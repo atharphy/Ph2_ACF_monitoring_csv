@@ -62,7 +62,7 @@ void CBCMonitor::runCBCRegisterMonitor(std::string registerName)
     // theCBCRegisterStreamer.setHeaderElement(getTimeStamp());
     // if(fStreamerEnabled)
     // {
-    //     for(auto board: theCBCRegisterContainer) { theCBCRegisterStreamer.streamAndSendBoard(board, fNetworkStreamer); }
+    //     for(auto board: theCBCRegisterContainer) { theCBCRegisterStreamer.streamAndSendBoard(board, fMonitorDQMStreamer); }
     // }
 #endif
 }
@@ -89,7 +89,7 @@ void CBCMonitor::runLpGBTRegisterMonitor(std::string registerName)
     // theLpGBTRegisterStreamer.setHeaderElement(getTimeStamp());
     // if(fStreamerEnabled)
     // {
-    //     for(auto board: theLpGBTRegisterContainer) { theLpGBTRegisterStreamer.streamAndSendBoard(board, fNetworkStreamer); }
+    //     for(auto board: theLpGBTRegisterContainer) { theLpGBTRegisterStreamer.streamAndSendBoard(board, fMonitorDQMStreamer); }
     // }
 #endif
 }

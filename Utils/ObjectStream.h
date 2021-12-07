@@ -66,9 +66,18 @@ class DataStreamBase
 
     virtual uint32_t size(void) = 0;
 
-    virtual void copyToStream(char* bufferBegin) { memcpy(bufferBegin, &fDataSize, fDataSize); }
+    virtual size_t copyToStream(char* bufferBegin, size_t bufferWritingPosition = 0)
+    { 
+        memcpy(&bufferBegin[bufferWritingPosition], &fDataSize, fDataSize); 
+        return bufferWritingPosition+fDataSize;
+    }
 
-    virtual void copyFromStream(const char* bufferBegin) { memcpy(&fDataSize, bufferBegin, size()); }
+    virtual size_t copyFromStream(const char* bufferBegin, size_t bufferReadingPosition = 0)
+    { 
+        memcpy(&fDataSize, &bufferBegin[bufferReadingPosition], size()); 
+        return bufferReadingPosition+size();
+
+    }
 
   protected:
     uint32_t fDataSize;

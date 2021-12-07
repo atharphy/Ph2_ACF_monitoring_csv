@@ -75,8 +75,8 @@ void Latency::sendData()
 
     if(fStreamerEnabled == true)
     {
-        for(const auto cBoard: theOccContainer) theStream.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theLatencyContainer) theLatencyStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theOccContainer) theStream.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theLatencyContainer) theLatencyStream.streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 

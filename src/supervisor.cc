@@ -7,6 +7,7 @@
 #include "../HWInterface/ChipInterface.h"
 #include "../Utils/MiddlewareInterface.h"
 #include "../Utils/argvparser.h"
+#include "../MonitorDQM/MonitorDQMInterface.h"
 
 #include <cstring>
 #include <errno.h>
@@ -209,7 +210,8 @@ int main(int argc, char* argv[])
     if(batchMode) tAppArgc = 2;
     TApplication theApp("App", &tAppArgc, tAppArgv);
 
-    DQMInterface theDQMInterface;
+    DQMInterface        theDQMInterface;
+    MonitorDQMInterface theMonitorDQMInterface;
 
     stateMachineStatus = HALTED;
 
@@ -251,17 +253,18 @@ int main(int argc, char* argv[])
         //    	}
         else
         {
+
             std::cout << __PRETTY_FUNCTION__ << "Supervisor Run Controller status: " << runControllerStatus << std::endl;
             switch(stateMachineStatus)
             {
             case HALTED:
             {
                 std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Configure!!!" << std::endl;
-                theMiddlewareInterface.configure(cmd.optionValue("calibration"), cmd.optionValue("file"));
-                // std::string configurationFile = baseDir + cmd.optionValue("file");
-                std::string configurationFile = cmd.optionValue("file");
                 std::string calibrationName   = cmd.optionValue("calibration");
+                std::string configurationFile = cmd.optionValue("file");
+                theMiddlewareInterface.configure(calibrationName, configurationFile);
                 theDQMInterface.configure(calibrationName, configurationFile);
+                theMonitorDQMInterface.configure(configurationFile);
                 stateMachineStatus = CONFIGURED;
                 break;
             }
@@ -270,6 +273,7 @@ int main(int argc, char* argv[])
                 std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Start!!!" << std::endl;
                 std::string runNumber = "5";
                 theDQMInterface.startProcessingData(runNumber);
+                theMonitorDQMInterface.startProcessingData();
                 theMiddlewareInterface.start(runNumber);
                 stateMachineStatus = RUNNING;
                 break;
@@ -302,6 +306,8 @@ int main(int argc, char* argv[])
             }
         }
     }
+
+    // theMonitorDQMInterface.stopProcessingData();
 
     std::cout << __PRETTY_FUNCTION__ << "Out of supervisor state machine!. Run Controller status: " << runControllerStatus << std::endl;
     checkExitStatus(runControllerStatus, "RunController");

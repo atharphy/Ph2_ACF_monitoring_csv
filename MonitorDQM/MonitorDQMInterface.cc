@@ -50,12 +50,12 @@ void MonitorDQMInterface::destroyDQMs(void)
 }
 
 //========================================================================================================================
-void MonitorDQMInterface::configure(std::string const& monitorName, std::string const& configurationFilePath)
+void MonitorDQMInterface::configure(std::string const& configurationFilePath)
 {
     LOG(INFO) << __PRETTY_FUNCTION__ << RESET;
 
     std::string serverIP   = "127.0.0.1";
-    int         serverPort = 6000;
+    int         serverPort = 7000;
     fListener              = new TCPSubscribeClient(serverIP, serverPort);
 
     if(!fListener->connect())

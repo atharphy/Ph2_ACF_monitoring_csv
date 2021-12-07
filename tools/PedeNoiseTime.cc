@@ -321,7 +321,7 @@ void PedeNoiseTime::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
     LOG(INFO) << "6 ";
     for(auto board: theOccupancyContainer)
     {
-        if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
+        if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fDQMStreamer);
     }
 #endif
     LOG(INFO) << "7 ";
@@ -1017,7 +1017,7 @@ void PedeNoiseTime::producePedeNoiseTimePlots()
     auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
     for(auto board: *fThresholdAndNoiseContainer)
     {
-        if(fStreamerEnabled) { theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer); }
+        if(fStreamerEnabled) { theThresholdAndNoiseStream.streamAndSendBoard(board, fDQMStreamer); }
     }
 #endif
 }

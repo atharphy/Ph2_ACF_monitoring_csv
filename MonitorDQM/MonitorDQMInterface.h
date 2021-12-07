@@ -14,7 +14,7 @@ class MonitorDQMInterface
     MonitorDQMInterface();
     ~MonitorDQMInterface(void);
 
-    void configure(std::string const& monitorName, std::string const& configurationFilePath);
+    void configure(std::string const& configurationFilePath);
     void startProcessingData();
     void stopProcessingData(void);
     void pauseProcessingData(void){};

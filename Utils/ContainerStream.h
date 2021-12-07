@@ -65,15 +65,17 @@ class ContainerCarried
 
     void reset() { fContainerCarried = 0; }
 
-    void carryChannelContainer() { fContainerCarried |= (1 << 0); }
-    void carryChipContainer() { fContainerCarried |= (1 << 1); }
-    void carryHybridContainer() { fContainerCarried |= (1 << 2); }
-    void carryBoardContainer() { fContainerCarried |= (1 << 3); }
+    void carryChannelContainer     () { fContainerCarried |= (1 << 0); }
+    void carryChipContainer        () { fContainerCarried |= (1 << 1); }
+    void carryHybridContainer      () { fContainerCarried |= (1 << 2); }
+    void carryOpticalGroupContainer() { fContainerCarried |= (1 << 3); }
+    void carryBoardContainer       () { fContainerCarried |= (1 << 4); }
 
-    bool isChannelContainerCarried() { return (fContainerCarried >> 0) & 1; }
-    bool isChipContainerCarried() { return (fContainerCarried >> 1) & 1; }
-    bool isHybridContainerCarried() { return (fContainerCarried >> 2) & 1; }
-    bool isBoardContainerCarried() { return (fContainerCarried >> 3) & 1; }
+    bool isChannelContainerCarried     () { return (fContainerCarried >> 0) & 1; }
+    bool isChipContainerCarried        () { return (fContainerCarried >> 1) & 1; }
+    bool isHybridContainerCarried      () { return (fContainerCarried >> 2) & 1; }
+    bool isOpticalGroupContainerCarried() { return (fContainerCarried >> 3) & 1; }
+    bool isBoardContainerCarried       () { return (fContainerCarried >> 4) & 1; }
 
     uint8_t fContainerCarried;
 } __attribute__((packed));
@@ -152,17 +154,28 @@ class DataStreamChannelContainer : public DataStreamBase
         return fDataSize;
     }
 
-    void copyToStream(char* bufferBegin)
+    size_t copyToStream(char* bufferBegin, size_t bufferWritingPosition = 0)
     {
-        memcpy(bufferBegin, &fDataSize, sizeof(fDataSize));
-        memcpy(&bufferBegin[sizeof(fDataSize)], &fChannelContainer->at(0), fChannelContainer->size() * sizeof(C));
+        memcpy(&bufferBegin[bufferWritingPosition], &fDataSize, sizeof(fDataSize));
+        bufferWritingPosition += sizeof(fDataSize);
+
+        memcpy(&bufferBegin[bufferWritingPosition], &fChannelContainer->at(0), fChannelContainer->size() * sizeof(C));
         fChannelContainer = nullptr;
+        bufferWritingPosition += fChannelContainer->size() * sizeof(C);
+
+        return bufferWritingPosition;
     }
-    void copyFromStream(const char* bufferBegin)
+
+    size_t copyFromStream(const char* bufferBegin, size_t bufferReadingPosition = 0)
     {
-        memcpy(&fDataSize, bufferBegin, sizeof(fDataSize));
+        memcpy(&fDataSize, &bufferBegin[bufferReadingPosition], sizeof(fDataSize));
+        bufferReadingPosition += sizeof(fDataSize);
+
         fChannelContainer = new ChannelContainer<C>((fDataSize - sizeof(fDataSize)) / sizeof(C));
-        memcpy(&fChannelContainer->at(0), &bufferBegin[sizeof(fDataSize)], fDataSize - sizeof(fDataSize));
+        memcpy(&fChannelContainer->at(0), &bufferBegin[bufferReadingPosition], fDataSize - sizeof(fDataSize));
+        bufferReadingPosition += (fChannelContainer->size() * sizeof(C));
+
+        return bufferReadingPosition;
     }
 
   public:
@@ -262,10 +275,8 @@ class DataStreamChipContainer : public DataStreamBase
         return fDataSize;
     }
 
-    void copyToStream(char* bufferBegin)
+    size_t copyToStream(char* bufferBegin, size_t bufferWritingPosition = 0)
     {
-        size_t bufferWritingPosition = 0;
-
         memcpy(&bufferBegin[bufferWritingPosition], &fDataSize, sizeof(fDataSize));
         bufferWritingPosition += sizeof(fDataSize);
 
@@ -281,14 +292,16 @@ class DataStreamChipContainer : public DataStreamBase
         if(fContainerCarried.isChannelContainerCarried())
         {
             memcpy(&bufferBegin[bufferWritingPosition], &fChannelContainer->at(0), fChannelContainer->size() * sizeof(T));
+            bufferWritingPosition += (fChannelContainer->size() * sizeof(T));
             fChannelContainer = nullptr;
         }
+
+        return bufferWritingPosition;
     }
 
-    void copyFromStream(const char* bufferBegin)
+    size_t copyFromStream(const char* bufferBegin, size_t bufferReadingPosition = 0)
     {
-        size_t bufferReadingPosition = 0;
-
+        size_t originalBufferReadingPosition = bufferReadingPosition;
         memcpy(&fDataSize, &bufferBegin[bufferReadingPosition], sizeof(fDataSize));
         bufferReadingPosition += sizeof(fDataSize);
 
@@ -303,9 +316,11 @@ class DataStreamChipContainer : public DataStreamBase
         }
         if(fContainerCarried.isChannelContainerCarried())
         {
-            fChannelContainer = new ChannelContainer<T>((fDataSize - bufferReadingPosition) / sizeof(T));
-            memcpy(&fChannelContainer->at(0), &bufferBegin[bufferReadingPosition], fDataSize - bufferReadingPosition);
+            fChannelContainer = new ChannelContainer<T>((fDataSize - bufferReadingPosition - originalBufferReadingPosition) / sizeof(T));
+            memcpy(&fChannelContainer->at(0), &bufferBegin[bufferReadingPosition], fChannelContainer->size() * sizeof(T));
+            bufferReadingPosition += (fDataSize - bufferReadingPosition - originalBufferReadingPosition);
         }
+        return bufferReadingPosition;
     }
 
   public:
@@ -410,7 +425,7 @@ class DataStreamHybridContainer : public DataStreamBase
     {
         for(auto element: fChannelContainerVector)
         {
-            if(element == nullptr)
+            if(element != nullptr)
             {
                 delete element;
                 element = nullptr;
@@ -420,7 +435,7 @@ class DataStreamHybridContainer : public DataStreamBase
 
         for(auto element: fChipSummaryContainerVector)
         {
-            if(element == nullptr)
+            if(element != nullptr)
             {
                 delete element;
                 element = nullptr;
@@ -445,10 +460,8 @@ class DataStreamHybridContainer : public DataStreamBase
         return fDataSize;
     }
 
-    void copyToStream(char* bufferBegin)
+    size_t copyToStream(char* bufferBegin, size_t bufferWritingPosition = 0)
     {
-        size_t bufferWritingPosition = 0;
-
         memcpy(&bufferBegin[bufferWritingPosition], &fDataSize, sizeof(fDataSize));
         bufferWritingPosition += sizeof(fDataSize);
         std::cout << __PRETTY_FUNCTION__ << "fDataSize = " << +fDataSize << std::endl;
@@ -488,12 +501,13 @@ class DataStreamHybridContainer : public DataStreamBase
                 channelContainer = nullptr;
             }
         }
+
+        return bufferWritingPosition;
     }
 
-    void copyFromStream(const char* bufferBegin)
+    size_t copyFromStream(const char* bufferBegin, size_t bufferReadingPosition = 0)
     {
-        size_t bufferReadingPosition = 0;
-
+        size_t originalBufferReadingPosition = bufferReadingPosition;
         memcpy(&fDataSize, &bufferBegin[bufferReadingPosition], sizeof(fDataSize));
         bufferReadingPosition += sizeof(fDataSize);
         std::cout << __PRETTY_FUNCTION__ << "fDataSize = " << +fDataSize << std::endl;
@@ -524,7 +538,7 @@ class DataStreamHybridContainer : public DataStreamBase
         }
         if(fContainerCarried.isChannelContainerCarried())
         {
-            size_t vectorSize = (fDataSize - bufferReadingPosition) / (sizeof(T) * fNumberOfChips);
+            size_t vectorSize = (fDataSize - bufferReadingPosition - originalBufferReadingPosition) / (sizeof(T) * fNumberOfChips);
             std::cout << __PRETTY_FUNCTION__ << "vectorSize = " << +vectorSize << std::endl;
 
             for(size_t chipIndex = 0; chipIndex < fNumberOfChips; ++chipIndex)
@@ -535,6 +549,8 @@ class DataStreamHybridContainer : public DataStreamBase
                 bufferReadingPosition += vectorSize * sizeof(T);
             }
         }
+
+        return bufferReadingPosition;
     }
 
   private:
@@ -660,6 +676,437 @@ class HybridContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t
         }
     }
 };
+
+
+
+
+
+
+
+
+// ------------------------------------------- OpticalGroupContainerStream ------------------------------------------- //
+
+template <typename T, typename C, typename M, typename O>
+class DataStreamOpticalGroupContainer : public DataStreamBase
+{
+  public:
+    DataStreamOpticalGroupContainer() : fOpticalGroupSummaryContainer(nullptr)
+    {
+        check_if_retrivable<O>();
+    }
+    ~DataStreamOpticalGroupContainer()
+    {
+        for(auto element: fDataSteamHybridContainerVector)
+        {
+            if(element != nullptr)
+            {
+                delete element;
+                element = nullptr;
+            }
+        }
+        fDataSteamHybridContainerVector.clear();
+
+        if(fOpticalGroupSummaryContainer == nullptr)
+        {
+            delete fOpticalGroupSummaryContainer;
+            fOpticalGroupSummaryContainer = nullptr;
+        }
+    }
+
+    uint32_t size(void) override
+    {
+        fDataSize = sizeof(fDataSize) + sizeof(fContainerCarried) + sizeof(fNumberOfSubContainers);
+        for(const auto& dataSteamHybridContainer : fDataSteamHybridContainerVector) 
+        {
+            fDataSize += dataSteamHybridContainer.size();
+        }
+        if(fOpticalGroupSummaryContainer != nullptr) { fDataSize += sizeof(O); }
+        return fDataSize;
+    }
+
+    size_t copyToStream(char* bufferBegin, size_t bufferWritingPosition = 0)
+    {
+        memcpy(&bufferBegin[bufferWritingPosition], &fDataSize, sizeof(fDataSize));
+        bufferWritingPosition += sizeof(fDataSize);
+        std::cout << __PRETTY_FUNCTION__ << "fDataSize = " << +fDataSize << std::endl;
+
+        memcpy(&bufferBegin[bufferWritingPosition], &fContainerCarried, sizeof(fContainerCarried));
+        bufferWritingPosition += sizeof(fContainerCarried);
+        std::cout << __PRETTY_FUNCTION__ << "fContainerCarried = " << +fContainerCarried.fContainerCarried << std::endl;
+
+        memcpy(&bufferBegin[bufferWritingPosition], &fNumberOfSubContainers, sizeof(fNumberOfSubContainers));
+        bufferWritingPosition += sizeof(fNumberOfSubContainers);
+        std::cout << __PRETTY_FUNCTION__ << "fNumberOfSubContainers = " << +fNumberOfSubContainers << std::endl;
+
+        for(auto& subContainer : fDataSteamHybridContainerVector) bufferWritingPosition = subContainer->copyToStream(&bufferBegin[bufferWritingPosition]);
+
+        return bufferWritingPosition;
+    }
+
+    size_t copyFromStream(const char* bufferBegin, size_t bufferReadingPosition = 0)
+    {
+        memcpy(&fDataSize, &bufferBegin[bufferReadingPosition], sizeof(fDataSize));
+        bufferReadingPosition += sizeof(fDataSize);
+        std::cout << __PRETTY_FUNCTION__ << "fDataSize = " << +fDataSize << std::endl;
+
+        memcpy(&fContainerCarried, &bufferBegin[bufferReadingPosition], sizeof(fContainerCarried));
+        bufferReadingPosition += sizeof(fContainerCarried);
+        std::cout << __PRETTY_FUNCTION__ << "fContainerCarried = " << +fContainerCarried.fContainerCarried << std::endl;
+
+        memcpy(&fNumberOfSubContainers, &bufferBegin[bufferReadingPosition], sizeof(fNumberOfSubContainers));
+        bufferReadingPosition += sizeof(fNumberOfSubContainers);
+        std::cout << __PRETTY_FUNCTION__ << "fNumberOfSubContainers = " << +fNumberOfSubContainers << std::endl;
+
+        if(fContainerCarried.isOpticalGroupContainerCarried())
+        {
+            fOpticalGroupSummaryContainer = new Summary<O, M>();
+            memcpy(&(fOpticalGroupSummaryContainer->theSummary_), &bufferBegin[bufferReadingPosition], sizeof(O));
+            bufferReadingPosition += sizeof(O);
+        }
+
+        for(auto dataSteamHybridContainerVector : fDataSteamHybridContainerVector)
+        {
+            bufferReadingPosition = dataSteamHybridContainerVector->copyFromStream(bufferBegin, bufferReadingPosition);
+        }
+
+        return bufferReadingPosition;
+    }
+
+
+  public:
+    ContainerCarried                                 fContainerCarried {};
+    std::vector<DataStreamHybridContainer<T, C, M>*> fDataSteamHybridContainerVector {};        
+    uint8_t                                          fNumberOfSubContainers {0};
+    Summary<O, M>*                                   fOpticalGroupSummaryContainer {nullptr};
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // ------------------------------------------- OpticalGroupContainerStream ------------------------------------------- //
+
+// template <typename T, typename C, typename M, typename O>
+// class DataStreamOpticalGroupContainer : public DataStreamBase
+// {
+//   public:
+//     DataStreamOpticalGroupContainer() : fOpticalGroupSummaryContainer(nullptr)
+//     {
+//         check_if_retrivable<C>();
+//         check_if_retrivable<M>();
+//         check_if_retrivable<O>();
+//     }
+//     ~DataStreamOpticalGroupContainer()
+//     {
+//         for(auto element: fChannelContainerVector)
+//         {
+//             if(element != nullptr)
+//             {
+//                 delete element;
+//                 element = nullptr;
+//             }
+//         }
+//         fChannelContainerVector.clear();
+
+//         for(auto element: fChipSummaryContainerVector)
+//         {
+//             if(element != nullptr)
+//             {
+//                 delete element;
+//                 element = nullptr;
+//             }
+//         }
+//         fChipSummaryContainerVector.clear();
+
+//         if(fHybridSummaryContainer == nullptr)
+//         {
+//             delete fHybridSummaryContainer;
+//             fHybridSummaryContainer = nullptr;
+//         }
+//     }
+
+//     uint32_t size(void) override
+//     {
+//         fDataSize = sizeof(fDataSize) + sizeof(fContainerCarried) + sizeof(fNumberOfChips);
+//         if(fHybridSummaryContainer != nullptr) { fDataSize += sizeof(M); }
+//         fDataSize += sizeOfChipContainer();
+//         fDataSize += sizeOfChannelContainer();
+
+//         return fDataSize;
+//     }
+
+//     size_t copyToStream(char* bufferBegin)
+//     {
+//         size_t bufferWritingPosition = 0;
+
+//         memcpy(&bufferBegin[bufferWritingPosition], &fDataSize, sizeof(fDataSize));
+//         bufferWritingPosition += sizeof(fDataSize);
+//         std::cout << __PRETTY_FUNCTION__ << "fDataSize = " << +fDataSize << std::endl;
+
+//         memcpy(&bufferBegin[bufferWritingPosition], &fContainerCarried, sizeof(fContainerCarried));
+//         bufferWritingPosition += sizeof(fContainerCarried);
+//         std::cout << __PRETTY_FUNCTION__ << "fContainerCarried = " << +fContainerCarried.fContainerCarried << std::endl;
+
+//         memcpy(&bufferBegin[bufferWritingPosition], &fNumberOfChips, sizeof(fNumberOfChips));
+//         bufferWritingPosition += sizeof(fNumberOfChips);
+//         std::cout << __PRETTY_FUNCTION__ << "fNumberOfChips = " << +fNumberOfChips << std::endl;
+
+//         if(fContainerCarried.isHybridContainerCarried())
+//         {
+//             memcpy(&bufferBegin[bufferWritingPosition], &(fHybridSummaryContainer->theSummary_), sizeof(M));
+//             bufferWritingPosition += sizeof(M);
+//             fHybridSummaryContainer = nullptr;
+//         }
+
+//         if(fContainerCarried.isChipContainerCarried())
+//         {
+//             for(auto chipSummary: fChipSummaryContainerVector)
+//             {
+//                 memcpy(&bufferBegin[bufferWritingPosition], &(chipSummary->theSummary_), sizeof(C));
+//                 bufferWritingPosition += sizeof(C);
+//                 chipSummary = nullptr;
+//             }
+//         }
+
+//         if(fContainerCarried.isChannelContainerCarried())
+//         {
+//             for(auto channelContainer: fChannelContainerVector)
+//             {
+//                 memcpy(&bufferBegin[bufferWritingPosition], &(channelContainer->at(0)), channelContainer->size() * sizeof(T));
+//                 bufferWritingPosition += channelContainer->size() * sizeof(T);
+//                 std::cout << __PRETTY_FUNCTION__ << "vectorSize = " << +channelContainer->size() << std::endl;
+//                 channelContainer = nullptr;
+//             }
+//         }
+//     }
+
+//     size_t copyFromStream(const char* bufferBegin)
+//     {
+//         size_t bufferReadingPosition = 0;
+
+//         memcpy(&fDataSize, &bufferBegin[bufferReadingPosition], sizeof(fDataSize));
+//         bufferReadingPosition += sizeof(fDataSize);
+//         std::cout << __PRETTY_FUNCTION__ << "fDataSize = " << +fDataSize << std::endl;
+
+//         memcpy(&fContainerCarried, &bufferBegin[bufferReadingPosition], sizeof(fContainerCarried));
+//         bufferReadingPosition += sizeof(fContainerCarried);
+//         std::cout << __PRETTY_FUNCTION__ << "fContainerCarried = " << +fContainerCarried.fContainerCarried << std::endl;
+
+//         memcpy(&fNumberOfChips, &bufferBegin[bufferReadingPosition], sizeof(fNumberOfChips));
+//         bufferReadingPosition += sizeof(fNumberOfChips);
+//         std::cout << __PRETTY_FUNCTION__ << "fNumberOfChips = " << +fNumberOfChips << std::endl;
+
+//         if(fContainerCarried.isHybridContainerCarried())
+//         {
+//             fHybridSummaryContainer = new Summary<M, C>();
+//             memcpy(&(fHybridSummaryContainer->theSummary_), &bufferBegin[bufferReadingPosition], sizeof(M));
+//             bufferReadingPosition += sizeof(M);
+//         }
+//         if(fContainerCarried.isChipContainerCarried())
+//         {
+//             for(size_t chipIndex = 0; chipIndex < fNumberOfChips; ++chipIndex)
+//             {
+//                 Summary<C, T>* chipSummaryContainer = new Summary<C, T>();
+//                 memcpy(&(chipSummaryContainer->theSummary_), &bufferBegin[bufferReadingPosition], sizeof(C));
+//                 fChipSummaryContainerVector.emplace_back(chipSummaryContainer);
+//                 bufferReadingPosition += sizeof(C);
+//             }
+//         }
+//         if(fContainerCarried.isChannelContainerCarried())
+//         {
+//             size_t vectorSize = (fDataSize - bufferReadingPosition) / (sizeof(T) * fNumberOfChips);
+//             std::cout << __PRETTY_FUNCTION__ << "vectorSize = " << +vectorSize << std::endl;
+
+//             for(size_t chipIndex = 0; chipIndex < fNumberOfChips; ++chipIndex)
+//             {
+//                 ChannelContainer<T>* channelContainer = new ChannelContainer<T>(vectorSize);
+//                 memcpy(&channelContainer->at(0), &bufferBegin[bufferReadingPosition], vectorSize * sizeof(T));
+//                 fChannelContainerVector.emplace_back(channelContainer);
+//                 bufferReadingPosition += vectorSize * sizeof(T);
+//             }
+//         }
+//     }
+
+//   private:
+//     uint32_t sizeOfChannelContainer()
+//     {
+//         if(fChannelContainerVectorVector.size() == 0) return 0;
+
+//         uint32_t sizeOfChannelContainer = 0;
+//         for(auto& channelContainerVector : fChannelContainerVectorVector) 
+//             for(auto& channelContainer : channelContainerVector) 
+//                 sizeOfChannelContainer += channelContainer->size() * sizeof(T));
+//         return sizeOfChannelContainer;
+//     }
+
+//     uint32_t sizeOfChipContainer()
+//     {
+//         if(fChipSummaryContainerVector.size() == 0) return 0;
+
+//         uint32_t sizeOfChipContainer = 0;
+//         for(auto chipContainerVector : fChipSummaryContainerVectorVector) sizeOfChipContainer += chipContainerVector.size() * sizeof(C);
+
+//         std::cout << __PRETTY_FUNCTION__ << " Chip vector size = " << +fChipSummaryContainerVector.size() << std::endl;
+//         std::cout << __PRETTY_FUNCTION__ << " Chip summary size = " << +sizeof(C) << std::endl;
+//         std::cout << __PRETTY_FUNCTION__ << " Total size = " << +sizeOfChipContainer.size() * sizeof(C) << std::endl;
+
+//         return sizeOfChipContainer;
+//     }
+
+//     uint32_t sizeOfHybridContainer()
+//     {
+//         if(fChipSummaryContainerVector.size() == 0) return 0;
+//         return fChipSummaryContainerVector.size() * sizeof(H);
+//     }
+
+//     uint32_t sizeOfOpticalContainer()
+//     {
+//         if(fChipSummaryContainerVector.size() == 0) return 0;
+//         return fChipSummaryContainerVector.size() * sizeof(H);
+//     }
+
+
+
+//   public:
+//     ContainerCarried                               fContainerCarried;
+//     std::vector<uint8_t>                           fNumberOfChipVector;
+//     uint8_t                                        fNumberOfHybrids;
+//     std::vector<std::vector<ChannelContainer<T>*>> fChannelContainerVectorVector;
+//     std::vector<std::vector<Summary<C, T>*>>       fChipSummaryContainerVectorVector;
+//     std::vector<Summary<M, C>*>                    fHybridSummaryContainerVector;
+//     Summary<O, M>                                  fOpticalGroupSummaryContainer;
+// };
+
+// template <typename T, typename C, typename M, typename O, typename... I>
+// class OpticalGroupContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamOpticalGroupContainer<T, C, M, O>>
+// {
+//     enum HeaderId
+//     {
+//         OpticalGroupId,
+//         HybridId
+//     };
+//     static constexpr size_t getEnumSize() { return HybridId + 1; }
+
+//   public:
+//     OpticalGroupContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamOpticalGroupContainer<T, C, M, O>>(creatorName) { ; }
+//     ~OpticalGroupContainerStream() { ; }
+
+//     void streamAndSendBoard(BoardDataContainer* board, TCPPublishServer* networkStreamer)
+//     {
+//         for(auto opticalGroup: *board)
+//         {
+//             for(auto hybrid: *opticalGroup)
+//             {
+//                 retrieveHybridData(board->getId(), opticalGroup->getId(), hybrid);
+//                 const std::vector<char>& stream = this->encodeStream();
+//                 this->incrementStreamPacketNumber();
+//                 networkStreamer->broadcast(stream);
+//             }
+//         }
+//     }
+
+//     void decodeHybridData(DetectorDataContainer& detectorContainer)
+//     {
+//         uint16_t boardId        = this->fHeaderStream.fBoardId;
+//         uint16_t opticalGroupId = this->fHeaderStream.template getHeaderInfo<HeaderId::OpticalGroupId>();
+//         uint16_t hybridId       = this->fHeaderStream.template getHeaderInfo<HeaderId::HybridId>();
+
+//         detectorContainer.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->setSummaryContainer(this->fDataStream.fHybridSummaryContainer);
+//         this->fDataStream.fHybridSummaryContainer = nullptr;
+
+//         for(auto chip: *detectorContainer.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId))
+//         {
+//             if(this->fDataStream.fContainerCarried.isChipContainerCarried())
+//             {
+//                 chip->setSummaryContainer(this->fDataStream.fChipSummaryContainerVector.at(chip->getIndex()));
+//                 this->fDataStream.fChipSummaryContainerVector.at(chip->getIndex()) = nullptr;
+//             }
+//             if(this->fDataStream.fContainerCarried.isChannelContainerCarried())
+//             {
+//                 chip->setChannelContainer(this->fDataStream.fChannelContainerVector.at(chip->getIndex()));
+//                 this->fDataStream.fChannelContainerVector.at(chip->getIndex()) = nullptr;
+//             }
+//         }
+//     }
+
+//     template <std::size_t N>
+//     using TupleElementType = typename std::tuple_element<N, std::tuple<I...>>::type;
+
+//     template <std::size_t N = 0>
+//     void setHeaderElement(TupleElementType<N> theInfo)
+//     {
+//         this->fHeaderStream.template setHeaderInfo<N + getEnumSize()>(theInfo);
+//     }
+
+//     template <std::size_t N = 0>
+//     TupleElementType<N> getHeaderElement() const
+//     {
+//         return this->fHeaderStream.template getHeaderInfo<N + getEnumSize()>();
+//     }
+
+//   protected:
+//     void retrieveHybridData(uint16_t boardId, uint16_t opticalGroupId, HybridDataContainer* hybrid)
+//     {
+//         this->fHeaderStream.fBoardId = boardId;
+//         this->fHeaderStream.template setHeaderInfo<HeaderId::OpticalGroupId>(opticalGroupId);
+//         this->fHeaderStream.template setHeaderInfo<HeaderId::HybridId>(hybrid->getId());
+//         this->fDataStream.fNumberOfChips = hybrid->size();
+//         this->fDataStream.fChipSummaryContainerVector.clear();
+//         this->fDataStream.fChannelContainerVector.clear();
+//         if(hybrid->getSummaryContainer<M, C>() != nullptr)
+//         {
+//             this->fDataStream.fContainerCarried.carryHybridContainer();
+//             this->fDataStream.fHybridSummaryContainer = hybrid->getSummaryContainer<M, C>();
+//         }
+//         for(auto chip: *hybrid)
+//         {
+//             if(chip->getSummaryContainer<C, T>() != nullptr)
+//             {
+//                 this->fDataStream.fContainerCarried.carryChipContainer();
+//                 this->fDataStream.fChipSummaryContainerVector.emplace_back(chip->getSummaryContainer<C, T>());
+//             }
+//             if(chip->getChannelContainer<T>() != nullptr)
+//             {
+//                 this->fDataStream.fContainerCarried.carryChannelContainer();
+//                 this->fDataStream.fChannelContainerVector.emplace_back(chip->getChannelContainer<T>());
+//             }
+//         }
+//     }
+// };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #if defined(__GNUC__) && !defined(__INTEL_COMPILER) && (((__GNUC__ * 100) + __GNUC_MINOR__) >= 800)
 #pragma GCC diagnostic pop

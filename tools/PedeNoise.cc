@@ -373,7 +373,7 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
     LOG(INFO) << "6 ";
     for(auto board: theOccupancyContainer)
     {
-        if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
+        if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fDQMStreamer);
     }
 #endif
     LOG(INFO) << "7 ";
@@ -779,7 +779,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
                 theSCurveStreamer.setHeaderElement(cValue);
                 for(auto board: *theOccupancyContainer)
                 {
-                    if(fStreamerEnabled) theSCurveStreamer.streamAndSendBoard(board, fNetworkStreamer);
+                    if(fStreamerEnabled) theSCurveStreamer.streamAndSendBoard(board, fDQMStreamer);
                 }
             }
 #endif
@@ -971,7 +971,7 @@ void PedeNoise::producePedeNoisePlots()
     auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
     for(auto board: *fThresholdAndNoiseContainer)
     {
-        if(fStreamerEnabled) { theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer); }
+        if(fStreamerEnabled) { theThresholdAndNoiseStream.streamAndSendBoard(board, fDQMStreamer); }
     }
 #endif
 }
