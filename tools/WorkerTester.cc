@@ -8,10 +8,9 @@ WorkerTester::WorkerTester() : Tool() {}
 
 WorkerTester::~WorkerTester() {}
 
-void WorkerTester::PrintFSMState(uint8_t pLinkId)
+void WorkerTester::PrintFSMState()
 {
     D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    cFWInterface->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
     uint32_t cStatus = cFWInterface->ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
     LOG(INFO) << "Worker FSM status : " << +(cStatus & 0xFF) << RESET;
     LOG(INFO) << "IC FSM status : " << +((cStatus & (0xFF << 8)) >> 8) << RESET;
@@ -31,7 +30,7 @@ void WorkerTester::ResetCPB()
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | 16 << 0);
     cFWInterface->WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", cCommandVector);
     cFWInterface->ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", 1);
-    std::this_thread::sleep_for(std::chrono::microseconds(0));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
 
 void WorkerTester::WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose)
@@ -48,7 +47,6 @@ void WorkerTester::WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, 
         }
     }
     cFWInterface->WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", pCommandVector);
-    std::this_thread::sleep_for(std::chrono::microseconds(0));
 }
 
 std::vector<uint32_t> WorkerTester::ReadReplyCPB(uint8_t pNWords, bool pVerbose)
@@ -63,6 +61,8 @@ std::vector<uint32_t> WorkerTester::ReadReplyCPB(uint8_t pNWords, bool pVerbose)
             LOG(INFO) << YELLOW << "Read reply word " << +cFifoIndex << " value 0x" << std::setfill('0') << std::setw(8) << std::hex << +cReplyWord << std::dec << RESET;
             cFifoIndex++;
         }
+        PrintFSMState();
+        LOG(INFO) << "----------------------" << RESET;
     }
     return cReplyVector;
 }
@@ -73,17 +73,14 @@ uint8_t WorkerTester::ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddre
     cFWInterface->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
     // ResetCPB();
     uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 2;
+    if(pVerbose){ LOG(INFO) << BOLDMAGENTA << "ReadLpGBTRegister from Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET; }
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pRegisterAddress << 0);
     WriteCommandCPB(cCommandVector, pVerbose);
+    while(!IsICToolDone()){ continue; }
     std::vector<uint32_t> cReplyVector     = ReadReplyCPB(1, pVerbose);
     uint8_t               cReadBack        = cReplyVector[0] & 0xFF;
-    if(pVerbose) 
-    {
-        LOG(INFO) << BOLDMAGENTA << "ReadLpGBTRegister from Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
-        PrintFSMState(pLinkId);
-    }
     return cReadBack;
 }
 
@@ -93,19 +90,31 @@ bool WorkerTester::WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress
     cFWInterface->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
     // ResetCPB();
     uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 3;
+    if(pVerbose){ LOG(INFO) << BOLDMAGENTA << "WriteLpGBTRegister from Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET; }
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pRegisterAddress << 0);
     cCommandVector.push_back(pRegisterValue << 0);
     WriteCommandCPB(cCommandVector, pVerbose);
+    while(!IsICToolDone()){ continue; }
     std::vector<uint32_t> cReplyVector     = ReadReplyCPB(1, pVerbose);
     uint8_t cReadBack = cReplyVector[0] & 0xFF;
-    if(pVerbose) 
+    if(cReadBack != pRegisterValue)
     {
-        LOG(INFO) << BOLDMAGENTA << "WriteLpGBTRegister from Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
-        PrintFSMState(pLinkId);
+        LOG(INFO) << RED << "lpGBTWrite : Wrong value read back" << RESET;
+        exit(0);
+        return false;
     }
-    return (cReadBack == pRegisterValue);
+    return true;
+}
+
+bool WorkerTester::IsICToolDone()
+{
+    D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    uint32_t cStatus = cFWInterface->ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
+    bool cWorkerDone = (cStatus & 0xFF) == 1;
+    bool cICToolDone = ((cStatus & (0xFF << 8)) >> 8) == 1;
+    return cWorkerDone && cICToolDone;
 }
 
 uint8_t WorkerTester::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes, bool pVerbose)
@@ -114,18 +123,23 @@ uint8_t WorkerTester::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlave
     cFWInterface->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
     // ResetCPB();
     uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 4, cMasterConfig = (pNBytes << 2) | 3;
+    if(pVerbose){ LOG(INFO) << BOLDMAGENTA << "I2CRead from Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET; }
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 14 | cMasterConfig << 6);
     cCommandVector.push_back(pSlaveAddress << 0);
     WriteCommandCPB(cCommandVector, pVerbose);
+    uint32_t cStatus = cFWInterface->ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
+    uint8_t cWorkerStatus = (cStatus & 0xFF);
+    uint8_t cI2CStatus = ((cStatus & (0xFF << 16)) >> 16);
+    while((cWorkerStatus != 1) || (cI2CStatus != 1))
+    {
+        cStatus = cFWInterface->ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
+        cWorkerStatus = (cStatus & 0xFF);
+        cI2CStatus = ((cStatus & (0xFF << 16)) >> 16);
+    }
     std::vector<uint32_t> cReplyVector = ReadReplyCPB(1, pVerbose);
     uint8_t cReadBack = cReplyVector[0] & 0xFF;
-    if(pVerbose) 
-    {
-        LOG(INFO) << BOLDMAGENTA << "I2CRead from Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
-        PrintFSMState(pLinkId);
-    }
     return cReadBack;
 }
 
@@ -134,24 +148,31 @@ bool WorkerTester::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAd
     D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     cFWInterface->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
     uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 5, cMasterConfig = (pNBytes << 2) | 3;
+    if(pVerbose){ LOG(INFO) << BOLDMAGENTA << "I2CWrite from Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET; }
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 14 | cMasterConfig << 6);
     cCommandVector.push_back(pSlaveData << 8 | pSlaveAddress << 0);
     WriteCommandCPB(cCommandVector, pVerbose);
+    while(!IsI2CToolDone()){ continue; }
     std::vector<uint32_t> cReplyVector = ReadReplyCPB(1, pVerbose);
-    uint8_t cI2CStatus = cReplyVector[0] & 0xFF;
-    if(pVerbose) 
+    uint8_t cI2CTransStatus = cReplyVector[0] & 0xFF;
+    if(cI2CTransStatus != 4)
     {
-        LOG(INFO) << BOLDMAGENTA << "I2CWrite from Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
-        PrintFSMState(pLinkId);
-    }
-    if(cI2CStatus != 4)
-    {
-        LOG(INFO) << RED << "I2CWrite : Wrong I2C status read back ... I2C status " << +cI2CStatus << RESET;
+        LOG(INFO) << RED << "I2CWrite : Wrong I2C status read back ... I2C status " << +cI2CTransStatus << RESET;
+        // exit(0);
         return false;
     }
     return true;
+}
+
+bool WorkerTester::IsI2CToolDone()
+{
+    D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    uint32_t cStatus = cFWInterface->ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
+    bool cWorkerDone = (cStatus & 0xFF) == 1;
+    bool cI2CToolDone = ((cStatus & (0xFF << 16)) >> 16) == 1;
+    return cWorkerDone && cI2CToolDone;
 }
 
 uint8_t WorkerTester::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, bool pVerbose)
@@ -165,18 +186,14 @@ uint8_t WorkerTester::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pR
     uint8_t cChipCode = fChipCodeMap[pChip->getFrontEndType()];
     uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : (pChip->getId() % 8); //use modulo 8 to accomodate for how MPAs are numbered
     std::vector<uint32_t> cCommandVector;
+    if(pVerbose){ LOG(INFO) << BOLDMAGENTA << "FERead from Link#" << +cLinkId << " -- workerId is " << +cWorkerId << RESET; }
     cCommandVector.clear();
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | cHybridId << 6 | cChipCode << 3 | cChipId << 0);
     cCommandVector.push_back(pRegisterAddress << 0);
-    WriteCommandCPB(cCommandVector, true);
-    // std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    std::vector<uint32_t> cReplyVector = ReadReplyCPB(1, true);
+    WriteCommandCPB(cCommandVector, pVerbose);
+    while(!IsFEToolDone()){ continue; }
+    std::vector<uint32_t> cReplyVector = ReadReplyCPB(1, pVerbose);
     uint8_t  cReadBack = cReplyVector[0] & 0xFF;
-    if(pVerbose) 
-    {
-        LOG(INFO) << BOLDMAGENTA << "FERead from Link#" << +cLinkId << " -- workerId is " << +cWorkerId << RESET;
-        PrintFSMState(cLinkId);
-    }
     LOG(DEBUG) << GREEN << "ReadFERegister : successfully read 0x" << std::hex << +cReadBack << std::dec << " from register : 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
     return cReadBack;
 }
@@ -191,18 +208,14 @@ bool WorkerTester::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pReg
     uint8_t cHybridId = pChip->getHybridId();
     uint8_t cChipCode = fChipCodeMap[pChip->getFrontEndType()];
     uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : (pChip->getId() % 8); //use modulo 8 to accomodate for how MPAs are numbered
+    if(pVerbose){ LOG(INFO) << BOLDMAGENTA << "FEWrite from Link#" << +cLinkId << " -- workerId is " << +cWorkerId << RESET; }
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pVerify << 8 | cHybridId << 6 | cChipCode << 3 | cChipId << 0);
     cCommandVector.push_back(pRegisterValue << 16 | pRegisterAddress << 0);
     WriteCommandCPB(cCommandVector, pVerbose);
-    // std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    while(!IsFEToolDone()){ continue; }
     std::vector<uint32_t> cReplyVector = ReadReplyCPB(1, pVerbose);
-    if(pVerbose) 
-    {
-        LOG(INFO) << BOLDMAGENTA << "FEWrite from Link#" << +cLinkId << " -- workerId is " << +cWorkerId << RESET;
-        PrintFSMState(cLinkId);
-    }
     if(pVerify)
     {
         uint8_t  cReadBack = cReplyVector[0] & 0xFF;
@@ -225,6 +238,15 @@ bool WorkerTester::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pReg
         LOG(DEBUG) << GREEN << "WriteFERegister without verification : successfully written 0x" << std::hex << +pRegisterValue << std::dec << " to register : 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
         return true;
     }
+}
+
+bool WorkerTester::IsFEToolDone()
+{
+    D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    uint32_t cStatus = cFWInterface->ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
+    bool cWorkerDone = (cStatus & 0xFF) == 1;
+    bool cFEToolDone = ((cStatus & (0xFF << 24)) >> 24) == 1;
+    return cWorkerDone && cFEToolDone;
 }
 
 bool WorkerTester::TestICRead(OpticalGroup* cOpticalGroup)
@@ -257,10 +279,13 @@ bool WorkerTester::TestICWrite(OpticalGroup* cOpticalGroup)
     //Write to I2C Master 0 slave address register and readback
     LOG(INFO) << BOLDMAGENTA << "Testing IC Write on OpticalGroup " << cOpticalGroup->getId() << RESET;
     uint16_t cI2CM0AddressReg = 0x0f1;
-    bool cSuccess = false;
-    for(uint8_t i = 0; i<10; i++)
+    bool cSuccess = true;
+    for(uint8_t cIteration = 0; cIteration < 10; cIteration++) 
     {
-        cSuccess = WriteLpGBTRegister(cOpticalGroup->getId(), cI2CM0AddressReg, i);
+        for(uint8_t i = 0; i<255; i++)
+        {
+            cSuccess &= WriteLpGBTRegister(cOpticalGroup->getId(), cI2CM0AddressReg, i);
+        }
     }
     if(cSuccess){ LOG(INFO) << GREEN << "Successfully written and checked all values" << RESET;}
     else{ LOG(INFO) << RED << "Failed on at least one write and check" << RESET;}
@@ -352,6 +377,7 @@ void WorkerTester::EnableHybridChips(OpticalGroup* cOpticalGroup)
 
 void WorkerTester::PrepareForTests()
 {
+    //ResetCPB();
     for(auto cBoard : *fDetectorContainer)
     {
         fBeBoardInterface->setBoard(cBoard->getId());
@@ -374,7 +400,7 @@ void WorkerTester::PrepareForTests()
 
 bool WorkerTester::TestI2CRead(OpticalGroup* cOpticalGroup)
 {
-    LOG(INFO) << BOLDMAGENTA << "Testing I2C Write on OpticalGroup " << cOpticalGroup->getId() << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Testing I2C Read on OpticalGroup " << cOpticalGroup->getId() << RESET;
     std::vector<uint8_t> cMasters = {2};
     uint8_t cSlaveAddress = 0x60; //CIC
     uint16_t cRegisterAddress = 0x99; //Calibration Pattern 0 : Default = 0xA1
@@ -385,13 +411,13 @@ bool WorkerTester::TestI2CRead(OpticalGroup* cOpticalGroup)
         
         uint16_t cInvertedRegister = ((cRegisterAddress & (0xFF << 8 * 0)) << 8) | ((cRegisterAddress & (0xFF << 8 * 1)) >> 8);
         uint32_t cSlaveData                 = (cRegisterValue << 16) | cInvertedRegister;
-        // LOG(INFO) << BLUE << "Writing value = 0x" << std::hex << +cRegisterValue << std::dec << " to register 0x" << std::hex << +cRegisterAddress << std::dec << RESET;
+        LOG(INFO) << BLUE << "Writing value = 0x" << std::hex << +cRegisterValue << std::dec << " to register 0x" << std::hex << +cRegisterAddress << std::dec << RESET;
         I2CWrite(cOpticalGroup->getId(), cMaster, cSlaveAddress, cSlaveData, 3);
 
         cSlaveData                 = cInvertedRegister;
         I2CWrite(cOpticalGroup->getId(), cMaster, cSlaveAddress, cSlaveData, 2);
         cRegisterReadBack = I2CRead(cOpticalGroup->getId(), cMaster, cSlaveAddress, 1);
-        // LOG(INFO) << MAGENTA << "Reading value = 0x" << std::hex << +cRegisterReadBack << std::dec << " from register 0x" << std::hex << +cRegisterAddress << std::dec << RESET;
+        LOG(INFO) << MAGENTA << "Reading value = 0x" << std::hex << +cRegisterReadBack << std::dec << " from register 0x" << std::hex << +cRegisterAddress << std::dec << RESET;
     }
     return (cRegisterValue == cRegisterReadBack);
 }
@@ -557,7 +583,7 @@ bool WorkerTester::TestFEWrite()
     return true;
 }
 
-void WorkerTester::Benchmark()
+void WorkerTester::Benchmark(int pNIterations)
 {
     for(auto cBoard : *fDetectorContainer)
     {
@@ -565,50 +591,87 @@ void WorkerTester::Benchmark()
         {
             for(auto cHybrid : *cOpticalGroup)
             {
-                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                if(cCic != nullptr)
+                // auto& cChip = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                // if(cChip != nullptr)
+                for(auto cChip : *cHybrid)
                 {
-                    ChipRegMap cChipRegMap = cCic->getRegMap();
-
-                    uint16_t cRegisterAddress = cChipRegMap["CALIB_PATTERN0"].fAddress;
+                    if(cChip->getFrontEndType() == FrontEndType::MPA) continue;
+                    ChipRegMap cChipRegMap = cChip->getRegMap();
+                    
+                    uint8_t cChipId = ((cChip->getFrontEndType() == FrontEndType::CIC) || (cChip->getFrontEndType() == FrontEndType::CIC2)) ? 0 : cChip->getId();
+                    uint16_t cRegisterAddress; //= cChipRegMap["CALIB_PATTERN0"].fAddress;
+                    if(cChip->getFrontEndType() == FrontEndType::MPA) cRegisterAddress = cChipRegMap["ThDAC0"].fAddress;
+                    else if(cChip->getFrontEndType() == FrontEndType::SSA) cRegisterAddress = cChipRegMap["Bias_THDAC"].fAddress;
                     uint16_t cInvertedRegister = ((cRegisterAddress & (0xFF << 8 * 0)) << 8) | ((cRegisterAddress & (0xFF << 8 * 1)) >> 8);
                     uint32_t cSlaveDataRead                 = cInvertedRegister;
-                    uint8_t cMaster = (cCic->getHybridId() == 0) ? 2 : 0;
-                    uint8_t cSlaveAddress = fChipAddressMap[cCic->getFrontEndType()];
+                    uint8_t cMaster = (cChip->getHybridId() == 0) ? 2 : 1;
+                    uint8_t cSlaveAddress = fChipAddressMap[cChip->getFrontEndType()] + cChipId;
+
+                    LOG(INFO) << BOLDMAGENTA << "Bencharking " << fChipTypeMap[cChip->getFrontEndType()] << "_" << +cChipId << RESET;
                     auto cStart = std::chrono::system_clock::now();
-                    for(uint8_t cValue = 0; cValue < 255; cValue++)
+                    for(int cIteration = 0; cIteration < pNIterations; cIteration++)
                     {
-                        WriteFERegister(cCic, cRegisterAddress, cValue, true);
+                        for(uint8_t cValue = 0; cValue < 255; cValue++)
+                        {
+                            // std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                            bool cSuccess = WriteFERegister(cChip, cRegisterAddress, cValue);
+                            if(!cSuccess)
+                            {
+                                LOG(INFO) << RED << "Benchmarking iteration " << +cIteration << ": read wrong value using FE functions" << RESET;
+                                // ResetCPB();
+                                exit(0);
+                            }
+                        }
                     }
                     auto cEnd = std::chrono::system_clock::now();
                     auto cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEnd - cStart);
-                    LOG(INFO) << "One FE register write with verification using FE functions takes in average " << (cDuration.count() / 255) << " us" << RESET;
+                    LOG(INFO) << "One FE register write with verification using FE functions takes in average " << (cDuration.count() / (255*pNIterations)) << " us" << RESET;
 
                     cStart = std::chrono::system_clock::now();
-                    for(uint8_t cValue = 0; cValue < 255; cValue++)
+                    for(int cIteration = 0; cIteration < pNIterations; cIteration++)
                     {
-                        //Write
-                        uint32_t cSlaveDataWrite                 = (cValue << 16) | cInvertedRegister;
-                        I2CWrite(cOpticalGroup->getId(), cMaster, cSlaveAddress, cSlaveDataWrite, 3);
-                        //Read
-                        I2CWrite(cOpticalGroup->getId(), cMaster, cSlaveAddress, cSlaveDataRead, 2);
-                        uint8_t cReadBack = I2CRead(cOpticalGroup->getId(), cMaster, cSlaveAddress, 1);
-                        if(cReadBack != cValue)
+                        for(uint8_t cValue = 0; cValue < 255; cValue++)
                         {
-                            LOG(INFO) << RED << "Benchmarking : read wrong value using I2C functions" << RESET;
+                            //Write
+                            uint32_t cSlaveDataWrite                 = (cValue << 16) | cInvertedRegister;
+                            I2CWrite(cOpticalGroup->getId(), cMaster, cSlaveAddress, cSlaveDataWrite, 3);
+                            // PrintI2CMasterRegisters(cOpticalGroup->flpGBT, cMaster);
+                            //Read
+                            I2CWrite(cOpticalGroup->getId(), cMaster, cSlaveAddress, cSlaveDataRead, 2);
+                            // PrintI2CMasterRegisters(cOpticalGroup->flpGBT, cMaster);
+                            uint8_t cReadBack = I2CRead(cOpticalGroup->getId(), cMaster, cSlaveAddress, 1);
+                            // PrintI2CMasterRegisters(cOpticalGroup->flpGBT, cMaster);
+                            if(cReadBack != cValue)
+                            {
+                                LOG(INFO) << RED << "Benchmarking iteration " << +cIteration << ": read wrong value using I2C functions" << RESET;
+                                // ResetCPB();
+                                exit(0);
+                            }
+                            LOG(DEBUG) << BLUE << "Read using I2C functions value 0x" << std::hex << +cReadBack << std::dec << " from register 0x" << std::hex << +cRegisterAddress << std::dec << RESET;
                         }
-                        LOG(DEBUG) << BLUE << "Read using I2C functions value 0x" << std::hex << +cReadBack << std::dec << " from register 0x" << std::hex << +cRegisterAddress << std::dec << RESET;
                     }
                     cEnd = std::chrono::system_clock::now();
                     cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEnd - cStart);
-                    LOG(INFO) << "One FE register write with verification using I2C functions takes in average " << (cDuration.count() / 255) << " us" << RESET;
+                    LOG(INFO) << "One FE register write with verification using I2C functions takes in average " << (cDuration.count() / (255*pNIterations)) << " us" << RESET;
                 }
             }
         }
     }
 }
 
-
-
-
+void WorkerTester::PrintI2CMasterRegisters(Ph2_HwDescription::Chip* pChip, uint8_t pMaster)
+{
+    ChipRegMap cChipRegMap = pChip->getRegMap();
+    uint8_t cLinkId = pChip->getOpticalId();
+    LOG(INFO) << "I2CM" << +pMaster << "Address = 0x" << std::hex << +ReadLpGBTRegister(cLinkId, cChipRegMap["I2CM" + std::to_string(pMaster) + "Address"].fAddress) << std::dec << RESET;
+    LOG(INFO) << "I2CM" << +pMaster << "Data0 = 0x" << std::hex << +ReadLpGBTRegister(cLinkId, cChipRegMap["I2CM" + std::to_string(pMaster) + "Data0"].fAddress) << std::dec << RESET;
+    LOG(INFO) << "I2CM" << +pMaster << "Data1 = 0x" << std::hex << +ReadLpGBTRegister(cLinkId, cChipRegMap["I2CM" + std::to_string(pMaster) + "Data1"].fAddress) << std::dec << RESET;
+    LOG(INFO) << "I2CM" << +pMaster << "Data2 = 0x" << std::hex << +ReadLpGBTRegister(cLinkId, cChipRegMap["I2CM" + std::to_string(pMaster) + "Data2"].fAddress) << std::dec << RESET;
+    LOG(INFO) << "I2CM" << +pMaster << "Data3 = 0x" << std::hex << +ReadLpGBTRegister(cLinkId, cChipRegMap["I2CM" + std::to_string(pMaster) + "Data3"].fAddress) << std::dec << RESET;
+    LOG(INFO) << "I2CM" << +pMaster << "Cmd = 0x" << std::hex << +ReadLpGBTRegister(cLinkId, cChipRegMap["I2CM" + std::to_string(pMaster) + "Cmd"].fAddress) << std::dec << RESET;
+    LOG(INFO) << "I2CM" << +pMaster << "Ctrl = 0x" << std::hex << +ReadLpGBTRegister(cLinkId, cChipRegMap["I2CM" + std::to_string(pMaster) + "Ctrl"].fAddress) << std::dec << RESET;
+    LOG(INFO) << "I2CM" << +pMaster << "Status = 0x" << std::hex << +ReadLpGBTRegister(cLinkId, cChipRegMap["I2CM" + std::to_string(pMaster) + "Status"].fAddress) << std::dec << RESET;
+    LOG(INFO) << "I2CM" << +pMaster << "TranCnt = 0x" << std::hex << +ReadLpGBTRegister(cLinkId, cChipRegMap["I2CM" + std::to_string(pMaster) + "TranCnt"].fAddress) << std::dec << RESET;
+    LOG(INFO) << "I2CM" << +pMaster << "ReadByte = 0x" << std::hex << +ReadLpGBTRegister(cLinkId, cChipRegMap["I2CM" + std::to_string(pMaster) + "ReadByte"].fAddress) << std::dec << RESET;
+}
 
