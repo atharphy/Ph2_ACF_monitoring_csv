@@ -73,10 +73,10 @@
               MONITOR_CONFIG_ADC     =    "5"
               MONITOR_CONFIG_BG      =   "12"
 
-              SER_SEL_OUT_0          =   "01"
-              SER_SEL_OUT_1          =   "01"
-              SER_SEL_OUT_2          =   "01"
-              SER_SEL_OUT_3          =   "01"
+              SER_SEL_OUT_0          = "0b01"
+              SER_SEL_OUT_1          = "0b01"
+              SER_SEL_OUT_2          = "0b01"
+              SER_SEL_OUT_3          = "0b01"
 
               ADC_OFFSET_VOLT        =   "63"
               ADC_MAXIMUM_VOLT       =  "839"
