@@ -1118,9 +1118,10 @@ void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybr
                     {
                         auto cFeId = cFeIds[cIndx];
                         uint8_t cItem = convertAnyInt(ctoken.c_str());
+                        auto cFeType = cMapOfTypes[cFeId];
                         os << GREEN << "|\n|\t|\t|\t|\t|" << +cFeId << "\t|\t|\t|\t|\t|----- " << +cItem;
-                        cMapOfMaks[cFeId].push_back(cItem + 1); // registers for masking start from 1
-                    }
+                        cMapOfMaks[cFeId].push_back(cItem + (cFeType==FrontEndType::CBC3 ? 0  : 1) ); 
+                    } 
                     cIndx++;
                 } 
             }

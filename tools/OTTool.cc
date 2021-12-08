@@ -1026,8 +1026,19 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                 {
                     auto cValueInMemory = cChip->getReg(cRegName);
                     fReadoutChipInterface->WriteChipReg(cChip, cRegName, cValueInMemory);
-                    LOG(INFO) << BOLDMAGENTA << "Configuring CBC#" << +cChip->getId() << " register " << cRegName << " to 0x" << std::hex << +cValueInMemory << std::dec << RESET;
+                    LOG(DEBUG) << BOLDMAGENTA << "Configuring CBC#" << +cChip->getId() << " register " << cRegName << " to 0x" << std::hex << +cValueInMemory << std::dec << RESET;
                 }
+                // masks 
+                for(auto cMapItem: cChip->getRegMap() )
+                {
+                    if( cMapItem.first.find("MaskChannel") != std::string::npos )
+                    {
+                        auto cValueInMemory = cChip->getReg(cMapItem.first);
+                        fReadoutChipInterface->WriteChipReg(cChip, cMapItem.first, cValueInMemory);
+                        LOG(DEBUG) << BOLDMAGENTA << "Configuring CBC#" << +cChip->getId() << " register " << cMapItem.first << " to 0x" << std::hex << +cValueInMemory << std::dec << RESET;
+                    }
+                }
+                
             }
         }
     }
