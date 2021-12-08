@@ -63,7 +63,7 @@ class RD53Interface : public ReadoutChipInterface
     void                                       InitRD53UplinkSpeed(Ph2_HwDescription::ReadoutChip* pChip);
     std::vector<std::pair<uint16_t, uint16_t>> ReadRD53Reg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName);
     void                                       WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault);
-    std::pair<std::string, uint16_t>           SplitSpecialRegisters(std::string regName, const Ph2_HwDescription::ChipRegItem& cRegItem, Ph2_HwDescription::ChipRegMap& pRD53RegMap);
+    std::pair<std::string, uint16_t>           SplitSpecialRegisters(std::string regName, Ph2_HwDescription::ChipRegItem& cRegItem, Ph2_HwDescription::ChipRegMap& pRD53RegMap);
 
     template <typename T>
     void sendCommand(Ph2_HwDescription::ReadoutChip* pChip, const T& cmd)

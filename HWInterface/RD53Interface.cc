@@ -76,7 +76,7 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
     static const char* registerBlackList[] = {
         "HighGain_LIN", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "CLK_DATA_DELAY_CMD_DELAY", "CLK_DATA_DELAY_CLK_DELAY", "CLK_DATA_DELAY_2INV_DELAY"};
 
-    for(const auto& cRegItem: pRD53RegMap)
+    for(auto& cRegItem: pRD53RegMap)
         if(cRegItem.second.fPrmptCfg == true)
         {
             auto i = 0u;
@@ -259,7 +259,7 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53Interface::ReadRD53Reg(ReadoutChi
     return regReadback;
 }
 
-std::pair<std::string, uint16_t> RD53Interface::SplitSpecialRegisters(std::string regName, const ChipRegItem& Reg, ChipRegMap& pRD53RegMap)
+std::pair<std::string, uint16_t> RD53Interface::SplitSpecialRegisters(std::string regName, ChipRegItem& Reg, ChipRegMap& pRD53RegMap)
 {
     uint16_t value = Reg.fValue;
 
@@ -341,6 +341,7 @@ std::pair<std::string, uint16_t> RD53Interface::SplitSpecialRegisters(std::strin
         regName = "SER_SEL_OUT";
     }
 
+    Reg.fPrmptCfg = true;
     return std::pair<std::string, uint16_t>(regName, value);
 }
 
