@@ -84,7 +84,7 @@ template <typename H>
 class HeaderStreamContainerBase : public DataStreamBase
 {
   public:
-    HeaderStreamContainerBase() : fBoardId(0){};
+    HeaderStreamContainerBase() {};
     ~HeaderStreamContainerBase(){};
 
     uint32_t size(void) override
@@ -92,10 +92,6 @@ class HeaderStreamContainerBase : public DataStreamBase
         fDataSize = uint64_t(this) + sizeof(H) - uint64_t(&fDataSize);
         return fDataSize;
     }
-
-    uint16_t fBoardId;
-    uint16_t fOpticalGroupId;
-
 } __attribute__((packed));
 
 // Generic Header which allows to add other members to the header
@@ -144,8 +140,11 @@ class DataStreamChannelContainer : public DataStreamBase
     DataStreamChannelContainer() : fChannelContainer(nullptr) {}
     ~DataStreamChannelContainer()
     {
-        if(fChannelContainer != nullptr) delete fChannelContainer;
-        fChannelContainer = nullptr;
+        if(fDeletePointers)
+        {
+            if(fChannelContainer != nullptr) delete fChannelContainer;
+            fChannelContainer = nullptr;
+        }
     }
 
     uint32_t size(void) override
@@ -168,6 +167,8 @@ class DataStreamChannelContainer : public DataStreamBase
 
     size_t copyFromStream(const char* bufferBegin, size_t bufferReadingPosition = 0)
     {
+        fDeletePointers = true;
+
         memcpy(&fDataSize, &bufferBegin[bufferReadingPosition], sizeof(fDataSize));
         bufferReadingPosition += sizeof(fDataSize);
 
@@ -180,13 +181,15 @@ class DataStreamChannelContainer : public DataStreamBase
 
   public:
     ChannelContainer<C>* fChannelContainer;
+    bool                 fDeletePointers {false};
 } __attribute__((packed));
 
 template <typename C, typename... I>
-class ChannelContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, I...>, DataStreamChannelContainer<C>>
+class ChannelContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, uint16_t, I...>, DataStreamChannelContainer<C>>
 {
     enum HeaderId
     {
+        BoardId,
         OpticalGroupId,
         HybridId,
         ChipId
@@ -194,7 +197,7 @@ class ChannelContainerStream : public ObjectStream<HeaderStreamContainer<uint16_
     static constexpr size_t getEnumSize() { return ChipId + 1; }
 
   public:
-    ChannelContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, I...>, DataStreamChannelContainer<C>>(creatorName) { ; }
+    ChannelContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, uint16_t, I...>, DataStreamChannelContainer<C>>(creatorName) { ; }
     ~ChannelContainerStream() { ; }
 
     void streamAndSendBoard(BoardDataContainer* board, TCPPublishServer* networkStreamer)
@@ -217,10 +220,10 @@ class ChannelContainerStream : public ObjectStream<HeaderStreamContainer<uint16_
 
     void decodeChipData(DetectorDataContainer& detectorContainer)
     {
-        detectorContainer.getObject(this->fHeaderStream.fBoardId)
+        detectorContainer.getObject(this->fHeaderStream.template getHeaderInfo<HeaderId::BoardId>())
             ->getObject(this->fHeaderStream.template getHeaderInfo<HeaderId::OpticalGroupId>())
             ->getObject(this->fHeaderStream.template getHeaderInfo<HeaderId::HybridId>())
-            ->at(this->fHeaderStream.template getHeaderInfo<HeaderId::ChipId>())
+            ->getObject(this->fHeaderStream.template getHeaderInfo<HeaderId::ChipId>())
             ->setChannelContainer(this->fDataStream.fChannelContainer);
         this->fDataStream.fChannelContainer = nullptr;
     }
@@ -243,10 +246,10 @@ class ChannelContainerStream : public ObjectStream<HeaderStreamContainer<uint16_
   protected:
     void retrieveChipData(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, ChipDataContainer* chip)
     {
-        this->fHeaderStream.fBoardId = boardId;
+        this->fHeaderStream.template setHeaderInfo<HeaderId::BoardId>(boardId);
         this->fHeaderStream.template setHeaderInfo<HeaderId::OpticalGroupId>(opticalGroupId);
         this->fHeaderStream.template setHeaderInfo<HeaderId::HybridId>(hybridId);
-        this->fHeaderStream.template setHeaderInfo<HeaderId::ChipId>(chip->getIndex());
+        this->fHeaderStream.template setHeaderInfo<HeaderId::ChipId>(chip->getId());
         this->fDataStream.fChannelContainer = chip->getChannelContainer<C>();
     }
 };
@@ -260,11 +263,14 @@ class DataStreamChipContainer : public DataStreamBase
     DataStreamChipContainer() : fChannelContainer(nullptr), fChipSummaryContainer(nullptr) { check_if_retrivable<C>(); }
     ~DataStreamChipContainer()
     {
-        if(fChannelContainer != nullptr) delete fChannelContainer;
-        fChannelContainer = nullptr;
+        if(fDeletePointers)
+        {
+            if(fChannelContainer != nullptr) delete fChannelContainer;
+            fChannelContainer = nullptr;
 
-        if(fChipSummaryContainer != nullptr) delete fChipSummaryContainer;
-        fChipSummaryContainer = nullptr;
+            if(fChipSummaryContainer != nullptr) delete fChipSummaryContainer;
+            fChipSummaryContainer = nullptr;
+        }
     }
 
     uint32_t size(void) override
@@ -301,6 +307,7 @@ class DataStreamChipContainer : public DataStreamBase
 
     size_t copyFromStream(const char* bufferBegin, size_t bufferReadingPosition = 0)
     {
+        fDeletePointers = true;
         size_t originalBufferReadingPosition = bufferReadingPosition;
         memcpy(&fDataSize, &bufferBegin[bufferReadingPosition], sizeof(fDataSize));
         bufferReadingPosition += sizeof(fDataSize);
@@ -327,14 +334,16 @@ class DataStreamChipContainer : public DataStreamBase
     ContainerCarried     fContainerCarried;
     ChannelContainer<T>* fChannelContainer;
     Summary<C, T>*       fChipSummaryContainer;
+    bool                 fDeletePointers {false};
 
 } __attribute__((packed));
 
 template <typename T, typename C, typename... I>
-class ChipContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, I...>, DataStreamChipContainer<T, C>>
+class ChipContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, uint16_t, I...>, DataStreamChipContainer<T, C>>
 {
     enum HeaderId
     {
+        BoardId,
         OpticalGroupId,
         HybridId,
         ChipId
@@ -342,7 +351,7 @@ class ChipContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, 
     static constexpr size_t getEnumSize() { return ChipId + 1; }
 
   public:
-    ChipContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, I...>, DataStreamChipContainer<T, C>>(creatorName) { ; }
+    ChipContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, uint16_t, I...>, DataStreamChipContainer<T, C>>(creatorName) { ; }
     ~ChipContainerStream() { ; }
 
     void streamAndSendBoard(BoardDataContainer* board, TCPPublishServer* networkStreamer)
@@ -364,7 +373,7 @@ class ChipContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, 
 
     void decodeChipData(DetectorDataContainer& detectorContainer)
     {
-        uint16_t boardId        = this->fHeaderStream.fBoardId;
+        uint16_t boardId        = this->fHeaderStream.template getHeaderInfo<HeaderId::BoardId>();
         uint16_t opticalGroupId = this->fHeaderStream.template getHeaderInfo<HeaderId::OpticalGroupId>();
         uint16_t hybridId       = this->fHeaderStream.template getHeaderInfo<HeaderId::HybridId>();
         uint16_t chipId         = this->fHeaderStream.template getHeaderInfo<HeaderId::ChipId>();
@@ -393,7 +402,7 @@ class ChipContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, 
   protected:
     void retrieveChipData(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, ChipDataContainer* chip)
     {
-        this->fHeaderStream.fBoardId = boardId;
+        this->fHeaderStream.template setHeaderInfo<HeaderId::BoardId>(boardId);
         this->fHeaderStream.template setHeaderInfo<HeaderId::OpticalGroupId>(opticalGroupId);
         this->fHeaderStream.template setHeaderInfo<HeaderId::HybridId>(hybridId);
         this->fHeaderStream.template setHeaderInfo<HeaderId::ChipId>(chip->getId());
@@ -423,30 +432,33 @@ class DataStreamHybridContainer : public DataStreamBase
     }
     ~DataStreamHybridContainer()
     {
-        for(auto element: fChannelContainerVector)
+        if(fDeletePointers)
         {
-            if(element != nullptr)
+            for(auto element: fChannelContainerVector)
             {
-                delete element;
-                element = nullptr;
+                if(element != nullptr)
+                {
+                    delete element;
+                    element = nullptr;
+                }
             }
-        }
-        fChannelContainerVector.clear();
+            fChannelContainerVector.clear();
 
-        for(auto element: fChipSummaryContainerVector)
-        {
-            if(element != nullptr)
+            for(auto element: fChipSummaryContainerVector)
             {
-                delete element;
-                element = nullptr;
+                if(element != nullptr)
+                {
+                    delete element;
+                    element = nullptr;
+                }
             }
-        }
-        fChipSummaryContainerVector.clear();
+            fChipSummaryContainerVector.clear();
 
-        if(fHybridSummaryContainer == nullptr)
-        {
-            delete fHybridSummaryContainer;
-            fHybridSummaryContainer = nullptr;
+            if(fHybridSummaryContainer != nullptr)
+            {
+                delete fHybridSummaryContainer;
+                fHybridSummaryContainer = nullptr;
+            }
         }
     }
 
@@ -507,6 +519,8 @@ class DataStreamHybridContainer : public DataStreamBase
 
     size_t copyFromStream(const char* bufferBegin, size_t bufferReadingPosition = 0)
     {
+        fDeletePointers = true;
+
         size_t originalBufferReadingPosition = bufferReadingPosition;
         memcpy(&fDataSize, &bufferBegin[bufferReadingPosition], sizeof(fDataSize));
         bufferReadingPosition += sizeof(fDataSize);
@@ -578,20 +592,22 @@ class DataStreamHybridContainer : public DataStreamBase
     std::vector<ChannelContainer<T>*> fChannelContainerVector;
     std::vector<Summary<C, T>*>       fChipSummaryContainerVector;
     Summary<M, C>*                    fHybridSummaryContainer;
+    bool                              fDeletePointers {false};
 };
 
 template <typename T, typename C, typename M, typename... I>
-class HybridContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamHybridContainer<T, C, M>>
+class HybridContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, I...>, DataStreamHybridContainer<T, C, M>>
 {
     enum HeaderId
     {
+        BoardId,
         OpticalGroupId,
         HybridId
     };
     static constexpr size_t getEnumSize() { return HybridId + 1; }
 
   public:
-    HybridContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamHybridContainer<T, C, M>>(creatorName) { ; }
+    HybridContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, I...>, DataStreamHybridContainer<T, C, M>>(creatorName) { ; }
     ~HybridContainerStream() { ; }
 
     void streamAndSendBoard(BoardDataContainer* board, TCPPublishServer* networkStreamer)
@@ -610,7 +626,7 @@ class HybridContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t
 
     void decodeHybridData(DetectorDataContainer& detectorContainer)
     {
-        uint16_t boardId        = this->fHeaderStream.fBoardId;
+        uint16_t boardId        = this->fHeaderStream.template getHeaderInfo<HeaderId::BoardId>();
         uint16_t opticalGroupId = this->fHeaderStream.template getHeaderInfo<HeaderId::OpticalGroupId>();
         uint16_t hybridId       = this->fHeaderStream.template getHeaderInfo<HeaderId::HybridId>();
 
@@ -621,13 +637,13 @@ class HybridContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t
         {
             if(this->fDataStream.fContainerCarried.isChipContainerCarried())
             {
-                chip->setSummaryContainer(this->fDataStream.fChipSummaryContainerVector.at(chip->getIndex()));
-                this->fDataStream.fChipSummaryContainerVector.at(chip->getIndex()) = nullptr;
+                chip->setSummaryContainer(this->fDataStream.fChipSummaryContainerVector.at(chip->getId()));
+                this->fDataStream.fChipSummaryContainerVector.at(chip->getId()) = nullptr;
             }
             if(this->fDataStream.fContainerCarried.isChannelContainerCarried())
             {
-                chip->setChannelContainer(this->fDataStream.fChannelContainerVector.at(chip->getIndex()));
-                this->fDataStream.fChannelContainerVector.at(chip->getIndex()) = nullptr;
+                chip->setChannelContainer(this->fDataStream.fChannelContainerVector.at(chip->getId()));
+                this->fDataStream.fChannelContainerVector.at(chip->getId()) = nullptr;
             }
         }
     }
@@ -650,7 +666,7 @@ class HybridContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t
   protected:
     void retrieveHybridData(uint16_t boardId, uint16_t opticalGroupId, HybridDataContainer* hybrid)
     {
-        this->fHeaderStream.fBoardId = boardId;
+        this->fHeaderStream.template setHeaderInfo<HeaderId::BoardId>(boardId);
         this->fHeaderStream.template setHeaderInfo<HeaderId::OpticalGroupId>(opticalGroupId);
         this->fHeaderStream.template setHeaderInfo<HeaderId::HybridId>(hybrid->getId());
         this->fDataStream.fNumberOfChips = hybrid->size();
@@ -696,20 +712,23 @@ class DataStreamOpticalGroupContainer : public DataStreamBase
     }
     ~DataStreamOpticalGroupContainer()
     {
-        for(auto element: fDataSteamHybridContainerVector)
+        if(fDeletePointers)
         {
-            if(element != nullptr)
+            for(auto element: fDataSteamHybridContainerVector)
             {
-                delete element;
-                element = nullptr;
+                if(element != nullptr)
+                {
+                    delete element;
+                    element = nullptr;
+                }
             }
-        }
-        fDataSteamHybridContainerVector.clear();
+            fDataSteamHybridContainerVector.clear();
 
-        if(fOpticalGroupSummaryContainer == nullptr)
-        {
-            delete fOpticalGroupSummaryContainer;
-            fOpticalGroupSummaryContainer = nullptr;
+            if(fOpticalGroupSummaryContainer == nullptr)
+            {
+                delete fOpticalGroupSummaryContainer;
+                fOpticalGroupSummaryContainer = nullptr;
+            }
         }
     }
 
@@ -745,6 +764,8 @@ class DataStreamOpticalGroupContainer : public DataStreamBase
 
     size_t copyFromStream(const char* bufferBegin, size_t bufferReadingPosition = 0)
     {
+        fDeletePointers = true;
+
         memcpy(&fDataSize, &bufferBegin[bufferReadingPosition], sizeof(fDataSize));
         bufferReadingPosition += sizeof(fDataSize);
         std::cout << __PRETTY_FUNCTION__ << "fDataSize = " << +fDataSize << std::endl;
@@ -778,12 +799,106 @@ class DataStreamOpticalGroupContainer : public DataStreamBase
     std::vector<DataStreamHybridContainer<T, C, M>*> fDataSteamHybridContainerVector {};        
     uint8_t                                          fNumberOfSubContainers {0};
     Summary<O, M>*                                   fOpticalGroupSummaryContainer {nullptr};
+    bool                                             fDeletePointers {false};
 };
 
 
+// template <typename T, typename C, typename M, typename O, typename... I>
+// class OpticalGroupContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamOpticalGroupContainer<T, C, M, O>>
+// {
+//     enum HeaderId
+//     {
+//         BoardId,
+//         OpticalGroupId
+//     };
+//     static constexpr size_t getEnumSize() { return HybridId + 1; }
 
+//   public:
+//     OpticalGroupContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamOpticalGroupContainer<T, C, M>>(creatorName) { ; }
+//     ~OpticalGroupContainerStream() { ; }
 
+//     void streamAndSendBoard(BoardDataContainer* board, TCPPublishServer* networkStreamer)
+//     {
+//         for(auto opticalGroup: *board)
+//         {
+//             for(auto hybrid: *opticalGroup)
+//             {
+//                 retrieveHybridData(board->getId(), opticalGroup->getId(), hybrid);
+//                 const std::vector<char>& stream = this->encodeStream();
+//                 this->incrementStreamPacketNumber();
+//                 networkStreamer->broadcast(stream);
+//             }
+//         }
+//     }
 
+//     void decodeHybridData(DetectorDataContainer& detectorContainer)
+//     {
+//         uint16_t boardId        = this->fHeaderStream.template getHeaderInfo<HeaderId::BoardId>();
+//         uint16_t opticalGroupId = this->fHeaderStream.template getHeaderInfo<HeaderId::OpticalGroupId>();
+//         uint16_t hybridId       = this->fHeaderStream.template getHeaderInfo<HeaderId::HybridId>();
+
+//         detectorContainer.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->setSummaryContainer(this->fDataStream.fHybridSummaryContainer);
+//         this->fDataStream.fHybridSummaryContainer = nullptr;
+
+//         for(auto chip: *detectorContainer.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId))
+//         {
+//             if(this->fDataStream.fContainerCarried.isChipContainerCarried())
+//             {
+//                 chip->setSummaryContainer(this->fDataStream.fChipSummaryContainerVector.getObject(chip->getId()));
+//                 this->fDataStream.fChipSummaryContainerVector.getObject(chip->getId()) = nullptr;
+//             }
+//             if(this->fDataStream.fContainerCarried.isChannelContainerCarried())
+//             {
+//                 chip->setChannelContainer(this->fDataStream.fChannelContainerVector.getObject(chip->getId()));
+//                 this->fDataStream.fChannelContainerVector.getObject(chip->getId()) = nullptr;
+//             }
+//         }
+//     }
+
+//     template <std::size_t N>
+//     using TupleElementType = typename std::tuple_element<N, std::tuple<I...>>::type;
+
+//     template <std::size_t N = 0>
+//     void setHeaderElement(TupleElementType<N> theInfo)
+//     {
+//         this->fHeaderStream.template setHeaderInfo<N + getEnumSize()>(theInfo);
+//     }
+
+//     template <std::size_t N = 0>
+//     TupleElementType<N> getHeaderElement() const
+//     {
+//         return this->fHeaderStream.template getHeaderInfo<N + getEnumSize()>();
+//     }
+
+//   protected:
+//     void retrieveHybridData(uint16_t boardId, uint16_t opticalGroupId, HybridDataContainer* hybrid)
+//     {
+//         this->fHeaderStream.template setHeaderInfo<HeaderId::BoardId>(boardId);
+//         this->fHeaderStream.template setHeaderInfo<HeaderId::OpticalGroupId>(opticalGroupId);
+//         this->fHeaderStream.template setHeaderInfo<HeaderId::HybridId>(hybrid->getId());
+//         this->fDataStream.fNumberOfChips = hybrid->size();
+//         this->fDataStream.fChipSummaryContainerVector.clear();
+//         this->fDataStream.fChannelContainerVector.clear();
+//         if(hybrid->getSummaryContainer<M, C>() != nullptr)
+//         {
+//             this->fDataStream.fContainerCarried.carryHybridContainer();
+//             this->fDataStream.fHybridSummaryContainer = hybrid->getSummaryContainer<M, C>();
+//         }
+//         for(auto chip: *hybrid)
+//         {
+//             if(chip->getSummaryContainer<C, T>() != nullptr)
+//             {
+//                 this->fDataStream.fContainerCarried.carryChipContainer();
+//                 this->fDataStream.fChipSummaryContainerVector.emplace_back(chip->getSummaryContainer<C, T>());
+//             }
+//             if(chip->getChannelContainer<T>() != nullptr)
+//             {
+//                 this->fDataStream.fContainerCarried.carryChannelContainer();
+//                 this->fDataStream.fChannelContainerVector.emplace_back(chip->getChannelContainer<T>());
+//             }
+//         }
+//     }
+// };
 
 
 
@@ -1034,13 +1149,13 @@ class DataStreamOpticalGroupContainer : public DataStreamBase
 //         {
 //             if(this->fDataStream.fContainerCarried.isChipContainerCarried())
 //             {
-//                 chip->setSummaryContainer(this->fDataStream.fChipSummaryContainerVector.at(chip->getIndex()));
-//                 this->fDataStream.fChipSummaryContainerVector.at(chip->getIndex()) = nullptr;
+//                 chip->setSummaryContainer(this->fDataStream.fChipSummaryContainerVector.getObject(chip->getId()));
+//                 this->fDataStream.fChipSummaryContainerVector.getObject(chip->getId()) = nullptr;
 //             }
 //             if(this->fDataStream.fContainerCarried.isChannelContainerCarried())
 //             {
-//                 chip->setChannelContainer(this->fDataStream.fChannelContainerVector.at(chip->getIndex()));
-//                 this->fDataStream.fChannelContainerVector.at(chip->getIndex()) = nullptr;
+//                 chip->setChannelContainer(this->fDataStream.fChannelContainerVector.getObject(chip->getId()));
+//                 this->fDataStream.fChannelContainerVector.getObject(chip->getId()) = nullptr;
 //             }
 //         }
 //     }

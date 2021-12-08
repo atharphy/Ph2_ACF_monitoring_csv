@@ -170,7 +170,11 @@ class Summary : public SummaryBase
   public:
     Summary() { ; }
     Summary(const S& theSummary) { theSummary_ = theSummary; }
-    Summary(S&& theSummary) { theSummary_ = std::move(theSummary); }
+    Summary(S&& theSummary)
+    { 
+        theSummary_ = std::move(theSummary); 
+        theSummary.theSummary_ = nullptr;
+    }
     Summary& operator=(S&& theSummary) { theSummary_ = std::move(theSummary); }
     Summary(const Summary<S, C>& summary) { theSummary_ = summary.theSummary_; }
 

@@ -347,11 +347,16 @@ void PedestalEqualization::FindVplus()
 #ifdef __USE_ROOT__
     fDQMHistogramPedestalEqualization.fillVplusPlots(theVcthContainer);
 #else
+std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
     auto theVCthStream = prepareHybridContainerStreamer<EmptyContainer, uint16_t, EmptyContainer>();
+std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
     for(auto board: theVcthContainer)
     {
+std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
         if(fStreamerEnabled) theVCthStream.streamAndSendBoard(board, fDQMStreamer);
+std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
     }
+std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
 #endif
 
     fTargetVcth = uint16_t(cMeanValue / nCbc);
@@ -362,6 +367,7 @@ void PedestalEqualization::FindVplus()
     }
     this->SetTestAllChannels(originalAllChannelFlag);
     setNormalization(cNormalizationOrig);
+std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
 }
 
 void PedestalEqualization::FindOffsets()
