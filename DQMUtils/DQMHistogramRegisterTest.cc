@@ -64,6 +64,12 @@ void DQMHistogramRegisterTest::book(TFile* theOutputFile, DetectorContainer& the
     HistContainer<TH2F> hWrValsMismatchesPg1("MismatchesWr", ";Expected Value; Actual Value", 255, 0, 255, 255 , 0 , 255 );
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fWrValsMismatchesPg1, hWrValsMismatchesPg1);
 
+    HistContainer<TH1F> hWrCount("WrCount", ";; Count", 3, 0, 3 );
+    RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fWrCnts, hWrCount);
+
+    HistContainer<TH1F> hRdCount("RdCount", ";; Count", 3, 0, 3 );
+    RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fRdCnts, hRdCount);
+
 }
 
 //========================================================================================================================
@@ -160,6 +166,54 @@ void DQMHistogramRegisterTest::process()
                     cHistogram->GetXaxis()->SetTitle("Number of Register Reads");
                     cHistogram->GetYaxis()->SetTitle("Register Address");
                     cHistogram->GetZaxis()->SetTitle("Mismatch");
+                    cHistogram->DrawCopy();
+                }
+            }
+        }
+    }
+    for(auto board: fWrCnts)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                for(auto chip: *hybrid)
+                {
+                    std::string cCanvasName  = "WriteCount_" + std::to_string(chip->getId()) + std::to_string(hybrid->getId());
+                    std::string cCanvasTitle = "Transaction Count [Writes] " + std::to_string(chip->getId()) + std::to_string(hybrid->getId());
+
+                    TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
+                    cCanvas->cd();
+                    auto& cHistogram = chip->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    cHistogram->GetXaxis()->SetTitle("");
+                    cHistogram->GetYaxis()->SetTitle("Count");
+                    cHistogram->GetXaxis()->SetBinLabel( cHistogram->FindBin(0.), "Write");
+                    cHistogram->GetXaxis()->SetBinLabel( cHistogram->FindBin(1.), "Read");
+                    cHistogram->GetXaxis()->SetBinLabel( cHistogram->FindBin(2.), "PgToggle");
+                    cHistogram->DrawCopy();
+                }
+            }
+        }
+    }
+    for(auto board: fRdCnts)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                for(auto chip: *hybrid)
+                {
+                    std::string cCanvasName  = "ReadCount_" + std::to_string(chip->getId()) + std::to_string(hybrid->getId());
+                    std::string cCanvasTitle = "Transaction Count [Reads] " + std::to_string(chip->getId()) + std::to_string(hybrid->getId());
+
+                    TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
+                    cCanvas->cd();
+                    auto& cHistogram = chip->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    cHistogram->GetXaxis()->SetTitle("");
+                    cHistogram->GetYaxis()->SetTitle("Count");
+                    cHistogram->GetXaxis()->SetBinLabel( cHistogram->FindBin(0.), "Write");
+                    cHistogram->GetXaxis()->SetBinLabel( cHistogram->FindBin(1.), "Read");
+                    cHistogram->GetXaxis()->SetBinLabel( cHistogram->FindBin(2.), "PgToggle");
                     cHistogram->DrawCopy();
                 }
             }
@@ -341,6 +395,80 @@ void DQMHistogramRegisterTest::fillRegisterReadMismatches(DetectorDataContainer&
                         cChipHistValues->SetBinContent(cBin, cBinContent + 1);
                         cChipHistValues->SetBinError(cBin, std::sqrt(cBinContent + 1));
                     }
+                }
+            }
+        }
+    }
+}
+void DQMHistogramRegisterTest::fillRegisterReadCounts(DetectorDataContainer& pReads, DetectorDataContainer& pToggles  )
+{
+    for(auto board: pReads)
+    {
+        auto& cBrdHist = fRdCnts.at(board->getIndex());
+        auto& cPageToggles = pToggles.at(board->getIndex());
+        for(auto opticalGroup: *board)
+        {
+            auto& cOGHist = cBrdHist->at(opticalGroup->getIndex());
+            auto& cPageTogglesOG = cPageToggles->at(opticalGroup->getIndex());
+            for(auto hybrid: *opticalGroup)
+            {
+                auto& cHybrdHist = cOGHist->at(hybrid->getIndex());
+                auto& cPageTogglesHybrd = cPageTogglesOG->at(hybrid->getIndex());
+                for(auto chip: *hybrid)
+                {
+                    auto& cReads = chip->getSummary<size_t>();
+                    auto& cPageTogglesChip = cPageTogglesHybrd->at(chip->getIndex())->getSummary<size_t>();
+                    TH1F* cChipHist = cHybrdHist->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    LOG (INFO) << BOLDYELLOW << "Chip#" << +chip->getId() << " " << cReads << " reads; " << cPageTogglesChip << " page toggles " << RESET;
+                    // number of read transactions
+                    auto cBin = cChipHist->FindBin(1.);
+                    auto cBinContent = cChipHist->GetBinContent(cBin);
+                    cChipHist->SetBinContent(cBin, cBinContent + cReads );
+                    // number of toggles
+                    cBin = cChipHist->FindBin(2.);
+                    cBinContent = cChipHist->GetBinContent(cBin);
+                    cChipHist->SetBinContent(cBin, cBinContent + cPageTogglesChip );
+                }
+            }
+        }
+    }
+}
+void DQMHistogramRegisterTest::fillRegisterWriteCounts(DetectorDataContainer& pWrites, DetectorDataContainer& pReads, DetectorDataContainer& pToggles  )
+{
+    for(auto board: pWrites)
+    {
+        auto& cBrdHist = fWrCnts.at(board->getIndex());
+        auto& cPageToggles = pToggles.at(board->getIndex());
+        auto& cReads = pReads.at(board->getIndex());
+        for(auto opticalGroup: *board)
+        {
+            auto& cOGHist = cBrdHist->at(opticalGroup->getIndex());
+            auto& cPageTogglesOG = cPageToggles->at(opticalGroup->getIndex());
+            auto& cReadsOG = cReads->at(opticalGroup->getIndex());
+            for(auto hybrid: *opticalGroup)
+            {
+                auto& cHybrdHist = cOGHist->at(hybrid->getIndex());
+                auto& cPageTogglesHybrd = cPageTogglesOG->at(hybrid->getIndex());
+                auto& cReadsHybrd = cReadsOG->at(hybrid->getIndex());
+                for(auto chip: *hybrid)
+                {
+                    auto& cWrites = chip->getSummary<size_t>();
+                    auto& cPageTogglesChip = cPageTogglesHybrd->at(chip->getIndex())->getSummary<size_t>();
+                    auto& cReadsChip = cReadsHybrd->at(chip->getIndex())->getSummary<size_t>();
+                    TH1F* cChipHist = cHybrdHist->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    LOG (INFO) << BOLDYELLOW << "Chip#" << +chip->getId() << " " <<  cWrites << " writes; " << cReadsChip << " reads and " << cPageTogglesChip << " page toggles " << RESET;
+                    // number of write transactions
+                    auto cBin = cChipHist->FindBin(0.);
+                    auto cBinContent = cChipHist->GetBinContent(cBin);
+                    cChipHist->SetBinContent(cBin, cBinContent + cWrites );
+                    // number of read transactions 
+                    cBin = cChipHist->FindBin(1.);
+                    cBinContent = cChipHist->GetBinContent(cBin);
+                    cChipHist->SetBinContent(cBin, cBinContent + cReadsChip );
+                    // number of toggles
+                    cBin = cChipHist->FindBin(2.);
+                    cBinContent = cChipHist->GetBinContent(cBin);
+                    cChipHist->SetBinContent(cBin, cBinContent + cPageTogglesChip );
                 }
             }
         }

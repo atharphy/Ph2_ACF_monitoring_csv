@@ -56,6 +56,8 @@ class DQMHistogramRegisterTest : public DQMHistogramBase
     // Histogram Fillers
     void fillRegisterWriteMismatches(DetectorDataContainer& pWrites, DetectorDataContainer& pToggles, DetectorDataContainer& pVals );
     void fillRegisterReadMismatches(DetectorDataContainer& pReads, DetectorDataContainer& pToggles, DetectorDataContainer& pVals );
+    void fillRegisterReadCounts(DetectorDataContainer& pReads, DetectorDataContainer& pToggles );
+    void fillRegisterWriteCounts(DetectorDataContainer& pWrites, DetectorDataContainer& pReads, DetectorDataContainer& pToggles );
 
   private:
     void parseSettings(const Ph2_System::SettingsMap& pSettingsMap);
@@ -64,6 +66,8 @@ class DQMHistogramRegisterTest : public DQMHistogramBase
     DetectorDataContainer fWriteMismatchesPg0, fWriteMismatchesPg1;
     DetectorDataContainer fReadMismatchesPg0, fReadMismatchesPg1; 
     DetectorDataContainer fRdValsMismatchesPg1, fWrValsMismatchesPg1;
+    DetectorDataContainer fRdCnts, fWrCnts;
+
 
     DetectorDataContainer fRdMismatchesPg1, fWrMismatchesPg1; 
 };

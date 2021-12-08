@@ -1021,7 +1021,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
             {
                 if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
-                std::vector<std::string> cRegNames{"HIP&TestMode", "Pipe&StubInpSel&Ptwidth", "CoincWind&Offset34", "CoincWind&Offset12", "LayerSwap&CluWidth", "40MhzClk&Or254"};
+                std::vector<std::string> cRegNames{"MiscTestPulseCtrl&AnalogMux", "HIP&TestMode", "Pipe&StubInpSel&Ptwidth", "CoincWind&Offset34", "CoincWind&Offset12", "LayerSwap&CluWidth", "40MhzClk&Or254"};
                 for(auto cRegName: cRegNames)
                 {
                     auto cValueInMemory = cChip->getReg(cRegName);

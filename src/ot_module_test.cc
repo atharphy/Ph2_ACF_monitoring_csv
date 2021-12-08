@@ -139,6 +139,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("memCheck", "Check memories of the following CBCs", ArgvParser::NoOptionAttribute);
     cmd.defineOption("completeDataCheck", "Complete data check for the following CBCs", ArgvParser::OptionRequiresValue);
     
+    cmd.defineOption("pageToTest","Page to test", ArgvParser::OptionRequiresValue);
     cmd.defineOption("registerTestWrite", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
     cmd.defineOption("registerTestWriteAndToggle", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
     cmd.defineOption("registerTestRead", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
@@ -387,7 +388,8 @@ int main(int argc, char* argv[])
         // 0 - no sorting other than page; 1 - page then increasing addresss ; 2 - page then decreasing address 
         uint8_t         cSortOder = (cmd.foundOption("sortOrder")) ? convertAnyInt(cmd.optionValue("sortOrder").c_str()) : 0;
         uint8_t         cBitToFlip = (cmd.foundOption("bitToFlip")) ? convertAnyInt(cmd.optionValue("bitToFlip").c_str()) : 0;
-        uint32_t         cAttempts = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10; 
+        uint32_t        cAttempts = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10; 
+        uint8_t         cPage     = (cmd.foundOption("pageToTest")) ? convertAnyInt(cmd.optionValue("pageToTest").c_str()) : 1;
         
         RegisterTester cRegTester;
         cRegTester.Inherit(&cTool);
@@ -396,7 +398,7 @@ int main(int argc, char* argv[])
         cRegTester.Initialise();
         for( size_t cAttempt=0; cAttempt < cAttempts; cAttempt++){ 
             LOG (INFO) << BOLDBLUE << "Read - test#" << +cAttempt << RESET;
-            cRegTester.CheckWriteRegisters(1, cNregistersToCheck);
+            cRegTester.CheckWriteRegisters(cPage, cNregistersToCheck);
         }
         cRegTester.writeObjects();
     }
@@ -408,7 +410,8 @@ int main(int argc, char* argv[])
         uint8_t         cSortOder = (cmd.foundOption("sortOrder")) ? convertAnyInt(cmd.optionValue("sortOrder").c_str()) : 0;
         uint8_t         cBitToFlip = (cmd.foundOption("bitToFlip")) ? convertAnyInt(cmd.optionValue("bitToFlip").c_str()) : 0;
         uint8_t         cReturnToDefPage = (cmd.foundOption("returnToDefPage")) ? convertAnyInt(cmd.optionValue("returnToDefPage").c_str()) : 1;
-        uint32_t         cAttempts = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10; 
+        uint32_t        cAttempts = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10; 
+        uint8_t         cPage     = (cmd.foundOption("pageToTest")) ? convertAnyInt(cmd.optionValue("pageToTest").c_str()) : 1;
         
         LOG (INFO) << BOLDBLUE << "Will run register test " << cAttempts << " times..." << RESET;
         RegisterTester cRegTester;
@@ -419,7 +422,7 @@ int main(int argc, char* argv[])
         cRegTester.Initialise();
         for( size_t cAttempt=0; cAttempt < cAttempts; cAttempt++){ 
             LOG (INFO) << BOLDBLUE << "Page switch with read - test#" << +cAttempt << RESET;   
-            cRegTester.CheckPageSwitchWrite(1,cNregistersToCheck);
+            cRegTester.CheckPageSwitchWrite(cPage,cNregistersToCheck);
         }
         cRegTester.writeObjects();
     }
@@ -430,6 +433,7 @@ int main(int argc, char* argv[])
         // 0 - no sorting other than page; 1 - page then increasing addresss ; 2 - page then decreasing address 
         uint8_t         cSortOder = (cmd.foundOption("sortOrder")) ? convertAnyInt(cmd.optionValue("sortOrder").c_str()) : 0;
         uint32_t         cAttempts = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10; 
+        uint8_t         cPage     = (cmd.foundOption("pageToTest")) ? convertAnyInt(cmd.optionValue("pageToTest").c_str()) : 1;
         
         RegisterTester cRegTester;
         cRegTester.Inherit(&cTool);
@@ -437,7 +441,7 @@ int main(int argc, char* argv[])
         cRegTester.Initialise();
         for( size_t cAttempt=0; cAttempt < cAttempts; cAttempt++){ 
             LOG (INFO) << BOLDBLUE << "Read - test#" << +cAttempt << RESET;
-            cRegTester.CheckReadRegisters(1, cNregistersToCheck);
+            cRegTester.CheckReadRegisters(cPage, cNregistersToCheck);
         }
         cRegTester.writeObjects();
     }
@@ -447,7 +451,8 @@ int main(int argc, char* argv[])
         // 0 - no sorting other than page; 1 - page then increasing addresss ; 2 - page then decreasing address 
         uint8_t         cSortOder = (cmd.foundOption("sortOrder")) ? convertAnyInt(cmd.optionValue("sortOrder").c_str()) : 0;
         uint8_t         cReturnToDefPage = (cmd.foundOption("returnToDefPage")) ? convertAnyInt(cmd.optionValue("returnToDefPage").c_str()) : 1;
-        uint32_t         cAttempts = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10; 
+        uint32_t        cAttempts = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10; 
+        uint8_t         cPage     = (cmd.foundOption("pageToTest")) ? convertAnyInt(cmd.optionValue("pageToTest").c_str()) : 1;
         
         RegisterTester cRegTester;
         cRegTester.Inherit(&cTool);
@@ -456,7 +461,7 @@ int main(int argc, char* argv[])
         cRegTester.Initialise();
         for( size_t cAttempt=0; cAttempt < cAttempts; cAttempt++){ 
             LOG (INFO) << BOLDBLUE << "Page switch with read - test#" << +cAttempt << RESET;   
-            cRegTester.CheckPageSwitchRead(1,cNregistersToCheck);
+            cRegTester.CheckPageSwitchRead(cPage,cNregistersToCheck);
         }
         cRegTester.writeObjects();
     }

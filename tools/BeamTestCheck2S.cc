@@ -140,7 +140,8 @@ void BeamTestCheck2S::CheckWithTP(uint8_t pContinousReadout)
     for(auto cBoard: *fDetectorContainer)
     {
         // prepare injection
-        PrepareForTP(cBoard);
+        PrepareForExternalTP(cBoard);
+        //PrepareForTP(cBoard);
     }
     if(fScanL1Latency) ScanL1Latency(pContinousReadout);
     if(fScanStubLatency) ScanStubLatency(pContinousReadout);
@@ -1785,6 +1786,65 @@ void BeamTestCheck2S::ScanStubLatency(uint8_t pContinousReadout)
         LOG(INFO) << BOLDYELLOW << "Setting common_stubdata_delay on BeBoard#" << +cBoard->getId() << " to " << cLat << RESET;
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cLat);
     }
+}
+void BeamTestCheck2S::PrepareForExternalTP(BeBoard* pBoard)
+{
+    // configure trigger
+    uint8_t                  cTriggerSource   = 13;
+    uint32_t                 cDelayAfterTP    = 100;
+    std::vector<std::string> cFcmdRegs{"trigger_source", "test_pulse.delay_after_test_pulse", "triggers_to_accept"};
+    std::vector<uint32_t>    cFcmdRegVals{cTriggerSource, cDelayAfterTP, 0};
+    std::vector<uint32_t>    cFcmdRegOrigVals(cFcmdRegs.size(), 0);
+    std::vector<std::pair<std::string, uint32_t>> cRegVec;
+    cRegVec.clear();
+    for(size_t cIndx = 0; cIndx < cFcmdRegs.size(); cIndx++)
+    {
+        std::string cRegName    = "fc7_daq_cnfg.fast_command_block." + cFcmdRegs[cIndx];
+        cFcmdRegOrigVals[cIndx] = fBeBoardInterface->ReadBoardReg(pBoard, cRegName);
+        cRegVec.push_back({cRegName, cFcmdRegVals[cIndx]});
+    }
+    cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 0);
+
+    size_t cNgroups                     = 0;
+    bool   cMaskChannelsFromOtherGroups = false;
+    bool   cInject                      = true;
+    bool   cWith2S                      = false;
+    // inject in one of each CBCs
+    for(auto cGroup: *fChannelGroupHandler)
+    {
+        if(cNgroups > 0) continue;
+        for(auto cOpticalGroup: *pBoard)
+        {
+            if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) continue;
+            cWith2S = true;
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid) { fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip, cGroup, cMaskChannelsFromOtherGroups, cInject); }
+            }
+        }
+        cNgroups++;
+    }
+
+    // set TP amplitude and delay
+    LOG(INFO) << BOLDYELLOW << "Enabling TP with : " << +fTPamplitude << " injected charge "
+              << " delay of " << +fTPdelay << " ns " << RESET;
+
+    // stop triggers
+    fBeBoardInterface->Stop(pBoard);
+    // send a ReSync
+    fBeBoardInterface->ChipReSync(pBoard);
+
+    UpdateFromRegMap(pBoard);
+    if(cWith2S)
+    {
+        // setSameDacBeBoard(pBoard, "InjectedCharge", fTPamplitude);
+        setSameDacBeBoard(pBoard, "TestPulseDelay", fTPdelay);
+    }
+
+    // inject PS
+    if(!cWith2S) InjectPattern(pBoard, fInjections, -1);
 }
 void BeamTestCheck2S::PrepareForTP(BeBoard* pBoard)
 {

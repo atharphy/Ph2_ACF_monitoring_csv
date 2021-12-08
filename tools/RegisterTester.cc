@@ -77,7 +77,9 @@ void RegisterTester::SendHardReset(const OpticalGroup* pOpticalGroup, const Chip
     auto  cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     auto& clpGBT     = pOpticalGroup->flpGBT;
     bool  cWithLpGBT = (clpGBT != nullptr);
-    if(!cWithLpGBT) { fBeBoardInterface->ChipReset((*cBoardIter)); }
+    if(!cWithLpGBT) { 
+        fBeBoardInterface->ChipReset((*cBoardIter)); 
+    }
     else
     {
         if(pFrontEndChip->getFrontEndType() == FrontEndType::CBC3)
@@ -157,7 +159,7 @@ void RegisterTester::CheckReadRegisters( uint8_t pPageToSelect, uint8_t pNRegist
                                     LOG (DEBUG) << BOLDYELLOW << "Toggle page from " << +cCurrentPage << " to " << +cNewPage << RESET;
                                     cNPageToggles++;
                                 }
-                                LOG (DEBUG) << BOLDBLUE << "After reading 0x" << std::hex << +cValue << std::dec << " from register " << cItem.first 
+                                LOG (INFO) << BOLDBLUE << "After reading 0x" << std::hex << +cValue << std::dec << " from register " << cItem.first 
                                     << " ... have toggled page " << +cNPageToggles << " time(s) and read from " 
                                     << +cNReads << " registers so far.... "
                                     << RESET;
@@ -396,9 +398,11 @@ void RegisterTester::CheckPageSwitchRead(uint8_t pPageToSelect, uint8_t pNRegist
     LOG(INFO) << BOLDMAGENTA << "Test of I2C registers in CBCs .... going to toggle the page with a read command..." << RESET;
     
     // Container to hold mismatches per chip
-    DetectorDataContainer cMismatches, cPageToggles, cMismatchValues;
+    DetectorDataContainer cMismatches, cPageToggles, cMismatchValues, cTotalReadAttempts, cTotalPageToggles ;
     ContainerFactory::copyAndInitChip<std::map<uint32_t,uint32_t>>(*fDetectorContainer, cMismatches);
     ContainerFactory::copyAndInitChip<std::map<uint32_t,uint32_t>>(*fDetectorContainer, cPageToggles);
+    ContainerFactory::copyAndInitChip<size_t>(*fDetectorContainer, cTotalReadAttempts);
+    ContainerFactory::copyAndInitChip<size_t>(*fDetectorContainer, cTotalPageToggles);
     ContainerFactory::copyAndInitChip<std::map<uint8_t,uint8_t>>(*fDetectorContainer, cMismatchValues);
     
     for(auto cBoard: *fDetectorContainer)
@@ -431,13 +435,26 @@ void RegisterTester::CheckPageSwitchRead(uint8_t pPageToSelect, uint8_t pNRegist
                     static_cast<CbcInterface*>(fReadoutChipInterface)->resetPageMap();
                     uint8_t           cDefPage     = cDefPageRegValue >> 7;  
                     LOG (INFO) << BOLDYELLOW << " After a hard reset default page " << +cDefPage << ".. running READ test on Chip#" << +cChip->getId() << " on hybrid#" << +cHybrid->getId() << RESET;
-                    size_t cNReads=0;
+                    
+                    // set page that you want to check 
+                    // size_t cNPageToggles=0; 
+                    auto&  cNPageToggles = cTotalPageToggles.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<size_t>();
+                    cNPageToggles = 0; 
+                    uint8_t cCurrentPage = cChip->getReg("FeCtrl&TrgLat2")  >> 7; 
+                    static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip, pPageToSelect , false); 
+                    uint8_t cNewPage = cChip->getReg("FeCtrl&TrgLat2")  >> 7; 
+                    if( cNewPage != cCurrentPage ){ 
+                        LOG (DEBUG) << BOLDYELLOW << "Toggle page from " << +cCurrentPage << " to " << +cNewPage << RESET;
+                        cNPageToggles++;
+                    }
+
+                    auto&  cNReads = cTotalReadAttempts.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<size_t>();
+                    cNReads = 0;
                     size_t cIndex=0;
                     // read from register on a given page 
                     auto&  cComparisons = cMismatches.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint32_t,uint32_t>>();
                     auto&  cToggles = cPageToggles.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint32_t,uint32_t>>();
                     auto&  cMismatches = cMismatchValues.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint8_t,uint8_t>>();
-                    size_t cNPageToggles=0; 
                     for( auto cItem : cRegList )
                     {
                         if( cItem.second.fPage == pPageToSelect )
@@ -446,13 +463,13 @@ void RegisterTester::CheckPageSwitchRead(uint8_t pPageToSelect, uint8_t pNRegist
                             {
                                 uint8_t cCurrentPage  = cChip->getReg("FeCtrl&TrgLat2") >> 7; 
                                 uint8_t cValue = fReadoutChipInterface->ReadChipReg(cChip, cItem.first) & 0xFF; 
-                                uint8_t cNewPage = cChip->getReg("FeCtrl&TrgLat2")  >> 7; 
+                                cNewPage = cChip->getReg("FeCtrl&TrgLat2")  >> 7; 
                                 if( cNewPage != cCurrentPage ){ 
                                     LOG (DEBUG) << BOLDYELLOW << "Toggle page from " << +cCurrentPage << " to " << +cNewPage << RESET;
                                     cNPageToggles++;
                                 }
                                 cNReads++;
-                                LOG (INFO) << BOLDBLUE << "After reading 0x" << std::hex << +cValue << std::dec << " from register " << cItem.first 
+                                LOG (DEBUG) << BOLDBLUE << "After reading 0x" << std::hex << +cValue << std::dec << " from register " << cItem.first 
                                     << " ... have toggled page " << cNPageToggles << " time(s) and read from " 
                                     << +cNReads << " registers so far.... "
                                     << RESET;
@@ -513,6 +530,7 @@ void RegisterTester::CheckPageSwitchRead(uint8_t pPageToSelect, uint8_t pNRegist
     }//boards
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillRegisterReadMismatches(cMismatches, cPageToggles, cMismatchValues);
+    fDQMHistogrammer.fillRegisterReadCounts(cTotalReadAttempts, cTotalPageToggles);
 #endif
 }
 void RegisterTester::CheckPageSwitchWrite(uint8_t pPageToSelect, uint8_t pNRegisters ) 
@@ -522,10 +540,13 @@ void RegisterTester::CheckPageSwitchWrite(uint8_t pPageToSelect, uint8_t pNRegis
     LOG(INFO) << BOLDMAGENTA << "Test of I2C registers in CBCs .... going to toggle the page with a write command..." << RESET;
     
     // Container to hold mismatches per chip
-    DetectorDataContainer cMismatches, cPageToggles, cMismatchValues;
+    DetectorDataContainer cMismatches, cPageToggles, cMismatchValues, cTotalWriteAttempts, cTotalPageToggles, cTotalReadAttempts ;
     ContainerFactory::copyAndInitChip<std::map<uint32_t,uint32_t>>(*fDetectorContainer, cMismatches);
     ContainerFactory::copyAndInitChip<std::map<uint32_t,uint32_t>>(*fDetectorContainer, cPageToggles);
     ContainerFactory::copyAndInitChip<std::map<uint8_t,uint8_t>>(*fDetectorContainer, cMismatchValues);
+    ContainerFactory::copyAndInitChip<size_t>(*fDetectorContainer, cTotalWriteAttempts);
+    ContainerFactory::copyAndInitChip<size_t>(*fDetectorContainer, cTotalPageToggles);
+    ContainerFactory::copyAndInitChip<size_t>(*fDetectorContainer, cTotalReadAttempts);
     
     // first I want to record the register map for this map
     // retreive original settings for all chips and all back-end boards
@@ -578,9 +599,13 @@ void RegisterTester::CheckPageSwitchWrite(uint8_t pPageToSelect, uint8_t pNRegis
                     auto&  cToggles = cPageToggles.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint32_t,uint32_t>>();
                     auto&  cMismatches = cMismatchValues.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::map<uint8_t,uint8_t>>();
                     // std::map<uint32_t,uint8_t> cComparisons; 
-                    uint32_t cNPageToggles=0; 
-                    uint32_t cNWrites = 0;
-                    uint32_t cNReads  = 0; 
+                    auto&  cNPageToggles = cTotalPageToggles.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<size_t>();
+                    cNPageToggles=0;
+                    auto&  cNWrites = cTotalWriteAttempts.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<size_t>();
+                    cNWrites = 0;
+                    size_t cWriteCount=0;
+                    auto&  cNReads = cTotalReadAttempts.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<size_t>();
+                    cNReads  = 0; 
                     uint8_t           cCurrentPage = cChip->getReg("FeCtrl&TrgLat2") >> 7;
 
                     // set page that you want to check 
@@ -597,7 +622,7 @@ void RegisterTester::CheckPageSwitchWrite(uint8_t pPageToSelect, uint8_t pNRegis
 
                         if( cItem.second.fPage == pPageToSelect )
                         {
-                            if( cNWrites < pNRegisters )
+                            if( cWriteCount < pNRegisters )
                             {
                                 cCurrentPage  = cChip->getReg("FeCtrl&TrgLat2") >> 7; 
                                 // flip the LSB 
@@ -607,6 +632,7 @@ void RegisterTester::CheckPageSwitchWrite(uint8_t pPageToSelect, uint8_t pNRegis
                                 cWriteVal ^= cMask;
                                 // write the new value  
                                 fReadoutChipInterface->WriteChipReg(cChip, cItem.first, cWriteVal, false);
+                                cNWrites++;
                                 // update default value 
                                 cItem.second.fDefValue = cWriteVal;
                                 uint8_t cNewPage = cChip->getReg("FeCtrl&TrgLat2")  >> 7; 
@@ -614,7 +640,7 @@ void RegisterTester::CheckPageSwitchWrite(uint8_t pPageToSelect, uint8_t pNRegis
                                     LOG (DEBUG) << BOLDYELLOW << "Toggle page from " << +cCurrentPage << " to " << +cNewPage << RESET;
                                     cNPageToggles++;
                                 }
-                                LOG (INFO) << BOLDBLUE << "After writing 0x" << std::hex << +cWriteVal << std::dec << " to register " << cItem.first 
+                                LOG (DEBUG) << BOLDBLUE << "After writing 0x" << std::hex << +cWriteVal << std::dec << " to register " << cItem.first 
                                     << " [ change from " << std::hex << +cOrigVal << std::dec 
                                     << " ] ... have toggled page " << +cNPageToggles << " time(s) and written to " 
                                     << +cNWrites << " registers so far.... "
@@ -663,7 +689,7 @@ void RegisterTester::CheckPageSwitchWrite(uint8_t pPageToSelect, uint8_t pNRegis
                                     }
                                 }
                             }
-                            cNWrites++;
+                            cWriteCount++;
                         }
                     }//loop over registers 
                 }//chips
@@ -698,6 +724,7 @@ void RegisterTester::CheckPageSwitchWrite(uint8_t pPageToSelect, uint8_t pNRegis
     } // board loop to save record of registers
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillRegisterWriteMismatches(cMismatches, cPageToggles, cMismatchValues);
+    fDQMHistogrammer.fillRegisterWriteCounts(cTotalWriteAttempts, cTotalReadAttempts, cTotalPageToggles);
 #endif
 }
 void RegisterTester::RegisterTest()

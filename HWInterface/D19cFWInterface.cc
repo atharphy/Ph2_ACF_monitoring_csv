@@ -6135,6 +6135,7 @@ bool D19cFWInterface::WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddr
     // uint8_t cWorkerId = 1 , cFunctionId = 3;
     // uint8_t cWorkerId = 1 + pLinkId, cFunctionId = 3;
     uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 3;
+    // uint8_t cWorkerId = 16, cFunctionId = 3;
     if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "WriteLpGBTRegister to Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
 
     std::vector<uint32_t> cCommandVector;
@@ -6189,6 +6190,7 @@ uint8_t D19cFWInterface::ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAd
     // uint8_t cWorkerId = 1, cFunctionId = 2;
     // uint8_t cWorkerId = 1 + pLinkId, cFunctionId = 2;
     uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 2;
+    // uint8_t cWorkerId = 16, cFunctionId = 2;
     if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "ReadLpGBTRegister from Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
@@ -6246,6 +6248,7 @@ bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlav
     // uint8_t cWorkerId = 1 , cFunctionId = 5, cMasterConfig = (pNBytes << 2) | fCPBConfig.fI2CFrequency;
     // uint8_t cWorkerId = 1 + pLinkId, cFunctionId = 5, cMasterConfig = (pNBytes << 2) | fCPBConfig.fI2CFrequency;
     uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 5, cMasterConfig = (pNBytes << 2) | fCPBConfig.fI2CFrequency;
+    // uint8_t cWorkerId = 16, cFunctionId = 5, cMasterConfig = (pNBytes << 2) | fCPBConfig.fI2CFrequency;
     if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "I2C write to Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
@@ -6298,6 +6301,7 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSl
     // uint8_t cWorkerId = 1 , cFunctionId = 4, cMasterConfig = (pNBytes << 2) | fCPBConfig.fI2CFrequency;
     // uint8_t cWorkerId = 1 + pLinkId, cFunctionId = 4, cMasterConfig = (pNBytes << 2) | fCPBConfig.fI2CFrequency;
     uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 4, cMasterConfig = (pNBytes << 2) | fCPBConfig.fI2CFrequency;
+    // uint8_t cWorkerId = 16 , cFunctionId = 4, cMasterConfig = (pNBytes << 2) | fCPBConfig.fI2CFrequency;
     if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "I2C Read to Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();

@@ -2,18 +2,18 @@
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="1" boardReset="1">
     <!-- B598 skeleton -->
-    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.70:50001" address_table="file://settings/address_tables/uDTC_OT_address_table_v3.xml" />
+    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.70:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <CDCE configure="0" clockRate="320"/>
     
     <!-- Perugia without Patch --> 
-    <OpticalGroup Id="0" FMCId="0" reset="1">
+    <OpticalGroup Id="1" FMCId="0" reset="1">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="./settings/lpGBTFiles/" />
-        <lpGBT Id="0" configfile="CMSOT_lpGBT.txt">
+        <lpGBT Id="1" configfile="CMSOT_lpGBT.txt">
           <Settings
           />
         </lpGBT>
-        <Hybrid Id="0" Status="1" reset="1">
+        <Hybrid Id="2" Status="1" reset="1">
             <Global>
                 <Settings threshold="560" latency="95"/>
                 <TestPulse enable="0" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
@@ -36,7 +36,7 @@
             <CIC_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run577/" />
             <CIC2 Id="8" configfile="BE0_OG1_FE2.txt" />
         </Hybrid>
-        <Hybrid Id="1" Status="1" reset="1">
+        <Hybrid Id="3" Status="1" reset="1">
             <Global>
                 <Settings threshold="560" latency="95"/>
                 <TestPulse enable="0" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
@@ -62,15 +62,15 @@
     </OpticalGroup>
 
 
-    <!-- CMS DAQ module --> 
-   <!--  <OpticalGroup Id="0" FMCId="0" reset="1">
+    <!-- CMS DAQ module
+    <OpticalGroup Id="1" FMCId="0" reset="1">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="./settings/lpGBTFiles/" />
-        <lpGBT Id="0" configfile="CMSOT_lpGBT.txt">
+        <lpGBT Id="1" configfile="CMSOT_lpGBT.txt">
           <Settings
           />
         </lpGBT>
-        <Hybrid Id="0" Status="1" reset="1">
+        <Hybrid Id="2" Status="1" reset="1">
             <Global>
                 <Settings threshold="545" latency="95"/>
                 <TestPulse enable="0" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
@@ -93,7 +93,7 @@
             <CIC_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run590/" />
             <CIC2 Id="8" configfile="BE0_OG2_FE4.txt" />
         </Hybrid>
-        <Hybrid Id="1" Status="0" reset="1">
+        <Hybrid Id="3" Status="0" reset="1">
             <Global>
                 <Settings threshold="545" latency="95"/>
                 <TestPulse enable="0" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
@@ -116,8 +116,8 @@
             <CIC_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run590/" />
             <CIC2 Id="8" configfile="BE0_OG2_FE5.txt" />
         </Hybrid>
-    </OpticalGroup> -->
-
+    </OpticalGroup>
+    
     <!-- KIT#3 --> 
     <!-- <OpticalGroup Id="1" FMCId="0" reset="1">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
@@ -328,7 +328,36 @@
             </Register>
     	</Register>
 	<!-- DIO5 Block -->
-	<Register name="dio5_block">
+    <!-- DIO5 Block -->
+    <Register name="dio5_block">
+        <Register name="dio5_en"> 1 </Register>
+            <Register name="ch1">
+                <Register name="out_enable"> 0 </Register>
+                <Register name="term_enable"> 1 </Register>
+                <Register name="threshold"> 50 </Register>
+            </Register>
+        <Register name="ch2">
+                <Register name="out_enable"> 1 </Register>
+                <Register name="term_enable"> 0 </Register>
+                <Register name="threshold"> 0 </Register>
+            </Register>
+        <Register name="ch3">
+                <Register name="out_enable"> 1 </Register>
+                <Register name="term_enable"> 0 </Register>
+                <Register name="threshold"> 0 </Register>
+            </Register>
+        <Register name="ch4">
+                <Register name="out_enable"> 1 </Register>
+                <Register name="term_enable"> 0 </Register>
+                <Register name="threshold"> 0 </Register>
+            </Register>
+        <Register name="ch5">
+                <Register name="out_enable"> 0 </Register>
+                <Register name="term_enable"> 0 </Register>
+                <Register name="threshold"> 0 </Register>
+            </Register>
+    </Register>
+	<!-- <Register name="dio5_block">
 	    <Register name="dio5_en"> 1 </Register>
             <Register name="ch1">
                 <Register name="out_enable"> 0 </Register>
@@ -355,7 +384,7 @@
                 <Register name="term_enable"> 0 </Register>
                 <Register name="threshold"> 0 </Register>
             </Register>
-	</Register>
+	</Register> -->
 	<!-- TLU Block -->
 	<Register name="tlu_block">
         <Register name="tlu_enabled"> 0 </Register>
@@ -368,7 +397,7 @@
 
 <Settings>
     <!--PedestalEqualization-->
-    <Setting name="Nevents">1000</Setting>
+    <Setting name="Nevents">100</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
