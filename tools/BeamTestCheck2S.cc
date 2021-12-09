@@ -141,6 +141,8 @@ void BeamTestCheck2S::CheckWithTP(uint8_t pContinousReadout)
     {
         // prepare injection
         PrepareForExternalTP(cBoard);
+        auto cRegValue = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.en_fast_reset");
+        LOG (INFO) << BOLDYELLOW << "Enable fast reset set to ... " << cRegValue << RESET;
         //PrepareForTP(cBoard);
     }
     if(fScanL1Latency) ScanL1Latency(pContinousReadout);
@@ -153,14 +155,16 @@ void BeamTestCheck2S::CheckWithTP(uint8_t pContinousReadout)
 #endif
     // validate
     Validate();
-    return;
+    
+    for(auto cBoard: *fDetectorContainer) { PrintData(cBoard); }
 }
 void BeamTestCheck2S::ValidateTP()
 {
     for(auto cBoard: *fDetectorContainer)
     {
+        PrepareForExternalTP(cBoard);
         // prepare injection
-        PrepareForTP(cBoard);
+        // PrepareForTP(cBoard);
     }
     // validate
     Validate();
@@ -181,7 +185,7 @@ void BeamTestCheck2S::Validate()
         BeBoardRegMap              cRegMap              = cBoard->getBeBoardRegMap();
         std::string                cMultRegName         = "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity";
         size_t                     cTriggerMult         = (fReadoutMode == 0) ? fBeBoardInterface->ReadBoardReg(cBoard, cMultRegName) : cRegMap[cMultRegName];
-        LOG(INFO) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " from BeBoard#" << +cBoard->getId() << " - normalization factor for occupancy is " << +cNormalizationFactor << RESET;
+        LOG(INFO) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " events from BeBoard#" << +cBoard->getId() << " - normalization factor for occupancy is " << +cNormalizationFactor << RESET;
         for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++) { Count(cEvents, cTriggerId, 1); }
     }
 #ifdef __USE_ROOT__
@@ -1791,18 +1795,16 @@ void BeamTestCheck2S::PrepareForExternalTP(BeBoard* pBoard)
 {
     // configure trigger
     uint8_t                  cTriggerSource   = 13;
-    uint32_t                 cDelayAfterTP    = 100;
-    std::vector<std::string> cFcmdRegs{"trigger_source", "test_pulse.delay_after_test_pulse", "triggers_to_accept"};
-    std::vector<uint32_t>    cFcmdRegVals{cTriggerSource, cDelayAfterTP, 0};
-    std::vector<uint32_t>    cFcmdRegOrigVals(cFcmdRegs.size(), 0);
+    std::vector<std::string> cTPRegs{"test_pulse.delay_after_fast_reset", "test_pulse.delay_after_test_pulse", "test_pulse.delay_before_next_pulse", "test_pulse.en_fast_reset"};
+    BeBoardRegMap cRegMap         = pBoard->getBeBoardRegMap();
     std::vector<std::pair<std::string, uint32_t>> cRegVec;
-    cRegVec.clear();
-    for(size_t cIndx = 0; cIndx < cFcmdRegs.size(); cIndx++)
+    for( auto cReg : cTPRegs )
     {
-        std::string cRegName    = "fc7_daq_cnfg.fast_command_block." + cFcmdRegs[cIndx];
-        cFcmdRegOrigVals[cIndx] = fBeBoardInterface->ReadBoardReg(pBoard, cRegName);
-        cRegVec.push_back({cRegName, cFcmdRegVals[cIndx]});
+        std::string cRegName    = "fc7_daq_cnfg.fast_command_block." + cReg;
+        cRegVec.push_back({cRegName,cRegMap[cRegName]});
     }
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSource});
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 0);

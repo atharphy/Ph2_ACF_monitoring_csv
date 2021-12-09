@@ -1093,10 +1093,15 @@ int main(int argc, char* argv[])
         cGoodRuns << cRunNumber << "\n";
         cGoodRuns.close();
 
+        PrintConfig cCng;
+        cCng.fVerbose    = 1;
+        cCng.fPrintEvery = 1;
+        
         BeamTestCheck2S cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         cBeamTestCheck.ConfigureScans(cScanL1, cScanStubs);
+        cBeamTestCheck.ConfigurePrintout(cCng);
         cBeamTestCheck.CheckWithTP();
         cBeamTestCheck.writeObjects();
         cBeamTestCheck.Reset();
@@ -1192,7 +1197,7 @@ int main(int argc, char* argv[])
         cCng.fPrintEvery = 1;
         cBeamTestCheck.ConfigurePrintout(cCng);
         cBeamTestCheck.ReadDataFromFile(cRawFileName);
-        // cBeamTestCheck.ValidateRaw();
+        cBeamTestCheck.ValidateRaw();
         cBeamTestCheck.writeObjects();
         // cBeamTestCheck.Reset();
     }

@@ -229,7 +229,7 @@ void OTTool::ReadDataFromFile(std::string pRawFileName)
 void OTTool::PrintData(BeBoard* pBoard)
 {
     const std::vector<Event*>& cEvents = GetEvents();
-    LOG(INFO) << BOLDBLUE << "Printing events from FC7.. collected : " << +cEvents.size() << " events." << RESET;
+    LOG(INFO) << BOLDRED << "Printing events from FC7.. collected : " << +cEvents.size() << " events." << RESET;
     fEventCountInt=0;
     for(auto& cEvent: cEvents) { EventPrintout(pBoard, cEvent); fEventCountInt++; }
 }
@@ -613,9 +613,9 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
                 if(std::find(cL1Ids.begin(), cL1Ids.end(), cL1IdCIC) == cL1Ids.end()) cL1Ids.push_back(cL1IdCIC);
             }
 
-            if( cL1IdCIC == 511 ) LOG (INFO) << BOLDYELLOW << "OVERFLOW " << cOutEvntHeader.str() << RESET;
-             if( pEvent->GetEventCount() != fEventCountInt ) LOG (INFO) << BOLDRED << " Mismatch in event counter " << cOutEvntHeader.str() << RESET;
-            // LOG (INFO) << BOLDYELLOW << cOutEvntHeader.str() << RESET;
+            // if( cL1IdCIC == 511 ) LOG (INFO) << BOLDYELLOW << "OVERFLOW " << cOutEvntHeader.str() << RESET;
+            // if( pEvent->GetEventCount() != fEventCountInt ) LOG (INFO) << BOLDRED << " Mismatch in event counter " << cOutEvntHeader.str() << RESET;
+            LOG (INFO) << BOLDYELLOW << cOutEvntHeader.str() << RESET;
 
             // bool cStubFound=false;
             // bool cClusterFound=false;
@@ -1021,7 +1021,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
             {
                 if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
-                std::vector<std::string> cRegNames{"MiscTestPulseCtrl&AnalogMux", "HIP&TestMode", "Pipe&StubInpSel&Ptwidth", "CoincWind&Offset34", "CoincWind&Offset12", "LayerSwap&CluWidth", "40MhzClk&Or254"};
+                std::vector<std::string> cRegNames{"TestPulsePotNodeSel","MiscTestPulseCtrl&AnalogMux", "HIP&TestMode", "Pipe&StubInpSel&Ptwidth", "CoincWind&Offset34", "CoincWind&Offset12", "LayerSwap&CluWidth", "40MhzClk&Or254"};
                 for(auto cRegName: cRegNames)
                 {
                     auto cValueInMemory = cChip->getReg(cRegName);

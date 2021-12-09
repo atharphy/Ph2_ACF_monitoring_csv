@@ -5,8 +5,45 @@
     <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.70:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <CDCE configure="0" clockRate="320"/>
     
-    <!-- Perugia without Patch --> 
-    <OpticalGroup Id="1" FMCId="0" reset="1">
+    <!-- skeleton -->
+    <OpticalGroup Id="0" FMCId="0" reset="1">
+        <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
+        <lpGBT_Files path="./settings/lpGBTFiles/" />
+        <lpGBT Id="0" configfile="CMSOT_lpGBT.txt">
+          <Settings
+          />
+        </lpGBT>
+        <Hybrid Id="0" Status="1" reset="1">
+            <Global>
+                <Settings threshold="560" latency="99"/>
+                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
+                <ChannelMask disable=""/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+                <!-- <MaskedStrips 
+                    CBCId="0;1" 
+                    Rows="241, 240,225,224,209,208,193,192,177,176,161,160,145,144,129,128,113,112,97,96,81,80,65,64,49,48,33,32,17,16;241,240,225,224,209,208,193,192,177,176,161,160,145,144,129,128,113,112,97,96,81,80,65,64,49,48,33,32,17,16" 
+                />  -->
+            </Global>
+
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" configfile="CBC3_default.txt" />
+            <CBC Id="1" configfile="CBC3_default.txt" />
+            <CBC Id="2" configfile="CBC3_default.txt" />
+            <CBC Id="3" configfile="CBC3_default.txt" />
+            <CBC Id="4" configfile="CBC3_default.txt" />
+            <CBC Id="5" configfile="CBC3_default.txt" />
+            <CBC Id="6" configfile="CBC3_default.txt" />
+            <CBC Id="7" configfile="CBC3_default.txt" /> 
+
+            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" configfile="CIC2_default.txt" />
+        </Hybrid>
+    </OpticalGroup>
+
+    <!-- Perugia with Patch --> 
+   <!--  <OpticalGroup Id="1" FMCId="0" reset="1">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="./settings/lpGBTFiles/" />
         <lpGBT Id="1" configfile="CMSOT_lpGBT.txt">
@@ -36,7 +73,7 @@
             <CIC_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run577/" />
             <CIC2 Id="8" configfile="BE0_OG1_FE2.txt" />
         </Hybrid>
-        <Hybrid Id="3" Status="1" reset="1">
+        <Hybrid Id="3" Status="1" reset="1" i2cMaster="1">
             <Global>
                 <Settings threshold="560" latency="95"/>
                 <TestPulse enable="0" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
@@ -59,181 +96,7 @@
             <CIC_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run577/" />
             <CIC2 Id="8" configfile="BE0_OG1_FE3.txt" />
         </Hybrid>
-    </OpticalGroup>
-
-
-    <!-- CMS DAQ module
-    <OpticalGroup Id="1" FMCId="0" reset="1">
-        <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
-        <lpGBT_Files path="./settings/lpGBTFiles/" />
-        <lpGBT Id="1" configfile="CMSOT_lpGBT.txt">
-          <Settings
-          />
-        </lpGBT>
-        <Hybrid Id="2" Status="1" reset="1">
-            <Global>
-                <Settings threshold="545" latency="95"/>
-                <TestPulse enable="0" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
-                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
-                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
-                <ChannelMask disable=""/>
-                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
-            </Global>
-
-            <CBC_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run590/" />
-            <CBC Id="0" configfile="BE0_OG2_FE5_Chip0.txt" />
-            <CBC Id="1" configfile="BE0_OG2_FE5_Chip1.txt" />
-            <CBC Id="2" configfile="BE0_OG2_FE5_Chip2.txt" />
-            <CBC Id="3" configfile="BE0_OG2_FE5_Chip3.txt" />
-            <CBC Id="4" configfile="BE0_OG2_FE5_Chip4.txt" />
-            <CBC Id="5" configfile="BE0_OG2_FE5_Chip5.txt" />
-            <CBC Id="6" configfile="BE0_OG2_FE5_Chip6.txt" />
-            <CBC Id="7" configfile="BE0_OG2_FE5_Chip7.txt" />
-            
-            <CIC_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run590/" />
-            <CIC2 Id="8" configfile="BE0_OG2_FE4.txt" />
-        </Hybrid>
-        <Hybrid Id="3" Status="0" reset="1">
-            <Global>
-                <Settings threshold="545" latency="95"/>
-                <TestPulse enable="0" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
-                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
-                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
-                <ChannelMask disable=""/>
-                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
-            </Global>
-
-            <CBC_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run590/" />
-            <CBC Id="0" configfile="BE0_OG2_FE5_Chip0.txt" />
-            <CBC Id="1" configfile="BE0_OG2_FE5_Chip1.txt" />
-            <CBC Id="2" configfile="BE0_OG2_FE5_Chip2.txt" />
-            <CBC Id="3" configfile="BE0_OG2_FE5_Chip3.txt" />
-            <CBC Id="4" configfile="BE0_OG2_FE5_Chip4.txt" />
-            <CBC Id="5" configfile="BE0_OG2_FE5_Chip5.txt" />
-            <CBC Id="6" configfile="BE0_OG2_FE5_Chip6.txt" />
-            <CBC Id="7" configfile="BE0_OG2_FE5_Chip7.txt" />
-            
-            <CIC_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run590/" />
-            <CIC2 Id="8" configfile="BE0_OG2_FE5.txt" />
-        </Hybrid>
-    </OpticalGroup>
-    
-    <!-- KIT#3 --> 
-    <!-- <OpticalGroup Id="1" FMCId="0" reset="1">
-        <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
-        <lpGBT_Files path="./settings/lpGBTFiles/" />
-        <lpGBT Id="1" configfile="CMSOT_lpGBT.txt">
-          <Settings
-          />
-        </lpGBT>
-
-        <Hybrid Id="2" Status="1" reset="1">
-            <Global>
-                <Settings threshold="550" latency="108"/>
-                <TestPulse enable="0" polarity="0" amplitude="0xFA" channelgroup="0" delay="0" groundothers="0"/>
-                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
-                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
-                <ChannelMask disable=""/>
-                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
-            </Global>
-
-            <CBC_Files path="${PH2ACF_BASE_DIR}/OT_ModuleTest_523" />
-            <CBC Id="0" configfile="BE0_OG2_FE4_Chip0.txt" />
-            <CBC Id="1" configfile="BE0_OG2_FE4_Chip1.txt" />
-            <CBC Id="2" configfile="BE0_OG2_FE4_Chip2.txt" />
-            <CBC Id="3" configfile="BE0_OG2_FE4_Chip3.txt" />
-            <CBC Id="4" configfile="BE0_OG2_FE4_Chip4.txt" />
-            <CBC Id="5" configfile="BE0_OG2_FE4_Chip5.txt" />
-            <CBC Id="6" configfile="BE0_OG2_FE4_Chip6.txt" />
-            <CBC Id="7" configfile="BE0_OG2_FE4_Chip7.txt" />
-            
-
-            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" />
-        </Hybrid>
-        <Hybrid Id="3" Status="1" reset="1">
-            <Global>
-                <Settings threshold="550" latency="108"/>
-                <TestPulse enable="0" polarity="0" amplitude="0xFA" channelgroup="0" delay="0" groundothers="0"/>
-                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
-                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
-                <ChannelMask disable=""/>
-                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
-            </Global>
-
-            <CBC_Files path="${PH2ACF_BASE_DIR}/OT_ModuleTest_521/" />
-            <CBC Id="0" configfile="BE0_OG2_FE5_Chip0.txt" />
-            <CBC Id="1" configfile="BE0_OG2_FE5_Chip1.txt" />
-            <CBC Id="2" configfile="BE0_OG2_FE5_Chip2.txt" />
-            <CBC Id="3" configfile="BE0_OG2_FE5_Chip3.txt" />
-            <CBC Id="4" configfile="BE0_OG2_FE5_Chip4.txt" />
-            <CBC Id="5" configfile="BE0_OG2_FE5_Chip5.txt" />
-            <CBC Id="6" configfile="BE0_OG2_FE5_Chip6.txt" />
-            <CBC Id="7" configfile="BE0_OG2_FE5_Chip7.txt" />
-         
-            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" />
-        </Hybrid>
-    </OpticalGroup>
- -->
-    <!-- Perugia --> 
-    <!-- <OpticalGroup Id="2" FMCId="0" reset="1">
-        <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
-        <lpGBT_Files path="./settings/lpGBTFiles/" />
-        <lpGBT Id="2" configfile="CMSOT_lpGBT.txt">
-          <Settings
-          />
-        </lpGBT>
-
-        <Hybrid Id="4" Status="1" reset="1">
-            <Global>
-                <Settings threshold="550" latency="108"/>
-                <TestPulse enable="0" polarity="0" amplitude="0xFA" channelgroup="0" delay="0" groundothers="0"/>
-                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
-                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
-                <ChannelMask disable=""/>
-                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
-            </Global>
-
-            <CBC_Files path="${PH2ACF_BASE_DIR}/OT_ModuleTest_523" />
-            <CBC Id="0" configfile="BE0_OG2_FE4_Chip0.txt" />
-            <CBC Id="1" configfile="BE0_OG2_FE4_Chip1.txt" />
-            <CBC Id="2" configfile="BE0_OG2_FE4_Chip2.txt" />
-            <CBC Id="3" configfile="BE0_OG2_FE4_Chip3.txt" />
-            <CBC Id="4" configfile="BE0_OG2_FE4_Chip4.txt" />
-            <CBC Id="5" configfile="BE0_OG2_FE4_Chip5.txt" />
-            <CBC Id="6" configfile="BE0_OG2_FE4_Chip6.txt" />
-            <CBC Id="7" configfile="BE0_OG2_FE4_Chip7.txt" />
-            
-
-            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" />
-        </Hybrid>
-        <Hybrid Id="5" Status="1" reset="1">
-            <Global>
-                <Settings threshold="550" latency="108"/>
-                <TestPulse enable="0" polarity="0" amplitude="0xFA" channelgroup="0" delay="0" groundothers="0"/>
-                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
-                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
-                <ChannelMask disable=""/>
-                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
-            </Global>
-
-            <CBC_Files path="${PH2ACF_BASE_DIR}/OT_ModuleTest_521/" />
-            <CBC Id="0" configfile="BE0_OG2_FE5_Chip0.txt" />
-            <CBC Id="1" configfile="BE0_OG2_FE5_Chip1.txt" />
-            <CBC Id="2" configfile="BE0_OG2_FE5_Chip2.txt" />
-            <CBC Id="3" configfile="BE0_OG2_FE5_Chip3.txt" />
-            <CBC Id="4" configfile="BE0_OG2_FE5_Chip4.txt" />
-            <CBC Id="5" configfile="BE0_OG2_FE5_Chip5.txt" />
-            <CBC Id="6" configfile="BE0_OG2_FE5_Chip6.txt" />
-            <CBC Id="7" configfile="BE0_OG2_FE5_Chip7.txt" />
-         
-            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" />
-        </Hybrid>
-    </OpticalGroup>
- -->
+    </OpticalGroup> -->
     
     <!--CONFIG-->
     <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
@@ -267,13 +130,13 @@
     		<Register name="stub_trigger_delay_value"> 0 </Register>
             <Register name="stub_trigger_veto_length"> 0 </Register>
     		<Register name="test_pulse">
-    			<Register name="delay_after_fast_reset"> 100 </Register>
-    			<Register name="delay_after_test_pulse"> 100 </Register>
-    			<Register name="delay_before_next_pulse"> 200 </Register>
-    			<Register name="en_fast_reset"> 0 </Register>
-    			<Register name="en_test_pulse"> 1 </Register>
-    			<Register name="en_l1a"> 1 </Register>
-    			<Register name="en_shutter"> 0 </Register>
+                <Register name="delay_after_fast_reset"> 100 </Register>
+                <Register name="delay_after_test_pulse"> 100 </Register>
+                <Register name="delay_before_next_pulse"> 200 </Register>
+                <Register name="en_fast_reset"> 0 </Register>
+                <Register name="en_test_pulse"> 1 </Register>
+                <Register name="en_l1a"> 1 </Register>
+                <Register name="en_shutter"> 0 </Register>
     		</Register>
             <Register name="ps_async_delay">
                 <Register name="after_clear_counters"> 200 </Register>
@@ -324,7 +187,7 @@
                     <Register name="trigger_type"> 0 </Register>
                     <Register name="data_type"> 0 </Register>
                     <!--this is what is commonly known as stub latency-->
-                    <Register name="common_stubdata_delay"> 31 </Register>
+                    <Register name="common_stubdata_delay"> 33 </Register>
             </Register>
     	</Register>
 	<!-- DIO5 Block -->
@@ -409,8 +272,8 @@
     <Setting name="StubAlignmentThreshold">590</Setting>
     <Setting name="StubAlignmentScanStart">70</Setting>
 
-    <Setting name="StartLatency">90</Setting>
-    <Setting name="LatencyRange">10</Setting>
+    <Setting name="StartLatency">85</Setting>
+    <Setting name="LatencyRange">20</Setting>
 
     <Setting name="TargetVcth">0x78</Setting>
     <Setting name="TargetOffset">0x50</Setting>
