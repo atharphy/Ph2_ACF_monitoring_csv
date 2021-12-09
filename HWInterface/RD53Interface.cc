@@ -375,7 +375,7 @@ std::pair<std::string, uint16_t> RD53Interface::SplitSpecialRegisters(std::strin
     }
     else if(regName == "SER_SEL_OUT_3")
     {
-        value   = (Reg.fValue << (pRD53RegMap["SER_SEL_OUT_0"].fBitSize + pRD53RegMap["SER_SEL_OUT_1"].fBitSize + pRD53RegMap["SER_SEL_OUT_2"].fBitSize)) + (pRD53RegMap["SER_SEL_OUT"].fValue & 0x3C);
+        value   = (Reg.fValue << (pRD53RegMap["SER_SEL_OUT_0"].fBitSize + pRD53RegMap["SER_SEL_OUT_1"].fBitSize + pRD53RegMap["SER_SEL_OUT_2"].fBitSize)) + (pRD53RegMap["SER_SEL_OUT"].fValue & 0x3F);
         regName = "SER_SEL_OUT";
         pRD53RegMap["SER_SEL_OUT"].fPrmptCfg = true;
     }
