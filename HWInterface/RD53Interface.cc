@@ -324,24 +324,27 @@ std::pair<std::string, uint16_t> RD53Interface::SplitSpecialRegisters(std::strin
     {
         value   = Reg.fValue + (pRD53RegMap["SER_SEL_OUT"].fValue & 0xFC);
         regName = "SER_SEL_OUT";
+        pRD53RegMap["SER_SEL_OUT"].fPrmptCfg = true;
     }
     else if(regName == "SER_SEL_OUT_1")
     {
         value   = (Reg.fValue << pRD53RegMap["SER_SEL_OUT_0"].fBitSize) + (pRD53RegMap["SER_SEL_OUT"].fValue & 0xF3);
         regName = "SER_SEL_OUT";
+        pRD53RegMap["SER_SEL_OUT"].fPrmptCfg = true;
     }
     else if(regName == "SER_SEL_OUT_2")
     {
         value   = (Reg.fValue << (pRD53RegMap["SER_SEL_OUT_0"].fBitSize + pRD53RegMap["SER_SEL_OUT_1"].fBitSize)) + (pRD53RegMap["SER_SEL_OUT"].fValue & 0xCF);
         regName = "SER_SEL_OUT";
+        pRD53RegMap["SER_SEL_OUT"].fPrmptCfg = true;
     }
     else if(regName == "SER_SEL_OUT_3")
     {
         value   = (Reg.fValue << (pRD53RegMap["SER_SEL_OUT_0"].fBitSize + pRD53RegMap["SER_SEL_OUT_1"].fBitSize + pRD53RegMap["SER_SEL_OUT_2"].fBitSize)) + (pRD53RegMap["SER_SEL_OUT"].fValue & 0x3C);
         regName = "SER_SEL_OUT";
+        pRD53RegMap["SER_SEL_OUT"].fPrmptCfg = true;
     }
 
-    Reg.fPrmptCfg = true;
     return std::pair<std::string, uint16_t>(regName, value);
 }
 
