@@ -70,44 +70,11 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
         RD53Interface::WriteChipReg(pChip, nameAndValue.first, nameAndValue.second, pVerifLoop);
     }
 
-    // ####################################
-    // # Programming SER_SEL_OUT register #
-    // ####################################
-    static const char* registerSerSelOutList[] = {"SER_SEL_OUT", "SER_SEL_OUT_0", "SER_SEL_OUT_1", "SER_SEL_OUT_2", "SER_SEL_OUT_3"}; // @CONST@
-    nameAndValue                               = std::pair<std::string, uint16_t>("SER_SEL_OUT", pRD53RegMap["SER_SEL_OUT"].fValue);
-    bool doWriteSerSelOut                      = false;
-
-    for(auto i = 0u; i < arraySize(registerSerSelOutList); i++)
-    {
-        auto cRegItem = pRD53RegMap.find(registerSerSelOutList[i]);
-        if((cRegItem != pRD53RegMap.end()) && (cRegItem->second.fPrmptCfg == true))
-        {
-            doWriteSerSelOut = true;
-
-            nameAndValue = RD53Interface::SplitSpecialRegisters(std::string(cRegItem->first), cRegItem->second, pRD53RegMap);
-
-            if(cRegItem->first == "SER_SEL_OUT") break;
-        }
-    }
-
-    if(doWriteSerSelOut == true) RD53Interface::WriteChipReg(pChip, nameAndValue.first, nameAndValue.second, pVerifLoop);
-
     // ###############################
     // # Programmig global registers #
     // ###############################
-    static const char* registerBlackList[] = {"HighGain_LIN",
-                                              "ADC_OFFSET_VOLT",
-                                              "ADC_MAXIMUM_VOLT",
-                                              "TEMPSENS_IDEAL_FACTOR",
-                                              "CLK_DATA_DELAY",
-                                              "CLK_DATA_DELAY_CMD_DELAY",
-                                              "CLK_DATA_DELAY_CLK_DELAY",
-                                              "CLK_DATA_DELAY_2INV_DELAY",
-                                              "SER_SEL_OUT",
-                                              "SER_SEL_OUT_0",
-                                              "SER_SEL_OUT_1",
-                                              "SER_SEL_OUT_2",
-                                              "SER_SEL_OUT_3"};
+    static const char* registerBlackList[] = {
+        "HighGain_LIN", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "CLK_DATA_DELAY", "CLK_DATA_DELAY_CMD_DELAY", "CLK_DATA_DELAY_CLK_DELAY", "CLK_DATA_DELAY_2INV_DELAY"};
 
     for(auto& cRegItem: pRD53RegMap)
         if(cRegItem.second.fPrmptCfg == true)
@@ -357,27 +324,23 @@ std::pair<std::string, uint16_t> RD53Interface::SplitSpecialRegisters(std::strin
     }
     else if(regName == "SER_SEL_OUT_0")
     {
-        value   = Reg.fValue + (pRD53RegMap["SER_SEL_OUT"].fValue & 0xFC);
+        value   = Reg.fValue | (pRD53RegMap["SER_SEL_OUT"].fValue & 0xFC);
         regName = "SER_SEL_OUT";
-        pRD53RegMap["SER_SEL_OUT"].fPrmptCfg = true;
     }
     else if(regName == "SER_SEL_OUT_1")
     {
-        value   = (Reg.fValue << pRD53RegMap["SER_SEL_OUT_0"].fBitSize) + (pRD53RegMap["SER_SEL_OUT"].fValue & 0xF3);
+        value   = (Reg.fValue << pRD53RegMap["SER_SEL_OUT_0"].fBitSize) | (pRD53RegMap["SER_SEL_OUT"].fValue & 0xF3);
         regName = "SER_SEL_OUT";
-        pRD53RegMap["SER_SEL_OUT"].fPrmptCfg = true;
     }
     else if(regName == "SER_SEL_OUT_2")
     {
-        value   = (Reg.fValue << (pRD53RegMap["SER_SEL_OUT_0"].fBitSize + pRD53RegMap["SER_SEL_OUT_1"].fBitSize)) + (pRD53RegMap["SER_SEL_OUT"].fValue & 0xCF);
+        value   = (Reg.fValue << (pRD53RegMap["SER_SEL_OUT_0"].fBitSize + pRD53RegMap["SER_SEL_OUT_1"].fBitSize)) | (pRD53RegMap["SER_SEL_OUT"].fValue & 0xCF);
         regName = "SER_SEL_OUT";
-        pRD53RegMap["SER_SEL_OUT"].fPrmptCfg = true;
     }
     else if(regName == "SER_SEL_OUT_3")
     {
-        value   = (Reg.fValue << (pRD53RegMap["SER_SEL_OUT_0"].fBitSize + pRD53RegMap["SER_SEL_OUT_1"].fBitSize + pRD53RegMap["SER_SEL_OUT_2"].fBitSize)) + (pRD53RegMap["SER_SEL_OUT"].fValue & 0x3F);
+        value   = (Reg.fValue << (pRD53RegMap["SER_SEL_OUT_0"].fBitSize + pRD53RegMap["SER_SEL_OUT_1"].fBitSize + pRD53RegMap["SER_SEL_OUT_2"].fBitSize)) | (pRD53RegMap["SER_SEL_OUT"].fValue & 0x3F);
         regName = "SER_SEL_OUT";
-        pRD53RegMap["SER_SEL_OUT"].fPrmptCfg = true;
     }
 
     return std::pair<std::string, uint16_t>(regName, value);
@@ -540,7 +503,9 @@ bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
 void RD53Interface::StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip)
 {
     auto regValue = RD53Constants::PATTERN_PRBS;
-    if(pChip->getRegItem("SER_SEL_OUT").fPrmptCfg == true) regValue = pChip->getRegItem("SER_SEL_OUT").fValue;
+    if((pChip->getRegItem("SER_SEL_OUT").fPrmptCfg == true) || (pChip->getRegItem("SER_SEL_OUT_0").fPrmptCfg == true) || (pChip->getRegItem("SER_SEL_OUT_1").fPrmptCfg == true) ||
+       (pChip->getRegItem("SER_SEL_OUT_2").fPrmptCfg == true) || (pChip->getRegItem("SER_SEL_OUT_3").fPrmptCfg == true))
+        regValue = RD53Constants::PATTERN_PRBS | (pChip->getRegItem("SER_SEL_OUT").fValue & 0xFC); // @TMP@
     RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", regValue, false);
 }
 void RD53Interface::StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) { RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false); }
