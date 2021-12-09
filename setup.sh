@@ -3,7 +3,7 @@
 ##########
 # CACTUS #
 ##########
-export CACTUSROOT=/opt/cactus
+export CACTUSROOT=/opt/cactus_Ph2_ACF
 export CACTUSBIN=$CACTUSROOT/bin
 export CACTUSLIB=$CACTUSROOT/lib
 export CACTUSINCLUDE=$CACTUSROOT/include

@@ -70,11 +70,44 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
         RD53Interface::WriteChipReg(pChip, nameAndValue.first, nameAndValue.second, pVerifLoop);
     }
 
+    // ####################################
+    // # Programming SER_SEL_OUT register #
+    // ####################################
+    static const char* registerSerSelOutList[] = {"SER_SEL_OUT", "SER_SEL_OUT_0", "SER_SEL_OUT_1", "SER_SEL_OUT_2", "SER_SEL_OUT_3"}; // @CONST@
+    nameAndValue                               = std::pair<std::string, uint16_t>("SER_SEL_OUT", pRD53RegMap["SER_SEL_OUT"].fValue);
+    bool doWriteSerSelOut                      = false;
+
+    for(auto i = 0u; i < arraySize(registerSerSelOutList); i++)
+    {
+        auto cRegItem = pRD53RegMap.find(registerSerSelOutList[i]);
+        if((cRegItem != pRD53RegMap.end()) && (cRegItem->second.fPrmptCfg == true))
+        {
+            doWriteSerSelOut = true;
+
+            nameAndValue = RD53Interface::SplitSpecialRegisters(std::string(cRegItem->first), cRegItem->second, pRD53RegMap);
+
+            if(cRegItem->first == "SER_SEL_OUT") break;
+        }
+    }
+
+    if(doWriteSerSelOut == true) RD53Interface::WriteChipReg(pChip, nameAndValue.first, nameAndValue.second, pVerifLoop);
+
     // ###############################
     // # Programmig global registers #
     // ###############################
-    static const char* registerBlackList[] = {
-        "HighGain_LIN", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "CLK_DATA_DELAY_CMD_DELAY", "CLK_DATA_DELAY_CLK_DELAY", "CLK_DATA_DELAY_2INV_DELAY"};
+    static const char* registerBlackList[] = {"HighGain_LIN",
+                                              "ADC_OFFSET_VOLT",
+                                              "ADC_MAXIMUM_VOLT",
+                                              "TEMPSENS_IDEAL_FACTOR",
+                                              "CLK_DATA_DELAY",
+                                              "CLK_DATA_DELAY_CMD_DELAY",
+                                              "CLK_DATA_DELAY_CLK_DELAY",
+                                              "CLK_DATA_DELAY_2INV_DELAY",
+                                              "SER_SEL_OUT",
+                                              "SER_SEL_OUT_0",
+                                              "SER_SEL_OUT_1",
+                                              "SER_SEL_OUT_2",
+                                              "SER_SEL_OUT_3"};
 
     for(auto& cRegItem: pRD53RegMap)
         if(cRegItem.second.fPrmptCfg == true)
@@ -263,21 +296,23 @@ std::pair<std::string, uint16_t> RD53Interface::SplitSpecialRegisters(std::strin
 {
     uint16_t value = Reg.fValue;
 
-    if(regName == "CLK_DATA_DELAY_CMD_DELAY") { value = Reg.fValue | (value & (RD53Shared::setBits(pRD53RegMap["CLK_DATA_DELAY"].fBitSize) - RD53Shared::setBits(Reg.fBitSize))); }
+    if(regName == "CLK_DATA_DELAY_CMD_DELAY")
+    {
+        value                                   = Reg.fValue | (value & (RD53Shared::setBits(pRD53RegMap["CLK_DATA_DELAY"].fBitSize) - RD53Shared::setBits(Reg.fBitSize)));
+        pRD53RegMap["CLK_DATA_DELAY"].fPrmptCfg = true;
+    }
     else if(regName == "CLK_DATA_DELAY_CLK_DELAY")
     {
         value = (Reg.fValue << pRD53RegMap["CLK_DATA_DELAY_CMD_DELAY"].fBitSize) |
                 (value & (RD53Shared::setBits(pRD53RegMap["CLK_DATA_DELAY"].fBitSize) - (RD53Shared::setBits(Reg.fBitSize) << pRD53RegMap["CLK_DATA_DELAY_CMD_DELAY"].fBitSize)));
+        pRD53RegMap["CLK_DATA_DELAY"].fPrmptCfg = true;
     }
     else if(regName == "CLK_DATA_DELAY_2INV_DELAY")
     {
         value = (Reg.fValue << (pRD53RegMap["CLK_DATA_DELAY_CMD_DELAY"].fBitSize + pRD53RegMap["CLK_DATA_DELAY_CLK_DELAY"].fBitSize)) |
                 (value & (RD53Shared::setBits(pRD53RegMap["CLK_DATA_DELAY"].fBitSize) -
                           (RD53Shared::setBits(Reg.fBitSize) << (pRD53RegMap["CLK_DATA_DELAY_CMD_DELAY"].fBitSize + pRD53RegMap["CLK_DATA_DELAY_CLK_DELAY"].fBitSize))));
-    }
-    else if(regName == "CLK_DATA_DELAY")
-    {
-        value = Reg.fValue;
+        pRD53RegMap["CLK_DATA_DELAY"].fPrmptCfg = true;
     }
     else if(regName == "MONITOR_CONFIG_ADC")
     {
