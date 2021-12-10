@@ -23,27 +23,24 @@ namespace Ph2_HwDescription
 {
 // C'tors which take BeId, FMCId, FeID, MPA2Id
 
-MPA2::MPA2(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pMPA2Id, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pBeId, pFMCId, pFeId, pMPA2Id)
+MPA2::MPA2(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pMPAId, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pBeId, pFMCId, pFeId, pMPAId)
 {
     fMaxRegValue      = 255;
-    fChipOriginalMask = new ChannelGroup<NSSACHANNELS * NMPACOLS>;
+    fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS * NMPACOLS>>();
     fChipOriginalMask->enableAllChannels();
     fPartnerId = pPartnerId;
     loadfRegMap(filename);
-    setFrontEndType(FrontEndType::MPA2);
-
-    const ChannelGroup<NSSACHANNELS* NMPACOLS>* originalMask = static_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>*>(fChipOriginalMask);
-    std::cout << (originalMask->getBitset()) << "\n";
+    setFrontEndType(FrontEndType::MPA);
 }
 
-MPA2::MPA2(const FrontEndDescription& pFeDesc, uint8_t pMPA2Id, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pFeDesc, pMPA2Id)
+MPA2::MPA2(const FrontEndDescription& pFeDesc, uint8_t pMPAId, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pFeDesc, pMPAId)
 {
-    fMaxRegValue      = 255; // 8 bit registers in MPA2
-    fChipOriginalMask = new ChannelGroup<NSSACHANNELS, NMPACOLS>;
+    fMaxRegValue      = 255; // 8 bit registers in MPA
+    fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS, NMPACOLS>>();
     fChipOriginalMask->enableAllChannels();
     fPartnerId = pPartnerId;
     loadfRegMap(filename);
-    setFrontEndType(FrontEndType::MPA2);
+    setFrontEndType(FrontEndType::MPA);
 }
 
 void MPA2::loadfRegMap(const std::string& filename)

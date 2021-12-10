@@ -385,10 +385,11 @@ uint16_t MPA2Interface::regRow(Chip* pChip, int pBaseRegister, int pRow)
 
 // two methods -- also kinda slow but cant really use broadcast commands with enflags without overwriting other bits
 // Would want  to do a rowwise broadcast -- maybe using col 0  for bit mask?
-bool MPA2Interface::maskChannelsGroup(ReadoutChip* cChip, const ChannelGroupBase* group, bool pVerifLoop)
+
+bool MPA2Interface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop)
 {
-    const ChannelGroup<NSSACHANNELS* NMPACOLS>* cOriginalMask = static_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>*>(cChip->getChipOriginalMask());
-    const ChannelGroup<NSSACHANNELS* NMPACOLS>* groupToMask   = static_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>*>(group);
+    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>>(cChip->getChipOriginalMask());
+    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>>(group);
 
     auto cBitset = std::bitset<NSSACHANNELS * NMPACOLS>(groupToMask->getBitset() & cOriginalMask->getBitset());
     // cBitset = cBitset&std::bitset<NSSACHANNELS*NMPACOLS>(0x0000F0FF0);
@@ -420,14 +421,16 @@ bool MPA2Interface::maskChannelsGroup(ReadoutChip* cChip, const ChannelGroupBase
     return returnval;
 }
 
-bool MPA2Interface::setInjectionSchema(ReadoutChip* cChip, const ChannelGroupBase* group, bool pVerifLoop)
+
+
+bool MPA2Interface::setInjectionSchema(ReadoutChip* cChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop)
 {
-    std::bitset<NSSACHANNELS* NMPACOLS> cBitset = std::bitset<NSSACHANNELS * NMPACOLS>(static_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>*>(group)->getBitset());
+    std::bitset<NSSACHANNELS* NMPACOLS> cBitset = std::bitset<NSSACHANNELS * NMPACOLS>(std::static_pointer_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>>(group)->getBitset());
     if(cBitset.count() == 0) // no mask set... so do nothing
         return true;
 
-    const ChannelGroup<NSSACHANNELS* NMPACOLS>* cOriginalMask = static_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>*>(cChip->getChipOriginalMask());
-    const ChannelGroup<NSSACHANNELS* NMPACOLS>* groupToMask   = static_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>*>(group);
+    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>>(cChip->getChipOriginalMask());
+    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>>(group);
 
     // cBitset=cBitset&std::bitset<NSSACHANNELS * NMPACOLS>(0xF0FF0);
 
@@ -446,15 +449,20 @@ bool MPA2Interface::setInjectionSchema(ReadoutChip* cChip, const ChannelGroupBas
 
     return returnval;
 }
-
-bool MPA2Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop)
+bool MPA2Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop)
 {
     bool success = true;
-    if(mask) success &= maskChannelsGroup(pChip, group, pVerifLoop);
+    if(mask) success &= maskChannelGroup(pChip, group, pVerifLoop);
     if(inject) success &= setInjectionSchema(pChip, group, pVerifLoop);
 
     return success;
 }
+
+
+
+
+
+
 
 bool MPA2Interface::enablePixelInjection(Chip* pChip, int pPixelNum, uint8_t pInj, bool pVerifLoop)
 {
@@ -468,8 +476,8 @@ bool MPA2Interface::enablePixelInjection(Chip* pChip, int pPixelNum, uint8_t pIn
 
 bool MPA2Interface::ConfigureChipOriginalMask(ReadoutChip* pCbc, bool pVerifLoop, uint32_t pBlockSize)
 {
-    ChannelGroup<NSSACHANNELS * NMPACOLS> allChannelEnabledGroup;
-    return maskChannelsGroup(pCbc, &allChannelEnabledGroup, pVerifLoop);
+    auto allChannelEnabledGroup = std::make_shared<ChannelGroup<NSSACHANNELS * NMPACOLS>>();
+    return maskChannelGroup(pCbc, allChannelEnabledGroup, pVerifLoop);
 }
 void MPA2Interface::readAllBias(Chip* pChip)
 {

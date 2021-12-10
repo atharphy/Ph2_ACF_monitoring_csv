@@ -58,10 +58,10 @@ bool PSInterface::maskChannelsAndSetInjectionSchema(ReadoutChip* pPS, const std:
 {
     return getInterface(pPS)->maskChannelsAndSetInjectionSchema(pPS, group, mask, inject, pVerifLoop); 
 }
-bool PSInterface::maskChannelGroup(ReadoutChip* pPS, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop)
-{
-    return getInterface(pPS)->maskChannelsGroup(pPS, group, pVerifLoop); 
-}
+//bool PSInterface::maskChannelGroup(ReadoutChip* pPS, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop)
+//{
+ //   return getInterface(pPS)->maskChannelsGroup(pPS, group, pVerifLoop); 
+//}
 
 bool PSInterface::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerifLoop, uint32_t pBlockSize)
 {
