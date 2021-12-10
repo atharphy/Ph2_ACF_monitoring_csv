@@ -617,6 +617,7 @@ int main(int argc, char* argv[])
         // cTool.fDetectorContainer->setReadoutChipQueryFunction(myFunction);
         cPedeNoise.Initialise(true, true); // canvases etc. for fast calibration
         cPedeNoise.measureNoise();
+        cPedeNoise.Validate();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
         // cTool.fDetectorContainer->resetReadoutChipQueryFunction();

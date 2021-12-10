@@ -38,7 +38,7 @@ class PedeNoise : public Tool
     void measureNoise(); // method based on the one below that actually analyzes the scurves and extracts the noise
     void scanScurves();
     void sweepSCurves(); // actual methods to measure SCurves
-    void Validate(uint32_t pNoiseStripThreshold = 1, uint32_t pMultiple = 100);
+    void Validate();
     void writeObjects();
 
     void Running() override;
@@ -63,6 +63,10 @@ class PedeNoise : public Tool
     int      fNEventsPerBurst{-1};
     float    fMean_Strps{0};
     float    fMean_Pxls{0};
+    uint32_t fNEventsToValidate{0};
+    float    fMaskingThreshold{0};
+    bool     fMaskNoisyChannels{0};
+
 
     DetectorDataContainer* fThresholdAndNoiseContainer;
 
@@ -85,7 +89,7 @@ class PedeNoise : public Tool
     void producePedeNoisePlots();
 
     // for validation
-    void setThresholdtoNSigma(BoardContainer* board, uint32_t pNSigma);
+    void setThresholdtoNSigma(BoardContainer* board, float pNSigma);
 
     // helpers for SCurve measurement
 

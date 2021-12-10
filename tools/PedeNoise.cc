@@ -109,7 +109,11 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fFitSCurves                  = findValueInSettings("FitSCurves", 0);
     fPulseAmplitude              = findValueInSettings("PedeNoisePulseAmplitude", 0);
     fEventsPerPoint              = findValueInSettings("Nevents", 10);
-    fNEventsPerBurst             = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
+    fNEventsPerBurst             = 0xffff;
+    fNEventsToValidate           = findValueInSettings("Nevents_Validation", 100000);
+    fMaskingThreshold            = findValueInSettings("Masking_Threshold", 0.001);
+    fMaskNoisyChannels           = findValueInSettings("MaskNoisyChannels", 0);
+
     LOG(INFO) << BOLDRED << "I8" << RESET;
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
@@ -341,9 +345,9 @@ void PedeNoise::measureNoise()
     LOG(INFO) << BOLDBLUE << "Done" << RESET;
 }
 
-void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
+void PedeNoise::Validate()
 {
-    LOG(INFO) << "Validation: Taking Data with " << fEventsPerPoint * pMultiple << " random triggers!";
+    LOG(INFO) << "Validation: Taking Data with " << fNEventsToValidate << " random triggers!";
 
     for(auto cBoard: *fDetectorContainer)
     {
@@ -356,7 +360,7 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
     bool originalAllChannelFlag = this->fAllChan;
 
     this->SetTestAllChannels(true);
-    this->measureData(fEventsPerPoint * pMultiple);
+    this->measureData(fNEventsToValidate, fNEventsPerBurst);
     this->SetTestAllChannels(originalAllChannelFlag);
 #ifdef __USE_ROOT__
     fDQMHistogramPedeNoise.fillValidationPlots(theOccupancyContainer);
@@ -370,13 +374,11 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
     auto theOccupancyStream = prepareHybridContainerStreamer<Occupancy, Occupancy, Occupancy>();
     // auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
 
-    LOG(INFO) << "6 ";
     for(auto board: theOccupancyContainer)
     {
         if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
     }
 #endif
-    LOG(INFO) << "7 ";
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -398,7 +400,7 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
                         // LOG (INFO) << RED << "Ch " << iChan << RESET ;
                         float occupancy =
                             theOccupancyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cFe->getIndex())->at(cROC->getIndex())->getChannel<Occupancy>(iChan).fOccupancy;
-                        if(occupancy > float(pNoiseStripThreshold * 0.001))
+                        if(occupancy > fMaskingThreshold && fMaskNoisyChannels)
                         {
                             if(cWithCBC)
                             {
@@ -421,19 +423,18 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
                                 std::string cRegName = "TrimDAC_P" + (boost::format("%|04|") % (iChan + 1)).str();
                                 cRegVec.push_back({cRegName, 0x1F});
                             }
-                            LOG(INFO) << RED << "Found a noisy channel on ROC " << +cROC->getId() << " on Hybrid#" << +cFe->getId() << " Channel " << iChan << " with an occupancy of "
-                                      << occupancy * 1e6 << "; threshold is " << pNoiseStripThreshold * 1e6 << " setting offset to " << +0xFF << RESET;
+                            LOG(INFO) << RED << "Found a noisy channel on ROC " << +cROC->getId() << " Channel " << iChan << " with an occupancy of " << occupancy << "; setting offset to " << +0xFF
+                                      << RESET;
                         }
                         else
                             LOG(INFO) << BOLDGREEN << "ROC " << +cROC->getId() << " on Hybrid#" << +cFe->getId() << " Channel " << iChan << " with an occupancy of " << occupancy * 1e6
-                                      << " number of hits is " << fEventsPerPoint * pMultiple * occupancy << "; threshold is " << pNoiseStripThreshold * 1e6 << " setting offset to " << +0xFF << RESET;
+                                      << " number of hits is " << fNEventsToValidate * occupancy << "; threshold is " << fMaskingThreshold << " setting offset to " << +0xFF << RESET;
                     }
 
                     fReadoutChipInterface->WriteChipMultReg(cROC, cRegVec);
                 }
             }
         }
-        setThresholdtoNSigma(cBoard, 0);
     }
 }
 
@@ -976,7 +977,7 @@ void PedeNoise::producePedeNoisePlots()
 #endif
 }
 
-void PedeNoise::setThresholdtoNSigma(BoardContainer* board, uint32_t pNSigma)
+void PedeNoise::setThresholdtoNSigma(BoardContainer* board, float pNSigma)
 {
     for(auto opticalGroup: *board)
     {
@@ -986,26 +987,32 @@ void PedeNoise::setThresholdtoNSigma(BoardContainer* board, uint32_t pNSigma)
             {
                 uint32_t cROCId = chip->getId();
 
-                uint16_t cPedestal = round(fThresholdAndNoiseContainer->at(board->getIndex())
+                float cPedestal = fThresholdAndNoiseContainer->at(board->getIndex())
                                                ->at(opticalGroup->getIndex())
                                                ->at(hybrid->getIndex())
                                                ->at(chip->getIndex())
                                                ->getSummary<ThresholdAndNoise, ThresholdAndNoise>()
-                                               .fThreshold);
-                uint16_t cNoise    = round(fThresholdAndNoiseContainer->at(board->getIndex())
+                                               .fThreshold;
+                float cNoise    = fThresholdAndNoiseContainer->at(board->getIndex())
                                             ->at(opticalGroup->getIndex())
                                             ->at(hybrid->getIndex())
                                             ->at(chip->getIndex())
                                             ->getSummary<ThresholdAndNoise, ThresholdAndNoise>()
-                                            .fNoise);
-                int      cDiff     = -pNSigma * cNoise;
-                uint16_t cValue    = cPedestal + cDiff;
+                                            .fNoise;
+
+                int    cDiff     = -pNSigma * cNoise;
+                uint16_t cThresholdWorkingPoint    = round(cPedestal + cDiff);
+
 
                 if(pNSigma > 0)
-                    LOG(INFO) << "Changing Threshold on ROC " << +cROCId << " by " << cDiff << " to " << cPedestal + cDiff << " VCth units to supress noise!";
-                else
+                    LOG(INFO) << "Changing Threshold on ROC " << +cROCId << " by " << cDiff << " to " << +cThresholdWorkingPoint << " VCth units to supress noise!" << " NOISE IS " << cNoise << " SIGMA " << pNSigma;
+                else{
                     LOG(INFO) << "Changing Threshold on ROC " << +cROCId << " back to the pedestal at " << +cPedestal;
-                ThresholdVisitor cThresholdVisitor(fReadoutChipInterface, cValue);
+                    cThresholdWorkingPoint = cPedestal;
+                }
+                fReadoutChipInterface->WriteChipReg(chip,"Threshold", cThresholdWorkingPoint);
+
+                ThresholdVisitor cThresholdVisitor(fReadoutChipInterface, cThresholdWorkingPoint);
                 static_cast<ReadoutChip*>(chip)->accept(cThresholdVisitor);
             }
         }
