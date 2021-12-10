@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
         theMPAInterface->Activate_sync(theMPA);
         theMPAInterface->Activate_pp(theMPA);
 
-        Stubs    curstub;
+       // Stubs    curstub;
         uint32_t npixtot = 0;
         // theMPAInterface->WriteChipReg(cMPA, "ClusterCut_ALL",1);
         // theMPAInterface->WriteChipReg(cMPA,"EdgeSelT1Raw", 0x0);
@@ -181,20 +181,20 @@ int main(int argc, char* argv[])
                         }
                     }
 
-                    Stubs    fst = theMPAInterface->Format_stubs(stubs);
-                    uint32_t nst = 0;
-                    for(auto& st1: fst.nst)
-                    {
-                        if(st1 != 0 and false)
-                        {
-                            std::cout << "CYCLE " << uint32_t(nst) << std::endl;
-                            std::cout << "pos " << uint32_t(fst.pos[nst][0]) << std::endl;
+                    //Stubs    fst = theMPAInterface->Format_stubs(stubs);
+                    //uint32_t nst = 0;
+                    //for(auto& st1: fst.nst)
+                    //{
+                      //  if(st1 != 0 and false)
+                        //{
+                          //  std::cout << "CYCLE " << uint32_t(nst) << std::endl;
+                            //std::cout << "pos " << uint32_t(fst.pos[nst][0]) << std::endl;
                             // for( auto& st2: fst.pos[nst])std::cout << "pos "<<uint32_t(st2)<< std::endl;
                             // for( auto& st2: fst.row[nst])std::cout << "row "<<uint32_t(st2)<< std::endl;
                             // for( auto& st2: fst.cur[nst])std::cout << "cur "<<uint32_t(st2)<< std::endl;
-                        }
-                        nst += 1;
-                    }
+                 //       }
+                   //     nst += 1;
+                    //}
 
                     // std::this_thread::sleep_for(ShortWait);
                     // static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->Send_pulses(1500);

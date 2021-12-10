@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
             thePSInterface->Set_threshold(cMPA, 200);
         }
     }
-    Stubs                 curstub;
+    //Stubs                 curstub;
     uint32_t              npixtot        = 0;
     std::vector<uint32_t> maxvals        = std::vector<uint32_t>(5, 0);
     uint32_t              maxNSclustot   = 0;

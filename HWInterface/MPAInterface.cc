@@ -440,6 +440,8 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
 {
     setBoard(pMPA->getBeBoardId());
 
+    //LOG(INFO) << BOLDRED << "glorpMPA! " << RESET;
+
     LOG(DEBUG) << BOLDMAGENTA << " MPAInterface::WriteChipReg writing to " << pRegName << RESET;
 
     // need to or success
@@ -1084,136 +1086,6 @@ uint32_t MPAInterface::Pix_read(ReadoutChip* cMPA, ChipRegItem cRegItem, uint32_
     rep = this->ReadChipReg(cMPA, "fc7_daq_ctrl.command_processor_block.i2c.mpa_MPA_i2c_reply.data");
 
     return rep;
-}
-
-Stubs MPAInterface::Format_stubs(std::vector<std::vector<uint8_t>> rawstubs)
-{
-    int   j     = 0;
-    int   cycle = 0;
-    Stubs formstubs;
-    for(int i = 0; i < 39; i++)
-    {
-        if((rawstubs[0][i] & 0x80) == 128)
-        {
-            j = i + 1;
-            formstubs.pos.push_back(std::vector<uint8_t>(5, 0));
-            formstubs.row.push_back(std::vector<uint8_t>(5, 0));
-            formstubs.cur.push_back(std::vector<uint8_t>(5, 0));
-
-            formstubs.nst.push_back(((rawstubs[1][i] & 0x80) >> 5) | ((rawstubs[2][i] & 0x80) >> 6) | ((rawstubs[3][i] & 0x80) >> 7));
-            formstubs.pos[cycle][0] = ((rawstubs[4][i] & 0x80) << 0) | ((rawstubs[0][i] & 0x40) << 0) | ((rawstubs[1][i] & 0x40) >> 1) | ((rawstubs[2][i] & 0x40) >> 2) |
-                                      ((rawstubs[3][i] & 0x40) >> 3) | ((rawstubs[4][i] & 0x40) >> 4) | ((rawstubs[0][i] & 0x20) >> 4) | ((rawstubs[1][i] & 0x20) >> 5);
-            formstubs.pos[cycle][1] = ((rawstubs[4][i] & 0x10) << 3) | ((rawstubs[0][i] & 0x8) << 3) | ((rawstubs[1][i] & 0x8) << 2) | ((rawstubs[2][i] & 0x8) << 1) | ((rawstubs[3][i] & 0x8) << 0) |
-                                      ((rawstubs[4][i] & 0x8) >> 1) | ((rawstubs[0][i] & 0x4) >> 1) | ((rawstubs[1][i] & 0x4) >> 2);
-            formstubs.pos[cycle][2] = ((rawstubs[4][i] & 0x2) << 6) | ((rawstubs[0][i] & 0x1) << 6) | ((rawstubs[1][i] & 0x1) << 5) | ((rawstubs[2][i] & 0x1) << 4) | ((rawstubs[3][i] & 0x1) << 3) |
-                                      ((rawstubs[4][i] & 0x1) << 3) | ((rawstubs[1][j] & 0x80) >> 6) | ((rawstubs[2][j] & 0x80) >> 7);
-            formstubs.pos[cycle][3] = ((rawstubs[0][j] & 0x20) << 2) | ((rawstubs[1][j] & 0x20) << 1) | ((rawstubs[2][j] & 0x20) << 0) | ((rawstubs[3][j] & 0x20) >> 1) |
-                                      ((rawstubs[4][j] & 0x20) >> 2) | ((rawstubs[0][j] & 0x10) >> 2) | ((rawstubs[1][j] & 0x10) >> 3) | ((rawstubs[2][j] & 0x10) >> 4);
-            formstubs.pos[cycle][4] = ((rawstubs[0][j] & 0x4) << 5) | ((rawstubs[1][j] & 0x4) << 4) | ((rawstubs[2][j] & 0x4) << 3) | ((rawstubs[3][j] & 0x4) << 2) | ((rawstubs[4][j] & 0x4) << 1) |
-                                      ((rawstubs[0][j] & 0x2) << 1) | ((rawstubs[1][j] & 0x2) << 0) | ((rawstubs[2][j] & 0x2) >> 1);
-            formstubs.row[cycle][0] = ((rawstubs[0][i] & 0x10) >> 1) | ((rawstubs[1][i] & 0x10) >> 2) | ((rawstubs[2][i] & 0x10) >> 3) | ((rawstubs[3][i] & 0x10) >> 4);
-            formstubs.row[cycle][1] = ((rawstubs[0][i] & 0x2) << 2) | ((rawstubs[1][i] & 0x2) << 1) | ((rawstubs[2][i] & 0x2) << 0) | ((rawstubs[3][i] & 0x2) >> 1);
-            formstubs.row[cycle][2] = ((rawstubs[1][j] & 0x40) >> 3) | ((rawstubs[2][j] & 0x40) >> 4) | ((rawstubs[3][j] & 0x40) >> 5) | ((rawstubs[4][j] & 0x40) >> 6);
-            formstubs.row[cycle][3] = ((rawstubs[1][j] & 0x8) >> 0) | ((rawstubs[2][j] & 0x8) >> 1) | ((rawstubs[3][j] & 0x8) >> 2) | ((rawstubs[4][j] & 0x8) >> 3);
-            formstubs.row[cycle][4] = ((rawstubs[1][j] & 0x1) << 3) | ((rawstubs[2][j] & 0x1) << 2) | ((rawstubs[3][j] & 0x1) << 1) | ((rawstubs[4][j] & 0x1) << 0);
-            formstubs.cur[cycle][0] = ((rawstubs[2][i] & 0x20) >> 3) | ((rawstubs[3][i] & 0x20) >> 4) | ((rawstubs[4][i] & 0x20) >> 5);
-            formstubs.cur[cycle][1] = ((rawstubs[2][i] & 0x4) >> 0) | ((rawstubs[3][i] & 0x4) >> 1) | ((rawstubs[4][i] & 0x4) >> 2);
-            formstubs.cur[cycle][2] = ((rawstubs[3][j] & 0x80) >> 5) | ((rawstubs[4][j] & 0x80) >> 6) | ((rawstubs[0][j] & 0x40) >> 6);
-            formstubs.cur[cycle][3] = ((rawstubs[3][j] & 0x10) >> 2) | ((rawstubs[4][j] & 0x10) >> 3) | ((rawstubs[0][j] & 0x8) >> 3);
-            formstubs.cur[cycle][4] = ((rawstubs[3][j] & 0x2) << 1) | ((rawstubs[4][j] & 0x2) >> 0) | ((rawstubs[0][j] & 0x1) >> 0);
-            // std::cout<<"RS1 "<<+formstubs.pos[cycle][0]<<std::endl;
-            // std::cout<<"RS2 "<<+formstubs.pos[cycle][1]<<std::endl;
-            // std::cout<<"RS3 "<<+formstubs.pos[cycle][2]<<std::endl;
-            // std::cout<<"RS01"<<+rawstubs[1][i]<<std::endl; std::cout<<"RS4 "<<+formstubs.pos[cycle][3]<<std::endl;
-            cycle += 1;
-        }
-    }
-    return formstubs;
-}
-
-L1data MPAInterface::Format_l1(std::vector<uint8_t> rawl1, bool verbose)
-{
-    bool    found = false;
-    uint8_t header, error(0), L1_ID, strip_counter, pixel_counter;
-    L1data  formL1data;
-
-    std::vector<uint16_t> strip_data, pixel_data;
-    uint16_t              curdata = 0;
-
-    for(int i = 1; i < 200; i++)
-    {
-        if((rawl1[i] == 255) & (rawl1[i - 1] == 255) & (!found))
-        {
-            header        = rawl1[i - 1] << 11 | rawl1[i - 1] << 3 | ((rawl1[i + 1] & 0xE0) >> 5);
-            error         = ((rawl1[i + 1] & 0x18) >> 3);
-            L1_ID         = ((rawl1[i + 1] & 0x7) << 6) | ((rawl1[i + 2] & 0xFC) >> 2);
-            strip_counter = ((rawl1[i + 2] & 0x1) << 4) | ((rawl1[i + 3] & 0xF0) >> 4);
-            pixel_counter = ((rawl1[i + 3] & 0xF) << 1) | ((rawl1[i + 4] & 0x80) >> 7);
-
-            uint8_t wordl = 11, counter = 0;
-            bool    curbit;
-            uint8_t bitmask = 0x80;
-            for(int j = 4; j < 50; j++)
-            {
-                for(int k = 0; k < 8; k++)
-                {
-                    curbit = (rawl1[i + j] & (bitmask >> k));
-                    counter += 1;
-                    curdata += (curbit << (wordl - counter));
-                    if(counter == wordl)
-                    {
-                        if(wordl == 11)
-                            strip_data.push_back(curdata);
-                        else
-                            pixel_data.push_back(curdata);
-                        if(strip_counter == strip_data.size()) wordl = 14;
-                        curdata = 0;
-                        counter = 0;
-                    }
-                }
-            }
-            found = true;
-        }
-    }
-    if(found)
-    {
-        formL1data.strip_counter = strip_counter;
-        formL1data.pixel_counter = pixel_counter;
-        if(verbose)
-        {
-            std::cout << "Header: " << std::bitset<8>(header) << std::endl;
-            std::cout << "Error: " << std::bitset<8>(error) << std::endl;
-            std::cout << "L1 ID: " << L1_ID << std::endl;
-            std::cout << "Strip counter: " << strip_counter << std::endl;
-            std::cout << "Pixel counter: " << pixel_counter << std::endl;
-            std::cout << "Strip data:" << std::endl;
-        }
-
-        for(auto& sdata: strip_data)
-        {
-            formL1data.pos_strip.push_back((sdata & 0x7F0) >> 4);
-            formL1data.width_strip.push_back((sdata & 0xE) >> 1);
-            formL1data.MIP.push_back((sdata & 0x1));
-
-            if(verbose) std::cout << "\tPosition: " << formL1data.pos_strip.back() << "\n\tWidth: " << formL1data.width_strip.back() << "\n\tMIP: " << formL1data.MIP.back() << std::endl;
-        }
-        if(verbose) std::cout << "Pixel data:" << std::endl;
-
-        for(auto& pdata: pixel_data)
-        {
-            formL1data.pos_pixel.push_back((pdata & 0x3F80) >> 7);
-            formL1data.width_pixel.push_back((pdata & 0x70) >> 4);
-            formL1data.Z.push_back((pdata & 0xF) + 1);
-
-            if(verbose) std::cout << "\tPosition: " << formL1data.pos_pixel.back() << "\n\tWidth: " << formL1data.width_pixel.back() << "\n\tRow Number: " << formL1data.Z.back() << std::endl;
-        }
-
-        return formL1data;
-    }
-    else
-        std::cout << "Header not found!" << std::endl;
-
-    return formL1data;
 }
 
 void MPAInterface::Activate_async(Chip* pMPA) { this->WriteChipReg(pMPA, "ReadoutMode", 0x1); }

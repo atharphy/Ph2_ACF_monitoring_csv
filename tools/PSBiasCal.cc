@@ -169,42 +169,85 @@ void PSBiasCal::CalibrateADC()
 
 uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point, uint32_t block, uint32_t DAC_val, float exp_val, float gnd_corr, std::string dac_str)
 {
-    std::vector<std::string> nameDAC{"A", "B", "C", "D", "E", "ThDAC", "CalDAC"};
+	float VREF_LPGBT        = 1.0;
+	float cConversionFactor = VREF_LPGBT / 1024.;
 
-    float VREF_LPGBT        = 1.0;
-    float cConversionFactor = VREF_LPGBT / 1024.;
-    fReadoutChipInterface->WriteChipReg(cChip, "TESTMUX", 0x1 << block);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    fReadoutChipInterface->WriteChipReg(cChip, "TEST" + std::to_string(block), 0x1 << point);
-    std::string DAC = nameDAC[point] + std::to_string(block);
+	uint32_t DAC_new_val =0;
+    if(cChip->getFrontEndType() == FrontEndType::MPA)
+		{
 
-    fReadoutChipInterface->WriteChipReg(cChip, DAC, 0);
-    std::this_thread::sleep_for(std::chrono::milliseconds(2));
-    uint32_t off_val = static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str);
+		std::vector<std::string> nameDAC{"A", "B", "C", "D", "E", "ThDAC", "CalDAC"};
 
-    fReadoutChipInterface->WriteChipReg(cChip, DAC, DAC_val);
-    std::this_thread::sleep_for(std::chrono::milliseconds(2));
-    uint32_t act_val = static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str);
 
-    float    LSB          = (float(act_val) - float(off_val)) / float(DAC_val);
-    float    exp_val_conv = exp_val / cConversionFactor;
-    uint32_t offsetval    = 0;
-    uint32_t DAC_new_val  = DAC_val - uint32_t(std::round(((float(act_val) - float(exp_val_conv) - float(gnd_corr)) / LSB))) + offsetval;
-    // LOG(INFO) << BOLDRED <<"DAC name:"<<DAC<<" ADC name:"<<dac_str<<" DAC_val "<<DAC_val<<" point:"<<point<<", block:"<<block<< RESET;
+		fReadoutChipInterface->WriteChipReg(cChip, "TESTMUX", 0x1 << block);
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		fReadoutChipInterface->WriteChipReg(cChip, "TEST" + std::to_string(block), 0x1 << point);
+		std::string DAC = nameDAC[point] + std::to_string(block);
 
-    DAC_new_val = std::max(uint32_t(0), DAC_new_val);
-    DAC_new_val = std::min(uint32_t(31), DAC_new_val);
-    fReadoutChipInterface->WriteChipReg(cChip, DAC, DAC_new_val);
-    std::this_thread::sleep_for(std::chrono::milliseconds(2));
-    float new_val = float(static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str));
-    // LOG(INFO) << BOLDRED <<"new_val:"<<new_val<<", act_valact_val:"<< act_val<<", exp_val:"<<exp_val_conv<<", off value:"<<off_val<<", DAC_val value:"<<DAC_val<< ", gnd_corr:"<<gnd_corr<<",
-    // LSB:"<<LSB<< RESET; LOG(INFO) << BOLDRED << "V-g " <<new_val - gnd_corr<<" vs "<<exp_val_conv<< RESET;
-    if(((new_val - gnd_corr) < (exp_val_conv + exp_val_conv * 0.052)) && ((new_val - gnd_corr) > (exp_val_conv - exp_val_conv * 0.052)))
-        LOG(DEBUG) << BOLDRED << "Calibration bias point " << point << " of test point " << block << " --> Done (" << new_val << "V for " << DAC_new_val << " DAC)" << RESET;
-    else
+		fReadoutChipInterface->WriteChipReg(cChip, DAC, 0);
+		std::this_thread::sleep_for(std::chrono::milliseconds(2));
+		uint32_t off_val = static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str);
+
+		fReadoutChipInterface->WriteChipReg(cChip, DAC, DAC_val);
+		std::this_thread::sleep_for(std::chrono::milliseconds(2));
+		uint32_t act_val = static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str);
+
+		float    LSB          = (float(act_val) - float(off_val)) / float(DAC_val);
+		float    exp_val_conv = exp_val / cConversionFactor;
+		uint32_t offsetval    = 0;
+		DAC_new_val  = DAC_val - uint32_t(std::round(((float(act_val) - float(exp_val_conv) - float(gnd_corr)) / LSB))) + offsetval;
+		// LOG(INFO) << BOLDRED <<"DAC name:"<<DAC<<" ADC name:"<<dac_str<<" DAC_val "<<DAC_val<<" point:"<<point<<", block:"<<block<< RESET;
+
+		DAC_new_val = std::max(uint32_t(0), DAC_new_val);
+		DAC_new_val = std::min(uint32_t(31), DAC_new_val);
+		fReadoutChipInterface->WriteChipReg(cChip, DAC, DAC_new_val);
+		std::this_thread::sleep_for(std::chrono::milliseconds(2));
+		float new_val = float(static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str));
+		// LOG(INFO) << BOLDRED <<"new_val:"<<new_val<<", act_valact_val:"<< act_val<<", exp_val:"<<exp_val_conv<<", off value:"<<off_val<<", DAC_val value:"<<DAC_val<< ", gnd_corr:"<<gnd_corr<<",
+		// LSB:"<<LSB<< RESET; LOG(INFO) << BOLDRED << "V-g " <<new_val - gnd_corr<<" vs "<<exp_val_conv<< RESET;
+		if(((new_val - gnd_corr) < (exp_val_conv + exp_val_conv * 0.052)) && ((new_val - gnd_corr) > (exp_val_conv - exp_val_conv * 0.052)))
+		    LOG(DEBUG) << BOLDRED << "Calibration bias point " << point << " of test point " << block << " --> Done (" << new_val << "V for " << DAC_new_val << " DAC)" << RESET;
+		else
+		{
+		    LOG(ERROR) << BOLDRED << "Calibration bias point " << point << " of test point " << block << " --> Failed (" << new_val << "V for " << DAC_new_val << " DAC)" << RESET;
+		    // throw std::runtime_error(std::string("Bias out of range"));
+		}
+
+	}
+    if(cChip->getFrontEndType() == FrontEndType::SSA)
     {
-        LOG(ERROR) << BOLDRED << "Calibration bias point " << point << " of test point " << block << " --> Failed (" << new_val << "V for " << DAC_new_val << " DAC)" << RESET;
-        // throw std::runtime_error(std::string("Bias out of range"));
+
+		std::vector<std::string> nameDAC{"Bias_D5BFEED","Bias_D5PREAMP","Bias_D5TDR","Bias_D5ALLV","Bias_D5ALLI"};
+		std::string DAC = nameDAC[point];
+
+
+		uint32_t MtoWr=(1<<point);
+		fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_LSB",MtoWr&0xff);
+		fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_MSB",MtoWr>>8);
+
+
+		fReadoutChipInterface->WriteChipReg(cChip, DAC, 0);
+		uint32_t off_val=static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT,dac_str);
+
+		fReadoutChipInterface->WriteChipReg(cChip, DAC, DAC_val);
+		uint32_t act_val=static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT,dac_str);
+		LOG(INFO) << BOLDRED <<"Calibrating DAC "<<DAC<<" to expected value " <<exp_val<<RESET;		
+
+		float    LSB          = (float(act_val) - float(off_val)) / float(DAC_val);
+		float    exp_val_conv = exp_val / cConversionFactor;
+		uint32_t offsetval    = 0;
+		DAC_new_val  = DAC_val - uint32_t(std::round(((float(act_val) - float(exp_val_conv) - float(gnd_corr)) / LSB))) + offsetval;
+		DAC_new_val = std::max(uint32_t(0), DAC_new_val);
+		DAC_new_val = std::min(uint32_t(31), DAC_new_val);
+
+		LOG(INFO) << BOLDRED <<"Read "<<act_val<<" with GND offset "<<gnd_corr<<" Writing "<<DAC_new_val<<" to   "<<RESET;		
+		LOG(INFO) << BOLDRED <<"Writing approximate DAC val "<<DAC_new_val<<RESET;		
+
+		fReadoutChipInterface->WriteChipReg(cChip, DAC, DAC_new_val);
+		float new_val = float(static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str));
+		LOG(INFO) << BOLDRED <<"New DAC val: "<<(new_val - gnd_corr)<<" Expected val from: " <<(exp_val_conv-LSB)<<" to "<<(exp_val_conv+LSB)<<RESET;
+
+
     }
     return DAC_new_val;
 }
@@ -213,7 +256,7 @@ void PSBiasCal::DisableTest(Chip* cChip)
 {
     if(cChip->getFrontEndType() == FrontEndType::MPA)
     {
-        LOG(DEBUG) << BOLDRED << "MPADisable " << RESET;
+        LOG(INFO) << BOLDRED << "MPADisable " << RESET;
         fReadoutChipInterface->WriteChipReg(cChip, "TESTMUX", 0x0);
         for(int iblock = 0; iblock < 7; iblock++)
         {
@@ -223,7 +266,7 @@ void PSBiasCal::DisableTest(Chip* cChip)
     }
     if(cChip->getFrontEndType() == FrontEndType::SSA)
     {
-        LOG(DEBUG) << BOLDRED << "SSADisable " << RESET;
+        LOG(INFO) << BOLDRED << "SSADisable " << RESET;
         fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_LSB", 0x0);
         fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_MSB", 0x0);
     }
@@ -231,19 +274,33 @@ void PSBiasCal::DisableTest(Chip* cChip)
 
 float PSBiasCal::MeasureGnd(Chip* cChip, Chip* clpGBT, std::string dac_str)
 {
-    std::vector<float> data(7, 0);
-    for(int iblock = 0; iblock < 7; iblock++)
-    {
-        std::string test = "TEST" + std::to_string(iblock);
-        fReadoutChipInterface->WriteChipReg(cChip, "TESTMUX", (0x1 << iblock));
-        fReadoutChipInterface->WriteChipReg(cChip, test, (0x1 << 7));
+	uint32_t gnd_val=0;
+    if(cChip->getFrontEndType() == FrontEndType::MPA)
+	{
+		std::vector<float> data(7, 0);
+		for(int iblock = 0; iblock < 7; iblock++)
+		{
+		    std::string test = "TEST" + std::to_string(iblock);
+		    fReadoutChipInterface->WriteChipReg(cChip, "TESTMUX", (0x1 << iblock));
+		    fReadoutChipInterface->WriteChipReg(cChip, test, (0x1 << 7));
 
-        data[iblock] = float(static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str));
-    }
+		    data[iblock] = float(static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str));
+		}
 
-    float avggnd = accumulate(data.begin(), data.end(), 0.0) / data.size();
-    LOG(INFO) << BOLDRED << "gndval " << avggnd << RESET;
-    return avggnd;
+		float avggnd = accumulate(data.begin(), data.end(), 0.0) / data.size();
+
+		gnd_val = avggnd;
+	}
+	if(cChip->getFrontEndType() == FrontEndType::SSA)
+	{
+		fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_LSB",(1<<11)&0xff);
+		fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_MSB",(1<<11)>>8);
+		gnd_val=static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT,dac_str);
+		//LOG(INFO) << BOLDRED <<DAC<<" DAC_val "<<DAC_val<<" exp_val "<<exp_val<<""<< RESET;
+		//LOG(INFO) << BOLDRED <<DAC<<" off_val "<<off_val<<" act_val " <<act_val<<" gnd_corr "<<gnd_corr<<" gnd_val "<<gnd_val<<RESET;
+	}
+	LOG(INFO) << BOLDRED << "gndval " << gnd_val << RESET;
+	return gnd_val;
 }
 
 void PSBiasCal::CalibrateBias()
@@ -256,37 +313,43 @@ void PSBiasCal::CalibrateBias()
             for(auto cHybrid: *cOpticalReadout)
             {
                 for(auto cChip: *cHybrid) { DisableTest(cChip); } // chip
+			}
+		}
+	}
+	
+    for(const auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalReadout: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalReadout)
+            {
+
                 for(auto cChip: *cHybrid)
                 {
                     std::string dac_str = "ADC3";
                     if(cHybrid->getId() == 1) dac_str = "ADC0";
+
+                    float gndval = MeasureGnd(cChip, cOpticalReadout->flpGBT, dac_str);
                     if(cChip->getFrontEndType() == FrontEndType::SSA)
                     {
-                        LOG(DEBUG) << BOLDRED << dac_str << " " << static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(cOpticalReadout->flpGBT, dac_str) << RESET;
+                        //gndval = MeasureGnd(cChip, cOpticalReadout->flpGBT, dac_str);
+                        LOG(INFO) << BOLDRED << dac_str << " " << static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(cOpticalReadout->flpGBT, dac_str) << RESET;
 
-                        /*LOG(INFO) << BOLDRED <<"ADC0 "<< static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(cOpticalReadout->flpGBT,"ADC0")<< RESET;
-                        LOG(INFO) << BOLDRED <<"ADC1 "<< static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(cOpticalReadout->flpGBT,"ADC1")<< RESET;
-                        LOG(INFO) << BOLDRED <<"ADC2 "<< static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(cOpticalReadout->flpGBT,"ADC2")<< RESET;
-                        LOG(INFO) << BOLDRED <<"ADC3 "<< static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(cOpticalReadout->flpGBT,"ADC3")<< RESET;
-                        LOG(INFO) << BOLDRED <<"ADC4 "<< static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(cOpticalReadout->flpGBT,"ADC4")<< RESET;
-                        LOG(INFO) << BOLDRED <<"ADC5 "<< static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(cOpticalReadout->flpGBT,"ADC5")<< RESET;
-                        LOG(INFO) << BOLDRED <<"ADC6 "<< static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(cOpticalReadout->flpGBT,"ADC6")<< RESET;
-                        LOG(INFO) << BOLDRED <<"ADC7 "<< static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(cOpticalReadout->flpGBT,"ADC7")<< RESET;*/
-
-                        /*LOG(INFO) << BOLDRED << "SSA "<<+(cChip->getId())<<" Hyb "<<+(cHybrid->getId()) <<RESET;
-                        for(uint32_t iMUX = 0; iMUX < 12; iMUX++)
-                            {
-                            uint32_t MtoWr=(1<<iMUX);
-                            fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_LSB",MtoWr&0xff);
-                            fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_MSB",MtoWr>>8);
-                            LOG(INFO) << BOLDRED <<dac_str<<" "<<iMUX<<" "<< static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(cOpticalReadout->flpGBT,dac_str)<< RESET;
-                            }*/
+                    
+                        LOG(INFO) << BOLDRED << "SSA "<<+(cChip->getId())<<" Hyb "<<+(cHybrid->getId()) <<RESET;
+ 
+                        std::vector<uint32_t> DAC_val{0xF, 0xF, 0xF, 0xF, 0xF, 0xF};
+                        std::vector<float>    exp_val{0.082,0.082,0.115,0.082,0.082,0.086};
+						for(int ipoint = 0; ipoint < 7; ipoint++)
+                        {
+                                LOG(DEBUG) << BOLDRED << CalibrateChipBias(cChip, cOpticalReadout->flpGBT, ipoint, 0, DAC_val[ipoint], exp_val[ipoint], gndval, dac_str) << RESET;
+						}
                     }
 
-                    if(cChip->getFrontEndType() == FrontEndType::MPA)
+                    else if(cChip->getFrontEndType() == FrontEndType::MPA)
                     {
-                        float gndval = MeasureGnd(cChip, cOpticalReadout->flpGBT, dac_str);
-                        DisableTest(cChip);
+                        //gndval = MeasureGnd(cChip, cOpticalReadout->flpGBT, dac_str);
+
                         std::vector<uint32_t> DAC_val{0xF, 0xF, 0xF, 0xF, 0xF, 0xFF, 0xFF};
                         std::vector<float>    exp_val{0.082, 0.082, 0.108, 0.082, 0.082, 1.0, 1.0};
                         // std::vector<uint32_t> DAC_val{0xF, 0xF, 29, 0xF, 0xF, 0xFF, 0xFF};
@@ -300,6 +363,8 @@ void PSBiasCal::CalibrateBias()
                             }
                         }
                     }
+
+
                     DisableTest(cChip);
                 }
             } // chip

@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
             thePSInterface->WriteChipReg(cMPA, "Bias_THDAC", 250);
         }
     }
-    Stubs    curstub;
+    //Stubs    curstub;
     uint32_t npixtot = 0;
 
     // dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ConfigureTriggerFSM( 0, 1, 6);

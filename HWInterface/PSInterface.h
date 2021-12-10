@@ -13,9 +13,11 @@
 #define __PSINTERFACE_H__
 
 #include "BeBoardFWInterface.h"
-#include "MPAInterface.h"
 #include "ReadoutChipInterface.h"
+#include "MPAInterface.h"
 #include "SSAInterface.h"
+#include "MPA2Interface.h"
+#include "SSA2Interface.h"
 
 #include "pugixml.hpp"
 #include <vector>
@@ -32,7 +34,7 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
  * \class PSInterface
  * \brief Class representing the User Interface to the PS on different boards
  */
-
+//const std::map<FrontEndType, ReadoutChipInterface*> CHIP_INTERFACE ={{FrontEndType::SSA,Ph2_HwInterface::SSAInterface*},{FrontEndType::SSA2,Ph2_HwInterface::SSA2Interface*},{FrontEndType::MPA,Ph2_HwInterface::MPAInterface*},{FrontEndType::MPA2,Ph2_HwInterface::MPA2Interface*}};
 class PSInterface : public ReadoutChipInterface
 { // begin class
   private:
@@ -44,8 +46,15 @@ class PSInterface : public ReadoutChipInterface
   public:
     PSInterface(const BeBoardFWMap& pBoardMap);
     ~PSInterface();
+
     Ph2_HwInterface::SSAInterface* theSSAInterface;
     Ph2_HwInterface::MPAInterface* theMPAInterface;
+    Ph2_HwInterface::SSA2Interface* theSSA2Interface;
+    Ph2_HwInterface::MPA2Interface* theMPA2Interface;
+
+	std::map<FrontEndType, ReadoutChipInterface*> CHIP_INTERFACE;
+	ReadoutChipInterface* getInterface(Ph2_HwDescription::Chip* pPS);
+
     void                           setFileHandler(FileHandler* pHandler);
     bool                           ConfigureChip(Ph2_HwDescription::Chip* pPS, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
     uint32_t                       ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait);
@@ -72,10 +81,8 @@ class PSInterface : public ReadoutChipInterface
     void                  Activate_ps(Ph2_HwDescription::Chip* pPS, uint8_t win = 8);
     void                  readAllBias(Ph2_HwDescription::ReadoutChip* pPS);
 
-    void Enable_pix_counter(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p);
-    void Enable_pix_sync(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p);
-    void Disable_pixel(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p);
-    void Enable_pix_digi(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p);
+
+
     // uint32_t Read_pixel_counter(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p);
 
     void                 producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
@@ -85,18 +92,7 @@ class PSInterface : public ReadoutChipInterface
     void             digiInjection(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern = 0xFF);
     std::vector<int> decodeBendCode(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pBendCode);
     void             ReadASEvent(Ph2_HwDescription::ReadoutChip* pPS, std::vector<uint32_t>& pData, std::pair<uint32_t, uint32_t> pSRange = std::pair<uint32_t, uint32_t>({0, 0}));
-    void             Pix_Smode(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p, std::string smode);
-    void             Enable_pix_BRcal(Ph2_HwDescription::ReadoutChip* pPS, uint32_t p, std::string polarity = "rise", std::string smode = "edge");
-    void             Pix_Set_enable(Ph2_HwDescription::ReadoutChip* pPS,
-                                    uint32_t                        p,
-                                    uint32_t                        PixelMask,
-                                    uint32_t                        Polarity,
-                                    uint32_t                        EnEdgeBR,
-                                    uint32_t                        EnLevelBR,
-                                    uint32_t                        Encount,
-                                    uint32_t                        DigCal,
-                                    uint32_t                        AnCal,
-                                    uint32_t                        BRclk);
+
 
     void Set_calibration(Ph2_HwDescription::Chip* pPS, uint32_t cal);
     void Set_threshold(Ph2_HwDescription::Chip* pPS, uint32_t th);

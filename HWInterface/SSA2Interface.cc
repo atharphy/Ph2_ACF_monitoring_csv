@@ -336,6 +336,14 @@ bool SSA2Interface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode,
 #endif
     return cSuccess;
 }
+
+bool SSA2Interface::WriteChipRegBits(Chip* pSSA2, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask ,bool pVerifLoop) 
+{
+        this->WriteChipSingleReg(pSSA2, pMaskReg, mask, pVerifLoop);
+        bool cReadoutMode = WriteChipSingleReg(pSSA2, pRegNode, pValue , pVerifLoop);
+        this->WriteChipSingleReg(pSSA2, pMaskReg, 0xFF, pVerifLoop);
+		return cReadoutMode;
+}                                
 //	// WRITE REGISTER (SINGLE CHIP REG <<main interface for writing>>):
 //////////
 bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint16_t pValue, bool pVerifLoop)
@@ -370,16 +378,21 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     }
     else if(pRegName == "ReadoutMode")
     {
-        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 7, pVerifLoop);
-        bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_1", pValue, pVerifLoop);
-        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 255, pVerifLoop);
+
+        bool cReadoutMode = this->WriteChipRegBits(pSSA2, "control_1", pValue,"mask_peri_D",7,pVerifLoop);
+
+        //this->WriteChipSingleReg(pSSA2, "mask_peri_D", 7, pVerifLoop);
+        //bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_1", pValue, pVerifLoop);
+        //this->WriteChipSingleReg(pSSA2, "mask_peri_D", 255, pVerifLoop);
         return cReadoutMode;
     }
     else if(pRegName == "SamplingMode")
     {
-        this->WriteChipSingleReg(pSSA2, "mask_strip", 0x60, pVerifLoop);
-        bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_1", pValue << 5, pVerifLoop);
-        this->WriteChipSingleReg(pSSA2, "mask_strip", 0xFF, pVerifLoop);
+        bool cReadoutMode = this->WriteChipRegBits(pSSA2, "control_1", pValue << 5,"mask_strip",0x60,pVerifLoop);
+
+        //this->WriteChipSingleReg(pSSA2, "mask_strip", 0x60, pVerifLoop);
+        //bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_1", pValue << 5, pVerifLoop);
+        //this->WriteChipSingleReg(pSSA2, "mask_strip", 0xFF, pVerifLoop);
         return cReadoutMode;
     }
     else if(pRegName == "inject")
@@ -390,10 +403,16 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     }
     else if(pRegName == "TriggerLatency")
     {
-        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xFF, false);
-        bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_3", pValue & 0xFF, pVerifLoop);
-        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0x10, false);
-        cReadoutMode &= WriteChipSingleReg(pSSA2, "control_1", (pValue & 0x100 >> 8), pVerifLoop);
+        bool cReadoutMode = this->WriteChipRegBits(pSSA2, "control_3", pValue & 0xFF,"mask_peri_D",0xFF,pVerifLoop);
+        cReadoutMode  &= this->WriteChipRegBits(pSSA2, "control_1", (pValue & 0x100 >> 8),"mask_peri_D",0x10,pVerifLoop);
+
+        //this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xFF, false);
+        //bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_3", pValue & 0xFF, pVerifLoop);
+        //this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0x10, false);
+        //cReadoutMode &= WriteChipSingleReg(pSSA2, "control_1", (pValue & 0x100 >> 8), pVerifLoop);
+
+		//mask not reset??
+
         return cReadoutMode;
     }
     else if(pRegName == "AnalogueAsync")
@@ -401,11 +420,24 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     //  cTool.fReadoutChipInterface->WriteChipReg(theSSA, "mask_strip", 0xff);
     //	cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ENFLAGS", 0x15);
     {
-        //	uint8_t cRegValue       = (pValue << 4) | (pValue << 2) | (1 << 0);
-        this->WriteChipSingleReg(pSSA2, "mask_strip", 0xff, false);
+
+
+		//NOTE:assume mask always 0xFF?
         bool cEnableAnalogue = WriteChipSingleReg(pSSA2, "ENFLAGS", 0x15, pVerifLoop);
-        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xff, false);
         bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_1", 0x1, pVerifLoop);
+
+		//do we need to mask here?
+
+        //bool cEnableAnalogue  = this->WriteChipRegBits(pSSA2, "ENFLAGS", 0x15,"mask_strip",0xff,pVerifLoop);
+        //bool cReadoutMode = this->WriteChipRegBits(pSSA2, "control_1", 0x1,"mask_peri_D",0xff,pVerifLoop);
+
+        //	uint8_t cRegValue       = (pValue << 4) | (pValue << 2) | (1 << 0);
+
+		//do we need to mask here?
+        //this->WriteChipSingleReg(pSSA2, "mask_strip", 0xff, false);
+        //bool cEnableAnalogue = WriteChipSingleReg(pSSA2, "ENFLAGS", 0x15, pVerifLoop);
+        //this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xff, false);
+        //bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_1", 0x1, pVerifLoop);
         return cEnableAnalogue && cReadoutMode;
     }
     else if(pRegName == "Sync")
@@ -419,9 +451,15 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         cRegValue               = cRegValue | (pStripEnable << 0);
         LOG(DEBUG) << BOLDRED << "Enable flag is 0x" << std::hex << +cRegValue << std::dec << RESET;
         bool cEnableAnalogue = WriteChipSingleReg(pSSA2, "ENFLAGS", cRegValue, pVerifLoop);
-        this->WriteChipSingleReg(pSSA2, "mask_strip", 1, pVerifLoop);
-        bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_1", (1 - pValue), pVerifLoop);
-        this->WriteChipSingleReg(pSSA2, "mask_strip", 255, pVerifLoop);
+
+
+
+
+        bool cReadoutMode = this->WriteChipRegBits(pSSA2, "control_1", (1 - pValue),"mask_strip",0x1,pVerifLoop);
+
+        //this->WriteChipSingleReg(pSSA2, "mask_strip", 1, pVerifLoop);
+        //bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_1", (1 - pValue), pVerifLoop);
+        //this->WriteChipSingleReg(pSSA2, "mask_strip", 255, pVerifLoop);
 
         return cEnableAnalogue && cReadoutMode;
     }
@@ -434,16 +472,22 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     else if(pRegName == "DigitalSync")
     {
         uint8_t cRegValue = (pValue << 3) | (1 << 2) | (1 << 0);
-        WriteChipReg(pSSA2, "mask_strip", 0xff, false);
+		
+
+		//NOTE:assume mask always 0xFF?
+        //WriteChipReg(pSSA2, "mask_strip", 0xff, false);
         bool cEnFlags = WriteChipSingleReg(pSSA2, "ENFLAGS", cRegValue, pVerifLoop);
         bool cMode    = WriteChipReg(pSSA2, "ReadoutMode", 0x0, pVerifLoop);
         return cEnFlags && cMode;
     }
     else if(pRegName == "DigitalDuration")
     {
-        this->WriteChipSingleReg(pSSA2, "mask_peri_D", (0xF << 4), false);
-        bool cCalDuration = WriteChipSingleReg(pSSA2, "control_2", (0xF << 4), false);
-        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 255, false);
+
+        bool cCalDuration = this->WriteChipRegBits(pSSA2, "control_2", (0xF << 4),"mask_peri_D",(0xF << 4),pVerifLoop);
+
+        //this->WriteChipSingleReg(pSSA2, "mask_peri_D", (0xF << 4), false);
+        //bool cCalDuration = WriteChipSingleReg(pSSA2, "control_2", (0xF << 4), false);
+        //this->WriteChipSingleReg(pSSA2, "mask_peri_D", 255, false);
         return cCalDuration;
     }
     else if(pRegName == "EnableSLVSTestOutput")
@@ -451,9 +495,13 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         LOG(INFO) << BOLDBLUE << "Enabling SLVS test output on SSA2#" << +pSSA2->getId() << RESET;
         uint8_t cRegValue = ReadChipReg(pSSA2, "ReadoutMode");
         cRegValue         = (cRegValue & 0x4) | (pValue << 1);
-        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 2, pVerifLoop);
-        bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_1", pValue << 1, pVerifLoop);
-        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 255, pVerifLoop);
+
+
+        bool cReadoutMode = this->WriteChipRegBits(pSSA2, "control_1", pValue << 1,"mask_peri_D",2,pVerifLoop);
+
+        //this->WriteChipSingleReg(pSSA2, "mask_peri_D", 2, pVerifLoop);
+        //bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_1", pValue << 1, pVerifLoop);
+        //this->WriteChipSingleReg(pSSA2, "mask_peri_D", 255, pVerifLoop);
         return cReadoutMode;
     }
     else if(pRegName == "CalibrationPattern")
