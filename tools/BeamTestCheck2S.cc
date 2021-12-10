@@ -157,7 +157,7 @@ void BeamTestCheck2S::CheckWithTP(uint8_t pContinousReadout)
     // validate
     Validate();
 
-    for(auto cBoard: *fDetectorContainer) { PrintData(cBoard); }
+    //for(auto cBoard: *fDetectorContainer) { PrintData(cBoard); }
 }
 void BeamTestCheck2S::ValidateTP()
 {
@@ -178,22 +178,22 @@ void BeamTestCheck2S::Validate()
     // read events
     if(fReadoutMode == 0) ContinousReadout();
 
-    for(auto cBoard: *fDetectorContainer)
-    {
-        fBeBoardInterface->setBoard(cBoard->getId());
-        const std::vector<Event*>& cEvents              = this->GetEvents();
-        float                      cNormalizationFactor = fNevents; // cEvents.size() / (1 + cTriggerMult);
-        BeBoardRegMap              cRegMap              = cBoard->getBeBoardRegMap();
-        std::string                cMultRegName         = "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity";
-        size_t                     cTriggerMult         = (fReadoutMode == 0) ? fBeBoardInterface->ReadBoardReg(cBoard, cMultRegName) : cRegMap[cMultRegName];
-        LOG(INFO) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " events from BeBoard#" << +cBoard->getId() << " - normalization factor for occupancy is " << +cNormalizationFactor << RESET;
-        for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++) { Count(cEvents, cTriggerId, 1); }
-    }
-#ifdef __USE_ROOT__
-    fDQMHistogrammer.fillHitMaps(fHitMap, fStubMap, fHitContainerTDC);
-    fDQMHistogrammer.fillBendPlots(fBendMap);
-    fDQMHistogrammer.fillCountPlots(fEventSubSet, fStubSubSet);
-#endif
+    // for(auto cBoard: *fDetectorContainer)
+    // {
+    //     fBeBoardInterface->setBoard(cBoard->getId());
+    //     const std::vector<Event*>& cEvents              = this->GetEvents();
+    //     float                      cNormalizationFactor = fNevents; // cEvents.size() / (1 + cTriggerMult);
+    //     LOG(INFO) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " events from BeBoard#" << +cBoard->getId() << " - normalization factor for occupancy is " << +cNormalizationFactor << RESET;
+    //     // BeBoardRegMap              cRegMap              = cBoard->getBeBoardRegMap();
+    //     // std::string                cMultRegName         = "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity";
+    //     // size_t                     cTriggerMult         = (fReadoutMode == 0) ? fBeBoardInterface->ReadBoardReg(cBoard, cMultRegName) : cRegMap[cMultRegName];
+    //     // for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++) { Count(cEvents, cTriggerId, 1); }
+    // }
+// #ifdef __USE_ROOT__
+//     fDQMHistogrammer.fillHitMaps(fHitMap, fStubMap, fHitContainerTDC);
+//     fDQMHistogrammer.fillBendPlots(fBendMap);
+//     fDQMHistogrammer.fillCountPlots(fEventSubSet, fStubSubSet);
+// #endif
 }
 //
 void BeamTestCheck2S::CheckWithInternal(uint8_t pContinousReadout)
@@ -217,7 +217,7 @@ void BeamTestCheck2S::CheckWithInternal(uint8_t pContinousReadout)
     // validate
     Validate();
 
-    for(auto cBoard: *fDetectorContainer) { PrintData(cBoard); }
+    // for(auto cBoard: *fDetectorContainer) { PrintData(cBoard); }
     // read events
     // if( fReadoutMode == 0 ) ContinousReadout();
 
