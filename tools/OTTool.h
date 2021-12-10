@@ -60,6 +60,7 @@ class OTTool : public Tool
     uint8_t fWithCBC{0};
     // readout related items
     uint32_t fNevents{100};
+    uint32_t fEventCountInt{0};
     uint32_t fReadoutPause{100};
     uint32_t fEventCounter{0};
     // waits
