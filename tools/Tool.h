@@ -119,6 +119,7 @@ class Tool : public Ph2_System::SystemController
 #ifdef __USE_ROOT__
     void InitResultFile(const std::string& pFilename);
     void CloseResultFile();
+    void AddMetadata();
     void StartHttpServer(const int pPort = 8080, bool pReadonly = true);
     void HttpServerProcess();
 #endif

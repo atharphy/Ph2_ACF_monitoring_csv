@@ -507,6 +507,7 @@ void Tool::InitResultFile(const std::string& pFilename)
         {
             fResultFile     = TFile::Open(cFilename.c_str(), "RECREATE");
             fResultFileName = cFilename;
+            AddMetadata();
         }
         catch(std::exception& e)
         {
@@ -528,6 +529,53 @@ void Tool::CloseResultFile()
         fResultFile = nullptr;
     }
 }
+
+//add username, chip IDs to a metadata tree
+void Tool::AddMetadata()
+{
+    fResultFile->cd();
+    TTree* t = new TTree();
+    t->SetName("metadata");
+    
+    //save username
+    std::string user = std::string( std::getenv("USER"));
+    t->Branch("username", &user);
+
+    //save chip IDs
+    int chipIds[20];
+    int i=0;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid){
+                    if(cChip->getFrontEndType() == FrontEndType::CBC3){
+                        
+                        std::stringstream label;
+                        label << "hybrid_" << std::to_string(cHybrid->getId()) << "_CBC3_" << std::to_string(cChip->getId());
+
+                        uint32_t value = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadCbcIDeFuse(cChip);
+                         
+                        chipIds[i] = value;
+                        //this is ok because we will only set one value per branch
+                        t->Branch(label.str().c_str(), &chipIds[i]);
+        
+                        i++; 
+
+                    }
+                }
+            }
+        }
+    }
+
+    t->Fill();
+
+    t->Write();
+    fResultFile->Write();
+}
+
 
 void Tool::StartHttpServer(const int pPort, bool pReadonly)
 {
