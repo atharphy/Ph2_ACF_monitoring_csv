@@ -605,18 +605,18 @@ void DQMHistogramPedeNoise::fitSCurves()
                         TH1F* channelSCurve = chip->getChannel<HistContainer<TH1F>>(cChannel).fTheHistogram;
 
                         float channelNoise = fDetectorStripNoiseHistograms.at(board->getIndex())
-                                    ->at(opticalGroup->getIndex())
-                                    ->at(hybrid->getIndex())
-                                    ->at(chip->getIndex())
-                                    ->getSummary<HistContainer<TH1F>>()
-                                    .fTheHistogram->GetBinContent(cChannel+1);
+                                                 ->at(opticalGroup->getIndex())
+                                                 ->at(hybrid->getIndex())
+                                                 ->at(chip->getIndex())
+                                                 ->getSummary<HistContainer<TH1F>>()
+                                                 .fTheHistogram->GetBinContent(cChannel + 1);
 
                         float channelPedestal = fDetectorStripPedestalHistograms.at(board->getIndex())
-                                    ->at(opticalGroup->getIndex())
-                                    ->at(hybrid->getIndex())
-                                    ->at(chip->getIndex())
-                                    ->getSummary<HistContainer<TH1F>>()
-                                    .fTheHistogram->GetBinContent(cChannel+1);
+                                                    ->at(opticalGroup->getIndex())
+                                                    ->at(hybrid->getIndex())
+                                                    ->at(chip->getIndex())
+                                                    ->getSummary<HistContainer<TH1F>>()
+                                                    .fTheHistogram->GetBinContent(cChannel + 1);
 
                         TF1* cFit = new TF1("SCurveFit", MyErf, channelPedestal - (channelNoise * 5), channelPedestal + (channelNoise * 5), 2);
 
