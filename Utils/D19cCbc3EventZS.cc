@@ -18,7 +18,7 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-void D19cCbc3EventZS::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
+void D19cCbc3EventZS::fillDataContainer(BoardDataContainer* boardContainer, const BoardDataContainer* theChannelGroupHandler, int groupNumber)
 {
     for(auto opticalGroup: *boardContainer)
     {
@@ -26,6 +26,9 @@ void D19cCbc3EventZS::fillDataContainer(BoardDataContainer* boardContainer, cons
         {
             for(auto chip: *hybrid)
             {
+                auto cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, opticalGroup->getId(), hybrid->getId(), chip->getId());
+                if(!cTestChannelGroup) continue;
+
                 unsigned int i = 0;
                 for(ChannelContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
                 {

@@ -50,16 +50,15 @@ std::vector<uint8_t> PSInterface::readLUT(ReadoutChip* pPS, uint8_t pMode)
     if(pPS->getFrontEndType() == FrontEndType::MPA) { cLUT = theMPAInterface->readLUT(pPS, pMode); }
     return cLUT;
 }
-
-bool PSInterface::setInjectionSchema(ReadoutChip* pPS, const ChannelGroupBase* group, bool pVerifLoop)
+bool PSInterface::setInjectionSchema(ReadoutChip* pPS, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop)
 {
     return getInterface(pPS)->setInjectionSchema(pPS, group, pVerifLoop); 
 }
-bool PSInterface::maskChannelsAndSetInjectionSchema(ReadoutChip* pPS, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop)
+bool PSInterface::maskChannelsAndSetInjectionSchema(ReadoutChip* pPS, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop)
 {
     return getInterface(pPS)->maskChannelsAndSetInjectionSchema(pPS, group, mask, inject, pVerifLoop); 
 }
-bool PSInterface::maskChannelsGroup(ReadoutChip* pPS, const ChannelGroupBase* group, bool pVerifLoop)
+bool PSInterface::maskChannelGroup(ReadoutChip* pPS, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop)
 {
     return getInterface(pPS)->maskChannelsGroup(pPS, group, pVerifLoop); 
 }

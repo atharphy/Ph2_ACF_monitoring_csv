@@ -14,7 +14,7 @@ D19cSSA2Event::D19cSSA2Event(const BeBoard* pBoard, uint32_t pNSSA2, uint32_t pN
     fNSSA2 = pNSSA2;
     SetEvent(pBoard, pNSSA2, list);
 }
-void D19cSSA2Event::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
+void D19cSSA2Event::fillDataContainer(BoardDataContainer* boardContainer, const BoardDataContainer* theChannelGroupHandler, int groupNumber)
 {
     for(auto opticalGroup: *boardContainer)
     {
@@ -22,6 +22,9 @@ void D19cSSA2Event::fillDataContainer(BoardDataContainer* boardContainer, const 
         {
             for(auto chip: *hybrid)
             {
+                auto cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, opticalGroup->getId(), hybrid->getId(), chip->getId());
+                if(!cTestChannelGroup) continue;
+
                 unsigned int i = 0;
                 for(ChannelDataContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
                 {

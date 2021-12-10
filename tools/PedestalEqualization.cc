@@ -60,31 +60,25 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     // cWithMPA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
     if(cWithCBC)
     {
-        fChannelGroupHandler = new CBCChannelGroupHandler();
-        fChannelGroupHandler->setChannelGroupParameters(16, 2); // 16*2*8
+        CBCChannelGroupHandler theChannelGroupHandler;
+        theChannelGroupHandler.setChannelGroupParameters(16, 2); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandler);
     }
-    if(cWithSSA && !cWithMPA)
+    if(cWithSSA)
     {
-        fChannelGroupHandler = new SSAChannelGroupHandler();
-        fChannelGroupHandler->setChannelGroupParameters(1, NSSACHANNELS); // 5*3*8
+        SSAChannelGroupHandler theChannelGroupHandler;
+        theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA);
+        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA2);
     }
-    if(cWithMPA && !cWithSSA)
+    if(cWithMPA)
     {
-        fChannelGroupHandler = new MPAChannelGroupHandler();
-        fChannelGroupHandler->setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS);
+        MPAChannelGroupHandler theChannelGroupHandler;
+        theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA);
+        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA2);
     }
-    if(cWithMPA && cWithSSA) { fChannelGroupHandler = new MPAChannelGroupHandler(); }
 
-    // ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
-    // cWithCBC = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-    // cWithSSA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
-    // cWithMPA = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
-    // if(cWithCBC) fChannelGroupHandler = new CBCChannelGroupHandler();
-    // if(cWithSSA) fChannelGroupHandler = new SSAChannelGroupHandler();
-    // if(cWithMPA) fChannelGroupHandler = new MPAChannelGroupHandler();
-    // fChannelGroupHandler->setChannelGroupParameters(16, 2);
-    // // For async only -- to fix
-    // if(cWithMPA) fChannelGroupHandler->setChannelGroupParameters(16, 120);
     this->fAllChan = pAllChan;
 
     fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels", 0);

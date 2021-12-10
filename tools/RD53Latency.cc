@@ -226,7 +226,7 @@ void Latency::scanDac(const std::string& regName, const std::vector<uint16_t>& d
         // ################
         PixelAlive::run();
         auto output = PixelAlive::analyze();
-        output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
+        output->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandlerContainer, 1);
 
         // ###############
         // # Save output #

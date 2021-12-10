@@ -602,9 +602,9 @@ bool SSA2Interface::ConfigureAmux(Chip* pChip, const std::string& pRegister)
 bool SSA2Interface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerifLoop) { return this->WriteChipReg(pChip, "inject", 1); }
 bool SSA2Interface::setInjectionAmplitude(ReadoutChip* pChip, uint8_t injectionAmplitude, bool pVerifLoop) { return this->WriteChipReg(pChip, "InjectedCharge", injectionAmplitude, pVerifLoop); }
 /////////// SPOOFING OVERRIDES:
-bool SSA2Interface::setInjectionSchema(ReadoutChip* pSSA2, const ChannelGroupBase* group, bool pVerifLoop) { return true; }
-bool SSA2Interface::maskChannelsGroup(ReadoutChip* pSSA2, const ChannelGroupBase* group, bool pVerifLoop) { return true; }
-bool SSA2Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop) { return true; }
+bool SSA2Interface::setInjectionSchema(ReadoutChip* pSSA2, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop) { return true; }
+bool SSA2Interface::maskChannelGroup(ReadoutChip* pSSA2, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop) { return true; }
+bool SSA2Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop) { return true; }
 bool SSA2Interface::ConfigureChipOriginalMask(ReadoutChip* pSSA2, bool pVerifLoop, uint32_t pBlockSize) { return true; }
 bool SSA2Interface::MaskAllChannels(ReadoutChip* pSSA2, bool mask, bool pVerifLoop) { return true; }
 } // namespace Ph2_HwInterface

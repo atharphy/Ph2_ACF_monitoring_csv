@@ -47,7 +47,7 @@ D19cCbc3Event::D19cCbc3Event(const BeBoard* pBoard, const std::vector<uint32_t>&
     // SetEvent (pBoard, fNCbc, list );
 }
 
-void D19cCbc3Event::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
+void D19cCbc3Event::fillDataContainer(BoardDataContainer* boardContainer, const BoardDataContainer* theChannelGroupHandler, int groupNumber)
 {
     for(auto opticalGroup: *boardContainer)
     {
@@ -55,7 +55,10 @@ void D19cCbc3Event::fillDataContainer(BoardDataContainer* boardContainer, const 
         {
             for(auto chip: *hybrid)
             {
-                unsigned int i = 0;
+                unsigned int i                 = 0;
+                auto         cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, opticalGroup->getId(), hybrid->getId(), chip->getId());
+                if(!cTestChannelGroup) continue;
+
                 for(ChannelDataContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
                 {
                     if(cTestChannelGroup->isChannelEnabled(i)) { channel->fOccupancy += (float)privateDataBit(hybrid->getId(), chip->getId(), i); }

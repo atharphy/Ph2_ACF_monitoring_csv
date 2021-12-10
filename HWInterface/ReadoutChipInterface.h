@@ -120,7 +120,7 @@ class ReadoutChipInterface : public ChipInterface
      * \param group: group of channels under test
      * \param pVerifLoop: perform a readback check
      */
-    virtual bool setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true)
+    virtual bool setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop = true)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         return false;
@@ -144,7 +144,7 @@ class ReadoutChipInterface : public ChipInterface
      * \param group: group of channels under test
      * \param pVerifLoop: perform a readback check
      */
-    virtual bool maskChannelsGroup(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true)
+    virtual bool maskChannelGroup(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop = true)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         return false;
@@ -158,7 +158,7 @@ class ReadoutChipInterface : public ChipInterface
      * \param inject: inject channels belonging to the group under test
      * \param pVerifLoop: perform a readback check
      */
-    virtual bool maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = true) = 0;
+    virtual bool maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop = true) = 0;
 
     /*!
      * \brief Reapply the stored mask for the Chip, use it after group masking is applied

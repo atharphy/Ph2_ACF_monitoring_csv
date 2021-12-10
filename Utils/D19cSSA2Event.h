@@ -37,7 +37,7 @@ class D19cSSA2Event : public Event
     uint32_t              GetSSA2L1Counter(uint8_t pFeId, uint8_t pSSA2Id) const;
     std::vector<uint32_t> GetHits(uint8_t pFeId, uint8_t pSSA2Id) const override;
     std::vector<Cluster>  getClusters(uint8_t pFeId, uint8_t pSSA2Id) const override;
-    void                  fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
+    void                  fillDataContainer(BoardDataContainer* boardContainer, const BoardDataContainer* theChannelGroupHandler, int groupNumber) override;
     void                  print(std::ostream& out) const override;
     bool                  DataBit(uint8_t pFeId, uint8_t pSSA2Id, uint32_t i) const override { return privateDataBit(pFeId, pSSA2Id, i); };
     inline bool           privateDataBit(uint8_t pFeId, uint8_t pSSA2Id, uint8_t i) const

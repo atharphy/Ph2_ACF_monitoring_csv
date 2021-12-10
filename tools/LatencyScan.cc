@@ -26,12 +26,28 @@ void LatencyScan::Initialize()
     bool         cWithSSA          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
     bool         cWithMPA          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
 
-    if(cWithCBC) fChannelGroupHandler = new CBCChannelGroupHandler();
-    if(cWithSSA) fChannelGroupHandler = new SSAChannelGroupHandler();
-    if(cWithMPA) fChannelGroupHandler = new MPAChannelGroupHandler();
+    if(cWithCBC)
+    {
+        CBCChannelGroupHandler theChannelGroupHandler;
+        theChannelGroupHandler.setChannelGroupParameters(16, 2); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandler);
+    }
+    if(cWithSSA)
+    {
+        SSAChannelGroupHandler theChannelGroupHandler;
+        theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA);
+        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA2);
+    }
+    if(cWithMPA)
+    {
+        MPAChannelGroupHandler theChannelGroupHandler;
+        theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA);
+        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA2);
+    }
 
     initializeRecycleBin();
-    fChannelGroupHandler->setChannelGroupParameters(16, 2);
 
     fStartLatency = findValueInSettings("StartLatency", 1);
     fLatencyRange = findValueInSettings("LatencyRange", 1);
@@ -228,7 +244,6 @@ void LatencyScan::ScanLatency()
                 {
                     if(cEventIter >= cEvents.end()) break;
                     uint8_t cTDCVal = (*cEventIter)->GetTDC();
-                    //(*cEventIter)->fillDataContainer(cOccBrd, fChannelGroupHandler->allChannelGroup());
                     for(auto cOpticalGroup: *cBoard)
                     {
                         auto& cOccOG = cOccBrd->at(cOpticalGroup->getIndex());
@@ -320,7 +335,7 @@ void LatencyScan::ScanLatency()
                     cEventIter += (1 + cTriggerMult);
                     cNEventsThisTriggerId++;
                 } while(cEventIter < cEvents.end());
-                cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup(), cNormalizationFactor);
+                cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandlerContainer->getObject(cOccBrd->getId()), cNormalizationFactor);
                 // float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
                 cTotalHits = cTotalHitsS0 + cTotalHitsS1;
                 if(cTotalHits > 0)

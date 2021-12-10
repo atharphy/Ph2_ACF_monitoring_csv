@@ -80,29 +80,27 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     // cWithMPA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
     if(cWithCBC)
     {
-        fChannelGroupHandler = new CBCChannelGroupHandler();
-        fChannelGroupHandler->setChannelGroupParameters(16, 2); // 16*2*8
+        CBCChannelGroupHandler theChannelGroupHandler;
+        theChannelGroupHandler.setChannelGroupParameters(16, 2); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandler);
     }
-    if(cWithSSA && !cWithMPA)
+    if(cWithSSA)
     {
-        fChannelGroupHandler = new SSAChannelGroupHandler();
-        fChannelGroupHandler->setChannelGroupParameters(1, NSSACHANNELS); // 5*3*8
+        SSAChannelGroupHandler theChannelGroupHandler;
+        theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA);
+        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA2);
     }
-    if(cWithMPA && !cWithSSA)
+    if(cWithMPA)
     {
-        fChannelGroupHandler = new MPAChannelGroupHandler();
-        fChannelGroupHandler->setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS);
-    }
-    if(cWithMPA && cWithSSA)
-    {
-        fChannelGroupHandler = new MPAChannelGroupHandler();
-        fChannelGroupHandler->setChannelGroupParameters(120, 16);
+        MPAChannelGroupHandler theChannelGroupHandler;
+        theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA);
+        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA2);
     }
 
     initializeRecycleBin();
-    // fChannelGroupHandler->setChannelGroupParameters(16, 2);
-    // For async only -- to fix
-    // if(!cWithCBC && !(cWithMPA && cWithSSA) ) fChannelGroupHandler->setChannelGroupParameters(120, 16);
+
     fAllChan = pAllChan;
 
     fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels", 0);
@@ -115,8 +113,6 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     LOG(INFO) << BOLDRED << "I8" << RESET;
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
-    LOG(INFO) << " Number of enabled channels " << fChannelGroupHandler->allChannelGroup()->getNumberOfEnabledChannels() << " " << +fChannelGroupHandler->allChannelGroup()->areAllChannelsEnabled()
-              << RESET;
 
     this->SetSkipMaskedChannels(fSkipMaskedChannels);
     if(fFitSCurves) fPlotSCurves = true;
@@ -836,7 +832,14 @@ void PedeNoise::extractPedeNoise()
                     {
                         for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
                         {
-                            if(!fChannelGroupHandler->allChannelGroup()->isChannelEnabled(iChannel)) continue;
+                            if(!fChannelGroupHandlerContainer->getObject(board->getId())
+                                    ->getObject(opticalGroup->getId())
+                                    ->getObject(hybrid->getId())
+                                    ->getObject(chip->getId())
+                                    ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                    ->allChannelGroup()
+                                    ->isChannelEnabled(iChannel))
+                                continue;
                             float previousOccupancy = (previousIterator)
                                                           ->second->at(board->getIndex())
                                                           ->at(opticalGroup->getIndex())
@@ -897,7 +900,14 @@ void PedeNoise::extractPedeNoise()
                 {
                     for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
                     {
-                        if(!fChannelGroupHandler->allChannelGroup()->isChannelEnabled(iChannel)) continue;
+                        if(!fChannelGroupHandlerContainer->getObject(board->getId())
+                                ->getObject(opticalGroup->getId())
+                                ->getObject(hybrid->getId())
+                                ->getObject(chip->getId())
+                                ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                ->allChannelGroup()
+                                ->isChannelEnabled(iChannel))
+                            continue;
                         chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold /= chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
                         chip->getChannel<ThresholdAndNoise>(iChannel).fNoise /= chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
                         chip->getChannel<ThresholdAndNoise>(iChannel).fNoise = sqrt(chip->getChannel<ThresholdAndNoise>(iChannel).fNoise - (chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold *
@@ -948,7 +958,7 @@ void PedeNoise::extractPedeNoise()
             // }
         }
         else
-            board->normalizeAndAverageContainers(fDetectorContainer->at(board->getIndex()), fChannelGroupHandler->allChannelGroup(), 0);
+            board->normalizeAndAverageContainers(fDetectorContainer->at(board->getIndex()), fChannelGroupHandlerContainer->getObject(board->getId()), 0);
     }
     setNormalization(cNormalizationOrig);
 }
@@ -956,7 +966,7 @@ void PedeNoise::extractPedeNoise()
 void PedeNoise::producePedeNoisePlots()
 {
 #ifdef __USE_ROOT__
-    if(!fFitSCurves) fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(*fThresholdAndNoiseContainer);
+    fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(*fThresholdAndNoiseContainer);
 #else
     auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
     for(auto board: *fThresholdAndNoiseContainer)

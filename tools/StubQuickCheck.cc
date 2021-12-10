@@ -39,8 +39,10 @@ StubQuickCheck::~StubQuickCheck()
 void StubQuickCheck::Initialise()
 {
     // this is needed if you're going to use groups anywhere
-    fChannelGroupHandler = new CBCChannelGroupHandler(); // This will be erased in tool.resetPointers()
-    fChannelGroupHandler->setChannelGroupParameters(16, 2);
+    CBCChannelGroupHandler theChannelGroupHandler;
+    theChannelGroupHandler.setChannelGroupParameters(16, 2);
+    setChannelGroupHandler(theChannelGroupHandler);
+
 #ifdef __USE_ROOT__
 //    fDQMHistogram.book(fResultFile,*fDetectorContainer);
 #endif

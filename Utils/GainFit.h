@@ -24,7 +24,8 @@ class GainFit
     void print(void) { std::cout << fSlope << "\t" << fIntercept << "\t" << fQuadratic << "\t" << fLog << "\t" << fChi2 << "\t" << fDoF << std::endl; }
 
     template <typename T>
-    void makeChannelAverage(const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents)
+    void
+    makeChannelAverage(const ChipContainer* theChipContainer, std::shared_ptr<ChannelGroupBase> chipOriginalMask, std::shared_ptr<ChannelGroupBase> cTestChannelGroup, const uint32_t numberOfEvents)
     {
     }
     void makeSummaryAverage(const std::vector<GainFit>* theGainVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents);
@@ -47,8 +48,10 @@ class GainFit
 };
 
 template <>
-inline void
-GainFit::makeChannelAverage<GainFit>(const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents)
+inline void GainFit::makeChannelAverage<GainFit>(const ChipContainer*              theChipContainer,
+                                                 std::shared_ptr<ChannelGroupBase> chipOriginalMask,
+                                                 std::shared_ptr<ChannelGroupBase> cTestChannelGroup,
+                                                 const uint32_t                    numberOfEvents)
 {
     float cnt = 0;
 

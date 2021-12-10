@@ -25,20 +25,17 @@ namespace Ph2_HwDescription
 MPA::MPA(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pMPAId, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pBeId, pFMCId, pFeId, pMPAId)
 {
     fMaxRegValue      = 255;
-    fChipOriginalMask = new ChannelGroup<NSSACHANNELS * NMPACOLS>;
+    fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS * NMPACOLS>>();
     fChipOriginalMask->enableAllChannels();
     fPartnerId = pPartnerId;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::MPA);
-
-    const ChannelGroup<NSSACHANNELS* NMPACOLS>* originalMask = static_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>*>(fChipOriginalMask);
-    std::cout << (originalMask->getBitset()) << "\n";
 }
 
 MPA::MPA(const FrontEndDescription& pFeDesc, uint8_t pMPAId, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pFeDesc, pMPAId)
 {
     fMaxRegValue      = 255; // 8 bit registers in MPA
-    fChipOriginalMask = new ChannelGroup<NSSACHANNELS, NMPACOLS>;
+    fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS, NMPACOLS>>();
     fChipOriginalMask->enableAllChannels();
     fPartnerId = pPartnerId;
     loadfRegMap(filename);

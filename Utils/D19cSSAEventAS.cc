@@ -95,7 +95,7 @@ void D19cSSAEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDa
 }
 
 // required by event but not sure if makes sense for AS
-void D19cSSAEventAS::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
+void D19cSSAEventAS::fillDataContainer(BoardDataContainer* boardContainer, const BoardDataContainer* theChannelGroupHandler, int groupNumber)
 {
     for(auto opticalGroup: *boardContainer)
     {
@@ -103,6 +103,9 @@ void D19cSSAEventAS::fillDataContainer(BoardDataContainer* boardContainer, const
         {
             for(auto chip: *hybrid)
             {
+                auto cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, opticalGroup->getId(), hybrid->getId(), chip->getId());
+                if(!cTestChannelGroup) continue;
+
                 std::vector<uint32_t> hVec = GetHits(hybrid->getId(), chip->getId());
                 unsigned int          i    = 0;
 

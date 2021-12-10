@@ -89,7 +89,7 @@ class RD53Event : public Ph2_HwInterface::Event
   public:
     RD53Event(const uint32_t* data, size_t n);
 
-    void fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
+    void fillDataContainer(BoardDataContainer* boardContainer, const BoardDataContainer* theChannelGroupHandler, int groupNumber) override;
 
     static void addBoardInfo2Events(const Ph2_HwDescription::BeBoard* pBoard, std::vector<RD53Event>& decodedEvents);
     static void ForkDecodingThreads();

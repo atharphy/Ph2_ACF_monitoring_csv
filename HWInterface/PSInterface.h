@@ -100,11 +100,11 @@ class PSInterface : public ReadoutChipInterface
     void Send_pulses(uint32_t n_pulse, uint32_t duration = 0);
     bool enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = true);
 
-    bool maskChannelsGroup(Ph2_HwDescription::ReadoutChip* pPS, const ChannelGroupBase* group, bool pVerifLoop);
+    bool maskChannelGroup(Ph2_HwDescription::ReadoutChip* pPS, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop);
     //
-    bool setInjectionSchema(Ph2_HwDescription::ReadoutChip* pPS, const ChannelGroupBase* group, bool pVerifLoop);
+    bool setInjectionSchema(Ph2_HwDescription::ReadoutChip* pPS, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop);
 
-    bool maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pPS, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop);
+    bool maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pPS, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop);
     //
 
     //

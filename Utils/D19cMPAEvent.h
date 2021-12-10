@@ -128,7 +128,7 @@ class D19cMPAEvent : public Event
      * \return Glib flag string
      */
     std::vector<Cluster> getClusters(uint8_t pFeId, uint8_t pCbcId) const override;
-    void                 fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
+    void                 fillDataContainer(BoardDataContainer* boardContainer, const BoardDataContainer* theChannelGroupHandler, int groupNumber) override;
     std::string          GlibFlagString(uint8_t pFeId, uint8_t pCbcId) const override;
     /*!
      * \brief Function to get Stub bit

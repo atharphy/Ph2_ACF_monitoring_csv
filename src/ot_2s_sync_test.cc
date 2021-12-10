@@ -41,10 +41,6 @@
 #include "Antenna.h"
 #endif
 
-// reference volage for lpgBT
-float VREF_LPGBT        = 1.0;
-float cConversionFactor = VREF_LPGBT / 1024.;
-
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;

@@ -11,6 +11,8 @@
 #include "../MonitorUtils/CBCMonitor.h"
 #include "../MonitorUtils/DetectorMonitor.h"
 #include "../MonitorUtils/RD53Monitor.h"
+#include "../Utils/ChannelGroupHandler.h"
+#include "../Utils/ContainerFactory.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -32,6 +34,7 @@ SystemController::SystemController()
     , fStreamerEnabled(false)
     , fNetworkStreamer(nullptr)
     , fDetectorMonitor(nullptr)
+    , fChannelGroupHandlerContainer(nullptr)
 {
 }
 
@@ -39,18 +42,19 @@ SystemController::~SystemController() {}
 
 void SystemController::Inherit(const SystemController* pController)
 {
-    fBeBoardInterface     = pController->fBeBoardInterface;
-    fReadoutChipInterface = pController->fReadoutChipInterface;
-    fChipInterface        = pController->fChipInterface;
-    flpGBTInterface       = pController->flpGBTInterface;
-    fBeBoardFWMap         = pController->fBeBoardFWMap;
-    fSettingsMap          = pController->fSettingsMap;
-    fFileHandler          = pController->fFileHandler;
-    fStreamerEnabled      = pController->fStreamerEnabled;
-    fNetworkStreamer      = pController->fNetworkStreamer;
-    fDetectorContainer    = pController->fDetectorContainer;
-    fCicInterface         = pController->fCicInterface;
-    fPowerSupplyClient    = pController->fPowerSupplyClient;
+    fBeBoardInterface             = pController->fBeBoardInterface;
+    fReadoutChipInterface         = pController->fReadoutChipInterface;
+    fChipInterface                = pController->fChipInterface;
+    flpGBTInterface               = pController->flpGBTInterface;
+    fBeBoardFWMap                 = pController->fBeBoardFWMap;
+    fSettingsMap                  = pController->fSettingsMap;
+    fFileHandler                  = pController->fFileHandler;
+    fStreamerEnabled              = pController->fStreamerEnabled;
+    fNetworkStreamer              = pController->fNetworkStreamer;
+    fDetectorContainer            = pController->fDetectorContainer;
+    fCicInterface                 = pController->fCicInterface;
+    fPowerSupplyClient            = pController->fPowerSupplyClient;
+    fChannelGroupHandlerContainer = pController->fChannelGroupHandlerContainer;
 }
 
 void SystemController::Destroy()
@@ -85,6 +89,9 @@ void SystemController::Destroy()
 
     delete fPowerSupplyClient;
     fPowerSupplyClient = nullptr;
+
+    delete fChannelGroupHandlerContainer;
+    fChannelGroupHandlerContainer = nullptr;
 
     LOG(INFO) << BOLDRED << ">>> Interfaces  destroyed <<<" << RESET;
 }
@@ -130,6 +137,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
+
+    fChannelGroupHandlerContainer = new DetectorDataContainer();
+    ContainerFactory::copyAndInitChip<std::shared_ptr<ChannelGroupHandler>>(*fDetectorContainer, *fChannelGroupHandlerContainer);
 
     fPowerSupplyClient = new TCPClient("127.0.0.1", 7000);
     if(!fPowerSupplyClient->connect(1))
@@ -1144,8 +1154,9 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
     // ####################
     else if(pType == BoardType::D19C)
     {
-        bool cTLUconfig = (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(pBoard->getIndex()), "fc7_daq_cnfg.tlu_block.handshake_mode") == 2 &&
-                           fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(pBoard->getIndex()), "fc7_daq_cnfg.tlu_block.tlu_enabled") == 1);
+        bool cTLUconfig = 2;
+        // bool cTLUconfig = (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(pBoard->getIndex()), "fc7_daq_cnfg.tlu_block.handshake_mode") == 2 &&
+        //                    fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(pBoard->getIndex()), "fc7_daq_cnfg.tlu_block.tlu_enabled") == 1);
         // for (auto L : pData) LOG(INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
         for(auto& pevt: fEventList) delete pevt;
         fEventList.clear();
@@ -1215,8 +1226,8 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                         {
                             std::vector<uint32_t> cEvent(cEventIterator, cEnd);
                             // some useful debug information
-                            // LOG(INFO) << BOLDGREEN << "Event" << +cEventIndex << " .. Data word that should be event header ..  " << std::bitset<32>(*cEventIterator) << ". Event is made up of "
-                            //            << +cEventSize << " 32 bit words..." << RESET;
+                            LOG(DEBUG) << BOLDGREEN << "Event" << +cEventIndex << " .. Data word that should be event header ..  " << std::bitset<32>(*cEventIterator) << ". Event is made up of "
+                                       << +cEventSize << " 32 bit words..." << RESET;
                             if(pBoard->getFrontEndType() == FrontEndType::CBC3) { fEventList.push_back(new D19cCbc3Event(pBoard, cEvent)); }
                             else if(pBoard->getFrontEndType() == FrontEndType::CIC || pBoard->getFrontEndType() == FrontEndType::CIC2)
                             {
@@ -1262,4 +1273,37 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
         } // end zero check
     }
 }
+
+void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, std::function<bool(const ChipContainer*)> theQueryFunction)
+{
+    auto theChannelGroupHandlerPointer = std::make_shared<ChannelGroupHandler>(std::move(theChannelGroupHandler));
+    fDetectorContainer->setReadoutChipQueryFunction(theQueryFunction);
+    for(const auto board: *fDetectorContainer)
+    {
+        for(const auto opticalGroup: *board)
+        {
+            for(const auto hybrid: *opticalGroup)
+            {
+                for(const auto chip: *hybrid)
+                {
+                    fChannelGroupHandlerContainer->getObject(board->getId())
+                        ->getObject(opticalGroup->getId())
+                        ->getObject(hybrid->getId())
+                        ->getObject(chip->getId())
+                        ->getSummary<std::shared_ptr<ChannelGroupHandler>>() = theChannelGroupHandlerPointer;
+                }
+            }
+        }
+    }
+    fDetectorContainer->resetReadoutChipQueryFunction();
+    return;
+}
+
+void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, FrontEndType theFrontEndType)
+{
+    auto selectChipFlavourFunction = [theFrontEndType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == theFrontEndType); };
+    setChannelGroupHandler(theChannelGroupHandler, selectChipFlavourFunction);
+    return;
+}
+
 } // namespace Ph2_System

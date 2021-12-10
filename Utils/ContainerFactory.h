@@ -133,7 +133,7 @@ void copyAndInitHybrid(const DetectorContainer& original, DetectorDataContainer&
 template <typename T>
 void copyAndInitOpticalGroup(const DetectorContainer& original, DetectorDataContainer& copy)
 {
-    copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, T, EmptyContainer, EmptyContainer>(original, copy);
+    copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, T, EmptyContainer, EmptyContainer>(original, copy);
 }
 
 template <typename T>
@@ -211,8 +211,7 @@ template <typename T>
 void copyAndInitOpticalGroup(const DetectorContainer& original, DetectorDataContainer& copy, T& opticalGroupSummary)
 {
     EmptyContainer theEmpty;
-    copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, T, EmptyContainer, EmptyContainer>(
-        original, copy, theEmpty, theEmpty, theEmpty, theEmpty, opticalGroupSummary, theEmpty, theEmpty);
+    copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, T, EmptyContainer, EmptyContainer>(original, copy, theEmpty, theEmpty, theEmpty, opticalGroupSummary, theEmpty, theEmpty);
 }
 
 template <typename T>

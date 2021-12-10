@@ -13,7 +13,6 @@
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Event.h"
-#include "../Utils/MPAChannelGroupHandler.h"
 #include "Tool.h"
 // #include "../Utils/PSSharedConstants.h"
 // #include "../HWInterface/PSFWInterface.h"

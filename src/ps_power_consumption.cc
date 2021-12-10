@@ -41,10 +41,6 @@ INITIALIZE_EASYLOGGINGPP
 
 #define CHIPSLAVE 4
 
-// reference volage for lpgBT
-float VREF_LPGBT        = 1.0;
-float cConversionFactor = VREF_LPGBT / 1024.;
-
 #ifndef Measurement
 typedef std::pair<float, float> Measurement;
 #endif
@@ -250,7 +246,7 @@ int main(int argc, char* argv[])
                 for(auto cRef: cRefPoints)
                 {
                     static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, cRef);
-                    for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor; }
+                    for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * CONVERSION_FACTOR; }
                     float cMean         = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
                     float cDifference_V = (cADCs_Refs[cIndx] - cMean);
                     LOG(DEBUG) << BOLDBLUE << "ADC_" << cADCsel << " reading from lpGBT "
@@ -275,7 +271,7 @@ int main(int argc, char* argv[])
                 LOG(DEBUG) << BOLDBLUE << "Mean slope is " << cMeanSlope << " , intercept is " << cIntcpt << " correction is " << cCorr << RESET;
                 // apply correction and check
                 static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, (uint8_t)cCorr);
-                for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor; }
+                for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * CONVERSION_FACTOR; }
                 // turn off ADC mon
                 static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->WriteChipReg(clpGBT, "ADCMon", 0x00);
 
@@ -290,7 +286,7 @@ int main(int argc, char* argv[])
                     std::string cADCsel = cADCs_VoltageMonitors[cIndx];
                     if(cModuleSide[cIndx].find(cMonitor) == std::string::npos) continue;
 
-                    for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor; }
+                    for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * CONVERSION_FACTOR; }
                     float cMean = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
                     // float cStartUpMontior = cMean;
                     LOG(INFO) << BOLDBLUE << "ADC_ " << cADCs_Names[cIndx] << " reading from lpGBT " << +cMean * 1e3 << " milli-volts. This is monitored via the " << cModuleSide[cIndx]
@@ -536,7 +532,7 @@ int main(int argc, char* argv[])
                         for(auto cRef: cRefPoints)
                         {
                             static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, cRef);
-                            for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor; }
+                            for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * CONVERSION_FACTOR; }
                             float cMean         = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
                             float cDifference_V = (cADCs_Refs[cIndx] - cMean);
                             LOG(DEBUG) << BOLDBLUE << "ADC_" << cADCsel << " reading from lpGBT "
@@ -561,7 +557,7 @@ int main(int argc, char* argv[])
                         LOG(DEBUG) << BOLDBLUE << "Mean slope is " << cMeanSlope << " , intercept is " << cIntcpt << " correction is " << cCorr << RESET;
                         // apply correction and check
                         static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, (uint8_t)cCorr);
-                        for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor; }
+                        for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * CONVERSION_FACTOR; }
                         // turn off ADC mon
                         static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->WriteChipReg(clpGBT, "ADCMon", 0x00);
 
@@ -576,7 +572,7 @@ int main(int argc, char* argv[])
                             std::string cADCsel = cADCs_VoltageMonitors[cIndx];
                             if(cModuleSide[cIndx].find(cMonitor) == std::string::npos) continue;
 
-                            for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor; }
+                            for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * CONVERSION_FACTOR; }
                             float cMean = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
                             // float cStartUpMontior = cMean;
                             LOG(INFO) << BOLDBLUE << "ADC_ " << cADCs_Names[cIndx] << " reading from lpGBT " << +cMean * 1e3 << " milli-volts. This is monitored via the " << cModuleSide[cIndx]
@@ -1241,7 +1237,7 @@ int main(int argc, char* argv[])
                         if(cModuleSide[cIndx].find(cMonitor) == std::string::npos) continue;
 
                         std::vector<float> cVals(10, 0);
-                        for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor; }
+                        for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * CONVERSION_FACTOR; }
                         float cMean   = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
                         float cSqSum  = std::inner_product(cVals.begin(), cVals.end(), cVals.begin(), 0.0);
                         float cStdDev = std::sqrt(cSqSum / cVals.size() - cMean * cMean);

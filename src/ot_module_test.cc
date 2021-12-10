@@ -41,10 +41,6 @@
 #include "Antenna.h"
 #endif
 
-// reference volage for lpgBT
-float VREF_LPGBT        = 1.0;
-float cConversionFactor = VREF_LPGBT / 1024.;
-
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -138,7 +134,16 @@ int main(int argc, char* argv[])
     cmd.defineOption("readIDs", "Read chip ids....", ArgvParser::NoOptionAttribute);
     cmd.defineOption("memCheck", "Check memories of the following CBCs", ArgvParser::NoOptionAttribute);
     cmd.defineOption("completeDataCheck", "Complete data check for the following CBCs", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("registerTest", "Test I2C registers on ROCs", ArgvParser::NoOptionAttribute);
+
+    cmd.defineOption("pageToTest", "Page to test", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("registerTestWrite", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("registerTestWriteAndToggle", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("registerTestRead", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("registerTestReadAndToggle", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("sortOrder", "Sort order for CBC registers  : 0 - no sort other than page; 1 - page then increasing addresss; 2 - page then decreasing addresss", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("bitToFlip", "Bit to flip when testing register write", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("testAttempts", "Number of attempts", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("returnToDefPage", "Return to Def Page", ArgvParser::OptionRequiresValue);
     cmd.defineOption("manualScan", "Manual scan of threshold", ArgvParser::NoOptionAttribute);
     cmd.defineOption("injectionTest", "Manual scan of threshold", ArgvParser::OptionRequiresValue);
     //
@@ -308,7 +313,7 @@ int main(int argc, char* argv[])
                     static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, cRef);
                     // wait until Vref is stable
                     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                    for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor; }
+                    for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * CONVERSION_FACTOR; }
                     float cMean         = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
                     float cDifference_V = (cADCs_Refs[cIndx] - cMean);
                     // LOG (DEBUG) << BOLDBLUE << "ADC_" << cADCsel << " reading from lpGBT "
@@ -342,7 +347,7 @@ int main(int argc, char* argv[])
                 static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, (uint8_t)cCorr);
                 // wait until Vref is stable
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor; }
+                for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * CONVERSION_FACTOR; }
                 float cMeanValue = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
                 LOG(INFO) << BOLDMAGENTA << "Measured V_min after correction is " << std::setprecision(2) << std::fixed << cMeanValue * 1e3 << " mV , expected value is " << cADCs_Refs[cIndx] * 1e3
                           << " difference is " << std::fabs(cMeanValue - cADCs_Refs[cIndx]) * 1e3 << " mV, correction needed to acheive this was  " << +cCorr << RESET;
@@ -363,7 +368,9 @@ int main(int argc, char* argv[])
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        auto cFusedId = cTool.fReadoutChipInterface->ReadChipReg(cChip, "ChipId");
+                        if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
+
+                        auto cFusedId = static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->ReadCbcIDeFuse(cChip);
                         LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cChip->getId() << " CBC#" << +cChip->getId() << " Fused Id is " << +cFusedId << RESET;
                     }
                 }
@@ -371,11 +378,92 @@ int main(int argc, char* argv[])
         }
     }
 
-    if(cmd.foundOption("registerTest"))
+    if(cmd.foundOption("registerTestWrite"))
     {
+        uint8_t cNregistersToCheck = (cmd.foundOption("registerTestWrite")) ? convertAnyInt(cmd.optionValue("registerTestWrite").c_str()) : 1;
+        // 0 - no sorting other than page; 1 - page then increasing addresss ; 2 - page then decreasing address
+        uint8_t  cSortOder  = (cmd.foundOption("sortOrder")) ? convertAnyInt(cmd.optionValue("sortOrder").c_str()) : 0;
+        uint8_t  cBitToFlip = (cmd.foundOption("bitToFlip")) ? convertAnyInt(cmd.optionValue("bitToFlip").c_str()) : 0;
+        uint32_t cAttempts  = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10;
+        uint8_t  cPage      = (cmd.foundOption("pageToTest")) ? convertAnyInt(cmd.optionValue("pageToTest").c_str()) : 1;
+
         RegisterTester cRegTester;
         cRegTester.Inherit(&cTool);
-        cRegTester.RegisterTest();
+        cRegTester.SetSortOrder(cSortOder);
+        cRegTester.SetBitToFlip(cBitToFlip);
+        cRegTester.Initialise();
+        for(size_t cAttempt = 0; cAttempt < cAttempts; cAttempt++)
+        {
+            LOG(INFO) << BOLDBLUE << "Read - test#" << +cAttempt << RESET;
+            cRegTester.CheckWriteRegisters(cPage, cNregistersToCheck);
+        }
+        cRegTester.writeObjects();
+    }
+
+    if(cmd.foundOption("registerTestWriteAndToggle"))
+    {
+        uint8_t cNregistersToCheck = (cmd.foundOption("registerTestWriteAndToggle")) ? convertAnyInt(cmd.optionValue("registerTestWriteAndToggle").c_str()) : 1;
+        // 0 - no sorting other than page; 1 - page then increasing addresss ; 2 - page then decreasing address
+        uint8_t  cSortOder        = (cmd.foundOption("sortOrder")) ? convertAnyInt(cmd.optionValue("sortOrder").c_str()) : 0;
+        uint8_t  cBitToFlip       = (cmd.foundOption("bitToFlip")) ? convertAnyInt(cmd.optionValue("bitToFlip").c_str()) : 0;
+        uint8_t  cReturnToDefPage = (cmd.foundOption("returnToDefPage")) ? convertAnyInt(cmd.optionValue("returnToDefPage").c_str()) : 1;
+        uint32_t cAttempts        = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10;
+        uint8_t  cPage            = (cmd.foundOption("pageToTest")) ? convertAnyInt(cmd.optionValue("pageToTest").c_str()) : 1;
+
+        LOG(INFO) << BOLDBLUE << "Will run register test " << cAttempts << " times..." << RESET;
+        RegisterTester cRegTester;
+        cRegTester.Inherit(&cTool);
+        cRegTester.SetSortOrder(cSortOder);
+        cRegTester.SetBitToFlip(cBitToFlip);
+        cRegTester.SetReturnToDefPage(cReturnToDefPage);
+        cRegTester.Initialise();
+        for(size_t cAttempt = 0; cAttempt < cAttempts; cAttempt++)
+        {
+            LOG(INFO) << BOLDBLUE << "Page switch with read - test#" << +cAttempt << RESET;
+            cRegTester.CheckPageSwitchWrite(cPage, cNregistersToCheck);
+        }
+        cRegTester.writeObjects();
+    }
+
+    if(cmd.foundOption("registerTestRead"))
+    {
+        uint8_t cNregistersToCheck = (cmd.foundOption("registerTestRead")) ? convertAnyInt(cmd.optionValue("registerTestRead").c_str()) : 1;
+        // 0 - no sorting other than page; 1 - page then increasing addresss ; 2 - page then decreasing address
+        uint8_t  cSortOder = (cmd.foundOption("sortOrder")) ? convertAnyInt(cmd.optionValue("sortOrder").c_str()) : 0;
+        uint32_t cAttempts = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10;
+        uint8_t  cPage     = (cmd.foundOption("pageToTest")) ? convertAnyInt(cmd.optionValue("pageToTest").c_str()) : 1;
+
+        RegisterTester cRegTester;
+        cRegTester.Inherit(&cTool);
+        cRegTester.SetSortOrder(cSortOder);
+        cRegTester.Initialise();
+        for(size_t cAttempt = 0; cAttempt < cAttempts; cAttempt++)
+        {
+            LOG(INFO) << BOLDBLUE << "Read - test#" << +cAttempt << RESET;
+            cRegTester.CheckReadRegisters(cPage, cNregistersToCheck);
+        }
+        cRegTester.writeObjects();
+    }
+    if(cmd.foundOption("registerTestReadAndToggle"))
+    {
+        uint8_t cNregistersToCheck = (cmd.foundOption("registerTestReadAndToggle")) ? convertAnyInt(cmd.optionValue("registerTestReadAndToggle").c_str()) : 1;
+        // 0 - no sorting other than page; 1 - page then increasing addresss ; 2 - page then decreasing address
+        uint8_t  cSortOder        = (cmd.foundOption("sortOrder")) ? convertAnyInt(cmd.optionValue("sortOrder").c_str()) : 0;
+        uint8_t  cReturnToDefPage = (cmd.foundOption("returnToDefPage")) ? convertAnyInt(cmd.optionValue("returnToDefPage").c_str()) : 1;
+        uint32_t cAttempts        = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10;
+        uint8_t  cPage            = (cmd.foundOption("pageToTest")) ? convertAnyInt(cmd.optionValue("pageToTest").c_str()) : 1;
+
+        RegisterTester cRegTester;
+        cRegTester.Inherit(&cTool);
+        cRegTester.SetSortOrder(cSortOder);
+        cRegTester.SetReturnToDefPage(cReturnToDefPage);
+        cRegTester.Initialise();
+        for(size_t cAttempt = 0; cAttempt < cAttempts; cAttempt++)
+        {
+            LOG(INFO) << BOLDBLUE << "Page switch with read - test#" << +cAttempt << RESET;
+            cRegTester.CheckPageSwitchRead(cPage, cNregistersToCheck);
+        }
+        cRegTester.writeObjects();
     }
 
     // align CIC-lpGBT-BE
@@ -1005,10 +1093,15 @@ int main(int argc, char* argv[])
         cGoodRuns << cRunNumber << "\n";
         cGoodRuns.close();
 
+        PrintConfig cCng;
+        cCng.fVerbose    = 1;
+        cCng.fPrintEvery = 1;
+
         BeamTestCheck2S cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         cBeamTestCheck.ConfigureScans(cScanL1, cScanStubs);
+        cBeamTestCheck.ConfigurePrintout(cCng);
         cBeamTestCheck.CheckWithTP();
         cBeamTestCheck.writeObjects();
         cBeamTestCheck.Reset();
@@ -1106,7 +1199,7 @@ int main(int argc, char* argv[])
         cBeamTestCheck.ReadDataFromFile(cRawFileName);
         cBeamTestCheck.ValidateRaw();
         cBeamTestCheck.writeObjects();
-        cBeamTestCheck.Reset();
+        // cBeamTestCheck.Reset();
     }
     if(!cmd.foundOption("read")) { cTool.dumpConfigFiles(); }
 

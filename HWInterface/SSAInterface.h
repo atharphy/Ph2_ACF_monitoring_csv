@@ -30,11 +30,11 @@ class SSAInterface : public ReadoutChipInterface
     // FIXME temporary fix to use 1/2 PS skeleton
     // void     LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface, Ph2_HwDescription::lpGBT* pLpGBT);
     bool     ConfigureChip(Ph2_HwDescription::Chip* pSSA, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
-    bool     setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true) override;
+    bool     setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop = true) override;
     bool     enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = true) override;
     bool     setInjectionAmplitude(Ph2_HwDescription::ReadoutChip* pChip, uint8_t injectionAmplitude, bool pVerifLoop = true) override;
-    bool     maskChannelsGroup(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool pVerifLoop = true) override;
-    bool     maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = true) override;
+    bool     maskChannelGroup(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop = true) override;
+    bool     maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop = true) override;
     bool     ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pSSA, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
     bool     MaskAllChannels(Ph2_HwDescription::ReadoutChip* pSSA, bool mask, bool pVerifLoop = true) override;
     bool     WriteChipReg(Ph2_HwDescription::Chip* pSSA, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override;

@@ -446,7 +446,7 @@ bool RD53Interface::MaskAllChannels(ReadoutChip* pChip, bool mask, bool pVerifLo
     return true;
 }
 
-bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop)
+bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop)
 {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
