@@ -1810,24 +1810,38 @@ void BeamTestCheck2S::PrepareForExternalTP(BeBoard* pBoard)
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 0);
 
-    size_t cNgroups                     = 0;
     bool   cMaskChannelsFromOtherGroups = false;
     bool   cInject                      = true;
     bool   cWith2S                      = false;
     // inject in one of each CBCs
-    for(auto cGroup: *fChannelGroupHandler)
+    auto boardIndex = pBoard->getIndex();
+    for(auto cOpticalGroup: *pBoard)
     {
-        if(cNgroups > 0) continue;
-        for(auto cOpticalGroup: *pBoard)
+        for(auto cHybrid: *cOpticalGroup)
         {
-            if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) continue;
-            cWith2S = true;
-            for(auto cHybrid: *cOpticalGroup)
+            for(auto cChip: *cHybrid)
             {
-                for(auto cChip: *cHybrid) { fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip, cGroup, cMaskChannelsFromOtherGroups, cInject); }
+                for(uint16_t groupNumber = 0; groupNumber < 1; ++groupNumber)
+                {
+                    if(groupNumber > fChannelGroupHandlerContainer->getObject(fDetectorContainer->getObject(boardIndex)->getId())
+                                         ->getObject(cOpticalGroup->getId())
+                                         ->getObject(cHybrid->getId())
+                                         ->getObject(cChip->getId())
+                                         ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                         ->getNumberOfGroups())
+                    continue;
+                    fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip,
+                                                                             fChannelGroupHandlerContainer->getObject(fDetectorContainer->at(boardIndex)->getId())
+                                                                                 ->getObject(cOpticalGroup->getId())
+                                                                                 ->getObject(cHybrid->getId())
+                                                                                 ->getObject(cChip->getId())
+                                                                                 ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                                                                 ->getTestGroup(groupNumber),
+                                                                             cMaskChannelsFromOtherGroups,
+                                                                             cInject);
+                }
             }
         }
-        cNgroups++;
     }
 
     // set TP amplitude and delay
