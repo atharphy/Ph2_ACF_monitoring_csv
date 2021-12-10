@@ -31,7 +31,8 @@ SystemController::SystemController()
     , fFileHandler(nullptr)
     , fRawFileName("")
     , fWriteHandlerEnabled(false)
-    , fStreamerEnabled(false)
+    , fDQMStreamerEnabled(false)
+    , fMonitorDQMStreamerEnabled(false)
     , fDQMStreamer(nullptr)
     , fMonitorDQMStreamer(nullptr)
     , fDetectorMonitor(nullptr)
@@ -50,7 +51,8 @@ void SystemController::Inherit(const SystemController* pController)
     fBeBoardFWMap                 = pController->fBeBoardFWMap;
     fSettingsMap                  = pController->fSettingsMap;
     fFileHandler                  = pController->fFileHandler;
-    fStreamerEnabled              = pController->fStreamerEnabled;
+    fDQMStreamerEnabled           = pController->fDQMStreamerEnabled;
+    fMonitorDQMStreamerEnabled    = pController->fMonitorDQMStreamerEnabled;
     fDQMStreamer                  = pController->fDQMStreamer;
     fMonitorDQMStreamer           = pController->fMonitorDQMStreamer;
     fDetectorContainer            = pController->fDetectorContainer;
@@ -132,7 +134,9 @@ void SystemController::readFile(std::vector<uint32_t>& pVec, uint32_t pNWords32)
 
 void SystemController::InitializeHw(const std::string& pFilename, std::ostream& os, bool pIsFile, bool streamData, uint16_t DQMportNumber, uint16_t monitorDQMportNumber)
 {
-    fStreamerEnabled = streamData;
+    fDQMStreamerEnabled        = streamData;
+    fMonitorDQMStreamerEnabled = streamData;
+
     if(streamData == true)
     {
         fDQMStreamer = new TCPPublishServer(DQMportNumber, 1);

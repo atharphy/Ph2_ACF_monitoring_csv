@@ -86,7 +86,7 @@ void ClockDelay::sendData()
     auto theStream           = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<ClkDelaySize>>("Occ");
     auto theClockDelayStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>("ClkDelay");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
         for(const auto cBoard: theOccContainer) theStream.streamAndSendBoard(cBoard, fDQMStreamer);
         for(const auto cBoard: theClockDelayContainer) theClockDelayStream.streamAndSendBoard(cBoard, fDQMStreamer);

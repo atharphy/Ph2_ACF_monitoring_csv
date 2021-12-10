@@ -3,6 +3,8 @@
 #include "../HWDescription/OuterTrackerHybrid.h"
 #include "../HWInterface/D19clpGBTInterface.h"
 #include "../Utils/ContainerFactory.h"
+#include "../Utils/CharArray.h"
+
 #ifdef __USE_ROOT__
 #include "TFile.h"
 #endif
@@ -60,9 +62,9 @@ void CBCMonitor::runCBCRegisterMonitor(std::string registerName)
 #else
     // auto theCBCRegisterStreamer = prepareHybridContainerStreamer<EmptyContainer, std::tuple<time_t,uint16_t>, EmptyContainer>("CBCRegister");
     // theCBCRegisterStreamer.setHeaderElement(getTimeStamp());
-    // if(fStreamerEnabled)
+    // if(fTheSystemController->fDQMStreamerEnabled)
     // {
-    //     for(auto board: theCBCRegisterContainer) { theCBCRegisterStreamer.streamAndSendBoard(board, fMonitorDQMStreamer); }
+    //     for(auto board: theCBCRegisterContainer) { theCBCRegisterStreamer.streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer); }
     // }
 #endif
 }
@@ -85,11 +87,11 @@ void CBCMonitor::runLpGBTRegisterMonitor(std::string registerName)
 #ifdef __USE_ROOT__
     fMonitorDQMPlotCBC->fillLpGBTRegisterPlots(theLpGBTRegisterContainer, registerName);
 #else
-    // auto theLpGBTRegisterStreamer = prepareHybridContainerStreamer<EmptyContainer, std::tuple<time_t,uint16_t>, EmptyContainer>("LpGBTRegister");
-    // theLpGBTRegisterStreamer.setHeaderElement(getTimeStamp());
-    // if(fStreamerEnabled)
-    // {
-    //     for(auto board: theLpGBTRegisterContainer) { theLpGBTRegisterStreamer.streamAndSendBoard(board, fMonitorDQMStreamer); }
-    // }
+    auto theLpGBTRegisterStreamer = prepareOpticalGroupContainerStreamer<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t,uint16_t>, CharArray>("LpGBTRegister");
+    theLpGBTRegisterStreamer.setHeaderElement(CharArray(registerName));
+    if(fTheSystemController->fDQMStreamerEnabled)
+    {
+        for(auto board: theLpGBTRegisterContainer) theLpGBTRegisterStreamer.streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
+    }
 #endif
 }

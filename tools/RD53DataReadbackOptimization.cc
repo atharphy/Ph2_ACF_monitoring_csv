@@ -77,7 +77,7 @@ void DataReadbackOptimization::sendData()
     auto theStreamTAP2scan = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TAPsize>>("TAP2scan");
     auto theStreamTAP2     = prepareChipContainerStreamer<EmptyContainer, uint16_t>("TAP2");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
         for(const auto cBoard: theTAP0scanContainer) theStreamTAP0scan.streamAndSendBoard(cBoard, fDQMStreamer);
         for(const auto cBoard: theTAP0Container) theStreamTAP0.streamAndSendBoard(cBoard, fDQMStreamer);

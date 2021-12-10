@@ -92,7 +92,7 @@ void Gain::sendData()
     auto theOccStream  = prepareChannelContainerStreamer<OccupancyAndPh, uint16_t>("Occ");
     auto theGainStream = prepareChannelContainerStreamer<GainFit>("Gain");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
         size_t index = 0;
         for(const auto theOccContainer: detectorContainerVector)

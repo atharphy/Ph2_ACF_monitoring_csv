@@ -54,7 +54,7 @@ void SSAPhysics::sendBoardData(BoardContainer* const& cBoard)
 {
     auto theOccStream = prepareChannelContainerStreamer<Occupancy>("Occ");
 
-    if(fStreamerEnabled == true) { theOccStream.streamAndSendBoard(fOccContainer.at(cBoard->getIndex()), fDQMStreamer); }
+    if(fDQMStreamerEnabled == true) { theOccStream.streamAndSendBoard(fOccContainer.at(cBoard->getIndex()), fDQMStreamer); }
 }
 
 void SSAPhysics::Stop()

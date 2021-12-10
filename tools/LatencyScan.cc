@@ -116,7 +116,7 @@ void LatencyScan::MeasureTriggerTDC()
     auto theTriggerTDCStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<TDCBINS, uint16_t>>("TriggerTDC");
     for(auto board: theTriggerTDCContainer)
     {
-        if(fStreamerEnabled) theTriggerTDCStream.streamAndSendBoard(board, fDQMStreamer);
+        if(fDQMStreamerEnabled) theTriggerTDCStream.streamAndSendBoard(board, fDQMStreamer);
     }
 #endif
 }
@@ -374,7 +374,7 @@ void LatencyScan::ScanLatency()
     auto theLatencyStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>();
     for(auto board: theLatencyContainer)
     {
-        if(fStreamerEnabled) theLatencyStream.streamAndSendBoard(board, fDQMStreamer);
+        if(fDQMStreamerEnabled) theLatencyStream.streamAndSendBoard(board, fDQMStreamer);
     }
 #endif
 }
@@ -731,7 +731,7 @@ void LatencyScan::StubLatencyScan()
     auto theStubStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>();
     for(auto board: theStubContainer)
     {
-        if(fStreamerEnabled) theStubStream.streamAndSendBoard(board, fDQMStreamer);
+        if(fDQMStreamerEnabled) theStubStream.streamAndSendBoard(board, fDQMStreamer);
     }
 #endif
 }
@@ -871,7 +871,7 @@ void LatencyScan::ScanLatency2D()
     auto theLatencyStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>("2D");
     for(auto board: theLatencyContainer)
     {
-        if(fStreamerEnabled) theLatencyStream.streamAndSendBoard(board, fDQMStreamer);
+        if(fDQMStreamerEnabled) theLatencyStream.streamAndSendBoard(board, fDQMStreamer);
     }
 #endif
 }

@@ -86,7 +86,7 @@ void InjectionDelay::sendData()
     auto theStream               = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<InjDelaySize>>("Occ");
     auto theInjectionDelayStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>("InjDelay");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
         for(const auto cBoard: theOccContainer) theStream.streamAndSendBoard(cBoard, fDQMStreamer);
         for(const auto cBoard: theInjectionDelayContainer) theInjectionDelayStream.streamAndSendBoard(cBoard, fDQMStreamer);

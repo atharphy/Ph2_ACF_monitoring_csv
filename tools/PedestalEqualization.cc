@@ -353,7 +353,7 @@ std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
     for(auto board: theVcthContainer)
     {
 std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
-        if(fStreamerEnabled) theVCthStream.streamAndSendBoard(board, fDQMStreamer);
+        if(fDQMStreamerEnabled) theVCthStream.streamAndSendBoard(board, fDQMStreamer);
 std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
     }
 std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
@@ -452,13 +452,13 @@ void PedestalEqualization::FindOffsets()
     auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
     for(auto board: theOccupancyContainer)
     {
-        if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fDQMStreamer);
+        if(fDQMStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fDQMStreamer);
     }
 
     auto theOffsetStream = prepareChannelContainerStreamer<uint8_t>();
     for(auto board: theOffsetsCointainer)
     {
-        if(fStreamerEnabled) theOffsetStream.streamAndSendBoard(board, fDQMStreamer);
+        if(fDQMStreamerEnabled) theOffsetStream.streamAndSendBoard(board, fDQMStreamer);
     }
 #endif
 

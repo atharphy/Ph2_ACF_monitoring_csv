@@ -142,7 +142,7 @@ void PSPhysics::Running()
 // {
 //     auto thePSSyncStream = prepareChipContainerStreamer<EmptyContainer, PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS_PS>>();
 
-//     if(fStreamerEnabled == true) { thePSSyncStream.streamAndSendBoard(fPSSyncContainer.at(cBoard->getIndex()), fDQMStreamer); }
+//     if(fDQMStreamerEnabled == true) { thePSSyncStream.streamAndSendBoard(fPSSyncContainer.at(cBoard->getIndex()), fDQMStreamer); }
 // }
 
 void PSPhysics::sendBoardData(BoardContainer* const& cBoard)
@@ -166,7 +166,7 @@ void PSPhysics::sendBoardData(BoardContainer* const& cBoard)
     //     }
     // }
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
         theOccupancyStream.streamAndSendBoard(fOccupancyContainer.at(cBoard->getIndex()), fDQMStreamer);
         theStubStream.streamAndSendBoard(fStubContainer.at(cBoard->getIndex()), fDQMStreamer);

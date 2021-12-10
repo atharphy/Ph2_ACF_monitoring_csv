@@ -77,7 +77,7 @@ void CBCPulseShape::runCBCPulseShape(void)
 #ifdef __USE_ROOT__
         fCBCHistogramPulseShape.fillCBCPulseShapePlots(delay, *fThresholdAndNoiseContainer);
 #else
-        if(fStreamerEnabled)
+        if(fDQMStreamerEnabled)
         {
             auto theThresholdAndNoiseStream = prepareChipContainerStreamer<ThresholdAndNoise, ThresholdAndNoise, uint16_t>();
             theThresholdAndNoiseStream.setHeaderElement<0>(delay);

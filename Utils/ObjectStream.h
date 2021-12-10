@@ -223,6 +223,9 @@ class ObjectStream
 
     D* getDataStream() { return &fDataStream; }
 
+    std::string getCreatorName() const {return fCreatorName;}
+
+
   protected:
     H         fHeaderStream;
     D         fDataStream;

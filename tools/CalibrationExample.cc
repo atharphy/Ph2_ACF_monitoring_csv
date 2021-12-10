@@ -73,7 +73,7 @@ void CalibrationExample::runCalibrationExample(void)
     // that is used when multiple calibrations are concatenated
     auto theHitStream = prepareChannelContainerStreamer<uint32_t>();
     // if the streamer was enabled (the supervisor script enable it) data are streamed
-    if(fStreamerEnabled)
+    if(fDQMStreamerEnabled)
     {
         // Disclamer: final MW will not do a for loop on board since each instance will hanlde 1 board only
         for(auto board: theHitContainer) theHitStream.streamAndSendBoard(board, fDQMStreamer);
