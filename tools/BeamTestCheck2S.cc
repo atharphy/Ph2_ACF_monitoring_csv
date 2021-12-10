@@ -1810,9 +1810,9 @@ void BeamTestCheck2S::PrepareForExternalTP(BeBoard* pBoard)
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 0);
 
-    bool   cMaskChannelsFromOtherGroups = false;
-    bool   cInject                      = true;
-    bool   cWith2S                      = false;
+    bool cMaskChannelsFromOtherGroups = false;
+    bool cInject                      = true;
+    bool cWith2S                      = false;
     // inject in one of each CBCs
     auto boardIndex = pBoard->getIndex();
     for(auto cOpticalGroup: *pBoard)
@@ -1829,7 +1829,7 @@ void BeamTestCheck2S::PrepareForExternalTP(BeBoard* pBoard)
                                          ->getObject(cChip->getId())
                                          ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                          ->getNumberOfGroups())
-                    continue;
+                        continue;
                     fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip,
                                                                              fChannelGroupHandlerContainer->getObject(fDetectorContainer->at(boardIndex)->getId())
                                                                                  ->getObject(cOpticalGroup->getId())
