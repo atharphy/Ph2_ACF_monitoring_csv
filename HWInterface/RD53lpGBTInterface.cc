@@ -90,6 +90,14 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
 
     RD53lpGBTInterface::PrintChipMode(pChip);
 
+    // #######################
+    // # Checking DLL status #
+    // #######################
+    LOG(INFO) << GREEN << "Checking DLL status of LpGBT: " << BOLDYELLOW << pChip->getId() << RESET;
+    for(const auto& cGroup: static_cast<lpGBT*>(pChip)->getRxGroups())
+        LOG(INFO) << BOLDBLUE << "\t--> DLL status of Rx Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " is " << BOLDYELLOW << lpGBTInterface::GetRxDllStatus(pChip, cGroup) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
+
     return true;
 }
 
