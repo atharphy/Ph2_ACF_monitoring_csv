@@ -143,8 +143,8 @@ void BeamTestCheck2S::CheckWithTP(uint8_t pContinousReadout)
         // prepare injection
         PrepareForExternalTP(cBoard);
         auto cRegValue = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.en_fast_reset");
-        LOG (INFO) << BOLDYELLOW << "Enable fast reset set to ... " << cRegValue << RESET;
-        //PrepareForTP(cBoard);
+        LOG(INFO) << BOLDYELLOW << "Enable fast reset set to ... " << cRegValue << RESET;
+        // PrepareForTP(cBoard);
     }
     if(fScanL1Latency) ScanL1Latency(pContinousReadout);
     if(fScanStubLatency) ScanStubLatency(pContinousReadout);
@@ -156,7 +156,7 @@ void BeamTestCheck2S::CheckWithTP(uint8_t pContinousReadout)
 #endif
     // validate
     Validate();
-    
+
     for(auto cBoard: *fDetectorContainer) { PrintData(cBoard); }
 }
 void BeamTestCheck2S::ValidateTP()
@@ -1795,14 +1795,14 @@ void BeamTestCheck2S::ScanStubLatency(uint8_t pContinousReadout)
 void BeamTestCheck2S::PrepareForExternalTP(BeBoard* pBoard)
 {
     // configure trigger
-    uint8_t                  cTriggerSource   = 13;
-    std::vector<std::string> cTPRegs{"test_pulse.delay_after_fast_reset", "test_pulse.delay_after_test_pulse", "test_pulse.delay_before_next_pulse", "test_pulse.en_fast_reset"};
-    BeBoardRegMap cRegMap         = pBoard->getBeBoardRegMap();
+    uint8_t                                       cTriggerSource = 13;
+    std::vector<std::string>                      cTPRegs{"test_pulse.delay_after_fast_reset", "test_pulse.delay_after_test_pulse", "test_pulse.delay_before_next_pulse", "test_pulse.en_fast_reset"};
+    BeBoardRegMap                                 cRegMap = pBoard->getBeBoardRegMap();
     std::vector<std::pair<std::string, uint32_t>> cRegVec;
-    for( auto cReg : cTPRegs )
+    for(auto cReg: cTPRegs)
     {
-        std::string cRegName    = "fc7_daq_cnfg.fast_command_block." + cReg;
-        cRegVec.push_back({cRegName,cRegMap[cRegName]});
+        std::string cRegName = "fc7_daq_cnfg.fast_command_block." + cReg;
+        cRegVec.push_back({cRegName, cRegMap[cRegName]});
     }
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0});
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSource});

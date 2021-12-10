@@ -896,7 +896,7 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
             cAttempt++;
         } while(cAttempt < 1 && !cCorrectDelay);
     }
-    // set everything back to original values .. except for the trigger source 
+    // set everything back to original values .. except for the trigger source
     // like I wasn't here
     // reset fast command registers
     LOG(INFO) << BOLDMAGENTA << "LinkAlignmentOT::FindPackageDelay Resetting BeBoards regs back to their original values" << RESET;
@@ -926,7 +926,7 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
     }
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.global.hybrid_enable", cEnableMask);
     // and check
-    // make sure you do this with internal triggers 
+    // make sure you do this with internal triggers
     ReadNEvents(pBoard, 10);
     const std::vector<Event*>& cEvents = this->GetEvents();
     for(auto& cEvent: cEvents)
@@ -940,7 +940,7 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
             }
         }
     }
-    fBeBoardInterface->WriteBoardReg(pBoard,"fc7_daq_cnfg.fast_command_block.trigger_source", cOriginalTriggerSrc);
+    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", cOriginalTriggerSrc);
     LOG(INFO) << BOLDMAGENTA << "Found package delay to be " << +cFinalDelay << RESET;
 
     // set everything back to original values .. like I wasn't here

@@ -230,8 +230,12 @@ void OTTool::PrintData(BeBoard* pBoard)
 {
     const std::vector<Event*>& cEvents = GetEvents();
     LOG(INFO) << BOLDRED << "Printing events from FC7.. collected : " << +cEvents.size() << " events." << RESET;
-    fEventCountInt=0;
-    for(auto& cEvent: cEvents) { EventPrintout(pBoard, cEvent); fEventCountInt++; }
+    fEventCountInt = 0;
+    for(auto& cEvent: cEvents)
+    {
+        EventPrintout(pBoard, cEvent);
+        fEventCountInt++;
+    }
 }
 
 // wait for triggers
@@ -407,8 +411,8 @@ void OTTool::ContinousReadoutTh(uint8_t cBrdId)
     // repeat until triggers have stopped
     cWaitCounter        = 0;
     size_t cLclEvntCntr = 0;
-    auto cStartTime = std::chrono::high_resolution_clock::now(), cEndTime=cStartTime;
-    size_t cAccumulatedWaits=0; 
+    auto   cStartTime = std::chrono::high_resolution_clock::now(), cEndTime = cStartTime;
+    size_t cAccumulatedWaits = 0;
     do
     {
         cAccumulatedWaits += fReadoutPause;
@@ -429,15 +433,15 @@ void OTTool::ContinousReadoutTh(uint8_t cBrdId)
         cWaitCounter++;
     } while(cInterface->GetTriggerState() == 1);
     // now decode data
-    cAccumulatedWaits += 100*1e3;
+    cAccumulatedWaits += 100 * 1e3;
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     std::vector<uint32_t> cData(0);
     cLclEvntCntr += fBeBoardInterface->ReadData((*cBoardIter), false, cData, cWait);
-    cEndTime = std::chrono::high_resolution_clock::now();
+    cEndTime       = std::chrono::high_resolution_clock::now();
     auto cDuration = std::chrono::duration_cast<std::chrono::milliseconds>(cEndTime - cStartTime).count();
     if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
-    LOG (DEBUG) << BOLDYELLOW << "Accumulated " << cAccumulatedWaits*1e-3 << " ms of waits.. read-out " << cCompleteData.size() << " 32-bit words in " << cDuration << " ms." << RESET;
-    
+    LOG(DEBUG) << BOLDYELLOW << "Accumulated " << cAccumulatedWaits * 1e-3 << " ms of waits.. read-out " << cCompleteData.size() << " 32-bit words in " << cDuration << " ms." << RESET;
+
     DecodeData((*cBoardIter), cCompleteData, cLclEvntCntr, fBeBoardInterface->getBoardType((*cBoardIter)));
     LOG(DEBUG) << BOLDYELLOW << fMyName << " : Mean trigger rate is " << cTriggerCounters[cTriggerCounters.size() - 1] / (cWaitCounter * fReadoutPause * 1e-6) << " Hz"
                << " .... readout " << cLclEvntCntr << " events from the FC7" << RESET;
@@ -523,8 +527,8 @@ void OTTool::ContinousReadoutTh(uint8_t cBrdId)
     // repeat until triggers have stopped
     cWaitCounter        = 0;
     size_t cLclEvntCntr = 0;
-    auto cStartTime = std::chrono::high_resolution_clock::now(), cEndTime=cStartTime;
-    size_t cAccumulatedWaits=0; 
+    auto   cStartTime = std::chrono::high_resolution_clock::now(), cEndTime = cStartTime;
+    size_t cAccumulatedWaits = 0;
     do
     {
         cAccumulatedWaits += fReadoutPause;
@@ -545,15 +549,15 @@ void OTTool::ContinousReadoutTh(uint8_t cBrdId)
         cWaitCounter++;
     } while(cInterface->GetTriggerState() == 1);
     // now decode data
-    cAccumulatedWaits += 100*1e3;
+    cAccumulatedWaits += 100 * 1e3;
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     std::vector<uint32_t> cData(0);
     cLclEvntCntr += fBeBoardInterface->ReadData((*cBoardIter), false, cData, cWait);
-    cEndTime = std::chrono::high_resolution_clock::now();
+    cEndTime       = std::chrono::high_resolution_clock::now();
     auto cDuration = std::chrono::duration_cast<std::chrono::milliseconds>(cEndTime - cStartTime).count();
     if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
-    LOG (INFO) << BOLDYELLOW << "Accumulated " << cAccumulatedWaits*1e-3 << " ms of waits.. read-out " << cCompleteData.size() << " 32-bit words in " << cDuration << " ms." << RESET;
-    
+    LOG(INFO) << BOLDYELLOW << "Accumulated " << cAccumulatedWaits * 1e-3 << " ms of waits.. read-out " << cCompleteData.size() << " 32-bit words in " << cDuration << " ms." << RESET;
+
     DecodeData((*cBoardIter), cCompleteData, cLclEvntCntr, fBeBoardInterface->getBoardType((*cBoardIter)));
     LOG(DEBUG) << BOLDYELLOW << fMyName << " : Mean trigger rate is " << cTriggerCounters[cTriggerCounters.size() - 1] / (cWaitCounter * fReadoutPause * 1e-6) << " Hz"
                << " .... readout " << cLclEvntCntr << " events from the FC7" << RESET;
@@ -570,7 +574,7 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
 
     if(pEvent->GetEventCount() % fPrintConfig.fPrintEvery != 0) return;
     std::stringstream cEvntHeader;
-    cEvntHeader << "Event#" << +pEvent->GetEventCount() << " -- " << +fEventCountInt << " in readout..." << RESET ; 
+    cEvntHeader << "Event#" << +pEvent->GetEventCount() << " -- " << +fEventCountInt << " in readout..." << RESET;
     std::stringstream cHeader;
 
     for(auto cOpticalGroup: *pBoard)
@@ -622,7 +626,7 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
 
             // if( cL1IdCIC == 511 ) LOG (INFO) << BOLDYELLOW << "OVERFLOW " << cOutEvntHeader.str() << RESET;
             // if( pEvent->GetEventCount() != fEventCountInt ) LOG (INFO) << BOLDRED << " Mismatch in event counter " << cOutEvntHeader.str() << RESET;
-            LOG (INFO) << BOLDYELLOW << cOutEvntHeader.str() << RESET;
+            LOG(INFO) << BOLDYELLOW << cOutEvntHeader.str() << RESET;
 
             // bool cStubFound=false;
             // bool cClusterFound=false;
@@ -736,7 +740,7 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
         //         LOG(INFO) << BOLDGREEN << cEvntHeader.str() << " ... IN SYNC " << RESET;
         //         LOG(INFO) << "Event#" << +fEventCountInt << " in readout..." << cHeader.str() << RESET;
         //     }
-        // }   
+        // }
     }
 }
 
@@ -1037,24 +1041,30 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
             {
                 if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
-                std::vector<std::string> cRegNames{"TestPulsePotNodeSel","MiscTestPulseCtrl&AnalogMux", "HIP&TestMode", "Pipe&StubInpSel&Ptwidth", "CoincWind&Offset34", "CoincWind&Offset12", "LayerSwap&CluWidth", "40MhzClk&Or254"};
+                std::vector<std::string> cRegNames{"TestPulsePotNodeSel",
+                                                   "MiscTestPulseCtrl&AnalogMux",
+                                                   "HIP&TestMode",
+                                                   "Pipe&StubInpSel&Ptwidth",
+                                                   "CoincWind&Offset34",
+                                                   "CoincWind&Offset12",
+                                                   "LayerSwap&CluWidth",
+                                                   "40MhzClk&Or254"};
                 for(auto cRegName: cRegNames)
                 {
                     auto cValueInMemory = cChip->getReg(cRegName);
                     fReadoutChipInterface->WriteChipReg(cChip, cRegName, cValueInMemory);
                     LOG(DEBUG) << BOLDMAGENTA << "Configuring CBC#" << +cChip->getId() << " register " << cRegName << " to 0x" << std::hex << +cValueInMemory << std::dec << RESET;
                 }
-                // masks 
-                for(auto cMapItem: cChip->getRegMap() )
+                // masks
+                for(auto cMapItem: cChip->getRegMap())
                 {
-                    if( cMapItem.first.find("MaskChannel") != std::string::npos )
+                    if(cMapItem.first.find("MaskChannel") != std::string::npos)
                     {
                         auto cValueInMemory = cChip->getReg(cMapItem.first);
                         fReadoutChipInterface->WriteChipReg(cChip, cMapItem.first, cValueInMemory);
                         LOG(DEBUG) << BOLDMAGENTA << "Configuring CBC#" << +cChip->getId() << " register " << cMapItem.first << " to 0x" << std::hex << +cValueInMemory << std::dec << RESET;
                     }
                 }
-                
             }
         }
     }

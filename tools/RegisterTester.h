@@ -17,8 +17,6 @@
 #include "../Utils/ContainerRecycleBin.h"
 #include "Tool.h"
 
-
-
 #ifdef __USE_ROOT__
 #include "../DQMUtils/DQMHistogramRegisterTest.h"
 #include "TH1.h"
@@ -66,13 +64,14 @@ class RegisterTester : public Tool
     void Reset();
     void initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
 
-    void CheckReadRegisters( uint8_t pPageToSelect=0, uint8_t pNRegisters=10);
-    void CheckWriteRegisters( uint8_t pPageToSelect=0, uint8_t pNRegisters=10);
-    void CheckPageSwitchRead(uint8_t pPageToSelect=0, uint8_t pNRegisters=1);
-    void CheckPageSwitchWrite(uint8_t pPageToSelect=0, uint8_t pNRegisters=1);
-    void SetSortOrder(uint8_t pSortOrder){ fSortOrder = pSortOrder; };
-    void SetBitToFlip(uint8_t pBit){ fBitToFlip = pBit; };
-    void SetReturnToDefPage(uint8_t pReturn){fReturnToDefPage =pReturn;};
+    void CheckReadRegisters(uint8_t pPageToSelect = 0, uint8_t pNRegisters = 10);
+    void CheckWriteRegisters(uint8_t pPageToSelect = 0, uint8_t pNRegisters = 10);
+    void CheckPageSwitchRead(uint8_t pPageToSelect = 0, uint8_t pNRegisters = 1);
+    void CheckPageSwitchWrite(uint8_t pPageToSelect = 0, uint8_t pNRegisters = 1);
+    void SetSortOrder(uint8_t pSortOrder) { fSortOrder = pSortOrder; };
+    void SetBitToFlip(uint8_t pBit) { fBitToFlip = pBit; };
+    void SetReturnToDefPage(uint8_t pReturn) { fReturnToDefPage = pReturn; };
+
   private:
     // timing
     std::chrono::seconds::rep fStartTime;
@@ -81,19 +80,19 @@ class RegisterTester : public Tool
     // Containers
     BadRegisters                 fBadRegisters;
     ContainerRecycleBin<uint8_t> fRecycleBin;
-    DetectorDataContainer        fRegList; 
+    DetectorDataContainer        fRegList;
 
     // Counters
     uint32_t fNBadRegisters;
-    
-    // sort order 
-    uint8_t  fSortOrder{0};
 
-    // bit to flip during register write test 
-    uint8_t  fBitToFlip{0};
+    // sort order
+    uint8_t fSortOrder{0};
 
-    // set page back to default after a write 
-    uint8_t  fReturnToDefPage{0};
+    // bit to flip during register write test
+    uint8_t fBitToFlip{0};
+
+    // set page back to default after a write
+    uint8_t fReturnToDefPage{0};
 
     // HardReset
     void SendHardReset(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, const Ph2_HwDescription::Chip* pFrontEndChip);
@@ -117,7 +116,6 @@ class RegisterTester : public Tool
     {
         bool operator()(Register a, Register b) const { return a.second.fAddress < b.second.fAddress; }
     } customLessThanAddress;
-
 
 #ifdef __USE_ROOT__
     DQMHistogramRegisterTest fDQMHistogrammer;

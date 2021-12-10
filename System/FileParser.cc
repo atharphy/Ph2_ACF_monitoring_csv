@@ -1083,7 +1083,7 @@ void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybr
             std::stringstream cStr(cList);
             os << GREEN << "|\t|\t|\t|---- " << cAttrName << " : ";
             char cDelimiter = ';';
-            if(cAttrName.find("Id") != std::string::npos) 
+            if(cAttrName.find("Id") != std::string::npos)
             {
                 while(std::getline(cStr, ctoken, cDelimiter))
                 {
@@ -1107,23 +1107,23 @@ void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybr
                         cMapOfMaks[cItem].clear();
                 }
             }
-            if(cAttrName.find("Rows") != std::string::npos) 
+            if(cAttrName.find("Rows") != std::string::npos)
             {
                 std::string cPrimaryToken;
-                int cIndx = 0;
+                int         cIndx = 0;
                 while(std::getline(cStr, cPrimaryToken, cDelimiter))
                 {
                     std::stringstream cPrim(cPrimaryToken);
                     while(std::getline(cPrim, ctoken, ','))
                     {
-                        auto cFeId = cFeIds[cIndx];
-                        uint8_t cItem = convertAnyInt(ctoken.c_str());
-                        auto cFeType = cMapOfTypes[cFeId];
+                        auto    cFeId   = cFeIds[cIndx];
+                        uint8_t cItem   = convertAnyInt(ctoken.c_str());
+                        auto    cFeType = cMapOfTypes[cFeId];
                         os << GREEN << "|\n|\t|\t|\t|\t|" << +cFeId << "\t|\t|\t|\t|\t|----- " << +cItem;
-                        cMapOfMaks[cFeId].push_back(cItem + (cFeType==FrontEndType::CBC3 ? 0  : 1) ); 
-                    } 
+                        cMapOfMaks[cFeId].push_back(cItem + (cFeType == FrontEndType::CBC3 ? 0 : 1));
+                    }
                     cIndx++;
-                } 
+                }
             }
             // while(std::getline(cStr, ctoken, cDelimiter))
             // {
@@ -1141,7 +1141,7 @@ void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybr
             //             if(cAttrName.find("MPA") != std::string::npos) cType = FrontEndType::MPA;
             //             if(cAttrName.find("SSA") != std::string::npos) cType = FrontEndType::SSA;
             //             if(cAttrName.find("SSA2") != std::string::npos) cType = FrontEndType::SSA2;
-            //             if(cAttrName.find("CBCId") != std::string::npos){ 
+            //             if(cAttrName.find("CBCId") != std::string::npos){
             //                 cType = FrontEndType::CBC3;
             //                 os << GREEN << "|\n|\t|\t|\t|\t|----- " << +cItem << "\n";
             //             }

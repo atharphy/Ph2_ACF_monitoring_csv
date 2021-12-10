@@ -144,10 +144,9 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         uint32_t cHitInfoSize   = (cHitInfoHeader & 0xFFF) * 4;
                         size_t   cOffset        = std::distance(pData.begin(), cIterator);
                         cStatusWord             = static_cast<uint8_t>(cGoodHitInfo == VALID_L1_HEADER);
-                        LOG(DEBUG) << BOLDBLUE << "\t.. ReadoutChip#" << +cFe->getIndex() << "...hit info header " << std::bitset<4>(cGoodHitInfo) << "... " 
-                            << +cHitInfoSize << " words in hit packet..." << "... status word " << std::bitset<2>(cStatusWord) 
-                            << " Event#" << +fEventCount
-                            << RESET;
+                        LOG(DEBUG) << BOLDBLUE << "\t.. ReadoutChip#" << +cFe->getIndex() << "...hit info header " << std::bitset<4>(cGoodHitInfo) << "... " << +cHitInfoSize
+                                   << " words in hit packet..."
+                                   << "... status word " << std::bitset<2>(cStatusWord) << " Event#" << +fEventCount << RESET;
                         if(cStatusWord == 0x01)
                         {
                             bool                          cWithCIC2 = (cCic->getFrontEndType() == FrontEndType::CIC2);
@@ -161,7 +160,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                             // {
                             //     LOG (INFO) << BOLDYELLOW << "\t\t\t.." << std::bitset<32>(  (*(cIterator + cLOff) ) ) << RESET;
                             // }
-                                
+
                             if(fIsSparsified)
                             {
                                 // LOG (DEBUG) << BOLDBLUE << "sparsified data" << RESET;
