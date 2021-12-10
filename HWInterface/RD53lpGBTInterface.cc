@@ -19,8 +19,6 @@ namespace Ph2_HwInterface
 // ###################################
 bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
 {
-    this->setBoard(pChip->getBeBoardId());
-
     // #####################
     // # Make reverted map #
     // #####################
@@ -29,20 +27,20 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     // #########################
     // # Configure PLL and DLL #
     // #########################
-    RD53lpGBTInterface::WriteChipReg(pChip, "LDConfigH", 1 << 5, false);
-    RD53lpGBTInterface::WriteChipReg(pChip, "EPRXLOCKFILTER", 0x55, false);
-    RD53lpGBTInterface::WriteChipReg(pChip, "EPRXDllConfig", 1 << 6 | 1 << 4 | 1 << 2, false);
-    RD53lpGBTInterface::WriteChipReg(pChip, "PSDllConfig", 5 << 4 | 1 << 2 | 1, false);
-    RD53lpGBTInterface::WriteChipReg(pChip, "POWERUP2", 1 << 2 | 1 << 1, false);
+    lpGBTInterface::WriteChipReg(pChip, "LDConfigH", 1 << 5, false);
+    lpGBTInterface::WriteChipReg(pChip, "EPRXLOCKFILTER", 0x55, false);
+    lpGBTInterface::WriteChipReg(pChip, "EPRXDllConfig", 1 << 6 | 1 << 4 | 1 << 2, false);
+    lpGBTInterface::WriteChipReg(pChip, "PSDllConfig", 5 << 4 | 1 << 2 | 1, false);
+    lpGBTInterface::WriteChipReg(pChip, "POWERUP2", 1 << 2 | 1 << 1, false);
 
     // #####################
     // # Check PUSM status #
     // #####################
-    uint8_t      PUSMStatus = RD53lpGBTInterface::GetPUSMStatus(pChip);
+    uint8_t      PUSMStatus = lpGBTInterface::GetPUSMStatus(pChip);
     unsigned int nAttempts  = 0;
     while((PUSMStatus != revertedPUSMStatusMap["READY"]) && (nAttempts < RD53Shared::MAXATTEMPTS))
     {
-        PUSMStatus = RD53lpGBTInterface::GetPUSMStatus(pChip);
+        PUSMStatus = lpGBTInterface::GetPUSMStatus(pChip);
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
         nAttempts++;
     }
@@ -54,18 +52,14 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     }
     LOG(INFO) << GREEN << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[PUSMStatus] << RESET;
 
-    // ######################
-    // # Configure Up links #
-    // ######################
-    RD53lpGBTInterface::ConfigureRxGroups(
-        pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], lpGBTconstants::rxPhaseTracking);
-    RD53lpGBTInterface::ConfigureRxChannels(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), 1, 1, 1, static_cast<lpGBT*>(pChip)->getRxHSLPolarity(), 12);
+    // ###############################
+    // # Configure Up and Down links #
+    // ###############################
+    lpGBTInterface::ConfigureRxGroups(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], 0);
+    lpGBTInterface::ConfigureRxChannels(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), 1, 1, 1, 0, 12);
 
-    // ########################
-    // # Configure Down links #
-    // ########################
-    RD53lpGBTInterface::ConfigureTxGroups(pChip, static_cast<lpGBT*>(pChip)->getTxGroups(), static_cast<lpGBT*>(pChip)->getTxChannels(), fTxDataRateMap[static_cast<lpGBT*>(pChip)->getTxDataRate()]);
-    RD53lpGBTInterface::ConfigureTxChannels(pChip, static_cast<lpGBT*>(pChip)->getTxGroups(), static_cast<lpGBT*>(pChip)->getTxChannels(), 3, 3, 0, 0, static_cast<lpGBT*>(pChip)->getTxHSLPolarity());
+    lpGBTInterface::ConfigureTxGroups(pChip, static_cast<lpGBT*>(pChip)->getTxGroups(), static_cast<lpGBT*>(pChip)->getTxChannels(), fTxDataRateMap[static_cast<lpGBT*>(pChip)->getTxDataRate()]);
+    lpGBTInterface::ConfigureTxChannels(pChip, static_cast<lpGBT*>(pChip)->getTxGroups(), static_cast<lpGBT*>(pChip)->getTxChannels(), 3, 3, 0, 0, 1);
 
     // ####################################################
     // # Programming registers as from configuration file #
@@ -73,12 +67,12 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     LOG(INFO) << GREEN << "Initializing registers of LpGBT: " << BOLDYELLOW << pChip->getId() << RESET;
     ChipRegMap& lpGBTRegMap = pChip->getRegMap();
     for(const auto& cRegItem: lpGBTRegMap)
+    {
         if(cRegItem.second.fPrmptCfg == true)
         {
             LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << cRegItem.first << BOLDBLUE << " = " << BOLDYELLOW << cRegItem.second.fValue << RESET;
-
             if(cRegItem.second.fAddress < 0x13C)
-                RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+                lpGBTInterface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fValue, pVerifLoop);
             else if((cRegItem.second.fAddress >= 0x1D0) && (cRegItem.second.fAddress < 0x1EB))
             {
                 lpGBTInterface::ConfigureRxPhase(
@@ -86,64 +80,15 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
                 static_cast<lpGBT*>(pChip)->setPhaseRxAligned(true); // @TMP@
             }
         }
+    }
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 
-    RD53lpGBTInterface::PrintChipMode(pChip);
-
+    PrintChipMode(pChip);
     return true;
-}
-
-bool RD53lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
-{
-    return RD53lpGBTInterface::WriteReg(pChip, pChip->getRegItem(pRegNode).fAddress, pValue, pVerifLoop);
-}
-
-uint16_t RD53lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode) { return RD53lpGBTInterface::ReadReg(pChip, pChip->getRegItem(pRegNode).fAddress); }
-
-bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerifLoop)
-{
-    this->setBoard(pChip->getBeBoardId());
-
-    if(pValue > 0xFF)
-    {
-        LOG(ERROR) << BOLDRED << "LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pValue << BOLDRED << " to address " << BOLDYELLOW << pAddress << RESET;
-        return false;
-    }
-
-    if(pAddress >= 0x13C)
-    {
-        LOG(ERROR) << "LpGBT read-write registers end at 0x13C ... impossible to write to address " << BOLDYELLOW << pAddress << RESET;
-        return false;
-    }
-
-    int  nAttempts = 0;
-    bool status;
-    do
-    {
-        status = fBoardFW->WriteOptoLinkRegister(pChip->getId(), static_cast<lpGBT*>(pChip)->getChipAddress(), pAddress, pValue, pVerifLoop);
-        nAttempts++;
-    } while((pVerifLoop == true) && (status == false) && (nAttempts < RD53Shared::MAXATTEMPTS));
-
-    if((pVerifLoop == true) && (status == false)) throw Exception("[RD53lpGBTInterface::WriteReg] LpGBT register writing issue");
-
-    return true;
-}
-
-uint16_t RD53lpGBTInterface::ReadReg(Chip* pChip, uint16_t pAddress)
-{
-    this->setBoard(pChip->getBeBoardId());
-    return fBoardFW->ReadOptoLinkRegister(pChip->getId(), static_cast<lpGBT*>(pChip)->getChipAddress(), pAddress);
-}
-
-bool RD53lpGBTInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerifLoop)
-{
-    bool writeGood = true;
-    for(const auto& cReg: pRegVec) writeGood &= RD53lpGBTInterface::WriteChipReg(pChip, cReg.first, cReg.second);
-    return writeGood;
 }
 
 // ####################################
-// # LpGBT specific routine functions #
+// # RD53 specific routine functions #
 // ####################################
 
 void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const BeBoard* pBoard, const OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface)
@@ -205,8 +150,7 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
 {
     const double frames_or_time = 1; // @CONST@
     const bool   given_time     = true;
-    bool         allGood        = true;
-    uint32_t     frontendSpeed  = static_cast<RD53FWInterface*>(pBeBoardFWInterface)->ReadoutSpeed();
+    // uint32_t     frontendSpeed  = static_cast<RD53FWInterface*>(pBeBoardFWInterface)->ReadoutSpeed();
 
     LOG(INFO) << GREEN << "Phase alignment ongoing for LpGBT chip: " << BOLDYELLOW << pChip->getId() << RESET;
 
@@ -217,7 +161,11 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
         return true;
     }
 
+    bool allGood = true;
+    // do this once
+    static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
     for(const auto cHybrid: *pOpticalGroup)
+    {
         for(const auto cChip: *cHybrid)
         {
             uint8_t cGroup   = static_cast<RD53*>(cChip)->getRxGroup();
@@ -229,15 +177,14 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
             uint8_t phaseGap       = 0;
             double  bestBERtest    = -1;
 
+            // start for this ROC
+            static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip);
             for(uint8_t phase = 0; phase < 16; phase++)
             {
                 LOG(INFO) << BOLDMAGENTA << ">>> Phase value = " << BOLDYELLOW << +phase << BOLDMAGENTA << " of (0-15) <<<" << RESET;
                 lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, phase);
 
-                static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
-                static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip);
-
-                const double result = lpGBTInterface::RunBERtest(pChip, cGroup, cChannel, given_time, frames_or_time, frontendSpeed);
+                double result = lpGBTInterface::RunBERtest(pChip, cGroup, cChannel, given_time, frames_or_time);
 
                 // #########################################################
                 // # Search for largest interval and set into middle point #
@@ -253,17 +200,19 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                     bestBERtest    = result;
                 }
                 else if(result == bestBERtest)
+                {
                     bestPhaseEnd = phase;
+                }
                 else if((result > bestBERtest) && (bestPhaseEnd >= bestPhaseStart))
+                {
                     bestBERtest = result;
+                }
 
                 if((bestPhaseEnd >= bestPhaseStart) && (bestPhaseEnd - bestPhaseStart > phaseGap))
                 {
                     bestPhase = (bestPhaseStart + bestPhaseEnd) / 2;
                     phaseGap  = bestPhaseEnd - bestPhaseStart;
                 }
-
-                static_cast<RD53Interface*>(pReadoutChipInterface)->StopPRBSpattern(cChip);
             }
 
             if(bestBERtest == 0)
@@ -274,12 +223,12 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                 LOG(INFO) << BOLDBLUE << "\t--> Rx Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " Channel " << BOLDYELLOW << +cChannel << BOLDRED << " has no good phase" << RESET;
                 allGood = false;
             }
-
             lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, bestPhase);
+            // stop for this ROC
+            static_cast<RD53Interface*>(pReadoutChipInterface)->StopPRBSpattern(cChip);
         }
-
-    static_cast<lpGBT*>(pChip)->setPhaseRxAligned(allGood); // @TMP@
-
+    }
+    static_cast<lpGBT*>(pChip)->setPhaseRxAligned(allGood); // do this once
     return allGood;
 }
 

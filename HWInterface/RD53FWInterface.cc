@@ -967,7 +967,7 @@ void RD53FWInterface::StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uin
 bool RD53FWInterface::WriteOptoLinkRegister(const uint32_t linkNumber, const uint16_t LpGBTaddress, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop)
 {
     // OptoChip ID
-    RD53FWInterface::selectLink(linkNumber);
+    RD53FWInterface::selectLink(pChip->getOpticalId());
 
     // Config
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_tx_fifo_din", pData}, {"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", LpGBTaddress}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
@@ -992,10 +992,10 @@ bool RD53FWInterface::WriteOptoLinkRegister(const uint32_t linkNumber, const uin
     return true;
 }
 
-uint32_t RD53FWInterface::ReadOptoLinkRegister(const uint32_t linkNumber, const uint16_t LpGBTaddress, const uint32_t pAddress)
+uint32_t RD53FWInterface::ReadOptoLinkRegister(const Chip* pChip, const uint32_t pAddress)
 {
     // OptoChip ID
-    RD53FWInterface::selectLink(linkNumber);
+    RD53FWInterface::selectLink(pChip->getOpticalId());
 
     // Config
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", LpGBTaddress}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});

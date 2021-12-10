@@ -138,23 +138,32 @@ BoardType BeBoardInterface::getBoardType(const BeBoard* pBoard)
 
 void BeBoardInterface::ConfigureBoard(const BeBoard* pBoard)
 {
-    std::lock_guard<std::mutex> theGuard(theMtx);
+    // std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
     setBoard(pBoard->getId());
+    LOG(INFO) << GREEN << "Configuring Board: " << BOLDYELLOW << +pBoard->getId() << RESET;
     fBoardFW->ConfigureBoard(pBoard);
 }
 
 void BeBoardInterface::Start(BeBoard* pBoard)
 {
-    std::lock_guard<std::mutex> theGuard(theMtx);
+    // std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
     setBoard(pBoard->getId());
     fBoardFW->Start();
 }
 
+void BeBoardInterface::SendNTriggers(BeBoard* pBoard, uint16_t pNtriggers)
+{
+    // std::lock_guard<std::recursive_mutex> theGuard(theMtx);
+
+    setBoard(pBoard->getId());
+    fBoardFW->SendNTriggers(pNtriggers);
+}
+
 void BeBoardInterface::Stop(BeBoard* pBoard)
 {
-    std::lock_guard<std::mutex> theGuard(theMtx);
+    // std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
     setBoard(pBoard->getId());
     fBoardFW->Stop();
@@ -162,7 +171,7 @@ void BeBoardInterface::Stop(BeBoard* pBoard)
 
 void BeBoardInterface::Pause(BeBoard* pBoard)
 {
-    std::lock_guard<std::mutex> theGuard(theMtx);
+    // std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
     setBoard(pBoard->getId());
     fBoardFW->Pause();
@@ -170,7 +179,7 @@ void BeBoardInterface::Pause(BeBoard* pBoard)
 
 void BeBoardInterface::Resume(BeBoard* pBoard)
 {
-    std::lock_guard<std::mutex> theGuard(theMtx);
+    // std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
     setBoard(pBoard->getId());
     fBoardFW->Resume();
@@ -180,20 +189,20 @@ uint32_t BeBoardInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::ve
 {
     uint32_t dataSize = 0;
 
-    std::unique_lock<std::mutex> theGuard(theMtx, std::defer_lock);
-    if(theGuard.try_lock() == true)
-    {
-        setBoard(pBoard->getId());
-        dataSize = fBoardFW->ReadData(pBoard, pBreakTrigger, pData, pWait);
-        theGuard.unlock();
-    }
+    // std::unique_lock<std::recursive_mutex> theGuard(theMtx, std::defer_lock);
+    // if(theGuard.try_lock() == true)
+    // {
+    setBoard(pBoard->getId());
+    dataSize = fBoardFW->ReadData(pBoard, pBreakTrigger, pData, pWait);
+    //     theGuard.unlock();
+    // }
 
     return dataSize;
 }
 
 void BeBoardInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
 {
-    std::lock_guard<std::mutex> theGuard(theMtx);
+    // std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
     setBoard(pBoard->getId());
     fBoardFW->ReadNEvents(pBoard, pNEvents, pData, pWait);

@@ -12,6 +12,7 @@
 
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/Definition.h"
+#include "../Utils/DataContainer.h"
 #include "../Utils/easylogging++.h"
 #include "ConsoleColor.h"
 #include "SLinkEvent.h"
@@ -35,24 +36,34 @@ using EventDataMap = std::map<uint16_t, std::vector<uint32_t>>;
 class Cluster
 {
   public:
-    uint8_t fSensor;
-    uint8_t fFirstStrip;
-    uint8_t fClusterWidth;
-    float   getBaricentre();
+    uint8_t  fSensor;
+    uint16_t fFirstStrip;
+    uint8_t  fClusterWidth;
+    float    getBaricentre();
 };
 
+class PSCluster
+{
+  public:
+    uint32_t fPixelId;
+    uint8_t  fWidth;
+    uint8_t  fMip;
+    uint8_t  fFeId;
+};
 class PCluster
 {
   public:
+    PCluster() : fAddress(255u), fWidth(255u), fZpos(255u){};
     uint8_t fAddress;
     uint8_t fWidth;
     uint8_t fZpos;
-    float   getBaricentre();
+    float   getBaricentre(); // Barycenter?
 };
 
 class SCluster
 {
   public:
+    SCluster() : fAddress(255u), fMip(255u), fWidth(255u){};
     uint8_t fAddress;
     uint8_t fMip;
     uint8_t fWidth;
@@ -65,14 +76,16 @@ class Stub
     Stub(uint8_t pPosition, uint8_t pBend, uint8_t pRow = 0) : fPosition(pPosition), fBend(pBend), fRow(pRow)
     {
         // with Strips starting at 0
-        fCenter = static_cast<float>((pPosition / 2.) - 1);
+        fCenter = static_cast<float>((pPosition / 2.)); // for PS
+        // fCenter = static_cast<float>((pPosition / 2.) - 1); // is this correct for 2S?
     }
+    Stub() : fPosition(255u), fBend(255u), fRow(255u), fCenter(-999.){};
     uint8_t getPosition() { return fPosition; }
     uint8_t getBend() { return fBend; }
     uint8_t getRow() { return fRow; }
     float   getCenter() { return fCenter; }
 
-  private:
+  public:
     uint8_t fPosition;
     uint8_t fBend;
     uint8_t fRow;
@@ -102,6 +115,7 @@ class Event
     uint32_t fLumi;          /*!< LuminositySection value */
     uint32_t fEventCountCBC; /*!< Cbc Event Counter */
     uint32_t fEventSize;
+    uint16_t fL1Number;
 
     // for CBC3 use
     uint8_t  fBeId;
@@ -149,6 +163,15 @@ class Event
     //}
     /*! \brief Get the event size in bytes */
     uint32_t GetSize() const { return fEventSize; }
+
+    inline const std::shared_ptr<ChannelGroupBase>
+    getChannelGroup(const BoardDataContainer* theChannelGroupContainer, int groupNumber, uint16_t opticalGroupId, uint16_t hybridGroupId, uint16_t chipGroupId)
+    {
+        auto theChannelGroupHandler = theChannelGroupContainer->getObject(opticalGroupId)->getObject(hybridGroupId)->getObject(chipGroupId)->getSummary<std::shared_ptr<ChannelGroupHandler>>();
+        if(groupNumber > theChannelGroupHandler->getNumberOfGroups()) return std::shared_ptr<ChannelGroupBase>();
+        return theChannelGroupHandler->getTestGroup(groupNumber);
+    }
+
     /*!
      * \brief Get the bunch value
      * \return Bunch value
@@ -252,6 +275,8 @@ class Event
      * \return Data string in hex
      */
     virtual std::string HexString() const { return ""; }
+
+    uint16_t GetL1Number() const { return fL1Number; }
 
     // user interface
     /*!
@@ -388,11 +413,11 @@ class Event
 
     virtual std::vector<Cluster> getClusters(uint8_t pFeId, uint8_t pCbcId) const { return {}; }
 
-    virtual void fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) = 0;
+    virtual void fillDataContainer(BoardDataContainer* boardContainer, const BoardDataContainer* theChannelGroupHandler, int groupNumber) = 0;
 
     // split stream of data
     template <std::size_t N>
-    void splitStream(const std::vector<uint32_t> pData, std::vector<std::bitset<N>>& pBitSet, size_t pOffset, size_t pSize)
+    void splitStream(const std::vector<uint32_t> pData, std::vector<std::bitset<N>>& pBitSet, size_t pOffset, size_t pSize, size_t pBitOffset = 0)
     {
         uint32_t cBitCounter  = 0;
         uint32_t cId          = 0;
@@ -401,14 +426,13 @@ class Event
         do
         {
             auto cWord = std::bitset<32>(*cIterator);
-            LOG(DEBUG) << BOLDBLUE << "Word " << +cWordCounter << " : " << cWord << RESET;
+            // LOG(INFO) << BOLDBLUE << "Word " << +cWordCounter << " : " << cWord << RESET;
             for(size_t cIndex = 0; cIndex < 32; cIndex++)
             {
                 if(cId >= pSize) continue;
+                if(cIndex < pBitOffset and (cWordCounter == 0)) continue;
 
                 pBitSet[cId][N - 1 - cBitCounter] = cWord[31 - cIndex];
-                // LOG (INFO) << "\t..Bit index " << +(31  - cIndex) << " bit counter in hit word at index " <<
-                // +cBitCounter << RESET;
                 cId += (cBitCounter == (N - 1));
                 cBitCounter = (cBitCounter + 1) % N;
             }

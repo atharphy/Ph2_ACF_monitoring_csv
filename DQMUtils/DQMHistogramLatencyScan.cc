@@ -34,8 +34,22 @@ DQMHistogramLatencyScan::DQMHistogramLatencyScan()
 DQMHistogramLatencyScan::~DQMHistogramLatencyScan() {}
 
 //========================================================================================================================
-void DQMHistogramLatencyScan::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramLatencyScan::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
 {
+    uint32_t cNCh = 0;
+    for(auto board: theDetectorStructure)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                uint32_t cN = 0;
+                for(auto chip: *hybrid) { cN += chip->size(); } // chip
+                if(cN > cNCh) cNCh = cN;
+            } // hybrid
+        }     // OG
+    }         // board
+
     // need to get settings from settings map
     parseSettings(pSettingsMap);
 
@@ -45,14 +59,28 @@ void DQMHistogramLatencyScan::book(TFile* theOutputFile, const DetectorContainer
     HistContainer<TH1F> hLatency("LatencyValue", "Latency Value", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fLatencyHistograms, hLatency);
 
+    HistContainer<TH1F> hLatencyS0("LatencyValueS0", "Latency Value [bottom sensor]", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fLatencyHistogramsS0, hLatencyS0);
+
+    HistContainer<TH1F> hLatencyS1("LatencyValueS1", "Latency Value [top sensor]", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fLatencyHistogramsS1, hLatencyS1);
+
     HistContainer<TH1F> hStub("StubValue", "Stub Value", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange);
-    RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fStubHistograms, hStub);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fStubHistograms, hStub);
 
     HistContainer<TH2F> hLatencyScan2D("LatencyScan2D", "LatencyScan2D", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange, fLatencyRange, fStartLatency, fStartLatency + fLatencyRange);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fLatencyScan2DHistograms, hLatencyScan2D);
 
     HistContainer<TH1F> hTriggerTDC("TriggerTDC", "Trigger TDC", TDCBINS, -0.5, TDCBINS - 0.5);
-    RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fTriggerTDCHistograms, hTriggerTDC);
+    RootContainerFactory::bookBoardHistograms(theOutputFile, theDetectorStructure, fTriggerTDCHistograms, hTriggerTDC);
+
+    // hit map vs. latency
+    HistContainer<TH2F> hLatencyHitMap("LatencyHitMap", "Latency HitMap", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange, cNCh, 0, cNCh);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fLatencyHitMaps, hLatencyHitMap);
+
+    // hit count for TDC phase + latency
+    HistContainer<TH2F> hLatencyTDC("LatencyTDC", "Latency TDC", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange, TDCBINS, 0, TDCBINS);
+    RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fLatencyTDCHistograms, hLatencyTDC);
 }
 
 //========================================================================================================================
@@ -105,21 +133,96 @@ bool DQMHistogramLatencyScan::fill(std::vector<char>& dataBuffer)
 //========================================================================================================================
 void DQMHistogramLatencyScan::process()
 {
+    // latency plot
     for(auto board: fLatencyHistograms)
     {
         for(auto opticalGroup: *board)
         {
             for(auto hybrid: *opticalGroup)
             {
-                TCanvas* latencyCanvas = new TCanvas(("Latency_" + std::to_string(hybrid->getId())).data(), ("Latency " + std::to_string(hybrid->getId())).data(), 500, 500);
-
+                TCanvas* latencyCanvas = new TCanvas(("Latency_" + std::to_string(hybrid->getId()) + "_Summary").data(), ("Latency_" + std::to_string(hybrid->getId()) + "_Summary").data(), 500, 500);
                 // latencyCanvas->DivideSquare(hybrid->size());
-
                 latencyCanvas->cd();
                 TH1F* latencyHistogram = hybrid->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 latencyHistogram->GetXaxis()->SetTitle("Trigger Latency");
-                latencyHistogram->GetYaxis()->SetTitle("# of hits");
+                latencyHistogram->GetYaxis()->SetTitle("< Hit Occupancy > Bottom Sensor");
                 latencyHistogram->DrawCopy();
+            }
+        }
+    }
+
+    for(auto board: fLatencyHistogramsS0)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                TCanvas* latencyCanvas =
+                    new TCanvas(("Latency_" + std::to_string(hybrid->getId()) + "_BottomSensor").data(), ("Latency_" + std::to_string(hybrid->getId()) + "_BottomSensor").data(), 500, 500);
+                // latencyCanvas->DivideSquare(hybrid->size());
+                latencyCanvas->cd();
+                TH1F* latencyHistogram = hybrid->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                latencyHistogram->GetXaxis()->SetTitle("Trigger Latency");
+                latencyHistogram->GetYaxis()->SetTitle("< Hit Occupancy > Bottom Sensor");
+                latencyHistogram->DrawCopy();
+            }
+        }
+    }
+    // latency plot
+    for(auto board: fLatencyHistogramsS1)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                TCanvas* latencyCanvas =
+                    new TCanvas(("Latency_" + std::to_string(hybrid->getId()) + "_TopSensor").data(), ("Latency_" + std::to_string(hybrid->getId()) + "_TopSensor").data(), 500, 500);
+                // latencyCanvas->DivideSquare(hybrid->size());
+                latencyCanvas->cd();
+                TH1F* latencyHistogram = hybrid->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                latencyHistogram->GetXaxis()->SetTitle("Trigger Latency");
+                latencyHistogram->GetYaxis()->SetTitle("< Hit Occupancy > Top Sensor");
+                latencyHistogram->DrawCopy();
+            }
+        }
+    }
+    // hit map
+    for(auto board: fLatencyHitMaps)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                TCanvas* cCanvas = new TCanvas(("LatencyHitMap_" + std::to_string(hybrid->getId())).data(), ("Latency Hit Map " + std::to_string(hybrid->getId())).data(), 500, 500);
+                cCanvas->cd();
+                auto& cHistogram = hybrid->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                cHistogram->GetXaxis()->SetTitle("Trigger Latency");
+                cHistogram->GetYaxis()->SetTitle("Strip Number");
+                cHistogram->GetZaxis()->SetTitle("< Hit Occupancy >");
+                cHistogram->DrawCopy();
+            }
+        }
+    }
+    // TDC trigger latency plot
+    for(auto board: fLatencyTDCHistograms)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                for(auto chip: *hybrid)
+                {
+                    std::string cCanvasName  = "LatencyTDC_" + std::to_string(chip->getId()) + std::to_string(hybrid->getId());
+                    std::string cCanvasTitle = "Latency TDC plot " + std::to_string(chip->getId()) + std::to_string(hybrid->getId());
+
+                    TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
+                    cCanvas->cd();
+                    auto& cHistogram = chip->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    cHistogram->GetXaxis()->SetTitle("Trigger Latency");
+                    cHistogram->GetYaxis()->SetTitle("TDC Phase");
+                    cHistogram->GetZaxis()->SetTitle("< Hit Occupancy >");
+                    cHistogram->DrawCopy();
+                }
             }
         }
     }
@@ -128,7 +231,103 @@ void DQMHistogramLatencyScan::process()
 //========================================================================================================================
 
 void DQMHistogramLatencyScan::reset(void) {}
+void DQMHistogramLatencyScan::fillLatencyPlots(uint16_t pLatency, DetectorDataContainer& pOccupancy, DetectorDataContainer& pTDCsummary)
+{
+    for(auto board: pOccupancy)
+    {
+        TH1F* boardTriggerTDCHistogram = fTriggerTDCHistograms.at(board->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                // float cNhits=0;
+                TH2F* cHitMap = fLatencyHitMaps.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                TH1F* cHist   = fLatencyHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                for(auto chip: *hybrid)
+                {
+                    float cOcc   = chip->getSummary<Occupancy>().fOccupancy;
+                    float cError = chip->getSummary<Occupancy>().fOccupancyError;
+                    auto  cBin   = cHist->FindBin((float)pLatency);
+                    cHist->SetBinContent(cBin, cOcc * chip->size());
+                    cHist->SetBinError(cBin, cError * chip->size());
+                    uint16_t cChnlIndx = 0;
+                    uint16_t cOffset   = chip->getId() * chip->size() / 2.;
+                    for(auto channel: *chip->getChannelContainer<Occupancy>())
+                    {
+                        uint16_t cStripOffset = (cChnlIndx % 2 == 0) ? cOffset : cHitMap->GetYaxis()->GetNbins() / 2. + cOffset;
+                        uint16_t cStripId     = cStripOffset + cChnlIndx / 2.0;
+                        cBin                  = cHitMap->FindBin((float)pLatency, cStripId);
+                        cHitMap->SetBinContent(cBin, channel.fOccupancy);
+                        cHitMap->SetBinError(cBin, channel.fOccupancyError);
+                        if(channel.fOccupancy > 0)
+                            LOG(INFO) << BOLDMAGENTA << "\t\t..ROC#" << +chip->getId() << " Channel " << cChnlIndx << " strip number " << cChnlIndx / 2.0 << " global strip number " << +cStripId
+                                      << " - have found " << channel.fOccupancy << " hits." << RESET;
+                        cChnlIndx++;
+                    }
+                    TH2F* cLatencyTDC =
+                        fLatencyTDCHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    for(uint8_t cTDC = 0; cTDC < TDCBINS; cTDC++)
+                    {
+                        cBin = cLatencyTDC->FindBin((float)pLatency, (float)cTDC);
+                        uint32_t cNhits =
+                            pTDCsummary.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDC];
+                        LOG(DEBUG) << BOLDMAGENTA << "\t\t..TDC phase of " << +cTDC << " latency of " << pLatency << " bin of " << +cBin << " OG" << +opticalGroup->getId() << " Hybrid"
+                                   << +hybrid->getId() << " Chip" << +chip->getId() << " - have found " << cNhits << " channels with a hit [per chip per event]." << RESET;
+                        cLatencyTDC->SetBinContent(cBin, cNhits);
+                        cLatencyTDC->SetBinError(cBin, std::sqrt((float)cNhits)); // for now
+                        boardTriggerTDCHistogram->Fill((float)cTDC, cNhits);
+                    }
+                }
+                // float cError = 0;
+                // if(cNhits > 0) cError = sqrt(float(cNhits));
+                // auto cBin = cHist->FindBin( (float)pLatency );
+                // cHist->SetBinContent(cBin, cNhits);
+                // cHist->SetBinError(cBin, cError);
+            }
+        }
+    }
+}
 
+void DQMHistogramLatencyScan::fillLatencyPlots(DetectorDataContainer& theLatencyS0, DetectorDataContainer& theLatencyS1)
+{
+    for(auto board: theLatencyS0)
+    {
+        auto& cBrdHitsS1 = theLatencyS1.at(board->getIndex());
+        for(auto opticalGroup: *board)
+        {
+            auto& cOGHitsS1 = cBrdHitsS1->at(board->getIndex());
+            for(auto hybrid: *opticalGroup)
+            {
+                auto& cHybridHitsS1 = cOGHitsS1->at(board->getIndex());
+
+                bool cFillS0 = (hybrid->hasSummary());
+                bool cFillS1 = (cHybridHitsS1->hasSummary());
+
+                TH1F* hybridLatencyHistogramS0 = fLatencyHistogramsS0.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                TH1F* hybridLatencyHistogramS1 = fLatencyHistogramsS1.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                for(uint32_t i = 0; i < fLatencyRange; i++)
+                {
+                    if(cFillS0)
+                    {
+                        uint32_t hits  = hybrid->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[i];
+                        float    error = 0;
+                        if(hits > 0) error = sqrt(float(hits));
+                        hybridLatencyHistogramS0->SetBinContent(i, hits);
+                        hybridLatencyHistogramS0->SetBinError(i, error);
+                    }
+                    if(cFillS1)
+                    {
+                        uint32_t hits  = cHybridHitsS1->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[i];
+                        float    error = 0;
+                        if(hits > 0) error = sqrt(float(hits));
+                        hybridLatencyHistogramS1->SetBinContent(i, hits);
+                        hybridLatencyHistogramS1->SetBinError(i, error);
+                    }
+                }
+            }
+        }
+    }
+}
 void DQMHistogramLatencyScan::fillLatencyPlots(DetectorDataContainer& theLatency)
 {
     for(auto board: theLatency)
@@ -137,18 +336,18 @@ void DQMHistogramLatencyScan::fillLatencyPlots(DetectorDataContainer& theLatency
         {
             for(auto hybrid: *opticalGroup)
             {
-                if(!hybrid->hasSummary()) continue;
+                bool  cFill                  = (hybrid->hasSummary());
                 TH1F* hybridLatencyHistogram = fLatencyHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-
                 for(uint32_t i = 0; i < fLatencyRange; i++)
                 {
-                    uint32_t hits = hybrid->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[i];
-
-                    float error = 0;
-                    if(hits > 0) error = sqrt(float(hits));
-
-                    hybridLatencyHistogram->SetBinContent(i, hits);
-                    hybridLatencyHistogram->SetBinError(i, error);
+                    if(cFill)
+                    {
+                        uint32_t hits  = hybrid->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[i];
+                        float    error = 0;
+                        if(hits > 0) error = sqrt(float(hits));
+                        hybridLatencyHistogram->SetBinContent(i, hits);
+                        hybridLatencyHistogram->SetBinError(i, error);
+                    }
                 }
             }
         }

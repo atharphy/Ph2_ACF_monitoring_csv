@@ -39,12 +39,12 @@ class RD53Interface : public ReadoutChipInterface
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& regName) override;
     bool     ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
     bool     MaskAllChannels(Ph2_HwDescription::ReadoutChip* pChip, bool mask, bool pVerifLoop = true) override;
-    bool     maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop = false) override;
+    bool     maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop = false) override;
     // ##################
     // # PRBS generator #
     // ##################
-    void StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override;
-    void StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) override;
+    void StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip);
+    void StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip);
     // #############################
 
     void Reset(Ph2_HwDescription::ReadoutChip* pChip, const int resetType);

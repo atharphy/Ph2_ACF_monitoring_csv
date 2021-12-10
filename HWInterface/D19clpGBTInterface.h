@@ -21,7 +21,22 @@ namespace Ph2_HwInterface
 class D19clpGBTInterface : public lpGBTInterface
 {
   public:
-    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB) {}
+    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB)
+    {
+        // configure during constructor now when configuring chip
+        SetConfigMode(pUseOpticalLink, pUseCPB);
+        // configure CPB - do this here rather than in SystemController? Not sure
+        CPBconfig cCPBconfig;
+        cCPBconfig.fEnable       = pUseCPB;
+        cCPBconfig.fI2CFrequency = 3;
+        cCPBconfig.fWait_us      = 0;    // TO-DO - make configurable from xml
+        cCPBconfig.fReTry        = 1;    // TO-DO - make configurable from xml
+        cCPBconfig.fVerbose      = 0;    // TO-DO - make configurable from xml
+        cCPBconfig.fMaxAttempts  = 5000; // TO-DO - make configurable from xml
+        cCPBconfig.fResetEn      = 1;    // TO-DO - make configurable from xml
+        // configure FW for all boards
+        for(auto cBoardMap: pBoardMap) { (cBoardMap.second)->ConfigureCPB(cCPBconfig); }
+    }
     ~D19clpGBTInterface() {}
 
     // ###################################
@@ -30,14 +45,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // General configuration of the lpGBT chip from register file
     bool ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
     bool SwitchOnSEH();
-    // R/W functions using register name
-    bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override;
-    uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
-    // R/W functions using register address
-    bool     WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerifLoop = true);
-    uint16_t ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress);
-    bool     WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
-
+    
     // ###################################
     // # Outer Tracker specific funtions #
     // ###################################
@@ -54,9 +62,8 @@ class D19clpGBTInterface : public lpGBTInterface
 #endif
 #endif
 
-#endif
     // Sets the flag used to select which lpGBT configuration interface to use
-    void SetConfigMode(Ph2_HwDescription::Chip* pChip, bool pUseOpticalLink, bool pUseCPB, bool pToggleTC = false);
+    void SetConfigMode(bool pUseOpticalLink, bool pUseCPB, bool pToggleTC = false);
     // configure PS-ROH
     void ConfigurePSROH(Ph2_HwDescription::Chip* pChip);
     // configure 2S-SEH
@@ -81,7 +88,100 @@ class D19clpGBTInterface : public lpGBTInterface
     uint32_t mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress);
     void     ContinuousPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
 
+    // 0 [RHS], 1 [LHS]
+    // active reset functions
+    void cicReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0)
+    {
+        if(pSide == 0)
+            ConfigureGPIOLevel(pChip, {fReset_RHS_CIC}, (pEnable) ? 0 : 1);
+        else
+            ConfigureGPIOLevel(pChip, {fReset_LHS_CIC}, (pEnable) ? 0 : 1);
+    }
+    void ssaReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0)
+    {
+        if(pSide == 0)
+            ConfigureGPIOLevel(pChip, {fReset_RHS_SSA}, (pEnable) ? 0 : 1);
+        else
+            ConfigureGPIOLevel(pChip, {fReset_LHS_SSA}, (pEnable) ? 0 : 1);
+    }
+    void mpaReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0)
+    {
+        if(pSide == 0)
+            ConfigureGPIOLevel(pChip, {fReset_RHS_MPA}, (pEnable) ? 0 : 1);
+        else
+            ConfigureGPIOLevel(pChip, {fReset_LHS_MPA}, (pEnable) ? 0 : 1);
+    }
+    void cbcReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0)
+    {
+        if(pSide == 0)
+            ConfigureGPIOLevel(pChip, {fReset_RHS_CBC}, (pEnable) ? 1 : 0);
+        else
+            ConfigureGPIOLevel(pChip, {fReset_LHS_CBC}, (pEnable) ? 1 : 0);
+    }
+    // 0 [RHS], 1 [LHS]
+    // send reset functions
+    void resetCIC(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0)
+    {
+        cicReset(pChip, 1, pSide);
+        std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
+        cicReset(pChip, 0, pSide);
+        std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
+    }
+    void resetSSA(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0)
+    {
+        ssaReset(pChip, 1, pSide);
+        std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
+        ssaReset(pChip, 0, pSide);
+        std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
+    }
+    void resetMPA(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0)
+    {
+        mpaReset(pChip, 1, pSide);
+        std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
+        mpaReset(pChip, 0, pSide);
+        std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
+    }
+    void resetCBC(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0)
+    {
+        cbcReset(pChip, 1, pSide);
+        std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
+        cbcReset(pChip, 0, pSide);
+        std::this_thread::sleep_for(std::chrono::microseconds(fResetMinPeriod));
+    }
+
+    void configureClockSettings(Ph2_HwDescription::Chip* pChip, uint8_t pClk, lpGBTClockConfig pClkCnfg)
+    {
+        fClkConfig.fClkFreq         = pClkCnfg.fClkFreq;
+        fClkConfig.fClkInvert       = pClkCnfg.fClkInvert;
+        fClkConfig.fClkDriveStr     = pClkCnfg.fClkDriveStr;
+        fClkConfig.fClkInvert       = pClkCnfg.fClkInvert;
+        fClkConfig.fClkPreEmphWidth = pClkCnfg.fClkPreEmphWidth;
+        fClkConfig.fClkPreEmphMode  = pClkCnfg.fClkPreEmphMode;
+        fClkConfig.fClkPreEmphStr   = pClkCnfg.fClkPreEmphStr;
+
+        std::string cClkHReg = "EPCLK" + std::to_string(pClk) + "ChnCntrH";
+        std::string cClkLReg = "EPCLK" + std::to_string(pClk) + "ChnCntrL";
+        WriteChipReg(pChip, cClkHReg, fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq);
+        WriteChipReg(pChip, cClkLReg, fClkConfig.fClkPreEmphStr << 5 | fClkConfig.fClkPreEmphMode << 3 | fClkConfig.fClkPreEmphWidth);
+    }
+    void cicClock(Ph2_HwDescription::Chip* pChip, lpGBTClockConfig pClkCnfg, uint8_t pSide = 0) { configureClockSettings(pChip, (pSide == 0) ? fClock_RHS_CIC : fClock_LHS_CIC, pClkCnfg); }
+    void hybridClock(Ph2_HwDescription::Chip* pChip, lpGBTClockConfig pClkCnfg, uint8_t pSide = 0) { configureClockSettings(pChip, (pSide == 0) ? fClock_RHS_Hybrid : fClock_LHS_Hybrid, pClkCnfg); }
+
+    void                 setFrontEndType(FrontEndType pType) { fFeType = pType; }
+    FrontEndType         getFrontEndType() { return fFeType; }
+    std::vector<uint8_t> getGPIOs()
+    {
+        if(fFeType == FrontEndType::OuterTracker2S) return {fReset_LHS_CIC, fReset_LHS_CBC, fReset_RHS_CIC, fReset_RHS_CBC};
+        if(fFeType == FrontEndType::OuterTrackerPS) return {fReset_LHS_CIC, fReset_LHS_MPA, fReset_LHS_SSA, fReset_RHS_CIC, fReset_RHS_MPA, fReset_RHS_SSA};
+        return {};
+    }
+
   private:
+    // default clock configuration
+    lpGBTClockConfig fClkConfig;
+    // front-end type
+    FrontEndType fFeType;
+
     // ###################################
     // # Outer Tracker specific objects  #
     // ###################################

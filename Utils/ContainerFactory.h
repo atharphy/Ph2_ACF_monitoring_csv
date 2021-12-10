@@ -27,7 +27,23 @@ class ChannelGroupBase;
 
 namespace ContainerFactory
 {
-void copyStructure(const DetectorContainer& original, DetectorDataContainer& copy);
+inline void copyStructure(const DetectorContainer& original, DetectorDataContainer& copy)
+{
+    for(const auto board: original)
+    {
+        BoardDataContainer* copyBoard = copy.addBoardDataContainer(board->getId());
+        for(const auto opticalGroup: *board)
+        {
+            OpticalGroupDataContainer* copyOpticalGroup = copyBoard->addOpticalGroupDataContainer(opticalGroup->getId());
+
+            for(const auto hybrid: *opticalGroup)
+            {
+                HybridDataContainer* copyHybrid = copyOpticalGroup->addHybridDataContainer(hybrid->getId());
+                for(const auto chip: *hybrid) { copyHybrid->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols()); }
+            }
+        }
+    }
+}
 
 template <typename T>
 void print(const DetectorDataContainer& detector)
@@ -119,7 +135,7 @@ void copyAndInitHybrid(const DetectorContainer& original, DetectorDataContainer&
 template <typename T>
 void copyAndInitOpticalGroup(const DetectorContainer& original, DetectorDataContainer& copy)
 {
-    copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, T, EmptyContainer, EmptyContainer>(original, copy);
+    copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, T, EmptyContainer, EmptyContainer>(original, copy);
 }
 
 template <typename T>
@@ -199,8 +215,7 @@ template <typename T>
 void copyAndInitOpticalGroup(const DetectorContainer& original, DetectorDataContainer& copy, T& opticalGroupSummary)
 {
     EmptyContainer theEmpty;
-    copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, T, EmptyContainer, EmptyContainer>(
-        original, copy, theEmpty, theEmpty, theEmpty, theEmpty, opticalGroupSummary, theEmpty, theEmpty);
+    copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, T, EmptyContainer, EmptyContainer>(original, copy, theEmpty, theEmpty, theEmpty, opticalGroupSummary, theEmpty, theEmpty);
 }
 
 template <typename T>

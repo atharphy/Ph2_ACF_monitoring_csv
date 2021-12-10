@@ -1,6 +1,7 @@
 #ifndef _DQMInterface_h_
 #define _DQMInterface_h_
 
+#include "../Utils/Container.h"
 #include <future>
 #include <vector>
 
@@ -31,6 +32,7 @@ class DQMInterface
     bool                           fRunning;
     std::future<bool>              fRunningFuture;
     TFile*                         fOutputFile;
+    DetectorContainer              fDetectorStructure;
 };
 
 #endif

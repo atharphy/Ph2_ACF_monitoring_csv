@@ -89,7 +89,7 @@ class DQMHistogramBase
      * \brief Book histograms
      * \param theDetectorStructure : Container of the Detector structure
      */
-    virtual void book(TFile* outputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) = 0;
+    virtual void book(TFile* outputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) = 0;
 
     /*!
      * \brief Book histograms

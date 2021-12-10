@@ -1,7 +1,6 @@
 #include "../NetworkUtils/TCPSubscribeClient.h"
 #include "../System/FileParser.h"
 #include "../System/SystemController.h"
-#include "../Utils/Container.h"
 #include "../Utils/ObjectStream.h"
 
 #include "CBCHistogramPulseShape.h"
@@ -10,6 +9,8 @@
 #include "DQMHistogramPedeNoise.h"
 #include "DQMHistogramPedestalEqualization.h"
 #include "DQMInterface.h"
+#include "PSPhysicsHistograms.h"
+#include "Physics2SHistograms.h"
 #include "RD53ClockDelayHistograms.h"
 #include "RD53DataTransmissionTestGraphs.h"
 #include "RD53GainHistograms.h"
@@ -83,7 +84,6 @@ void DQMInterface::configure(std::string const& calibrationName, std::string con
     Ph2_System::FileParser                                   fParser;
     std::map<uint16_t, Ph2_HwInterface::BeBoardFWInterface*> fBeBoardFWMap;
     std::stringstream                                        out;
-    DetectorContainer                                        fDetectorStructure;
     Ph2_System::SettingsMap                                  pSettingsMap;
 
     fParser.parseHW(configurationFilePath, fBeBoardFWMap, &fDetectorStructure, out, true);
@@ -130,6 +130,10 @@ void DQMInterface::configure(std::string const& calibrationName, std::string con
         fDQMHistogrammerVector.push_back(new SSAPhysicsHistograms());
     else if(calibrationName == "datatrtest")
         fDQMHistogrammerVector.push_back(new DataTransmissionTestGraphs());
+    else if(calibrationName == "psphysics")
+        fDQMHistogrammerVector.push_back(new PSPhysicsHistograms());
+    else if(calibrationName == "2sphysics")
+        fDQMHistogrammerVector.push_back(new Physics2SHistograms());
 
     fOutputFile = new TFile("tmp.root", "RECREATE");
     for(auto dqmHistogrammer: fDQMHistogrammerVector) dqmHistogrammer->book(fOutputFile, fDetectorStructure, pSettingsMap);
@@ -174,7 +178,7 @@ bool DQMInterface::running()
 
     while(fRunning)
     {
-        LOG(INFO) << __PRETTY_FUNCTION__ << " Running = " << fRunning << RESET;
+        // LOG(INFO) << __PRETTY_FUNCTION__ << " Running = " << fRunning << RESET;
         // if(receive(configBuffer, 1) != -1)
         // if(receive(*reinterpret_cast<std::vector<char>*>(*configBuffer.end()), 1) != -1)
         // TODO We need to optimize the data readout so we don't do multiple copies
