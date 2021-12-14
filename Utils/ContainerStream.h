@@ -768,6 +768,13 @@ class DataStreamOpticalGroupContainer : public DataStreamBase
         bufferWritingPosition += sizeof(fNumberOfSubContainers);
         std::cout << __PRETTY_FUNCTION__ << "fNumberOfSubContainers = " << +fNumberOfSubContainers << std::endl;
 
+        if(fContainerCarried.isOpticalGroupContainerCarried())
+        {
+            memcpy(&bufferBegin[bufferWritingPosition], &(fOpticalGroupSummaryContainer->theSummary_), sizeof(O));
+            bufferWritingPosition += sizeof(O);
+            fOpticalGroupSummaryContainer = nullptr;
+        }
+        
         for(auto& subContainer : fDataSteamHybridContainerVector) bufferWritingPosition = subContainer->copyToStream(&bufferBegin[bufferWritingPosition]);
 
         return bufferWritingPosition;

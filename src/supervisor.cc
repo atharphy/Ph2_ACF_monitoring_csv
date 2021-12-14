@@ -309,9 +309,9 @@ int main(int argc, char* argv[])
                     }
                     case STOPPED:
                     {
-                        theMiddlewareInterface.halt();
-                        usleep(5e6);
                         theDQMInterface.stopProcessingData();
+                        usleep(5e6);
+                        theMiddlewareInterface.halt();
                         std::cout << __PRETTY_FUNCTION__ << "Supervisor Everything Stopped!!! Exiting..." << std::endl;
                         done = true;
                         break;
@@ -332,7 +332,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    // theMonitorDQMInterface.stopProcessingData();
+    theMonitorDQMInterface.stopProcessingData();
 
     std::cout << __PRETTY_FUNCTION__ << "Out of supervisor state machine!. Run Controller status: " << runControllerStatus << std::endl;
     checkExitStatus(runControllerStatus, "RunController");

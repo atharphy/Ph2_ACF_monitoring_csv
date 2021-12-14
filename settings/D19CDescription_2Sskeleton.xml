@@ -270,7 +270,7 @@
 <Monitoring type="2S" enable="1">
     <MonitoringSleepTime> 500 </MonitoringSleepTime>
     <MonitoringElements
-    CBCThreshold  = "0"
+    CBCThreshold  = "1"
     LpGBT_ADC1    = "1"
     LpGBT_VDD     = "1"
     LpGBT_VDDA    = "1"
