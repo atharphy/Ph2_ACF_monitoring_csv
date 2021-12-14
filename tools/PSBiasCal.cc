@@ -185,12 +185,12 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
 
 		std::vector<std::string> nameDAC{"Bias_D5BFEED","Bias_D5PREAMP","Bias_D5TDR","Bias_D5ALLV","Bias_D5ALLI","Bias_D5DAC8"};
 		uint32_t shift=point;
-		if (point==6) //TODO: hacky,Bias_D5DAC8 is the only one that is out of order
+		if (point==6) //TODO: hacky, Bias_D5DAC8 is the only one that is out of order.  Should pass index map
 			shift=point+4;
 
 		uint32_t MtoWr=(1<<shift);
 		fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_LSB",MtoWr&0xff);
-		fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_MSB",MtoWr>>8);
+		fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_MSB",(MtoWr>>8)&0xff));
 		DAC = nameDAC[point];
 	}
 
@@ -208,7 +208,6 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
 	float    exp_val_conv = exp_val / cConversionFactor;
 	uint32_t offsetval    = 0;
 	DAC_new_val  = DAC_val - uint32_t(std::round(((float(act_val) - float(exp_val_conv) - float(gnd_corr)) / LSB))) + offsetval;
-	// LOG(INFO) << BOLDRED <<"DAC name:"<<DAC<<" ADC name:"<<dac_str<<" DAC_val "<<DAC_val<<" point:"<<point<<", block:"<<block<< RESET;
 
 	DAC_new_val = std::max(uint32_t(0), DAC_new_val);
 	DAC_new_val = std::min(uint32_t(31), DAC_new_val);
@@ -218,6 +217,7 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
 
 	fReadoutChipInterface->WriteChipReg(cChip, DAC, DAC_new_val);
 	float new_val = float(static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str));
+	//See if closest within 1 LSB TODO: Need a correction to be sure if fails
 	LOG(INFO) << BOLDRED <<"New DAC val: "<<(new_val - gnd_corr)<<" Expected val from: " <<(exp_val_conv-LSB)<<" to "<<(exp_val_conv+LSB)<<RESET;
 
     return DAC_new_val;
@@ -267,8 +267,7 @@ float PSBiasCal::MeasureGnd(Chip* cChip, Chip* clpGBT, std::string dac_str)
 		fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_LSB",(1<<11)&0xff);
 		fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_MSB",(1<<11)>>8);
 		gnd_val=static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT,dac_str);
-		//LOG(INFO) << BOLDRED <<DAC<<" DAC_val "<<DAC_val<<" exp_val "<<exp_val<<""<< RESET;
-		//LOG(INFO) << BOLDRED <<DAC<<" off_val "<<off_val<<" act_val " <<act_val<<" gnd_corr "<<gnd_corr<<" gnd_val "<<gnd_val<<RESET;
+		
 	}
 	LOG(INFO) << BOLDRED << "gndval " << gnd_val << RESET;
 	return gnd_val;
@@ -303,10 +302,7 @@ void PSBiasCal::CalibrateBias()
                     float gndval = MeasureGnd(cChip, cOpticalReadout->flpGBT, dac_str);
                     if(cChip->getFrontEndType() == FrontEndType::SSA)
                     {
-                        //gndval = MeasureGnd(cChip, cOpticalReadout->flpGBT, dac_str);
                         LOG(INFO) << BOLDRED << dac_str << " " << static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(cOpticalReadout->flpGBT, dac_str) << RESET;
-
-                    
                         LOG(INFO) << BOLDRED << "SSA "<<+(cChip->getId())<<" Hyb "<<+(cHybrid->getId()) <<RESET;
  
                         std::vector<uint32_t> DAC_val{0xF, 0xF, 0xF, 0xF, 0xF, 0xF};
@@ -320,12 +316,10 @@ void PSBiasCal::CalibrateBias()
 
                     else if(cChip->getFrontEndType() == FrontEndType::MPA)
                     {
-                        //gndval = MeasureGnd(cChip, cOpticalReadout->flpGBT, dac_str);
 
-                        std::vector<uint32_t> DAC_val{0xF, 0xF, 0xF, 0xF, 0xF, 0xFF, 0xFF};
-                        std::vector<float>    exp_val{0.082, 0.082, 0.108, 0.082, 0.082, 1.0, 1.0};
-                        // std::vector<uint32_t> DAC_val{0xF, 0xF, 29, 0xF, 0xF, 0xFF, 0xFF};
-                        // std::vector<float> exp_val{0.082, 0.082, 0.164, 0.082, 0.082,1.0,1.0};
+                        std::vector<uint32_t> DAC_val{0xF, 0xF, 0xF, 0xF, 0xF};//, 0xFF, 0xFF};
+                        std::vector<float>    exp_val{0.082, 0.082, 0.108, 0.082, 0.082};//, 1.0, 1.0};
+                      
                         for(int ipoint = 0; ipoint < 5; ipoint++)
                         {
                             for(int iblock = 0; iblock < 7; iblock++)
