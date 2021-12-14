@@ -190,7 +190,7 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
 
 		uint32_t MtoWr=(1<<shift);
 		fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_LSB",MtoWr&0xff);
-		fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_MSB",(MtoWr>>8)&0xff));
+		fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_MSB",(MtoWr>>8)&0xff);
 		DAC = nameDAC[point];
 	}
 
