@@ -116,7 +116,7 @@ class Chip : public FrontEndDescription
      * \brief Get the Chip Id
      * \return The Chip ID
      */
-    virtual uint8_t getId() const { return fChipId; }
+    virtual uint16_t getId() const { return fChipId; }
 
     /*!
      * \brief Set the Chip Id

@@ -72,7 +72,8 @@ void SSAPhysicsHistograms::process()
                 size_t hybridIndex = hybrid->getIndex();
 
                 // Create a canvas do draw the plots
-                TCanvas* cOccupancy = new TCanvas(("Occupancy_hybrid_" + std::to_string(hybrid->getId())).data(), ("Hits hybrid " + std::to_string(hybrid->getId())).data(), 0, 0, 650, 650);
+                std::string occupancyCanvasName = "Occupancy_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
+                TCanvas* cOccupancy = new TCanvas(occupancyCanvasName.data(), occupancyCanvasName.data(), 0, 0, 650, 650);
                 cOccupancy->Divide(hybrid->size());
 
                 for(auto chip: *hybrid) // for on chip - begin
