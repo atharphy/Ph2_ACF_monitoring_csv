@@ -123,6 +123,7 @@
                     <node id="clock_enable"                     mask="0x00000004"/>
                     <node id="power_enable"                     mask="0x00000008"/>
                     <node id="fast_commands_enable"             mask="0x00000010"/>
+                    <node id="stub_package_delay"               mask="0x00700000"/>
                 </node>
                 <node id="i2c"              address="0x001">
                         <node id="frequency"                mask="0x0000000f"/>
@@ -154,8 +155,8 @@
 
                 <!-- <node id="stubs"          address="0x000"> -->
                 <node id="stubs"          address="0x046">
-                    <!-- <node id="stub_package_delay"               mask="0x1c000000"/> -->
-                    <node id="stub_package_delay"             mask="0x00000007"/>
+                    <node id="stub_package_delay"               mask="0x1c000000"/> 
+                    <!--<node id="stub_package_delay"             mask="0x00000007"/>-->
                 </node>
             </node>
 
@@ -460,10 +461,29 @@
                 </node>
                 <node id="nreplies"                     address="0x004" description="nreplies present in reply fifo"/>
             </node>
+
             <node id="worker">
-                <node id="lpgbtsc_fsm_state"    address="0x005" mask="0x000000ff"/>
+                <node id="lpgbtsc_fsm_state"    address="0x005" mask="0xffffffff"/>
             </node>
-        </node>
+
+            <node id="reply_debug_block0" address="0x006">
+               <node id="word0" mask="0x000000FF"/>
+               <node id="word1" mask="0x0000FF00"/>
+               <node id="word2" mask="0x00FF0000"/>
+               <node id="word3" mask="0xFF000000"/>
+	        </node>
+           <node id="reply_debug_block1" address="0x007">
+               <node id="word4" mask="0x000000FF"/>
+               <node id="word5" mask="0x0000FF00"/>
+               <node id="word6" mask="0x00FF0000"/>
+               <node id="word7" mask="0xFF000000"/>
+	        </node>
+           <node id="reply_debug_block2" address="0x008">
+               <node id="word8" mask="0x000000FF"/>
+               <node id="word9" mask="0x0000FF00"/>
+               <node id="word10" mask="0x00FF0000"/>
+	        </node>
+        </node>        
 
         <node id="fast_command_block"           address="0x2000">
             <node id="general"                          address="0x000">

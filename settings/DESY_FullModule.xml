@@ -14,7 +14,7 @@
     <CDCE configure="0" clockRate="320"/>
     
 
-    <OpticalGroup Id="0" FMCId="0" reset="1">
+    <OpticalGroup Id="2" FMCId="0" reset="1">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="./settings/lpGBTFiles/" />
         <lpGBT Id="0" configfile="CMSOT_lpGBT.txt">
@@ -22,7 +22,7 @@
           />
         </lpGBT>
 
-        <Hybrid Id="0" Status="1" LinkId="0" reset="1">
+        <Hybrid Id="0" Status="1" reset="1">
             <Global>
                <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
             </Global>
@@ -31,7 +31,8 @@
             <SSA Id="0" configfile="SSA.txt" /> 
             <SSA Id="1" configfile="SSA.txt" /> 
             <SSA Id="2" configfile="SSA.txt" /> 
-            <SSA Id="4" configfile="SSA.txt" /> 
+            <!-- <SSA Id="3" configfile="SSA.txt" />  -->
+            <!-- <SSA Id="4" configfile="SSA.txt" />  -->
             <SSA Id="5" configfile="SSA.txt" /> 
             <SSA Id="6" configfile="SSA.txt" /> 
             <SSA Id="7" configfile="SSA.txt" /> 
@@ -46,13 +47,14 @@
             <MPA Id="6" configfile="MPA.txt" /> 
             <MPA Id="7" configfile="MPA.txt" />
 
+
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC Id="8" configfile="CIC_default.txt" />
         </Hybrid>
 
 
 
-        <!-- <Hybrid Id="1" Status="1" LinkId="0" i2cMaster="1">
+        <Hybrid Id="1" Status="1" i2cMaster="1">
             <Global>
                <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
             </Global>
@@ -78,7 +80,7 @@
 
 	    <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC Id="8" configfile="CIC_default.txt" />
-        </Hybrid> -->
+        </Hybrid>
     </OpticalGroup>
     
     <!--CONFIG-->
