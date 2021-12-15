@@ -14,34 +14,34 @@ class WorkerTester : public Tool {
 
 	void ResetCPB();
 
-        void PrepareForTests();
+    void PrepareForTests();
 
-    	void WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose=true);
-    	std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords, bool pVerbose=true);
+    void WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose=false);
+    std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords, bool pVerbose=false);
 
-        void PrintFSMState();
+    void PrintFSMState();
 
-        // function for IC transactions 
-        bool WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerbose=false);
-        uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterValue, bool pVerbose=false);
-        bool IsICToolDone();
-        // function for I2C transactions using lpGBT I2C Masters
-        bool I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes, bool pVerbose=true);
-        uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes, bool pVerbose=true);
-        bool IsI2CToolDone();
-        // function for front-end slow control
-        bool WriteFERegister(Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerify = true, bool pVerbose=true);
-        uint8_t ReadFERegister(Chip* pChip, uint16_t pRegisterAddress, bool pVerbose=false);
-        bool IsFEToolDone();
+    // function for IC transactions 
+    bool WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerbose=false);
+    uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterValue, bool pVerbose=true);
+    bool IsICToolDone();
+    // function for I2C transactions using lpGBT I2C Masters
+    bool I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes, bool pVerbose=false);
+    uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes, bool pVerbose=false);
+    bool IsI2CToolDone();
+    // function for front-end slow control
+    bool WriteFERegister(Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerify = true, bool pVerbose=false);
+    uint8_t ReadFERegister(Chip* pChip, uint16_t pRegisterAddress, bool pVerbose=false);
+    bool IsFEToolDone();
 
-        void Benchmark(int pNIterations);
+    void Benchmark(int pNIterations);
 
-        bool TestICRead();
-        bool TestICWrite();
-        bool TestI2CRead();
-        bool TestI2CWrite();
-        bool TestFERead();
-        bool TestFEWrite();
+    bool TestICRead();
+    bool TestICWrite();
+    bool TestI2CRead();
+    bool TestI2CWrite();
+    bool TestFERead();
+    bool TestFEWrite();
 
 
     private :
@@ -50,6 +50,7 @@ class WorkerTester : public Tool {
         void SetHybridClocks(OpticalGroup* cOpticalGroup);
         void EnableHybridChips(OpticalGroup* cOptialGroup);
         void PrintI2CMasterRegisters(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
+        void PrintLpGBTReplyFrame();
 
         bool TestICRead(OpticalGroup* cOpticalGroup);
         bool TestICWrite(OpticalGroup* cOpticalGroup);
