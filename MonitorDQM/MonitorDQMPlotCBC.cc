@@ -9,6 +9,7 @@
 #include "../MonitorDQM/MonitorDQMPlotCBC.h"
 #include "../RootUtils/GraphContainer.h"
 #include "../RootUtils/RootContainerFactory.h"
+#include "../Utils/CharArray.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
@@ -16,7 +17,6 @@
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TGraph.h"
-#include "../Utils/CharArray.h"
 
 //========================================================================================================================
 MonitorDQMPlotCBC::MonitorDQMPlotCBC() {}
@@ -71,14 +71,12 @@ void MonitorDQMPlotCBC::bookCBCPlots(TFile* theOutputFile, const DetectorContain
 //========================================================================================================================
 void MonitorDQMPlotCBC::bookLpGBTPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName)
 {
-
-
-    std::cout<< __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
     // creating the histograms for all the chips:
     // create the GraphContainer<TGraph> as you would create a TGraph (it implements some feature needed to avoid memory
     // leaks in copying histograms like the move constructor)
@@ -161,7 +159,8 @@ void MonitorDQMPlotCBC::fillLpGBTRegisterPlots(DetectorDataContainer& theThresho
                                    getTimeStampForRoot(std::get<0>(opticalGroup->getSummary<std::tuple<time_t, uint16_t>>())),
                                    std::get<1>(opticalGroup->getSummary<std::tuple<time_t, uint16_t>>()) * CONVERSION_FACTOR);
 
-            // std::cout << "Filling plot " << registerName << " at time " << std::get<0>(opticalGroup->getSummary<std::tuple<time_t, uint16_t>>()) << " with value " << (std::get<1>(opticalGroup->getSummary<std::tuple<time_t, uint16_t>>()) * CONVERSION_FACTOR) << std::endl;
+            // std::cout << "Filling plot " << registerName << " at time " << std::get<0>(opticalGroup->getSummary<std::tuple<time_t, uint16_t>>()) << " with value " <<
+            // (std::get<1>(opticalGroup->getSummary<std::tuple<time_t, uint16_t>>()) * CONVERSION_FACTOR) << std::endl;
         } // for on opticalGroup - end
     }     // for on boards - end
 }
@@ -183,9 +182,8 @@ bool MonitorDQMPlotCBC::fill(std::vector<char>& dataBuffer)
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR DQM YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
 
     // I'm expecting to receive a data stream from an uint16_t contained from DQM "DQMExample"
-    OpticalGroupContainerStream<EmptyContainer, std::tuple<time_t,uint16_t>, EmptyContainer, EmptyContainer, CharArray> theCBCDQMStreamer  ("CBCMonitorCBCRegister"  );
-    OpticalGroupContainerStream<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t,uint16_t>, CharArray> theLpGBTDQMStreamer("CBCMonitorLpGBTRegister");
-
+    OpticalGroupContainerStream<EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, EmptyContainer, CharArray> theCBCDQMStreamer("CBCMonitorCBCRegister");
+    OpticalGroupContainerStream<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, uint16_t>, CharArray> theLpGBTDQMStreamer("CBCMonitorLpGBTRegister");
 
     if(theCBCDQMStreamer.attachBuffer(&dataBuffer))
     {
@@ -206,13 +204,12 @@ bool MonitorDQMPlotCBC::fill(std::vector<char>& dataBuffer)
         theLpGBTDQMStreamer.decodeData(fDetectorData);
         // Filling the histograms
         CharArray registerNameArray = theLpGBTDQMStreamer.getHeaderElement();
-        
+
         fillLpGBTRegisterPlots(fDetectorData, registerNameArray.getString());
         // Cleaning the data container to be ready for the next TCP string
         fDetectorData.cleanDataStored();
         return true;
     }
-
 
     // the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking
     // for this stream)

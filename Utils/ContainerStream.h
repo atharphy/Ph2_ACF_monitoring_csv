@@ -65,17 +65,17 @@ class ContainerCarried
 
     void reset() { fContainerCarried = 0; }
 
-    void carryChannelContainer     () { fContainerCarried |= (1 << 0); }
-    void carryChipContainer        () { fContainerCarried |= (1 << 1); }
-    void carryHybridContainer      () { fContainerCarried |= (1 << 2); }
+    void carryChannelContainer() { fContainerCarried |= (1 << 0); }
+    void carryChipContainer() { fContainerCarried |= (1 << 1); }
+    void carryHybridContainer() { fContainerCarried |= (1 << 2); }
     void carryOpticalGroupContainer() { fContainerCarried |= (1 << 3); }
-    void carryBoardContainer       () { fContainerCarried |= (1 << 4); }
+    void carryBoardContainer() { fContainerCarried |= (1 << 4); }
 
-    bool isChannelContainerCarried     () { return (fContainerCarried >> 0) & 1; }
-    bool isChipContainerCarried        () { return (fContainerCarried >> 1) & 1; }
-    bool isHybridContainerCarried      () { return (fContainerCarried >> 2) & 1; }
+    bool isChannelContainerCarried() { return (fContainerCarried >> 0) & 1; }
+    bool isChipContainerCarried() { return (fContainerCarried >> 1) & 1; }
+    bool isHybridContainerCarried() { return (fContainerCarried >> 2) & 1; }
     bool isOpticalGroupContainerCarried() { return (fContainerCarried >> 3) & 1; }
-    bool isBoardContainerCarried       () { return (fContainerCarried >> 4) & 1; }
+    bool isBoardContainerCarried() { return (fContainerCarried >> 4) & 1; }
 
     uint8_t fContainerCarried;
 } __attribute__((packed));
@@ -84,7 +84,7 @@ template <typename H>
 class HeaderStreamContainerBase : public DataStreamBase
 {
   public:
-    HeaderStreamContainerBase() {};
+    HeaderStreamContainerBase(){};
     ~HeaderStreamContainerBase(){};
 
     uint32_t size(void) override
@@ -181,7 +181,7 @@ class DataStreamChannelContainer : public DataStreamBase
 
   public:
     ChannelContainer<C>* fChannelContainer;
-    bool                 fDeletePointers {false};
+    bool                 fDeletePointers{false};
 } __attribute__((packed));
 
 template <typename C, typename... I>
@@ -307,7 +307,7 @@ class DataStreamChipContainer : public DataStreamBase
 
     size_t copyFromStream(const char* bufferBegin, size_t bufferReadingPosition = 0)
     {
-        fDeletePointers = true;
+        fDeletePointers                      = true;
         size_t originalBufferReadingPosition = bufferReadingPosition;
         memcpy(&fDataSize, &bufferBegin[bufferReadingPosition], sizeof(fDataSize));
         bufferReadingPosition += sizeof(fDataSize);
@@ -334,7 +334,7 @@ class DataStreamChipContainer : public DataStreamBase
     ContainerCarried     fContainerCarried;
     ChannelContainer<T>* fChannelContainer;
     Summary<C, T>*       fChipSummaryContainer;
-    bool                 fDeletePointers {false};
+    bool                 fDeletePointers{false};
 
 } __attribute__((packed));
 
@@ -592,9 +592,8 @@ class DataStreamHybridContainer : public DataStreamBase
     std::vector<ChannelContainer<T>*> fChannelContainerVector;
     std::vector<Summary<C, T>*>       fChipSummaryContainerVector;
     Summary<M, C>*                    fHybridSummaryContainer;
-    bool                              fDeletePointers {false};
+    bool                              fDeletePointers{false};
 };
-
 
 template <typename T, typename C, typename H, typename O, typename... I>
 class OpticalGroupContainerStream;
@@ -617,10 +616,7 @@ class HybridContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t
     HybridContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, I...>, DataStreamHybridContainer<T, C, H>>(creatorName) { ; }
     ~HybridContainerStream() { ; }
 
-    void setContainerCarried(const ContainerCarried& theContainerCarried)
-    {
-        this->fDataStream.fContainerCarried = theContainerCarried;
-    }
+    void setContainerCarried(const ContainerCarried& theContainerCarried) { this->fDataStream.fContainerCarried = theContainerCarried; }
 
     void streamAndSendBoard(BoardDataContainer* board, TCPPublishServer* networkStreamer)
     {
@@ -704,23 +700,13 @@ class HybridContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t
     }
 };
 
-
-
-
-
-
-
-
 // ------------------------------------------- OpticalGroupContainerStream ------------------------------------------- //
 
 template <typename T, typename C, typename H, typename O>
 class DataStreamOpticalGroupContainer : public DataStreamBase
 {
   public:
-    DataStreamOpticalGroupContainer() : fOpticalGroupSummaryContainer(nullptr)
-    {
-        check_if_retrivable<O>();
-    }
+    DataStreamOpticalGroupContainer() : fOpticalGroupSummaryContainer(nullptr) { check_if_retrivable<O>(); }
     ~DataStreamOpticalGroupContainer()
     {
         if(fDeletePointers)
@@ -746,10 +732,7 @@ class DataStreamOpticalGroupContainer : public DataStreamBase
     uint32_t size(void) override
     {
         fDataSize = sizeof(fDataSize) + sizeof(fContainerCarried) + sizeof(fNumberOfSubContainers);
-        for(const auto& dataSteamHybridContainer : fDataSteamHybridContainerVector) 
-        {
-            fDataSize += dataSteamHybridContainer->size();
-        }
+        for(const auto& dataSteamHybridContainer: fDataSteamHybridContainerVector) { fDataSize += dataSteamHybridContainer->size(); }
         if(fOpticalGroupSummaryContainer != nullptr) { fDataSize += sizeof(O); }
         return fDataSize;
     }
@@ -774,8 +757,8 @@ class DataStreamOpticalGroupContainer : public DataStreamBase
             bufferWritingPosition += sizeof(O);
             fOpticalGroupSummaryContainer = nullptr;
         }
-        
-        for(auto& subContainer : fDataSteamHybridContainerVector) bufferWritingPosition = subContainer->copyToStream(&bufferBegin[bufferWritingPosition]);
+
+        for(auto& subContainer: fDataSteamHybridContainerVector) bufferWritingPosition = subContainer->copyToStream(&bufferBegin[bufferWritingPosition]);
 
         return bufferWritingPosition;
     }
@@ -803,23 +786,18 @@ class DataStreamOpticalGroupContainer : public DataStreamBase
             bufferReadingPosition += sizeof(O);
         }
 
-        for(auto dataSteamHybridContainerVector : fDataSteamHybridContainerVector)
-        {
-            bufferReadingPosition = dataSteamHybridContainerVector->copyFromStream(bufferBegin, bufferReadingPosition);
-        }
+        for(auto dataSteamHybridContainerVector: fDataSteamHybridContainerVector) { bufferReadingPosition = dataSteamHybridContainerVector->copyFromStream(bufferBegin, bufferReadingPosition); }
 
         return bufferReadingPosition;
     }
 
-
   public:
-    ContainerCarried                                 fContainerCarried {};
-    std::vector<DataStreamHybridContainer<T, C, H>*> fDataSteamHybridContainerVector {};        
-    uint8_t                                          fNumberOfSubContainers {0};
-    Summary<O, H>*                                   fOpticalGroupSummaryContainer {nullptr};
-    bool                                             fDeletePointers {false};
+    ContainerCarried                                 fContainerCarried{};
+    std::vector<DataStreamHybridContainer<T, C, H>*> fDataSteamHybridContainerVector{};
+    uint8_t                                          fNumberOfSubContainers{0};
+    Summary<O, H>*                                   fOpticalGroupSummaryContainer{nullptr};
+    bool                                             fDeletePointers{false};
 };
-
 
 template <typename T, typename C, typename H, typename O, typename... I>
 class OpticalGroupContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamOpticalGroupContainer<T, C, H, O>>
@@ -883,7 +861,7 @@ class OpticalGroupContainerStream : public ObjectStream<HeaderStreamContainer<ui
         return this->fHeaderStream.template getHeaderInfo<N + getEnumSize()>();
     }
 
-    void retrieveData(uint16_t boardId, OpticalGroupDataContainer *opticalGroup)
+    void retrieveData(uint16_t boardId, OpticalGroupDataContainer* opticalGroup)
     {
         this->fHeaderStream.template setHeaderInfo<HeaderId::BoardId>(boardId);
         this->fHeaderStream.template setHeaderInfo<HeaderId::OpticalGroupId>(opticalGroup->getId());
@@ -902,21 +880,6 @@ class OpticalGroupContainerStream : public ObjectStream<HeaderStreamContainer<ui
         }
     }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // // ------------------------------------------- OpticalGroupContainerStream ------------------------------------------- //
 
@@ -1067,8 +1030,8 @@ class OpticalGroupContainerStream : public ObjectStream<HeaderStreamContainer<ui
 //         if(fChannelContainerVectorVector.size() == 0) return 0;
 
 //         uint32_t sizeOfChannelContainer = 0;
-//         for(auto& channelContainerVector : fChannelContainerVectorVector) 
-//             for(auto& channelContainer : channelContainerVector) 
+//         for(auto& channelContainerVector : fChannelContainerVectorVector)
+//             for(auto& channelContainer : channelContainerVector)
 //                 sizeOfChannelContainer += channelContainer->size() * sizeof(T));
 //         return sizeOfChannelContainer;
 //     }
@@ -1098,8 +1061,6 @@ class OpticalGroupContainerStream : public ObjectStream<HeaderStreamContainer<ui
 //         if(fChipSummaryContainerVector.size() == 0) return 0;
 //         return fChipSummaryContainerVector.size() * sizeof(H);
 //     }
-
-
 
 //   public:
 //     ContainerCarried                               fContainerCarried;
@@ -1207,24 +1168,6 @@ class OpticalGroupContainerStream : public ObjectStream<HeaderStreamContainer<ui
 //         }
 //     }
 // };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #if defined(__GNUC__) && !defined(__INTEL_COMPILER) && (((__GNUC__ * 100) + __GNUC_MINOR__) >= 800)
 #pragma GCC diagnostic pop

@@ -258,64 +258,64 @@ int main(int argc, char* argv[])
                 std::cout << __PRETTY_FUNCTION__ << "Supervisor Run Controller status: " << runControllerStatus << std::endl;
                 switch(stateMachineStatus)
                 {
-                    case HALTED:
+                case HALTED:
+                {
+                    std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Configure!!!" << std::endl;
+                    std::string calibrationName   = cmd.optionValue("calibration");
+                    std::string configurationFile = cmd.optionValue("file");
+                    theMiddlewareInterface.configure(calibrationName, configurationFile);
+                    theDQMInterface.configure(calibrationName, configurationFile);
+                    theMonitorDQMInterface.configure(configurationFile);
+                    stateMachineStatus = CONFIGURED;
+                    break;
+                }
+                case CONFIGURED:
+                {
+                    std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Start!!!" << std::endl;
+                    std::string runNumber = "5";
+                    std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+                    theDQMInterface.startProcessingData(runNumber);
+                    std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+                    theMonitorDQMInterface.startProcessingData();
+                    std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+                    theMiddlewareInterface.start(runNumber);
+                    std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+                    stateMachineStatus = RUNNING;
+                    std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+                    break;
+                }
+                case RUNNING:
+                {
+                    std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+                    if(cmd.optionValue("calibration") != "psphysics" && cmd.optionValue("calibration") != "2sphysics")
                     {
-                        std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Configure!!!" << std::endl;
-                        std::string calibrationName   = cmd.optionValue("calibration");
-                        std::string configurationFile = cmd.optionValue("file");
-                        theMiddlewareInterface.configure(calibrationName, configurationFile);
-                        theDQMInterface.configure(calibrationName, configurationFile);
-                        theMonitorDQMInterface.configure(configurationFile);
-                        stateMachineStatus = CONFIGURED;
-                        break;
-                    }
-                    case CONFIGURED:
-                    {
-                        std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Start!!!" << std::endl;
-                        std::string runNumber = "5";
                         std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                        theDQMInterface.startProcessingData(runNumber);
+                        theMiddlewareInterface.status();
                         std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                        theMonitorDQMInterface.startProcessingData();
-                        std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                        theMiddlewareInterface.start(runNumber);
-                        std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                        stateMachineStatus = RUNNING;
-                        std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                        break;
-                    }
-                    case RUNNING:
-                    {
-                        std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                        if(cmd.optionValue("calibration") != "psphysics" && cmd.optionValue("calibration") != "2sphysics")
+                        while(theMiddlewareInterface.status() != "Done")
                         {
                             std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                            theMiddlewareInterface.status();
-                            std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                            while(theMiddlewareInterface.status() != "Done")
-                            {
-                                std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                                usleep(5e5);
-                            }
+                            usleep(5e5);
                         }
-                        else
-                            usleep(20e6);
-                        std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Stop!!!" << std::endl;
-                        usleep(2e6);
-                        theMiddlewareInterface.stop();
-                        usleep(1e6);
-                        stateMachineStatus = STOPPED;
-                        break;
                     }
-                    case STOPPED:
-                    {
-                        theDQMInterface.stopProcessingData();
-                        usleep(5e6);
-                        theMiddlewareInterface.halt();
-                        std::cout << __PRETTY_FUNCTION__ << "Supervisor Everything Stopped!!! Exiting..." << std::endl;
-                        done = true;
-                        break;
-                    }
+                    else
+                        usleep(20e6);
+                    std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Stop!!!" << std::endl;
+                    usleep(2e6);
+                    theMiddlewareInterface.stop();
+                    usleep(1e6);
+                    stateMachineStatus = STOPPED;
+                    break;
+                }
+                case STOPPED:
+                {
+                    theDQMInterface.stopProcessingData();
+                    usleep(5e6);
+                    theMiddlewareInterface.halt();
+                    std::cout << __PRETTY_FUNCTION__ << "Supervisor Everything Stopped!!! Exiting..." << std::endl;
+                    done = true;
+                    break;
+                }
                 }
             }
             catch(const std::exception& e)

@@ -2,8 +2,8 @@
 #include "../HWDescription/Definition.h"
 #include "../HWDescription/OuterTrackerHybrid.h"
 #include "../HWInterface/D19clpGBTInterface.h"
-#include "../Utils/ContainerFactory.h"
 #include "../Utils/CharArray.h"
+#include "../Utils/ContainerFactory.h"
 
 #ifdef __USE_ROOT__
 #include "TFile.h"
@@ -60,7 +60,7 @@ void CBCMonitor::runCBCRegisterMonitor(std::string registerName)
 #ifdef __USE_ROOT__
     fMonitorDQMPlotCBC->fillCBCRegisterPlots(theCBCRegisterContainer, registerName);
 #else
-    auto theCBCRegisterStreamer = prepareOpticalGroupContainerStreamer<EmptyContainer, std::tuple<time_t,uint16_t>, EmptyContainer, EmptyContainer, CharArray>("CBCRegister");
+    auto theCBCRegisterStreamer = prepareOpticalGroupContainerStreamer<EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, EmptyContainer, CharArray>("CBCRegister");
     theCBCRegisterStreamer.setHeaderElement(CharArray(registerName));
     if(fTheSystemController->fDQMStreamerEnabled)
     {
@@ -87,7 +87,7 @@ void CBCMonitor::runLpGBTRegisterMonitor(std::string registerName)
 #ifdef __USE_ROOT__
     fMonitorDQMPlotCBC->fillLpGBTRegisterPlots(theLpGBTRegisterContainer, registerName);
 #else
-    auto theLpGBTRegisterStreamer = prepareOpticalGroupContainerStreamer<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t,uint16_t>, CharArray>("LpGBTRegister");
+    auto theLpGBTRegisterStreamer = prepareOpticalGroupContainerStreamer<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, uint16_t>, CharArray>("LpGBTRegister");
     theLpGBTRegisterStreamer.setHeaderElement(CharArray(registerName));
     if(fTheSystemController->fDQMStreamerEnabled)
     {

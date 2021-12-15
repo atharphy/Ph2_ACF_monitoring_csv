@@ -202,10 +202,10 @@ void DQMHistogramPedeNoise::process()
                 hybridStripNoiseOddHistogram->SetStats(false);
 
                 std::string validationCanvasName = "Validation_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
-                std::string pedeNoiseCanvasName  = "PedeNoise_B_"  + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
+                std::string pedeNoiseCanvasName  = "PedeNoise_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
 
                 TCanvas* cValidation = new TCanvas(validationCanvasName.data(), validationCanvasName.data(), 0, 0, 650, fPlotSCurves ? 900 : 650);
-                TCanvas* cPedeNoise  = new TCanvas(pedeNoiseCanvasName .data(), pedeNoiseCanvasName .data(), 670, 0, 650, 650);
+                TCanvas* cPedeNoise  = new TCanvas(pedeNoiseCanvasName.data(), pedeNoiseCanvasName.data(), 670, 0, 650, 650);
 
                 cValidation->Divide(hybrid->size(), fPlotSCurves ? 3 : 2);
                 cPedeNoise->Divide(hybrid->size(), 2);
@@ -607,18 +607,18 @@ void DQMHistogramPedeNoise::fitSCurves()
                         TH1F* channelSCurve = chip->getChannel<HistContainer<TH1F>>(cChannel).fTheHistogram;
 
                         float channelNoise = fDetectorStripNoiseHistograms.at(board->getIndex())
-                                    ->at(opticalGroup->getIndex())
-                                    ->at(hybrid->getIndex())
-                                    ->at(chip->getIndex())
-                                    ->getSummary<HistContainer<TH1F>>()
-                                    .fTheHistogram->GetBinContent(cChannel+1);
+                                                 ->at(opticalGroup->getIndex())
+                                                 ->at(hybrid->getIndex())
+                                                 ->at(chip->getIndex())
+                                                 ->getSummary<HistContainer<TH1F>>()
+                                                 .fTheHistogram->GetBinContent(cChannel + 1);
 
                         float channelPedestal = fDetectorStripPedestalHistograms.at(board->getIndex())
-                                    ->at(opticalGroup->getIndex())
-                                    ->at(hybrid->getIndex())
-                                    ->at(chip->getIndex())
-                                    ->getSummary<HistContainer<TH1F>>()
-                                    .fTheHistogram->GetBinContent(cChannel+1);
+                                                    ->at(opticalGroup->getIndex())
+                                                    ->at(hybrid->getIndex())
+                                                    ->at(chip->getIndex())
+                                                    ->getSummary<HistContainer<TH1F>>()
+                                                    .fTheHistogram->GetBinContent(cChannel + 1);
 
                         TF1* cFit = new TF1("SCurveFit", MyErf, channelPedestal - (channelNoise * 5), channelPedestal + (channelNoise * 5), 2);
 

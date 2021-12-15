@@ -34,9 +34,9 @@ class MiddlewareController : public TCPServer
         { return "ConfiguereDone"; }
         if(buffer.substr(0, 5) == "Start") // changing the status changes the mode in threadMain (BBC) function.
         {
-            fRunning         = true;
+            fRunning     = true;
             fDQMStreamer = new TCPPublishServer(6000, 1);
-            fAccept          = true;
+            fAccept      = true;
             std::thread thread(&MiddlewareController::running, this);
             thread.detach();
             // currentRun_ = getVariableValue("RunNumber", buffer);

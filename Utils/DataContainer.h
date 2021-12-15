@@ -171,8 +171,8 @@ class Summary : public SummaryBase
     Summary() { ; }
     Summary(const S& theSummary) { theSummary_ = theSummary; }
     Summary(S&& theSummary)
-    { 
-        theSummary_ = std::move(theSummary); 
+    {
+        theSummary_            = std::move(theSummary);
         theSummary.theSummary_ = nullptr;
     }
     Summary& operator=(S&& theSummary) { theSummary_ = std::move(theSummary); }

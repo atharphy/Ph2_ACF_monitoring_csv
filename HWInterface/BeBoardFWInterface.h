@@ -351,7 +351,6 @@ class BeBoardFWInterface : public RegManager
 
         return pMismatchedWriteVector;
     }
-
 };
 } // namespace Ph2_HwInterface
 

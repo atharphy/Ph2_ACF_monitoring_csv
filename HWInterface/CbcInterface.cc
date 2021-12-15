@@ -337,8 +337,8 @@ uint16_t CbcInterface::readErrorRegister(ReadoutChip* pCbc)
     else
     {
         std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-        bool cVerifLoop = true;
-        bool cSuccess   = ConfigurePage(pCbc, cRegItem.fPage, cVerifLoop);
+        bool                                  cVerifLoop = true;
+        bool                                  cSuccess   = ConfigurePage(pCbc, cRegItem.fPage, cVerifLoop);
         if(cSuccess) { cErrorReg = fBoardFW->ReadFERegister(pCbc, cRegItem.fAddress); }
     }
     return cErrorReg;
@@ -554,7 +554,6 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
 }
 bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerifLoop)
 {
-
     // only written for optical .. electrical readout the fw takes care of this
     bool cSuccess = !lpGBTFound();
     if(cSuccess) return cSuccess;
@@ -847,8 +846,8 @@ uint8_t CbcInterface::ReadChipSingleReg(Chip* pCbc, const std::string& pRegNode)
     else
     {
         std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-        bool cVerifLoop = true;
-        bool cSuccess   = (pRegNode == "FeCtrl&TrgLat2") ? true : ConfigurePage(pCbc, cRegItem.fPage, cVerifLoop);
+        bool                                  cVerifLoop = true;
+        bool                                  cSuccess   = (pRegNode == "FeCtrl&TrgLat2") ? true : ConfigurePage(pCbc, cRegItem.fPage, cVerifLoop);
         if(cSuccess) { cValue = fBoardFW->ReadFERegister(pCbc, cRegItem.fAddress); }
     }
     pCbc->setReg(pRegNode, cValue);
@@ -857,7 +856,7 @@ uint8_t CbcInterface::ReadChipSingleReg(Chip* pCbc, const std::string& pRegNode)
 }
 uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
 {
-    ChipRegItem                 cRegItem;
+    ChipRegItem cRegItem;
     setBoard(pCbc->getBeBoardId());
     std::vector<uint32_t> cVecReq;
     if(pRegNode == "VCth" || pRegNode == "Threshold")

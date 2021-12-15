@@ -88,9 +88,9 @@ void DQMHistogramPedestalEqualization::process()
         {
             for(auto hybrid: *opticalGroup)
             {
-                std::string offsetCanvasName = "Offset_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
+                std::string offsetCanvasName    = "Offset_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
                 std::string occupancyCanvasName = "Occupancy_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
-                std::cout<<__PRETTY_FUNCTION__ << offsetCanvasName<< std::endl;
+                std::cout << __PRETTY_FUNCTION__ << offsetCanvasName << std::endl;
 
                 TCanvas* offsetCanvas    = new TCanvas(offsetCanvasName.data(), offsetCanvasName.data(), 10, 0, 500, 500);
                 TCanvas* occupancyCanvas = new TCanvas(occupancyCanvasName.data(), occupancyCanvasName.data(), 10, 525, 500, 500);

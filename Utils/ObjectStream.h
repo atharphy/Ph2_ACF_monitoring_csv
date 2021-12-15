@@ -67,16 +67,15 @@ class DataStreamBase
     virtual uint32_t size(void) = 0;
 
     virtual size_t copyToStream(char* bufferBegin, size_t bufferWritingPosition = 0)
-    { 
-        memcpy(&bufferBegin[bufferWritingPosition], &fDataSize, fDataSize); 
-        return bufferWritingPosition+fDataSize;
+    {
+        memcpy(&bufferBegin[bufferWritingPosition], &fDataSize, fDataSize);
+        return bufferWritingPosition + fDataSize;
     }
 
     virtual size_t copyFromStream(const char* bufferBegin, size_t bufferReadingPosition = 0)
-    { 
-        memcpy(&fDataSize, &bufferBegin[bufferReadingPosition], size()); 
-        return bufferReadingPosition+size();
-
+    {
+        memcpy(&fDataSize, &bufferBegin[bufferReadingPosition], size());
+        return bufferReadingPosition + size();
     }
 
   protected:
@@ -223,8 +222,7 @@ class ObjectStream
 
     D* getDataStream() { return &fDataStream; }
 
-    std::string getCreatorName() const {return fCreatorName;}
-
+    std::string getCreatorName() const { return fCreatorName; }
 
   protected:
     H         fHeaderStream;

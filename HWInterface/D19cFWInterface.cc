@@ -6354,12 +6354,10 @@ bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t p
     return localWriteFERegister(pChip, pRegisterAddress, pRegisterValue, pRetry, theI2CWriteCount, theI2CReadMismatches);
 }
 
-
 bool D19cFWInterface::localWriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerify, uint32_t& theI2CWriteCount, uint32_t& theI2CReadMismatches)
 {
-
     std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
-    auto cLinkId = pChip->getOpticalId();
+    auto                                  cLinkId = pChip->getOpticalId();
     // uint8_t cMasterId = ((pChip->getHybridId() % 2) == 0) ? 2 : 0;
     uint8_t cMasterId = pChip->getMasterId();
     // if(cLpGBTI2CHack && cMasterId == 0) cMasterId = 1;
@@ -6385,7 +6383,7 @@ bool D19cFWInterface::localWriteFERegister(Ph2_HwDescription::Chip* pChip, uint1
         cNbytes    = 2;
         cSlaveData = (pRegisterValue << 8) | (pRegisterAddress & 0xFF);
     }
-    bool cSuccess      = I2CWrite(cLinkId, cMasterId, cChipAddress, cSlaveData, cNbytes, theI2CWriteCount);
+    bool cSuccess = I2CWrite(cLinkId, cMasterId, cChipAddress, cSlaveData, cNbytes, theI2CWriteCount);
     pChip->updateWriteCount(theI2CWriteCount);
     if(theI2CWriteCount != 1)
     {
@@ -6402,18 +6400,19 @@ bool D19cFWInterface::localWriteFERegister(Ph2_HwDescription::Chip* pChip, uint1
         {
             // if(cIter == cMaxIter - 1)
             // {
-                LOG(INFO) << BOLDRED << "I2C ReadBack Mismatch in hybrid " << +pChip->getHybridId() << " Chip " << +cChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec
-                          << " asked to write 0x" << std::hex << +pRegisterValue << std::dec << " and read back 0x" << std::hex << +cReadBack << std::dec << RESET;
+            LOG(INFO) << BOLDRED << "I2C ReadBack Mismatch in hybrid " << +pChip->getHybridId() << " Chip " << +cChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec
+                      << " asked to write 0x" << std::hex << +pRegisterValue << std::dec << " and read back 0x" << std::hex << +cReadBack << std::dec << RESET;
             // }
             // dont re-write  - just try and read again
             // cReadBack = ReadFERegister(pChip, pRegisterAddress);
 
             // this was repeating both the write and the read
             cSuccess = I2CWrite(cLinkId, cMasterId, cChipAddress, cSlaveData, cNbytes, theI2CWriteCount);
-            if(cSuccess) {
+            if(cSuccess)
+            {
                 LOG(INFO) << "trying to read again";
-                cReadBack = ReadFERegister(pChip, pRegisterAddress); 
-                }
+                cReadBack = ReadFERegister(pChip, pRegisterAddress);
+            }
             theI2CReadMismatches++;
             cIter++;
         }
@@ -6431,8 +6430,8 @@ bool D19cFWInterface::localWriteFERegister(Ph2_HwDescription::Chip* pChip, uint1
     {
         std::stringstream cOutput;
         pChip->printChipType(cOutput);
-        LOG(INFO) << BOLDYELLOW << "\t\t\t ...Post-verfication - took " << +theI2CReadMismatches << "attempts to read-back written value from " << +pRegisterValue << " on register " << +pRegisterAddress
-                  << " for " << cOutput.str() << "#" << +pChip->getId() << " on Hybrid#" << +pChip->getHybridId() << RESET;
+        LOG(INFO) << BOLDYELLOW << "\t\t\t ...Post-verfication - took " << +theI2CReadMismatches << "attempts to read-back written value from " << +pRegisterValue << " on register "
+                  << +pRegisterAddress << " for " << cOutput.str() << "#" << +pChip->getId() << " on Hybrid#" << +pChip->getHybridId() << RESET;
     }
     pChip->updateRBMismatchCount(theI2CReadMismatches);
     pChip->updateRegWriteCount();
@@ -6442,8 +6441,8 @@ bool D19cFWInterface::localWriteFERegister(Ph2_HwDescription::Chip* pChip, uint1
 uint8_t D19cFWInterface::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
-    auto    cLinkId   = pChip->getOpticalId();
-    uint8_t cMasterId = pChip->getMasterId();
+    auto                                  cLinkId   = pChip->getOpticalId();
+    uint8_t                               cMasterId = pChip->getMasterId();
     // uint8_t cMasterId = ((pChip->getHybridId() % 2) == 0) ? 2 : 0;
     // cMasterId = pChip->getMasterId();
     // if(cLpGBTI2CHack && cMasterId == 0) cMasterId = 1;
@@ -6466,7 +6465,7 @@ uint8_t D19cFWInterface::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t
 
     uint32_t theI2CWriteCount = 0;
     uint32_t theI2CReadCount  = 0;
-    uint32_t cReadBack = 0;
+    uint32_t cReadBack        = 0;
     {
         std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
         I2CWrite(cLinkId, cMasterId, cChipAddress, cSlaveData, cNbytes, theI2CWriteCount);

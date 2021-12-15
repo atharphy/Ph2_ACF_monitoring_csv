@@ -41,7 +41,7 @@ void MiddlewareInterface::configure(std::string const& calibrationName, std::str
 }
 
 //========================================================================================================================
-void MiddlewareInterface::halt(void) 
+void MiddlewareInterface::halt(void)
 {
     std::cout << __PRETTY_FUNCTION__ << "Sending Halt!" << std::endl;
     std::string readBuffer = sendCommand("Halt");

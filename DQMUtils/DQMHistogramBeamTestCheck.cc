@@ -237,8 +237,8 @@ void DQMHistogramBeamTestCheck::process()
         {
             for(auto hybrid: *opticalGroup)
             {
-                std::string cCanvasName  = "Latency_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
-                TCanvas* latencyCanvas = new TCanvas(cCanvasName.data(), cCanvasName.data(), 500, 500);
+                std::string cCanvasName   = "Latency_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
+                TCanvas*    latencyCanvas = new TCanvas(cCanvasName.data(), cCanvasName.data(), 500, 500);
                 // latencyCanvas->DivideSquare(hybrid->size());
                 latencyCanvas->cd();
                 TH1F* latencyHistogram = hybrid->getSummary<HistContainer<TH1F>>().fTheHistogram;
@@ -255,8 +255,8 @@ void DQMHistogramBeamTestCheck::process()
         {
             for(auto hybrid: *opticalGroup)
             {
-                std::string cCanvasName  = "LatencyBottomSensor_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
-                TCanvas* latencyCanvas = new TCanvas(cCanvasName.data(), cCanvasName.data(), 500, 500);
+                std::string cCanvasName   = "LatencyBottomSensor_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
+                TCanvas*    latencyCanvas = new TCanvas(cCanvasName.data(), cCanvasName.data(), 500, 500);
                 // latencyCanvas->DivideSquare(hybrid->size());
                 latencyCanvas->cd();
                 TH1F* latencyHistogram = hybrid->getSummary<HistContainer<TH1F>>().fTheHistogram;
@@ -273,8 +273,8 @@ void DQMHistogramBeamTestCheck::process()
         {
             for(auto hybrid: *opticalGroup)
             {
-                std::string cCanvasName  = "LatencyTopSensor_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
-                TCanvas* latencyCanvas = new TCanvas(cCanvasName.data(), cCanvasName.data(), 500, 500);
+                std::string cCanvasName   = "LatencyTopSensor_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
+                TCanvas*    latencyCanvas = new TCanvas(cCanvasName.data(), cCanvasName.data(), 500, 500);
                 // latencyCanvas->DivideSquare(hybrid->size());
                 latencyCanvas->cd();
                 TH1F* latencyHistogram = hybrid->getSummary<HistContainer<TH1F>>().fTheHistogram;
@@ -291,8 +291,8 @@ void DQMHistogramBeamTestCheck::process()
         {
             for(auto hybrid: *opticalGroup)
             {
-                std::string cCanvasName  = "LatencyHitMap_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
-                TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasName.data(), 500, 500);
+                std::string cCanvasName = "LatencyHitMap_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
+                TCanvas*    cCanvas     = new TCanvas(cCanvasName.data(), cCanvasName.data(), 500, 500);
                 cCanvas->cd();
                 auto& cHistogram = hybrid->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 cHistogram->GetXaxis()->SetTitle("Trigger Latency");
@@ -311,8 +311,10 @@ void DQMHistogramBeamTestCheck::process()
             {
                 for(auto chip: *hybrid)
                 {
-                    std::string cCanvasName  = "LatencyTDC_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId())+ "_C_" + std::to_string(chip->getId());
-                    std::string cCanvasTitle = "Latency TDC plot B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId())+ "_C_" + std::to_string(chip->getId());
+                    std::string cCanvasName = "LatencyTDC_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId()) + "_C_" +
+                                              std::to_string(chip->getId());
+                    std::string cCanvasTitle = "Latency TDC plot B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId()) +
+                                               "_C_" + std::to_string(chip->getId());
 
                     TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
                     cCanvas->cd();
@@ -333,8 +335,10 @@ void DQMHistogramBeamTestCheck::process()
             {
                 for(auto chip: *hybrid)
                 {
-                    std::string cCanvasName  = "ClusterOccupancy_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId())+ "_C_" + std::to_string(chip->getId());
-                    std::string cCanvasTitle = "ClusterOccupancy plot B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId())+ "_C_" + std::to_string(chip->getId());
+                    std::string cCanvasName = "ClusterOccupancy_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId()) + "_C_" +
+                                              std::to_string(chip->getId());
+                    std::string cCanvasTitle = "ClusterOccupancy plot B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId()) +
+                                               "_C_" + std::to_string(chip->getId());
 
                     TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
                     cCanvas->cd();
@@ -453,8 +457,10 @@ void DQMHistogramBeamTestCheck::process()
         {
             for(auto hybrid: *opticalGroup)
             {
-                std::string cCanvasName  = "StubCountDistribution_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());;
-                std::string cCanvasTitle = "StubCountDistribution_ plot B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());;
+                std::string cCanvasName = "StubCountDistribution_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
+                ;
+                std::string cCanvasTitle = "StubCountDistribution_ plot B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
+                ;
 
                 TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
                 cCanvas->cd();
