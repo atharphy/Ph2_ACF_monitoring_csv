@@ -6074,141 +6074,260 @@ uint32_t D19cFWInterface::ReadOptoLpGBTRegister(const uint32_t linkNumber, const
 // ##########################################
 // # Read/Write new Command Processor Block #
 // #########################################
+void D19cFWInterface::PrintFSMState()
+{
+    uint32_t cStatus = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
+    LOG(INFO) << "Worker FSM status : " << +(cStatus & 0xFF) << RESET;
+    LOG(INFO) << "IC FSM status : " << +((cStatus & (0xFF << 8)) >> 8) << RESET;
+    LOG(INFO) << "I2C FSM status : " << +((cStatus & (0xFF << 16)) >> 16) << RESET;
+    LOG(INFO) << "FE FSM status : " << +((cStatus & (0xFF << 24)) >> 24) << RESET;
+}
+
 void D19cFWInterface::ResetCPB()
 {
-    LOG(DEBUG) << BOLDBLUE << "Resetting CPB" << RESET;
     // Soft reset the GBT-SC worker
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
     uint8_t cWorkerId = 0, cFunctionId = 2;
     // reset shoudl be 0x00020010
+    //this->WriteStackReg({{"fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.core_reset", 0x01}, {"fc7_daq_ctrl.command_processor_block.cpb_ctrl_reg.core_reset",0x00}});
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | 16 << 0);
     WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", cCommandVector);
-    ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", 10);
-    std::this_thread::sleep_for(std::chrono::microseconds(fCPBConfig.fWait_us));
+    ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", 1);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
 
-void D19cFWInterface::WriteCommandCPB(const std::vector<uint32_t>& pCommandVector)
+void D19cFWInterface::WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose)
 {
     uint8_t cWordIndex = 0;
-    if(fCPBConfig.fVerbose)
+    if(pVerbose)
     {
+        LOG(INFO) << "----------------------" << RESET;
         for(auto cCommandWord: pCommandVector)
         {
-            LOG(INFO) << GREEN << "\t Write command word " << +cWordIndex << " value 0x" << std::setfill('0') << std::setw(8) << std::hex << +cCommandWord << std::dec << RESET;
+            LOG(INFO) << GREEN << "Write command word " << +cWordIndex << " value 0x" << std::setfill('0') << std::setw(8) << std::hex << +cCommandWord << std::dec << RESET;
             cWordIndex++;
         }
     }
     WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", pCommandVector);
-    std::this_thread::sleep_for(std::chrono::microseconds(fCPBConfig.fWait_us));
 }
 
-std::vector<uint32_t> D19cFWInterface::ReadReplyCPB(uint8_t pNWords)
+std::vector<uint32_t> D19cFWInterface::ReadReplyCPB(uint8_t pNWords, bool pVerbose)
 {
     std::vector<uint32_t> cReplyVector = ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", pNWords);
     uint8_t               cFifoIndex   = 0;
-    if(fCPBConfig.fVerbose)
+    if(pVerbose)
     {
         for(auto cReplyWord: cReplyVector)
         {
-            LOG(INFO) << YELLOW << "\t Read reply word " << +cFifoIndex << " value 0x" << std::setfill('0') << std::setw(8) << std::hex << +cReplyWord << std::dec << RESET;
+            LOG(INFO) << YELLOW << "Read reply word " << +cFifoIndex << " value 0x" << std::setfill('0') << std::setw(8) << std::hex << +cReplyWord << std::dec << RESET;
             cFifoIndex++;
         }
-        LOG(INFO) << "\t lpgbtsc FSM state : 0b" << std::bitset<8>(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state")) << RESET;
+        // PrintFSMState();
+        LOG(INFO) << "----------------------" << RESET;
     }
     return cReplyVector;
 }
 
-// ##########################################
-// # Read/Write lpGBT registers with CPB #
-// #########################################
-
-bool D19cFWInterface::WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop)
+uint8_t D19cFWInterface::ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, bool pVerbose)
 {
-    if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "D19cFWInterface::WriteLpGBTRegister" << RESET;
-    size_t cExpectedReplySize = 10 * 1;
-    this->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
-    if(fCPBConfig.fResetEn) ResetCPB();
-    // Use new Command Processor Block
-    uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 3;
-    if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "WriteLpGBTRegister to Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
+    WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
+    // ResetCPB();
+    uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 2;
+    if(pVerbose){ LOG(INFO) << BOLDMAGENTA << "ReadLpGBTRegister from Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET; }
+    std::vector<uint32_t> cCommandVector;
+    cCommandVector.clear();
+    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pRegisterAddress << 0);
+    WriteCommandCPB(cCommandVector, pVerbose);
+    while(!IsICToolDone())
+    { 
+        // if(pVerbose) PrintFSMState();
+        continue;
+    }
+    std::vector<uint32_t> cReplyVector     = ReadReplyCPB(1, pVerbose);
+    // PrintLpGBTReplyFrame();
+    uint8_t               cReadBack        = cReplyVector[0] & 0xFF;
+    return cReadBack;
+}
 
+bool D19cFWInterface::WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerbose)
+{
+    WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
+    // ResetCPB();
+    uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 3;
+    if(pVerbose){ LOG(INFO) << BOLDMAGENTA << "WriteLpGBTRegister from Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET; }
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pRegisterAddress << 0);
     cCommandVector.push_back(pRegisterValue << 0);
-    WriteCommandCPB(cCommandVector);
-    std::vector<uint32_t> cReplyVector     = ReadReplyCPB(cExpectedReplySize);
-    uint8_t               cParityCheck     = cReplyVector[2] & 0xFF;
-    uint8_t               cReadBack        = cReplyVector[7] & 0xFF;
-    uint16_t              cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
-    // always check parity
-    size_t cIter             = 0;
-    bool   cValidTransaction = (cParityCheck == 1);
-    while(!cValidTransaction && fCPBConfig.fReTry && cIter < fCPBConfig.fMaxAttempts)
-    {
-        if(fCPBConfig.fVerbose)
-            LOG(INFO) << BOLDRED << "[Iter# " << cIter << "/" << fCPBConfig.fMaxAttempts
-                      << " of D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply (mismatch in readbacks or failed parity check) from command processor block ... retrying" << RESET;
-        ResetCPB();
-        cReplyVector.clear();
-        WriteCommandCPB(cCommandVector);
-        cReplyVector      = ReadReplyCPB(cExpectedReplySize);
-        cParityCheck      = cReplyVector[2] & 0xFF;
-        cReadBackRegAddr  = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
-        cReadBack         = cReplyVector[7] & 0xFF;
-        cValidTransaction = (cParityCheck == 1);
-        if(cValidTransaction && pVerifLoop)
-        {
-            cValidTransaction = cValidTransaction && ((cReadBack == pRegisterValue) && (cReadBackRegAddr == pRegisterAddress));
-            if(fCPBConfig.fVerbose && !cValidTransaction)
-                LOG(INFO) << BOLDRED << "[Iter# " << cIter << "/" << fCPBConfig.fMaxAttempts
-                          << " of D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply (mismatch in readbacks) from command processor block ... retrying" << RESET;
-        }
-        cIter++;
+    WriteCommandCPB(cCommandVector, pVerbose);
+    while(!IsICToolDone())
+    { 
+        if(pVerbose) PrintFSMState();
+        continue; 
     }
-    // throw exception based on failure
-    if(cIter > 1) LOG(INFO) << BOLDYELLOW << "D19cFWInterface::WriteLpGBTRegister had to try " << cIter << "/" << fCPBConfig.fMaxAttempts << " possible attempts to complete transaction." << RESET;
-    if(cParityCheck != 1) throw std::runtime_error(std::string("[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block - failed parity check"));
-    if(pVerifLoop && cReadBack != pRegisterValue)
-        throw std::runtime_error(std::string("[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block - mismatch in read-back lpGBT register value"));
-    if(pVerifLoop && cReadBackRegAddr != pRegisterAddress)
-        throw std::runtime_error(std::string("[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block - mismatch in read-back lpGBT register address"));
-    return (pVerifLoop) ? ((cReadBack == pRegisterValue) && (cReadBackRegAddr == pRegisterAddress)) : (cParityCheck == 1);
+    std::vector<uint32_t> cReplyVector     = ReadReplyCPB(1, pVerbose);
+    // PrintLpGBTReplyFrame();
+    uint8_t cReadBack = cReplyVector[0] & 0xFF;
+    if(cReadBack != pRegisterValue)
+    {
+        LOG(INFO) << RED << "lpGBTWrite : Wrong value read back" << RESET;
+        // exit(0);
+        return false;
+    }
+    return true;
 }
 
-uint8_t D19cFWInterface::ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress)
+bool D19cFWInterface::IsICToolDone()
 {
-    size_t cExpectedReplySize = 10 * 1;
-    this->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
-    if(fCPBConfig.fResetEn) ResetCPB();
-    uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 2;
-    if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "ReadLpGBTRegister from Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
+    uint32_t cStatus = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
+    bool cWorkerDone = (cStatus & 0xFF) == 1;
+    bool cICToolDone = ((cStatus & (0xFF << 8)) >> 8) == 1;
+    return cWorkerDone && cICToolDone;
+}
+
+uint8_t D19cFWInterface::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes, bool pVerbose)
+{
+    WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
+    // ResetCPB();
+    uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 4, cMasterConfig = (pNBytes << 2) | 3;
+    if(pVerbose){ LOG(INFO) << BOLDMAGENTA << "I2CRead from Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET; }
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
-    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pRegisterAddress << 0);
-    WriteCommandCPB(cCommandVector);
-    std::vector<uint32_t> cReplyVector     = ReadReplyCPB(cExpectedReplySize);
-    uint8_t               cReadBack        = cReplyVector[7] & 0xFF;
-    uint16_t              cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
-    // uint8_t               cParityCheck     = cReplyVector[2] & 0xFF;
-    size_t cIter = 0;
-    while((cReadBackRegAddr != pRegisterAddress) && cIter < fCPBConfig.fMaxAttempts && fCPBConfig.fReTry)
+    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 14 | cMasterConfig << 6);
+    cCommandVector.push_back(pSlaveAddress << 0);
+    WriteCommandCPB(cCommandVector, pVerbose);
+    while(!IsI2CToolDone())
+    { 
+        if(pVerbose) PrintFSMState();
+        continue; 
+    }
+    std::vector<uint32_t> cReplyVector = ReadReplyCPB(1, pVerbose);
+    uint8_t cReadBack = cReplyVector[0] & 0xFF;
+    uint8_t cI2CErrorCode = cReplyVector[0] & (0xFF << 8);
+    if(cI2CErrorCode != 0)
     {
-        if(fCPBConfig.fResetEn) ResetCPB();
-        if(fCPBConfig.fVerbose)
-            LOG(INFO) << BOLDRED << "[Iter# " << cIter << "/" << fCPBConfig.fMaxAttempts
-                      << " of D19cFWInterface::ReadLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
-        cReplyVector.clear();
-        WriteCommandCPB(cCommandVector);
-        cReplyVector     = ReadReplyCPB(cExpectedReplySize);
-        cReadBack        = cReplyVector[7] & 0xFF;
-        cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
-        cIter++;
-    };
-    if(cIter == (size_t)fCPBConfig.fMaxAttempts) throw std::runtime_error(std::string("[D19cFWInterface::ReadLpGBTRegister] : Received corrupted reply from command processor block"));
-    // LOG(DEBUG) << BOLDWHITE << "\t Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
+        // PrintLpGBTReplyFrame();
+        LOG(INFO) << RED << "I2CRead : I2C ERROR read ... " << RESET;
+        exit(0);
+        return false;
+    }
     return cReadBack;
+}
+
+bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes, bool pVerbose)
+{
+    WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
+    uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 5, cMasterConfig = (pNBytes << 2) | 3;
+    if(pVerbose){ LOG(INFO) << BOLDMAGENTA << "I2CWrite from Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET; }
+    std::vector<uint32_t> cCommandVector;
+    cCommandVector.clear();
+    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 14 | cMasterConfig << 6);
+    cCommandVector.push_back(pSlaveData << 8 | pSlaveAddress << 0);
+    WriteCommandCPB(cCommandVector, pVerbose);
+    while(!IsI2CToolDone())
+    { 
+        if(pVerbose) PrintFSMState();
+        continue; 
+    }
+    std::vector<uint32_t> cReplyVector = ReadReplyCPB(1, pVerbose);
+    uint8_t cI2CTransStatus = cReplyVector[0] & 0xFF;
+    if(cI2CTransStatus != 4)
+    {
+        // PrintLpGBTReplyFrame();
+        LOG(INFO) << RED << "I2CWrite : Wrong I2C status read back ... I2C status " << +cI2CTransStatus << RESET;
+        // PrintI2CMasterRegisters(fDetectorContainer->at(0)->at(0)->flpGBT, pMasterId);
+        exit(0);
+        return false;
+    }
+    return true;
+}
+
+bool D19cFWInterface::IsI2CToolDone()
+{
+    uint32_t cStatus = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
+    bool cWorkerDone = (cStatus & 0xFF) == 1;
+    bool cI2CToolDone = ((cStatus & (0xFF << 16)) >> 16) == 1;
+    return cWorkerDone && cI2CToolDone;
+}
+
+uint8_t D19cFWInterface::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, bool pVerbose)
+{
+    uint8_t cLinkId = pChip->getOpticalId();
+    WriteReg("fc7_daq_cnfg.command_processor_block.link_select", cLinkId);
+    uint8_t cWorkerId = 16 + cLinkId;
+    uint8_t cFunctionId = 6;
+    uint8_t cMasterId = pChip->getMasterId();
+    uint8_t cChipCode = fChipCodeMap[pChip->getFrontEndType()];
+    uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : (pChip->getId() % 8); //use modulo 8 to accomodate for how MPAs are numbered
+    std::vector<uint32_t> cCommandVector;
+    if(pVerbose){ LOG(INFO) << BOLDMAGENTA << "FERead from Link#" << +cLinkId << " -- workerId is " << +cWorkerId << RESET; }
+    cCommandVector.clear();
+    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | cMasterId << 6 | cChipCode << 3 | cChipId << 0);
+    cCommandVector.push_back(pRegisterAddress << 0);
+    WriteCommandCPB(cCommandVector, pVerbose);
+    while(!IsFEToolDone())
+    { 
+        if(pVerbose) PrintFSMState();
+        continue; 
+    }
+    std::vector<uint32_t> cReplyVector = ReadReplyCPB(1, pVerbose);
+    uint8_t  cReadBack = cReplyVector[0] & 0xFF;
+    LOG(DEBUG) << GREEN << "ReadFERegister : successfully read 0x" << std::hex << +cReadBack << std::dec << " from register : 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
+    return cReadBack;
+}
+
+bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerify, bool pVerbose)
+{
+    uint8_t cLinkId = pChip->getOpticalId();
+    WriteReg("fc7_daq_cnfg.command_processor_block.link_select", cLinkId);
+    uint8_t cWorkerId = 16 + cLinkId;
+    uint8_t cFunctionId = 7;
+    uint8_t cMasterId = pChip->getMasterId();
+    uint8_t cChipCode = fChipCodeMap[pChip->getFrontEndType()];
+    uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : (pChip->getId() % 8); //use modulo 8 to accomodate for how MPAs are numbered
+    if(pVerbose){ LOG(INFO) << BOLDMAGENTA << "FEWrite from Link#" << +cLinkId << " -- workerId is " << +cWorkerId << RESET; }
+    std::vector<uint32_t> cCommandVector;
+    cCommandVector.clear();
+    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pVerify << 8 | cMasterId << 6 | cChipCode << 3 | cChipId << 0);
+    cCommandVector.push_back(pRegisterValue << 16 | pRegisterAddress << 0);
+    WriteCommandCPB(cCommandVector, pVerbose);
+    while(!IsFEToolDone())
+    { 
+        if(pVerbose) PrintFSMState();
+        continue; 
+    }
+    std::vector<uint32_t> cReplyVector = ReadReplyCPB(1, pVerbose);
+    if(pVerify)
+    {
+        uint8_t  cReadBack = cReplyVector[0] & 0xFF;
+        if(cReadBack != pRegisterValue)
+        {
+            LOG(INFO) << RED << "WriteFERegister with Verification : Wrong value read back" << RESET;
+            return false;
+        }
+        LOG(DEBUG) << GREEN << "WriteFERegister with Verification : successfully written 0x" << std::hex << +cReadBack << std::dec << " to register : 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
+        return true;
+    }
+    else
+    {
+        uint8_t cI2CStatus = cReplyVector[0] & 0xFF;
+        if(cI2CStatus != 4)
+        {
+            LOG(INFO) << RED << "WrireFERegister without verificaiton : Wrong I2C status read back ... I2C status " << +cI2CStatus << RESET;
+            return false;
+        }
+        LOG(DEBUG) << GREEN << "WriteFERegister without verification : successfully written 0x" << std::hex << +pRegisterValue << std::dec << " to register : 0x" << std::hex << +pRegisterAddress << std::dec << RESET;
+        return true;
+    }
+}
+
+bool D19cFWInterface::IsFEToolDone()
+{
+    uint32_t cStatus = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
+    bool cWorkerDone = (cStatus & 0xFF) == 1;
+    bool cFEToolDone = ((cStatus & (0xFF << 24)) >> 24) == 1;
+    return cWorkerDone && cFEToolDone;
 }
 
 // ##########################################
@@ -6233,237 +6352,7 @@ uint32_t D19cFWInterface::ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pC
 // ##########################################
 // # Read/Write registers with CPB I2C functions #
 // #########################################
-bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes)
-{
-    this->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
-    if(fCPBConfig.fResetEn) ResetCPB();
-    uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 5, cMasterConfig = (pNBytes << 2) | fCPBConfig.fI2CFrequency;
-    if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "I2C write to Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
-    std::vector<uint32_t> cCommandVector;
-    cCommandVector.clear();
-    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 8 | pSlaveAddress << 0);
-    cCommandVector.push_back(cMasterConfig << 24 | pSlaveData << 0);
-    WriteCommandCPB(cCommandVector);
-    std::this_thread::sleep_for(std::chrono::microseconds(50));
-    std::vector<uint32_t> cReplyVector = ReadReplyCPB(10);
-    fI2Cstatus                         = cReplyVector[7] & 0xFF;
-    size_t cIter = 0, cMaxIter = fCPBConfig.fMaxAttempts;
-    while(fI2Cstatus != 4 && cIter < cMaxIter && fCPBConfig.fReTry)
-    {
-        // reset I2C
-        // std::vector<uint8_t> cBitPosition = {2, 1, 0};
-        // uint8_t cResetMask = (1 << cBitPosition[pMasterId]);
-        // LOG (INFO) << BOLDYELLOW << "Writing 0x00 to I2C reset " << RESET;
-        // WriteLpGBTRegister( pLinkId, 0x12c, 0 );
-        // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
-        // WriteLpGBTRegister( pLinkId, 0x12c, cResetMask );
-        // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
-        // WriteLpGBTRegister( pLinkId, 0x12c, 0 );
-        // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
 
-        if(fI2Cstatus != 4)
-            LOG(DEBUG) << BOLDMAGENTA << "[D19cFWInterface::I2CWrite] Iter#" << +cIter << " I2CM" << +pMasterId << " status indicates a failure 0x" << std::hex << +fI2Cstatus << std::dec
-                       << " transaction was to write " << +pNBytes << " to slave address " << +pSlaveAddress << " with data 0x" << std::hex << pSlaveData << std::dec << RESET;
-        if(cIter == cMaxIter - 1) LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] : I2CM" << +pMasterId << " Transaction Failed" << RESET;
-        ResetCPB();
-        if(cIter == cMaxIter - 1) LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] : Received corrupted reply from command processor block ... retrying" << RESET;
-        cReplyVector.clear();
-        WriteCommandCPB(cCommandVector);
-        cReplyVector = ReadReplyCPB(10);
-        fI2Cstatus   = cReplyVector[7] & 0xFF;
-        cIter++;
-    }
-    fI2CWriteCount += (1 + cIter);
-    if(cIter == cMaxIter)
-    {
-        LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] Iter#" << +cIter << " I2CM" << +pMasterId << " status indicates a failure 0x" << std::hex << +fI2Cstatus << std::dec
-                  << " transaction was to write " << +pNBytes << " to slave address " << +pSlaveAddress << " with data 0x" << std::hex << pSlaveData << std::dec << RESET;
-    }
-    if(fI2Cstatus != 4) LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] I2CM" << +pMasterId << " status is 0x" << std::hex << +fI2Cstatus << std::dec << RESET;
-    return (fI2Cstatus == 4);
-}
-
-uint8_t D19cFWInterface::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes)
-{
-    this->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
-    if(fCPBConfig.fResetEn) ResetCPB();
-    uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 4, cMasterConfig = (pNBytes << 2) | fCPBConfig.fI2CFrequency;
-    if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "I2C Read to Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
-    std::vector<uint32_t> cCommandVector;
-    cCommandVector.clear();
-    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 8 | pSlaveAddress << 0);
-    cCommandVector.push_back(cMasterConfig << 24);
-    WriteCommandCPB(cCommandVector);
-    std::vector<uint32_t> cReplyVector     = ReadReplyCPB(10);
-    uint8_t               cReadBack        = cReplyVector[7] & 0xFF;
-    uint16_t              cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
-    size_t                cIter = 0, cMaxIter = fCPBConfig.fMaxAttempts;
-    uint16_t              cI2CReadByteRegAddr = 0;
-    // pick correct register address to check
-    if(pMasterId == 2) cI2CReadByteRegAddr = 0x018d;
-    if(pMasterId == 1) cI2CReadByteRegAddr = 0x178;
-    if(pMasterId == 0) cI2CReadByteRegAddr = 0x0163;
-    // check reply
-    bool cCheckReadByte = true;
-    bool cFail          = cCheckReadByte ? (cReadBackRegAddr != cI2CReadByteRegAddr) : false;
-    cFail               = cFail && (cI2CReadByteRegAddr && cIter < cMaxIter && fCPBConfig.fReTry);
-    while(cFail)
-    {
-        if(cIter == cMaxIter - 1) LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CRead] : Received corrupted reply from command processor block ... retrying" << RESET;
-        ResetCPB();
-        std::this_thread::sleep_for(std::chrono::microseconds(50));
-        cReplyVector.clear();
-        WriteCommandCPB(cCommandVector);
-        std::this_thread::sleep_for(std::chrono::microseconds(50));
-        cReplyVector = ReadReplyCPB(10);
-        // std::this_thread::sleep_for(std::chrono::microseconds(10));
-        cReadBack        = cReplyVector[7] & 0xFF;
-        cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
-        cFail            = cCheckReadByte ? (cReadBackRegAddr != cI2CReadByteRegAddr) : false;
-        cFail            = cFail && (cI2CReadByteRegAddr && cIter < cMaxIter && fCPBConfig.fReTry);
-        if(cIter == cMaxIter - 1) LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CRead] : Corrupted CPB reply frame" << RESET;
-        cIter++;
-    };
-    fI2CReadCount += (1 + cIter);
-    if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::I2CRead] : Corrupted CPB reply frame"));
-    return cReadBack;
-}
-
-// ##########################################
-// # Read/Write FE ASIC registers over I2C #
-// #########################################
-
-bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerify)
-{
-    auto cLinkId = pChip->getOpticalId();
-    // uint8_t cMasterId = ((pChip->getHybridId() % 2) == 0) ? 2 : 0;
-    uint8_t cMasterId = pChip->getMasterId();
-    // if(cLpGBTI2CHack && cMasterId == 0) cMasterId = 1;
-
-    LOG(DEBUG) << BOLDBLUE << " Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "] I2C master" << +cMasterId << RESET;
-    uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId();
-    if(pChip->getFrontEndType() == FrontEndType::MPA) cChipId = cChipId % 8;
-    uint8_t cChipAddress = fFEAddressMap[pChip->getFrontEndType()] + cChipId;
-    // +1 for CBC address
-    cChipAddress += (pChip->getFrontEndType() == FrontEndType::CBC3) ? 1 : 0;
-    // LOG (INFO) << BOLDMAGENTA << "D19cFWInterface::WriteFERegister ChipAddress " << std::hex << +cChipAddress << std::dec << " on link" << +cLinkId << RESET;
-    // CBC addresses are only 8 bits
-    uint32_t cSlaveData = 0x00;
-    uint8_t  cNbytes    = 3;
-    if(pChip->getFrontEndType() != FrontEndType::CBC3)
-    {
-        // LOG (INFO) << BOLDYELLOW << "Writing to ... something else " << RESET;
-        uint16_t cInvertedRegister = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
-        cSlaveData                 = (pRegisterValue << 16) | cInvertedRegister;
-    }
-    else
-    {
-        cNbytes    = 2;
-        cSlaveData = (pRegisterValue << 8) | (pRegisterAddress & 0xFF);
-    }
-    fI2CWriteCount     = 0;
-    fI2CReadMismatches = 0;
-    bool cSuccess      = I2CWrite(cLinkId, cMasterId, cChipAddress, cSlaveData, cNbytes);
-    pChip->updateWriteCount(fI2CWriteCount);
-    if(fI2CWriteCount != 1)
-    {
-        std::stringstream cOutput;
-        pChip->printChipType(cOutput);
-        LOG(INFO) << BOLDYELLOW << "\t\t... Pre-verfication - took " << +fI2CWriteCount << " I2C writes to succeed in writing " << +pRegisterValue << " on register " << +pRegisterAddress << " for "
-                  << cOutput.str() << "#" << +pChip->getId() << " on Hybrid#" << +pChip->getHybridId() << RESET;
-    }
-    if(pVerify && cSuccess)
-    {
-        uint8_t cReadBack = ReadFERegister(pChip, pRegisterAddress);
-        uint8_t cIter = 0, cMaxIter = fCPBConfig.fMaxAttempts;
-        while(cReadBack != pRegisterValue && cIter < cMaxIter)
-        {
-            if(cIter == cMaxIter - 1)
-            {
-                LOG(INFO) << BOLDRED << "I2C ReadBack Mismatch in hybrid " << +pChip->getHybridId() << " Chip " << +cChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec
-                          << " asked to write 0x" << std::hex << +pRegisterValue << std::dec << " and read back 0x" << std::hex << +cReadBack << std::dec << RESET;
-            }
-            // dont re-write  - just try and read again
-            // cReadBack = ReadFERegister(pChip, pRegisterAddress);
-
-            // this was repeating both the write and the read
-            cSuccess = I2CWrite(cLinkId, cMasterId, cChipAddress, cSlaveData, cNbytes);
-            if(cSuccess) { cReadBack = ReadFERegister(pChip, pRegisterAddress); }
-            fI2CReadMismatches++;
-            cIter++;
-        }
-        if(cReadBack != pRegisterValue) { throw std::runtime_error(std::string("I2C readback mismatch")); }
-    }
-    else if(!cSuccess)
-    {
-        std::stringstream cErrorMsg;
-        cErrorMsg << "I2C Write FAILED on Hybrid#" << +pChip->getHybridId() << " Link#" << +cLinkId << " Chip#" << +pChip->getId() << " - I2C status is " << +fI2Cstatus;
-        LOG(INFO) << BOLDRED << cErrorMsg.str() << RESET;
-        throw std::runtime_error(std::string(cErrorMsg.str()));
-    }
-
-    if(fI2CReadMismatches != 0)
-    {
-        std::stringstream cOutput;
-        pChip->printChipType(cOutput);
-        LOG(INFO) << BOLDYELLOW << "\t\t\t ...Post-verfication - took " << +fI2CReadMismatches << "attempts to read-back written value from " << +pRegisterValue << " on register " << +pRegisterAddress
-                  << " for " << cOutput.str() << "#" << +pChip->getId() << " on Hybrid#" << +pChip->getHybridId() << RESET;
-    }
-    pChip->updateRBMismatchCount(fI2CReadMismatches);
-    pChip->updateRegWriteCount();
-    return cSuccess;
-}
-
-uint8_t D19cFWInterface::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress)
-{
-    auto    cLinkId   = pChip->getOpticalId();
-    uint8_t cMasterId = pChip->getMasterId();
-    // uint8_t cMasterId = ((pChip->getHybridId() % 2) == 0) ? 2 : 0;
-    // cMasterId = pChip->getMasterId();
-    // if(cLpGBTI2CHack && cMasterId == 0) cMasterId = 1;
-
-    // LOG (INFO) << BOLDGREEN << "Reading FE register on link " << +cLinkId << RESET;
-    uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId();
-    if(pChip->getFrontEndType() == FrontEndType::MPA) cChipId = cChipId % 8;
-    uint8_t cChipAddress = fFEAddressMap[pChip->getFrontEndType()] + cChipId;
-    // +1 for CBC address
-    cChipAddress += (pChip->getFrontEndType() == FrontEndType::CBC3) ? 1 : 0;
-    uint8_t  cNbytes    = 2;
-    uint32_t cSlaveData = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
-    if(pChip->getFrontEndType() != FrontEndType::CBC3)
-        cSlaveData = ((pRegisterAddress & (0xFF << 8 * 0)) << 8) | ((pRegisterAddress & (0xFF << 8 * 1)) >> 8);
-    else
-    {
-        cNbytes    = 1;
-        cSlaveData = (pRegisterAddress & 0xFF);
-    }
-
-    fI2CWriteCount = 0;
-    I2CWrite(cLinkId, cMasterId, cChipAddress, cSlaveData, cNbytes);
-    pChip->updateWriteCount(fI2CWriteCount);
-    fI2CReadCount      = 0;
-    uint32_t cReadBack = I2CRead(cLinkId, cMasterId, cChipAddress, 1);
-    pChip->updateReadCount(fI2CReadCount);
-    pChip->updateRegReadCount();
-    return cReadBack;
-}
-
-void D19cFWInterface::ResetFCMDBram()
-{
-    LOG(DEBUG) << BOLDBLUE << "Resetting FCMD BRAM from sw.... started" << RESET;
-    uint16_t                                      cBRAMdepth = 0x3FFF;
-    std::vector<std::pair<std::string, uint32_t>> cRegs;
-    for(uint16_t cBx = 0; cBx < cBRAMdepth; cBx++)
-    {
-        cRegs.push_back({"fc7_daq_cnfg.fast_command_block.generic_fcmd_data", 0x00});
-        cRegs.push_back({"fc7_daq_cnfg.fast_command_block.generic_fcmd_addr", cBx});
-        cRegs.push_back({"fc7_daq_ctrl.fast_command_block.control.write_generic", 0x1});
-        cRegs.push_back({"fc7_daq_ctrl.fast_command_block.control.write_generic", 0x0});
-        if(cBx % (cBRAMdepth / 10) == 0) LOG(DEBUG) << BOLDBLUE << "\t... Bx..." << +cBx << RESET;
-    }
-    this->WriteStackReg(cRegs);
-    LOG(DEBUG) << BOLDBLUE << "Resetting FCMD BRAM from sw..... done" << RESET;
-}
 void D19cFWInterface::ConfigureFCMDBram(std::vector<uint8_t> pFastCommands)
 {
     LOG(DEBUG) << BOLDBLUE << "Configuring FCMD BRAM from sw.." << RESET;

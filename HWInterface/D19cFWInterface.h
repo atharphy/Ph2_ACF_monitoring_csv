@@ -842,18 +842,41 @@ class D19cFWInterface : public BeBoardFWInterface
     // # Read/Write new Command Processor Block #
     // ##########################################
     // functions for new Command Processor Block
-    void                  ResetCPB() override;
-    void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) override;
-    std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) override;
-    // function to read/write lpGBT registers
-    bool    WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override;
-    uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterValue) override;
+    void ResetCPB() override;
+    void WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose=false) override;
+    std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords, bool pVerbose=false) override;
+    //
+    void PrintFSMState();
+    // function for IC transactions 
+    bool WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerbose=false) override;
+    uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterValue, bool pVerbose=false) override;
+    bool IsICToolDone();
     // function for I2C transactions using lpGBT I2C Masters
-    bool    I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) override;
-    uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes) override;
+    bool I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes, bool pVerbose=false) override;
+    uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes, bool pVerbose=false) override;
+    bool IsI2CToolDone();
     // function for front-end slow control
-    bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false) override;
-    uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) override;
+    bool WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerify = true, bool pVerbose=false) override;
+    uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, bool pVerbose=false) override;
+    bool IsFEToolDone();
+
+    std::map<FrontEndType, uint8_t> fChipCodeMap = {{FrontEndType::CBC3, 1}, 
+                                                    {FrontEndType::MPA, 2}, 
+                                                    {FrontEndType::SSA, 3},
+                                                    {FrontEndType::CIC, 4},
+                                                    {FrontEndType::CIC2, 5}};
+
+    std::map<FrontEndType, uint8_t> fChipAddressMap = {{FrontEndType::CBC3, 0x40}, 
+                                                        {FrontEndType::MPA, 0x40}, 
+                                                        {FrontEndType::SSA, 0x20},
+                                                        {FrontEndType::CIC, 0x60},
+                                                        {FrontEndType::CIC2, 0x60}};
+
+    std::map<FrontEndType, std::string> fChipTypeMap = {{FrontEndType::CBC3, "CBC3"}, 
+                                                        {FrontEndType::MPA, "MPA"}, 
+                                                        {FrontEndType::SSA, "SSA"},
+                                                        {FrontEndType::CIC, "CIC1"},
+                                                        {FrontEndType::CIC2, "CIC2"}};
     // fast command generic block
     void ResetFCMDBram();
     void ConfigureFCMDBram(std::vector<uint8_t> pFastCommands);

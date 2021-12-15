@@ -308,17 +308,17 @@ class BeBoardFWInterface : public RegManager
     // ##########################################
     // functions for new Command Processor Block
     virtual void                  ResetCPB() {}
-    virtual void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) {}
-    virtual std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) { return {}; }
+    virtual void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose=false) {}
+    virtual std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords, bool pVerbose=false) { return {}; }
     // function to read/write lpGBT registers
-    virtual bool    WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) { return true; }
-    virtual uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress) { return 0; }
+    virtual bool    WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerbose=false) { return true; }
+    virtual uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterValue, bool pVerbose=false) { return 0; }
     // function for I2C transactions using lpGBT I2C Masters
-    virtual bool    I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) { return true; }
-    virtual uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes) { return 0; }
+    virtual bool    I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes, bool pVerbose=false) { return true; }
+    virtual uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes, bool pVerbose=false) { return 0; }
     // function for front-end slow control
-    virtual bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false) { return true; }
-    virtual uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) { return 0; }
+    virtual bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerify = true, bool pVerbose=false) { return true; }
+    virtual uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, bool pVerbose=false) { return 0; }
 
     void ConfigureCPB(CPBconfig pConfig)
     {
