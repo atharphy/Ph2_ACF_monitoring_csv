@@ -769,6 +769,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
             fSCurveOccupancyMap[cValue]                  = theOccupancyContainer;
             this->setDacAndMeasureData("Threshold", cValue, fEventsPerPoint, fNEventsPerBurst);
 
+            theOccupancyContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandlerContainer, fEventsPerPoint);
             float globalOccupancy = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
 #ifdef __USE_ROOT__
             if(fPlotSCurves) fDQMHistogramPedeNoise.fillSCurvePlots(cValue, *theOccupancyContainer);
