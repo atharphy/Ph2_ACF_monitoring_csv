@@ -380,7 +380,7 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
                 uint8_t cPatternPeriod = 8;
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(pBoard, cHybridId, cChipId, cLineId, 0xAA, cPatternPeriod);
             }
-
+            
             uint8_t cBadLines[4] = {0, 0, 0, 0};
 
             // Stop 0xAA pattern and use test patterns
@@ -898,6 +898,7 @@ void PSHybridTester::SSATestLateralCommunication(Ph2_HwDescription::BeBoard* pBo
         int cInjectedSSAId = (int)(pSSAPairSel[cPairId]-'0');
         int cAdjacentSSAId = (int)(pSSAPairSel[1-cPairId]-'0');
         uint8_t cInjectedStrip = 0;
+        std::string cInjectedSSACentroid = ""; // Centroid that should be generated on the injected SSA.
         std::string cAdjacentSSACentroid = ""; // Centroid that should be generated on the adjacent SSA.
         LOG(INFO) << BOLDMAGENTA << "Injected chip is SSA#" << +cInjectedSSAId << " (chip " << +(1 - cInjectedSSAId%2) << " in StubDebug). Adjacent chip is SSA#" << cAdjacentSSAId << " (chip " << +(1 - cAdjacentSSAId%2) << " in StubDebug)." << RESET;
 
@@ -1000,43 +1001,62 @@ void PSHybridTester::SSATestLateralCommunication(Ph2_HwDescription::BeBoard* pBo
             this->SSAOutputsPogoScope(cReadStubLines, pSSAPairSel, pBoard, false, !pSweepPhaseSelector); //Scope SSA stub lines
 
             //Check that the channels were actually injected in the injected SSA.
-            std::string cInjectedSSAL1Data = (cInjectedSSAId %2 == 0 ) ? cReadL1Lines[1][0] : cReadL1Lines[0][0];
-            std::size_t cL1PacketPosition = cInjectedSSAL1Data.find("0011");
-            if( cL1PacketPosition != std::string::npos ) 
-            {
-                cL1PacketPosition += 2; //Set cL1PacketPosition to the real start of the packet
-                std::size_t cL1PacketPositionEnd = cInjectedSSAL1Data.find("11110000000", cL1PacketPosition+2+9+9+120+24);
-                if (cL1PacketPositionEnd!=std::string::npos && cL1PacketPositionEnd == cL1PacketPosition+2+9+9+120+24)
-                {
-                    std::vector<std::string> cDecodedL1Packet = this->DecodeSSAL1Packet((int)2,cInjectedSSAL1Data.substr(cL1PacketPosition, 2+9+9+120+24)); //TODO Pass SSA Version correctly with Readout type
-                    std::string cStripsL1Packet = cDecodedL1Packet[3]; //Recover strips
+            // Option 1: by checking the L1 packet
+            // std::string cInjectedSSAL1Data = (cInjectedSSAId %2 == 0 ) ? cReadL1Lines[1][0] : cReadL1Lines[0][0];
+            // std::size_t cL1PacketPosition = cInjectedSSAL1Data.find("0011");
+            // if( cL1PacketPosition != std::string::npos ) 
+            // {
+            //     cL1PacketPosition += 2; //Set cL1PacketPosition to the real start of the packet
+            //     std::size_t cL1PacketPositionEnd = cInjectedSSAL1Data.find("11110000000", cL1PacketPosition+2+9+9+120+24);
+            //     if (cL1PacketPositionEnd!=std::string::npos && cL1PacketPositionEnd == cL1PacketPosition+2+9+9+120+24)
+            //     {
+            //         std::vector<std::string> cDecodedL1Packet = this->DecodeSSAL1Packet((int)2,cInjectedSSAL1Data.substr(cL1PacketPosition, 2+9+9+120+24)); //TODO Pass SSA Version correctly with Readout type
+            //         std::string cStripsL1Packet = cDecodedL1Packet[3]; //Recover strips
 
-                    LOG(INFO) << "Strips on injected SSA: " << cStripsL1Packet << RESET;
+            //         LOG(INFO) << "Strips on injected SSA: " << cStripsL1Packet << RESET;
 
-                    bool cInjectionSuccesfull = true;
-                    for (uint8_t strip=0; strip < cStripsL1Packet.length() ; strip++)
-                    {
-                        LOG(DEBUG) << "Starting at 0: strip #" << +strip << "should be " << +( cInjectedStrip == strip ) << RESET;
-                        cInjectionSuccesfull &=  (uint8_t)( cInjectedStrip == strip ) == (uint8_t)(cStripsL1Packet[cStripsL1Packet.length() - strip - 1]-'0');
-                    }
-                    if(!cInjectionSuccesfull)
-                    {
-                        LOG(INFO) << BOLDRED << "Digital injection failed on injected SSA (hits not present on L1 data)" << RESET; // The rest of the test is skipped
-                        continue;
-                    }
-                }
-                else
-                {
-                    LOG(ERROR) << "Couldn't find L1 packet on injected SSA L1 data." << RESET;
-                    continue;
-                }
-            }
-            else
+            //         bool cInjectionSuccesful = true;
+            //         for (uint8_t strip=0; strip < cStripsL1Packet.length() ; strip++)
+            //         {
+            //             LOG(DEBUG) << "Starting at 0: strip #" << +strip << "should be " << +( cInjectedStrip == strip ) << RESET;
+            //             cInjectionSuccesful &=  (uint8_t)( cInjectedStrip == strip ) == (uint8_t)(cStripsL1Packet[cStripsL1Packet.length() - strip - 1]-'0');
+            //         }
+            //         if(!cInjectionSuccesful)
+            //         {
+            //             LOG(INFO) << BOLDRED << "Digital injection failed on injected SSA (hits not present on L1 data)" << RESET; // The rest of the test is skipped
+            //             continue;
+            //         }
+            //     }
+            //     else
+            //     {
+            //         LOG(ERROR) << "Couldn't find L1 packet on injected SSA L1 data." << RESET;
+            //         continue;
+            //     }
+            // }
+            // else
+            // {
+            //     LOG(ERROR) << "Couldn't find L1 packet injected SSA L1 data." << RESET;
+            //     continue;
+            // }
+
+
+            // Option 2: by checking that the centroid is present on the stub lines of the injected chip
+            bool cInjectionSuccesful = false;
+            LOG(INFO) << "cInjectedStrip " << +cInjectedStrip << RESET;
+            cInjectedSSACentroid = std::bitset< 8 >( cInjectedStrip*2+9 ).to_string();
+            LOG(INFO) << "Centroid that should be generated on the injected SSA: " << cInjectedSSACentroid << RESET;
+            // Search the scoped lines for data on the injected chip
+            std::vector<std::string> cInjectedSSAOutputs = (cInjectedSSAId %2 == 0 ) ? cReadStubLines[1] : cReadStubLines[0] ;
+            for(uint8_t cLine = 0; cLine < cInjectedSSAOutputs.size(); cLine++ )
             {
-                LOG(ERROR) << "Couldn't find L1 packet injected SSA L1 data." << RESET;
+                cInjectionSuccesful |= (cInjectedSSAOutputs[cLine].find(cInjectedSSACentroid) != std::string::npos);
+            } 
+            if(!cInjectionSuccesful)
+            {
+                LOG(INFO) << BOLDRED << "Digital injection failed on injected SSA (hits not present on L1 data)" << RESET; // The rest of the test is skipped for this pair
                 continue;
             }
-
+            
             LOG(INFO) << "Injected chip is SSA#" << +cInjectedSSAId << " (chip " << +(1 - cInjectedSSAId%2) << " in StubDebug). Adjacent chip is SSA#" << cAdjacentSSAId << " (chip " << +(1 - cAdjacentSSAId%2) << " in StubDebug)." << RESET;
             int cAdjacentSSAStripNumber;
             if(cPairId == 1)
