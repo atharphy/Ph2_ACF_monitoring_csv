@@ -228,7 +228,6 @@ void copyAndInitDetector(const DetectorContainer& original, DetectorDataContaine
     copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, T>(original, copy, theEmpty, theEmpty, theEmpty, theEmpty, theEmpty, detectorSummary);
 }
 
-
 template <typename T, typename SC, typename SM, typename SO, typename SB, typename SD>
 void reinitializeContainer(DetectorDataContainer* theDataContainer, T& channel, SC& chipSummary, SM& hybridSummary, SO& opticalGroupSummary, SB& boardSummary, SD& detectorSummary)
 {
@@ -263,7 +262,6 @@ void reinitializeContainer(DetectorDataContainer* theDataContainer, T& channel)
 {
     reinitializeContainer<T, T, T, T, T, T>(theDataContainer, channel, channel, channel, channel, channel, channel);
 }
-
 
 } // namespace ContainerFactory
 

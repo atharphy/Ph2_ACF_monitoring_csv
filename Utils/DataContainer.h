@@ -296,7 +296,7 @@ class BaseDataContainer
     }
 
     SummaryBase* summary_;
-    bool isNormalized {false};
+    bool         isNormalized{false};
 };
 
 template <class T>
@@ -345,7 +345,6 @@ class DataContainer
 
     uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const BaseDataContainer* theChannelGroupContainer, const uint32_t numberOfEvents) override
     {
-
         uint16_t              index                    = 0;
         uint32_t              numberOfEnabledChannels_ = 0;
         std::vector<uint32_t> theNumberOfEnabledChannelsList;
@@ -362,7 +361,7 @@ class DataContainer
         {
             isNormalized = true;
             if(summary_ != nullptr) summary_->makeSummaryOfSummary(getAllObjectSummaryContainers(), theNumberOfEnabledChannelsList,
-                                                                numberOfEvents); // sum of chip container needed!!!
+                                                                   numberOfEvents); // sum of chip container needed!!!
         }
         return numberOfEnabledChannels_;
     }
