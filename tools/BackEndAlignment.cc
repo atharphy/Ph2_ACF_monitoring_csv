@@ -97,7 +97,7 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard, std::string pSSAPair)
                     auto cDriveStrength = fReadoutChipInterface->ReadChipReg(cChip, "SLVS_pad_current_L1");
                     LOG(INFO) << BOLDBLUE << "SSA#" << +cChip->getId() << " Alignment for L1 and stub lines.. L1 drive set to " << +cDriveStrength << RESET;
 
-                    std::vector<uint8_t> cAlVals(8, 0);
+                    std::vector<uint8_t> cAlVals(9, 0);
                     uint8_t              cPairId = (cChip->getId() % 2 == 0) ? 1 : 0;
                     uint8_t              cChipId = (pSSAPair != "") ? cPairId : cChip->getId();
                     cPairId                      = (pSSAPair != "") ? cPairId : 0;
