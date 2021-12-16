@@ -111,7 +111,7 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard, std::string pSSAPair)
                     else
                         LOG(INFO) << BOLDBLUE << "Backend alignment for SSA#" << +cChipId << RESET;
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, "EnableSLVSTestOutput", 0x1);
-                    std::vector<uint8_t> cPhaseTaps(0);
+                    std::vector<uint8_t> cPhaseTaps(9,0);
                     for(uint8_t cLineId = 1; cLineId <= 8; cLineId++) // stub lines - 1 to 8
                     {
                         std::stringstream cRegName;
