@@ -165,7 +165,7 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard, std::string pSSAPair)
                         cRegName << "OutPatternL1Line";
                         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName.str(), 0x00);
                     }
-                    cTuned = cTuned && (std::accumulate(cAlVals.begin(), cAlVals.end(), 0) == 8);
+                    cTuned = cTuned && (std::accumulate(cAlVals.begin(), cAlVals.end(), 0) == 9);
                 }
                 else if(cChip->getFrontEndType() == FrontEndType::SSA)
                 {
