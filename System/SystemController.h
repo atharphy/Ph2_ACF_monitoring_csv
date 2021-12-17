@@ -87,8 +87,10 @@ class SystemController
     FileHandler*                           fFileHandler;
     std::string                            fRawFileName;
     bool                                   fWriteHandlerEnabled;
-    bool                                   fStreamerEnabled;
-    TCPPublishServer*                      fNetworkStreamer;
+    bool                                   fDQMStreamerEnabled;
+    bool                                   fMonitorDQMStreamerEnabled;
+    TCPPublishServer*                      fDQMStreamer;
+    TCPPublishServer*                      fMonitorDQMStreamer;
     DetectorMonitor*                       fDetectorMonitor;
     TCPClient*                             fPowerSupplyClient{nullptr};
 // TestCard interfaces - eventually piGBT can be added here as well
@@ -158,7 +160,7 @@ class SystemController
      * \param pFilename : HW Description file
      *\param os         : ostream to dump output
      */
-    void InitializeHw(const std::string& pFilename, std::ostream& os = std::cout, bool pIsFile = true, bool streamData = false, uint16_t DQMportNumber = 6000);
+    void InitializeHw(const std::string& pFilename, std::ostream& os = std::cout, bool pIsFile = true, bool streamData = false, uint16_t DQMportNumber = 6000, uint16_t monitorDQMportNumber = 7000);
 
     /*!
      * \brief Initialize the settings

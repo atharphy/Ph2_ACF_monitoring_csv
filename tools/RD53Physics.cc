@@ -88,11 +88,11 @@ void Physics::sendBoardData(const BoardContainer* cBoard)
     auto theBCIDStream  = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<BCIDsize>>("BCID");
     auto theTrgIDStream = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TrgIDsize>>("TrgID");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
-        theOccStream.streamAndSendBoard(theOccContainer.at(cBoard->getIndex()), fNetworkStreamer);
-        theBCIDStream.streamAndSendBoard(theBCIDContainer.at(cBoard->getIndex()), fNetworkStreamer);
-        theTrgIDStream.streamAndSendBoard(theTrgIDContainer.at(cBoard->getIndex()), fNetworkStreamer);
+        theOccStream.streamAndSendBoard(theOccContainer.at(cBoard->getIndex()), fDQMStreamer);
+        theBCIDStream.streamAndSendBoard(theBCIDContainer.at(cBoard->getIndex()), fDQMStreamer);
+        theTrgIDStream.streamAndSendBoard(theTrgIDContainer.at(cBoard->getIndex()), fDQMStreamer);
     }
 }
 

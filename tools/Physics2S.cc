@@ -81,10 +81,10 @@ void Physics2S::sendBoardData(BoardContainer* const& cBoard)
     auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>("Occupancy");
     auto theStubStream      = prepareChannelContainerStreamer<float>("Stub");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
-        theOccupancyStream.streamAndSendBoard(fOccupancyContainer.at(cBoard->getIndex()), fNetworkStreamer);
-        theStubStream.streamAndSendBoard(fStubContainer.at(cBoard->getIndex()), fNetworkStreamer);
+        theOccupancyStream.streamAndSendBoard(fOccupancyContainer.at(cBoard->getIndex()), fDQMStreamer);
+        theStubStream.streamAndSendBoard(fStubContainer.at(cBoard->getIndex()), fDQMStreamer);
     }
 }
 

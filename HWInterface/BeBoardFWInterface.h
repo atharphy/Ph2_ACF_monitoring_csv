@@ -314,8 +314,8 @@ class BeBoardFWInterface : public RegManager
     virtual bool    WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) { return true; }
     virtual uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress) { return 0; }
     // function for I2C transactions using lpGBT I2C Masters
-    virtual bool    I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) { return true; }
-    virtual uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes) { return 0; }
+    virtual bool    I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes, uint32_t& theI2CWriteCount) { return true; }
+    virtual uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes, uint32_t& theI2CReadCount) { return 0; }
     // function for front-end slow control
     virtual bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false) { return true; }
     virtual uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) { return 0; }
@@ -329,10 +329,6 @@ class BeBoardFWInterface : public RegManager
         fCPBConfig.fMaxAttempts  = pConfig.fMaxAttempts;
         fCPBConfig.fI2CFrequency = pConfig.fI2CFrequency;
     }
-    // return functions for internal I2C reads and writes
-    uint32_t getWriteCount() { return fI2CWriteCount; }
-    uint32_t getReadCount() { return fI2CReadCount; }
-    uint32_t getRBMismatchCount() { return fI2CReadMismatches; }
 
   protected:
     uint32_t   fBlockSize{0};
@@ -355,12 +351,6 @@ class BeBoardFWInterface : public RegManager
 
         return pMismatchedWriteVector;
     }
-
-  protected:
-    // I2C write and read count
-    uint32_t fI2CWriteCount{0};
-    uint32_t fI2CReadCount{0};
-    uint32_t fI2CReadMismatches{0};
 };
 } // namespace Ph2_HwInterface
 

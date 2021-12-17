@@ -44,10 +44,10 @@ void VoltageTuning::sendData()
     auto theDigStreamer = prepareChipContainerStreamer<EmptyContainer, double>("VoltageDig");
     auto theAnaStreamer = prepareChipContainerStreamer<EmptyContainer, double>("VoltageAna");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: theDigContainer) theDigStreamer.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theAnaContainer) theAnaStreamer.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theDigContainer) theDigStreamer.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theAnaContainer) theAnaStreamer.streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 

@@ -34,9 +34,9 @@ class MiddlewareController : public TCPServer
         { return "ConfiguereDone"; }
         if(buffer.substr(0, 5) == "Start") // changing the status changes the mode in threadMain (BBC) function.
         {
-            fRunning         = true;
-            fNetworkStreamer = new TCPPublishServer(6000, 1);
-            fAccept          = true;
+            fRunning     = true;
+            fDQMStreamer = new TCPPublishServer(6000, 1);
+            fAccept      = true;
             std::thread thread(&MiddlewareController::running, this);
             thread.detach();
             // currentRun_ = getVariableValue("RunNumber", buffer);
@@ -48,7 +48,7 @@ class MiddlewareController : public TCPServer
             std::cout << __PRETTY_FUNCTION__ << "Closing the network publisher socket: " << getSocketId() << std::endl;
             fAccept = false;
             while(fAcceptFuture.wait_for(std::chrono::milliseconds(100)) != std::future_status::ready) std::cout << __PRETTY_FUNCTION__ << "Still running" << std::endl;
-            if(fNetworkStreamer != nullptr) delete fNetworkStreamer;
+            if(fDQMStreamer != nullptr) delete fDQMStreamer;
             std::cout << "Run " << currentRun_ << " fRunning!" << std::endl;
             fRunning = false;
             return "StopDone";
@@ -82,10 +82,10 @@ class MiddlewareController : public TCPServer
         {
             std::this_thread::sleep_for(std::chrono::seconds(1));
             std::cout << __PRETTY_FUNCTION__ << "Trying to stream: " << counter << " fAccept?" << fAccept << std::endl;
-            fNetworkStreamer->broadcast(std::to_string(counter));
+            fDQMStreamer->broadcast(std::to_string(counter));
             std::cout << __PRETTY_FUNCTION__ << "Streamed: " << counter << " fAccept?" << fAccept << std::endl;
             ++counter;
-            // fNetworkStreamer->broadcast("");
+            // fDQMStreamer->broadcast("");
         }
         fAcceptPromise.set_value(true);
     };
@@ -97,7 +97,7 @@ class MiddlewareController : public TCPServer
         if(end == std::string::npos) end = buffer.size();
         return buffer.substr(begin, end - begin);
     }
-    TCPPublishServer*  fNetworkStreamer;
+    TCPPublishServer*  fDQMStreamer;
     std::promise<bool> fAcceptPromise;
     std::atomic_bool   fAccept;
     std::future<bool>  fAcceptFuture;

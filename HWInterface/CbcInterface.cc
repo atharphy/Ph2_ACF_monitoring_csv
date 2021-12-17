@@ -336,8 +336,9 @@ uint16_t CbcInterface::readErrorRegister(ReadoutChip* pCbc)
     }
     else
     {
-        bool cVerifLoop = true;
-        bool cSuccess   = ConfigurePage(pCbc, cRegItem.fPage, cVerifLoop);
+        std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+        bool                                  cVerifLoop = true;
+        bool                                  cSuccess   = ConfigurePage(pCbc, cRegItem.fPage, cVerifLoop);
         if(cSuccess) { cErrorReg = fBoardFW->ReadFERegister(pCbc, cRegItem.fAddress); }
     }
     return cErrorReg;
@@ -413,7 +414,6 @@ bool CbcInterface::MaskAllChannels(ReadoutChip* pCbc, bool mask, bool pVerifLoop
 
 bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerifLoop)
 {
-    std::lock_guard<std::mutex> theGuard(fMutex);
     LOG(DEBUG) << BOLDYELLOW << "CbcInterface::WriteChipReg " << dacName << RESET;
     if(dacName == "VCth" || dacName == "Threshold")
     {
@@ -636,6 +636,7 @@ bool CbcInterface::WriteChipSingleReg(Chip* pCbc, const std::string& pRegNode, u
     }
     else
     {
+        std::lock_guard<std::recursive_mutex> theGuard(fMutex);
         cSuccess = (pRegNode == "FeCtrl&TrgLat2") ? true : ConfigurePage(pCbc, cRegItem.fPage, pVerifLoop);
         if(!cSuccess) return cSuccess;
         // read only  register
@@ -844,8 +845,9 @@ uint8_t CbcInterface::ReadChipSingleReg(Chip* pCbc, const std::string& pRegNode)
     }
     else
     {
-        bool cVerifLoop = true;
-        bool cSuccess   = (pRegNode == "FeCtrl&TrgLat2") ? true : ConfigurePage(pCbc, cRegItem.fPage, cVerifLoop);
+        std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+        bool                                  cVerifLoop = true;
+        bool                                  cSuccess   = (pRegNode == "FeCtrl&TrgLat2") ? true : ConfigurePage(pCbc, cRegItem.fPage, cVerifLoop);
         if(cSuccess) { cValue = fBoardFW->ReadFERegister(pCbc, cRegItem.fAddress); }
     }
     pCbc->setReg(pRegNode, cValue);
@@ -854,8 +856,7 @@ uint8_t CbcInterface::ReadChipSingleReg(Chip* pCbc, const std::string& pRegNode)
 }
 uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
 {
-    std::lock_guard<std::mutex> theGuard(fMutex);
-    ChipRegItem                 cRegItem;
+    ChipRegItem cRegItem;
     setBoard(pCbc->getBeBoardId());
     std::vector<uint32_t> cVecReq;
     if(pRegNode == "VCth" || pRegNode == "Threshold")

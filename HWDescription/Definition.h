@@ -189,4 +189,7 @@ enum class EventType
     VR2S  = 8
 };
 
+// Monitoring parameters
+#define MAX_LENGHT_PARAMETER_STRING 50
+
 #endif

@@ -350,7 +350,7 @@ void PedestalEqualization::FindVplus()
     auto theVCthStream = prepareHybridContainerStreamer<EmptyContainer, uint16_t, EmptyContainer>();
     for(auto board: theVcthContainer)
     {
-        if(fStreamerEnabled) theVCthStream.streamAndSendBoard(board, fNetworkStreamer);
+        if(fDQMStreamerEnabled) theVCthStream.streamAndSendBoard(board, fDQMStreamer);
     }
 #endif
 
@@ -446,13 +446,13 @@ void PedestalEqualization::FindOffsets()
     auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
     for(auto board: theOccupancyContainer)
     {
-        if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
+        if(fDQMStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fDQMStreamer);
     }
 
     auto theOffsetStream = prepareChannelContainerStreamer<uint8_t>();
     for(auto board: theOffsetsCointainer)
     {
-        if(fStreamerEnabled) theOffsetStream.streamAndSendBoard(board, fNetworkStreamer);
+        if(fDQMStreamerEnabled) theOffsetStream.streamAndSendBoard(board, fDQMStreamer);
     }
 #endif
 
