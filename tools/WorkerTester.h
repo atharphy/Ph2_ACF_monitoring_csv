@@ -12,14 +12,13 @@ class WorkerTester : public Tool {
         WorkerTester();
 	~WorkerTester();
 
-
     void PrepareForTests();
     void PrintFSMState();
 
     // function for CPB command/reply 
     void WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose=false);
     std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords, bool pVerbose=false);
-	void ResetCPB();
+    void ResetCPB();
     // function for IC transactions 
     bool WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerbose=false);
     uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterValue, bool pVerbose=false);
