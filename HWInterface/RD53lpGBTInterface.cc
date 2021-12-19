@@ -113,7 +113,6 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
 //     for(const auto cHybrid: *pOpticalGroup)
 //         for(const auto cChip: *cHybrid) { static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip); }
 
-    
 //     lpGBTInterface::PhaseTrainRx(pChip, pGroups);
 //     for(const auto& cGroup: pGroups)
 //     {

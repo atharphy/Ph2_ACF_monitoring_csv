@@ -1896,7 +1896,7 @@ void DataChecker::WriteSlinkTest(std::string pDAQFileName)
     FileHandler* cDAQFileHandler = new FileHandler(cDAQFileName, 'w');
 
     auto              cSetting = fSettingsMap.find("Nevents");
-    uint32_t          cNevents = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second): 100;
+    uint32_t          cNevents = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 100;
     std::stringstream outp;
     for(auto cBoard: *fDetectorContainer)
     {
@@ -2197,7 +2197,7 @@ uint32_t DataChecker::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
 
     // n events
     auto     cSetting = fSettingsMap.find("Nevents");
-    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second): 100;
+    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 100;
 
     // configure trigger blocks
     auto cTriggerMult       = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
@@ -2286,7 +2286,7 @@ void DataChecker::FastCommandInjections(int cNtrials)
     // LOG(INFO) << BOLDMAGENTA << "Cal Pulse Injections with GFCMDs " << RESET;
 
     auto   cSetting       = fSettingsMap.find("DelayAfterInjection");
-    size_t cCalPulseDelay = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second): 85;
+    size_t cCalPulseDelay = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 85;
     cSetting              = fSettingsMap.find("CheckForStubs");
     int  cCheckForStubs   = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 1;
     bool cWStubs          = (cCheckForStubs == 1);
@@ -2487,7 +2487,7 @@ std::vector<int> DataChecker::GenerateIds()
 {
     //
     auto     cSetting    = fSettingsMap.find("ActiveMPAs");
-    uint32_t cActiveMPAs = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second): 8;
+    uint32_t cActiveMPAs = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 8;
 
     // random c++
     std::srand(std::time(NULL));
@@ -2574,7 +2574,7 @@ std::vector<Injection> DataChecker::GeneratePSInjections(int pMaxNstubs)
     std::vector<uint8_t>  cColumns(0); // 5 , 10 };
     std::vector<uint8_t>  cRows(0);    // 20 , 30};
     auto                  cSetting            = fSettingsMap.find("RandomizeInjections");
-    uint8_t               cRandom             = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint8_t>(cSetting->second): 0;
+    uint8_t               cRandom             = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint8_t>(cSetting->second) : 0;
     size_t                cStubs              = cRandom ? cNStubDist(cGen) : pMaxNstubs;
     int                   cTotalNumberOfStubs = 0;
     std::vector<uint32_t> cPixelIds(0); // these will be used to generate stubs
@@ -3812,7 +3812,7 @@ void DataChecker::PSNominal()
     LOG(INFO) << BOLDBLUE << "Nominal PS data checker ... inject data from MPA --> CIC --> back-end" << RESET;
     int      cLatencyOffset = -1;
     auto     cSetting       = fSettingsMap.find("Nevents");
-    uint32_t cNevents       = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second): 100;
+    uint32_t cNevents       = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 100;
     cSetting                = fSettingsMap.find("Attempts");
     uint32_t cMaxAttempts   = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 10;
     cSetting                = fSettingsMap.find("SLVSDrive");
@@ -5141,7 +5141,7 @@ void DataChecker::ReadNeventsTest()
 {
     // this->DigitalInjectionTest(true, false);
     auto     cSetting = fSettingsMap.find("Nevents");
-    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second): 100;
+    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 100;
     LOG(INFO) << BOLDBLUE << "ReadNEvents data test with " << +cNevents << RESET;
     std::stringstream outp;
 

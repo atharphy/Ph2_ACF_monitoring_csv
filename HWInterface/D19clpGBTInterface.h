@@ -44,7 +44,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // ###################################
     // General configuration of the lpGBT chip from register file
     bool ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
-    
+
     // Sets the flag used to select which lpGBT configuration interface to use
     void SetConfigMode(bool pUseOpticalLink, bool pUseCPB, bool pToggleTC = false);
     // configure PS-ROH
@@ -52,7 +52,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // configure 2S-SEH
     void        Configure2SSEH(Ph2_HwDescription::Chip* pChip);
     std::string getVariableValue(std::string variable, std::string buffer);
-    void     ContinuousPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
+    void        ContinuousPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
 
     // 0 [RHS], 1 [LHS]
     // active reset functions

@@ -11,9 +11,9 @@
 #include "../MonitorUtils/CBCMonitor.h"
 #include "../MonitorUtils/DetectorMonitor.h"
 #include "../MonitorUtils/RD53Monitor.h"
-#include "../tools/SEHMonitor.h"
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
+#include "../tools/SEHMonitor.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -56,9 +56,9 @@ void SystemController::Inherit(const SystemController* pController)
     fCicInterface                 = pController->fCicInterface;
     fPowerSupplyClient            = pController->fPowerSupplyClient;
     fChannelGroupHandlerContainer = pController->fChannelGroupHandlerContainer;
-    #ifdef __TCP_SERVER__
-        fTestcardClient = pController->fTestcardClient;
-    #endif
+#ifdef __TCP_SERVER__
+    fTestcardClient = pController->fTestcardClient;
+#endif
 }
 
 void SystemController::Destroy()

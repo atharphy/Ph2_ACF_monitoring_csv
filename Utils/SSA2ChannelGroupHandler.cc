@@ -13,6 +13,4 @@ SSA2ChannelGroupHandler::SSA2ChannelGroupHandler(std::bitset<NSSACHANNELS>&& inp
     currentChannelGroup_ = std::make_shared<ChannelGroup<NSSACHANNELS, 1>>(std::move(inputChannelsBitset));
 }
 
-SSA2ChannelGroupHandler::~SSA2ChannelGroupHandler()
-{
-}
+SSA2ChannelGroupHandler::~SSA2ChannelGroupHandler() {}

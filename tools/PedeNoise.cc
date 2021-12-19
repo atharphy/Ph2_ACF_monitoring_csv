@@ -322,10 +322,7 @@ void PedeNoise::sweepSCurves()
     }
 
     bool forceAllChannels = false;
-    if(fPulseAmplitude != 0)
-    {
-        LOG(INFO) << BLUE << "Enabled test pulse. " << RESET;
-    }
+    if(fPulseAmplitude != 0) { LOG(INFO) << BLUE << "Enabled test pulse. " << RESET; }
     else
     {
         LOG(INFO) << BOLDYELLOW << "sweepSCurves without TP injection" << RESET;

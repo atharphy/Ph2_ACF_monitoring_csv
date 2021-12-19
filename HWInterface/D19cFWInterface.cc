@@ -198,7 +198,7 @@ uint32_t D19cFWInterface::getBoardInfo()
     uint32_t cVersionWord = 0;
     return cVersionWord;
 }
-/// #################### PS Counter Stuff ############### 
+/// #################### PS Counter Stuff ###############
 // method to read SSA counters over I2C
 void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pData)
 {
@@ -730,7 +730,7 @@ void D19cFWInterface::ReadPSSCCountersFast(BeBoard* pBoard, std::vector<uint32_t
 //     {
 //         throw std::runtime_error(std::string("Trying to read MPA counters when EventType does not match..."));
 //     }
-// } 
+// }
 void D19cFWInterface::PS_Open_shutter(uint32_t pDuration)
 {
     uint8_t cReSync   = 0;
@@ -767,7 +767,7 @@ void D19cFWInterface::PS_Start_counters_read(uint32_t pDuration)
     this->Compose_fast_command(pDuration, cReSync, cL1A, cCalPulse, cBC0);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
 }
-/// #################### PS Counter Stuff ############### 
+/// #################### PS Counter Stuff ###############
 
 void D19cFWInterface::configureCDCE_old(uint16_t pClockRate)
 {
@@ -1063,7 +1063,6 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
     return cLinksLocked;
 }
 
-
 void D19cFWInterface::configureLink(const BeBoard* pBoard)
 {
     std::vector<uint8_t> cLinkIds(0);
@@ -1325,7 +1324,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         }
     }
 
-    if((fI2CVersion >= 1 ) && !cWithlpGBT)
+    if((fI2CVersion >= 1) && !cWithlpGBT)
     {
         fI2CSlaveMap.clear();
         fSlaveMap.clear();
@@ -2575,8 +2574,6 @@ uint32_t D19cFWInterface::CountFwEvents(BeBoard* pBoard, std::vector<uint32_t>& 
     return cNEvents;
 }
 
-
-
 uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
 {
     // LOG(INFO) << BOLDBLUE << "Retreiving data from the FC7..." << RESET;
@@ -2641,27 +2638,27 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
         // if(cWithMPA or cWithSSA) { this->ReadPSCounters(pBoard, pData, true, true); }
         // else if(cAsync)
         // {
-            uint32_t its = 0;
-            while(pData.size() == 0 and its < 5)
-            {
-                if(its > 0) LOG(INFO) << BOLDRED << "Retrying..." << RESET;
+        uint32_t its = 0;
+        while(pData.size() == 0 and its < 5)
+        {
+            if(its > 0) LOG(INFO) << BOLDRED << "Retrying..." << RESET;
 
-                if(fPSCounterFast == 1)
-                {
-                    LOG(DEBUG) << BOLDBLUE << "Reading PS Hit counters over stub lines..." << RESET;
-                    this->ReadPSSCCountersFast(pBoard, pData);
-                    continue;
-                }
-                else
-                {
-                    if(cWithSSA or cWithSSA2)
-                        this->ReadSSACounters(pBoard, pData);
-                    else
-                        this->ReadMPACounters(pBoard, pData);
-                }
-                its += 1;
+            if(fPSCounterFast == 1)
+            {
+                LOG(DEBUG) << BOLDBLUE << "Reading PS Hit counters over stub lines..." << RESET;
+                this->ReadPSSCCountersFast(pBoard, pData);
+                continue;
             }
-            cNEvents = 1;
+            else
+            {
+                if(cWithSSA or cWithSSA2)
+                    this->ReadSSACounters(pBoard, pData);
+                else
+                    this->ReadMPACounters(pBoard, pData);
+            }
+            its += 1;
+        }
+        cNEvents = 1;
         // }
         // uint32_t its = 0;
         // while(pData.size() == 0 and its < 5)
@@ -3377,7 +3374,7 @@ bool D19cFWInterface::WriteBlockReg(const std::string& pRegNode, const std::vect
 
 void D19cFWInterface::EncodeReg(const ChipRegItem& pRegItem, Chip* pChip, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
 {
-    uint8_t pCbcId       = pChip->getId()%8;
+    uint8_t pCbcId       = pChip->getId() % 8;
     uint8_t pLinkId      = pChip->getOpticalId();
     uint8_t pFeId        = pChip->getHybridId();
     auto    cMapIterator = fI2CSlaveMap.find(pCbcId);
@@ -4392,7 +4389,6 @@ uint32_t D19cFWInterface::PSInterfaceBoard_SendI2CCommand_READ(uint32_t slave_id
     return 0;
 }
 
-
 // some overlap for now...
 void D19cFWInterface::Send_pulses(uint32_t pNtriggers, bool manual)
 {
@@ -4429,8 +4425,6 @@ void D19cFWInterface::Send_pulses(uint32_t pNtriggers, bool manual)
         WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
     }
 }
-
-
 
 void D19cFWInterface::KillI2C()
 {
@@ -5066,7 +5060,6 @@ void D19cFWInterface::ConfigureMultiplexingSetup(int BackplaneNum, int CardNum, 
         }
     }
 }
-
 
 void D19cFWInterface::Align_out()
 {

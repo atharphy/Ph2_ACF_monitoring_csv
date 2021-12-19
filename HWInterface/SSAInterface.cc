@@ -642,7 +642,7 @@ uint16_t SSAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVer
     {
         bool                  cFailed = false;
         bool                  cRead;
-        uint8_t cSSAId;
+        uint8_t               cSSAId;
         std::vector<uint32_t> cVecReq;
         fBoardFW->EncodeReg(cRegItem, pChip, cVecReq, true, false);
         fBoardFW->ReadChipBlockReg(cVecReq);

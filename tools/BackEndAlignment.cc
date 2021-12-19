@@ -343,7 +343,7 @@ bool BackEndAlignment::Align()
         bool cWithCIC          = false;
         bool cWithCBC          = false;
         bool cWithSSA          = false;
-        bool cWithSSA2          = false;
+        bool cWithSSA2         = false;
         bool cWithMPA          = false;
         for(auto cOpticalReadout: *cBoard)
         {
@@ -354,10 +354,10 @@ bool BackEndAlignment::Align()
                 cWithCIC = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic != NULL;
                 for(auto cReadoutChip: *cHybrid)
                 {
-                    cWithCBC = cWithCBC || cReadoutChip->getFrontEndType() == FrontEndType::CBC3;
-                    cWithSSA = cWithSSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA;
+                    cWithCBC  = cWithCBC || cReadoutChip->getFrontEndType() == FrontEndType::CBC3;
+                    cWithSSA  = cWithSSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA;
                     cWithSSA2 = cWithSSA2 || cReadoutChip->getFrontEndType() == FrontEndType::SSA2;
-                    cWithMPA = cWithMPA || cReadoutChip->getFrontEndType() == FrontEndType::MPA;
+                    cWithMPA  = cWithMPA || cReadoutChip->getFrontEndType() == FrontEndType::MPA;
                 } // ROcs
             }     // Hybrids
         }         // OGs
@@ -367,7 +367,7 @@ bool BackEndAlignment::Align()
             cAligned = this->CBCAlignment(theBoard);
         }
         else if(cWithMPA || cWithSSA)
-            cAligned = this->PSAlignment(theBoard,fPairSelect);
+            cAligned = this->PSAlignment(theBoard, fPairSelect);
 
         // check alignment
         if(cAligned)

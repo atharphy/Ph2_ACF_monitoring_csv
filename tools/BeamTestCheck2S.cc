@@ -1560,7 +1560,7 @@ void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
                             cTotalHits += cHits.size();
                             for(auto cHit: cHits)
                             {
-                                if(  cHit % 2 == cRefSensor)
+                                if(cHit % 2 == cRefSensor)
                                 {
                                     if(cHybrid->getId() % 2 == cRefSide)
                                     {

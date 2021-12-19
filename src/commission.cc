@@ -217,10 +217,10 @@ int main(int argc, char* argv[])
 
     // hack
     // make sure MPAs and SSAs have all pixels enabled
-    int  cPSmoduleSSAth = cTool.findValueInSettings<int>("PSmoduleSSAthreshold",100);
-    int cPSmoduleMPAth  = cTool.findValueInSettings<int>("PSmoduleMPAthreshold",100);
-    int cPSmoduleLat    = cTool.findValueInSettings<int>("PSmoduleTriggerLatency",100);
-    int cPSmoduleWindow = cTool.findValueInSettings<int>("PSmoduleStubWindow",100);
+    int cPSmoduleSSAth  = cTool.findValueInSettings<int>("PSmoduleSSAthreshold", 100);
+    int cPSmoduleMPAth  = cTool.findValueInSettings<int>("PSmoduleMPAthreshold", 100);
+    int cPSmoduleLat    = cTool.findValueInSettings<int>("PSmoduleTriggerLatency", 100);
+    int cPSmoduleWindow = cTool.findValueInSettings<int>("PSmoduleStubWindow", 100);
     for(auto board: *cTool.fDetectorContainer)
     {
         for(auto opticalGroup: *board)

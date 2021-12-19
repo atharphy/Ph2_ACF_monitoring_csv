@@ -310,11 +310,11 @@ class BeBoardFWInterface : public RegManager
     uint32_t getRBMismatchCount() { return fI2CReadMismatches; }
 
   protected:
-    uint32_t   fBlockSize{0};
-    uint32_t   fNPackets{0};
-    uint32_t   numAcq{0};
-    uint32_t   nbMaxAcq{0};
-    CPBconfig  fCPBConfig;
+    uint32_t  fBlockSize{0};
+    uint32_t  fNPackets{0};
+    uint32_t  numAcq{0};
+    uint32_t  nbMaxAcq{0};
+    CPBconfig fCPBConfig;
     // Template to return a vector of all mismatched elements in two vectors using std::mismatch for readback value
     // comparison
     template <typename T, class BinaryPredicate>

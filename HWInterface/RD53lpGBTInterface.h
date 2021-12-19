@@ -20,7 +20,8 @@ class RD53lpGBTInterface : public lpGBTInterface
     RD53lpGBTInterface(const BeBoardFWMap& pBoardMap) : lpGBTInterface(pBoardMap) {}
 
     bool ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
-    //void    PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const Ph2_HwDescription::BeBoard* pBoard, const Ph2_HwDescription::OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface) override;
+    // void    PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const Ph2_HwDescription::BeBoard* pBoard, const Ph2_HwDescription::OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface)
+    // override;
     bool ExternalPhaseAlignRx(Ph2_HwDescription::Chip*               pChip,
                               const Ph2_HwDescription::BeBoard*      pBoard,
                               const Ph2_HwDescription::OpticalGroup* pOpticalGroup,

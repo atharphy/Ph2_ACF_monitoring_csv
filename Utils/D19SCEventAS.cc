@@ -95,10 +95,10 @@ void D19SCEventAS::fillDataContainer(BoardDataContainer* boardContainer, const B
         {
             for(auto chip: *hybrid)
             {
-                std::vector<uint32_t> hVec = GetHits(hybrid->getId(), chip->getId());
-                unsigned int          i    = 0;
-                auto         cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, opticalGroup->getId(), hybrid->getId(), chip->getId());
-                
+                std::vector<uint32_t> hVec              = GetHits(hybrid->getId(), chip->getId());
+                unsigned int          i                 = 0;
+                auto                  cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, opticalGroup->getId(), hybrid->getId(), chip->getId());
+
                 for(ChannelContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
                 {
                     if(cTestChannelGroup->isChannelEnabled(i)) { channel->fOccupancy += hVec[i]; }

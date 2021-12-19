@@ -196,10 +196,10 @@ int main(int argc, char* argv[])
     if(!cmd.foundOption("skipAlignment")) { cPSAlignment.Align(); }
     cPSAlignment.dumpConfigFiles();
 
-    int  cPSmoduleSSAth = cTool.findValueInSettings<int>("PSmoduleSSAthreshold",100);
-    int cPSmoduleMPAth  = cTool.findValueInSettings<int>("PSmoduleMPAthreshold",100);
-    int cPSmoduleLat    = cTool.findValueInSettings<int>("PSmoduleTriggerLatency",100);
-    int cPSmoduleWindow = cTool.findValueInSettings<int>("PSmoduleStubWindow",100);
+    int cPSmoduleSSAth  = cTool.findValueInSettings<int>("PSmoduleSSAthreshold", 100);
+    int cPSmoduleMPAth  = cTool.findValueInSettings<int>("PSmoduleMPAthreshold", 100);
+    int cPSmoduleLat    = cTool.findValueInSettings<int>("PSmoduleTriggerLatency", 100);
+    int cPSmoduleWindow = cTool.findValueInSettings<int>("PSmoduleStubWindow", 100);
 
     for(auto board: *cTool.fDetectorContainer)
     {

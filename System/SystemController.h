@@ -32,6 +32,7 @@
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/Container.h"
 // 2S scc/8CBC3 hybrid tests
+#include "../Utils/D19SCEventAS.h"
 #include "../Utils/D19cCbc3Event.h"
 #include "../Utils/D19cCbc3EventZS.h"
 #include "../Utils/D19cCic2Event.h"
@@ -39,7 +40,6 @@
 #include "../Utils/D19cPSEventAS.h"
 #include "../Utils/D19cSSA2Event.h"
 #include "../Utils/D19cSSAEvent.h"
-#include "../Utils/D19SCEventAS.h"
 #include "../Utils/Event.h"
 #include "../Utils/FileHandler.h"
 #include "../Utils/Utilities.h"
