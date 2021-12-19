@@ -631,7 +631,7 @@ void WorkerTester::Benchmark(int pNIterations)
                 // if(cChip != nullptr)
                 for(auto cChip : *cHybrid)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::MPA) continue;
+                    // if(cChip->getFrontEndType() == FrontEndType::MPA) continue;
                     ChipRegMap cChipRegMap = cChip->getRegMap();
                     
                     uint8_t cChipId = ((cChip->getFrontEndType() == FrontEndType::CIC) || (cChip->getFrontEndType() == FrontEndType::CIC2)) ? 0 : cChip->getId();

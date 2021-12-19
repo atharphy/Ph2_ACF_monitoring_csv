@@ -12,18 +12,17 @@ class WorkerTester : public Tool {
         WorkerTester();
 	~WorkerTester();
 
-	void ResetCPB();
 
     void PrepareForTests();
-
-    void WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose=false);
-    std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords, bool pVerbose=false);
-
     void PrintFSMState();
 
+    // function for CPB command/reply 
+    void WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose=false);
+    std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords, bool pVerbose=false);
+	void ResetCPB();
     // function for IC transactions 
     bool WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerbose=false);
-    uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterValue, bool pVerbose=true);
+    uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterValue, bool pVerbose=false);
     bool IsICToolDone();
     // function for I2C transactions using lpGBT I2C Masters
     bool I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes, bool pVerbose=false);
