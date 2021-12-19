@@ -59,7 +59,7 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockS
         if(cRegItem.first.find("bist_output") != std::string::npos) continue;
 
         LOG(DEBUG) << BOLDGREEN << "Encoding register " << cRegItem.first << " with address " << +cRegItem.second.fAddress << RESET;
-        fBoardFW->EncodeReg(cRegItem.second, pSSA2->getHybridId(), pSSA2->getId(), cVec, pVerifLoop, cWrite);
+        fBoardFW->EncodeReg(cRegItem.second, pSSA2, cVec, pVerifLoop, cWrite);
     }
     uint8_t cWriteAttempts = 0;
     cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
@@ -67,7 +67,7 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockS
     {
         cWrite = false;
         cVec.clear();
-        for(auto& cRegInMap: cSSA2RegMap) { fBoardFW->EncodeReg(cRegInMap.second, pSSA2->getHybridId(), pSSA2->getId(), cVec, pVerifLoop, cWrite); }
+        for(auto& cRegInMap: cSSA2RegMap) { fBoardFW->EncodeReg(cRegInMap.second, pSSA2, cVec, pVerifLoop, cWrite); }
         fBoardFW->ReadChipBlockReg(cVec);
         uint16_t                 cIndx = 0;
         std::vector<std::string> cReadOnlyRegs{"AC_ReadCounterLSB",
@@ -206,7 +206,7 @@ uint16_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode)
         cRegItem.fPage    = 0x00;
         cRegItem.fAddress = 0x500 + cChannel;
         cRegItem.fValue   = 0;
-        fBoardFW->EncodeReg(cRegItem, pSSA2->getHybridId(), pSSA2->getId(), cVecReq, true, false);
+        fBoardFW->EncodeReg(cRegItem, pSSA2, cVecReq, true, false);
         fBoardFW->ReadChipBlockReg(cVecReq);
         fBoardFW->DecodeReg(cRegItem, cSSA2Id, cVecReq[0], cRead, cFailed);
         if(!cFailed)
@@ -216,7 +216,7 @@ uint16_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode)
             cRegItem.fPage    = 0x00;
             cRegItem.fAddress = 0x600 + cChannel;
             cRegItem.fValue   = 0;
-            fBoardFW->EncodeReg(cRegItem, pSSA2->getHybridId(), pSSA2->getId(), cVecReq, true, false);
+            fBoardFW->EncodeReg(cRegItem, pSSA2, cVecReq, true, false);
             fBoardFW->ReadChipBlockReg(cVecReq);
             // bools to find the values of failed and read
             fBoardFW->DecodeReg(cRegItem, cSSA2Id, cVecReq[0], cRead, cFailed);
@@ -252,7 +252,7 @@ uint16_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode)
     else
     {
         cRegItem = pSSA2->getRegItem(pRegNode);
-        fBoardFW->EncodeReg(cRegItem, pSSA2->getHybridId(), pSSA2->getId(), cVecReq, true, false);
+        fBoardFW->EncodeReg(cRegItem, pSSA2, cVecReq, true, false);
         fBoardFW->ReadChipBlockReg(cVecReq);
         fBoardFW->DecodeReg(cRegItem, cSSA2Id, cVecReq[0], cRead, cFailed);
         if(!cFailed)
@@ -343,7 +343,7 @@ bool SSA2Interface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pR
     cRegItem.fPage    = 0x00;
     cRegItem.fAddress = pRegisterAddress;
     cRegItem.fValue   = pRegisterValue & 0xFF;
-    fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVec, pVerifLoop, true);
+    fBoardFW->EncodeReg(cRegItem, pChip, cVec, pVerifLoop, true);
     uint8_t cWriteAttempts = 0;
     return fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
 }
@@ -358,7 +358,7 @@ bool SSA2Interface::WriteChipMultReg(Chip* pSSA2, const std::vector<std::pair<st
     {
         cRegItem        = pSSA2->getRegItem(cReg.first);
         cRegItem.fValue = cReg.second;
-        fBoardFW->EncodeReg(cRegItem, pSSA2->getHybridId(), pSSA2->getId(), cVec, pVerifLoop, true);
+        fBoardFW->EncodeReg(cRegItem, pSSA2, cVec, pVerifLoop, true);
 #ifdef COUNT_FLAG
         fRegisterCount++;
 #endif
@@ -386,7 +386,7 @@ bool SSA2Interface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode,
     std::vector<uint32_t> cVec;
     ChipRegItem           cRegItem = pChip->getRegItem(pRegNode);
     cRegItem.fValue                = pValue & 0xFF;
-    fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVec, pVerifLoop, true);
+    fBoardFW->EncodeReg(cRegItem, pChip, cVec, pVerifLoop, true);
     uint8_t cWriteAttempts = 0;
     bool    cSuccess       = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
     if(cSuccess)

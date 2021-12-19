@@ -27,8 +27,12 @@ void SSAPhysics::ConfigureCalibration()
     this->CreateResultDirectory(RESULTDIR, false, false);
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, fOccContainer);
 
-    fChannelGroupHandler = new SSA2ChannelGroupHandler();
-    fChannelGroupHandler->setChannelGroupParameters(16, 2);
+
+    SSA2ChannelGroupHandler theChannelGroupHandler;
+    theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+    setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA2);
+    //fChannelGroupHandler = new SSA2ChannelGroupHandler();
+    //fChannelGroupHandler->setChannelGroupParameters(16, 2);
 }
 
 void SSAPhysics::Running()
@@ -166,7 +170,9 @@ void SSAPhysics::fillDataContainer(BoardContainer* const& cBoard)
     // # Fill containers #
     // ###################
     const std::vector<Event*>& events = SystemController::GetEvents();
-    for(const auto& event: events) { event->fillDataContainer(fOccContainer.at(cBoard->getIndex()), fChannelGroupHandler->allChannelGroup()); }
+    for(const auto& event: events) { 
+        event->fillDataContainer(fOccContainer.at(cBoard->getIndex()), fChannelGroupHandlerContainer->at(cBoard->getIndex()), 0 ); 
+    }
 }
 
 void SSAPhysics::chipErrorReport() {}

@@ -1,7 +1,7 @@
 #include "SEHMonitor.h"
 #include "../HWDescription/OuterTrackerHybrid.h"
 
-SEHMonitor::SEHMonitor(const Ph2_System::SystemController& theSystCntr, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystCntr, theDetectorMonitorConfig)
+SEHMonitor::SEHMonitor(const Ph2_System::SystemController* theSystCntr, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystCntr, theDetectorMonitorConfig)
 {
     // doMonitorTemperature = fDetectorMonitorConfig.isElementToMonitor("ModuleTemperature");
     doMonitorInputCurrent = fDetectorMonitorConfig.isElementToMonitor("I_SEH");

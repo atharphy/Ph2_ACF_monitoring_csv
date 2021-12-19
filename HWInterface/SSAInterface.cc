@@ -514,7 +514,7 @@ bool SSAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
     if(!lpGBTFound())
     {
         std::vector<uint32_t> cVec;
-        fBoardFW->EncodeReg(cRegItem, pChip->getId(), pChip->getId(), cVec, pVerifLoop, true);
+        fBoardFW->EncodeReg(cRegItem, pChip, cVec, pVerifLoop, true);
         uint8_t cWriteAttempts = 0;
         cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
     }
@@ -596,7 +596,7 @@ bool SSAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
             cRegItem.fPage    = 0x00;
             cRegItem.fAddress = cReg.first;
             cRegItem.fValue   = cReg.second & 0xFF;
-            fBoardFW->EncodeReg(cRegItem, pChip->getId(), pChip->getId(), cVec, pVerifLoop, true);
+            fBoardFW->EncodeReg(cRegItem, pChip, cVec, pVerifLoop, true);
 #ifdef COUNT_FLAG
             fRegisterCount++;
 #endif
@@ -642,10 +642,10 @@ uint16_t SSAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVer
     {
         bool                  cFailed = false;
         bool                  cRead;
-        std::vector<uint32_t> cVecReq;
-        fBoardFW->EncodeReg(cRegItem, pChip->getId(), pChip->getId(), cVecReq, true, false);
-        fBoardFW->ReadChipBlockReg(cVecReq);
         uint8_t cSSAId;
+        std::vector<uint32_t> cVecReq;
+        fBoardFW->EncodeReg(cRegItem, pChip, cVecReq, true, false);
+        fBoardFW->ReadChipBlockReg(cVecReq);
         fBoardFW->DecodeReg(cRegItem, cSSAId, cVecReq[0], cRead, cFailed);
     }
     else
@@ -687,7 +687,7 @@ bool SSAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
     if(!lpGBTFound())
     {
         std::vector<uint32_t> cVec;
-        fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId() % 8, cVec, cCheckReadback, true);
+        fBoardFW->EncodeReg(cRegItem, pChip, cVec, cCheckReadback, true);
         uint8_t cWriteAttempts = 0;
         cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, cCheckReadback);
     }
@@ -874,14 +874,7 @@ uint16_t SSAInterface::ReadChipReg(Chip* pSSA, const std::string& pRegNode)
     }
     else if(pRegNode.find("SLVS_pad_current") != std::string::npos)
     {
-        cRegItem = pSSA->getRegItem("SLVS_pad_current");
-        fBoardFW->EncodeReg(cRegItem, pSSA->getHybridId(), pSSA->getId(), cVecReq, true, false);
-        fBoardFW->ReadChipBlockReg(cVecReq);
-
-        fBoardFW->DecodeReg(cRegItem, cSSAId, cVecReq[0], cRead, cFailed);
-
-        if(!cFailed) pSSA->setReg("SLVS_pad_current", cRegItem.fValue);
-        return cRegItem.fValue & 0xFF;
+        return this->ReadChipReg(pSSA, "SLVS_pad_current");
     }
     else if(pRegNode == "TriggerLatency")
     {

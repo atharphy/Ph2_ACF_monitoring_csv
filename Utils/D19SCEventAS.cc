@@ -87,7 +87,7 @@ void D19SCEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pData
 }
 
 // required by event but not sure if makes sense for AS
-void D19SCEventAS::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
+void D19SCEventAS::fillDataContainer(BoardDataContainer* boardContainer, const BoardDataContainer* theChannelGroupHandler, int groupNumber)
 {
     for(auto opticalGroup: *boardContainer)
     {
@@ -97,7 +97,8 @@ void D19SCEventAS::fillDataContainer(BoardDataContainer* boardContainer, const C
             {
                 std::vector<uint32_t> hVec = GetHits(hybrid->getId(), chip->getId());
                 unsigned int          i    = 0;
-
+                auto         cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, opticalGroup->getId(), hybrid->getId(), chip->getId());
+                
                 for(ChannelContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
                 {
                     if(cTestChannelGroup->isChannelEnabled(i)) { channel->fOccupancy += hVec[i]; }

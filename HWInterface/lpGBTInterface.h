@@ -137,7 +137,6 @@ class lpGBTInterface : public ChipInterface
     // ##############################################
     // # LpGBT Reset  functions (Slow Control) #
     // ##############################################
-    void ResetRxDll(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups);
     void ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pMasters);
 
     // ##############################################

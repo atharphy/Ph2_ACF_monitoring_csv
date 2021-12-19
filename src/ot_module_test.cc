@@ -1,6 +1,5 @@
 #include <cstring>
 
-#include "ExtraChecks.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
@@ -768,16 +767,11 @@ int main(int argc, char* argv[])
                 cTool.fBeBoardInterface->WriteBoardMultReg(board, cRegVec);
                 cTool.fBeBoardInterface->WriteBoardReg(board, "fc7_daq_cnfg.tlu_block.tlu_enabled", 0);
 
-                auto cSetting       = cTool.fSettingsMap.find("PSmoduleSSAthreshold");
-                int  cPSmoduleSSAth = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
-                cSetting            = cTool.fSettingsMap.find("PSmoduleMPAthreshold");
-                int cPSmoduleMPAth  = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
-                cSetting            = cTool.fSettingsMap.find("PSOccupancyPulseAmplitude");
-                int cInjectionAmpl  = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0xFF;
-                cSetting            = cTool.fSettingsMap.find("SamplingModeSSA");
-                int cSamplingSSA    = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0;
-                cSetting            = cTool.fSettingsMap.find("SamplingModeMPA");
-                int cSamplingMPA    = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0;
+                int  cPSmoduleSSAth = cTool.findValueInSettings<int>("PSmoduleSSAthreshold",100);
+                int cPSmoduleMPAth  = cTool.findValueInSettings<int>("PSmoduleMPAthreshold",100);
+                int cInjectionAmpl  = cTool.findValueInSettings<int>("PSOccupancyPulseAmplitude",0xFF);
+                int cSamplingSSA    = cTool.findValueInSettings<int>("SamplingModeSSA",0);
+                int cSamplingMPA    = cTool.findValueInSettings<int>("SamplingModeMPA",0);
                 // analogue injection
                 cTool.setSameDacBeBoard(static_cast<BeBoard*>(board), "InjectedCharge", cInjectionAmpl);
                 cTool.setSameDacBeBoard(static_cast<BeBoard*>(board), "AnalogueSync", 1);
@@ -862,14 +856,10 @@ int main(int argc, char* argv[])
                 auto cTriggerSource = cTool.fBeBoardInterface->ReadBoardReg(board, "fc7_daq_cnfg.fast_command_block.trigger_source");
                 LOG(INFO) << BOLDBLUE << "Injection test with trigger source " << +cTriggerSource << RESET;
 
-                auto cSetting       = cTool.fSettingsMap.find("PSmoduleSSAthreshold");
-                int  cPSmoduleSSAth = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
-                cSetting            = cTool.fSettingsMap.find("PSmoduleMPAthreshold");
-                int cPSmoduleMPAth  = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
-                cSetting            = cTool.fSettingsMap.find("SamplingModeSSA");
-                int cSamplingSSA    = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0;
-                cSetting            = cTool.fSettingsMap.find("SamplingModeMPA");
-                int cSamplingMPA    = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0;
+                int  cPSmoduleSSAth = cTool.findValueInSettings<int>("PSmoduleSSAthreshold",100);
+                int cPSmoduleMPAth  = cTool.findValueInSettings<int>("PSmoduleMPAthreshold",100);
+                int cSamplingSSA    = cTool.findValueInSettings<int>("SamplingModeSSA",0);
+                int cSamplingMPA    = cTool.findValueInSettings<int>("SamplingModeMPA",0);
 
                 // force TP to be off
                 cTool.setSameDacBeBoard(static_cast<BeBoard*>(board), "AnalogueSync", 0);
@@ -1027,8 +1017,7 @@ int main(int argc, char* argv[])
             std::vector<uint8_t> cFesToCheck = getArgs(cArgsStr);
             cMemoryChecker.EvaluatePedeNoise(10); // find pedestal + noise
             cMemoryChecker.SetThreshold(-2.0);    // set threshold to 3 sigma away from pedestal
-            auto cSetting    = cTool.fSettingsMap.find("TriggerSeparation");
-            int  cTriggerGap = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 500;
+            int  cTriggerGap = cTool.findValueInSettings<int>("TriggerSeparation",500);
             cMemoryChecker.DataCheck(cFesToCheck, cTriggerGap);
         }
         cMemoryChecker.MemoryCheck2SRaw(true);  // all ones

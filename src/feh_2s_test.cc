@@ -1,6 +1,5 @@
 #include <cstring>
 
-#include "ExtraChecks.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
@@ -127,7 +126,6 @@ int main(int argc, char* argv[])
 
     cmd.defineOption("antennaDelay", "Delay between the antenna pulse and the delay [25 ns]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("latencyRange", "Range of latencies around pulse to scan [25 ns]", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("evaluate", "Run some more detailed tests... ", ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("evaluate", "e");
 
     cmd.defineOption("withCIC", "With CIC. Default : false", ArgvParser::NoOptionAttribute);
@@ -169,7 +167,6 @@ int main(int argc, char* argv[])
     bool        batchMode         = (cmd.foundOption("batch")) ? true : false;
     bool        cAllChan          = (cmd.foundOption("allChan")) ? true : false;
     bool        cCheckData        = (cmd.foundOption("checkData"));
-    bool        cEvaluate         = (cmd.foundOption("evaluate"));
 
     bool cSaveToFile = cmd.foundOption("save");
 
@@ -662,18 +659,6 @@ int main(int argc, char* argv[])
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
     }
-    if(cEvaluate)
-    {
-        int cSigma = cmd.foundOption("evaluate") ? convertAnyInt(cmd.optionValue("evaluate").c_str()) : 3;
-        // some extra stuff ...
-        ExtraChecks cExtra;
-        cExtra.Inherit(&cTool);
-        cExtra.Initialise();
-        LOG(INFO) << BOLDBLUE << "Measuring noise and setting thresholds to " << +cSigma << " noise units away from pedestal...." << RESET;
-        cExtra.Evaluate(cSigma, 0, true);
-        cExtra.writeObjects();
-        cExtra.resetPointers();
-    }
     // inject hits and stubs using mask and compare input against output
     if(cmd.foundOption("memCheck"))
     {
@@ -692,8 +677,7 @@ int main(int argc, char* argv[])
             std::vector<uint8_t> cFesToCheck = getArgs(cArgsStr);
             cMemoryChecker.EvaluatePedeNoise(100); // find pedestal + noise
             cMemoryChecker.SetThreshold(-2.0);     // set threshold to 3 sigma away from pedestal
-            auto cSetting    = cTool.fSettingsMap.find("TriggerSeparation");
-            int  cTriggerGap = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 500;
+            int  cTriggerGap = cTool.findValueInSettings<int>("TriggerSeparation",500);
             cMemoryChecker.DataCheck(cFesToCheck, cTriggerGap);
         }
         cMemoryChecker.MemoryCheck2SRaw(true);  // all ones

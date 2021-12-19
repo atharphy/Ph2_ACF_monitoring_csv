@@ -124,6 +124,10 @@ class Chip : public FrontEndDescription
      */
     void setChipId(uint8_t pChipId) { fChipId = pChipId; }
 
+    void    setChipAddress(uint16_t pChipAddress) { fChipAddress = pChipAddress; }
+    uint8_t getChipAddreess() const {return fChipAddress;}
+
+
     /*!
      * \brief Set the clock frequency
      * \param cClkFrequency
@@ -180,6 +184,7 @@ class Chip : public FrontEndDescription
 
   protected:
     uint8_t    fChipId;
+    uint8_t    fChipAddress; // I2C addess of chip 
     uint16_t   fMaxRegValue;
     uint16_t   fClockFrequency;
     uint8_t    fMasterId;

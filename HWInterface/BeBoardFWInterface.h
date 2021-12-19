@@ -76,11 +76,6 @@ class BeBoardFWInterface : public RegManager
     BeBoardFWInterface(const char* puHalConfigFileName, uint32_t pBoardId);
     BeBoardFWInterface(const char* pId, const char* pUri, const char* pAddressTable);
 
-    void setPowerSupplyClient(TCPClient* thePowerSupplyClient) { fPowerSupplyClient = thePowerSupplyClient; };
-#ifdef __TCP_SERVER__
-    void       setTestcardClient(TCPClient* theTestcardClient) { fTestcardClient = theTestcardClient; };
-    TCPClient* getTestcardClient() { return fTestcardClient; };
-#endif
     /*!
      * \brief set a FileHandler Object and enable saving to file!
      * \param pFileHandler : pointer to file handler for saving Raw Data*/
@@ -141,29 +136,6 @@ class BeBoardFWInterface : public RegManager
      * \param pChip : Chip object
      */
     virtual void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, Ph2_HwDescription::Chip* pChip, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-    }
-
-    /*!
-     * \brief Encode a/several word(s) readable for a Chip
-     * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
-     * \param pChipId : Id of the Chip to work with
-     * \param pVecReq : Vector to stack the encoded words
-     */
-    virtual void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pChipId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite)
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-    }
-
-    /*!< Encode a/several word(s) readable for a Chip*/
-    /*!
-     * \brief Encode a/several word(s) readable for a Chip
-     * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
-     * \param pChipId : Id of the Chip to work with
-     * \param pVecReq : Vector to stack the encoded words
-     */
-    virtual void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pChipId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     }
@@ -342,12 +314,7 @@ class BeBoardFWInterface : public RegManager
     uint32_t   fNPackets{0};
     uint32_t   numAcq{0};
     uint32_t   nbMaxAcq{0};
-    TCPClient* fPowerSupplyClient;
     CPBconfig  fCPBConfig;
-
-#ifdef __TCP_SERVER__
-    TCPClient* fTestcardClient;
-#endif
     // Template to return a vector of all mismatched elements in two vectors using std::mismatch for readback value
     // comparison
     template <typename T, class BinaryPredicate>

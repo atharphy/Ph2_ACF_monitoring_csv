@@ -8,10 +8,12 @@
 */
 
 #include "SystemController.h"
-#include "../tools/CBCMonitor.h"
-#include "../tools/DetectorMonitor.h"
-#include "../tools/RD53Monitor.h"
+#include "../MonitorUtils/CBCMonitor.h"
+#include "../MonitorUtils/DetectorMonitor.h"
+#include "../MonitorUtils/RD53Monitor.h"
 #include "../tools/SEHMonitor.h"
+#include "../Utils/ChannelGroupHandler.h"
+#include "../Utils/ContainerFactory.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -180,7 +182,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     {
         LOG(INFO) << BOLDYELLOW << "Connected to the Power Supply Server!" << RESET;
     }
-    for(const auto board: *fDetectorContainer) fBeBoardInterface->setPowerSupplyClient(board, fPowerSupplyClient);
+
 #ifdef __TCP_SERVER__
     fTestcardClient = new TCPClient("127.0.0.1", 8000);
     if(!fTestcardClient->connect(1))
@@ -189,7 +191,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         delete fTestcardClient;
         fTestcardClient = nullptr;
     }
-    for(const auto board: *fDetectorContainer) fBeBoardInterface->setTestcardClient(board, fTestcardClient);
 #endif
 
     if(fDetectorContainer->size() > 0)
@@ -291,9 +292,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         if(monitoringType == "2S")
             fDetectorMonitor = new CBCMonitor(this, theDetectorMonitorConfig);
         else if(monitoringType == "RD53")
-            fDetectorMonitor = new RD53Monitor(*this, theDetectorMonitorConfig);
+            fDetectorMonitor = new RD53Monitor(this, theDetectorMonitorConfig);
         else if(monitoringType == "2SSEH")
-            fDetectorMonitor = new SEHMonitor(*this, theDetectorMonitorConfig);
+            fDetectorMonitor = new SEHMonitor(this, theDetectorMonitorConfig);
         else
         {
             LOG(ERROR) << BOLDRED << "Unrecognized monitor type, Aborting" << RESET;
@@ -371,13 +372,13 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     // ###################
     // # Configuring FSM #
     // ###################
-    size_t nTRIGxEvent = SystemController::findValueInSettings("nTRIGxEvent");
-    size_t injType     = SystemController::findValueInSettings("INJtype");
-    size_t injLatency  = SystemController::findValueInSettings("InjLatency");
-    size_t nClkDelays  = SystemController::findValueInSettings("nClkDelays");
-    size_t colStart    = SystemController::findValueInSettings("COLstart");
-    bool   resetMask   = SystemController::findValueInSettings("ResetMask");
-    bool   resetTDAC   = SystemController::findValueInSettings("ResetTDAC");
+    size_t nTRIGxEvent = SystemController::findValueInSettings<size_t>("nTRIGxEvent");
+    size_t injType     = SystemController::findValueInSettings<size_t>("INJtype");
+    size_t injLatency  = SystemController::findValueInSettings<size_t>("InjLatency");
+    size_t nClkDelays  = SystemController::findValueInSettings<size_t>("nClkDelays");
+    size_t colStart    = SystemController::findValueInSettings<size_t>("COLstart");
+    bool   resetMask   = SystemController::findValueInSettings<bool>("ResetMask");
+    bool   resetTDAC   = SystemController::findValueInSettings<bool>("ResetTDAC");
     LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
     static_cast<RD53FWInterface*>(this->fBeBoardFWMap[pBoard->getId()])->SetAndConfigureFastCommands(pBoard, nTRIGxEvent, injType, injLatency, nClkDelays, colStart < RD53::LIN.colStart);
     LOG(INFO) << CYAN << "================== Done ==================" << RESET;
@@ -398,7 +399,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
 
             if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
             {
-                flpGBTInterface->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, this->fBeBoardFWMap[pBoard->getId()], fReadoutChipInterface);
+                static_cast<RD53lpGBTInterface*>(flpGBTInterface)->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, this->fBeBoardFWMap[pBoard->getId()], fReadoutChipInterface);
                 LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;
             }
             else
@@ -1172,16 +1173,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
             }
 
             if(fEventType == EventType::SCAS) { fEventList.push_back(new D19SCEventAS(pBoard, pData)); }
-            else if(fEventType == EventType::PSAS)
             if(fEventType == EventType::PSAS) { fEventList.push_back(new D19cPSEventAS(pBoard, pData)); }
-            else if(fEventType == EventType::SSAAS)
-            {
-                fEventList.push_back(new D19cSSAEventAS(pBoard, pData));
-            }
-            else if(fEventType == EventType::MPAAS)
-            {
-                LOG(INFO) << BOLDYELLOW << "Placeholder for PS ASYNC event decoding via CIC..." << RESET;
-            }
             else if(fEventType != EventType::ZS)
             {
                 // check data words because I'm desperate

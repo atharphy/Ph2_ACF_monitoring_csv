@@ -38,20 +38,6 @@ void BeBoardInterface::SetFileHandler(const BeBoard* pBoard, FileHandler* pHandl
     setBoard(pBoard->getId());
     fBoardFW->setFileHandler(pHandler);
 }
-
-void BeBoardInterface::setPowerSupplyClient(const Ph2_HwDescription::BeBoard* pBoard, TCPClient* fPowerSupplyClient)
-{
-    setBoard(pBoard->getId());
-    fBoardFW->setPowerSupplyClient(fPowerSupplyClient);
-}
-#ifdef __TCP_SERVER__
-void BeBoardInterface::setTestcardClient(const Ph2_HwDescription::BeBoard* pBoard, TCPClient* fTestcardClient)
-{
-    setBoard(pBoard->getId());
-    fBoardFW->setTestcardClient(fTestcardClient);
-}
-#endif
-
 void BeBoardInterface::enableFileHandler(BeBoard* pBoard)
 {
     setBoard(pBoard->getId());

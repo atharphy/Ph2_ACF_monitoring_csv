@@ -44,24 +44,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // ###################################
     // General configuration of the lpGBT chip from register file
     bool ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
-    bool SwitchOnSEH();
     
-    // ###################################
-    // # Outer Tracker specific funtions #
-    // ###################################
-#ifdef __TCUSB__
-    void InitialiseTCUSBHandler();
-#ifdef __ROH_USB__
-    void      SetTCUSBHandler(TC_PSROH* pTC_PSROH) { fTC_USB = pTC_PSROH; }
-    TC_PSROH* GetTCUSBHandler() { return fTC_USB; }
-#elif __SEH_USB__
-#ifdef __TCP_SERVER__
-#else
-    void      SetTCUSBHandler(TC_2SSEH* pTC_2SSEH) { fTC_USB = pTC_2SSEH; }
-    TC_2SSEH* GetTCUSBHandler() { return fTC_USB; }
-#endif
-#endif
-
     // Sets the flag used to select which lpGBT configuration interface to use
     void SetConfigMode(bool pUseOpticalLink, bool pUseCPB, bool pToggleTC = false);
     // configure PS-ROH
@@ -69,23 +52,6 @@ class D19clpGBTInterface : public lpGBTInterface
     // configure 2S-SEH
     void        Configure2SSEH(Ph2_HwDescription::Chip* pChip);
     std::string getVariableValue(std::string variable, std::string buffer);
-    // cbc read/write
-    bool cbcWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint8_t pPage, uint8_t pRegistergAddress, uint8_t pRegisterValue, bool pReadBack = true, bool pSetPage = false)
-    {
-        return true;
-    }
-    uint32_t cbcRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint8_t pPage, uint8_t pRegisterAddress) { return 0; }
-    uint8_t  cbcSetPage(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint8_t pPage) { return 0; }
-    uint8_t  cbcGetPageRegister(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t cChipId) { return 0; }
-    // cic read/write
-    bool     cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false);
-    uint32_t cicRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint16_t pRegisterAddress);
-    // ssa read/write
-    bool     ssaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false);
-    uint32_t ssaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress);
-    // mpa read/write
-    bool     mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false);
-    uint32_t mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress);
     void     ContinuousPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
 
     // 0 [RHS], 1 [LHS]
@@ -187,30 +153,31 @@ class D19clpGBTInterface : public lpGBTInterface
     // ###################################
     bool fUseOpticalLink = true;
     bool fUseCPB         = true;
-#ifdef __TCUSB__
 
-#ifdef __ROH_USB__
-    TC_PSROH*                                    fTC_USB;
-    std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
-                                                                {"L_CIC", TC_PSROH::measurement::L_CIC_RST},
-                                                                {"L_SSA", TC_PSROH::measurement::L_SSA_RST},
-                                                                {"R_MPA", TC_PSROH::measurement::R_MPA_RST},
-                                                                {"R_CIC", TC_PSROH::measurement::R_CIC_RST},
-                                                                { "R_SSA",
-                                                                  TC_PSROH::measurement::R_SSA_RST }};
+    // reset
+    uint8_t fResetMinPeriod = 100; // ms was 100
 
-#elif __SEH_USB__
-#ifdef __TCP_SERVER__
-#else
+    // number of read transactions
+    uint8_t fI2CReads_M0 = 0;
+    uint8_t fI2CReads_M1 = 0;
+    uint8_t fI2CReads_M2 = 0;
 
-    TC_2SSEH*                                         fTC_USB;
-    std::map<std::string, TC_2SSEH::resetMeasurement> fSehResetLines = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
-                                                                        {"RST_CIC_R", TC_2SSEH::resetMeasurement::RST_CIC_R},
-                                                                        {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
-                                                                        {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
-#endif
-#endif
-#endif
+    // clocks
+    uint8_t fClock_RHS_Hybrid = 1;
+    uint8_t fClock_LHS_Hybrid = 11;
+    uint8_t fClock_LHS_CIC    = 6;
+    uint8_t fClock_RHS_CIC    = 26;
+
+    // reset GPIOs
+    uint8_t fReset_LHS_CIC = 0;
+    uint8_t fReset_LHS_MPA = 1;
+    uint8_t fReset_LHS_SSA = 3;
+    uint8_t fReset_LHS_CBC = 3;
+    // rhs
+    uint8_t fReset_RHS_CIC = 6;
+    uint8_t fReset_RHS_MPA = 9;
+    uint8_t fReset_RHS_SSA = 12;
+    uint8_t fReset_RHS_CBC = 8;
 };
 } // namespace Ph2_HwInterface
 #endif

@@ -1472,12 +1472,12 @@ void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
     }     // optical group
 
     // use ReadDataRather than ReadNEvents
-    auto cRefSensor = findValueInSettings("Check2SRefSensor", 0);
-    auto cRefSide   = findValueInSettings("Check2SRefSide", 0);
-    auto cRefChip   = findValueInSettings("Check2SRefChip", 0);
+    auto cRefSensor = findValueInSettings<uint8_t>("Check2SRefSensor", 0);
+    auto cRefSide   = findValueInSettings<uint8_t>("Check2SRefSide", 0);
+    auto cRefChip   = findValueInSettings<uint8_t>("Check2SRefChip", 0);
 
-    fUseReadNEvents   = findValueInSettings("Check2SUseReadNEvents", 0);
-    fWait_ms          = findValueInSettings("Check2Swait", 0);
+    fUseReadNEvents   = findValueInSettings<uint8_t>("Check2SUseReadNEvents", 0);
+    fWait_ms          = findValueInSettings<uint32_t>("Check2Swait", 0);
     uint16_t cLat     = fStartLatency;
     float    cMaxHits = 0;
     fOptimalLatency   = cLat;
@@ -1560,7 +1560,7 @@ void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
                             cTotalHits += cHits.size();
                             for(auto cHit: cHits)
                             {
-                                if(cHit % 2 == cRefSensor)
+                                if(  cHit % 2 == cRefSensor)
                                 {
                                     if(cHybrid->getId() % 2 == cRefSide)
                                     {
@@ -1711,7 +1711,7 @@ void BeamTestCheck2S::ScanStubLatency(uint8_t pContinousReadout)
     if(!cAlignmentRun)
     {
         auto     cSetting   = fSettingsMap.find("StubAlignmentScanStart");
-        uint32_t cScanStart = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+        uint32_t cScanStart = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 100;
         cOffset             = cScanStart;
     }
     else
