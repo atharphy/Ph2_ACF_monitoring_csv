@@ -82,17 +82,18 @@ class SystemController
     Ph2_HwInterface::ChipInterface*        fChipInterface;  //!< Interface to the Chip
     Ph2_HwInterface::lpGBTInterface*       flpGBTInterface; //!< Interface to the lpGBT
     Ph2_HwInterface::CicInterface*         fCicInterface;   //!< Interface to a CIC [only valid for OT]
-
-    DetectorContainer* fDetectorContainer;
-    BeBoardFWMap       fBeBoardFWMap;
-    SettingsMap        fSettingsMap;
-    FileHandler*       fFileHandler;
-    std::string        fRawFileName;
-    bool               fWriteHandlerEnabled;
-    bool               fStreamerEnabled;
-    TCPPublishServer*  fNetworkStreamer;
-    DetectorMonitor*   fDetectorMonitor;
-    TCPClient*         fPowerSupplyClient{nullptr};
+    DetectorContainer*                     fDetectorContainer;
+    BeBoardFWMap                           fBeBoardFWMap;
+    SettingsMap                            fSettingsMap;
+    FileHandler*                           fFileHandler;
+    std::string                            fRawFileName;
+    bool                                   fWriteHandlerEnabled;
+    bool                                   fDQMStreamerEnabled;
+    bool                                   fMonitorDQMStreamerEnabled;
+    TCPPublishServer*                      fDQMStreamer;
+    TCPPublishServer*                      fMonitorDQMStreamer;
+    DetectorMonitor*                       fDetectorMonitor;
+    TCPClient*                             fPowerSupplyClient{nullptr};
 #ifdef __TCP_SERVER__
     TCPClient* fTestcardClient{nullptr};
 #endif
@@ -162,7 +163,7 @@ class SystemController
      * \param pFilename : HW Description file
      *\param os         : ostream to dump output
      */
-    void InitializeHw(const std::string& pFilename, std::ostream& os = std::cout, bool pIsFile = true, bool streamData = false, uint16_t DQMportNumber = 6000);
+    void InitializeHw(const std::string& pFilename, std::ostream& os = std::cout, bool pIsFile = true, bool streamData = false, uint16_t DQMportNumber = 6000, uint16_t monitorDQMportNumber = 7000);
 
     /*!
      * \brief Initialize the settings

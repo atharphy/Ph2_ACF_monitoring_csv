@@ -85,7 +85,7 @@ void CBCPulseShape::runCBCPulseShape(void)
         if(fPlotPulseShapeSCurves)
             for(auto& scurveOccupancy: fSCurveOccupancyMap) { fCBCHistogramPulseShape.fillSCurvePlots(scurveOccupancy.first, latencyDAC, delayDAC, *scurveOccupancy.second); }
 #else
-        if(fStreamerEnabled)
+        if(fDQMStreamerEnabled)
         {
             auto theThresholdAndNoiseStream = prepareChipContainerStreamer<ThresholdAndNoise, ThresholdAndNoise, uint16_t>();
             theThresholdAndNoiseStream.setHeaderElement<0>(delay);

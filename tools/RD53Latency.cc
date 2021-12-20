@@ -72,10 +72,10 @@ void Latency::sendData()
     auto theStream        = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<LatencySize>>("Occ");
     auto theLatencyStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>("Latency");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: theOccContainer) theStream.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theLatencyContainer) theLatencyStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theOccContainer) theStream.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theLatencyContainer) theLatencyStream.streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 

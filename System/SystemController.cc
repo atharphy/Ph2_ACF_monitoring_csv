@@ -32,8 +32,10 @@ SystemController::SystemController()
     , fFileHandler(nullptr)
     , fRawFileName("")
     , fWriteHandlerEnabled(false)
-    , fStreamerEnabled(false)
-    , fNetworkStreamer(nullptr)
+    , fDQMStreamerEnabled(false)
+    , fMonitorDQMStreamerEnabled(false)
+    , fDQMStreamer(nullptr)
+    , fMonitorDQMStreamer(nullptr)
     , fDetectorMonitor(nullptr)
     , fChannelGroupHandlerContainer(nullptr)
 {
@@ -50,8 +52,10 @@ void SystemController::Inherit(const SystemController* pController)
     fBeBoardFWMap                 = pController->fBeBoardFWMap;
     fSettingsMap                  = pController->fSettingsMap;
     fFileHandler                  = pController->fFileHandler;
-    fStreamerEnabled              = pController->fStreamerEnabled;
-    fNetworkStreamer              = pController->fNetworkStreamer;
+    fDQMStreamerEnabled           = pController->fDQMStreamerEnabled;
+    fMonitorDQMStreamerEnabled    = pController->fMonitorDQMStreamerEnabled;
+    fDQMStreamer                  = pController->fDQMStreamer;
+    fMonitorDQMStreamer           = pController->fMonitorDQMStreamer;
     fDetectorContainer            = pController->fDetectorContainer;
     fCicInterface                 = pController->fCicInterface;
     fPowerSupplyClient            = pController->fPowerSupplyClient;
@@ -109,8 +113,11 @@ void SystemController::Destroy()
     fBeBoardFWMap.clear();
     fSettingsMap.clear();
 
-    delete fNetworkStreamer;
-    fNetworkStreamer = nullptr;
+    delete fDQMStreamer;
+    fDQMStreamer = nullptr;
+
+    delete fMonitorDQMStreamer;
+    fMonitorDQMStreamer = nullptr;
 
     delete fPowerSupplyClient;
     fPowerSupplyClient = nullptr;
@@ -154,13 +161,18 @@ void SystemController::readFile(std::vector<uint32_t>& pVec, uint32_t pNWords32)
         pVec = fFileHandler->readFileChunks(pNWords32);
 }
 
-void SystemController::InitializeHw(const std::string& pFilename, std::ostream& os, bool pIsFile, bool streamData, uint16_t DQMportNumber)
+void SystemController::InitializeHw(const std::string& pFilename, std::ostream& os, bool pIsFile, bool streamData, uint16_t DQMportNumber, uint16_t monitorDQMportNumber)
 {
-    fStreamerEnabled = streamData;
+    fDQMStreamerEnabled        = streamData;
+    fMonitorDQMStreamerEnabled = streamData;
+
     if(streamData == true)
     {
-        fNetworkStreamer = new TCPPublishServer(DQMportNumber, 1);
-        fNetworkStreamer->startAccept();
+        fDQMStreamer = new TCPPublishServer(DQMportNumber, 1);
+        fDQMStreamer->startAccept();
+
+        fMonitorDQMStreamer = new TCPPublishServer(monitorDQMportNumber, 1);
+        fMonitorDQMStreamer->startAccept();
     }
 
     fDetectorContainer = new DetectorContainer;

@@ -331,6 +331,21 @@
     <Setting name="Check2SRefChip">0</Setting>   <!-- L == 1  ; R== 0 --> 
     
 </Settings>
+
+
+<MonitoringSettings>
+<Monitoring type="2S" enable="0">
+    <MonitoringSleepTime> 500 </MonitoringSleepTime>
+    <MonitoringElements
+    CBCThreshold  = "1"
+    LpGBT_ADC1    = "1"
+    LpGBT_VDD     = "1"
+    LpGBT_VDDA    = "1"
+    LpGBT_TEMP    = "1"
+    />
+</Monitoring>
+</MonitoringSettings>
+
 </HwDescription>
 
 <Devices>

@@ -1058,6 +1058,8 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
         else
             setAllGlobalDacBeBoard(boardIndex, dacName, *currentDacList);
 
+        Occupancy noOccupancy;
+        ContainerFactory::reinitializeContainer(currentStepOccupancyContainer, noOccupancy);
         fDetectorDataContainer = currentStepOccupancyContainer;
         measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
         // TO-DO.. generalize so that I don't need the MPA/SSA
@@ -1401,8 +1403,8 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
 
     if(fNormalize)
     {
-        auto cTmp = fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandlerContainer, numberOfEvents);
-        LOG(DEBUG) << BOLDYELLOW << cTmp << RESET;
+        auto cTmp = fDetectorDataContainer->at(boardIndex)->normalizeAndAverageContainers(fDetectorContainer->at(boardIndex), fChannelGroupHandlerContainer->at(boardIndex), numberOfEvents);
+        LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << cTmp << RESET;
     }
     fUseReadNEvents = cUseReadNEvents;
 }

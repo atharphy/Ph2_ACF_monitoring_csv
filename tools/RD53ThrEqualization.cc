@@ -94,10 +94,10 @@ void ThrEqualization::sendData()
     auto theOccStream  = prepareChannelContainerStreamer<OccupancyAndPh>("Occ");
     auto theTDACStream = prepareChannelContainerStreamer<uint16_t>("TDAC");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: theOccContainer) theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theTDACcontainer) theTDACStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theOccContainer) theOccStream.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTDACcontainer) theTDACStream.streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 
