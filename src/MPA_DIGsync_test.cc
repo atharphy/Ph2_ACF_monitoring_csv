@@ -88,10 +88,16 @@ int main(int argc, char* argv[])
         {
             MPA* theMPA = static_cast<MPA*>(cMPA);
 
-            thePSInterface->Set_calibration(theMPA, 200);
-            thePSInterface->Set_threshold(theMPA, 200);
-            thePSInterface->Activate_ps(theMPA, 4);
-            thePSInterface->Activate_sync(theMPA);
+            cTool.fReadoutChipInterface->WriteChipReg(theMPA, "InjectedCharge", 200);
+            cTool.fReadoutChipInterface->WriteChipReg(theMPA, "Threshold", 200);
+            cTool.fReadoutChipInterface->WriteChipReg(theMPA, "StubMode", 0);
+            cTool.fReadoutChipInterface->WriteChipReg(theMPA, "StubWindow", 4);
+            cTool.fReadoutChipInterface->WriteChipReg(theMPA, "DigitalSync", 1);
+
+            // thePSInterface->Set_calibration(theMPA, 200);
+            // thePSInterface->Set_threshold(theMPA, 200);
+            // thePSInterface->Activate_ps(theMPA, 4);
+            // thePSInterface->Activate_sync(theMPA);
             thePSInterface->WriteChipReg(cMPA, "ClusterCut_ALL", 5);
         }
         if(cMPA->getFrontEndType() == FrontEndType::SSA)

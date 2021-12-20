@@ -215,12 +215,11 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
                 if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
 
                 // uint8_t  cMode = 3;
-                // uint8_t  cStubWindow=8;
-
-                static_cast<PSInterface*>(fReadoutChipInterface)->Activate_ps(cChip, 2);
+                uint8_t cStubWindow = 8;
+                // static_cast<PSInterface*>(fReadoutChipInterface)->Activate_ps(cChip, 2);
                 // text parsed reimplementation
-                // fReadoutChipInterface->WriteChipReg(cChip,"StubMode", cMode);
-                // fReadoutChipInterface->WriteChipReg(cChip,"StubWindow", cStubWindow);
+                fReadoutChipInterface->WriteChipReg(cChip, "StubMode", 0);
+                fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", cStubWindow);
             } // chip
         }     // hybrid
     }         // optica]l group

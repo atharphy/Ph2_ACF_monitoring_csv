@@ -97,9 +97,15 @@ int main(int argc, char* argv[])
         if(cMPA->getFrontEndType() == FrontEndType::MPA)
         {
             MPA* theMPA = static_cast<MPA*>(cMPA);
-            thePSInterface->Activate_ps(theMPA, 8);
-            if(do_ss) thePSInterface->Activate_ss(theMPA, 1);
-            if(do_pp) thePSInterface->Activate_pp(theMPA, 1);
+            cTool.fReadoutChipInterface->WriteChipReg(theMPA, "StubMode", 0);
+            cTool.fReadoutChipInterface->WriteChipReg(theMPA, "StubWindow", 8);
+
+            if(do_ss) cTool.fReadoutChipInterface->WriteChipReg(theMPA, "StubMode", 1);
+            if(do_pp) cTool.fReadoutChipInterface->WriteChipReg(theMPA, "StubMode", 2);
+
+            // thePSInterface->Activate_ps(theMPA, 8);
+            // if(do_ss) thePSInterface->Activate_ss(theMPA, 1);
+            // if(do_pp) thePSInterface->Activate_pp(theMPA, 1);
             // RTR=thePSInterface->ReadChipReg(cMPA, "RetimePix");
         }
     }
