@@ -868,22 +868,94 @@ double lpGBTInterface::GetBERTResult(Chip* pChip)
 // In addition, the BERT in the lpGBT itself doesn't need to 'know' anything external to the lpGBT - it knows how many bits
 // it receives per second and you configure it to count for N clock cycles (or x seconds)
 // so no need to provide any information aside from how long to count for
-double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double bits_or_time)
+// double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double bits_or_time)
+// {
+//     const float cConfidenceLevel = 0.95;
+//     // figure out data rate at which I'm receiving data
+//     // this should be totally based on the configuration of the lpGBT
+//     // and the e-port Rx
+//     // so I do not need to pass anything to this function
+//     // number of bits received per second
+//     uint16_t cRxRate = GetRxDataRate(pChip, pGroup);
+//     // constants to allow me to calculate the error rate
+//     const int n_prints = 10; // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
+//     double    time2run = (given_time) ? bits_or_time : bits_or_time / cRxRate;
+//     double    bitsRxd  = (given_time) ? time2run * cRxRate : bits_or_time;
+//     LOG(INFO) << GREEN << "Running BERT for ~" << BOLDYELLOW << std::fixed << std::setprecision(0) << time2run << RESET << GREEN << "s will test  " << BOLDYELLOW << bitsRxd << RESET << GREEN
+//               << " received bits." << RESET;
+//     uint32_t BERTMeasTime = (log2(time2run * fClockSpeed) - 5) / 2.;
+//     // Configure number of printouts and calculate the frequency of printouts
+//     double time_per_step = std::min(std::max(time2run / n_prints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
+
+//     // ###############
+//     // # Configuring #
+//     // ###############
+//     lpGBTInterface::ConfigureRxSource(pChip, {pGroup}, lpGBTconstants::PATTERN_NORMAL);
+//     lpGBTInterface::ConfigureBERT(pChip, fGroup2BERTsourceCourse[pGroup], fChannelSpeed2BERTsourceFine[pChannel + 4 * (2 - cRxRate)], BERTMeasTime);
+
+//     // #########
+//     // # Start #
+//     // #########
+//     lpGBTInterface::StartBERT(pChip, false); // Stop
+//     lpGBTInterface::StartBERT(pChip, true);  // Start
+//     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+
+//     LOG(INFO) << BOLDGREEN << "===== BER run starting =====" << std::fixed << std::setprecision(0) << RESET;
+//     int      idx = 1;
+//     uint64_t nErrors;
+//     while(lpGBTInterface::IsBERTDone(pChip) == false)
+//     {
+//         std::this_thread::sleep_for(std::chrono::seconds(static_cast<unsigned int>(time_per_step)));
+
+//         nErrors = lpGBTInterface::GetBERTErrors(pChip);
+
+//         LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s" << RESET;
+//         LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << lpGBTInterface::GetBERTErrors(pChip) << RESET << GREEN << " bit(s) in error ...." << RESET;
+//         idx++;
+//     }
+//     LOG(INFO) << BOLDGREEN << "========= Finished =========" << RESET;
+
+//     if(lpGBTInterface::IsBERTEmptyData(pChip) == true)
+//     {
+//         lpGBTInterface::StartBERT(pChip, false); // Stop
+//         throw Exception("[lpGBTInterface::RunBERtest] All zeros at input");
+//     }
+
+//     // ########
+//     // # Stop #
+//     // ########
+//     nErrors = lpGBTInterface::GetBERTErrors(pChip);
+//     lpGBTInterface::StartBERT(pChip, false);                                                            // Stop
+//     float cErrorRate = (nErrors == 0) ? -1 * log(1.0 - cConfidenceLevel) / bitsRxd : nErrors / bitsRxd; // upper limit on BERT is I see no errors detected
+//     // Read PRBS frame counter
+//     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
+//     LOG(INFO) << GREEN << "Final number of bits received : " << BOLDYELLOW << bitsRxd << RESET;
+//     LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " bits in error i.e. a BERT of " << BOLDYELLOW << cErrorRate << RESET;
+//     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
+//     return nErrors;
+// }
+double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time)
 {
-    const float cConfidenceLevel = 0.95;
     // figure out data rate at which I'm receiving data
     // this should be totally based on the configuration of the lpGBT
     // and the e-port Rx
     // so I do not need to pass anything to this function
     // number of bits received per second
-    uint16_t cRxRate = GetRxDataRate(pChip, pGroup);
-    // constants to allow me to calculate the error rate
-    const int n_prints = 10; // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
-    double    time2run = (given_time) ? bits_or_time : bits_or_time / cRxRate;
-    double    bitsRxd  = (given_time) ? time2run * cRxRate : bits_or_time;
-    LOG(INFO) << GREEN << "Running BERT for ~" << BOLDYELLOW << std::fixed << std::setprecision(0) << time2run << RESET << GREEN << "s will test  " << BOLDYELLOW << bitsRxd << RESET << GREEN
-              << " received bits." << RESET;
-    uint32_t BERTMeasTime = (log2(time2run * fClockSpeed) - 5) / 2.;
+    uint16_t frontendSpeed = GetRxDataRate(pChip, pGroup);
+    const double   mainClock       = 40e6;                             // @CONST@
+    const uint32_t nBitInClkPeriod = 32. * std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
+    const double   fps             = 1.28e9 / nBitInClkPeriod;         // Frames per second
+    const int      n_prints        = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
+    double         frames2run;
+    double         time2run;
+
+    if(given_time == true)
+        time2run = frames_or_time;
+    else
+        time2run = frames_or_time / fps;
+    uint32_t BERTMeasTime = (log2(time2run * mainClock) - 5) / 2.;
+    frames2run            = fBERTMeasTimeMap[BERTMeasTime];
+
     // Configure number of printouts and calculate the frequency of printouts
     double time_per_step = std::min(std::max(time2run / n_prints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
 
@@ -891,7 +963,7 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     // # Configuring #
     // ###############
     lpGBTInterface::ConfigureRxSource(pChip, {pGroup}, lpGBTconstants::PATTERN_NORMAL);
-    lpGBTInterface::ConfigureBERT(pChip, fGroup2BERTsourceCourse[pGroup], fChannelSpeed2BERTsourceFine[pChannel + 4 * (2 - cRxRate)], BERTMeasTime);
+    lpGBTInterface::ConfigureBERT(pChip, fGroup2BERTsourceCourse[pGroup], fChannelSpeed2BERTsourceFine[pChannel + 4 * (2 - frontendSpeed)], BERTMeasTime);
 
     // #########
     // # Start #
@@ -910,7 +982,8 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
         nErrors = lpGBTInterface::GetBERTErrors(pChip);
 
         LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s" << RESET;
-        LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << lpGBTInterface::GetBERTErrors(pChip) << RESET << GREEN << " bit(s) in error ...." << RESET;
+        LOG(INFO) << GREEN << "Current counter: " << BOLDYELLOW << nErrors / nBitInClkPeriod << RESET << GREEN << " frames with error(s), i.e. " << BOLDYELLOW << nErrors << RESET << GREEN
+                  << " bits with errors" << RESET;
         idx++;
     }
     LOG(INFO) << BOLDGREEN << "========= Finished =========" << RESET;
@@ -925,15 +998,20 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     // # Stop #
     // ########
     nErrors = lpGBTInterface::GetBERTErrors(pChip);
-    lpGBTInterface::StartBERT(pChip, false);                                                            // Stop
-    float cErrorRate = (nErrors == 0) ? -1 * log(1.0 - cConfidenceLevel) / bitsRxd : nErrors / bitsRxd; // upper limit on BERT is I see no errors detected
+    lpGBTInterface::StartBERT(pChip, false); // Stop
+
     // Read PRBS frame counter
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
-    LOG(INFO) << GREEN << "Final number of bits received : " << BOLDYELLOW << bitsRxd << RESET;
-    LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " bits in error i.e. a BERT of " << BOLDYELLOW << cErrorRate << RESET;
+    LOG(INFO) << GREEN << "Final number of PRBS frames sent: " << BOLDYELLOW << frames2run << RESET;
+    LOG(INFO) << GREEN << "Final counter: " << BOLDYELLOW << nErrors / nBitInClkPeriod << RESET << GREEN << " frames with error(s), i.e. " << BOLDYELLOW << nErrors << RESET << GREEN
+              << " bits with errors" << RESET;
+    LOG(INFO) << GREEN << "Final BER: " << BOLDYELLOW << nErrors / frames2run << RESET << GREEN << " bits/clk (" << BOLDYELLOW << nErrors / nBitInClkPeriod / frames2run * 100 << RESET << GREEN << "%)"
+              << RESET;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
-    return nErrors;
+
+    return nErrors / frames2run;
 }
+
 
 void lpGBTInterface::StartPRBSpattern(Chip* pChip)
 {

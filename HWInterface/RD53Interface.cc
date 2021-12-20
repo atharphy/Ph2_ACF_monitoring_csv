@@ -174,6 +174,13 @@ void RD53Interface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     RD53Interface::InitRD53UplinkSpeed(pChip);
 }
 
+void RD53Interface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms) 
+{
+    StartPRBSpattern(pChip);
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    StopPRBSpattern(pChip);
+}
+
 bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const uint16_t data, bool pVerifLoop)
 {
     this->setBoard(pChip->getBeBoardId());
