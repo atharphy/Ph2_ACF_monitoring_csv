@@ -68,12 +68,12 @@ void PedeNoiseTime::Initialise(bool pAllChan, bool pDisableStubLogic)
     initializeRecycleBin();
     fAllChan = pAllChan;
 
-    fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels", 0);
-    fMaskChannelsFromOtherGroups = findValueInSettings("MaskChannelsFromOtherGroups", 1);
-    fPlotSCurves                 = findValueInSettings("PlotSCurves", 0);
-    fFitSCurves                  = findValueInSettings("FitSCurves", 0);
-    fPulseAmplitude              = findValueInSettings("PedeNoisePulseAmplitude", 0);
-    fEventsPerPoint              = findValueInSettings("Nevents", 10);
+    fSkipMaskedChannels          = findValueInSettings<double>("SkipMaskedChannels", 0);
+    fMaskChannelsFromOtherGroups = findValueInSettings<double>("MaskChannelsFromOtherGroups", 1);
+    fPlotSCurves                 = findValueInSettings<double>("PlotSCurves", 0);
+    fFitSCurves                  = findValueInSettings<double>("FitSCurves", 0);
+    fPulseAmplitude              = findValueInSettings<double>("PedeNoisePulseAmplitude", 0);
+    fEventsPerPoint              = findValueInSettings<double>("Nevents", 10);
     fNEventsPerBurst             = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
@@ -525,8 +525,8 @@ uint32_t PedeNoiseTime::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
 }
 bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSeparation)
 {
-    auto                  cMaxTriggersInBurst        = findValueInSettings("MaxNtriggersPerBurst", 1);
-    auto                  cNtriggersToSendPerAttempt = findValueInSettings("Ntriggers", 10);
+    auto                  cMaxTriggersInBurst        = findValueInSettings<double>("MaxNtriggersPerBurst", 1);
+    auto                  cNtriggersToSendPerAttempt = findValueInSettings<double>("Ntriggers", 10);
     DetectorDataContainer cNwordsContainer;
     ContainerFactory::copyAndInitBoard<uint32_t>(*fDetectorContainer, cNwordsContainer);
 
@@ -664,9 +664,9 @@ bool PedeNoiseTime::DataFromExternalTriggers()
 }
 bool PedeNoiseTime::GetDataFromFC7()
 {
-    fEventsPerPoint             = findValueInSettings("NeventsScan", 10);
-    int  cMeanTriggerSeparation = findValueInSettings("MeanTriggerSeparation", 500);
-    int  cUseFcmdBram           = findValueInSettings("UseFcmdBram", 1);
+    fEventsPerPoint             = findValueInSettings<double>("NeventsScan", 10);
+    int  cMeanTriggerSeparation = findValueInSettings<double>("MeanTriggerSeparation", 500);
+    int  cUseFcmdBram           = findValueInSettings<double>("UseFcmdBram", 1);
     bool cSuccess               = (cUseFcmdBram) ? this->DataFromRandomTriggers(cMeanTriggerSeparation) : this->DataFromExternalTriggers();
     std::this_thread::sleep_for(std::chrono::microseconds(10));
     if(cSuccess)
@@ -695,7 +695,7 @@ bool PedeNoiseTime::GetDataFromFC7()
 }
 void PedeNoiseTime::CalculateOccupancy(DetectorDataContainer* pOccupancyContainer)
 {
-    int    cUseFcmdBram     = findValueInSettings("UseFcmdBram", 1);
+    int    cUseFcmdBram     = findValueInSettings<double>("UseFcmdBram", 1);
     size_t cNeventsExpected = fEventsPerPoint;
     if(cUseFcmdBram) cNeventsExpected = fTriggersSent;
     // now retreive events
@@ -768,9 +768,9 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
         fThresholdAndNoiseContainer = new DetectorDataContainer();
         ContainerFactory::copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *fThresholdAndNoiseContainer);
     }
-    fEventsPerPoint   = findValueInSettings("NeventsScan", 10);
-    int cStartLatency = findValueInSettings("StartLatency", 1);
-    int cLatencyRange = findValueInSettings("LatencyRange", 1);
+    fEventsPerPoint   = findValueInSettings<double>("NeventsScan", 10);
+    int cStartLatency = findValueInSettings<double>("StartLatency", 1);
+    int cLatencyRange = findValueInSettings<double>("LatencyRange", 1);
     LOG(INFO) << BOLDMAGENTA << "PedeNoiseTime::measureSCurves .. asking for " << fEventsPerPoint << " events per point on the threshold scan" << RESET;
     // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan!
     float    cLimit    = 0.05;

@@ -517,10 +517,10 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
         // #################
         // # Measure noise #
         // #################
-        this->fChannelGroupHandler = theChnGroupHandlerNoise.get();
+        setChannelGroupHandler(*theChnGroupHandlerNoise.get());
         this->SetTestPulse(PixelAlive::INJtype::None);
         this->measureData(nEvents, nEvtsBurst);
-        this->fChannelGroupHandler = theChnGroupHandler.get();
+        setChannelGroupHandler(*theChnGroupHandler.get());
         this->SetTestPulse(PixelAlive::injType);
 
         // #####################

@@ -471,6 +471,8 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     }
     LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
 
+    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[pBoard->getId()])->PrintFrequencyLVDS(); // @TMP@
+
     LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
     RD53Event::ForkDecodingThreads();
 }
@@ -988,14 +990,11 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
             }
 
             LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
-
-            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->PrintFrequencyLVDS(); // @TMP@
-
-            LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
-            RD53Event::ForkDecodingThreads();
         }
         else if(cBoard->getBoardType() == BoardType::RD53)
+        {
             ConfigureIT(cBoard);
+        }
     }
     if(fDetectorMonitor != nullptr)
     {

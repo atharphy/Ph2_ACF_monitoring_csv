@@ -46,17 +46,17 @@ void BeamTestCheck2S::Initialise()
     setChannelGroupHandler(theChannelGroupHandler);
 
     // set TP amplitude and delay
-    fTPamplitude = findValueInSettings("Check2STPamplitude", 255);
-    fTPdelay     = findValueInSettings("Check2STPdelay", 0);
+    fTPamplitude = findValueInSettings<double>("Check2STPamplitude", 255);
+    fTPdelay     = findValueInSettings<double>("Check2STPdelay", 0);
 
     // threshold
-    fThreshold = findValueInSettings("Check2Sthreshold", 0);
+    fThreshold = findValueInSettings<double>("Check2Sthreshold", 0);
 
     // initialize latency scan range based on TP settings
-    fStartLatency = findValueInSettings("StartLatency", 0);
-    fLatencyRange = findValueInSettings("LatencyRange", 0);
+    fStartLatency = findValueInSettings<double>("StartLatency", 0);
+    fLatencyRange = findValueInSettings<double>("LatencyRange", 0);
 
-    auto cInjectionType = findValueInSettings("InjectionType", 0);
+    auto cInjectionType = findValueInSettings<double>("InjectionType", 0);
     SetInjectionType(cInjectionType);
 
     // initialize containers

@@ -88,7 +88,6 @@ class SystemController
     FileHandler*                           fFileHandler;
     std::string                            fRawFileName;
     bool                                   fWriteHandlerEnabled;
-    bool                                   fStreamerEnabled;
     bool                                   fDQMStreamerEnabled;
     bool                                   fMonitorDQMStreamerEnabled;
     TCPPublishServer*                      fDQMStreamer;
