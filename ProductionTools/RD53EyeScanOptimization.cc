@@ -88,12 +88,12 @@ void EyeScanOptimization::sendData()
     auto theStreamTAP2scan = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>("TAP2scan");
     auto theStream3Dscan   = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>("TAP3Dscan");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: theTAP0scanContainer) theStreamTAP0scan.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theTAP1scanContainer) theStreamTAP1scan.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theTAP2scanContainer) theStreamTAP2scan.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: the3DContainer) theStream3Dscan.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theTAP0scanContainer) theStreamTAP0scan.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTAP1scanContainer) theStreamTAP1scan.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTAP2scanContainer) theStreamTAP2scan.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: the3DContainer) theStream3Dscan.streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 
