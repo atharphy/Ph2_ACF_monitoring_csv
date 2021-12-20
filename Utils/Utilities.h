@@ -91,7 +91,6 @@ uint32_t convertAnyInt(const char* pRegValue);
 
 double convertAnyDouble(const char* pRegValue);
 
-
 // tokenize string
 void tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters);
 
@@ -118,8 +117,8 @@ void addNoDuplicate(std::vector<T>& vector, const std::vector<T>& vector2add)
 template <std::size_t NBITS>
 uint8_t reverseBits(uint8_t cValue)
 {
-    std::bitset<NBITS> cBitset  = cValue; 
-    std::string    cSelect = cBitset.to_string();
+    std::bitset<NBITS> cBitset = cValue;
+    std::string        cSelect = cBitset.to_string();
     std::reverse(cSelect.begin(), cSelect.end());
     std::bitset<NBITS> cReverseBiset(cSelect);
     std::cout << std::bitset<8>(cValue) << " reversed " << std::bitset<NBITS>(cReverseBiset) << "\n";
