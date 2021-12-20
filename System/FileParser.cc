@@ -1452,7 +1452,7 @@ void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, st
         if(cType == FrontEndType::CBC3)
         {
             pCbc->setReg("TestPulsePotNodeSel", cAmplitude);
-            pCbc->setReg("TestPulseDel&ChanGroup", reverseBits((cChanGroup & 0x07) << 5 | (cDelay & 0x1F)));
+            pCbc->setReg("TestPulseDel&ChanGroup", reverseBits<8>((cChanGroup & 0x07) << 5 | (cDelay & 0x1F)));
             uint8_t cAmuxValue = pCbc->getReg("MiscTestPulseCtrl&AnalogMux");
             pCbc->setReg("MiscTestPulseCtrl&AnalogMux", (((cPolarity & 0x01) << 7) | ((cEnable & 0x01) << 6) | ((cGroundOthers & 0x01) << 5) | (cAmuxValue & 0x1F)));
         }
@@ -1506,7 +1506,7 @@ void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, st
         cStubLogic = convertAnyInt(cMiscNode.attribute("stublogic").value());
         cOr254     = convertAnyInt(cMiscNode.attribute("or254").value());
         cHIPcount  = convertAnyInt(cMiscNode.attribute("hipCount").value());
-        cDll       = reverseBits(static_cast<uint8_t>(convertAnyInt(cMiscNode.attribute("dll").value())) & 0x1F);
+        cDll       = reverseBits<5>(static_cast<uint8_t>(convertAnyInt(cMiscNode.attribute("dll").value())));
         // LOG (DEBUG) << convertAnyInt (cMiscNode.attribute ("dll").value() ) << " " << +cDll << " " << std::bitset<5>
         // (cDll);
         cTpgClock  = convertAnyInt(cMiscNode.attribute("tpgclock").value());
