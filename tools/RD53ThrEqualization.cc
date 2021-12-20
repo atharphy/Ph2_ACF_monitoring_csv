@@ -477,7 +477,7 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
                     this->fReadoutChipInterface->ReadChipAllLocalReg(
                         static_cast<RD53*>(cChip), regName, *midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
 
-    /*
+    
     // ask FAbio what to do here
     // uint16_t numberOfBits = floor(log2(frontEnd->nTDACvalues) + 1);
     // ################################
@@ -573,7 +573,7 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
                                 cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy = 0;
                             }
     }
-    */
+    
 
     // ###################
     // # Reset container #
