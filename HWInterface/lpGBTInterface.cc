@@ -941,7 +941,7 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     // and the e-port Rx
     // so I do not need to pass anything to this function
     // number of bits received per second
-    uint16_t frontendSpeed = GetRxDataRate(pChip, pGroup);
+    uint16_t       frontendSpeed   = GetRxDataRate(pChip, pGroup);
     const double   mainClock       = 40e6;                             // @CONST@
     const uint32_t nBitInClkPeriod = 32. * std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
     const double   fps             = 1.28e9 / nBitInClkPeriod;         // Frames per second
@@ -1011,7 +1011,6 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
 
     return nErrors / frames2run;
 }
-
 
 void lpGBTInterface::StartPRBSpattern(Chip* pChip)
 {
