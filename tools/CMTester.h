@@ -12,11 +12,13 @@
 #define CMTESTER_H__
 
 #include "Tool.h"
-#ifdef __USE_ROOT__
+
 
 #include "../Utils/CommonVisitors.h"
 
 // ROOT
+
+#ifdef __USE_ROOT__
 #include "TCanvas.h"
 #include "TDirectoryFile.h"
 #include "TF1.h"
@@ -28,15 +30,18 @@
 #include "TProfile.h"
 #include "TProfile2D.h"
 #include "TString.h"
+#include "../DQMUtils/DQMHistogramOTCommonNoise.h"
+#endif
+
 #include <math.h>
 
 #include "CMFits.h"
 
 using namespace Ph2_System;
 
-typedef std::map<Ph2_HwDescription::Chip*, std::map<std::string, TObject*>> CbcHistogramMap;
+//typedef std::map<Ph2_HwDescription::Chip*, std::map<std::string, TObject*>> CbcHistogramMap;
 // typedef std::map<Chip*, TCanvas*> CanvasMap;
-typedef std::map<Ph2_HwDescription::Hybrid*, std::map<std::string, TObject*>> HybridHistogramMap;
+//typedef std::map<Ph2_HwDescription::Hybrid*, std::map<std::string, TObject*>> HybridHistogramMap;
 
 /*!
  * \class CMTester
@@ -61,13 +66,20 @@ class CMTester : public Tool
     bool randHit(float pProbability);
     bool isMasked(Ph2_HwDescription::ReadoutChip* pCbc, int pChan);
     bool isMasked(int pGlobalChannel);
+    float getLambda(ChipContainer *theCbc);
 
     uint32_t            fNevents, fDoSimulate, fSimOccupancy;
     std::vector<double> fTotalNoise;
     uint32_t            fVcth;
 
     std::map<ChipContainer*, std::set<int>> fNoiseStripMap;
+    std::map<ChipContainer*, float> averageMap;
+    std::map<ChipContainer*, float> squareAverageMap;
+
+
+#ifdef __USE_ROOT__
+    DQMHistogramOTCommonNoise fDQMHistogramOTCommonNoise;
+#endif
 };
 
-#endif
 #endif

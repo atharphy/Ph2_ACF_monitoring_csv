@@ -1,8 +1,6 @@
-
 #include "CMTester.h"
-#ifdef __USE_ROOT__
-
-// This has no bad-strip masking and does not take a reduced number of active strips into account yet!
+#include "../Utils/ContainerFactory.h"
+#include "../Utils/GenericDataArray.h"
 
 // PUBLIC METHODS
 CMTester::CMTester() : Tool() {}
@@ -10,219 +8,21 @@ CMTester::CMTester() : Tool() {}
 CMTester::~CMTester() {}
 
 void CMTester::Initialize()
-{
-    // gStyle->SetOptStat( 000000 );
-    // gStyle->SetTitleOffset( 1.3, "Y" );
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                uint32_t cHybridId = cHybrid->getId();
+{    
+    parseSettings();
+    
+    fNevents = 6000; //TODO should come from settings file
 
-                for(auto cCbc: *cHybrid)
-                {
-                    uint32_t cCbcId = cCbc->getId();
-
-                    // Fill Canvas Map
-                    TCanvas* ctmpCanvas = new TCanvas(Form("c_online_canvas_fe%d_cbc%d", cHybridId, cCbcId), Form("FE%d CBC%d Online Canvas", cHybridId, cCbcId), 800, 800);
-                    ctmpCanvas->Divide(2, 2);
-                    fCanvasMap[cCbc] = ctmpCanvas;
-
-                    // here create an empty std::set<int> for noisy strips
-                    std::set<int> cTmpSet;
-                    fNoiseStripMap[cCbc] = cTmpSet;
-
-                    // here create the CBC-wise histos
-
-                    // histogram for the number of hits
-                    TString  cName = Form("h_nhits_Fe%dCbc%d", cHybridId, cCbcId);
-                    TObject* cObj  = gROOT->FindObject(cName);
-
-                    if(cObj) delete cObj;
-
-                    TH1F* cHist = new TH1F(cName, Form("Number of Hits FE%d CBC%d; Hits; Count", cHybridId, cCbcId), NCHANNELS + 1, -.5, NCHANNELS + 0.5);
-                    cHist->SetLineColor(9);
-                    cHist->SetLineWidth(2);
-                    bookHistogram(cCbc, "nhits", cHist);
-
-                    // 2D profile for the combined odccupancy
-                    cName = Form("p_combinedoccupancy_Fe%dCbc%d", cHybridId, cCbcId);
-                    cObj  = (TProfile2D*)gROOT->FindObject(cName);
-
-                    if(cObj) delete cObj;
-
-                    //  no clue why i can not call it cName but when I do, it produces a segfault!!
-                    TProfile2D* c2DOccProfile = new TProfile2D(
-                        cName, Form("Combined Occupancy FE%d CBC%d; Strip; Strip; Occupancy", cHybridId, cCbcId), NCHANNELS + 1, -0.5, NCHANNELS + 0.5, NCHANNELS + 1, -0.5, NCHANNELS + 0.5);
-
-                    c2DOccProfile->SetMarkerColor(1);
-                    bookHistogram(cCbc, "combinedoccupancy", c2DOccProfile);
-
-                    // 2D Profile for correlation coefficient
-                    cName = Form("p_correlation_Fe%dCbc%d", cHybridId, cCbcId);
-                    cObj  = gROOT->FindObject(cName);
-
-                    if(cObj) delete cObj;
-
-                    TH2F* c2DHist = new TH2F(
-                        cName, Form("Correlation FE%d CBC%d; Strip; Strip; Correlation coefficient", cHybridId, cCbcId), NCHANNELS + 1, -.5, NCHANNELS + 0.5, NCHANNELS + 1, -.5, NCHANNELS + 0.5);
-                    bookHistogram(cCbc, "correlation", c2DHist);
-
-                    // 1D projection of the combined odccupancy
-                    cName = Form("p_occupancyprojection_Fe%dCbc%d", cHybridId, cCbcId);
-                    cObj  = gROOT->FindObject(cName);
-
-                    if(cObj) delete cObj;
-
-                    TProfile* cProfile = new TProfile(cName, Form("Projection of combined Occupancy FE%d CBC%d;  NNeighbors; Probability", cHybridId, cCbcId), NCHANNELS + 1, -.5, NCHANNELS + 0.5);
-                    cProfile->SetLineColor(9);
-                    cProfile->SetLineWidth(2);
-                    bookHistogram(cCbc, "occupancyprojection", cProfile);
-
-                    // 1D projection of the combined occupancy, but nearest neighbor calculated on both sides
-                    cName = Form("p_occupancyprojectionsymmetric_Fe%dCbc%d", cHybridId, cCbcId);
-                    cObj  = gROOT->FindObject(cName);
-
-                    if(cObj) delete cObj;
-
-                    cProfile =
-                        new TProfile(cName, Form("Projection of combined Occupancy (+ and -) FE%d CBC%d;  NNeighbors (+-N); Probability", cHybridId, cCbcId), NCHANNELS + 1, -.5, NCHANNELS + 0.5);
-                    cProfile->SetLineColor(9);
-                    cProfile->SetLineWidth(2);
-                    bookHistogram(cCbc, "occupancyprojectionplusminus", cProfile);
-
-                    // 1D projection of the uncorrelated odccupancy
-                    cName = Form("p_uncorr_occupancyprojection_Fe%dCbc%d", cHybridId, cCbcId);
-                    cObj  = gROOT->FindObject(cName);
-
-                    if(cObj) delete cObj;
-
-                    cProfile = new TProfile(cName, Form("Projection of uncorrelated Occupancy FE%d CBC%d;  NNeighbors; Probability", cHybridId, cCbcId), NCHANNELS + 1, -.5, NCHANNELS + 0.5);
-                    cProfile->SetLineColor(2);
-                    cProfile->SetLineWidth(2);
-                    bookHistogram(cCbc, "uncorr_occupancyprojection", cProfile);
-
-                    // 1D projection of the correlation
-                    cName = Form("p_correlationprojection_Fe%dCbc%d", cHybridId, cCbcId);
-                    cObj  = gROOT->FindObject(cName);
-
-                    if(cObj) delete cObj;
-
-                    cProfile = new TProfile(cName, Form("Projection of Correlation FE%d CBC%d;  NNeighbors; Correlation", cHybridId, cCbcId), NCHANNELS + 1, -.5, NCHANNELS + 0.5);
-                    cProfile->SetLineColor(9);
-                    cProfile->SetLineWidth(2);
-                    bookHistogram(cCbc, "correlationprojection", cProfile);
-
-                    // 1D hit probability profile
-                    cName = Form("p_hitprob_Fe%dCbc%d", cHybridId, cCbcId);
-                    cObj  = gROOT->FindObject(cName);
-
-                    if(cObj) delete cObj;
-
-                    cProfile = new TProfile(cName, Form("Hit Probability FE%d CBC%d;  Strip; Probability", cHybridId, cCbcId), NCHANNELS + 1, -.5, NCHANNELS + 0.5);
-                    cProfile->SetLineColor(9);
-                    cProfile->SetLineWidth(2);
-                    bookHistogram(cCbc, "hitprob", cProfile);
-
-                    // dummy TF1* for fit & dummy TH1F* for 0CM
-                    cName = Form("f_nhitsfit_Fe%dCbc%d", cHybridId, cCbcId);
-                    cObj  = gROOT->FindObject(cName);
-
-                    if(cObj) delete cObj;
-
-                    TF1* cCmFit = new TF1(cName, hitProbFunction, 0, 255, 4);
-                    bookHistogram(cCbc, "nhitsfit", cCmFit);
-
-                    cName = Form("h_nocm_Fe%dCbc%d", cHybridId, cCbcId);
-                    cObj  = gROOT->FindObject(cName);
-
-                    if(cObj) delete cObj;
-
-                    TH1F* cNoCM = new TH1F(cName, "Noise hit distributtion", NCHANNELS + 1, -0.5, NCHANNELS + 0.5);
-                    cNoCM->SetLineColor(16);
-                    bookHistogram(cCbc, "nocm", cNoCM);
-                }
-
-                // PER Hybrid PLOTS
-                uint32_t cNCbc = cHybrid->size();
-
-                // 2D profile for the combined odccupancy
-                TString  cName = Form("p_hybrid_combinedoccupancy_Fe%d", cHybridId);
-                TObject* cObj  = gROOT->FindObject(cName);
-
-                if(cObj) delete cObj;
-
-                TProfile2D* c2DProfile = new TProfile2D(cName,
-                                                        Form("Combined Occupancy FE%d; Strip; Strip; Occupancy", cHybridId),
-                                                        cNCbc * NCHANNELS + 1,
-                                                        -.5,
-                                                        cNCbc * NCHANNELS + 0.5,
-                                                        cNCbc * NCHANNELS + 1,
-                                                        -.5,
-                                                        cNCbc * NCHANNELS + 0.5);
-                bookHistogram(cHybrid, "hybrid_combinedoccupancy", c2DProfile);
-
-                // 2D Hist for correlation coefficient
-                cName = Form("p_hybrid_correlation_Fe%d", cHybridId);
-                cObj  = gROOT->FindObject(cName);
-
-                if(cObj) delete cObj;
-
-                TH2F* c2DHist = new TH2F(cName,
-                                         Form("Correlation FE%d; Strip; Strip; Correlation coefficient", cHybridId),
-                                         cNCbc * NCHANNELS + 1,
-                                         -.5,
-                                         cNCbc * NCHANNELS + 0.5,
-                                         cNCbc * NCHANNELS + 1,
-                                         -.5,
-                                         cNCbc * NCHANNELS + 0.5);
-                bookHistogram(cHybrid, "hybrid_correlation", c2DHist);
-
-                // 1D projection of the combined odccupancy
-                cName = Form("p_hybrid_occupancyprojection_Fe%d", cHybridId);
-                cObj  = gROOT->FindObject(cName);
-
-                if(cObj) delete cObj;
-
-                TProfile* cProfile = new TProfile(cName, Form("Projection of combined Occupancy FE%d;  NNeighbors; Probability", cHybridId), cNCbc * NCHANNELS + 1, -.5, cNCbc * NCHANNELS + 0.5);
-                cProfile->SetLineColor(9);
-                cProfile->SetLineWidth(2);
-                bookHistogram(cHybrid, "hybrid_occupancyprojection", cProfile);
-
-                // 1D projection of the uncorrelated occupancy
-                cName = Form("p_hybrid_uncorr_occupancyprojection_Fe%d", cHybridId);
-                cObj  = gROOT->FindObject(cName);
-
-                if(cObj) delete cObj;
-
-                cProfile = new TProfile(cName, Form("Projection of uncorrelated Occupancy FE%d;  NNeighbors; Probability", cHybridId), cNCbc * NCHANNELS + 1, -.5, cNCbc * NCHANNELS + 0.5);
-                cProfile->SetLineColor(2);
-                cProfile->SetLineWidth(2);
-                bookHistogram(cHybrid, "hybrid_uncorr_occupancyprojection", cProfile);
-
-                // 1D projection of the correlation
-                cName = Form("p_hybrid_correlationprojection_Fe%d", cHybridId);
-                cObj  = gROOT->FindObject(cName);
-
-                if(cObj) delete cObj;
-
-                cProfile = new TProfile(cName, Form("Projection of Correlation FE%d;  NNeighbors; Correlation", cHybridId), cNCbc * NCHANNELS + 1, -.5, cNCbc * NCHANNELS + 0.5);
-                cProfile->SetLineColor(9);
-                cProfile->SetLineWidth(2);
-                bookHistogram(cHybrid, "hybrid_correlationprojection", cProfile);
-            }
-        }
-    }
-
-    // initializeHists();
+#ifdef __USE_ROOT__
+    fDQMHistogramOTCommonNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
 
     LOG(INFO) << "Histograms and Settings initialised.";
 }
 
 void CMTester::ScanNoiseChannels()
 {
+    /*
     LOG(INFO) << "Scanning for noisy channels! ";
     uint32_t cTotalEvents = 500;
 
@@ -307,71 +107,99 @@ void CMTester::ScanNoiseChannels()
 
         cNoiseStrips->Reset();
     }
+    */
 }
 
 void CMTester::TakeData()
 {
-    std::stringstream outp;
-    parseSettings();
-
     ThresholdVisitor cVisitor(fReadoutChipInterface);
     this->accept(cVisitor);
     fVcth = cVisitor.getThreshold();
     LOG(INFO) << "Checking threshold on latest CBC that was touched...: " << fVcth << std::endl;
 
-    //    cVisitor.setOption ('w');
-    //    cVisitor.setThreshold (595);
-    //    cVcth = cVisitor.getThreshold();
-    //    std::cout<<"Now my threshold is: "<<cVcth<<std::endl;
+    DetectorDataContainer theHitContainer;
+    //channel, chip, hybrid, optical group, board, detector
+    //can have 0 or 255 hits, need NCHANNELS+1 (inclusive)
+    ContainerFactory::copyAndInitStructure<EmptyContainer, GenericDataArray<(NCHANNELS+1), uint32_t>, GenericDataArray<((NCHANNELS+1)*NCHIPS_OT), uint32_t>, EmptyContainer, EmptyContainer, EmptyContainer>(*fDetectorContainer, theHitContainer);
 
-    // CbcRegReader cReader ( fReadoutChipInterface, "VCth" );
-    // accept( cReader );
+    //LESYA TODO
+    //currently missing the channel by channel data per event, need to think about how to implement this to make the 2D plot.
 
-    for(auto pBoard: *fDetectorContainer)
+    for(auto cBoard: theHitContainer)
     {
-        BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
+        //BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
+        BeBoard* theBoard = static_cast<BeBoard*>(fDetectorContainer->at(cBoard->getIndex()));
 
         uint32_t cN      = 0;
-        uint32_t cNthAcq = 0;
 
         fBeBoardInterface->Start(theBoard);
-        // while ( cN <=  fNevents )
-        //{
-        // Run( theBoard, cNthAcq );
-        // ReadData (theBoard);
         ReadNEvents(theBoard, fNevents);
         const std::vector<Event*>& events = GetEvents();
 
-        // Loop over Events from this Acquisition
-
         for(auto& cEvent: events)
         {
-            // LOG (INFO) << cN << " "<< *cEvent;
 
             if(cN > fNevents) continue; // Needed when using ReadData on CBC3
 
-            analyze(theBoard, cEvent);
+            for(auto cOpticalGroup: *cBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    uint32_t cHybridHits = 0;
+                    for(auto cCbc: *cHybrid)
+                    {
+                        uint32_t cEventHits = cEvent->GetNHits(cHybrid->getId(), cCbc->getId());
 
+                        //basically filling the histogram, then we will set bin content later
+                        cCbc->getSummary<GenericDataArray<(NCHANNELS+1), uint32_t>>()[cEventHits] += 1;
+                        cHybridHits += cEventHits;
+
+                    }
+                    //save per hybrid
+                   cHybrid->getSummary<GenericDataArray<((NCHANNELS+1)*NCHIPS_OT), uint32_t>>()[cHybridHits] = cHybridHits; 
+                }
+            }
+            
+            //print out event counter
             if(cN % 100 == 0)
             {
                 LOG(INFO) << cN << " Events recorded!";
-                updateHists();
+                // updateHists();
             }
-
             cN++;
+
         }
-
-        cNthAcq++;
-        //} // End of Analyze Events of last Acquistion loop
-
-        // fBeBoardInterface->Stop ( pBoard );
     }
+#ifdef __USE_ROOT__
+    fDQMHistogramOTCommonNoise.fillHitPlots(theHitContainer);
+#else
+    auto theHitStream = prepareHybridContainerStreamer<EmptyContainer, GenericDataArray<(NCHANNELS+1), uint32_t>, GenericDataArray<((NCHANNELS+1)*NCHIPS_OT), uint32_t>>("CMNoise_HitStream");
+    for(auto board: theHitContainer)
+    {
+        if(fStreamerEnabled) theHitStream.streamAndSendBoard(board, fNetworkStreamer);
+    }
+#endif
 
-    updateHists();
 }
+
+float CMTester::getLambda(ChipContainer *theCbc)
+{
+
+    float average  = averageMap[theCbc]/fNevents;
+    float variance = squareAverageMap[theCbc]/fNevents - (average*average);
+
+    float sinAlfa = sin(2*M_PI * (variance - average*(1-(average/NCHANNELS)))/(NCHANNELS*(NCHANNELS-1)));
+
+    float lambda = sqrt(sinAlfa/(1-sinAlfa));
+
+    return lambda;
+}
+
 
 void CMTester::FinishRun()
 {
+    /*
+    
     //  Iterate through maps, pick histogram that I need and the other one
     LOG(INFO) << "Fitting and computing aditional histograms ... ";
     // first CBCs
@@ -398,6 +226,7 @@ void CMTester::FinishRun()
 
         float CMnoiseFrac    = fabs(cNHitsFit->GetParameter(1));
         float CMnoiseFracErr = fabs(cNHitsFit->GetParError(1));
+
         if(fTotalNoise[iCbc] > 0)
             LOG(INFO) << BOLDRED << "Average noise on FE " << +static_cast<ReadoutChip*>(cCbc.first)->getHybridId() << " CBC " << +cCbc.first->getId() << " : " << fTotalNoise[iCbc] << " . At Vcth "
                       << cVcth << " CM is " << CMnoiseFrac << "+/-" << CMnoiseFracErr << "%, so " << CMnoiseFrac * fTotalNoise[iCbc] << " VCth." << RESET;
@@ -405,6 +234,7 @@ void CMTester::FinishRun()
             LOG(INFO) << BOLDRED << "FE " << +static_cast<ReadoutChip*>(cCbc.first)->getHybridId() << " CBC " << +cCbc.first->getId() << " . At Vcth " << cVcth << " CM is " << CMnoiseFrac << "+/-"
                       << CMnoiseFracErr << "%" << RESET;
 
+         LOG(INFO) << BOLDBLUE << "Lambda = " << getLambda(cCbc.first) << RESET;
         // now compute the correlation coefficient and the uncorrelated probability
         TProfile2D* cTmpOccProfile  = dynamic_cast<TProfile2D*>(getHist(cCbc.first, "combinedoccupancy"));
         TProfile*   cUncorrHitProb  = dynamic_cast<TProfile*>(getHist(cCbc.first, "uncorr_occupancyprojection"));
@@ -473,6 +303,7 @@ void CMTester::FinishRun()
     LOG(INFO) << " done!";
     // Not drawing anything yet
     updateHists(true);
+    */
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -482,6 +313,7 @@ void CMTester::FinishRun()
 
 void CMTester::analyze(BeBoard* pBoard, const Event* pEvent)
 {
+    /*
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)
@@ -490,16 +322,22 @@ void CMTester::analyze(BeBoard* pBoard, const Event* pEvent)
 
             for(auto cCbc: *cHybrid)
             {
+
+                TH1F*       cTmpNHits         = dynamic_cast<TH1F*>(getHist(cCbc, "nhits"));
+                int cEventHits = pEvent->GetNHits(cHybrid->getId(), cCbc->getId());
+                cTmpNHits->Fill(cEventHits);
+                averageMap      [cCbc] += cEventHits;
+                squareAverageMap[cCbc] += cEventHits*cEventHits;
+                continue;
+
                 // here loop over the channels and fill the histograms
                 // dont forget to get them first
-                TH1F*       cTmpNHits         = dynamic_cast<TH1F*>(getHist(cCbc, "nhits"));
                 TProfile*   cTmpHitProb       = dynamic_cast<TProfile*>(getHist(cCbc, "hitprob"));
                 TProfile2D* cTmpOccProfile    = dynamic_cast<TProfile2D*>(getHist(cCbc, "combinedoccupancy"));
                 TProfile*   cTmpCombinedOcc   = dynamic_cast<TProfile*>(getHist(cCbc, "occupancyprojection"));
                 TProfile*   cTmpCombinedOccPM = dynamic_cast<TProfile*>(getHist(cCbc, "occupancyprojectionplusminus"));
 
                 int cNHits     = 0;
-                int cEventHits = pEvent->GetNHits(cHybrid->getId(), cCbc->getId());
 
                 if(cEventHits > 250) LOG(INFO) << " Found an event with " << cEventHits << " hits on a CBC! Is this expected?";
 
@@ -564,7 +402,11 @@ void CMTester::analyze(BeBoard* pBoard, const Event* pEvent)
 
                 // Fill NHits Histogram
                 cTmpNHits->Fill(cNHits);
+                averageMap      [cCbc] += cNHits;
+                squareAverageMap[cCbc] += cNHits*cNHits;
+
             }
+            continue;
 
             // Here deal with per-hybrid Histograms
             TProfile2D* cTmpOccProfile  = dynamic_cast<TProfile2D*>(getHist(cHybrid, "hybrid_combinedoccupancy"));
@@ -597,10 +439,14 @@ void CMTester::analyze(BeBoard* pBoard, const Event* pEvent)
             }
         }
     }
+    */
+
 }
+
 
 void CMTester::updateHists(bool pFinal)
 {
+    /*
     // method to iterate over the histograms that I want to draw and update the canvases
     int iCbc = 0;
     for(auto& cCbc: fChipHistMap)
@@ -678,6 +524,7 @@ void CMTester::updateHists(bool pFinal)
     }
 
     this->HttpServerProcess();
+    */
 }
 
 bool CMTester::randHit(float pProbability)
@@ -786,4 +633,3 @@ void CMTester::parseSettings()
     LOG(INFO) << "	sim. Occupancy (%) = " << int(fSimOccupancy);
 }
 
-#endif

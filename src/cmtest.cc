@@ -9,10 +9,17 @@
 #include "../tools/PedestalEqualization.h"
 #include <cstring>
 
+#include "tools/BackEndAlignment.h"
+#include "tools/StubBackEndAlignment.h"
+#include "tools/CicFEAlignment.h"
+
 #include "../Utils/argvparser.h"
 #include <TApplication.h>
 //#include "../Utils/easylogging++.h"
+#ifdef __USE_ROOT__
+#include "TApplication.h"
 #include "TROOT.h"
+#endif
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -97,6 +104,35 @@ int main(int argc, char* argv[])
     cTool.StartHttpServer();
     cTool.ConfigureHw();
 
+
+    // Align lpGBT-CIC first
+    CicFEAlignment cCicAligner;
+    cCicAligner.Inherit(&cTool);
+    cCicAligner.Initialise();
+    cCicAligner.CicLpGbtAlignment();
+
+
+    // align back-end
+    BackEndAlignment cBackEndAligner;
+    cBackEndAligner.Inherit(&cTool);
+    cBackEndAligner.Start(0);
+    cBackEndAligner.waitForRunToBeCompleted();
+    
+    // if CIC is enabled then align CIC first
+    if(true) 
+    {
+       // cCicAligner.AlignInputs();
+    }
+    cCicAligner.Reset();
+    cCicAligner.dumpConfigFiles();
+    
+    // time align stubs in back-end 
+    StubBackEndAlignment cStubBackEndAligner;
+    cStubBackEndAligner.Inherit(&cTool);
+    cStubBackEndAligner.Initialise();
+    cStubBackEndAligner.Reset();
+
+
     if(cCalibrate) // Calibrate Voffset
     {
         // Find offsets
@@ -114,7 +150,7 @@ int main(int argc, char* argv[])
     PedeNoise cPedeNoise;
     cPedeNoise.Inherit(&cTool);
     cPedeNoise.Initialise(true); // true = all channels (as opposed to test groups)
-    cPedeNoise.measureNoise();
+    // cPedeNoise.measureNoise();
     // cPedeNoise.Validate(); // This masks noisy channels, already done optionally by CMTester ScanNoiseChannels
     cPedeNoise.writeObjects();
 
@@ -132,8 +168,11 @@ int main(int argc, char* argv[])
 
         if(cManualVcth == 0)
         {
+            cPedestal = cVisitor.getThreshold();
+            LOG(INFO) << "threshold is " << cVisitor.getThreshold();  
             ReadoutChip* theCbc = static_cast<ReadoutChip*>(cCbc);
-            cVisitor.setThreshold(cPedestal + cPedestalShift);
+            cTool.setSameDac("VCth", cPedestal);
+            //cVisitor.setThreshold(cPedestal + cPedestalShift);
             cVisitor.visitReadoutChip(*theCbc); // Visit a specific CBC
             theCbc->accept(cVisitor);           // Should probably make a special Visitor to set a vector of Vcth's
             LOG(INFO) << BOLDRED << "CBC" << i << ": set threshold to pedestal (" << cPedestal << ") plus " << cPedestalShift << ": " << cPedestal + cPedestalShift << RESET;
@@ -147,8 +186,6 @@ int main(int argc, char* argv[])
 
         i++;
     }
-
-#ifdef __USE_ROOT__
 
     // Runs on 10*Nevents
     CMTester cTester;
@@ -164,9 +201,8 @@ int main(int argc, char* argv[])
     cTester.SaveResults();
     cTester.CloseResultFile();
     cTester.Destroy();
-#endif
 
     if(!batchMode) cApp.Run();
 
-    return 0;
+    return EXIT_SUCCESS;
 }
