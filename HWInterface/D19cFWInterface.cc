@@ -6228,8 +6228,8 @@ bool D19cFWInterface::localWriteFERegister(Ph2_HwDescription::Chip* pChip, uint1
         cNbytes    = 2;
         cSlaveData = (pRegisterValue << 8) | (pRegisterAddress & 0xFF);
     }
-    theI2CWriteCount=0;
-    bool cSuccess = I2CWrite(cLinkId, cMasterId, cChipAddress, cSlaveData, cNbytes, theI2CWriteCount);
+    theI2CWriteCount = 0;
+    bool cSuccess    = I2CWrite(cLinkId, cMasterId, cChipAddress, cSlaveData, cNbytes, theI2CWriteCount);
     pChip->updateWriteCount(theI2CWriteCount);
     if(theI2CWriteCount != 1)
     {
