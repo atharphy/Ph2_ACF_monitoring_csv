@@ -33,7 +33,7 @@ class BackEndAlignment : public LinkAlignmentOT
     bool Bx0Alignment(Ph2_HwDescription::BeBoard* pBoard);
     bool CICAlignment(Ph2_HwDescription::BeBoard* pBoard);
     bool CBCAlignment(Ph2_HwDescription::BeBoard* pBoard);
-    bool PSAlignment(Ph2_HwDescription::BeBoard* pBoard);
+    bool PSAlignment(Ph2_HwDescription::BeBoard* pBoard, uint8_t pSSApair = 1);
     void Running() override;
     void Stop() override;
     void Pause() override;
@@ -44,8 +44,9 @@ class BackEndAlignment : public LinkAlignmentOT
     bool getStatus() const { return fSuccess; }
 
   protected:
-    bool fL1Debug   = false;
-    bool fStubDebug = false;
+    bool    fL1Debug   = false;
+    bool    fStubDebug = false;
+    uint8_t fPairSelect{0};
 
   private:
     //

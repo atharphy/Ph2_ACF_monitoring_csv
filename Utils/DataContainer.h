@@ -13,6 +13,7 @@
 #define __DATA_CONTAINER_H__
 
 #include "../Utils/ChannelGroupHandler.h"
+#include "../Utils/ConsoleColor.h"
 #include "../Utils/Container.h"
 #include "../Utils/EmptyContainer.h"
 #include "../Utils/easylogging++.h"
@@ -170,7 +171,11 @@ class Summary : public SummaryBase
   public:
     Summary() { ; }
     Summary(const S& theSummary) { theSummary_ = theSummary; }
-    Summary(S&& theSummary) { theSummary_ = std::move(theSummary); }
+    Summary(S&& theSummary)
+    {
+        theSummary_            = std::move(theSummary);
+        theSummary.theSummary_ = nullptr;
+    }
     Summary& operator=(S&& theSummary) { theSummary_ = std::move(theSummary); }
     Summary(const Summary<S, C>& summary) { theSummary_ = summary.theSummary_; }
 
@@ -292,6 +297,7 @@ class BaseDataContainer
     }
 
     SummaryBase* summary_;
+    bool         isNormalized{false};
 };
 
 template <class T>
@@ -322,11 +328,13 @@ class DataContainer
     void resetSummary()
     {
         if(!std::is_same<S, EmptyContainer>::value) static_cast<Summary<S, V>*>(summary_)->theSummary_ = S();
+        isNormalized = false;
     }
     template <typename S, typename V>
     void resetSummary(S& theSummary)
     {
         if(!std::is_same<S, EmptyContainer>::value) static_cast<Summary<S, V>*>(summary_)->theSummary_ = theSummary;
+        isNormalized = false;
     }
 
     SummaryContainerBase* getAllObjectSummaryContainers() const
@@ -346,12 +354,16 @@ class DataContainer
             uint32_t numberOfContainerEnabledChannels = 0;
             if(container != nullptr)
                 numberOfContainerEnabledChannels = container->normalizeAndAverageContainers(
-                    theContainer->getElement(index++), static_cast<const DataContainer<T>*>(theChannelGroupContainer)->getObject(this->getId()), numberOfEvents);
+                    theContainer->getElement(index++), static_cast<const DataContainer<T>*>(theChannelGroupContainer)->getObject(container->getId()), numberOfEvents);
             theNumberOfEnabledChannelsList.emplace_back(numberOfContainerEnabledChannels);
             numberOfEnabledChannels_ += numberOfContainerEnabledChannels;
         }
-        if(summary_ != nullptr) summary_->makeSummaryOfSummary(getAllObjectSummaryContainers(), theNumberOfEnabledChannelsList,
-                                                               numberOfEvents); // sum of chip container needed!!!
+        if(!isNormalized)
+        {
+            isNormalized = true;
+            if(summary_ != nullptr) summary_->makeSummaryOfSummary(getAllObjectSummaryContainers(), theNumberOfEnabledChannelsList,
+                                                                   numberOfEvents); // sum of chip container needed!!!
+        }
         return numberOfEnabledChannels_;
     }
 
@@ -433,11 +445,13 @@ class ChipDataContainer
     void resetSummary()
     {
         if(!std::is_same<S, EmptyContainer>::value) static_cast<Summary<S, V>*>(summary_)->theSummary_ = S();
+        isNormalized = false;
     }
     template <typename S, typename V>
     void resetSummary(S& theSummary)
     {
         if(!std::is_same<S, EmptyContainer>::value) static_cast<Summary<S, V>*>(summary_)->theSummary_ = theSummary;
+        isNormalized = false;
     }
 
     template <typename V>
@@ -445,12 +459,14 @@ class ChipDataContainer
     {
         if(!std::is_same<V, EmptyContainer>::value)
             for(auto& channel: *this->getChannelContainer<V>()) channel = V();
+        isNormalized = false;
     }
     template <typename V>
     void resetChannels(V& initialValue)
     {
         if(!std::is_same<V, EmptyContainer>::value)
             for(auto& channel: *this->getChannelContainer<V>()) channel = initialValue;
+        isNormalized = false;
     }
 
     uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const BaseDataContainer* theChannelGroupContainer, const uint32_t numberOfEvents)
@@ -459,12 +475,16 @@ class ChipDataContainer
         //     << " # of enabled channels " << cTestChannelGroup->getNumberOfEnabledChannels(static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask())
         //     << " # of events " << numberOfEvents
         //     << "\n";
-        if(container_ != nullptr) container_->normalize(numberOfEvents);
-        if(summary_ != nullptr)
-            summary_->makeSummaryOfChannels(this,
-                                            static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask(),
-                                            theChannelGroupContainer->getSummary<std::shared_ptr<ChannelGroupHandler>>()->allChannelGroup(),
-                                            numberOfEvents);
+        if(!isNormalized)
+        {
+            isNormalized = true;
+            if(container_ != nullptr) container_->normalize(numberOfEvents);
+            if(summary_ != nullptr)
+                summary_->makeSummaryOfChannels(this,
+                                                static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask(),
+                                                theChannelGroupContainer->getSummary<std::shared_ptr<ChannelGroupHandler>>()->allChannelGroup(),
+                                                numberOfEvents);
+        }
         return theChannelGroupContainer->getSummary<std::shared_ptr<ChannelGroupHandler>>()->allChannelGroup()->getNumberOfEnabledChannels(
             static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask());
     }
@@ -489,7 +509,18 @@ class HybridDataContainer : public DataContainer<ChipDataContainer>
     {
         return static_cast<T*>(DataContainer<ChipDataContainer>::addObject(id, chip));
     }
-    ChipDataContainer* addChipDataContainer(uint16_t id, uint16_t row, uint16_t col = 1) { return DataContainer<ChipDataContainer>::addObject(id, new ChipDataContainer(id, row, col)); }
+    ChipDataContainer* addChipDataContainer(uint16_t id, uint16_t row, uint16_t col = 1)
+    {
+        try
+        {
+            DataContainer<ChipDataContainer>::getObject(id);
+        }
+        catch(std::exception& ex)
+        {
+            return DataContainer<ChipDataContainer>::addObject(id, new ChipDataContainer(id, row, col));
+        }
+        return DataContainer<ChipDataContainer>::getObject(id);
+    }
 
   private:
 };
@@ -506,7 +537,19 @@ class OpticalGroupDataContainer : public DataContainer<HybridDataContainer>
     {
         return static_cast<T*>(DataContainer<HybridDataContainer>::addObject(id, hybrid));
     }
-    HybridDataContainer* addHybridDataContainer(uint16_t id) { return DataContainer<HybridDataContainer>::addObject(id, new HybridDataContainer(id)); }
+    HybridDataContainer* addHybridDataContainer(uint16_t id)
+    {
+        try
+        {
+            DataContainer<HybridDataContainer>::getObject(id);
+        }
+        catch(std::exception& ex)
+        {
+            return DataContainer<HybridDataContainer>::addObject(id, new HybridDataContainer(id));
+        }
+        LOG(WARNING) << BOLDRED << "Object Id alreay present: " << id << RESET;
+        return DataContainer<HybridDataContainer>::getObject(id);
+    }
 
   private:
 };
@@ -523,7 +566,19 @@ class BoardDataContainer : public DataContainer<OpticalGroupDataContainer>
     {
         return static_cast<T*>(DataContainer<OpticalGroupDataContainer>::addObject(id, opticalGroup));
     }
-    OpticalGroupDataContainer* addOpticalGroupDataContainer(uint16_t id) { return DataContainer<OpticalGroupDataContainer>::addObject(id, new OpticalGroupDataContainer(id)); }
+    OpticalGroupDataContainer* addOpticalGroupDataContainer(uint16_t id)
+    {
+        try
+        {
+            DataContainer<OpticalGroupDataContainer>::getObject(id);
+        }
+        catch(std::exception& ex)
+        {
+            return DataContainer<OpticalGroupDataContainer>::addObject(id, new OpticalGroupDataContainer(id));
+        }
+        LOG(WARNING) << BOLDRED << "Object Id alreay present: " << id << RESET;
+        return DataContainer<OpticalGroupDataContainer>::getObject(id);
+    }
 
   private:
 };
@@ -541,7 +596,19 @@ class DetectorDataContainer : public DataContainer<BoardDataContainer>
     {
         return static_cast<T*>(DataContainer<BoardDataContainer>::addObject(id, board));
     }
-    BoardDataContainer* addBoardDataContainer(uint16_t id) { return DataContainer<BoardDataContainer>::addObject(id, new BoardDataContainer(id)); }
+    BoardDataContainer* addBoardDataContainer(uint16_t id)
+    {
+        try
+        {
+            DataContainer<BoardDataContainer>::getObject(id);
+        }
+        catch(std::exception& ex)
+        {
+            return DataContainer<BoardDataContainer>::addObject(id, new BoardDataContainer(id));
+        }
+        LOG(WARNING) << BOLDRED << "Object Id alreay present: " << id << RESET;
+        return DataContainer<BoardDataContainer>::getObject(id);
+    }
 
   private:
 };

@@ -49,10 +49,10 @@ void LatencyScan::Initialize()
 
     initializeRecycleBin();
 
-    fStartLatency = findValueInSettings("StartLatency", 1);
-    fLatencyRange = findValueInSettings("LatencyRange", 1);
-    fHoleMode     = findValueInSettings("HoleMode", 1);
-    fNevents      = findValueInSettings("Nevents", 10);
+    fStartLatency = findValueInSettings<uint16_t>("StartLatency", 1);
+    fLatencyRange = findValueInSettings<uint16_t>("LatencyRange", 1);
+    fHoleMode     = findValueInSettings<uint8_t>("HoleMode", 1);
+    fNevents      = findValueInSettings<uint32_t>("Nevents", 10);
     std::cout << "Going to read " << fNevents << " events" << std::endl;
 
 #ifdef __USE_ROOT__
@@ -116,7 +116,7 @@ void LatencyScan::MeasureTriggerTDC()
     auto theTriggerTDCStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<TDCBINS, uint16_t>>("TriggerTDC");
     for(auto board: theTriggerTDCContainer)
     {
-        if(fStreamerEnabled) theTriggerTDCStream.streamAndSendBoard(board, fNetworkStreamer);
+        if(fDQMStreamerEnabled) theTriggerTDCStream.streamAndSendBoard(board, fDQMStreamer);
     }
 #endif
 }
@@ -374,7 +374,7 @@ void LatencyScan::ScanLatency()
     auto theLatencyStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>();
     for(auto board: theLatencyContainer)
     {
-        if(fStreamerEnabled) theLatencyStream.streamAndSendBoard(board, fNetworkStreamer);
+        if(fDQMStreamerEnabled) theLatencyStream.streamAndSendBoard(board, fDQMStreamer);
     }
 #endif
 }
@@ -731,7 +731,7 @@ void LatencyScan::StubLatencyScan()
     auto theStubStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>();
     for(auto board: theStubContainer)
     {
-        if(fStreamerEnabled) theStubStream.streamAndSendBoard(board, fNetworkStreamer);
+        if(fDQMStreamerEnabled) theStubStream.streamAndSendBoard(board, fDQMStreamer);
     }
 #endif
 }
@@ -871,7 +871,7 @@ void LatencyScan::ScanLatency2D()
     auto theLatencyStream = prepareHybridContainerStreamer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>("2D");
     for(auto board: theLatencyContainer)
     {
-        if(fStreamerEnabled) theLatencyStream.streamAndSendBoard(board, fNetworkStreamer);
+        if(fDQMStreamerEnabled) theLatencyStream.streamAndSendBoard(board, fDQMStreamer);
     }
 #endif
 }
@@ -962,7 +962,7 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanStubLatency(uint8_t pStartL
             // Take Data for all Hybrids
             // here set the stub latency
             for(auto cReg: getStubLatencyName(cBeBoard->getBoardType())) fBeBoardInterface->WriteBoardReg(cBeBoard, cReg, cLat);
-            this->ReadNEvents(cBeBoard, this->findValueInSettings("Nevents"));
+            this->ReadNEvents(cBeBoard, fNevents);
             const std::vector<Event*>& cEvents = this->GetEvents();
             // Loop over Events from this Acquisition
             for(auto& cEvent: cEvents)

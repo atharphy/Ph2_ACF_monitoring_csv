@@ -103,17 +103,22 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 
     fAllChan = pAllChan;
 
-    fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels", 0);
-    fMaskChannelsFromOtherGroups = findValueInSettings("MaskChannelsFromOtherGroups", 1);
-    fPlotSCurves                 = findValueInSettings("PlotSCurves", 0);
-    fFitSCurves                  = findValueInSettings("FitSCurves", 0);
-    fPulseAmplitude              = findValueInSettings("PedeNoisePulseAmplitude", 0);
-    fEventsPerPoint              = findValueInSettings("Nevents", 10);
-    fNEventsPerBurst             = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
-    LOG(INFO) << BOLDRED << "I8" << RESET;
+    fSkipMaskedChannels          = findValueInSettings<double>("SkipMaskedChannels", 0);
+    fMaskChannelsFromOtherGroups = findValueInSettings<double>("MaskChannelsFromOtherGroups", 1);
+    fPlotSCurves                 = findValueInSettings<double>("PlotSCurves", 0);
+    fFitSCurves                  = findValueInSettings<double>("FitSCurves", 0);
+    fPulseAmplitude              = findValueInSettings<double>("PedeNoisePulseAmplitude", 0);
+    fEventsPerPoint              = findValueInSettings<double>("Nevents", 10);
+    fUseFixRange                 = findValueInSettings<double>("PedeNoiseUseFixRange", 0);
+    fMinThreshold                = findValueInSettings<double>("PedeNoiseMinThreshold", 0);
+    fMaxThreshold                = findValueInSettings<double>("PedeNoiseMaxThreshold", 1023);
+
+    fNEventsPerBurst = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
+    // uint8_t cEnableFastCounterReadout = (uint8_t)findValueInSettings<double>("EnableFastCounterReadout", 0);
+    // uint8_t cEnablePairSelect         = (uint8_t)findValueInSettings<double>("EnablePairSelect", 0);
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
-
+    // LOG(INFO) << " Fast Counter Readout [PS] " << +cEnableFastCounterReadout << RESET;
     this->SetSkipMaskedChannels(fSkipMaskedChannels);
     if(fFitSCurves) fPlotSCurves = true;
 
@@ -153,6 +158,30 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 #ifdef __USE_ROOT__
     fDQMHistogramPedeNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
+
+    // enable ASYNC mode for PS asics
+    for(auto cBoard: *fDetectorContainer)
+    {
+        fBeBoardInterface->setBoard(cBoard->getId());
+        // auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        // cInterface->SetPSCounterMode(cEnableFastCounterReadout);
+        // cInterface->SetPSPairSelect(cEnablePairSelect);
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                // set all SSAs + MPAs to output data in async mode
+                for(auto cROC: *cHybrid)
+                {
+                    if(cROC->getFrontEndType() == FrontEndType::CBC3) continue;
+
+                    // TBC - what about MPA here?
+                    LOG(INFO) << BOLDBLUE << "Setting up for analogue async injection in SSA/MPAs" << RESET;
+                    fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
+                }
+            }
+        }
+    }
 }
 
 void PedeNoise::Reset()
@@ -291,10 +320,19 @@ void PedeNoise::sweepSCurves()
         else
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
     }
-    if(fPulseAmplitude != 0)
+
+    bool forceAllChannels = false;
+    if(fPulseAmplitude != 0) { LOG(INFO) << BLUE << "Enabled test pulse. " << RESET; }
+    else
     {
-        LOG(INFO) << BLUE << "Enabled test pulse. " << RESET;
-        setFWTestPulse();
+        LOG(INFO) << BOLDYELLOW << "sweepSCurves without TP injection" << RESET;
+        this->enableTestPulse(false);
+        forceAllChannels = true;
+    }
+    if(!fUseFixRange) { cStartValue = this->findPedestal(forceAllChannels); }
+    else
+    {
+        cStartValue = (fMaxThreshold + fMinThreshold) / 2.;
     }
     this->enableTestPulse(fPulseAmplitude != 0);
     cStartValue = this->findPedestal(fPulseAmplitude == 0);
@@ -360,20 +398,20 @@ void PedeNoise::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
     this->SetTestAllChannels(originalAllChannelFlag);
 #ifdef __USE_ROOT__
     fDQMHistogramPedeNoise.fillValidationPlots(theOccupancyContainer);
-    // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fStreamerEnabled << std::endl;
-    // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fStreamerEnabled << std::endl;
-    // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fStreamerEnabled << std::endl;
+    // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fDQMStreamerEnabled << std::endl;
+    // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fDQMStreamerEnabled << std::endl;
+    // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fDQMStreamerEnabled << std::endl;
 #else
-    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
-    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
-    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fDQMStreamerEnabled << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fDQMStreamerEnabled << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fDQMStreamerEnabled << std::endl;
     auto theOccupancyStream = prepareHybridContainerStreamer<Occupancy, Occupancy, Occupancy>();
     // auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
 
     LOG(INFO) << "6 ";
     for(auto board: theOccupancyContainer)
     {
-        if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
+        if(fDQMStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fDQMStreamer);
     }
 #endif
     LOG(INFO) << "7 ";
@@ -769,6 +807,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
             fSCurveOccupancyMap[cValue]                  = theOccupancyContainer;
             this->setDacAndMeasureData("Threshold", cValue, fEventsPerPoint, fNEventsPerBurst);
 
+            theOccupancyContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandlerContainer, fEventsPerPoint);
             float globalOccupancy = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
 #ifdef __USE_ROOT__
             if(fPlotSCurves) fDQMHistogramPedeNoise.fillSCurvePlots(cValue, *theOccupancyContainer);
@@ -779,7 +818,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
                 theSCurveStreamer.setHeaderElement(cValue);
                 for(auto board: *theOccupancyContainer)
                 {
-                    if(fStreamerEnabled) theSCurveStreamer.streamAndSendBoard(board, fNetworkStreamer);
+                    if(fDQMStreamerEnabled) theSCurveStreamer.streamAndSendBoard(board, fDQMStreamer);
                 }
             }
 #endif
@@ -912,6 +951,18 @@ void PedeNoise::extractPedeNoise()
                         chip->getChannel<ThresholdAndNoise>(iChannel).fNoise /= chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError;
                         chip->getChannel<ThresholdAndNoise>(iChannel).fNoise = sqrt(chip->getChannel<ThresholdAndNoise>(iChannel).fNoise - (chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold *
                                                                                                                                             chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold));
+                        if(isnan(chip->getChannel<ThresholdAndNoise>(iChannel).fNoise) || isinf(chip->getChannel<ThresholdAndNoise>(iChannel).fNoise))
+                        {
+                            LOG(WARNING) << BOLDYELLOW << "Problem in deriving noise for Board " << board->getId() << " Optical Group " << opticalGroup->getId() << " Hybrid " << hybrid->getId()
+                                         << " ReadoutChip " << chip->getId() << " Channel " << iChannel << ", forcing it to 0." << RESET;
+                            chip->getChannel<ThresholdAndNoise>(iChannel).fNoise = 0.;
+                        }
+                        if(isnan(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold) || isinf(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold))
+                        {
+                            LOG(WARNING) << BOLDYELLOW << "Problem in deriving threshold for Board " << board->getId() << " Optical Group " << opticalGroup->getId() << " Hybrid " << hybrid->getId()
+                                         << " ReadoutChip " << chip->getId() << " Channel " << iChannel << ", forcing it to 0." << RESET;
+                            chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold = 0.;
+                        }
                         chip->getChannel<ThresholdAndNoise>(iChannel).fThresholdError = 1;
                         chip->getChannel<ThresholdAndNoise>(iChannel).fNoiseError     = 1;
                     }
@@ -971,7 +1022,7 @@ void PedeNoise::producePedeNoisePlots()
     auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
     for(auto board: *fThresholdAndNoiseContainer)
     {
-        if(fStreamerEnabled) { theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer); }
+        if(fDQMStreamerEnabled) { theThresholdAndNoiseStream.streamAndSendBoard(board, fDQMStreamer); }
     }
 #endif
 }

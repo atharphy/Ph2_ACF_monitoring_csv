@@ -81,10 +81,15 @@ int main(int argc, char* argv[])
         MPA* theMPA = static_cast<MPA*>(cMPA);
         // ReadoutChip* theMPA = static_cast<ReadoutChip*>(cMPA);
 
-        theMPAInterface->Set_calibration(theMPA, 200);
-        theMPAInterface->Set_threshold(theMPA, 200);
-        theMPAInterface->Activate_sync(theMPA);
-        theMPAInterface->Activate_pp(theMPA);
+        theMPAInterface->WriteChipReg(theMPA, "InjectedCharge", 200);
+        theMPAInterface->WriteChipReg(theMPA, "Threshold", 200);
+        theMPAInterface->WriteChipReg(theMPA, "StubMode", 2);
+        theMPAInterface->WriteChipReg(theMPA, "AnalogueSync", 1);
+
+        // theMPAInterface->Set_calibration(theMPA, 200);
+        // theMPAInterface->Set_threshold(theMPA, 200);
+        // theMPAInterface->Activate_sync(theMPA);
+        // theMPAInterface->Activate_pp(theMPA);
 
         Stubs    curstub;
         uint32_t npixtot = 0;
@@ -158,8 +163,13 @@ int main(int argc, char* argv[])
                     std::this_thread::sleep_for(ShortWait);
                     std::this_thread::sleep_for(ShortWait);
 
+                    // please implement this correctly with an event class if you would like to decode raw stub/L1 data from the lines
+                    // especially if we will need this for MAPSA testing
+                    // will comment out for now
+                    // FIX-ME
+                    /*
                     auto rawstubs =
-                        static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ReadBlockRegValue("fc7_daq_stat.physical_interface_block.stat_slvs_debug_mpa_stub_0", 80);
+                    static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ReadBlockRegValue("fc7_daq_stat.physical_interface_block.stat_slvs_debug_mpa_stub_0", 80);
                     std::vector<std::vector<uint8_t>> stubs(5, vector<uint8_t>(40, 0));
                     uint32_t                          line  = 0;
                     uint32_t                          cycle = 0;
@@ -195,6 +205,7 @@ int main(int argc, char* argv[])
                         }
                         nst += 1;
                     }
+                    */
 
                     // std::this_thread::sleep_for(ShortWait);
                     // static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->Send_pulses(1500);

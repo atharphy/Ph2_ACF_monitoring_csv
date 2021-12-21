@@ -21,11 +21,11 @@ void DataChecker::Initialise()
     exit(0);
     // get threshold range
     auto     cSetting   = fSettingsMap.find("PulseShapeInitialVcth");
-    uint16_t cInitialTh = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 400;
+    uint16_t cInitialTh = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 400;
     cSetting            = fSettingsMap.find("PulseShapeFinalVcth");
-    uint16_t cFinalTh   = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 600;
+    uint16_t cFinalTh   = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 600;
     cSetting            = fSettingsMap.find("PulseShapeVCthStep");
-    uint16_t cThStep    = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 5;
+    uint16_t cThStep    = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 5;
     int      cSteps     = std::ceil((cFinalTh - cInitialTh) / (float)cThStep);
 
     // this is needed if you're going to use groups anywhere
@@ -633,26 +633,26 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
 
     // configure latencies
     auto   cSetting       = fSettingsMap.find("DelayAfterInjection");
-    size_t cCalPulseDelay = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 85;
+    size_t cCalPulseDelay = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 85;
     cSetting              = fSettingsMap.find("DistributeInjections");
-    int  cInjDistrFlag    = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    int  cInjDistrFlag    = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 0;
     bool cDistributeInj   = (cInjDistrFlag == 1);
     //
     cSetting            = fSettingsMap.find("Bend");
-    int     cBend       = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    int     cBend       = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 0;
     uint8_t cStubWindow = (std::fabs(cBend) + 1) * 2; // stub window in half pixels (1)
     // check for stubs
     cSetting            = fSettingsMap.find("CheckForStubs");
-    int  cCheckForStubs = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    int  cCheckForStubs = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 1;
     bool cWStubs        = (cCheckForStubs == 1);
     // mode
     // (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel
     cSetting            = fSettingsMap.find("TestMode");
-    uint8_t cMode       = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    uint8_t cMode       = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint8_t>(cSetting->second) : 0;
     cSetting            = fSettingsMap.find("TriggerMultiplicity");
-    size_t cTriggerMult = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    size_t cTriggerMult = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 1;
     cSetting            = fSettingsMap.find("FifoDepth");
-    int cFifoDepth      = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 8;
+    int cFifoDepth      = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 8;
     // configure FIFO depth in SSAs
     for(auto cBoard: *fDetectorContainer)
     {
@@ -685,15 +685,15 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
     // int cLastMPA = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
     // configure injections
     cSetting         = fSettingsMap.find("MinPclusters");
-    int cMinNpClstrs = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    int cMinNpClstrs = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 1;
     cSetting         = fSettingsMap.find("MaxPclusters");
-    int cMaxNpClstrs = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    int cMaxNpClstrs = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 1;
     cSetting         = fSettingsMap.find("MinSclusters");
-    int cMinNsClstrs = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    int cMinNsClstrs = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 1;
     cSetting         = fSettingsMap.find("MaxSclusters");
-    int cMaxNsClstrs = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    int cMaxNsClstrs = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 1;
     cSetting         = fSettingsMap.find("MaxStubs");
-    int cMaxNstubs   = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    int cMaxNstubs   = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 1;
     // cluster distributions
     std::uniform_int_distribution<int> cFlatDistPxlCltrs(cMinNpClstrs, cMaxNpClstrs);
     std::uniform_int_distribution<int> cFlatDistStrpCltrs(cMinNsClstrs, cMaxNsClstrs);
@@ -702,12 +702,12 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
     // int  cMaxStubSel    = (cDistributeInj) ? 8 : 1;
     // auto cStubOffset = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getStubOffset();
     cSetting                   = fSettingsMap.find("ScanL1Latency");
-    uint8_t cScanL1Latency     = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    uint8_t cScanL1Latency     = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint8_t>(cSetting->second) : 0;
     int     cOptimalOffset     = -1 + (cTriggerMult > 1);
     int     cL1MinOffset       = (cScanL1Latency == 1) ? cOptimalOffset - 2 : cOptimalOffset;
     int     cL1MaxOffset       = (cScanL1Latency == 1) ? cOptimalOffset + cTriggerMult + 2 : cL1MinOffset + 1;
     cSetting                   = fSettingsMap.find("ScanStubLatency");
-    uint8_t cScanStubLatency   = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    uint8_t cScanStubLatency   = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint8_t>(cSetting->second) : 0;
     int     cOptimalStubOffset = 0;
     int     cStubMinOffset     = (cScanStubLatency == 1 && cWStubs) ? cOptimalStubOffset - 5 : cOptimalStubOffset;
     int     cStubMaxOffset     = (cScanStubLatency == 1 && cWStubs) ? cOptimalStubOffset + 5 : cOptimalStubOffset + 1;
@@ -917,7 +917,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                 // int cTotalStubsExpected = 0;
                 //
                 cSetting                 = fSettingsMap.find("TriggerMultiplicity");
-                size_t cTriggerMult      = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+                size_t cTriggerMult      = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 1;
                 size_t cInjectionCounter = 0;
                 auto   cEventIter        = cPh2Events.begin();
                 do
@@ -1077,26 +1077,26 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
 
     // configure latencies
     auto   cSetting       = fSettingsMap.find("DelayAfterInjection");
-    size_t cCalPulseDelay = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 85;
+    size_t cCalPulseDelay = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<size_t>(cSetting->second) : 85;
     cSetting              = fSettingsMap.find("DistributeInjections");
-    int  cInjDistrFlag    = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    int  cInjDistrFlag    = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 0;
     bool cDistributeInj   = (cInjDistrFlag == 1);
     //
     cSetting            = fSettingsMap.find("Bend");
-    int     cBend       = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    int     cBend       = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 0;
     uint8_t cStubWindow = (std::fabs(cBend) + 1) * 2; // stub window in half pixels (1)
     // check for stubs
     cSetting            = fSettingsMap.find("CheckForStubs");
-    int  cCheckForStubs = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    int  cCheckForStubs = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 1;
     bool cWStubs        = (cCheckForStubs == 1);
     // mode
     // (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel
     cSetting            = fSettingsMap.find("TestMode");
-    uint8_t cMode       = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    uint8_t cMode       = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint8_t>(cSetting->second) : 0;
     cSetting            = fSettingsMap.find("TriggerMultiplicity");
-    size_t cTriggerMult = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    size_t cTriggerMult = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<size_t>(cSetting->second) : 1;
     cSetting            = fSettingsMap.find("FifoDepth");
-    int cFifoDepth      = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 8;
+    int cFifoDepth      = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 8;
     // configure FIFO depth in SSAs
     for(auto cBoard: *fDetectorContainer)
     {
@@ -1129,15 +1129,15 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
     // int cLastMPA = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
     // configure injections
     cSetting         = fSettingsMap.find("MinPclusters");
-    int cMinNpClstrs = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    int cMinNpClstrs = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 1;
     cSetting         = fSettingsMap.find("MaxPclusters");
-    int cMaxNpClstrs = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    int cMaxNpClstrs = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 1;
     cSetting         = fSettingsMap.find("MinSclusters");
-    int cMinNsClstrs = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    int cMinNsClstrs = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 1;
     cSetting         = fSettingsMap.find("MaxSclusters");
-    int cMaxNsClstrs = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    int cMaxNsClstrs = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 1;
     cSetting         = fSettingsMap.find("MaxStubs");
-    int cMaxNstubs   = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    int cMaxNstubs   = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 1;
     // cluster distributions
     std::uniform_int_distribution<int> cFlatDistPxlCltrs(cMinNpClstrs, cMaxNpClstrs);
     std::uniform_int_distribution<int> cFlatDistStrpCltrs(cMinNsClstrs, cMaxNsClstrs);
@@ -1146,12 +1146,12 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
     // int  cMaxStubSel    = (cDistributeInj) ? 8 : 1;
     // auto cStubOffset = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getStubOffset();
     cSetting                   = fSettingsMap.find("ScanL1Latency");
-    uint8_t cScanL1Latency     = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    uint8_t cScanL1Latency     = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint8_t>(cSetting->second) : 0;
     int     cOptimalOffset     = -1 + (cTriggerMult > 1);
     int     cL1MinOffset       = (cScanL1Latency == 1) ? cOptimalOffset - 2 : cOptimalOffset;
     int     cL1MaxOffset       = (cScanL1Latency == 1) ? cOptimalOffset + cTriggerMult + 2 : cL1MinOffset + 1;
     cSetting                   = fSettingsMap.find("ScanStubLatency");
-    uint8_t cScanStubLatency   = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    uint8_t cScanStubLatency   = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint8_t>(cSetting->second) : 0;
     int     cOptimalStubOffset = 0;
     int     cStubMinOffset     = (cScanStubLatency == 1 && cWStubs) ? cOptimalStubOffset - 5 : cOptimalStubOffset;
     int     cStubMaxOffset     = (cScanStubLatency == 1 && cWStubs) ? cOptimalStubOffset + 5 : cOptimalStubOffset + 1;
@@ -1370,7 +1370,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                 fPSevent.fLatencyOffset = cLatencyOffset;
                 //
                 cSetting                 = fSettingsMap.find("TriggerMultiplicity");
-                size_t cTriggerMult      = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+                size_t cTriggerMult      = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<size_t>(cSetting->second) : 1;
                 size_t cInjectionCounter = 0;
                 auto   cEventIter        = cPh2Events.begin();
                 size_t cMatchCounter     = 0;
@@ -1579,7 +1579,7 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t> pChipIds, st
 
     // get number of events from xml
     auto   cSetting        = fSettingsMap.find("Nevents");
-    size_t cEventsPerPoint = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    size_t cEventsPerPoint = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<size_t>(cSetting->second) : 100;
 
     uint8_t cSeed = pExpectedStub.first;
     int     cBend = pExpectedStub.second;
@@ -1762,8 +1762,8 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t> pChipIds, st
 }
 void DataChecker::AsyncTest()
 {
-    uint8_t           cSweepThreshold = this->findValueInSettings("AsyncSweepTh");
-    uint8_t           cThreshold      = this->findValueInSettings("AsyncThreshold");
+    uint8_t           cSweepThreshold = this->findValueInSettings<uint8_t>("AsyncSweepTh");
+    uint8_t           cThreshold      = this->findValueInSettings<uint8_t>("AsyncThreshold");
     uint8_t           cThresholdStart = (cSweepThreshold == 0) ? cThreshold : 0;
     uint8_t           cThresholdStop  = (cSweepThreshold == 0) ? cThreshold + 5 : 200;
     std::stringstream outp;
@@ -1802,7 +1802,7 @@ void DataChecker::AsyncTest()
                     {
                         fReadoutChipInterface->WriteChipReg(cChip, "AnalogueAsync", 1);
                         fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
-                        fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", this->findValueInSettings("AsyncCalDac"));
+                        fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", this->findValueInSettings<double>("AsyncCalDac"));
                     }
                 }
             }
@@ -1810,7 +1810,7 @@ void DataChecker::AsyncTest()
             // read counters
             BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
             LOG(INFO) << BOLDRED << "Reading counters .. " << RESET;
-            this->ReadNEvents(theBoard, this->findValueInSettings("Nevents"));
+            this->ReadNEvents(theBoard, this->findValueInSettings<double>("Nevents"));
             const std::vector<Event*>& cEvents = this->GetEvents();
             for(auto cOpticalGroup: *cBoard)
             {
@@ -1896,7 +1896,7 @@ void DataChecker::WriteSlinkTest(std::string pDAQFileName)
     FileHandler* cDAQFileHandler = new FileHandler(cDAQFileName, 'w');
 
     auto              cSetting = fSettingsMap.find("Nevents");
-    uint32_t          cNevents = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t          cNevents = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 100;
     std::stringstream outp;
     for(auto cBoard: *fDetectorContainer)
     {
@@ -1951,7 +1951,7 @@ void DataChecker::WriteSlinkTest(std::string pDAQFileName)
 }
 void DataChecker::CollectEvents()
 {
-    uint32_t cNevents    = this->findValueInSettings("Nevents");
+    uint32_t cNevents    = this->findValueInSettings<uint32_t>("Nevents");
     uint32_t cMaxNevents = 65535;
     for(auto cBoard: *fDetectorContainer)
     {
@@ -1976,7 +1976,7 @@ void DataChecker::CheckPSData(BeBoard* pBoard, std::vector<Injection> pInjection
 
     auto     cSetting = fSettingsMap.find("Nevents");
     int      cScale   = 1000;
-    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? (cSetting->second) * cScale : 100;
+    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? (boost::any_cast<uint32_t>(cSetting->second) * cScale) : 100;
     LOG(DEBUG) << BOLDBLUE << "Checking PSdata by reading " << +cNevents << " from BeBoard#" << +pBoard->getIndex() << RESET;
 
     std::vector<uint32_t> cPixelIds(0);
@@ -2197,7 +2197,7 @@ uint32_t DataChecker::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
 
     // n events
     auto     cSetting = fSettingsMap.find("Nevents");
-    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 100;
 
     // configure trigger blocks
     auto cTriggerMult       = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
@@ -2286,21 +2286,21 @@ void DataChecker::FastCommandInjections(int cNtrials)
     // LOG(INFO) << BOLDMAGENTA << "Cal Pulse Injections with GFCMDs " << RESET;
 
     auto   cSetting       = fSettingsMap.find("DelayAfterInjection");
-    size_t cCalPulseDelay = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 85;
+    size_t cCalPulseDelay = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 85;
     cSetting              = fSettingsMap.find("CheckForStubs");
-    int  cCheckForStubs   = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    int  cCheckForStubs   = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 1;
     bool cWStubs          = (cCheckForStubs == 1);
     // figure out if injection duration
     // needs to be 1 or 8 clock cycles
     cSetting                 = fSettingsMap.find("DistributeInjections");
-    int    cInjDistrFlag     = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    int    cInjDistrFlag     = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 0;
     bool   cDistributeInj    = (cInjDistrFlag == 1);
     size_t cCalPulseDuration = cDistributeInj ? 8 : 1;
     cSetting                 = fSettingsMap.find("TriggerSeparation");
-    size_t cSeparation       = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 10;
+    size_t cSeparation       = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<size_t>(cSetting->second) : 10;
     bool   cUseClearCounter  = false;
     cSetting                 = fSettingsMap.find("TriggerMultiplicity");
-    size_t cTriggerMult      = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    size_t cTriggerMult      = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<size_t>(cSetting->second) : 1;
     if(cCalPulseDelay < 85 && cWStubs)
     {
         LOG(INFO) << BOLDMAGENTA << "Minimum delay is 85 clocks... changing to that" << RESET;
@@ -2487,7 +2487,7 @@ std::vector<int> DataChecker::GenerateIds()
 {
     //
     auto     cSetting    = fSettingsMap.find("ActiveMPAs");
-    uint32_t cActiveMPAs = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 8;
+    uint32_t cActiveMPAs = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 8;
 
     // random c++
     std::srand(std::time(NULL));
@@ -2574,7 +2574,7 @@ std::vector<Injection> DataChecker::GeneratePSInjections(int pMaxNstubs)
     std::vector<uint8_t>  cColumns(0); // 5 , 10 };
     std::vector<uint8_t>  cRows(0);    // 20 , 30};
     auto                  cSetting            = fSettingsMap.find("RandomizeInjections");
-    uint8_t               cRandom             = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    uint8_t               cRandom             = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint8_t>(cSetting->second) : 0;
     size_t                cStubs              = cRandom ? cNStubDist(cGen) : pMaxNstubs;
     int                   cTotalNumberOfStubs = 0;
     std::vector<uint32_t> cPixelIds(0); // these will be used to generate stubs
@@ -2765,9 +2765,9 @@ std::vector<Injection> DataChecker::GeneratePSpxlClusters(int pMaxNPclusters)
 void DataChecker::PreparePSInjection(DetectorDataContainer& pInjectionScheme)
 {
     auto cSetting          = fSettingsMap.find("Bend");
-    int  cBend             = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    int  cBend             = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 0;
     cSetting               = fSettingsMap.find("DistributeInjections");
-    int     cInjDistrFlag  = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    int     cInjDistrFlag  = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 0;
     bool    cDistributeInj = (cInjDistrFlag == 1);
     uint8_t cStubWindow    = (std::fabs(cBend) + 1) * 2; // stub window in half pixels (1)
     uint8_t cMode          = 0;                          // (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel
@@ -2849,7 +2849,7 @@ void DataChecker::PSTriggerTests()
 {
     // decode setting
     auto     cSetting   = fSettingsMap.find("Attempts");
-    uint32_t cAttempts  = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 10;
+    uint32_t cAttempts  = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 10;
     fTriggerTestCounter = 0;
     for(size_t cAttempt = 0; cAttempt < cAttempts; cAttempt++)
     {
@@ -2862,21 +2862,21 @@ void DataChecker::PSTriggerTest()
 {
     // decode setting
     auto     cSetting      = fSettingsMap.find("Nevents");
-    uint32_t cNtrials      = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 10;
+    uint32_t cNtrials      = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 10;
     cSetting               = fSettingsMap.find("MaxPClusters");
-    int cMaxClustersPerMPA = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    int cMaxClustersPerMPA = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 1;
     cSetting               = fSettingsMap.find("DelayAfterInjection");
-    size_t cCalPulseDelay  = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 85;
+    size_t cCalPulseDelay  = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<size_t>(cSetting->second) : 85;
     cSetting               = fSettingsMap.find("DistributeInjections");
-    int  cInjDistrFlag     = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    int  cInjDistrFlag     = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 0;
     bool cDistributeInj    = (cInjDistrFlag == 1);
     cSetting               = fSettingsMap.find("Bend");
-    int cBend              = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    int cBend              = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 0;
     cSetting               = fSettingsMap.find("CheckForStubs");
-    int  cCheckForStubs    = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    int  cCheckForStubs    = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 1;
     bool cWStubs           = (cCheckForStubs == 1);
     cSetting               = fSettingsMap.find("FifoDepth");
-    int cFifoDepth         = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 8;
+    int cFifoDepth         = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 8;
 
     // configure FIFO depth in SSAs
     for(auto cBoard: *fDetectorContainer)
@@ -3812,17 +3812,17 @@ void DataChecker::PSNominal()
     LOG(INFO) << BOLDBLUE << "Nominal PS data checker ... inject data from MPA --> CIC --> back-end" << RESET;
     int      cLatencyOffset = -1;
     auto     cSetting       = fSettingsMap.find("Nevents");
-    uint32_t cNevents       = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t cNevents       = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 100;
     cSetting                = fSettingsMap.find("Attempts");
-    uint32_t cMaxAttempts   = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 10;
+    uint32_t cMaxAttempts   = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 10;
     cSetting                = fSettingsMap.find("SLVSDrive");
-    uint8_t cSLVSDrive      = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 3;
+    uint8_t cSLVSDrive      = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint8_t>(cSetting->second) : 3;
     cSetting                = fSettingsMap.find("MaxOffset");
-    int cMaxOffset          = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 5;
+    int cMaxOffset          = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<int>(cSetting->second) : 5;
 
     // configure clusters
     cSetting            = fSettingsMap.find("MaxPClusters");
-    size_t nMaxClusters = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 2;
+    size_t nMaxClusters = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<size_t>(cSetting->second) : 2;
 
     LOG(DEBUG) << BOLDBLUE << "ReadNEvents data test with " << +cNevents << RESET;
 
@@ -4630,7 +4630,7 @@ void DataChecker::Eye_CIC()
 {
     int      cLatencyOffset = -1;
     auto     cSetting       = fSettingsMap.find("Nevents");
-    uint32_t cNevents       = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t cNevents       = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 100;
     LOG(DEBUG) << BOLDBLUE << "ReadNEvents data test with " << +cNevents << RESET;
 
     uint8_t                cStubWindow = 1; // stub window in half pixels (1)
@@ -4828,7 +4828,7 @@ void DataChecker::Eye_CIC()
 void DataChecker::DigitalInjectionTest(bool pBypassCic, bool pShiftRegMode)
 {
     auto     cSetting = fSettingsMap.find("Nevents");
-    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 100;
     LOG(DEBUG) << BOLDBLUE << "ReadNEvents data test with " << +cNevents << RESET;
     uint8_t cPattern = 0xAA;
 
@@ -5141,7 +5141,7 @@ void DataChecker::ReadNeventsTest()
 {
     // this->DigitalInjectionTest(true, false);
     auto     cSetting = fSettingsMap.find("Nevents");
-    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 100;
     LOG(INFO) << BOLDBLUE << "ReadNEvents data test with " << +cNevents << RESET;
     std::stringstream outp;
 
@@ -5348,17 +5348,17 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
 
     // get number of events from xml
     auto     cSetting        = fSettingsMap.find("Nevents");
-    uint32_t cEventsPerPoint = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t cEventsPerPoint = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
 
     // get trigger multiplicity from xml
     cSetting                       = fSettingsMap.find("TriggerMultiplicity");
     bool     cConfigureTriggerMult = (cSetting != std::end(fSettingsMap));
-    uint16_t cTriggerMult          = cConfigureTriggerMult ? cSetting->second : 0;
+    uint16_t cTriggerMult          = cConfigureTriggerMult ? boost::any_cast<double>(cSetting->second) : 0;
 
     // get stub delay scan range from xml
     cSetting                  = fSettingsMap.find("StubDelay");
     bool cModifyStubScanRange = (cSetting != std::end(fSettingsMap));
-    int  cStubDelay           = cModifyStubScanRange ? cSetting->second : 48;
+    int  cStubDelay           = cModifyStubScanRange ? boost::any_cast<double>(cSetting->second) : 48;
 
     // get target threshold
     cSetting = fSettingsMap.find("Threshold");
@@ -5367,7 +5367,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
     cSetting = fSettingsMap.find("Attempts");
     // get mode
     cSetting      = fSettingsMap.find("Mode");
-    uint8_t cMode = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    uint8_t cMode = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
     // get latency offset
     cSetting = fSettingsMap.find("LatencyOffset");
     // resync between attempts
@@ -5375,33 +5375,33 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
 
     // if TP is used - enable it
     cSetting              = fSettingsMap.find("PulseShapePulseAmplitude");
-    fTPconfig.tpAmplitude = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    fTPconfig.tpAmplitude = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
 
     // get TP amplitude range
     // get threshold range
 
     // get threshold range
     cSetting            = fSettingsMap.find("PulseShapeInitialVcth");
-    uint16_t cInitialTh = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 400;
+    uint16_t cInitialTh = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 400;
     cSetting            = fSettingsMap.find("PulseShapeFinalVcth");
-    uint16_t cFinalTh   = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 600;
+    uint16_t cFinalTh   = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 600;
     cSetting            = fSettingsMap.find("PulseShapeVCthStep");
-    uint16_t cThStep    = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 5;
+    uint16_t cThStep    = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 5;
 
     // get TP delay range
     cSetting                 = fSettingsMap.find("PulseShapeInitialDelay");
-    uint16_t cInitialTPdleay = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    uint16_t cInitialTPdleay = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
     cSetting                 = fSettingsMap.find("PulseShapeFinalDelay");
-    uint16_t cFinalTPdleay   = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 25;
+    uint16_t cFinalTPdleay   = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 25;
     cSetting                 = fSettingsMap.find("PulseShapeDelayStep");
-    uint16_t cTPdelayStep    = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 3;
+    uint16_t cTPdelayStep    = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 3;
 
     // get injected stub from xmls
     std::pair<uint8_t, int> cStub;
     cSetting     = fSettingsMap.find("StubSeed");
-    cStub.first  = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 10;
+    cStub.first  = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 10;
     cSetting     = fSettingsMap.find("StubBend");
-    cStub.second = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    cStub.second = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
     LOG(DEBUG) << BOLDBLUE << "Injecting a stub in position " << +cStub.first << " with bend " << cStub.second << " to test data integrity..." << RESET;
 
     // set-up for TP
@@ -6081,40 +6081,40 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed, int pB
     // use xml to figure out whether to use noise or charge injection
     bool pWithNoise = true; // default is to use noise
     auto cSetting   = fSettingsMap.find("UseNoise");
-    if(cSetting != std::end(fSettingsMap)) pWithNoise = (cSetting->second == 1);
+    if(cSetting != std::end(fSettingsMap)) pWithNoise = (boost::any_cast<double>(cSetting->second) == 1);
 
     // get number of events from xml
     cSetting                 = fSettingsMap.find("Nevents");
-    uint32_t cEventsPerPoint = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t cEventsPerPoint = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
 
     // get trigger rate from xml
     cSetting                   = fSettingsMap.find("TriggerRate");
     bool     cConfigureTrigger = (cSetting != std::end(fSettingsMap));
-    uint16_t cTriggerRate      = cConfigureTrigger ? cSetting->second : 100;
+    uint16_t cTriggerRate      = cConfigureTrigger ? boost::any_cast<double>(cSetting->second) : 100;
     // get trigger multiplicity from xml
     cSetting                       = fSettingsMap.find("TriggerMultiplicity");
     bool     cConfigureTriggerMult = (cSetting != std::end(fSettingsMap));
-    uint16_t cTriggerMult          = cConfigureTriggerMult ? cSetting->second : 0;
+    uint16_t cTriggerMult          = cConfigureTriggerMult ? boost::any_cast<double>(cSetting->second) : 0;
 
     // get stub delay scan range from xml
     cSetting                  = fSettingsMap.find("StubDelay");
     bool cModifyStubScanRange = (cSetting != std::end(fSettingsMap));
-    int  cStubDelay           = cModifyStubScanRange ? cSetting->second : 48;
+    int  cStubDelay           = cModifyStubScanRange ? boost::any_cast<double>(cSetting->second) : 48;
 
     // get injected stub from xmls
     cSetting     = fSettingsMap.find("StubSeed");
-    cStub.first  = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 10;
+    cStub.first  = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 10;
     cSetting     = fSettingsMap.find("StubBend");
-    cStub.second = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    cStub.second = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
     LOG(DEBUG) << BOLDBLUE << "Injecting a stub in position " << +cStub.first << " with bend " << cStub.second << " to test data integrity..." << RESET;
 
     // get target threshold
     cSetting                  = fSettingsMap.find("Threshold");
-    uint16_t cTargetThreshold = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 580;
+    uint16_t cTargetThreshold = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 580;
 
     // get number of attempts
     cSetting         = fSettingsMap.find("Attempts");
-    size_t cAttempts = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 10;
+    size_t cAttempts = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 10;
 
     // get injected stub from xmls
     cSetting = fSettingsMap.find("ManualPhaseAlignment");
@@ -6144,15 +6144,15 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed, int pB
 
     // get number of attempts
     cSetting      = fSettingsMap.find("Mode");
-    uint8_t cMode = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    uint8_t cMode = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
 
     // get latency offset
     cSetting           = fSettingsMap.find("LatencyOffset");
-    int cLatencyOffset = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    int cLatencyOffset = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
 
     // resync between attempts
     cSetting     = fSettingsMap.find("ReSync");
-    bool cResync = (cSetting != std::end(fSettingsMap)) ? (cSetting->second == 1) : false;
+    bool cResync = (cSetting != std::end(fSettingsMap)) ? (boost::any_cast<double>(cSetting->second) == 1) : false;
 
     uint16_t cTPdelay = 0;
 
@@ -6160,11 +6160,11 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed, int pB
     if(!pWithNoise)
     {
         cSetting              = fSettingsMap.find("PulseShapePulseAmplitude");
-        fTPconfig.tpAmplitude = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+        fTPconfig.tpAmplitude = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
 
         // get TP delay
         cSetting = fSettingsMap.find("PulseShapePulseDelay");
-        cTPdelay = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+        cTPdelay = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
 
         // set-up for TP
         fAllChan                     = true;
@@ -6359,11 +6359,11 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
     std::string  cDAQFileName    = "StubCheck.daq";
     FileHandler* cDAQFileHandler = new FileHandler(cDAQFileName, 'w');
 
-    uint8_t cSweepPackageDelay = this->findValueInSettings("SweepPackageDelay");
-    uint8_t cSweepStubDelay    = this->findValueInSettings("SweepStubDelay");
+    uint8_t cSweepPackageDelay = this->findValueInSettings<double>("SweepPackageDelay");
+    uint8_t cSweepStubDelay    = this->findValueInSettings<double>("SweepStubDelay");
 
-    uint8_t cFirmwareTPdelay      = this->findValueInSettings("StubFWTestPulseDelay");
-    uint8_t cFirmwareTriggerDelay = this->findValueInSettings("StubFWTriggerDelay");
+    uint8_t cFirmwareTPdelay      = this->findValueInSettings<double>("StubFWTestPulseDelay");
+    uint8_t cFirmwareTriggerDelay = this->findValueInSettings<double>("StubFWTriggerDelay");
 
     // set-up for TP
     fAllChan                     = true;
@@ -6379,7 +6379,7 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
 
     // set threshold
     uint8_t  cTestPulseAmplitude = 0xFF - 100;
-    uint16_t cThreshold          = this->findValueInSettings("StubThreshold");
+    uint16_t cThreshold          = this->findValueInSettings<double>("StubThreshold");
     uint8_t  cTPgroup            = 0;
     // enable TP and set TP amplitude
     fTestPulse = true;
@@ -6444,7 +6444,7 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
             }
         }
 
-        for(int cAttempt = 0; cAttempt < this->findValueInSettings("StubAttempts"); cAttempt++)
+        for(int cAttempt = 0; cAttempt < this->findValueInSettings<double>("StubAttempts"); cAttempt++)
         {
             LOG(INFO) << BOLDMAGENTA << "Attempt#" << +cAttempt << RESET;
             auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
@@ -6518,8 +6518,8 @@ void DataChecker::StubCheck(std::vector<uint8_t> pChipIds)
 
 void DataChecker::StubCheckWNoise(std::vector<uint8_t> pChipIds)
 {
-    uint8_t cSweepPackageDelay = this->findValueInSettings("SweepPackageDelay");
-    uint8_t cSweepStubDelay    = this->findValueInSettings("SweepStubDelay");
+    uint8_t cSweepPackageDelay = this->findValueInSettings<double>("SweepPackageDelay");
+    uint8_t cSweepStubDelay    = this->findValueInSettings<double>("SweepStubDelay");
     bool    cWithCIC           = false;
     for(auto cBoard: *fDetectorContainer)
     {
@@ -6684,7 +6684,7 @@ void DataChecker::HitCheck2S(BeBoard* pBoard)
 
     // get number of events from xml
     auto     cSetting        = fSettingsMap.find("Nevents");
-    uint32_t cEventsPerPoint = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t cEventsPerPoint = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
 
     LOG(INFO) << BOLDBLUE << "Injecting hits to verify data quality in the back-end" << RESET;
     // bool cUseNoiseInjection=true;
@@ -6916,7 +6916,7 @@ void DataChecker::ClusterCheck(std::vector<uint8_t> pChannels)
     for(auto cChannel: pChannels) fCBCMask->enableChannel(cChannel);
 
     auto     cSetting = fSettingsMap.find("Nevents");
-    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
     for(auto cBoard: *fDetectorContainer)
     {
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", 1);

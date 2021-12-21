@@ -44,23 +44,6 @@ void D19cSSA2Event::SetEvent(const BeBoard* pBoard, uint32_t pNSSA2, const std::
     // for (auto L : list) LOG(INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
 
     // start reading here for first SSA2
-    auto   cIter = list.begin() + 4;
-    size_t cIndx = 0;
-    do
-    {
-        if(cIndx == 2)
-        {
-            fL1Id = ((*cIter) >> 16) & 0x1FF;
-            LOG(DEBUG) << BOLDGREEN << std::bitset<32>(*cIter) << ".....L1 Id is " << +fL1Id << RESET;
-        }
-        // if( cIndx >= 4 && cIndx <= 7 )
-        // {
-        //     LOG (INFO) << BOLDBLUE << "Hit data is " <<  std::bitset<32>(*cIter)  << RESET;
-        // }
-        cIter++;
-        cIndx++;
-    } while(cIter < list.end());
-
     std::vector<uint32_t> head;
     head.push_back(list.at(0));
     head.push_back(list.at(1));

@@ -107,9 +107,9 @@ void ShortFinder::Initialise()
 
     // now read the settings from the map
     auto cSetting       = fSettingsMap.find("Nevents");
-    fEventsPerPoint     = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 10;
+    fEventsPerPoint     = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 10;
     cSetting            = fSettingsMap.find("ShortsPulseAmplitude");
-    fTestPulseAmplitude = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    fTestPulseAmplitude = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
 
     if(fTestPulseAmplitude == 0)
         fTestPulse = 0;

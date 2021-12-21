@@ -1,4 +1,4 @@
-file(GLOB_RECURSE PH2_TCUSB_SOURCE_DIR ${PROJECT_SOURCE_DIR}/../cmsph2_tcusb/USB_a.h)
+file(GLOB_RECURSE PH2_TCUSB_SOURCE_DIR ${PROJECT_SOURCE_DIR}/../cmsph2_tcusb/src/USB_a.h)
 if(PH2_TCUSB_SOURCE_DIR)
          set(PH2_TCUSB_FOUND TRUE)
          #strip to the blank path
@@ -6,7 +6,7 @@ if(PH2_TCUSB_SOURCE_DIR)
 
          find_library(PH2_TCUSB_LIBRARY_DIRS
          NAMES
-         lib/libPh2_TCUSB.so
+         lib/libcmsph2_tcusb_utils.so
          PATHS
          ${PH2_TCUSB_SOURCE_DIR}
          )
@@ -14,7 +14,7 @@ if(PH2_TCUSB_SOURCE_DIR)
          #strip away the path
          get_filename_component(PH2_TCUSB_LIBRARY_DIRS "${PH2_TCUSB_LIBRARY_DIRS}" PATH)
          #strip again to get the path to the Ph2_USBInstDriver directory from the root of the FS
-         get_filename_component(PH2_TCUSB_SOURCE_DIR "${PH2_TCUSB_LIBRARY_DIRS}" PATH)
+         #get_filename_component(PH2_TCUSB_SOURCE_DIR "${PH2_TCUSB_LIBRARY_DIRS}" PATH)
 
          set(PH2_TCUSB_INCLUDE_DIRS
              ${PH2_TCUSB_SOURCE_DIR})

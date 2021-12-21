@@ -90,25 +90,33 @@ int main(int argc, char* argv[])
     std::cout << "Setup" << latoff << std::endl;
     for(auto cMPA: *ChipVec)
     {
+        cTool.fReadoutChipInterface->WriteChipReg(cMPA, "Threshold", 200);
+        cTool.fReadoutChipInterface->WriteChipReg(cMPA, "InjectedCharge", 200);
         if(cMPA->getFrontEndType() == FrontEndType::MPA)
         {
             MPA* theMPA = static_cast<MPA*>(cMPA);
-            thePSInterface->Activate_ps(theMPA);
-            if(do_ss) thePSInterface->Activate_ss(theMPA, 1);
-            if(do_pp) thePSInterface->Activate_pp(theMPA, 1);
-            thePSInterface->Activate_sync(theMPA);
+            cTool.fReadoutChipInterface->WriteChipReg(theMPA, "StubWindow", 1);
+            cTool.fReadoutChipInterface->WriteChipReg(theMPA, "StubMode", 0);
+            if(do_ss) cTool.fReadoutChipInterface->WriteChipReg(theMPA, "StubMode", 1);
+            if(do_pp) cTool.fReadoutChipInterface->WriteChipReg(theMPA, "StubMode", 2);
+            cTool.fReadoutChipInterface->WriteChipReg(theMPA, "AnalogueSync", 1);
+
+            // thePSInterface->Activate_ps(theMPA);
+            // if(do_ss) thePSInterface->Activate_ss(theMPA, 1);
+            // if(do_pp) thePSInterface->Activate_pp(theMPA, 1);
+            // thePSInterface->Activate_sync(theMPA);
             thePSInterface->WriteChipReg(cMPA, "ClusterCut_ALL", 5);
             thePSInterface->WriteChipReg(cMPA, "EdgeSelTrig", 0xff);
-            thePSInterface->Set_calibration(cMPA, 200);
-            thePSInterface->Set_threshold(cMPA, 200);
+            // thePSInterface->Set_calibration(cMPA, 200);
+            // thePSInterface->Set_threshold(cMPA, 200);
         }
         if(cMPA->getFrontEndType() == FrontEndType::SSA)
         {
             thePSInterface->WriteChipReg(cMPA, "ReadoutMode", 0);
             thePSInterface->WriteChipReg(cMPA, "ClusterCut", 5);
             thePSInterface->WriteChipReg(cMPA, "FE_Calibration", 1);
-            thePSInterface->Set_calibration(cMPA, 200);
-            thePSInterface->Set_threshold(cMPA, 200);
+            // thePSInterface->Set_calibration(cMPA, 200);
+            // thePSInterface->Set_threshold(cMPA, 200);
         }
     }
     Stubs                 curstub;

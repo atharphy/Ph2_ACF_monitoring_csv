@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     ArgvParser cmd;
 
     // init
-    cmd.setIntroductoryDescription("CMS Ph2_ACF  Data acquisition test and Data dump");
+    cmd.setIntroductoryDescription("Binary to test a 2S-SEH with a test card");
     // error codes
     cmd.addErrorCode(0, "Success");
     cmd.addErrorCode(1, "Error");
@@ -97,8 +97,8 @@ int main(int argc, char* argv[])
     cmd.defineOptionAlternative("debug", "d");
     // scope
     cmd.defineOption("scope-fcmd", "Scope fast commands [de-serialized]");
-    // efficency
-    cmd.defineOption("eff", "Measure the DC/DC efficency");
+    // efficiency
+    cmd.defineOption("eff", "Measure the DC/DC efficiency");
     // Test VTRx+ registers
     cmd.defineOption("powersupply", "Use remote control of the 10V power supply in order to ramp up the voltage", ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("powersupply", "ps");
@@ -106,6 +106,10 @@ int main(int argc, char* argv[])
     cmd.defineOption("leak", "Measure the Bias voltage leakage current ", ArgvParser::OptionRequiresValue);
     // Bias voltage on sensor side
     cmd.defineOption("bias", "Measure the Bias voltage on sensor side ", ArgvParser::OptionRequiresValue);
+    // Load values defining a test from file
+    cmd.defineOption("ext-leak", "Measure the Bias voltage leakage current using an external power supply", ArgvParser::OptionRequiresValue);
+    // Bias voltage on sensor side
+    cmd.defineOption("ext-bias", "Measure the Bias voltage on sensor side using an external power supply", ArgvParser::OptionRequiresValue);
     // Load values defining a test from file
     cmd.defineOption("test-parameter", "Use user file with test parameters, otherwise (or if file is missing it) default parameters will be used", ArgvParser::OptionRequiresValue);
     // Test VTRx+ registers
@@ -148,6 +152,7 @@ int main(int argc, char* argv[])
     std::string cTestParameterFileName = (cmd.foundOption("test-parameter")) ? cmd.optionValue("test-parameter") : "testParameters.txt";
     uint16_t    cBiasVoltage           = (cmd.foundOption("bias")) ? convertAnyInt(cmd.optionValue("bias").c_str()) : 0;
     uint16_t    cLeakVoltage           = (cmd.foundOption("leak")) ? convertAnyInt(cmd.optionValue("leak").c_str()) : 0;
+    uint16_t    cExtLeakVoltage        = (cmd.foundOption("ext-leak")) ? convertAnyInt(cmd.optionValue("ext-leak").c_str()) : 0;
     cDirectory += Form("2S_SEH_%s", cHybridId.c_str());
 
     TApplication cApp("Root Application", &argc, argv);
@@ -174,19 +179,22 @@ int main(int argc, char* argv[])
     cTool.InitResultFile(cResultfile);
     cTool.bookSummaryTree();
     LOG(INFO) << BOLDYELLOW << "Configuring FC7" << RESET;
-    // cTool.ConfigureHw();
-
-    // Initialize BackEnd & Control LpGBT Tester
     SEHTester cSEHTester;
-    // cSEHTester.exampleFit();
     cSEHTester.Inherit(&cTool);
-    cSEHTester.FindUSBHandler();
 
+    cSEHTester.FindUSBHandler();
+    cSEHTester.TurnOn();
+    uint8_t cExternalPattern = (cmd.foundOption("external-pattern")) ? convertAnyInt(cmd.optionValue("external-pattern").c_str()) : 0;
+    cSEHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
+    cTool.ConfigureHw();
+    // Initialize BackEnd & Control LpGBT Tester
+    // cSEHTester.exampleFit();
+    // cSEHTester.DCDCOutputEvaluation();
     if(cmd.foundOption("powersupply"))
     {
         LOG(INFO) << BOLDYELLOW << "Switching on SEH using remote power supply control" << RESET;
         cSEHTester.TurnOn();
-        cSEHTester.RampPowerSupply(cHWFile, cPowerSupply);
+        cSEHTester.RampPowerSupply("MyRohdeSchwarz", "LV_Module3");
     }
     else
     {
@@ -222,9 +230,8 @@ int main(int argc, char* argv[])
         /* EXTERNALLY GENERATED PATTERN */
         else if(cmd.foundOption("external-pattern"))
         {
-            uint8_t cExternalPattern = (cmd.foundOption("external-pattern")) ? convertAnyInt(cmd.optionValue("external-pattern").c_str()) : 0;
-            cSEHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
-            bool cStatus = cSEHTester.LpGBTCheckULPattern(true);
+            // cSEHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
+            bool cStatus = cSEHTester.LpGBTCheckULPattern(true, cExternalPattern);
             cSEHTester.LpGBTInjectULExternalPattern(false, cExternalPattern);
             if(cStatus) { LOG(INFO) << BOLDGREEN << "CIC_Out test passed." << RESET; }
             else
@@ -288,7 +295,7 @@ int main(int argc, char* argv[])
         // cSEHTester.ToyTestFixedADCs();
         cSEHTester.LpGBTTestFixedADCs();
         std::vector<std::string> cADCs = {"ADC0", "ADC3"};
-        cSEHTester.LpGBTTestADC(cADCs, 0, 0x4000, 330); // DAC *should* be 16 bit with 1V reference, ROH is 12 bit something, needs to be included somewhere
+        cSEHTester.LpGBTTestADC(cADCs, 0, 0xe00, 300); // DAC *should* be 16 bit with 1V reference, ROH is 12 bit something, needs to be included somewhere
     }
 
     // Test Fast Commands
@@ -321,8 +328,8 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("eff"))
     {
         // cSEHTester.exampleFit();
-        LOG(INFO) << BOLDBLUE << "Efficency Test" << RESET;
-        cSEHTester.TestEfficency(0, 100, 5);
+        LOG(INFO) << BOLDBLUE << "Efficiency Test" << RESET;
+        cSEHTester.TestEfficiency(0, 2500, 500);
     }
 
     if(cmd.foundOption("leak"))
@@ -335,6 +342,18 @@ int main(int argc, char* argv[])
     {
         LOG(INFO) << BOLDBLUE << "Measuring bias voltage on sensor side" << RESET;
         cSEHTester.TestBiasVoltage(cBiasVoltage);
+    }
+
+    if(cmd.foundOption("ext-leak"))
+    {
+        LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply" << RESET;
+        cSEHTester.ExternalTestLeakageCurrent(cExtLeakVoltage, 600, "MyIsegSHR4220", "HV_Module1");
+    }
+
+    if(cmd.foundOption("ext-bias"))
+    {
+        LOG(INFO) << BOLDBLUE << "Measuring bias voltage on sensor side with external power supply" << RESET;
+        cSEHTester.ExternalTestBiasVoltage("MyIsegSHR4220", "HV_Module1");
     }
 
     if(cFCMDTest && !cFCMDTestStartPattern.empty() && !cFCMDTestUserFileName.empty())
@@ -406,12 +425,15 @@ int main(int argc, char* argv[])
         cFWInterface->L1ADebug();
     */
     // Save Result File
+    cSEHTester.TurnOff();
+    cSEHTester.LpGBTInjectULExternalPattern(false, 170);
+
     cTool.SaveResults();
     cTool.WriteRootFile();
     cTool.CloseResultFile();
     // Destroy Tools
     cTool.Destroy();
-    cTool.Destroy();
+    // cTool.Destroy();
 
     if(!batchMode) cApp.Run();
     return 0;

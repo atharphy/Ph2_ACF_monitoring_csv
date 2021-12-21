@@ -146,84 +146,6 @@ void PSInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
         LOG(INFO) << BOLDMAGENTA << "No need to generate word alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET;
     }
 }
-void PSInterface::setFileHandler(FileHandler* pHandler)
-{
-    setBoard(0);
-    fBoardFW->setFileHandler(pHandler);
-}
-
-void PSInterface::Pix_write(ReadoutChip* cPS, ChipRegItem cRegItem, uint32_t row, uint32_t pixel, uint32_t data) { return theMPAInterface->Pix_write(cPS, cRegItem, row, pixel, data); }
-
-uint32_t PSInterface::Pix_read(ReadoutChip* cPS, ChipRegItem cRegItem, uint32_t row, uint32_t pixel) { return theMPAInterface->Pix_read(cPS, cRegItem, row, pixel); }
-
-void PSInterface::Activate_async(Chip* pPS) { return theMPAInterface->Activate_async(pPS); }
-
-void PSInterface::Activate_sync(Chip* pPS) { return theMPAInterface->Activate_sync(pPS); }
-
-void PSInterface::Activate_pp(Chip* pPS, uint8_t win) { return theMPAInterface->Activate_pp(pPS, win); }
-
-void PSInterface::Activate_ss(Chip* pPS, uint8_t win) { return theMPAInterface->Activate_ss(pPS, win); }
-
-void PSInterface::Activate_ps(Chip* pPS, uint8_t win) { return theMPAInterface->Activate_ps(pPS, win); }
-
-void PSInterface::Pix_Smode(ReadoutChip* pPS, uint32_t p, std::string smode = "edge") { return theMPAInterface->Pix_Smode(pPS, p, smode); }
-
-void PSInterface::Enable_pix_BRcal(ReadoutChip* pPS, uint32_t p, std::string polarity, std::string smode) { return theMPAInterface->Enable_pix_BRcal(pPS, p, polarity, smode); }
-
-void PSInterface::Enable_pix_counter(ReadoutChip* pPS, uint32_t p) { return theMPAInterface->Enable_pix_counter(pPS, p); }
-
-void PSInterface::Enable_pix_sync(ReadoutChip* pPS, uint32_t p) { return theMPAInterface->Enable_pix_sync(pPS, p); }
-
-void PSInterface::Disable_pixel(ReadoutChip* pPS, uint32_t p) { return theMPAInterface->Disable_pixel(pPS, p); }
-
-void PSInterface::Enable_pix_digi(ReadoutChip* pPS, uint32_t p) { return theMPAInterface->Enable_pix_digi(pPS, p); }
-
-void PSInterface::Pix_Set_enable(ReadoutChip* pPS,
-                                 uint32_t     p,
-                                 uint32_t     PixelMask = 1,
-                                 uint32_t     Polarity  = 1,
-                                 uint32_t     EnEdgeBR  = 1,
-                                 uint32_t     EnLevelBR = 0,
-                                 uint32_t     Encount   = 0,
-                                 uint32_t     DigCal    = 0,
-                                 uint32_t     AnCal     = 0,
-                                 uint32_t     BRclk     = 0)
-{
-    return theMPAInterface->Pix_Set_enable(pPS, p, PixelMask, Polarity, EnEdgeBR, EnLevelBR, Encount, DigCal, AnCal, BRclk);
-}
-
-void PSInterface::Set_calibration(Chip* pPS, uint32_t cal)
-{
-    if(pPS->getFrontEndType() == FrontEndType::MPA) { return theMPAInterface->Set_calibration(pPS, cal); }
-    else if(pPS->getFrontEndType() == FrontEndType::SSA)
-    {
-        return theSSAInterface->Set_calibration(pPS, cal);
-    }
-    else
-        LOG(ERROR) << "Bad chip for PS interface";
-}
-
-void PSInterface::Set_threshold(Chip* pPS, uint32_t th)
-{
-    if(pPS->getFrontEndType() == FrontEndType::MPA) { return theMPAInterface->Set_threshold(pPS, th); }
-    else if(pPS->getFrontEndType() == FrontEndType::SSA)
-    {
-        return theSSAInterface->Set_threshold(pPS, th);
-    }
-    else
-        LOG(ERROR) << "Bad chip for PS interface";
-}
-
-void PSInterface::ReadASEvent(ReadoutChip* pPS, std::vector<uint32_t>& pData, std::pair<uint32_t, uint32_t> pSRange)
-{
-    if(pPS->getFrontEndType() == FrontEndType::MPA) { return theMPAInterface->ReadASEvent(pPS, pData, pSRange); }
-    else if(pPS->getFrontEndType() == FrontEndType::SSA)
-    {
-        return theSSAInterface->ReadASEvent(pPS, pData, pSRange);
-    }
-    else
-        LOG(ERROR) << "Bad chip for PS interface";
-}
 
 bool PSInterface::enableInjection(ReadoutChip* pPS, bool inject, bool pVerifLoop)
 {
@@ -237,12 +159,6 @@ bool PSInterface::enableInjection(ReadoutChip* pPS, bool inject, bool pVerifLoop
     return false;
 }
 
-void PSInterface::readAllBias(ReadoutChip* pPS)
-{
-    if(pPS->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->readAllBias(pPS); }
-}
-
-//
 std::vector<int> PSInterface::decodeBendCode(ReadoutChip* pChip, uint8_t pBendCode) { return theMPAInterface->decodeBendCode(pChip, pBendCode); }
 //
 void PSInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern)
@@ -260,18 +176,6 @@ void PSInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInje
     //     }
 
     // }
-}
-
-uint32_t PSInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
-{
-    setBoard(0);
-    return fBoardFW->ReadData(pBoard, pBreakTrigger, pData, pWait);
-}
-
-void PSInterface::Cleardata()
-{
-    setBoard(0);
-    // fBoardFW->Cleardata( );
 }
 
 } // namespace Ph2_HwInterface

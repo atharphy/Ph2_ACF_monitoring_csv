@@ -116,13 +116,16 @@ class Chip : public FrontEndDescription
      * \brief Get the Chip Id
      * \return The Chip ID
      */
-    virtual uint8_t getId() const { return fChipId; }
+    virtual uint16_t getId() const { return fChipId; }
 
     /*!
      * \brief Set the Chip Id
      * \param pChipId
      */
     void setChipId(uint8_t pChipId) { fChipId = pChipId; }
+
+    void    setChipAddress(uint16_t pChipAddress) { fChipAddress = pChipAddress; }
+    uint8_t getChipAddreess() const { return fChipAddress; }
 
     /*!
      * \brief Set the clock frequency
@@ -180,6 +183,7 @@ class Chip : public FrontEndDescription
 
   protected:
     uint8_t    fChipId;
+    uint8_t    fChipAddress; // I2C addess of chip
     uint16_t   fMaxRegValue;
     uint16_t   fClockFrequency;
     uint8_t    fMasterId;

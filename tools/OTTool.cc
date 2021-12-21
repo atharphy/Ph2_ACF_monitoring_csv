@@ -98,7 +98,7 @@ void OTTool::Reset()
 void OTTool::Prepare()
 {
     // retreive number of events from settings file
-    fNevents = findValueInSettings("Nevents", 10);
+    fNevents = findValueInSettings<double>("Nevents", 10);
 
     if(fReadoutMode == 1) return;
     // retreive original settings for all chips and all back-end boards

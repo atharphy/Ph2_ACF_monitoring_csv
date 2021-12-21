@@ -762,21 +762,21 @@ void CMTester::parseSettings()
     auto cSetting = fSettingsMap.find("Nevents");
 
     if(cSetting != std::end(fSettingsMap))
-        fNevents = 10 * cSetting->second;
+        fNevents = 10 * boost::any_cast<double>(cSetting->second);
     else
         fNevents = 2000;
 
     cSetting = fSettingsMap.find("doSimulate");
 
     if(cSetting != std::end(fSettingsMap))
-        fDoSimulate = cSetting->second;
+        fDoSimulate = boost::any_cast<double>(cSetting->second);
     else
         fDoSimulate = false;
 
     cSetting = fSettingsMap.find("SimOccupancy");
 
     if(cSetting != std::end(fSettingsMap))
-        fSimOccupancy = cSetting->second;
+        fSimOccupancy = boost::any_cast<double>(cSetting->second);
     else
         fSimOccupancy = 50;
 

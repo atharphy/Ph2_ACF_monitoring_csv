@@ -23,16 +23,15 @@ void InjectionDelay::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings("ROWstart");
-    rowStop        = this->findValueInSettings("ROWstop");
-    colStart       = this->findValueInSettings("COLstart");
-    colStop        = this->findValueInSettings("COLstop");
-    nEvents        = this->findValueInSettings("nEvents");
+    rowStart       = this->findValueInSettings<double>("ROWstart");
+    rowStop        = this->findValueInSettings<double>("ROWstop");
+    colStart       = this->findValueInSettings<double>("COLstart");
+    colStop        = this->findValueInSettings<double>("COLstop");
     startValue     = 0;
     stopValue      = RD53Shared::NLATENCYBINS * (RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY")) + 1) - 1;
-    doDisplay      = this->findValueInSettings("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings("SaveBinaryData");
+    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
 
     // ##############################
     // # Initialize dac scan values #
@@ -45,7 +44,7 @@ void InjectionDelay::ConfigureCalibration()
     // # Initialize Latency #
     // ######################
     la.Inherit(this);
-    la.localConfigure("", -1);
+    la.localConfigure();
 
     // ##############################
     // # Injection register masking #
@@ -86,10 +85,10 @@ void InjectionDelay::sendData()
     auto theStream               = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<InjDelaySize>>("Occ");
     auto theInjectionDelayStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>("InjDelay");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: theOccContainer) theStream.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theInjectionDelayContainer) theInjectionDelayStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theOccContainer) theStream.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theInjectionDelayContainer) theInjectionDelayStream.streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 
@@ -105,7 +104,7 @@ void InjectionDelay::Stop()
     RD53RunProgress::reset();
 }
 
-void InjectionDelay::localConfigure(const std::string fileRes_, int currentRun)
+void InjectionDelay::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos = nullptr;
@@ -120,7 +119,7 @@ void InjectionDelay::localConfigure(const std::string fileRes_, int currentRun)
     InjectionDelay::initializeFiles(fileRes_, currentRun);
 }
 
-void InjectionDelay::initializeFiles(const std::string fileRes_, int currentRun)
+void InjectionDelay::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 
@@ -140,7 +139,7 @@ void InjectionDelay::initializeFiles(const std::string fileRes_, int currentRun)
     // ######################
     std::string fileName = fileRes;
     fileName.replace(fileRes.find("_InjectionDelay"), 15, "_Latency");
-    la.initializeFiles(fileName, -1);
+    la.initializeFiles(fileName);
 }
 
 void InjectionDelay::run()
@@ -194,7 +193,7 @@ void InjectionDelay::run()
                         this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", latency + i);
                     }
 
-        InjectionDelay::scanDac("INJECTION_SELECT", halfDacList, nEvents, &theOccContainer);
+        InjectionDelay::scanDac("INJECTION_SELECT", halfDacList, &theOccContainer);
     }
 
     // ################
@@ -222,7 +221,6 @@ void InjectionDelay::draw()
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     InjectionDelay::fillHisto();
     histos->process();
-    this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
 #endif
@@ -281,7 +279,7 @@ void InjectionDelay::fillHisto()
 #endif
 }
 
-void InjectionDelay::scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
+void InjectionDelay::scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer)
 {
     const size_t InjDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
@@ -325,7 +323,7 @@ void InjectionDelay::scanDac(const std::string& regName, const std::vector<uint1
                     }
 
         // ##############################################
-        // # Send periodic data to minitor the progress #
+        // # Send periodic data to monitor the progress #
         // ##############################################
         InjectionDelay::sendData();
     }

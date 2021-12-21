@@ -29,7 +29,7 @@ class D19clpGBTInterface : public lpGBTInterface
         CPBconfig cCPBconfig;
         cCPBconfig.fEnable       = pUseCPB;
         cCPBconfig.fI2CFrequency = 3;
-        cCPBconfig.fWait_us      = 0;    // TO-DO - make configurable from xml
+        cCPBconfig.fWait_us      = 100;  // TO-DO - make configurable from xml
         cCPBconfig.fReTry        = 1;    // TO-DO - make configurable from xml
         cCPBconfig.fVerbose      = 0;    // TO-DO - make configurable from xml
         cCPBconfig.fMaxAttempts  = 5000; // TO-DO - make configurable from xml
@@ -45,43 +45,14 @@ class D19clpGBTInterface : public lpGBTInterface
     // General configuration of the lpGBT chip from register file
     bool ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
 
-    // ###################################
-    // # Outer Tracker specific funtions #
-    // ###################################
-    // #ifdef __TCUSB__
-    //     void InitialiseTCUSBHandler();
-    // #ifdef __ROH_USB__
-    //     void      SetTCUSBHandler(TC_PSROH* pTC_PSROH) { fTC_USB = pTC_PSROH; }
-    //     TC_PSROH* GetTCUSBHandler() { return fTC_USB; }
-    // #elif __SEH_USB__
-    //     void                                              SetTCUSBHandler(TC_2SSEH* pTC_2SSEH) { fTC_USB = pTC_2SSEH; }
-    //     TC_2SSEH*                                         GetTCUSBHandler() { return fTC_USB; }
-    // #endif
-    // #endif
-
     // Sets the flag used to select which lpGBT configuration interface to use
     void SetConfigMode(bool pUseOpticalLink, bool pUseCPB, bool pToggleTC = false);
     // configure PS-ROH
     void ConfigurePSROH(Ph2_HwDescription::Chip* pChip);
     // configure 2S-SEH
-    void Configure2SSEH(Ph2_HwDescription::Chip* pChip);
-    // cbc read/write
-    bool cbcWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint8_t pPage, uint8_t pRegistergAddress, uint8_t pRegisterValue, bool pReadBack = true, bool pSetPage = false)
-    {
-        return true;
-    }
-    uint32_t cbcRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint8_t pPage, uint8_t pRegisterAddress) { return 0; }
-    uint8_t  cbcSetPage(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint8_t pPage) { return 0; }
-    uint8_t  cbcGetPageRegister(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t cChipId) { return 0; }
-    // cic read/write
-    bool     cicWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false);
-    uint32_t cicRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint16_t pRegisterAddress);
-    // ssa read/write
-    bool     ssaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false);
-    uint32_t ssaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress);
-    // mpa read/write
-    bool     mpaWrite(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false);
-    uint32_t mpaRead(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pChipId, uint16_t pRegisterAddress);
+    void        Configure2SSEH(Ph2_HwDescription::Chip* pChip);
+    std::string getVariableValue(std::string variable, std::string buffer);
+    void        ContinuousPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
 
     // 0 [RHS], 1 [LHS]
     // active reset functions

@@ -486,7 +486,7 @@ uint32_t MemoryCheck2S::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
 
     // n events
     auto     cSetting = fSettingsMap.find("Nevents");
-    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t cNevents = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 100;
 
     // configure trigger blocks
     auto cTriggerMult       = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
@@ -538,7 +538,7 @@ void MemoryCheck2S::GenericTriggers(int pTriggerSeparation, int pMaxBurstLength)
     // the first injection
     size_t cReSyncSep = 1;
     auto   cSetting   = fSettingsMap.find("TestPulseSeparation");
-    size_t cTPdelay   = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 2;
+    size_t cTPdelay   = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<size_t>(cSetting->second) : 2;
 
     // random c++
     std::srand(std::time(NULL));
@@ -656,10 +656,10 @@ bool MemoryCheck2S::SendGenericTriggers(int pTriggerSeparation)
 void MemoryCheck2S::GenericTestPulse(int pReSync)
 {
     auto   cSetting = fSettingsMap.find("TestPulseSeparation");
-    size_t cTPdelay = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 2;
+    size_t cTPdelay = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<size_t>(cSetting->second) : 2;
     // length of the trigger burst
     cSetting            = fSettingsMap.find("LengthOfBurst");
-    size_t cBurstLength = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    size_t cBurstLength = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<size_t>(cSetting->second) : 1;
 
     // LOG (INFO) << BOLDMAGENTA << "Injecting TP with generic FCMDs .."
     //     << " time between ReSync + TP is  " << +pReSync
@@ -1042,11 +1042,11 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
     bool   cWithNoise      = !cInjection;
     bool   cUseOffsets     = true;
     auto   cSetting        = fSettingsMap.find("Ntrials");
-    size_t cNtrials        = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 10;
+    size_t cNtrials        = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<size_t>(cSetting->second) : 10;
     cSetting               = fSettingsMap.find("TestPulseSeparation");
-    size_t cTPdelay        = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 2;
+    size_t cTPdelay        = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<size_t>(cSetting->second) : 2;
     cSetting               = fSettingsMap.find("TriggerSeparation");
-    size_t cTriggerGap     = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 500;
+    size_t cTriggerGap     = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<size_t>(cSetting->second) : 500;
 
     // sparisfication
     DetectorDataContainer cSparsBoards;
@@ -1294,11 +1294,11 @@ void MemoryCheck2S::MemoryCheck2SRaw(bool pAllOnes)
     }
 
     auto   cSetting     = fSettingsMap.find("Ntrials");
-    size_t cNtrials     = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 10;
+    size_t cNtrials     = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<size_t>(cSetting->second) : 10;
     cSetting            = fSettingsMap.find("TestPulseSeparation");
-    size_t cTPdelay     = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 2;
+    size_t cTPdelay     = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<size_t>(cSetting->second) : 2;
     cSetting            = fSettingsMap.find("LengthOfBurst");
-    size_t cBurstLength = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    size_t cBurstLength = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<size_t>(cSetting->second) : 1;
 
     size_t cDepthPipeline = 512;
     int    cNOffsts       = std::ceil(cDepthPipeline / (float)cBurstLength);
@@ -1443,11 +1443,11 @@ void MemoryCheck2S::MemoryCheck2SSparse()
     bool     cWithNoise      = false;
     bool     cUseOffsets     = false;
     auto     cSetting        = fSettingsMap.find("Ntrials");
-    size_t   cNtrials        = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 10;
+    size_t   cNtrials        = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<size_t>(cSetting->second) : 10;
     cSetting                 = fSettingsMap.find("TestPulseSeparation");
-    size_t cTPdelay          = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 2;
+    size_t cTPdelay          = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<size_t>(cSetting->second) : 2;
     cSetting                 = fSettingsMap.find("LengthOfBurst");
-    size_t cBurstLength      = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    size_t cBurstLength      = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<size_t>(cSetting->second) : 1;
 
     size_t cDepthPipeline = 512;
     int    cNOffsts       = std::ceil(cDepthPipeline / (float)cBurstLength);

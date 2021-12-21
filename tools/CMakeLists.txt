@@ -59,6 +59,14 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{AntennaFlag}")
     endif()
 
+    # Power supplt
+    if(${PH2_POWERSUPPLY_FOUND})
+      include_directories(${PH2_POWERSUPPLY_INCLUDE_DIRS})
+      link_directories(${PH2_POWERSUPPLY_LIBRARY_DIRS})
+      set(LIBS ${LIBS} ${PH2_POWERSUPPLY_LIBRARIES})
+      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{PowerSupplyFlag}")
+    endif()
+
     # Check for TestCard USBDriver
     if(${PH2_TCUSB_FOUND})
         include_directories(${PH2_TCUSB_INCLUDE_DIRS})
@@ -70,6 +78,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         else($ENV{UseTCUSBforROH})
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
         endif($ENV{UseTCUSBforROH})
+        if($ENV{UseTCUSBTcpServer})
+          set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBTcpServerFlag}")
+        endif($ENV{UseTCUSBTcpServer})
     endif(${PH2_TCUSB_FOUND})
     #last but not least, find root and link against it
     if(NoDataShipping)
@@ -134,6 +145,7 @@ else()
     MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/tools/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/uhal/include)
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/log/include)
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
@@ -149,7 +161,10 @@ else()
             LIBRARIES
             pthread
             ${Boost_SYSTEM_LIBRARY}
-            EXCLUDE RD53eudaqProducer.h RD53eudaqProducer.cc
+            EXCLUDE 
+            RD53eudaqProducer.h RD53eudaqProducer.cc
+            SEHTester.h SEHTester.cc
+            SSAPhysics.h SSAPhysics.cc
             )
 
     install_headers()

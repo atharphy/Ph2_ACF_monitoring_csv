@@ -88,7 +88,7 @@ void AntennaTester::InitialiseSettings()
     fDecisionThreshold = 10.0;
     // figure out whether the hybrid was configured to run in hole/electron mode
     auto cSetting = fSettingsMap.find("HoleMode");
-    fHoleMode     = (cSetting != std::end(fSettingsMap)) ? cSetting->second : true;
+    fHoleMode     = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : true;
 
     // figure out how many CBCs you're working with
     Counter cCbcCounter;
@@ -97,14 +97,10 @@ void AntennaTester::InitialiseSettings()
 
     // figure out what the number of events to take is
     cSetting     = fSettingsMap.find("Nevents");
-    fTotalEvents = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 999;
+    fTotalEvents = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 999;
 
     cSetting = fSettingsMap.find("TriggerSource");
-    //         if ( cSetting != std::end ( fSettingsMap ) ) trigSource = cSetting->second;
 
-    /// fBeBoardInterface->ReadBoardReg (cBoard, getDelAfterTPString ( cBoard->getBoardType() ) );
-    // trigSource =ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source");
-    //         LOG (INFO)  <<int (trigSource);
     for(auto cBoard: *fDetectorContainer)
     {
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);

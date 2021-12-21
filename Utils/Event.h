@@ -123,6 +123,7 @@ class Event
     uint8_t  fCBCDataType;
     uint8_t  fNCbc;
     uint8_t  fNSSA;
+    uint8_t  fNSSA2;
     uint8_t  fNMPA;
     uint16_t fEventDataSize;
     uint32_t fBeStatus;

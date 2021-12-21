@@ -25,17 +25,16 @@ void ThrMinimization::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart        = this->findValueInSettings("ROWstart");
-    rowStop         = this->findValueInSettings("ROWstop");
-    colStart        = this->findValueInSettings("COLstart");
-    colStop         = this->findValueInSettings("COLstop");
-    nEvents         = this->findValueInSettings("nEvents");
-    targetOccupancy = this->findValueInSettings("TargetOcc");
-    ThrStart        = this->findValueInSettings("ThrStart");
-    ThrStop         = this->findValueInSettings("ThrStop");
-    doDisplay       = this->findValueInSettings("DisplayHisto");
-    doUpdateChip    = this->findValueInSettings("UpdateChipCfg");
-    saveBinaryData  = this->findValueInSettings("SaveBinaryData");
+    rowStart        = this->findValueInSettings<double>("ROWstart");
+    rowStop         = this->findValueInSettings<double>("ROWstop");
+    colStart        = this->findValueInSettings<double>("COLstart");
+    colStop         = this->findValueInSettings<double>("COLstop");
+    targetOccupancy = this->findValueInSettings<double>("TargetOcc");
+    ThrStart        = this->findValueInSettings<double>("ThrStart");
+    ThrStop         = this->findValueInSettings<double>("ThrStop");
+    doDisplay       = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData  = this->findValueInSettings<double>("SaveBinaryData");
 
     frontEnd = RD53::getMajorityFE(colStart, colStop);
     colStart = std::max(colStart, frontEnd->colStart);
@@ -72,8 +71,8 @@ void ThrMinimization::sendData()
 {
     auto theThrStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>();
 
-    if(fStreamerEnabled == true)
-        for(const auto cBoard: theThrContainer) theThrStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+    if(fDQMStreamerEnabled == true)
+        for(const auto cBoard: theThrContainer) theThrStream.streamAndSendBoard(cBoard, fDQMStreamer);
 }
 
 void ThrMinimization::Stop()
@@ -88,7 +87,7 @@ void ThrMinimization::Stop()
     RD53RunProgress::reset();
 }
 
-void ThrMinimization::localConfigure(const std::string fileRes_, int currentRun)
+void ThrMinimization::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos             = nullptr;
@@ -104,7 +103,7 @@ void ThrMinimization::localConfigure(const std::string fileRes_, int currentRun)
     ThrMinimization::initializeFiles(fileRes_, currentRun);
 }
 
-void ThrMinimization::initializeFiles(const std::string fileRes_, int currentRun)
+void ThrMinimization::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     // ##############################
     // # Initialize sub-calibration #
@@ -127,7 +126,7 @@ void ThrMinimization::initializeFiles(const std::string fileRes_, int currentRun
 
 void ThrMinimization::run()
 {
-    ThrMinimization::bitWiseScanGlobal(frontEnd->thresholdReg, nEvents, targetOccupancy, ThrStart, ThrStop);
+    ThrMinimization::bitWiseScanGlobal(frontEnd->thresholdReg, targetOccupancy, ThrStart, ThrStop);
 
     // ############################
     // # Fill threshold container #
@@ -167,8 +166,6 @@ void ThrMinimization::draw()
 
     PixelAlive::draw(false);
 
-    this->WriteRootFile();
-
     if(doDisplay == true) myApp->Run(true);
 #endif
 }
@@ -190,11 +187,12 @@ void ThrMinimization::fillHisto()
 #endif
 }
 
-void ThrMinimization::bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
+void ThrMinimization::bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue)
 {
     std::vector<uint16_t> chipCommandList;
     std::vector<uint32_t> hybridCommandList;
 
+    float    tmp;
     uint16_t init;
     uint16_t numberOfBits = floor(log2(stopValue - startValue + 1) + 1);
 
@@ -209,20 +207,8 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, midDACcontainer);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, maxDACcontainer, init = (stopValue + 1));
 
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, bestDACcontainer);
-    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer);
-
-    // #########################
-    // # Initialize containers #
-    // #########################
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = 0;
-                    bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>()       = 0;
-                }
+    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, bestDACcontainer, init = 0);
+    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer, tmp = 0);
 
     for(auto i = 0u; i <= numberOfBits; i++)
     {
@@ -273,7 +259,7 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, uint32_t nEv
         output->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandlerContainer, 1);
 
         // ##############################################
-        // # Send periodic data to minitor the progress #
+        // # Send periodic data to monitor the progress #
         // ##############################################
         PixelAlive::sendData();
 

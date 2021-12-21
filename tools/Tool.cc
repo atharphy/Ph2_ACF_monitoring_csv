@@ -462,7 +462,7 @@ void Tool::SaveResults()
         cCanvas.second->SaveAs(cPdfName.c_str());
     }
     // Save summary TTree
-    // fSummaryTree->Write(); // Seems to be needed with ROOT6, seems to break with ROOT5...
+    if(fSummaryTree != nullptr) fSummaryTree->Write(); // Seems to be needed with ROOT6, seems to break with ROOT5...
 
 #endif
 
@@ -472,12 +472,12 @@ void Tool::SaveResults()
     LOG(INFO) << "Results saved!";
 }
 
-void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool pDate)
+void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool pDate, const std::string& whichCalib)
 {
     std::string nDirname = pDirname;
     if(pDate) nDirname += currentDateTime();
 
-    LOG(INFO) << GREEN << "Creating directory: " << BOLDYELLOW << nDirname << RESET;
+    LOG(INFO) << GREEN << whichCalib << " attempting to create directory: " << BOLDYELLOW << nDirname << RESET;
     std::string cCommand = "mkdir -p " + nDirname;
 
     try
@@ -519,10 +519,9 @@ void Tool::InitResultFile(const std::string& pFilename)
 
 void Tool::CloseResultFile()
 {
-    LOG(INFO) << GREEN << "Closing result file" << RESET;
-
     if(fResultFile != nullptr)
     {
+        LOG(INFO) << GREEN << "Closing result file" << RESET;
         fResultFile->Close();
         delete fResultFile;
         fResultFile = nullptr;
@@ -728,15 +727,13 @@ void Tool::setFWTestPulse()
     for(auto cBoard: *fDetectorContainer)
     {
         std::vector<std::pair<std::string, uint32_t>> cRegVec;
-        // uint8_t cAsync = ( cBoard->getEventType() == EventType::SSAAS || cBoard->getEventType() == EventType::MPAAS )
-        // ? 1 : 0;
         switch(cBoard->getBoardType())
         {
         case BoardType::D19C:
         {
             EventType cEventType = cBoard->getEventType();
-            bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::PSAS);
-
+            // bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::PSAS);
+            bool cAsync = (cEventType == EventType::SCAS);
             if(!cAsync)
             {
                 cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
@@ -744,7 +741,9 @@ void Tool::setFWTestPulse()
             }
             else
             {
+                LOG(INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 10" << RESET;
                 cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
+                // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
                 cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
             }
             break;
@@ -1059,6 +1058,8 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
         else
             setAllGlobalDacBeBoard(boardIndex, dacName, *currentDacList);
 
+        Occupancy noOccupancy;
+        ContainerFactory::reinitializeContainer(currentStepOccupancyContainer, noOccupancy);
         fDetectorDataContainer = currentStepOccupancyContainer;
         measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
         // TO-DO.. generalize so that I don't need the MPA/SSA
@@ -1402,8 +1403,8 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
 
     if(fNormalize)
     {
-        auto cTmp = fDetectorDataContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandlerContainer, numberOfEvents);
-        LOG(DEBUG) << BOLDYELLOW << cTmp << RESET;
+        auto cTmp = fDetectorDataContainer->at(boardIndex)->normalizeAndAverageContainers(fDetectorContainer->at(boardIndex), fChannelGroupHandlerContainer->at(boardIndex), numberOfEvents);
+        LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << cTmp << RESET;
     }
     fUseReadNEvents = cUseReadNEvents;
 }

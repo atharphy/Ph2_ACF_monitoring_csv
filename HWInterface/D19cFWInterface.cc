@@ -512,98 +512,6 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
     return cLinksLocked;
 }
 
-bool D19cFWInterface::GBTLock(const BeBoard* pBoard)
-{
-    // std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    // get link Ids
-    std::vector<uint8_t> cLinkIds;
-    for(auto cOpticalReadout: *pBoard)
-    {
-        if(std::find(cLinkIds.begin(), cLinkIds.end(), cOpticalReadout->getId()) == cLinkIds.end()) cLinkIds.push_back(cOpticalReadout->getId());
-    }
-
-    // switch off SEH
-    if(fPowerSupplyClient == nullptr)
-    {
-        LOG(INFO) << BOLDRED << "Please switch off the SEH... press any key to continue once you have done so..." << RESET;
-        do
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        } while(std::cin.get() != '\n');
-    }
-    else
-    {
-        LOG(INFO) << BOLDRED << "Switching off the LV using Power Supply Server..." << RESET;
-        fPowerSupplyClient->sendAndReceivePacket("TurnOff,PowerSupplyId:MyTTi,ChannelId:LV_Module");
-        // fPowerSupplyClient->sendAndReceivePacket("TurnOff,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module3");
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    }
-    // system("/home/modtest/Programming/power_supply/bin/TurnOff -c /home/modtest/Programming/power_supply/config/config.xml ");
-    // std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
-    // resync CDCE
-    // this->syncCDCE();
-    // reset GBT-FPGA
-    this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    // reset GBT-FPGA
-    // this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
-    // std::this_thread::sleep_for (std::chrono::milliseconds (500) );
-    // this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
-    // std::this_thread::sleep_for (std::chrono::milliseconds (500) );
-    bool cLinksLocked = true;
-
-    // tell user to switch on SEH
-    if(fPowerSupplyClient == nullptr)
-    {
-        LOG(INFO) << BOLDRED << "Please switch on the SEH... press any key to continue once you have done so..." << RESET;
-        do
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        } while(std::cin.get() != '\n');
-    }
-    else
-    {
-        LOG(INFO) << BOLDRED << "Switching on the LV using Power Supply Server..." << RESET;
-        fPowerSupplyClient->sendAndReceivePacket("TurnOn,PowerSupplyId:MyTTi,ChannelId:LV_Module");
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    }
-    // system("/home/modtest/Programming/power_supply/bin/TurnOn -c /home/modtest/Programming/power_supply/config/config.xml ");
-    // std::this_thread::sleep_for (std::chrono::milliseconds (1000) );
-
-    for(auto cLinkId: cLinkIds)
-    {
-        // reset here for good measure
-        uint32_t cCommand = (0x0 << 22) | ((cLinkId & 0x3f) << 26);
-        // this->WriteReg("fc7_daq_ctrl.optical_block.general", cCommand ) ;
-        // std::this_thread::sleep_for (std::chrono::milliseconds (2000) );
-        //  get link status
-        cCommand = ((0x1 & 0xf) << 22) | ((cLinkId & 0x3f) << 26);
-        this->WriteReg("fc7_daq_ctrl.optical_block.general", cCommand);
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        LOG(INFO) << BOLDBLUE << "GBT Link Status..." << RESET;
-        uint32_t cLinkStatus = this->ReadReg("fc7_daq_stat.optical_block");
-        LOG(INFO) << BOLDBLUE << "GBT Link" << +cLinkId << " status " << std::bitset<32>(cLinkStatus) << RESET;
-        std::vector<std::string> cStates     = {"GBT TX Ready", "MGT Ready", "GBT RX Ready"};
-        uint8_t                  cIndex      = 1;
-        bool                     cGBTxLocked = true;
-        for(auto cState: cStates)
-        {
-            uint8_t cStatus = (cLinkStatus >> (3 - cIndex)) & 0x1;
-            cGBTxLocked &= (cStatus == 1);
-            if(cStatus == 1)
-                LOG(INFO) << BOLDBLUE << "\t... " << cState << BOLDGREEN << "\t : LOCKED" << RESET;
-            else
-                LOG(INFO) << BOLDBLUE << "\t... " << cState << BOLDRED << "\t : FAILED" << RESET;
-            cIndex++;
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        LOG(INFO) << BOLDMAGENTA << RESET;
-        cLinksLocked = cLinksLocked && cGBTxLocked;
-        this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x00);
-    }
-    return cLinksLocked;
-}
-
 void D19cFWInterface::configureLink(const BeBoard* pBoard)
 {
     std::vector<uint8_t> cLinkIds(0);
@@ -841,19 +749,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     // fUseOpticalLink = pBoard->isOptical() && !fOptical;
     bool cWithGBTx = false;
     // if optical readout .. then configure links
-    if(pBoard->isOptical() && !cWithlpGBT)
-    {
-        cWithGBTx = true;
-        LOG(INFO) << BOLDBLUE << "Configuring optical link with GBTx" << RESET;
-        bool cGBTlock = GBTLock(pBoard);
-        if(!cGBTlock)
-        {
-            LOG(INFO) << BOLDRED << "GBT link failed to LOCK!" << RESET;
-            exit(0);
-        }
-        // now configure SCA + GBTx
-        configureLink(pBoard);
-    }
+
     if(pBoard->isOptical() && cWithlpGBT)
     {
         bool cSkip = (pBoard->getLinkReset() == 0);
@@ -1113,7 +1009,7 @@ void D19cFWInterface::CheckChipControl(const BeBoard* pBoard)
                 ChipRegItem cRegItem      = cReadoutChip->getRegItem((*cIterator).first);
                 auto        cValueFromMap = cRegItem.fValue;
                 bool        cWrite        = false;
-                this->EncodeReg(cRegItem, cHybrid->getId(), cReadoutChip->getId(), cVec, true, cWrite);
+                this->EncodeReg(cRegItem, cReadoutChip, cVec, true, cWrite);
                 this->ReadChipBlockReg(cVec);
                 uint8_t cChipId;
                 bool    cRead   = false;
@@ -1203,7 +1099,7 @@ void D19cFWInterface::CheckChipControl(const BeBoard* pBoard)
                 } while((*cIterator).second.fValue != 0 && cIndex < cRegisterMap.size());
                 ChipRegItem cRegItem = cCic->getRegItem((*cIterator).first);
                 bool        cWrite   = false;
-                this->EncodeReg(cRegItem, cHybrid->getId(), cCic->getId(), cVec, true, cWrite);
+                this->EncodeReg(cRegItem, cCic, cVec, true, cWrite);
                 bool cWriteSuccess = !this->WriteI2C(cVec, cReplies, true, false);
                 if(cWriteSuccess)
                 {
@@ -2209,7 +2105,7 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                     else
                         cReg_Counters_MSB.fAddress = 0x0680 + cChnl;
                     cReg_Counters_MSB.fValue = 0x00;
-                    this->EncodeReg(cReg_Counters_MSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
+                    this->EncodeReg(cReg_Counters_MSB, cChip, cVec, true, cWrite);
                     // this->ReadChipBlockReg( cVec );
                     // cReplies.push_back(cVec[0]);
                     // cVec.clear();
@@ -2221,7 +2117,7 @@ void D19cFWInterface::ReadSSACounters(BeBoard* pBoard, std::vector<uint32_t>& pD
                     else
                         cReg_Counters_LSB.fAddress = 0x0580 + cChnl;
                     cReg_Counters_LSB.fValue = 0x00;
-                    this->EncodeReg(cReg_Counters_LSB, cFe->getId(), cChip->getId(), cVec, true, cWrite);
+                    this->EncodeReg(cReg_Counters_LSB, cChip, cVec, true, cWrite);
                     // this->ReadChipBlockReg( cVec );
                     // cReplies.push_back(cVec[0]);
                     // cVec.clear();
@@ -2350,7 +2246,7 @@ void D19cFWInterface::ReadPSCounters(BeBoard* pBoard, std::vector<uint32_t>& pDa
                                     ChipRegItem cReg_Counters;
                                     cReg_Counters.fPage    = 0x00;
                                     cReg_Counters.fAddress = cReg;
-                                    this->EncodeReg(cReg_Counters, cFe->getId(), cChip->getId(), cVec, true, cWrite);
+                                    this->EncodeReg(cReg_Counters, cChip, cVec, true, cWrite);
                                     cRegValues[cIndx] = cReg_Counters;
                                     cIndx++;
                                 }
@@ -4179,7 +4075,7 @@ bool D19cFWInterface::WriteBlockReg(const std::string& pRegNode, const std::vect
 
 void D19cFWInterface::EncodeReg(const ChipRegItem& pRegItem, Chip* pChip, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
 {
-    uint8_t pCbcId       = pChip->getId();
+    uint8_t pCbcId       = pChip->getId() % 8;
     uint8_t pLinkId      = pChip->getOpticalId();
     uint8_t pFeId        = pChip->getHybridId();
     auto    cMapIterator = fI2CSlaveMap.find(pCbcId);
@@ -4195,59 +4091,6 @@ void D19cFWInterface::EncodeReg(const ChipRegItem& pRegItem, Chip* pChip, std::v
         {
             this->selectLink(pLinkId);
             // new command consists of one word if its read command, and of two words if its write. first word is always
-            uint32_t cWord = (pLinkId << 29) | (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0);
-            pVecReq.push_back(cWord);
-            // only for write commands
-            if(pWrite)
-            {
-                cWord = (pLinkId << 29) | (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pRegItem.fValue << 0);
-                pVecReq.push_back(cWord);
-            }
-        }
-        else if(fI2CVersion >= 1)
-        {
-            // new command consists of one word if its read command, and of two words if its write. first word is always
-            // the same
-            pVecReq.push_back((0 << 28) | (0 << 27) | (pFeId << 23) | (pIndex << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0));
-            // only for write commands
-            if(pWrite) pVecReq.push_back((0 << 28) | (pWrite << 27) | (pRegItem.fValue << 0));
-        }
-        else
-        {
-            pVecReq.push_back((0 << 28) | (pFeId << 24) | (pCbcId << 20) | (pReadBack << 19) | (pUseMask << 18) | ((pRegItem.fPage) << 17) | ((!pWrite) << 16) | (pRegItem.fAddress << 8) |
-                              pRegItem.fValue);
-        }
-    }
-    else
-    {
-        LOG(INFO) << BOLDRED << "Could not find address in I2C map.. " << RESET;
-    }
-}
-
-void D19cFWInterface::EncodeReg(const ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
-{
-    // use fBroadcastCBCId for broadcast commands
-    bool    pUseMask = false;
-    uint8_t pFeId    = 0;
-    pVecReq.push_back((0 << 28) | (pFeId << 24) | (pCbcId << 20) | (pReadBack << 19) | (pUseMask << 18) | ((pRegItem.fPage) << 17) | ((!pWrite) << 16) | (pRegItem.fAddress << 8) | pRegItem.fValue);
-}
-void D19cFWInterface::EncodeReg(const ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
-{
-    auto cMapIterator = fI2CSlaveMap.find(pCbcId);
-    bool cFound       = (cMapIterator != fI2CSlaveMap.end());
-    if(cFound)
-    {
-        // remember .. encoded command the chip id is .. the index and not the id!!
-        uint8_t pIndex = std::distance(fI2CSlaveMap.begin(), cMapIterator);
-        // LOG(INFO) << BOLDGREEN << "Encoding register from chip " << +pCbcId << " which is index " << +pIndex << " in I2C map " << RESET;
-        // use fBroadcastCBCId for broadcast commands
-        bool pUseMask = false;
-        if(fOptical)
-        {
-            uint8_t pLinkId = 0; // placeholder .. eventually should have the link here
-            // new command consists of one word if its read command, and of two words if its write. first word is always
-
-            // the same
             uint32_t cWord = (pLinkId << 29) | (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0);
             pVecReq.push_back(cWord);
             // only for write commands
@@ -5967,7 +5810,7 @@ void D19cFWInterface::Pix_write_MPA(Chip* cMPA, ChipRegItem cRegItem, uint32_t r
     rowreg.fValue      = data;
     std::vector<uint32_t> cVecReq;
     cVecReq.clear();
-    this->EncodeReg(rowreg, cMPA->getHybridId(), cMPA->getId(), cVecReq, false, true);
+    this->EncodeReg(rowreg, cMPA, cVecReq, false, true);
     this->WriteChipBlockReg(cVecReq, cWriteAttempts, false);
 }
 
@@ -5978,7 +5821,7 @@ uint32_t D19cFWInterface::Pix_read_MPA(Chip* cMPA, ChipRegItem cRegItem, uint32_
 
     std::vector<uint32_t> cVecReq;
     cVecReq.clear();
-    this->EncodeReg(cRegItem, cMPA->getHybridId(), cMPA->getId(), cVecReq, false, false);
+    this->EncodeReg(cRegItem, cMPA, cVecReq, false, false);
     this->WriteChipBlockReg(cVecReq, cWriteAttempts, false);
     // std::chrono::milliseconds cShort( 1 );
     // uint32_t readempty = ReadReg ("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");
@@ -6257,7 +6100,7 @@ uint32_t D19cFWInterface::ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pC
 // ##########################################
 // # Read/Write registers with CPB I2C functions #
 // #########################################
-bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes)
+bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes, uint32_t& theI2CWriteCount)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
 
@@ -6277,17 +6120,6 @@ bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlav
     size_t cIter = 0, cMaxIter = fCPBConfig.fMaxAttempts;
     while(fI2Cstatus != 4 && cIter < cMaxIter && fCPBConfig.fReTry)
     {
-        // reset I2C
-        // std::vector<uint8_t> cBitPosition = {2, 1, 0};
-        // uint8_t cResetMask = (1 << cBitPosition[pMasterId]);
-        // LOG (INFO) << BOLDYELLOW << "Writing 0x00 to I2C reset " << RESET;
-        // WriteLpGBTRegister( pLinkId, 0x12c, 0 );
-        // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
-        // WriteLpGBTRegister( pLinkId, 0x12c, cResetMask );
-        // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
-        // WriteLpGBTRegister( pLinkId, 0x12c, 0 );
-        // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
-
         if(fI2Cstatus != 4)
             LOG(DEBUG) << BOLDMAGENTA << "[D19cFWInterface::I2CWrite] Iter#" << +cIter << " I2CM" << +pMasterId << " status indicates a failure 0x" << std::hex << +fI2Cstatus << std::dec
                        << " transaction was to write " << +pNBytes << " to slave address " << +pSlaveAddress << " with data 0x" << std::hex << pSlaveData << std::dec << RESET;
@@ -6299,7 +6131,7 @@ bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlav
         fI2Cstatus                         = cReplyVector[7] & 0xFF;
         cIter++;
     }
-    fI2CWriteCount += (1 + cIter);
+    theI2CWriteCount += (1 + cIter);
     if(cIter == cMaxIter)
     {
         LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] Iter#" << +cIter << " I2CM" << +pMasterId << " status indicates a failure 0x" << std::hex << +fI2Cstatus << std::dec
@@ -6308,8 +6140,7 @@ bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlav
     if(fI2Cstatus != 4) LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] I2CM" << +pMasterId << " status is 0x" << std::hex << +fI2Cstatus << std::dec << RESET;
     return (fI2Cstatus == 4);
 }
-
-uint8_t D19cFWInterface::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes)
+uint8_t D19cFWInterface::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes, uint32_t& theI2CReadCount)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
 
@@ -6352,7 +6183,7 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSl
         if(cIter == cMaxIter - 1) LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CRead] : Corrupted CPB reply frame" << RESET;
         cIter++;
     };
-    fI2CReadCount += (1 + cIter);
+    theI2CReadCount += (1 + cIter);
     if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::I2CRead] : Corrupted CPB reply frame"));
     return cReadBack;
 }
@@ -6361,9 +6192,10 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSl
 // # Read/Write FE ASIC registers over I2C #
 // #########################################
 
-bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerify)
+bool D19cFWInterface::localWriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerify, uint32_t& theI2CWriteCount, uint32_t& theI2CReadMismatches)
 {
-    auto cLinkId = pChip->getOpticalId();
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
+    auto                                  cLinkId = pChip->getOpticalId();
     // uint8_t cMasterId = ((pChip->getHybridId() % 2) == 0) ? 2 : 0;
     uint8_t cMasterId = pChip->getMasterId();
     // if(cLpGBTI2CHack && cMasterId == 0) cMasterId = 1;
@@ -6389,15 +6221,13 @@ bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t p
         cNbytes    = 2;
         cSlaveData = (pRegisterValue << 8) | (pRegisterAddress & 0xFF);
     }
-    fI2CWriteCount     = 0;
-    fI2CReadMismatches = 0;
-    bool cSuccess      = I2CWrite(cLinkId, cMasterId, cChipAddress, cSlaveData, cNbytes);
-    pChip->updateWriteCount(fI2CWriteCount);
-    if(fI2CWriteCount != 1)
+    bool cSuccess = I2CWrite(cLinkId, cMasterId, cChipAddress, cSlaveData, cNbytes, theI2CWriteCount);
+    pChip->updateWriteCount(theI2CWriteCount);
+    if(theI2CWriteCount != 1)
     {
         std::stringstream cOutput;
         pChip->printChipType(cOutput);
-        LOG(INFO) << BOLDYELLOW << "\t\t... Pre-verfication - took " << +fI2CWriteCount << " I2C writes to succeed in writing " << +pRegisterValue << " on register " << +pRegisterAddress << " for "
+        LOG(INFO) << BOLDYELLOW << "\t\t... Pre-verfication - took " << +theI2CWriteCount << " I2C writes to succeed in writing " << +pRegisterValue << " on register " << +pRegisterAddress << " for "
                   << cOutput.str() << "#" << +pChip->getId() << " on Hybrid#" << +pChip->getHybridId() << RESET;
     }
     if(pVerify && cSuccess)
@@ -6406,18 +6236,22 @@ bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t p
         uint8_t cIter = 0, cMaxIter = fCPBConfig.fMaxAttempts;
         while(cReadBack != pRegisterValue && cIter < cMaxIter)
         {
-            if(cIter == cMaxIter - 1)
-            {
-                LOG(INFO) << BOLDRED << "I2C ReadBack Mismatch in hybrid " << +pChip->getHybridId() << " Chip " << +cChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec
-                          << " asked to write 0x" << std::hex << +pRegisterValue << std::dec << " and read back 0x" << std::hex << +cReadBack << std::dec << RESET;
-            }
+            // if(cIter == cMaxIter - 1)
+            // {
+            LOG(INFO) << BOLDRED << "I2C ReadBack Mismatch in hybrid " << +pChip->getHybridId() << " Chip " << +cChipId << " register 0x" << std::hex << +pRegisterAddress << std::dec
+                      << " asked to write 0x" << std::hex << +pRegisterValue << std::dec << " and read back 0x" << std::hex << +cReadBack << std::dec << RESET;
+            // }
             // dont re-write  - just try and read again
             // cReadBack = ReadFERegister(pChip, pRegisterAddress);
 
             // this was repeating both the write and the read
-            cSuccess = I2CWrite(cLinkId, cMasterId, cChipAddress, cSlaveData, cNbytes);
-            if(cSuccess) { cReadBack = ReadFERegister(pChip, pRegisterAddress); }
-            fI2CReadMismatches++;
+            cSuccess = I2CWrite(cLinkId, cMasterId, cChipAddress, cSlaveData, cNbytes, theI2CWriteCount);
+            if(cSuccess)
+            {
+                LOG(INFO) << "trying to read again";
+                cReadBack = ReadFERegister(pChip, pRegisterAddress);
+            }
+            theI2CReadMismatches++;
             cIter++;
         }
         if(cReadBack != pRegisterValue) { throw std::runtime_error(std::string("I2C readback mismatch")); }
@@ -6430,25 +6264,29 @@ bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t p
         throw std::runtime_error(std::string(cErrorMsg.str()));
     }
 
-    if(fI2CReadMismatches != 0)
+    if(theI2CReadMismatches != 0)
     {
         std::stringstream cOutput;
         pChip->printChipType(cOutput);
-        LOG(INFO) << BOLDYELLOW << "\t\t\t ...Post-verfication - took " << +fI2CReadMismatches << "attempts to read-back written value from " << +pRegisterValue << " on register " << +pRegisterAddress
-                  << " for " << cOutput.str() << "#" << +pChip->getId() << " on Hybrid#" << +pChip->getHybridId() << RESET;
+        LOG(INFO) << BOLDYELLOW << "\t\t\t ...Post-verfication - took " << +theI2CReadMismatches << "attempts to read-back written value from " << +pRegisterValue << " on register "
+                  << +pRegisterAddress << " for " << cOutput.str() << "#" << +pChip->getId() << " on Hybrid#" << +pChip->getHybridId() << RESET;
     }
-    pChip->updateRBMismatchCount(fI2CReadMismatches);
+    pChip->updateRBMismatchCount(theI2CReadMismatches);
     pChip->updateRegWriteCount();
     return cSuccess;
 }
 
+bool D19cFWInterface::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerify)
+{
+    uint32_t theI2CWriteCount     = 0;
+    uint32_t theI2CReadMismatches = 0;
+    return localWriteFERegister(pChip, pRegisterAddress, pRegisterValue, pVerify, theI2CWriteCount, theI2CReadMismatches);
+}
 uint8_t D19cFWInterface::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress)
 {
-    auto    cLinkId   = pChip->getOpticalId();
-    uint8_t cMasterId = pChip->getMasterId();
-    // uint8_t cMasterId = ((pChip->getHybridId() % 2) == 0) ? 2 : 0;
-    // cMasterId = pChip->getMasterId();
-    // if(cLpGBTI2CHack && cMasterId == 0) cMasterId = 1;
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
+    auto                                  cLinkId   = pChip->getOpticalId();
+    uint8_t                               cMasterId = pChip->getMasterId();
 
     // LOG (INFO) << BOLDGREEN << "Reading FE register on link " << +cLinkId << RESET;
     uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId();
@@ -6466,12 +6304,16 @@ uint8_t D19cFWInterface::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t
         cSlaveData = (pRegisterAddress & 0xFF);
     }
 
-    fI2CWriteCount = 0;
-    I2CWrite(cLinkId, cMasterId, cChipAddress, cSlaveData, cNbytes);
-    pChip->updateWriteCount(fI2CWriteCount);
-    fI2CReadCount      = 0;
-    uint32_t cReadBack = I2CRead(cLinkId, cMasterId, cChipAddress, 1);
-    pChip->updateReadCount(fI2CReadCount);
+    uint32_t theI2CWriteCount = 0;
+    uint32_t theI2CReadCount  = 0;
+    uint32_t cReadBack        = 0;
+    {
+        std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
+        I2CWrite(cLinkId, cMasterId, cChipAddress, cSlaveData, cNbytes, theI2CWriteCount);
+        cReadBack = I2CRead(cLinkId, cMasterId, cChipAddress, 1, theI2CReadCount);
+    }
+    pChip->updateWriteCount(theI2CWriteCount);
+    pChip->updateReadCount(theI2CReadCount);
     pChip->updateRegReadCount();
     return cReadBack;
 }

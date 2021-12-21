@@ -46,17 +46,17 @@ void BeamTestCheck2S::Initialise()
     setChannelGroupHandler(theChannelGroupHandler);
 
     // set TP amplitude and delay
-    fTPamplitude = findValueInSettings("Check2STPamplitude", 255);
-    fTPdelay     = findValueInSettings("Check2STPdelay", 0);
+    fTPamplitude = findValueInSettings<double>("Check2STPamplitude", 255);
+    fTPdelay     = findValueInSettings<double>("Check2STPdelay", 0);
 
     // threshold
-    fThreshold = findValueInSettings("Check2Sthreshold", 0);
+    fThreshold = findValueInSettings<double>("Check2Sthreshold", 0);
 
     // initialize latency scan range based on TP settings
-    fStartLatency = findValueInSettings("StartLatency", 0);
-    fLatencyRange = findValueInSettings("LatencyRange", 0);
+    fStartLatency = findValueInSettings<double>("StartLatency", 0);
+    fLatencyRange = findValueInSettings<double>("LatencyRange", 0);
 
-    auto cInjectionType = findValueInSettings("InjectionType", 0);
+    auto cInjectionType = findValueInSettings<double>("InjectionType", 0);
     SetInjectionType(cInjectionType);
 
     // initialize containers
@@ -1472,12 +1472,12 @@ void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
     }     // optical group
 
     // use ReadDataRather than ReadNEvents
-    auto cRefSensor = findValueInSettings("Check2SRefSensor", 0);
-    auto cRefSide   = findValueInSettings("Check2SRefSide", 0);
-    auto cRefChip   = findValueInSettings("Check2SRefChip", 0);
+    auto cRefSensor = findValueInSettings<uint8_t>("Check2SRefSensor", 0);
+    auto cRefSide   = findValueInSettings<uint8_t>("Check2SRefSide", 0);
+    auto cRefChip   = findValueInSettings<uint8_t>("Check2SRefChip", 0);
 
-    fUseReadNEvents   = findValueInSettings("Check2SUseReadNEvents", 0);
-    fWait_ms          = findValueInSettings("Check2Swait", 0);
+    fUseReadNEvents   = findValueInSettings<uint8_t>("Check2SUseReadNEvents", 0);
+    fWait_ms          = findValueInSettings<uint32_t>("Check2Swait", 0);
     uint16_t cLat     = fStartLatency;
     float    cMaxHits = 0;
     fOptimalLatency   = cLat;
@@ -1711,7 +1711,7 @@ void BeamTestCheck2S::ScanStubLatency(uint8_t pContinousReadout)
     if(!cAlignmentRun)
     {
         auto     cSetting   = fSettingsMap.find("StubAlignmentScanStart");
-        uint32_t cScanStart = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+        uint32_t cScanStart = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 100;
         cOffset             = cScanStart;
     }
     else

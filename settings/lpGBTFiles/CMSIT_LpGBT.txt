@@ -694,8 +694,8 @@ ADCStatusL                0x1b9         0x00              0x00                  
 * RegName                 Addr          Defval            Value                         BitSize
 *-------------------------------------------------------------------------------------------------------
 EOMStatus                 0x1ba         0x00              0x00                          8
-EOMCouterValueH           0x1bb         0x00              0x00                          8
-EOMCouterValueL           0x1bc         0x00              0x00                          8
+EOMCounterValueH          0x1bb         0x00              0x00                          8
+EOMCounterValueL          0x1bc         0x00              0x00                          8
 EOMCounter40MH            0x1bd         0x00              0x00                          8
 EOMCounter40ML            0x1be         0x00              0x00                          8
 

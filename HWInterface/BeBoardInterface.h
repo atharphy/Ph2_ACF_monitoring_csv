@@ -94,9 +94,6 @@ class BeBoardInterface
      * \param pHandler : pointer to FileHandler object
      */
     void SetFileHandler(const Ph2_HwDescription::BeBoard* pBoard, FileHandler* pHandler);
-
-    void setPowerSupplyClient(const Ph2_HwDescription::BeBoard* pBoard, TCPClient* fPowerSupplyClient);
-
     /*!
      * \brief enable the file handler
      * \param pBoard

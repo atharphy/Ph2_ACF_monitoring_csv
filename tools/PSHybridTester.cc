@@ -24,7 +24,7 @@ void PSHybridTester::MPATest(uint32_t pPattern)
 }
 void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
 {
-    uint32_t cNtriggers = this->findValueInSettings("PSHybridDebugDuration");
+    uint32_t cNtriggers = this->findValueInSettings<double>("PSHybridDebugDuration");
     if(pTrigger)
         LOG(INFO) << BOLDBLUE << "Going to send " << +cNtriggers << " triggers to debug L1 SSA output " << RESET;
     else
@@ -62,7 +62,7 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
 
 void PSHybridTester::SSAOutputsPogoDebug(BeBoard* pBoard, bool pTrigger)
 {
-    uint32_t cNtriggers = this->findValueInSettings("PSHybridDebugDuration");
+    uint32_t cNtriggers = this->findValueInSettings<double>("PSHybridDebugDuration");
     if(pTrigger)
         LOG(INFO) << BOLDBLUE << "Going to send " << +cNtriggers << " triggers to debug L1 SSA output " << RESET;
     else
@@ -186,15 +186,26 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
             // set AMUX on all SSAs to highZ
             for(auto cReadoutChip: *cHybrid)
             {
-                // add check for SSA
-                if(cReadoutChip->getFrontEndType() != FrontEndType::SSA) continue;
-
                 uint8_t cPattern = (cReadoutChip->getId() % 2 == 0) ? 0x01 : 0x05;
 
                 LOG(INFO) << BOLDBLUE << "Chip " << +cReadoutChip->getId() << " configured to output " << std::bitset<8>(cPattern) << " on SLVS output" << RESET;
 
                 // make sure SSA is configured to output a test pattern on SLVS out
                 fReadoutChipInterface->WriteChipReg(cReadoutChip, "EnableSLVSTestOutput", 1);
+                for(uint8_t cLineId = 1; cLineId <= 8; cLineId++) // stub lines - 1 to 8
+                {
+                    std::stringstream cRegName;
+                    cRegName << "OutPatternStubLine" << +(cLineId - 1);
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName.str(), cPattern);
+                }
+                for(uint8_t cLineId = 0; cLineId < 1; cLineId++) // L1 line - line 0
+                {
+                    if(cReadoutChip->getFrontEndType() == FrontEndType::SSA) { continue; }
+                    std::stringstream cRegName;
+                    cRegName << "OutPatternL1Line";
+                    fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName.str(), cPattern);
+                }
+                /*
                 fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern0", cPattern);
                 fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern1", cPattern);
                 fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern2", cPattern);
@@ -203,6 +214,7 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
                 fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern5", cPattern);
                 fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern6", cPattern);
                 fReadoutChipInterface->WriteChipReg(cReadoutChip, "OutPattern7/FIFOconfig", cPattern);
+                */
             } // chip
         }     // hybrid
     }         // opticalGroup

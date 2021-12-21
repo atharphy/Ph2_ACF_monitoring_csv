@@ -13,6 +13,7 @@
 #include "../MonitorUtils/RD53Monitor.h"
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
+#include "../tools/SEHMonitor.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -31,8 +32,10 @@ SystemController::SystemController()
     , fFileHandler(nullptr)
     , fRawFileName("")
     , fWriteHandlerEnabled(false)
-    , fStreamerEnabled(false)
-    , fNetworkStreamer(nullptr)
+    , fDQMStreamerEnabled(false)
+    , fMonitorDQMStreamerEnabled(false)
+    , fDQMStreamer(nullptr)
+    , fMonitorDQMStreamer(nullptr)
     , fDetectorMonitor(nullptr)
     , fChannelGroupHandlerContainer(nullptr)
 {
@@ -49,19 +52,45 @@ void SystemController::Inherit(const SystemController* pController)
     fBeBoardFWMap                 = pController->fBeBoardFWMap;
     fSettingsMap                  = pController->fSettingsMap;
     fFileHandler                  = pController->fFileHandler;
-    fStreamerEnabled              = pController->fStreamerEnabled;
-    fNetworkStreamer              = pController->fNetworkStreamer;
+    fDQMStreamerEnabled           = pController->fDQMStreamerEnabled;
+    fMonitorDQMStreamerEnabled    = pController->fMonitorDQMStreamerEnabled;
+    fDQMStreamer                  = pController->fDQMStreamer;
+    fMonitorDQMStreamer           = pController->fMonitorDQMStreamer;
     fDetectorContainer            = pController->fDetectorContainer;
     fCicInterface                 = pController->fCicInterface;
     fPowerSupplyClient            = pController->fPowerSupplyClient;
     fChannelGroupHandlerContainer = pController->fChannelGroupHandlerContainer;
+#ifdef __TCP_SERVER__
+    fTestcardClient = pController->fTestcardClient;
+#endif
 }
 
 void SystemController::Destroy()
 {
+    for(const auto cBoard: *fDetectorContainer)
+        if(cBoard->getBoardType() == BoardType::RD53)
+        {
+            try
+            {
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->PrintErrorsLVDS(); // @TMP@
+            }
+            catch(...)
+            {
+            }
+        }
+
     this->closeFileHandler();
 
     LOG(INFO) << BOLDRED << ">>> Destroying interfaces <<<" << RESET;
+
+    // #######################################
+    // # Disable all channels before exiting #
+    // #######################################
+    if(SystemController::findValueInSettings<double>("DisableChannelsAtExit", false) == true)
+        for(const auto cBoard: *fDetectorContainer)
+            for(const auto cOpticalGroup: *cBoard)
+                for(const auto cHybrid: *cOpticalGroup)
+                    for(const auto cChip: *cHybrid) fReadoutChipInterface->MaskAllChannels(cChip, true);
 
     RD53Event::JoinDecodingThreads();
 
@@ -84,8 +113,11 @@ void SystemController::Destroy()
     fBeBoardFWMap.clear();
     fSettingsMap.clear();
 
-    delete fNetworkStreamer;
-    fNetworkStreamer = nullptr;
+    delete fDQMStreamer;
+    fDQMStreamer = nullptr;
+
+    delete fMonitorDQMStreamer;
+    fMonitorDQMStreamer = nullptr;
 
     delete fPowerSupplyClient;
     fPowerSupplyClient = nullptr;
@@ -93,6 +125,10 @@ void SystemController::Destroy()
     delete fChannelGroupHandlerContainer;
     fChannelGroupHandlerContainer = nullptr;
 
+#ifdef __TCP_SERVER__
+    delete fTestcardClient;
+    fTestcardClient = nullptr;
+#endif
     LOG(INFO) << BOLDRED << ">>> Interfaces  destroyed <<<" << RESET;
 }
 
@@ -125,13 +161,18 @@ void SystemController::readFile(std::vector<uint32_t>& pVec, uint32_t pNWords32)
         pVec = fFileHandler->readFileChunks(pNWords32);
 }
 
-void SystemController::InitializeHw(const std::string& pFilename, std::ostream& os, bool pIsFile, bool streamData, uint16_t DQMportNumber)
+void SystemController::InitializeHw(const std::string& pFilename, std::ostream& os, bool pIsFile, bool streamData, uint16_t DQMportNumber, uint16_t monitorDQMportNumber)
 {
-    fStreamerEnabled = streamData;
+    fDQMStreamerEnabled        = streamData;
+    fMonitorDQMStreamerEnabled = streamData;
+
     if(streamData == true)
     {
-        fNetworkStreamer = new TCPPublishServer(DQMportNumber, 1);
-        fNetworkStreamer->startAccept();
+        fDQMStreamer = new TCPPublishServer(DQMportNumber, 1);
+        fDQMStreamer->startAccept();
+
+        fMonitorDQMStreamer = new TCPPublishServer(monitorDQMportNumber, 1);
+        fMonitorDQMStreamer->startAccept();
     }
 
     fDetectorContainer = new DetectorContainer;
@@ -141,13 +182,28 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     fChannelGroupHandlerContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitChip<std::shared_ptr<ChannelGroupHandler>>(*fDetectorContainer, *fChannelGroupHandlerContainer);
 
+    LOG(INFO) << BOLDYELLOW << "Trying to connect to the Power Supply Server..." << RESET;
     fPowerSupplyClient = new TCPClient("127.0.0.1", 7000);
     if(!fPowerSupplyClient->connect(1))
     {
+        LOG(INFO) << BOLDYELLOW << "Cannot connect to the Power Supply Server, power supplies will need to be controlled manually" << RESET;
         delete fPowerSupplyClient;
         fPowerSupplyClient = nullptr;
     }
-    for(const auto board: *fDetectorContainer) fBeBoardInterface->setPowerSupplyClient(board, fPowerSupplyClient);
+    else
+    {
+        LOG(INFO) << BOLDYELLOW << "Connected to the Power Supply Server!" << RESET;
+    }
+
+#ifdef __TCP_SERVER__
+    fTestcardClient = new TCPClient("127.0.0.1", 8000);
+    if(!fTestcardClient->connect(1))
+    {
+        std::cerr << "Cannot connect to the Testcard Server" << '\n';
+        delete fTestcardClient;
+        fTestcardClient = nullptr;
+    }
+#endif
 
     if(fDetectorContainer->size() > 0)
     {
@@ -249,6 +305,8 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             fDetectorMonitor = new CBCMonitor(this, theDetectorMonitorConfig);
         else if(monitoringType == "RD53")
             fDetectorMonitor = new RD53Monitor(this, theDetectorMonitorConfig);
+        else if(monitoringType == "2SSEH")
+            fDetectorMonitor = new SEHMonitor(this, theDetectorMonitorConfig);
         else
         {
             LOG(ERROR) << BOLDRED << "Unrecognized monitor type, Aborting" << RESET;
@@ -326,13 +384,13 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     // ###################
     // # Configuring FSM #
     // ###################
-    size_t nTRIGxEvent = SystemController::findValueInSettings("nTRIGxEvent");
-    size_t injType     = SystemController::findValueInSettings("INJtype");
-    size_t injLatency  = SystemController::findValueInSettings("InjLatency");
-    size_t nClkDelays  = SystemController::findValueInSettings("nClkDelays");
-    size_t colStart    = SystemController::findValueInSettings("COLstart");
-    bool   resetMask   = SystemController::findValueInSettings("ResetMask");
-    bool   resetTDAC   = SystemController::findValueInSettings("ResetTDAC");
+    size_t nTRIGxEvent = SystemController::findValueInSettings<size_t>("nTRIGxEvent");
+    size_t injType     = SystemController::findValueInSettings<size_t>("INJtype");
+    size_t injLatency  = SystemController::findValueInSettings<size_t>("InjLatency");
+    size_t nClkDelays  = SystemController::findValueInSettings<size_t>("nClkDelays");
+    size_t colStart    = SystemController::findValueInSettings<size_t>("COLstart");
+    bool   resetMask   = SystemController::findValueInSettings<bool>("ResetMask");
+    bool   resetTDAC   = SystemController::findValueInSettings<bool>("ResetTDAC");
     LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
     static_cast<RD53FWInterface*>(this->fBeBoardFWMap[pBoard->getId()])->SetAndConfigureFastCommands(pBoard, nTRIGxEvent, injType, injLatency, nClkDelays, colStart < RD53::LIN.colStart);
     LOG(INFO) << CYAN << "================== Done ==================" << RESET;
@@ -353,7 +411,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
 
             if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
             {
-                flpGBTInterface->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, this->fBeBoardFWMap[pBoard->getId()], fReadoutChipInterface);
+                static_cast<RD53lpGBTInterface*>(flpGBTInterface)->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, this->fBeBoardFWMap[pBoard->getId()], fReadoutChipInterface);
                 LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;
             }
             else
@@ -412,6 +470,8 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
         }
     }
     LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
+
+    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[pBoard->getId()])->PrintFrequencyLVDS(); // @TMP@
 
     LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
     RD53Event::ForkDecodingThreads();
@@ -929,9 +989,13 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                 }
             }
             ConfigureOT(cBoard);
+
+            LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
         }
         else if(cBoard->getBoardType() == BoardType::RD53)
+        {
             ConfigureIT(cBoard);
+        }
     }
     if(fDetectorMonitor != nullptr)
     {
@@ -1069,47 +1133,6 @@ void SystemController::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vect
     this->DecodeData(pBoard, pData, pNEvents, fBeBoardInterface->getBoardType(pBoard));
 }
 
-void SystemController::ReadASEvent(BeBoard* pBoard, uint32_t pNMsec, uint32_t pulses, bool fast, bool fsm)
-{
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
-
-    std::vector<uint32_t> cData;
-    if(fsm and (pulses > 0))
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->Send_pulses(pulses);
-    else
-    {
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Open_shutter(0);
-        std::this_thread::sleep_for(std::chrono::microseconds(pNMsec));
-        for(uint32_t i = 0; i < pulses; i++) { static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ChipTestPulse(); }
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PS_Close_shutter(0);
-    }
-
-    if(fast) { static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadASEvent(pBoard, cData); }
-    else
-    {
-        for(auto cOpticalGroup: *pBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                for(auto cChip: *cHybrid)
-                {
-                    if(cChip->getFrontEndType() == FrontEndType::MPA) static_cast<MPAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
-                    if(cChip->getFrontEndType() == FrontEndType::SSA) static_cast<SSAInterface*>(fReadoutChipInterface)->ReadASEvent(cChip, cData);
-                }
-            }
-        }
-    }
-
-    this->DecodeData(pBoard, cData, 1, fBeBoardInterface->getBoardType(pBoard));
-}
-
-double SystemController::findValueInSettings(const std::string name, double defaultValue) const
-{
-    auto setting = fSettingsMap.find(name);
-    return (setting != std::end(fSettingsMap) ? setting->second : defaultValue);
-}
-
 // #################
 // # Data decoding #
 // #################
@@ -1156,27 +1179,13 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
             fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);
             // uint32_t nmpa = 0;
             uint32_t maxind = 0;
-
-            // if(fEventType == EventType::SSAAS)
-            //   {
-            //   uint16_t nSSA = (fEventSize - D19C_EVENT_HEADER1_SIZE_32_SSA) / D19C_EVENT_SIZE_32_SSA / fNFe;
-            //   nSSA = pData.size() / 120;
-            //   }
-
             for(auto opticalGroup: *pBoard)
             {
                 for(auto hybrid: *opticalGroup) { maxind = std::max(maxind, uint32_t(hybrid->size())); }
             }
 
+            if(fEventType == EventType::SCAS) { fEventList.push_back(new D19SCEventAS(pBoard, pData)); }
             if(fEventType == EventType::PSAS) { fEventList.push_back(new D19cPSEventAS(pBoard, pData)); }
-            else if(fEventType == EventType::SSAAS)
-            {
-                fEventList.push_back(new D19cSSAEventAS(pBoard, pData));
-            }
-            else if(fEventType == EventType::MPAAS)
-            {
-                fEventList.push_back(new D19cMPAEventAS(pBoard, pData));
-            }
             else if(fEventType != EventType::ZS)
             {
                 // check data words because I'm desperate
