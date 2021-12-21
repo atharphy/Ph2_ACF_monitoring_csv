@@ -122,15 +122,9 @@ class D19cFWInterface : public BeBoardFWInterface
     bool         fIsDDR3Readout;
     bool         fDDR3Calibrated;
     uint32_t     fDDR3Offset;
-    // PS counters
-    uint8_t fPSCounterDelay{29};
-    uint8_t fPSCounterFast{0};
-    uint8_t fPairSelect{0};
     // i2c version of master
     uint32_t fI2CVersion;
     // optical readout
-    uint8_t                    fI2Cstatus      = 0x00;
-    const uint8_t              flpGBTAddress   = 0x70;
     bool                       fOptical        = false;
     bool                       fUseOpticalLink = false;
     bool                       fConfigureCDCE  = false;
@@ -275,6 +269,8 @@ class D19cFWInterface : public BeBoardFWInterface
      */
     uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
 
+    void ReadASEvent(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
+
     /*!
      * \brief Read data for pNEvents
      * \param pBoard : the pointer to the BeBoard
@@ -293,11 +289,6 @@ class D19cFWInterface : public BeBoardFWInterface
     uint32_t getStubOffset() { return fStubOffset; };
     uint8_t  getI2Cstatus() { return fI2Cstatus; }
 
-    // configure PS counter readout
-    void SetPSCounterDelay(uint8_t pDelay) { fPSCounterDelay = pDelay; };
-    void SetPSCounterMode(uint8_t pMode) { fPSCounterFast = pMode; };
-    void SetPSPairSelect(uint8_t pMode) { fPairSelect = pMode; };
-
   private:
     uint8_t  fFastCommandDuration = 0;
     uint32_t fReadoutAttempts     = 0;
@@ -311,9 +302,9 @@ class D19cFWInterface : public BeBoardFWInterface
     // split data per hybrid/chip for a given board
     uint32_t CountFwEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
     // read back SSA counters directly
+    bool PSAsyncCounterData(uint8_t pRawMode = 1);
     void ReadSSACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
-    void ReadMPACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
-    void ReadPSSCCountersFast(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, uint8_t pRawMode = 0);
+    void ReadPSCounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, bool pFast = false, bool pRawMode = false);
 
     uint32_t computeEventSize(Ph2_HwDescription::BeBoard* pBoard);
     // I2C command sending implementation
@@ -404,8 +395,8 @@ class D19cFWInterface : public BeBoardFWInterface
     // for testing, move back
     uint32_t GetData(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
     void     EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, Ph2_HwDescription::Chip* pChip, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override;
-    void     BCEncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override;
-    void     DecodeReg(Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed) override;
+    void BCEncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override;
+    void DecodeReg(Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed) override;
 
     bool WriteChipBlockReg(std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback) override;
     bool BCWriteChipBlockReg(std::vector<uint32_t>& pVecReg, bool pReadback) override;
@@ -460,9 +451,10 @@ class D19cFWInterface : public BeBoardFWInterface
     void ResetLink(uint8_t pLinkId);
     bool GetLinkStatus(uint8_t pLinkId);
 
-    bool LinkLock(const Ph2_HwDescription::BeBoard* pBoard);
-    void setRxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fRxPolarity.insert({pLinkId, pPolarity}); };
-    void setTxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fTxPolarity.insert({pLinkId, pPolarity}); };
+    bool                       LinkLock(const Ph2_HwDescription::BeBoard* pBoard);
+    std::pair<uint16_t, float> readADC(std::string pValueToRead = "AMUX_L", bool pApplyCorrection = false);
+    void                       setRxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fRxPolarity.insert({pLinkId, pPolarity}); };
+    void                       setTxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fTxPolarity.insert({pLinkId, pPolarity}); };
 
     // CDCE
     void configureCDCE_old(uint16_t pClockRate = 120);
@@ -659,7 +651,7 @@ class D19cFWInterface : public BeBoardFWInterface
             // perform phase alignment
             // LOG (INFO) << BOLDBLUE << "\t..... running phase alignment...." << RESET;
             SendControl(pInterface, pHybrid, pChip, pLine, "PhaseAlignment");
-        };
+        }
         void AlignWord(BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip, uint8_t pLine, uint8_t pPattern, uint8_t pPatternPeriod, bool pChangePattern)
         {
             if(pChangePattern)
@@ -670,7 +662,8 @@ class D19cFWInterface : public BeBoardFWInterface
             // perform phase alignment
             // LOG (INFO) << BOLDBLUE << "\t..... running phase alignment...." << RESET;
             SendControl(pInterface, pHybrid, pChip, pLine, "WordAlignment");
-        };
+        }
+
         bool TuneLine(BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip, uint8_t pLine, uint8_t pPattern, uint8_t pPatternPeriod, bool pChangePattern)
         {
             LOG(DEBUG) << BOLDBLUE << "Tuning line " << +pLine << RESET;
@@ -753,6 +746,9 @@ class D19cFWInterface : public BeBoardFWInterface
     void KillI2C();
     ///
 
+    void     Pix_write_MPA(Ph2_HwDescription::Chip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel, uint32_t data);
+    uint32_t Pix_read_MPA(Ph2_HwDescription::Chip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel);
+
     void Compose_fast_command(uint32_t duration = 0, uint32_t resync_en = 0, uint32_t l1a_en = 0, uint32_t cal_pulse_en = 0, uint32_t bc0_en = 0);
     void PS_Open_shutter(uint32_t duration = 0);
     void PS_Close_shutter(uint32_t duration = 0);
@@ -823,14 +819,17 @@ class D19cFWInterface : public BeBoardFWInterface
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    const uint8_t                   fI2CFrequency = 3; // 1 MHz
-    std::map<FrontEndType, uint8_t> fFEAddressMap = {{FrontEndType::CIC, 0x60}, {FrontEndType::CIC2, 0x60}, {FrontEndType::SSA, 0x20}, {FrontEndType::MPA, 0x40}};
-    // Functions for standard uDTC
-    void StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override {}
-    void ResetOptoLink() override;
+    uint8_t                         fI2Cstatus    = 0;
+    const uint8_t                   flpGBTAddress = 0x70;
+    std::map<FrontEndType, uint8_t> fFEAddressMap = {{FrontEndType::CIC, 0x60}, {FrontEndType::CIC2, 0x60}, {FrontEndType::SSA, 0x20}, {FrontEndType::MPA, 0x40}, {FrontEndType::CBC3, 0x40}};
+
     // OT implementation of write and read
     bool     WriteOptoLpGBTRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop);
     uint32_t ReadOptoLpGBTRegister(const uint32_t linkNumber, const uint32_t pAddress);
+
+    // Functions for standard uDTC
+    void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override {}
+    void     ResetOptoLink() override;
     bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override;
     uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress) override;
     // ##########################################
@@ -846,8 +845,8 @@ class D19cFWInterface : public BeBoardFWInterface
     bool    WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override;
     uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterValue) override;
     // function for I2C transactions using lpGBT I2C Masters
-    bool    I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes, uint32_t& theI2CWriteCount) override;
-    uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes, uint32_t& theI2CReadCount) override;
+    bool    I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes, uint32_t &pNWrites ) override;
+    uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes, uint32_t &pNReads ) override;
     // function for front-end slow control
     bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false) override;
     bool    localWriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry, uint32_t& theI2CWriteCount, uint32_t& theI2CReadMismatches);

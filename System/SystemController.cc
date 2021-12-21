@@ -988,6 +988,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                     }
                 }
             }
+            ConfigureOT(cBoard);
 
             LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
         }
