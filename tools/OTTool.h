@@ -89,8 +89,8 @@ class OTTool : public Tool
     PrintConfig fPrintConfig;
     // name of the tool
     std::string fMyName;
-    // Data container 
-    std::map<uint8_t, std::vector<uint32_t>> fReadoutData; 
+    // Data container
+    std::map<uint8_t, std::vector<uint32_t>> fReadoutData;
 
     // list of registers to perserve
     std::vector<std::string> fBrdRegsToPerserve;

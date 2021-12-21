@@ -157,7 +157,7 @@ void BeamTestCheck2S::CheckWithTP(uint8_t pContinousReadout)
     // validate
     Validate();
 
-    //for(auto cBoard: *fDetectorContainer) { PrintData(cBoard); }
+    // for(auto cBoard: *fDetectorContainer) { PrintData(cBoard); }
 }
 void BeamTestCheck2S::ValidateTP()
 {
@@ -189,11 +189,11 @@ void BeamTestCheck2S::Validate()
     //     // size_t                     cTriggerMult         = (fReadoutMode == 0) ? fBeBoardInterface->ReadBoardReg(cBoard, cMultRegName) : cRegMap[cMultRegName];
     //     // for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++) { Count(cEvents, cTriggerId, 1); }
     // }
-// #ifdef __USE_ROOT__
-//     fDQMHistogrammer.fillHitMaps(fHitMap, fStubMap, fHitContainerTDC);
-//     fDQMHistogrammer.fillBendPlots(fBendMap);
-//     fDQMHistogrammer.fillCountPlots(fEventSubSet, fStubSubSet);
-// #endif
+    // #ifdef __USE_ROOT__
+    //     fDQMHistogrammer.fillHitMaps(fHitMap, fStubMap, fHitContainerTDC);
+    //     fDQMHistogrammer.fillBendPlots(fBendMap);
+    //     fDQMHistogrammer.fillCountPlots(fEventSubSet, fStubSubSet);
+    // #endif
 }
 //
 void BeamTestCheck2S::CheckWithInternal(uint8_t pContinousReadout)
