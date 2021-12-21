@@ -51,8 +51,8 @@ void LatencyScan::Initialize()
 
     fStartLatency = findValueInSettings<uint16_t>("StartLatency", 1);
     fLatencyRange = findValueInSettings<uint16_t>("LatencyRange", 1);
-    fHoleMode     = findValueInSettings<uint8_t>("HoleMode", 1);
-    fNevents      = findValueInSettings<uint32_t>("Nevents", 10);
+    fHoleMode     = findValueInSettings<double>("HoleMode", 1);
+    fNevents      = findValueInSettings<double>("Nevents", 10);
     std::cout << "Going to read " << fNevents << " events" << std::endl;
 
 #ifdef __USE_ROOT__

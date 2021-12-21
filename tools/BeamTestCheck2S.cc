@@ -1472,12 +1472,12 @@ void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
     }     // optical group
 
     // use ReadDataRather than ReadNEvents
-    auto cRefSensor = findValueInSettings<uint8_t>("Check2SRefSensor", 0);
-    auto cRefSide   = findValueInSettings<uint8_t>("Check2SRefSide", 0);
-    auto cRefChip   = findValueInSettings<uint8_t>("Check2SRefChip", 0);
+    auto cRefSensor = findValueInSettings<double>("Check2SRefSensor", 0);
+    auto cRefSide   = findValueInSettings<double>("Check2SRefSide", 0);
+    auto cRefChip   = findValueInSettings<double>("Check2SRefChip", 0);
 
-    fUseReadNEvents   = findValueInSettings<uint8_t>("Check2SUseReadNEvents", 0);
-    fWait_ms          = findValueInSettings<uint32_t>("Check2Swait", 0);
+    fUseReadNEvents   = findValueInSettings<double>("Check2SUseReadNEvents", 0);
+    fWait_ms          = findValueInSettings<double>("Check2Swait", 0);
     uint16_t cLat     = fStartLatency;
     float    cMaxHits = 0;
     fOptimalLatency   = cLat;

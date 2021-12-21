@@ -1762,8 +1762,8 @@ void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t> pChipIds, st
 }
 void DataChecker::AsyncTest()
 {
-    uint8_t           cSweepThreshold = this->findValueInSettings<uint8_t>("AsyncSweepTh");
-    uint8_t           cThreshold      = this->findValueInSettings<uint8_t>("AsyncThreshold");
+    uint8_t           cSweepThreshold = this->findValueInSettings<double>("AsyncSweepTh");
+    uint8_t           cThreshold      = this->findValueInSettings<double>("AsyncThreshold");
     uint8_t           cThresholdStart = (cSweepThreshold == 0) ? cThreshold : 0;
     uint8_t           cThresholdStop  = (cSweepThreshold == 0) ? cThreshold + 5 : 200;
     std::stringstream outp;
@@ -1951,7 +1951,7 @@ void DataChecker::WriteSlinkTest(std::string pDAQFileName)
 }
 void DataChecker::CollectEvents()
 {
-    uint32_t cNevents    = this->findValueInSettings<uint32_t>("Nevents");
+    uint32_t cNevents    = this->findValueInSettings<double>("Nevents");
     uint32_t cMaxNevents = 65535;
     for(auto cBoard: *fDetectorContainer)
     {

@@ -384,11 +384,11 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     // ###################
     // # Configuring FSM #
     // ###################
-    size_t nTRIGxEvent = SystemController::findValueInSettings<size_t>("nTRIGxEvent");
-    size_t injType     = SystemController::findValueInSettings<size_t>("INJtype");
-    size_t injLatency  = SystemController::findValueInSettings<size_t>("InjLatency");
-    size_t nClkDelays  = SystemController::findValueInSettings<size_t>("nClkDelays");
-    size_t colStart    = SystemController::findValueInSettings<size_t>("COLstart");
+    size_t nTRIGxEvent = SystemController::findValueInSettings<double>("nTRIGxEvent");
+    size_t injType     = SystemController::findValueInSettings<double>("INJtype");
+    size_t injLatency  = SystemController::findValueInSettings<double>("InjLatency");
+    size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays");
+    size_t colStart    = SystemController::findValueInSettings<double>("COLstart");
     bool   resetMask   = SystemController::findValueInSettings<bool>("ResetMask");
     bool   resetTDAC   = SystemController::findValueInSettings<bool>("ResetTDAC");
     LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;

@@ -677,7 +677,7 @@ int main(int argc, char* argv[])
             std::vector<uint8_t> cFesToCheck = getArgs(cArgsStr);
             cMemoryChecker.EvaluatePedeNoise(100); // find pedestal + noise
             cMemoryChecker.SetThreshold(-2.0);     // set threshold to 3 sigma away from pedestal
-            int cTriggerGap = cTool.findValueInSettings<int>("TriggerSeparation", 500);
+            int cTriggerGap = cTool.findValueInSettings<double>("TriggerSeparation", 500);
             cMemoryChecker.DataCheck(cFesToCheck, cTriggerGap);
         }
         cMemoryChecker.MemoryCheck2SRaw(true);  // all ones
