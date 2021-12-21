@@ -512,8 +512,6 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
     return cLinksLocked;
 }
 
-
-
 void D19cFWInterface::configureLink(const BeBoard* pBoard)
 {
     std::vector<uint8_t> cLinkIds(0);
@@ -751,7 +749,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     // fUseOpticalLink = pBoard->isOptical() && !fOptical;
     bool cWithGBTx = false;
     // if optical readout .. then configure links
-    
+
     if(pBoard->isOptical() && cWithlpGBT)
     {
         bool cSkip = (pBoard->getLinkReset() == 0);
@@ -4077,7 +4075,7 @@ bool D19cFWInterface::WriteBlockReg(const std::string& pRegNode, const std::vect
 
 void D19cFWInterface::EncodeReg(const ChipRegItem& pRegItem, Chip* pChip, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
 {
-    uint8_t pCbcId       = pChip->getId()%8;
+    uint8_t pCbcId       = pChip->getId() % 8;
     uint8_t pLinkId      = pChip->getOpticalId();
     uint8_t pFeId        = pChip->getHybridId();
     auto    cMapIterator = fI2CSlaveMap.find(pCbcId);
@@ -6190,7 +6188,6 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSl
     return cReadBack;
 }
 
-
 // ##########################################
 // # Read/Write FE ASIC registers over I2C #
 // #########################################
@@ -6290,7 +6287,7 @@ uint8_t D19cFWInterface::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t
     std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
     auto                                  cLinkId   = pChip->getOpticalId();
     uint8_t                               cMasterId = pChip->getMasterId();
-    
+
     // LOG (INFO) << BOLDGREEN << "Reading FE register on link " << +cLinkId << RESET;
     uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId();
     if(pChip->getFrontEndType() == FrontEndType::MPA) cChipId = cChipId % 8;

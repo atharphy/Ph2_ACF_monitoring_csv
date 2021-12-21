@@ -81,15 +81,15 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
 
     this->fAllChan = pAllChan;
 
-    fSkipMaskedChannels               = findValueInSettings<double>("SkipMaskedChannels", 0);
-    fMaskChannelsFromOtherGroups      = findValueInSettings<double>("MaskChannelsFromOtherGroups", 1);
-    fCheckLoop                        = findValueInSettings<double>("VerificationLoop", 1);
-    fTestPulseAmplitude               = findValueInSettings<double>("PedestalEqualizationPulseAmplitude", 0);
-    fEventsPerPoint                   = findValueInSettings<double>("Nevents", 10);
-    fNEventsPerBurst                  = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
-    fOccupancyAtPedestal              = findValueInSettings<double>("PedestalEqualizationOccupancy", 0.56);
-    uint8_t cDefTargetOffset          = (cWithCBC) ? 0x7F : 0xF;
-    fTargetOffset                     = findValueInSettings<double>("PedestalEqualizationTargetOffset", cDefTargetOffset); // 0x7F;
+    fSkipMaskedChannels          = findValueInSettings<double>("SkipMaskedChannels", 0);
+    fMaskChannelsFromOtherGroups = findValueInSettings<double>("MaskChannelsFromOtherGroups", 1);
+    fCheckLoop                   = findValueInSettings<double>("VerificationLoop", 1);
+    fTestPulseAmplitude          = findValueInSettings<double>("PedestalEqualizationPulseAmplitude", 0);
+    fEventsPerPoint              = findValueInSettings<double>("Nevents", 10);
+    fNEventsPerBurst             = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
+    fOccupancyAtPedestal         = findValueInSettings<double>("PedestalEqualizationOccupancy", 0.56);
+    uint8_t cDefTargetOffset     = (cWithCBC) ? 0x7F : 0xF;
+    fTargetOffset                = findValueInSettings<double>("PedestalEqualizationTargetOffset", cDefTargetOffset); // 0x7F;
     // uint8_t cEnableFastCounterReadout = (uint8_t)findValueInSettings<double>("EnableFastCounterReadout", 0);
     // uint8_t cEnablePairSelect         = (uint8_t)findValueInSettings<double>("EnablePairSelect", 0);
     if(cWithSSA or cWithMPA) fTargetOffset = 0xF;
