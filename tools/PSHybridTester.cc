@@ -1,11 +1,12 @@
 #include "PSHybridTester.h"
+
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
 // initialize the static member
 
-PSHybridTester::PSHybridTester() : Tool() {}
+PSHybridTester::PSHybridTester() : LinkAlignmentOT() {}
 
 PSHybridTester::~PSHybridTester() {}
 
@@ -24,6 +25,9 @@ void PSHybridTester::MPATest(uint32_t pPattern)
 }
 void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
 {
+    LinkAlignmentOT::Inherit(this);
+    LinkAlignmentOT::Initialise();
+
     uint32_t cNtriggers = this->findValueInSettings<double>("PSHybridDebugDuration");
     if(pTrigger)
         LOG(INFO) << BOLDBLUE << "Going to send " << +cNtriggers << " triggers to debug L1 SSA output " << RESET;
@@ -38,9 +42,11 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
         if(!pTrigger)
         {
             bool cAligned = true;
+            auto cSSA = new SSA(pBoard->getId() , 0, 0, cPairId, 0, 0, "./settings/SSAFiles/SSA.txt");
             for(uint8_t cLineId = 1; cLineId < 8; cLineId++)
             {
-                cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(pBoard, 0, cPairId, cLineId, cAlignmentPattern, 8);
+                cAligned = LineTuning( cSSA, cLineId, cAlignmentPattern , 8);
+                // cAligned = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->PhaseTuning(pBoard, 0, cPairId, cLineId, cAlignmentPattern, 8);
                 if(!cAligned) LOG(INFO) << BOLDRED << "Alignment failed on line " << +cLineId << RESET;
             }
             // if aligned then try and scope

@@ -29,13 +29,13 @@
 
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
             <CBC Id="0" configfile="CBC3_default.txt" />
-            <CBC Id="1" configfile="CBC3_default.txt" />
+            <!-- <CBC Id="1" configfile="CBC3_default.txt" />
             <CBC Id="2" configfile="CBC3_default.txt" />
             <CBC Id="3" configfile="CBC3_default.txt" />
             <CBC Id="4" configfile="CBC3_default.txt" />
             <CBC Id="5" configfile="CBC3_default.txt" />
             <CBC Id="6" configfile="CBC3_default.txt" />
-            <CBC Id="7" configfile="CBC3_default.txt" /> 
+            <CBC Id="7" configfile="CBC3_default.txt" />  -->
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />

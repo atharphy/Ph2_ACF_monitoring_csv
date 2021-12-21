@@ -581,7 +581,7 @@ class D19cFWInterface : public BeBoardFWInterface
 
             // form command
             uint32_t command_final = fHybrid + fChip + fLine + fCommand + mode_raw + l1a_en_raw + master_line_id_raw + delay_raw + bitslip_raw;
-            LOG(DEBUG) << BOLDBLUE << "Line " << +pLine << " setting line mode to " << std::hex << command_final << std::dec << RESET;
+            LOG(INFO) << BOLDBLUE << "D19cFWInterface::PhaseTuner Line " << +pLine << " setting line mode to 0x" << std::hex << command_final << std::dec << RESET;
             pInterface->WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final);
             std::this_thread::sleep_for(std::chrono::microseconds(fWait_ms * 1000));
         };
@@ -594,7 +594,7 @@ class D19cFWInterface : public BeBoardFWInterface
             ConfigureCommandType(command_type);
             uint32_t len_raw       = (0xFF & pPatternPeriod) << 0;
             uint32_t command_final = fHybrid + fChip + fLine + fCommand + len_raw;
-            LOG(DEBUG) << BOLDBLUE << "Setting line pattern size to " << std::hex << command_final << std::dec << RESET;
+            LOG(INFO) << BOLDBLUE << "D19cFWInterface::PhaseTuner Setting line pattern size to 0x" << std::hex << command_final << std::dec << RESET;
             pInterface->WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final);
             // set the pattern
             command_type = 4;
@@ -602,7 +602,7 @@ class D19cFWInterface : public BeBoardFWInterface
             uint8_t byte_id_raw = (0xFF & 0) << 8;
             uint8_t pattern_raw = (0xFF & pPattern) << 0;
             command_final       = fHybrid + fChip + fLine + fCommand + byte_id_raw + pattern_raw;
-            LOG(DEBUG) << BOLDBLUE << "Setting line pattern  to " << std::hex << command_final << std::dec << RESET;
+            LOG(INFO) << BOLDBLUE << "D19cFWInterface::PhaseTuner Setting line pattern  to 0x" << std::hex << command_final << std::dec << RESET;
             pInterface->WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final);
             std::this_thread::sleep_for(std::chrono::microseconds(fWait_ms * 1000));
         };
@@ -620,7 +620,7 @@ class D19cFWInterface : public BeBoardFWInterface
                 command_final += 2;
             else if(pCommand == "PhaseAlignment")
                 command_final += 1;
-            LOG(DEBUG) << BOLDBLUE << pCommand << ": sending " << std::hex << command_final << std::dec << RESET;
+            LOG(INFO) << BOLDBLUE << pCommand << "D19cFWInterface::PhaseTuner sending " << std::hex << command_final << std::dec << RESET;
             pInterface->WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final);
             std::this_thread::sleep_for(std::chrono::microseconds(fWait_ms * 1000));
         };
@@ -634,6 +634,7 @@ class D19cFWInterface : public BeBoardFWInterface
             ConfigureCommandType(command_type);
             uint32_t command_final = fHybrid + fChip + fLine + fCommand;
             pInterface->WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final);
+            LOG(INFO) << BOLDBLUE << "D19cFWInterface::PhaseTuner Get line status  0x" << std::hex << command_final << std::dec << RESET;
             std::this_thread::sleep_for(std::chrono::microseconds(fWait_ms * 1000));
             uint8_t cStatus = ParseStatus(pInterface);
             //
@@ -641,6 +642,7 @@ class D19cFWInterface : public BeBoardFWInterface
             ConfigureCommandType(command_type);
             command_final = fHybrid + fChip + fLine + fCommand;
             pInterface->WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final);
+            LOG(INFO) << BOLDBLUE << "D19cFWInterface::PhaseTuner Get line status  0x" << std::hex << command_final << std::dec << RESET;
             std::this_thread::sleep_for(std::chrono::microseconds(fWait_ms * 1000));
             cStatus = ParseStatus(pInterface);
             return cStatus;
