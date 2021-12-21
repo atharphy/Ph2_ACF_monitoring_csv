@@ -112,7 +112,7 @@ class FrontEndDescription
     // Id of the Optical group (link # , etc.. )
     uint8_t fOpticalId;
     // Enable reset
-    uint8_t fReset{0};
+    uint8_t fReset{1};
 
     // status (true=active, false=disabled)
     bool fStatus;

@@ -114,11 +114,11 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fMaxThreshold                = findValueInSettings<double>("PedeNoiseMaxThreshold", 1023);
 
     fNEventsPerBurst                  = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
-    uint8_t cEnableFastCounterReadout = (uint8_t)findValueInSettings<double>("EnableFastCounterReadout", 0);
-    uint8_t cEnablePairSelect         = (uint8_t)findValueInSettings<double>("EnablePairSelect", 0);
+    // uint8_t cEnableFastCounterReadout = (uint8_t)findValueInSettings<double>("EnableFastCounterReadout", 0);
+    // uint8_t cEnablePairSelect         = (uint8_t)findValueInSettings<double>("EnablePairSelect", 0);
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
-    LOG(INFO) << " Fast Counter Readout [PS] " << +cEnableFastCounterReadout << RESET;
+    // LOG(INFO) << " Fast Counter Readout [PS] " << +cEnableFastCounterReadout << RESET;
     this->SetSkipMaskedChannels(fSkipMaskedChannels);
     if(fFitSCurves) fPlotSCurves = true;
 
@@ -163,9 +163,9 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     for(auto cBoard: *fDetectorContainer)
     {
         fBeBoardInterface->setBoard(cBoard->getId());
-        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-        cInterface->SetPSCounterMode(cEnableFastCounterReadout);
-        cInterface->SetPSPairSelect(cEnablePairSelect);
+        // auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        // cInterface->SetPSCounterMode(cEnableFastCounterReadout);
+        // cInterface->SetPSPairSelect(cEnablePairSelect);
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)

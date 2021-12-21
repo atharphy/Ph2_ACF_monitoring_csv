@@ -478,100 +478,100 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
                         static_cast<RD53*>(cChip), regName, *midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
 
     // // ask FAbio what to do here
-    uint16_t numberOfBits = floor(log2(frontEnd->nTDACvalues) + 1);
-    // ################################
-    // # Custom channel group handler #
-    // ################################
-    ChannelGroup<RD53::nRows, RD53::nCols> customChannelGroupNoise;
-    customChannelGroupNoise.disableAllChannels();
+    // uint16_t numberOfBits = floor(log2(frontEnd->nTDACvalues) + 1);
+    // // ################################
+    // // # Custom channel group handler #
+    // // ################################
+    // ChannelGroup<RD53::nRows, RD53::nCols> customChannelGroupNoise;
+    // customChannelGroupNoise.disableAllChannels();
 
-    for(auto row = rowStart; row <= rowStop; row++)
-        for(auto col = colStart; col <= colStop; col++) customChannelGroupNoise.enableChannel(row, col);
+    // for(auto row = rowStart; row <= rowStop; row++)
+    //     for(auto col = colStart; col <= colStop; col++) customChannelGroupNoise.enableChannel(row, col);
 
-    std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandlerNoise;
-    theChnGroupHandlerNoise = std::make_shared<RD53ChannelGroupHandler>(customChannelGroupNoise, RD53GroupType::AllPixels, nHITxCol);
-    theChnGroupHandlerNoise->setCustomChannelGroup(customChannelGroupNoise);
+    // std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandlerNoise;
+    // theChnGroupHandlerNoise = std::make_shared<RD53ChannelGroupHandler>(customChannelGroupNoise, RD53GroupType::AllPixels, nHITxCol);
+    // theChnGroupHandlerNoise->setCustomChannelGroup(customChannelGroupNoise);
 
-    for(auto i = 0u; i <= numberOfBits; i++)
-    {
-        // ###########################
-        // # Download new DAC values #
-        // ###########################
-        for(const auto cBoard: *fDetectorContainer)
-            for(const auto cOpticalGroup: *cBoard)
-                for(const auto cHybrid: *cOpticalGroup)
-                    for(const auto cChip: *cHybrid)
-                        this->fReadoutChipInterface->WriteChipAllLocalReg(
-                            static_cast<RD53*>(cChip), regName, *midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
+    // for(auto i = 0u; i <= numberOfBits; i++)
+    // {
+    //     // ###########################
+    //     // # Download new DAC values #
+    //     // ###########################
+    //     for(const auto cBoard: *fDetectorContainer)
+    //         for(const auto cOpticalGroup: *cBoard)
+    //             for(const auto cHybrid: *cOpticalGroup)
+    //                 for(const auto cChip: *cHybrid)
+    //                     this->fReadoutChipInterface->WriteChipAllLocalReg(
+    //                         static_cast<RD53*>(cChip), regName, *midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
 
-        // ################
-        // # Run analysis #
-        // ################
-        this->measureData(nEvents, nEvtsBurst);
+    //     // ################
+    //     // # Run analysis #
+    //     // ################
+    //     this->measureData(nEvents, nEvtsBurst);
 
-        // ############################
-        // # Save measured efficiency #
-        // ############################
-        ThrEqualization::copyAndResetContainer(theOccContainer, saveEff);
+    //     // ############################
+    //     // # Save measured efficiency #
+    //     // ############################
+    //     ThrEqualization::copyAndResetContainer(theOccContainer, saveEff);
 
-        // #################
-        // # Measure noise #
-        // #################
-        this->fChannelGroupHandler = theChnGroupHandlerNoise.get();
-        this->SetTestPulse(PixelAlive::INJtype::None);
-        this->measureData(nEvents, nEvtsBurst);
-        this->fChannelGroupHandler = theChnGroupHandler.get();
-        this->SetTestPulse(PixelAlive::injType);
+    //     // #################
+    //     // # Measure noise #
+    //     // #################
+    //     this->fChannelGroupHandler = theChnGroupHandlerNoise.get();
+    //     this->SetTestPulse(PixelAlive::INJtype::None);
+    //     this->measureData(nEvents, nEvtsBurst);
+    //     this->fChannelGroupHandler = theChnGroupHandler.get();
+    //     this->SetTestPulse(PixelAlive::injType);
 
-        // #####################
-        // # Compute next step #
-        // #####################
-        for(const auto cBoard: theOccContainer)
-            for(const auto cOpticalGroup: *cBoard)
-                for(const auto cHybrid: *cOpticalGroup)
-                    for(const auto cChip: *cHybrid)
-                        for(auto row = 0u; row < RD53::nRows; row++)
-                            for(auto col = 0u; col < RD53::nCols; col++)
-                            {
-                                // #######################
-                                // # Build discriminator #
-                                // #######################
-                                float newValue = fabs(saveEff.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<float>(row, col) -
-                                                      cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
+    //     // #####################
+    //     // # Compute next step #
+    //     // #####################
+    //     for(const auto cBoard: theOccContainer)
+    //         for(const auto cOpticalGroup: *cBoard)
+    //             for(const auto cHybrid: *cOpticalGroup)
+    //                 for(const auto cChip: *cHybrid)
+    //                     for(auto row = 0u; row < RD53::nRows; row++)
+    //                         for(auto col = 0u; col < RD53::nCols; col++)
+    //                         {
+    //                             // #######################
+    //                             // # Build discriminator #
+    //                             // #######################
+    //                             float newValue = fabs(saveEff.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<float>(row, col) -
+    //                                                   cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
 
-                                // ########################
-                                // # Save best DAC values #
-                                // ########################
-                                float oldValue = bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<float>(row, col);
+    //                             // ########################
+    //                             // # Save best DAC values #
+    //                             // ########################
+    //                             float oldValue = bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<float>(row, col);
 
-                                if(fabs(newValue - target) <= fabs(oldValue - target))
-                                {
-                                    bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<float>(row, col) = newValue;
-                                    bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
-                                        midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col);
-                                }
+    //                             if(fabs(newValue - target) <= fabs(oldValue - target))
+    //                             {
+    //                                 bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<float>(row, col) = newValue;
+    //                                 bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
+    //                                     midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col);
+    //                             }
 
-                                if(newValue < target)
+    //                             if(newValue < target)
 
-                                    minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
-                                        midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col);
+    //                                 minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
+    //                                     midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col);
 
-                                else
+    //                             else
 
-                                    maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
-                                        midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col);
+    //                                 maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
+    //                                     midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col);
 
-                                midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
-                                    (minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) +
-                                     maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col)) /
-                                    2;
+    //                             midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
+    //                                 (minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) +
+    //                                  maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col)) /
+    //                                 2;
 
-                                // ###################
-                                // # Reset container #
-                                // ###################
-                                cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy = 0;
-                            }
-    }
+    //                             // ###################
+    //                             // # Reset container #
+    //                             // ###################
+    //                             cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy = 0;
+    //                         }
+    // }
 
     // ###################
     // # Reset container #

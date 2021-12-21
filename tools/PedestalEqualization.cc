@@ -90,8 +90,8 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     fOccupancyAtPedestal              = findValueInSettings("PedestalEqualizationOccupancy", 0.56);
     uint8_t cDefTargetOffset          = (cWithCBC) ? 0x7F : 0xF;
     fTargetOffset                     = findValueInSettings("PedestalEqualizationTargetOffset", cDefTargetOffset); // 0x7F;
-    uint8_t cEnableFastCounterReadout = (uint8_t)findValueInSettings<double>("EnableFastCounterReadout", 0);
-    uint8_t cEnablePairSelect         = (uint8_t)findValueInSettings<double>("EnablePairSelect", 0);
+    // uint8_t cEnableFastCounterReadout = (uint8_t)findValueInSettings<double>("EnableFastCounterReadout", 0);
+    // uint8_t cEnablePairSelect         = (uint8_t)findValueInSettings<double>("EnablePairSelect", 0);
     if(cWithSSA or cWithMPA) fTargetOffset = 0xF;
 
     LOG(INFO) << BOLDBLUE << "PedestalEqualization::Initialise Occupancy at pedestal is " << fOccupancyAtPedestal << " target offset is " << +fTargetOffset << RESET;
@@ -123,9 +123,9 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     {
         fEventTypes.push_back(cBoard->getEventType());
         fBeBoardInterface->setBoard(cBoard->getId());
-        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-        cInterface->SetPSCounterMode(cEnableFastCounterReadout);
-        cInterface->SetPSPairSelect(cEnablePairSelect);
+        // auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        // cInterface->SetPSCounterMode(cEnableFastCounterReadout);
+        // cInterface->SetPSPairSelect(cEnablePairSelect);
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
