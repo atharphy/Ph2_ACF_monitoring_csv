@@ -1,3 +1,4 @@
+
 #include "PSBiasCal.h"
 
 #include "../Utils/CBCChannelGroupHandler.h"
@@ -168,25 +169,30 @@ void PSBiasCal::CalibrateADC()
 uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point, uint32_t block, uint32_t DAC_val, float exp_val, float gnd_corr, std::string dac_str)
 {
 	//float VREF_LPGBT        = 1.0;
-	float cConversionFactor = VREF_LPGBT / 1024.;
+	//float cConversionFactor = VREF_LPGBT / 1024.;
+	float cConversionFactor = CONVERSION_FACTOR;
 
 	uint32_t DAC_new_val =0;
 	std::string DAC;
     if(cChip->getFrontEndType() == FrontEndType::MPA)
 	{
+
+
 		std::vector<std::string> nameDAC{"A", "B", "C", "D", "E", "ThDAC", "CalDAC"};
+		std::vector<uint32_t> iDAC{0, 1, 2, 3, 4, 5, 6};
+		uint32_t shift=iDAC[point];
 		fReadoutChipInterface->WriteChipReg(cChip, "TESTMUX", 0x1 << block);
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		fReadoutChipInterface->WriteChipReg(cChip, "TEST" + std::to_string(block), 0x1 << point);
+		fReadoutChipInterface->WriteChipReg(cChip, "TEST" + std::to_string(block), 0x1 << shift);
 		DAC = nameDAC[point] + std::to_string(block);
 	}
     if(cChip->getFrontEndType() == FrontEndType::SSA)
     {
 
 		std::vector<std::string> nameDAC{"Bias_D5BFEED","Bias_D5PREAMP","Bias_D5TDR","Bias_D5ALLV","Bias_D5ALLI","Bias_D5DAC8"};
-		uint32_t shift=point;
-		if (point==6) //TODO: hacky, Bias_D5DAC8 is the only one that is out of order.  Should pass index map
-			shift=point+4;
+		std::vector<uint32_t> iDAC{0, 1, 2, 3, 4, 9};
+		uint32_t shift=iDAC[point];
+
 
 		uint32_t MtoWr=(1<<shift);
 		fReadoutChipInterface->WriteChipReg(cChip, "Bias_TEST_LSB",MtoWr&0xff);
@@ -203,7 +209,7 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
 	fReadoutChipInterface->WriteChipReg(cChip, DAC, DAC_val);
 	std::this_thread::sleep_for(std::chrono::milliseconds(2));
 	uint32_t act_val = static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str);
-
+	//LOG(INFO) << BOLDRED <<"act_val "<<act_val<<RESET;		
 	float    LSB          = (float(act_val) - float(off_val)) / float(DAC_val);
 	float    exp_val_conv = exp_val / cConversionFactor;
 	uint32_t offsetval    = 0;
@@ -227,42 +233,59 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
 	bool checkadj=true;
 	if (checkadj) //This checks if the linear extrapolation finds the best value, with a 1 dac unit correction possible. Could add a while loop to always find best value
 	{
-		uint32_t DAC_down_val;
-
-		DAC_down_val = std::max(uint32_t(0), DAC_new_val-1);
-		DAC_down_val = std::min(uint32_t(31), DAC_new_val-1);
-
-		
-		fReadoutChipInterface->WriteChipReg(cChip, DAC, DAC_down_val);
-		std::this_thread::sleep_for(std::chrono::milliseconds(2));
-		float new_val_down = float(static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str));
-
-		uint32_t DAC_up_val;
-
-		DAC_up_val = std::max(uint32_t(0), DAC_new_val+1);
-		DAC_up_val = std::min(uint32_t(31), DAC_new_val+1);
-
-		
-		fReadoutChipInterface->WriteChipReg(cChip, DAC, DAC_up_val);
-		std::this_thread::sleep_for(std::chrono::milliseconds(2));
-		float new_val_up = float(static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str));
-		LOG(INFO) << BOLDRED <<"Down "<<new_val_down - gnd_corr<<" Up "<<new_val_up - gnd_corr<<RESET;		
-
-		float expdiff=std::fabs(exp_val_conv-(new_val - gnd_corr));
-		float expdiffdown=std::fabs(exp_val_conv-(new_val_down - gnd_corr));
-		float expdiffup=std::fabs(exp_val_conv-(new_val_up - gnd_corr));
-
-		if ((expdiffdown<expdiff) or (expdiffup<expdiff))
+		bool searching=true;
+		uint32_t niter=0;
+		while(searching)
 		{
-			LOG(ERROR) << BOLDRED <<"Bad extrapolation in PSBiasCal: expdiffdown:"<<expdiffdown<<", expdiffup:"<<expdiffup<<", expdiff:"<<expdiff<<RESET;
-			if ((expdiffdown<expdiff)) DAC_nom_val=DAC_down_val;
-			if ((expdiffup<expdiff)) DAC_nom_val=DAC_up_val;
-		}
-		LOG(INFO) << BOLDRED <<"Writing corr DAC val "<<DAC_nom_val<<RESET;		
 
-		fReadoutChipInterface->WriteChipReg(cChip, DAC, DAC_nom_val);
-		std::this_thread::sleep_for(std::chrono::milliseconds(2));
-		new_val = float(static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str));
+			uint32_t DAC_down_val;
+
+			DAC_down_val = std::max(uint32_t(0), DAC_new_val-1);
+			DAC_down_val = std::min(uint32_t(31), DAC_new_val-1);
+
+			
+			fReadoutChipInterface->WriteChipReg(cChip, DAC, DAC_down_val);
+			std::this_thread::sleep_for(std::chrono::milliseconds(2));
+			float new_val_down = float(static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str));
+
+			uint32_t DAC_up_val;
+
+			DAC_up_val = std::max(uint32_t(0), DAC_new_val+1);
+			DAC_up_val = std::min(uint32_t(31), DAC_new_val+1);
+
+			
+			fReadoutChipInterface->WriteChipReg(cChip, DAC, DAC_up_val);
+			std::this_thread::sleep_for(std::chrono::milliseconds(2));
+			float new_val_up = float(static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str));
+			LOG(INFO) << BOLDRED <<"Down "<<new_val_down - gnd_corr<<" Up "<<new_val_up - gnd_corr<<RESET;		
+
+			float expdiff=std::fabs(exp_val_conv-(new_val - gnd_corr));
+			float expdiffdown=std::fabs(exp_val_conv-(new_val_down - gnd_corr));
+			float expdiffup=std::fabs(exp_val_conv-(new_val_up - gnd_corr));
+
+			if ((expdiffdown<expdiff) or (expdiffup<expdiff))
+			{
+				LOG(INFO) << BOLDRED <<"Bad extrapolation in PSBiasCal: expdiffdown:"<<expdiffdown<<", expdiffup:"<<expdiffup<<", expdiff:"<<expdiff<<", iteration:"<<niter<<RESET;
+				if ((expdiffdown<expdiff)) 
+					{
+					DAC_nom_val=DAC_down_val;
+					DAC_new_val=DAC_new_val-1;
+					}
+				if ((expdiffup<expdiff)) 
+					{
+					DAC_nom_val=DAC_up_val;
+					DAC_new_val=DAC_new_val+1;
+					}
+
+			}
+			else searching=false;
+			LOG(INFO) << BOLDRED <<"Writing corr DAC val "<<DAC_nom_val<<RESET;		
+
+			fReadoutChipInterface->WriteChipReg(cChip, DAC, DAC_nom_val);
+			std::this_thread::sleep_for(std::chrono::milliseconds(2));
+			new_val = float(static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str));
+			niter+=1;
+		}
 	}
 
 	LOG(INFO) << BOLDRED <<"New DAC val: "<<(new_val - gnd_corr)<<" Expected val: " <<exp_val_conv<<"+/-"<<LSB<<RESET;

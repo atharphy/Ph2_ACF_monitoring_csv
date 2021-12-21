@@ -120,7 +120,7 @@ int main(int argc, char* argv[])
                 {
                     static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Set_calibration(cChip, 50);
                     static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Set_threshold(cChip, 100);
-                    static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Activate_sync(cChip);
+                    //static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Activate_sync(cChip);
                     // static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS_ALL", 0x57);
                     static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                     static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ClusterCut_ALL", 2);

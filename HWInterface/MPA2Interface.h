@@ -55,14 +55,9 @@ class MPA2Interface : public ReadoutChipInterface
 
     void                  Pix_write(Ph2_HwDescription::ReadoutChip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel, uint32_t data);
     uint32_t              Pix_read(Ph2_HwDescription::ReadoutChip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel);
-    void                  activate_I2C_chip();
-    std::vector<uint16_t> ReadoutCounters_MPA(uint32_t raw_mode_en);
-    void                  PS_Open_shutter(uint32_t duration = 0);
-    void                  PS_Close_shutter(uint32_t duration = 0);
-    void                  PS_Clear_counters(uint32_t duration = 0);
-    void                  PS_Start_counters_read(uint32_t duration = 0);
-    void                  Activate_async(Ph2_HwDescription::Chip* pMPA);
-    void                  Activate_sync(Ph2_HwDescription::Chip* pMPA);
+
+    // void                  Activate_async(Ph2_HwDescription::Chip* pMPA);
+    // void                  Activate_sync(Ph2_HwDescription::Chip* pMPA);
     void                  Activate_pp(Ph2_HwDescription::Chip* pMPA, uint8_t win = 0);
     void                  Activate_ss(Ph2_HwDescription::Chip* pMPA, uint8_t win = 0);
     void                  Activate_ps(Ph2_HwDescription::Chip* pMPA, uint8_t win = 8);

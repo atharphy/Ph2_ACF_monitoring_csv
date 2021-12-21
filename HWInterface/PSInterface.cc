@@ -143,22 +143,6 @@ uint32_t PSInterface::Pix_read(ReadoutChip* pChip, ChipRegItem cRegItem, uint32_
 	return 0;
 }
 
-void PSInterface::Activate_async(Chip* pChip) 
-{ 
-    if(pChip->getFrontEndType() == FrontEndType::MPA)
-		return theMPAInterface->Activate_async(pChip); 
-    else if(pChip->getFrontEndType() == FrontEndType::MPA2)
-		return theMPA2Interface->Activate_async(pChip); 
-}
-
-void PSInterface::Activate_sync(Chip* pChip) 
-{ 
-    if(pChip->getFrontEndType() == FrontEndType::MPA)
-		return theMPAInterface->Activate_sync(pChip); 
-    else if(pChip->getFrontEndType() == FrontEndType::MPA2)
-		return theMPA2Interface->Activate_sync(pChip); 
-}
-
 void PSInterface::Activate_pp(Chip* pChip, uint8_t win) 
 { 
     if(pChip->getFrontEndType() == FrontEndType::MPA)

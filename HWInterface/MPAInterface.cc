@@ -1088,9 +1088,9 @@ uint32_t MPAInterface::Pix_read(ReadoutChip* cMPA, ChipRegItem cRegItem, uint32_
     return rep;
 }
 
-void MPAInterface::Activate_async(Chip* pMPA) { this->WriteChipReg(pMPA, "ReadoutMode", 0x1); }
+//void MPAInterface::Activate_async(Chip* pMPA) { this->WriteChipReg(pMPA, "ReadoutMode", 0x1); }
 
-void MPAInterface::Activate_sync(Chip* pMPA) { this->WriteChipReg(pMPA, "ReadoutMode", 0x0); }
+//void MPAInterface::Activate_sync(Chip* pMPA) { this->WriteChipReg(pMPA, "ReadoutMode", 0x0); }
 
 void MPAInterface::Activate_pp(Chip* pMPA, uint8_t win) { this->WriteChipReg(pMPA, "ECM", (0x2 << 6) | win); }
 
