@@ -731,7 +731,7 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
                 cSSA->setOptical(cHybrid->isOptical());
                 cSSA->setMasterId(cHybrid->getMasterId());
                 LOG(INFO) << BOLDMAGENTA << "SSA " << +cSSAId << " current set to " << +cSLVSdriveSSA << "" << RESET;
-                (fBeBoardInterface->getFirmwareInterface())->WriteFERegister(cSSA, cRegisterPadStrength, cSLVSdriveSSA);
+                (fBeBoardInterface->getFirmwareInterface())->WriteFERegister(cSSA, cRegisterPadStrength, cSLVSdriveSSA, false);
             }
 
         } // hybrid

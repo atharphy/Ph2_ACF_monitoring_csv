@@ -201,6 +201,16 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     // InternalPhaseAlignRx(pChip, cRxGroups, cRxChannels);
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
-    // Setting GPIO levels for Skeleton test
+    // Setting GPIO levels for PS ROH 
+    ConfigureGPIODirection(pChip, {fReset_LHS_CIC, fReset_LHS_MPA, fReset_LHS_SSA, fReset_RHS_CIC, fReset_RHS_MPA, fReset_RHS_SSA}, 1);
+    ConfigureGPIOLevel(pChip, {fReset_LHS_CIC, fReset_LHS_MPA, fReset_LHS_SSA, fReset_RHS_CIC, fReset_RHS_MPA, fReset_RHS_SSA}, 1);
+    // hold resets
+    for(uint8_t cSide = 0; cSide < 2; cSide++)
+    {
+        this->ssaReset(pChip, true, cSide);
+        this->mpaReset(pChip, true, cSide);
+        this->cicReset(pChip, true, cSide);
+    }
+    LOG(INFO) << BOLDGREEN << "PS-ROH-" << +cChipRate << "G lpGBT configuration APPLIED" << RESET;
 }
 } // namespace Ph2_HwInterface
