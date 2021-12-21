@@ -614,82 +614,82 @@ int main(int argc, char* argv[])
         // cTool.fDetectorContainer->resetReadoutChipQueryFunction();
     }
 
-    if(cmd.foundOption("linkTest") && !cmd.foundOption("read"))
-    {
-        auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
-        for(auto cBoard: *cTool.fDetectorContainer)
-        {
-            for(auto cOpticalGroup: *cBoard)
-            {
-                if(cSrcLnkTst == "lpGBT")
-                {
-                    auto& clpGBT = cOpticalGroup->flpGBT;
-                    // configure lpGBT to produce constant pattern
-                    cTool.flpGBTInterface->ConfigureRxSource(clpGBT, {0, 1, 2, 3, 4, 5, 6}, 4);
-                    cTool.flpGBTInterface->ConfigureDPPattern(clpGBT, 0xE0E0E0E0);
-                    D19cFWInterface::PhaseTuner cTuner;
-                    for(size_t cLineId = 1; cLineId <= 6; cLineId++)
-                    {
-                        for(auto cHybrid: *cOpticalGroup) { cTuner.AlignWord(cInterface, cHybrid->getId(), 0, cLineId, 0xE0, 8, true); }
-                    }
-                    for(auto cHybrid: *cOpticalGroup)
-                    {
-                        cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
-                        cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-                        for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 6); }
-                    }
-                    continue;
-                }
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
-                    cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-                    auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                    if(cSrcLnkTst == "CIC")
-                    {
-                        // CIC alignment pattern
-                        cTool.fCicInterface->SelectOutput(cCic, true);
-                    }
-                    else
-                    {
-                        LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cHybrid->getId() << RESET;
-                        // MPA shift pattern
-                        // enable MPA alignment pattern
-                        LOG(INFO) << GREEN << "Enabling MPA Alignment pattern" << RESET;
-                        std::vector<uint8_t>     cOriginalValues;
-                        std::vector<std::string> cRegs;
-                        uint8_t                  cAlignmentPattern = 0xE0;
-                        std::vector<uint8_t>     cRegValues{0x2, cAlignmentPattern};
-                        std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};
-                        for(size_t cIndex = 0; cIndex < cRegValues.size(); cIndex++)
-                        {
-                            for(auto cChip: *cHybrid)
-                            {
-                                if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+    // if(cmd.foundOption("linkTest") && !cmd.foundOption("read"))
+    // {
+    //     auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+    //     for(auto cBoard: *cTool.fDetectorContainer)
+    //     {
+    //         for(auto cOpticalGroup: *cBoard)
+    //         {
+    //             if(cSrcLnkTst == "lpGBT")
+    //             {
+    //                 auto& clpGBT = cOpticalGroup->flpGBT;
+    //                 // configure lpGBT to produce constant pattern
+    //                 cTool.flpGBTInterface->ConfigureRxSource(clpGBT, {0, 1, 2, 3, 4, 5, 6}, 4);
+    //                 cTool.flpGBTInterface->ConfigureDPPattern(clpGBT, 0xE0E0E0E0);
+    //                 D19cFWInterface::PhaseTuner cTuner;
+    //                 for(size_t cLineId = 1; cLineId <= 6; cLineId++)
+    //                 {
+    //                     for(auto cHybrid: *cOpticalGroup) { cTuner.AlignWord(cInterface, cHybrid->getId(), 0, cLineId, 0xE0, 8, true); }
+    //                 }
+    //                 for(auto cHybrid: *cOpticalGroup)
+    //                 {
+    //                     cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
+    //                     cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+    //                     for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 6); }
+    //                 }
+    //                 continue;
+    //             }
+    //             for(auto cHybrid: *cOpticalGroup)
+    //             {
+    //                 cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
+    //                 cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+    //                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+    //                 if(cSrcLnkTst == "CIC")
+    //                 {
+    //                     // CIC alignment pattern
+    //                     cTool.fCicInterface->SelectOutput(cCic, true);
+    //                 }
+    //                 else
+    //                 {
+    //                     LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cHybrid->getId() << RESET;
+    //                     // MPA shift pattern
+    //                     // enable MPA alignment pattern
+    //                     LOG(INFO) << GREEN << "Enabling MPA Alignment pattern" << RESET;
+    //                     std::vector<uint8_t>     cOriginalValues;
+    //                     std::vector<std::string> cRegs;
+    //                     uint8_t                  cAlignmentPattern = 0xE0;
+    //                     std::vector<uint8_t>     cRegValues{0x2, cAlignmentPattern};
+    //                     std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};
+    //                     for(size_t cIndex = 0; cIndex < cRegValues.size(); cIndex++)
+    //                     {
+    //                         for(auto cChip: *cHybrid)
+    //                         {
+    //                             if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
 
-                                cOriginalValues.push_back(cTool.fReadoutChipInterface->ReadChipReg(cChip, cRegNames[cIndex]));
-                                cRegs.push_back(cRegNames[cIndex]);
-                                cTool.fReadoutChipInterface->WriteChipReg(cChip, cRegNames[cIndex], cRegValues[cIndex]);
-                            } // loop over MPAs
-                        }     // loop over registers
-                        for(uint8_t cPhyPort = 8; cPhyPort < 9; cPhyPort++)
-                        {
-                            LOG(INFO) << BOLDMAGENTA << "PhyPort#" << +cPhyPort << RESET;
-                            cTool.fCicInterface->SelectMux(cCic, cPhyPort);
-                            // align line
-                            D19cFWInterface::PhaseTuner cTuner;
-                            for(size_t cLineId = 1; cLineId <= 3; cLineId++) { cTuner.AlignWord(cInterface, cHybrid->getId(), 0, cLineId, cAlignmentPattern, 8, true); }
-                            for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 3); }
-                        }
-                    }
-                    if(cSrcLnkTst == "CIC" || cSrcLnkTst == "lpGBT")
-                    {
-                        for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 6); }
-                    }
-                } // hybrid
-            }     // OG
-        }         // board
-    }
+    //                             cOriginalValues.push_back(cTool.fReadoutChipInterface->ReadChipReg(cChip, cRegNames[cIndex]));
+    //                             cRegs.push_back(cRegNames[cIndex]);
+    //                             cTool.fReadoutChipInterface->WriteChipReg(cChip, cRegNames[cIndex], cRegValues[cIndex]);
+    //                         } // loop over MPAs
+    //                     }     // loop over registers
+    //                     for(uint8_t cPhyPort = 8; cPhyPort < 9; cPhyPort++)
+    //                     {
+    //                         LOG(INFO) << BOLDMAGENTA << "PhyPort#" << +cPhyPort << RESET;
+    //                         cTool.fCicInterface->SelectMux(cCic, cPhyPort);
+    //                         // align line
+    //                         D19cFWInterface::PhaseTuner cTuner;
+    //                         for(size_t cLineId = 1; cLineId <= 3; cLineId++) { cTuner.AlignWord(cInterface, cHybrid->getId(), 0, cLineId, cAlignmentPattern, 8, true); }
+    //                         for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 3); }
+    //                     }
+    //                 }
+    //                 if(cSrcLnkTst == "CIC" || cSrcLnkTst == "lpGBT")
+    //                 {
+    //                     for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 6); }
+    //                 }
+    //             } // hybrid
+    //         }     // OG
+    //     }         // board
+    // }
     if(cmd.foundOption("injectionTest") && !cmd.foundOption("read"))
     {
         // auto cNevents          = findValueInSettings("Check2STPamplitude", 255);
