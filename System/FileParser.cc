@@ -667,7 +667,6 @@ void FileParser::parseMPAContainer(pugi::xml_node pMPANode, Hybrid* pHybrid, std
     cMPA->setClockFrequency(320);
     cMPA->setMasterId(pHybrid->getMasterId());
 
-
     os << BOLDCYAN << "|"
        << "  "
        << "|"
@@ -1229,7 +1228,7 @@ void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std
     cCbc->setClockFrequency(320);
     cCbc->setNumberOfChannels(254);
     cCbc->setMasterId(cHybrid->getMasterId());
-    
+
     os << BOLDCYAN << "|"
        << "  "
        << "|"

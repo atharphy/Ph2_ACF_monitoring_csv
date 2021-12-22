@@ -24,7 +24,7 @@ namespace Ph2_HwDescription
 
 MPA::MPA(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pMPAId, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pBeId, pFMCId, pFeId, pMPAId)
 {
-    fChipAddress      = 0x40 + pMPAId%8;
+    fChipAddress      = 0x40 + pMPAId % 8;
     fMaxRegValue      = 255;
     fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS * NMPACOLS>>();
     fChipOriginalMask->enableAllChannels();
@@ -35,7 +35,7 @@ MPA::MPA(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pMPAId, uint8_t p
 
 MPA::MPA(const FrontEndDescription& pFeDesc, uint8_t pMPAId, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pFeDesc, pMPAId)
 {
-    fChipAddress      = 0x40 + pMPAId%8;
+    fChipAddress      = 0x40 + pMPAId % 8;
     fMaxRegValue      = 255; // 8 bit registers in MPA
     fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS, NMPACOLS>>();
     fChipOriginalMask->enableAllChannels();
