@@ -18,12 +18,8 @@ class D19cDebugFWInterface : public BeBoardFWInterface
 
   public:
     std::vector<std::string> StubDebug(bool pWithTestPulse = true, uint8_t pNlines = 6);
-    std::string              L1ADebug(uint8_t pWait_ms = 100, bool pPrint = true);
+    std::string              L1ADebug(uint8_t pWait_ms = 1, bool pPrint = true);
     std::vector<std::string> ScopeStubLines(bool pWithTestPulse = true);
-
-  private:
-    void     ResetReadout();
-    uint32_t fWait_us{100};
 };
 } // namespace Ph2_HwInterface
 #endif
