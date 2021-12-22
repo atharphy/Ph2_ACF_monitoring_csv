@@ -389,8 +389,8 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     size_t injLatency  = SystemController::findValueInSettings<double>("InjLatency");
     size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays");
     size_t colStart    = SystemController::findValueInSettings<double>("COLstart");
-    bool   resetMask   = SystemController::findValueInSettings<bool>("ResetMask");
-    bool   resetTDAC   = SystemController::findValueInSettings<bool>("ResetTDAC");
+    bool   resetMask   = SystemController::findValueInSettings<double>("ResetMask");
+    bool   resetTDAC   = SystemController::findValueInSettings<double>("ResetTDAC");
     LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
     static_cast<RD53FWInterface*>(this->fBeBoardFWMap[pBoard->getId()])->SetAndConfigureFastCommands(pBoard, nTRIGxEvent, injType, injLatency, nClkDelays, colStart < RD53::LIN.colStart);
     LOG(INFO) << CYAN << "================== Done ==================" << RESET;

@@ -49,8 +49,8 @@ void LatencyScan::Initialize()
 
     initializeRecycleBin();
 
-    fStartLatency = findValueInSettings<uint16_t>("StartLatency", 1);
-    fLatencyRange = findValueInSettings<uint16_t>("LatencyRange", 1);
+    fStartLatency = findValueInSettings<double>("StartLatency", 1);
+    fLatencyRange = findValueInSettings<double>("LatencyRange", 1);
     fHoleMode     = findValueInSettings<double>("HoleMode", 1);
     fNevents      = findValueInSettings<double>("Nevents", 10);
     std::cout << "Going to read " << fNevents << " events" << std::endl;

@@ -23,7 +23,7 @@ void Physics2S::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    saveRawData = this->findValueInSettings<bool>("SaveRawData");
+    saveRawData = this->findValueInSettings<double>("SaveRawData");
     doLocal     = false;
 
     // ###########################################

@@ -1,6 +1,6 @@
 #include "LinkAlignmentOT.h"
 
-#include "../HWInterface/D19cBackendAlignmenntFWInterface.h"
+#include "../HWInterface/D19cBackendAlignmentFWInterface.h"
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
 //#include "boost/format.hpp"
@@ -195,7 +195,7 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     fBeBoardInterface->setBoard((*cBoardIter)->getId());
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    D19cBackendAlignmenntFWInterface *cAlignerInterface = static_cast<D19cBackendAlignmenntFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cBackendAlignmentFWInterface *cAlignerInterface = static_cast<D19cBackendAlignmentFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     cAlignerInterface->InitializeConfiguration();
     cAlignerInterface->InitializeAlignerObject();
 
@@ -347,7 +347,7 @@ bool LinkAlignmentOT::PhaseAlignBEdata(const OpticalGroup* pOpticalGroup)
     auto cBoardId   = pOpticalGroup->getBeBoardId();
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     fBeBoardInterface->setBoard((*cBoardIter)->getId());
-    D19cBackendAlignmenntFWInterface *cAlignerInterface = static_cast<D19cBackendAlignmenntFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cBackendAlignmentFWInterface *cAlignerInterface = static_cast<D19cBackendAlignmentFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     cAlignerInterface->InitializeConfiguration();
     cAlignerInterface->InitializeAlignerObject();
 
@@ -422,7 +422,7 @@ std::pair<bool,uint8_t> LinkAlignmentOT::PhaseTuneLine(const Chip* pChip, uint8_
     auto cBoardId   = pChip->getBeBoardId();
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     fBeBoardInterface->setBoard((*cBoardIter)->getId());
-    D19cBackendAlignmenntFWInterface *cAlignerInterface = static_cast<D19cBackendAlignmenntFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cBackendAlignmentFWInterface *cAlignerInterface = static_cast<D19cBackendAlignmentFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     cAlignerInterface->InitializeConfiguration();
     cAlignerInterface->InitializeAlignerObject();
 
@@ -455,7 +455,7 @@ std::pair<bool,uint8_t> LinkAlignmentOT::WordAlignLine(const Chip* pChip, uint8_
     auto cBoardId   = pChip->getBeBoardId();
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     fBeBoardInterface->setBoard((*cBoardIter)->getId());
-    D19cBackendAlignmenntFWInterface *cAlignerInterface = static_cast<D19cBackendAlignmenntFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cBackendAlignmentFWInterface *cAlignerInterface = static_cast<D19cBackendAlignmentFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     cAlignerInterface->InitializeConfiguration();
     cAlignerInterface->InitializeAlignerObject();
 
@@ -508,7 +508,7 @@ void                    LinkAlignmentOT::ManuallyConfigureLine(const Chip* pChip
     auto cBoardId   = pChip->getBeBoardId();
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     fBeBoardInterface->setBoard((*cBoardIter)->getId());
-    D19cBackendAlignmenntFWInterface *cAlignerInterface = static_cast<D19cBackendAlignmenntFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cBackendAlignmentFWInterface *cAlignerInterface = static_cast<D19cBackendAlignmentFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     cAlignerInterface->InitializeConfiguration();
     cAlignerInterface->InitializeAlignerObject();
 
@@ -577,7 +577,7 @@ bool LinkAlignmentOT::LineTuning(const Chip* pChip, uint8_t pLineId , uint8_t pA
     auto cBoardId   = pChip->getBeBoardId();
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     fBeBoardInterface->setBoard((*cBoardIter)->getId());
-    D19cBackendAlignmenntFWInterface *cAlignerInterface = static_cast<D19cBackendAlignmenntFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cBackendAlignmentFWInterface *cAlignerInterface = static_cast<D19cBackendAlignmentFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     cAlignerInterface->InitializeConfiguration();
     cAlignerInterface->InitializeAlignerObject();
 
@@ -624,7 +624,7 @@ bool LinkAlignmentOT::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     fBeBoardInterface->setBoard((*cBoardIter)->getId());
     D19cFWInterface* cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    D19cBackendAlignmenntFWInterface *cAlignerInterface = static_cast<D19cBackendAlignmenntFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cBackendAlignmentFWInterface *cAlignerInterface = static_cast<D19cBackendAlignmentFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     cAlignerInterface->InitializeConfiguration();
     cAlignerInterface->InitializeAlignerObject();
 
