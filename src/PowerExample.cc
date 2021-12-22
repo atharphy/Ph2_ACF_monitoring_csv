@@ -14,6 +14,7 @@
 #include "../Utils/argvparser.h"
 #include "../tools/CalibrationExample.h"
 #include "../tools/Tool.h"
+#include "D19cPSTestBoardFWInterface.h"
 #include "TApplication.h"
 #include "TCanvas.h"
 #include "TH1.h"
@@ -23,7 +24,6 @@
 #include <fstream>
 #include <inttypes.h>
 #include <iostream>
-#include "D19cPSTestBoardFWInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
     cTool.InitializeHw(cHWFile, outp);
     cTool.InitializeSettings(cHWFile, outp);
     cTool.fBeBoardInterface->setBoard(0);
-    D19cPSTestBoardFWInterface* IB = dynamic_cast<D19cPSTestBoardFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()); 
+    D19cPSTestBoardFWInterface* IB = dynamic_cast<D19cPSTestBoardFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
     IB->PSInterfaceBoard_PowerOn_MPASSA(1.25, 1.25, 1.25, 0.3, 0.3, 1, 0);
-    IB->ReadPower_SSA(0,0);
+    IB->ReadPower_SSA(0, 0);
 }

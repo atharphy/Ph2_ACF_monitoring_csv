@@ -6,7 +6,6 @@
 #include "../HWDescription/ReadoutChip.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/D19cFWInterface.h"
-#include "D19cPSTestBoardFWInterface.h"
 #include "../System/SystemController.h"
 #include "../Utils/CommonVisitors.h"
 #include "../Utils/ConsoleColor.h"
@@ -16,6 +15,7 @@
 #include "../tools/BackEndAlignment.h"
 #include "../tools/CalibrationExample.h"
 #include "../tools/Tool.h"
+#include "D19cPSTestBoardFWInterface.h"
 #include "TApplication.h"
 #include "TCanvas.h"
 #include "TH1.h"
@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
     cTool.InitializeSettings(cHWFile, outp);
     // //
     // cTool.fBeBoardInterface->setBoard(0);
-    // D19cPSTestBoardFWInterface* IB = dynamic_cast<D19cPSTestBoardFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()); 
+    // D19cPSTestBoardFWInterface* IB = dynamic_cast<D19cPSTestBoardFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
     // // power cycle board - jic
     // IB->PSInterfaceBoard_PowerOff_SSA();
     // IB->ReadPower_SSA();

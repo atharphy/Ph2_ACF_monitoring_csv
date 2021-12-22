@@ -4309,7 +4309,6 @@ bool D19cFWInterface::cmd_reply_ack(const uint32_t& cWord1, const uint32_t& cWor
         return false;
 }
 
-
 void D19cFWInterface::PS_Open_shutter(uint32_t pDuration)
 {
     uint8_t cReSync   = 0;
@@ -4384,8 +4383,6 @@ void D19cFWInterface::PS_Start_counters_read(uint32_t pDuration)
     this->Compose_fast_command(pDuration, cReSync, cL1A, cCalPulse, cBC0);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
 }
-
-
 
 // disconnect setup with multiplexing backplane
 // disconnect setup with multiplexing backplane

@@ -19,10 +19,10 @@
 #include "../Utils/argvparser.h"
 #include "../tools/BackEndAlignment.h"
 #include "../tools/Tool.h"
+#include "D19cPSTestBoardFWInterface.h"
 #include "TCanvas.h"
 #include "TH1.h"
 #include "tools/CicFEAlignment.h"
-#include "D19cPSTestBoardFWInterface.h"
 #include <cstring>
 #include <fstream>
 #include <inttypes.h>
@@ -47,8 +47,8 @@ int main(int argc, char* argv[])
     cTool.InitializeHw(cHWFile, outp);
     cTool.InitializeSettings(cHWFile, outp);
 
-    // power on MPA ? 
-    // D19cPSTestBoardFWInterface* IB = dynamic_cast<D19cPSTestBoardFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()); 
+    // power on MPA ?
+    // D19cPSTestBoardFWInterface* IB = dynamic_cast<D19cPSTestBoardFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
     // IB->PSInterfaceBoard_PowerOn();
     // std::this_thread::sleep_for(std::chrono::milliseconds(100));
     // IB->PSInterfaceBoard_PowerOn_MPA(1.25, 1.2, 1.25, 0.3, 0, 0);
