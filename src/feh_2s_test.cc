@@ -1,5 +1,6 @@
 #include <cstring>
 
+#include "D19cDebugFWInterface.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
@@ -17,7 +18,6 @@
 #include "tools/RegisterTester.h"
 #include "tools/ShortFinder.h"
 #include "tools/StubBackEndAlignment.h"
-#include "D19cDebugFWInterface.h"
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -552,7 +552,7 @@ int main(int argc, char* argv[])
 
         for(auto cHybridId: cHybridIds)
         {
-            auto cDebugInterface = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()); 
+            auto cDebugInterface = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
             for(const auto cBoard: *cTool.fDetectorContainer)
             {
                 cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybridId);

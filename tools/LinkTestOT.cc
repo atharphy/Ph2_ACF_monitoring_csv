@@ -34,7 +34,7 @@ bool LinkTestOT::TestL1ALine(BeBoard* pBoard, bool pAlign, size_t pAttempts)
     // now ... configure CIC to produce idle pattern
     // on L1 line
     fBeBoardInterface->setBoard(pBoard->getId());
-    D19cDebugFWInterface* cDebugInterface              = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cDebugFWInterface* cDebugInterface = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     // make sure that we are in sparsified mode
     bool cSparsified = pBoard->getSparsification();
     pBoard->setSparsification(true);

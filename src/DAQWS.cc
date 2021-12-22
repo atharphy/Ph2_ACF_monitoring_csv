@@ -15,8 +15,8 @@
 #include "../tools/BackEndAlignment.h"
 #include "../tools/CalibrationExample.h"
 #include "../tools/Tool.h"
-#include "D19cPSTestBoardFWInterface.h"
 #include "D19cDebugFWInterface.h"
+#include "D19cPSTestBoardFWInterface.h"
 #include "TApplication.h"
 #include "TCanvas.h"
 #include "TH1.h"
@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
     cBackEndAligner.Reset();
 
     // look at L1 debug
-    // auto cDebugInterface = static_cast<D19cDebugFWInterface*>(dynamic_cast<D19cPSTestBoardFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());); 
+    // auto cDebugInterface = static_cast<D19cDebugFWInterface*>(dynamic_cast<D19cPSTestBoardFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()););
     // cDebugInterface->L1ADebug();
     // collect events
     size_t cNevents = 10;

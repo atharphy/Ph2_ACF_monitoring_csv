@@ -1,10 +1,10 @@
 #include "CicFEAlignment.h"
 
 // #ifdef __USE_ROOT__
-#include "D19cDebugFWInterface.h"
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Occupancy.h"
+#include "D19cDebugFWInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -379,7 +379,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
         if(!cDebug) continue;
 
         fBeBoardInterface->setBoard(cBoard->getId());
-        D19cDebugFWInterface* cDebugInterface              = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        D19cDebugFWInterface* cDebugInterface = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)

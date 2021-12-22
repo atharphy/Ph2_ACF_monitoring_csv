@@ -1382,7 +1382,7 @@ void D19cFWInterface::ConfigureFastCommandBlock(const BeBoard* pBoard)
 //         cLineIndx++;
 //     }
 //     return cBuffer;
-    
+
 //     // search for L1 headers
 //     size_t cSearch = 0;
 //     size_t cPos = 0;
@@ -1401,7 +1401,6 @@ void D19cFWInterface::ConfigureFastCommandBlock(const BeBoard* pBoard)
 //         cFound = cBuffer.find("111111111111111111111110",cPos);
 //     }while( cFound != std::string::npos );
 //     LOG (INFO) << BOLDYELLOW << cL1DataHeaders.str() << RESET;
-    
 
 //     // size_t cOffset = 28;
 //     // auto cHeader = cBuffer.substr(4, cOffset); cOffset+=4;

@@ -1,8 +1,8 @@
 #include "BackEndAlignment.h"
 
-#include "D19cDebugFWInterface.h"
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
+#include "D19cDebugFWInterface.h"
 #include "boost/format.hpp"
 
 using namespace Ph2_HwDescription;
@@ -58,9 +58,9 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard, uint8_t pSSAPair)
     bool cTuned = true;
     LOG(INFO) << GREEN << "BackEndAlignment for PS Chip(s)" << RESET;
     fBeBoardInterface->setBoard(pBoard->getId());
-    D19cDebugFWInterface* cDebugInterface              = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    uint8_t cPhaseAlignmentPattern = 0xAA;
-    uint8_t cWordAlignmentPattern  = 0xEA;
+    D19cDebugFWInterface* cDebugInterface        = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    uint8_t               cPhaseAlignmentPattern = 0xAA;
+    uint8_t               cWordAlignmentPattern  = 0xEA;
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
