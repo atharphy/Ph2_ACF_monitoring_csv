@@ -314,20 +314,12 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
     // align L1 data in the BE
     fL1Debug = true;
     LOG(INFO) << BOLDMAGENTA << "LinkAlignmentOT::WordAlignBEdata ... word alignment on L1 lines from CIC.." << RESET;
-    // cAligned           = cInterface->L1WordAlignment(pOpticalGroup, fL1Debug);
     cAligned = L1WordAlignment(pOpticalGroup, fL1Debug);
-    // auto   cL1Bitslips = cInterface->getL1Bitslips();
     size_t cIndx       = 0;
-    // configure CICs to NOT output alignment pattern on stub lines
-    // and also re-confiure enabled FEs
+    // re-confiure enabled FEs
     for(auto cHybrid: *pOpticalGroup)
     {
         auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-
-        // auto& cBeBitSlipHybrd = cBeBitSlipOG->at(cHybrid->getIndex());
-        // auto& cThisBeBitSlip  = cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>();
-        // cThisBeBitSlip[0] = cL1Bitslips[cIndx];
-        // disable alignment output
         fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
         cIndx++;
     }
@@ -643,7 +635,7 @@ bool LinkAlignmentOT::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     cVecReg.clear();
     std::vector<std::string> cFcmdRegs{"misc.trigger_multiplicity", "user_trigger_frequency", "trigger_source", "misc.backpressure_enable", "triggers_to_accept"};
-    std::vector<uint16_t>    cFcmdRegVals{0, 1000, 3, 0, 0};
+    std::vector<uint16_t>    cFcmdRegVals{0, 100, 3, 0, 0};
     std::vector<uint8_t>     cFcmdRegOrigVals(0);
     for(size_t cIndx = 0; cIndx < cFcmdRegs.size(); cIndx++)
     {
@@ -682,12 +674,7 @@ bool LinkAlignmentOT::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
         uint8_t cLineId = 0;
         LOG(INFO) << BOLDBLUE << "Performing word alignment [in the back-end] to prepare for receiving CIC L1A data ...: FE " << +cHybrid->getId() << " Chip" << +cChipId << RESET;
         uint16_t cPattern = 0xFE;
-        // select lines for slvs debug
-        if( pScope )
-        {
-            fBeBoardInterface->WriteBoardReg(*cBoardIter, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
-            fBeBoardInterface->WriteBoardReg(*cBoardIter, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-        }
+       
         // configure pattern
         LOG (INFO) << BOLDBLUE << "LinkAlignmentOT::L1WordAlignment for CIC data" << RESET;
         AlignerObject cAlignerObjct;
@@ -697,9 +684,10 @@ bool LinkAlignmentOT::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
         LineConfiguration cLineCnfg;
         cLineCnfg.fPattern = cPattern;
         cLineCnfg.fMode    = 0; 
+        cLineCnfg.fEnableL1  = 0; 
+        cLineCnfg.fMasterLine = 0;
         cAlignerInterface->SetLineMode(cAlignerObjct, cLineCnfg);
-        if(pScope) cInterface->L1ADebug();
-
+        
         uint8_t cPhaseDelay = 0; 
         if( !cOptical )
         {
@@ -730,6 +718,7 @@ bool LinkAlignmentOT::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
                 LOG(INFO) << BOLDBLUE << "\t\t Alignment attempt#" << +cIterCount << RESET;
                 for(uint8_t cBitslip = 0; cBitslip < 8; cBitslip++)
                 {
+                    if( cSuccess ) continue;
                     LOG(INFO) << BOLDMAGENTA << "Manually setting bitslip to " << +cBitslip << RESET;
                     ManuallyConfigureLine(cCic , cLineId, cPhaseDelay, cBitslip ); //generic
 
@@ -770,9 +759,19 @@ bool LinkAlignmentOT::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
                 cIterCount++;
             } while(cIterCount < cMaxIters && !cSuccess);
         }
-        if(pScope) cInterface->L1ADebug();
     }
     fBeBoardInterface->Stop(*cBoardIter);
+
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        auto& cCic    = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        if( cCic == nullptr || !pScope ) continue;
+
+        // select lines for slvs debug
+        fBeBoardInterface->WriteBoardReg(*cBoardIter, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
+        fBeBoardInterface->WriteBoardReg(*cBoardIter, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+        cInterface->L1ADebug();
+    }
 
     return cSuccess;
 }

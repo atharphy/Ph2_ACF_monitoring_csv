@@ -6,7 +6,7 @@ namespace Ph2_HwInterface
 {
 	D19cBackendAlignmenntFWInterface::D19cBackendAlignmenntFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler) :BeBoardFWInterface(puHalConfigFileName, pBoardId){}
   	D19cBackendAlignmenntFWInterface::D19cBackendAlignmenntFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler) : BeBoardFWInterface(pId, pUri, pAddressTable){}
-  	D19cBackendAlignmenntFWInterface::~D19cBackendAlignmenntFWInterface();
+  	D19cBackendAlignmenntFWInterface::~D19cBackendAlignmenntFWInterface(){}
 
   	void D19cBackendAlignmenntFWInterface::ParseResult(uint32_t pReply)
     {
@@ -171,7 +171,8 @@ namespace Ph2_HwInterface
             command_final += 2;
         else if(pCommand == "PhaseAlignment")
             command_final += 1;
-        LOG(DEBUG) << BOLDBLUE << pCommand << ": sending " << std::hex << command_final << std::dec << RESET;
+        if( fVerbose == 1 ) LOG(INFO) << BOLDBLUE << pCommand << ": sending " << std::hex << command_final << std::dec << RESET;
+        else if( fVerbose == 2 ) LOG(DEBUG) << BOLDBLUE << pCommand << ": sending " << std::hex << command_final << std::dec << RESET;
         WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final);
         std::this_thread::sleep_for(std::chrono::microseconds(fAlignerObject.fWait_us));
     }
@@ -199,7 +200,8 @@ namespace Ph2_HwInterface
 
         // form command
         uint32_t command_final = fAlignerObject.fCommand + mode_raw + l1a_en_raw + master_line_id_raw + delay_raw + bitslip_raw;
-        LOG(INFO) << BOLDBLUE << "D19cBackendAlignmenntFWInterface Line " << +fAlignerObject.fLine << " setting line mode to 0x" << std::hex << command_final << std::dec << RESET;
+        if( fVerbose == 1 ) LOG(INFO) << BOLDBLUE << "D19cBackendAlignmenntFWInterface Line " << +fAlignerObject.fLine << " setting line mode to 0x" << std::hex << command_final << std::dec << RESET;
+        else if( fVerbose == 2 ) LOG (DEBUG) <<  BOLDBLUE << "D19cBackendAlignmenntFWInterface Line " << +fAlignerObject.fLine << " setting line mode to 0x" << std::hex << command_final << std::dec << RESET;
         WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final);
         std::this_thread::sleep_for(std::chrono::microseconds(fAlignerObject.fWait_us));
     }
@@ -214,14 +216,16 @@ namespace Ph2_HwInterface
         ConfigureCommandType(3);
         uint32_t len_raw       = (0xFF & fLineConfiguration.fPatternPeriod) << 0;
         uint32_t command_final = fAlignerObject.fCommand + len_raw;
-        LOG(DEBUG) << BOLDBLUE << "D19cBackendAlignmenntFWInterface Setting line pattern size to 0x" << std::hex << command_final << std::dec << RESET;
+        if( fVerbose == 1 ) LOG(INFO) << BOLDBLUE << "D19cBackendAlignmenntFWInterface Setting line pattern size to 0x" << std::hex << command_final << std::dec << RESET;
+        else if( fVerbose == 2 ) LOG(DEBUG) << BOLDBLUE << "D19cBackendAlignmenntFWInterface Setting line pattern size to 0x" << std::hex << command_final << std::dec << RESET;
         WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final);
         // set the pattern
         ConfigureCommandType(4);
         uint8_t byte_id_raw = (0xFF & 0) << 8;
         uint8_t pattern_raw = (0xFF & fLineConfiguration.fPattern) << 0;
         command_final       = fAlignerObject.fCommand + byte_id_raw + pattern_raw;
-        LOG(DEBUG) << BOLDBLUE << "D19cBackendAlignmenntFWInterface Setting line pattern  to 0x" << std::hex << command_final << std::dec << RESET;
+        if( fVerbose == 1 ) LOG(INFO) << BOLDBLUE << "D19cBackendAlignmenntFWInterface Setting line pattern  to 0x" << std::hex << command_final << std::dec << RESET;
+        else if( fVerbose == 2 ) LOG(DEBUG) << BOLDBLUE << "D19cBackendAlignmenntFWInterface Setting line pattern  to 0x" << std::hex << command_final << std::dec << RESET;
         WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final);
         std::this_thread::sleep_for(std::chrono::microseconds(fAlignerObject.fWait_us));
     }
@@ -234,14 +238,17 @@ namespace Ph2_HwInterface
         ConfigureCommandType(0);
         uint32_t command_final = fAlignerObject.fCommand ;
         WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final);
-        LOG(DEBUG) << BOLDBLUE << "D19cBackendAlignmenntFWInterface::PhaseTuner Get line status  0x" << std::hex << command_final << std::dec << RESET;
+        if( fVerbose == 1 ) LOG(INFO) << BOLDBLUE << "D19cBackendAlignmenntFWInterface::PhaseTuner Get line status  0x" << std::hex << command_final << std::dec << RESET;
+        else if( fVerbose == 2 ) LOG(INFO) << BOLDBLUE << "D19cBackendAlignmenntFWInterface::PhaseTuner Get line status  0x" << std::hex << command_final << std::dec << RESET;
+        
         std::this_thread::sleep_for(std::chrono::microseconds(fAlignerObject.fWait_us));
         uint8_t cStatus = ParseStatus();
         //
         ConfigureCommandType(1);
         command_final = fAlignerObject.fCommand  ;
         WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final);
-        LOG(DEBUG) << BOLDBLUE << "D19cBackendAlignmenntFWInterface::PhaseTuner Get line status  0x" << std::hex << command_final << std::dec << RESET;
+        if( fVerbose == 1 ) LOG(INFO) << BOLDBLUE << "D19cBackendAlignmenntFWInterface::PhaseTuner Get line status  0x" << std::hex << command_final << std::dec << RESET;
+        else if( fVerbose == 2 ) LOG(DEBUG) << BOLDBLUE << "D19cBackendAlignmenntFWInterface::PhaseTuner Get line status  0x" << std::hex << command_final << std::dec << RESET;
         std::this_thread::sleep_for(std::chrono::microseconds(fAlignerObject.fWait_us));
         cStatus = ParseStatus();
         return cStatus;
@@ -250,7 +257,8 @@ namespace Ph2_HwInterface
     {
         SetLineMode(pAlignerObject, pLineConfiguration);
         // perform phase alignment
-        LOG (DEBUG) << BOLDBLUE << "\t..... running phase alignment...." << RESET;
+        if( fVerbose == 1 ) LOG(INFO) << BOLDBLUE << "\t..... running phase alignment...." << RESET;
+        else if( fVerbose == 2 ) LOG(DEBUG) << BOLDBLUE << "\t..... running phase alignment...." << RESET;
         SendControl("PhaseAlignment");
     }
     void D19cBackendAlignmenntFWInterface::AlignWord(AlignerObject pAlignerObject, LineConfiguration pLineConfiguration, bool pChangePattern )
@@ -261,12 +269,14 @@ namespace Ph2_HwInterface
             SetLinePattern(fAlignerObject, fLineConfiguration);
         }
         // perform word alignment
-        LOG (DEBUG) << BOLDBLUE << "\t..... running word alignment...." << RESET;
+        if( fVerbose == 1 ) LOG(INFO) << BOLDBLUE << "\t..... running word alignment...." << RESET;
+        else if( fVerbose == 2 ) LOG(DEBUG) << BOLDBLUE << "\t..... running word alignment...." << RESET;
         SendControl("WordAlignment");
     }
     bool D19cBackendAlignmenntFWInterface::TuneLine(AlignerObject pAlignerObject,  LineConfiguration pLineConfiguration, bool pChangePattern )
     {
-        LOG(DEBUG) << BOLDBLUE << "Tuning line " << +pAlignerObject.fLine << RESET;
+        if( fVerbose == 1 ) LOG(INFO) << BOLDBLUE << "Tuning line " << +pAlignerObject.fLine << RESET;
+        else if( fVerbose == 2 ) LOG(DEBUG) << BOLDBLUE << "Tuning line " << +pAlignerObject.fLine << RESET;
         TunePhase(pAlignerObject, pLineConfiguration);
         AlignWord(fAlignerObject, fLineConfiguration, pChangePattern );
         uint8_t cLineStatus = GetLineStatus(fAlignerObject);

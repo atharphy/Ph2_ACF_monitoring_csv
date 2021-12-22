@@ -43,7 +43,7 @@ namespace Ph2_HwInterface
 
       D19cBackendAlignmenntFWInterface(const char* pId, const char* pUri, const char* pAddressTable);
       D19cBackendAlignmenntFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler);
-      ~D19cBackendAlignmenntFWInterface(){}
+      ~D19cBackendAlignmenntFWInterface();
 
       void InitializeConfiguration();
       void InitializeAlignerObject();
@@ -64,7 +64,7 @@ namespace Ph2_HwInterface
       AlignerObject fAlignerObject;
       LineConfiguration fLineConfiguration;
       Status            fStatus; 
-
+      uint8_t           fVerbose{0};
     private : 
       void ConfigureInput();
       void ConfigureAligner(LineConfiguration pCnfg);

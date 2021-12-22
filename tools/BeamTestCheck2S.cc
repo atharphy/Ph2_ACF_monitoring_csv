@@ -217,12 +217,7 @@ void BeamTestCheck2S::CheckWithInternal(uint8_t pContinousReadout)
     // validate
     Validate();
 
-    // for(auto cBoard: *fDetectorContainer) { PrintData(cBoard); }
-    // read events
-    // if( fReadoutMode == 0 ) ContinousReadout();
-
-    // validate
-    // Validate();
+    for(auto cBoard: *fDetectorContainer) { PrintData(cBoard); }
 }
 void BeamTestCheck2S::CheckWithTLU(uint8_t pContinousReadout)
 {
