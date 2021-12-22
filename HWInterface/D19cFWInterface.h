@@ -497,28 +497,6 @@ class D19cFWInterface : public BeBoardFWInterface
     /////////////////////////////////////////////////////
     void selectLink(const uint8_t pLinkId = 0, uint32_t cWait_ms = 100) override;
 
-    ///////////////////////////////////////////////////////
-    //      Multiplexing crate                          //
-    /////////////////////////////////////////////////////
-    /*!
-     * \breif Disconnect Setup with Multiplexing Backplane
-     */
-    void DisconnectMultiplexingSetup(uint8_t pWait_ms = 100);
-    void DisconnectMultiplexingSetup_old(uint8_t pWait_ms = 100);
-
-    /*!
-     * \breif Scan Setup with Multiplexing Backplane
-     */
-    uint32_t ScanMultiplexingSetup(uint8_t pWait_ms = 100);
-    uint32_t ScanMultiplexingSetup_old(uint8_t pWait_ms = 100);
-
-    /*!
-     * \breif Configure Setup with Multiplexing Backplane
-     * \param BackplaneNum
-     * \param CardNum
-     */
-    void ConfigureMultiplexingSetup(int BackplaneNum, int CardNum, uint8_t pWait_ms = 100);
-
     // ##############################
     // # Pseudo Random Bit Sequence #
     // ##############################

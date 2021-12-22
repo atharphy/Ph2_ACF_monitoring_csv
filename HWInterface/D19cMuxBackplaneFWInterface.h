@@ -1,0 +1,29 @@
+#ifndef _D19cMuxBackplaneFWInterface_H__
+#define __D19cMuxBackplaneFWInterface_H__
+
+#include "BeBoardFWInterface.h"
+#include <string>
+
+namespace Ph2_HwInterface
+{
+
+  class D19cMuxBackplaneFWInterface : public BeBoardFWInterface
+  {
+    public:
+      D19cMuxBackplaneFWInterface(const char* puHalConfigFileName, uint32_t pBoardId);
+      D19cMuxBackplaneFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler);
+
+      D19cMuxBackplaneFWInterface(const char* pId, const char* pUri, const char* pAddressTable);
+      D19cMuxBackplaneFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler);
+      ~D19cMuxBackplaneFWInterface();
+
+    public:
+      void DisconnectMultiplexingSetup(uint8_t pWait_ms=100);
+      uint32_t ScanMultiplexingSetup(uint8_t pWait_ms=100);
+      void ConfigureMultiplexingSetup(int BackplaneNum, int CardNum, uint8_t pWait_ms=100);
+
+    private : 
+
+  };
+}
+#endif
