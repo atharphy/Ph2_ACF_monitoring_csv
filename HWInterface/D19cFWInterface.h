@@ -140,7 +140,7 @@ class D19cFWInterface : public BeBoardFWInterface
     uint32_t fEventCounter = 0;
 
     // some useful stuff
-    int  fResetAttempts;
+    int fResetAttempts;
     // L1 word alignment values
     std::vector<uint8_t> fBeL1Delays;
     std::vector<uint8_t> fBeL1Bitslips;
@@ -435,7 +435,7 @@ class D19cFWInterface : public BeBoardFWInterface
     std::string              L1ADebug(uint8_t pWait_ms = 1, bool pPrint = true);
     std::vector<std::string> StubDebug(bool pWithTestPulse = true, uint8_t pNlines = 5);
     std::vector<std::string> ScopeStubLines(bool pWithTestPulse = true);
-    
+
     // Optical readout specific functions - d19c [temporary]
     void setGBTxPhase(uint32_t pPhase) { fGBTphase = pPhase; }
     void configureLink(const Ph2_HwDescription::BeBoard* pBoard);

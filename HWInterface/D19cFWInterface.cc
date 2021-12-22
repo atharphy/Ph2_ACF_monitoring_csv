@@ -1582,7 +1582,6 @@ std::vector<std::string> D19cFWInterface::ScopeStubLines(bool pWithTestPulse)
     return cLines;
 }
 
-
 // modified to check for header
 // and remove dummy words from the event
 uint32_t D19cFWInterface::CountFwEvents(BeBoard* pBoard, std::vector<uint32_t>& pData)
@@ -5302,7 +5301,6 @@ uint32_t D19cFWInterface::Pix_read_MPA(Chip* cMPA, ChipRegItem cRegItem, uint32_
 
     return rep;
 }
-
 
 // ##########################################
 // # Low level opto-link read and write

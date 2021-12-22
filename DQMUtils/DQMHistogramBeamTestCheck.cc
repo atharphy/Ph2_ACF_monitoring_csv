@@ -1224,7 +1224,7 @@ void DQMHistogramBeamTestCheck::parseSettings(const Ph2_System::SettingsMap& pSe
 
     cSetting = pSettingsMap.find("LatencyRange");
     if(cSetting != std::end(pSettingsMap))
-        fLatencyRange =  static_cast<uint16_t>(boost::any_cast<double>(cSetting->second));
+        fLatencyRange = static_cast<uint16_t>(boost::any_cast<double>(cSetting->second));
     else
         fLatencyRange = 512;
 }
