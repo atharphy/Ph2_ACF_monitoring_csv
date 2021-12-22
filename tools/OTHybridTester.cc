@@ -1,6 +1,6 @@
 #include "OTHybridTester.h"
 #include "linearFitter.h"
-
+#include "D19cDebugFWInterface.h"
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -107,7 +107,8 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
 
                 cFWInterface->selectLink(cOpticalGroup->getId());
                 LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
-                // cFWInterface->StubDebug(true, 6);
+                // D19cDebugFWInterface* cDebugInterface = dynamic_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+                // cDebugInterface->StubDebug(true, 6);
                 // enable stub debug - allows you to 'scope' the stub output
 
                 cFWInterface->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x01);
@@ -183,7 +184,8 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 cFWInterface->ResetReadout();
 
                 LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
-                // cFWInterface->L1ADebug();
+                // D19cDebugFWInterface* cDebugInterface              = static_cast<D19cDebugFWInterface*>(cFWInterface);
+                // cDebugInterface->L1ADebug();
                 // cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", 0xff);
                 cFWInterface->ConfigureTriggerFSM(0, 10, 3);
 

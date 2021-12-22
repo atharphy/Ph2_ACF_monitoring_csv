@@ -293,11 +293,6 @@ class D19cFWInterface : public BeBoardFWInterface
     bool WaitForData(Ph2_HwDescription::BeBoard* pBoard);
     // split data per hybrid/chip for a given board
     uint32_t CountFwEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
-    // read back SSA counters directly
-    bool PSAsyncCounterData(uint8_t pRawMode = 1);
-    void ReadSSACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
-    void ReadPSCounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, bool pFast = false, bool pRawMode = false);
-
     uint32_t computeEventSize(Ph2_HwDescription::BeBoard* pBoard);
     // I2C command sending implementation
     bool WriteI2C(std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pWriteRead, bool pBroadcast);
@@ -426,12 +421,7 @@ class D19cFWInterface : public BeBoardFWInterface
     // consecutive triggers FSM
     void ConfigureAntennaFSM(uint16_t pNtriggers = 1, uint16_t pTriggerRate = 1, uint16_t pL1Delay = 100);
 
-    std::string              L1ADebug(uint8_t pWait_ms = 1, bool pPrint = true);
-    std::vector<std::string> StubDebug(bool pWithTestPulse = true, uint8_t pNlines = 5);
-    std::vector<std::string> ScopeStubLines(bool pWithTestPulse = true);
-
     // Optical readout specific functions - d19c [temporary]
-    void setGBTxPhase(uint32_t pPhase) { fGBTphase = pPhase; }
     void configureLink(const Ph2_HwDescription::BeBoard* pBoard);
     void ResetLink(uint8_t pLinkId);
     bool GetLinkStatus(uint8_t pLinkId);

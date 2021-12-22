@@ -617,6 +617,7 @@ int main(int argc, char* argv[])
     // if(cmd.foundOption("linkTest") && !cmd.foundOption("read"))
     // {
     //     auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+    //     D19cDebugFWInterface* cDebugInterface = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
     //     for(auto cBoard: *cTool.fDetectorContainer)
     //     {
     //         for(auto cOpticalGroup: *cBoard)
@@ -636,7 +637,7 @@ int main(int argc, char* argv[])
     //                 {
     //                     cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
     //                     cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-    //                     for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 6); }
+    //                     for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { cDebugInterface->StubDebug(true, 6); }
     //                 }
     //                 continue;
     //             }
@@ -679,12 +680,12 @@ int main(int argc, char* argv[])
     //                         // align line
     //                         D19cFWInterface::PhaseTuner cTuner;
     //                         for(size_t cLineId = 1; cLineId <= 3; cLineId++) { cTuner.AlignWord(cInterface, cHybrid->getId(), 0, cLineId, cAlignmentPattern, 8, true); }
-    //                         for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 3); }
+    //                         for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { cDebugInterface->StubDebug(true, 3); }
     //                     }
     //                 }
     //                 if(cSrcLnkTst == "CIC" || cSrcLnkTst == "lpGBT")
     //                 {
-    //                     for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 6); }
+    //                     for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { cDebugInterface->StubDebug(true, 6); }
     //                 }
     //             } // hybrid
     //         }     // OG

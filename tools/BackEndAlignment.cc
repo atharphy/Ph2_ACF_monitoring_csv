@@ -1,6 +1,6 @@
 #include "BackEndAlignment.h"
 
-// #include "../HWInterface/BackendAlignmentInterface.h"
+#include "D19cDebugFWInterface.h"
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
 #include "boost/format.hpp"
@@ -58,7 +58,7 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard, uint8_t pSSAPair)
     bool cTuned = true;
     LOG(INFO) << GREEN << "BackEndAlignment for PS Chip(s)" << RESET;
     fBeBoardInterface->setBoard(pBoard->getId());
-    auto    cInterface             = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cDebugFWInterface* cDebugInterface              = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     uint8_t cPhaseAlignmentPattern = 0xAA;
     uint8_t cWordAlignmentPattern  = 0xEA;
     for(auto cOpticalReadout: *pBoard)
@@ -135,9 +135,9 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard, uint8_t pSSAPair)
                     // back to readout mode 0 to look at the L1 data
                     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
                     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cChipId);
-                    cInterface->StubDebug(true, 8);
+                    cDebugInterface->StubDebug(true, 8);
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, "EnableSLVSTestOutput", 0x0, false);
-                    cInterface->L1ADebug();
+                    cDebugInterface->L1ADebug();
 
                     // Reset to original values
                     for(uint8_t cLineId = 0; cLineId < 8; cLineId++) // stub lines
@@ -289,7 +289,7 @@ bool BackEndAlignment::CBCAlignment(BeBoard* pBoard)
                 LOG(INFO) << BOLDMAGENTA << "Expect pattern : " << std::bitset<8>((cBendCode_phAlign << 4) | cBendCode_phAlign) << " on stub line  4." << RESET;
                 LOG(INFO) << BOLDMAGENTA << "Expect pattern : " << std::bitset<8>((1 << 7) | cBendCode_phAlign) << " on stub line  5." << RESET;
                 LOG(INFO) << BOLDMAGENTA << "After alignment of last stub line ... stub lines 0-5: " << RESET;
-                (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 5);
+                (static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 5);
 
                 // now unmask all channels and set threshold and hit or logic back to their original values
                 fReadoutChipInterface->maskChannelGroup(theReadoutChip, cOriginalMask);

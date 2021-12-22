@@ -1,6 +1,7 @@
 #include "DataChecker.h"
 #ifdef __USE_ROOT__
 
+#include "D19cDebugFWInterface.h"
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
@@ -1572,7 +1573,7 @@ void DataChecker::ReadDataTestPS(BeBoard* pBoard, uint32_t pNevents)
 void DataChecker::matchEvents(BeBoard* pBoard, std::vector<uint8_t> pChipIds, std::pair<uint8_t, int> pExpectedStub)
 {
     // LOG (INFO) << BOLDMAGENTA << "Let's see what's on the stub lines" << RESET;
-    // (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true,5);
+    // (static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true,5);
 
     // get trigger multiplicity from register
     size_t cTriggerMult = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
@@ -4910,7 +4911,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic, bool pShiftRegMode)
                         }
                         if(pShiftRegMode)
                         {
-                            auto cLines    = (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->ScopeStubLines();
+                            auto cLines    = (static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->ScopeStubLines();
                             int  cLineIndx = 0;
                             for(auto cLine: cLines)
                             {
@@ -4923,7 +4924,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic, bool pShiftRegMode)
                         {
                             for(int cAttempt = 0; cAttempt < 100; cAttempt++)
                             {
-                                auto cLines    = (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->ScopeStubLines();
+                                auto cLines    = (static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->ScopeStubLines();
                                 int  cLineIndx = 0;
                                 for(auto cLine: cLines)
                                 {
@@ -4933,7 +4934,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic, bool pShiftRegMode)
                                         LOG(DEBUG) << BOLDBLUE << "Line#" << +cLineIndx << BOLDRED << cLine << RESET;
                                     cLineIndx++;
                                 }
-                                //(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 4);
+                                //(static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 4);
                                 // std::this_thread::sleep_for(std::chrono::microseconds(10));
                             }
                         }
@@ -6553,7 +6554,7 @@ void DataChecker::StubCheckWNoise(std::vector<uint8_t> pChipIds)
         }         // hybrid
 
         // now want to see the CIC output
-        (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 5);
+        (static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 5);
         auto cBeBoard       = static_cast<BeBoard*>(cBoard);
         auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
         LOG(INFO) << BOLDMAGENTA << "Stub package delay set to " << +cOriginalDelay << RESET;

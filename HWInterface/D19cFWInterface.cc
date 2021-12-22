@@ -1318,180 +1318,180 @@ void D19cFWInterface::ConfigureFastCommandBlock(const BeBoard* pBoard)
     WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
 }
 
-std::string D19cFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
-{
-    // this->ConfigureTriggerFSM(0, 750, 3);
-    // // use generic fast command block to send ReSync + L1A
-    // this->ResetFCMDBram();
-    // std::vector<uint8_t> cFastCommands(0);cFastCommands.clear();
-    // size_t cL1toClear = 10;
-    // size_t cAfterClear = 5000;
-    // size_t cDelayAfterReSync = this->ReadReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset");
-    // size_t cDelayAfterTP     = this->ReadReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
-    // size_t cDelayToNext      = this->ReadReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse");
-    // LOG (INFO) << BOLDMAGENTA << "Delay after ReSync : " << cDelayAfterReSync << " Delay after TP : " << cDelayAfterTP << RESET;
-    // for(size_t cIndx=0; cIndx < 14000 ; cIndx++)
-    // {
-    //     if( cIndx == 0 ) cFastCommands.push_back( 0xC3 ); // BC0 to reset L1 capture
-    //     else if( cIndx == cL1toClear )  cFastCommands.push_back( 0xC9 ); // flush L1A FIFO
-    //     else if( cIndx ==  cL1toClear+cAfterClear ) cFastCommands.push_back( 0xD3 ); // send a ReSync+BC0
-    //     else if ( cIndx == cL1toClear+cAfterClear+cDelayAfterReSync ) cFastCommands.push_back( 0xC5 ); // send a TP injection
-    //     else if ( cIndx == cL1toClear+cAfterClear+cDelayAfterReSync+cDelayAfterTP ) cFastCommands.push_back( 0xC9 ); // send an L1A
-    //     else if ( cIndx == cL1toClear+cAfterClear+cDelayAfterReSync+cDelayAfterTP+cDelayToNext ) cFastCommands.push_back( 0xC9 ); // send another L1A
-    //     else cFastCommands.push_back( 0xC1 );
-    // }
-    // ConfigureFCMDBram(cFastCommands);
-    // // repeat the sequence N times
-    // this->WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x00);
-    // this->WriteReg("fc7_daq_cnfg.readout_block.packet_nbr", 1);
-    // this->WriteReg("fc7_daq_cnfg.fast_command_block.generic_fcmd.number_of_repetitions", 1);
-    // // make sure fast command duration is 0
-    // this->WriteReg("fc7_daq_ctrl.fast_command_block.control.fast_duration", 0x0);
-    // // make sure all triggers are accepted
-    // this->WriteReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept", 1);
-    // ResetTriggerFSM();
+// std::string D19cFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
+// {
+//     // this->ConfigureTriggerFSM(0, 750, 3);
+//     // // use generic fast command block to send ReSync + L1A
+//     // this->ResetFCMDBram();
+//     // std::vector<uint8_t> cFastCommands(0);cFastCommands.clear();
+//     // size_t cL1toClear = 10;
+//     // size_t cAfterClear = 5000;
+//     // size_t cDelayAfterReSync = this->ReadReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset");
+//     // size_t cDelayAfterTP     = this->ReadReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
+//     // size_t cDelayToNext      = this->ReadReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse");
+//     // LOG (INFO) << BOLDMAGENTA << "Delay after ReSync : " << cDelayAfterReSync << " Delay after TP : " << cDelayAfterTP << RESET;
+//     // for(size_t cIndx=0; cIndx < 14000 ; cIndx++)
+//     // {
+//     //     if( cIndx == 0 ) cFastCommands.push_back( 0xC3 ); // BC0 to reset L1 capture
+//     //     else if( cIndx == cL1toClear )  cFastCommands.push_back( 0xC9 ); // flush L1A FIFO
+//     //     else if( cIndx ==  cL1toClear+cAfterClear ) cFastCommands.push_back( 0xD3 ); // send a ReSync+BC0
+//     //     else if ( cIndx == cL1toClear+cAfterClear+cDelayAfterReSync ) cFastCommands.push_back( 0xC5 ); // send a TP injection
+//     //     else if ( cIndx == cL1toClear+cAfterClear+cDelayAfterReSync+cDelayAfterTP ) cFastCommands.push_back( 0xC9 ); // send an L1A
+//     //     else if ( cIndx == cL1toClear+cAfterClear+cDelayAfterReSync+cDelayAfterTP+cDelayToNext ) cFastCommands.push_back( 0xC9 ); // send another L1A
+//     //     else cFastCommands.push_back( 0xC1 );
+//     // }
+//     // ConfigureFCMDBram(cFastCommands);
+//     // // repeat the sequence N times
+//     // this->WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x00);
+//     // this->WriteReg("fc7_daq_cnfg.readout_block.packet_nbr", 1);
+//     // this->WriteReg("fc7_daq_cnfg.fast_command_block.generic_fcmd.number_of_repetitions", 1);
+//     // // make sure fast command duration is 0
+//     // this->WriteReg("fc7_daq_ctrl.fast_command_block.control.fast_duration", 0x0);
+//     // // make sure all triggers are accepted
+//     // this->WriteReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept", 1);
+//     // ResetTriggerFSM();
 
-    // //this->Compose_fast_command(fFastCommandDuration, 0, 0, 0, 1);
-    // // start generic  - ctrl signal high
-    // this->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_generic", 0x1);
-    // this->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_generic", 0x0);
+//     // //this->Compose_fast_command(fFastCommandDuration, 0, 0, 0, 1);
+//     // // start generic  - ctrl signal high
+//     // this->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_generic", 0x1);
+//     // this->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_generic", 0x0);
 
-    // disable back-pressure
-    this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0);
-    this->Start();
-    // std::this_thread::sleep_for(std::chrono::microseconds(pWait_ms * 1000));
-    this->Stop();
+//     // disable back-pressure
+//     this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0);
+//     this->Start();
+//     // std::this_thread::sleep_for(std::chrono::microseconds(pWait_ms * 1000));
+//     this->Stop();
 
-    LOG(DEBUG) << BOLDMAGENTA << "First header found after " << this->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay") << " clock cycles." << RESET;
-    auto cWords = ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
-    LOG(DEBUG) << BOLDBLUE << "Hits debug ...." << RESET;
-    std::string cBuffer   = "";
-    size_t      cLineIndx = 0;
-    for(auto cWord: cWords)
-    {
-        auto                     cString = std::bitset<32>(cWord).to_string();
-        std::vector<std::string> cOutputWords(0);
-        for(size_t cIndex = 0; cIndex < 4; cIndex++) { cOutputWords.push_back(cString.substr(cIndex * 8, 8)); }
-        std::string cOutput = "";
-        for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--)
-        {
-            cOutput += *cIt + " ";
-            cBuffer += *cIt;
-        }
-        if(pPrint) LOG(INFO) << BOLDBLUE << "#" << +cLineIndx << ":" << cOutput << RESET;
-        cLineIndx++;
-    }
-    return cBuffer;
-    /*
-    // search for L1 headers
-    size_t cSearch = 0;
-    size_t cPos = 0;
-    auto   cFound = cBuffer.find("111111111111111111111110",cPos);
-    std::stringstream cL1DataHeaders;
-    do
-    {
-        cSearch=cBuffer.find("111111111111111111111110",cPos);
-        auto cHeader = cBuffer.substr( cSearch - 8  , 32 );
-        size_t cCount1s = std::count_if( cHeader.begin(), cHeader.end(), []( char c ){return c =='1';});
-        auto cStatus = cBuffer.substr( cSearch - 8 + 32 , 9 );
-        auto cL1Id   = cBuffer.substr( cSearch - 8 + 32 + 9 , 9 );
-        cL1DataHeaders << cHeader << "[" <<  cCount1s << "]" << cStatus << "-" << std::stoi(cL1Id,0,2) << ":" ;
-        //LOG (INFO) << BOLDYELLOW << cHeader << " - " << cStatus << " - " << cL1Id << RESET;
-        cPos = cSearch - 8 + 32;
-        cFound = cBuffer.find("111111111111111111111110",cPos);
-    }while( cFound != std::string::npos );
-    LOG (INFO) << BOLDYELLOW << cL1DataHeaders.str() << RESET;
-    */
+//     LOG(DEBUG) << BOLDMAGENTA << "First header found after " << this->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay") << " clock cycles." << RESET;
+//     auto cWords = ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
+//     LOG(DEBUG) << BOLDBLUE << "Hits debug ...." << RESET;
+//     std::string cBuffer   = "";
+//     size_t      cLineIndx = 0;
+//     for(auto cWord: cWords)
+//     {
+//         auto                     cString = std::bitset<32>(cWord).to_string();
+//         std::vector<std::string> cOutputWords(0);
+//         for(size_t cIndex = 0; cIndex < 4; cIndex++) { cOutputWords.push_back(cString.substr(cIndex * 8, 8)); }
+//         std::string cOutput = "";
+//         for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--)
+//         {
+//             cOutput += *cIt + " ";
+//             cBuffer += *cIt;
+//         }
+//         if(pPrint) LOG(INFO) << BOLDBLUE << "#" << +cLineIndx << ":" << cOutput << RESET;
+//         cLineIndx++;
+//     }
+//     return cBuffer;
+    
+//     // search for L1 headers
+//     size_t cSearch = 0;
+//     size_t cPos = 0;
+//     auto   cFound = cBuffer.find("111111111111111111111110",cPos);
+//     std::stringstream cL1DataHeaders;
+//     do
+//     {
+//         cSearch=cBuffer.find("111111111111111111111110",cPos);
+//         auto cHeader = cBuffer.substr( cSearch - 8  , 32 );
+//         size_t cCount1s = std::count_if( cHeader.begin(), cHeader.end(), []( char c ){return c =='1';});
+//         auto cStatus = cBuffer.substr( cSearch - 8 + 32 , 9 );
+//         auto cL1Id   = cBuffer.substr( cSearch - 8 + 32 + 9 , 9 );
+//         cL1DataHeaders << cHeader << "[" <<  cCount1s << "]" << cStatus << "-" << std::stoi(cL1Id,0,2) << ":" ;
+//         //LOG (INFO) << BOLDYELLOW << cHeader << " - " << cStatus << " - " << cL1Id << RESET;
+//         cPos = cSearch - 8 + 32;
+//         cFound = cBuffer.find("111111111111111111111110",cPos);
+//     }while( cFound != std::string::npos );
+//     LOG (INFO) << BOLDYELLOW << cL1DataHeaders.str() << RESET;
+    
 
-    // size_t cOffset = 28;
-    // auto cHeader = cBuffer.substr(4, cOffset); cOffset+=4;
-    // auto cStatus = cBuffer.substr(cOffset, 9);cOffset+=9;
-    // auto cL1Id = std::stoi( cBuffer.substr(cOffset, 9), 0 ,2 );cOffset+=9;
-    // auto cCbcErr = cBuffer.substr(cOffset, 2); cOffset+=2;
-    // auto cPipeAddr = std::stoi( cBuffer.substr(cOffset, 9),0,2); cOffset+=9;
-    // auto cL1IdCbc = std::stoi( cBuffer.substr(cOffset, 9),0,2);cOffset+=9;
-    // LOG (INFO) << BOLDMAGENTA << "Header is " << cHeader
-    //     << " Status is " << cStatus
-    //     << " L1Id is " << cL1Id
-    //     << " CBC Error is " << cCbcErr
-    //     << " Pipeaddress is " << cPipeAddr
-    //     << " L1Id CBC is " << cL1IdCbc << RESET;
-    this->ResetReadout();
-}
-std::vector<std::string> D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines)
-{
-    this->ResetReadout();
-    if(pWithTestPulse)
-        this->ChipTestPulse();
-    else
-        this->Trigger(0);
+//     // size_t cOffset = 28;
+//     // auto cHeader = cBuffer.substr(4, cOffset); cOffset+=4;
+//     // auto cStatus = cBuffer.substr(cOffset, 9);cOffset+=9;
+//     // auto cL1Id = std::stoi( cBuffer.substr(cOffset, 9), 0 ,2 );cOffset+=9;
+//     // auto cCbcErr = cBuffer.substr(cOffset, 2); cOffset+=2;
+//     // auto cPipeAddr = std::stoi( cBuffer.substr(cOffset, 9),0,2); cOffset+=9;
+//     // auto cL1IdCbc = std::stoi( cBuffer.substr(cOffset, 9),0,2);cOffset+=9;
+//     // LOG (INFO) << BOLDMAGENTA << "Header is " << cHeader
+//     //     << " Status is " << cStatus
+//     //     << " L1Id is " << cL1Id
+//     //     << " CBC Error is " << cCbcErr
+//     //     << " Pipeaddress is " << cPipeAddr
+//     //     << " L1Id CBC is " << cL1IdCbc << RESET;
+//     this->ResetReadout();
+// }
+// std::vector<std::string> D19cFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines)
+// {
+//     this->ResetReadout();
+//     if(pWithTestPulse)
+//         this->ChipTestPulse();
+//     else
+//         this->Trigger(0);
 
-    auto                     cWords = ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
-    std::vector<std::string> cLines(0);
-    size_t                   cLine = 0;
-    // int cStrLength=0;
-    do
-    {
-        std::vector<std::string> cOutputWords(0);
-        for(size_t cIndex = 0; cIndex < 5; cIndex++)
-        {
-            auto cWord   = cWords[cLine * 10 + cIndex];
-            auto cString = std::bitset<32>(cWord).to_string();
-            for(size_t cOffset = 0; cOffset < 4; cOffset++) { cOutputWords.push_back(cString.substr(cOffset * 8, 8)); }
-        }
+//     auto                     cWords = ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
+//     std::vector<std::string> cLines(0);
+//     size_t                   cLine = 0;
+//     // int cStrLength=0;
+//     do
+//     {
+//         std::vector<std::string> cOutputWords(0);
+//         for(size_t cIndex = 0; cIndex < 5; cIndex++)
+//         {
+//             auto cWord   = cWords[cLine * 10 + cIndex];
+//             auto cString = std::bitset<32>(cWord).to_string();
+//             for(size_t cOffset = 0; cOffset < 4; cOffset++) { cOutputWords.push_back(cString.substr(cOffset * 8, 8)); }
+//         }
 
-        std::string cOutput_wSpace = "";
-        std::string cOutput        = "";
-        for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--)
-        {
-            cOutput_wSpace += *cIt + " ";
-            cOutput += *cIt;
-        }
-        LOG(INFO) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
-        cLines.push_back(cOutput);
-        // cStrLength = cOutput.length();
-        cLine++;
-    } while(cLine < pNlines);
-    this->ResetReadout();
-    return cLines;
-}
-std::vector<std::string> D19cFWInterface::ScopeStubLines(bool pWithTestPulse)
-{
-    uint8_t cNlines = 5;
-    if(pWithTestPulse)
-        this->ChipTestPulse();
-    else
-        this->Trigger(0);
+//         std::string cOutput_wSpace = "";
+//         std::string cOutput        = "";
+//         for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--)
+//         {
+//             cOutput_wSpace += *cIt + " ";
+//             cOutput += *cIt;
+//         }
+//         LOG(INFO) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
+//         cLines.push_back(cOutput);
+//         // cStrLength = cOutput.length();
+//         cLine++;
+//     } while(cLine < pNlines);
+//     this->ResetReadout();
+//     return cLines;
+// }
+// std::vector<std::string> D19cFWInterface::ScopeStubLines(bool pWithTestPulse)
+// {
+//     uint8_t cNlines = 5;
+//     if(pWithTestPulse)
+//         this->ChipTestPulse();
+//     else
+//         this->Trigger(0);
 
-    auto                     cWords = ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
-    std::vector<std::string> cLines(0);
-    size_t                   cLine = 0;
-    // int cStrLength=0;
-    do
-    {
-        std::vector<std::string> cOutputWords(0);
-        for(size_t cIndex = 0; cIndex < cNlines; cIndex++)
-        {
-            auto cWord   = cWords[cLine * 10 + cIndex];
-            auto cString = std::bitset<32>(cWord).to_string();
-            for(size_t cOffset = 0; cOffset < 4; cOffset++) { cOutputWords.push_back(cString.substr(cOffset * 8, 8)); }
-        }
+//     auto                     cWords = ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
+//     std::vector<std::string> cLines(0);
+//     size_t                   cLine = 0;
+//     // int cStrLength=0;
+//     do
+//     {
+//         std::vector<std::string> cOutputWords(0);
+//         for(size_t cIndex = 0; cIndex < cNlines; cIndex++)
+//         {
+//             auto cWord   = cWords[cLine * 10 + cIndex];
+//             auto cString = std::bitset<32>(cWord).to_string();
+//             for(size_t cOffset = 0; cOffset < 4; cOffset++) { cOutputWords.push_back(cString.substr(cOffset * 8, 8)); }
+//         }
 
-        std::string cOutput_wSpace = "";
-        std::string cOutput        = "";
-        for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--)
-        {
-            cOutput_wSpace += *cIt + " ";
-            cOutput += *cIt;
-        }
-        LOG(DEBUG) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
-        cLines.push_back(cOutput);
-        // cStrLength = cOutput.length();
-        cLine++;
-    } while(cLine < cNlines);
-    this->ResetReadout();
-    return cLines;
-}
+//         std::string cOutput_wSpace = "";
+//         std::string cOutput        = "";
+//         for(auto cIt = cOutputWords.end() - 1; cIt >= cOutputWords.begin(); cIt--)
+//         {
+//             cOutput_wSpace += *cIt + " ";
+//             cOutput += *cIt;
+//         }
+//         LOG(DEBUG) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
+//         cLines.push_back(cOutput);
+//         // cStrLength = cOutput.length();
+//         cLine++;
+//     } while(cLine < cNlines);
+//     this->ResetReadout();
+//     return cLines;
+// }
 
 // modified to check for header
 // and remove dummy words from the event

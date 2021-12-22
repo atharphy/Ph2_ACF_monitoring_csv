@@ -1,6 +1,7 @@
 #include "LinkAlignmentOT.h"
 
 #include "../HWInterface/D19cBackendAlignmentFWInterface.h"
+#include "../HWInterface/D19cDebugFWInterface.h"
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
 //#include "boost/format.hpp"
@@ -194,7 +195,7 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
     auto cBoardId   = pOpticalGroup->getBeBoardId();
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     fBeBoardInterface->setBoard((*cBoardIter)->getId());
-    auto                             cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cDebugFWInterface* cDebugInterface = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     D19cBackendAlignmentFWInterface* cAlignerInterface = static_cast<D19cBackendAlignmentFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     cAlignerInterface->InitializeConfiguration();
     cAlignerInterface->InitializeAlignerObject();
@@ -284,7 +285,7 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
         //             LOG (INFO) << BOLDMAGENTA << "Manually setting BitSlip on Line#" << +cLineId << " to " << +cBitSlip << RESET;
         //             cTuner.SetLineMode(cInterface, cHybrid->getId(), 0, cLineId, 0);
         //             cTuner.SetLineMode(cInterface, cHybrid->getId(), 0, cLineId, 2, 0, cMode, 0, 0);
-        //             cInterface->StubDebug( true, cNlines );
+        //             cDebugInterface->StubDebug( true, cNlines );
         //         }
         //     }
         // }
@@ -299,7 +300,7 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
             for(size_t cIter = 0; cIter < 1; cIter++)
             {
                 LOG(INFO) << BOLDYELLOW << "Debug capture Iteration#" << cIter << RESET;
-                cInterface->StubDebug(true, cNlines);
+                cDebugInterface->StubDebug(true, cNlines);
             }
         }
     }
@@ -616,8 +617,8 @@ bool LinkAlignmentOT::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
     auto cBoardId   = pOpticalGroup->getBeBoardId();
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     fBeBoardInterface->setBoard((*cBoardIter)->getId());
-    D19cFWInterface*                 cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     D19cBackendAlignmentFWInterface* cAlignerInterface = static_cast<D19cBackendAlignmentFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cDebugFWInterface* cDebugInterface              = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     cAlignerInterface->InitializeConfiguration();
     cAlignerInterface->InitializeAlignerObject();
 
@@ -762,7 +763,7 @@ bool LinkAlignmentOT::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
         // select lines for slvs debug
         fBeBoardInterface->WriteBoardReg(*cBoardIter, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
         fBeBoardInterface->WriteBoardReg(*cBoardIter, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-        cInterface->L1ADebug();
+        cDebugInterface->L1ADebug();
     }
 
     return cSuccess;

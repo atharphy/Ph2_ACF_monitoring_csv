@@ -2,6 +2,7 @@
 
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
+#include "D19cDebugFWInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -33,7 +34,7 @@ bool LinkTestOT::TestL1ALine(BeBoard* pBoard, bool pAlign, size_t pAttempts)
     // now ... configure CIC to produce idle pattern
     // on L1 line
     fBeBoardInterface->setBoard(pBoard->getId());
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cDebugFWInterface* cDebugInterface              = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     // make sure that we are in sparsified mode
     bool cSparsified = pBoard->getSparsification();
     pBoard->setSparsification(true);
@@ -75,7 +76,7 @@ bool LinkTestOT::TestL1ALine(BeBoard* pBoard, bool pAlign, size_t pAttempts)
             std::vector<size_t> cIdleBits(0);
             for(size_t cAttempt = 0; cAttempt < pAttempts; cAttempt++)
             {
-                auto        cBuffer     = cInterface->L1ADebug(1, false);
+                auto        cBuffer     = cDebugInterface->L1ADebug(1, false);
                 std::string cIdleBuffer = cBuffer;
                 // if buffer ends in 3 0s .. skip
                 if(cBuffer.substr(cBuffer.length() - 5, 5) == "00000") continue;

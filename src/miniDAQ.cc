@@ -12,6 +12,7 @@
 #include "../HWDescription/Definition.h"
 #include "../HWDescription/Hybrid.h"
 #include "../HWInterface/BeBoardInterface.h"
+#include "D19cDebugFWInterface.h"
 #include "../HWInterface/ChipInterface.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/Timer.h"
@@ -328,7 +329,8 @@ int main(int argc, char* argv[])
         for(size_t cAttempts = 0; cAttempts < cScopingAttempts; cAttempts++)
         {
             LOG(DEBUG) << BOLDBLUE << "Attempt#" << +cAttempts << RESET;
-            auto cBuffer = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->L1ADebug(1, false);
+            auto cDebugInterface = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()); 
+            auto cBuffer = cDebugInterface->L1ADebug(1, false);
             // search for L1 headers
             size_t                cSearch = 0;
             size_t                cPos    = 0;

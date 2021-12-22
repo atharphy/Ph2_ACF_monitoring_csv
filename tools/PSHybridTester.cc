@@ -1,5 +1,5 @@
 #include "PSHybridTester.h"
-
+#include "D19cDebugFWInterface.h"
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -58,10 +58,10 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
         }
         fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cPairId);
         if(pTrigger)
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1ADebug(false);
+            static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1ADebug(false);
         else
         {
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 7);
+            static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 7);
         }
     }
 }
@@ -176,7 +176,7 @@ void PSHybridTester::MPATest(BeBoard* pBoard, uint32_t pPattern)
         }     // hybrid
         // check output
         fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 4);
+        static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 4);
     }
 }
 void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAPairSel)

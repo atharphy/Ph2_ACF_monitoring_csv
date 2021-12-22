@@ -17,6 +17,7 @@
 #include "tools/RegisterTester.h"
 #include "tools/ShortFinder.h"
 #include "tools/StubBackEndAlignment.h"
+#include "D19cDebugFWInterface.h"
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -551,14 +552,14 @@ int main(int argc, char* argv[])
 
         for(auto cHybridId: cHybridIds)
         {
-            auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+            auto cDebugInterface = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()); 
             for(const auto cBoard: *cTool.fDetectorContainer)
             {
                 cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybridId);
                 cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cChipId);
             }
             LOG(INFO) << BOLDYELLOW << "Scoping L1 data on hybrid" << +cHybridId << RESET;
-            cInterface->L1ADebug(1, false);
+            cDebugInterface->L1ADebug(1, false);
             for(const auto cBoard: *cTool.fDetectorContainer)
             {
                 LOG(INFO) << BOLDMAGENTA << "First header found after " << +cTool.fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay")

@@ -225,66 +225,6 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
             cBeBoard->setUseOpticalLink(false);
             cBeBoard->setUseCPB(false);
             this->parseOpticalGroupContainer(pOpticalGroupNode, cBeBoard, os);
-            for(pugi::xml_node cChild: pOpticalGroupNode.children("GBT"))
-            {
-                std::string cName = cChild.name();
-                os << BOLDBLUE << "|"
-                   << "----" << cName << "\n"
-                   << RESET;
-                uint8_t cGBTId       = 0;
-                bool    cWithOptical = false;
-                for(pugi::xml_attribute cAttribute: cChild.attributes())
-                {
-                    if(std::string(cAttribute.name()) == "enable") cWithOptical = cWithOptical | (convertAnyInt(cAttribute.value()) == true);
-
-                    if(std::string(cAttribute.name()) == "Id") // T.B.D store this somewhere...but where
-                    {
-                        cGBTId = convertAnyInt(cAttribute.value());
-                        os << BOLDBLUE << "|"
-                           << "       "
-                           << "|"
-                           << "----"
-                           << " GBT :      " << BOLDYELLOW << +cGBTId << std::endl
-                           << RESET;
-                    }
-                    if(cBeBoard->getBoardType() == BoardType::D19C)
-                    {
-                        if(std::string(cAttribute.name()) == "phaseTap") // T.B.D store this somewhere...but where
-                        {
-                            static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getId()])->setGBTxPhase(convertAnyInt(cAttribute.value()));
-                            os << BOLDBLUE << "\t|"
-                               << "       "
-                               << "|"
-                               << "----"
-                               << " phase is :      " << BOLDYELLOW << cAttribute.value() << std::endl
-                               << RESET;
-                        }
-                        if(std::string(cAttribute.name()) == "txPolarity") // T.B.D store this somewhere...but where
-                        {
-                            auto cPolarity = convertAnyInt(cAttribute.value());
-                            static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getId()])->setTxPolarity(cGBTId, cPolarity);
-                            os << BOLDBLUE << "\t|"
-                               << "       "
-                               << "|"
-                               << "----"
-                               << " Tx Polarity is :      " << BOLDYELLOW << cAttribute.value() << std::endl
-                               << RESET;
-                        }
-                        if(std::string(cAttribute.name()) == "rxPolarity") // T.B.D store this somewhere...but where
-                        {
-                            auto cPolarity = convertAnyInt(cAttribute.value());
-                            static_cast<D19cFWInterface*>(pBeBoardFWMap[cBeBoard->getId()])->setRxPolarity(cGBTId, cPolarity);
-                            os << BOLDBLUE << "\t|"
-                               << "       "
-                               << "|"
-                               << "----"
-                               << " Rx Polairty is :      " << BOLDYELLOW << cAttribute.value() << std::endl
-                               << RESET;
-                        }
-                    }
-                }
-                cBeBoard->setOptical(cWithOptical);
-            }
         }
     }
     pugi::xml_node cSLinkNode = pBeBordNode.child("SLink");
