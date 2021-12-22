@@ -85,7 +85,7 @@ void PSPhysics::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    saveRawData = this->findValueInSettings<bool>("SaveRawData");
+    saveRawData = this->findValueInSettings<double>("SaveRawData");
     doLocal     = false;
 
     // ###########################################
