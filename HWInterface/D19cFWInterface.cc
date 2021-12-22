@@ -24,7 +24,7 @@ using namespace Ph2_HwDescription;
 namespace Ph2_HwInterface
 {
 D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoardId)
-    : BeBoardFWInterface(puHalConfigFileName, pBoardId),  fBroadcastCbcId(0), fNReadoutChip(0), fNHybrids(0), fNCic(0), fFMCId(1)
+    : BeBoardFWInterface(puHalConfigFileName, pBoardId), fBroadcastCbcId(0), fNReadoutChip(0), fNHybrids(0), fNCic(0), fFMCId(1)
 {
     fResetAttempts = 0;
 }
@@ -804,7 +804,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     // now check that I2C communication is functioning
     LOG(INFO) << BOLDGREEN << "According to the Firmware status registers, it was compiled for: " << fFWNHybrids << " hybrid(s), " << fFWNChips << " " << cChipName << " chip(s) per hybrid" << RESET;
     this->EnableFrontEnds(pBoard);
-    
+
     // adding an ReSync to align CBC L1A counters
     this->ChipReSync();
 
@@ -827,9 +827,9 @@ void D19cFWInterface::EnableFrontEnds(const Ph2_HwDescription::BeBoard* pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)
         {
-            auto&                 cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            uint8_t               cChipsEnable = 0x00;
-            fNCic += (cCic != nullptr ) ? 1 : 0; 
+            auto&   cCic         = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+            uint8_t cChipsEnable = 0x00;
+            fNCic += (cCic != nullptr) ? 1 : 0;
             hybrid_enable |= 1 << cHybrid->getId();
             fNHybrids++;
             LOG(INFO) << BOLDBLUE << "Enabling FE hybrid : " << +cHybrid->getId() << " - link Id " << +cOpticalGroup->getId() << RESET;
@@ -1187,7 +1187,6 @@ void D19cFWInterface::ConfigureFastCommandBlock(const BeBoard* pBoard)
     // load trigger configuration
     WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
 }
-
 
 // modified to check for header
 // and remove dummy words from the event
@@ -1802,7 +1801,6 @@ bool D19cFWInterface::WriteBlockReg(const std::string& pRegNode, const std::vect
     return cWriteCorr;
 }
 
-
 ///////////////////////////////////////////////////////
 //      CBC Methods                                 //
 /////////////////////////////////////////////////////
@@ -1971,10 +1969,9 @@ bool D19cFWInterface::WriteI2C(std::vector<uint32_t>& pVecSend, std::vector<uint
     // std::this_thread::sleep_for (std::chrono::microseconds (fWait_us) );
     // usleep (20);
     cFailed = ReadI2C(cNReplies, pReplies);
-    
+
     return cFailed;
 }
-
 
 bool D19cFWInterface::BCWriteChipBlockReg(std::vector<uint32_t>& pVecReg, bool pReadback)
 {
@@ -2084,7 +2081,6 @@ bool D19cFWInterface::WriteChipBlockReg(std::vector<uint32_t>& pVecReg, uint8_t&
 
     return cSuccess;
 }
-
 
 void D19cFWInterface::ChipI2CRefresh()
 {
@@ -2780,7 +2776,7 @@ bool D19cFWInterface::localWriteFERegister(Ph2_HwDescription::Chip* pChip, uint1
     LOG(DEBUG) << BOLDBLUE << " Writing 0x" << std::hex << +pRegisterValue << std::dec << " to [0x" << std::hex << +pRegisterAddress << std::dec << "] I2C master" << +cMasterId << RESET;
     uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId();
     if(pChip->getFrontEndType() == FrontEndType::MPA) cChipId = cChipId % 8;
-    uint8_t cChipAddress = pChip->getChipAddress();//fFEAddressMap[pChip->getFrontEndType()] + cChipId;
+    uint8_t cChipAddress = pChip->getChipAddress(); // fFEAddressMap[pChip->getFrontEndType()] + cChipId;
     // +1 for CBC address
     // cChipAddress += (pChip->getFrontEndType() == FrontEndType::CBC3) ? 1 : 0;
     // LOG (INFO) << BOLDMAGENTA << "D19cFWInterface::WriteFERegister ChipAddress " << std::hex << +cChipAddress << std::dec << " on link" << +cLinkId << RESET;
@@ -2863,7 +2859,7 @@ uint8_t D19cFWInterface::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t
     // LOG (INFO) << BOLDGREEN << "Reading FE register on link " << +cLinkId << RESET;
     uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId();
     if(pChip->getFrontEndType() == FrontEndType::MPA) cChipId = cChipId % 8;
-    uint8_t cChipAddress = pChip->getChipAddress();//fFEAddressMap[pChip->getFrontEndType()] + cChipId;
+    uint8_t cChipAddress = pChip->getChipAddress(); // fFEAddressMap[pChip->getFrontEndType()] + cChipId;
     // +1 for CBC address
     // cChipAddress += (pChip->getFrontEndType() == FrontEndType::CBC3) ? 1 : 0;
     uint8_t  cNbytes    = 2;

@@ -86,7 +86,6 @@ struct D19cFWEvt
  */
 namespace Ph2_HwInterface
 {
-
 /*!
  * \class Cbc3Fc7FWInterface
  *
@@ -123,7 +122,7 @@ class D19cFWInterface : public BeBoardFWInterface
     std::map<uint8_t, uint8_t> fRxPolarity;
     std::map<uint8_t, uint8_t> fTxPolarity;
     // 2S or PS readout
-    bool           fIs2S = true;
+    bool           fIs2S           = true;
     const uint32_t SINGLE_I2C_WAIT = 200; // used for 1MHz I2C
     // I'm going to add a variable to hold the stub offset
     uint32_t fStubOffset = 0xFFFF;
@@ -438,9 +437,9 @@ class D19cFWInterface : public BeBoardFWInterface
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    uint8_t                         fI2Cstatus    = 0;
-    const uint8_t                   flpGBTAddress = 0x70;
-    
+    uint8_t       fI2Cstatus    = 0;
+    const uint8_t flpGBTAddress = 0x70;
+
     // OT implementation of write and read
     bool     WriteOptoLpGBTRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop);
     uint32_t ReadOptoLpGBTRegister(const uint32_t linkNumber, const uint32_t pAddress);
@@ -472,7 +471,6 @@ class D19cFWInterface : public BeBoardFWInterface
     // fast command generic block
     void ResetFCMDBram();
     void ConfigureFCMDBram(std::vector<uint8_t> pFastCommands);
-
 };
 } // namespace Ph2_HwInterface
 

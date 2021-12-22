@@ -2,13 +2,13 @@
 #include <cstring>
 #include <ios>
 
-#include "FC7FpgaControlFWInterface.h"
 #include "../System/SystemController.h"
 #include "../Utils/CommonVisitors.h"
 #include "../Utils/Timer.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/argvparser.h"
 #include "../tools/Tool.h"
+#include "FC7FpgaControlFWInterface.h"
 #include "TApplication.h"
 #include "TROOT.h"
 #ifdef __ANTENNA__
@@ -116,10 +116,11 @@ int main(int argc, char** argv)
     bool cIPB_Rate  = (cmd.foundOption("ipb_rate")) ? true : false;
     bool cOccupancy = (cmd.foundOption("occupancy")) ? true : false;
 
-    if(cHardReset) { 
+    if(cHardReset)
+    {
         cTool.fBeBoardInterface->setBoard(pBoard->getId());
-        FC7FpgaControlFWInterface*  cInterface = static_cast<FC7FpgaControlFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
-        cInterface->RebootBoard(); 
+        FC7FpgaControlFWInterface* cInterface = static_cast<FC7FpgaControlFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+        cInterface->RebootBoard();
     }
     else if(cDDR3SelfTest)
     {

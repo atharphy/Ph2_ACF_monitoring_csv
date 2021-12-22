@@ -12,12 +12,13 @@
 
 namespace Ph2_HwInterface
 {
-BeBoardFWInterface::BeBoardFWInterface(const char* puHalConfigFileName, uint32_t pBoardId) : RegManager(puHalConfigFileName, pBoardId), fSaveToFile(false), fFileHandler(nullptr)//, fFpgaConfig(nullptr)
+BeBoardFWInterface::BeBoardFWInterface(const char* puHalConfigFileName, uint32_t pBoardId)
+    : RegManager(puHalConfigFileName, pBoardId), fSaveToFile(false), fFileHandler(nullptr) //, fFpgaConfig(nullptr)
 {
 }
 
 BeBoardFWInterface::BeBoardFWInterface(const char* pId, const char* pUri, const char* pAddressTable)
-    : RegManager(pId, pUri, pAddressTable), fSaveToFile(false), fFileHandler(nullptr)//, fFpgaConfig(nullptr)
+    : RegManager(pId, pUri, pAddressTable), fSaveToFile(false), fFileHandler(nullptr) //, fFpgaConfig(nullptr)
 {
 }
 

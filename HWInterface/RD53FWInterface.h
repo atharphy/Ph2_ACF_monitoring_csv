@@ -196,7 +196,6 @@ class RD53FWInterface : public BeBoardFWInterface
     bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override;
     uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress) override;
 
-
     // ####################################################
     // # Hybrid ADC measurements: temperature and voltage #
     // ####################################################

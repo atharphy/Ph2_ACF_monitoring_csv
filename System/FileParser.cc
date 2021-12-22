@@ -270,7 +270,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             lpGBT* thelpGBT = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, fileName);
             thelpGBT->setOptical(pBoard->isOptical());
             thelpGBT->setOpticalId(cOpticalGroupId);
-            thelpGBT->setChipAddress(0x70); // default lpGBT address 
+            thelpGBT->setChipAddress(0x70); // default lpGBT address
             theOpticalGroup->addlpGBT(thelpGBT);
             // Initialize LpGBT settings from XML (only for IT)
             if(pBoard->getBoardType() == BoardType::RD53)
@@ -497,8 +497,8 @@ void FileParser::parseSSAContainer(pugi::xml_node pSSAnode, Hybrid* pHybrid, std
     cSSA->setNumberOfChannels(NSSACHANNELS);
     cSSA->setClockFrequency(320);
     cSSA->setMasterId(pHybrid->getMasterId());
-    cSSA->setChipAddress(0x20 + cChipId%8);
-    
+    cSSA->setChipAddress(0x20 + cChipId % 8);
+
     os << BOLDCYAN << "|"
        << "  "
        << "|"
@@ -641,7 +641,7 @@ void FileParser::parseSSA2Container(pugi::xml_node pSSAnode, Hybrid* pHybrid, st
     cSSA2->setOpticalId(pHybrid->getOpticalId());
     cSSA2->setNumberOfChannels(NSSACHANNELS);
     cSSA2->setClockFrequency(320);
-    cSSA2->setChipAddress(0x20 + cChipId%8);
+    cSSA2->setChipAddress(0x20 + cChipId % 8);
 }
 
 void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, ReadoutChip* pSSA)
@@ -668,7 +668,7 @@ void FileParser::parseMPAContainer(pugi::xml_node pMPANode, Hybrid* pHybrid, std
     cMPA->setNumberOfChannels(NSSACHANNELS, NMPACOLS);
     cMPA->setClockFrequency(320);
     cMPA->setMasterId(pHybrid->getMasterId());
-    cMPA->setChipAddress(0x40 + cChipId%8);
+    cMPA->setChipAddress(0x40 + cChipId % 8);
 
     os << BOLDCYAN << "|"
        << "  "
@@ -1232,7 +1232,7 @@ void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std
     cCbc->setClockFrequency(320);
     cCbc->setNumberOfChannels(254);
     cCbc->setMasterId(cHybrid->getMasterId());
-    cCbc->setChipAddress(0x41 + cChipId%8);
+    cCbc->setChipAddress(0x41 + cChipId % 8);
 
     os << BOLDCYAN << "|"
        << "  "
