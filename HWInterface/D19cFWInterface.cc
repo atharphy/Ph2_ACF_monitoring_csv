@@ -4309,7 +4309,6 @@ bool D19cFWInterface::cmd_reply_ack(const uint32_t& cWord1, const uint32_t& cWor
         return false;
 }
 
-
 void D19cFWInterface::PS_Open_shutter(uint32_t pDuration)
 {
     uint8_t cReSync   = 0;

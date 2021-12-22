@@ -47,7 +47,7 @@ void MultiplexingSetup::Scan()
         fBeBoardInterface->setBoard(theBoardId);
         fBeBoardInterface->getBoardInfo(static_cast<BeBoard*>(cBoard));
         D19cMuxBackplaneFWInterface* cInterface = static_cast<D19cMuxBackplaneFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-        fAvailableCards = cInterface->ScanMultiplexingSetup();
+        fAvailableCards                         = cInterface->ScanMultiplexingSetup();
         parseAvailable(false);
         printAvailableCards();
     }
@@ -90,7 +90,7 @@ void MultiplexingSetup::ConfigureAll()
         LOG(INFO) << BOLDBLUE << "Configuring all cards on BeBoard " << +theBoardId << RESET;
         fBeBoardInterface->setBoard(theBoardId);
         D19cMuxBackplaneFWInterface* cInterface = static_cast<D19cMuxBackplaneFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-        fAvailableCards = cInterface->ScanMultiplexingSetup();
+        fAvailableCards                         = cInterface->ScanMultiplexingSetup();
         parseAvailable(false);
         printAvailableCards();
         for(const auto& el: fAvailable)
