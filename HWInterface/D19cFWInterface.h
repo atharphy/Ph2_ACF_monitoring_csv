@@ -457,35 +457,6 @@ class D19cFWInterface : public BeBoardFWInterface
     bool Measure2SOccupancy(uint32_t pNEvents, uint8_t**& pErrorCounters, uint8_t***& pChannelCounters);
     void Manage2SCountersMemory(uint8_t**& pErrorCounters, uint8_t***& pChannelCounters, bool pAllocate);
 
-    ///////////////////////////////////////////////////////
-    //      MPA/SSA Methods                             //
-    /////////////////////////////////////////////////////
-
-    // Coms
-    void     PSInterfaceBoard_SetSlaveMap();
-    void     PSInterfaceBoard_ConfigureI2CMaster(uint32_t pEnabled, uint32_t pFrequency);
-    void     PSInterfaceBoard_SendI2CCommand(uint32_t slave_id, uint32_t board_id, uint32_t read, uint32_t register_address, uint32_t data);
-    uint32_t PSInterfaceBoard_SendI2CCommand_READ(uint32_t slave_id, uint32_t board_id, uint32_t read, uint32_t register_address, uint32_t data);
-
-    // Main Power:
-    void PSInterfaceBoard_PowerOn(uint8_t mpaid = 0, uint8_t ssaid = 0);
-    void PSInterfaceBoard_PowerOff();
-
-    void PSInterfaceBoard_PowerOn_MPASSA(float VDDPST = 1.25, float DVDD = 1.2, float AVDD = 1.25, float VBG = 0.3, float VBF = 0.3, uint8_t mpaid = 0, uint8_t ssaid = 0);
-    // MPA power on
-    void PSInterfaceBoard_PowerOn_MPA(float VDDPST = 1.25, float DVDD = 1.2, float AVDD = 1.25, float VBG = 0.3, uint8_t mpaid = 0, uint8_t ssaid = 0);
-    void PSInterfaceBoard_PowerOff_MPA(uint8_t mpaid = 0, uint8_t ssaid = 0);
-    /// SSA power on
-    void PSInterfaceBoard_PowerOn_SSA(float VDDPST = 1.25, float DVDD = 1.25, float AVDD = 1.25, float VBF = 0.3, float BG = 0.0, uint8_t ENABLE = 0);
-    void PSInterfaceBoard_PowerOff_SSA(uint8_t mpaid = 0, uint8_t ssaid = 0);
-    void ReadPower_SSA(uint8_t mpaid = 0, uint8_t ssaid = 0);
-    void SSAEqualizeDACs(uint8_t pChipId);
-    void KillI2C();
-    ///
-
-    void     Pix_write_MPA(Ph2_HwDescription::Chip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel, uint32_t data);
-    uint32_t Pix_read_MPA(Ph2_HwDescription::Chip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel);
-
     void Compose_fast_command(uint32_t duration = 0, uint32_t resync_en = 0, uint32_t l1a_en = 0, uint32_t cal_pulse_en = 0, uint32_t bc0_en = 0);
     void PS_Open_shutter(uint32_t duration = 0);
     void PS_Close_shutter(uint32_t duration = 0);

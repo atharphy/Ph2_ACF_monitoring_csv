@@ -6,7 +6,7 @@
 #include "../HWDescription/OuterTrackerHybrid.h"
 #include "../HWDescription/ReadoutChip.h"
 #include "../HWInterface/BeBoardInterface.h"
-#include "../HWInterface/D19cFWInterface.h"
+#include "D19cPSTestBoardFWInterface.h"
 #include "../System/SystemController.h"
 #include "../Utils/CommonVisitors.h"
 #include "../Utils/ConsoleColor.h"
@@ -60,8 +60,15 @@ int main(int argc, char* argv[])
     Tool              cTool;
     cTool.InitializeHw(cHWFile, outp);
     cTool.InitializeSettings(cHWFile, outp);
+    // //
+    // cTool.fBeBoardInterface->setBoard(0);
+    // D19cPSTestBoardFWInterface* IB = dynamic_cast<D19cPSTestBoardFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()); 
+    // // power cycle board - jic
+    // IB->PSInterfaceBoard_PowerOff_SSA();
+    // IB->ReadPower_SSA();
+    // IB->PSInterfaceBoard_PowerOn_SSA(1.25, 1.0, 1.25, 0.3, 0.0, 145);
+    // IB->ReadPower_SSA();
     cTool.ConfigureHw();
-    // D19cFWInterface* IB = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()); // There has to be a better way!
 
     // align back-end
     BackEndAlignment cBackEndAligner;

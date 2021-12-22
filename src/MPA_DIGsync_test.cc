@@ -22,6 +22,7 @@
 #include "TCanvas.h"
 #include "TH1.h"
 #include "tools/CicFEAlignment.h"
+#include "D19cPSTestBoardFWInterface.h"
 #include <cstring>
 #include <fstream>
 #include <inttypes.h>
@@ -46,6 +47,12 @@ int main(int argc, char* argv[])
     cTool.InitializeHw(cHWFile, outp);
     cTool.InitializeSettings(cHWFile, outp);
 
+    // power on MPA ? 
+    // D19cPSTestBoardFWInterface* IB = dynamic_cast<D19cPSTestBoardFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()); 
+    // IB->PSInterfaceBoard_PowerOn();
+    // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    // IB->PSInterfaceBoard_PowerOn_MPA(1.25, 1.2, 1.25, 0.3, 0, 0);
+
     cTool.ConfigureHw();
 
     CicFEAlignment cCicAligner;
@@ -58,9 +65,6 @@ int main(int argc, char* argv[])
     cBackEndAligner.Initialise();
     cBackEndAligner.Align();
     cBackEndAligner.resetPointers();
-
-    // D19cFWInterface* IB = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardFWMap.find(0)->second); // There has to be a
-    // better way! IB->PSInterfaceBoard_PowerOff_SSA();
 
     BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
 
