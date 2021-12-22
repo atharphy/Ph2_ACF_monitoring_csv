@@ -167,7 +167,7 @@ void ThrEqualization::run()
     ContainerFactory::copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *this->fDetectorDataContainer);
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, theTDACcontainer);
 
-    setChannelGroupHandler(*theChnGroupHandler.get());
+    setChannelGroupHandler(theChnGroupHandler);
     this->SetTestPulse(true);
     this->fMaskChannelsFromOtherGroups = true;
     ThrEqualization::bitWiseScanLocal(frontEnd->name, nEvents * nSteps, TARGETEFF, nEvtsBurst * nSteps);
@@ -517,10 +517,10 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
         // #################
         // # Measure noise #
         // #################
-        setChannelGroupHandler(*theChnGroupHandlerNoise.get());
+        setChannelGroupHandler(theChnGroupHandlerNoise);
         this->SetTestPulse(PixelAlive::INJtype::None);
         this->measureData(nEvents, nEvtsBurst);
-        setChannelGroupHandler(*theChnGroupHandler.get());
+        setChannelGroupHandler(theChnGroupHandler);
         this->SetTestPulse(PixelAlive::injType);
 
         // #####################
