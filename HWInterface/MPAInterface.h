@@ -56,25 +56,6 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
  * \brief Class representing the User Interface to the MPA on different boards
  */
 
-struct Stubs
-{
-    std::vector<uint8_t>              nst;
-    std::vector<std::vector<uint8_t>> pos;
-    std::vector<std::vector<uint8_t>> row;
-    std::vector<std::vector<uint8_t>> cur;
-};
-
-struct L1data
-{
-    uint8_t              strip_counter;
-    uint8_t              pixel_counter;
-    std::vector<uint8_t> pos_strip;
-    std::vector<uint8_t> width_strip;
-    std::vector<uint8_t> MIP;
-    std::vector<uint8_t> pos_pixel;
-    std::vector<uint8_t> width_pixel;
-    std::vector<uint8_t> Z;
-};
 
 struct Injection
 {

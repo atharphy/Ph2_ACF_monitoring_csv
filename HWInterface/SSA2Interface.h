@@ -47,6 +47,7 @@ class SSA2Interface : public ReadoutChipInterface
 
   private:
     uint8_t                        ReadChipId(Ph2_HwDescription::Chip* pChip);                                                                              // FIXME
+    bool     					   WriteChipRegBits(Ph2_HwDescription::Chip* pSSA2, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask ,bool pVerifLoop = true) ;                                      // FIXME
     bool                           WriteReg(Ph2_HwDescription::Chip* pCbc, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop = true);     // FIXME
     bool                           WriteChipSingleReg(Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true); // FIXME
     bool                           ConfigureAmux(Ph2_HwDescription::Chip* pChip, const std::string& pRegister);                                             // FIXME

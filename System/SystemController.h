@@ -19,6 +19,7 @@
 #include "../HWInterface/CicInterface.h"
 #include "../HWInterface/D19clpGBTInterface.h"
 #include "../HWInterface/MPAInterface.h"
+#include "../HWInterface/MPA2Interface.h"
 #include "../HWInterface/PSInterface.h"
 #include "../HWInterface/RD53Interface.h"
 #include "../HWInterface/RD53lpGBTInterface.h"
