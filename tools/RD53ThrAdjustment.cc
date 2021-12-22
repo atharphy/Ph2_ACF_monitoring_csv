@@ -269,6 +269,7 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, 
         // ################
         PixelAlive::run();
         auto output = PixelAlive::analyze();
+        output->resetNormalizationStatus();
         output->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandlerContainer, 1);
 
         // ##############################################

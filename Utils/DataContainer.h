@@ -255,6 +255,7 @@ class BaseDataContainer
 
     // virtual void initialize() = 0;
     virtual uint32_t normalizeAndAverageContainers(const BaseContainer* theContainer, const BaseDataContainer* theChannelGroupContainer, const uint32_t numberOfEvents) = 0;
+    virtual void resetNormalizationStatus() = 0;
 
     template <typename T>
     bool isSummaryContainerType()
@@ -366,6 +367,13 @@ class DataContainer
         }
         return numberOfEnabledChannels_;
     }
+
+    void resetNormalizationStatus() override
+    {
+        isNormalized = false;
+        for(auto container: *this) container->resetNormalizationStatus();
+    }
+
 
     void cleanDataStored() override
     {
@@ -487,6 +495,11 @@ class ChipDataContainer
         }
         return theChannelGroupContainer->getSummary<std::shared_ptr<ChannelGroupHandler>>()->allChannelGroup()->getNumberOfEnabledChannels(
             static_cast<const ChipContainer*>(theContainer)->getChipOriginalMask());
+    }
+    
+    void resetNormalizationStatus() override
+    {
+        isNormalized = false;
     }
 
     void cleanDataStored() override

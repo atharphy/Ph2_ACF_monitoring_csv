@@ -325,8 +325,9 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                 .data[deltaTrgID]++;
                     }
                 }
-        theOccContainer->normalizeAndAverageContainers(fDetectorContainer->at(cBoard->getIndex()), fChannelGroupHandlerContainer->getObject(cBoard->getId()), 1);
     }
+    theOccContainer->resetNormalizationStatus();
+    theOccContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandlerContainer, 1);
     return theOccContainer;
 }
 

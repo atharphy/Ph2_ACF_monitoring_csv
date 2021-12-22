@@ -354,6 +354,7 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, const float&
         // ################
         PixelAlive::run();
         auto output = PixelAlive::analyze();
+        output->resetNormalizationStatus();
         output->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandlerContainer, 1);
 
         // ##############################################
