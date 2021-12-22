@@ -90,10 +90,6 @@ class D19cFpgaConfig;
 class D19cSSAEvent;
 class D19clpGBTInterface;
 
-#ifndef PSCounterData
-typedef std::map<uint8_t, std::vector<uint16_t>> PSCounterData;
-typedef std::map<uint32_t, PSCounterData>        PSModuleCounterData;
-#endif
 /*!
  * \class Cbc3Fc7FWInterface
  *
@@ -144,8 +140,6 @@ class D19cFWInterface : public BeBoardFWInterface
     // L1 word alignment values
     std::vector<uint8_t> fBeL1Delays;
     std::vector<uint8_t> fBeL1Bitslips;
-    std::vector<uint8_t> fStubBuffer;
-    PSModuleCounterData  fPSModulesCounterData;
 
   public:
     /*!
@@ -443,7 +437,6 @@ class D19cFWInterface : public BeBoardFWInterface
     bool GetLinkStatus(uint8_t pLinkId);
 
     bool                       LinkLock(const Ph2_HwDescription::BeBoard* pBoard);
-    std::pair<uint16_t, float> readADC(std::string pValueToRead = "AMUX_L", bool pApplyCorrection = false);
     void                       setRxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fRxPolarity.insert({pLinkId, pPolarity}); };
     void                       setTxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fTxPolarity.insert({pLinkId, pPolarity}); };
 
@@ -458,12 +451,7 @@ class D19cFWInterface : public BeBoardFWInterface
     void Manage2SCountersMemory(uint8_t**& pErrorCounters, uint8_t***& pChannelCounters, bool pAllocate);
 
     void Compose_fast_command(uint32_t duration = 0, uint32_t resync_en = 0, uint32_t l1a_en = 0, uint32_t cal_pulse_en = 0, uint32_t bc0_en = 0);
-    void PS_Open_shutter(uint32_t duration = 0);
-    void PS_Close_shutter(uint32_t duration = 0);
-    void PS_Clear_counters(uint32_t duration = 0);
-    void PS_Start_counters_read(uint32_t duration = 0);
-
-    ///////////////////////////////////////////////////////
+     ///////////////////////////////////////////////////////
     //      FPGA CONFIG                                 //
     /////////////////////////////////////////////////////
 
@@ -489,9 +477,6 @@ class D19cFWInterface : public BeBoardFWInterface
     /*! \brief Set or reset the start signal */
     void SetForceStart(bool bStart) {}
 
-    bool CheckStartPattern();
-    bool DecodeRawCounterDataPS(PSCounterData& pFeCounters, std::vector<uint8_t> pIds);
-    bool GetCounterData(uint8_t pRawMode, size_t pChipId, size_t pHybridId);
     ///////////////////////////////////////////////////////
     //      Optical readout                                 //
     /////////////////////////////////////////////////////

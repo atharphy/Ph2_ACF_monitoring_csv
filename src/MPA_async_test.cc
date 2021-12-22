@@ -10,7 +10,7 @@
 #include "../HWDescription/OuterTrackerHybrid.h"
 #include "../HWDescription/ReadoutChip.h"
 #include "../HWInterface/BeBoardInterface.h"
-#include "../HWInterface/D19cFWInterface.h"
+#include "../HWInterface/D19cPSCounterFWInterface.h"
 #include "../HWInterface/MPAInterface.h"
 #include "../System/SystemController.h"
 #include "../Utils/CommonVisitors.h"
@@ -135,6 +135,11 @@ int main(int argc, char* argv[])
     std::vector<int> totalevPRE;
     int              impa = 0;
 
+
+
+    cTool.fBeBoardInterface->setBoard(0);
+    D19cPSCounterFWInterface* IB = static_cast<D19cPSCounterFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+
     for(auto cMPA: *ChipVec)
     {
         std::cout << "2" << std::endl;
@@ -171,9 +176,7 @@ int main(int argc, char* argv[])
     for(uint16_t ith = th.first; ith < th.second; ith++)
     {
         // if (not (ith%10==0)) continue;
-        static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
-        static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
-
+        IB->PS_Clear_counters();
         std::cout << "ITH= " << ith << std::endl;
         for(auto cMPA: *ChipVec)
         {
@@ -187,12 +190,14 @@ int main(int argc, char* argv[])
         {
             std::cout << "" << std::endl;
             std::cout << "Shutter Open" << std::endl;
-            static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters(8);
-            static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Open_shutter(8);
+
+            IB->SetDuration(8);
+            IB->PS_Clear_counters();
+            IB->PS_Open_shutter();
             // std::this_thread::sleep_for(LongPOWait*2*60);
             std::this_thread::sleep_for(LongPOWait * 2 * 10);
             // static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->Send_pulses(1000);
-            static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Close_shutter(8);
+            IB->PS_Close_shutter();
             // static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Start_counters_read(8);
             // static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Start_counters_read(8);
             // std::cout << "Shutter close " << std::endl;
@@ -295,8 +300,8 @@ int main(int argc, char* argv[])
             nrep = 0;
         }
         scurvecsv << "\n";
-        static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters(8);
-        static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters(8);
+        IB->SetDuration(8);
+        IB->PS_Clear_counters();
     }
     // TFile *curf = TFile::Open("scurves.root","RECREATE");
     // curf->cd();

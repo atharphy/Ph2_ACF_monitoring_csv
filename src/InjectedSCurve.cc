@@ -13,6 +13,7 @@
 #include "../Utils/Utilities.h"
 #include "../Utils/argvparser.h"
 #include "../tools/CalibrationExample.h"
+#include "../HWInterface/D19cPSCounterFWInterface.h"
 #include "../tools/Tool.h"
 #include "TApplication.h"
 #include "TCanvas.h"
@@ -43,8 +44,9 @@ int main(int argc, char* argv[])
     cTool.InitializeHw(cHWFile, outp);
     cTool.InitializeSettings(cHWFile, outp);
     cTool.ConfigureHw();
-    D19cFWInterface* IB = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardFWMap.find(0)->second); // There has to be a better way!
-
+    cTool.fBeBoardInterface->setBoard(0);
+    D19cPSCounterFWInterface* IB = static_cast<D19cPSCounterFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+    
     cTool.setFWTestPulse(); // turns on injections (in either mode)
     BeBoard*         pBoard  = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
     HybridContainer* ChipVec = pBoard->at(0)->at(0);

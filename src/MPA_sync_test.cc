@@ -8,7 +8,7 @@
 //#include "../HWDescription/OuterTrackerModule.h"
 #include "../HWDescription/ReadoutChip.h"
 #include "../HWInterface/BeBoardInterface.h"
-#include "../HWInterface/D19cFWInterface.h"
+#include "../HWInterface/D19cPSCounterFWInterface.h"
 #include "../HWInterface/MPAInterface.h"
 #include "../System/SystemController.h"
 #include "../Utils/CommonVisitors.h"
@@ -80,6 +80,10 @@ int main(int argc, char* argv[])
     std::string        title;
     std::cout << "Setup" << std::endl;
 
+
+    cTool.fBeBoardInterface->setBoard(0);
+    D19cPSCounterFWInterface* IB = static_cast<D19cPSCounterFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+    
     for(auto cMPA: *ChipVec)
     {
         MPA* theMPA = static_cast<MPA*>(cMPA);
@@ -120,9 +124,8 @@ int main(int argc, char* argv[])
         {
             for(size_t col = cols.first; col < cols.second; col++)
             {
-                static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
-                static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->PS_Clear_counters();
-
+                IB->PS_Clear_counters();
+                
                 // theMPAInterface->enableInjection(cMPA,true);
 
                 std::this_thread::sleep_for(ShortWait);

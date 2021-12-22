@@ -5,7 +5,7 @@
 #include "../HWDescription/OuterTrackerHybrid.h"
 #include "../HWDescription/ReadoutChip.h"
 #include "../HWInterface/BeBoardInterface.h"
-#include "../HWInterface/D19cFWInterface.h"
+#include "../HWInterface/D19cPSCounterFWInterface.h"
 #include "../System/SystemController.h"
 #include "../Utils/CommonVisitors.h"
 #include "../Utils/ConsoleColor.h"
@@ -43,7 +43,9 @@ int main(int argc, char* argv[])
     cTool.InitializeHw(cHWFile, outp);
     cTool.InitializeSettings(cHWFile, outp);
     cTool.ConfigureHw();
-    D19cFWInterface* IB = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardFWMap.find(0)->second); // There has to be a better way!
+    cTool.fBeBoardInterface->setBoard(0);
+    D19cPSCounterFWInterface* IB = static_cast<D19cPSCounterFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+
 
     cTool.setFWTestPulse(); // turns on injections (in either mode)
     BeBoard*         pBoard  = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
