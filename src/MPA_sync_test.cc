@@ -80,10 +80,9 @@ int main(int argc, char* argv[])
     std::string        title;
     std::cout << "Setup" << std::endl;
 
-
     cTool.fBeBoardInterface->setBoard(0);
     D19cPSCounterFWInterface* IB = static_cast<D19cPSCounterFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
-    
+
     for(auto cMPA: *ChipVec)
     {
         MPA* theMPA = static_cast<MPA*>(cMPA);
@@ -125,7 +124,7 @@ int main(int argc, char* argv[])
             for(size_t col = cols.first; col < cols.second; col++)
             {
                 IB->PS_Clear_counters();
-                
+
                 // theMPAInterface->enableInjection(cMPA,true);
 
                 std::this_thread::sleep_for(ShortWait);

@@ -6,6 +6,7 @@
 #include "../HWDescription/ReadoutChip.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/D19cFWInterface.h"
+#include "../HWInterface/D19cPSCounterFWInterface.h"
 #include "../System/SystemController.h"
 #include "../Utils/CommonVisitors.h"
 #include "../Utils/ConsoleColor.h"
@@ -13,7 +14,6 @@
 #include "../Utils/Utilities.h"
 #include "../Utils/argvparser.h"
 #include "../tools/CalibrationExample.h"
-#include "../HWInterface/D19cPSCounterFWInterface.h"
 #include "../tools/Tool.h"
 #include "TApplication.h"
 #include "TCanvas.h"
@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     cTool.ConfigureHw();
     cTool.fBeBoardInterface->setBoard(0);
     D19cPSCounterFWInterface* IB = static_cast<D19cPSCounterFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
-    
+
     cTool.setFWTestPulse(); // turns on injections (in either mode)
     BeBoard*         pBoard  = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
     HybridContainer* ChipVec = pBoard->at(0)->at(0);

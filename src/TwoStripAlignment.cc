@@ -46,7 +46,6 @@ int main(int argc, char* argv[])
     cTool.fBeBoardInterface->setBoard(0);
     D19cPSCounterFWInterface* IB = static_cast<D19cPSCounterFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
 
-
     cTool.setFWTestPulse(); // turns on injections (in either mode)
     BeBoard*         pBoard  = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
     HybridContainer* ChipVec = pBoard->at(0)->at(0);

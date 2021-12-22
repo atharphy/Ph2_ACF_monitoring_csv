@@ -436,9 +436,9 @@ class D19cFWInterface : public BeBoardFWInterface
     void ResetLink(uint8_t pLinkId);
     bool GetLinkStatus(uint8_t pLinkId);
 
-    bool                       LinkLock(const Ph2_HwDescription::BeBoard* pBoard);
-    void                       setRxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fRxPolarity.insert({pLinkId, pPolarity}); };
-    void                       setTxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fTxPolarity.insert({pLinkId, pPolarity}); };
+    bool LinkLock(const Ph2_HwDescription::BeBoard* pBoard);
+    void setRxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fRxPolarity.insert({pLinkId, pPolarity}); };
+    void setTxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fTxPolarity.insert({pLinkId, pPolarity}); };
 
     // CDCE
     void configureCDCE_old(uint16_t pClockRate = 120);
@@ -451,7 +451,7 @@ class D19cFWInterface : public BeBoardFWInterface
     void Manage2SCountersMemory(uint8_t**& pErrorCounters, uint8_t***& pChannelCounters, bool pAllocate);
 
     void Compose_fast_command(uint32_t duration = 0, uint32_t resync_en = 0, uint32_t l1a_en = 0, uint32_t cal_pulse_en = 0, uint32_t bc0_en = 0);
-     ///////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////
     //      FPGA CONFIG                                 //
     /////////////////////////////////////////////////////
 

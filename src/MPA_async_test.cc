@@ -135,8 +135,6 @@ int main(int argc, char* argv[])
     std::vector<int> totalevPRE;
     int              impa = 0;
 
-
-
     cTool.fBeBoardInterface->setBoard(0);
     D19cPSCounterFWInterface* IB = static_cast<D19cPSCounterFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
 

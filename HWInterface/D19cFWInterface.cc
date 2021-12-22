@@ -1555,7 +1555,6 @@ uint32_t D19cFWInterface::CountFwEvents(BeBoard* pBoard, std::vector<uint32_t>& 
     return cNEvents;
 }
 
-
 uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
 {
     // LOG(INFO) << BOLDBLUE << "Retreiving data from the FC7..." << RESET;
@@ -1786,8 +1785,6 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     // need to return the number of events read
     return cNEvents;
 }
-
-
 
 bool D19cFWInterface::WaitForData(BeBoard* pBoard)
 {
