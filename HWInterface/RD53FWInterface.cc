@@ -14,7 +14,7 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-RD53FWInterface::RD53FWInterface(const char* pId, const char* pUri, const char* pAddressTable) : BeBoardFWInterface(pId, pUri, pAddressTable), fpgaConfig(nullptr), ddr3Offset(0), FWinfo(0) {}
+RD53FWInterface::RD53FWInterface(const char* pId, const char* pUri, const char* pAddressTable) : BeBoardFWInterface(pId, pUri, pAddressTable), ddr3Offset(0), FWinfo(0) {}
 
 void RD53FWInterface::setFileHandler(FileHandler* pHandler)
 {
@@ -971,7 +971,7 @@ bool RD53FWInterface::WriteOptoLinkRegister(const Chip* pChip, const uint32_t pA
 
     // Config
     RegManager::WriteStackReg(
-        {{"user.ctrl_regs.lpgbt_1.ic_tx_fifo_din", pData}, {"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", pChip->getChipAddreess()}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
+        {{"user.ctrl_regs.lpgbt_1.ic_tx_fifo_din", pData}, {"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", pChip->getChipAddress()}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
 
     // Perform operation
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_tx_fifo_wr_en", 0x1},
@@ -999,7 +999,7 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(const Chip* pChip, const uint32_t
     RD53FWInterface::selectLink(pChip->getOpticalId());
 
     // Config
-    RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", pChip->getChipAddreess()}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
+    RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", pChip->getChipAddress()}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
 
     // Perform operation
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_2.ic_nb_of_words_to_read", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_send_rd_cmd", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_send_rd_cmd", 0x0}});
@@ -1055,55 +1055,6 @@ void RD53FWInterface::WriteArbitraryRegister(const std::string& regName, const u
 }
 
 uint32_t RD53FWInterface::ReadArbitraryRegister(const std::string& regName) { return RegManager::ReadReg(regName); }
-
-// ###########################################
-// # Member functions to handle the firmware #
-// ###########################################
-
-void RD53FWInterface::FlashProm(const std::string& strConfig, const char* fileName)
-{
-    CheckIfUploading();
-    fpgaConfig->runUpload(strConfig, fileName);
-}
-
-void RD53FWInterface::JumpToFpgaConfig(const std::string& strConfig)
-{
-    CheckIfUploading();
-    fpgaConfig->jumpToImage(strConfig);
-}
-
-void RD53FWInterface::DownloadFpgaConfig(const std::string& strConfig, const std::string& strDest)
-{
-    CheckIfUploading();
-    fpgaConfig->runDownload(strConfig, strDest.c_str());
-}
-
-std::vector<std::string> RD53FWInterface::getFpgaConfigList()
-{
-    CheckIfUploading();
-    return fpgaConfig->getFirmwareImageNames();
-}
-
-void RD53FWInterface::DeleteFpgaConfig(const std::string& strId)
-{
-    CheckIfUploading();
-    fpgaConfig->deleteFirmwareImage(strId);
-}
-
-void RD53FWInterface::CheckIfUploading()
-{
-    if(fpgaConfig && fpgaConfig->getUploadingFpga() > 0) throw Exception("[RD53FWInterface::CheckIfUploading] This board is uploading an FPGA configuration");
-
-    if(!fpgaConfig) fpgaConfig = new D19cFpgaConfig(this);
-}
-
-void RD53FWInterface::RebootBoard()
-{
-    if(!fpgaConfig) fpgaConfig = new D19cFpgaConfig(this);
-    fpgaConfig->resetBoard();
-}
-
-const FpgaConfig* RD53FWInterface::GetConfiguringFpga() { return (const FpgaConfig*)fpgaConfig; }
 
 // ###################
 // # Clock generator #

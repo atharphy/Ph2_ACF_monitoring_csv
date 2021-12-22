@@ -16,7 +16,6 @@
 #include "../Utils/RD53Shared.h"
 #include "../Utils/easylogging++.h"
 #include "BeBoardFWInterface.h"
-#include "D19cFpgaConfig.h"
 #include "RD53lpGBTInterface.h"
 
 #include <uhal/uhal.hpp>
@@ -197,17 +196,6 @@ class RD53FWInterface : public BeBoardFWInterface
     bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override;
     uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress) override;
 
-    // ###########################################
-    // # Member functions to handle the firmware #
-    // ###########################################
-    void                     FlashProm(const std::string& strConfig, const char* pstrFile);
-    void                     JumpToFpgaConfig(const std::string& strConfig);
-    void                     DownloadFpgaConfig(const std::string& strConfig, const std::string& strDest);
-    std::vector<std::string> getFpgaConfigList();
-    void                     DeleteFpgaConfig(const std::string& strId);
-    void                     CheckIfUploading();
-    void                     RebootBoard();
-    const FpgaConfig*        GetConfiguringFpga();
 
     // ####################################################
     // # Hybrid ADC measurements: temperature and voltage #
@@ -238,7 +226,6 @@ class RD53FWInterface : public BeBoardFWInterface
     void ReadClockGenerator();
 
     FastCommandsConfig localCfgFastCmd;
-    D19cFpgaConfig*    fpgaConfig;
     size_t             ddr3Offset;
     bool               singleChip;
     uint32_t           FWinfo;

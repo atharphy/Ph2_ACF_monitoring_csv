@@ -125,7 +125,7 @@ class Chip : public FrontEndDescription
     void setChipId(uint8_t pChipId) { fChipId = pChipId; }
 
     void    setChipAddress(uint16_t pChipAddress) { fChipAddress = pChipAddress; }
-    uint8_t getChipAddreess() const { return fChipAddress; }
+    uint8_t getChipAddress() const { return fChipAddress; }
 
     /*!
      * \brief Set the clock frequency

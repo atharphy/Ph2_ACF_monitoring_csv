@@ -86,9 +86,6 @@ struct D19cFWEvt
  */
 namespace Ph2_HwInterface
 {
-class D19cFpgaConfig;
-class D19cSSAEvent;
-class D19clpGBTInterface;
 
 /*!
  * \class Cbc3Fc7FWInterface
@@ -102,7 +99,6 @@ class D19cFWInterface : public BeBoardFWInterface
     D19cFWEvtEncoder::D19cFWEvt              fD19cFWEvts;
     std::vector<std::vector<uint32_t>>       fSlaveMap;
     std::map<uint8_t, std::vector<uint32_t>> fI2CSlaveMap;
-    D19cFpgaConfig*                          fpgaConfig;
     FileHandler*                             fFileHandler;
     uint32_t                                 fBroadcastCbcId;
     uint32_t                                 fNReadoutChip;
@@ -128,7 +124,6 @@ class D19cFWInterface : public BeBoardFWInterface
     std::map<uint8_t, uint8_t> fTxPolarity;
     // 2S or PS readout
     bool           fIs2S = true;
-    uint32_t       fGBTphase;
     const uint32_t SINGLE_I2C_WAIT = 200; // used for 1MHz I2C
     // I'm going to add a variable to hold the stub offset
     uint32_t fStubOffset = 0xFFFF;
@@ -137,9 +132,6 @@ class D19cFWInterface : public BeBoardFWInterface
 
     // some useful stuff
     int fResetAttempts;
-    // L1 word alignment values
-    std::vector<uint8_t> fBeL1Delays;
-    std::vector<uint8_t> fBeL1Bitslips;
 
   public:
     /*!
@@ -250,18 +242,11 @@ class D19cFWInterface : public BeBoardFWInterface
     void DDR3SelfTest();
 
     /*!
-     * \brief Tune the 320MHz buses phase shift
-     */
-    bool PhaseTuning(Ph2_HwDescription::BeBoard* pBoard, uint8_t pFeId, uint8_t pChipId, uint8_t pLineId, uint16_t pPattern, uint16_t pPatternPeriod);
-
-    /*!
      * \brief Read data from DAQ
      * \param pBreakTrigger : if true, enable the break trigger
      * \return fNpackets: the number of packets read
      */
     uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
-
-    void ReadASEvent(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
 
     /*!
      * \brief Read data for pNEvents
@@ -364,7 +349,7 @@ class D19cFWInterface : public BeBoardFWInterface
     }
 
     void ReadErrors();
-    void CheckChipControl(const Ph2_HwDescription::BeBoard* pBoard);
+    void EnableFrontEnds(const Ph2_HwDescription::BeBoard* pBoard);
 
   public:
     void ReconfigureTriggerFSM(std::vector<std::pair<std::string, uint32_t>> pTriggerConfig);
@@ -399,8 +384,6 @@ class D19cFWInterface : public BeBoardFWInterface
 
     void ChipTrigger();
     void Trigger(uint8_t pDuration = 1);
-    // Readout chip specific stuff
-    void Send_pulses(uint32_t pNtriggers, bool manual = false);
 
     void ReadoutChipReset();
     // CIC BE stuff
@@ -422,7 +405,6 @@ class D19cFWInterface : public BeBoardFWInterface
     void ConfigureAntennaFSM(uint16_t pNtriggers = 1, uint16_t pTriggerRate = 1, uint16_t pL1Delay = 100);
 
     // Optical readout specific functions - d19c [temporary]
-    void configureLink(const Ph2_HwDescription::BeBoard* pBoard);
     void ResetLink(uint8_t pLinkId);
     bool GetLinkStatus(uint8_t pLinkId);
 
@@ -441,30 +423,6 @@ class D19cFWInterface : public BeBoardFWInterface
     void Manage2SCountersMemory(uint8_t**& pErrorCounters, uint8_t***& pChannelCounters, bool pAllocate);
 
     void Compose_fast_command(uint32_t duration = 0, uint32_t resync_en = 0, uint32_t l1a_en = 0, uint32_t cal_pulse_en = 0, uint32_t bc0_en = 0);
-    ///////////////////////////////////////////////////////
-    //      FPGA CONFIG                                 //
-    /////////////////////////////////////////////////////
-
-    void checkIfUploading();
-    /*! \brief Upload a firmware (FPGA configuration) from a file in MCS format into a given configuration
-     * \param strConfig FPGA configuration name
-     * \param pstrFile path to MCS file
-     */
-    void FlashProm(const std::string& strConfig, const char* pstrFile);
-    /*! \brief Jump to an FPGA configuration */
-    void JumpToFpgaConfig(const std::string& strConfig);
-
-    void DownloadFpgaConfig(const std::string& strConfig, const std::string& strDest);
-    /*! \brief Is the FPGA being configured ?
-     * \return FPGA configuring process or NULL if configuration occurs */
-    const FpgaConfig* GetConfiguringFpga() { return (const FpgaConfig*)fpgaConfig; }
-    /*! \brief Get the list of available FPGA configuration (or firmware images)*/
-    std::vector<std::string> getFpgaConfigList();
-    /*! \brief Delete one Fpga configuration (or firmware image)*/
-    void DeleteFpgaConfig(const std::string& strId);
-    /*! \brief Reboot the board */
-    void RebootBoard();
-    /*! \brief Set or reset the start signal */
     void SetForceStart(bool bStart) {}
 
     ///////////////////////////////////////////////////////
@@ -482,8 +440,7 @@ class D19cFWInterface : public BeBoardFWInterface
     // ############################
     uint8_t                         fI2Cstatus    = 0;
     const uint8_t                   flpGBTAddress = 0x70;
-    std::map<FrontEndType, uint8_t> fFEAddressMap = {{FrontEndType::CIC, 0x60}, {FrontEndType::CIC2, 0x60}, {FrontEndType::SSA, 0x20}, {FrontEndType::MPA, 0x40}, {FrontEndType::CBC3, 0x40}};
-
+    
     // OT implementation of write and read
     bool     WriteOptoLpGBTRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop);
     uint32_t ReadOptoLpGBTRegister(const uint32_t linkNumber, const uint32_t pAddress);
@@ -516,9 +473,6 @@ class D19cFWInterface : public BeBoardFWInterface
     void ResetFCMDBram();
     void ConfigureFCMDBram(std::vector<uint8_t> pFastCommands);
 
-    // get alignment values for L1 lines
-    std::vector<uint8_t> getL1Delays() { return fBeL1Delays; }
-    std::vector<uint8_t> getL1Bitslips() { return fBeL1Bitslips; }
 };
 } // namespace Ph2_HwInterface
 

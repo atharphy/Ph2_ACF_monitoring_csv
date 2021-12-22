@@ -55,7 +55,7 @@ class BeBoardFWInterface : public RegManager
   public:
     bool         fSaveToFile;
     FileHandler* fFileHandler;
-    FpgaConfig*  fFpgaConfig;
+    // FpgaConfig*  fFpgaConfig;
     uint32_t     fNthAcq{0}, fNpackets{0};
 
     // for slow control
@@ -106,26 +106,35 @@ class BeBoardFWInterface : public RegManager
      */
     virtual uint32_t getBoardInfo() = 0;
 
+    // // ###########################################
+    // // # Member functions to handle the firmware #
+    // // ###########################################
+    
     /*! \brief Upload a configuration in a board FPGA */
-    virtual void FlashProm(const std::string& strConfig, const char* pstrFile) {}
+    // virtual void FlashProm(const std::string& strConfig, const char* pstrFile) {}
 
     /*! \brief Jump to an FPGA configuration */
-    virtual void JumpToFpgaConfig(const std::string& strConfig) {}
+    // virtual void JumpToFpgaConfig(const std::string& strConfig) {}
 
-    virtual void DownloadFpgaConfig(const std::string& strConfig, const std::string& strDest) {}
+    // virtual void DownloadFpgaConfig(const std::string& strConfig, const std::string& strDest) {}
 
+    /*! \brief Get the list of available FPGA configuration (or firmware images)*/
+    // virtual std::vector<std::string> getFpgaConfigList() { return std::vector<std::string>(); }
+
+    /*! \brief Delete one Fpga configuration (or firmware image)*/
+    // virtual void DeleteFpgaConfig(const std::string& strId) {}
     /*! \brief Current FPGA configuration*/
-    virtual const FpgaConfig* GetConfiguringFpga() { return nullptr; }
-    virtual void              ProgramCdce() {}
+    // virtual const FpgaConfig* GetConfiguringFpga() { return nullptr; }
+    
+    /*! \brief Reboot the board */
+    // virtual void RebootBoard() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
 
+    virtual void              ProgramCdce() {}
+    
     // this is temporary until the modified command processor block is in place
     virtual void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) = 0;
 
-    /*! \brief Get the list of available FPGA configuration (or firmware images)*/
-    virtual std::vector<std::string> getFpgaConfigList() { return std::vector<std::string>(); }
-
-    /*! \brief Delete one Fpga configuration (or firmware image)*/
-    virtual void DeleteFpgaConfig(const std::string& strId) {}
+    
 
     /*! \brief Run Bit Error Rate test */
     virtual double RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) = 0;
@@ -264,9 +273,7 @@ class BeBoardFWInterface : public RegManager
 
     virtual BoardType getBoardType() const = 0;
 
-    /*! \brief Reboot the board */
-    virtual void RebootBoard() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
-
+   
     /*! \brief Set or reset the start signal */
     virtual void SetForceStart(bool bStart) { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
 
