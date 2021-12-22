@@ -235,7 +235,7 @@ bool SSAInterface::MaskAllChannels(ReadoutChip* pSSA, bool mask, bool pVerifLoop
 // I actually want this one!
 bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_t pValue, bool pVerifLoop)
 {
-    //LOG(INFO) << BOLDRED << "SSA! " << RESET;
+    // LOG(INFO) << BOLDRED << "SSA! " << RESET;
     if(pRegName == "CountingMode")
     {
         uint8_t cRegValue = (pValue << 2) | (1 << 0);
@@ -259,10 +259,10 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         return this->ConfigureAmux(pSSA, "GND");
     }
 
-    else if(pRegName.substr(0, pRegName.find("__"))=="AMUX")
-	{
+    else if(pRegName.substr(0, pRegName.find("__")) == "AMUX")
+    {
         return this->ConfigureAmux(pSSA, pRegName.substr(1, pRegName.find("__")));
-	}
+    }
 
     else if(pRegName.find("MaskChannel") != std::string::npos)
     {

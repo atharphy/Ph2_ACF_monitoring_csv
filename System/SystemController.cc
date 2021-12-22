@@ -240,9 +240,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     cType          = FrontEndType::MPA;
                     bool cWithMPA  = (std::find_if(cFirstHybrid->begin(), cFirstHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cFirstHybrid->end());
                     cType          = FrontEndType::MPA2;
-                    bool cWithMPA2  = (std::find_if(cFirstHybrid->begin(), cFirstHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cFirstHybrid->end());
-                    bool cMPAtype=cWithMPA2|cWithMPA;
-                    bool cSSAtype=cWithSSA2|cWithSSA;
+                    bool cWithMPA2 = (std::find_if(cFirstHybrid->begin(), cFirstHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cFirstHybrid->end());
+                    bool cMPAtype  = cWithMPA2 | cWithMPA;
+                    bool cSSAtype  = cWithSSA2 | cWithSSA;
 
                     if(cWithCBC)
                     {
@@ -250,34 +250,33 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                         fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
                     }
 
-                    if (cSSAtype && !cMPAtype) // SSA boards?
-					{
-						if (cWithSSA)
-				        {
-				                LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
-				                fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
-				        }
-				        if (cWithSSA2)
-				        {
-				                LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA2(s)" << RESET;
-				                fReadoutChipInterface = new SSA2Interface(fBeBoardFWMap);
-				        }
-					}
+                    if(cSSAtype && !cMPAtype) // SSA boards?
+                    {
+                        if(cWithSSA)
+                        {
+                            LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA(s)" << RESET;
+                            fReadoutChipInterface = new SSAInterface(fBeBoardFWMap);
+                        }
+                        if(cWithSSA2)
+                        {
+                            LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for SSA2(s)" << RESET;
+                            fReadoutChipInterface = new SSA2Interface(fBeBoardFWMap);
+                        }
+                    }
 
-
-                    if (cMPAtype && !cSSAtype) // MPA boards?
-					{
-						if (cWithMPA)
-				        {
-		                    LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
-		                    fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
-				        }
-				        if (cWithMPA2)
-				        {
-		                    LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
-		                    fReadoutChipInterface = new MPA2Interface(fBeBoardFWMap);
-				        }
-					}
+                    if(cMPAtype && !cSSAtype) // MPA boards?
+                    {
+                        if(cWithMPA)
+                        {
+                            LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
+                            fReadoutChipInterface = new MPAInterface(fBeBoardFWMap);
+                        }
+                        if(cWithMPA2)
+                        {
+                            LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for MPA(s)" << RESET;
+                            fReadoutChipInterface = new MPA2Interface(fBeBoardFWMap);
+                        }
+                    }
                     if((cMPAtype && cSSAtype) && cWithLpGBT)
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for PS module(s)" << RESET;

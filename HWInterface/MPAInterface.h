@@ -56,7 +56,6 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
  * \brief Class representing the User Interface to the MPA on different boards
  */
 
-
 struct Injection
 {
     uint8_t fRow;
@@ -119,6 +118,7 @@ class MPAInterface : public ReadoutChipInterface
     //
     void Set_calibration(Ph2_HwDescription::Chip* pMPA, uint32_t cal);
     void Set_threshold(Ph2_HwDescription::Chip* pMPA, uint32_t th);
+    void readAllBias(Ph2_HwDescription::Chip* pChip);
 
     bool     WriteReg(Ph2_HwDescription::Chip* pMPA, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop = VERIFY_MPA);
     bool     WriteRegs(Ph2_HwDescription::Chip* pMPA, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop = VERIFY_MPA);

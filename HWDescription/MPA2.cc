@@ -8,7 +8,7 @@
         Support :               mail to : knash201@gmail.com
 
  */
-//pretty much a copy of MPA.cc, does not seem to be any relevant changes...
+// pretty much a copy of MPA.cc, does not seem to be any relevant changes...
 
 #include "MPA2.h"
 #include "Definition.h"

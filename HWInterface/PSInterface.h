@@ -13,11 +13,11 @@
 #define __PSINTERFACE_H__
 
 #include "BeBoardFWInterface.h"
-#include "ReadoutChipInterface.h"
-#include "MPAInterface.h"
-#include "SSAInterface.h"
 #include "MPA2Interface.h"
+#include "MPAInterface.h"
+#include "ReadoutChipInterface.h"
 #include "SSA2Interface.h"
+#include "SSAInterface.h"
 
 #include "pugixml.hpp"
 #include <vector>
@@ -34,7 +34,8 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
  * \class PSInterface
  * \brief Class representing the User Interface to the PS on different boards
  */
-//const std::map<FrontEndType, ReadoutChipInterface*> CHIP_INTERFACE ={{FrontEndType::SSA,Ph2_HwInterface::SSAInterface*},{FrontEndType::SSA2,Ph2_HwInterface::SSA2Interface*},{FrontEndType::MPA,Ph2_HwInterface::MPAInterface*},{FrontEndType::MPA2,Ph2_HwInterface::MPA2Interface*}};
+// const std::map<FrontEndType, ReadoutChipInterface*> CHIP_INTERFACE
+// ={{FrontEndType::SSA,Ph2_HwInterface::SSAInterface*},{FrontEndType::SSA2,Ph2_HwInterface::SSA2Interface*},{FrontEndType::MPA,Ph2_HwInterface::MPAInterface*},{FrontEndType::MPA2,Ph2_HwInterface::MPA2Interface*}};
 class PSInterface : public ReadoutChipInterface
 { // begin class
   private:
@@ -47,17 +48,17 @@ class PSInterface : public ReadoutChipInterface
     PSInterface(const BeBoardFWMap& pBoardMap);
     ~PSInterface();
 
-    Ph2_HwInterface::SSAInterface* theSSAInterface;
-    Ph2_HwInterface::MPAInterface* theMPAInterface;
+    Ph2_HwInterface::SSAInterface*  theSSAInterface;
+    Ph2_HwInterface::MPAInterface*  theMPAInterface;
     Ph2_HwInterface::SSA2Interface* theSSA2Interface;
     Ph2_HwInterface::MPA2Interface* theMPA2Interface;
 
-	std::map<FrontEndType, ReadoutChipInterface*> CHIP_INTERFACE;
-	ReadoutChipInterface* getInterface(Ph2_HwDescription::Chip* pPS);
+    std::map<FrontEndType, ReadoutChipInterface*> CHIP_INTERFACE;
+    ReadoutChipInterface*                         getInterface(Ph2_HwDescription::Chip* pPS);
 
-    void                           setFileHandler(FileHandler* pHandler);
-    bool                           ConfigureChip(Ph2_HwDescription::Chip* pPS, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
-    std::vector<uint8_t>           readLUT(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pMode = 0);
+    void                 setFileHandler(FileHandler* pHandler);
+    bool                 ConfigureChip(Ph2_HwDescription::Chip* pPS, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
+    std::vector<uint8_t> readLUT(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pMode = 0);
 
     bool     WriteChipReg(Ph2_HwDescription::Chip* pPS, const std::string& pRegName, uint16_t pValue, bool pVerifLoop = true) override;
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pPS, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop = true) override;
@@ -72,12 +73,11 @@ class PSInterface : public ReadoutChipInterface
     std::vector<int> decodeBendCode(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pBendCode);
     bool             enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = true);
 
-    //bool maskChannelGroup(Ph2_HwDescription::ReadoutChip* pPS, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop);
+    // bool maskChannelGroup(Ph2_HwDescription::ReadoutChip* pPS, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop);
     //
     bool maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop = VERIFY_MPA);
 
     bool setInjectionSchema(Ph2_HwDescription::ReadoutChip* pCbc, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop = VERIFY_MPA);
-
 
     //
     bool ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pPS, bool pVerifLoop, uint32_t pBlockSize);

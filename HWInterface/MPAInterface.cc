@@ -427,7 +427,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
 {
     setBoard(pMPA->getBeBoardId());
 
-    //LOG(INFO) << BOLDRED << "glorpMPA! " << RESET;
+    // LOG(INFO) << BOLDRED << "glorpMPA! " << RESET;
 
     LOG(DEBUG) << BOLDMAGENTA << " MPAInterface::WriteChipReg writing to " << pRegName << RESET;
 
@@ -1171,7 +1171,19 @@ bool MPAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
 
 //     return formL1data;
 // }
-
+void MPAInterface::readAllBias(Chip* pChip)
+{
+    std::vector<std::string> nameDAC{"A", "B", "C", "D", "E", "ThDAC", "CalDAC"};
+    for(int ipoint = 0; ipoint < 5; ipoint++)
+    {
+        for(int iblock = 0; iblock < 7; iblock++)
+        {
+            std::string DAC    = nameDAC[ipoint] + std::to_string(iblock);
+            auto        cValue = ReadChipReg(pChip, DAC);
+            LOG(INFO) << BOLDBLUE << DAC << ": bias:" << cValue << " on MPA" << +pChip->getId() << RESET;
+        }
+    }
+}
 void MPAInterface::Set_calibration(Chip* pMPA, uint32_t cal)
 {
     this->WriteChipReg(pMPA, "CalDAC0", cal);

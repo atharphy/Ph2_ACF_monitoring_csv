@@ -122,10 +122,8 @@ class SSAInterface : public ReadoutChipInterface
                                                {"Bandgap", 10},
                                                {"GND", 11},
                                                {"HighZ", 12},
-                                               {"ADC_IREF",13},
-                                               {"ADC_VREF",14}};
-
-
+                                               {"ADC_IREF", 13},
+                                               {"ADC_VREF", 14}};
 
 }; // end class
 
