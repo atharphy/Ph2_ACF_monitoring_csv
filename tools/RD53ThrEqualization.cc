@@ -185,7 +185,7 @@ void ThrEqualization::run()
 
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
-                            if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !fChannelGroupHandlerContainer->getObject(cBoard->getId())
+                            if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !getChannelGroupHandlerContainer()->getObject(cBoard->getId())
                                                                                                                      ->getObject(cOpticalGroup->getId())
                                                                                                                      ->getObject(cHybrid->getId())
                                                                                                                      ->getObject(cChip->getId())
@@ -246,7 +246,7 @@ void ThrEqualization::analyze()
 
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
-                            if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && fChannelGroupHandlerContainer->getObject(cBoard->getId())
+                            if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && getChannelGroupHandlerContainer()->getObject(cBoard->getId())
                                                                                                                    ->getObject(cOpticalGroup->getId())
                                                                                                                    ->getObject(cHybrid->getId())
                                                                                                                    ->getObject(cChip->getId())
@@ -355,7 +355,7 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, const float&
         PixelAlive::run();
         auto output = PixelAlive::analyze();
         output->resetNormalizationStatus();
-        output->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandlerContainer, 1);
+        output->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), 1);
 
         // ##############################################
         // # Send periodic data to monitor the progress #

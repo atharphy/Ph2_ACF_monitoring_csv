@@ -1586,7 +1586,7 @@ void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
                 }         // optical group vector
                 cEventIter += (1 + cTriggerMult);
             } while(cEventIter < cEvents.end());
-            cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandlerContainer->getObject(cOccBrd->getId()), fNReadbackEvents);
+            cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), getChannelGroupHandlerContainer()->getObject(cOccBrd->getId()), fNReadbackEvents);
             // float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
             cTotalHits = cTotalHitsS0 + cTotalHitsS1;
 
@@ -1818,7 +1818,7 @@ void BeamTestCheck2S::PrepareForExternalTP(BeBoard* pBoard)
             {
                 for(uint16_t groupNumber = 0; groupNumber < 1; ++groupNumber)
                 {
-                    if(groupNumber > fChannelGroupHandlerContainer->getObject(fDetectorContainer->getObject(boardIndex)->getId())
+                    if(groupNumber > getChannelGroupHandlerContainer()->getObject(fDetectorContainer->getObject(boardIndex)->getId())
                                          ->getObject(cOpticalGroup->getId())
                                          ->getObject(cHybrid->getId())
                                          ->getObject(cChip->getId())
@@ -1826,7 +1826,7 @@ void BeamTestCheck2S::PrepareForExternalTP(BeBoard* pBoard)
                                          ->getNumberOfGroups())
                         continue;
                     fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip,
-                                                                             fChannelGroupHandlerContainer->getObject(fDetectorContainer->at(boardIndex)->getId())
+                                                                             getChannelGroupHandlerContainer()->getObject(fDetectorContainer->at(boardIndex)->getId())
                                                                                  ->getObject(cOpticalGroup->getId())
                                                                                  ->getObject(cHybrid->getId())
                                                                                  ->getObject(cChip->getId())
@@ -1885,7 +1885,7 @@ void BeamTestCheck2S::PrepareForTP(BeBoard* pBoard)
     bool   cInject                      = true;
     bool   cWith2S                      = false;
     // inject in one of each CBCs
-    for(auto cGroup: *fChannelGroupHandlerContainer->at(0)->at(0)->at(0)->at(0)->getSummary<std::shared_ptr<ChannelGroupHandler>>().get())
+    for(auto cGroup: *getChannelGroupHandlerContainer()->at(0)->at(0)->at(0)->at(0)->getSummary<std::shared_ptr<ChannelGroupHandler>>().get())
     {
         if(cNgroups > 0) continue;
         for(auto cOpticalGroup: *pBoard)

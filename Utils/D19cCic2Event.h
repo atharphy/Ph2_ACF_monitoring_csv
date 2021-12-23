@@ -200,8 +200,7 @@ class D19cCic2Event : public Event
     std::vector<SCluster> GetStripClusters(uint8_t pFeId, uint8_t pMPAId) const;
     std::vector<PCluster> GetPixelClusters(uint8_t pFeId, uint8_t pMPAId) const;
 
-    void fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup) override;
-    void fillChipDataContainer(ChipDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) override;
+    void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) override;
 
     void     print(std::ostream& out) const override;
     uint16_t L1Status(uint8_t pFeId) const;

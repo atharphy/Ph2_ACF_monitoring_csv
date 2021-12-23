@@ -40,6 +40,21 @@ Event::Event(const Event& pEvent)
 // Event implementation
 bool Event::operator==(const Event& pEvent) const { return fEventDataMap == pEvent.fEventDataMap; }
 
+void Event::fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup)
+{
+    for(auto opticalGroup: *boardContainer)
+    {
+        for(auto hybrid: *opticalGroup)
+        {
+            for(auto chip: *hybrid)
+            {
+                fillChipDataContainer(chip, testChannelGroup, hybrid->getId());
+            }
+        }
+    }
+}
+
+
 void Event::GetCbcEvent(const uint8_t& pFeId, const uint8_t& pCbcId, std::vector<uint32_t>& cbcData) const
 {
     cbcData.clear();

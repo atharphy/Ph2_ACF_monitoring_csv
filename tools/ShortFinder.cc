@@ -450,7 +450,7 @@ void ShortFinder::FindShorts2S(BeBoard* pBoard)
     // for (auto cBoard : this->fBoardVector)
     uint8_t cTestGroup = 0;
     LOG(INFO) << BOLDBLUE << "Starting short finding loop for 2S hybrid " << RESET;
-    for(auto cGroup: *fChannelGroupHandlerContainer->getObject(pBoard->getId())->getObject(0)->getObject(0)->getObject(0)->getSummary<std::shared_ptr<ChannelGroupHandler>>().get())
+    for(auto cGroup: *getChannelGroupHandlerContainer()->getObject(pBoard->getId())->getObject(0)->getObject(0)->getObject(0)->getSummary<std::shared_ptr<ChannelGroupHandler>>().get())
     {
         setSameGlobalDac("TestPulseGroup", cTestGroup);
         // bitset for this group

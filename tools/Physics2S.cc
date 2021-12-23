@@ -228,9 +228,12 @@ void Physics2S::fillDataContainer(BoardContainer* cBoard, const std::vector<Even
     clearContainers(cBoard);
     // std::cout<<__LINE__<<std::endl;
 
+    //Assuming all chip will have all channels enabled:
+    auto allChannelGroup = getChannelGroup(-1);
+
     for(auto event: eventList)
     {
-        event->fillDataContainer(fOccupancyContainer.at(cBoard->getIndex()), fChannelGroupHandlerContainer->at(cBoard->getIndex()), -1);
+        event->fillDataContainer(fOccupancyContainer.at(cBoard->getIndex()), allChannelGroup);
         // ###################
         // # Fill containers #
         // ###################

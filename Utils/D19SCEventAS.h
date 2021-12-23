@@ -26,8 +26,7 @@ class D19SCEventAS : public Event
     static constexpr size_t encodeVectorIndex(const uint8_t pFeId, const uint8_t pCbcId, const uint8_t numberOfCBCs) { return pCbcId + pFeId * numberOfCBCs; }
     inline bool             privateDataBit(uint8_t pFeId, uint8_t pSSAId, uint8_t i) const;
 
-    void fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup) override;
-    void fillChipDataContainer(ChipDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) override;
+    void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) override;
 
     size_t getFeIndex(const uint8_t pFeId) const
     {

@@ -164,14 +164,6 @@ class Event
     /*! \brief Get the event size in bytes */
     uint32_t GetSize() const { return fEventSize; }
 
-    inline const std::shared_ptr<ChannelGroupBase>
-    getChannelGroup(const BoardDataContainer* theChannelGroupContainer, int groupNumber, uint16_t opticalGroupId, uint16_t hybridGroupId, uint16_t chipGroupId)
-    {
-        auto theChannelGroupHandler = theChannelGroupContainer->getObject(opticalGroupId)->getObject(hybridGroupId)->getObject(chipGroupId)->getSummary<std::shared_ptr<ChannelGroupHandler>>();
-        if(groupNumber > theChannelGroupHandler->getNumberOfGroups()) return std::shared_ptr<ChannelGroupBase>();
-        return theChannelGroupHandler->getTestGroup(groupNumber);
-    }
-
     /*!
      * \brief Get the bunch value
      * \return Bunch value
@@ -413,7 +405,7 @@ class Event
 
     virtual std::vector<Cluster> getClusters(uint8_t pFeId, uint8_t pCbcId) const { return {}; }
 
-    virtual void fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup) = 0;
+    virtual void fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup);
     virtual void fillChipDataContainer(ChipDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) = 0;
 
 

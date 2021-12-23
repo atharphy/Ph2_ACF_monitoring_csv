@@ -807,7 +807,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
             fSCurveOccupancyMap[cValue]                  = theOccupancyContainer;
             this->setDacAndMeasureData("Threshold", cValue, fEventsPerPoint, fNEventsPerBurst);
 
-            theOccupancyContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandlerContainer, fEventsPerPoint);
+            theOccupancyContainer->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), fEventsPerPoint);
             float globalOccupancy = theOccupancyContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
 #ifdef __USE_ROOT__
             if(fPlotSCurves) fDQMHistogramPedeNoise.fillSCurvePlots(cValue, *theOccupancyContainer);
@@ -871,7 +871,7 @@ void PedeNoise::extractPedeNoise()
                     {
                         for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
                         {
-                            if(!fChannelGroupHandlerContainer->getObject(board->getId())
+                            if(!getChannelGroupHandlerContainer()->getObject(board->getId())
                                     ->getObject(opticalGroup->getId())
                                     ->getObject(hybrid->getId())
                                     ->getObject(chip->getId())
@@ -939,7 +939,7 @@ void PedeNoise::extractPedeNoise()
                 {
                     for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
                     {
-                        if(!fChannelGroupHandlerContainer->getObject(board->getId())
+                        if(!getChannelGroupHandlerContainer()->getObject(board->getId())
                                 ->getObject(opticalGroup->getId())
                                 ->getObject(hybrid->getId())
                                 ->getObject(chip->getId())
@@ -1009,7 +1009,7 @@ void PedeNoise::extractPedeNoise()
             // }
         }
         else
-            board->normalizeAndAverageContainers(fDetectorContainer->at(board->getIndex()), fChannelGroupHandlerContainer->getObject(board->getId()), 0);
+            board->normalizeAndAverageContainers(fDetectorContainer->at(board->getIndex()), getChannelGroupHandlerContainer()->getObject(board->getId()), 0);
     }
     setNormalization(cNormalizationOrig);
 }

@@ -244,7 +244,10 @@ void Physics::fillDataContainer(BeBoard& theBoard)
     // # Fill containers #
     // ###################
     const std::vector<Event*>& events = SystemController::GetEvents();
-    for(const auto& event: events) event->fillDataContainer(cBoard, fChannelGroupHandlerContainer->at(cBoard->getIndex()), -1);
+    //Assuming all chip will have all channels enabled:
+    auto allChannelGroup = getChannelGroup(-1);
+
+    for(const auto& event: events) event->fillDataContainer(cBoard, allChannelGroup);
 
     // ######################################
     // # Copy register values for streaming #

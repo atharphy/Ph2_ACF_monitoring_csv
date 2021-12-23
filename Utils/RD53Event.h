@@ -95,7 +95,7 @@ class RD53Event : public Ph2_HwInterface::Event
     RD53Event(const uint32_t* data, size_t n);
 
     void fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup) override;
-    void fillChipDataContainer(ChipDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) override;
+    void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) override;
 
     static void clearEventContainer(Ph2_HwDescription::BeBoard& theBoard, DetectorDataContainer& theContainer);
     static void addBoardInfo2Events(const Ph2_HwDescription::BeBoard* pBoard, std::vector<RD53Event>& decodedEvents);
@@ -117,7 +117,6 @@ class RD53Event : public Ph2_HwInterface::Event
     std::vector<std::pair<ChipFrame, Ph2_HwDescription::RD53::Event>> chip_frames_events;
 
     uint16_t eventStatus;
-    bool fVectorRequired
 
     // ########################################
     // # Vector containing the decoded events #

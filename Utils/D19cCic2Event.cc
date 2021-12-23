@@ -362,31 +362,16 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
         cNEvents++;
     } while(cEventIterator < pData.end());
 }
-void D19cCic2Event::fillDataContainer(BoardDataContainer* boardContainer, const BoardDataContainer* theChannelGroupHandler, int groupNumber)
-{
-    for(auto opticalGroup: *boardContainer)
-    {
-        for(auto hybrid: *opticalGroup)
-        {
-            // LOG(INFO) << BOLDBLUE << "Filling data container for hybrid " << +hybrid->getId() << RESET;
-            for(auto chip: *hybrid)
-            {
-                auto cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, opticalGroup->getId(), hybrid->getId(), chip->getId());
-                if(!cTestChannelGroup) continue;
 
-                std::vector<uint32_t> cHits = this->GetHits(hybrid->getId(), chip->getId());
-                // LOG(INFO) << BOLDBLUE << "Filling data container for chip " << +chip->getId()
-                //     << " at index " << +chip->getIndex()
-                //     << "\t.... " << +cHits.size() << " hits in chip."
-                //     << RESET;
-                for(auto cHit: cHits)
-                {
-                    if(cTestChannelGroup->isChannelEnabled(cHit)) { chip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; }
-                }
-            }
-        }
+void D19cCic2Event::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId)
+{
+    std::vector<uint32_t> cHits = this->GetHits(hybridId, chipContainer->getId());
+    for(auto cHit: cHits)
+    {
+        if(testChannelGroup->isChannelEnabled(cHit)) { chipContainer->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; }
     }
 }
+
 void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list)
 {
     // get the first CIC

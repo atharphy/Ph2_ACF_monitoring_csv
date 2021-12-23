@@ -184,7 +184,7 @@ class ChannelGroupHandler
     {
       public:
         explicit ChannelGroupIterator(ChannelGroupHandler& channelGroupHandler, uint32_t groupNumber) : channelGroupHandler_(channelGroupHandler), groupNumber_(groupNumber) { ; }
-        const std::shared_ptr<ChannelGroupBase>& operator*() const { return channelGroupHandler_.getTestGroup(groupNumber_); }
+        const std::shared_ptr<ChannelGroupBase> operator*() const { return channelGroupHandler_.getTestGroup(groupNumber_); }
         ChannelGroupIterator&                    operator++()
         {
             ++groupNumber_;
@@ -216,11 +216,12 @@ class ChannelGroupHandler
 
     virtual ChannelGroupIterator end() { return ChannelGroupIterator(*this, numberOfGroups_); }
 
-    const std::shared_ptr<ChannelGroupBase>& allChannelGroup() const { return allChannelGroup_; }
+    const std::shared_ptr<ChannelGroupBase> allChannelGroup() const { return allChannelGroup_; }
 
-    virtual const std::shared_ptr<ChannelGroupBase>& getTestGroup(int groupNumber)
+    virtual const std::shared_ptr<ChannelGroupBase> getTestGroup(int groupNumber)
     {
         if(groupNumber < 0) return allChannelGroup();
+        if(groupNumber > getNumberOfGroups()) return std::shared_ptr<ChannelGroupBase>();
         allChannelGroup_->makeTestGroup(currentChannelGroup_, groupNumber, numberOfClustersPerGroup_, numberOfRowsPerCluster_, numberOfColsPerCluster_);
         return currentChannelGroup_;
     }

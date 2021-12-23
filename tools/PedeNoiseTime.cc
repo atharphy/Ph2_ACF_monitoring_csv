@@ -736,7 +736,7 @@ void PedeNoiseTime::CalculateOccupancy(DetectorDataContainer* pOccupancyContaine
                         for(auto cHit: cHits)
                         {
                             fEvent.fHits.push_back((uint8_t)cHit);
-                            if(fChannelGroupHandlerContainer->getObject(cBoard->getId())
+                            if(getChannelGroupHandlerContainer()->getObject(cBoard->getId())
                                    ->getObject(cOpticalGroup->getId())
                                    ->getObject(cHybrid->getId())
                                    ->getObject(cChip->getId())
@@ -759,7 +759,7 @@ void PedeNoiseTime::CalculateOccupancy(DetectorDataContainer* pOccupancyContaine
         fEvent.fEventCnt++;
     } // event loop - I want to keep this because I want to look at what happens in an event/per event basis
     auto cNevents = cPh2Events.size();
-    pOccupancyContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandlerContainer, cNevents);
+    pOccupancyContainer->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), cNevents);
 }
 void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
 {
@@ -926,7 +926,7 @@ void PedeNoiseTime::extractPedeNoiseTime()
                     {
                         for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
                         {
-                            if(!fChannelGroupHandlerContainer->getObject(board->getId())
+                            if(!getChannelGroupHandlerContainer()->getObject(board->getId())
                                     ->getObject(opticalGroup->getId())
                                     ->getObject(hybrid->getId())
                                     ->getObject(chip->getId())
@@ -987,7 +987,7 @@ void PedeNoiseTime::extractPedeNoiseTime()
                 {
                     for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
                     {
-                        if(!fChannelGroupHandlerContainer->getObject(board->getId())
+                        if(!getChannelGroupHandlerContainer()->getObject(board->getId())
                                 ->getObject(opticalGroup->getId())
                                 ->getObject(hybrid->getId())
                                 ->getObject(chip->getId())
@@ -1005,7 +1005,7 @@ void PedeNoiseTime::extractPedeNoiseTime()
                 }
             }
         }
-        board->normalizeAndAverageContainers(fDetectorContainer->at(board->getIndex()), fChannelGroupHandlerContainer->getObject(board->getId()), 0);
+        board->normalizeAndAverageContainers(fDetectorContainer->at(board->getIndex()), getChannelGroupHandlerContainer()->getObject(board->getId()), 0);
     }
 }
 

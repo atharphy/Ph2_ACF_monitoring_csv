@@ -1298,6 +1298,19 @@ void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGro
 
 void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandler> theChannelGroupHandlerPointer, std::function<bool(const ChipContainer*)> theQueryFunction)
 {
+    uint16_t totalNumberOfChips = 0;
+    for(const auto board: *fDetectorContainer)
+    {
+        for(const auto opticalGroup: *board)
+        {
+            for(const auto hybrid: *opticalGroup)
+            {
+                totalNumberOfChips += hybrid->size();
+            }
+        }
+    }
+    
+    uint16_t totalNumberOfQueriedChips = 0;
     fDetectorContainer->setReadoutChipQueryFunction(theQueryFunction);
     for(const auto board: *fDetectorContainer)
     {
@@ -1305,6 +1318,7 @@ void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandle
         {
             for(const auto hybrid: *opticalGroup)
             {
+                totalNumberOfQueriedChips += hybrid->size();
                 for(const auto chip: *hybrid)
                 {
                     fChannelGroupHandlerContainer->getObject(board->getId())
@@ -1317,6 +1331,8 @@ void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandle
         }
     }
     fDetectorContainer->resetReadoutChipQueryFunction();
+
+    fSameChannelGroupForAllChannels = (totalNumberOfQueriedChips == totalNumberOfChips);
     return;
 }
 
@@ -1325,6 +1341,15 @@ void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGro
     auto selectChipFlavourFunction = [theFrontEndType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == theFrontEndType); };
     setChannelGroupHandler(theChannelGroupHandler, selectChipFlavourFunction);
     return;
+}
+
+void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandler> theChannelGroupHandlerPointer, uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId)
+{
+    fChannelGroupHandlerContainer->getObject(boardId)
+                    ->getObject(opticalGroupId)
+                    ->getObject(hybridId)
+                    ->getObject(chipId)
+                    ->getSummary<std::shared_ptr<ChannelGroupHandler>>() = theChannelGroupHandlerPointer;               
 }
 
 } // namespace Ph2_System
