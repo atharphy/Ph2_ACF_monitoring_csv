@@ -330,7 +330,7 @@ void lpGBTInterface::ResetRxDll(Chip* pChip, const std::vector<uint8_t>& pGroups
     uint8_t     cValue   = 0x00;
     for(auto cGroup: pGroups) { cValue = cValue | (1 << cGroup); }
     this->WriteChipReg(pChip, "RST1", cValue);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     this->WriteChipReg(pChip, "RST1", 0x00);
 }
 void lpGBTInterface::InternalPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
