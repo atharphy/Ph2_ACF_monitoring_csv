@@ -36,7 +36,6 @@ class D19cSSAEvent : public Event
     uint32_t              GetSSAL1Counter(uint8_t pFeId, uint8_t pSSAId) const;
     std::vector<uint32_t> GetHits(uint8_t pFeId, uint8_t pSSAId) const override;
     std::vector<Cluster>  getClusters(uint8_t pFeId, uint8_t pSSAId) const override;
-    void                  fillDataContainer(BoardDataContainer* boardContainer, const BoardDataContainer* theChannelGroupHandler, int groupNumber) override;
     void                  print(std::ostream& out) const override;
     bool                  DataBit(uint8_t pFeId, uint8_t pSSAId, uint32_t i) const override { return privateDataBit(pFeId, pSSAId, i); };
     inline bool           privateDataBit(uint8_t pFeId, uint8_t pSSAId, uint8_t i) const
@@ -52,6 +51,11 @@ class D19cSSAEvent : public Event
             return false;
         }
     }
+
+
+    void fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup) override;
+    void fillChipDataContainer(ChipDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) override;
+
 
   private:
     EventDataVector           fEventDataVector;

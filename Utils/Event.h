@@ -413,7 +413,9 @@ class Event
 
     virtual std::vector<Cluster> getClusters(uint8_t pFeId, uint8_t pCbcId) const { return {}; }
 
-    virtual void fillDataContainer(BoardDataContainer* boardContainer, const BoardDataContainer* theChannelGroupHandler, int groupNumber) = 0;
+    virtual void fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup) = 0;
+    virtual void fillChipDataContainer(ChipDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) = 0;
+
 
     // split stream of data
     template <std::size_t N>
