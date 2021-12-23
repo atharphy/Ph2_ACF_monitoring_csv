@@ -199,7 +199,7 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
     fReadoutChipInterface->WriteChipReg(cChip, DAC, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
     uint32_t off_val = static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str);
-
+	
     fReadoutChipInterface->WriteChipReg(cChip, DAC, DAC_val);
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
     uint32_t act_val = static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str);
@@ -223,7 +223,7 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
     // See if closest within 1 LSB TODO: Need a correction to be sure if fails
 
     bool checkadj = true;
-    if(checkadj) // This checks if the linear extrapolation finds the best value, with a 1 dac unit correction possible. Could add a while loop to always find best value
+    if(checkadj) // This checks if the linear extrapolation finds the best value.
     {
         bool     searching = true;
         uint32_t niter     = 0;
