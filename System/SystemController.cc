@@ -411,12 +411,12 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
 
             if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
             {
-                // start PRBS pattern 
+                // start PRBS pattern
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid) static_cast<RD53Interface*>(fReadoutChipInterface)->StartPRBSpattern(cChip);
-                // lpGBT phase align Rx 
+                // lpGBT phase align Rx
                 flpGBTInterface->PhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup);
-                // stop PRBS pattern 
+                // stop PRBS pattern
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid) static_cast<RD53Interface*>(fReadoutChipInterface)->StartPRBSpattern(cChip);
                 LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;

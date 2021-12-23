@@ -909,7 +909,7 @@ double lpGBTInterface::GetBERTResult(Chip* pChip)
 // In addition, the BERT in the lpGBT itself doesn't need to 'know' anything external to the lpGBT - it knows how many bits
 // it receives per second and you configure it to count for N clock cycles (or x seconds)
 // so no need to provide any information aside from how long to count for
-double lpGBTInterface::BERtestCL(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double bits_or_time, float pConfidenceLevel) 
+double lpGBTInterface::BERtestCL(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double bits_or_time, float pConfidenceLevel)
 {
     const float cConfidenceLevel = pConfidenceLevel;
     // figure out data rate at which I'm receiving data
@@ -983,7 +983,7 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
 // # 320 Mbit/s   = 2 #
 // ####################
 {
-   const double   mainClock       = 40e6;                             // @CONST@
+    const double   mainClock       = 40e6;                             // @CONST@
     const uint32_t nBitInClkPeriod = 32. * std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
     const double   fps             = 1.28e9 / nBitInClkPeriod;         // Frames per second
     const int      n_prints        = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
@@ -1251,13 +1251,13 @@ void lpGBTInterface::ManualPhaseAlignRx(Ph2_HwDescription::Chip* pChip, uint8_t 
     const bool   given_time     = true;
 
     LOG(INFO) << GREEN << "Phase alignment ongoing for LpGBT chip: " << BOLDYELLOW << pChip->getId() << RESET;
-    uint8_t bestPhase      = 0;
-    uint8_t bestPhaseStart = 0;
-    uint8_t bestPhaseEnd   = 0;
-    uint8_t phaseGap       = 0;
-    double  bestBERtest    = -1;
-    uint16_t cRxRate = GetRxDataRate(pChip, pGroup); // number of bits received per second 
-    uint8_t  cRxRate_40MHz = cRxRate*25e-9; 
+    uint8_t  bestPhase      = 0;
+    uint8_t  bestPhaseStart = 0;
+    uint8_t  bestPhaseEnd   = 0;
+    uint8_t  phaseGap       = 0;
+    double   bestBERtest    = -1;
+    uint16_t cRxRate        = GetRxDataRate(pChip, pGroup); // number of bits received per second
+    uint8_t  cRxRate_40MHz  = cRxRate * 25e-9;
     // make sure that the chip is in manual alignment mode
     const uint8_t cFixedTrackMode = 0;
     ConfigureRxAlignmentMode(pChip, {pGroup}, cFixedTrackMode);
