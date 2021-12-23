@@ -69,9 +69,6 @@ class lpGBTInterface : public ChipInterface
     void StartPRBSpattern(Ph2_HwDescription::Chip* pChip);
     void StopPRBSpattern(Ph2_HwDescription::Chip* pChip);
 
-    virtual void
-    PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const Ph2_HwDescription::BeBoard* pBoard, const Ph2_HwDescription::OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface){};
-
     // #######################################
     // # Chip configuration functions #
     // #######################################
@@ -127,8 +124,9 @@ class lpGBTInterface : public ChipInterface
     void   ConfigureBERT(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, bool pSkipDisable = false);
     void   ConfigureBERTPattern(Ph2_HwDescription::Chip* pChip, uint32_t pPattern);
     double GetBERTResult(Ph2_HwDescription::Chip* pChip);
-    double RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time);
-
+    double RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed);
+    double BERtestCL(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double bits_or_time, float pConfidenceLevel);
+    
     // ##############
     // # LpGBT Manual phase alignment of Rx ports
     // #############
@@ -190,6 +188,8 @@ class lpGBTInterface : public ChipInterface
     // i2cConfig GetI2Cconfig(uint8_t pMasterId){
     //     return fI2Cconfigs[pMasterId];
     // }
+
+    void    PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const Ph2_HwDescription::BeBoard* pBoard, const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     uint8_t AutoPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
     void    ConfigureRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
     void    ConfigureTxChannels(Ph2_HwDescription::Chip*    pChip,

@@ -149,8 +149,7 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
     const double frames_or_time = 1; // @CONST@
     const bool   given_time     = true;
     bool         allGood        = true;
-    // can be retrieved from the lpGBT itself
-    // uint32_t     frontendSpeed  = static_cast<RD53FWInterface*>(pBeBoardFWInterface)->ReadoutSpeed();
+    uint32_t     frontendSpeed  = static_cast<RD53FWInterface*>(pBeBoardFWInterface)->ReadoutSpeed();
 
     LOG(INFO) << GREEN << "Phase alignment ongoing for LpGBT chip: " << BOLDYELLOW << pChip->getId() << RESET;
 
@@ -181,7 +180,7 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                 static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
                 static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip);
 
-                const double result = lpGBTInterface::RunBERtest(pChip, cGroup, cChannel, given_time, frames_or_time);
+                const double result = lpGBTInterface::RunBERtest(pChip, cGroup, cChannel, given_time, frames_or_time, frontendSpeed);
 
                 // #########################################################
                 // # Search for largest interval and set into middle point #
