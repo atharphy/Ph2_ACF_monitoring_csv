@@ -162,7 +162,7 @@ void Gain::run()
     detectorContainerVector.clear();
     for(auto i = 0u; i < dacList.size(); i++) detectorContainerVector.push_back(theRecyclingBin.get(&ContainerFactory::copyAndInitStructure<OccupancyAndPh>, OccupancyAndPh()));
 
-    setChannelGroupHandler(*theChnGroupHandler.get());
+    setChannelGroupHandler(theChnGroupHandler);
     this->SetBoardBroadcast(true);
     this->SetTestPulse(true);
     this->fMaskChannelsFromOtherGroups = true;
