@@ -1,0 +1,83 @@
+/*!
+
+        \file                   MPA2.h
+        \brief                  MPA2 Description class, config of the MPA2s
+        \author                 Kevin Nash
+        \version                1.0
+        \date                   12/06/21
+        Support :               mail to : knash201@gmail.com
+
+ */
+
+#ifndef MPA2_h__
+#define MPA2_h__
+
+#include "../Utils/Exception.h"
+#include "../Utils/Visitor.h"
+#include "../Utils/easylogging++.h"
+#include "ChipRegItem.h"
+#include "FrontEndDescription.h"
+#include "ReadoutChip.h"
+#include <iostream>
+#include <map>
+#include <set>
+#include <stdint.h>
+#include <string>
+#include <utility>
+
+/*!
+ * \namespace Ph2_HwDescription
+ * \brief Namespace regrouping all the hardware description
+ */
+namespace Ph2_HwDescription
+{
+using MPARegPair = std::pair<std::string, ChipRegItem>;
+using CommentMap = std::map<int, std::string>;
+
+class MPA2 : public ReadoutChip
+{
+  public:
+    static constexpr size_t nRows = NSSACHANNELS;
+    static constexpr size_t nCols = NMPACOLS;
+
+    MPA2(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pMPA2Id, uint8_t pPartnerId, const std::string& filename);
+    // C'tors with object FE Description
+    MPA2(const FrontEndDescription& pFeDesc, uint8_t pMPA2Id, uint8_t pPartnerId, const std::string& filename);
+
+    using MPARegPair = std::pair<std::string, ChipRegItem>;
+    uint8_t fPartnerId;
+    uint8_t getPartid() { return fPartnerId; }
+    void    loadfRegMap(const std::string& filename) override;
+    void    saveRegMap(const std::string& filename) override;
+
+    bool isDACLocal(const std::string& dacName) override
+    {
+        if((dacName.find("TrimDAC", 0, 9) != std::string::npos) or (dacName.find("ThresholdTrim") != std::string::npos))
+            return true;
+        else
+            return false;
+    }
+    uint8_t getNumberOfBits(const std::string& dacName) override
+    {
+        if((dacName.find("TrimDAC_P", 0, 9) != std::string::npos) or (dacName.find("ThresholdTrim") != std::string::npos))
+            return 5;
+        else
+            return 8;
+    }
+
+    // row, col starts at index 0, global pix number starts at number 1
+
+    std::pair<uint32_t, uint32_t> PNlocal(const uint32_t PN) { return std::pair<uint32_t, uint32_t>((PN + 1) / 120 + 1, ((PN - 1) % 120) + 1); }
+
+    uint32_t getNumberOfChannels() const override { return NMPACHANNELS; }
+
+    uint32_t PNglobal(std::pair<uint32_t, uint32_t> PC) { return (PC.first - 1) * 120 + (PC.second - 1) + 1; }
+};
+
+struct MPARegItemComparer
+{
+    bool operator()(const MPARegPair& pRegItem1, const MPARegPair& pRegItem2) const;
+};
+} // namespace Ph2_HwDescription
+
+#endif

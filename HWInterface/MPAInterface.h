@@ -56,26 +56,6 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
  * \brief Class representing the User Interface to the MPA on different boards
  */
 
-struct Stubs
-{
-    std::vector<uint8_t>              nst;
-    std::vector<std::vector<uint8_t>> pos;
-    std::vector<std::vector<uint8_t>> row;
-    std::vector<std::vector<uint8_t>> cur;
-};
-
-struct L1data
-{
-    uint8_t              strip_counter;
-    uint8_t              pixel_counter;
-    std::vector<uint8_t> pos_strip;
-    std::vector<uint8_t> width_strip;
-    std::vector<uint8_t> MIP;
-    std::vector<uint8_t> pos_pixel;
-    std::vector<uint8_t> width_pixel;
-    std::vector<uint8_t> Z;
-};
-
 struct Injection
 {
     uint8_t fRow;
@@ -138,6 +118,7 @@ class MPAInterface : public ReadoutChipInterface
     //
     void Set_calibration(Ph2_HwDescription::Chip* pMPA, uint32_t cal);
     void Set_threshold(Ph2_HwDescription::Chip* pMPA, uint32_t th);
+    void readAllBias(Ph2_HwDescription::Chip* pChip);
 
     bool     WriteReg(Ph2_HwDescription::Chip* pMPA, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop = VERIFY_MPA);
     bool     WriteRegs(Ph2_HwDescription::Chip* pMPA, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop = VERIFY_MPA);
