@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
     // std::cout <<"Writing stublat "<<writeslat<< std::endl;
     // cTool.fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", writeslat);
 
-    Stubs                 curstub;
+    // Stubs                 curstub;
     uint32_t              npixtot        = 0;
     std::vector<uint32_t> maxvals        = std::vector<uint32_t>(5, 0);
     uint32_t              maxNSclustot   = 0;

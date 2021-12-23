@@ -18,6 +18,7 @@
 #include "../HWInterface/ChipInterface.h"
 #include "../HWInterface/CicInterface.h"
 #include "../HWInterface/D19clpGBTInterface.h"
+#include "../HWInterface/MPA2Interface.h"
 #include "../HWInterface/MPAInterface.h"
 #include "../HWInterface/PSInterface.h"
 #include "../HWInterface/RD53Interface.h"
@@ -338,7 +339,8 @@ class SystemController
     DetectorDataContainer* fChannelGroupHandlerContainer;
 
     void setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, std::function<bool(const ChipContainer*)> theQueryFunction = [](const ChipContainer*) { return true; });
-    void setChannelGroupHandler(std::shared_ptr<ChannelGroupHandler> theChannelGroupHandlerPointer, std::function<bool(const ChipContainer*)> theQueryFunction = [](const ChipContainer*) { return true; });
+    void setChannelGroupHandler(std::shared_ptr<ChannelGroupHandler>      theChannelGroupHandlerPointer,
+                                std::function<bool(const ChipContainer*)> theQueryFunction = [](const ChipContainer*) { return true; });
     void setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, FrontEndType theFrontEndType);
 };
 
