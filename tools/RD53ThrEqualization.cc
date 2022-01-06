@@ -642,4 +642,5 @@ void ThrEqualization::copyAndResetContainer(DetectorDataContainer& fromContainer
                             cChip->getChannel<OccupancyAndPh>(row, col).fPhError     = 0;
                             cChip->getChannel<OccupancyAndPh>(row, col).readoutError = false;
                         }
+    fromContainer.resetNormalizationStatus();
 }
