@@ -354,9 +354,6 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, const float&
         // ################
         PixelAlive::run();
         auto output = PixelAlive::analyze();
-        output->resetNormalizationStatus();
-        output->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), 1);
-
         // ##############################################
         // # Send periodic data to monitor the progress #
         // ##############################################
@@ -571,6 +568,7 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
                                 // ###################
                                 cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy = 0;
                             }
+        theOccContainer.resetNormalizationStatus();
     }
 
     // ###################
