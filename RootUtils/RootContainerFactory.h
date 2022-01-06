@@ -12,6 +12,7 @@
 #ifndef __ROOTCONTAINERFACTORY_H__
 #define __ROOTCONTAINERFACTORY_H__
 
+#include "../HWDescription/ReadoutChip.h"
 #include "../RootUtils/PlotContainer.h"
 #include "../Utils/Container.h"
 #include "../Utils/DataContainer.h"
@@ -157,9 +158,12 @@ void bookHistogramsFromStructure(TFile*                   theOutputFile,
                 copyHybrid->getSummary<SM, SC>() = std::move(theHybridSummary);
 
                 // Chips
-                for(const ChipContainer* chip: *hybrid)
+                for(const auto chip: *hybrid)
                 {
-                    std::string chipFolder     = "/Chip_" + std::to_string(chip->getId());
+                    std::string chipFolderType = "Chip";
+                    if((chip)->getFrontEndType() == FrontEndType::MPA) chipFolderType = "MPA";
+                    if((chip)->getFrontEndType() == FrontEndType::SSA) chipFolderType = "SSA";
+                    std::string chipFolder     = "/" + chipFolderType + "_" + std::to_string(chip->getId());
                     std::string fullChipFolder = detectorFolder + boardFolder + opticalGroupFolder + hybridFolder + chipFolder;
                     createAndOpenRootFileFolder(theOutputFile, fullChipFolder);
 

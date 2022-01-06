@@ -40,14 +40,12 @@ ChipRegItem Chip::getRegItem(const std::string& pReg)
     ChipRegItem          cItem;
     ChipRegMap::iterator i = fRegMap.find(pReg);
 
-    if(i != std::end(fRegMap))
-        return (i->second);
-    else
-    {
-        LOG(ERROR) << "Error, no register " << pReg << " found in the RegisterMap of Chip " << +fChipId << "!";
-        throw Exception("Chip: no matching register found");
-        return cItem;
-    }
+    if(i != std::end(fRegMap)) return (i->second);
+
+    if(!pReg.empty()) { LOG(INFO) << "EMPTY"; }
+    LOG(ERROR) << "Error, no register " << pReg << " found in the RegisterMap of Chip " << +fChipId << "!";
+    throw Exception("Chip: no matching register found");
+    return cItem;
 }
 
 uint16_t Chip::getReg(const std::string& pReg) const
@@ -63,7 +61,7 @@ uint16_t Chip::getReg(const std::string& pReg) const
         return i->second.fValue & fMaxRegValue;
 }
 
-void Chip::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg)
+void Chip::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, uint8_t pStatusReg)
 {
     ChipRegMap::iterator i = fRegMap.find(pReg);
 
@@ -72,8 +70,9 @@ void Chip::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg)
         LOG(ERROR) << "Chip register are at most " << fMaxRegValue << " bits, impossible to write " << psetValue << " on registed " << pReg;
     else
     {
-        i->second.fValue = psetValue & fMaxRegValue;
-        i->second.fPrmptCfg |= pPrmptCfg;
+        i->second.fValue     = psetValue & fMaxRegValue;
+        i->second.fStatusReg = pStatusReg;
+        i->second.fPrmptCfg  = pPrmptCfg;
     }
 }
 

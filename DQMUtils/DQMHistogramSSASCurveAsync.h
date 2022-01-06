@@ -38,7 +38,7 @@ class DQMHistogramSSASCurveAsync : public DQMHistogramBase
      * all board/chip/hybrid/channel \param pSettingsMap : setting as for Tool setting map in case coe informations are
      * needed (i.e. FitSCurve)
      */
-    void book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;
+    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;
 
     /*!
      * \brief fill : fill histograms from TCP stream, need to be overwritten to avoid compilation errors, but it is not

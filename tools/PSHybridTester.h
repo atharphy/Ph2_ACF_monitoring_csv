@@ -10,6 +10,7 @@
 #ifndef PSHybridTester_h__
 #define PSHybridTester_h__
 
+#include "LinkAlignmentOT.h"
 #include "Tool.h"
 #ifdef __TCUSB__
 #include "USB_a.h"
@@ -18,7 +19,7 @@
 #define PSHYBRIDMAXV 1.32
 
 #include <map>
-class PSHybridTester : public Tool
+class PSHybridTester : public LinkAlignmentOT
 {
   public:
     PSHybridTester();

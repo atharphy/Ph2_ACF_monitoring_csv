@@ -24,7 +24,7 @@ CBCHistogramPulseShape::CBCHistogramPulseShape() {}
 CBCHistogramPulseShape::~CBCHistogramPulseShape() {}
 
 //========================================================================================================================
-void CBCHistogramPulseShape::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
+void CBCHistogramPulseShape::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
 {
     // SoC utilities only - BEGIN
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
@@ -176,7 +176,8 @@ void CBCHistogramPulseShape::process()
             for(auto hybrid: *opticalGroup) // for on hybrid - begin
             {
                 // Create a canvas do draw the plots
-                TCanvas* cChipPulseShape = new TCanvas(("Hits_hybrid_" + std::to_string(hybrid->getId())).data(), ("Hits hybrid " + std::to_string(hybrid->getId())).data(), 0, 0, 650, 650);
+                std::string cCanvasName     = "PulseShape_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
+                TCanvas*    cChipPulseShape = new TCanvas(cCanvasName.data(), cCanvasName.data(), 0, 0, 650, 650);
                 cChipPulseShape->Divide(0, hybrid->size());
 
                 for(auto chip: *hybrid) // for on chip - begin

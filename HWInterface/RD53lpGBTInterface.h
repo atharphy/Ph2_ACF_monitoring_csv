@@ -19,13 +19,9 @@ class RD53lpGBTInterface : public lpGBTInterface
   public:
     RD53lpGBTInterface(const BeBoardFWMap& pBoardMap) : lpGBTInterface(pBoardMap) {}
 
-    bool     ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
-    bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override;
-    bool     WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
-    uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
-    void
-    PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const Ph2_HwDescription::BeBoard* pBoard, const Ph2_HwDescription::OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface) override;
-
+    bool ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
+    // void    PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const Ph2_HwDescription::BeBoard* pBoard, const Ph2_HwDescription::OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface)
+    // override;
     bool ExternalPhaseAlignRx(Ph2_HwDescription::Chip*               pChip,
                               const Ph2_HwDescription::BeBoard*      pBoard,
                               const Ph2_HwDescription::OpticalGroup* pOpticalGroup,
@@ -33,8 +29,6 @@ class RD53lpGBTInterface : public lpGBTInterface
                               ReadoutChipInterface*                  pReadoutChipInterface);
 
   private:
-    bool     WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerifLoop = true);
-    uint16_t ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress);
 };
 
 } // namespace Ph2_HwInterface

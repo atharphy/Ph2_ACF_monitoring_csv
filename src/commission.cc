@@ -3,18 +3,19 @@
 //#include "../Utils/easylogging++.h"
 #include "../Utils/Timer.h"
 #include "../Utils/Utilities.h"
+#include "../Utils/argvparser.h"
 #include "../tools/AntennaTester.h"
 #include "../tools/CBCPulseShape.h"
 #include "../tools/LatencyScan.h"
 #include "../tools/PedeNoise.h"
 #include "../tools/SignalScan.h"
 #include "../tools/SignalScanFit.h"
-#include "tools/BackEndAlignment.h"
-#include "tools/CicFEAlignment.h"
-
-#include "../Utils/argvparser.h"
 #include "TApplication.h"
 #include "TROOT.h"
+#include "tools/BackEndAlignment.h"
+#include "tools/CicFEAlignment.h"
+#include "tools/PSAlignment.h"
+#include "tools/StubBackEndAlignment.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -42,6 +43,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("file", "Hw Description File . Default value: settings/Commission_2CBC.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOptionAlternative("file", "f");
 
+    cmd.defineOption("reconfigure", "Reconfigure Hardware");
+    cmd.defineOption("reload", "Reload settings files and board registers");
     cmd.defineOption("latency", "scan the trigger latency", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("latency", "l");
 
@@ -73,8 +76,6 @@ int main(int argc, char* argv[])
 
     cmd.defineOption("pulseShape", "Scan the threshold and fit for signal Vcth", ArgvParser::NoOptionAttribute);
 
-    cmd.defineOption("withCIC", "With CIC. Default : false", ArgvParser::NoOptionAttribute);
-
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -95,7 +96,6 @@ int main(int argc, char* argv[])
     bool cAntenna    = (cmd.foundOption("antenna")) ? true : false;
     bool cPulseShape = (cmd.foundOption("pulseShape")) ? true : false;
 
-    bool        cWithCIC   = (cmd.foundOption("withCIC"));
     std::string cDirectory = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
 
     if(cNoise)
@@ -138,23 +138,40 @@ int main(int argc, char* argv[])
     cTool.CreateResultDirectory(cDirectory);
     cTool.InitResultFile(cResultfile);
     cTool.StartHttpServer();
-    cTool.ConfigureHw();
 
-    // align back-end .. if this moves to firmware then we can get rid of this step
-    BackEndAlignment cBackEndAligner;
-    cBackEndAligner.Inherit(&cTool);
-    cBackEndAligner.Initialise();
-    bool cAligned = cBackEndAligner.Align();
-    cBackEndAligner.resetPointers();
-    if(!cAligned)
+    bool cIgnoreI2c    = false;
+    bool cReInitialize = true;
+    if(cmd.foundOption("reconfigure"))
     {
-        LOG(ERROR) << BOLDRED << "Failed to align back-end" << RESET;
-        exit(0);
-    }
+        cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
 
-    // if CIC is enabled then align CIC first
-    if(cWithCIC)
-    {
+        // map MPA outputs for PS module
+        PSAlignment cPSAlignment;
+        cPSAlignment.Inherit(&cTool);
+        cPSAlignment.Initialise();
+        cPSAlignment.MapMPAOutputs();
+        cPSAlignment.Reset();
+
+        LinkAlignmentOT cLinkAlignment;
+        cLinkAlignment.Inherit(&cTool);
+        try
+        {
+            cLinkAlignment.Start(0);
+        }
+        catch(const std::exception& e)
+        {
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            return (666);
+        }
+        cLinkAlignment.waitForRunToBeCompleted();
+        cLinkAlignment.dumpConfigFiles();
+        if(!cLinkAlignment.getStatus())
+        {
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            return (666);
+        }
+
+        // align FEs - CIC
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit(&cTool);
         cCicAligner.Start(0);
@@ -164,6 +181,75 @@ int main(int argc, char* argv[])
         cCicAligner.Reset();
         cCicAligner.dumpConfigFiles();
     }
+    // reload settings on-to FE chips
+    if(cmd.foundOption("reload"))
+    {
+        // //cReInitialize=false;
+        // cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
+        cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
+
+        // map MPA outputs for PS module
+        PSAlignment cPSAlignment;
+        cPSAlignment.Inherit(&cTool);
+        cPSAlignment.Initialise();
+        cPSAlignment.MapMPAOutputs();
+        cPSAlignment.Reset();
+
+        LinkAlignmentOT cLinkAlignment;
+        cLinkAlignment.Inherit(&cTool);
+        try
+        {
+            cLinkAlignment.Start(0);
+        }
+        catch(const std::exception& e)
+        {
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            return (666);
+        }
+        cLinkAlignment.waitForRunToBeCompleted();
+        cLinkAlignment.dumpConfigFiles();
+        if(!cLinkAlignment.getStatus())
+        {
+            LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
+            return (666);
+        }
+    }
+
+    // hack
+    // make sure MPAs and SSAs have all pixels enabled
+    int cPSmoduleSSAth  = cTool.findValueInSettings<double>("PSmoduleSSAthreshold", 100);
+    int cPSmoduleMPAth  = cTool.findValueInSettings<double>("PSmoduleMPAthreshold", 100);
+    int cPSmoduleLat    = cTool.findValueInSettings<double>("PSmoduleTriggerLatency", 100);
+    int cPSmoduleWindow = cTool.findValueInSettings<double>("PSmoduleStubWindow", 100);
+    for(auto board: *cTool.fDetectorContainer)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                for(auto chip: *hybrid)
+                {
+                    cTool.fReadoutChipInterface->WriteChipReg(chip, "InjectedCharge", 77);
+                    if(chip->getFrontEndType() == FrontEndType::SSA)
+                    {
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "AnalogueSync", 1);
+                        // cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 1);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "TriggerLatency", cPSmoduleLat - 1);
+                    }
+                    if(chip->getFrontEndType() == FrontEndType::MPA)
+                    {
+                        // cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0x5F);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "TriggerLatency", cPSmoduleLat);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "StubWindow", cPSmoduleWindow);
+                        cTool.fReadoutChipInterface->WriteChipReg(chip, "StubMode", 2);
+                    }
+                }
+            }
+        }
+    }
+    // align back-end .. if this moves to firmware then we can get rid of this step
 
 #ifdef __ANTENNA__
     AntennaTester cAntennaTester;
@@ -173,6 +259,7 @@ int main(int argc, char* argv[])
 
     if(cLatency || cStubLatency)
     {
+        LOG(INFO) << BOLDBLUE << "STARTLAT" << RESET;
         LatencyScan cLatencyScan;
         cLatencyScan.Inherit(&cTool);
         cLatencyScan.Initialize();
@@ -185,8 +272,10 @@ int main(int argc, char* argv[])
 #ifdef __ANTENNA__
             if(cAntenna) cAntennaTester.EnableAntenna(cAntenna, cAntennaPotential);
 #endif
+            LOG(INFO) << BOLDBLUE << "LATSCAN" << RESET;
 
             cLatencyScan.ScanLatency();
+            LOG(INFO) << BOLDBLUE << "LATSCANDONE" << RESET;
         }
 
         if(cStubLatency) cLatencyScan.StubLatencyScan();

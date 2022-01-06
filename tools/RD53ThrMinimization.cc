@@ -71,8 +71,8 @@ void ThrMinimization::sendData()
 {
     auto theThrStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>();
 
-    if(fStreamerEnabled == true)
-        for(const auto cBoard: theThrContainer) theThrStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+    if(fDQMStreamerEnabled == true)
+        for(const auto cBoard: theThrContainer) theThrStream.streamAndSendBoard(cBoard, fDQMStreamer);
 }
 
 void ThrMinimization::Stop()
@@ -256,6 +256,8 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, const float&
         // ################
         PixelAlive::run();
         auto output = PixelAlive::analyze();
+        output->resetNormalizationStatus();
+        output->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), 1);
 
         // ##############################################
         // # Send periodic data to monitor the progress #

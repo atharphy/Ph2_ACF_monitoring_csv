@@ -61,7 +61,7 @@ T mtxInversion(const boost::numeric::ublas::matrix<T>& input, boost::numeric::ub
     T det = 1;
     for(auto i = 0u; i < pivots.size(); i++)
     {
-        if(pivots(i) != i) det *= -1;
+        if((int)pivots(i) != i) det *= -1;
         det *= mLU(i, i);
     }
 

@@ -12,6 +12,10 @@ logs/*
 *.raw
 Results/
 Results/**
+MonitorResults/**
+RunNumbers.dat
+*.log
+core.*
 Results
 tags
 # just for G. Auzingers sanity

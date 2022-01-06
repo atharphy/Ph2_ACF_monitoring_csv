@@ -68,7 +68,7 @@ class BeBoardInterface
     BeBoardFWMap        fBoardMap;
     BeBoardFWInterface* fBoardFW;
     uint16_t            fPrevBoardIdentifier;
-    std::mutex          theMtx;
+    // std::recursive_mutex theMtx;
 
   public:
     /*!
@@ -94,11 +94,6 @@ class BeBoardInterface
      * \param pHandler : pointer to FileHandler object
      */
     void SetFileHandler(const Ph2_HwDescription::BeBoard* pBoard, FileHandler* pHandler);
-
-    void setPowerSupplyClient(const Ph2_HwDescription::BeBoard* pBoard, TCPClient* fPowerSupplyClient);
-#ifdef __TCP_SERVER__
-    void setTestcardClient(const Ph2_HwDescription::BeBoard* pBoard, TCPClient* fTestcardClient);
-#endif
     /*!
      * \brief enable the file handler
      * \param pBoard
@@ -223,6 +218,12 @@ class BeBoardInterface
     void Resume(Ph2_HwDescription::BeBoard* pBoard);
 
     /*!
+     * \brief Start a DAQ
+     * \param pBoard
+     */
+    void SendNTriggers(Ph2_HwDescription::BeBoard* pBoard, uint16_t pNtriggers);
+
+    /*!
      * \brief Read board monitor data
      * \param pReadoutChipInterface
      * \param pChip
@@ -231,7 +232,7 @@ class BeBoardInterface
      */
     void ReadChipMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip, const std::vector<std::string>& args)
     {
-        std::lock_guard<std::mutex> theGuard(theMtx);
+        // std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
         pReadoutChipInterface->ReadHybridVoltage(pChip);
         pReadoutChipInterface->ReadHybridTemperature(pChip);
@@ -275,33 +276,33 @@ class BeBoardInterface
      * \param numConfig FPGA configuration number to be uploaded
      * \param pstrFile path to MCS file containing the FPGA configuration
      */
-    void FlashProm(Ph2_HwDescription::BeBoard* pBoard, const std::string& strConfig, const char* pstrFile);
+    // void FlashProm(Ph2_HwDescription::BeBoard* pBoard, const std::string& strConfig, const char* pstrFile);
 
     /*! \brief Jump to an FPGA configuration
      * \param pBoard pointer to a board description
      * \param numConfig FPGA configuration number
      */
-    void JumpToFpgaConfig(Ph2_HwDescription::BeBoard* pBoard, const std::string& strConfig);
+    // void JumpToFpgaConfig(Ph2_HwDescription::BeBoard* pBoard, const std::string& strConfig);
 
-    void DownloadFpgaConfig(Ph2_HwDescription::BeBoard* pBoard, const std::string& strConfig, const std::string& strDest);
+    // void DownloadFpgaConfig(Ph2_HwDescription::BeBoard* pBoard, const std::string& strConfig, const std::string& strDest);
 
     /*! \brief Current FPGA configuration
      * \param pBoard pointer to a board description
      * \return const pointer to an FPGA uploading process. NULL means that no upload is been processed.
      */
-    const FpgaConfig* GetConfiguringFpga(Ph2_HwDescription::BeBoard* pBoard);
+    // const FpgaConfig* GetConfiguringFpga(Ph2_HwDescription::BeBoard* pBoard);
 
     /*! \brief Get the list of available FPGA configuration (or firmware images)
      * \param pBoard pointer to a board description */
-    std::vector<std::string> getFpgaConfigList(Ph2_HwDescription::BeBoard* pBoard);
+    // std::vector<std::string> getFpgaConfigList(Ph2_HwDescription::BeBoard* pBoard);
 
     /*! \brief Delete one Fpga configuration (or firmware image)
      * \param pBoard pointer to a board description
      * \param strId Firmware image identifier*/
-    void DeleteFpgaConfig(Ph2_HwDescription::BeBoard* pBoard, const std::string& strId);
+    // void DeleteFpgaConfig(Ph2_HwDescription::BeBoard* pBoard, const std::string& strId);
 
     /*! \brief Reboot the board */
-    void RebootBoard(Ph2_HwDescription::BeBoard* pBoard);
+    // void RebootBoard(Ph2_HwDescription::BeBoard* pBoard);
 
     /*! \brief Set or reset the start signal */
     void SetForceStart(Ph2_HwDescription::BeBoard* pBoard, bool bStart);

@@ -1,6 +1,6 @@
 #include "OTHybridTester.h"
+#include "D19cDebugFWInterface.h"
 #include "linearFitter.h"
-
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -9,56 +9,15 @@ using namespace Ph2_System;
 
 OTHybridTester::OTHybridTester() : Tool() {}
 
-OTHybridTester::~OTHybridTester()
-{
-#ifdef __TCUSB__
-#ifdef __TCP_SERVER__
-#else
-    if(fTC_USB != nullptr) delete fTC_USB;
-#endif
-#endif
-}
+OTHybridTester::~OTHybridTester() {}
 
 void OTHybridTester::FindUSBHandler()
 {
-#ifdef __TCUSB__
-    bool cThereIsLpGBT = false;
-    for(auto cBoard: *fDetectorContainer)
-    {
-        if(cBoard->at(0)->flpGBT != nullptr)
-        {
-            LOG(DEBUG) << BOLDYELLOW << "Found lpGBT" << RESET;
-            cThereIsLpGBT = true;
-        }
-        else
-        {
-            LOG(DEBUG) << BOLDYELLOW << "Did not find lpGBT" << RESET;
-            cThereIsLpGBT = false;
-        }
-    }
-    if(!cThereIsLpGBT)
-    {
-#ifdef __ROH_USB__
-        fTC_USB = new TC_PSROH();
-#elif __SEH_USB__
-#ifdef __TCP_SERVER__
-        if(fTestcardClient == nullptr)
-        {
-            LOG(ERROR) << BOLDRED << "Not connected to the test card! Test cannot be executed" << RESET;
-            throw std::runtime_error("Test card cannot be reached");
-        }
-#else
-        fTC_USB = new TC_2SSEH();
-#endif
-#endif
-    }
-
-#ifdef __TCP_SERVER__
-#else
+    bool cThereIsLpGBT = fReadoutChipInterface->lpGBTFound();
+    if(cThereIsLpGBT)
+        LOG(DEBUG) << BOLDYELLOW << "Found lpGBT" << RESET;
     else
-        fTC_USB = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetTCUSBHandler();
-#endif
-#endif
+        LOG(DEBUG) << BOLDYELLOW << "Did not find lpGBT" << RESET;
 }
 
 void OTHybridTester::LpGBTInjectULInternalPattern(uint32_t pPattern)
@@ -148,7 +107,8 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
 
                 cFWInterface->selectLink(cOpticalGroup->getId());
                 LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
-                // cFWInterface->StubDebug(true, 6);
+                // D19cDebugFWInterface* cDebugInterface = dynamic_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+                // cDebugInterface->StubDebug(true, 6);
                 // enable stub debug - allows you to 'scope' the stub output
 
                 cFWInterface->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x01);
@@ -224,7 +184,8 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 cFWInterface->ResetReadout();
 
                 LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
-                // cFWInterface->L1ADebug();
+                // D19cDebugFWInterface* cDebugInterface              = static_cast<D19cDebugFWInterface*>(cFWInterface);
+                // cDebugInterface->L1ADebug();
                 // cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", 0xff);
                 cFWInterface->ConfigureTriggerFSM(0, 10, 3);
 
@@ -375,19 +336,13 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
                 for(int cDACValue = pMinDACValue; cDACValue <= (int)pMaxDACValue; cDACValue += pStep)
                 {
 #ifdef __TCUSB__
-
 // Need to confirm conversion factor for 2S-SEH
 // fTC_2SSEH->set_AMUX(cDACValue, cDACValue);
 // example to program current Dac for temperature sensor clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, pADCs,0);
 #ifdef __ROH_USB__
-                    fTC_USB->dac_output(cDACValue);
+                    fTCInterface.getInterface().dac_output(cDACValue);
 #elif __SEH_USB__
-#ifdef __TCP_SERVER__
-                    fTestcardClient->sendAndReceivePacket("set_AMUX,rightValue:" + std::to_string(cDACValue) + ",leftValue:" + std::to_string(cDACValue) + ",");
-#else
-                    fTC_USB->set_AMUX(cDACValue, cDACValue);
-                    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-#endif
+                    fTCInterface.getInterface().set_AMUX(cDACValue, cDACValue);
 #endif
 #endif
                     int cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
@@ -473,11 +428,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
                 {"PTAT_BPOL12V", "PTAT_BPOL12V_Nominal"}};
     cDefaultParameters   = &f2SSEHDefaultParameters;
     cADCNametoPinMapping = &f2SSEHADCInputMap;
-#ifdef __TCP_SERVER__
-    fTestcardClient->sendAndReceivePacket("set_P1V25_L_Sense:On");
-#else
-    fTC_USB->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
-#endif
+    fTCInterface.getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
 #elif __ROH_USB__
 
     cADCsMap = {{"12V_MONITOR_VD", "12V_MONITOR_VD_Nominal"},
@@ -496,9 +447,9 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     auto  cADCsMapIterator = cADCsMap.begin();
     int   cADCValue;
     int   cBinCount         = 1;
-    float cConversionFactor = 1. / 1024.;
+    float CONVERSION_FACTOR = 1. / 1024.;
 
-    fillSummaryTree("ADC conversion factor", cConversionFactor);
+    fillSummaryTree("ADC conversion factor", CONVERSION_FACTOR);
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr)
@@ -527,18 +478,18 @@ bool OTHybridTester::LpGBTTestFixedADCs()
 
                 float sum           = std::accumulate(cADCValueVect.begin(), cADCValueVect.end(), 0.0);
                 float mean          = sum / cADCValueVect.size();
-                float cDifference_V = std::fabs((*cDefaultParameters)[cADCsMapIterator->second] - mean * cConversionFactor);
-                fillSummaryTree(cADCsMapIterator->first.c_str(), mean * cConversionFactor);
+                float cDifference_V = std::fabs((*cDefaultParameters)[cADCsMapIterator->second] - mean * CONVERSION_FACTOR);
+                fillSummaryTree(cADCsMapIterator->first.c_str(), mean * CONVERSION_FACTOR);
                 // Still hard coded threshold for imidiate boolean result, actual values are stored
                 if(cDifference_V > 0.1)
                 {
-                    LOG(INFO) << BOLDRED << "Mismatch in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << mean * cConversionFactor << " V, nominal value is "
+                    LOG(INFO) << BOLDRED << "Mismatch in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << mean * CONVERSION_FACTOR << " V, nominal value is "
                               << (*cDefaultParameters)[cADCsMapIterator->second] << " V" << RESET;
                     cReturn = false;
                 }
                 else
                 {
-                    LOG(INFO) << BOLDGREEN << "Match in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << mean * cConversionFactor << " V, nominal value is "
+                    LOG(INFO) << BOLDGREEN << "Match in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << mean * CONVERSION_FACTOR << " V, nominal value is "
                               << (*cDefaultParameters)[cADCsMapIterator->second] << " V" << RESET;
                 }
                 cFixedADCsTree->Fill();
@@ -558,11 +509,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     cFixedADCsTree->Write();
 
 #ifdef __SEH_USB__
-#ifdef __TCP_SERVER__
-    fTestcardClient->sendAndReceivePacket("set_P1V25_L_Sense:Off");
-#else
-    fTC_USB->set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
-#endif
+    fTCInterface.getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
 #endif
 #endif
 #endif
@@ -589,11 +536,12 @@ bool OTHybridTester::LpGBTTestResetLines()
     bool cValid = true;
 
     std::vector<std::pair<std::string, uint8_t>> cLevels = {{"High", 1}, {"Low", 0}};
+    // lpGBTinterface now nows this .. so don't need the if statements
+    std::vector<uint8_t> cGPIOs = static_cast<D19clpGBTInterface*>(flpGBTInterface)->getGPIOs();
 #ifdef __TCUSB__
     float cMeasurement;
 #ifdef __ROH_USB__
     std::map<std::string, TC_PSROH::measurement> cResetLines = fResetLines;
-    std::vector<uint8_t>                         cGPIOs      = {0, 1, 3, 6, 9, 12};
 #elif __SEH_USB__
     std::map<std::string, TC_2SSEH::resetMeasurement> cResetLines = f2SSEHResetLines;
     std::vector<uint8_t>                              cGPIOs      = {0, 3, 6, 8};
@@ -789,7 +737,7 @@ void OTHybridTester::LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect)
         {
             LOG(INFO) << BOLDRED << "VDDRX read value = " << +clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "VDDRX") << RESET;
             // ROOT Tree for Eye Diagram from lpGBT Eye Opening Monitor
-            auto cEyeDiagramTree = new TTree(Form("tEyeDiagram%i", cOpticalGroup->getOpticalGroupId()), "Eye Diagram form lpGBT Eye Opening Monitor");
+            auto cEyeDiagramTree = new TTree(Form("tEyeDiagram%i", cOpticalGroup->getOpticalId()), "Eye Diagram form lpGBT Eye Opening Monitor");
             // vectors for Tree
             std::vector<int> cVoltageVector;
             std::vector<int> cTimeVector;
@@ -799,10 +747,10 @@ void OTHybridTester::LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect)
             cEyeDiagramTree->Branch("TimeStep", &cTimeVector);
             cEyeDiagramTree->Branch("Counter", &cCounterVector);
             // Create TCanvas & TH2I
-            auto cEyeDiagramCanvas = new TCanvas(Form("cEyeDiagram%i", cOpticalGroup->getOpticalGroupId()), "Eye Opening Image", 500, 500);
-            auto cObj              = gROOT->FindObject(Form("hEyeDiagram%i", cOpticalGroup->getOpticalGroupId()));
+            auto cEyeDiagramCanvas = new TCanvas(Form("cEyeDiagram%i", cOpticalGroup->getOpticalId()), "Eye Opening Image", 500, 500);
+            auto cObj              = gROOT->FindObject(Form("hEyeDiagram%i", cOpticalGroup->getOpticalId()));
             if(cObj) delete cObj;
-            auto cEyeDiagramHist = new TH2I(Form("hEyeDiagram%i", cOpticalGroup->getOpticalGroupId()), "Eye Opening Image", 64, 0, 63, 32, 0, 31);
+            auto cEyeDiagramHist = new TH2I(Form("hEyeDiagram%i", cOpticalGroup->getOpticalId()), "Eye Opening Image", 64, 0, 63, 32, 0, 31);
             clpGBTInterface->ConfigureEOM(cOpticalGroup->flpGBT, pEndOfCountSelect, false, true);
             for(uint8_t cVoltageStep = 0; cVoltageStep < 31; cVoltageStep++)
             {
@@ -877,6 +825,7 @@ void OTHybridTester::LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFi
         }
     }
 }
+
 #ifdef __TCP_SERVER__
 float OTHybridTester::getMeasurement(std::string name)
 {

@@ -27,7 +27,23 @@ class ChannelGroupBase;
 
 namespace ContainerFactory
 {
-void copyStructure(const DetectorContainer& original, DetectorDataContainer& copy);
+inline void copyStructure(const DetectorContainer& original, DetectorDataContainer& copy)
+{
+    for(const auto board: original)
+    {
+        BoardDataContainer* copyBoard = copy.addBoardDataContainer(board->getId());
+        for(const auto opticalGroup: *board)
+        {
+            OpticalGroupDataContainer* copyOpticalGroup = copyBoard->addOpticalGroupDataContainer(opticalGroup->getId());
+
+            for(const auto hybrid: *opticalGroup)
+            {
+                HybridDataContainer* copyHybrid = copyOpticalGroup->addHybridDataContainer(hybrid->getId());
+                for(const auto chip: *hybrid) { copyHybrid->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols()); }
+            }
+        }
+    }
+}
 
 template <typename T>
 void print(const DetectorDataContainer& detector)
@@ -119,7 +135,7 @@ void copyAndInitHybrid(const DetectorContainer& original, DetectorDataContainer&
 template <typename T>
 void copyAndInitOpticalGroup(const DetectorContainer& original, DetectorDataContainer& copy)
 {
-    copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, T, EmptyContainer, EmptyContainer>(original, copy);
+    copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, T, EmptyContainer, EmptyContainer>(original, copy);
 }
 
 template <typename T>
@@ -199,8 +215,7 @@ template <typename T>
 void copyAndInitOpticalGroup(const DetectorContainer& original, DetectorDataContainer& copy, T& opticalGroupSummary)
 {
     EmptyContainer theEmpty;
-    copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, T, EmptyContainer, EmptyContainer>(
-        original, copy, theEmpty, theEmpty, theEmpty, theEmpty, opticalGroupSummary, theEmpty, theEmpty);
+    copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, T, EmptyContainer, EmptyContainer>(original, copy, theEmpty, theEmpty, theEmpty, opticalGroupSummary, theEmpty, theEmpty);
 }
 
 template <typename T>
@@ -215,6 +230,41 @@ void copyAndInitDetector(const DetectorContainer& original, DetectorDataContaine
 {
     EmptyContainer theEmpty;
     copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, T>(original, copy, theEmpty, theEmpty, theEmpty, theEmpty, theEmpty, detectorSummary);
+}
+
+template <typename T, typename SC, typename SM, typename SO, typename SB, typename SD>
+void reinitializeContainer(DetectorDataContainer* theDataContainer, T& channel, SC& chipSummary, SM& hybridSummary, SO& opticalGroupSummary, SB& boardSummary, SD& detectorSummary)
+{
+    theDataContainer->resetSummary<SD, SB>(detectorSummary);
+    for(auto board: *theDataContainer)
+    {
+        board->resetSummary<SB, SO>(boardSummary);
+        for(auto opticalGroup: *board)
+        {
+            opticalGroup->resetSummary<SO, SM>(opticalGroupSummary);
+            for(auto hybrid: *opticalGroup)
+            {
+                hybrid->resetSummary<SM, SC>(hybridSummary);
+                for(auto chip: *hybrid)
+                {
+                    chip->resetSummary<SC, T>(chipSummary);
+                    chip->resetChannels<T>(channel);
+                }
+            }
+        }
+    }
+}
+
+template <typename T, typename S>
+void reinitializeContainer(DetectorDataContainer* theDataContainer, T& channel, S& summay)
+{
+    reinitializeContainer<T, S, S, S, S, S>(theDataContainer, channel, summay, summay, summay, summay, summay);
+}
+
+template <typename T>
+void reinitializeContainer(DetectorDataContainer* theDataContainer, T& channel)
+{
+    reinitializeContainer<T, T, T, T, T, T>(theDataContainer, channel, channel, channel, channel, channel, channel);
 }
 
 } // namespace ContainerFactory

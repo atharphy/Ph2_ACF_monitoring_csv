@@ -96,8 +96,8 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
         I_SEH = this->getMeasurement("read_supply:I_SEH");
         U_SEH = this->getMeasurement("read_supply:U_SEH");
 #else
-        fTC_USB->read_supply(fTC_USB->I_SEH, I_SEH);
-        fTC_USB->read_supply(fTC_USB->U_SEH, U_SEH);
+        fTCInterface.getInterface().read_supply(fTC_USB->I_SEH, I_SEH);
+        fTCInterface.getInterface().read_supply(fTC_USB->U_SEH, U_SEH);
 #endif
 #endif
 #endif
@@ -444,8 +444,8 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
     float cVHVJ8 = 0;
     if(fPowerSupplyClient == nullptr)
     {
-        LOG(ERROR) << BOLDRED << "Not connected to the power supply!!! ExternalTestBiasVoltage cannot be executed" << RESET;
-        throw std::runtime_error("ExternalTestBiasVoltage cannot be executed");
+        LOG(ERROR) << BOLDRED << "Not connected to the power supply!!! ExternalfTCInterface.getInterface().Voltage cannot be executed" << RESET;
+        throw std::runtime_error("ExternalfTCInterface.getInterface().Voltage cannot be executed");
     }
 
 #ifdef __TCP_SERVER__
@@ -798,10 +798,10 @@ void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, u
 #else
             fTC_USB->read_load(fTC_USB->I_P1V2_R, I_P1V2_R);
             fTC_USB->read_load(fTC_USB->I_P1V2_L, I_P1V2_L);
-            fTC_USB->read_supply(fTC_USB->I_SEH, I_SEH);
+            fTCInterface.getInterface().read_supply(fTC_USB->I_SEH, I_SEH);
             fTC_USB->read_load(fTC_USB->U_P1V2_R, U_P1V2_R);
             fTC_USB->read_load(fTC_USB->U_P1V2_L, U_P1V2_L);
-            fTC_USB->read_supply(fTC_USB->U_SEH, U_SEH);
+            fTCInterface.getInterface().read_supply(fTC_USB->U_SEH, U_SEH);
             fTC_USB->read_load(fTC_USB->P2V5_VTRx_MON, U_P2V5);
 #endif
             // The input binning is performed in DAC values, the result is binned in the measured current
@@ -1059,7 +1059,7 @@ void SEHTester::TestCardVoltages()
 #ifdef __TCP_SERVER__
         k = this->getMeasurement("read_supply:" + c2SSEHMapIterator->first);
 #else
-        fTC_USB->read_supply(c2SSEHMapIterator->second, k);
+        fTCInterface.getInterface().read_supply(c2SSEHMapIterator->second, k);
 #endif
 #ifdef __USE_ROOT__
         fillSummaryTree(c2SSEHMapIterator->first, k);
@@ -1075,7 +1075,7 @@ void SEHTester::TestCardVoltages()
 #ifdef __TCP_SERVER__
         k = this->getMeasurement("read_supply:" + d2SSEHMapIterator->first);
 #else
-        fTC_USB->read_supply(d2SSEHMapIterator->second, k);
+        fTCInterface.getInterface().read_supply(d2SSEHMapIterator->second, k);
 #endif
 #ifdef __USE_ROOT__
         fillSummaryTree(d2SSEHMapIterator->first, k);

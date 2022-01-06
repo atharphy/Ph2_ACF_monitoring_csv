@@ -94,10 +94,10 @@ void ThrEqualization::sendData()
     auto theOccStream  = prepareChannelContainerStreamer<OccupancyAndPh>("Occ");
     auto theTDACStream = prepareChannelContainerStreamer<uint16_t>("TDAC");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: theOccContainer) theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theTDACcontainer) theTDACStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theOccContainer) theOccStream.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTDACcontainer) theTDACStream.streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 
@@ -167,7 +167,7 @@ void ThrEqualization::run()
     ContainerFactory::copyAndInitStructure<OccupancyAndPh>(*fDetectorContainer, *this->fDetectorDataContainer);
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, theTDACcontainer);
 
-    this->fChannelGroupHandler = theChnGroupHandler.get();
+    setChannelGroupHandler(theChnGroupHandler);
     this->SetTestPulse(true);
     this->fMaskChannelsFromOtherGroups = true;
     ThrEqualization::bitWiseScanLocal(frontEnd->name, nEvents * nSteps, TARGETEFF, nEvtsBurst * nSteps);
@@ -185,7 +185,13 @@ void ThrEqualization::run()
 
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
-                            if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row, col))
+                            if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !getChannelGroupHandlerContainer()->getObject(cBoard->getId())
+                                                                                                                     ->getObject(cOpticalGroup->getId())
+                                                                                                                     ->getObject(cHybrid->getId())
+                                                                                                                     ->getObject(cChip->getId())
+                                                                                                                     ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                                                                                                     ->allChannelGroup()
+                                                                                                                     ->isChannelEnabled(row, col))
                             {
                                 theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row, col).fOccupancy =
                                     RD53Shared::ISDISABLED;
@@ -240,7 +246,13 @@ void ThrEqualization::analyze()
 
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
-                            if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row, col))
+                            if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && getChannelGroupHandlerContainer()->getObject(cBoard->getId())
+                                                                                                                   ->getObject(cOpticalGroup->getId())
+                                                                                                                   ->getObject(cHybrid->getId())
+                                                                                                                   ->getObject(cChip->getId())
+                                                                                                                   ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                                                                                                   ->allChannelGroup()
+                                                                                                                   ->isChannelEnabled(row, col))
                             {
                                 static_cast<RD53*>(cChip)->setTDAC(
                                     row, col, theTDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col));
@@ -342,7 +354,6 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, const float&
         // ################
         PixelAlive::run();
         auto output = PixelAlive::analyze();
-
         // ##############################################
         // # Send periodic data to monitor the progress #
         // ##############################################
@@ -435,7 +446,6 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
 {
     float    tmp;
     uint16_t init;
-    uint16_t numberOfBits = floor(log2(frontEnd->nTDACvalues) + 1);
 
     DetectorDataContainer minDACcontainer;
     DetectorDataContainer midDACcontainer;
@@ -465,6 +475,7 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
                     this->fReadoutChipInterface->ReadChipAllLocalReg(
                         static_cast<RD53*>(cChip), regName, *midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
 
+    uint16_t numberOfBits = floor(log2(frontEnd->nTDACvalues) + 1);
     // ################################
     // # Custom channel group handler #
     // ################################
@@ -503,10 +514,10 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
         // #################
         // # Measure noise #
         // #################
-        this->fChannelGroupHandler = theChnGroupHandlerNoise.get();
+        setChannelGroupHandler(theChnGroupHandlerNoise);
         this->SetTestPulse(PixelAlive::INJtype::None);
         this->measureData(nEvents, nEvtsBurst);
-        this->fChannelGroupHandler = theChnGroupHandler.get();
+        setChannelGroupHandler(theChnGroupHandler);
         this->SetTestPulse(PixelAlive::injType);
 
         // #####################
@@ -557,6 +568,7 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
                                 // ###################
                                 cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy = 0;
                             }
+        theOccContainer.resetNormalizationStatus();
     }
 
     // ###################
@@ -628,4 +640,5 @@ void ThrEqualization::copyAndResetContainer(DetectorDataContainer& fromContainer
                             cChip->getChannel<OccupancyAndPh>(row, col).fPhError     = 0;
                             cChip->getChannel<OccupancyAndPh>(row, col).readoutError = false;
                         }
+    fromContainer.resetNormalizationStatus();
 }

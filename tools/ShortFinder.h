@@ -28,7 +28,7 @@ class ShortFinder : public Tool
     ~ShortFinder();
     void Initialise();
 
-    void Count(Ph2_HwDescription::BeBoard* pBoard, const ChannelGroup<NCHANNELS>* pGroup);
+    void Count(Ph2_HwDescription::BeBoard* pBoard, const std::shared_ptr<ChannelGroupBase> pGroup);
     // void Count(Ph2_HwDescription::BeBoard* pBoard, const ChannelGroup<NSSACHANNELS>* pGroup);
 
     void FindShorts2S(Ph2_HwDescription::BeBoard* pBoard);

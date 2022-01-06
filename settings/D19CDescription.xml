@@ -8,16 +8,22 @@
         <lpGBT_Interface useOpticalLink="0" useCPB="0"/>
         <Hybrid Id="0" Status="1">
             <Global>
-                <Settings threshold="500" latency="29"/>
-                <TestPulse enable="0" polarity="0" amplitude="0xFA" channelgroup="0" delay="0" groundothers="0"/>
-                <ClusterStub clusterwidth="4" ptwidth="4" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Settings threshold="500" latency="199"/>
+                <TestPulse enable="1" polarity="0" amplitude="0xF0" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00011" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="11"/>
-                <ChannelMask disable=""/>
+                <MaskedStrips CBCId="0"   Rows="50" />
             </Global>
 
             <CBC_Files path="./settings/CbcFiles/" />
             <CBC Id="0" configfile="CBC3_default.txt" />
             <CBC Id="1" configfile="CBC3_default.txt" />
+            <CBC Id="2" configfile="CBC3_default.txt" />
+            <CBC Id="3" configfile="CBC3_default.txt" />
+            <CBC Id="4" configfile="CBC3_default.txt" />
+            <CBC Id="5" configfile="CBC3_default.txt" />
+            <CBC Id="6" configfile="CBC3_default.txt" />
+            <CBC Id="7" configfile="CBC3_default.txt" />
         </Hybrid>
     </OpticalGroup>
 
@@ -44,7 +50,7 @@
         <Register name="fast_command_block">
 		<Register name="triggers_to_accept"> 0 </Register>
             <Register name="trigger_source"> 3 </Register>
-		<Register name="user_trigger_frequency"> 10 </Register>
+		<Register name="user_trigger_frequency"> 1 </Register>
             <Register name="stubs_mask"> 1 </Register>
                 <!--this is the delay for the stub trigger-->
 		<Register name="stub_trigger_delay_value"> 0 </Register>
@@ -53,7 +59,7 @@
             <Register name="delay_after_fast_reset"> 50 </Register>
             <Register name="delay_after_test_pulse"> 200 </Register>
             <Register name="delay_before_next_pulse"> 400 </Register>
-            <Register name="en_fast_reset"> 1 </Register>
+            <Register name="en_fast_reset"> 0 </Register>
             <Register name="en_test_pulse"> 1 </Register>
             <Register name="en_l1a"> 1 </Register>
         </Register>
@@ -61,7 +67,7 @@
         <Register name="antenna_trigger_delay_value"> 200 </Register>
         <Register name="delay_between_two_consecutive"> 0 </Register>
         <Register name="misc">
-            <Register name="backpressure_enable"> 1 </Register>
+            <Register name="backpressure_enable"> 0 </Register>
             <Register name="stubOR"> 1 </Register>
             <Register name="initial_fast_reset_enable"> 0 </Register>
             <Register name="trigger_multiplicity"> 0 </Register>
@@ -179,8 +185,8 @@
     <Setting name="ScanRange">5</Setting>
     
     <!-- Latency scan -->
-    <Setting name="LatencyStart">3</Setting>
-    <Setting name="LatencyStop">2</Setting>
+    <Setting name="StartLatency">190</Setting>
+    <Setting name="LatencyRange">20</Setting>
     
 </Settings>
 </HwDescription>

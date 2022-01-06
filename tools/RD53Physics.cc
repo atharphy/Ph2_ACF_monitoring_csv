@@ -90,11 +90,11 @@ void Physics::sendBoardData(const BoardContainer* cBoard)
     auto theBCIDStream  = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<BCIDsize>>("BCID");
     auto theTrgIDStream = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TrgIDsize>>("TrgID");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
-        theOccStream.streamAndSendBoard(theOccContainer.at(cBoard->getIndex()), fNetworkStreamer);
-        theBCIDStream.streamAndSendBoard(theBCIDContainer.at(cBoard->getIndex()), fNetworkStreamer);
-        theTrgIDStream.streamAndSendBoard(theTrgIDContainer.at(cBoard->getIndex()), fNetworkStreamer);
+        theOccStream.streamAndSendBoard(theOccContainer.at(cBoard->getIndex()), fDQMStreamer);
+        theBCIDStream.streamAndSendBoard(theBCIDContainer.at(cBoard->getIndex()), fDQMStreamer);
+        theTrgIDStream.streamAndSendBoard(theTrgIDContainer.at(cBoard->getIndex()), fDQMStreamer);
     }
 }
 
@@ -244,7 +244,10 @@ void Physics::fillDataContainer(BeBoard& theBoard)
     // # Fill containers #
     // ###################
     const std::vector<Event*>& events = SystemController::GetEvents();
-    for(const auto& event: events) event->fillDataContainer(cBoard, theChnGroupHandler->allChannelGroup());
+    //Assuming all chip will have all channels enabled:
+    auto allChannelGroup = getChannelGroup(-1);
+
+    for(const auto& event: events) event->fillDataContainer(cBoard, allChannelGroup);
 
     // ######################################
     // # Copy register values for streaming #

@@ -18,31 +18,29 @@
 #include "../HWInterface/ChipInterface.h"
 #include "../HWInterface/CicInterface.h"
 #include "../HWInterface/D19clpGBTInterface.h"
+#include "../HWInterface/MPA2Interface.h"
 #include "../HWInterface/MPAInterface.h"
+#include "../HWInterface/PSInterface.h"
 #include "../HWInterface/RD53Interface.h"
 #include "../HWInterface/RD53lpGBTInterface.h"
 #include "../HWInterface/ReadoutChipInterface.h"
 #include "../HWInterface/SSA2Interface.h"
 #include "../HWInterface/SSAInterface.h"
 #include "../HWInterface/lpGBTInterface.h"
+#include "../MonitorUtils/DetectorMonitorConfig.h"
 #include "../NetworkUtils/TCPClient.h"
 #include "../NetworkUtils/TCPPublishServer.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/Container.h"
 // 2S scc/8CBC3 hybrid tests
+#include "../Utils/D19SCEventAS.h"
 #include "../Utils/D19cCbc3Event.h"
 #include "../Utils/D19cCbc3EventZS.h"
-// ps sync - scc/feh tests
+#include "../Utils/D19cCic2Event.h"
 #include "../Utils/D19cMPAEvent.h"
+#include "../Utils/D19cPSEventAS.h"
 #include "../Utils/D19cSSA2Event.h"
 #include "../Utils/D19cSSAEvent.h"
-// ps async - scc/feh tetse
-#include "../Utils/D19SCEventAS.h"
-// ps async - modules
-#include "../Utils/D19cMPAEventAS.h"
-// final modules  - CIC2/CIC2 data
-#include "../Utils/D19cCic2Event.h"
-#include "../Utils/DetectorMonitorConfig.h"
 #include "../Utils/Event.h"
 #include "../Utils/FileHandler.h"
 #include "../Utils/Utilities.h"
@@ -57,7 +55,14 @@
 #include <unordered_map>
 #include <vector>
 
+// librariries for communicating with Hybrid Test Cards
+#ifdef __TCUSB__
+#include "TCInterface.h"
+#endif
+
 class DetectorMonitor;
+class ChannelGroupHandler;
+
 /*!
  * \namespace Ph2_System
  * \brief Namespace regrouping the framework wrapper
@@ -78,19 +83,30 @@ class SystemController
     Ph2_HwInterface::ChipInterface*        fChipInterface;  //!< Interface to the Chip
     Ph2_HwInterface::lpGBTInterface*       flpGBTInterface; //!< Interface to the lpGBT
     Ph2_HwInterface::CicInterface*         fCicInterface;   //!< Interface to a CIC [only valid for OT]
-
-    DetectorContainer* fDetectorContainer;
-    BeBoardFWMap       fBeBoardFWMap;
-    SettingsMap        fSettingsMap;
-    FileHandler*       fFileHandler;
-    std::string        fRawFileName;
-    bool               fWriteHandlerEnabled;
-    bool               fStreamerEnabled;
-    TCPPublishServer*  fNetworkStreamer;
-    DetectorMonitor*   fDetectorMonitor;
-    TCPClient*         fPowerSupplyClient{nullptr};
+    DetectorContainer*                     fDetectorContainer;
+    BeBoardFWMap                           fBeBoardFWMap;
+    SettingsMap                            fSettingsMap;
+    FileHandler*                           fFileHandler;
+    std::string                            fRawFileName;
+    bool                                   fWriteHandlerEnabled;
+    bool                                   fDQMStreamerEnabled;
+    bool                                   fMonitorDQMStreamerEnabled;
+    TCPPublishServer*                      fDQMStreamer;
+    TCPPublishServer*                      fMonitorDQMStreamer;
+    DetectorMonitor*                       fDetectorMonitor;
+    TCPClient*                             fPowerSupplyClient{nullptr};
 #ifdef __TCP_SERVER__
     TCPClient* fTestcardClient{nullptr};
+#endif
+// TestCard interfaces - eventually piGBT can be added here as well
+// should also add the interfaces for the 2S + PS FEHs
+#ifdef __TCUSB__
+#ifdef __ROH_USB__
+    typedef Ph2_HwInterface::TCInterface<TC_PSROH> TestCardInterface;
+#elif __SEH_USB__
+    typedef Ph2_HwInterface::TCInterface<TC_2SSEH> TestCardInterface;
+#endif
+    TestCardInterface fTCInterface{};
 #endif
     /*!
      * \brief Constructor of the SystemController class
@@ -148,7 +164,7 @@ class SystemController
      * \param pFilename : HW Description file
      *\param os         : ostream to dump output
      */
-    void InitializeHw(const std::string& pFilename, std::ostream& os = std::cout, bool pIsFile = true, bool streamData = false);
+    void InitializeHw(const std::string& pFilename, std::ostream& os = std::cout, bool pIsFile = true, bool streamData = false, uint16_t DQMportNumber = 6000, uint16_t monitorDQMportNumber = 7000);
 
     /*!
      * \brief Initialize the settings
@@ -160,7 +176,30 @@ class SystemController
     /*!
      * \brief Configure the Hardware with XML file indicated values
      */
-    void ConfigureHw(bool bIgnoreI2c = false);
+    void ConfigureHw(bool bIgnoreI2c = false, bool pReInitialize = true);
+    // IT + OT specific configurations
+    /*!
+     * \brief Configure the Hardware with XML file indicated values
+     */
+    void ConfigureIT(Ph2_HwDescription::BeBoard* pBoard);
+    void InitializeOT(Ph2_HwDescription::BeBoard* pBoard);
+    void ConfigureOT(Ph2_HwDescription::BeBoard* pBoard);
+    // OT specific configurations for 2S + PS modules
+    /*!
+     * \brief Configure the Hardware with XML file indicated values
+     */
+    void ModuleStartUpPS(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    void ModuleStartUp2S(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    bool CicStartUp(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool cStartUpSequence);
+    /*!
+     * \brief Run Bit Error Rate test
+     * \param chain2test     : which part of the chain to be tested
+     * \param given_time     : states if PRBS has to be run for a certain amount of time or for a certain amount of frames
+     * \param frames_or_time : time [s] or number of frames
+     * \return: none
+     */
+
+    void RunBERtest(std::string chain2test, bool given_time, double frames_or_time);
 
     /*!
      * \brief Read Monitor Data from pBoard
@@ -195,7 +234,7 @@ class SystemController
     virtual void Stop();
     virtual void Pause();
     virtual void Resume();
-    virtual void Configure(std::string cHWFile, bool enableStream = false);
+    virtual void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000);
 
     void StartBoard(Ph2_HwDescription::BeBoard* pBoard);
     void StopBoard(Ph2_HwDescription::BeBoard* pBoard);
@@ -255,6 +294,38 @@ class SystemController
         return false;
     }
 
+    void PrintRegCount()
+    {
+        // print number of I2C transactions
+        for(auto cBoard: *fDetectorContainer)
+        {
+            for(auto cOpticalGroup: *cBoard)
+            {
+                auto& clpGBT = cOpticalGroup->flpGBT;
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    LOG(INFO) << BOLDBLUE << "Hybrid#" << +cHybrid->getId() << RESET;
+                    uint8_t cMasterId = (cHybrid->getId() % 2 == 0) ? 2 : 0;
+                    for(auto cChip: *cHybrid)
+                    {
+                        LOG(INFO) << BOLDMAGENTA << "\t\t..Chip#" << +cChip->getId() << " performed " << cChip->getWriteCount() << " CPB I2C writes and " << cChip->getReadCount() << " CPB I2C reads; "
+                                  << " wrote " << cChip->getRegWriteCount() << " registers and read " << cChip->getRegReadCount() << " registers." << RESET;
+                        if(clpGBT != nullptr)
+                        {
+                            clpGBT->updateWriteCount(cMasterId, cChip->getWriteCount());
+                            clpGBT->updateReadCount(cMasterId, cChip->getReadCount());
+                        }
+                    }
+                    if(clpGBT != nullptr)
+                    {
+                        LOG(INFO) << BOLDBLUE << "\tCPB I2C writes on Master" << +cMasterId << " : " << clpGBT->getWriteCount(cMasterId) << RESET;
+                        LOG(INFO) << BOLDBLUE << "\tCPB I2C reads on Master" << +cMasterId << " : " << clpGBT->getReadCount(cMasterId) << RESET;
+                    }
+                }
+            }
+        }
+    }
+
   private:
     void SetFuture(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
 
@@ -263,6 +334,38 @@ class SystemController
     uint32_t                             fEventSize;
     uint32_t                             fNCbc;
     FileParser                           fParser;
+
+  public:
+    void setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, std::function<bool(const ChipContainer*)> theQueryFunction = [](const ChipContainer*) { return true; });
+    void setChannelGroupHandler(std::shared_ptr<ChannelGroupHandler>      theChannelGroupHandlerPointer,
+                                std::function<bool(const ChipContainer*)> theQueryFunction = [](const ChipContainer*) { return true; });
+    void setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, FrontEndType theFrontEndType);
+
+    void setChannelGroupHandler(std::shared_ptr<ChannelGroupHandler> theChannelGroupHandlerPointer, uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId);
+    const DetectorDataContainer* getChannelGroupHandlerContainer() const
+    {
+        return fChannelGroupHandlerContainer;
+    }
+
+
+    inline const std::shared_ptr<ChannelGroupBase>
+    getChannelGroup(int groupNumber, uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId)
+    {
+        return fChannelGroupHandlerContainer->getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getTestGroup(groupNumber);
+    }
+
+    inline const std::shared_ptr<ChannelGroupBase>
+    getChannelGroup(int groupNumber)
+    {
+        return fChannelGroupHandlerContainer->at(0)->at(0)->at(0)->at(0)->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getTestGroup(groupNumber);
+    }
+
+  protected:
+    bool fSameChannelGroupForAllChannels {true};
+
+  private:
+    DetectorDataContainer* fChannelGroupHandlerContainer;
+
 };
 
 } // namespace Ph2_System

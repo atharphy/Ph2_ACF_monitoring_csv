@@ -16,9 +16,9 @@
 #include "../HWInterface/BeBoardFWInterface.h"
 #include "../HWInterface/D19cFWInterface.h"
 #include "../HWInterface/RD53FWInterface.h"
+#include "../MonitorUtils/DetectorMonitorConfig.h"
 #include "../Utils/ConditionDataSet.h"
 #include "../Utils/ConsoleColor.h"
-#include "../Utils/DetectorMonitorConfig.h"
 #include "../Utils/Exception.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/easylogging++.h"
@@ -89,16 +89,16 @@ class FileParser
     void parseCbcContainer(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
     void parseCbcSettings(pugi::xml_node pCbcNode, Ph2_HwDescription::ReadoutChip* pCbc, std::ostream& os);
     void parseGlobalCbcSettings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os);
+    void parseGlobalHybridMask(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os);
     //
     void parseSSAContainer(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
-    void parseSSASettings(pugi::xml_node pHybridNode, Ph2_HwDescription::ReadoutChip* cSSA);
+    void parseSSASettings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os);
     //
-
     void parseSSA2Container(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
-    void parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription::ReadoutChip* cSSA2);
+    void parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription::ReadoutChip* cSSA);
     //
-    void parseMPA(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix);
-    void parseMPASettings(pugi::xml_node pHybridNode, Ph2_HwDescription::ReadoutChip* cMPA);
+    void parseMPAContainer(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
+    void parseMPASettings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os);
     //
     void parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, Ph2_HwDescription::lpGBT* plpGBT, std::ostream& os);
 

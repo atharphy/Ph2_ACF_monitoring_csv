@@ -25,8 +25,10 @@ namespace Ph2_HwDescription
 
 Cbc::Cbc(const FrontEndDescription& pFeDesc, uint8_t pCbcId, const std::string& filename) : ReadoutChip(pFeDesc, pCbcId)
 {
+    fChipAddress      = 0x41 + pCbcId % 8;
     fMaxRegValue      = 255; // 8 bit registers in CBC
-    fChipOriginalMask = new ChannelGroup<NCHANNELS, 1>;
+    fChipOriginalMask = std::make_shared<ChannelGroup<NCHANNELS, 1>>();
+    fChipOriginalMask->enableAllChannels();
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::CBC3);
 }
@@ -34,8 +36,10 @@ Cbc::Cbc(const FrontEndDescription& pFeDesc, uint8_t pCbcId, const std::string& 
 // C'tors which take BeId, FMCId, FeID, CbcId
 Cbc::Cbc(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCbcId, const std::string& filename) : ReadoutChip(pBeId, pFMCId, pFeId, pCbcId)
 {
+    fChipAddress      = 0x41 + pCbcId % 8;
     fMaxRegValue      = 255; // 8 bit registers in CBC
-    fChipOriginalMask = new ChannelGroup<NCHANNELS, 1>;
+    fChipOriginalMask = std::make_shared<ChannelGroup<NCHANNELS, 1>>();
+    fChipOriginalMask->enableAllChannels();
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::CBC3);
 }

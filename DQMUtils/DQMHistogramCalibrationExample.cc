@@ -23,7 +23,7 @@ DQMHistogramCalibrationExample::DQMHistogramCalibrationExample() {}
 DQMHistogramCalibrationExample::~DQMHistogramCalibrationExample() {}
 
 //========================================================================================================================
-void DQMHistogramCalibrationExample::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramCalibrationExample::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
 {
     // SoC utilities only - BEGIN
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
@@ -86,8 +86,9 @@ void DQMHistogramCalibrationExample::process()
             {
                 size_t hybridIndex = hybrid->getIndex();
 
+                std::string cCanvasName = "Hits_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
                 // Create a canvas do draw the plots
-                TCanvas* cValidation = new TCanvas(("Hits_hybrid_" + std::to_string(hybrid->getId())).data(), ("Hits hybrid " + std::to_string(hybrid->getId())).data(), 0, 0, 650, 650);
+                TCanvas* cValidation = new TCanvas(cCanvasName.data(), cCanvasName.data(), 0, 0, 650, 650);
                 cValidation->Divide(hybrid->size());
 
                 for(auto chip: *hybrid) // for on chip - begin

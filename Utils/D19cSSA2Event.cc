@@ -14,27 +14,19 @@ D19cSSA2Event::D19cSSA2Event(const BeBoard* pBoard, uint32_t pNSSA2, uint32_t pN
     fNSSA2 = pNSSA2;
     SetEvent(pBoard, pNSSA2, list);
 }
-void D19cSSA2Event::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
+
+void D19cSSA2Event::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId)
 {
-    for(auto opticalGroup: *boardContainer)
+    unsigned int i = 0;
+    for(ChannelDataContainer<Occupancy>::iterator channel = chipContainer->begin<Occupancy>(); channel != chipContainer->end<Occupancy>(); channel++, i++)
     {
-        for(auto hybrid: *opticalGroup)
+        if(testChannelGroup->isChannelEnabled(i))
         {
-            for(auto chip: *hybrid)
-            {
-                unsigned int i = 0;
-                for(ChannelDataContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
-                {
-                    if(cTestChannelGroup->isChannelEnabled(i))
-                    {
-                        channel->fOccupancy += (float)privateDataBit(hybrid->getId(), chip->getId(), i);
-                        // if (privateDataBit(hybrid->getId(), chip->getId(), i)) LOG (INFO) << "!";
-                    }
-                }
-            }
+            channel->fOccupancy += (float)privateDataBit(hybridId, chipContainer->getId(), i);
         }
-    }
+    } 
 }
+
 void D19cSSA2Event::SetEvent(const BeBoard* pBoard, uint32_t pNSSA2, const std::vector<uint32_t>& list)
 {
     // LOG(INFO) << BOLDBLUE << "NEW"<< RESET;
@@ -79,6 +71,7 @@ void D19cSSA2Event::SetEvent(const BeBoard* pBoard, uint32_t pNSSA2, const std::
         // " <<pNSSA2<< RESET;
     }
 }
+uint32_t    D19cSSA2Event::L1Id(uint8_t pFeId, uint8_t pCbcId) const { return fL1Id; }
 std::string D19cSSA2Event::HexString() const { return ""; }
 std::string D19cSSA2Event::DataHexString(uint8_t pFeId, uint8_t pSSA2Id) const { return ""; }
 bool        D19cSSA2Event::Error(uint8_t pFeId, uint8_t pSSA2Id, uint32_t i) const // FIXME NOT WORKING?!

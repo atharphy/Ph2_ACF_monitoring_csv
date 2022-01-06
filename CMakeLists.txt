@@ -76,7 +76,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     set (GCC_NOERROR_FLAGS " -Wno-error=unused-result    -Wno-error=deprecated-declarations")
     set (GCC_6_NOERROR_FLAGS "-Wno-error=misleading-indentation")
     set (GCC_7_NOERROR_FLAGS "-Wno-expansion-to-defined -Wno-error=format-overflow")
-    set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow")
+    #set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow")
+    set (GCC_8_NOERROR_FLAGS "-Wno-error=deprecated-declarations -Wno-error=format-overflow -Wno-error=deprecated-declarations -Wno-error=sign-compare -Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow")
     set (GCC_9_NOERROR_FLAGS "-Wno-error=deprecated-copy -Wno-error=int-in-bool-context -Wno-error=unused-variable")
 
     if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
@@ -195,6 +196,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     if(CompileForShep OR NoDataShipping)
         add_subdirectory(DQMUtils)
         add_subdirectory(RootUtils)
+        add_subdirectory(MonitorDQM)
     endif()
 
     if(NoDataShipping OR (CompileForShep AND CompileForHerd))
@@ -207,6 +209,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     add_subdirectory(Utils)
     add_subdirectory(NetworkUtils)
+    add_subdirectory(MonitorUtils)
 
     message("--     ${BoldRed}#### Don't forget to set the path and ld_library_path by sourcing setup.sh before running ###${Reset}")
     #set(ENV{PATH} "$ENV{PATH}:${PROJECT_SOURCE_DIR}/bin")
@@ -279,6 +282,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     add_subdirectory(HWInterface)
     add_subdirectory(System)
     add_subdirectory(miniDAQ)
+    add_subdirectory(MonitorUtils)
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")

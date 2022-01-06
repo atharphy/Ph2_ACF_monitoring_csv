@@ -105,14 +105,6 @@ double convertAnyDouble(const char* pRegValue)
     return strtod(myRegValue.c_str(), 0);
 }
 
-uint8_t reverseBits(uint8_t cValue)
-{
-    cValue = (cValue & 0xF0) >> 4 | (cValue & 0x0F) << 4;
-    cValue = (cValue & 0xCC) >> 2 | (cValue & 0x33) << 2;
-    cValue = (cValue & 0xAA) >> 1 | (cValue & 0x55) << 1;
-    return cValue;
-}
-
 void tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters)
 {
     std::vector<std::string> cTokens;

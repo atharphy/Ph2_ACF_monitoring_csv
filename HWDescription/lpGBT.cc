@@ -114,9 +114,9 @@ void lpGBT::saveRegMap(const std::string& fileName)
             file << v.first;
             for(auto j = 0; j < Nspaces; j++) file << " ";
             file.seekp(-v.first.size(), std::ios_base::cur);
-            file << "0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fAddress) << "          0x" << std::setfill('0') << std::setw(4) << std::hex
-                 << std::uppercase << int(v.second.fDefValue) << "                  0x" << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << int(v.second.fValue)
-                 << "                             " << std::setfill('0') << std::setw(2) << std::dec << std::uppercase << int(v.second.fBitSize) << std::endl;
+            file << "0x" << std::setfill('0') << std::setw(3) << std::hex << std::uppercase << int(v.second.fAddress) << "          0x" << std::setfill('0') << std::setw(2) << std::hex
+                 << std::uppercase << int(v.second.fDefValue) << "                  0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fValue)
+                 << "                             " << std::setfill('0') << std::setw(1) << std::dec << std::uppercase << int(v.second.fBitSize) << std::endl;
 
             cLineCounter++;
         }
