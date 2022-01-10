@@ -385,6 +385,7 @@ bool D19cFWInterface::GetLinkStatus(uint8_t pLinkId)
     }
     return cGBTxLocked;
 }
+
 bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
 {
     // std::lock_guard<std::recursive_mutex> theGuard(fMutex);
@@ -410,6 +411,7 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
         if(cLinksLocked)
         {
             LOG(INFO) << BOLDGREEN << "All links locked." << RESET;
+            LOG(INFO) << BOLDGREEN << "Set fLinkLockStatus true." << RESET;
             break;
         }
         else
@@ -420,10 +422,9 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
             if(fPowerSupplyClient != nullptr)
             {
                 LOG(INFO) << BOLDRED << "Powercycling the module using the Power supply TCP server ..." << RESET;
-                if(fPowerSupplyClient->sendAndReceivePacket("TurnOff,PowerSupplyId:MyRohdeSchwarz,MyKeithley:Front") == "Error") throw std::runtime_error(std::string("HV channel did not turned Off"));
-                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-                if(fPowerSupplyClient->sendAndReceivePacket("TurnOff,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module1") == "Error")
-                    throw std::runtime_error(std::string("LV channel 1 did not turned Off"));
+                if(fPowerSupplyClient->sendAndReceivePacket("TurnOff,PowerSupplyId:MyRohdeSchwarz,MyKeithley:Front") == "Error") throw std::runtime_error(std::string("HV channel did not turned
+            Off")); std::this_thread::sleep_for(std::chrono::milliseconds(1000)); if(fPowerSupplyClient->sendAndReceivePacket("TurnOff,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module1") ==
+            "Error") throw std::runtime_error(std::string("LV channel 1 did not turned Off"));
                 if(fPowerSupplyClient->sendAndReceivePacket("TurnOff,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module2") == "Error")
                     throw std::runtime_error(std::string("LV channel 2 did not turned Off"));
 
@@ -434,7 +435,8 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
                 if(fPowerSupplyClient->sendAndReceivePacket("TurnOn,PowerSupplyId:MyRohdeSchwarz,ChannelId:LV_Module2") == "Error")
                     throw std::runtime_error(std::string("LV channel 2 did not turned On"));
                 std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-                if(fPowerSupplyClient->sendAndReceivePacket("TurnOn,PowerSupplyId:MyRohdeSchwarz,MyKeithley:Front") == "Error") throw std::runtime_error(std::string("HV channel did not turned On"));
+                if(fPowerSupplyClient->sendAndReceivePacket("TurnOn,PowerSupplyId:MyRohdeSchwarz,MyKeithley:Front") == "Error") throw std::runtime_error(std::string("HV channel did not turned
+            On"));
             }*/
             // reset lpGBT core
             this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
@@ -2678,6 +2680,7 @@ bool D19cFWInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlav
     // uint8_t cWorkerId = 16, cFunctionId = 5, cMasterConfig = (pNBytes << 2) | fCPBConfig.fI2CFrequency;
     if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "I2C write to Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
     std::vector<uint32_t> cCommandVector;
+    // ResetCPB();
     cCommandVector.clear();
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 8 | pSlaveAddress << 0);
     cCommandVector.push_back(cMasterConfig << 24 | pSlaveData << 0);
@@ -2718,6 +2721,7 @@ uint8_t D19cFWInterface::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSl
     // uint8_t cWorkerId = 16 , cFunctionId = 4, cMasterConfig = (pNBytes << 2) | fCPBConfig.fI2CFrequency;
     if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "I2C Read to Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
     std::vector<uint32_t> cCommandVector;
+    // ResetCPB();
     cCommandVector.clear();
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 8 | pSlaveAddress << 0);
     cCommandVector.push_back(cMasterConfig << 24);

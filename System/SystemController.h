@@ -342,30 +342,28 @@ class SystemController
     void setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, FrontEndType theFrontEndType);
 
     void setChannelGroupHandler(std::shared_ptr<ChannelGroupHandler> theChannelGroupHandlerPointer, uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId);
-    const DetectorDataContainer* getChannelGroupHandlerContainer() const
+    const DetectorDataContainer* getChannelGroupHandlerContainer() const { return fChannelGroupHandlerContainer; }
+
+    inline const std::shared_ptr<ChannelGroupBase> getChannelGroup(int groupNumber, uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId)
     {
-        return fChannelGroupHandlerContainer;
+        return fChannelGroupHandlerContainer->getObject(boardId)
+            ->getObject(opticalGroupId)
+            ->getObject(hybridId)
+            ->getObject(chipId)
+            ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+            ->getTestGroup(groupNumber);
     }
 
-
-    inline const std::shared_ptr<ChannelGroupBase>
-    getChannelGroup(int groupNumber, uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId)
-    {
-        return fChannelGroupHandlerContainer->getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getTestGroup(groupNumber);
-    }
-
-    inline const std::shared_ptr<ChannelGroupBase>
-    getChannelGroup(int groupNumber)
+    inline const std::shared_ptr<ChannelGroupBase> getChannelGroup(int groupNumber)
     {
         return fChannelGroupHandlerContainer->at(0)->at(0)->at(0)->at(0)->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getTestGroup(groupNumber);
     }
 
   protected:
-    bool fSameChannelGroupForAllChannels {true};
+    bool fSameChannelGroupForAllChannels{true};
 
   private:
     DetectorDataContainer* fChannelGroupHandlerContainer;
-
 };
 
 } // namespace Ph2_System

@@ -20,6 +20,9 @@ void OTHybridTester::FindUSBHandler()
         LOG(DEBUG) << BOLDYELLOW << "Did not find lpGBT" << RESET;
 }
 
+// void OTHybridTester::makeDir(const char* cDirName) { fResultFile->mkdir(cDirName); }
+// void OTHybridTester::changeDir(const char* cDirName) { fResultFile->cd(cDirName); }
+
 void OTHybridTester::LpGBTInjectULInternalPattern(uint32_t pPattern)
 {
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
@@ -89,6 +92,16 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
     LOG(INFO) << BOLDGREEN << "Checking against : " << std::bitset<8>(pPattern) << RESET;
     bool                res             = true;
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+    // #ifdef __USE_ROOT__
+    //     auto cCICOutTree = new TTree("tCicOut", "CIC_Out lines going to the SEH");
+
+    //     std::vector<TString> cLineNames;
+    //     std::vector<uint8_t> cMissMatch;
+    //     // Create TTree Branches
+    //     cCICOutTree->Branch("LineName", &cLineNames);
+    //     cCICOutTree->Branch("MissMatch", &cMissMatch);
+    // #endif
+
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
@@ -103,16 +116,17 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 }
                 fBeBoardInterface->setBoard(cBoard->getId());
-                D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-
+                D19cFWInterface*      cFWInterface      = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+                D19cDebugFWInterface* cDebugFWInterface = dynamic_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
                 cFWInterface->selectLink(cOpticalGroup->getId());
+                cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
                 LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
                 // D19cDebugFWInterface* cDebugInterface = dynamic_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
                 // cDebugInterface->StubDebug(true, 6);
                 // enable stub debug - allows you to 'scope' the stub output
 
                 cFWInterface->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x01);
-                cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
+
                 cFWInterface->ChipTestPulse();
                 auto                     cWords = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
                 std::vector<std::string> cLines(0);
@@ -143,6 +157,8 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                               << BOLDWHITE << +cShift << RESET;
 
 #ifdef __USE_ROOT__
+                    // cLineNames.push_back(Form("stub_%d_hybrid_%d_match", int(cLine), hybridNumber));
+                    // cMissMatch.push_back(cMatch);
                     fillSummaryTree(Form("stub_%d_hybrid_%d_match", int(cLine), hybridNumber), cMatch);
                     fillSummaryTree(Form("stub_%d_hybrid_%d_shift", int(cLine), hybridNumber), cShift);
 #endif
@@ -174,7 +190,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     // cStrLength = cOutput.length();
                     cLine++;
 #ifdef __SEH_USB__
-                } while(cLine < 5); // makeing sure missing stub line pair is skipped in 2S case
+                } while(cLine < 5); // making sure missing stub line pair is skipped in 2S case
 #else
                 } while(cLine < 6);
 #endif
@@ -184,9 +200,9 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 cFWInterface->ResetReadout();
 
                 LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
-                // D19cDebugFWInterface* cDebugInterface              = static_cast<D19cDebugFWInterface*>(cFWInterface);
-                // cDebugInterface->L1ADebug();
-                // cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", 0xff);
+                // cFWInterface->L1ADebug();
+                cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
+
                 cFWInterface->ConfigureTriggerFSM(0, 10, 3);
 
                 // disable back-pressure
@@ -216,6 +232,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     LOG(DEBUG) << BOLDBLUE << "Line L1A Shift " << +shift << " Match " << +popcount << RESET;
                 }
                 LOG(INFO) << BOLDBLUE << "Found for L1A a minimal bit difference of " << BOLDWHITE << +cMatch << BOLDBLUE << " for a bit shift of " << BOLDWHITE << +cShift << RESET;
+                cFWInterface->ResetReadout();
                 if((cMatch == 0))
                 {
                     LOG(INFO) << BOLDGREEN << "CIC Out Test passed for L1A line"
@@ -226,8 +243,12 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     LOG(INFO) << BOLDRED << "CIC Out Test failed for L1A line"
                               << " for hybrid side " << +hybridNumber << RESET;
                     res = false;
+                    cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
+                    cDebugFWInterface->L1ADebug(10);
                 }
 #ifdef __USE_ROOT__
+                // cLineNames.push_back(Form("L1A_hybrid_%d_match", hybridNumber));
+                // cMissMatch.push_back(cMatch);
                 fillSummaryTree(Form("L1A_hybrid_%d_match", hybridNumber), cMatch);
                 fillSummaryTree(Form("L1A_hybrid_%d_shift", hybridNumber), cShift);
 #endif
@@ -241,11 +262,11 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     cL1ATotal += 32;
                 }
                 LOG(INFO) << "L1A total wrong bits: " << BOLDBLUE << +cL1ATotalWrong << " in a total of: " << +cL1ATotal << RESET;
-
-                cFWInterface->ResetReadout();
             }
         }
     }
+    // cCICOutTree->Fill();
+    // cCICOutTree->Write();
     return res;
 }
 
@@ -270,26 +291,151 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.fe_data_player.i2c_slave_reset", 0x01);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        LOG(DEBUG) << BOLDBLUE << "Reset I2C slave in electrical FC7" << RESET;
+    }
+#ifdef __USE_ROOT__
+
+    // Create variables for TTree branches
+    std::vector<std::vector<uint8_t>> cI2CStatusVectVect;
+    // std::vector<std::vector<int>>     cTryVectVect;
+    // std::vector<std::vector<float>>   cSetRightLoadVectVect;
+    // std::vector<std::vector<float>>   cSetLeftLoadVectVect;
+
+    // float cSetRightLoad = 0;
+    // float cSetLeftLoad  = 0;
+
+    for(auto cBoard: *fDetectorContainer)
+    {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
+        BeBoardFWInterface* pInterface = dynamic_cast<BeBoardFWInterface*>(fBeBoardFWMap.find(cBoard->getId())->second);
+
         for(auto cOpticalGroup: *cBoard)
         {
             clpGBTInterface->ResetI2C(cOpticalGroup->flpGBT, {0, 1, 2});
             std::this_thread::sleep_for(std::chrono::milliseconds(30));
             for(const auto cMaster: pMasters)
             {
-                uint8_t cSlaveAddress = 0x60;
+                // #ifdef __TCUSB__
+                // #ifdef __SEH_USB__
+                //     fTC_USB->set_load2(true, false, 0);
+                //     fTC_USB->set_load1(true, false, 0);
+                //     std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+                //     fTC_USB->read_load(fTC_USB->I_P1V2_R, cSetRightLoad);
+                //     fTC_USB->read_load(fTC_USB->I_P1V2_L, cSetLeftLoad);
 
-                uint8_t cSuccess = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x0901, 2);
-                cSuccess         = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x9, 1);
-                if(cSuccess)
-                    LOG(INFO) << BOLDGREEN << "I2C Master " << +cMaster << " PASSED" << RESET;
+                // #endif
+                // #endif
+                bool                 cMasterSuccess = true;
+                std::vector<uint8_t> cI2CStatusVect;
+                // std::vector<int>     cTryVect;
+                // std::vector<float>   cSetRightLoadVect;
+                // std::vector<float>   cSetLeftLoadVect;
+
+                uint8_t cSlaveAddress = 0x60;
+                // LOG(INFO) << BOLDBLUE << "Don't care about following first I2C transaction" << RESET;
+                // uint8_t cSuccess  = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x09, 1);
+                // uint8_t i2cstatus = clpGBTInterface->GetI2CStatus(cOpticalGroup->flpGBT, cMaster);
+                // LOG(INFO) << GREEN << "I2C Master " << +cMaster << " -- Status : " << fI2CStatusMap[i2cstatus] << RESET;
+                // LOG(INFO) << BOLDBLUE << "--------" << RESET;
+                struct timeval stop, start;
+                gettimeofday(&start, NULL);
+                // do stuff
+                uint8_t failureIter = 0;
+                int     tries       = 100000;
+                for(int j = 0; j < tries; j++)
+                {
+                    // #ifdef __TCUSB__
+                    // #ifdef __SEH_USB__
+                    //                     if(j == tries / 2)
+                    //                     {
+                    //                         fTC_USB->set_load2(true, false, 1500);
+                    //                         fTC_USB->set_load1(true, false, 1500);
+                    //                         std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+                    //                         fTC_USB->read_load(fTC_USB->I_P1V2_R, cSetRightLoad);
+                    //                         fTC_USB->read_load(fTC_USB->I_P1V2_L, cSetLeftLoad);
+                    //                     }
+                    // #endif
+                    // #endif
+                    // cSuccess = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x0901, 2);
+
+                    // uint8_t cSuccess  = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x09, 1);
+                    uint8_t  i2cstatus         = 4; // clpGBTInterface->GetI2CStatus(cOpticalGroup->flpGBT, cMaster);
+                    uint8_t  cLinkID           = cOpticalGroup->getId();
+                    uint32_t cTheI2CWriteCount = 0;
+                    bool     cSuccess          = pInterface->I2CWrite(cLinkID, cMaster, cSlaveAddress, 0x09, 1, cTheI2CWriteCount);
+
+                    if(cSuccess)
+                    {
+                        LOG(DEBUG) << BOLDGREEN << "I2C Master " << +cMaster << " PASSED" << RESET;
+                        failureIter = 0;
+                    }
+                    else
+                    {
+                        i2cstatus = clpGBTInterface->GetI2CStatus(cOpticalGroup->flpGBT, cMaster);
+                        LOG(INFO) << GREEN << "I2C Master " << +cMaster << " -- Status : " << fI2CStatusMap[i2cstatus] << RESET;
+                        LOG(INFO) << BOLDRED << "I2C Master " << +cMaster << " FAILED" << RESET;
+                        LOG(INFO) << BOLDBLUE << "I2C test number " << BOLDRED << +j << " failed" << RESET;
+                        failureIter++;
+                        if(failureIter >= 5)
+                        {
+                            cI2CStatusVect.push_back(i2cstatus);
+                            cMasterSuccess &= cSuccess;
+                            break;
+                        }
+                    }
+
+                    // cTryVect.push_back(j);
+                    // cSetRightLoadVect.push_back(cSetRightLoad);
+                    // cSetLeftLoadVect.push_back(cSetLeftLoad);
+                    cI2CStatusVect.push_back(i2cstatus);
+                    cMasterSuccess &= cSuccess;
+                }
+                if(cMasterSuccess) { LOG(INFO) << BOLDGREEN << "I2C Master " << +cMaster << " PASSED the Test Card Test" << RESET; }
                 else
-                    LOG(INFO) << BOLDRED << "I2C Master " << +cMaster << " FAILED" << RESET;
-                cTestSuccess &= cSuccess;
-                fillSummaryTree(Form("i2cmaster%i", cMaster), cSuccess);
+                {
+                    LOG(INFO) << BOLDRED << "I2C Master " << +cMaster << " FAILED the Test Card Test" << RESET;
+                }
+                fillSummaryTree(Form("i2cmaster%i", cMaster), cMasterSuccess);
+                gettimeofday(&stop, NULL);
+                LOG(INFO) << BOLDBLUE << "Duration " << (stop.tv_sec - start.tv_sec) * 1000000 + stop.tv_usec - start.tv_usec << RESET;
+                // printf("took %lu us\n", (stop.tv_sec - start.tv_sec) * 1000000 + stop.tv_usec - start.tv_usec);
+                cTestSuccess &= cMasterSuccess;
+                cI2CStatusVectVect.push_back(cI2CStatusVect);
+                // cTryVectVect.push_back(cTryVect);
+                // cSetRightLoadVectVect.push_back(cSetRightLoadVect);
+                // cSetLeftLoadVectVect.push_back(cSetLeftLoadVect);
             }
         }
+        // cI2CTree->Branch(Form("I2C_Master_%i_status", cMaster), &cI2CStatusVect);
+        // cI2CTree->Branch("I2C_Master_%i_transaction", &cTryVect);
     }
+    // #ifdef __TCUSB__
+    // #ifdef __SEH_USB__
+    //     fTC_USB->set_load2(true, false, 1000);
+    //     fTC_USB->set_load1(true, false, 1000);
+    //     std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+    //     fTC_USB->read_load(fTC_USB->I_P1V2_R, cSetRightLoad);
+    //     fTC_USB->read_load(fTC_USB->I_P1V2_L, cSetLeftLoad);
+
+    // #endif
+    // #endif
+    int index = 0;
+    for(const auto cMaster: pMasters)
+    {
+        auto cI2CTree = new TTree(Form("tI2CMaster%i", cMaster), Form("I2C Master %i Test Tree", cMaster));
+        cI2CTree->Branch("I2C_Master_status", &cI2CStatusVectVect[index]);
+        // cI2CTree->Branch("I2C_Master_transaction", &cTryVectVect[index]);
+        // cI2CTree->Branch("I2C_Master_rightLoad", &cSetRightLoadVectVect[index]);
+        // cI2CTree->Branch("I2C_Master_leftLoad", &cSetLeftLoadVectVect[index]);
+        cI2CTree->Fill();
+        fResultFile->cd();
+        cI2CTree->Write();
+        index += 1;
+    }
+#endif
     return cTestSuccess;
 }
 
@@ -447,9 +593,9 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     auto  cADCsMapIterator = cADCsMap.begin();
     int   cADCValue;
     int   cBinCount         = 1;
-    float CONVERSION_FACTOR = 1. / 1024.;
+    float cConversionFactor = (1. / 1024.);
 
-    fillSummaryTree("ADC conversion factor", CONVERSION_FACTOR);
+    fillSummaryTree("ADC conversion factor", cConversionFactor);
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr)
@@ -524,7 +670,7 @@ void OTHybridTester::LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8
         if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
-            LOG(INFO) << BOLDBLUE << "Set levels to " << +pLevel << RESET;
+            // LOG(INFO) << BOLDBLUE << "Set levels to " << +pLevel << RESET;
             clpGBTInterface->ConfigureGPIODirection(cOpticalGroup->flpGBT, pGPIOs, 1);
             clpGBTInterface->ConfigureGPIOLevel(cOpticalGroup->flpGBT, pGPIOs, pLevel);
         }
@@ -544,8 +690,35 @@ bool OTHybridTester::LpGBTTestResetLines()
     std::map<std::string, TC_PSROH::measurement> cResetLines = fResetLines;
 #elif __SEH_USB__
     std::map<std::string, TC_2SSEH::resetMeasurement> cResetLines = f2SSEHResetLines;
-    std::vector<uint8_t>                              cGPIOs      = {0, 3, 6, 8};
+    // std::vector<uint8_t>                              cGPIOs      = {0, 3, 6, 8};
 #endif
+    LpGBTSetGPIOLevel(cGPIOs, 1);
+
+    // while(true)
+    // {
+    //     // LpGBTSetGPIOLevel(cGPIOs, 0);
+    //     // std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    //     // LpGBTSetGPIOLevel(cGPIOs, 1);
+    //     // for(int j=0;j<250;j++){
+    //     // LpGBTSetGPIOLevel(cGPIOs, 0);
+    //     // std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    //     // LpGBTSetGPIOLevel(cGPIOs, 1);
+    //     //}
+
+    //     fTC_USB->read_reset(TC_2SSEH::resetMeasurement::RST_CBC_R, cMeasurement);
+    //     fTC_USB->read_reset(TC_2SSEH::resetMeasurement::RST_CIC_R, cMeasurement);
+    //     fTC_USB->read_reset(TC_2SSEH::resetMeasurement::RST_CBC_L, cMeasurement);
+    //     fTC_USB->read_reset(TC_2SSEH::resetMeasurement::RST_CIC_L, cMeasurement);
+    //     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+    // }
+
+    // auto cResetTree = new TTree("tReset", "Reset Test");
+
+    // std::vector<TString> cLineNames;
+    // std::vector<float> cValues;
+    // // Create TTree Branches
+    // cResetTree->Branch("LineAndLevel", &cLineNames);
+    // cResetTree->Branch("VoltageValue", &cValues);
 
     for(auto cLevel: cLevels)
     {
@@ -567,10 +740,12 @@ bool OTHybridTester::LpGBTTestResetLines()
 #endif
             float cDifference_mV = std::fabs((cLevel.second * 1300) - cMeasurement * 1000.); // 1300
 #endif
-            cStatus = cStatus && (cDifference_mV <= 100);
+            fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
+            cStatus = cStatus && (cDifference_mV <= 200);
             cValid  = cValid && cStatus;
-
-            if(cDifference_mV > 100)
+            // cLineNames.push_back(cMapIterator->first.c_str() + cLevel.first);
+            // cValues.push_back(cMeasurement);
+            if(cDifference_mV > 200)
             {
                 LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
                 fillSummaryTree(cMapIterator->first.c_str() + cLevel.first, 0);
@@ -588,11 +763,13 @@ bool OTHybridTester::LpGBTTestResetLines()
             LOG(INFO) << BOLDRED << "Set levels to " << cLevel.first << " : test " << BOLDRED << " failed." << RESET;
     }
 #endif
-    if(cValid) { LOG(INFO) << BOLDGREEN << "Reset test passed." << RESET; }
-    else
-    {
-        LOG(INFO) << BOLDRED << "Reset test failed." << RESET;
-    }
+    // if(cValid) { LOG(INFO) << BOLDGREEN << "Reset test passed." << RESET; }
+    // else
+    // {
+    //     LOG(INFO) << BOLDRED << "Reset test failed." << RESET;
+    // }
+    // cResetTree->Write();
+    // cResetTree->Fill();
     return cValid;
 }
 
@@ -641,8 +818,21 @@ bool OTHybridTester::LpGBTTestVTRx()
         if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
+            clpGBTInterface->ResetI2C(cOpticalGroup->flpGBT, {0, 1, 2});
+            std::this_thread::sleep_for(std::chrono::milliseconds(30));
             clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "I2CM1Config", 8);
-            auto cMapIterator = fVTRxplusDefaultRegisters.begin();
+            cRecent = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, 0x15, 1);
+            for(int i = 0; i < 5 && !(cRecent); i++) { cRecent = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, 0x15, 1); }
+            cResult                                              = clpGBTInterface->ReadI2C(cOpticalGroup->flpGBT, 1, 0x50, 1);
+            std::map<uint8_t, uint8_t> cVTRxplusDefaultRegisters = fVTRxplusDefaultRegisters;
+            if(cResult == 0x15)
+            {
+                cVTRxplusDefaultRegisters = fVTRxplusDefaultRegistersV13;
+                LOG(INFO) << BOLDGREEN << "VTRx+ register map for version 1.3 is used!" << RESET;
+            }
+            else
+                LOG(INFO) << BOLDGREEN << "VTRx+ register map for version 1.2 is used!" << RESET;
+            auto cMapIterator = cVTRxplusDefaultRegisters.begin();
             do
             {
                 cRecent  = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, cMapIterator->first, 1, 2);
@@ -657,13 +847,29 @@ bool OTHybridTester::LpGBTTestVTRx()
 
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 cMapIterator++;
-            } while(cMapIterator != fVTRxplusDefaultRegisters.end());
+            } while(cMapIterator != cVTRxplusDefaultRegisters.end());
         }
     }
     fillSummaryTree("vtrxplusslowcontrol", cSuccess);
     return cSuccess;
 }
 
+bool OTHybridTester::LpGBTGetLinkLock()
+{
+    bool cStatus = false;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        fBeBoardInterface->setBoard(cBoard->getId());
+        for(auto cOpticalGroup: *cBoard)
+        {
+            D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+
+            cStatus = cFWInterface->GetLinkStatus(cOpticalGroup->getId());
+        }
+    }
+    return cStatus;
+}
 bool OTHybridTester::LpGBTFastCommandChecker(uint8_t pPattern)
 {
     uint8_t  cMatch;
@@ -825,7 +1031,6 @@ void OTHybridTester::LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFi
         }
     }
 }
-
 #ifdef __TCP_SERVER__
 float OTHybridTester::getMeasurement(std::string name)
 {

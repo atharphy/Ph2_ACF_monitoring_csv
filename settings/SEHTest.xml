@@ -5,7 +5,7 @@
   ###############-->
   <BeBoard Id="0" boardType="D19C" eventType="SSA">
       <!--<connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.12:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
-      <connection id="board" uri="ipbusudp-2.0://192.168.0.167:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+      <connection id="board" uri="ipbusudp-2.0://192.168.0.168:50001" address_table="file://settings/address_tables/uDTC_OT_address_table_sync.xml" />
     <!--<connection id="board" uri="chtcp-2.0://ph2acf-01.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
     <CDCE configure="0" clockRate="320"/>
     
@@ -27,7 +27,7 @@
     </SLink>
 
     <!--CONFIG-->
-    <Register name="clock_source">3</Register> <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
+    <Register name="clock_source">0</Register> <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
     <Register name="fc7_daq_cnfg">
         <!-- Clock control -->
         <Register name="clock">
@@ -132,7 +132,7 @@
     ELECTRICAL FC7 
   ###############-->
   <BeBoard Id="1" boardType="D19C" eventType="SSA">
-        <connection id="board" uri="ipbusudp-2.0://192.168.0.135:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
+        <connection id="board" uri="ipbusudp-2.0://192.168.0.169:50001" address_table="file://settings/address_tables/uDTC_OT_address_table_sync.xml" /> 
         <!--  <connection id="board" uri="chtcp-2.0://cmsuptkhsetup2.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />  -->
 
         <CDCE configure="0" clockRate="320"/> 
@@ -141,7 +141,7 @@
          </OpticalGroup> 
 
     <!--CONFIG-->
-    <Register name="clock_source">3</Register> <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
+    <Register name="clock_source">0</Register> <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
     <Register name="fc7_daq_cnfg">
 	<!-- Clock control -->
 	<Register name="clock">

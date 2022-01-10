@@ -42,6 +42,15 @@ class OTHybridTester : public Tool
     ~OTHybridTester();
 
     void FindUSBHandler();
+#ifdef __TCUSB__
+#ifdef __ROH_USB__
+    TC_PSROH* GetTCUSBHandler() { return fTC_USB; }
+#elif __SEH_USB__
+    TC_2SSEH* GetTCUSBHandler() { return fTC_USB; }
+#endif
+#endif
+    // void makeDir(const char* cDirName);
+    // void changeDir(const char* cDirName);
 
     // ###################################
     // # LpGBT related functions #
@@ -64,11 +73,15 @@ class OTHybridTester : public Tool
     bool LpGBTTestFixedADCs();
     bool LpGBTTestGPILines();
     bool LpGBTTestVTRx();
+    bool LpGBTGetLinkLock();
     bool LpGBTFastCommandChecker(uint8_t pPattern);
     // Run Eye Openin Monitor
     void LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect);
     // Run Bit Error Rate Test
     void LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint32_t pPattern = 0x00000000);
+
+    // Phase Alignment
+    void BackEndAlignment(std::vector<std::string> pLines);
 
   private:
     float       getMeasurement(std::string name);
@@ -118,7 +131,7 @@ class OTHybridTester : public Tool
                                                             {"PTAT_BPOL12V_Nominal", 0.6}};
     std::map<std::string, std::string> f2SSEHADCInputMap =
         {{"AMUX_L", "ADC0"}, {"VMON_P1V25_L", "ADC1"}, {"VMIN", "ADC2"}, {"AMUX_R", "ADC3"}, {"TEMPP", "ADC4"}, {"VTRX+_RSSI_ADC", "ADC5"}, {"PTAT_BPOL2V5", "ADC6"}, {"PTAT_BPOL12V", "ADC7"}};
-    std::map<std::string, std::string> fPSROHADCInputMap         = {{"L_AMUX_OUT", "ADC0"},
+    std::map<std::string, std::string> fPSROHADCInputMap            = {{"L_AMUX_OUT", "ADC0"},
                                                             {"1V_MONITOR", "ADC1"},
                                                             {"12V_MONITOR_VD", "ADC2"},
                                                             {"R_AMUX_OUT", "ADC3"},
@@ -126,7 +139,7 @@ class OTHybridTester : public Tool
                                                             {"VTRX+.RSSI_ADC", "ADC5"},
                                                             {"1V25_MONITOR", "ADC6"},
                                                             {"2V55_MONITOR", "ADC7"}};
-    std::map<std::string, float>       fPSROHDefaultParameters   = {{"Spannung", 2},
+    std::map<std::string, float>       fPSROHDefaultParameters      = {{"Spannung", 2},
                                                             {"Strom", 0.5},
                                                             {"HV", 1},
                                                             {"12V_MONITOR_VD_Nominal", 0.21},
@@ -134,7 +147,20 @@ class OTHybridTester : public Tool
                                                             {"VTRX+.RSSI_ADC_Nominal", 0.6},
                                                             {"1V25_MONITOR_Nominal", 0.806},
                                                             {"2V55_MONITOR_Nominal", 0.808}};
-    std::map<uint8_t, uint8_t>         fVTRxplusDefaultRegisters = {{0x00, 0x0f}, {0x01, 0x01}, {0x04, 0x0f}, {0x05, 0x2f}, {0x06, 0x26}, {0x07, 0x00}};
+    std::map<uint8_t, uint8_t>         fVTRxplusDefaultRegisters    = {{0x00, 0x0f}, {0x01, 0x01}, {0x04, 0x0f}, {0x05, 0x2f}, {0x06, 0x26}, {0x07, 0x00}};
+    std::map<uint8_t, uint8_t>         fVTRxplusDefaultRegistersV13 = {{0x00, 0x01}, {0x02, 0x01}, {0x03, 0x30}, {0x04, 0xa0}, {0x05, 0x00}, {0x11, 0x07}};
+    std::map<uint8_t, std::string>     fI2CStatusMap                = {{4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
+
+    std::map<std::string, uint8_t> fBackendAlignmentLineMap = {{"SSA_FCMD_L", 0}, {"SSA_FCMD_R", 1}, {"CIC_FCMD_L", 2}, {"CIC_FCMD_R", 3}, {"2S_R", 1}, {"2S_L", 2}};
+
+  protected:
+#ifdef __TCUSB__
+#ifdef __ROH_USB__
+    TC_PSROH* fTC_USB;
+#elif __SEH_USB__
+    TC_2SSEH* fTC_USB;
+#endif
+#endif
 };
 
 #endif

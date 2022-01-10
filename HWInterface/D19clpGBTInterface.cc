@@ -148,6 +148,19 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
         this->cbcReset(pChip, true, cSide);
         this->cicReset(pChip, true, cSide);
     }
+#ifdef __TCUSB__
+    ContinuousPhaseAlignRx(pChip, cRxGroups, cRxChannels);
+    // InternalPhaseAlignRx(pChip, cRxGroups, cRxChannels);
+    // DpPhaseAlignRx(pChip, cRxGroups, cRxChannels);
+    ConfigureCurrentDAC(pChip, std::vector<std::string>{"ADC4"}, 0x1c); // current chosen according to measurement range
+#endif
+
+} // namespace Ph2_HwInterface
+void D19clpGBTInterface::ContinuousPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
+{
+    // Configure Rx Phase Shifter
+
+    D19clpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, 2, 2);
 }
 
 void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)

@@ -30,6 +30,7 @@ void SEHTester::Initialise()
     {
         if(cBoard->at(0)->flpGBT != nullptr) continue;
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.fe_for_ps_roh.i2c_slave_reset", 0x01);
+        LOG(INFO) << BOLDRED << "Reset I2C slave" << RESET;
     }
 }
 
@@ -204,6 +205,9 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:1,hvmonx8Relay:1,HVDAC_setvalue:0,");
 #else
     fTC_USB->set_HV(false, true, true, 0);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
 #endif
     std::vector<float> cDACValVect;
     std::vector<float> cVHVJ7ValVect;
@@ -560,15 +564,85 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
 #endif
 #endif
 }
-
-void SEHTester::TurnOn()
+void SEHTester::SetLoad(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
 {
 #ifdef __TCUSB__
 #ifdef __SEH_USB__
+    fTC_USB->set_load2(true, false, pLeftLoadValue);
+    fTC_USB->set_load1(true, false, pRightLoadValue);
+#endif
+#endif
+}
+void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
+{
+    // workaround to turn on the bPOL2V5 propertly
+
+#ifdef __TCUSB__
+#ifdef __SEH_USB__
+    float T;
+    // check if the critical temperature of -35C has been reached
+    fTC_USB->read_temperature(fTC_USB->Temp1, T);
+    fillSummaryTree("StartTemperature", T);
+    if(T < -35.0)
+    {
+        // if so add additional load to the lpGBT side of the hybrid to
+        // ensure larger currents and stop the negative over-current prottection
+        // of the bPOL
+        // 0x090 correcponds to 91mA a translates to 7mA of current draw
+        // before turning on the service hybrid
+        uint32_t cLeftLoadValue = pLeftLoadValue;
+        if(pLeftLoadValue < 0x090) { cLeftLoadValue = 0x090; }
+        fTC_USB->set_load1(true, false, pRightLoadValue);
+        fTC_USB->set_load2(true, false, cLeftLoadValue); // 1 step = 635uA 0xfff = 2.6A
+        // waiting 7 seconds before turnin on the hybrid ensures propper
+        // discharge of the side and lets the current rise so that the negative
+        // over-current protection does not activate
+        std::this_thread::sleep_for(std::chrono::milliseconds(7000));
+    }
+    else
+    {
+        fTC_USB->set_load2(true, false, pLeftLoadValue);
+        fTC_USB->set_load1(true, false, pRightLoadValue);
+    }
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("TurnOn");
 #else
+
+    float I_SEH;
+    float U_SEH;
+    float I_P1V2_R;
+    float I_P1V2_L;
+    float U_P1V2_R;
+    float U_P1V2_L;
+    float U_P2V5 = 0;
+    // 1 step = 635uA 0xfff = 2.6A
+    // waiting 7 seconds before turnin on the hybrid ensures propper
+    // discharge of the side and lets the current rise so that the negative
+    // over-current protection does not activate
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+    fTC_USB->read_load(fTC_USB->U_P1V2_R, U_P1V2_R);
+    fTC_USB->read_load(fTC_USB->U_P1V2_L, U_P1V2_L);
+    fTC_USB->read_load(fTC_USB->P2V5_VTRx_MON, U_P2V5);
     fTC_USB->set_SehSupply(fTC_USB->sehSupply_On);
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+
+    fTC_USB->read_load(fTC_USB->I_P1V2_R, I_P1V2_R);
+    fTC_USB->read_load(fTC_USB->I_P1V2_L, I_P1V2_L);
+    fTC_USB->read_supply(fTC_USB->I_SEH, I_SEH);
+    fTC_USB->read_load(fTC_USB->U_P1V2_R, U_P1V2_R);
+    fTC_USB->read_load(fTC_USB->U_P1V2_L, U_P1V2_L);
+    fTC_USB->read_supply(fTC_USB->U_SEH, U_SEH);
+    fTC_USB->read_load(fTC_USB->P2V5_VTRx_MON, U_P2V5);
+    fillSummaryTree("TurnOnLoadRight", I_P1V2_R);
+    fillSummaryTree("TurnOnLoadLeft", I_P1V2_L);
+    if(T < -35.0)
+    {
+        // wait 4 seconds
+        std::this_thread::sleep_for(std::chrono::milliseconds(4000));
+        // to prevent indroducing a systematic current draw at -35C we turn
+        // the load off
+        fTC_USB->set_load2(false, false, pLeftLoadValue); // 1 step = 635uA 0xfff = 2.6A
+    }
 #endif
 #endif
 #endif
@@ -679,11 +753,12 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     cMonGraph->GetYaxis()->SetTitle("Monitoring Voltage [V]");
 
     cMonCanvas->Write();
+
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:0,hvmonx8Relay:0,HVDAC_setvalue:0,");
 #else
     fTC_USB->set_HV(false, false, false, 0);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(30000));
     fillSummaryTree("LeakDone", 1);
 #endif
 #endif
@@ -1541,8 +1616,9 @@ void SEHTester::ReadCheckAddrBRAM(int iCheckBRAMAddr)
     }
 }
 
-void SEHTester::CheckClocks(BeBoard* pBoard)
+bool SEHTester::CheckClocks(BeBoard* pBoard)
 {
+    bool cStatus = true;
     fBeBoardInterface->setBoard(pBoard->getId());
     // clk test
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x01);
@@ -1569,22 +1645,28 @@ void SEHTester::CheckClocks(BeBoard* pBoard)
             if(cClkStat)
                 LOG(INFO) << cMapIterator->first << " test ->" << BOLDGREEN << " PASSED" << RESET;
             else
+            {
                 LOG(ERROR) << cMapIterator->first << " test ->" << BOLDRED << " FAILED" << RESET;
+                cStatus &= false;
+            }
 #ifdef __USE_ROOT__
             fillSummaryTree(cMapIterator->first, cClkStat);
 #endif
         }
         cMapIterator++;
     } while(cMapIterator != f2SSEHClockMap.end());
+    return cStatus;
 }
 
-void SEHTester::CheckClocks()
+bool SEHTester::CheckClocks()
 {
+    bool cStatus = true;
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT != nullptr) continue;
-        this->CheckClocks(cBoard);
+        cStatus = this->CheckClocks(cBoard);
     }
+    return cStatus;
 }
 void SEHTester::FastCommandScope(BeBoard* pBoard)
 {
