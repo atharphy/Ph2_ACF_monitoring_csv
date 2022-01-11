@@ -10,6 +10,7 @@
 
 #ifdef __USE_ROOT__
 class TFile;
+#include "MonitorDQM/MonitorDQMPlotBase.h"
 #endif
 
 class DetectorMonitor
@@ -28,7 +29,8 @@ class DetectorMonitor
     const Ph2_System::SystemController* fTheSystemController{nullptr};
     DetectorMonitorConfig               fDetectorMonitorConfig;
 #ifdef __USE_ROOT__
-    TFile* fOutputFile;
+    TFile*              fOutputFile;
+    MonitorDQMPlotBase* fMonitorPlotDQM;
 #endif
     time_t      getTimeStamp();
     std::string getMonitorName();
@@ -40,27 +42,26 @@ class DetectorMonitor
         return theContainerStreamer;
     }
 
-    template <typename T, typename C, typename... H>
-    ChipContainerStream<T, C, H...> prepareChipContainerStreamer(std::string appendName = "")
+    template <typename T, typename C, typename... I>
+    ChipContainerStream<T, C, I...> prepareChipContainerStreamer(std::string appendName = "")
     {
-        ChipContainerStream<T, C, H...> theContainerStreamer(getMonitorName() + appendName);
+        ChipContainerStream<T, C, I...> theContainerStreamer(getMonitorName() + appendName);
         return theContainerStreamer;
     }
 
-    template <typename T, typename C, typename M, typename... H>
-    HybridContainerStream<T, C, M, H...> prepareHybridContainerStreamer(std::string appendName = "")
+    template <typename T, typename C, typename H, typename... I>
+    HybridContainerStream<T, C, H, I...> prepareHybridContainerStreamer(std::string appendName = "")
     {
-        HybridContainerStream<T, C, M, H...> theContainerStreamer(getMonitorName() + appendName);
+        HybridContainerStream<T, C, H, I...> theContainerStreamer(getMonitorName() + appendName);
         return theContainerStreamer;
     }
 
-    // not yet available...
-    // template <typename T, typename C, typename M, typename O, typename... H>
-    // OpticalGroupContainerStream<T, C, M, O, H...> prepareOpticalGroupContainerStreamer(std::string appendName = "")
-    // {
-    //     OpticalGroupContainerStream<T, C, M, O, H...> theContainerStreamer(getMonitorName() + appendName);
-    //     return theContainerStreamer;
-    // }
+    template <typename T, typename C, typename H, typename O, typename... I>
+    OpticalGroupContainerStream<T, C, H, O, I...> prepareOpticalGroupContainerStreamer(std::string appendName = "")
+    {
+        OpticalGroupContainerStream<T, C, H, O, I...> theContainerStreamer(getMonitorName() + appendName);
+        return theContainerStreamer;
+    }
 
   private:
     std::atomic<bool> fKeepRunning;

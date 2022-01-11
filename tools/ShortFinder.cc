@@ -84,21 +84,32 @@ void ShortFinder::Initialise()
     fWithSSA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
     LOG(INFO) << "With SSA set to " << ((fWithSSA) ? 1 : 0) << RESET;
 
-    if(ShortFinder::fWithCBC)
+    if(fWithCBC)
     {
-        fChannelGroupHandler = new CBCChannelGroupHandler();
-        fChannelGroupHandler->setChannelGroupParameters(16, 2);
-        fSkipMaskedChannels = findValueInSettings("SkipMaskedChannels", 0);
-        this->SetSkipMaskedChannels(fSkipMaskedChannels);
+        CBCChannelGroupHandler theChannelGroupHandler;
+        theChannelGroupHandler.setChannelGroupParameters(16, 2); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandler);
     }
-    if(ShortFinder::fWithSSA) fChannelGroupHandler = new SSAChannelGroupHandler();
-    // THRESHOLD_IN=0.01;
+    if(fWithSSA)
+    {
+        SSAChannelGroupHandler theChannelGroupHandler;
+        theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA);
+        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA2);
+    }
+    // if(cWithMPA)
+    // {
+    //     MPAChannelGroupHandler theChannelGroupHandler;
+    //     theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
+    //     setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA);
+    //     setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA2);
+    // }
 
     // now read the settings from the map
     auto cSetting       = fSettingsMap.find("Nevents");
-    fEventsPerPoint     = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 10;
+    fEventsPerPoint     = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 10;
     cSetting            = fSettingsMap.find("ShortsPulseAmplitude");
-    fTestPulseAmplitude = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    fTestPulseAmplitude = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
 
     if(fTestPulseAmplitude == 0)
         fTestPulse = 0;
@@ -142,9 +153,9 @@ void ShortFinder::Initialise()
     }
 }
 void ShortFinder::Stop() { this->Reset(); }
-void ShortFinder::Count(BeBoard* pBoard, const ChannelGroup<NCHANNELS>* pGroup)
+void ShortFinder::Count(BeBoard* pBoard, const std::shared_ptr<ChannelGroupBase> pGroup)
 {
-    auto  cBitset              = std::bitset<NCHANNELS>(pGroup->getBitset());
+    auto  cBitset              = std::bitset<NCHANNELS>(std::static_pointer_cast<const ChannelGroup<NCHANNELS>>(pGroup)->getBitset());
     auto& cThisShortsContainer = fShortsContainer.at(pBoard->getIndex());
     auto& cThisHitsContainer   = fHitsContainer.at(pBoard->getIndex());
     auto& cShorts              = fShorts.at(pBoard->getIndex());
@@ -439,11 +450,11 @@ void ShortFinder::FindShorts2S(BeBoard* pBoard)
     // for (auto cBoard : this->fBoardVector)
     uint8_t cTestGroup = 0;
     LOG(INFO) << BOLDBLUE << "Starting short finding loop for 2S hybrid " << RESET;
-    for(auto cGroup: *fChannelGroupHandler)
+    for(auto cGroup: *getChannelGroupHandlerContainer()->getObject(pBoard->getId())->getObject(0)->getObject(0)->getObject(0)->getSummary<std::shared_ptr<ChannelGroupHandler>>().get())
     {
         setSameGlobalDac("TestPulseGroup", cTestGroup);
         // bitset for this group
-        auto cBitset = std::bitset<NCHANNELS>(static_cast<const ChannelGroup<NCHANNELS>*>(cGroup)->getBitset());
+        auto cBitset = std::bitset<NCHANNELS>(std::static_pointer_cast<const ChannelGroup<NCHANNELS>>(cGroup)->getBitset());
         LOG(INFO) << BOLDBLUE << "Injecting charge into CBCs using test capacitor " << +cTestGroup << RESET;
         LOG(DEBUG) << BOLDBLUE << "Test pulse channel mask is " << cBitset << RESET;
 
@@ -483,7 +494,7 @@ void ShortFinder::FindShorts2S(BeBoard* pBoard)
                 }
             }
         }
-        this->Count(pBoard, static_cast<const ChannelGroup<NCHANNELS>*>(cGroup));
+        this->Count(pBoard, std::static_pointer_cast<ChannelGroup<NCHANNELS>>(cGroup));
         cTestGroup++;
     }
 }

@@ -129,44 +129,27 @@ void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
     }// opticalGroup*/
 }
 // required by event but not sure if makes sense for AS
-void D19cPSEventAS::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
+void D19cPSEventAS::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId)
 {
-    if(cTestChannelGroup == nullptr)
+    std::vector<uint32_t> cHits = GetHits(hybridId, chipContainer->getId());
+    float                 cOcc  = 0;
+    size_t                cChnl = 0;
+    for(auto cHit: cHits)
     {
-        LOG(INFO) << BOLDRED << "!!!!" << RESET;
-        return;
-    }
-    // LOG (INFO) << cTestChannelGroup->getNumberOfRows() << " : " << cTestChannelGroup->getNumberOfCols() << RESET;
-    for(auto opticalGroup: *boardContainer)
-    {
-        for(auto hybrid: *opticalGroup)
+        if(testChannelGroup->isChannelEnabled(cChnl))
         {
-            for(auto chip: *hybrid)
-            {
-                std::vector<uint32_t> cHits = GetHits(hybrid->getId(), chip->getId());
-                float                 cOcc  = 0;
-                size_t                cChnl = 0;
-                for(auto cHit: cHits)
-                {
-                    // uint32_t cRow = cChnl%cTestChannelGroup->getNumberOfRows();
-                    // uint32_t cCol = (cTestChannelGroup->getNumberOfCols() > 1 ) ? cChnl/cTestChannelGroup->getNumberOfRows() : 1;
-                    if(cTestChannelGroup->isChannelEnabled(cChnl))
-                    {
-                        uint32_t cRow = cChnl % cTestChannelGroup->getNumberOfRows();
-                        uint32_t cCol;
-                        if(cTestChannelGroup->getNumberOfCols() == 0)
-                            cCol = 0;
-                        else
-                            cCol = cChnl / cTestChannelGroup->getNumberOfRows();
-                        chip->getChannel<Occupancy>(cRow, cCol).fOccupancy += cHit;
-                        cOcc += cHit;
-                    }
-                    cChnl++;
-                }
-                LOG(DEBUG) << BOLDBLUE << "ROC#" << +chip->getId() << " chip occupancy is " << cOcc / chip->size() << RESET;
-            }
+            uint32_t cRow = cChnl % testChannelGroup->getNumberOfRows();
+            uint32_t cCol;
+            if(testChannelGroup->getNumberOfCols() == 0)
+                cCol = 0;
+            else
+                cCol = cChnl / testChannelGroup->getNumberOfRows();
+            chipContainer->getChannel<Occupancy>(cRow, cCol).fOccupancy += cHit;
+            cOcc += cHit;
         }
+        cChnl++;
     }
+    LOG(DEBUG) << BOLDBLUE << "ROC#" << +chipContainer->getId() << " chip occupancy is " << cOcc / chipContainer->size() << RESET;
 }
 
 void D19cPSEventAS::SetEvent(const BeBoard* pBoard, uint32_t pNMPA, const std::vector<uint32_t>& list)

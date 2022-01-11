@@ -65,15 +65,6 @@ class HistContainer : public PlotContainer
 
     void print(void) { std::cout << "HistContainer " << fTheHistogram->GetName() << std::endl; }
 
-    // template<typename T>
-    //   void makeChannelAverage (const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const
-    //   ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents) {}
-
-    // void makeSummaryAverage (const std::vector<HistContainer<Hist>>* theTH1FContainerVector, const
-    // std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents) {}
-
-    // void normalize (const uint32_t numberOfEvents) {}
-
     void setNameTitle(std::string histogramName, std::string histogramTitle) override { fTheHistogram->SetNameTitle(histogramName.data(), histogramTitle.data()); }
 
     std::string getName() const override { return fTheHistogram->GetName(); }

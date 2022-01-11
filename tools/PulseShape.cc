@@ -423,52 +423,52 @@ void PulseShape::parseSettings()
     auto cSetting = fSettingsMap.find("Nevents");
 
     if(cSetting != std::end(fSettingsMap))
-        fNevents = cSetting->second;
+        fNevents = boost::any_cast<double>(cSetting->second);
     else
         fNevents = 2000;
 
     cSetting = fSettingsMap.find("HoleMode");
 
     if(cSetting != std::end(fSettingsMap))
-        fHoleMode = cSetting->second;
+        fHoleMode = boost::any_cast<double>(cSetting->second);
     else
         fHoleMode = 1;
 
     cSetting = fSettingsMap.find("Vplus");
 
     if(cSetting != std::end(fSettingsMap))
-        fVplus = cSetting->second;
+        fVplus = boost::any_cast<double>(cSetting->second);
     else
         fVplus = 0x6F;
 
     cSetting = fSettingsMap.find("TestPulsePotentiometer");
 
     if(cSetting != std::end(fSettingsMap))
-        fTPAmplitude = cSetting->second;
+        fTPAmplitude = boost::any_cast<double>(cSetting->second);
     else
         fTPAmplitude = 0x20;
 
     cSetting = fSettingsMap.find("ChannelOffset");
 
-    //  if ( cSetting != std::end ( fSettingsMap ) ) fOffset = cSetting->second;
+    //  if ( cSetting != std::end ( fSettingsMap ) ) fOffset = boost::any_cast<double>(cSetting->second);
     //  else fOffset = 0x5;
 
     cSetting = fSettingsMap.find("TestGroup");
 
     if(cSetting != std::end(fSettingsMap))
-        fTestGroup = cSetting->second;
+        fTestGroup = boost::any_cast<double>(cSetting->second);
     else
         fTestGroup = 0;
 
     cSetting = fSettingsMap.find("StepSize");
 
     if(cSetting != std::end(fSettingsMap))
-        fStepSize = cSetting->second;
+        fStepSize = boost::any_cast<double>(cSetting->second);
     else
         fStepSize = 5;
 
     cSetting = fSettingsMap.find("FitSCurves");
-    fFitHist = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    fFitHist = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
 
     LOG(INFO) << "Parsed the following settings:";
     LOG(INFO) << "	Nevents = " << fNevents;

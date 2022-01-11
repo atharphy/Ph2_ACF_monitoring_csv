@@ -86,14 +86,6 @@ struct D19cFWEvt
  */
 namespace Ph2_HwInterface
 {
-class D19cFpgaConfig;
-class D19cSSAEvent;
-class D19clpGBTInterface;
-
-#ifndef PSCounterData
-typedef std::map<uint8_t, std::vector<uint16_t>> PSCounterData;
-typedef std::map<uint32_t, PSCounterData>        PSModuleCounterData;
-#endif
 /*!
  * \class Cbc3Fc7FWInterface
  *
@@ -102,11 +94,10 @@ typedef std::map<uint32_t, PSCounterData>        PSModuleCounterData;
 class D19cFWInterface : public BeBoardFWInterface
 {
   private:
-    std::mutex                               fMutex;
+    // std::recursive_mutex                     fMutex;
     D19cFWEvtEncoder::D19cFWEvt              fD19cFWEvts;
     std::vector<std::vector<uint32_t>>       fSlaveMap;
     std::map<uint8_t, std::vector<uint32_t>> fI2CSlaveMap;
-    D19cFpgaConfig*                          fpgaConfig;
     FileHandler*                             fFileHandler;
     uint32_t                                 fBroadcastCbcId;
     uint32_t                                 fNReadoutChip;
@@ -131,8 +122,7 @@ class D19cFWInterface : public BeBoardFWInterface
     std::map<uint8_t, uint8_t> fRxPolarity;
     std::map<uint8_t, uint8_t> fTxPolarity;
     // 2S or PS readout
-    bool           fIs2S = true;
-    uint32_t       fGBTphase;
+    bool           fIs2S           = true;
     const uint32_t SINGLE_I2C_WAIT = 200; // used for 1MHz I2C
     // I'm going to add a variable to hold the stub offset
     uint32_t fStubOffset = 0xFFFF;
@@ -140,14 +130,7 @@ class D19cFWInterface : public BeBoardFWInterface
     uint32_t fEventCounter = 0;
 
     // some useful stuff
-    int  fResetAttempts;
-    void Align_out();
-
-    // L1 word alignment values
-    std::vector<uint8_t> fBeL1Delays;
-    std::vector<uint8_t> fBeL1Bitslips;
-    std::vector<uint8_t> fStubBuffer;
-    PSModuleCounterData  fPSModulesCounterData;
+    int fResetAttempts;
 
   public:
     /*!
@@ -258,18 +241,11 @@ class D19cFWInterface : public BeBoardFWInterface
     void DDR3SelfTest();
 
     /*!
-     * \brief Tune the 320MHz buses phase shift
-     */
-    bool PhaseTuning(Ph2_HwDescription::BeBoard* pBoard, uint8_t pFeId, uint8_t pChipId, uint8_t pLineId, uint16_t pPattern, uint16_t pPatternPeriod);
-
-    /*!
      * \brief Read data from DAQ
      * \param pBreakTrigger : if true, enable the break trigger
      * \return fNpackets: the number of packets read
      */
     uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
-
-    void ReadASEvent(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
 
     /*!
      * \brief Read data for pNEvents
@@ -301,11 +277,6 @@ class D19cFWInterface : public BeBoardFWInterface
     bool WaitForData(Ph2_HwDescription::BeBoard* pBoard);
     // split data per hybrid/chip for a given board
     uint32_t CountFwEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
-    // read back SSA counters directly
-    bool PSAsyncCounterData(uint8_t pRawMode = 1);
-    void ReadSSACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
-    void ReadPSCounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, bool pFast = false, bool pRawMode = false);
-
     uint32_t computeEventSize(Ph2_HwDescription::BeBoard* pBoard);
     // I2C command sending implementation
     bool WriteI2C(std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pWriteRead, bool pBroadcast);
@@ -377,7 +348,7 @@ class D19cFWInterface : public BeBoardFWInterface
     }
 
     void ReadErrors();
-    void CheckChipControl(const Ph2_HwDescription::BeBoard* pBoard);
+    void EnableFrontEnds(const Ph2_HwDescription::BeBoard* pBoard);
 
   public:
     void ReconfigureTriggerFSM(std::vector<std::pair<std::string, uint32_t>> pTriggerConfig);
@@ -395,13 +366,8 @@ class D19cFWInterface : public BeBoardFWInterface
     // for testing, move back
     uint32_t GetData(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
     void     EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, Ph2_HwDescription::Chip* pChip, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override;
-    void
-         EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override; /*!< Encode a/several word(s) readable for a Chip*/
-    void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pCbcId, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
-        override; /*!< Encode a/several word(s) readable for a Chip*/
-
-    void BCEncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override;
-    void DecodeReg(Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed) override;
+    void     BCEncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override;
+    void     DecodeReg(Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed) override;
 
     bool WriteChipBlockReg(std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback) override;
     bool BCWriteChipBlockReg(std::vector<uint32_t>& pVecReg, bool pReadback) override;
@@ -417,8 +383,6 @@ class D19cFWInterface : public BeBoardFWInterface
 
     void ChipTrigger();
     void Trigger(uint8_t pDuration = 1);
-    // Readout chip specific stuff
-    void Send_pulses(uint32_t pNtriggers, bool manual = false);
 
     void ReadoutChipReset();
     // CIC BE stuff
@@ -439,28 +403,13 @@ class D19cFWInterface : public BeBoardFWInterface
     // consecutive triggers FSM
     void ConfigureAntennaFSM(uint16_t pNtriggers = 1, uint16_t pTriggerRate = 1, uint16_t pL1Delay = 100);
 
-    std::string              L1ADebug(uint8_t pWait_ms = 1, bool pPrint = true);
-    std::vector<std::string> StubDebug(bool pWithTestPulse = true, uint8_t pNlines = 5);
-    std::vector<std::string> ScopeStubLines(bool pWithTestPulse = true);
-    bool                     L1PhaseTuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
-    bool                     L1WordAlignment(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool pScope = false);
-    bool                     L1WordAlignment(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
-    bool                     L1Tuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false);
-    bool                     StubTuning(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool pScope = false, uint8_t pNlines = 5);
-    bool                     StubTuning(const Ph2_HwDescription::BeBoard* pBoard, bool pScope = false, uint8_t pNlines = 5);
-    // bool BackEndTuning(const BeBoard* pBoard, bool pDoL1A=true);
-
     // Optical readout specific functions - d19c [temporary]
-    void setGBTxPhase(uint32_t pPhase) { fGBTphase = pPhase; }
-    void configureLink(const Ph2_HwDescription::BeBoard* pBoard);
     void ResetLink(uint8_t pLinkId);
     bool GetLinkStatus(uint8_t pLinkId);
 
-    bool                       LinkLock(const Ph2_HwDescription::BeBoard* pBoard);
-    bool                       GBTLock(const Ph2_HwDescription::BeBoard* pBoard);
-    std::pair<uint16_t, float> readADC(std::string pValueToRead = "AMUX_L", bool pApplyCorrection = false);
-    void                       setRxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fRxPolarity.insert({pLinkId, pPolarity}); };
-    void                       setTxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fTxPolarity.insert({pLinkId, pPolarity}); };
+    bool LinkLock(const Ph2_HwDescription::BeBoard* pBoard);
+    void setRxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fRxPolarity.insert({pLinkId, pPolarity}); };
+    void setTxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fTxPolarity.insert({pLinkId, pPolarity}); };
 
     // CDCE
     void configureCDCE_old(uint16_t pClockRate = 120);
@@ -468,354 +417,17 @@ class D19cFWInterface : public BeBoardFWInterface
     void syncCDCE();
     void epromCDCE();
 
-    // phase tuning commands - d19c
-    struct PhaseTuner
-    {
-        uint8_t fWait_ms = 10;
-        uint8_t fType;
-        uint8_t fMode;
-        uint8_t fDelay;
-        uint8_t fBitslip;
-        uint8_t fDone;
-        uint8_t fWordAlignmentFSMstate;
-        uint8_t fPhaseAlignmentFSMstate;
-        uint8_t fFSMstate;
-
-        void ParseResult(uint32_t pReply)
-        {
-            fType = (pReply >> 24) & 0xF;
-            if(fType == 0)
-            {
-                // bit slip of 3 bits
-                fMode    = (pReply & 0x00003000) >> 12;
-                fDelay   = (pReply & 0x000000F8) >> 3;
-                fBitslip = (pReply & 0x00000007) >> 0;
-
-                // fMode    = (pReply & (0x3)) >> 13;
-                // fDelay   = (pReply & (0x1F)) >> 4;
-                // fBitslip = (pReply & (0xF<<0)) >> 0;
-            }
-            else if(fType == 1)
-            {
-                // // bit slip of 4 bits
-                // fDelay                  = (pReply & (0x1F<<19)) >> 19;
-                // fBitslip                = (pReply & (0xF<<15)) >> 15;
-                // fDone                   = (pReply & (0x1<<14)) >> 14;
-                // fWordAlignmentFSMstate  = (pReply & (0xF<<7)) >> 7;
-                // fPhaseAlignmentFSMstate = (pReply & (0xF<<0)) >> 0;
-
-                // bit slip of 3 bits
-                fDelay                  = (pReply & 0x00F80000) >> 19;
-                fBitslip                = (pReply & 0x00070000) >> 16;
-                fDone                   = (pReply & 0x00008000) >> 15;
-                fWordAlignmentFSMstate  = (pReply & 0x00000F00) >> 8;
-                fPhaseAlignmentFSMstate = (pReply & 0x0000000F) >> 0;
-            }
-            else if(fType == 6)
-            {
-                fFSMstate = (pReply & 0x000000FF) >> 0;
-            }
-        };
-        uint8_t ParseStatus(BeBoardFWInterface* pInterface)
-        {
-            uint8_t cStatus = 0;
-            // read status
-            uint32_t cReply = pInterface->ReadReg("fc7_daq_stat.physical_interface_block.phase_tuning_reply");
-            ParseResult(cReply);
-
-            if(fType == 0)
-            {
-                LOG(INFO) << "\t\t Mode: " << +fMode;
-                LOG(INFO) << "\t\t Manual Delay: " << +fDelay << ", Manual Bitslip: " << +fBitslip;
-                cStatus = 1;
-            }
-            else if(fType == 1)
-            {
-                LOG(INFO) << "\t\t Done: " << +fDone << ", PA FSM: " << BOLDGREEN << fPhaseFSMStateMap[fPhaseAlignmentFSMstate] << RESET << ", WA FSM: " << BOLDGREEN
-                          << fWordFSMStateMap[fWordAlignmentFSMstate] << RESET;
-                LOG(INFO) << "\t\t Delay: " << +fDelay << ", Bitslip: " << +fBitslip;
-                cStatus = 1;
-            }
-            else if(fType == 6)
-            {
-                LOG(DEBUG) << "\t\t Default FSM State: " << +fFSMstate;
-                cStatus = 1;
-            }
-            else
-                cStatus = 0;
-            return cStatus;
-        };
-        uint32_t fHybrid;
-        uint32_t fChip;
-        uint32_t fLine;
-        void     ConfigureInput(uint8_t pHybrid, uint8_t pChip, uint8_t pLine)
-        {
-            fHybrid = (pHybrid & 0xF) << 28;
-            fChip   = (pChip & 0xF) << 24;
-            fLine   = (pLine & 0xF) << 20;
-        };
-        uint32_t fCommand;
-        void     ConfigureCommandType(uint8_t pType) { fCommand = (pType & 0xF) << 16; };
-        void     SetLineMode(BeBoardFWInterface* pInterface,
-                             uint8_t             pHybrid,
-                             uint8_t             pChip,
-                             uint8_t             pLine,
-                             uint8_t             pMode       = 0,
-                             uint8_t             pDelay      = 0,
-                             uint8_t             pBitSlip    = 0,
-                             uint8_t             pEnableL1   = 0,
-                             uint8_t             pMasterLine = 0)
-        {
-            // select FE
-            ConfigureInput(pHybrid, pChip, pLine);
-            // command
-            uint32_t command_type = 2;
-            ConfigureCommandType(command_type);
-            // set defaults - bit slip of 3 bits
-            uint32_t mode_raw           = (pMode & 0x3) << 12;
-            uint32_t l1a_en_raw         = (pMode == 0) ? ((pEnableL1 & 0x1) << 11) : 0;
-            uint32_t master_line_id_raw = (pMode == 1) ? ((pMasterLine & 0xF) << 8) : 0;
-            uint32_t delay_raw          = (pMode == 2) ? ((pDelay & 0x1F) << 3) : 0;
-            uint32_t bitslip_raw        = (pMode == 2) ? ((pBitSlip & 0x7) << 0) : 0;
-
-            // set defaults - bit slip of 4 bits..
-            // uint32_t mode_raw           = (pMode & 0x3) << 13 ;
-            // uint32_t l1a_en_raw         = (pMode == 0) ? ((pEnableL1 & 0x1) << 11) : 0;
-            // uint32_t master_line_id_raw = (pMode == 1) ? ((pMasterLine & 0xF) << 8) : 0;
-            // uint32_t delay_raw          = (pMode == 2) ? ((pDelay & 0x1F) << 4) : 0;
-            // uint32_t bitslip_raw        = (pMode == 2) ? ((pBitSlip & 0xF) << 0) : 0;
-
-            // form command
-            uint32_t command_final = fHybrid + fChip + fLine + fCommand + mode_raw + l1a_en_raw + master_line_id_raw + delay_raw + bitslip_raw;
-            LOG(DEBUG) << BOLDBLUE << "Line " << +pLine << " setting line mode to " << std::hex << command_final << std::dec << RESET;
-            pInterface->WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final);
-            std::this_thread::sleep_for(std::chrono::microseconds(fWait_ms * 1000));
-        };
-        void SetLinePattern(BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip, uint8_t pLine, uint16_t pPattern, uint16_t pPatternPeriod)
-        {
-            // select FE
-            ConfigureInput(pHybrid, pChip, pLine);
-            // set the pattern size
-            uint8_t command_type = 3;
-            ConfigureCommandType(command_type);
-            uint32_t len_raw       = (0xFF & pPatternPeriod) << 0;
-            uint32_t command_final = fHybrid + fChip + fLine + fCommand + len_raw;
-            LOG(DEBUG) << BOLDBLUE << "Setting line pattern size to " << std::hex << command_final << std::dec << RESET;
-            pInterface->WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final);
-            // set the pattern
-            command_type = 4;
-            ConfigureCommandType(command_type);
-            uint8_t byte_id_raw = (0xFF & 0) << 8;
-            uint8_t pattern_raw = (0xFF & pPattern) << 0;
-            command_final       = fHybrid + fChip + fLine + fCommand + byte_id_raw + pattern_raw;
-            LOG(DEBUG) << BOLDBLUE << "Setting line pattern  to " << std::hex << command_final << std::dec << RESET;
-            pInterface->WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final);
-            std::this_thread::sleep_for(std::chrono::microseconds(fWait_ms * 1000));
-        };
-        void SendControl(BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip, uint8_t pLine, std::string pCommand)
-        {
-            // select FE
-            ConfigureInput(pHybrid, pChip, pLine);
-            // set the pattern size
-            uint8_t command_type = 5;
-            ConfigureCommandType(command_type);
-            uint32_t command_final = fHybrid + fChip + fLine + fCommand;
-            if(pCommand == "Apply")
-                command_final += 4;
-            else if(pCommand == "WordAlignment")
-                command_final += 2;
-            else if(pCommand == "PhaseAlignment")
-                command_final += 1;
-            LOG(DEBUG) << BOLDBLUE << pCommand << ": sending " << std::hex << command_final << std::dec << RESET;
-            pInterface->WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final);
-            std::this_thread::sleep_for(std::chrono::microseconds(fWait_ms * 1000));
-        };
-        uint8_t GetLineStatus(BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip, uint8_t pLine)
-        {
-            // select FE
-            ConfigureInput(pHybrid, pChip, pLine);
-            // print header
-            LOG(DEBUG) << BOLDBLUE << "\t Hybrid: " << RESET << +pHybrid << BOLDBLUE << ", Chip: " << RESET << +pChip << BOLDBLUE << ", Line: " << RESET << +pLine;
-            uint8_t command_type = 0;
-            ConfigureCommandType(command_type);
-            uint32_t command_final = fHybrid + fChip + fLine + fCommand;
-            pInterface->WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final);
-            std::this_thread::sleep_for(std::chrono::microseconds(fWait_ms * 1000));
-            uint8_t cStatus = ParseStatus(pInterface);
-            //
-            command_type = 1;
-            ConfigureCommandType(command_type);
-            command_final = fHybrid + fChip + fLine + fCommand;
-            pInterface->WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command_final);
-            std::this_thread::sleep_for(std::chrono::microseconds(fWait_ms * 1000));
-            cStatus = ParseStatus(pInterface);
-            return cStatus;
-        };
-        void TunePhase(BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip, uint8_t pLine)
-        {
-            SetLineMode(pInterface, pHybrid, pChip, pLine);
-            // perform phase alignment
-            // LOG (INFO) << BOLDBLUE << "\t..... running phase alignment...." << RESET;
-            SendControl(pInterface, pHybrid, pChip, pLine, "PhaseAlignment");
-        }
-        void AlignWord(BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip, uint8_t pLine, uint8_t pPattern, uint8_t pPatternPeriod, bool pChangePattern)
-        {
-            if(pChangePattern)
-            {
-                SetLineMode(pInterface, pHybrid, pChip, pLine);
-                SetLinePattern(pInterface, pHybrid, pChip, pLine, pPattern, pPatternPeriod);
-            }
-            // perform phase alignment
-            // LOG (INFO) << BOLDBLUE << "\t..... running phase alignment...." << RESET;
-            SendControl(pInterface, pHybrid, pChip, pLine, "WordAlignment");
-        }
-
-        bool TuneLine(BeBoardFWInterface* pInterface, uint8_t pHybrid, uint8_t pChip, uint8_t pLine, uint8_t pPattern, uint8_t pPatternPeriod, bool pChangePattern)
-        {
-            LOG(DEBUG) << BOLDBLUE << "Tuning line " << +pLine << RESET;
-            if(pChangePattern)
-            {
-                SetLineMode(pInterface, pHybrid, pChip, pLine);
-                SetLinePattern(pInterface, pHybrid, pChip, pLine, pPattern, pPatternPeriod);
-            }
-            // perform phase alignment
-            // LOG (INFO) << BOLDBLUE << "\t..... running phase alignment...." << RESET;
-            SendControl(pInterface, pHybrid, pChip, pLine, "PhaseAlignment");
-            // perform word alignment
-            // LOG (INFO) << BOLDBLUE << "\t..... running word alignment...." << RESET;
-            SendControl(pInterface, pHybrid, pChip, pLine, "WordAlignment");
-            uint8_t cLineStatus = GetLineStatus(pInterface, pHybrid, pChip, pLine);
-            return (cLineStatus == 1);
-        };
-
-        // maps to decode status of word and phase alignment FSM
-        std::map<int, std::string> fPhaseFSMStateMap = {{0, "IdlePHASE"},
-                                                        {1, "ResetIDELAYE"},
-                                                        {2, "WaitResetIDELAYE"},
-                                                        {3, "ApplyInitialDelay"},
-                                                        {4, "CheckInitialDelay"},
-                                                        {5, "InitialSampling"},
-                                                        {6, "ProcessInitialSampling"},
-                                                        {7, "ApplyDelay"},
-                                                        {8, "CheckDelay"},
-                                                        {9, "Sampling"},
-                                                        {10, "ProcessSampling"},
-                                                        {11, "WaitGoodDelay"},
-                                                        {12, "FailedInitial"},
-                                                        {13, "FailedToApplyDelay"},
-                                                        {14, "TunedPHASE"},
-                                                        {15, "Unknown"}};
-        std::map<int, std::string> fWordFSMStateMap  = {{0, "IdleWORD or WaitIserdese"},
-                                                       {1, "WaitFrame"},
-                                                       {2, "ApplyBitslip"},
-                                                       {3, "WaitBitslip"},
-                                                       {4, "PatternVerification"},
-                                                       {5, "Not Defined"},
-                                                       {6, "Not Defined"},
-                                                       {7, "Not Defined"},
-                                                       {8, "Not Defined"},
-                                                       {9, "Not Defined"},
-                                                       {10, "Not Defined"},
-                                                       {11, "Not Defined"},
-                                                       {12, "FailedFrame"},
-                                                       {13, "FailedVerification"},
-                                                       {14, "TunedWORD"},
-                                                       {15, "Unknown"}};
-    };
     // measures the occupancy of the 2S chips
     bool Measure2SOccupancy(uint32_t pNEvents, uint8_t**& pErrorCounters, uint8_t***& pChannelCounters);
     void Manage2SCountersMemory(uint8_t**& pErrorCounters, uint8_t***& pChannelCounters, bool pAllocate);
 
-    ///////////////////////////////////////////////////////
-    //      MPA/SSA Methods                             //
-    /////////////////////////////////////////////////////
-
-    // Coms
-    void     PSInterfaceBoard_SetSlaveMap();
-    void     PSInterfaceBoard_ConfigureI2CMaster(uint32_t pEnabled, uint32_t pFrequency);
-    void     PSInterfaceBoard_SendI2CCommand(uint32_t slave_id, uint32_t board_id, uint32_t read, uint32_t register_address, uint32_t data);
-    uint32_t PSInterfaceBoard_SendI2CCommand_READ(uint32_t slave_id, uint32_t board_id, uint32_t read, uint32_t register_address, uint32_t data);
-
-    // Main Power:
-    void PSInterfaceBoard_PowerOn(uint8_t mpaid = 0, uint8_t ssaid = 0);
-    void PSInterfaceBoard_PowerOff();
-
-    void PSInterfaceBoard_PowerOn_MPASSA(float VDDPST = 1.25, float DVDD = 1.2, float AVDD = 1.25, float VBG = 0.3, float VBF = 0.3, uint8_t mpaid = 0, uint8_t ssaid = 0);
-    // MPA power on
-    void PSInterfaceBoard_PowerOn_MPA(float VDDPST = 1.25, float DVDD = 1.2, float AVDD = 1.25, float VBG = 0.3, uint8_t mpaid = 0, uint8_t ssaid = 0);
-    void PSInterfaceBoard_PowerOff_MPA(uint8_t mpaid = 0, uint8_t ssaid = 0);
-    /// SSA power on
-    void PSInterfaceBoard_PowerOn_SSA(float VDDPST = 1.25, float DVDD = 1.25, float AVDD = 1.25, float VBF = 0.3, float BG = 0.0, uint8_t ENABLE = 0);
-    void PSInterfaceBoard_PowerOff_SSA(uint8_t mpaid = 0, uint8_t ssaid = 0);
-    void ReadPower_SSA(uint8_t mpaid = 0, uint8_t ssaid = 0);
-    void SSAEqualizeDACs(uint8_t pChipId);
-    void KillI2C();
-    ///
-
-    void     Pix_write_MPA(Ph2_HwDescription::Chip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel, uint32_t data);
-    uint32_t Pix_read_MPA(Ph2_HwDescription::Chip* cMPA, Ph2_HwDescription::ChipRegItem cRegItem, uint32_t row, uint32_t pixel);
-
     void Compose_fast_command(uint32_t duration = 0, uint32_t resync_en = 0, uint32_t l1a_en = 0, uint32_t cal_pulse_en = 0, uint32_t bc0_en = 0);
-    void PS_Open_shutter(uint32_t duration = 0);
-    void PS_Close_shutter(uint32_t duration = 0);
-    void PS_Clear_counters(uint32_t duration = 0);
-    void PS_Start_counters_read(uint32_t duration = 0);
-
-    ///////////////////////////////////////////////////////
-    //      FPGA CONFIG                                 //
-    /////////////////////////////////////////////////////
-
-    void checkIfUploading();
-    /*! \brief Upload a firmware (FPGA configuration) from a file in MCS format into a given configuration
-     * \param strConfig FPGA configuration name
-     * \param pstrFile path to MCS file
-     */
-    void FlashProm(const std::string& strConfig, const char* pstrFile);
-    /*! \brief Jump to an FPGA configuration */
-    void JumpToFpgaConfig(const std::string& strConfig);
-
-    void DownloadFpgaConfig(const std::string& strConfig, const std::string& strDest);
-    /*! \brief Is the FPGA being configured ?
-     * \return FPGA configuring process or NULL if configuration occurs */
-    const FpgaConfig* GetConfiguringFpga() { return (const FpgaConfig*)fpgaConfig; }
-    /*! \brief Get the list of available FPGA configuration (or firmware images)*/
-    std::vector<std::string> getFpgaConfigList();
-    /*! \brief Delete one Fpga configuration (or firmware image)*/
-    void DeleteFpgaConfig(const std::string& strId);
-    /*! \brief Reboot the board */
-    void RebootBoard();
-    /*! \brief Set or reset the start signal */
     void SetForceStart(bool bStart) {}
 
-    bool CheckStartPattern();
-    bool DecodeRawCounterDataPS(PSCounterData& pFeCounters, std::vector<uint8_t> pIds);
-    bool GetCounterData(uint8_t pRawMode, size_t pChipId, size_t pHybridId);
     ///////////////////////////////////////////////////////
     //      Optical readout                                 //
     /////////////////////////////////////////////////////
     void selectLink(const uint8_t pLinkId = 0, uint32_t cWait_ms = 100) override;
-
-    ///////////////////////////////////////////////////////
-    //      Multiplexing crate                          //
-    /////////////////////////////////////////////////////
-    /*!
-     * \breif Disconnect Setup with Multiplexing Backplane
-     */
-    void DisconnectMultiplexingSetup(uint8_t pWait_ms = 100);
-    void DisconnectMultiplexingSetup_old(uint8_t pWait_ms = 100);
-
-    /*!
-     * \breif Scan Setup with Multiplexing Backplane
-     */
-    uint32_t ScanMultiplexingSetup(uint8_t pWait_ms = 100);
-    uint32_t ScanMultiplexingSetup_old(uint8_t pWait_ms = 100);
-
-    /*!
-     * \breif Configure Setup with Multiplexing Backplane
-     * \param BackplaneNum
-     * \param CardNum
-     */
-    void ConfigureMultiplexingSetup(int BackplaneNum, int CardNum, uint8_t pWait_ms = 100);
 
     // ##############################
     // # Pseudo Random Bit Sequence #
@@ -825,9 +437,8 @@ class D19cFWInterface : public BeBoardFWInterface
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    uint8_t                         fI2Cstatus    = 0;
-    const uint8_t                   flpGBTAddress = 0x70;
-    std::map<FrontEndType, uint8_t> fFEAddressMap = {{FrontEndType::CIC, 0x60}, {FrontEndType::CIC2, 0x60}, {FrontEndType::SSA, 0x20}, {FrontEndType::MPA, 0x40}, {FrontEndType::CBC3, 0x40}};
+    uint8_t       fI2Cstatus    = 0;
+    const uint8_t flpGBTAddress = 0x70;
 
     // OT implementation of write and read
     bool     WriteOptoLpGBTRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop);
@@ -845,22 +456,21 @@ class D19cFWInterface : public BeBoardFWInterface
     void                  ResetCPB() override;
     void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) override;
     std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) override;
+    std::vector<uint32_t> WriteCommandCPBandReadReply(const std::vector<uint32_t>& pCommandVector, uint8_t pNWords);
+
     // function to read/write lpGBT registers
     bool    WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override;
     uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterValue) override;
     // function for I2C transactions using lpGBT I2C Masters
-    bool    I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) override;
-    uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes) override;
+    bool    I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes, uint32_t& pNWrites) override;
+    uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes, uint32_t& pNReads) override;
     // function for front-end slow control
     bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false) override;
+    bool    localWriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry, uint32_t& theI2CWriteCount, uint32_t& theI2CReadMismatches);
     uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) override;
     // fast command generic block
     void ResetFCMDBram();
     void ConfigureFCMDBram(std::vector<uint8_t> pFastCommands);
-
-    // get alignment values for L1 lines
-    std::vector<uint8_t> getL1Delays() { return fBeL1Delays; }
-    std::vector<uint8_t> getL1Bitslips() { return fBeL1Bitslips; }
 };
 } // namespace Ph2_HwInterface
 

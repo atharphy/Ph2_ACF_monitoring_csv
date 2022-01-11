@@ -144,18 +144,23 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         uint32_t cHitInfoSize   = (cHitInfoHeader & 0xFFF) * 4;
                         size_t   cOffset        = std::distance(pData.begin(), cIterator);
                         cStatusWord             = static_cast<uint8_t>(cGoodHitInfo == VALID_L1_HEADER);
-                        // LOG(INFO) << BOLDBLUE << "\t.. ReadoutChip#" << +cFe->getIndex() << "...hit info header " << std::bitset<4>(cGoodHitInfo) << "... " << +cHitInfoSize << " words in hit
-                        // packet..."
-                        //            << "... status word " << std::bitset<2>(cStatusWord) << RESET;
+                        LOG(DEBUG) << BOLDBLUE << "\t.. ReadoutChip#" << +cFe->getIndex() << "...hit info header " << std::bitset<4>(cGoodHitInfo) << "... " << +cHitInfoSize
+                                   << " words in hit packet..."
+                                   << "... status word " << std::bitset<2>(cStatusWord) << " Event#" << +fEventCount << RESET;
                         if(cStatusWord == 0x01)
                         {
                             bool                          cWithCIC2 = (cCic->getFrontEndType() == FrontEndType::CIC2);
                             std::pair<uint16_t, uint16_t> cL1Information;
                             cL1Information.first  = (*(cIterator + 2) & 0x7FC000) >> 14;
                             cL1Information.second = (*(cIterator + 2) & 0xFF800000) >> 23;
-                            // LOG(INFO) << BOLDBLUE << "L1 counter for this event : " << +cL1Information.first << " . L1 data size is " << +(cHitInfoSize) << " status "
-                            //            << std::bitset<9>(cL1Information.second) << RESET;
+                            LOG(DEBUG) << BOLDBLUE << "\t\t..L1 counter for this event : " << +cL1Information.first << " . L1 data size is " << +(cHitInfoSize) << " status "
+                                       << std::bitset<9>(cL1Information.second) << RESET;
                             int cL1Offset = cOffset + 2 + int(cWithCIC2);
+                            // for( size_t cLOff=0; cLOff <cHitInfoSize; cLOff++)
+                            // {
+                            //     LOG (INFO) << BOLDYELLOW << "\t\t\t.." << std::bitset<32>(  (*(cIterator + cLOff) ) ) << RESET;
+                            // }
+
                             if(fIsSparsified)
                             {
                                 // LOG (DEBUG) << BOLDBLUE << "sparsified data" << RESET;
@@ -357,28 +362,16 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
         cNEvents++;
     } while(cEventIterator < pData.end());
 }
-void D19cCic2Event::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
+
+void D19cCic2Event::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId)
 {
-    for(auto opticalGroup: *boardContainer)
+    std::vector<uint32_t> cHits = this->GetHits(hybridId, chipContainer->getId());
+    for(auto cHit: cHits)
     {
-        for(auto hybrid: *opticalGroup)
-        {
-            // LOG(INFO) << BOLDBLUE << "Filling data container for hybrid " << +hybrid->getId() << RESET;
-            for(auto chip: *hybrid)
-            {
-                std::vector<uint32_t> cHits = this->GetHits(hybrid->getId(), chip->getId());
-                // LOG(INFO) << BOLDBLUE << "Filling data container for chip " << +chip->getId()
-                //     << " at index " << +chip->getIndex()
-                //     << "\t.... " << +cHits.size() << " hits in chip."
-                //     << RESET;
-                for(auto cHit: cHits)
-                {
-                    if(cTestChannelGroup->isChannelEnabled(cHit)) { chip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; }
-                }
-            }
-        }
+        if(testChannelGroup->isChannelEnabled(cHit)) { chipContainer->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; }
     }
 }
+
 void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list)
 {
     // get the first CIC

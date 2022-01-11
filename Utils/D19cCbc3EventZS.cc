@@ -18,21 +18,13 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-void D19cCbc3EventZS::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
+
+void D19cCbc3EventZS::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId)
 {
-    for(auto opticalGroup: *boardContainer)
+    unsigned int i = 0;
+    for(ChannelDataContainer<Occupancy>::iterator channel = chipContainer->begin<Occupancy>(); channel != chipContainer->end<Occupancy>(); channel++, i++)
     {
-        for(auto hybrid: *opticalGroup)
-        {
-            for(auto chip: *hybrid)
-            {
-                unsigned int i = 0;
-                for(ChannelContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
-                {
-                    if(cTestChannelGroup->isChannelEnabled(i)) { channel->fOccupancy += (float)DataBit(hybrid->getId(), chip->getId(), i); }
-                }
-            }
-        }
+        if(testChannelGroup->isChannelEnabled(i)) { channel->fOccupancy += (float)DataBit(hybridId, chipContainer->getId(), i); }
     }
 }
 

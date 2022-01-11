@@ -23,17 +23,16 @@ void Latency::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings("ROWstart");
-    rowStop        = this->findValueInSettings("ROWstop");
-    colStart       = this->findValueInSettings("COLstart");
-    colStop        = this->findValueInSettings("COLstop");
-    nEvents        = this->findValueInSettings("nEvents");
-    nTRIGxEvent    = this->findValueInSettings("nTRIGxEvent");
-    startValue     = this->findValueInSettings("LatencyStart");
-    stopValue      = this->findValueInSettings("LatencyStop");
-    doDisplay      = this->findValueInSettings("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings("SaveBinaryData");
+    rowStart       = this->findValueInSettings<double>("ROWstart");
+    rowStop        = this->findValueInSettings<double>("ROWstop");
+    colStart       = this->findValueInSettings<double>("COLstart");
+    colStop        = this->findValueInSettings<double>("COLstop");
+    nTRIGxEvent    = this->findValueInSettings<double>("nTRIGxEvent");
+    startValue     = this->findValueInSettings<double>("LatencyStart");
+    stopValue      = this->findValueInSettings<double>("LatencyStop");
+    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
 
     // ##############################
     // # Initialize dac scan values #
@@ -73,10 +72,10 @@ void Latency::sendData()
     auto theStream        = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<LatencySize>>("Occ");
     auto theLatencyStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>("Latency");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: theOccContainer) theStream.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theLatencyContainer) theLatencyStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theOccContainer) theStream.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theLatencyContainer) theLatencyStream.streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 
@@ -92,7 +91,7 @@ void Latency::Stop()
     RD53RunProgress::reset();
 }
 
-void Latency::localConfigure(const std::string fileRes_, int currentRun)
+void Latency::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos = nullptr;
@@ -107,7 +106,7 @@ void Latency::localConfigure(const std::string fileRes_, int currentRun)
     Latency::initializeFiles(fileRes_, currentRun);
 }
 
-void Latency::initializeFiles(const std::string fileRes_, int currentRun)
+void Latency::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 
@@ -128,7 +127,7 @@ void Latency::run()
     const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
     ContainerFactory::copyAndInitChip<GenericDataArray<LatencySize>>(*fDetectorContainer, theOccContainer);
-    Latency::scanDac("LATENCY_CONFIG", dacList, nEvents, &theOccContainer);
+    Latency::scanDac("LATENCY_CONFIG", dacList, &theOccContainer);
 
     // ################
     // # Error report #
@@ -154,7 +153,6 @@ void Latency::draw(bool saveData)
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     Latency::fillHisto();
     histos->process();
-    this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
 #endif
@@ -209,7 +207,7 @@ void Latency::fillHisto()
 #endif
 }
 
-void Latency::scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
+void Latency::scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer)
 {
     const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
@@ -226,7 +224,8 @@ void Latency::scanDac(const std::string& regName, const std::vector<uint16_t>& d
         // ################
         PixelAlive::run();
         auto output = PixelAlive::analyze();
-        output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
+        output->resetNormalizationStatus();
+        output->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), 1);
 
         // ###############
         // # Save output #
@@ -241,7 +240,7 @@ void Latency::scanDac(const std::string& regName, const std::vector<uint16_t>& d
                     }
 
         // ##############################################
-        // # Send periodic data to minitor the progress #
+        // # Send periodic data to monitor the progress #
         // ##############################################
         Latency::sendData();
     }

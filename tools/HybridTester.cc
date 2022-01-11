@@ -188,16 +188,16 @@ void HybridTester::InitializeHists()
 void HybridTester::InitialiseSettings()
 {
     auto cSetting       = fSettingsMap.find("Threshold_NSigmas");
-    fSigmas             = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 4;
+    fSigmas             = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 4;
     cSetting            = fSettingsMap.find("Nevents");
-    fTotalEvents        = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 999;
+    fTotalEvents        = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 999;
     cSetting            = fSettingsMap.find("HoleMode");
-    fHoleMode           = (cSetting != std::end(fSettingsMap)) ? cSetting->second : true;
+    fHoleMode           = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : true;
     cSetting            = fSettingsMap.find("TestPulsePotentiometer");
-    fTestPulseAmplitude = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0x7F;
+    fTestPulseAmplitude = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0x7F;
 
     // cSetting = fSettingsMap.find ( "TriggerSource" );
-    // if ( cSetting != std::end ( fSettingsMap ) ) trigSource = cSetting->second;
+    // if ( cSetting != std::end ( fSettingsMap ) ) trigSource = boost::any_cast<double>(cSetting->second);
     // LOG (INFO)  <<int (trigSource);
 
     for(auto cBoard: *fDetectorContainer)

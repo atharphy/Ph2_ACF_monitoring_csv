@@ -8,12 +8,13 @@
 */
 
 #include "RD53FWInterface.h"
+#include "RD53Interface.h"
 
 using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-RD53FWInterface::RD53FWInterface(const char* pId, const char* pUri, const char* pAddressTable) : BeBoardFWInterface(pId, pUri, pAddressTable), fpgaConfig(nullptr), ddr3Offset(0) {}
+RD53FWInterface::RD53FWInterface(const char* pId, const char* pUri, const char* pAddressTable) : BeBoardFWInterface(pId, pUri, pAddressTable), ddr3Offset(0), FWinfo(0) {}
 
 void RD53FWInterface::setFileHandler(FileHandler* pHandler)
 {
@@ -24,14 +25,6 @@ void RD53FWInterface::setFileHandler(FileHandler* pHandler)
     }
     else
         LOG(ERROR) << BOLDRED << "NULL FileHandler" << RESET;
-}
-
-uint32_t RD53FWInterface::getBoardInfo()
-{
-    uint32_t cVersionMajor = RegManager::ReadReg("user.stat_regs.usr_ver.usr_ver_major");
-    uint32_t cVersionMinor = RegManager::ReadReg("user.stat_regs.usr_ver.usr_ver_minor");
-    uint32_t cVersionWord  = ((cVersionMajor << RD53FWconstants::NBIT_FWVER) | cVersionMinor);
-    return cVersionWord;
 }
 
 void RD53FWInterface::ResetSequence(const std::string& refClockRate)
@@ -67,6 +60,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ########################
     uint32_t cVersionMajor = RegManager::ReadReg("user.stat_regs.usr_ver.usr_ver_major");
     uint32_t cVersionMinor = RegManager::ReadReg("user.stat_regs.usr_ver.usr_ver_minor");
+    this->FWinfo           = ((cVersionMajor << RD53FWconstants::NBIT_FWVER) | cVersionMinor);
 
     uint32_t cFWyear    = RegManager::ReadReg("user.stat_regs.fw_date.year");
     uint32_t cFWmonth   = RegManager::ReadReg("user.stat_regs.fw_date.month");
@@ -108,8 +102,8 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
                 RD53FWInterface::localCfgFastCmd.enable_hitor = it.second;
             else if(it.first.find("ext_clk_en") != std::string::npos)
             {
-                cfgDIO5.enable     = it.second;
-                cfgDIO5.ch_out_en  = 0x0;
+                cfgDIO5.enable     = cfgDIO5.enable | it.second;
+                cfgDIO5.ch_out_en  = cfgDIO5.ch_out_en & 0x0F;
                 cfgDIO5.ext_clk_en = it.second;
             }
             else
@@ -117,13 +111,15 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
                 RD53FWInterface::localCfgFastCmd.trigger_source = static_cast<RD53FWInterface::TriggerSource>(it.second);
                 if(static_cast<RD53FWInterface::TriggerSource>(it.second) == TriggerSource::External)
                 {
+                    LOG(INFO) << BOLDBLUE << "\t--> Trigger source was selected to be External" << RESET;
                     cfgDIO5.enable    = true;
-                    cfgDIO5.ch_out_en = 0x0;
+                    cfgDIO5.ch_out_en = cfgDIO5.ch_out_en & 0x1D;
                 }
                 else if(static_cast<RD53FWInterface::TriggerSource>(it.second) == TriggerSource::TLU)
                 {
+                    LOG(INFO) << BOLDBLUE << "\t--> Trigger source was selected to be TLU" << RESET;
                     cfgDIO5.enable             = true;
-                    cfgDIO5.ch_out_en          = 0x04;
+                    cfgDIO5.ch_out_en          = cfgDIO5.ch_out_en | 0x05;
                     cfgDIO5.tlu_en             = true;
                     cfgDIO5.tlu_handshake_mode = 0x02;
                 }
@@ -173,8 +169,18 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ###########################
     uint32_t inputClk = RegManager::ReadReg("user.stat_regs.clkin_rate");
     uint32_t gtxClk   = RegManager::ReadReg("user.stat_regs.gtx_refclk_rate");
-    LOG(INFO) << GREEN << "Input clock frequency (could be either internal or external, should be ~40 MHz): " << BOLDYELLOW << inputClk / 1000. << " MHz" << RESET;
-    LOG(INFO) << GREEN << "GTX receiver clock frequency (~160 MHz (~320 MHz) for electrical (optical) readout): " << BOLDYELLOW << gtxClk / 1000. << " MHz" << RESET;
+    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "Input clock frequency (could be either internal or external, should be ~40 MHz): " << BOLDYELLOW << inputClk / 1000. << " MHz"
+              << std::setprecision(-1) << RESET;
+    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "GTX receiver clock frequency (~160 MHz (~320 MHz) for electrical (optical) readout): " << BOLDYELLOW << gtxClk / 1000. << " MHz"
+              << std::setprecision(-1) << RESET;
+
+    // @TMP@
+    RegManager::WriteReg("user.ctrl_regs.ctrl_cdr.cdr_addr", 0);
+    uint32_t extCMDclk = RegManager::ReadReg("user.stat_regs.cdr_freq_mon");
+    RegManager::WriteReg("user.ctrl_regs.ctrl_cdr.cdr_addr", 1);
+    uint32_t extSERclk = RegManager::ReadReg("user.stat_regs.cdr_freq_mon");
+    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "External CMD clock frequency: " << BOLDYELLOW << extCMDclk / 1000. << " MHz" << std::setprecision(-1) << RESET;
+    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "External Serializer clock frequency: " << BOLDYELLOW << extSERclk / 1000. << " MHz" << std::setprecision(-1) << RESET;
 }
 
 void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
@@ -652,8 +658,10 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     bool retry;
     int  nAttempts = 0;
 
-    RD53FWInterface::localCfgFastCmd.n_triggers = pNEvents;
-    RD53FWInterface::ConfigureFastCommands();
+    RD53FWInterface::WriteArbitraryRegister("user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept", RD53FWInterface::localCfgFastCmd.n_triggers = pNEvents);
+    // @TMP@
+    if(RD53FWInterface::localCfgFastCmd.autozero_source == AutozeroSource::FastCMDFSM)
+        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
 
     do
     {
@@ -713,17 +721,13 @@ void RD53FWInterface::SendBoardCommand(const std::string& cmd_reg)
 
 void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
 {
+    const int GLOBAL_PULSE_WIDTH = 0x6; // @CONST@
+
     if(cfg == nullptr) cfg = &(RD53FWInterface::localCfgFastCmd);
 
-    // @TMP@
+    // @TMP@ : Prepare GLOBAL_PULSE_RT to acquire zero level in SYNC FE
     if(cfg->autozero_source == AutozeroSource::FastCMDFSM)
-    {
-        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 15).getFrames(),
-                                          -1); // Prepare GLOBAL_PULSE_RT to reset autozero level in SYNC FE
-        RD53FWInterface::WriteChipCommand(RD53Cmd::GlobalPulse(RD53Constants::BROADCAST_CHIPID, 0x0004).getFrames(), -1);
-        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(),
-                                          -1); // Prepare GLOBAL_PULSE_RT to acquire zero level in SYNC FE
-    }
+        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
 
     // ##################################
     // # Configuring fast command block #
@@ -761,7 +765,7 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
                                // # @TMP@ Autozero configuration #
                                // ################################
                                {"user.ctrl_regs.fast_cmd_reg_2.autozero_source", (uint32_t)cfg->autozero_source},
-                               {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data", (uint32_t)bits::pack<4, 1, 4, 1>(RD53Constants::BROADCAST_CHIPID, 0, 0x0008, 0)}});
+                               {"user.ctrl_regs.fast_cmd_reg_7.glb_pulse_data", (uint32_t)bits::pack<4, 1, 4, 1>(RD53Constants::BROADCAST_CHIPID, 0, GLOBAL_PULSE_WIDTH, 0)}});
 
     RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
 }
@@ -896,9 +900,9 @@ void RD53FWInterface::ConfigureDIO5(const DIO5Config* cfg)
 {
     const uint8_t fiftyOhmEnable = 0x12; // @CONST@
 
-    if(RegManager::ReadReg("user.stat_regs.stat_dio5.dio5_not_ready") == true) LOG(ERROR) << BOLDRED << "DIO5 not ready" << RESET;
+    if(RegManager::ReadReg("user.stat_regs.fast_cmd.dio5_not_ready") == true) LOG(ERROR) << BOLDRED << "DIO5 not ready" << RESET;
 
-    if(RegManager::ReadReg("user.stat_regs.stat_dio5.dio5_error") == true) LOG(ERROR) << BOLDRED << "DIO5 is in error" << RESET;
+    if(RegManager::ReadReg("user.stat_regs.fast_cmd.dio5_error") == true) LOG(ERROR) << BOLDRED << "DIO5 is in error" << RESET;
 
     RegManager::WriteStackReg({{"user.ctrl_regs.ext_tlu_reg1.dio5_en", (uint32_t)cfg->enable},
                                {"user.ctrl_regs.ext_tlu_reg1.dio5_ch_out_en", (uint32_t)cfg->ch_out_en},
@@ -910,10 +914,9 @@ void RD53FWInterface::ConfigureDIO5(const DIO5Config* cfg)
                                {"user.ctrl_regs.ext_tlu_reg2.dio5_ch5_thr", (uint32_t)cfg->ch5_thr},
                                {"user.ctrl_regs.ext_tlu_reg2.tlu_en", (uint32_t)cfg->tlu_en},
                                {"user.ctrl_regs.ext_tlu_reg2.tlu_handshake_mode", (uint32_t)cfg->tlu_handshake_mode},
-                               {"user.ctrl_regs.ext_tlu_reg2.ext_clk_en", (uint32_t)cfg->ext_clk_en},
+                               {"user.ctrl_regs.reset_reg.ext_clk_en", (uint32_t)cfg->ext_clk_en}});
 
-                               {"user.ctrl_regs.ext_tlu_reg2.dio5_load_config", 1},
-                               {"user.ctrl_regs.ext_tlu_reg2.dio5_load_config", 0}});
+    RD53FWInterface::SendBoardCommand("user.ctrl_regs.ext_tlu_reg2.dio5_load_config");
 }
 
 // ###################################
@@ -968,7 +971,7 @@ bool RD53FWInterface::WriteOptoLinkRegister(const Chip* pChip, const uint32_t pA
 
     // Config
     RegManager::WriteStackReg(
-        {{"user.ctrl_regs.lpgbt_1.ic_tx_fifo_din", pData}, {"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", lpGBTconstants::LPGBTADDRESS}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
+        {{"user.ctrl_regs.lpgbt_1.ic_tx_fifo_din", pData}, {"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", pChip->getChipAddress()}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
 
     // Perform operation
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_tx_fifo_wr_en", 0x1},
@@ -996,7 +999,7 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(const Chip* pChip, const uint32_t
     RD53FWInterface::selectLink(pChip->getOpticalId());
 
     // Config
-    RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", lpGBTconstants::LPGBTADDRESS}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
+    RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", pChip->getChipAddress()}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
 
     // Perform operation
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_2.ic_nb_of_words_to_read", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_send_rd_cmd", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_send_rd_cmd", 0x0}});
@@ -1008,58 +1011,50 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(const Chip* pChip, const uint32_t
     return cRead;
 }
 
+void RD53FWInterface::PrintFrequencyLVDS()
+{
+    uint32_t LVDS = RegManager::ReadReg("user.stat_regs.gp_lvds_freq_mon");
+    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "LVDS frequency: " << BOLDYELLOW << LVDS / 1000. << " MHz" << std::setprecision(-1) << RESET;
+}
+
+void RD53FWInterface::PrintErrorsLVDS()
+{
+    uint32_t LVDSctrl  = RegManager::ReadReg("user.ctrl_regs.reg_gp_lvds.gp_lvds_ctrl");
+    uint32_t LVDSerror = RegManager::ReadReg("user.stat_regs.global_reg.error_gp_lvds");
+    if(LVDSctrl == 1)
+    {
+        if(LVDSerror == 0)
+            LOG(INFO) << GREEN << "No errors in CMD data" << RESET;
+        else
+            LOG(WARNING) << RED << "Some errors CMD data: " << BOLDYELLOW << LVDSerror << RESET;
+    }
+    else if(LVDSctrl == 7)
+    {
+        if(LVDSerror == 0)
+            LOG(INFO) << GREEN << "LVDS pattern GOOD" << RESET;
+        else
+            LOG(WARNING) << RED << "LVDS pattern WRONG" << RESET;
+    }
+}
+
 void RD53FWInterface::selectLink(const uint8_t pLinkId, uint32_t pWait_ms) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.active_link", pLinkId); }
 
 void RD53FWInterface::SelectBERcheckBitORFrame(const uint8_t bitORframe) { RegManager::WriteReg("user.ctrl_regs.PRBS_checker.error_cntr_sel", bitORframe); }
 
-// ###########################################
-// # Member functions to handle the firmware #
-// ###########################################
-
-void RD53FWInterface::FlashProm(const std::string& strConfig, const char* fileName)
+void RD53FWInterface::WriteArbitraryRegister(const std::string& regName, const uint32_t value, const BeBoard* pBoard, ReadoutChipInterface* pReadoutChipInterface, const bool doReset)
 {
-    CheckIfUploading();
-    fpgaConfig->runUpload(strConfig, fileName);
+    RegManager::WriteReg(regName, value);
+    RD53FWInterface::SendBoardCommand("user.ctrl_regs.fast_cmd_reg_1.load_config");
+
+    if(doReset == true)
+    {
+        RD53FWInterface::ResetBoard();
+        RD53FWInterface::ConfigureBoard(pBoard);
+        static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
+    }
 }
 
-void RD53FWInterface::JumpToFpgaConfig(const std::string& strConfig)
-{
-    CheckIfUploading();
-    fpgaConfig->jumpToImage(strConfig);
-}
-
-void RD53FWInterface::DownloadFpgaConfig(const std::string& strConfig, const std::string& strDest)
-{
-    CheckIfUploading();
-    fpgaConfig->runDownload(strConfig, strDest.c_str());
-}
-
-std::vector<std::string> RD53FWInterface::getFpgaConfigList()
-{
-    CheckIfUploading();
-    return fpgaConfig->getFirmwareImageNames();
-}
-
-void RD53FWInterface::DeleteFpgaConfig(const std::string& strId)
-{
-    CheckIfUploading();
-    fpgaConfig->deleteFirmwareImage(strId);
-}
-
-void RD53FWInterface::CheckIfUploading()
-{
-    if(fpgaConfig && fpgaConfig->getUploadingFpga() > 0) throw Exception("[RD53FWInterface::CheckIfUploading] This board is uploading an FPGA configuration");
-
-    if(!fpgaConfig) fpgaConfig = new D19cFpgaConfig(this);
-}
-
-void RD53FWInterface::RebootBoard()
-{
-    if(!fpgaConfig) fpgaConfig = new D19cFpgaConfig(this);
-    fpgaConfig->resetBoard();
-}
-
-const FpgaConfig* RD53FWInterface::GetConfiguringFpga() { return (const FpgaConfig*)fpgaConfig; }
+uint32_t RD53FWInterface::ReadArbitraryRegister(const std::string& regName) { return RegManager::ReadReg(regName); }
 
 // ###################
 // # Clock generator #
@@ -1149,7 +1144,7 @@ void RD53FWInterface::ReadClockGenerator()
         uint32_t          readback = RegManager::ReadReg("system.spi.rx_data");
         std::stringstream myString("");
         myString << std::right << std::setfill('0') << std::setw(8) << std::hex << std::uppercase << readback << std::dec;
-        LOG(INFO) << BOLDBLUE << "\t--> SPI register content: 0x" << BOLDYELLOW << std::hex << std::uppercase << myString.str() << RESET;
+        LOG(INFO) << BOLDBLUE << "\t--> SPI register content: 0x" << BOLDYELLOW << std::hex << std::uppercase << myString.str() << std::dec << RESET;
     }
 }
 
@@ -1267,7 +1262,7 @@ float RD53FWInterface::calcVoltage(uint32_t senseVDD, uint32_t senseGND)
 // # Bit Error Rate test #
 // #######################
 
-double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed)
+double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_lane, uint8_t frontendSpeed)
 // ####################
 // # frontendSpeed    #
 // # 1.28 Gbit/s  = 0 #
@@ -1275,7 +1270,7 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
 // # 320 Mbit/s   = 2 #
 // ####################
 {
-    const uint32_t nBitInClkPeriod = 32. / std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
+    const uint32_t nBitInClkPeriod = 32. * std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
     const double   fps             = 1.28e9 / nBitInClkPeriod;         // Frames per second
     const int      n_prints        = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
     double         frames2run;
@@ -1298,17 +1293,15 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     double time_per_step = std::min(std::max(time2run / n_prints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
 
     WriteStackReg({{"user.ctrl_regs.PRBS_checker.module_addr", hybrid_id},
-                   {"user.ctrl_regs.PRBS_checker.chip_address", chip_id},
+                   {"user.ctrl_regs.PRBS_checker.chip_address", chip_lane},
                    {"user.ctrl_regs.PRBS_checker.reset_cntr", 1},
                    {"user.ctrl_regs.PRBS_checker.reset_cntr", 0}});
 
     // Set PRBS frames to run
     uint32_t lowFrames, highFrames;
     std::tie(highFrames, lowFrames) = bits::unpack<32, 32>(static_cast<long long>(frames2run));
-    WriteStackReg({{"user.ctrl_regs.prbs_frames_to_run_low", lowFrames},
-                   {"user.ctrl_regs.prbs_frames_to_run_high", highFrames},
-                   {"user.ctrl_regs.PRBS_checker.load_config", 1},
-                   {"user.ctrl_regs.PRBS_checker.load_config", 0}});
+    WriteStackReg({{"user.ctrl_regs.prbs_frames_to_run_low", lowFrames}, {"user.ctrl_regs.prbs_frames_to_run_high", highFrames}});
+    RD53FWInterface::SendBoardCommand("user.ctrl_regs.PRBS_checker.load_config");
 
     // #########
     // # Start #
@@ -1332,11 +1325,11 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
             return -1;
         }
         frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
-        nErrors += RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
+        nErrors      = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
 
         double percent_done = frameCounter / frames2run * 100.;
         LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s (" << BOLDYELLOW << percent_done << RESET << GREEN << "% done)" << RESET;
-        LOG(INFO) << GREEN << "Current BER counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " frames with error(s)" << RESET;
+        LOG(INFO) << GREEN << "Current counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " frames with error(s)" << RESET;
         if(given_time == true)
             run_done = (time_per_step * idx >= time2run);
         else
@@ -1354,11 +1347,12 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     cntr_lo      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
     cntr_hi      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
     frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
-    nErrors += RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
+    nErrors      = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
     LOG(INFO) << GREEN << "Final number of PRBS frames sent: " << BOLDYELLOW << frameCounter << RESET;
-    LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " frames with error(s), i.e. BER = " << BOLDYELLOW << nErrors * nBitInClkPeriod / frames2run << RESET
-              << GREEN << " bits/clk (" << BOLDYELLOW << nErrors / frames2run * 100 << RESET << GREEN << "%)" << RESET;
+    LOG(INFO) << GREEN << "Final counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " frames with error(s)" << RESET;
+    LOG(INFO) << GREEN << "Final Frame Error Rate: " << BOLDYELLOW << nErrors / time2run << RESET << GREEN << " frames/s (" << BOLDYELLOW << std::fixed << std::setprecision(3)
+              << nErrors / frames2run * 100 << RESET << GREEN << "%)" << RESET;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
     return nErrors / frames2run;

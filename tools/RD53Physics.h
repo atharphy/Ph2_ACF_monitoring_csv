@@ -35,6 +35,7 @@ class Physics : public Tool
     ~Physics()
     {
 #ifdef __USE_ROOT__
+        this->WriteRootFile();
         this->CloseResultFile();
 #endif
     }
@@ -44,13 +45,13 @@ class Physics : public Tool
     void ConfigureCalibration() override;
 
     void sendBoardData(const BoardContainer* cBoard);
-    void localConfigure(const std::string fileRes_, int currentRun);
-    void initializeFiles(const std::string fileRes_, int currentRun);
+    void localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
+    void initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
     void run();
     void draw();
     void analyze(bool doReadBinary = false);
     void saveChipRegisters(int currentRun);
-    void fillDataContainer(Ph2_HwDescription::BeBoard* cBoard);
+    void fillDataContainer(Ph2_HwDescription::BeBoard& cBoard);
 
     void setGenericEvtConverter(evtConvType arg)
     {
@@ -70,6 +71,8 @@ class Physics : public Tool
     size_t colStop;
     size_t nTRIGxEvent;
 
+    const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
+
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
     DetectorDataContainer                    theOccContainer;
     DetectorDataContainer                    theBCIDContainer;
@@ -77,7 +80,7 @@ class Physics : public Tool
 
     void fillHisto();
     void chipErrorReport() const;
-    void clearContainers(Ph2_HwDescription::BeBoard* cBoard);
+    void clearContainers(Ph2_HwDescription::BeBoard& cBoard);
 
   protected:
     struct RD53dummyEvtConverter

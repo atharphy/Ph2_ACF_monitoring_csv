@@ -128,9 +128,9 @@ bool CbcInterface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerifL
 
 bool CbcInterface::setInjectionAmplitude(ReadoutChip* pChip, uint8_t injectionAmplitude, bool pVerifLoop) { return this->WriteChipReg(pChip, "TestPulsePotNodeSel", injectionAmplitude, pVerifLoop); }
 
-bool CbcInterface::setInjectionSchema(ReadoutChip* pCbc, const ChannelGroupBase* group, bool pVerifLoop)
+bool CbcInterface::setInjectionSchema(ReadoutChip* pCbc, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop)
 {
-    std::bitset<NCHANNELS> cBitset = std::bitset<NCHANNELS>(static_cast<const ChannelGroup<NCHANNELS>*>(group)->getBitset());
+    std::bitset<NCHANNELS> cBitset = std::bitset<NCHANNELS>(std::static_pointer_cast<const ChannelGroup<NCHANNELS>>(group)->getBitset());
     if(cBitset.count() == 0) // no mask set... so do nothing
         return true;
     // LOG (DEBUG) << BOLDBLUE << "Setting injection scheme for " << std::bitset<NCHANNELS>(cBitset) << RESET;
@@ -149,10 +149,10 @@ bool CbcInterface::setInjectionSchema(ReadoutChip* pCbc, const ChannelGroupBase*
     return this->WriteChipReg(pCbc, "TestPulseGroup", cGroupId, pVerifLoop);
 }
 
-bool CbcInterface::maskChannelsGroup(ReadoutChip* pCbc, const ChannelGroupBase* group, bool pVerifLoop)
+bool CbcInterface::maskChannelGroup(ReadoutChip* pCbc, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop)
 {
-    const ChannelGroup<NCHANNELS>* originalMask = static_cast<const ChannelGroup<NCHANNELS>*>(pCbc->getChipOriginalMask());
-    const ChannelGroup<NCHANNELS>* groupToMask  = static_cast<const ChannelGroup<NCHANNELS>*>(group);
+    auto originalMask = std::static_pointer_cast<const ChannelGroup<NCHANNELS>>(pCbc->getChipOriginalMask());
+    auto groupToMask  = std::static_pointer_cast<const ChannelGroup<NCHANNELS>>(group);
     LOG(DEBUG) << BOLDBLUE << "\t... Applying mask to CBC" << +pCbc->getId() << " with " << group->getNumberOfEnabledChannels()
                << " enabled channels\t... mask : " << std::bitset<NCHANNELS>(groupToMask->getBitset()) << RESET;
 
@@ -170,18 +170,18 @@ bool CbcInterface::maskChannelsGroup(ReadoutChip* pCbc, const ChannelGroupBase* 
     return WriteChipMultReg(pCbc, cRegVec, pVerifLoop);
 }
 
-bool CbcInterface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop)
+bool CbcInterface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop)
 {
     bool success = true;
-    if(mask) success &= maskChannelsGroup(pChip, group, pVerifLoop);
+    if(mask) success &= maskChannelGroup(pChip, group, pVerifLoop);
     if(inject) success &= setInjectionSchema(pChip, group, pVerifLoop);
     return success;
 }
 
 bool CbcInterface::ConfigureChipOriginalMask(ReadoutChip* pCbc, bool pVerifLoop, uint32_t pBlockSize)
 {
-    ChannelGroup<NCHANNELS> allChannelEnabledGroup;
-    return CbcInterface::maskChannelsGroup(pCbc, &allChannelEnabledGroup, pVerifLoop);
+    auto allChannelEnabledGroup = std::make_shared<ChannelGroup<NCHANNELS, 1>>();
+    return CbcInterface::maskChannelGroup(pCbc, allChannelEnabledGroup, pVerifLoop);
 }
 
 std::vector<uint8_t> CbcInterface::createHitListFromStubs(uint8_t pSeed, bool pSeedLayer)
@@ -257,7 +257,7 @@ bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<uint8_t> pStubAddr
         this->enableInjection(pCbc, true); // enable injection
         // write register which sets TP amplitude
         // this->setInjectionAmplitude(pCbc, 0xFF - 100); // fix injection amplitude
-        return this->maskChannelsGroup(pCbc, &cChannelMask);
+        return this->maskChannelGroup(pCbc, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask)));
     }
     else // with noise
     {
@@ -289,7 +289,7 @@ bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<uint8_t> pStubAddr
         {
             uint16_t cVcth = 1023;
             this->WriteChipReg(pCbc, "VCth", cVcth);
-            return this->maskChannelsGroup(pCbc, &cChannelMask);
+            return this->maskChannelGroup(pCbc, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask)));
         }
     }
 }
@@ -336,8 +336,9 @@ uint16_t CbcInterface::readErrorRegister(ReadoutChip* pCbc)
     }
     else
     {
-        bool cVerifLoop = true;
-        bool cSuccess   = ConfigurePage(pCbc, cRegItem.fPage, cVerifLoop);
+        std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+        bool                                  cVerifLoop = true;
+        bool                                  cSuccess   = ConfigurePage(pCbc, cRegItem.fPage, cVerifLoop);
         if(cSuccess) { cErrorReg = fBoardFW->ReadFERegister(pCbc, cRegItem.fAddress); }
     }
     return cErrorReg;
@@ -408,12 +409,11 @@ bool CbcInterface::MaskAllChannels(ReadoutChip* pCbc, bool mask, bool pVerifLoop
     else
         cChannelMask.enableAllChannels();
     // LOG (DEBUG)  << BOLDBLUE << "Mask to be set is " << std::bitset<254>( cChannelMask.getBitset() ) << RESET;
-    return this->maskChannelsGroup(pCbc, &cChannelMask, pVerifLoop);
+    return this->maskChannelGroup(pCbc, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask)), pVerifLoop);
 }
 
 bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerifLoop)
 {
-    std::lock_guard<std::mutex> theGuard(fMutex);
     LOG(DEBUG) << BOLDYELLOW << "CbcInterface::WriteChipReg " << dacName << RESET;
     if(dacName == "VCth" || dacName == "Threshold")
     {
@@ -636,6 +636,7 @@ bool CbcInterface::WriteChipSingleReg(Chip* pCbc, const std::string& pRegNode, u
     }
     else
     {
+        std::lock_guard<std::recursive_mutex> theGuard(fMutex);
         cSuccess = (pRegNode == "FeCtrl&TrgLat2") ? true : ConfigurePage(pCbc, cRegItem.fPage, pVerifLoop);
         if(!cSuccess) return cSuccess;
         // read only  register
@@ -813,7 +814,7 @@ bool CbcInterface::WriteChipAllLocalReg(ReadoutChip* pCbc, const std::string& da
         }
     }
 
-    if(isMask) { return maskChannelsGroup(pCbc, &channelToEnable, pVerifLoop); }
+    if(isMask) { return maskChannelGroup(pCbc, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(channelToEnable)), pVerifLoop); }
     else
     {
         // uint8_t cWriteAttempts = 0 ;
@@ -844,8 +845,9 @@ uint8_t CbcInterface::ReadChipSingleReg(Chip* pCbc, const std::string& pRegNode)
     }
     else
     {
-        bool cVerifLoop = true;
-        bool cSuccess   = (pRegNode == "FeCtrl&TrgLat2") ? true : ConfigurePage(pCbc, cRegItem.fPage, cVerifLoop);
+        std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+        bool                                  cVerifLoop = true;
+        bool                                  cSuccess   = (pRegNode == "FeCtrl&TrgLat2") ? true : ConfigurePage(pCbc, cRegItem.fPage, cVerifLoop);
         if(cSuccess) { cValue = fBoardFW->ReadFERegister(pCbc, cRegItem.fAddress); }
     }
     pCbc->setReg(pRegNode, cValue);
@@ -854,8 +856,7 @@ uint8_t CbcInterface::ReadChipSingleReg(Chip* pCbc, const std::string& pRegNode)
 }
 uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
 {
-    std::lock_guard<std::mutex> theGuard(fMutex);
-    ChipRegItem                 cRegItem;
+    ChipRegItem cRegItem;
     setBoard(pCbc->getBeBoardId());
     std::vector<uint32_t> cVecReq;
     if(pRegNode == "VCth" || pRegNode == "Threshold")
@@ -973,9 +974,9 @@ void CbcInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWai
 {
     LOG(INFO) << BOLDMAGENTA << "Producing phase alignment pattern on CBC#" << +pChip->getId() << RESET;
     // mask for L1A alignment
-    ChannelGroup<NCHANNELS, 1> cChannelMask;
-    cChannelMask.disableAllChannels();
-    for(uint8_t cChannel = 0; cChannel < NCHANNELS; cChannel += 2) cChannelMask.enableChannel(cChannel); // generate a hit in every Nth channel
+    auto cChannelMask = std::make_shared<ChannelGroup<NCHANNELS, 1>>();
+    cChannelMask->disableAllChannels();
+    for(uint8_t cChannel = 0; cChannel < NCHANNELS; cChannel += 2) cChannelMask->enableChannel(cChannel); // generate a hit in every Nth channel
 
     // switch on HitOr
     WriteChipReg(pChip, "HitOr", 1);
@@ -1014,7 +1015,7 @@ void CbcInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWai
         injectStubs(static_cast<ReadoutChip*>(pChip), cSeeds_ph3, cBends_ph3);
         std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));
     }
-    this->maskChannelsGroup(static_cast<ReadoutChip*>(pChip), &cChannelMask);
+    this->maskChannelGroup(static_cast<ReadoutChip*>(pChip), cChannelMask);
 }
 void CbcInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
 {

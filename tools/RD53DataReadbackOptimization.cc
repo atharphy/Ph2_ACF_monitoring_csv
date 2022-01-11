@@ -22,16 +22,16 @@ void DataReadbackOptimization::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    startValueTAP0 = this->findValueInSettings("TAP0Start");
-    stopValueTAP0  = this->findValueInSettings("TAP0Stop");
-    startValueTAP1 = this->findValueInSettings("TAP1Start");
-    stopValueTAP1  = this->findValueInSettings("TAP1Stop");
-    invTAP1        = this->findValueInSettings("InvTAP1");
-    startValueTAP2 = this->findValueInSettings("TAP2Start");
-    stopValueTAP2  = this->findValueInSettings("TAP2Stop");
-    invTAP2        = this->findValueInSettings("InvTAP2");
-    doDisplay      = this->findValueInSettings("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
+    startValueTAP0 = this->findValueInSettings<double>("TAP0Start");
+    stopValueTAP0  = this->findValueInSettings<double>("TAP0Stop");
+    startValueTAP1 = this->findValueInSettings<double>("TAP1Start");
+    stopValueTAP1  = this->findValueInSettings<double>("TAP1Stop");
+    invTAP1        = this->findValueInSettings<double>("InvTAP1");
+    startValueTAP2 = this->findValueInSettings<double>("TAP2Start");
+    stopValueTAP2  = this->findValueInSettings<double>("TAP2Stop");
+    invTAP2        = this->findValueInSettings<double>("InvTAP2");
+    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
 
     // ##############################
     // # Initialize dac scan values #
@@ -47,11 +47,6 @@ void DataReadbackOptimization::ConfigureCalibration()
     nSteps = (stopValueTAP2 - startValueTAP2 + 1 >= RD53Shared::MAXSTEPS ? RD53Shared::MAXSTEPS : stopValueTAP2 - startValueTAP2 + 1);
     step   = floor((stopValueTAP2 - startValueTAP2 + 1) / nSteps);
     for(auto i = 0u; i < nSteps; i++) dacListTAP2.push_back(startValueTAP2 + step * i);
-
-    // ############################################################
-    // # Create directory for: raw data, config files, histograms #
-    // ############################################################
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false);
 }
 
 void DataReadbackOptimization::Running()
@@ -77,16 +72,16 @@ void DataReadbackOptimization::sendData()
     auto theStreamTAP2scan = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TAPsize>>("TAP2scan");
     auto theStreamTAP2     = prepareChipContainerStreamer<EmptyContainer, uint16_t>("TAP2");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: theTAP0scanContainer) theStreamTAP0scan.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theTAP0Container) theStreamTAP0.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theTAP0scanContainer) theStreamTAP0scan.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTAP0Container) theStreamTAP0.streamAndSendBoard(cBoard, fDQMStreamer);
 
-        for(const auto cBoard: theTAP1scanContainer) theStreamTAP1scan.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theTAP1Container) theStreamTAP1.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theTAP1scanContainer) theStreamTAP1scan.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTAP1Container) theStreamTAP1.streamAndSendBoard(cBoard, fDQMStreamer);
 
-        for(const auto cBoard: theTAP2scanContainer) theStreamTAP2scan.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theTAP2Container) theStreamTAP2.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theTAP2scanContainer) theStreamTAP2scan.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTAP2Container) theStreamTAP2.streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 
@@ -102,7 +97,7 @@ void DataReadbackOptimization::Stop()
     RD53RunProgress::reset();
 }
 
-void DataReadbackOptimization::localConfigure(const std::string fileRes_, int currentRun)
+void DataReadbackOptimization::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos = nullptr;
@@ -117,7 +112,7 @@ void DataReadbackOptimization::localConfigure(const std::string fileRes_, int cu
     DataReadbackOptimization::initializeFiles(fileRes_, currentRun);
 }
 
-void DataReadbackOptimization::initializeFiles(const std::string fileRes_, int currentRun)
+void DataReadbackOptimization::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 
@@ -174,7 +169,6 @@ void DataReadbackOptimization::draw(bool saveData)
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     DataReadbackOptimization::fillHisto();
     histos->process();
-    this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
 #endif
@@ -261,7 +255,7 @@ void DataReadbackOptimization::scanDac(const std::string& regName, const std::ve
                             BERtest::theBERtestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<double>();
 
         // ##############################################
-        // # Send periodic data to minitor the progress #
+        // # Send periodic data to monitor the progress #
         // ##############################################
         DataReadbackOptimization::sendData();
     }

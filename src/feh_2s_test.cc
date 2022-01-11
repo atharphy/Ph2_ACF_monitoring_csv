@@ -1,6 +1,6 @@
 #include <cstring>
 
-#include "ExtraChecks.h"
+#include "D19cDebugFWInterface.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
@@ -40,10 +40,6 @@
 #ifdef __ANTENNA__
 #include "Antenna.h"
 #endif
-
-// reference volage for lpgBT
-float VREF_LPGBT        = 1.0;
-float cConversionFactor = VREF_LPGBT / 1024.;
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -131,7 +127,6 @@ int main(int argc, char* argv[])
 
     cmd.defineOption("antennaDelay", "Delay between the antenna pulse and the delay [25 ns]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("latencyRange", "Range of latencies around pulse to scan [25 ns]", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("evaluate", "Run some more detailed tests... ", ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("evaluate", "e");
 
     cmd.defineOption("withCIC", "With CIC. Default : false", ArgvParser::NoOptionAttribute);
@@ -173,7 +168,6 @@ int main(int argc, char* argv[])
     bool        batchMode         = (cmd.foundOption("batch")) ? true : false;
     bool        cAllChan          = (cmd.foundOption("allChan")) ? true : false;
     bool        cCheckData        = (cmd.foundOption("checkData"));
-    bool        cEvaluate         = (cmd.foundOption("evaluate"));
 
     bool cSaveToFile = cmd.foundOption("save");
 
@@ -357,7 +351,7 @@ int main(int argc, char* argv[])
                     static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, cRef);
                     // wait until Vref is stable
                     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                    for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor; }
+                    for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * CONVERSION_FACTOR; }
                     float cMean         = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
                     float cDifference_V = (cADCs_Refs[cIndx] - cMean);
                     // LOG (DEBUG) << BOLDBLUE << "ADC_" << cADCsel << " reading from lpGBT "
@@ -391,7 +385,7 @@ int main(int argc, char* argv[])
                 static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, (uint8_t)cCorr);
                 // wait until Vref is stable
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor; }
+                for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * CONVERSION_FACTOR; }
                 float cMeanValue = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
                 LOG(INFO) << BOLDMAGENTA << "Measured V_min after correction is " << std::setprecision(2) << std::fixed << cMeanValue * 1e3 << " mV , expected value is " << cADCs_Refs[cIndx] * 1e3
                           << " difference is " << std::fabs(cMeanValue - cADCs_Refs[cIndx]) * 1e3 << " mV, correction needed to acheive this was  " << +cCorr << RESET;
@@ -419,7 +413,7 @@ int main(int argc, char* argv[])
                     // char               cADC[4];
                     std::string cADC = "ADC" + (boost::format("%|01|") % cADCsels[cIndx]).str();
                     // sprintf(cADC, "ADC%.1d", cADCsels[cIndx]);
-                    for(size_t cM = 0; cM < cVals.size(); cM++) cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADC.c_str()) * cConversionFactor;
+                    for(size_t cM = 0; cM < cVals.size(); cM++) cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADC.c_str()) * CONVERSION_FACTOR;
                     float cMean = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
                     LOG(INFO) << BOLDMAGENTA << "\t...ADC#" << +cADCsels[cIndx] << " " << cADCNames[cIndx] << " reading from lpGBT "
                               << " is " << +cMean * 1e3 << " milli-volts. " << RESET;
@@ -494,7 +488,7 @@ int main(int argc, char* argv[])
                                 cTool.fReadoutChipInterface->WriteChipReg(cChip, "AmuxOutput", cMuxSel);
                             } // all FEs set to floating, except 0
                             std::vector<float> cVals(10);
-                            for(size_t cM = 0; cM < cVals.size(); cM++) cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADC.c_str()) * cConversionFactor;
+                            for(size_t cM = 0; cM < cVals.size(); cM++) cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADC.c_str()) * CONVERSION_FACTOR;
                             float cMean = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
                             LOG(INFO) << BOLDMAGENTA << "\t...CBC#" << +cChipId << " " << cADC << " reading from lpGBT "
                                       << " while monitoring AMUX#" << +cMuxSel << " is " << +cMean * 1e3 << " milli-volts. " << RESET;
@@ -516,7 +510,7 @@ int main(int argc, char* argv[])
     cCicAligner.Initialise();
     cCicAligner.CicLpGbtAlignment();
 
-    // align back-end
+    // // align back-end
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(&cTool);
     cBackEndAligner.Start(0);
@@ -558,14 +552,14 @@ int main(int argc, char* argv[])
 
         for(auto cHybridId: cHybridIds)
         {
-            auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+            auto cDebugInterface = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
             for(const auto cBoard: *cTool.fDetectorContainer)
             {
                 cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybridId);
                 cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cChipId);
             }
             LOG(INFO) << BOLDYELLOW << "Scoping L1 data on hybrid" << +cHybridId << RESET;
-            cInterface->L1ADebug(1, false);
+            cDebugInterface->L1ADebug(1, false);
             for(const auto cBoard: *cTool.fDetectorContainer)
             {
                 LOG(INFO) << BOLDMAGENTA << "First header found after " << +cTool.fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay")
@@ -586,9 +580,29 @@ int main(int argc, char* argv[])
     // equalize thresholds on readout chips
     if(cTune)
     {
-        // uint8_t cFeId=0;
-        // auto cSelectFunction = [cFeId](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getId() == cFeId); };
-        // cTool.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
+        // for(auto cBoard: *cTool.fDetectorContainer)
+        // {
+        //     for(auto cOpticalGroup: *cBoard)
+        //     {
+        //         for(auto cHybrid: *cOpticalGroup)
+        //         {
+        //             // set all SSAs + MPAs to output data in async mode
+        //             for(auto cROC: *cHybrid)
+        //             {
+        //                 // TBC - what about MPA here?
+        //                 if( cROC->getFrontEndType() == FrontEndType::SSA || cROC->getFrontEndType() == FrontEndType::SSA2 )
+        //                 {
+        //                     cTool.fReadoutChipInterface->WriteChipReg(cROC, "AnalogueSync", 1);
+        //                 }
+        //             }
+        //         }
+        //     }
+        //     cTool.fBeBoardInterface->setBoard(cBoard->getId());
+        //     auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+        //     cTool.fBeBoardInterface->WriteBoardReg(cBoard,"fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select" , 0) ;
+        //     cTool.fBeBoardInterface->WriteBoardReg(cBoard,"fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select" , 0) ;
+        //     cInterface->L1ADebug();
+        // }
 
         t.start();
         // now create a PedestalEqualization object
@@ -646,18 +660,6 @@ int main(int argc, char* argv[])
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
     }
-    if(cEvaluate)
-    {
-        int cSigma = cmd.foundOption("evaluate") ? convertAnyInt(cmd.optionValue("evaluate").c_str()) : 3;
-        // some extra stuff ...
-        ExtraChecks cExtra;
-        cExtra.Inherit(&cTool);
-        cExtra.Initialise();
-        LOG(INFO) << BOLDBLUE << "Measuring noise and setting thresholds to " << +cSigma << " noise units away from pedestal...." << RESET;
-        cExtra.Evaluate(cSigma, 0, true);
-        cExtra.writeObjects();
-        cExtra.resetPointers();
-    }
     // inject hits and stubs using mask and compare input against output
     if(cmd.foundOption("memCheck"))
     {
@@ -676,8 +678,7 @@ int main(int argc, char* argv[])
             std::vector<uint8_t> cFesToCheck = getArgs(cArgsStr);
             cMemoryChecker.EvaluatePedeNoise(100); // find pedestal + noise
             cMemoryChecker.SetThreshold(-2.0);     // set threshold to 3 sigma away from pedestal
-            auto cSetting    = cTool.fSettingsMap.find("TriggerSeparation");
-            int  cTriggerGap = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 500;
+            int cTriggerGap = cTool.findValueInSettings<double>("TriggerSeparation", 500);
             cMemoryChecker.DataCheck(cFesToCheck, cTriggerGap);
         }
         cMemoryChecker.MemoryCheck2SRaw(true);  // all ones

@@ -12,6 +12,7 @@
 
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/Definition.h"
+#include "../Utils/DataContainer.h"
 #include "../Utils/easylogging++.h"
 #include "ConsoleColor.h"
 #include "SLinkEvent.h"
@@ -122,6 +123,7 @@ class Event
     uint8_t  fCBCDataType;
     uint8_t  fNCbc;
     uint8_t  fNSSA;
+    uint8_t  fNSSA2;
     uint8_t  fNMPA;
     uint16_t fEventDataSize;
     uint32_t fBeStatus;
@@ -161,6 +163,7 @@ class Event
     //}
     /*! \brief Get the event size in bytes */
     uint32_t GetSize() const { return fEventSize; }
+
     /*!
      * \brief Get the bunch value
      * \return Bunch value
@@ -402,7 +405,9 @@ class Event
 
     virtual std::vector<Cluster> getClusters(uint8_t pFeId, uint8_t pCbcId) const { return {}; }
 
-    virtual void fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) = 0;
+    virtual void fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup);
+    virtual void fillChipDataContainer(ChipDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) = 0;
+
 
     // split stream of data
     template <std::size_t N>

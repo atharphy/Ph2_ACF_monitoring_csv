@@ -10,13 +10,21 @@
 #ifndef RD53eudaqProducer_H
 #define RD53eudaqProducer_H
 
-#include "Tool.h"
+#include "RD53Physics.h"
+#include "eudaq/CMSITEventData.hh"
 #include "eudaq/Producer.hh"
-class Physics;
+#include "eudaq/RawDataEvent.hh"
 
-class RD53eudaqProducer
-    : public Tool
-    , public eudaq::Producer
+#include "boost/archive/binary_oarchive.hpp"
+#include "boost/serialization/vector.hpp"
+
+namespace EUDAQ
+{
+const std::string EVENT = "CMSIT";
+const int         WAIT  = 5000; // [ms]
+} // namespace EUDAQ
+
+class RD53eudaqProducer : public eudaq::Producer
 {
     class RD53eudaqEvtConverter
     {
@@ -29,28 +37,28 @@ class RD53eudaqProducer
     };
 
   public:
-    RD53eudaqProducer(Ph2_System::SystemController& RD53SysCntr, const std::string configFile, const std::string producerName, const std::string runControl);
+    RD53eudaqProducer(Ph2_System::SystemController& RD53SysCntr, const std::string& configFile, const std& ::string producerName, const std::string& runControl);
 
-    void DoReset() override;
-    void DoInitialise() override;
-    void DoConfigure() override;
-    void DoStartRun() override;
-    void DoStopRun() override;
-    void DoTerminate() override;
+    void OnReset() override;
+    void OnInitialise(const eudaq::Configuration& param) override;
+    void OnConfigure(const eudaq::Configuration& param) override;
+    void OnStartRun(unsigned runNumber) override;
+    void OnStopRun() override;
+    void OnTerminate() override;
+
+    void MainLoop();
+    void MySendEvent(eudaq::Event& theEvent);
+
+    int theRunNumber;
+    int evCounter;
+
+    Physics RD53sysCntrPhys;
 
   private:
-    size_t      fRunNumber;
-    std::string configFile;
-    Physics*    RD53sysCntrPhys;
+    std::condition_variable wakeUp;
+    std::mutex              theMtx;
+    bool                    doExit;
+    std::string             configFile;
 };
-
-// ##################################
-// # Call to EUDAQ producer factory #
-// ##################################
-namespace
-{
-__attribute__((unused)) auto dummy =
-    eudaq::Factory<eudaq::Producer>::Register<RD53eudaqProducer, Ph2_System::SystemController&, const std::string, const std::string, const std::string>(eudaq::cstr2hash("RD53eudaqProducer"));
-}
 
 #endif

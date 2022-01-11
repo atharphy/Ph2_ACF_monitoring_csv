@@ -19,6 +19,11 @@
 #include <condition_variable>
 #include <omp.h>
 
+#ifdef __USE_ROOT__
+#include "TFile.h"
+#include "TTree.h"
+#endif
+
 // #############
 // # CONSTANTS #
 // #############
@@ -89,8 +94,10 @@ class RD53Event : public Ph2_HwInterface::Event
   public:
     RD53Event(const uint32_t* data, size_t n);
 
-    void fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
+    void fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup) override;
+    void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) override;
 
+    static void clearEventContainer(Ph2_HwDescription::BeBoard& theBoard, DetectorDataContainer& theContainer);
     static void addBoardInfo2Events(const Ph2_HwDescription::BeBoard* pBoard, std::vector<RD53Event>& decodedEvents);
     static void ForkDecodingThreads();
     static void JoinDecodingThreads();
@@ -98,6 +105,7 @@ class RD53Event : public Ph2_HwInterface::Event
     static void DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStart, uint16_t& eventStatus);
     static bool EvtErrorHandler(uint16_t status);
     static void PrintEvents(const std::vector<RD53Event>& events, const std::vector<uint32_t>& pData = {});
+    static void MakeNtuple(const std::string& fileName, const std::vector<RD53Event>& events);
 
     uint16_t block_size;
     uint16_t tlu_trigger_id;

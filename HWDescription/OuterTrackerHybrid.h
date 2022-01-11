@@ -20,6 +20,7 @@
 #include "Hybrid.h"
 #include "MPA.h"
 #include "SSA.h"
+#include "SSA2.h"
 #include <stdint.h>
 #include <vector>
 

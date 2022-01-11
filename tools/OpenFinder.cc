@@ -13,8 +13,8 @@ OpenFinder::OpenFinder() : PSHybridTester()
 {
     fParameters.fAntennaTriggerSource = 7;
     fParameters.antennaDelay          = 50;
-    fParameters.potentiometer         = this->findValueInSettings("AntennaPotentiometer");
-    fParameters.nTriggers             = this->findValueInSettings("Nevents");
+    fParameters.potentiometer         = this->findValueInSettings<double>("AntennaPotentiometer");
+    fParameters.nTriggers             = this->findValueInSettings<double>("Nevents");
 }
 
 OpenFinder::~OpenFinder() {}
@@ -55,14 +55,15 @@ void OpenFinder::Reset()
 }
 void OpenFinder::Initialise(Parameters pParameters)
 {
-    fChannelGroupHandler = new CBCChannelGroupHandler();
-    fChannelGroupHandler->setChannelGroupParameters(16, 2);
+    CBCChannelGroupHandler theChannelGroupHandler;
+    theChannelGroupHandler.setChannelGroupParameters(16, 2);
+    setChannelGroupHandler(theChannelGroupHandler);
 
     // Read some settings from the map
     auto cSetting       = fSettingsMap.find("Nevents");
-    fEventsPerPoint     = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    fEventsPerPoint     = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 100;
     cSetting            = fSettingsMap.find("TestPulseAmplitude");
-    fTestPulseAmplitude = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 0;
+    fTestPulseAmplitude = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
     // Set fTestPulse based on the test pulse amplitude
     fTestPulse = (fTestPulseAmplitude & 0x1);
     // Import the rest of parameters from the user settings
@@ -422,8 +423,8 @@ void OpenFinder::SelectAntennaPosition(const std::string& cPosition)
 }
 void OpenFinder::FindOpensPS()
 {
-    fParameters.potentiometer = this->findValueInSettings("AntennaPotentiometer");
-    fParameters.nTriggers     = this->findValueInSettings("Nevents");
+    fParameters.potentiometer = this->findValueInSettings<double>("AntennaPotentiometer");
+    fParameters.nTriggers     = this->findValueInSettings<double>("Nevents");
 
     LOG(INFO) << BOLDBLUE << "Checking for opens in PS hybrid "
               << " antenna potentiometer will be set to 0x" << std::hex << fParameters.potentiometer << std::dec << " units."
@@ -434,7 +435,7 @@ void OpenFinder::FindOpensPS()
     // make sure that async mode is selected
     // that antenna source is 10
     // and set thresholds
-    uint16_t cThreshold = this->findValueInSettings("ThresholdForOpens");
+    uint16_t cThreshold = this->findValueInSettings<double>("ThresholdForOpens");
     for(auto cBoard: *fDetectorContainer)
     {
         std::vector<std::pair<std::string, uint32_t>> cRegVec;

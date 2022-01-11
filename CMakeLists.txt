@@ -134,7 +134,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # Ph2_TCUSB [USB control of hybrids]
     if ($ENV{CompileWithTCUSB})
-      find_package(PH2_TCUSB)  
+      find_package(PH2_TCUSB)
       if(PH2_TCUSB_FOUND)
         if($ENV{UseTCUSBforROH})
             message(STATUS "    Building the ROH TestCards USB components")
@@ -143,14 +143,18 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
             message(STATUS "    Building the SEH TestCards USB components")
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
         endif($ENV{UseTCUSBforROH})
+        if($ENV{UseTCUSBTcpServer})
+            message(STATUS "    Building the components to use the TCP Server")
+            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBTcpServerFlag}")
+        endif($ENV{UseTCUSBTcpServer})
       endif(PH2_TCUSB_FOUND)
     endif($ENV{CompileWithTCUSB})
 
     # EUDAQ
     if ($ENV{CompileWithEUDAQ})
         set(USE_EUDAQ ON)
-        include_directories($ENV{EUDAQDIR}/include $ENV{EUDAQDIR}/user/tlu/module/src)
-        set(EUDAQ_LIB -L$ENV{EUDAQLIB} eudaq_core)
+        include_directories($ENV{EUDAQDIR}/include)
+        set(EUDAQ_LIB -L$ENV{EUDAQLIB} EUDAQ)
         message(STATUS "    EUDAQ variable is defined. EUDAQ directory: $ENV{EUDAQDIR}")
     else($ENV{CompileWithEUDAQ})
         message(STATUS "    EUDAQ variable is not defined. Building without EUDAQ producer")
@@ -167,8 +171,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # Boost
     set(BOOST_INCLUDE_DIRS "$ENV{BOOST_INCLUDE}")
     set(BOOST_LIBRARY_DIRS "$ENV{BOOST_LIB}")
-    find_package(Boost 1.53 REQUIRED system filesystem thread program_options)
-    
+    find_package(Boost 1.53 REQUIRED system filesystem thread program_options serialization)
+
     message("--     ${BoldCyan}#### Done ####${Reset}")
 
     # All the subdirs
@@ -179,6 +183,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     MESSAGE(STATUS " ")
     if(CompileForHerd OR NoDataShipping)
         add_subdirectory(tools)
+        add_subdirectory(ProductionTools)
         add_subdirectory(HWDescription)
         add_subdirectory(HWInterface)
         add_subdirectory(System)
@@ -226,13 +231,9 @@ else() # ------------------------------- Compilation in the otsdaq environment -
 
     MESSAGE (STATUS "${CMAKE_CXX_FLAGS}")
 
-    set(CompileForShep "$ENV{CompileForShep}")
-    set(CompileForHerd "$ENV{CompileForHerd}")
-    if ((NOT CompileForShep) AND (NOT CompileForHerd))
-        set(NoDataShipping true)
-    else()
-        set(NoDataShipping false)
-    endif()
+    set(CompileForShep true)
+    set(CompileForHerd false)
+    set(NoDataShipping false)
 
     # AMC13
     if(${CACTUS_AMC13_FOUND})
@@ -272,6 +273,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     endif()
 
     add_subdirectory(tools)
+    add_subdirectory(ProductionTools)
     add_subdirectory(DQMUtils)
     add_subdirectory(Utils)
     add_subdirectory(RootUtils)

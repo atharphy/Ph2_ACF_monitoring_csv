@@ -147,10 +147,10 @@ bool SSAInterface::setInjectionAmplitude(ReadoutChip* pChip, uint8_t injectionAm
 //
 
 //
-bool SSAInterface::setInjectionSchema(ReadoutChip* cChip, const ChannelGroupBase* group, bool pVerifLoop)
+bool SSAInterface::setInjectionSchema(ReadoutChip* cChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop)
 {
-    const ChannelGroup<NSSACHANNELS>* cOriginalMask = static_cast<const ChannelGroup<NSSACHANNELS>*>(cChip->getChipOriginalMask());
-    const ChannelGroup<NSSACHANNELS>* groupToMask   = static_cast<const ChannelGroup<NSSACHANNELS>*>(group);
+    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(cChip->getChipOriginalMask());
+    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(group);
 
     auto cBitset = std::bitset<NSSACHANNELS>(groupToMask->getBitset() & cOriginalMask->getBitset());
     // cBitset = cBitset&std::bitset<NSSACHANNELS>(0x0000F0FF0);
@@ -183,10 +183,10 @@ bool SSAInterface::setInjectionSchema(ReadoutChip* cChip, const ChannelGroupBase
 }
 //
 
-bool SSAInterface::maskChannelsGroup(ReadoutChip* cChip, const ChannelGroupBase* group, bool pVerifLoop)
+bool SSAInterface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop)
 {
-    const ChannelGroup<NSSACHANNELS>* cOriginalMask = static_cast<const ChannelGroup<NSSACHANNELS>*>(cChip->getChipOriginalMask());
-    const ChannelGroup<NSSACHANNELS>* groupToMask   = static_cast<const ChannelGroup<NSSACHANNELS>*>(group);
+    auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(cChip->getChipOriginalMask());
+    auto groupToMask   = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(group);
 
     auto cBitset = std::bitset<NSSACHANNELS>(groupToMask->getBitset() & cOriginalMask->getBitset());
     // cBitset = cBitset&std::bitset<NSSACHANNELS>(0x0000F0FF0);
@@ -219,10 +219,10 @@ bool SSAInterface::maskChannelsGroup(ReadoutChip* cChip, const ChannelGroupBase*
     return this->WriteChipMultReg(cChip, pVecReq);
 }
 //
-bool SSAInterface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop)
+bool SSAInterface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop)
 {
     bool success = true;
-    if(mask) success &= maskChannelsGroup(pChip, group, pVerifLoop);
+    if(mask) success &= maskChannelGroup(pChip, group, pVerifLoop);
     if(inject) success &= setInjectionSchema(pChip, group, pVerifLoop);
 
     return success;
@@ -235,6 +235,7 @@ bool SSAInterface::MaskAllChannels(ReadoutChip* pSSA, bool mask, bool pVerifLoop
 // I actually want this one!
 bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_t pValue, bool pVerifLoop)
 {
+    // LOG(INFO) << BOLDRED << "SSA! " << RESET;
     if(pRegName == "CountingMode")
     {
         uint8_t cRegValue = (pValue << 2) | (1 << 0);
@@ -257,6 +258,12 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     {
         return this->ConfigureAmux(pSSA, "GND");
     }
+
+    else if(pRegName.substr(0, pRegName.find("__")) == "AMUX")
+    {
+        return this->ConfigureAmux(pSSA, pRegName.substr(1, pRegName.find("__")));
+    }
+
     else if(pRegName.find("MaskChannel") != std::string::npos)
     {
         std::string cToken    = "MaskChannel";
@@ -322,9 +329,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     else if(pRegName == "AsyncDelay")
     {
         uint8_t cLSB = pValue & 0xFF;
-        uint8_t cMSB = (pValue >> 8);
-        LOG(DEBUG) << BOLDBLUE << "Delay value is 0x" << std::hex << pValue << std::dec << " LSB should be 0x" << std::hex << +cLSB << std::dec << " MSB should be 0x" << std::hex << +cMSB << std::dec
-                   << RESET;
+        uint8_t cMSB = (pValue << 8);
         WriteChipSingleReg(pSSA, "AsyncRead_StartDel_LSB", cLSB, pVerifLoop);
         WriteChipSingleReg(pSSA, "AsyncRead_StartDel_MSB", cMSB, pVerifLoop);
         return true;
@@ -409,9 +414,10 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     }
     else if(pRegName == "EnableSLVSTestOutput")
     {
-        LOG(DEBUG) << BOLDBLUE << "Enabling SLVS test output on SSA#" << +pSSA->getId() << RESET;
+        uint8_t cReadoutMode = (pValue == 0x1) ? 0x2 : 0x0;
+        LOG(INFO) << BOLDBLUE << "Enabling SLVS test output on SSA#" << +pSSA->getId() << RESET;
         uint8_t cRegValue = ReadChipReg(pSSA, "ReadoutMode");
-        cRegValue         = (cRegValue & 0x4) | (pValue << 1);
+        cRegValue         = (cRegValue & 0x4) | (cReadoutMode);
         return WriteChipSingleReg(pSSA, "ReadoutMode", cRegValue, pVerifLoop);
     }
     else if(pRegName.find("OutPatternStubLine") != std::string::npos) // Stub Lines
@@ -444,6 +450,26 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
             return WriteChipSingleReg(pSSA, "DigCalibPattern_L", pValue, pVerifLoop);
         else
             return cEnableAnalogue;
+    }
+    else if(pRegName.find("SLVS_pad_current") != std::string::npos)
+    {
+        return this->WriteChipSingleReg(pSSA, "SLVS_pad_current", pValue);
+    }
+    else if(pRegName.find("OutPatternStubLine") != std::string::npos) // Stub Lines
+    {
+        int cLine;
+        std::sscanf(pRegName.c_str(), "OutPatternStubLine%d", &cLine);
+        std::stringstream cRegName;
+        if(cLine < 7)
+            cRegName << "OutPattern" << +cLine;
+        else
+            cRegName << "OutPattern7/FIFOconfig";
+        return this->WriteChipSingleReg(pSSA, cRegName.str(), pValue, pVerifLoop);
+    }
+    else if(pRegName.find("OutPatternL1Line") != std::string::npos) // Stub Lines
+    {
+        LOG(INFO) << BOLDRED << "SSA1 - cannot send pattern on L1 line" << RESET;
+        return true;
     }
     else if(pRegName.find("CalibrationPattern") != std::string::npos)
     {
@@ -557,7 +583,7 @@ bool SSAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRe
     if(!lpGBTFound())
     {
         std::vector<uint32_t> cVec;
-        fBoardFW->EncodeReg(cRegItem, pChip->getId(), pChip->getId(), cVec, pVerifLoop, true);
+        fBoardFW->EncodeReg(cRegItem, pChip, cVec, pVerifLoop, true);
         uint8_t cWriteAttempts = 0;
         cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
     }
@@ -639,7 +665,7 @@ bool SSAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
             cRegItem.fPage    = 0x00;
             cRegItem.fAddress = cReg.first;
             cRegItem.fValue   = cReg.second & 0xFF;
-            fBoardFW->EncodeReg(cRegItem, pChip->getId(), pChip->getId(), cVec, pVerifLoop, true);
+            fBoardFW->EncodeReg(cRegItem, pChip, cVec, pVerifLoop, true);
 #ifdef COUNT_FLAG
             fRegisterCount++;
 #endif
@@ -685,10 +711,10 @@ uint16_t SSAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVer
     {
         bool                  cFailed = false;
         bool                  cRead;
+        uint8_t               cSSAId;
         std::vector<uint32_t> cVecReq;
-        fBoardFW->EncodeReg(cRegItem, pChip->getId(), pChip->getId(), cVecReq, true, false);
+        fBoardFW->EncodeReg(cRegItem, pChip, cVecReq, true, false);
         fBoardFW->ReadChipBlockReg(cVecReq);
-        uint8_t cSSAId;
         fBoardFW->DecodeReg(cRegItem, cSSAId, cVecReq[0], cRead, cFailed);
     }
     else
@@ -730,7 +756,7 @@ bool SSAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, 
     if(!lpGBTFound())
     {
         std::vector<uint32_t> cVec;
-        fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId() % 8, cVec, cCheckReadback, true);
+        fBoardFW->EncodeReg(cRegItem, pChip, cVec, cCheckReadback, true);
         uint8_t cWriteAttempts = 0;
         cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, cCheckReadback);
     }
@@ -914,6 +940,10 @@ uint16_t SSAInterface::ReadChipReg(Chip* pSSA, const std::string& pRegNode)
     else if(pRegNode == "Threshold")
     {
         return this->ReadChipReg(pSSA, "Bias_THDAC");
+    }
+    else if(pRegNode.find("SLVS_pad_current") != std::string::npos)
+    {
+        return this->ReadChipReg(pSSA, "SLVS_pad_current");
     }
     else if(pRegNode == "TriggerLatency")
     {

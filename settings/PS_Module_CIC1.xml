@@ -16,7 +16,7 @@
         <lpGBT Id="0" configfile="CMSOT_lpGBT.txt">
           <Settings
           />
-        </lpGBT>
+        </lpGBT> -->
         <Hybrid Id="0" Status="1" LinkId="0">
             <Global>
                <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320"/>
@@ -33,13 +33,13 @@
 
 
             <MPA_Files path="./settings/MPAFiles/" />
-            <MPA Id="0" partid="0" configfile="MPA.txt" />
-            <MPA Id="1" partid="1" configfile="MPA.txt" />
-            <MPA Id="2" partid="2" configfile="MPA.txt" />
-            <MPA Id="4" partid="4" configfile="MPA.txt" />
-            <MPA Id="5" partid="5" configfile="MPA.txt" />
-            <MPA Id="6" partid="6" configfile="MPA.txt" />
-            <MPA Id="7" partid="7" configfile="MPA.txt" />
+            <MPA Id="8" partid="0" configfile="MPA.txt" />
+            <MPA Id="9" partid="1" configfile="MPA.txt" />
+            <MPA Id="10" partid="2" configfile="MPA.txt" />
+            <MPA Id="12" partid="4" configfile="MPA.txt" />
+            <MPA Id="13" partid="5" configfile="MPA.txt" />
+            <MPA Id="14" partid="6" configfile="MPA.txt" />
+            <MPA Id="15" partid="7" configfile="MPA.txt" />
 
 
             <CIC_Files path="./settings/CicFiles/" />
@@ -78,7 +78,7 @@
     		</Register>
             <Register name="ps_async_delay">
                 <Register name="after_clear_counters"> 200 </Register>
-                <Register name="after_open_shutter"> 1 </Register>
+                <Register name="after_open_shutter"> 200 </Register>
                 <Register name="after_close_shutter"> 200 </Register>
                 <Register name="after_stop_antenna"> 200 </Register>
             </Register>
@@ -172,8 +172,8 @@
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
     <Setting name="FitSCurves">0</Setting>
     <Setting name="PlotSCurves">1</Setting>
-    <Setting name="PedestalEqualizationPulseAmplitude">120</Setting>
-    <Setting name="PedeNoisePulseAmplitude">8</Setting>
+    <Setting name="PedestalEqualizationPulseAmplitude">70</Setting>
+    <Setting name="PedeNoisePulseAmplitude">70</Setting>
     <Setting name="TriggerRate">10</Setting>
 
 

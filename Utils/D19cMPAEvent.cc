@@ -28,24 +28,15 @@ D19cMPAEvent::D19cMPAEvent(const BeBoard* pBoard, uint32_t pNMPA, uint32_t pNFe,
     SetEvent(pBoard, pNMPA, list);
 }
 
-void D19cMPAEvent::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
+void D19cMPAEvent::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId)
 {
-    for(auto opticalGroup: *boardContainer)
+    unsigned int i = 0;
+    for(ChannelDataContainer<Occupancy>::iterator channel = chipContainer->begin<Occupancy>(); channel != chipContainer->end<Occupancy>(); channel++, i++)
     {
-        for(auto hybrid: *opticalGroup)
+        if(testChannelGroup->isChannelEnabled(i))
         {
-            for(auto chip: *hybrid)
-            {
-                unsigned int i = 0;
-                for(ChannelDataContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
-                {
-                    if(cTestChannelGroup->isChannelEnabled(i))
-                    {
-                        // TOFIX
-                        channel->fOccupancy += 0.0;
-                    }
-                }
-            }
+            // TOFIX
+            channel->fOccupancy += 0.0;
         }
     }
 }

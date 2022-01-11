@@ -57,15 +57,25 @@ class MonitorDQMPlotCBC : public MonitorDQMPlotBase
     void reset(void) override;
 
     /*!
-     * \brief fillDQMThresholdPlots
-     * \param theThresholdContainer : Container with the hits you want to plot
+     * \brief fillCBCRegisterPlots
+     * \param theCBCRegisterContainer : Container with the hits you want to plot
      * \param timeStamp : timeStamp
      */
-    void fillDQMThresholdPlots(DetectorDataContainer& theThresholdContainer, time_t timeStamp);
+    void fillCBCRegisterPlots(DetectorDataContainer& theCBCRegisterContainer, const std::string& registerName);
+    void fillLpGBTRegisterPlots(DetectorDataContainer& theCBCRegisterContainer, const std::string& registerName);
 
   private:
-    bool                  fDoMonitorThreshold{false};
-    DetectorDataContainer fDetectorMonitorPlots;
-    DetectorDataContainer fDetectorData;
+    bool fDoMonitorThreshold{false};
+    bool fDoMonitorLpGBT_ADC1{false};
+    bool fDoMonitorLpGBT_VDD{false};
+    bool fDoMonitorLpGBT_VDDA{false};
+    bool fDoMonitorLpGBT_TEMP{false};
+
+    std::map<std::string, DetectorDataContainer> fCBCRegisterMonitorPlotMap;
+    std::map<std::string, DetectorDataContainer> fLpGBTRegisterMonitorPlotMap;
+    DetectorDataContainer                        fDetectorData;
+
+    void bookCBCPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
+    void bookLpGBTPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
 };
 #endif
