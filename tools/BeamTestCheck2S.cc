@@ -41,21 +41,22 @@ void BeamTestCheck2S::Initialise()
 
     // create groups for injection
     // set injection group
-    fChannelGroupHandler = new CBCChannelGroupHandler();
-    fChannelGroupHandler->setChannelGroupParameters(16, 2); // number of cluster per group, number of rows per cluster
+    CBCChannelGroupHandler theChannelGroupHandler;
+    theChannelGroupHandler.setChannelGroupParameters(16, 2);
+    setChannelGroupHandler(theChannelGroupHandler);
 
     // set TP amplitude and delay
-    fTPamplitude = findValueInSettings("Check2STPamplitude", 255);
-    fTPdelay     = findValueInSettings("Check2STPdelay", 0);
+    fTPamplitude = findValueInSettings<double>("Check2STPamplitude", 255);
+    fTPdelay     = findValueInSettings<double>("Check2STPdelay", 0);
 
     // threshold
-    fThreshold = findValueInSettings("Check2Sthreshold", 0);
+    fThreshold = findValueInSettings<double>("Check2Sthreshold", 0);
 
     // initialize latency scan range based on TP settings
-    fStartLatency = findValueInSettings("StartLatency", 0);
-    fLatencyRange = findValueInSettings("LatencyRange", 0);
+    fStartLatency = findValueInSettings<double>("StartLatency", 0);
+    fLatencyRange = findValueInSettings<double>("LatencyRange", 0);
 
-    auto cInjectionType = findValueInSettings("InjectionType", 0);
+    auto cInjectionType = findValueInSettings<double>("InjectionType", 0);
     SetInjectionType(cInjectionType);
 
     // initialize containers
@@ -140,7 +141,10 @@ void BeamTestCheck2S::CheckWithTP(uint8_t pContinousReadout)
     for(auto cBoard: *fDetectorContainer)
     {
         // prepare injection
-        PrepareForTP(cBoard);
+        PrepareForExternalTP(cBoard);
+        auto cRegValue = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.en_fast_reset");
+        LOG(INFO) << BOLDYELLOW << "Enable fast reset set to ... " << cRegValue << RESET;
+        // PrepareForTP(cBoard);
     }
     if(fScanL1Latency) ScanL1Latency(pContinousReadout);
     if(fScanStubLatency) ScanStubLatency(pContinousReadout);
@@ -152,14 +156,16 @@ void BeamTestCheck2S::CheckWithTP(uint8_t pContinousReadout)
 #endif
     // validate
     Validate();
-    return;
+
+    // for(auto cBoard: *fDetectorContainer) { PrintData(cBoard); }
 }
 void BeamTestCheck2S::ValidateTP()
 {
     for(auto cBoard: *fDetectorContainer)
     {
+        PrepareForExternalTP(cBoard);
         // prepare injection
-        PrepareForTP(cBoard);
+        // PrepareForTP(cBoard);
     }
     // validate
     Validate();
@@ -172,22 +178,22 @@ void BeamTestCheck2S::Validate()
     // read events
     if(fReadoutMode == 0) ContinousReadout();
 
-    for(auto cBoard: *fDetectorContainer)
-    {
-        fBeBoardInterface->setBoard(cBoard->getId());
-        const std::vector<Event*>& cEvents              = this->GetEvents();
-        float                      cNormalizationFactor = fNevents; // cEvents.size() / (1 + cTriggerMult);
-        BeBoardRegMap              cRegMap              = cBoard->getBeBoardRegMap();
-        std::string                cMultRegName         = "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity";
-        size_t                     cTriggerMult         = (fReadoutMode == 0) ? fBeBoardInterface->ReadBoardReg(cBoard, cMultRegName) : cRegMap[cMultRegName];
-        LOG(INFO) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " from BeBoard#" << +cBoard->getId() << " - normalization factor for occupancy is " << +cNormalizationFactor << RESET;
-        for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++) { Count(cEvents, cTriggerId, 1); }
-    }
-#ifdef __USE_ROOT__
-    fDQMHistogrammer.fillHitMaps(fHitMap, fStubMap, fHitContainerTDC);
-    fDQMHistogrammer.fillBendPlots(fBendMap);
-    fDQMHistogrammer.fillCountPlots(fEventSubSet, fStubSubSet);
-#endif
+    // for(auto cBoard: *fDetectorContainer)
+    // {
+    //     fBeBoardInterface->setBoard(cBoard->getId());
+    //     const std::vector<Event*>& cEvents              = this->GetEvents();
+    //     float                      cNormalizationFactor = fNevents; // cEvents.size() / (1 + cTriggerMult);
+    //     LOG(INFO) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " events from BeBoard#" << +cBoard->getId() << " - normalization factor for occupancy is " << +cNormalizationFactor << RESET;
+    //     // BeBoardRegMap              cRegMap              = cBoard->getBeBoardRegMap();
+    //     // std::string                cMultRegName         = "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity";
+    //     // size_t                     cTriggerMult         = (fReadoutMode == 0) ? fBeBoardInterface->ReadBoardReg(cBoard, cMultRegName) : cRegMap[cMultRegName];
+    //     // for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++) { Count(cEvents, cTriggerId, 1); }
+    // }
+    // #ifdef __USE_ROOT__
+    //     fDQMHistogrammer.fillHitMaps(fHitMap, fStubMap, fHitContainerTDC);
+    //     fDQMHistogrammer.fillBendPlots(fBendMap);
+    //     fDQMHistogrammer.fillCountPlots(fEventSubSet, fStubSubSet);
+    // #endif
 }
 //
 void BeamTestCheck2S::CheckWithInternal(uint8_t pContinousReadout)
@@ -212,11 +218,6 @@ void BeamTestCheck2S::CheckWithInternal(uint8_t pContinousReadout)
     Validate();
 
     for(auto cBoard: *fDetectorContainer) { PrintData(cBoard); }
-    // read events
-    // if( fReadoutMode == 0 ) ContinousReadout();
-
-    // validate
-    // Validate();
 }
 void BeamTestCheck2S::CheckWithTLU(uint8_t pContinousReadout)
 {
@@ -1466,12 +1467,12 @@ void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
     }     // optical group
 
     // use ReadDataRather than ReadNEvents
-    auto cRefSensor = findValueInSettings("Check2SRefSensor", 0);
-    auto cRefSide   = findValueInSettings("Check2SRefSide", 0);
-    auto cRefChip   = findValueInSettings("Check2SRefChip", 0);
+    auto cRefSensor = findValueInSettings<double>("Check2SRefSensor", 0);
+    auto cRefSide   = findValueInSettings<double>("Check2SRefSide", 0);
+    auto cRefChip   = findValueInSettings<double>("Check2SRefChip", 0);
 
-    fUseReadNEvents   = findValueInSettings("Check2SUseReadNEvents", 0);
-    fWait_ms          = findValueInSettings("Check2Swait", 0);
+    fUseReadNEvents   = findValueInSettings<double>("Check2SUseReadNEvents", 0);
+    fWait_ms          = findValueInSettings<double>("Check2Swait", 0);
     uint16_t cLat     = fStartLatency;
     float    cMaxHits = 0;
     fOptimalLatency   = cLat;
@@ -1585,7 +1586,7 @@ void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
                 }         // optical group vector
                 cEventIter += (1 + cTriggerMult);
             } while(cEventIter < cEvents.end());
-            // cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), fChannelGroupHandler->allChannelGroup(), fNReadbackEvents);
+            cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), getChannelGroupHandlerContainer()->getObject(cOccBrd->getId()), fNReadbackEvents);
             // float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
             cTotalHits = cTotalHitsS0 + cTotalHitsS1;
 
@@ -1705,7 +1706,7 @@ void BeamTestCheck2S::ScanStubLatency(uint8_t pContinousReadout)
     if(!cAlignmentRun)
     {
         auto     cSetting   = fSettingsMap.find("StubAlignmentScanStart");
-        uint32_t cScanStart = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+        uint32_t cScanStart = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 100;
         cOffset             = cScanStart;
     }
     else
@@ -1786,6 +1787,77 @@ void BeamTestCheck2S::ScanStubLatency(uint8_t pContinousReadout)
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cLat);
     }
 }
+void BeamTestCheck2S::PrepareForExternalTP(BeBoard* pBoard)
+{
+    // configure trigger
+    uint8_t                                       cTriggerSource = 13;
+    std::vector<std::string>                      cTPRegs{"test_pulse.delay_after_fast_reset", "test_pulse.delay_after_test_pulse", "test_pulse.delay_before_next_pulse", "test_pulse.en_fast_reset"};
+    BeBoardRegMap                                 cRegMap = pBoard->getBeBoardRegMap();
+    std::vector<std::pair<std::string, uint32_t>> cRegVec;
+    for(auto cReg: cTPRegs)
+    {
+        std::string cRegName = "fc7_daq_cnfg.fast_command_block." + cReg;
+        cRegVec.push_back({cRegName, cRegMap[cRegName]});
+    }
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSource});
+    cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 0);
+
+    bool cMaskChannelsFromOtherGroups = false;
+    bool cInject                      = true;
+    bool cWith2S                      = false;
+    // inject in one of each CBCs
+    auto boardIndex = pBoard->getIndex();
+    for(auto cOpticalGroup: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            for(auto cChip: *cHybrid)
+            {
+                for(uint16_t groupNumber = 0; groupNumber < 1; ++groupNumber)
+                {
+                    if(groupNumber > getChannelGroupHandlerContainer()->getObject(fDetectorContainer->getObject(boardIndex)->getId())
+                                         ->getObject(cOpticalGroup->getId())
+                                         ->getObject(cHybrid->getId())
+                                         ->getObject(cChip->getId())
+                                         ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                         ->getNumberOfGroups())
+                        continue;
+                    fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip,
+                                                                             getChannelGroupHandlerContainer()->getObject(fDetectorContainer->at(boardIndex)->getId())
+                                                                                 ->getObject(cOpticalGroup->getId())
+                                                                                 ->getObject(cHybrid->getId())
+                                                                                 ->getObject(cChip->getId())
+                                                                                 ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                                                                 ->getTestGroup(groupNumber),
+                                                                             cMaskChannelsFromOtherGroups,
+                                                                             cInject);
+                }
+            }
+        }
+    }
+
+    // set TP amplitude and delay
+    LOG(INFO) << BOLDYELLOW << "Enabling TP with : " << +fTPamplitude << " injected charge "
+              << " delay of " << +fTPdelay << " ns " << RESET;
+
+    // stop triggers
+    fBeBoardInterface->Stop(pBoard);
+    // send a ReSync
+    fBeBoardInterface->ChipReSync(pBoard);
+
+    UpdateFromRegMap(pBoard);
+    if(cWith2S)
+    {
+        // setSameDacBeBoard(pBoard, "InjectedCharge", fTPamplitude);
+        setSameDacBeBoard(pBoard, "TestPulseDelay", fTPdelay);
+    }
+
+    // inject PS
+    if(!cWith2S) InjectPattern(pBoard, fInjections, -1);
+}
 void BeamTestCheck2S::PrepareForTP(BeBoard* pBoard)
 {
     // configure trigger
@@ -1813,7 +1885,7 @@ void BeamTestCheck2S::PrepareForTP(BeBoard* pBoard)
     bool   cInject                      = true;
     bool   cWith2S                      = false;
     // inject in one of each CBCs
-    for(auto cGroup: *fChannelGroupHandler)
+    for(auto cGroup: *getChannelGroupHandlerContainer()->at(0)->at(0)->at(0)->at(0)->getSummary<std::shared_ptr<ChannelGroupHandler>>().get())
     {
         if(cNgroups > 0) continue;
         for(auto cOpticalGroup: *pBoard)

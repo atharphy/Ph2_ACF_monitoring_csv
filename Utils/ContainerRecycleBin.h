@@ -10,41 +10,6 @@ using TestType = decltype(ContainerFactory::copyAndInitStructure(std::declval<co
                                                                                                                                                                             DetectorDataContainer&,
                                                                                                                                                                             Ts&...);
 
-template <typename T, typename SC, typename SM, typename SO, typename SB, typename SD>
-void reinitializeContainer(DetectorDataContainer* theDataContainer, T& channel, SC& chipSummary, SM& hybridSummary, SO& opticalGroupSummary, SB& boardSummary, SD& detectorSummary)
-{
-    theDataContainer->resetSummary<SD, SB>(detectorSummary);
-    for(auto board: *theDataContainer)
-    {
-        board->resetSummary<SB, SO>(boardSummary);
-        for(auto opticalGroup: *board)
-        {
-            opticalGroup->resetSummary<SO, SM>(opticalGroupSummary);
-            for(auto hybrid: *opticalGroup)
-            {
-                hybrid->resetSummary<SM, SC>(hybridSummary);
-                for(auto chip: *hybrid)
-                {
-                    chip->resetSummary<SC, T>(chipSummary);
-                    chip->resetChannels<T>(channel);
-                }
-            }
-        }
-    }
-}
-
-template <typename T, typename S>
-void reinitializeContainer(DetectorDataContainer* theDataContainer, T& channel, S& summay)
-{
-    reinitializeContainer<T, S, S, S, S, S>(theDataContainer, channel, summay, summay, summay, summay, summay);
-}
-
-template <typename T>
-void reinitializeContainer(DetectorDataContainer* theDataContainer, T& channel)
-{
-    reinitializeContainer<T, T, T, T, T, T>(theDataContainer, channel, channel, channel, channel, channel, channel);
-}
-
 template <typename... Args>
 class ContainerRecycleBin
 {
@@ -83,7 +48,7 @@ class ContainerRecycleBin
         {
             DetectorDataContainer* availableContainer = fRecycleBin.back();
             fRecycleBin.pop_back();
-            reinitializeContainer<Args...>(availableContainer, theInitArguments...);
+            ContainerFactory::reinitializeContainer<Args...>(availableContainer, theInitArguments...);
             return availableContainer;
         }
     }

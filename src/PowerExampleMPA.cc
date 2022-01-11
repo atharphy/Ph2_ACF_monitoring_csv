@@ -14,6 +14,7 @@
 #include "../Utils/argvparser.h"
 #include "../tools/CalibrationExample.h"
 #include "../tools/Tool.h"
+#include "D19cPSTestBoardFWInterface.h"
 #include "TApplication.h"
 #include "TCanvas.h"
 #include "TH1.h"
@@ -42,8 +43,9 @@ int main(int argc, char* argv[])
     Tool              cTool;
     cTool.InitializeHw(cHWFile, outp);
     cTool.InitializeSettings(cHWFile, outp);
-    D19cFWInterface* IB = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardFWMap.find(0)->second);
-
+    //
+    cTool.fBeBoardInterface->setBoard(0);
+    D19cPSTestBoardFWInterface* IB = dynamic_cast<D19cPSTestBoardFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
     IB->PSInterfaceBoard_PowerOn();
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     IB->PSInterfaceBoard_PowerOn_MPA(1.25, 1.2, 1.25, 0.3, 0, 0);

@@ -39,6 +39,7 @@ class RegManager
     const char*                                   fUri;
     const char*                                   fAddressTable;
     const char*                                   fId;
+    std::recursive_mutex                          fMutex;
 
   public:
     // Connection w uHal

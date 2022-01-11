@@ -9,8 +9,10 @@
 
 #include "PSPhysics.h"
 #include "../Utils/GenericDataArray.h"
+#include "../Utils/MPAChannelGroupHandler.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/PSSync.h"
+#include "../Utils/SSAChannelGroupHandler.h"
 #include "BackEndAlignment.h"
 #include "CicFEAlignment.h"
 #include "PSAlignment.h"
@@ -83,7 +85,7 @@ void PSPhysics::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    saveRawData = this->findValueInSettings("SaveRawData");
+    saveRawData = this->findValueInSettings<double>("SaveRawData");
     doLocal     = false;
 
     // ###########################################
@@ -95,8 +97,15 @@ void PSPhysics::ConfigureCalibration()
     ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, fOccupancyContainer);
     ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, fStubContainer);
 
-    fChannelGroupHandler = new MPAChannelGroupHandler();
-    fChannelGroupHandler->setChannelGroupParameters(120, 16);
+    SSAChannelGroupHandler theSSAChannelGroupHandler;
+    theSSAChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+    setChannelGroupHandler(theSSAChannelGroupHandler, FrontEndType::SSA);
+    setChannelGroupHandler(theSSAChannelGroupHandler, FrontEndType::SSA2);
+
+    MPAChannelGroupHandler theMPAChannelGroupHandler;
+    theMPAChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
+    setChannelGroupHandler(theMPAChannelGroupHandler, FrontEndType::MPA);
+    setChannelGroupHandler(theMPAChannelGroupHandler, FrontEndType::MPA2);
 }
 
 void PSPhysics::Running()
@@ -133,7 +142,7 @@ void PSPhysics::Running()
 // {
 //     auto thePSSyncStream = prepareChipContainerStreamer<EmptyContainer, PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS_PS>>();
 
-//     if(fStreamerEnabled == true) { thePSSyncStream.streamAndSendBoard(fPSSyncContainer.at(cBoard->getIndex()), fNetworkStreamer); }
+//     if(fDQMStreamerEnabled == true) { thePSSyncStream.streamAndSendBoard(fPSSyncContainer.at(cBoard->getIndex()), fDQMStreamer); }
 // }
 
 void PSPhysics::sendBoardData(BoardContainer* const& cBoard)
@@ -157,10 +166,10 @@ void PSPhysics::sendBoardData(BoardContainer* const& cBoard)
     //     }
     // }
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
-        theOccupancyStream.streamAndSendBoard(fOccupancyContainer.at(cBoard->getIndex()), fNetworkStreamer);
-        theStubStream.streamAndSendBoard(fStubContainer.at(cBoard->getIndex()), fNetworkStreamer);
+        theOccupancyStream.streamAndSendBoard(fOccupancyContainer.at(cBoard->getIndex()), fDQMStreamer);
+        theStubStream.streamAndSendBoard(fStubContainer.at(cBoard->getIndex()), fDQMStreamer);
     }
 }
 

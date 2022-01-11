@@ -73,7 +73,7 @@ class lpGBT : public Chip
     bool                 phaseRxAligned; // @TMP@
     std::string          configFileName;
     std::vector<uint8_t> fClocks, fRxGroups, fRxChannels, fTxGroups, fTxChannels;
-    uint16_t             fClocksFrequency, fRxDataRate, fTxDataRate;
+    uint16_t             fClocksFrequency, fRxDataRate, fTxDataRate, fChipAddress;
     uint8_t              fRxHSLPolarity, fTxHSLPolarity;
     // number of write transactions - one element per master
     std::vector<uint32_t> fI2CWrites{0, 0, 0};

@@ -120,6 +120,7 @@ class BeamTestCheck2S : public OTTool
     uint16_t fOptimalLatency;
 
     void PrepareForInternal(Ph2_HwDescription::BeBoard* pBoard, uint8_t pLimitTriggers = 0);
+    void PrepareForExternalTP(Ph2_HwDescription::BeBoard* pBoard);
     void PrepareForTP(Ph2_HwDescription::BeBoard* pBoard);
     void PrepareForExternal(Ph2_HwDescription::BeBoard* pBoard);
     void PrepareForTLU(Ph2_HwDescription::BeBoard* pBoard);

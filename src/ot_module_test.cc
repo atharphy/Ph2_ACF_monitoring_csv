@@ -1,6 +1,5 @@
 #include <cstring>
 
-#include "ExtraChecks.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
@@ -40,10 +39,6 @@
 #ifdef __ANTENNA__
 #include "Antenna.h"
 #endif
-
-// reference volage for lpgBT
-float VREF_LPGBT        = 1.0;
-float cConversionFactor = VREF_LPGBT / 1024.;
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -138,7 +133,16 @@ int main(int argc, char* argv[])
     cmd.defineOption("readIDs", "Read chip ids....", ArgvParser::NoOptionAttribute);
     cmd.defineOption("memCheck", "Check memories of the following CBCs", ArgvParser::NoOptionAttribute);
     cmd.defineOption("completeDataCheck", "Complete data check for the following CBCs", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("registerTest", "Test I2C registers on ROCs", ArgvParser::NoOptionAttribute);
+
+    cmd.defineOption("pageToTest", "Page to test", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("registerTestWrite", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("registerTestWriteAndToggle", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("registerTestRead", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("registerTestReadAndToggle", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("sortOrder", "Sort order for CBC registers  : 0 - no sort other than page; 1 - page then increasing addresss; 2 - page then decreasing addresss", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("bitToFlip", "Bit to flip when testing register write", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("testAttempts", "Number of attempts", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("returnToDefPage", "Return to Def Page", ArgvParser::OptionRequiresValue);
     cmd.defineOption("manualScan", "Manual scan of threshold", ArgvParser::NoOptionAttribute);
     cmd.defineOption("injectionTest", "Manual scan of threshold", ArgvParser::OptionRequiresValue);
     //
@@ -308,7 +312,7 @@ int main(int argc, char* argv[])
                     static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, cRef);
                     // wait until Vref is stable
                     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                    for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor; }
+                    for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * CONVERSION_FACTOR; }
                     float cMean         = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
                     float cDifference_V = (cADCs_Refs[cIndx] - cMean);
                     // LOG (DEBUG) << BOLDBLUE << "ADC_" << cADCsel << " reading from lpGBT "
@@ -342,7 +346,7 @@ int main(int argc, char* argv[])
                 static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, (uint8_t)cCorr);
                 // wait until Vref is stable
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * cConversionFactor; }
+                for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * CONVERSION_FACTOR; }
                 float cMeanValue = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
                 LOG(INFO) << BOLDMAGENTA << "Measured V_min after correction is " << std::setprecision(2) << std::fixed << cMeanValue * 1e3 << " mV , expected value is " << cADCs_Refs[cIndx] * 1e3
                           << " difference is " << std::fabs(cMeanValue - cADCs_Refs[cIndx]) * 1e3 << " mV, correction needed to acheive this was  " << +cCorr << RESET;
@@ -363,7 +367,9 @@ int main(int argc, char* argv[])
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        auto cFusedId = cTool.fReadoutChipInterface->ReadChipReg(cChip, "ChipId");
+                        if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
+
+                        auto cFusedId = static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->ReadCbcIDeFuse(cChip);
                         LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cChip->getId() << " CBC#" << +cChip->getId() << " Fused Id is " << +cFusedId << RESET;
                     }
                 }
@@ -371,11 +377,92 @@ int main(int argc, char* argv[])
         }
     }
 
-    if(cmd.foundOption("registerTest"))
+    if(cmd.foundOption("registerTestWrite"))
     {
+        uint8_t cNregistersToCheck = (cmd.foundOption("registerTestWrite")) ? convertAnyInt(cmd.optionValue("registerTestWrite").c_str()) : 1;
+        // 0 - no sorting other than page; 1 - page then increasing addresss ; 2 - page then decreasing address
+        uint8_t  cSortOder  = (cmd.foundOption("sortOrder")) ? convertAnyInt(cmd.optionValue("sortOrder").c_str()) : 0;
+        uint8_t  cBitToFlip = (cmd.foundOption("bitToFlip")) ? convertAnyInt(cmd.optionValue("bitToFlip").c_str()) : 0;
+        uint32_t cAttempts  = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10;
+        uint8_t  cPage      = (cmd.foundOption("pageToTest")) ? convertAnyInt(cmd.optionValue("pageToTest").c_str()) : 1;
+
         RegisterTester cRegTester;
         cRegTester.Inherit(&cTool);
-        cRegTester.RegisterTest();
+        cRegTester.SetSortOrder(cSortOder);
+        cRegTester.SetBitToFlip(cBitToFlip);
+        cRegTester.Initialise();
+        for(size_t cAttempt = 0; cAttempt < cAttempts; cAttempt++)
+        {
+            LOG(INFO) << BOLDBLUE << "Read - test#" << +cAttempt << RESET;
+            cRegTester.CheckWriteRegisters(cPage, cNregistersToCheck);
+        }
+        cRegTester.writeObjects();
+    }
+
+    if(cmd.foundOption("registerTestWriteAndToggle"))
+    {
+        uint8_t cNregistersToCheck = (cmd.foundOption("registerTestWriteAndToggle")) ? convertAnyInt(cmd.optionValue("registerTestWriteAndToggle").c_str()) : 1;
+        // 0 - no sorting other than page; 1 - page then increasing addresss ; 2 - page then decreasing address
+        uint8_t  cSortOder        = (cmd.foundOption("sortOrder")) ? convertAnyInt(cmd.optionValue("sortOrder").c_str()) : 0;
+        uint8_t  cBitToFlip       = (cmd.foundOption("bitToFlip")) ? convertAnyInt(cmd.optionValue("bitToFlip").c_str()) : 0;
+        uint8_t  cReturnToDefPage = (cmd.foundOption("returnToDefPage")) ? convertAnyInt(cmd.optionValue("returnToDefPage").c_str()) : 1;
+        uint32_t cAttempts        = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10;
+        uint8_t  cPage            = (cmd.foundOption("pageToTest")) ? convertAnyInt(cmd.optionValue("pageToTest").c_str()) : 1;
+
+        LOG(INFO) << BOLDBLUE << "Will run register test " << cAttempts << " times..." << RESET;
+        RegisterTester cRegTester;
+        cRegTester.Inherit(&cTool);
+        cRegTester.SetSortOrder(cSortOder);
+        cRegTester.SetBitToFlip(cBitToFlip);
+        cRegTester.SetReturnToDefPage(cReturnToDefPage);
+        cRegTester.Initialise();
+        for(size_t cAttempt = 0; cAttempt < cAttempts; cAttempt++)
+        {
+            LOG(INFO) << BOLDBLUE << "Page switch with read - test#" << +cAttempt << RESET;
+            cRegTester.CheckPageSwitchWrite(cPage, cNregistersToCheck);
+        }
+        cRegTester.writeObjects();
+    }
+
+    if(cmd.foundOption("registerTestRead"))
+    {
+        uint8_t cNregistersToCheck = (cmd.foundOption("registerTestRead")) ? convertAnyInt(cmd.optionValue("registerTestRead").c_str()) : 1;
+        // 0 - no sorting other than page; 1 - page then increasing addresss ; 2 - page then decreasing address
+        uint8_t  cSortOder = (cmd.foundOption("sortOrder")) ? convertAnyInt(cmd.optionValue("sortOrder").c_str()) : 0;
+        uint32_t cAttempts = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10;
+        uint8_t  cPage     = (cmd.foundOption("pageToTest")) ? convertAnyInt(cmd.optionValue("pageToTest").c_str()) : 1;
+
+        RegisterTester cRegTester;
+        cRegTester.Inherit(&cTool);
+        cRegTester.SetSortOrder(cSortOder);
+        cRegTester.Initialise();
+        for(size_t cAttempt = 0; cAttempt < cAttempts; cAttempt++)
+        {
+            LOG(INFO) << BOLDBLUE << "Read - test#" << +cAttempt << RESET;
+            cRegTester.CheckReadRegisters(cPage, cNregistersToCheck);
+        }
+        cRegTester.writeObjects();
+    }
+    if(cmd.foundOption("registerTestReadAndToggle"))
+    {
+        uint8_t cNregistersToCheck = (cmd.foundOption("registerTestReadAndToggle")) ? convertAnyInt(cmd.optionValue("registerTestReadAndToggle").c_str()) : 1;
+        // 0 - no sorting other than page; 1 - page then increasing addresss ; 2 - page then decreasing address
+        uint8_t  cSortOder        = (cmd.foundOption("sortOrder")) ? convertAnyInt(cmd.optionValue("sortOrder").c_str()) : 0;
+        uint8_t  cReturnToDefPage = (cmd.foundOption("returnToDefPage")) ? convertAnyInt(cmd.optionValue("returnToDefPage").c_str()) : 1;
+        uint32_t cAttempts        = (cmd.foundOption("testAttempts")) ? convertAnyInt(cmd.optionValue("testAttempts").c_str()) : 10;
+        uint8_t  cPage            = (cmd.foundOption("pageToTest")) ? convertAnyInt(cmd.optionValue("pageToTest").c_str()) : 1;
+
+        RegisterTester cRegTester;
+        cRegTester.Inherit(&cTool);
+        cRegTester.SetSortOrder(cSortOder);
+        cRegTester.SetReturnToDefPage(cReturnToDefPage);
+        cRegTester.Initialise();
+        for(size_t cAttempt = 0; cAttempt < cAttempts; cAttempt++)
+        {
+            LOG(INFO) << BOLDBLUE << "Page switch with read - test#" << +cAttempt << RESET;
+            cRegTester.CheckPageSwitchRead(cPage, cNregistersToCheck);
+        }
+        cRegTester.writeObjects();
     }
 
     // align CIC-lpGBT-BE
@@ -527,82 +614,83 @@ int main(int argc, char* argv[])
         // cTool.fDetectorContainer->resetReadoutChipQueryFunction();
     }
 
-    if(cmd.foundOption("linkTest") && !cmd.foundOption("read"))
-    {
-        auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
-        for(auto cBoard: *cTool.fDetectorContainer)
-        {
-            for(auto cOpticalGroup: *cBoard)
-            {
-                if(cSrcLnkTst == "lpGBT")
-                {
-                    auto& clpGBT = cOpticalGroup->flpGBT;
-                    // configure lpGBT to produce constant pattern
-                    cTool.flpGBTInterface->ConfigureRxSource(clpGBT, {0, 1, 2, 3, 4, 5, 6}, 4);
-                    cTool.flpGBTInterface->ConfigureDPPattern(clpGBT, 0xE0E0E0E0);
-                    D19cFWInterface::PhaseTuner cTuner;
-                    for(size_t cLineId = 1; cLineId <= 6; cLineId++)
-                    {
-                        for(auto cHybrid: *cOpticalGroup) { cTuner.AlignWord(cInterface, cHybrid->getId(), 0, cLineId, 0xE0, 8, true); }
-                    }
-                    for(auto cHybrid: *cOpticalGroup)
-                    {
-                        cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
-                        cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-                        for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 6); }
-                    }
-                    continue;
-                }
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
-                    cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-                    auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                    if(cSrcLnkTst == "CIC")
-                    {
-                        // CIC alignment pattern
-                        cTool.fCicInterface->SelectOutput(cCic, true);
-                    }
-                    else
-                    {
-                        LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cHybrid->getId() << RESET;
-                        // MPA shift pattern
-                        // enable MPA alignment pattern
-                        LOG(INFO) << GREEN << "Enabling MPA Alignment pattern" << RESET;
-                        std::vector<uint8_t>     cOriginalValues;
-                        std::vector<std::string> cRegs;
-                        uint8_t                  cAlignmentPattern = 0xE0;
-                        std::vector<uint8_t>     cRegValues{0x2, cAlignmentPattern};
-                        std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};
-                        for(size_t cIndex = 0; cIndex < cRegValues.size(); cIndex++)
-                        {
-                            for(auto cChip: *cHybrid)
-                            {
-                                if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+    // if(cmd.foundOption("linkTest") && !cmd.foundOption("read"))
+    // {
+    //     auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+    //     D19cDebugFWInterface* cDebugInterface = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+    //     for(auto cBoard: *cTool.fDetectorContainer)
+    //     {
+    //         for(auto cOpticalGroup: *cBoard)
+    //         {
+    //             if(cSrcLnkTst == "lpGBT")
+    //             {
+    //                 auto& clpGBT = cOpticalGroup->flpGBT;
+    //                 // configure lpGBT to produce constant pattern
+    //                 cTool.flpGBTInterface->ConfigureRxSource(clpGBT, {0, 1, 2, 3, 4, 5, 6}, 4);
+    //                 cTool.flpGBTInterface->ConfigureDPPattern(clpGBT, 0xE0E0E0E0);
+    //                 D19cFWInterface::PhaseTuner cTuner;
+    //                 for(size_t cLineId = 1; cLineId <= 6; cLineId++)
+    //                 {
+    //                     for(auto cHybrid: *cOpticalGroup) { cTuner.AlignWord(cInterface, cHybrid->getId(), 0, cLineId, 0xE0, 8, true); }
+    //                 }
+    //                 for(auto cHybrid: *cOpticalGroup)
+    //                 {
+    //                     cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
+    //                     cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+    //                     for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { cDebugInterface->StubDebug(true, 6); }
+    //                 }
+    //                 continue;
+    //             }
+    //             for(auto cHybrid: *cOpticalGroup)
+    //             {
+    //                 cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
+    //                 cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+    //                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+    //                 if(cSrcLnkTst == "CIC")
+    //                 {
+    //                     // CIC alignment pattern
+    //                     cTool.fCicInterface->SelectOutput(cCic, true);
+    //                 }
+    //                 else
+    //                 {
+    //                     LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cHybrid->getId() << RESET;
+    //                     // MPA shift pattern
+    //                     // enable MPA alignment pattern
+    //                     LOG(INFO) << GREEN << "Enabling MPA Alignment pattern" << RESET;
+    //                     std::vector<uint8_t>     cOriginalValues;
+    //                     std::vector<std::string> cRegs;
+    //                     uint8_t                  cAlignmentPattern = 0xE0;
+    //                     std::vector<uint8_t>     cRegValues{0x2, cAlignmentPattern};
+    //                     std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};
+    //                     for(size_t cIndex = 0; cIndex < cRegValues.size(); cIndex++)
+    //                     {
+    //                         for(auto cChip: *cHybrid)
+    //                         {
+    //                             if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
 
-                                cOriginalValues.push_back(cTool.fReadoutChipInterface->ReadChipReg(cChip, cRegNames[cIndex]));
-                                cRegs.push_back(cRegNames[cIndex]);
-                                cTool.fReadoutChipInterface->WriteChipReg(cChip, cRegNames[cIndex], cRegValues[cIndex]);
-                            } // loop over MPAs
-                        }     // loop over registers
-                        for(uint8_t cPhyPort = 8; cPhyPort < 9; cPhyPort++)
-                        {
-                            LOG(INFO) << BOLDMAGENTA << "PhyPort#" << +cPhyPort << RESET;
-                            cTool.fCicInterface->SelectMux(cCic, cPhyPort);
-                            // align line
-                            D19cFWInterface::PhaseTuner cTuner;
-                            for(size_t cLineId = 1; cLineId <= 3; cLineId++) { cTuner.AlignWord(cInterface, cHybrid->getId(), 0, cLineId, cAlignmentPattern, 8, true); }
-                            for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 3); }
-                        }
-                    }
-                    if(cSrcLnkTst == "CIC" || cSrcLnkTst == "lpGBT")
-                    {
-                        for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { (static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 6); }
-                    }
-                } // hybrid
-            }     // OG
-        }         // board
-    }
+    //                             cOriginalValues.push_back(cTool.fReadoutChipInterface->ReadChipReg(cChip, cRegNames[cIndex]));
+    //                             cRegs.push_back(cRegNames[cIndex]);
+    //                             cTool.fReadoutChipInterface->WriteChipReg(cChip, cRegNames[cIndex], cRegValues[cIndex]);
+    //                         } // loop over MPAs
+    //                     }     // loop over registers
+    //                     for(uint8_t cPhyPort = 8; cPhyPort < 9; cPhyPort++)
+    //                     {
+    //                         LOG(INFO) << BOLDMAGENTA << "PhyPort#" << +cPhyPort << RESET;
+    //                         cTool.fCicInterface->SelectMux(cCic, cPhyPort);
+    //                         // align line
+    //                         D19cFWInterface::PhaseTuner cTuner;
+    //                         for(size_t cLineId = 1; cLineId <= 3; cLineId++) { cTuner.AlignWord(cInterface, cHybrid->getId(), 0, cLineId, cAlignmentPattern, 8, true); }
+    //                         for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { cDebugInterface->StubDebug(true, 3); }
+    //                     }
+    //                 }
+    //                 if(cSrcLnkTst == "CIC" || cSrcLnkTst == "lpGBT")
+    //                 {
+    //                     for(size_t cAttempt = 0; cAttempt < 100; cAttempt++) { cDebugInterface->StubDebug(true, 6); }
+    //                 }
+    //             } // hybrid
+    //         }     // OG
+    //     }         // board
+    // }
     if(cmd.foundOption("injectionTest") && !cmd.foundOption("read"))
     {
         // auto cNevents          = findValueInSettings("Check2STPamplitude", 255);
@@ -680,16 +768,11 @@ int main(int argc, char* argv[])
                 cTool.fBeBoardInterface->WriteBoardMultReg(board, cRegVec);
                 cTool.fBeBoardInterface->WriteBoardReg(board, "fc7_daq_cnfg.tlu_block.tlu_enabled", 0);
 
-                auto cSetting       = cTool.fSettingsMap.find("PSmoduleSSAthreshold");
-                int  cPSmoduleSSAth = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
-                cSetting            = cTool.fSettingsMap.find("PSmoduleMPAthreshold");
-                int cPSmoduleMPAth  = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
-                cSetting            = cTool.fSettingsMap.find("PSOccupancyPulseAmplitude");
-                int cInjectionAmpl  = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0xFF;
-                cSetting            = cTool.fSettingsMap.find("SamplingModeSSA");
-                int cSamplingSSA    = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0;
-                cSetting            = cTool.fSettingsMap.find("SamplingModeMPA");
-                int cSamplingMPA    = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0;
+                int cPSmoduleSSAth = cTool.findValueInSettings<double>("PSmoduleSSAthreshold", 100);
+                int cPSmoduleMPAth = cTool.findValueInSettings<double>("PSmoduleMPAthreshold", 100);
+                int cInjectionAmpl = cTool.findValueInSettings<double>("PSOccupancyPulseAmplitude", 0xFF);
+                int cSamplingSSA   = cTool.findValueInSettings<double>("SamplingModeSSA", 0);
+                int cSamplingMPA   = cTool.findValueInSettings<double>("SamplingModeMPA", 0);
                 // analogue injection
                 cTool.setSameDacBeBoard(static_cast<BeBoard*>(board), "InjectedCharge", cInjectionAmpl);
                 cTool.setSameDacBeBoard(static_cast<BeBoard*>(board), "AnalogueSync", 1);
@@ -774,14 +857,10 @@ int main(int argc, char* argv[])
                 auto cTriggerSource = cTool.fBeBoardInterface->ReadBoardReg(board, "fc7_daq_cnfg.fast_command_block.trigger_source");
                 LOG(INFO) << BOLDBLUE << "Injection test with trigger source " << +cTriggerSource << RESET;
 
-                auto cSetting       = cTool.fSettingsMap.find("PSmoduleSSAthreshold");
-                int  cPSmoduleSSAth = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
-                cSetting            = cTool.fSettingsMap.find("PSmoduleMPAthreshold");
-                int cPSmoduleMPAth  = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
-                cSetting            = cTool.fSettingsMap.find("SamplingModeSSA");
-                int cSamplingSSA    = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0;
-                cSetting            = cTool.fSettingsMap.find("SamplingModeMPA");
-                int cSamplingMPA    = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 0;
+                int cPSmoduleSSAth = cTool.findValueInSettings<double>("PSmoduleSSAthreshold", 100);
+                int cPSmoduleMPAth = cTool.findValueInSettings<double>("PSmoduleMPAthreshold", 100);
+                int cSamplingSSA   = cTool.findValueInSettings<double>("SamplingModeSSA", 0);
+                int cSamplingMPA   = cTool.findValueInSettings<double>("SamplingModeMPA", 0);
 
                 // force TP to be off
                 cTool.setSameDacBeBoard(static_cast<BeBoard*>(board), "AnalogueSync", 0);
@@ -939,8 +1018,7 @@ int main(int argc, char* argv[])
             std::vector<uint8_t> cFesToCheck = getArgs(cArgsStr);
             cMemoryChecker.EvaluatePedeNoise(10); // find pedestal + noise
             cMemoryChecker.SetThreshold(-2.0);    // set threshold to 3 sigma away from pedestal
-            auto cSetting    = cTool.fSettingsMap.find("TriggerSeparation");
-            int  cTriggerGap = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 500;
+            int cTriggerGap = cTool.findValueInSettings<double>("TriggerSeparation", 500);
             cMemoryChecker.DataCheck(cFesToCheck, cTriggerGap);
         }
         cMemoryChecker.MemoryCheck2SRaw(true);  // all ones
@@ -1005,10 +1083,15 @@ int main(int argc, char* argv[])
         cGoodRuns << cRunNumber << "\n";
         cGoodRuns.close();
 
+        PrintConfig cCng;
+        cCng.fVerbose    = 1;
+        cCng.fPrintEvery = 1;
+
         BeamTestCheck2S cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         cBeamTestCheck.ConfigureScans(cScanL1, cScanStubs);
+        cBeamTestCheck.ConfigurePrintout(cCng);
         cBeamTestCheck.CheckWithTP();
         cBeamTestCheck.writeObjects();
         cBeamTestCheck.Reset();
@@ -1106,7 +1189,7 @@ int main(int argc, char* argv[])
         cBeamTestCheck.ReadDataFromFile(cRawFileName);
         cBeamTestCheck.ValidateRaw();
         cBeamTestCheck.writeObjects();
-        cBeamTestCheck.Reset();
+        // cBeamTestCheck.Reset();
     }
     if(!cmd.foundOption("read")) { cTool.dumpConfigFiles(); }
 

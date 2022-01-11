@@ -82,6 +82,8 @@ void bookHistogramsFromStructure(TFile*                   theOutputFile,
                                  const SB&                boardSummary,
                                  const SD&                detectorSummary)
 {
+    copy.reset();
+
     std::string detectorFolder = "Detector";
     createAndOpenRootFileFolder(theOutputFile, detectorFolder);
     std::string channelHistogramGenericName             = getPlotName(&channel);

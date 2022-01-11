@@ -145,6 +145,10 @@
 #define MAX_NUMBER_OF_STUB_CLUSTERS_PS 5
 #define MAX_NUMBER_OF_STUB_CLUSTERS_2S 3
 
+// LpGBT convertion factors
+#define VREF_LPGBT 1.0
+#define CONVERSION_FACTOR (VREF_LPGBT / 1024.)
+
 enum class BoardType
 {
     D19C,
@@ -179,10 +183,15 @@ enum class EventType
     VR    = 2,
     SSA   = 3,
     MPA   = 4,
-    SSAAS = 5,
-    MPAAS = 6,
-    PSAS  = 7,
-    VR2S  = 8
+    SCAS  = 5,
+    SSA2  = 6,
+    SSAAS = 7,
+    MPAAS = 8,
+    PSAS  = 9,
+    VR2S  = 10
 };
+
+// Monitoring parameters
+#define MAX_LENGHT_PARAMETER_STRING 50
 
 #endif

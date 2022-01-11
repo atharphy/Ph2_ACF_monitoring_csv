@@ -70,7 +70,9 @@ class OTHybridTester : public Tool
     // Run Bit Error Rate Test
     void LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint32_t pPattern = 0x00000000);
 
-  protected:
+  private:
+    float       getMeasurement(std::string name);
+    std::string getVariableValue(std::string variable, std::string buffer);
 #ifdef __TCUSB__
     std::map<std::string, uint8_t> f2SSEHGPILines = {
         {"PG2V5", 13},

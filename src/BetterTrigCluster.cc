@@ -93,9 +93,9 @@ int main(int argc, char* argv[])
                 ReadoutChip* iSSA = static_cast<ReadoutChip*>(cSSA);
                 cTool.fReadoutChipInterface->WriteChipReg(iSSA, "control_3", lat);
             }
-            cTool.ReadNEvents(pBoard, 4);
-            const std::vector<Event*>& cPh2Events = cTool.GetEvents();
-            for(auto& event: cPh2Events) // for on events - begin
+            cTool.ReadNEvents(pBoard, 50);
+            const std::vector<Event*>& eventVector = cTool.GetEvents();
+            for(auto& event: eventVector) // for on events - begin
             {
                 for(auto opt: *pBoard) // for on hybrid - begin
                 {

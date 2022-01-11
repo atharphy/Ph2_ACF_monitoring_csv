@@ -42,8 +42,12 @@ void BERtestHistograms::fillBERtest(const DetectorDataContainer& BERtestContaine
                 {
                     if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
 
-                    auto* BERtestHist =
-                        BERtest.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* BERtestHist = BERtest.getObject(cBoard->getId())
+                                            ->getObject(cOpticalGroup->getId())
+                                            ->getObject(cHybrid->getId())
+                                            ->getObject(cChip->getId())
+                                            ->getSummary<CanvasContainer<TH1F>>()
+                                            .fTheHistogram;
 
                     BERtestHist->SetBinContent(1, cChip->getSummary<double>());
                 }

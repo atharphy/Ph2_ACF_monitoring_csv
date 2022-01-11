@@ -24,8 +24,9 @@ namespace Ph2_HwDescription
 
 SSA2::SSA2(const FrontEndDescription& pFeDesc, uint8_t pSSAId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename) : ReadoutChip(pFeDesc, pSSAId)
 {
+    fChipAddress      = 0x20 + pSSAId % 8;
     fMaxRegValue      = 255; // 8 bit registers in SSA2
-    fChipOriginalMask = new ChannelGroup<120>;
+    fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS>>();
     fPartnerId        = pPartnerId;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::SSA2);
@@ -33,8 +34,9 @@ SSA2::SSA2(const FrontEndDescription& pFeDesc, uint8_t pSSAId, uint8_t pPartnerI
 
 SSA2::SSA2(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pSSAId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename) : ReadoutChip(pBeId, pFMCId, pFeId, pSSAId)
 {
+    fChipAddress      = 0x20 + pSSAId % 8;
     fMaxRegValue      = 255; // 8 bit registers in CBC
-    fChipOriginalMask = new ChannelGroup<120>;
+    fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS>>();
     fPartnerId        = pPartnerId;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::SSA2);

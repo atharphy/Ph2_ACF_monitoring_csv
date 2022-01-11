@@ -1,10 +1,10 @@
 #include "CicFEAlignment.h"
 
 // #ifdef __USE_ROOT__
-
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Occupancy.h"
+#include "D19cDebugFWInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -16,6 +16,17 @@ CicFEAlignment::~CicFEAlignment() {}
 
 void CicFEAlignment::Initialise()
 {
+    LOG(INFO) << BOLDMAGENTA << "CicFEAlignment::Initialise" << RESET;
+    fSuccess = false;
+    fWithMPA = false;
+    // this is needed if you're going to use groups anywhere
+    CBCChannelGroupHandler theChannelGroupHandler;
+    theChannelGroupHandler.setChannelGroupParameters(16, 2);
+    setChannelGroupHandler(theChannelGroupHandler);
+
+    DetectorDataContainer theOccupancyContainer;
+    fDetectorDataContainer = &theOccupancyContainer;
+    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
     LOG(INFO) << BOLDMAGENTA << "CicFEAlignment::Initialise" << RESET;
     // prepare common OTTool
     Prepare();
@@ -368,7 +379,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
         if(!cDebug) continue;
 
         fBeBoardInterface->setBoard(cBoard->getId());
-        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        D19cDebugFWInterface* cDebugInterface = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
@@ -377,7 +388,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
                 for(uint8_t cPhyPort = 0; cPhyPort < 12; cPhyPort++)
                 {
                     fCicInterface->SelectMux(cCic, cPhyPort);
-                    cInterface->StubDebug(true, 4);
+                    cDebugInterface->StubDebug(true, 4);
                 }
                 fCicInterface->ControlMux(cCic, 0);
             }

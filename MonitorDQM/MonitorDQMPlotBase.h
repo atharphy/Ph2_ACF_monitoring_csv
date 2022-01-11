@@ -71,7 +71,7 @@ class MonitorDQMPlotBase
     double findValueInSettings(const Ph2_System::SettingsMap& settingsMap, const std::string name, double defaultValue = 0.) const
     {
         auto setting = settingsMap.find(name);
-        return (setting != std::end(settingsMap) ? setting->second : defaultValue);
+        return (setting != std::end(settingsMap) ? boost::any_cast<double>(setting->second) : defaultValue);
     }
 
     uint32_t getTimeStampForRoot(time_t rawTime)

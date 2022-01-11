@@ -235,9 +235,9 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
 {
     uint32_t cNevents   = 10;
     auto     cSetting   = fSettingsMap.find("StubAlignmentThreshold");
-    uint32_t cThreshold = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 530;
+    uint32_t cThreshold = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 530;
     cSetting            = fSettingsMap.find("StubAlignmentScanStart");
-    uint32_t cScanStart = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 100;
+    uint32_t cScanStart = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 100;
 
     // sparsification of
     bool cSparsified = pBoard->getSparsification();

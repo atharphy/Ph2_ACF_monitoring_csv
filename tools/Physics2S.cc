@@ -23,7 +23,7 @@ void Physics2S::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    saveRawData = this->findValueInSettings("SaveRawData");
+    saveRawData = this->findValueInSettings<double>("SaveRawData");
     doLocal     = false;
 
     // ###########################################
@@ -34,8 +34,9 @@ void Physics2S::ConfigureCalibration()
     ContainerFactory::copyAndInitChannel<Occupancy>(*fDetectorContainer, fOccupancyContainer);
     ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, fStubContainer);
 
-    fChannelGroupHandler = new CBCChannelGroupHandler();
-    fChannelGroupHandler->setChannelGroupParameters(16, 2);
+    CBCChannelGroupHandler theChannelGroupHandler;
+    theChannelGroupHandler.setChannelGroupParameters(16, 2);
+    setChannelGroupHandler(theChannelGroupHandler);
 
     CicFEAlignment cCicAligner;
     cCicAligner.Inherit(this);
@@ -80,10 +81,10 @@ void Physics2S::sendBoardData(BoardContainer* const& cBoard)
     auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>("Occupancy");
     auto theStubStream      = prepareChannelContainerStreamer<float>("Stub");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
-        theOccupancyStream.streamAndSendBoard(fOccupancyContainer.at(cBoard->getIndex()), fNetworkStreamer);
-        theStubStream.streamAndSendBoard(fStubContainer.at(cBoard->getIndex()), fNetworkStreamer);
+        theOccupancyStream.streamAndSendBoard(fOccupancyContainer.at(cBoard->getIndex()), fDQMStreamer);
+        theStubStream.streamAndSendBoard(fStubContainer.at(cBoard->getIndex()), fDQMStreamer);
     }
 }
 
@@ -227,9 +228,12 @@ void Physics2S::fillDataContainer(BoardContainer* cBoard, const std::vector<Even
     clearContainers(cBoard);
     // std::cout<<__LINE__<<std::endl;
 
+    //Assuming all chip will have all channels enabled:
+    auto allChannelGroup = getChannelGroup(-1);
+
     for(auto event: eventList)
     {
-        event->fillDataContainer(fOccupancyContainer.at(cBoard->getIndex()), fChannelGroupHandler->allChannelGroup());
+        event->fillDataContainer(fOccupancyContainer.at(cBoard->getIndex()), allChannelGroup);
         // ###################
         // # Fill containers #
         // ###################

@@ -110,7 +110,7 @@ class Tool : public Ph2_System::SystemController
      * \param pDirectoryname : the name of the directory to create
      * \param pDate : apend the current date and time to the directoryname
      */
-    void CreateResultDirectory(const std::string& pDirname, bool pMode = true, bool pDate = true);
+    void CreateResultDirectory(const std::string& pDirname, bool pMode = true, bool pDate = true, const std::string& whichCalib = "");
 
 /*!
  * \brief Initialize the result Root file
@@ -357,6 +357,9 @@ class Tool : public Ph2_System::SystemController
 
   protected:
     DetectorDataContainer* fDetectorDataContainer{nullptr};
+
+    uint16_t getMaxNumberOfGroups();
+
 #ifdef __USE_ROOT__
     CanvasMap           fCanvasMap;
     ChipHistogramMap    fChipHistMap;
@@ -382,21 +385,20 @@ class Tool : public Ph2_System::SystemController
     THttpServer* fHttpServer;
 #endif
 
-    std::atomic<bool>    fKeepRunning;
-    int                  fRunNumber;
-    std::future<void>    fRunningFuture;
-    bool                 fSkipMaskedChannels;
-    bool                 fAllChan;
-    bool                 fMaskChannelsFromOtherGroups;
-    bool                 fTestPulse;
-    bool                 fDoBoardBroadcast;
-    bool                 fDoHybridBroadcast;
-    ChannelGroupHandler* fChannelGroupHandler;
-    bool                 fUseReadNEvents{1};
-    int                  fWait_ms{100};
-    size_t               fNReadbackEvents{0};
-    uint8_t              fNormalize{1};
-    std::string          getCalibrationName();
+    std::atomic<bool> fKeepRunning;
+    int               fRunNumber;
+    std::future<void> fRunningFuture;
+    bool              fSkipMaskedChannels;
+    bool              fAllChan;
+    bool              fMaskChannelsFromOtherGroups;
+    bool              fTestPulse;
+    bool              fDoBoardBroadcast;
+    bool              fDoHybridBroadcast;
+    bool              fUseReadNEvents{1};
+    int               fWait_ms{100};
+    size_t            fNReadbackEvents{0};
+    uint8_t           fNormalize{1};
+    std::string       getCalibrationName();
 };
 
 #endif
