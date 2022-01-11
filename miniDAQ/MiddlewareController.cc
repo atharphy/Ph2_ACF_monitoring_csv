@@ -9,6 +9,7 @@
 #include "../tools/PedeNoise.h"
 #include "../tools/PedestalEqualization.h"
 #include "../tools/RD53ClockDelay.h"
+#include "../tools/RD53DataTransmissionTest.h"
 #include "../tools/RD53Gain.h"
 #include "../tools/RD53GainOptimization.h"
 #include "../tools/RD53InjectionDelay.h"
@@ -19,15 +20,19 @@
 #include "../tools/RD53ThrAdjustment.h"
 #include "../tools/RD53ThrEqualization.h"
 #include "../tools/RD53ThrMinimization.h"
-#include "../tools/RD53DataTransmissionTest.h"
 #include "../tools/Tool.h"
 #include "MiddlewareController.h"
 //#include "../tools/SSAPhysics.h"
-#include "../tools/BackEndAlignment.h"
+#include "../tools/CicFEAlignment.h"
+#include "../tools/LinkAlignmentOT.h"
+#include "../tools/PSPhysics.h"
+#include "../tools/Physics2S.h"
+#include "../tools/StubBackEndAlignment.h"
 
 //========================================================================================================================
-MiddlewareController::MiddlewareController(int serverPort) : TCPServer(serverPort, 1)
+MiddlewareController::MiddlewareController(uint16_t portShift) : TCPServer(PORT_BASE + portShift, 1)
 {
+    theDQMPortnumber_ = DQM_PORT_BASE + portShift;
     // TCPServer::setReceiveTimeout(1,0);//Doesn't work
 }
 
@@ -83,17 +88,17 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
         LOG(INFO) << BOLDBLUE << "Configuring" << RESET;
 
         if(getVariableValue("Calibration", buffer) == "calibration")
-            theSystemController_ = new CombinedCalibration<BackEndAlignment, PedestalEqualization>;
+            theSystemController_ = new CombinedCalibration<LinkAlignmentOT, CicFEAlignment, PedestalEqualization>;
         else if(getVariableValue("Calibration", buffer) == "pedenoise")
-            theSystemController_ = new CombinedCalibration<BackEndAlignment, PedeNoise>;
+            theSystemController_ = new CombinedCalibration<LinkAlignmentOT, CicFEAlignment, PedeNoise>;
         else if(getVariableValue("Calibration", buffer) == "calibrationandpedenoise")
-            theSystemController_ = new CombinedCalibration<BackEndAlignment, PedestalEqualization, PedeNoise>;
+            theSystemController_ = new CombinedCalibration<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise>;
         else if(getVariableValue("Calibration", buffer) == "calibrationexample")
-            theSystemController_ = new CombinedCalibration<BackEndAlignment, CalibrationExample>;
+            theSystemController_ = new CombinedCalibration<LinkAlignmentOT, CicFEAlignment, CalibrationExample>;
         else if(getVariableValue("Calibration", buffer) == "cbcPulseShape")
-            theSystemController_ = new CombinedCalibration<BackEndAlignment, CBCPulseShape>;
+            theSystemController_ = new CombinedCalibration<LinkAlignmentOT, CicFEAlignment, CBCPulseShape>;
         else if(getVariableValue("Calibration", buffer) == "OTLatency")
-            theSystemController_ = new CombinedCalibration<BackEndAlignment, LatencyScan>;
+            theSystemController_ = new CombinedCalibration<LinkAlignmentOT, CicFEAlignment, LatencyScan>;
 
         else if(getVariableValue("Calibration", buffer) == "pixelalive")
             theSystemController_ = new CombinedCalibration<PixelAlive>;
@@ -119,6 +124,10 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
             theSystemController_ = new CombinedCalibration<ClockDelay>;
         else if(getVariableValue("Calibration", buffer) == "physics")
             theSystemController_ = new Physics;
+        else if(getVariableValue("Calibration", buffer) == "psphysics")
+            theSystemController_ = new PSPhysics;
+        else if(getVariableValue("Calibration", buffer) == "2sphysics")
+            theSystemController_ = new Physics2S;
         else if(getVariableValue("Calibration", buffer) == "datatrtest")
             theSystemController_ = new CombinedCalibration<DataTransmissionTest>;
 
@@ -129,7 +138,18 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
         }
 
         LOG(INFO) << BOLDBLUE << "SystemController created" << RESET;
-        theSystemController_->Configure(getVariableValue("ConfigurationFile", buffer), true);
+        try
+        {
+            theSystemController_->Configure(getVariableValue("ConfigurationFile", buffer), true);
+            /* code */
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+            delete theSystemController_;
+            std::string errorString = std::string("Error: ") + e.what();
+            return errorString;
+        }
         return "ConfigureDone";
     }
     else if(buffer.substr(0, 6) == "Error:")

@@ -32,6 +32,7 @@ void Gain::ConfigureCalibration()
     offset         = this->findValueInSettings<double>("VCalMED");
     nHITxCol       = this->findValueInSettings<double>("nHITxCol");
     doFast         = this->findValueInSettings<double>("DoFast");
+    doOnlyNGroups  = this->findValueInSettings<double>("DoOnlyNGroups");
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
@@ -45,7 +46,7 @@ void Gain::ConfigureCalibration()
     for(auto row = rowStart; row <= rowStop; row++)
         for(auto col = colStart; col <= colStop; col++) customChannelGroup.enableChannel(row, col);
 
-    theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup, doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol);
+    theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup, doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol, doOnlyNGroups);
     theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 
     // ##############################
@@ -67,7 +68,7 @@ void Gain::ConfigureCalibration()
     // ############################################################
     // # Create directory for: raw data, config files, histograms #
     // ############################################################
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false);
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "Gain");
 }
 
 void Gain::Running()
@@ -92,18 +93,18 @@ void Gain::sendData()
     auto theOccStream  = prepareChannelContainerStreamer<OccupancyAndPh, uint16_t>("Occ");
     auto theGainStream = prepareChannelContainerStreamer<GainFit>("Gain");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
         size_t index = 0;
         for(const auto theOccContainer: detectorContainerVector)
         {
             theOccStream.setHeaderElement(dacList[index] - offset);
-            for(const auto cBoard: *theOccContainer) theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+            for(const auto cBoard: *theOccContainer) theOccStream.streamAndSendBoard(cBoard, fDQMStreamer);
             index++;
         }
 
         if(theGainContainer != nullptr)
-            for(const auto cBoard: *theGainContainer.get()) theGainStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+            for(const auto cBoard: *theGainContainer.get()) theGainStream.streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 
@@ -119,7 +120,7 @@ void Gain::Stop()
     RD53RunProgress::reset();
 }
 
-void Gain::localConfigure(const std::string fileRes_, int currentRun)
+void Gain::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos = nullptr;
@@ -134,7 +135,7 @@ void Gain::localConfigure(const std::string fileRes_, int currentRun)
     Gain::initializeFiles(fileRes_, currentRun);
 }
 
-void Gain::initializeFiles(const std::string fileRes_, int currentRun)
+void Gain::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 
@@ -161,7 +162,7 @@ void Gain::run()
     detectorContainerVector.clear();
     for(auto i = 0u; i < dacList.size(); i++) detectorContainerVector.push_back(theRecyclingBin.get(&ContainerFactory::copyAndInitStructure<OccupancyAndPh>, OccupancyAndPh()));
 
-    this->fChannelGroupHandler = theChnGroupHandler.get();
+    setChannelGroupHandler(theChnGroupHandler);
     this->SetBoardBroadcast(true);
     this->SetTestPulse(true);
     this->fMaskChannelsFromOtherGroups = true;
@@ -176,7 +177,13 @@ void Gain::run()
                 for(const auto cChip: *cHybrid)
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
-                            if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row, col))
+                            if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !getChannelGroupHandlerContainer()->getObject(cBoard->getId())
+                                                                                                                     ->getObject(cOpticalGroup->getId())
+                                                                                                                     ->getObject(cHybrid->getId())
+                                                                                                                     ->getObject(cChip->getId())
+                                                                                                                     ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                                                                                                     ->allChannelGroup()
+                                                                                                                     ->isChannelEnabled(row, col))
                                 for(auto i = 0u; i < dacList.size(); i++)
                                     detectorContainerVector[i]
                                         ->at(cBoard->getIndex())
@@ -239,7 +246,13 @@ void Gain::draw(bool doSaveData)
                             fileOutID << "Iteration " << i << " --- reg = " << dacList[i] - offset << std::endl;
                             for(auto row = 0u; row < RD53::nRows; row++)
                                 for(auto col = 0u; col < RD53::nCols; col++)
-                                    if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row, col))
+                                    if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && getChannelGroupHandlerContainer()->getObject(cBoard->getId())
+                                                                                                                           ->getObject(cOpticalGroup->getId())
+                                                                                                                           ->getObject(cHybrid->getId())
+                                                                                                                           ->getObject(cChip->getId())
+                                                                                                                           ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                                                                                                           ->allChannelGroup()
+                                                                                                                           ->isChannelEnabled(row, col))
                                         fileOutID << "r " << row << " c " << col << " h "
                                                   << detectorContainerVector[i]
                                                              ->at(cBoard->getIndex())
@@ -287,7 +300,13 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                 {
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
-                            if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row, col))
+                            if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && getChannelGroupHandlerContainer()->getObject(cBoard->getId())
+                                                                                                                   ->getObject(cOpticalGroup->getId())
+                                                                                                                   ->getObject(cHybrid->getId())
+                                                                                                                   ->getObject(cChip->getId())
+                                                                                                                   ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                                                                                                   ->allChannelGroup()
+                                                                                                                   ->isChannelEnabled(row, col))
                             {
                                 for(auto i = 0u; i < dacList.size(); i++)
                                 {
@@ -377,7 +396,7 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                     index++;
                 }
 
-    theGainContainer->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
+    theGainContainer->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), 1);
 
     for(const auto cBoard: *theGainContainer)
         for(const auto cOpticalGroup: *cBoard)

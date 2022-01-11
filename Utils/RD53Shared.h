@@ -39,7 +39,7 @@ std::string composeFileName(const std::string& configFileName, const std::string
 size_t      countBitsOne(size_t num);
 void        resetDefaultFloat();
 
-constexpr size_t setBits(size_t nBit2Set) { return (1 << nBit2Set) - 1; }
+constexpr size_t setBits(size_t nBit2Set) { return (1L << nBit2Set) - 1; }
 
 template <typename T>
 inline void myMove(std::vector<T> source, std::vector<T>& destination)
@@ -61,7 +61,7 @@ T mtxInversion(const boost::numeric::ublas::matrix<T>& input, boost::numeric::ub
     T det = 1;
     for(auto i = 0u; i < pivots.size(); i++)
     {
-        if(pivots(i) != i) det *= -1;
+        if((int)pivots(i) != i) det *= -1;
         det *= mLU(i, i);
     }
 

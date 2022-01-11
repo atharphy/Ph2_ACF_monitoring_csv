@@ -26,6 +26,7 @@ void PixelAlive::ConfigureCalibration()
     injType        = this->findValueInSettings<double>("INJtype");
     nHITxCol       = this->findValueInSettings<double>("nHITxCol");
     doFast         = this->findValueInSettings<double>("DoFast");
+    doOnlyNGroups  = this->findValueInSettings<double>("DoOnlyNGroups");
     thrOccupancy   = this->findValueInSettings<double>("TargetOcc");
     unstuckPixels  = this->findValueInSettings<double>("UnstuckPixels");
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
@@ -42,7 +43,7 @@ void PixelAlive::ConfigureCalibration()
         for(auto col = colStart; col <= colStop; col++) customChannelGroup.enableChannel(row, col);
 
     theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(
-        customChannelGroup, injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels, nHITxCol);
+        customChannelGroup, injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels, nHITxCol, doOnlyNGroups);
     theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 
     // ######################
@@ -69,7 +70,7 @@ void PixelAlive::ConfigureCalibration()
     // ############################################################
     // # Create directory for: raw data, config files, histograms #
     // ############################################################
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false);
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "PixelAlive");
 }
 
 void PixelAlive::Running()
@@ -98,11 +99,11 @@ void PixelAlive::sendData()
     auto theBCIDStream  = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<BCIDsize>>("BCID");
     auto theTrgIDStream = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TrgIDsize>>("TrgID");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: *theOccContainer.get()) theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theBCIDContainer) theBCIDStream.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theTrgIDContainer) theTrgIDStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: *theOccContainer.get()) theOccStream.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theBCIDContainer) theBCIDStream.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTrgIDContainer) theTrgIDStream.streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 
@@ -118,7 +119,7 @@ void PixelAlive::Stop()
     RD53RunProgress::reset();
 }
 
-void PixelAlive::localConfigure(const std::string fileRes_, int currentRun)
+void PixelAlive::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos = nullptr;
@@ -133,7 +134,7 @@ void PixelAlive::localConfigure(const std::string fileRes_, int currentRun)
     PixelAlive::initializeFiles(fileRes_, currentRun);
 }
 
-void PixelAlive::initializeFiles(const std::string fileRes_, int currentRun)
+void PixelAlive::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 
@@ -151,11 +152,11 @@ void PixelAlive::initializeFiles(const std::string fileRes_, int currentRun)
 
 void PixelAlive::run()
 {
-    theOccContainer              = std::shared_ptr<DetectorDataContainer>(new DetectorDataContainer());
+    theOccContainer              = std::make_shared<DetectorDataContainer>();
     this->fDetectorDataContainer = theOccContainer.get();
     ContainerFactory::copyAndInitStructure<OccupancyAndPh, GenericDataVector>(*fDetectorContainer, *this->fDetectorDataContainer);
 
-    this->fChannelGroupHandler = theChnGroupHandler.get();
+    setChannelGroupHandler(theChnGroupHandler);
     this->SetTestPulse(injType);
     this->fMaskChannelsFromOtherGroups = true;
     this->measureData(nEvents, nEvtsBurst);
@@ -201,6 +202,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
     ContainerFactory::copyAndInitChip<GenericDataArray<TrgIDsize>>(*fDetectorContainer, theTrgIDContainer);
 
     for(const auto cBoard: *fDetectorContainer)
+    {
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
@@ -221,7 +223,13 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
 
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
-                            if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row, col))
+                            if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && getChannelGroupHandlerContainer()->getObject(cBoard->getId())
+                                                                                                                   ->getObject(cOpticalGroup->getId())
+                                                                                                                   ->getObject(cHybrid->getId())
+                                                                                                                   ->getObject(cChip->getId())
+                                                                                                                   ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                                                                                                   ->allChannelGroup()
+                                                                                                                   ->isChannelEnabled(row, col))
                             {
                                 float occupancy = theOccContainer->at(cBoard->getIndex())
                                                       ->at(cOpticalGroup->getIndex())
@@ -317,7 +325,9 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                 .data[deltaTrgID]++;
                     }
                 }
-
+    }
+    theOccContainer->resetNormalizationStatus();
+    theOccContainer->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), 1);
     return theOccContainer;
 }
 

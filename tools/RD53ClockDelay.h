@@ -35,8 +35,8 @@ class ClockDelay : public PixelAlive
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string fileRes_ = "", int currentRun = -1);
-    void   initializeFiles(const std::string fileRes_ = "", int currentRun = -1);
+    void   localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
+    void   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
     void   run();
     void   draw();
     void   analyze();
@@ -59,8 +59,6 @@ class ClockDelay : public PixelAlive
     size_t  colStop;
     size_t  startValue;
     size_t  stopValue;
-    size_t  nEvents;
-    bool    doFast;
 
     std::vector<uint16_t> dacList;
 
@@ -68,7 +66,7 @@ class ClockDelay : public PixelAlive
     DetectorDataContainer theClockDelayContainer;
 
     void fillHisto();
-    void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer);
+    void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer);
     void chipErrorReport() const;
     void writeSequence(const Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::ReadoutChip* pChip, uint16_t clk_data_delay);
 

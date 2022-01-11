@@ -18,7 +18,7 @@ void SSAPhysics::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    saveRawData = this->findValueInSettings<double>("SaveRawData");
+    saveRawData = this->findValueInSettings<double>("SaveRawData", true);
     doLocal     = false;
 
     // ###########################################
@@ -27,8 +27,9 @@ void SSAPhysics::ConfigureCalibration()
     this->CreateResultDirectory(RESULTDIR, false, false);
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, fOccContainer);
 
-    fChannelGroupHandler = new SSAChannelGroupHandler();
-    fChannelGroupHandler->setChannelGroupParameters(16, 2);
+    SSAChannelGroupHandler theChannelGroupHandler;
+    theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+    setChannelGroupHandler(theChannelGroupHandler);
 }
 
 void SSAPhysics::Running()
@@ -53,7 +54,7 @@ void SSAPhysics::sendBoardData(BoardContainer* const& cBoard)
 {
     auto theOccStream = prepareChannelContainerStreamer<Occupancy>("Occ");
 
-    if(fStreamerEnabled == true) { theOccStream.streamAndSendBoard(fOccContainer.at(cBoard->getIndex()), fNetworkStreamer); }
+    if(fDQMStreamerEnabled == true) { theOccStream.streamAndSendBoard(fOccContainer.at(cBoard->getIndex()), fDQMStreamer); }
 }
 
 void SSAPhysics::Stop()
@@ -107,7 +108,7 @@ void SSAPhysics::run()
             totalDataSize += dataSize;
         }
 
-        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
+        std::this_thread::sleep_for(std::chrono::microseconds(50));
     }
 
     LOG(WARNING) << BOLDBLUE << "Number of collected events = " << totalDataSize << RESET;
@@ -166,7 +167,10 @@ void SSAPhysics::fillDataContainer(BoardContainer* const& cBoard)
     // # Fill containers #
     // ###################
     const std::vector<Event*>& events = SystemController::GetEvents();
-    for(const auto& event: events) { event->fillDataContainer(fOccContainer.at(cBoard->getIndex()), fChannelGroupHandler->allChannelGroup()); }
+    //Assuming all chip will have all channels enabled:
+    auto allChannelGroup = getChannelGroup(-1);
+
+    for(const auto& event: events) { event->fillDataContainer(fOccContainer.at(cBoard->getIndex()), allChannelGroup); }
 }
 
 void SSAPhysics::chipErrorReport() {}

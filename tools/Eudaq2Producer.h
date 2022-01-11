@@ -1,21 +1,19 @@
 /*!
  *
- * \file CicFEAlignment.h
- * \brief CIC FE alignment class, automated alignment procedure for CICs
- * connected to FEs
- * \author Sarah SEIF EL NASR-STOREY
- * \author2 Younes OTARID
- * \date 13 / 11 / 19
+ * \file Eudaq2Producer.h
+ * \brief Testbeam Producer for EUDAQ2
+ * \author Younes OTARID
+ * \date 13 / 09 / 21
  *
- * \Support : sarah.storey@cern.ch
- * \Support2 : younes.otarid@desy.de
+ * \Support : younes.otarid@cern.ch
  *
  */
-
 #ifndef Eudaq2Producer_h__
 #define Eudaq2Producer_h__
 
-#include "Tool.h"
+#include "CommonVisitors.h"
+#include "OTTool.h"
+#include "Visitor.h"
 
 #include <cmath>
 #include <map>
@@ -47,7 +45,7 @@
 
 #ifdef __EUDAQ__
 class Eudaq2Producer
-    : public Tool
+    : public OTTool
     , public eudaq::Producer
 {
   public:
@@ -62,6 +60,7 @@ class Eudaq2Producer
     void ReadoutLoop();
     void ConvertToSubEvent(const Ph2_HwDescription::BeBoard*, const Ph2_HwInterface::Event*, eudaq::EventSP);
     bool EventsPending();
+    void EnableDigitalInjection(uint8_t pPulseAmplitude, uint8_t pThresholdMPA, uint8_t pThresholdSSA);
 
     // override initialization from euDAQ
     void DoConfigure() override;
@@ -70,28 +69,40 @@ class Eudaq2Producer
     void DoStopRun() override;
     void DoTerminate() override;
     void DoReset() override;
-    // void RunLoop() override; //is replaced by ReadOutLoop()
 
     // register producer in eudaq2
     static const uint32_t m_id_factory = eudaq::cstr2hash("CMSPhase2Producer");
 
   protected:
   private:
-    // settings
-    bool        fHandshakeEnabled;
-    uint32_t    fTriggerMultiplicity;
-    uint32_t    fHitsCounter;
-    std::string fHWFile;
-    std::string fRawPh2ACF;
+    // Some HW settings
+    bool     fHandshakeEnabled;
+    uint32_t fTriggerMultiplicity;
+    uint32_t fHitsCounter;
+    bool     fIsPS            = true;
+    bool     fEnableInjection = false;
+    // std::vector<int> fThresholdList;
 
-    // status variables
-    bool        fInitialised, fConfigured, fStarted, fStopped, fTerminated;
+    uint8_t               fThresholdMPA;
+    uint8_t               fThresholdSSA;
+    uint16_t              fThresholdCBC;
+    int                   fRelativeThreshold;
+    DetectorDataContainer fChipThreshContainer;
+
+    // Run status variables
+    bool        fExitRun, fConfigured, fInitialised;
     std::thread fThreadRun;
+    bool        fSkipFirstEvent = true;
 
-    // for raw data
+    // Handlers gor Ph2ACF Raw data and SLink data
+    std::string  fPathToHWFile;
+    std::string  fPathToRawPh2ACF;
     FileHandler* fPh2FileHandler;
-    // for s-link data [TBD]
     FileHandler* fSLinkFileHandler;
+
+    // Temporary
+    uint16_t fOriginalTriggerSrc;
+    uint8_t  fOriginalTLUConfig;
 };
 
 // Register Producer in EUDAQ Factory

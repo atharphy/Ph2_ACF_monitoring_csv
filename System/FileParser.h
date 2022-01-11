@@ -16,9 +16,9 @@
 #include "../HWInterface/BeBoardFWInterface.h"
 #include "../HWInterface/D19cFWInterface.h"
 #include "../HWInterface/RD53FWInterface.h"
+#include "../MonitorUtils/DetectorMonitorConfig.h"
 #include "../Utils/ConditionDataSet.h"
 #include "../Utils/ConsoleColor.h"
-#include "../Utils/DetectorMonitorConfig.h"
 #include "../Utils/Exception.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/easylogging++.h"
@@ -54,6 +54,7 @@ class FileParser
     void        parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile);
     void        parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile);
     std::string parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os, bool pIsFile);
+    void        disableInterfaces() { fEnableInterfaces = false; }
 
   protected:
     /*!
@@ -88,12 +89,16 @@ class FileParser
     void parseCbcContainer(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
     void parseCbcSettings(pugi::xml_node pCbcNode, Ph2_HwDescription::ReadoutChip* pCbc, std::ostream& os);
     void parseGlobalCbcSettings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os);
+    void parseGlobalHybridMask(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os);
     //
     void parseSSAContainer(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
-    void parseSSASettings(pugi::xml_node pHybridNode, Ph2_HwDescription::ReadoutChip* cSSA);
+    void parseSSASettings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os);
     //
-    void parseMPA(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix);
-    void parseMPASettings(pugi::xml_node pHybridNode, Ph2_HwDescription::ReadoutChip* cMPA);
+    void parseSSA2Container(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
+    void parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription::ReadoutChip* cSSA);
+    //
+    void parseMPAContainer(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os);
+    void parseMPASettings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os);
     //
     void parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, Ph2_HwDescription::lpGBT* plpGBT, std::ostream& os);
 
@@ -121,6 +126,9 @@ class FileParser
         {18, "MaskChannel-152-to-145"}, {19, "MaskChannel-160-to-153"}, {20, "MaskChannel-168-to-161"}, {21, "MaskChannel-176-to-169"}, {22, "MaskChannel-184-to-177"}, {23, "MaskChannel-192-to-185"},
         {24, "MaskChannel-200-to-193"}, {25, "MaskChannel-208-to-201"}, {26, "MaskChannel-216-to-209"}, {27, "MaskChannel-224-to-217"}, {28, "MaskChannel-232-to-225"}, {29, "MaskChannel-240-to-233"},
         {30, "MaskChannel-248-to-241"}, {31, "MaskChannel-254-to-249"}};
+
+  private:
+    bool fEnableInterfaces{true};
 };
 } // namespace Ph2_System
 

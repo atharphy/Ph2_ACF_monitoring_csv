@@ -40,15 +40,15 @@ class GainOptimization : public Gain
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string fileRes_ = "", int currentRun = -1);
-    void   initializeFiles(const std::string fileRes_ = "", int currentRun = -1);
+    void   localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
+    void   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
     void   run();
     void   analyze();
     void   draw();
     size_t getNumberIterations()
     {
-        uint16_t nIterationsKrumCurr = floor(log2(KrumCurrStop - KrumCurrStart + 1) + 1);
-        uint16_t moreIterations      = 2;
+        uint16_t nIterationsKrumCurr = floor(log2(KrumCurrStop - KrumCurrStart + 1) + 2);
+        uint16_t moreIterations      = 1;
         return Gain::getNumberIterations() * (nIterationsKrumCurr + moreIterations);
     }
     void saveChipRegisters(int currentRun);
@@ -62,7 +62,6 @@ class GainOptimization : public Gain
     size_t rowStop;
     size_t colStart;
     size_t colStop;
-    size_t nEvents;
     size_t startValue;
     size_t stopValue;
     float  targetCharge;
@@ -75,7 +74,7 @@ class GainOptimization : public Gain
     DetectorDataContainer theKrumCurrContainer;
 
     void fillHisto();
-    void bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
+    void bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue);
     void chipErrorReport() const;
 
   protected:

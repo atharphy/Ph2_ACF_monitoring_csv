@@ -12,7 +12,7 @@
 
 using namespace Ph2_HwDescription;
 
-void LatencyHistograms::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
+void LatencyHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
@@ -66,10 +66,10 @@ void LatencyHistograms::fillOccupancy(const DetectorDataContainer& OccupancyCont
                 {
                     if(cChip->getSummaryContainer<GenericDataArray<LatencySize>>() == nullptr) continue;
 
-                    auto* Occupancy1DHist = Occupancy1D.getObject(cBoard->getIndex())
-                                                ->getObject(cOpticalGroup->getIndex())
-                                                ->getObject(cHybrid->getIndex())
-                                                ->getObject(cChip->getIndex())
+                    auto* Occupancy1DHist = Occupancy1D.getObject(cBoard->getId())
+                                                ->getObject(cOpticalGroup->getId())
+                                                ->getObject(cHybrid->getId())
+                                                ->getObject(cChip->getId())
                                                 ->getSummary<CanvasContainer<TH1F>>()
                                                 .fTheHistogram;
 
@@ -87,10 +87,10 @@ void LatencyHistograms::fillLatency(const DetectorDataContainer& LatencyContaine
                 {
                     if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
 
-                    auto* LatencyHist = Latency.getObject(cBoard->getIndex())
-                                            ->getObject(cOpticalGroup->getIndex())
-                                            ->getObject(cHybrid->getIndex())
-                                            ->getObject(cChip->getIndex())
+                    auto* LatencyHist = Latency.getObject(cBoard->getId())
+                                            ->getObject(cOpticalGroup->getId())
+                                            ->getObject(cHybrid->getId())
+                                            ->getObject(cChip->getId())
                                             ->getSummary<CanvasContainer<TH1F>>()
                                             .fTheHistogram;
 

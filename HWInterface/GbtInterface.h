@@ -79,6 +79,7 @@ class GbtInterface
     void gbtxConfigure(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pDLLcurrent = 11, uint8_t pDLLlockMode = 7);
     void gbtxSelectTerminationRx(Ph2_HwInterface::BeBoardFWInterface* pInterface, bool pEnable = true);
     void gbtxSetDriveStrength(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pStrength = 0xA);
+    void gbtxAutoAlign(Ph2_HwInterface::BeBoardFWInterface* pInterface, uint8_t pHyridId = 0);
 
     struct RegConfig
     {

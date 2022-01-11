@@ -48,20 +48,10 @@ void SSASCurve::run(void)
     {
         BeBoard* theBeBoard = static_cast<BeBoard*>(fDetectorContainer->at(cBoard->getIndex()));
 
-        if(cWithSSA)
-        {
-            if(SyncDebug)
-                LOG(INFO) << BOLDBLUE << "SYNC DEBUG!" << RESET;
-            else
-                theBeBoard->setEventType(EventType::SSAAS);
-        }
-        if(cWithMPA)
-        {
-            if(SyncDebug)
-                LOG(INFO) << BOLDBLUE << "SYNC DEBUG!" << RESET;
-            else
-                theBeBoard->setEventType(EventType::MPAAS);
-        }
+        if(SyncDebug)
+            LOG(INFO) << BOLDBLUE << "SYNC DEBUG!" << RESET;
+        else
+            theBeBoard->setEventType(EventType::SCAS);
 
         float rms  = 999.0;
         float vfac = Vfac;

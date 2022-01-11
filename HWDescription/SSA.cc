@@ -24,18 +24,22 @@ namespace Ph2_HwDescription
 
 SSA::SSA(const FrontEndDescription& pFeDesc, uint8_t pSSAId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename) : ReadoutChip(pFeDesc, pSSAId)
 {
+    fChipAddress      = 0x20 + pSSAId % 8;
     fMaxRegValue      = 255; // 8 bit registers in CBC
-    fChipOriginalMask = new ChannelGroup<120>;
-    fPartnerId        = pPartnerId;
+    fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS>>();
+    fChipOriginalMask->enableAllChannels();
+    fPartnerId = pPartnerId;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::SSA);
 }
 
 SSA::SSA(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pSSAId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename) : ReadoutChip(pBeId, pFMCId, pFeId, pSSAId)
 {
+    fChipAddress      = 0x20 + pSSAId % 8;
     fMaxRegValue      = 255; // 8 bit registers in CBC
-    fChipOriginalMask = new ChannelGroup<120>;
-    fPartnerId        = pPartnerId;
+    fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS>>();
+    fChipOriginalMask->enableAllChannels();
+    fPartnerId = pPartnerId;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::SSA);
 }
@@ -43,7 +47,6 @@ SSA::SSA(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pSSAId, uint8_t p
 void SSA::loadfRegMap(const std::string& filename)
 { // start loadfRegMap
     std::ifstream file(filename.c_str(), std::ios::in);
-
     if(file)
     {
         std::string line, fName, fPage_str, fAddress_str, fDefValue_str, fValue_str;
@@ -78,16 +81,14 @@ void SSA::loadfRegMap(const std::string& filename)
                 fRegItem.fAddress  = strtoul(fAddress_str.c_str(), 0, 16);
                 fRegItem.fDefValue = strtoul(fDefValue_str.c_str(), 0, 16);
                 fRegItem.fValue    = strtoul(fValue_str.c_str(), 0, 16);
-                // FIXME this channel masking part is currently using the CBC values. Need to check what the SSA format
-                // is
-                if(fRegItem.fPage == 0x00 && fRegItem.fAddress >= 0x20 && fRegItem.fAddress <= 0x3F)
+
+                // LOG(INFO) << "CURS " << fRegItem.fAddress - 0x0101;
+                if(fRegItem.fPage == 0x00 && fRegItem.fAddress >= 0x0101 && fRegItem.fAddress <= 0x0178)
                 { // Register is a Mask
-                    if(fRegItem.fValue != 0xFF)
+                    if(fRegItem.fValue == 0x0)
                     {
-                        for(uint8_t channel = 0; channel < 8; ++channel)
-                        {
-                            if((fRegItem.fValue & (0x1 << channel)) == 0) { fChipOriginalMask->disableChannel((fRegItem.fAddress - 0x20) * 8 + channel); }
-                        }
+                        // LOG(INFO) << "DISABLE " << fRegItem.fAddress - 0x0101<<std::endl;
+                        fChipOriginalMask->disableChannel(fRegItem.fAddress - 0x0101);
                     }
                 }
                 fRegMap[fName] = fRegItem;

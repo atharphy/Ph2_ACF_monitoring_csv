@@ -35,7 +35,7 @@ class DQMHistogramPedestalEqualization : public DQMHistogramBase
     /*!
      * Book histograms
      */
-    void book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;
+    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;
 
     /*!
      * Fill histogram
@@ -60,6 +60,7 @@ class DQMHistogramPedestalEqualization : public DQMHistogramBase
     void fillOccupancyPlots(DetectorDataContainer& theOccupancy);
 
   private:
+    uint32_t              NCH = 0;
     DetectorDataContainer fDetectorData;
     DetectorDataContainer fDetectorVplusHistograms;
     DetectorDataContainer fDetectorOffsetHistograms;

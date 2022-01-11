@@ -40,14 +40,15 @@ class PixelAlive : public Tool
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void                                   localConfigure(const std::string fileRes_ = "", int currentRun = -1);
-    void                                   initializeFiles(const std::string fileRes_ = "", int currentRun = -1);
+    void                                   localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
+    void                                   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
     void                                   run();
     void                                   draw(bool doSaveData = true);
     std::shared_ptr<DetectorDataContainer> analyze();
     size_t                                 getNumberIterations()
     {
-        return RD53ChannelGroupHandler::getNumberOfGroups(injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels, nHITxCol) *
+        return RD53ChannelGroupHandler::getNumberOfGroups(
+                   injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels, nHITxCol, doOnlyNGroups) *
                nEvents / nEvtsBurst;
     }
     void saveChipRegisters(int currentRun);
@@ -63,16 +64,9 @@ class PixelAlive : public Tool
     size_t colStop;
     size_t nEvents;
     size_t nEvtsBurst;
-    size_t injType;
     size_t nHITxCol;
     float  thrOccupancy;
     bool   unstuckPixels;
-    enum INJtype
-    {
-        None,
-        Analog,
-        Digital
-    };
 
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
     std::shared_ptr<DetectorDataContainer>   theOccContainer;
@@ -83,11 +77,20 @@ class PixelAlive : public Tool
     void chipErrorReport() const;
 
   protected:
+    size_t injType;
+    enum INJtype
+    {
+        None,
+        Analog,
+        Digital
+    };
+
     std::string fileRes;
     int         theCurrentRun;
     bool        doUpdateChip;
     bool        doDisplay;
     bool        doFast;
+    size_t      doOnlyNGroups;
     bool        saveBinaryData;
     bool        saveData;
 };

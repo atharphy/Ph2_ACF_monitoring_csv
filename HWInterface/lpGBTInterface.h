@@ -21,18 +21,47 @@
 // ##########################
 namespace lpGBTconstants
 {
-const uint8_t LPGBTADDRESS      = 0x70; // LpGBT chip address
-const uint8_t PATTERN_PRBS      = 0x1;  // Start PRBS pattern
-const uint8_t PATTERN_NORMAL    = 0x0;  // Start normal-mode pattern
-const uint8_t fictitiousGroup   = 6;    // Fictitious group used when no need to speficy frontend chip
-const uint8_t fictitiousChannel = 0;    // Fictitious channel used when no need to speficy frontend chip
-const uint8_t rxPhaseTracking   = 2;    // Rx phase tracking mode [0 = no-tracking, 2 = automatic-tracking]
+const uint8_t PATTERN_PRBS      = 0x1; // Start PRBS pattern
+const uint8_t PATTERN_NORMAL    = 0x0; // Start normal-mode pattern
+const uint8_t fictitiousGroup   = 6;   // Fictitious group used when no need to speficy frontend chip
+const uint8_t fictitiousChannel = 0;   // Fictitious channel used when no need to speficy frontend chip
+const uint8_t rxPhaseTracking   = 2;   // Rx phase tracking mode [0 = no-tracking, 2 = automatic-tracking]
 } // namespace lpGBTconstants
+
+#ifdef __TCUSB__
+#include "TCInterface.h"
+#endif
 
 namespace Ph2_HwInterface
 {
+struct lpGBTClockConfig
+{
+    uint8_t fClkFreq = 4, fClkDriveStr = 1, fClkInvert = 1;
+    uint8_t fClkPreEmphWidth = 0, fClkPreEmphMode = 0, fClkPreEmphStr = 0;
+};
+// struct i2cConfig
+// {
+//     uint8_t fMasterId=0;
+//     uint8_t fI2CFrequency=3;
+//     uint8_t fSCLmode=0;
+//     uint8_t fRetry=0;
+// };
+
 class lpGBTInterface : public ChipInterface
 {
+  protected:
+// I think eventually this will want to change
+#ifdef __TCUSB__
+#ifdef __ROH_USB__
+    typedef TCInterface<TC_PSROH> ExternalInterface;
+#elif __SEH_USB__
+    typedef TCInterface<TC_2SSEH> ExternalInterface;
+#endif
+    ExternalInterface fExternalInterface{};
+#endif
+    const float fClockSpeed = 40e6; // 40 MHz clock for the lpGBT
+                                    // std::vector<i2cConfig> fI2Cconfigs(3);
+
   public:
     lpGBTInterface(const BeBoardFWMap& pBoardMap) : ChipInterface(pBoardMap) {}
     virtual ~lpGBTInterface() {}
@@ -40,16 +69,11 @@ class lpGBTInterface : public ChipInterface
     void StartPRBSpattern(Ph2_HwDescription::Chip* pChip);
     void StopPRBSpattern(Ph2_HwDescription::Chip* pChip);
 
-    virtual void
-                 PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const Ph2_HwDescription::BeBoard* pBoard, const Ph2_HwDescription::OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface){};
-    virtual bool ExternalPhaseAlignRx(Ph2_HwDescription::Chip*               pChip,
-                                      const Ph2_HwDescription::BeBoard*      pBoard,
-                                      const Ph2_HwDescription::OpticalGroup* pOpticalGroup,
-                                      Ph2_HwInterface::BeBoardFWInterface*   pBeBoardFWInterface,
-                                      ReadoutChipInterface*                  pReadoutChipInterface)
-    {
-        return true;
-    };
+    // #######################################
+    // # Chip configuration functions #
+    // #######################################
+    bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerifLoop = false) override;
+    uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
 
     // #######################################
     // # LpGBT block configuration functions #
@@ -70,6 +94,7 @@ class lpGBTInterface : public ChipInterface
     void ConfigureRxPRBS(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, bool pEnable);
     void ConfigureRxSource(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pSource);
     void ConfigureTxSource(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pSource);
+    void ConfigureTxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate);
 
     // ########################
     // # LpGBT GPIO functions #
@@ -99,33 +124,92 @@ class lpGBTInterface : public ChipInterface
     void   ConfigureBERT(Ph2_HwDescription::Chip* pChip, uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, bool pSkipDisable = false);
     void   ConfigureBERTPattern(Ph2_HwDescription::Chip* pChip, uint32_t pPattern);
     double GetBERTResult(Ph2_HwDescription::Chip* pChip);
-    double RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed = 0);
+    double RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed);
+    double BERtestCL(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double bits_or_time, float pConfidenceLevel);
+
+    // ##############
+    // # LpGBT Manual phase alignment of Rx ports
+    // #############
+    void ManualPhaseAlignRx(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel);
+
+    // ##############################################
+    // # LpGBT Reset  functions (Slow Control) #
+    // ##############################################
+    void ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pMasters);
 
     // ##############################################
     // # LpGBT I2C Masters functions (Slow Control) #
     // ##############################################
-    void     ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pMasters);
     void     ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode);
-    bool     WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes);
-    uint32_t ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes);
+    bool     WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes, uint8_t pFreq = 3 /* 3   1 MHz */);
+    uint32_t ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes, uint8_t pFreq = 3 /* 3   1 MHz */);
     uint8_t  GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
     bool     IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
 
+    // ###########################
+    // # LpGBT ADC-DAC functions #
+    // ###########################
+    void ConfigureADC(Ph2_HwDescription::Chip* pChip, uint8_t pGainSelect, bool pADCEnable, bool pStartConversion);
+    void ConfigureCurrentDAC(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& pCurrentDACChannels, uint8_t pCurrentDACOutput);
+    bool IsReadADCDone(Ph2_HwDescription::Chip* pChip);
+
+    // #######################################
+    // # LpGBT retreive configuration  #
+    // #######################################
+
+    uint16_t GetRxDataRate(Ph2_HwDescription::Chip* pChip, uint8_t pGroup);
+    uint8_t  GetChipRate(Ph2_HwDescription::Chip* pChip);
+
+    // ###########################
+    // # LpGBT Vref function #
+    // ###########################
+    bool ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection);
+
+// #######################################
+// # functions to link to external interfaces #
+// #######################################
+#ifdef __TCUSB__
+    template <class T>
+    void LinkExternalInterface(T pInterface)
+    {
+        fExternalInterface = pInterface;
+    }
+#endif
+
+    // ####################################
+    // # LpGBT I2C master config #
+    // ####################################
+    // void SetI2Cconfig(i2cConfig pConfig){
+    //     fI2Cconfigs[pConfig.fMasterId].fMasterId = pConfig.fMasterId;
+    //     fI2Cconfigs[pConfig.fMasterId].fI2CFrequency = pConfig.fI2CFrequency;
+    //     fI2Cconfigs[pConfig.fMasterId].fSCLmode = pConfig.fSCLmode;
+    //     fI2Cconfigs[pConfig.fMasterId].fRetry = pConfig.fRetry;
+    // }
+    // i2cConfig GetI2Cconfig(uint8_t pMasterId){
+    //     return fI2Cconfigs[pMasterId];
+    // }
+
+    void    PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    uint8_t AutoPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
+    void    ConfigureRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
+    void    ConfigureTxChannels(Ph2_HwDescription::Chip*    pChip,
+                                const std::vector<uint8_t>& pGroups,
+                                const std::vector<uint8_t>& pChannels,
+                                uint8_t                     pDriveStr,
+                                uint8_t                     pPreEmphMode,
+                                uint8_t                     pPreEmphStr,
+                                uint8_t                     pPreEmphWidth,
+                                uint8_t                     pInvert);
+
   protected:
+    bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
+
     // #######################################
     // # LpGBT block configuration functions #
     // #######################################
     void SetPUSMDone(Ph2_HwDescription::Chip* pChip, bool pPllConfigDone, bool pDllConfigDone);
     void ConfigureRxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate, uint8_t pTrackMode);
-    void ConfigureTxGroups(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels, uint8_t pDataRate);
-    void ConfigureTxChannels(Ph2_HwDescription::Chip*    pChip,
-                             const std::vector<uint8_t>& pGroups,
-                             const std::vector<uint8_t>& pChannels,
-                             uint8_t                     pDriveStr,
-                             uint8_t                     pPreEmphMode,
-                             uint8_t                     pPreEmphStr,
-                             uint8_t                     pPreEmphWidth,
-                             uint8_t                     pInvert);
+    void ConfigureRxAlignmentMode(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pTrackMode);
     void ConfigureClocks(Ph2_HwDescription::Chip*    pChip,
                          const std::vector<uint8_t>& pClock,
                          uint8_t                     pFreq,
@@ -135,21 +219,20 @@ class lpGBTInterface : public ChipInterface
                          uint8_t                     pPreEmphMode,
                          uint8_t                     pPreEmphStr);
     void ConfigureHighSpeedPolarity(Ph2_HwDescription::Chip* pChip, uint8_t pOutPolarity, uint8_t pInPolarity);
-    void ConfigureRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
     void ConfigurePhShifter(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pClocks, uint8_t pFreq, uint8_t pDriveStr, uint8_t pEnFTune, uint16_t pDelay);
 
     // ####################################
     // # LpGBT specific routine functions #
     // ####################################
-    void PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, bool pTrain);
+    void PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups);
     void InternalPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
+    void ResetRxDll(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups);
 
     // ################################
     // # LpGBT block status functions #
     // ################################
     bool    IsPUSMDone(Ph2_HwDescription::Chip* pChip);
     void    PrintChipMode(Ph2_HwDescription::Chip* pChip);
-    uint8_t GetChipRate(Ph2_HwDescription::Chip* pChip);
     uint8_t GetPUSMStatus(Ph2_HwDescription::Chip* pChip);
     uint8_t GetRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel);
     bool    IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, const std::vector<uint8_t>& pChannels);
@@ -160,13 +243,6 @@ class lpGBTInterface : public ChipInterface
     // ########################
     void ConfigureGPIODriverStrength(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pDriveStr);
     void ConfigureGPIOPull(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGPIOs, uint8_t pPullEn, uint8_t pPullUpDown);
-
-    // ###########################
-    // # LpGBT ADC-DAC functions #
-    // ###########################
-    void ConfigureADC(Ph2_HwDescription::Chip* pChip, uint8_t pGainSelect, bool pADCEnable, bool pStartConversion);
-    void ConfigureCurrentDAC(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& pCurrentDACChannels, uint8_t pCurrentDACOutput);
-    bool IsReadADCDone(Ph2_HwDescription::Chip* pChip);
 
     // ##############
     // # LpGBT BERT #
@@ -226,22 +302,22 @@ class lpGBTInterface : public ChipInterface
                                                      {18, "READY"}};
 
     std::map<std::string, uint8_t> revertedPUSMStatusMap;
-    std::map<uint8_t, double>      fBERTMeasTimeMap = {{0, RD53Shared::setBits(4) + 1},
-                                                  {1, RD53Shared::setBits(6) + 1},
-                                                  {2, RD53Shared::setBits(8) + 1},
-                                                  {3, RD53Shared::setBits(10) + 1},
-                                                  {4, RD53Shared::setBits(12) + 1},
-                                                  {5, RD53Shared::setBits(14) + 1},
-                                                  {6, RD53Shared::setBits(16) + 1},
-                                                  {7, RD53Shared::setBits(18) + 1},
-                                                  {8, RD53Shared::setBits(20) + 1},
-                                                  {9, RD53Shared::setBits(22) + 1},
-                                                  {10, RD53Shared::setBits(24) + 1},
-                                                  {11, RD53Shared::setBits(26) + 1},
-                                                  {12, RD53Shared::setBits(28) + 1},
-                                                  {13, RD53Shared::setBits(30) + 1},
-                                                  {14, RD53Shared::setBits(32) + 1},
-                                                  {15, RD53Shared::setBits(34) + 1}};
+    std::map<uint8_t, double>      fBERTMeasTimeMap = {{0, RD53Shared::setBits(5) + 1},
+                                                  {1, RD53Shared::setBits(7) + 1},
+                                                  {2, RD53Shared::setBits(9) + 1},
+                                                  {3, RD53Shared::setBits(11) + 1},
+                                                  {4, RD53Shared::setBits(13) + 1},
+                                                  {5, RD53Shared::setBits(15) + 1},
+                                                  {6, RD53Shared::setBits(17) + 1},
+                                                  {7, RD53Shared::setBits(19) + 1},
+                                                  {8, RD53Shared::setBits(21) + 1},
+                                                  {9, RD53Shared::setBits(23) + 1},
+                                                  {10, RD53Shared::setBits(25) + 1},
+                                                  {11, RD53Shared::setBits(27) + 1},
+                                                  {12, RD53Shared::setBits(29) + 1},
+                                                  {13, RD53Shared::setBits(31) + 1},
+                                                  {14, RD53Shared::setBits(33) + 1},
+                                                  {15, RD53Shared::setBits(35) + 1}};
 
     std::map<uint8_t, std::string> fEOMStatusMap = {{0, "smIdle"}, {1, "smResetCounters"}, {2, "smCount"}, {3, "smEndOfCount"}};
 

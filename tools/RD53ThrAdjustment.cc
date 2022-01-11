@@ -29,7 +29,6 @@ void ThrAdjustment::ConfigureCalibration()
     rowStop         = this->findValueInSettings<double>("ROWstop");
     colStart        = this->findValueInSettings<double>("COLstart");
     colStop         = this->findValueInSettings<double>("COLstop");
-    nEvents         = this->findValueInSettings<double>("nEvents");
     targetThreshold = this->findValueInSettings<double>("TargetThr");
     ThrStart        = this->findValueInSettings<double>("ThrStart");
     ThrStop         = this->findValueInSettings<double>("ThrStop");
@@ -72,8 +71,8 @@ void ThrAdjustment::sendData()
 {
     auto theThrStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>();
 
-    if(fStreamerEnabled == true)
-        for(const auto cBoard: theThrContainer) theThrStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+    if(fDQMStreamerEnabled == true)
+        for(const auto cBoard: theThrContainer) theThrStream.streamAndSendBoard(cBoard, fDQMStreamer);
 }
 
 void ThrAdjustment::Stop()
@@ -88,7 +87,7 @@ void ThrAdjustment::Stop()
     RD53RunProgress::reset();
 }
 
-void ThrAdjustment::localConfigure(const std::string fileRes_, int currentRun)
+void ThrAdjustment::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos             = nullptr;
@@ -104,7 +103,7 @@ void ThrAdjustment::localConfigure(const std::string fileRes_, int currentRun)
     ThrAdjustment::initializeFiles(fileRes_, currentRun);
 }
 
-void ThrAdjustment::initializeFiles(const std::string fileRes_, int currentRun)
+void ThrAdjustment::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     // ##############################
     // # Initialize sub-calibration #
@@ -127,7 +126,7 @@ void ThrAdjustment::initializeFiles(const std::string fileRes_, int currentRun)
 
 void ThrAdjustment::run()
 {
-    ThrAdjustment::bitWiseScanGlobal(frontEnd->thresholdReg, nEvents, targetThreshold, ThrStart, ThrStop);
+    ThrAdjustment::bitWiseScanGlobal(frontEnd->thresholdReg, targetThreshold, ThrStart, ThrStop);
 
     // ############################
     // # Fill threshold container #
@@ -188,11 +187,12 @@ void ThrAdjustment::fillHisto()
 #endif
 }
 
-void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, float target, uint16_t startValue, uint16_t stopValue)
+void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, uint16_t startValue, uint16_t stopValue)
 {
     std::vector<uint16_t> chipCommandList;
     std::vector<uint32_t> hybridCommandList;
 
+    float    tmp;
     uint16_t init;
     uint16_t numberOfBits = floor(log2(stopValue - startValue + 1) + 1);
 
@@ -207,20 +207,8 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, uint32_t nEven
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, midDACcontainer);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, maxDACcontainer, init = (stopValue + 1));
 
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, bestDACcontainer);
-    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer);
-
-    // #########################
-    // # Initialize containers #
-    // #########################
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = 0;
-                    bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>()       = 0;
-                }
+    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, bestDACcontainer, init = 0);
+    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer, tmp = 0);
 
     for(auto i = 0u; i <= numberOfBits; i++)
     {
@@ -281,10 +269,11 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, uint32_t nEven
         // ################
         PixelAlive::run();
         auto output = PixelAlive::analyze();
-        output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
+        output->resetNormalizationStatus();
+        output->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), 1);
 
         // ##############################################
-        // # Send periodic data to minitor the progress #
+        // # Send periodic data to monitor the progress #
         // ##############################################
         PixelAlive::sendData();
 

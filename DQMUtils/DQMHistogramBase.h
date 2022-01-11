@@ -43,7 +43,7 @@ struct sfinae_true_DQMHistogramBase : std::true_type
 };
 
 template <typename T>
-static auto test_SetZTitle(int ) -> sfinae_true_DQMHistogramBase<decltype(std::declval<T>().SetZTitle(""))>;
+static auto test_SetZTitle(int) -> sfinae_true_DQMHistogramBase<decltype(std::declval<T>().SetZTitle(""))>;
 template <typename>
 static auto test_SetZTitle(long) -> std::false_type;
 } // namespace user_detail
@@ -58,10 +58,7 @@ struct has_SetZTitle : decltype(user_detail::test_SetZTitle<T>(0))
 template <typename T, bool hasSetZTitle = false>
 struct CallSetZTitle
 {
-    void operator()(T* thePlot, const char* theTitle)
-    {
-        return;
-    }
+    void operator()(T* thePlot, const char* theTitle) { return; }
 };
 
 // Functor for SetZTitle - case when SetZTitle is defined
@@ -70,7 +67,7 @@ struct CallSetZTitle<T, true>
 {
     void operator()(T* thePlot, const char* theTitle)
     {
-        thePlot.SetZTitle(theTitle);
+        thePlot->SetZTitle(theTitle);
         return;
     }
 };
@@ -92,7 +89,7 @@ class DQMHistogramBase
      * \brief Book histograms
      * \param theDetectorStructure : Container of the Detector structure
      */
-    virtual void book(TFile* outputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) = 0;
+    virtual void book(TFile* outputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) = 0;
 
     /*!
      * \brief Book histograms
@@ -166,15 +163,37 @@ class DQMHistogramBase
                                                              RD53chargeConverter::VCal2Charge(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins()), isNoise),
                                                              510,
                                                              "-"));
-                            else if(additionalAxisType == "frequency")
+                            else if(additionalAxisType == "frequency") // @TMP@
+                            {
+                                axes.emplace_back(new TGaxis(myPad->GetUxmax(),
+                                                             myPad->GetUymin(),
+                                                             myPad->GetUxmax(),
+                                                             myPad->GetUymax(),
+                                                             RD53FWconstants::CDR2Freq(hist->GetYaxis()->GetBinLowEdge(1)),
+                                                             RD53FWconstants::CDR2Freq(hist->GetYaxis()->GetBinLowEdge(hist->GetYaxis()->GetNbins())),
+                                                             510,
+                                                             "+L"));
+
+                                axes.back()->SetTitle("Frequency (MHz)");
+                                axes.back()->SetTitleOffset(1.4);
+                                axes.back()->SetTitleSize(0.035);
+                                axes.back()->SetTitleFont(40);
+                                axes.back()->SetLabelOffset(0.01);
+                                axes.back()->SetLabelSize(0.035);
+                                axes.back()->SetLabelFont(42);
+                                axes.back()->SetLabelColor(kRed);
+                                axes.back()->SetLineColor(kRed);
+                                axes.back()->Draw();
+
                                 axes.emplace_back(new TGaxis(myPad->GetUxmin(),
                                                              myPad->GetUymax(),
                                                              myPad->GetUxmax(),
                                                              myPad->GetUymax(),
-                                                             RD53FWconstants::CDR2Freq(hist->GetXaxis()->GetBinLowEdge(1)),
-                                                             RD53FWconstants::CDR2Freq(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins())),
+                                                             RD53FWconstants::VDDD2Volt(hist->GetXaxis()->GetBinLowEdge(1)),
+                                                             RD53FWconstants::VDDD2Volt(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins())),
                                                              510,
                                                              "-"));
+                            }
 
                             axes.back()->SetTitle(additionalAxisTitle);
                             axes.back()->SetTitleOffset(1.2);
@@ -193,13 +212,12 @@ class DQMHistogramBase
                     }
     }
 
-    template<typename T>
+    template <typename T>
     T findValueInSettings(const Ph2_System::SettingsMap& settingsMap, const std::string name, T defaultValue = T()) const
     {
         auto setting = settingsMap.find(name);
         return (setting != std::end(settingsMap) ? boost::any_cast<T>(setting->second) : defaultValue);
     }
-
 };
 
 #endif

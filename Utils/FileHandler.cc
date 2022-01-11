@@ -89,6 +89,7 @@ bool FileHandler::openFile()
             {
                 std::vector<uint32_t> cHeaderVec = fHeader.encodeHeader();
                 fBinaryFile.write((char*)&cHeaderVec.at(0), cHeaderVec.size() * sizeof(uint32_t));
+                LOG(INFO) << GREEN << "Valid file Header provided, writing file with it ... expect " << cHeaderVec.size() * sizeof(uint32_t) << " 32-bit words" << RESET;
                 fHeaderPresent = true;
             }
         }

@@ -24,44 +24,52 @@ Alternatively, instead of the `dd` command above, to only copy the needed bytes 
 imageName=sdgoldenimage.img
 dd if=$imageName bs=512 iflag=count_bytes of=somefile_or_device count=$(ls -s --block-size=1 $imageName | awk '{print $1}')
 ```
+
+If you installed the command `pv` (`sudo yum install -y pv`), then the best way is the following (replacing `/dev/mmcblk0` with your target device):
+```bash
+pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
+```
 <hr>
 
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 10/05/2021
++ Last change made to this section: 30/08/2021
 ```
 
 **Suggested software and firmware versions:**
-- Software git branch / tag : `Dev` / `v4-01`
-- Firmware tag: `4.1`
-- Mattermost forum: `cms-it-daq` (https://mattermost.web.cern.ch/cms-it-daq/)
+- Software git branch / tag : `Dev` / `v4-02`
+- Firmware tag: `4.2`
+
+**Important webpages:**
+- Mattermost forum: [`cms-it-daq`](https://mattermost.web.cern.ch/cms-it-daq/)
+- DAQ web page: https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/
 
 **FC7 setup:**
 1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of the ethernet card of your PC to which the FC7 is connected to)
 2. In `/etc/ethers` put `mac_address fc7.board.1` and in `/etc/hosts` put `192.168.1.80 fc7.board.1`
 3. Restart the network: `sudo /etc/init.d/network restart`
-4. Install the rarpd daemon (version for CENTOS6 should work just fine even for CENTOS7): `sudo yum install rarp_file_name.rpm` from https://archives.fedoraproject.org/pub/archive/epel/6/x86_64/Packages/r/rarpd-ss981107-42.el6.x86_64.rpm
+4. Install the rarpd daemon (version for CENTOS6 should work just fine even for CENTOS7): `sudo yum install rarp_file_name.rpm` from [here](https://archives.fedoraproject.org/pub/archive/epel/6/x86_64/Packages/r/rarpd-ss981107-42.el6.x86_64.rpm)
 5. Start the rarpd daemon: `sudo systemctl start rarpd` or `sudo rarp -e -A` (to start rarpd automatically after bootstrap: `sudo systemctl enable rarpd`)
 
-More details on the hardware needed to setup the system can be bound here: https://espace.cern.ch/Tracker-Upgrade/DAQ/SitePages/Home.aspx
+More details on the hardware needed to setup the system can be found [here](https://indico.cern.ch/event/1014295/contributions/4257334/attachments/2200045/3728440/Low-resoution%202021_02%20DAQ%20School.pdf)
 
 **Firmware setup:**
 1. Check whether the DIP switches on FC7 board are setup for the use of a microSD card (`out-in-in-in-out-in-in-in`)
 2. Insert a microSD card in the PC and run `/sbin/fdisk -l` to understand to which dev it's attached to (`/dev/sd_card_name`)
 3. Upload a golden firmware* on the microSD card (read FC7 manual or run `dd if=sdgoldenimage.img of=/dev/sd_card_name bs=512`)
-4. Download the proper IT firmware version from https://gitlab.cern.ch/cmstkph2-IT/d19c-firmware/-/releases
+4. Download the proper IT firmware version from [here](https://gitlab.cern.ch/cmstkph2-IT/d19c-firmware/-/releases)
 5. Plug the microSD card in the FC7
 6. From Ph2_ACF use the command `fpgaconfig` to upload the proper IT firmware (see instructions: `IT-DAQ setup and run` before running this command)
 
 *A golden firmware is any stable firmware either from IT or OT, and it's needed just to initialize the IPbus communication at bootstrap (in order to create and image of the microSD card you can use the command: `dd if=/dev/sd_card_name conv=sync,noerror bs=128K | gzip -c > sdgoldenimage.img.gz`) <br />
-A golden firmware can be downloaded from here: https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/Downloads/sdgoldenimage.img <br />
-A detailed manual about the firmware can be found here: https://gitlab.cern.ch/cmstkph2-IT/d19c-firmware/blob/master/doc/IT-uDTC_fw_manual_v1.0.pdf
+A golden firmware can be downloaded from the [cms-tracker-daq webpage](https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/Downloads/sdgoldenimage.img) <br />
+A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/cmstkph2-IT/d19c-firmware/blob/master/doc/IT-uDTC_fw_manual_v1.0.pdf)
 
 **IT-DAQ setup and run:**
 1. `sudo yum install pugixml-devel` (if necesary run `sudo yum install epel-release` before point 1.)
 2. Install: `boost` by running `sudo yum install boost-devel`, `CERN ROOT` from https://root.cern.ch, and `IPbus` from http://ipbus.web.cern.ch/ipbus (either using `sudo yum` or from source)
-3. Checkout the DAQ code from git: `git clone --recursive https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git`
+3. Checkout the DAQ code from git: `git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git`
 4. `cd Ph2_ACF; source setup.sh; mkdir myBuild; cd myBuild; cmake ..; make -j4; cd ..`
 5. `mkdir choose_a_name`
 6. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
@@ -189,13 +197,15 @@ fi
 ### Setup
 
 Firmware for the FC7 can be found in /firmware. Since the "old" FMC flavour is deprecated, only new FMCs (both connectors on the same side) are supported.
-You'll need Xilinx Vivado and a Xilinx Platform Cable USB II (http://uk.farnell.com/xilinx/hw-usb-ii-g/platform-cable-configuration-prog/dp/1649384)
+You'll need Xilinx Vivado and a Xilinx Platform Cable USB II (http://uk.farnell.com/xilinx/hw-usb-ii-g/platform-cable-configuration-prog/dp/1649384).
 For more information on the firmware, please check the doc directory of https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware
 
 
 ### Gitlab CI setup for Developers (required to submit merge requests!!!)
 
-1. Add predefined variables
+1. Make sure you are subscribed to the cms-tracker-phase2-DAQ e-group
+
+2. Add predefined variables
 
     i. from your fork go to `Ph2_ACF > settings > CI/CD`
 
@@ -211,7 +221,7 @@ For more information on the firmware, please check the doc directory of https://
         - add key: USER_PASS and value: <your CERN password encoded to base64>
           e.g encode "thisword": printf "thisword" | base64
 
-2. Enable shared Runners (if not enabled)
+3. Enable shared Runners (if not enabled)
 
     i. from `settings > CI/CD` expand the `Runners` section
 
@@ -254,6 +264,7 @@ sudo yum install -y git-extras
 
         $> yum install centos-release-scl
         $> yum install llvm-toolset-7.0
+        $> scl enable devtoolset-7 bash
 
 2. if you already sourced the environment, you should be able to run the command to format the Ph2_ACF (to be done before each merge request!!!):
 
@@ -342,7 +353,7 @@ Follow these instructions to install and compile the libraries:
 
 1. Clone the GitHub repo and run cmake
   
-        $> git clone --recursive https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git 
+        $> git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git 
         $> cd Ph2_ACF
         $> source setup.sh
         $> mkdir build 
@@ -595,5 +606,5 @@ This uses TCP protocol instead of UDP which accounts for packet loss but decreas
 For any support/suggestions, mail to fabio.raveraSPAMNOT@cern.ch, mauro.dinardoSPAMNOT@cern.ch
 
 
-### Firmware repository for OT tracker:
+### Firmware repository for OT tracker
 https://udtc-ot-firmware.web.cern.ch/

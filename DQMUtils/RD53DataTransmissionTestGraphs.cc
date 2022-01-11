@@ -12,7 +12,7 @@
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
-void DataTransmissionTestGraphs::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
+void DataTransmissionTestGraphs::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
@@ -25,7 +25,7 @@ void DataTransmissionTestGraphs::book(TFile* theOutputFile, const DetectorContai
 
     auto gTAP0scan = CanvasContainer<TGraphAsymmErrors>(11);
     bookImplementer(theOutputFile, theDetectorStructure, TAP0scan, gTAP0scan, "TAP0", "Bit Error Rate");
-    auto hTAP0tgt  = CanvasContainer<TH1F>("TAP0tgt", "TAP0 at target BER", 1024, 0-0.5, 1024-0.5);
+    auto hTAP0tgt = CanvasContainer<TH1F>("TAP0tgt", "TAP0 at target BER", 1024, 0 - 0.5, 1024 - 0.5);
     bookImplementer(theOutputFile, theDetectorStructure, TAP0tgt, hTAP0tgt, "TAP0 at target BER", "Value");
 }
 
@@ -60,16 +60,21 @@ void DataTransmissionTestGraphs::fillTAP0scan(const DetectorDataContainer& TAP0s
                 for(const auto cChip: *cHybrid)
                 {
                     if(cChip->getSummaryContainer<std::array<std::tuple<uint16_t, double, double, double>, 11>>() == nullptr) continue;
-                    auto *TAP0scanGraph = TAP0scan.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TGraphAsymmErrors>>().fTheHistogram;
+                    auto* TAP0scanGraph =
+                        TAP0scan.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TGraphAsymmErrors>>().fTheHistogram;
 
                     for(auto i = 0u; i < 11u; i++) // set bin errors manually
                     {
-			TAP0scanGraph->SetPoint(i, ((double)(std::get<0>((cChip->getSummary<std::array<std::tuple<uint16_t, double, double, double>, 11>>())[i]))),
-					        std::get<1>((cChip->getSummary<std::array<std::tuple<uint16_t, double, double, double>, 11>>())[i]));
-			TAP0scanGraph->SetPointError(i, 0.5, 0.5, std::get<2>((cChip->getSummary<std::array<std::tuple<uint16_t, double, double, double>, 11>>())[i]),
-					             std::get<3>((cChip->getSummary<std::array<std::tuple<uint16_t, double, double, double>, 11>>())[i]));
+                        TAP0scanGraph->SetPoint(i,
+                                                ((double)(std::get<0>((cChip->getSummary<std::array<std::tuple<uint16_t, double, double, double>, 11>>())[i]))),
+                                                std::get<1>((cChip->getSummary<std::array<std::tuple<uint16_t, double, double, double>, 11>>())[i]));
+                        TAP0scanGraph->SetPointError(i,
+                                                     0.5,
+                                                     0.5,
+                                                     std::get<2>((cChip->getSummary<std::array<std::tuple<uint16_t, double, double, double>, 11>>())[i]),
+                                                     std::get<3>((cChip->getSummary<std::array<std::tuple<uint16_t, double, double, double>, 11>>())[i]));
                     }
-		    TAP0scanGraph->SetMarkerStyle(8);
+                    TAP0scanGraph->SetMarkerStyle(8);
                 }
     }
 }
@@ -83,7 +88,8 @@ void DataTransmissionTestGraphs::fillTAP0tgt(const DetectorDataContainer& TAP0tg
                 {
                     if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
 
-                    auto* TAP0tgtHist = TAP0tgt.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* TAP0tgtHist =
+                        TAP0tgt.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
                     TAP0tgtHist->SetBinContent(TAP0tgtHist->GetBin(cChip->getSummary<uint16_t>()), 1);
                     TAP0tgtHist->SetBinError(TAP0tgtHist->GetBin(cChip->getSummary<uint16_t>()), 0);

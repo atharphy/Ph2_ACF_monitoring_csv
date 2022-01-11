@@ -5,6 +5,7 @@
 #include "../HWDescription/Hybrid.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/ChipInterface.h"
+#include "../MonitorDQM/MonitorDQMInterface.h"
 #include "../Utils/MiddlewareInterface.h"
 #include "../Utils/argvparser.h"
 
@@ -113,6 +114,9 @@ int main(int argc, char* argv[])
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
 
+    cmd.defineOption("port", "Port shift for TCP servers 0", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
+    cmd.defineOptionAlternative("port", "p");
+
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -191,6 +195,7 @@ int main(int argc, char* argv[])
         RUNNING,
         STOPPED
     };
+
     int                 stateMachineStatus = INITIAL;
     MiddlewareInterface theMiddlewareInterface("127.0.0.1", 5000);
     theMiddlewareInterface.initialize();
@@ -205,7 +210,8 @@ int main(int argc, char* argv[])
     if(batchMode) tAppArgc = 2;
     TApplication theApp("App", &tAppArgc, tAppArgv);
 
-    DQMInterface theDQMInterface;
+    DQMInterface        theDQMInterface;
+    MonitorDQMInterface theMonitorDQMInterface;
 
     stateMachineStatus = HALTED;
 
@@ -227,7 +233,7 @@ int main(int argc, char* argv[])
     {
         if(runControllerPidStatus == 0 && (runControllerPidStatus = waitpid(runControllerPid, &runControllerStatus, WNOHANG)) != 0)
         {
-            std::cout << __PRETTY_FUNCTION__ << "1Run Controller status: " << runControllerStatus << std::endl;
+            std::cout << __PRETTY_FUNCTION__ << " Run Controller status: " << runControllerStatus << std::endl;
             if(!checkExitStatus(runControllerStatus, "RunController")) exit(EXIT_FAILURE);
         }
         //		if(dqmControllerPidStatus == 0 && (dqmControllerPidStatus = waitpid(dqmControllerPid,
@@ -247,54 +253,86 @@ int main(int argc, char* argv[])
         //    	}
         else
         {
-            std::cout << __PRETTY_FUNCTION__ << "Supervisor Run Controller status: " << runControllerStatus << std::endl;
-            switch(stateMachineStatus)
+            try
             {
-            case HALTED:
-            {
-                std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Configure!!!" << std::endl;
-                theMiddlewareInterface.configure(cmd.optionValue("calibration"), cmd.optionValue("file"));
-                // std::string configurationFile = baseDir + cmd.optionValue("file");
-                std::string configurationFile = cmd.optionValue("file");
-                std::string calibrationName   = cmd.optionValue("calibration");
-                theDQMInterface.configure(calibrationName, configurationFile);
-                stateMachineStatus = CONFIGURED;
-                break;
+                std::cout << __PRETTY_FUNCTION__ << "Supervisor Run Controller status: " << runControllerStatus << std::endl;
+                switch(stateMachineStatus)
+                {
+                case HALTED:
+                {
+                    std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Configure!!!" << std::endl;
+                    std::string calibrationName   = cmd.optionValue("calibration");
+                    std::string configurationFile = cmd.optionValue("file");
+                    theMiddlewareInterface.configure(calibrationName, configurationFile);
+                    theDQMInterface.configure(calibrationName, configurationFile);
+                    theMonitorDQMInterface.configure(configurationFile);
+                    stateMachineStatus = CONFIGURED;
+                    break;
+                }
+                case CONFIGURED:
+                {
+                    std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Start!!!" << std::endl;
+                    std::string runNumber = "5";
+                    std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+                    theDQMInterface.startProcessingData(runNumber);
+                    std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+                    theMonitorDQMInterface.startProcessingData();
+                    std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+                    theMiddlewareInterface.start(runNumber);
+                    std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+                    stateMachineStatus = RUNNING;
+                    std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+                    break;
+                }
+                case RUNNING:
+                {
+                    std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+                    if(cmd.optionValue("calibration") != "psphysics" && cmd.optionValue("calibration") != "2sphysics")
+                    {
+                        std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+                        theMiddlewareInterface.status();
+                        std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+                        while(theMiddlewareInterface.status() != "Done")
+                        {
+                            std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+                            usleep(5e5);
+                        }
+                    }
+                    else
+                        usleep(20e6);
+                    std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Stop!!!" << std::endl;
+                    usleep(2e6);
+                    theMiddlewareInterface.stop();
+                    usleep(1e6);
+                    stateMachineStatus = STOPPED;
+                    break;
+                }
+                case STOPPED:
+                {
+                    theDQMInterface.stopProcessingData();
+                    usleep(5e6);
+                    theMiddlewareInterface.halt();
+                    std::cout << __PRETTY_FUNCTION__ << "Supervisor Everything Stopped!!! Exiting..." << std::endl;
+                    done = true;
+                    break;
+                }
+                }
             }
-            case CONFIGURED:
+            catch(const std::exception& e)
             {
-                std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Start!!!" << std::endl;
-                std::string runNumber = "5";
-                theDQMInterface.startProcessingData(runNumber);
-                theMiddlewareInterface.start(runNumber);
-                stateMachineStatus = RUNNING;
-                break;
-            }
-            case RUNNING:
-            {
-                while(theMiddlewareInterface.status() != "Done") usleep(5e5);
-                std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Stop!!!" << std::endl;
-                usleep(2e6);
-                theMiddlewareInterface.stop();
-                usleep(1e6);
-                theDQMInterface.stopProcessingData();
-                stateMachineStatus = STOPPED;
-                break;
-            }
-            case STOPPED:
-            {
-                std::cout << __PRETTY_FUNCTION__ << "Supervisor Everything Stoped!!! Exiting..." << std::endl;
-                done = true;
-                break;
-            }
-            }
-            if(!done)
-            {
-                std::cout << __PRETTY_FUNCTION__ << "Supervisor SLEEPING!!!" << std::endl;
-                usleep(1000000);
+                std::cerr << e.what() << '\n';
+                kill(runControllerPid, SIGKILL);
+                return EXIT_FAILURE;
             }
         }
+        if(!done)
+        {
+            std::cout << __PRETTY_FUNCTION__ << "Supervisor SLEEPING!!!" << std::endl;
+            usleep(1000000);
+        }
     }
+
+    theMonitorDQMInterface.stopProcessingData();
 
     std::cout << __PRETTY_FUNCTION__ << "Out of supervisor state machine!. Run Controller status: " << runControllerStatus << std::endl;
     checkExitStatus(runControllerStatus, "RunController");

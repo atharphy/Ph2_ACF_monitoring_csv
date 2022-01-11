@@ -24,6 +24,7 @@
 #define NCHANNELS 254
 #define NSSACHANNELS 120
 #define NMPACHANNELS 1920
+#define NMPACOLS 16
 
 // Events
 
@@ -131,10 +132,22 @@
 #define OFFSET_CBCSTUBDATA_CBC3 264 + 23 // LAST BIT
 #define WIDTH_CBCSTUBDATA 12
 
+// number of bend codes
+#define BENDBINS 30
 // Latency Scan
-#define TDCBINS 10
+#define TDCBINS 8
 #define VECSIZE 1000
 //------------------------------------------------------------------------------
+
+// OT Physics parameters
+#define MAX_NUMBER_OF_STRIP_CLUSTERS 5
+#define MAX_NUMBER_OF_PIXEL_CLUSTERS 5
+#define MAX_NUMBER_OF_STUB_CLUSTERS_PS 5
+#define MAX_NUMBER_OF_STUB_CLUSTERS_2S 3
+
+// LpGBT convertion factors
+#define VREF_LPGBT 1.0
+#define CONVERSION_FACTOR (VREF_LPGBT / 1024.)
 
 enum class BoardType
 {
@@ -147,10 +160,16 @@ enum class FrontEndType
     HYBRID,
     CBC3,
     MPA,
+    MPA2,
     SSA,
+    SSA2,
     RD53,
     CIC,
-    CIC2
+    CIC2,
+    OuterTracker2S,
+    OuterTrackerPS,
+    InnerTrackerDouble,
+    InnerTrackerQuad
 };
 enum class SLinkDebugMode
 {
@@ -164,8 +183,15 @@ enum class EventType
     VR    = 2,
     SSA   = 3,
     MPA   = 4,
-    SSAAS = 5,
-    MPAAS = 6
+    SCAS  = 5,
+    SSA2  = 6,
+    SSAAS = 7,
+    MPAAS = 8,
+    PSAS  = 9,
+    VR2S  = 10
 };
+
+// Monitoring parameters
+#define MAX_LENGHT_PARAMETER_STRING 50
 
 #endif

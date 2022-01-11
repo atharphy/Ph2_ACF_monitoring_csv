@@ -7,6 +7,8 @@
 
     # Includes
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+    include_directories(${PROJECT_SOURCE_DIR}/Utils)
+    include_directories(${PROJECT_SOURCE_DIR})
     include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
     include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
     include_directories(${UHAL_LOG_INCLUDE_PREFIX})
@@ -24,6 +26,12 @@
     add_library(Ph2_Utils STATIC ${SOURCES} ${HEADERS})
     set(LIBS ${LIBS} pugixml boost_thread boost_date_time boost_iostreams boost_filesystem rt)
     TARGET_LINK_LIBRARIES(Ph2_Utils ${LIBS})
+
+    # Find root and link against it
+    if(${ROOT_FOUND})
+        include_directories(${ROOT_INCLUDE_DIRS})
+        set(LIBS ${LIBS} ${ROOT_LIBRARIES})
+    endif()
 
     # Check for ZMQ installed
     if(ZMQ_FOUND)
@@ -55,7 +63,6 @@
     message("--     ${BoldCyan}#### End ####${Reset}")
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS " ")
     MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/Utils/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
@@ -68,9 +75,13 @@ else()
     MESSAGE(STATUS " ")
 
     #include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/uhal/include)
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/log/include)
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
+    include_directories($ENV{PH2ACF_BASE_DIR}/Utils)
+    include_directories($ENV{PH2ACF_BASE_DIR}/Utils/../)
+    include_directories($ENV{PH2ACF_BASE_DIR})
 
     cet_set_compiler_flags(
      EXTRA_FLAGS -Wno-reorder -Wl,--undefined

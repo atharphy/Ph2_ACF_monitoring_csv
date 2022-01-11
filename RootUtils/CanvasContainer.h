@@ -27,7 +27,7 @@ struct sfinae_true_CanvasContainer : std::true_type
 };
 
 template <typename T>
-static auto test_SetDirectory(int ) -> sfinae_true_CanvasContainer<decltype(std::declval<T>().SetDirectory())>;
+static auto test_SetDirectory(int) -> sfinae_true_CanvasContainer<decltype(std::declval<T>().SetDirectory(0))>;
 template <typename>
 static auto test_SetDirectory(long) -> std::false_type;
 } // namespace user_detail
@@ -42,20 +42,14 @@ struct has_SetDirectory : decltype(user_detail::test_SetDirectory<T>(0))
 template <typename T, bool hasSetDirectory = false>
 struct CallSetDirectory
 {
-    void operator()(T* thePlot)
-    {
-        return;
-    }
+    void operator()(T* thePlot) { return; }
 };
 
 // Functor for SetDirectory - case when SetDirectory is defined
 template <typename T>
 struct CallSetDirectory<T, true>
 {
-    void operator()(T* thePlot)
-    {
-        thePlot.SetDirectory(0);
-    }
+    void operator()(T* thePlot) { thePlot->SetDirectory(0); }
 };
 
 template <class Hist>

@@ -51,10 +51,15 @@ export PH2ACF_BASE_DIR=$(pwd)
 ####################
 # External Plugins #
 ####################
+export EXTERNAL_TOOLS_BASE_DIR=${PH2ACF_BASE_DIR%/*}
+# if in the docker container I want to do this .. need to figure out how to make sure that this 
+# is set-up correctly 
+#export EXTERNAL_TOOLS_BASE_DIR=/home/cmsTkUser 
 export AMC13DIR=$CACTUSINCLUDE/amc13
-export ANTENNADIR=$PH2ACF_BASE_DIR/../CMSPh2_AntennaDriver
-export USBINSTDIR=$PH2ACF_BASE_DIR/../Ph2_USBInstDriver
-export EUDAQDIR=$PH2ACF_BASE_DIR/../eudaq
+export ANTENNADIR=$EXTERNAL_TOOLS_BASE_DIR/CMSPh2_AntennaDriver
+export USBINSTDIR=$EXTERNAL_TOOLS_BASE_DIR/Ph2_USBInstDriver
+export EUDAQDIR=$EXTERNAL_TOOLS_BASE_DIR/eudaq
+export POWERSUPPLYDIR=$EXTERNAL_TOOLS_BASE_DIR/power_supply
 
 ###########
 # ANTENNA #
@@ -74,7 +79,7 @@ export EUDAQLIB=$EUDAQDIR/lib
 ##########
 # System #
 ##########
-export PATH=$PH2ACF_BASE_DIR/bin:$PATH
+export PATH=$PH2ACF_BASE_DIR/bin:$PH2ACF_BASE_DIR/ProductionTools/LDACLINCalibration:$PATH
 export LD_LIBRARY_PATH=$USBINSTLIB:$ANTENNALIB:$PH2ACF_BASE_DIR/RootWeb/lib:$CACTUSLIB:$PH2ACF_BASE_DIR/lib:$EUDAQLIB:/opt/rh/llvm-toolset-7.0/root/usr/lib64:$LD_LIBRARY_PATH
 
 #########
@@ -87,6 +92,7 @@ export Amc13Flag='-D__AMC13__'
 export TCUSBFlag='-D__TCUSB__'
 export TCUSBforROHFlag='-D__ROH_USB__'
 export TCUSBforSEHFlag='-D__SEH_USB__'
+export TCUSBTcpServerFlag='-D__TCP_SERVER__'
 export AntennaFlag='-D__ANTENNA__'
 export UseRootFlag='-D__USE_ROOT__'
 export MultiplexingFlag='-D__MULTIPLEXING__'
@@ -118,6 +124,7 @@ export CompileWithEUDAQ=false
 # Compile with TC_USB library
 export CompileWithTCUSB=false
 export UseTCUSBforROH=false
+export UseTCUSBTcpServer=false
 
 # Clang-format command
 if command -v clang-format &> /dev/null; then

@@ -82,9 +82,6 @@ class Tool : public Ph2_System::SystemController
      * \param cValue: Value of the measurement to be stored
      */
     void fillSummaryTree(TString cParameter, Double_t cValue);
-
-    TString getDirectoryName();
-
     void bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObject);
     void bookHistogram(HybridContainer* pHybrid, std::string pName, TObject* pObject);
     void bookHistogram(BoardContainer* pBeBoard, std::string pName, TObject* pObject);
@@ -101,7 +98,7 @@ class Tool : public Ph2_System::SystemController
     virtual void Running(){};
     virtual bool GetRunningStatus();
 
-    void Configure(std::string cHWFile, bool enableStream = false) override;
+    void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000) override;
     void Start(int runNumber) override;
     void Stop() override;
 
@@ -113,7 +110,7 @@ class Tool : public Ph2_System::SystemController
      * \param pDirectoryname : the name of the directory to create
      * \param pDate : apend the current date and time to the directoryname
      */
-    void CreateResultDirectory(const std::string& pDirname, bool pMode = true, bool pDate = true);
+    void CreateResultDirectory(const std::string& pDirname, bool pMode = true, bool pDate = true, const std::string& whichCalib = "");
 
 /*!
  * \brief Initialize the result Root file
@@ -315,11 +312,54 @@ class Tool : public Ph2_System::SystemController
         return theContainerStreamer;
     }
 
+    std::string getDirectoryName() { return fDirectoryName; }
+
+    // summarize stats
+    // while removing NANs
+    struct StatsSum
+    {
+      public:
+        float fMean;
+        float fSum;
+        float fSqSum;
+        float fStdDev;
+        float fNentries;
+        float fMin;
+        float fMax;
+    };
+    template <typename T>
+    StatsSum SummarizeStats(std::vector<T> cData)
+    {
+        T cInitVal = (T)(0);
+        // remove NANs
+        cData.erase(std::remove_if(cData.begin(), cData.end(), [](T x) { return std::isnan(x); }), cData.end());
+        // calculate stats
+        StatsSum cStatsSum;
+        cStatsSum.fSum      = std::accumulate(cData.begin(), cData.end(), cInitVal);
+        cStatsSum.fMean     = cStatsSum.fSum / cData.size();
+        cStatsSum.fMax      = *(std::max_element(cData.begin(), cData.end()));
+        cStatsSum.fMin      = *(std::min_element(cData.begin(), cData.end()));
+        cStatsSum.fSqSum    = std::inner_product(cData.begin(), cData.end(), cData.begin(), 0.0);
+        cStatsSum.fStdDev   = std::sqrt(cStatsSum.fSqSum / cData.size() - cStatsSum.fMean * cStatsSum.fMean);
+        cStatsSum.fNentries = cData.size();
+        return cStatsSum;
+    }
+
+    bool    ifUseReadNEvents() { return fUseReadNEvents; }
+    int     getWait() { return fWait_ms; }
+    size_t  getNReadbackEvents() { return fNReadbackEvents; }
+    void    setNReadbackEvents(size_t pNEvents) { fNReadbackEvents = pNEvents; }
+    void    setNormalization(uint8_t pNorm) { fNormalize = pNorm; }
+    uint8_t getNormalization() { return fNormalize; }
+
   private:
     void doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase* scanFunctor);
 
   protected:
     DetectorDataContainer* fDetectorDataContainer{nullptr};
+
+    uint16_t getMaxNumberOfGroups();
+
 #ifdef __USE_ROOT__
     CanvasMap           fCanvasMap;
     ChipHistogramMap    fChipHistMap;
@@ -345,18 +385,20 @@ class Tool : public Ph2_System::SystemController
     THttpServer* fHttpServer;
 #endif
 
-    std::atomic<bool>    fKeepRunning;
-    int                  fRunNumber;
-    std::future<void>    fRunningFuture;
-    bool                 fSkipMaskedChannels;
-    bool                 fAllChan;
-    bool                 fMaskChannelsFromOtherGroups;
-    bool                 fTestPulse;
-    bool                 fDoBoardBroadcast;
-    bool                 fDoHybridBroadcast;
-    ChannelGroupHandler* fChannelGroupHandler;
-
-    std::string getCalibrationName();
+    std::atomic<bool> fKeepRunning;
+    int               fRunNumber;
+    std::future<void> fRunningFuture;
+    bool              fSkipMaskedChannels;
+    bool              fAllChan;
+    bool              fMaskChannelsFromOtherGroups;
+    bool              fTestPulse;
+    bool              fDoBoardBroadcast;
+    bool              fDoHybridBroadcast;
+    bool              fUseReadNEvents{1};
+    int               fWait_ms{100};
+    size_t            fNReadbackEvents{0};
+    uint8_t           fNormalize{1};
+    std::string       getCalibrationName();
 };
 
 #endif

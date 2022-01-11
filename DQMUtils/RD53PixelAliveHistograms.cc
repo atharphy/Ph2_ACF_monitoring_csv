@@ -12,7 +12,7 @@
 
 using namespace Ph2_HwDescription;
 
-void PixelAliveHistograms::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
+void PixelAliveHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
@@ -36,7 +36,7 @@ void PixelAliveHistograms::book(TFile* theOutputFile, const DetectorContainer& t
     auto hToT1D = CanvasContainer<TH1F>("ToT1D", "ToT Distribution", ToTsize, 0, ToTsize);
     bookImplementer(theOutputFile, theDetectorStructure, ToT1D, hToT1D, "ToT", "Entries");
 
-    auto hToT2D = CanvasContainer<TH2F>("ToT2D", "ToT Distribution", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+    auto hToT2D = CanvasContainer<TH2F>("ToT2D", "Integrated ToT Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ToT2D, hToT2D, "Columns", "Rows");
 
     auto hBCID = CanvasContainer<TH1F>("BCID", "BCID", BCIDsize, 1, BCIDsize + 1);
@@ -121,7 +121,10 @@ void PixelAliveHistograms::fill(const DetectorDataContainer& DataContainer)
                                 Occupancy2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
                                 ToT1DHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fPh);
                                 ToT2DHist->SetBinContent(col + 1, row + 1, ToT2DHist->GetBinContent(col + 1, row + 1) + cChip->getChannel<OccupancyAndPh>(row, col).fPh);
-                                ToT2DHist->SetBinError(col + 1, row + 1, ToT2DHist->GetBinContent(col + 1, row + 1) + cChip->getChannel<OccupancyAndPh>(row, col).fPhError);
+                                ToT2DHist->SetBinError(col + 1,
+                                                       row + 1,
+                                                       sqrt(ToT2DHist->GetBinError(col + 1, row + 1) * ToT2DHist->GetBinError(col + 1, row + 1) +
+                                                            cChip->getChannel<OccupancyAndPh>(row, col).fPhError * cChip->getChannel<OccupancyAndPh>(row, col).fPhError));
                             }
                             if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
                         }
@@ -142,7 +145,11 @@ void PixelAliveHistograms::fillBCID(const DetectorDataContainer& DataContainer)
                     auto* BCIDHist =
                         BCID.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-                    for(auto i = 0u; i < BCIDsize; i++) BCIDHist->SetBinContent((i == 0 ? BCIDHist->GetNbinsX() : i), cChip->getSummary<GenericDataArray<BCIDsize>>().data[i]);
+                    for(auto i = 0u; i < BCIDsize; i++)
+                    {
+                        auto bin = (i == 0 ? BCIDHist->GetNbinsX() : i);
+                        BCIDHist->SetBinContent(bin, BCIDHist->GetBinContent(bin) + cChip->getSummary<GenericDataArray<BCIDsize>>().data[i]);
+                    }
                 }
 }
 
@@ -164,7 +171,11 @@ void PixelAliveHistograms::fillTrgID(const DetectorDataContainer& DataContainer)
                                               ->getSummary<CanvasContainer<TH1F>>()
                                               .fTheHistogram;
 
-                    for(auto i = 0u; i < TrgIDsize; i++) TriggerIDHist->SetBinContent((i == 0 ? TriggerIDHist->GetNbinsX() : i), cChip->getSummary<GenericDataArray<TrgIDsize>>().data[i]);
+                    for(auto i = 0u; i < TrgIDsize; i++)
+                    {
+                        auto bin = (i == 0 ? TriggerIDHist->GetNbinsX() : i);
+                        TriggerIDHist->SetBinContent(bin, TriggerIDHist->GetBinContent(bin) + cChip->getSummary<GenericDataArray<TrgIDsize>>().data[i]);
+                    }
                 }
 }
 

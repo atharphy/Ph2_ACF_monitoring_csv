@@ -30,7 +30,7 @@ void DataTransmissionTest::ConfigureCalibration()
     // ############################################################
     // # Create directory for: raw data, config files, histograms #
     // ############################################################
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false);
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "DataTransmissionTest");
 }
 
 void DataTransmissionTest::Running()
@@ -47,12 +47,12 @@ void DataTransmissionTest::sendData()
     // Store (TAP0, BER, BERlowErr, BERupErr)
     auto theStreamTAP0scan = prepareChipContainerStreamer<EmptyContainer, std::array<std::tuple<uint16_t, double, double, double>, 11>>("DataTransmissionTestTAP0scan");
     // Store TAP0 value that has nearest BER to the target
-    auto theStreamTAP0tgt  = prepareChipContainerStreamer<EmptyContainer, uint16_t>("DataTransmissionTestTAP0target");
+    auto theStreamTAP0tgt = prepareChipContainerStreamer<EmptyContainer, uint16_t>("DataTransmissionTestTAP0target");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: theTAP0scanContainer)   theStreamTAP0scan.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theTAP0tgtContainer)    theStreamTAP0tgt.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theTAP0scanContainer) theStreamTAP0scan.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTAP0tgtContainer) theStreamTAP0tgt.streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 
@@ -67,7 +67,7 @@ void DataTransmissionTest::Stop()
     RD53RunProgress::reset();
 }
 
-void DataTransmissionTest::localConfigure(const std::string fileRes_, int currentRun)
+void DataTransmissionTest::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos = nullptr;
@@ -82,7 +82,7 @@ void DataTransmissionTest::localConfigure(const std::string fileRes_, int curren
     DataTransmissionTest::initializeFiles(fileRes_, currentRun);
 }
 
-void DataTransmissionTest::initializeFiles(const std::string fileRes_, int currentRun)
+void DataTransmissionTest::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 
@@ -144,44 +144,44 @@ void DataTransmissionTest::analyze(const DetectorDataContainer& theTAP0scanConta
                         auto currentTAP0 = std::get<0>((cChip->getSummary<std::array<std::tuple<uint16_t, double, double, double>, 11>>())[i]);
                         auto currentBER  = std::get<1>((cChip->getSummary<std::array<std::tuple<uint16_t, double, double, double>, 11>>())[i]);
                         if(currentBER > 0 && currentBER >= BERtarget &&
-                           (fabs(currentBER - BERtarget) < fabs(nearestBERup-BERtarget) || (fabs(currentBER - BERtarget) == fabs(nearestBERup-BERtarget) && currentTAP0 > nearestTAP0up)))
+                           (fabs(currentBER - BERtarget) < fabs(nearestBERup - BERtarget) || (fabs(currentBER - BERtarget) == fabs(nearestBERup - BERtarget) && currentTAP0 > nearestTAP0up)))
                         {
-	                    nearestBERup  = currentBER;
+                            nearestBERup  = currentBER;
                             nearestTAP0up = (double)currentTAP0;
                         }
                         else if(currentBER > 0 && currentBER < BERtarget &&
-                                (fabs(currentBER - BERtarget) < fabs(nearestBERlo-BERtarget) || (fabs(currentBER - BERtarget) == fabs(nearestBERlo-BERtarget) && currentTAP0 < nearestTAP0lo)))
+                                (fabs(currentBER - BERtarget) < fabs(nearestBERlo - BERtarget) || (fabs(currentBER - BERtarget) == fabs(nearestBERlo - BERtarget) && currentTAP0 < nearestTAP0lo)))
                         {
                             nearestBERlo  = currentBER;
                             nearestTAP0lo = (double)currentTAP0;
                         }
                     }
-		    
-		    // Saving the very nearest value
-		    auto nearestTAP0 = fabs(BERtarget-nearestBERup) < fabs(BERtarget-nearestBERlo) ? nearestTAP0up : nearestTAP0lo;
-		    
-		    LOG(INFO) << BOLDMAGENTA << ">>> TAP0 value at target (BER=" << std::setprecision(4) << std::scientific << BOLDYELLOW << BERtarget << BOLDMAGENTA
-                              << std::fixed << std::setprecision(0) << ") for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << nearestTAP0 << BOLDMAGENTA << " <<<" << RESET; 
-                    
-		    // Fill the container with TAP0 value at target BER
+
+                    // Saving the very nearest value
+                    auto nearestTAP0 = fabs(BERtarget - nearestBERup) < fabs(BERtarget - nearestBERlo) ? nearestTAP0up : nearestTAP0lo;
+
+                    LOG(INFO) << BOLDMAGENTA << ">>> TAP0 value at target (BER=" << std::setprecision(4) << std::scientific << BOLDYELLOW << BERtarget << BOLDMAGENTA << std::fixed
+                              << std::setprecision(0) << ") for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                              << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << nearestTAP0 << BOLDMAGENTA << " <<<" << RESET;
+
+                    // Fill the container with TAP0 value at target BER
                     theTAP0tgtContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = (uint16_t)nearestTAP0;
-		    
-		    // Fitting the last two points with exp(a-bx)
+
+                    // Fitting the last two points with exp(a-bx)
                     if(nearestBERup <= 1 && nearestBERlo < BERtarget)
-		    {
-                        double a = log(nearestBERup) + log(nearestBERup/nearestBERlo) * nearestTAP0up / (nearestTAP0lo-nearestTAP0up);
-                        double b = log(nearestBERup/nearestBERlo) / (nearestTAP0lo-nearestTAP0up);
-                        
-			LOG(INFO) << BOLDBLUE << "Exponential fit function between the two points around target (" << BOLDYELLOW
-				  << nearestTAP0up << BOLDBLUE << ", " << BOLDYELLOW << nearestTAP0lo << BOLDBLUE << "): BER = EXP(a-b*TAP0)" << RESET;
-		        LOG(INFO) << BOLDBLUE << std::scientific << std::setprecision(5) << "a = " << BOLDYELLOW << a << RESET;
-		        LOG(INFO) << BOLDBLUE << "b = " << BOLDYELLOW << b << RESET;
-			if (fabs(nearestTAP0lo-nearestTAP0up)>1)
-			    LOG(INFO) << BOLDYELLOW << "You might want to consider adjusting the BER target as the distance between nearest two points is >2 (likely due to fluctuations)" << RESET;
-		    }
-		    else
-			LOG(ERROR) << BOLDRED << "Could not find two closest points around the BER target that are proper to fit. BER target should be adjusted." << RESET;
+                    {
+                        double a = log(nearestBERup) + log(nearestBERup / nearestBERlo) * nearestTAP0up / (nearestTAP0lo - nearestTAP0up);
+                        double b = log(nearestBERup / nearestBERlo) / (nearestTAP0lo - nearestTAP0up);
+
+                        LOG(INFO) << BOLDBLUE << "Exponential fit function between the two points around target (" << BOLDYELLOW << nearestTAP0up << BOLDBLUE << ", " << BOLDYELLOW << nearestTAP0lo
+                                  << BOLDBLUE << "): BER = EXP(a-b*TAP0)" << RESET;
+                        LOG(INFO) << BOLDBLUE << std::scientific << std::setprecision(5) << "a = " << BOLDYELLOW << a << RESET;
+                        LOG(INFO) << BOLDBLUE << "b = " << BOLDYELLOW << b << RESET;
+                        if(fabs(nearestTAP0lo - nearestTAP0up) > 1)
+                            LOG(INFO) << BOLDYELLOW << "You might want to consider adjusting the BER target as the distance between nearest two points is >2 (likely due to fluctuations)" << RESET;
+                    }
+                    else
+                        LOG(ERROR) << BOLDRED << "Could not find two closest points around the BER target that are proper to fit. BER target should be adjusted." << RESET;
                 }
 }
 
@@ -195,9 +195,9 @@ void DataTransmissionTest::fillHisto()
 
 void DataTransmissionTest::binSearch(DetectorDataContainer* theTAP0scanContainer)
 {
-    uint16_t currentTAP0 = 1023; // start from highest TAP0
-    uint16_t step = 512;         // next point will be 512 units away
-    uint8_t timesRepeated = 0;   // to be used for dealing with errors
+    uint16_t currentTAP0   = 1023; // start from highest TAP0
+    uint16_t step          = 512;  // next point will be 512 units away
+    uint8_t  timesRepeated = 0;    // to be used for dealing with errors
 
     for(auto i = 0u; i < 11u; i++)
     {
@@ -209,29 +209,28 @@ void DataTransmissionTest::binSearch(DetectorDataContainer* theTAP0scanContainer
         BERtest::run();
 
         bool searchUp = 0; // to determine if next TAP0 point will be higher or lower
-        bool repeat = 0; // in case of an error
+        bool repeat   = 0; // in case of an error
 
         // Saving the data
         for(const auto cBoard: *theTAP0scanContainer)
         {
             // Finding the total number of frames
-            uint32_t frontendSpeed = static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
+            uint32_t       frontendSpeed   = static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
             const uint32_t nBitInClkPeriod = 32. / std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
             const double   fps             = 1.28e9 / nBitInClkPeriod;         // Frames per second
-            double nFrames = frames_or_time;
-            if(given_time)
-                nFrames = frames_or_time * fps;
-            
-	    for(const auto cOpticalGroup: *cBoard)
+            double         nFrames         = frames_or_time;
+            if(given_time) nFrames = frames_or_time * fps;
+
+            for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
                     {
-                        auto bitErrRate = BERtest::theBERtestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<double>();
-			auto bitErrCount = bitErrRate * nFrames;
+                        auto bitErrRate  = BERtest::theBERtestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<double>();
+                        auto bitErrCount = bitErrRate * nFrames;
 
-			if(bitErrRate < 0) // in case a measurement fails for some reason
+                        if(bitErrRate < 0) // in case a measurement fails for some reason
                             repeat = 1;
-                        else 
+                        else
                         {
                             // ######################################################### //
                             // From Ulrich and Xu:                                       //
@@ -244,29 +243,27 @@ void DataTransmissionTest::binSearch(DetectorDataContainer* theTAP0scanContainer
                             // 68% confidence is mean+-std                               //
                             // 68% confidence around mode is not necessarily symmetrical //
                             // ######################################################### //
-                            auto mean = (bitErrCount+1) / (nFrames+2);
-                            auto variance = ((bitErrCount+1)*(bitErrCount+2)) / ((nFrames+2)*(nFrames+3)) - ((bitErrCount+1)*(bitErrCount+1)) / ((nFrames+2)*(nFrames+3));
-                            auto std = sqrt(variance);
-                            auto errUp = mean - bitErrRate + std;
-                            auto errLo = bitErrRate - mean + std;
+                            auto mean     = (bitErrCount + 1) / (nFrames + 2);
+                            auto variance = ((bitErrCount + 1) * (bitErrCount + 2)) / ((nFrames + 2) * (nFrames + 3)) - ((bitErrCount + 1) * (bitErrCount + 1)) / ((nFrames + 2) * (nFrames + 3));
+                            auto std      = sqrt(variance);
+                            auto errUp    = mean - bitErrRate + std;
+                            auto errLo    = bitErrRate - mean + std;
                             if(bitErrRate == 0) errLo = 0;
-                            
-                            // Saving everything at once
-                            (cChip->getSummary<std::array<std::tuple<uint16_t, double, double, double>, 11>>())[i] =
-                                    std::make_tuple(currentTAP0, bitErrRate, errLo, errUp);
 
-			    // Deciding where the next point should be
-                            if(bitErrRate > BERtarget)
-                                searchUp = 1;
+                            // Saving everything at once
+                            (cChip->getSummary<std::array<std::tuple<uint16_t, double, double, double>, 11>>())[i] = std::make_tuple(currentTAP0, bitErrRate, errLo, errUp);
+
+                            // Deciding where the next point should be
+                            if(bitErrRate > BERtarget) searchUp = 1;
                         }
                     }
         }
 
         // Send periodic data to monitor the progress
         DataTransmissionTest::sendData();
-        
+
         // Repeat in case the measurement has failed (no more than twice)
-        if (repeat && timesRepeated < 3)
+        if(repeat && timesRepeated < 3)
         {
             i -= 1;
             timesRepeated += 1;

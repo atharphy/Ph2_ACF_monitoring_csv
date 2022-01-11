@@ -103,30 +103,40 @@ void RD53Event::addBoardInfo2Events(const BeBoard* pBoard, std::vector<RD53Event
         }
 }
 
-void RD53Event::fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup)
+void RD53Event::fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup)
 {
-    bool   vectorRequired = boardContainer->at(0)->at(0)->at(0)->isSummaryContainerType<Summary<GenericDataVector, OccupancyAndPh>>();
-    size_t chipIndx;
+    size_t chipIndx = 0; // Fabio: not sure if it is correct, but before was left uninitialized...
 
     for(const auto& cOpticalGroup: *boardContainer)
         for(const auto& cHybrid: *cOpticalGroup)
             for(const auto& cChip: *cHybrid)
                 if((eventStatus == RD53FWEvtEncoder::GOOD) && (RD53Event::isHittedChip(cHybrid->getId(), cChip->getId(), chipIndx) == true))
                 {
-                    if(vectorRequired == true)
-                    {
-                        cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.push_back(chip_frames_events[chipIndx].second.bc_id);
-                        cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.push_back(chip_frames_events[chipIndx].second.trigger_id);
-                    }
+                    // auto cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, cOpticalGroup->getId(), cHybrid->getId(), cChip->getId());
+                    // if(!cTestChannelGroup) continue;
 
-                    for(const auto& hit: chip_frames_events[chipIndx].second.hit_data)
-                    {
-                        cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).fOccupancy++;
-                        cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).fPh += static_cast<float>(hit.tot);
-                        cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).fPhError += static_cast<float>(hit.tot * hit.tot);
-                        if(cTestChannelGroup->isChannelEnabled(hit.row, hit.col) == false) cChip->getChannel<OccupancyAndPh>(hit.row, hit.col).readoutError = true;
-                    }
+                    fillChipDataContainer(cChip, testChannelGroup, cHybrid->getId());
                 }
+}
+
+void RD53Event::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId)
+{
+    bool vectorRequired = chipContainer->isSummaryContainerType<Summary<GenericDataVector, OccupancyAndPh>>();
+    size_t chipIndx = 0; // Fabio: not sure if it is correct, but before was left uninitialized...
+
+    if(vectorRequired == true)
+    {
+        chipContainer->getSummary<GenericDataVector, OccupancyAndPh>().data1.push_back(chip_frames_events[chipIndx].second.bc_id);
+        chipContainer->getSummary<GenericDataVector, OccupancyAndPh>().data2.push_back(chip_frames_events[chipIndx].second.trigger_id);
+    }
+
+    for(const auto& hit: chip_frames_events[chipIndx].second.hit_data)
+    {
+        chipContainer->getChannel<OccupancyAndPh>(hit.row, hit.col).fOccupancy++;
+        chipContainer->getChannel<OccupancyAndPh>(hit.row, hit.col).fPh += static_cast<float>(hit.tot);
+        chipContainer->getChannel<OccupancyAndPh>(hit.row, hit.col).fPhError += static_cast<float>(hit.tot * hit.tot);
+        if(testChannelGroup->isChannelEnabled(hit.row, hit.col) == false) chipContainer->getChannel<OccupancyAndPh>(hit.row, hit.col).readoutError = true;
+    }
 }
 
 bool RD53Event::isHittedChip(uint8_t hybrid_id, uint8_t chip_id, size_t& chipIndx) const
@@ -159,6 +169,26 @@ int RD53Event::lane2chipId(const BeBoard* pBoard, uint16_t optGroup_id, uint16_t
         }
     }
     return -1; // Chip not found
+}
+
+void RD53Event::clearEventContainer(BeBoard& theBoard, DetectorDataContainer& theContainer)
+{
+    for(const auto cOpticalGroup: *theContainer.at(theBoard.getIndex()))
+        for(const auto cHybrid: *cOpticalGroup)
+            for(const auto cChip: *cHybrid)
+            {
+                for(auto row = 0u; row < RD53::nRows; row++)
+                    for(auto col = 0u; col < RD53::nCols; col++)
+                    {
+                        cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy   = 0;
+                        cChip->getChannel<OccupancyAndPh>(row, col).fPh          = 0;
+                        cChip->getChannel<OccupancyAndPh>(row, col).fPhError     = 0;
+                        cChip->getChannel<OccupancyAndPh>(row, col).readoutError = false;
+                    }
+
+                cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.clear();
+                cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.clear();
+            }
 }
 
 // ##########################################
@@ -540,4 +570,114 @@ void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std:
     }
 }
 */
+
+void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Event>& events)
+{
+#ifdef __USE_ROOT__
+    TFile theFile(fileName.c_str(), "RECREATE");
+    TTree theTree("theTree", "Ntuple with event data");
+
+    uint32_t event, FW_block_size, FW_tlu_trigger_id, FW_data_format_ver, FW_tdc, FW_l1a_counter, FW_bx_counter, FW_nframes;
+    theTree.Branch("event", &event, "event/i");
+    theTree.Branch("FW_block_size", &FW_block_size, "FW_block_size/i");
+    theTree.Branch("FW_tlu_trigger_id", &FW_tlu_trigger_id, "FW_tlu_trigger_id/i");
+    theTree.Branch("FW_data_format_ver", &FW_data_format_ver, "FW_data_format_ver/i");
+    theTree.Branch("FW_tdc", &FW_tdc, "FW_tdc/i");
+    theTree.Branch("FW_l1a_counter", &FW_l1a_counter, "FW_l1a_counter/i");
+    theTree.Branch("FW_bx_counter", &FW_bx_counter, "FW_bx_counter/i");
+    theTree.Branch("FW_nframes", &FW_nframes, "FW_nframes/i");
+
+    std::vector<uint32_t> FW_frame_event_error_code;
+    std::vector<uint32_t> FW_frame_event_hybrid_id;
+    std::vector<uint32_t> FW_frame_event_chip_lane;
+    std::vector<uint32_t> FW_frame_event_l1a_data_size;
+    std::vector<uint32_t> FW_frame_event_chip_type;
+    std::vector<uint32_t> FW_frame_event_frame_delay;
+
+    std::vector<uint32_t> RD53_frame_event_trigger_id;
+    std::vector<uint32_t> RD53_frame_event_trigger_tag;
+    std::vector<uint32_t> RD53_frame_event_bc_id;
+    std::vector<uint32_t> RD53_frame_event_nhits;
+
+    theTree.Branch("FW_frame_event_error_code", &FW_frame_event_error_code);
+    theTree.Branch("FW_frame_event_hybrid_id", &FW_frame_event_hybrid_id);
+    theTree.Branch("FW_frame_event_chip_lane", &FW_frame_event_chip_lane);
+    theTree.Branch("FW_frame_event_l1a_data_size", &FW_frame_event_l1a_data_size);
+    theTree.Branch("FW_frame_event_chip_type", &FW_frame_event_chip_type);
+    theTree.Branch("FW_frame_event_frame_delay", &FW_frame_event_frame_delay);
+
+    theTree.Branch("RD53_frame_event_trigger_id", &RD53_frame_event_trigger_id);
+    theTree.Branch("RD53_frame_event_trigger_tag", &RD53_frame_event_trigger_tag);
+    theTree.Branch("RD53_frame_event_bc_id", &RD53_frame_event_bc_id);
+    theTree.Branch("RD53_frame_event_nhits", &RD53_frame_event_nhits);
+
+    std::vector<uint8_t> RD53_hit_row;
+    std::vector<uint8_t> RD53_hit_col;
+    std::vector<uint8_t> RD53_hit_tot;
+
+    theTree.Branch("RD53_hit_row", &RD53_hit_row);
+    theTree.Branch("RD53_hit_col", &RD53_hit_col);
+    theTree.Branch("RD53_hit_tot", &RD53_hit_tot);
+
+    for(auto i = 0u; i < events.size(); i++)
+    {
+        auto& evt = events[i];
+
+        event              = i;
+        FW_block_size      = evt.block_size;
+        FW_tlu_trigger_id  = evt.tlu_trigger_id;
+        FW_data_format_ver = evt.data_format_ver;
+        FW_tdc             = evt.tdc;
+        FW_l1a_counter     = evt.l1a_counter;
+        FW_bx_counter      = evt.bx_counter;
+        FW_nframes         = evt.chip_frames_events.size();
+
+        FW_frame_event_error_code.clear();
+        FW_frame_event_hybrid_id.clear();
+        FW_frame_event_chip_lane.clear();
+        FW_frame_event_l1a_data_size.clear();
+        FW_frame_event_chip_type.clear();
+        FW_frame_event_frame_delay.clear();
+
+        RD53_frame_event_trigger_id.clear();
+        RD53_frame_event_trigger_tag.clear();
+        RD53_frame_event_bc_id.clear();
+        RD53_frame_event_nhits.clear();
+
+        RD53_hit_row.clear();
+        RD53_hit_col.clear();
+        RD53_hit_tot.clear();
+
+        for(auto& frame_event: evt.chip_frames_events)
+        {
+            FW_frame_event_error_code.push_back(frame_event.first.error_code);
+            FW_frame_event_hybrid_id.push_back(frame_event.first.hybrid_id);
+            FW_frame_event_chip_lane.push_back(frame_event.first.chip_lane);
+            FW_frame_event_l1a_data_size.push_back(frame_event.first.l1a_data_size);
+            FW_frame_event_chip_type.push_back(frame_event.first.chip_type);
+            FW_frame_event_frame_delay.push_back(frame_event.first.frame_delay);
+
+            RD53_frame_event_trigger_id.push_back(frame_event.second.trigger_id);
+            RD53_frame_event_trigger_tag.push_back(frame_event.second.trigger_tag);
+            RD53_frame_event_bc_id.push_back(frame_event.second.bc_id);
+            RD53_frame_event_nhits.push_back(frame_event.second.hit_data.size());
+
+            for(const auto& hit: frame_event.second.hit_data)
+            {
+                RD53_hit_row.push_back(hit.row);
+                RD53_hit_col.push_back(hit.col);
+                RD53_hit_tot.push_back(hit.tot);
+            }
+        }
+
+        theTree.Fill();
+    }
+
+    theTree.Write();
+    theFile.Close();
+#else
+    LOG(WARNING) << BOLDBLUE << "[RD53Event::MakeNtuple] Function to translate raw data into ROOT ntuple was not compilded" << RESET;
+#endif
+}
+
 } // namespace Ph2_HwInterface

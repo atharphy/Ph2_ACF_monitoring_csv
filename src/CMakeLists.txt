@@ -14,6 +14,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/Utils)
     include_directories(${PROJECT_SOURCE_DIR}/System)
     include_directories(${PROJECT_SOURCE_DIR}/tools)
+    include_directories(${PROJECT_SOURCE_DIR}/ProductionTools)
     include_directories(${PROJECT_SOURCE_DIR})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -24,7 +25,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     link_directories(${PROJECT_SOURCE_DIR/lib})
 
     # Initial set of libraries
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_Tools Ph2_DQMUtils Ph2_RootUtils NetworkUtils)
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_Tools Ph2_RootUtils Ph2_DQMUtils Ph2_MonitorDQM Ph2_MonitorUtils Ph2_ProductionTools NetworkUtils)
 
     # Check for ZMQ installed
     if(ZMQ_FOUND)
@@ -59,6 +60,14 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{AntennaFlag}")
     endif()
 
+    # Check for PowerSupply
+    if(${PH2_POWERSUPPLY_FOUND})
+      include_directories(${PH2_POWERSUPPLY_INCLUDE_DIRS})
+      link_directories(${PH2_POWERSUPPLY_LIBRARY_DIRS})
+      #set(LIBS ${LIBS} ${PH2_POWERSUPPLY_LIBRARIES})
+      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{PowerSupplyFlag}")
+    endif()
+
     # Check for TestCard USBDriver
     if(${PH2_TCUSB_FOUND})
       include_directories(${PH2_TCUSB_INCLUDE_DIRS})
@@ -70,6 +79,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
       else($ENV{UseTCUSBforROH})
           set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
       endif($ENV{UseTCUSBforROH})
+      if($ENV{UseTCUSBTcpServer})
+          set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBTcpServerFlag}")
+      endif($ENV{UseTCUSBTcpServer})
     endif(${PH2_TCUSB_FOUND})
 
     #boost also needs to be linked
@@ -77,7 +89,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set(LIBS ${LIBS} ${Boost_LIBRARIES})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_date_time -lboost_iostreams")
     endif()
-
 
     # Find root and link against it
     if(${ROOT_FOUND})

@@ -17,13 +17,13 @@
 #include "../Utils/RD53Shared.h"
 #include "DQMHistogramBase.h"
 
-#include <TH1F.h>
 #include <TGraphAsymmErrors.h>
+#include <TH1F.h>
 
 class DataTransmissionTestGraphs : public DQMHistogramBase
 {
   public:
-    void book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap) override;
+    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap) override;
     void process() override;
     bool fill(std::vector<char>& dataBuffer) override;
     void reset() override{};

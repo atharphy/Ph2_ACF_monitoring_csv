@@ -74,15 +74,15 @@ void GenericDacDacScan::Running()
 
 void GenericDacDacScan::sendData()
 {
-    const size_t GenericDacDacScanSize = (RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1) * (RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
+    const size_t GenericDacDacScanSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
     auto theStream                  = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<GenericDacDacScanSize>>("Occ");
     auto theGenericDacDacScanStream = prepareChipContainerStreamer<EmptyContainer, std::pair<uint16_t, uint16_t>>("DACDAC");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: theOccContainer) theStream.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theGenericDacDacScanContainer) theGenericDacDacScanStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theOccContainer) theStream.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theGenericDacDacScanContainer) theGenericDacDacScanStream.streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 
@@ -98,7 +98,7 @@ void GenericDacDacScan::Stop()
     RD53RunProgress::reset();
 }
 
-void GenericDacDacScan::localConfigure(const std::string fileRes_, int currentRun)
+void GenericDacDacScan::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos = nullptr;
@@ -113,7 +113,7 @@ void GenericDacDacScan::localConfigure(const std::string fileRes_, int currentRu
     GenericDacDacScan::initializeFiles(fileRes_, currentRun);
 }
 
-void GenericDacDacScan::initializeFiles(const std::string fileRes_, int currentRun)
+void GenericDacDacScan::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 
@@ -131,7 +131,7 @@ void GenericDacDacScan::initializeFiles(const std::string fileRes_, int currentR
 
 void GenericDacDacScan::run()
 {
-    const size_t GenericDacDacScanSize = (RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1) * (RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
+    const size_t GenericDacDacScanSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
     ContainerFactory::copyAndInitChip<GenericDataArray<GenericDacDacScanSize>>(*fDetectorContainer, theOccContainer);
     GenericDacDacScan::scanDacDac(regNameDAC1, regNameDAC2, dac1List, dac2List, &theOccContainer);
@@ -167,7 +167,7 @@ void GenericDacDacScan::draw()
 
 void GenericDacDacScan::analyze()
 {
-    const size_t GenericDacDacScanSize = (RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1) * (RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
+    const size_t GenericDacDacScanSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
     ContainerFactory::copyAndInitChip<std::pair<uint16_t, uint16_t>>(*fDetectorContainer, theGenericDacDacScanContainer);
 
@@ -223,7 +223,7 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
                                    const std::vector<uint16_t>& dac2List,
                                    DetectorDataContainer*       theContainer)
 {
-    const size_t GenericDacDacScanSize = (RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1) * (RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
+    const size_t GenericDacDacScanSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
     for(auto i = 0u; i < dac1List.size(); i++)
     {
@@ -249,14 +249,13 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
             else
                 for(const auto cBoard: *fDetectorContainer)
                     static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])
-                        ->WriteArbitraryRegister(regNameDAC2, dac2List[i], cBoard, this->fReadoutChipInterface, (regNameDAC2.find("cdr") != std::string::npos ? true : false));
+                        ->WriteArbitraryRegister(regNameDAC2, dac2List[j], cBoard, this->fReadoutChipInterface, (regNameDAC2.find("cdr") != std::string::npos ? true : false));
 
             // ################
             // # Run analysis #
             // ################
             PixelAlive::run();
             auto output = PixelAlive::analyze();
-            output->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
 
             // ###############
             // # Save output #
@@ -276,7 +275,7 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
                         }
 
             // ##############################################
-            // # Send periodic data to minitor the progress #
+            // # Send periodic data to monitor the progress #
             // ##############################################
             GenericDacDacScan::sendData();
         }
