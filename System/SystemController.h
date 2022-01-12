@@ -80,7 +80,7 @@ class SystemController
   public:
     Ph2_HwInterface::BeBoardInterface*     fBeBoardInterface; //!< Interface to the BeBoard
     Ph2_HwInterface::ReadoutChipInterface* fReadoutChipInterface;
-    Ph2_HwInterface::ChipInterface*        fChipInterface;  //!< Interface to the Chip
+    //Ph2_HwInterface::ChipInterface*        fChipInterface;  //!< Interface to the Chip
     Ph2_HwInterface::lpGBTInterface*       flpGBTInterface; //!< Interface to the lpGBT
     Ph2_HwInterface::CicInterface*         fCicInterface;   //!< Interface to a CIC [only valid for OT]
     DetectorContainer*                     fDetectorContainer;
@@ -97,16 +97,6 @@ class SystemController
     TCPClient*                             fPowerSupplyClient{nullptr};
 #ifdef __TCP_SERVER__
     TCPClient* fTestcardClient{nullptr};
-#endif
-// TestCard interfaces - eventually piGBT can be added here as well
-// should also add the interfaces for the 2S + PS FEHs
-#ifdef __TCUSB__
-#ifdef __ROH_USB__
-    typedef Ph2_HwInterface::TCInterface<TC_PSROH> TestCardInterface;
-#elif __SEH_USB__
-    typedef Ph2_HwInterface::TCInterface<TC_2SSEH> TestCardInterface;
-#endif
-    TestCardInterface fTCInterface{};
 #endif
     /*!
      * \brief Constructor of the SystemController class

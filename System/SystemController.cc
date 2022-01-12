@@ -24,7 +24,7 @@ namespace Ph2_System
 SystemController::SystemController()
     : fBeBoardInterface(nullptr)
     , fReadoutChipInterface(nullptr)
-    , fChipInterface(nullptr)
+    //, fChipInterface(nullptr)
     , flpGBTInterface(nullptr)
     , fCicInterface(nullptr)
     , fDetectorContainer(nullptr)
@@ -47,7 +47,7 @@ void SystemController::Inherit(const SystemController* pController)
 {
     fBeBoardInterface             = pController->fBeBoardInterface;
     fReadoutChipInterface         = pController->fReadoutChipInterface;
-    fChipInterface                = pController->fChipInterface;
+    //fChipInterface                = pController->fChipInterface;
     flpGBTInterface               = pController->flpGBTInterface;
     fBeBoardFWMap                 = pController->fBeBoardFWMap;
     fSettingsMap                  = pController->fSettingsMap;
@@ -100,16 +100,17 @@ void SystemController::Destroy()
     fBeBoardInterface = nullptr;
     delete fReadoutChipInterface;
     fReadoutChipInterface = nullptr;
-    delete fChipInterface;
-    fChipInterface = nullptr;
+    //delete fChipInterface;
+    //fChipInterface = nullptr;
     delete flpGBTInterface;
     flpGBTInterface = nullptr;
+    
     delete fDetectorContainer;
     fDetectorContainer = nullptr;
 
     delete fCicInterface;
     fCicInterface = nullptr;
-
+    
     fBeBoardFWMap.clear();
     fSettingsMap.clear();
 
@@ -213,6 +214,14 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             LOG(INFO) << BOLDBLUE << "Initializing HwInterfaces for OT BeBoards.." << RESET;
             if(cFirstBoard->size() > 0) // # of optical groups connected to Board0
             {
+                // if TCUSB library is compiled then initialize TC interface 
+                // #ifdef __TCUSB__
+                //     #ifdef __ROH_USB__ 
+                //         fTCInterface = new TestCardInterface("ROH_USB");
+                //     #elif __SEH_USB__ 
+                //         fTCInterface = new TestCardInterface("SEH_USB");
+                //     #endif
+                // #endif
                 auto cFirstOpticalGroup = cFirstBoard->at(0);
                 LOG(INFO) << BOLDBLUE << "\t...Initializing HwInterfaces for OpticalGroups.." << +cFirstBoard->size() << " optical group(s) found ..." << RESET;
                 bool cWithLpGBT = (cFirstOpticalGroup->flpGBT != nullptr);
@@ -220,10 +229,8 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 {
                     LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for lpGBT" << RESET;
                     flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap, cFirstBoard->isOptical(), cFirstBoard->ifUseCPB());
-// link to external interface
-#ifdef __TCUSB__
-                    flpGBTInterface->LinkExternalInterface<TestCardInterface>(fTCInterface);
-#endif
+                    // check link to external interface
+                    if( flpGBTInterface->getExternalController() != nullptr )  LOG (INFO) << BOLDBLUE << "TC interface should be initialized... type is " << flpGBTInterface->getExternalController()->getName() << RESET;
                 }
 
                 LOG(INFO) << BOLDBLUE << "Found " << +cFirstOpticalGroup->size() << " hybrids in this group..." << RESET;
@@ -367,14 +374,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         }
     }
 
-// turn on the SEH here - moved from the lpGBT interface
-// I think it makes more sense to have it in the initialization step
-#ifdef __SEH_USB__
-    fTCInterface.getInterface().set_SehSupply(TC_2SSEH::sehSupplyState::sehSupply_On);
-    LOG(INFO) << BOLDRED << "Intitally switching on SEH for configuration" << RESET;
-// move this to the TC library .. I shouldn't have to wait here - you should wait for me
-// std::this_thread::sleep_for(std::chrono::milliseconds(100));
-#endif
 }
 
 void SystemController::InitializeSettings(const std::string& pFilename, std::ostream& os, bool pIsFile) { this->fParser.parseSettings(pFilename, fSettingsMap, os, pIsFile); }
@@ -506,6 +505,11 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
 void SystemController::InitializeOT(BeBoard* pBoard)
 {
     LOG(INFO) << BOLDMAGENTA << "Initializing OT hardware.." << RESET;
+    // turn on the SEH here - moved from the lpGBT interface
+    #ifdef __SEH_USB__
+        LOG(INFO) << BOLDRED << "Intitally switching on SEH for configuration" << RESET;
+        if( flpGBTInterface->getExternalController() != nullptr ) flpGBTInterface->getExternalController()->getInterface()->set_SehSupply(TC_2SSEH::sehSupplyState::sehSupply_On);
+    #endif
     for(auto cOpticalGroup: *pBoard)
     {
         if(cOpticalGroup->flpGBT == nullptr) continue;

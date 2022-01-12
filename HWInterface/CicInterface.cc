@@ -43,7 +43,9 @@ CicInterface::CicInterface(const BeBoardFWMap& pBoardMap) : ChipInterface(pBoard
     }
 }
 
-CicInterface::~CicInterface() {}
+CicInterface::~CicInterface() {
+    LOG (INFO) << BOLDRED << "Destructor CicInterface" << RESET;
+}
 
 bool CicInterface::runVerification(Ph2_HwDescription::Chip* pChip, uint8_t pValue, std::string pRegName)
 {

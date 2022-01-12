@@ -697,7 +697,7 @@ bool PSROHTester::TestResetLines(uint8_t pLevel)
     auto  cMapIterator = fResetLines.begin();
     do
     {
-        fTCInterface.getInterface().adc_get(cMapIterator->second, cMeasurement);
+        flpGBTInterface->getExternalController()->getInterface()->adc_get(cMapIterator->second, cMeasurement);
         float cDifference_mV = std::fabs((pLevel * 1200) - cMeasurement);
         cValid               = cValid && (cDifference_mV <= 100);
         if(cDifference_mV > 100)

@@ -27,7 +27,7 @@ CbcInterface::CbcInterface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterface
     resetPageMap();
 }
 
-CbcInterface::~CbcInterface() {}
+CbcInterface::~CbcInterface() { LOG (INFO) << BOLDRED << "Destructor CbcInterface" << RESET;}
 
 bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerifLoop, uint32_t pBlockSize)
 {

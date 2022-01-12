@@ -11,10 +11,6 @@
 #define D19clpGBTInterface_H
 
 #include "lpGBTInterface.h"
-#ifdef __TCUSB__
-#include "USB_a.h"
-#include "USB_libusb.h"
-#endif
 
 namespace Ph2_HwInterface
 {
@@ -23,6 +19,15 @@ class D19clpGBTInterface : public lpGBTInterface
   public:
     D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB)
     {
+        LOG (INFO) << BOLDRED << "Constructor D19clpGBTInterface" << RESET;
+        #ifdef __TCUSB__
+            #ifdef __ROH_USB__
+                fExternalController = new TestCardInterface("ROH_USB");
+            #elif __SEH_USB__
+                fExternalController = new TestCardInterface("SEH_USB");
+            #endif
+        #endif
+
         // configure during constructor now when configuring chip
         SetConfigMode(pUseOpticalLink, pUseCPB);
         // configure CPB - do this here rather than in SystemController? Not sure
@@ -37,7 +42,17 @@ class D19clpGBTInterface : public lpGBTInterface
         // configure FW for all boards
         for(auto cBoardMap: pBoardMap) { (cBoardMap.second)->ConfigureCPB(cCPBconfig); }
     }
-    ~D19clpGBTInterface() {}
+    ~D19clpGBTInterface() { 
+        LOG (INFO) << BOLDRED << "Destructor D19clpGBTInterface" << RESET;
+        #ifdef __TCUSB__
+            if( fExternalController != nullptr ) 
+            {
+                LOG (INFO) << BOLDRED << "Deleting pointer to external controller for D19clpGBTInterface" << RESET;
+                delete fExternalController;
+                fExternalController = nullptr;
+            }
+        #endif
+    }
 
     // ###################################
     // # LpGBT register access functions #
