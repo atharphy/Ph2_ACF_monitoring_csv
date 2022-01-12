@@ -27,7 +27,8 @@ class TCInterface
     TCInterface(){fPtr = new T();}
     TCInterface(const std::string pName){std::cout << "Constructor TCInterface<" <<pName << "> with string\n"; fPtr = new T(); fName=pName;}
     ~TCInterface() { std::cout << "Destructor TCInterface<" << fName << ">\n"; if( fPtr != nullptr ){ delete fPtr; fPtr = nullptr; } }
-    T* getInterface() const { return fPtr; }
+    //T* getInterface() const { return fPtr; }
+    T  getInterface() const { return *fPtr; }
     // user-defined copy assignment (copy-and-swap idiom)
     // T& operator=(const T original) { *fPtr = *original.fPtr; return *this; }
     // user defined assignment operator
