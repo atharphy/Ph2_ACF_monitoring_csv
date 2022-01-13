@@ -39,8 +39,8 @@ class ChipInterface
 {
   protected:
     std::recursive_mutex fMutex;
-    BeBoardFWMap         fBoardMap;            /*!< Map of Board connected */
-    BeBoardFWInterface*  fBoardFW;             /*!< Board loaded */
+    BeBoardFWMap         fBoardMap; /*!< Map of Board connected */
+    BeBoardFWInterface*  fBoardFW;  /*!< Board loaded */
     // #ifdef __TCUSB__
     //     #ifdef __ROH_USB__
     //         TCInterface<TC_PSROH>*   fExternalController;
@@ -48,11 +48,11 @@ class ChipInterface
     //         TCInterface<TC_2SSEH>*   fExternalController;
     //     #endif
     // #endif
-    uint16_t             fPrevBoardIdentifier; /*!< Id of the previous board */
+    uint16_t fPrevBoardIdentifier; /*!< Id of the previous board */
 
-    uint16_t fRegisterCount;     /*!< Counter for the number of Registers written */
-    uint16_t fTransactionCount;  /*!< Counter for the number of Transactions */
-    bool     fWithlpGBT = false; /*!< lpGBT is used for configuration */
+    uint16_t    fRegisterCount;     /*!< Counter for the number of Registers written */
+    uint16_t    fTransactionCount;  /*!< Counter for the number of Transactions */
+    bool        fWithlpGBT = false; /*!< lpGBT is used for configuration */
     std::string fName{"ChipInterface"};
 
     /*!
@@ -61,8 +61,9 @@ class ChipInterface
      */
     void setBoard(uint16_t pBoardIdentifier);
 
-    void setName(std::string pName){ fName=pName;}
-    std::string getName(){return fName;}
+    void        setName(std::string pName) { fName = pName; }
+    std::string getName() { return fName; }
+
   public:
     /*!
      * \brief Constructor of the ChipInterface Class
@@ -73,7 +74,7 @@ class ChipInterface
     /*!
      * \brief Destructor of the ChipInterface Class
      */
-    virtual ~ChipInterface(){}
+    virtual ~ChipInterface() {}
 
     /*!
      * \brief Configure the Chip with the Chip Config File
@@ -137,7 +138,6 @@ class ChipInterface
     void setWithLpGBT(bool pValue) { fWithlpGBT = pValue; }
 
     void output();
-    
 };
 } // namespace Ph2_HwInterface
 

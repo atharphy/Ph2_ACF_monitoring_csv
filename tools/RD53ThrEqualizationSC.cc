@@ -157,7 +157,8 @@ void ThrEqualizationSC::run()
                     this->fReadoutChipInterface->ReadChipAllLocalReg(
                         static_cast<RD53*>(cChip), "PIX_PORTAL", *theTDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
 
-                    auto& theChannelGroupHandler = getChannelGroupHandlerContainer()->at(cBoard->getIndex())
+                    auto& theChannelGroupHandler = getChannelGroupHandlerContainer()
+                                                       ->at(cBoard->getIndex())
                                                        ->getObject(cOpticalGroup->getId())
                                                        ->getObject(cHybrid->getId())
                                                        ->getObject(cChip->getId())
@@ -213,7 +214,8 @@ void ThrEqualizationSC::analyze()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    auto& theChannelGroupHandler = getChannelGroupHandlerContainer()->at(cBoard->getIndex())
+                    auto& theChannelGroupHandler = getChannelGroupHandlerContainer()
+                                                       ->at(cBoard->getIndex())
                                                        ->getObject(cOpticalGroup->getId())
                                                        ->getObject(cHybrid->getId())
                                                        ->getObject(cChip->getId())

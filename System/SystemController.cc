@@ -45,9 +45,9 @@ SystemController::~SystemController() {}
 
 void SystemController::Inherit(const SystemController* pController)
 {
-    fBeBoardInterface             = pController->fBeBoardInterface;
-    fReadoutChipInterface         = pController->fReadoutChipInterface;
-    //fChipInterface                = pController->fChipInterface;
+    fBeBoardInterface     = pController->fBeBoardInterface;
+    fReadoutChipInterface = pController->fReadoutChipInterface;
+    // fChipInterface                = pController->fChipInterface;
     flpGBTInterface               = pController->flpGBTInterface;
     fBeBoardFWMap                 = pController->fBeBoardFWMap;
     fSettingsMap                  = pController->fSettingsMap;
@@ -100,17 +100,17 @@ void SystemController::Destroy()
     fBeBoardInterface = nullptr;
     delete fReadoutChipInterface;
     fReadoutChipInterface = nullptr;
-    //delete fChipInterface;
-    //fChipInterface = nullptr;
+    // delete fChipInterface;
+    // fChipInterface = nullptr;
     delete flpGBTInterface;
     flpGBTInterface = nullptr;
-    
+
     delete fDetectorContainer;
     fDetectorContainer = nullptr;
 
     delete fCicInterface;
     fCicInterface = nullptr;
-    
+
     fBeBoardFWMap.clear();
     fSettingsMap.clear();
 
@@ -214,11 +214,11 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             LOG(INFO) << BOLDBLUE << "Initializing HwInterfaces for OT BeBoards.." << RESET;
             if(cFirstBoard->size() > 0) // # of optical groups connected to Board0
             {
-                // if TCUSB library is compiled then initialize TC interface 
+                // if TCUSB library is compiled then initialize TC interface
                 // #ifdef __TCUSB__
-                //     #ifdef __ROH_USB__ 
+                //     #ifdef __ROH_USB__
                 //         fTCInterface = new TestCardInterface("ROH_USB");
-                //     #elif __SEH_USB__ 
+                //     #elif __SEH_USB__
                 //         fTCInterface = new TestCardInterface("SEH_USB");
                 //     #endif
                 // #endif
@@ -230,15 +230,15 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for lpGBT" << RESET;
                     flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap, cFirstBoard->isOptical(), cFirstBoard->ifUseCPB());
                     // check link to external interface
-                    if( flpGBTInterface->getExternalController() != nullptr )  
+                    if(flpGBTInterface->getExternalController() != nullptr)
                     {
-                        LOG (INFO) << BOLDBLUE << "TC interface should be initialized... type is " << flpGBTInterface->getExternalController()->getName() << RESET;
-                        #ifdef __ROH_USB__
-                            // check reading of ADC from PSROH TC
-                            float cOutput;
-                            flpGBTInterface->getExternalController()->getInterface().adc_get(TC_PSROH::measurement::_1V25_REF, cOutput);
-                            LOG (INFO) << BOLDBLUE << "Checking communication with test card by reading 1V25_Ref : " << cOutput << RESET;
-                        #endif
+                        LOG(INFO) << BOLDBLUE << "TC interface should be initialized... type is " << flpGBTInterface->getExternalController()->getName() << RESET;
+#ifdef __ROH_USB__
+                        // check reading of ADC from PSROH TC
+                        float cOutput;
+                        flpGBTInterface->getExternalController()->getInterface().adc_get(TC_PSROH::measurement::_1V25_REF, cOutput);
+                        LOG(INFO) << BOLDBLUE << "Checking communication with test card by reading 1V25_Ref : " << cOutput << RESET;
+#endif
                     }
                 }
 
@@ -382,7 +382,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             static_cast<D19clpGBTInterface*>(flpGBTInterface)->setFrontEndType(cOpticalGroup->getFrontEndType());
         }
     }
-
 }
 
 void SystemController::InitializeSettings(const std::string& pFilename, std::ostream& os, bool pIsFile) { this->fParser.parseSettings(pFilename, fSettingsMap, os, pIsFile); }
@@ -514,11 +513,11 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
 void SystemController::InitializeOT(BeBoard* pBoard)
 {
     LOG(INFO) << BOLDMAGENTA << "Initializing OT hardware.." << RESET;
-    // turn on the SEH here - moved from the lpGBT interface
-    #ifdef __SEH_USB__
-        LOG(INFO) << BOLDRED << "Intitally switching on SEH for configuration" << RESET;
-        if( flpGBTInterface->getExternalController() != nullptr ) flpGBTInterface->getExternalController()->getInterface()->set_SehSupply(TC_2SSEH::sehSupplyState::sehSupply_On);
-    #endif
+// turn on the SEH here - moved from the lpGBT interface
+#ifdef __SEH_USB__
+    LOG(INFO) << BOLDRED << "Intitally switching on SEH for configuration" << RESET;
+    if(flpGBTInterface->getExternalController() != nullptr) flpGBTInterface->getExternalController()->getInterface()->set_SehSupply(TC_2SSEH::sehSupplyState::sehSupply_On);
+#endif
     for(auto cOpticalGroup: *pBoard)
     {
         if(cOpticalGroup->flpGBT == nullptr) continue;
@@ -1316,13 +1315,10 @@ void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandle
     {
         for(const auto opticalGroup: *board)
         {
-            for(const auto hybrid: *opticalGroup)
-            {
-                totalNumberOfChips += hybrid->size();
-            }
+            for(const auto hybrid: *opticalGroup) { totalNumberOfChips += hybrid->size(); }
         }
     }
-    
+
     uint16_t totalNumberOfQueriedChips = 0;
     fDetectorContainer->setReadoutChipQueryFunction(theQueryFunction);
     for(const auto board: *fDetectorContainer)
@@ -1358,11 +1354,8 @@ void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGro
 
 void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandler> theChannelGroupHandlerPointer, uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId)
 {
-    fChannelGroupHandlerContainer->getObject(boardId)
-                    ->getObject(opticalGroupId)
-                    ->getObject(hybridId)
-                    ->getObject(chipId)
-                    ->getSummary<std::shared_ptr<ChannelGroupHandler>>() = theChannelGroupHandlerPointer;               
+    fChannelGroupHandlerContainer->getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<std::shared_ptr<ChannelGroupHandler>>() =
+        theChannelGroupHandlerPointer;
 }
 
 } // namespace Ph2_System

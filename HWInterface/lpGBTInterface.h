@@ -32,13 +32,12 @@ const uint8_t rxPhaseTracking   = 2;   // Rx phase tracking mode [0 = no-trackin
 
 namespace Ph2_HwInterface
 {
-
 #ifdef __TCUSB__
-    #ifdef __ROH_USB__
-        using TestCardInterface =  TCInterface<TC_PSROH>;
-    #elif __SEH_USB__
-        using TestCardInterface =  TCInterface<TC_2SSEH>;
-    #endif
+#ifdef __ROH_USB__
+using TestCardInterface = TCInterface<TC_PSROH>;
+#elif __SEH_USB__
+using TestCardInterface = TCInterface<TC_2SSEH>;
+#endif
 #endif
 
 struct lpGBTClockConfig
@@ -56,22 +55,21 @@ struct lpGBTClockConfig
 
 class lpGBTInterface : public ChipInterface
 {
-  protected : 
-        #ifdef __TCUSB__
-            TestCardInterface*   fExternalController;
-        #endif
-        
+  protected:
+#ifdef __TCUSB__
+    TestCardInterface* fExternalController;
+#endif
+
   protected:
     const float fClockSpeed = 40e6; // 40 MHz clock for the lpGBT
                                     // std::vector<i2cConfig> fI2Cconfigs(3);
-    // if external interface is compiled then return the ptr to access the controller
+                                    // if external interface is compiled then return the ptr to access the controller
   public:
-    #ifdef __TCUSB__
-        TestCardInterface* getExternalController() const { return fExternalController; }
-    #endif
-    
-  public:
+#ifdef __TCUSB__
+    TestCardInterface* getExternalController() const { return fExternalController; }
+#endif
 
+  public:
     lpGBTInterface(const BeBoardFWMap& pBoardMap) : ChipInterface(pBoardMap) {}
     virtual ~lpGBTInterface() {}
 

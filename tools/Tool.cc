@@ -876,7 +876,8 @@ uint16_t Tool::getMaxNumberOfGroups()
             {
                 for(const auto chip: *hybrid)
                 {
-                    uint16_t numberOfGroups = getChannelGroupHandlerContainer()->getObject(board->getId())
+                    uint16_t numberOfGroups = getChannelGroupHandlerContainer()
+                                                  ->getObject(board->getId())
                                                   ->getObject(opticalGroup->getId())
                                                   ->getObject(hybrid->getId())
                                                   ->getObject(chip->getId())
@@ -1239,11 +1240,11 @@ class ScanBase
 
     virtual void operator()() = 0;
     void         setGroupHandlerContainer(const DetectorDataContainer* theChannelHandlerContainer, bool isSameChannelGroupForAllChannels)
-    { 
-        fChannelHandlerContainer = theChannelHandlerContainer; 
+    {
+        fChannelHandlerContainer        = theChannelHandlerContainer;
         fSameChannelGroupForAllChannels = isSameChannelGroupForAllChannels;
     }
-    void         setGroup(int groupNumber) { fGroupNumber = groupNumber; }
+    void setGroup(int groupNumber) { fGroupNumber = groupNumber; }
     // void         setGroup(const ChannelGroupBase* cTestChannelGroup) { fTestChannelGroup = cTestChannelGroup; }
     void setBoardId(uint16_t boardIndex) { fBoardIndex = boardIndex; }
     void setNumberOfEvents(uint32_t numberOfEvents) { fNumberOfEvents = numberOfEvents; }
@@ -1261,20 +1262,22 @@ class ScanBase
     uint               fGroupNumber;
     Tool*              fTool;
     DetectorContainer* fDetectorContainer;
-    bool fSameChannelGroupForAllChannels;
+    bool               fSameChannelGroupForAllChannels;
 
-    inline const std::shared_ptr<ChannelGroupBase>
-    getChannelGroup(int groupNumber, uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId)
+    inline const std::shared_ptr<ChannelGroupBase> getChannelGroup(int groupNumber, uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId)
     {
-        return fChannelHandlerContainer->getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getTestGroup(groupNumber);
+        return fChannelHandlerContainer->getObject(boardId)
+            ->getObject(opticalGroupId)
+            ->getObject(hybridId)
+            ->getObject(chipId)
+            ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+            ->getTestGroup(groupNumber);
     }
 
-    inline const std::shared_ptr<ChannelGroupBase>
-    getChannelGroup(int groupNumber)
+    inline const std::shared_ptr<ChannelGroupBase> getChannelGroup(int groupNumber)
     {
         return fChannelHandlerContainer->at(0)->at(0)->at(0)->at(0)->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getTestGroup(groupNumber);
     }
-
 };
 
 void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase* groupScan)
@@ -1298,7 +1301,8 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
                     {
                         for(auto cChip: *cHybrid)
                         {
-                            if(groupNumber > getChannelGroupHandlerContainer()->getObject(fDetectorContainer->getObject(boardIndex)->getId())
+                            if(groupNumber > getChannelGroupHandlerContainer()
+                                                 ->getObject(fDetectorContainer->getObject(boardIndex)->getId())
                                                  ->getObject(cOpticalGroup->getId())
                                                  ->getObject(cHybrid->getId())
                                                  ->getObject(cChip->getId())
@@ -1306,7 +1310,8 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
                                                  ->getNumberOfGroups())
                                 continue;
                             fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip,
-                                                                                     getChannelGroupHandlerContainer()->getObject(fDetectorContainer->at(boardIndex)->getId())
+                                                                                     getChannelGroupHandlerContainer()
+                                                                                         ->getObject(fDetectorContainer->at(boardIndex)->getId())
                                                                                          ->getObject(cOpticalGroup->getId())
                                                                                          ->getObject(cHybrid->getId())
                                                                                          ->getObject(cChip->getId())
@@ -1386,8 +1391,8 @@ class MeasureBeBoardDataPerGroup : public ScanBase
             // Loop over Events from this Acquisition
             const std::vector<Event*>& events = fTool->GetEvents();
             fTool->setNReadbackEvents(events.size());
-            
-            //Assuming all chip will have all channels enabled:
+
+            // Assuming all chip will have all channels enabled:
             if(fSameChannelGroupForAllChannels)
             {
                 auto channelGroup = this->getChannelGroup(fGroupNumber);
@@ -1395,16 +1400,16 @@ class MeasureBeBoardDataPerGroup : public ScanBase
             }
             else
             {
-                for(auto cOpticalGroup : *fDetectorDataContainer->at(fBoardIndex))
+                for(auto cOpticalGroup: *fDetectorDataContainer->at(fBoardIndex))
                 {
-                    for(const auto cHybrid : *cOpticalGroup)
+                    for(const auto cHybrid: *cOpticalGroup)
                     {
-                        for(const auto cChip : *cHybrid)
+                        for(const auto cChip: *cHybrid)
                         {
                             auto channelGroup = this->getChannelGroup(fGroupNumber, fDetectorDataContainer->at(fBoardIndex)->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId());
                             for(auto& event: events) event->fillChipDataContainer(cChip, channelGroup, cHybrid->getId());
                         }
-                    }                    
+                    }
                 }
             }
             --burstNumbers;

@@ -7,11 +7,12 @@ using namespace Ph2_System;
 
 #ifdef __USE_ROOT__
 
-OTHybridTester::OTHybridTester() : Tool() {
-    // I think that this is where the TC interface should be initialized 
+OTHybridTester::OTHybridTester() : Tool()
+{
+    // I think that this is where the TC interface should be initialized
     // and where the lpGBT interface should be linked if needed
-    // not in system controller 
-    // as this is very specific to each hybrid testing tool 
+    // not in system controller
+    // as this is very specific to each hybrid testing tool
 }
 
 OTHybridTester::~OTHybridTester() {}
@@ -449,9 +450,9 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     auto cADCHistogram = new TH2I("hADCHistogram", "Fixed ADC Histogram", cADCsMap.size(), 0, cADCsMap.size(), 1024, 0, 1024);
     cADCHistogram->GetZaxis()->SetTitle("Number of entries");
 
-    auto  cADCsMapIterator = cADCsMap.begin();
-    int   cADCValue;
-    int   cBinCount         = 1;
+    auto cADCsMapIterator = cADCsMap.begin();
+    int  cADCValue;
+    int  cBinCount = 1;
 
     fillSummaryTree("ADC conversion factor", CONVERSION_FACTOR);
     for(auto cBoard: *fDetectorContainer)

@@ -11,7 +11,7 @@
 #ifndef __TCINTERFACE_H__
 #define __TCINTERFACE_H__
 
-#pragma once 
+#pragma once
 #include "USB_a.h"
 #include "USB_libusb.h"
 /*!
@@ -24,25 +24,39 @@ template <class T>
 class TCInterface
 {
   public:
-    TCInterface(){fPtr = new T();}
-    TCInterface(const std::string pName){std::cout << "Constructor TCInterface<" <<pName << "> with string\n"; fPtr = new T(); fName=pName;}
-    ~TCInterface() { std::cout << "Destructor TCInterface<" << fName << ">\n"; if( fPtr != nullptr ){ delete fPtr; fPtr = nullptr; } }
-    //T* getInterface() const { return fPtr; }
-    T  getInterface() const { return *fPtr; }
+    TCInterface() { fPtr = new T(); }
+    TCInterface(const std::string pName)
+    {
+        std::cout << "Constructor TCInterface<" << pName << "> with string\n";
+        fPtr  = new T();
+        fName = pName;
+    }
+    ~TCInterface()
+    {
+        std::cout << "Destructor TCInterface<" << fName << ">\n";
+        if(fPtr != nullptr)
+        {
+            delete fPtr;
+            fPtr = nullptr;
+        }
+    }
+    // T* getInterface() const { return fPtr; }
+    T getInterface() const { return *fPtr; }
     // user-defined copy assignment (copy-and-swap idiom)
     // T& operator=(const T original) { *fPtr = *original.fPtr; return *this; }
     // user defined assignment operator
     T& operator=(const T& rhs)
     {
-        //shallow copy of ptr object 
-        fPtr = rhs.fPtr;
+        // shallow copy of ptr object
+        fPtr  = rhs.fPtr;
         fName = rhs.fName;
         return *this;
     }
-    std::string getName(){ return fName;}
-    void        setName(const std::string pName){ fName= pName;}
+    std::string getName() { return fName; }
+    void        setName(const std::string pName) { fName = pName; }
+
   private:
-    T* fPtr;
+    T*          fPtr;
     std::string fName;
 };
 

@@ -76,6 +76,7 @@ class OTHybridTester : public Tool
   private:
     float       getMeasurement(std::string name);
     std::string getVariableValue(std::string variable, std::string buffer);
+
   protected:
 #ifdef __TCUSB__
     std::map<std::string, uint8_t> f2SSEHGPILines = {

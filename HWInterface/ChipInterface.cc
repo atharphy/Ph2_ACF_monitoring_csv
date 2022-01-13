@@ -23,7 +23,6 @@ ChipInterface::ChipInterface(const BeBoardFWMap& pBoardMap) : fBoardMap(pBoardMa
 #endif
 }
 
-
 void ChipInterface::output()
 {
 #ifdef COUNT_FLAG

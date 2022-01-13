@@ -19,14 +19,14 @@ class D19clpGBTInterface : public lpGBTInterface
   public:
     D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB)
     {
-        LOG (INFO) << BOLDRED << "Constructor D19clpGBTInterface" << RESET;
-        #ifdef __TCUSB__
-            #ifdef __ROH_USB__
-                fExternalController = new TestCardInterface("ROH_USB");
-            #elif __SEH_USB__
-                fExternalController = new TestCardInterface("SEH_USB");
-            #endif
-        #endif
+        LOG(INFO) << BOLDRED << "Constructor D19clpGBTInterface" << RESET;
+#ifdef __TCUSB__
+#ifdef __ROH_USB__
+        fExternalController = new TestCardInterface("ROH_USB");
+#elif __SEH_USB__
+        fExternalController = new TestCardInterface("SEH_USB");
+#endif
+#endif
 
         // configure during constructor now when configuring chip
         SetConfigMode(pUseOpticalLink, pUseCPB);
@@ -42,16 +42,17 @@ class D19clpGBTInterface : public lpGBTInterface
         // configure FW for all boards
         for(auto cBoardMap: pBoardMap) { (cBoardMap.second)->ConfigureCPB(cCPBconfig); }
     }
-    ~D19clpGBTInterface() { 
-        LOG (INFO) << BOLDRED << "Destructor D19clpGBTInterface" << RESET;
-        #ifdef __TCUSB__
-            if( fExternalController != nullptr ) 
-            {
-                LOG (INFO) << BOLDRED << "Deleting pointer to external controller for D19clpGBTInterface" << RESET;
-                delete fExternalController;
-                fExternalController = nullptr;
-            }
-        #endif
+    ~D19clpGBTInterface()
+    {
+        LOG(INFO) << BOLDRED << "Destructor D19clpGBTInterface" << RESET;
+#ifdef __TCUSB__
+        if(fExternalController != nullptr)
+        {
+            LOG(INFO) << BOLDRED << "Deleting pointer to external controller for D19clpGBTInterface" << RESET;
+            delete fExternalController;
+            fExternalController = nullptr;
+        }
+#endif
     }
 
     // ###################################

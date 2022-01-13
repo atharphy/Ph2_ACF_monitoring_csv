@@ -167,7 +167,7 @@ void SSAPhysics::fillDataContainer(BoardContainer* const& cBoard)
     // # Fill containers #
     // ###################
     const std::vector<Event*>& events = SystemController::GetEvents();
-    //Assuming all chip will have all channels enabled:
+    // Assuming all chip will have all channels enabled:
     auto allChannelGroup = getChannelGroup(-1);
 
     for(const auto& event: events) { event->fillDataContainer(fOccContainer.at(cBoard->getIndex()), allChannelGroup); }
