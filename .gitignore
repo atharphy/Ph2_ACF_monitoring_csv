@@ -12,6 +12,7 @@ logs/*
 *.raw
 Results/
 Results/**
+ResultsGUI/*
 MonitorResults/**
 RunNumbers.dat
 *.log
@@ -28,3 +29,11 @@ consoledump.log
 src/test.cc
 build/
 rundir*
+ReadRootFile.py
+core.*
+FEH_PS*/
+*.cc
+*.bin
+.vscode/*
+*.py
+*.txt

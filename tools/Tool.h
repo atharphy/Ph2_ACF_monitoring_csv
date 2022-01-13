@@ -20,6 +20,7 @@
 #include "TFile.h"
 #include "TObject.h"
 #include "TROOT.h"
+#include "TString.h"
 #include "TSystem.h"
 #include "TTree.h"
 #endif
@@ -81,7 +82,12 @@ class Tool : public Ph2_System::SystemController
      * \param cParameter : Name of the measurement to be stored
      * \param cValue: Value of the measurement to be stored
      */
-    void fillSummaryTree(TString cParameter, Double_t cValue);
+    void fillSummaryTree(std::string cParameter, Double_t cValue);
+
+    Double_t getSummaryParameter(std::string cParameter);
+
+    TString getDirectoryName();
+
     void bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObject);
     void bookHistogram(HybridContainer* pHybrid, std::string pName, TObject* pObject);
     void bookHistogram(BoardContainer* pBeBoard, std::string pName, TObject* pObject);
@@ -368,7 +374,6 @@ class Tool : public Ph2_System::SystemController
     TTree*              fSummaryTree; /*< TTree for summary of results*/
     static TString      fSummaryTreeParameter;
     static Double_t     fSummaryTreeValue;
-
 #endif
 
     FrontEndType        fType;

@@ -231,14 +231,27 @@ void Tool::bookSummaryTree() // MINE
  * \param cParameter : Name of the measurement to be stored
  * \param cValue: Value of the measurement to be stored
  */
-void Tool::fillSummaryTree(TString cParameter, Double_t cValue) // MINE
+void Tool::fillSummaryTree(std::string cParameter, Double_t cValue) // MINE
 {
     fResultFile->cd();
     fSummaryTreeParameter.Clear();
-    fSummaryTreeParameter = cParameter;
+    TString cParameter_TString(cParameter);
+    fSummaryTreeParameter = cParameter_TString;
     fSummaryTreeValue     = cValue;
     if(fSummaryTree) fSummaryTree->Fill();
 }
+
+Double_t Tool::getSummaryParameter(std::string cParameter)
+{
+    for(int i = 0; i < fSummaryTree->GetEntries(); i++)
+    {
+        fSummaryTree->GetEntry(i);
+        if(fSummaryTreeParameter == cParameter) return fSummaryTreeValue;
+    }
+    return -1.0;
+}
+
+TString Tool::getDirectoryName() { return fDirectoryName.c_str(); }
 
 void Tool::bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObject)
 {
@@ -466,10 +479,8 @@ void Tool::SaveResults()
 
 #endif
 
-    // fResultFile->Write();
-    // fResultFile->Close();
-
-    LOG(INFO) << "Results saved!";
+    // fSummaryTree->Write();
+    // LOG(INFO) << "Results saved!";
 }
 
 void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool pDate, const std::string& whichCalib)
@@ -1003,6 +1014,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
 
     fDetectorDataContainer = currentStepOccupancyContainer;
     LOG(INFO) << BOLDBLUE << "\t\t... measuring occupancy...." << RESET;
+    // TODO -> SEGFAULT!!!!!!!
     measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
 
     occupanyDirectlyProportionalToDAC =

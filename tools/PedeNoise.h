@@ -18,6 +18,7 @@
 #include "Tool.h"
 #ifdef __USE_ROOT__
 #include "../DQMUtils/DQMHistogramPedeNoise.h"
+#include "TH1.h"
 #endif
 
 #include <map>

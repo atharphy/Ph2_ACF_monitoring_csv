@@ -123,7 +123,7 @@ export CompileWithEUDAQ=false
 
 # Compile with TC_USB library
 export CompileWithTCUSB=true
-export UseTCUSBforROH=true
+export UseTCUSBforROH=false
 export UseTCUSBTcpServer=false
 
 # Clang-format command
