@@ -19,6 +19,7 @@ OTHybridTester::~OTHybridTester() {}
 
 void OTHybridTester::FindUSBHandler()
 {
+    // should this now check if the external controller exists?
     bool cThereIsLpGBT = fReadoutChipInterface->lpGBTFound();
     if(cThereIsLpGBT)
         LOG(DEBUG) << BOLDYELLOW << "Found lpGBT" << RESET;

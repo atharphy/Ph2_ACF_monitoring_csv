@@ -277,18 +277,18 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                 }
                                 else
                                 {
-                                    for(size_t cOffst = 2; cOffst < 2 + cHitInfoSize; cOffst++)
-                                    { LOG(INFO) << BOLDMAGENTA << "Word#" << (cOffst - 2) << " : " << std::bitset<32>(*(cIterator + cOffst)) << RESET; }
-                                    // const size_t                     cNblocks = cFullSize; // 274 bits per chip ..
-                                    // const size_t                     cRawL1   = RAW_L1_CBC - 1;
-                                    // std::vector<std::bitset<cRawL1>> cL1Words(cNblocks, 0);
-                                    // this->splitStream(pData, cL1Words, cL1Offset,
-                                    //                   cNblocks); // split 32 bit words in  blocks of 274 bits
-                                    // for(size_t cIndex = 0; cIndex < cFullSize; cIndex++)
-                                    // {
-                                    //     LOG(INFO) << BOLDBLUE << "\t...  chip " << +cIndex << "\t -- " << cL1Words[cIndex] << RESET;
-                                    //     fEventRawList[cFeIndex].second.push_back(std::bitset<RAW_L1_CBC>((cL1Words[cIndex]).to_string() + "0"));
-                                    // }
+                                    // for(size_t cOffst = 2; cOffst < 2 + cHitInfoSize; cOffst++)
+                                    // { LOG(INFO) << BOLDMAGENTA << "Word#" << (cOffst - 2) << " : " << std::bitset<32>(*(cIterator + cOffst)) << RESET; }
+                                    const size_t                     cNblocks = cFullSize; // 274 bits per chip ..
+                                    const size_t                     cRawL1   = RAW_L1_CBC - 1;
+                                    std::vector<std::bitset<cRawL1>> cL1Words(cNblocks, 0);
+                                    this->splitStream(pData, cL1Words, cL1Offset,
+                                                      cNblocks); // split 32 bit words in  blocks of 274 bits
+                                    for(size_t cIndex = 0; cIndex < cFullSize; cIndex++)
+                                    {
+                                        LOG(INFO) << BOLDBLUE << "\t...  chip " << +cIndex << "\t -- " << cL1Words[cIndex] << RESET;
+                                        fEventRawList[cFeIndex].second.push_back(std::bitset<RAW_L1_CBC>((cL1Words[cIndex]).to_string() + "0"));
+                                    }
                                 }
                             }
                         }

@@ -209,19 +209,11 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     if(fDetectorContainer->size() > 0)
     {
         const BeBoard* cFirstBoard = fDetectorContainer->at(0);
-        if(cFirstBoard->getBoardType() != BoardType::RD53)
+        if(cFirstBoard->getBoardType() != BoardType::RD53 && fInitializeInterfaces == 1)
         {
             LOG(INFO) << BOLDBLUE << "Initializing HwInterfaces for OT BeBoards.." << RESET;
             if(cFirstBoard->size() > 0) // # of optical groups connected to Board0
             {
-                // if TCUSB library is compiled then initialize TC interface
-                // #ifdef __TCUSB__
-                //     #ifdef __ROH_USB__
-                //         fTCInterface = new TestCardInterface("ROH_USB");
-                //     #elif __SEH_USB__
-                //         fTCInterface = new TestCardInterface("SEH_USB");
-                //     #endif
-                // #endif
                 auto cFirstOpticalGroup = cFirstBoard->at(0);
                 LOG(INFO) << BOLDBLUE << "\t...Initializing HwInterfaces for OpticalGroups.." << +cFirstBoard->size() << " optical group(s) found ..." << RESET;
                 bool cWithLpGBT = (cFirstOpticalGroup->flpGBT != nullptr);
