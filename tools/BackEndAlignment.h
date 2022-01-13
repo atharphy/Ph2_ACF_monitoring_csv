@@ -44,9 +44,9 @@ class BackEndAlignment : public LinkAlignmentOT
     bool getStatus() const { return fSuccess; }
 
   protected:
-    bool    fL1Debug   = false;
-    bool    fStubDebug = false;
-    std::string fPairSelect="";
+    bool        fL1Debug    = false;
+    bool        fStubDebug  = false;
+    std::string fPairSelect = "";
 
   private:
     //

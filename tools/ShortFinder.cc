@@ -81,7 +81,7 @@ void ShortFinder::Initialise()
 {
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
     fWithCBC                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-    fWithSSA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA || cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA2 );
+    fWithSSA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA || cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA2);
     LOG(INFO) << "With SSA set to " << ((fWithSSA) ? 1 : 0) << RESET;
 
     if(fWithCBC)
@@ -362,7 +362,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                 for(auto cReadoutChip: *cHybrid)
                 {
                     // add check for SSA
-                    if(cReadoutChip->getFrontEndType() != FrontEndType::SSA && cReadoutChip->getFrontEndType() != FrontEndType::SSA2 ) continue;
+                    if(cReadoutChip->getFrontEndType() != FrontEndType::SSA && cReadoutChip->getFrontEndType() != FrontEndType::SSA2) continue;
 
                     LOG(DEBUG) << BOLDBLUE << "\t...SSA" << +cReadoutChip->getId() << RESET;
 

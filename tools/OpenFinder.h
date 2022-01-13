@@ -100,12 +100,12 @@ class OpenFinder : public PSHybridTester
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fBoardRegContainer;
 
-    // #ifdef __TCUSB__
+#ifdef __TCUSB__
     std::map<std::string, TC_PSFE::ant_channel> fAntennaControl = {{"EvenChannels", TC_PSFE::ant_channel::_2},
                                                                    {"OddChannels", TC_PSFE::ant_channel::_1},
                                                                    {"Enable", TC_PSFE::ant_channel::ALL},
                                                                    {"Disable", TC_PSFE::ant_channel::NONE}};
-    // #endif
+#endif
 };
 
 #endif

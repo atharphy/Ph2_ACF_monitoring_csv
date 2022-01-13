@@ -12,9 +12,9 @@
 
 #include "LinkAlignmentOT.h"
 #include "Tool.h"
-// #ifdef __TCUSB__
+#ifdef __TCUSB__
 #include "../../cmsph2_tcusb/USB_a.h"
-// #endif
+#endif
 
 #include "../Utils/SSAChannelGroupHandler.h"
 #include "DPInterface.h"
@@ -59,30 +59,30 @@ class PSHybridTester : public LinkAlignmentOT
     void SweepPhaseAlignment(uint8_t);
 
   private:
-    void CheckI2C(Ph2_HwDescription::BeBoard* pBoard);
-    void CheckCounters(Ph2_HwDescription::BeBoard* pBoard);
-    void ReadSSABias(Ph2_HwDescription::BeBoard* pBoard, const std::string& pBiasName);
-    void TrimSSABias(Ph2_HwDescription::BeBoard* pBoard, const std::string& pBiasName);
-    void CalibrateSSABias(Ph2_HwDescription::BeBoard* pBoard);
-    void CalibrateGainTrim(Ph2_HwDescription::BeBoard* pBoard);
-    std::vector<double> DecodeSSACentroids(std::vector<std::string>);
+    void                     CheckI2C(Ph2_HwDescription::BeBoard* pBoard);
+    void                     CheckCounters(Ph2_HwDescription::BeBoard* pBoard);
+    void                     ReadSSABias(Ph2_HwDescription::BeBoard* pBoard, const std::string& pBiasName);
+    void                     TrimSSABias(Ph2_HwDescription::BeBoard* pBoard, const std::string& pBiasName);
+    void                     CalibrateSSABias(Ph2_HwDescription::BeBoard* pBoard);
+    void                     CalibrateGainTrim(Ph2_HwDescription::BeBoard* pBoard);
+    std::vector<double>      DecodeSSACentroids(std::vector<std::string>);
     std::vector<std::string> DecodeSSAL1Packet(int, std::string);
-    void SetTrim(Ph2_HwDescription::BeBoard* pBoard, std::string pTrimRegister, uint16_t pTrimValue);
-    void CheckHybridInputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters);
-    void CheckHybridOutputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters);
-    void CheckFastCommands(Ph2_HwDescription::BeBoard* pBoard, const std::string& pFastCommand, uint8_t pDuartion = 1);
-    void ReadHybridVoltage(const std::string& pVoltageName);
-    void ReadHybridCurrent(const std::string& pCurrentName);
+    void                     SetTrim(Ph2_HwDescription::BeBoard* pBoard, std::string pTrimRegister, uint16_t pTrimValue);
+    void                     CheckHybridInputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters);
+    void                     CheckHybridOutputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters);
+    void                     CheckFastCommands(Ph2_HwDescription::BeBoard* pBoard, const std::string& pFastCommand, uint8_t pDuartion = 1);
+    void                     ReadHybridVoltage(const std::string& pVoltageName);
+    void                     ReadHybridCurrent(const std::string& pCurrentName);
     // functions to test SSA outputs (pogo)
-    void                           SSAPairSelect(Ph2_HwDescription::BeBoard* pBoard, const std::string& SSAPairSel);
-    void                           SSAOutputsPogoDebug(Ph2_HwDescription::BeBoard* pBoard, bool pTrigger = false);
-    void                           SSATestStubOutput(Ph2_HwDescription::BeBoard* pBoard, const std::string& cSSAPairSel);
-    void                           SSATestL1Output(Ph2_HwDescription::BeBoard* pBoard, const std::string& cSSAPairSel);
-    void                           SSATestLateralCommunication(Ph2_HwDescription::BeBoard* pBoard, const std::string& pSSAPairSel, bool pSweepPhaseSelector);
-    void                           SSAOutputsPogoScope(Ph2_HwDescription::BeBoard* pBoard, bool pTrigger = false);
-    void                           SSAOutputsPogoScope(std::vector<std::vector<std::string>>&, std::string pSSAPairSel, Ph2_HwDescription::BeBoard* pBoard, bool pTrigger = false, bool pPrintScoped = true);
-    void                           FillSSATree(std::string, std::string);
-    void                           MPATest(Ph2_HwDescription::BeBoard* pBoard);
+    void SSAPairSelect(Ph2_HwDescription::BeBoard* pBoard, const std::string& SSAPairSel);
+    void SSAOutputsPogoDebug(Ph2_HwDescription::BeBoard* pBoard, bool pTrigger = false);
+    void SSATestStubOutput(Ph2_HwDescription::BeBoard* pBoard, const std::string& cSSAPairSel);
+    void SSATestL1Output(Ph2_HwDescription::BeBoard* pBoard, const std::string& cSSAPairSel);
+    void SSATestLateralCommunication(Ph2_HwDescription::BeBoard* pBoard, const std::string& pSSAPairSel, bool pSweepPhaseSelector);
+    void SSAOutputsPogoScope(Ph2_HwDescription::BeBoard* pBoard, bool pTrigger = false);
+    void SSAOutputsPogoScope(std::vector<std::vector<std::string>>&, std::string pSSAPairSel, Ph2_HwDescription::BeBoard* pBoard, bool pTrigger = false, bool pPrintScoped = true);
+    void FillSSATree(std::string, std::string);
+    void MPATest(Ph2_HwDescription::BeBoard* pBoard);
     std::map<std::string, uint8_t> fInputDebugMap = {{"sda_out", 0},      {"rtn_clk320", 1},   {"cic_out_6", 2},    {"cic_out_5", 3},    {"cic_out_4", 4},    {"cic_out_3", 5},    {"cic_out_2", 6},
                                                      {"cic_out_1", 7},    {"cic_out_0", 8},    {"sda_out", 9},      {"ssa1_clk320", 10}, {"ssa1_fcmd", 11},   {"ssa1_l1", 12},     {"ssa1_trig_7", 13},
                                                      {"ssa1_trig_6", 14}, {"ssa1_trig_5", 15}, {"ssa1_trig_4", 16}, {"ssa1_trig_3", 17}, {"ssa1_trig_2", 18}, {"ssa1_trig_1", 19}, {"ssa1_trig_0", 20},
@@ -161,9 +161,9 @@ class PSHybridTester : public LinkAlignmentOT
     std::map<std::string, float> fDACsCalibrationTargetMap = {{"BoosterFeedback", 82.0}, {"PreampBias", 82.0}, {"VoltageBias", 82.0}, {"CurrentBias", 82.0}, {"DAC", 86.0}};
 #endif
 #ifdef __USE_ROOT__
-    TTree* fSSATree = nullptr;
+    TTree*      fSSATree          = nullptr;
     std::string fSSATreeParameter = "";
-    std::string fSSATreeValue = "";
+    std::string fSSATreeValue     = "";
 #endif
     int                     fVoltageMeasurementWait_ms = 100;
     int                     fNreadings                 = 3;

@@ -86,8 +86,6 @@ class Tool : public Ph2_System::SystemController
 
     Double_t getSummaryParameter(std::string cParameter);
 
-    TString getDirectoryName();
-
     void bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObject);
     void bookHistogram(HybridContainer* pHybrid, std::string pName, TObject* pObject);
     void bookHistogram(BoardContainer* pBeBoard, std::string pName, TObject* pObject);

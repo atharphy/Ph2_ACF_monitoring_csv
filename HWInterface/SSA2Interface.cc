@@ -705,7 +705,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         // // digital injection, async , enable all strips
         // uint8_t cRegValue = (pValue << 3) | (1 << 2) | (1 << 0);
         // return WriteChipSingleReg(pSSA2, "ENFLAGS", cRegValue, pVerifLoop);
-        
+
         uint8_t cReadoutMode = 0x1;
         uint8_t cEdgeSel_T1  = 0x0;
         // readout mode
@@ -855,15 +855,15 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         this->WriteChipSingleReg(pSSA2, "mask_peri_A", 0xFF, false);
         return WriteChipSingleReg(pSSA2, "Bias_THDAC", (pValue), pVerifLoop);
     }
-    else if( pRegName == "LateralRX_L_PhaseData" )
+    else if(pRegName == "LateralRX_L_PhaseData")
     {
-        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0x07, false); //0b00000111 
-        return this->WriteChipSingleReg(pSSA2, "LateralRX_sampling", (pValue), pVerifLoop); 
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0x07, false); // 0b00000111
+        return this->WriteChipSingleReg(pSSA2, "LateralRX_sampling", (pValue), pVerifLoop);
     }
-    else if( pRegName == "LateralRX_R_PhaseData")
+    else if(pRegName == "LateralRX_R_PhaseData")
     {
-        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0x70, false); //0b01110000 
-        return this->WriteChipSingleReg(pSSA2, "LateralRX_sampling", (pValue), pVerifLoop); 
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0x70, false); // 0b01110000
+        return this->WriteChipSingleReg(pSSA2, "LateralRX_sampling", (pValue), pVerifLoop);
     }
     else
     {

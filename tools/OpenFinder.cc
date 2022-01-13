@@ -54,8 +54,11 @@ void OpenFinder::Reset()
 }
 void OpenFinder::Initialise(Parameters pParameters)
 {
-    fChannelGroupHandler = new CBCChannelGroupHandler();
-    fChannelGroupHandler->setChannelGroupParameters(16, 2);
+    CBCChannelGroupHandler theChannelGroupHandler;
+    theChannelGroupHandler.setChannelGroupParameters(16, 2); // 16*2*8
+    setChannelGroupHandler(theChannelGroupHandler);
+    // fChannelGroupHandler = new CBCChannelGroupHandler();
+    // fChannelGroupHandler->setChannelGroupParameters(16, 2);
 
     // Read some settings from the map
     auto cSetting       = fSettingsMap.find("Nevents");
@@ -465,10 +468,10 @@ void OpenFinder::FindOpensPS()
         setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "AnalogueAsync", 1);
         // first .. set injection amplitude to 0
         setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", 0);
-        std::vector<std::pair<std::string, uint32_t> > cRegVec;
-        cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
-        cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.ps_async_en.cal_pulse", 0});
-        cRegVec.push_back ({"fc7_daq_cnfg.fast_command_block.ps_async_en.antenna", 1});
+        std::vector<std::pair<std::string, uint32_t>> cRegVec;
+        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
+        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.cal_pulse", 0});
+        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.antenna", 1});
         for(auto cOpticalGroup: *cBoard)
         {
             // std::vector<std::pair<std::string, uint32_t>> cRegVec;
@@ -632,7 +635,7 @@ void OpenFinder::FindOpensPS()
                         {
                             // uint8_t cPosition = 1-cPosition_index;
                             uint8_t cPosition = cPosition_index;
-                            antenna_set = false;
+                            antenna_set       = false;
                             for(int i = 0; i < 2 && !antenna_set; i++)
                             {
                                 std::string chn = (cPosition == 0) ? "even" : "odd";
@@ -796,7 +799,7 @@ void OpenFinder::FindOpensPS()
                             this->ReadNEvents(cBeBoard, fParameters.nTriggers);
                             const std::vector<Event*>& cEvents = this->GetEvents();
                             // const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
-                            cOpensFound                        = false;
+                            cOpensFound = false;
                             std::vector<uint16_t> opens;
                             for(auto cEvent: cEvents)
                             {

@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
         gui::status("Setting voltage of the hybrid");
         gui::progress(0.5 / 10.0);
 
-        gui::data("ResultsDirectory", cHybridTester.getDirectoryName());
+        gui::data("ResultsDirectory", cHybridTester.getDirectoryName().c_str());
     }
 
     if(cmd.foundOption("USBBus") && cmd.foundOption("USBDev"))
@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
     // cHybridTester.CheckHybridCurrents();
     // check voltage on PS FEH
     // cHybridTester.CheckHybridVoltages();
-    if (cSSAPair.empty() ) { cHybridTester.RunHybridETest(); } 
+    if(cSSAPair.empty()) { cHybridTester.RunHybridETest(); }
     LOG(INFO) << outp.str() << RESET;
     // select CIC readout
     // cHybridTester.SelectCIC(true);
@@ -193,7 +193,7 @@ int main(int argc, char* argv[])
     // cHybridTester.ReadSSABias("MonitorVoltageBias");
     // cHybridTester.ReadSSABias("MonitorCurrentBias");
 
-    if (cSSAPair.empty() ) { cHybridTester.CalibrateSSABias(); } 
+    if(cSSAPair.empty()) { cHybridTester.CalibrateSSABias(); }
 
     if(cGui)
     {
@@ -256,7 +256,7 @@ int main(int argc, char* argv[])
             cCicAligner.Inherit(&cHybridTester);
 
             LOG(INFO) << "Phase alignment MPA" << RESET;
-            cAligned       = cCicAligner.PhaseAlignmentMPA(100);
+            cAligned       = cCicAligner.PhaseAlignment(100);
             cAlignedDouble = cAligned ? 1.0 : 0.0;
 #ifdef __USE_ROOT__
             cHybridTester.fillSummaryTree(Form("MPA Alignment attemp %d", i + 1), cAlignedDouble);
@@ -479,19 +479,16 @@ int main(int argc, char* argv[])
         // configure SSA to output something on stub lines
         if(!cSSAPair.empty())
         {
-
             BackEndAlignment cBackendAlignment;
             cBackendAlignment.Inherit(&cHybridTester);
 
             LOG(INFO) << BOLDRED << "SSAOutput POGO debug" << RESET;
             // configure SSA to output something on stub lines
-            if(cSSAPair != "ALL") {
+            if(cSSAPair != "ALL")
+            {
                 cHybridTester.SSAPairSelect(cSSAPair);
-                for(auto cBoard : *cHybridTester.fDetectorContainer)
-                {
-                    cBackendAlignment.PSAlignment(cBoard, cSSAPair);
-                }
-                cHybridTester.SSATestStubOutput(cSSAPair); 
+                for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard, cSSAPair); }
+                cHybridTester.SSATestStubOutput(cSSAPair);
                 cHybridTester.SSATestL1Output(cSSAPair);
                 cHybridTester.SSATestLateralCommunication(cSSAPair);
             }
@@ -502,22 +499,16 @@ int main(int argc, char* argv[])
                 {
                     cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
                     cHybridTester.SSAPairSelect(cCurrentSSAPair);
-                    for(auto cBoard : *cHybridTester.fDetectorContainer)
-                    {
-                        cBackendAlignment.PSAlignment(cBoard, cCurrentSSAPair);
-                    }
+                    for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard, cCurrentSSAPair); }
                     cHybridTester.SSATestStubOutput(cCurrentSSAPair);
                     cHybridTester.SSATestL1Output(cCurrentSSAPair);
                 }
-                
-                for(int i = 0; i < 7; i ++)
+
+                for(int i = 0; i < 7; i++)
                 {
                     cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
                     cHybridTester.SSAPairSelect(cCurrentSSAPair);
-                    for(auto cBoard : *cHybridTester.fDetectorContainer)
-                    {
-                        cBackendAlignment.PSAlignment(cBoard, cCurrentSSAPair);
-                    }
+                    for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard, cCurrentSSAPair); }
                     cHybridTester.SSATestLateralCommunication(cCurrentSSAPair);
                 }
             }

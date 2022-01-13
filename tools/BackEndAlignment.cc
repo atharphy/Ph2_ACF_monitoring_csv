@@ -70,8 +70,7 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard, std::string pSSAPair)
                 ReadoutChip* cReadoutChip = static_cast<ReadoutChip*>(cChip);
                 if(cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::SSA)
                 {
-                    if( cReadoutChip->getId()!=(int)(pSSAPair[0]-'0') && cReadoutChip->getId()!=(int)(pSSAPair[1]-'0') )
-                        continue;
+                    if(cReadoutChip->getId() != (int)(pSSAPair[0] - '0') && cReadoutChip->getId() != (int)(pSSAPair[1] - '0')) continue;
                     auto cDriveStrength = fReadoutChipInterface->ReadChipReg(cChip, "SLVS_pad_current_L1");
                     LOG(INFO) << BOLDBLUE << "SSA#" << +cChip->getId() << " Alignment for L1 and stub lines.. L1 drive set to " << +cDriveStrength << RESET;
 
@@ -81,15 +80,14 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard, std::string pSSAPair)
                     cPairId                      = (pSSAPair != "") ? cPairId : 0;
 
                     // select SSA pair
-                    if(pSSAPair == "")
-                        fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.multiplexing_bp.ssa_pair_select", 0x4);
+                    if(pSSAPair == "") fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.multiplexing_bp.ssa_pair_select", 0x4);
                     cWordAlignmentPattern = (cPairId == 0) ? 0xCA : 0xF0;
                     if(pSSAPair != "")
                         LOG(INFO) << BOLDBLUE << "Backend alignment for SSA " << +cPairId << " in pair [ChipId in BE is  " << +cChip->getId() << " ]" << RESET;
                     else
                         LOG(INFO) << BOLDBLUE << "Backend alignment for SSA#" << +cChipId << RESET;
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, "EnableSLVSTestOutput", 0x1);
-                    std::vector<uint8_t> cPhaseTaps(9,0);
+                    std::vector<uint8_t> cPhaseTaps(9, 0);
                     for(uint8_t cLineId = 1; cLineId <= 8; cLineId++) // stub lines - 1 to 8
                     {
                         std::stringstream cRegName;

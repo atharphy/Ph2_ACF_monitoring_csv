@@ -17,7 +17,7 @@ class D19cDebugFWInterface : public BeBoardFWInterface
     ~D19cDebugFWInterface();
 
   public:
-    std::vector<std::string> StubDebug(bool pWithTestPulse = true, uint8_t pNlines = 6);
+    std::vector<std::string> StubDebug(bool pWithTestPulse = true, uint8_t pNlines = 6, bool pPrint = true);
     std::string              L1ADebug(uint8_t pWait_ms = 1, bool pPrint = true);
     std::vector<std::string> ScopeStubLines(bool pWithTestPulse = true);
 };

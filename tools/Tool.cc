@@ -251,7 +251,7 @@ Double_t Tool::getSummaryParameter(std::string cParameter)
     return -1.0;
 }
 
-TString Tool::getDirectoryName() { return fDirectoryName.c_str(); }
+// TString Tool::getDirectoryName() { return fDirectoryName.c_str(); }
 
 void Tool::bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObject)
 {
