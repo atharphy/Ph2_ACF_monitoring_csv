@@ -20,9 +20,9 @@ class D19clpGBTInterface : public lpGBTInterface
     D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB)
     {
         LOG(INFO) << BOLDRED << "Constructor D19clpGBTInterface" << RESET;
-        #ifdef __TCUSB__ 
-            iniitalizeExternalController();
-        #endif
+#ifdef __TCUSB__
+        iniitalizeExternalController();
+#endif
         // configure during constructor now when configuring chip
         SetConfigMode(pUseOpticalLink, pUseCPB);
         // configure CPB - do this here rather than in SystemController? Not sure

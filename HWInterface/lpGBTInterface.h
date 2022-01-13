@@ -66,17 +66,18 @@ class lpGBTInterface : public ChipInterface
                                     // if external interface is compiled then return the ptr to access the controller
   public:
 #ifdef __TCUSB__
-    void               iniitalizeExternalController(){
-      #ifdef __TCUSB__
-        #ifdef __ROH_USB__
-                LOG (INFO) << BOLDYELLOW << "Initializing controller (via usb) for PS-ROH test system..." << RESET;
-                fExternalController = new TestCardInterface("ROH_USB");
-        #elif __SEH_USB__
+    void iniitalizeExternalController()
+    {
+#ifdef __TCUSB__
+#ifdef __ROH_USB__
+        LOG(INFO) << BOLDYELLOW << "Initializing controller (via usb) for PS-ROH test system..." << RESET;
+        fExternalController = new TestCardInterface("ROH_USB");
+#elif __SEH_USB__
 
-                LOG (INFO) << BOLDYELLOW << "Initializing controller (via usb) for 2S-SEH test system..." << RESET;
-                fExternalController = new TestCardInterface("SEH_USB");
-        #endif
-      #endif
+        LOG(INFO) << BOLDYELLOW << "Initializing controller (via usb) for 2S-SEH test system..." << RESET;
+        fExternalController = new TestCardInterface("SEH_USB");
+#endif
+#endif
     }
     TestCardInterface* getExternalController() const { return fExternalController; }
 #endif

@@ -349,12 +349,12 @@ class SystemController
         return fChannelGroupHandlerContainer->at(0)->at(0)->at(0)->at(0)->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getTestGroup(groupNumber);
     }
 
-  public : 
-    void setInterfaceInitialization(uint8_t pCnfg){ fInitializeInterfaces =pCnfg; }
+  public:
+    void setInterfaceInitialization(uint8_t pCnfg) { fInitializeInterfaces = pCnfg; }
 
   protected:
-    bool fSameChannelGroupForAllChannels{true};
-    uint8_t fInitializeInterfaces{1}; 
+    bool    fSameChannelGroupForAllChannels{true};
+    uint8_t fInitializeInterfaces{1};
 
   private:
     DetectorDataContainer* fChannelGroupHandlerContainer;

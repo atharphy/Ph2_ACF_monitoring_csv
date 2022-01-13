@@ -74,7 +74,7 @@ void D19clpGBTInterface::SetConfigMode(bool pUseOpticalLink, bool pUseCPB, bool 
         LOG(INFO) << BOLDGREEN << "Using Serial Interface configuration mode" << RESET;
 #ifdef __ROH_USB__
         LOG(INFO) << BOLDBLUE << "Toggling Test Card" << RESET;
-        if(pToggleTC && fExternalController != nullptr ) fExternalController->getInterface().toggle_SCI2C();
+        if(pToggleTC && fExternalController != nullptr) fExternalController->getInterface().toggle_SCI2C();
 #endif
         fUseOpticalLink = true;
         if(pUseCPB)
