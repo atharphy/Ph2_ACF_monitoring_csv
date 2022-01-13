@@ -29,8 +29,8 @@
 
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
             <CBC Id="0" configfile="CBC3_default.txt" />
-            <!-- <CBC Id="1" configfile="CBC3_default.txt" />
-            <CBC Id="2" configfile="CBC3_default.txt" />
+            <CBC Id="1" configfile="CBC3_default.txt" />
+            <!--<CBC Id="2" configfile="CBC3_default.txt" />
             <CBC Id="3" configfile="CBC3_default.txt" />
             <CBC Id="4" configfile="CBC3_default.txt" />
             <CBC Id="5" configfile="CBC3_default.txt" />
@@ -250,7 +250,7 @@
 	<!-- DIO5 Block -->
     <!-- DIO5 Block -->
     <Register name="dio5_block">
-        <Register name="dio5_en"> 0 </Register>
+        <Register name="dio5_en"> 1 </Register>
             <Register name="ch1">
                 <Register name="out_enable"> 0 </Register>
                 <Register name="term_enable"> 1 </Register>

@@ -4,6 +4,7 @@
 
 #include "BeBoardFWInterface.h"
 #include <boost/tokenizer.hpp>
+#include <random>
 
 namespace Ph2_HwInterface
 {
