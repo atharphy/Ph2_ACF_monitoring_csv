@@ -7,12 +7,19 @@ using namespace Ph2_System;
 
 #ifdef __USE_ROOT__
 
-OTHybridTester::OTHybridTester() : Tool() {}
+OTHybridTester::OTHybridTester() : Tool()
+{
+    // I think that this is where the TC interface should be initialized
+    // and where the lpGBT interface should be linked if needed
+    // not in system controller
+    // as this is very specific to each hybrid testing tool
+}
 
 OTHybridTester::~OTHybridTester() {}
 
 void OTHybridTester::FindUSBHandler()
 {
+    // should this now check if the external controller exists?
     bool cThereIsLpGBT = fReadoutChipInterface->lpGBTFound();
     if(cThereIsLpGBT)
         LOG(DEBUG) << BOLDYELLOW << "Found lpGBT" << RESET;
@@ -340,9 +347,9 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
 // fTC_2SSEH->set_AMUX(cDACValue, cDACValue);
 // example to program current Dac for temperature sensor clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, pADCs,0);
 #ifdef __ROH_USB__
-                    fTCInterface.getInterface().dac_output(cDACValue);
+                    flpGBTInterface->getExternalController()->getInterface().dac_output(cDACValue);
 #elif __SEH_USB__
-                    fTCInterface.getInterface().set_AMUX(cDACValue, cDACValue);
+                    flpGBTInterface->getExternalController()->getInterface().set_AMUX(cDACValue, cDACValue);
 #endif
 #endif
                     int cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
@@ -428,7 +435,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
                 {"PTAT_BPOL12V", "PTAT_BPOL12V_Nominal"}};
     cDefaultParameters   = &f2SSEHDefaultParameters;
     cADCNametoPinMapping = &f2SSEHADCInputMap;
-    fTCInterface.getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
+    flpGBTInterface->getExternalController()->getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
 #elif __ROH_USB__
 
     cADCsMap = {{"12V_MONITOR_VD", "12V_MONITOR_VD_Nominal"},
@@ -444,10 +451,9 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     auto cADCHistogram = new TH2I("hADCHistogram", "Fixed ADC Histogram", cADCsMap.size(), 0, cADCsMap.size(), 1024, 0, 1024);
     cADCHistogram->GetZaxis()->SetTitle("Number of entries");
 
-    auto  cADCsMapIterator = cADCsMap.begin();
-    int   cADCValue;
-    int   cBinCount         = 1;
-    float CONVERSION_FACTOR = 1. / 1024.;
+    auto cADCsMapIterator = cADCsMap.begin();
+    int  cADCValue;
+    int  cBinCount = 1;
 
     fillSummaryTree("ADC conversion factor", CONVERSION_FACTOR);
     for(auto cBoard: *fDetectorContainer)
@@ -509,7 +515,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     cFixedADCsTree->Write();
 
 #ifdef __SEH_USB__
-    fTCInterface.getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
+    flpGBTInterface->getExternalController()->getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
 #endif
 #endif
 #endif
@@ -544,7 +550,6 @@ bool OTHybridTester::LpGBTTestResetLines()
     std::map<std::string, TC_PSROH::measurement> cResetLines = fResetLines;
 #elif __SEH_USB__
     std::map<std::string, TC_2SSEH::resetMeasurement> cResetLines = f2SSEHResetLines;
-    std::vector<uint8_t>                              cGPIOs      = {0, 3, 6, 8};
 #endif
 
     for(auto cLevel: cLevels)
@@ -556,13 +561,13 @@ bool OTHybridTester::LpGBTTestResetLines()
         do
         {
 #ifdef __ROH_USB__
-            fTC_USB->adc_get(cMapIterator->second, cMeasurement);
+            flpGBTInterface->getExternalController()->getInterface().adc_get(cMapIterator->second, cMeasurement);
             float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement);
 #elif __SEH_USB__
 #ifdef __TCP_SERVER__
             cMeasurement         = this->getMeasurement("read_reset:" + cMapIterator->first);
 #else
-            fTC_USB->read_reset(cMapIterator->second, cMeasurement);
+            flpGBTInterface->getExternalController()->getInterface().read_reset(cMapIterator->second, cMeasurement);
 
 #endif
             float cDifference_mV = std::fabs((cLevel.second * 1300) - cMeasurement * 1000.); // 1300

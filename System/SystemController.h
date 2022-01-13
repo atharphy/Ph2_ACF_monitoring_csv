@@ -80,33 +80,23 @@ class SystemController
   public:
     Ph2_HwInterface::BeBoardInterface*     fBeBoardInterface; //!< Interface to the BeBoard
     Ph2_HwInterface::ReadoutChipInterface* fReadoutChipInterface;
-    Ph2_HwInterface::ChipInterface*        fChipInterface;  //!< Interface to the Chip
-    Ph2_HwInterface::lpGBTInterface*       flpGBTInterface; //!< Interface to the lpGBT
-    Ph2_HwInterface::CicInterface*         fCicInterface;   //!< Interface to a CIC [only valid for OT]
-    DetectorContainer*                     fDetectorContainer;
-    BeBoardFWMap                           fBeBoardFWMap;
-    SettingsMap                            fSettingsMap;
-    FileHandler*                           fFileHandler;
-    std::string                            fRawFileName;
-    bool                                   fWriteHandlerEnabled;
-    bool                                   fDQMStreamerEnabled;
-    bool                                   fMonitorDQMStreamerEnabled;
-    TCPPublishServer*                      fDQMStreamer;
-    TCPPublishServer*                      fMonitorDQMStreamer;
-    DetectorMonitor*                       fDetectorMonitor;
-    TCPClient*                             fPowerSupplyClient{nullptr};
+    // Ph2_HwInterface::ChipInterface*        fChipInterface;  //!< Interface to the Chip
+    Ph2_HwInterface::lpGBTInterface* flpGBTInterface; //!< Interface to the lpGBT
+    Ph2_HwInterface::CicInterface*   fCicInterface;   //!< Interface to a CIC [only valid for OT]
+    DetectorContainer*               fDetectorContainer;
+    BeBoardFWMap                     fBeBoardFWMap;
+    SettingsMap                      fSettingsMap;
+    FileHandler*                     fFileHandler;
+    std::string                      fRawFileName;
+    bool                             fWriteHandlerEnabled;
+    bool                             fDQMStreamerEnabled;
+    bool                             fMonitorDQMStreamerEnabled;
+    TCPPublishServer*                fDQMStreamer;
+    TCPPublishServer*                fMonitorDQMStreamer;
+    DetectorMonitor*                 fDetectorMonitor;
+    TCPClient*                       fPowerSupplyClient{nullptr};
 #ifdef __TCP_SERVER__
     TCPClient* fTestcardClient{nullptr};
-#endif
-// TestCard interfaces - eventually piGBT can be added here as well
-// should also add the interfaces for the 2S + PS FEHs
-#ifdef __TCUSB__
-#ifdef __ROH_USB__
-    typedef Ph2_HwInterface::TCInterface<TC_PSROH> TestCardInterface;
-#elif __SEH_USB__
-    typedef Ph2_HwInterface::TCInterface<TC_2SSEH> TestCardInterface;
-#endif
-    TestCardInterface fTCInterface{};
 #endif
     /*!
      * \brief Constructor of the SystemController class
@@ -342,30 +332,32 @@ class SystemController
     void setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, FrontEndType theFrontEndType);
 
     void setChannelGroupHandler(std::shared_ptr<ChannelGroupHandler> theChannelGroupHandlerPointer, uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId);
-    const DetectorDataContainer* getChannelGroupHandlerContainer() const
+    const DetectorDataContainer* getChannelGroupHandlerContainer() const { return fChannelGroupHandlerContainer; }
+
+    inline const std::shared_ptr<ChannelGroupBase> getChannelGroup(int groupNumber, uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId)
     {
-        return fChannelGroupHandlerContainer;
+        return fChannelGroupHandlerContainer->getObject(boardId)
+            ->getObject(opticalGroupId)
+            ->getObject(hybridId)
+            ->getObject(chipId)
+            ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+            ->getTestGroup(groupNumber);
     }
 
-
-    inline const std::shared_ptr<ChannelGroupBase>
-    getChannelGroup(int groupNumber, uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId)
-    {
-        return fChannelGroupHandlerContainer->getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getTestGroup(groupNumber);
-    }
-
-    inline const std::shared_ptr<ChannelGroupBase>
-    getChannelGroup(int groupNumber)
+    inline const std::shared_ptr<ChannelGroupBase> getChannelGroup(int groupNumber)
     {
         return fChannelGroupHandlerContainer->at(0)->at(0)->at(0)->at(0)->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getTestGroup(groupNumber);
     }
 
+  public : 
+    void setInterfaceInitialization(uint8_t pCnfg){ fInitializeInterfaces =pCnfg; }
+
   protected:
-    bool fSameChannelGroupForAllChannels {true};
+    bool fSameChannelGroupForAllChannels{true};
+    uint8_t fInitializeInterfaces{1}; 
 
   private:
     DetectorDataContainer* fChannelGroupHandlerContainer;
-
 };
 
 } // namespace Ph2_System

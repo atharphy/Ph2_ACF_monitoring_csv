@@ -6,9 +6,10 @@ if(PH2_TCUSB_SOURCE_DIR)
 
          find_library(PH2_TCUSB_LIBRARY_DIRS
          NAMES
-         lib/libcmsph2_tcusb_utils.so
+         libcmsph2_tcusb.so
+         libcmsph2_tcusb_utils.so
          PATHS
-         ${PH2_TCUSB_SOURCE_DIR}
+         ${PH2_TCUSB_SOURCE_DIR}/../lib
          )
 
          #strip away the path

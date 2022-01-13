@@ -38,7 +38,7 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
     else
     {
 #ifdef __TCUSB__
-        cSuccess = fExternalInterface.getInterface().write_i2c(cAddress, static_cast<char>(pDacValue));
+        cSuccess = fExternalController->getInterface().write_i2c(cAddress, static_cast<char>(pDacValue));
         cSuccess = (!pVerifLoop) ? cSuccess : (ReadChipReg(pChip, pDacName) == pDacValue);
 #endif
     }
@@ -59,7 +59,7 @@ uint16_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
     else
     {
 #ifdef __TCUSB__
-        cValue = fExternalInterface.getInterface().read_i2c(cAddress);
+        cValue = fExternalController->getInterface().read_i2c(cAddress);
 #endif
     }
     pChip->setReg(pDacName, cValue); // make sure to update value in memory

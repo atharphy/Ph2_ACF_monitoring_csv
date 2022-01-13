@@ -122,8 +122,8 @@ export CompileForShep=false
 export CompileWithEUDAQ=false
 
 # Compile with TC_USB library
-export CompileWithTCUSB=false
-export UseTCUSBforROH=false
+export CompileWithTCUSB=true
+export UseTCUSBforROH=true
 export UseTCUSBTcpServer=false
 
 # Clang-format command

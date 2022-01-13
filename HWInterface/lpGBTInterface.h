@@ -15,7 +15,9 @@
 #include "../Utils/RD53Shared.h"
 #include "ChipInterface.h"
 #include "ReadoutChipInterface.h"
-
+#ifdef __TCUSB__
+#include "TCInterface.h"
+#endif
 // ##########################
 // # LpGBT useful constants #
 // ##########################
@@ -28,12 +30,16 @@ const uint8_t fictitiousChannel = 0;   // Fictitious channel used when no need t
 const uint8_t rxPhaseTracking   = 2;   // Rx phase tracking mode [0 = no-tracking, 2 = automatic-tracking]
 } // namespace lpGBTconstants
 
-#ifdef __TCUSB__
-#include "TCInterface.h"
-#endif
-
 namespace Ph2_HwInterface
 {
+#ifdef __TCUSB__
+#ifdef __ROH_USB__
+using TestCardInterface = TCInterface<TC_PSROH>;
+#elif __SEH_USB__
+using TestCardInterface = TCInterface<TC_2SSEH>;
+#endif
+#endif
+
 struct lpGBTClockConfig
 {
     uint8_t fClkFreq = 4, fClkDriveStr = 1, fClkInvert = 1;
@@ -50,17 +56,30 @@ struct lpGBTClockConfig
 class lpGBTInterface : public ChipInterface
 {
   protected:
-// I think eventually this will want to change
 #ifdef __TCUSB__
-#ifdef __ROH_USB__
-    typedef TCInterface<TC_PSROH> ExternalInterface;
-#elif __SEH_USB__
-    typedef TCInterface<TC_2SSEH> ExternalInterface;
+    TestCardInterface* fExternalController{nullptr};
 #endif
-    ExternalInterface fExternalInterface{};
-#endif
+
+  protected:
     const float fClockSpeed = 40e6; // 40 MHz clock for the lpGBT
                                     // std::vector<i2cConfig> fI2Cconfigs(3);
+                                    // if external interface is compiled then return the ptr to access the controller
+  public:
+#ifdef __TCUSB__
+    void               iniitalizeExternalController(){
+      #ifdef __TCUSB__
+        #ifdef __ROH_USB__
+                LOG (INFO) << BOLDYELLOW << "Initializing controller (via usb) for PS-ROH test system..." << RESET;
+                fExternalController = new TestCardInterface("ROH_USB");
+        #elif __SEH_USB__
+
+                LOG (INFO) << BOLDYELLOW << "Initializing controller (via usb) for 2S-SEH test system..." << RESET;
+                fExternalController = new TestCardInterface("SEH_USB");
+        #endif
+      #endif
+    }
+    TestCardInterface* getExternalController() const { return fExternalController; }
+#endif
 
   public:
     lpGBTInterface(const BeBoardFWMap& pBoardMap) : ChipInterface(pBoardMap) {}
@@ -164,17 +183,6 @@ class lpGBTInterface : public ChipInterface
     // # LpGBT Vref function #
     // ###########################
     bool ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection);
-
-// #######################################
-// # functions to link to external interfaces #
-// #######################################
-#ifdef __TCUSB__
-    template <class T>
-    void LinkExternalInterface(T pInterface)
-    {
-        fExternalInterface = pInterface;
-    }
-#endif
 
     // ####################################
     // # LpGBT I2C master config #
