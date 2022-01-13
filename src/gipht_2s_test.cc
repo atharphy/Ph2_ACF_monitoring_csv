@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
 
     cmd.defineOption("tuneOffsets", "tune offsets on readout chips connected to CIC.");
     cmd.defineOptionAlternative("tuneOffsets", "t");
-    cmd.defineOption("output", "output directory for result files.");
+    cmd.defineOption("output", "output directory for result files.", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOptionAlternative("output", "o");
 
     cmd.defineOption("measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC.");
@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
     bool        batchMode        = (cmd.foundOption("batch")) ? true : false;
     std::string cInjectionSource = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
     std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
-
+    std::cout << "DIR: " <<cDirectory << std::endl;
     bool        cGui              = (cmd.foundOption("gui"));
 
     std::string guiPipe = (cGui) ? cmd.optionValue("gui") : "/tmp/guiDummyPipe";
