@@ -121,6 +121,7 @@ int main(int argc, char* argv[])
 
     std::string        cHWFile = (cmd.foundOption("config")) ? cmd.optionValue("config") : "settings/HWDescription_2CBC.xml";
     std::ostringstream cStr;
+    cSystemController.setInterfaceInitialization(0);
     cSystemController.InitializeHw(cHWFile, cStr);
     BeBoard* pBoard = cSystemController.fDetectorContainer->at((cmd.foundOption("board")) ? convertAnyInt(cmd.optionValue("board").c_str()) : 0);
     cSystemController.fBeBoardInterface->setBoard(pBoard->getId());
