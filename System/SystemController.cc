@@ -510,7 +510,10 @@ void SystemController::InitializeOT(BeBoard* pBoard)
 // turn on the SEH here - moved from the lpGBT interface
 #ifdef __SEH_USB__
     LOG(INFO) << BOLDRED << "Intitally switching on SEH for configuration" << RESET;
-    if(flpGBTInterface->getExternalController() != nullptr) flpGBTInterface->getExternalController()->getInterface().set_SehSupply(TC_2SSEH::sehSupplyState::sehSupply_On);
+    if(flpGBTInterface != nullptr)
+    {
+        if(flpGBTInterface->getExternalController() != nullptr) flpGBTInterface->getExternalController()->getInterface().set_SehSupply(TC_2SSEH::sehSupplyState::sehSupply_On);
+    }
 #endif
     for(auto cOpticalGroup: *pBoard)
     {
