@@ -448,9 +448,9 @@ void OpenFinder::FindOpensPS()
 
     std::vector<uint16_t> finalAntennaOdd;
     std::vector<uint16_t> finalAntennaEven;
-    uint16_t              finalAntenna = 0;
+    // uint16_t              finalAntenna = 0;
 
-    int    crosstalk_channels     = 0;
+    // int    crosstalk_channels     = 0;
     int    high_outliers_channels = 0;
     double occupancy_avg          = 0;
     // double occupancy_crosstk = 0;
@@ -472,8 +472,7 @@ void OpenFinder::FindOpensPS()
         cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
         cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.cal_pulse", 0});
         cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.antenna", 1});
-        for(auto cOpticalGroup: *cBoard)
-        {
+        
             // std::vector<std::pair<std::string, uint32_t>> cRegVec;
             // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
             // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.cal_pulse", 0});
@@ -534,7 +533,7 @@ void OpenFinder::FindOpensPS()
             fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
         }
         // fBeBoardInterface->WriteBoardMultReg (cBoard, cRegVec);
-    }
+    
 
     // For DEBUG. Sweep antenna value
     //   TH1I* occupancyHist = new TH1I("OccupHist", "occupancy histogram for stddev", 60, 0, 60);
@@ -667,7 +666,7 @@ void OpenFinder::FindOpensPS()
                                     // const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
                                     for(auto cEvent: cEvents)
                                     {
-                                        auto cNhits     = cEvent->GetNHits(cHybrid->getId(), cChip->getId());
+                                        // auto cNhits     = cEvent->GetNHits(cHybrid->getId(), cChip->getId());
                                         auto cHitVector = cEvent->GetHits(cHybrid->getId(), cChip->getId());
 
                                         for(uint32_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
@@ -804,7 +803,7 @@ void OpenFinder::FindOpensPS()
                             for(auto cEvent: cEvents)
                             {
                                 LOG(INFO) << BOLDBLUE << "SSA#" << +cChip->getId() << RESET;
-                                auto cNhits     = cEvent->GetNHits(cHybrid->getId(), cChip->getId());
+                                // auto cNhits     = cEvent->GetNHits(cHybrid->getId(), cChip->getId());
                                 auto cHitVector = cEvent->GetHits(cHybrid->getId(), cChip->getId());
 
                                 std::string tmpParameter = "";

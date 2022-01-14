@@ -13,7 +13,7 @@
 #include "LinkAlignmentOT.h"
 #include "Tool.h"
 #ifdef __TCUSB__
-#include "../../cmsph2_tcusb/USB_a.h"
+#include "USB_a.h"
 #endif
 
 #include "../Utils/SSAChannelGroupHandler.h"
