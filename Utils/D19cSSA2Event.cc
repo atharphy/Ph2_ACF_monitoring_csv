@@ -20,11 +20,8 @@ void D19cSSA2Event::fillChipDataContainer(ChipDataContainer* chipContainer, cons
     unsigned int i = 0;
     for(ChannelDataContainer<Occupancy>::iterator channel = chipContainer->begin<Occupancy>(); channel != chipContainer->end<Occupancy>(); channel++, i++)
     {
-        if(testChannelGroup->isChannelEnabled(i))
-        {
-            channel->fOccupancy += (float)privateDataBit(hybridId, chipContainer->getId(), i);
-        }
-    } 
+        if(testChannelGroup->isChannelEnabled(i)) { channel->fOccupancy += (float)privateDataBit(hybridId, chipContainer->getId(), i); }
+    }
 }
 
 void D19cSSA2Event::SetEvent(const BeBoard* pBoard, uint32_t pNSSA2, const std::vector<uint32_t>& list)

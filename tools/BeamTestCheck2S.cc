@@ -1818,7 +1818,8 @@ void BeamTestCheck2S::PrepareForExternalTP(BeBoard* pBoard)
             {
                 for(uint16_t groupNumber = 0; groupNumber < 1; ++groupNumber)
                 {
-                    if(groupNumber > getChannelGroupHandlerContainer()->getObject(fDetectorContainer->getObject(boardIndex)->getId())
+                    if(groupNumber > getChannelGroupHandlerContainer()
+                                         ->getObject(fDetectorContainer->getObject(boardIndex)->getId())
                                          ->getObject(cOpticalGroup->getId())
                                          ->getObject(cHybrid->getId())
                                          ->getObject(cChip->getId())
@@ -1826,7 +1827,8 @@ void BeamTestCheck2S::PrepareForExternalTP(BeBoard* pBoard)
                                          ->getNumberOfGroups())
                         continue;
                     fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip,
-                                                                             getChannelGroupHandlerContainer()->getObject(fDetectorContainer->at(boardIndex)->getId())
+                                                                             getChannelGroupHandlerContainer()
+                                                                                 ->getObject(fDetectorContainer->at(boardIndex)->getId())
                                                                                  ->getObject(cOpticalGroup->getId())
                                                                                  ->getObject(cHybrid->getId())
                                                                                  ->getObject(cChip->getId())

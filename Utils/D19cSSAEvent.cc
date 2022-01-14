@@ -24,7 +24,6 @@ void D19cSSAEvent::fillChipDataContainer(ChipDataContainer* chipContainer, const
     }
 }
 
-
 void D19cSSAEvent::SetEvent(const BeBoard* pBoard, uint32_t pNSSA, const std::vector<uint32_t>& list)
 {
     // LOG(INFO) << BOLDBLUE << "NEW"<< RESET;

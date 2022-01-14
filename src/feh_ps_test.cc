@@ -12,12 +12,14 @@
 #include "tools/BackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
-#include "tools/PSAlignment.h"
-#include "tools/PSBiasCal.h"
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"
 #include "TROOT.h"
+#endif
+
+#ifdef __TCUSB__
+#include "USB_a.h"
 #endif
 
 #define __NAMEDPIPE__
@@ -54,8 +56,6 @@ int main(int argc, char* argv[])
     cmd.defineOption("file", "Hw Description File . Default value: settings/Commission_2CBC.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOptionAlternative("file", "f");
 
-    cmd.defineOption("save", "Save the data to a raw file.  ", ArgvParser::OptionRequiresValue);
-
     cmd.defineOption("tuneOffsets", "tune offsets on readout chips connected to CIC.");
     cmd.defineOptionAlternative("tuneOffsets", "t");
 
@@ -64,31 +64,35 @@ int main(int argc, char* argv[])
 
     cmd.defineOption("findShorts", "look for shorts", ArgvParser::NoOptionAttribute);
     cmd.defineOption("findOpens", "perform latency scan with antenna on UIB", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("mpaTest", "Check MPA input with Data Player Pattern [provide pattern]", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
+    cmd.defineOption("mpaTest", "Check MPA input with Data Player Pattern", ArgvParser::NoOptionAttribute /*| ArgvParser::OptionRequires*/);
     cmd.defineOption("ssapair", "Debug selected SSA pair. Possible options: 01, 12, 23, 34, 45, 56, 67", ArgvParser::OptionRequiresValue);
 
-    cmd.defineOption("threshold", "Threshold value to set on chips for open and short finding", ArgvParser::OptionRequiresValue);
     cmd.defineOption("hybridId", "Serial Number of front-end hybrid. Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
 
     cmd.defineOption("pattern", "Data Player Pattern", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
     cmd.defineOptionAlternative("pattern", "p");
 
     cmd.defineOption("withCIC", "Perform CIC alignment steps", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("runBias", "Run bias scan", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("eyeScanCic", "Perform CIC eye scan", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("triggerTestCIC", "Perform CIC trigger test", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("checkAsync", "Check async readout", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("checkSync", "Check sync readout", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("checkAsync", "Check async readout", ArgvParser::NoOptionAttribute);
 
-    cmd.defineOption("MPA", "Check sync readout", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("SSA", "Check sync readout", ArgvParser::NoOptionAttribute);
-
-    cmd.defineOption("perType", "perform pedeNoise per chip flavour [MPA/SSA]");
-    cmd.defineOptionAlternative("perType", "a");
+    cmd.defineOption("checkI2C", "Check I2C read of a non-zero register. Infinite loop", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("checkCountersRead", "Check I2C read of a non-zero register. Infinite loop", ArgvParser::NoOptionAttribute);
 
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
+
+    // GUI support
+    cmd.defineOption("USB", "USB iProduct string to identify the test card when using the USB functionalities.", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("USBBus", "USB device bus number", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("USBDev", "USB device device number", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("useGui",
+                     "Support for running the test from the gui for hybrids testing. The named pipe for communication needs to be passed as the last parameter. Default: false",
+                     ArgvParser::NoOptionAttribute);
+
+    cmd.defineOption("output", "Output directory. Default: Results/", ArgvParser::OptionRequiresValue);
+
+    cmd.defineOption("antennaValue", "Antenna value for test.", ArgvParser::OptionRequiresValue);
 
     int result = cmd.parse(argc, argv);
 
@@ -102,18 +106,17 @@ int main(int argc, char* argv[])
     std::string cHWFile = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Commissioning.xml";
     // bool cFindOpens = (cmd.foundOption ("findOpens") )? true : false;
     // bool cShortFinder = ( cmd.foundOption ( "findShorts" ) ) ? true : false;
-    bool        cSaveToFile = cmd.foundOption("save");
-    bool        batchMode   = (cmd.foundOption("batch")) ? true : false;
-    std::string cDirectory  = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
-    std::string cHybridId   = (cmd.foundOption("hybridId")) ? cmd.optionValue("hybridId") : "xxxx";
-    std::string cChipType   = (cmd.foundOption("checkAsync")) ? cmd.optionValue("checkAsync") : "SSA";
-    if(!(cmd.foundOption("checkAsync"))) cChipType = (cmd.foundOption("checkSync")) ? cmd.optionValue("checkSync") : "SSA";
-    if((cmd.foundOption("MPA"))) cChipType = "MPA";
-    if((cmd.foundOption("SSA"))) cChipType = "SSA";
-
-    uint8_t           cPattern = (cmd.foundOption("mpaTest")) ? convertAnyInt(cmd.optionValue("mpaTest").c_str()) : 0;
+    bool        batchMode  = (cmd.foundOption("batch")) ? true : false;
+    std::string cDirectory = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
+    std::string cHybridId  = (cmd.foundOption("hybridId")) ? cmd.optionValue("hybridId") : "xxxx";
+    // uint8_t cPattern = ( cmd.foundOption ( "mpaTest" ) ) ? convertAnyInt ( cmd.optionValue ( "mpaTest" ).c_str() ) : 0;
     const std::string cSSAPair = (cmd.foundOption("ssapair")) ? cmd.optionValue("ssapair") : "";
     cDirectory += Form("FEH_PS_%s", cHybridId.c_str());
+
+    std::string cUsbId  = (cmd.foundOption("USB")) ? cmd.optionValue("USB") : "";                             // Default option?
+    uint32_t    cUsbBus = (cmd.foundOption("USBBus")) ? (uint32_t)(std::stoi(cmd.optionValue("USBBus"))) : 0; // Default option?
+    uint8_t     cUsbDev = (cmd.foundOption("USBDev")) ? (uint32_t)(std::stoi(cmd.optionValue("USBDev"))) : 0; // Default option?
+    bool        cGui    = (cmd.foundOption("useGui"));
 
     TApplication cApp("Root Application", &argc, argv);
 
@@ -123,319 +126,192 @@ int main(int argc, char* argv[])
         TQObject::Connect("TCanvas", "Closed()", "TApplication", &cApp, "Terminate()");
 
     std::string cResultfile = "Hybrid";
-    Timer       t, T;
+    Timer       t;
 
-#ifdef __TCUSB__
-#endif
+    if(cGui)
+    {
+        // Initialize gui communication with named pipe
+        gui::init(argv[argc - 1]);
 
-    T.start();
+        gui::status("Initializing test");
+        gui::progress(0 / 10.0);
+    }
+
     std::stringstream outp;
     // hybrid testing tool
     // going to use this because it also
     // allows me to initialize voltages
     // and check voltages
     PSHybridTester cHybridTester;
-    if(cSaveToFile)
-    {
-        std::string cRawFile = cmd.optionValue("save");
-        cHybridTester.addFileHandler(cRawFile, 'w');
-        LOG(INFO) << BOLDBLUE << "Writing Binary Rawdata to:   " << cRawFile;
-    }
+    LOG(INFO) << "File " << cHWFile << RESET;
+    LOG(INFO) << &cHWFile << RESET;
     cHybridTester.InitializeHw(cHWFile, outp);
     cHybridTester.InitializeSettings(cHWFile, outp);
     cHybridTester.CreateResultDirectory(cDirectory);
     cHybridTester.InitResultFile(cResultfile);
-
+    cHybridTester.bookSummaryTree();
     // set voltage  on PS FEH
-    // cHybridTester.SetHybridVoltage();
+    if(cGui)
+    {
+        gui::message("");
+        gui::status("Setting voltage of the hybrid");
+        gui::progress(0.5 / 10.0);
+
+        gui::data("ResultsDirectory", cHybridTester.getDirectoryName().c_str());
+    }
+
+    if(cmd.foundOption("USBBus") && cmd.foundOption("USBDev"))
+    {
+#ifdef __TCUSB__
+        TC_PSFE cTC_PSFE(cUsbBus, cUsbDev);
+#endif
+    }
+
+    cHybridTester.SetHybridVoltage(cUsbBus, cUsbDev);
     // LOG (INFO) << BOLDBLUE << "PS FEH current consumption pre-configuration..." << RESET;
     // cHybridTester.CheckHybridCurrents();
     // check voltage on PS FEH
     // cHybridTester.CheckHybridVoltages();
-    // LOG(INFO) << outp.str();
+    if(cSSAPair.empty()) { cHybridTester.RunHybridETest(); }
+    LOG(INFO) << outp.str() << RESET;
     // select CIC readout
     // cHybridTester.SelectCIC(true);
-    cHybridTester.ConfigureHw();
 
-    bool cMonitorLPGBT = true;
-
-    if(cmd.foundOption("runBias"))
+    if(cGui)
     {
-        PSBiasCal cPSBiasCal;
-        cPSBiasCal.Inherit(&cHybridTester);
-        cPSBiasCal.Initialise();
-        if(cMonitorLPGBT) cPSBiasCal.CalibrateADC();
-        cPSBiasCal.CalibrateBias();
-    }
-    // return 0;
-
-    // bool        cMonitorLPGBT = true;
-    std::string cMonitor = "right";
-    cHybridTester.ConfigureHw();
-
-    if(cMonitorLPGBT)
-    {
-        for(const auto cBoard: *cHybridTester.fDetectorContainer)
-        {
-            for(auto cOpticalGroup: *cBoard)
-            {
-                auto& clpGBT = cOpticalGroup->flpGBT;
-                if(clpGBT == nullptr) continue;
-
-                // enable voltage
-                std::vector<std::string> cADCs_VoltageMonitors{"ADC1", "ADC2", "ADC6", "ADC7", "VDD"};
-                std::vector<std::string> cADCs_Names{"1V_Monitor", "12V_Monitor", "1V25_Monitor", "2V55_Monitor"};
-                std::vector<std::string> cModuleSide{"left", "left", "right", "left", "internal"};
-                std::vector<float>       cADCs_Refs{1.0, 12, 0.645 * 1.25, 2.55, 1.25 * 0.42};
-                // std::vector<float>       cADCs_Refs{1.0, 12, 0.645 * 1.146  , 2.55, 1.25*0.42};
-                // use Vddd as reference
-                // use P1V25 as reference
-                size_t cIndx = 4;
-                static_cast<D19clpGBTInterface*>(cHybridTester.flpGBTInterface)->WriteChipReg(clpGBT, "ADCMon", (1 << 4));
-                // find correction
-                std::vector<float>   cVals(10, 0);
-                uint8_t              cEnableVref = 1;
-                std::string          cADCsel     = cADCs_VoltageMonitors[cIndx];
-                std::vector<uint8_t> cRefPoints{0, 0x05, 0x10, 0x20, 0x3F};
-                std::vector<float>   cMeasurements(0);
-                std::vector<float>   cSlopes(0);
-                for(auto cRef: cRefPoints)
-                {
-                    static_cast<D19clpGBTInterface*>(cHybridTester.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, cRef);
-                    for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cHybridTester.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * CONVERSION_FACTOR; }
-                    float cMean         = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
-                    float cDifference_V = (cADCs_Refs[cIndx] - cMean);
-                    LOG(DEBUG) << BOLDBLUE << "ADC_" << cADCsel << " reading from lpGBT "
-                               << " correction applied is " << +cRef << " reading [mean] is " << +cMean * 1e3 << " milli-volts."
-                               << "\t...Difference between expected and measured "
-                               << " values is " << cDifference_V * 1e3 << " milli-volts." << RESET;
-
-                    cMeasurements.push_back(cDifference_V);
-                    if(cMeasurements.size() > 1)
-                    {
-                        for(int cI = cMeasurements.size() - 2; cI >= 0; cI--)
-                        {
-                            float cSlope = (cMeasurements[cMeasurements.size() - 1] - cMeasurements[cI]) / (cRefPoints[cMeasurements.size() - 1] - cRefPoints[cI]);
-                            LOG(DEBUG) << BOLDBLUE << "Index " << +(cMeasurements.size() - 1) << " -- index " << cI << " slope is " << cSlope << RESET;
-                            cSlopes.push_back(cSlope);
-                        }
-                    }
-                }
-                float cMeanSlope = std::accumulate(cSlopes.begin(), cSlopes.end(), 0.) / cSlopes.size();
-                float cIntcpt    = cMeasurements[0];
-                int   cCorr      = std::min(std::floor(-1.0 * cIntcpt / cMeanSlope), 63.);
-                LOG(DEBUG) << BOLDBLUE << "Mean slope is " << cMeanSlope << " , intercept is " << cIntcpt << " correction is " << cCorr << RESET;
-                // apply correction and check
-                static_cast<D19clpGBTInterface*>(cHybridTester.flpGBTInterface)->ConfigureVref(clpGBT, cEnableVref, (uint8_t)cCorr);
-                for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cHybridTester.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * CONVERSION_FACTOR; }
-                // turn off ADC mon
-                static_cast<D19clpGBTInterface*>(cHybridTester.flpGBTInterface)->WriteChipReg(clpGBT, "ADCMon", 0x00);
-
-                float cMean         = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
-                float cDifference_V = std::fabs(cADCs_Refs[cIndx] - cMean);
-                LOG(INFO) << BOLDBLUE << "ADC_" << cADCsel << " reading from lpGBT " << +cMean * 1e3 << " milli-volts."
-                          << "\t...Difference between expected and measured "
-                          << " values is " << cDifference_V * 1e3 << " milli-volts." << RESET;
-
-                for(size_t cIndx = 0; cIndx < cADCs_VoltageMonitors.size(); cIndx++)
-                {
-                    std::string cADCsel = cADCs_VoltageMonitors[cIndx];
-                    if(cModuleSide[cIndx].find(cMonitor) == std::string::npos) continue;
-
-                    for(size_t cM = 0; cM < cVals.size(); cM++) { cVals[cM] = static_cast<D19clpGBTInterface*>(cHybridTester.flpGBTInterface)->ReadADC(clpGBT, cADCsel) * CONVERSION_FACTOR; }
-                    float cMean = std::accumulate(cVals.begin(), cVals.end(), 0.) / cVals.size();
-                    // float cStartUpMontior = cMean;
-                    LOG(INFO) << BOLDBLUE << "ADC_ " << cADCs_Names[cIndx] << " reading from lpGBT " << +cMean * 1e3 << " milli-volts. This is monitored via the " << cModuleSide[cIndx]
-                              << " side of the module" << RESET;
-                } // read all monitors
-            }     // configure lpGBT
-        }
+        gui::message("Voltage set");
+        gui::status("Configuring hardware");
+        gui::progress(1 / 10.0);
     }
 
-    // align ASICs on PS module
-    PSAlignment cPSAlignment;
-    cPSAlignment.Inherit(&cHybridTester);
-    cPSAlignment.Initialise();
-    // map MPA outputs for PS module
-    cPSAlignment.MapMPAOutputs();
+    cHybridTester.ConfigureHw();
+    // LOG (INFO) << BOLDBLUE << "PS FEH current consumption post-configuration..." << RESET;
+    // cHybridTester.CheckHybridCurrents();
+    if(cmd.foundOption("checkI2C")) cHybridTester.CheckI2C();
+
+    // cHybridTester.ReadSSABias("MonitorGround");
+    // cHybridTester.ReadSSABias("MonitorVoltageBias");
+    // cHybridTester.ReadSSABias("MonitorCurrentBias");
+
+    if(cSSAPair.empty()) { cHybridTester.CalibrateSSABias(); }
+
+    if(cGui)
+    {
+        gui::message("Hardware configured");
+        gui::status("");
+        gui::progress(1.5 / 10.0);
+    }
 
     // interface to data player
     DPInterface         cDPInterfacer;
     BeBoardFWInterface* cInterface = dynamic_cast<BeBoardFWInterface*>(cHybridTester.fBeBoardFWMap.find(0)->second);
+
+    // // ***************** for dummy hybrid test ***********************
+    //     cHybridTester.SelectCIC(true);
+    //     //Configure and Start DataPlayer
+    //     uint8_t cDataPlayerPattern=0xAA;
+    //     cDPInterfacer.Configure(cInterface, cDataPlayerPattern);
+    //     cDPInterfacer.Start(cInterface);
+    //     if( cDPInterfacer.IsRunning(cInterface) )
+    //     {
+    //         LOG (INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
+    //     }
+    //     else
+    //         LOG (INFO) << BOLDRED << "Could not start FE data player" << RESET;
+
+    //     cDPInterfacer.Stop(cInterface);
+    //     cDPInterfacer.CheckNPatterns(cInterface);
+    // // ************************end dummy test************************************
 
     // need to do this if
     // reading out CIC
     // or testing MPA
     if(cmd.foundOption("withCIC") || cmd.foundOption("mpaTest"))
     {
-        // align ASICs on PS module
-        PSAlignment cPSAlignment;
-        cPSAlignment.Inherit(&cHybridTester);
-        cPSAlignment.Initialise();
-        // map MPA outputs for PS module
-        cPSAlignment.MapMPAOutputs();
-
-        // TO-DO
-        // add condirion to check if USB is being used
         cHybridTester.SelectCIC(true);
-        LOG(INFO) << "CicFEAlignment" << RESET;
-        CicFEAlignment cCicAligner;
-        cCicAligner.Inherit(&cHybridTester);
-        cCicAligner.Start(0);
-        cCicAligner.waitForRunToBeCompleted();
-        // reset all chip and board registers
-        // to what they were before this tool was called
-        cCicAligner.Reset();
-        cCicAligner.dumpConfigFiles();
-        LOG(INFO) << "BackEndAlignment" << RESET;
-        // align back-end
-        BackEndAlignment cBackEndAligner;
-        cBackEndAligner.Inherit(&cHybridTester);
-        cBackEndAligner.Start(0);
-        cBackEndAligner.waitForRunToBeCompleted();
-        // reset all chip and board registers
-        // to what they were before this tool was called
-        cBackEndAligner.Reset();
-        cPSAlignment.Align();
-        cPSAlignment.Reset();
 
-        cHybridTester.dumpConfigFiles();
+        bool    cAligned = false;
+        double  cAlignedDouble;
+        uint8_t cPhaseAlignmentPattern = 0xAA;
+        for(int i = 0; i < 3; i++)
+        {
+            // Check if data player is running
+            if(cDPInterfacer.IsRunning(cInterface))
+            {
+                LOG(INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
+                cDPInterfacer.Stop(cInterface);
+            }
 
-        // // Check if data player is running
-        // // if(cDPInterfacer.IsRunning(cInterface))
-        // // {
-        // //     LOG(INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
-        // //     cDPInterfacer.Stop(cInterface);
-        // // }
+            // Configure and Start DataPlayer
+            // to send phase alignment pattern
+            cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
+            cDPInterfacer.Start(cInterface);
+            // cDPInterfacer.StartSyncPlaying(cInterface);
+            if(cDPInterfacer.IsRunning(cInterface)) { LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET; }
+            else
+                LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
 
-        // // align CIC inputs
-        // CicFEAlignment cCicAligner;
-        // cCicAligner.Inherit(&cHybridTester);
-        // cCicAligner.PhaseAlignmentMPA(100);
-        // cDPInterfacer.Stop(cInterface);
-        // cDPInterfacer.CheckNPatterns(cInterface);
+            // align CIC inputs
+            CicFEAlignment cCicAligner;
+            cCicAligner.Inherit(&cHybridTester);
 
-        // // still needs to be de-bugged!!
-        // // does not work yet
-        // // Configure and Start DataPlayer
-        // // to send word alignment pattern
-        // uint8_t cWordAlignmentPattern = 0x75;
-        // cDPInterfacer.ConfigureEmulator(cInterface, cWordAlignmentPattern);
-        // cDPInterfacer.StartEmulator(cInterface);
-        // if( cDPInterfacer.EmulatorIsRunning(cInterface) )
-        // {
-        //     LOG (INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
-        // }
-        // else
-        //     LOG (INFO) << BOLDRED << "Could not start FE data player" << RESET;
+            LOG(INFO) << "Phase alignment MPA" << RESET;
+            cAligned       = cCicAligner.PhaseAlignment(100);
+            cAlignedDouble = cAligned ? 1.0 : 0.0;
+#ifdef __USE_ROOT__
+            cHybridTester.fillSummaryTree(Form("MPA Alignment attemp %d", i + 1), cAlignedDouble);
+#endif
+            // for (uint8_t value = 0; value < 16; value ++ ) {
+            //     cAligned = cCicAligner.ManualPhaseAlignment(value);
+            //     if (cAligned)
+            //         LOG(INFO) << "Phase: " << +value << RESET;
+            //     else
+            //         LOG(INFO) << BOLDRED << "Phase: " << +value << ". Not set correctly" << RESET;
 
-        // cCicAligner.WordAlignmentMPA(100);
-        // reset all chip and board registers
-        // to what they were before this tool was called
-        // cCicAligner.dumpConfigFiles();
+            //     cHybridTester.SweepPhaseAlignment(value);
+            // }
+            if(cAligned) break;
+        }
+
+        // and then re-align back-end just because
+        cHybridTester.AlignCICout(cPhaseAlignmentPattern);
+
+        cDPInterfacer.Stop(cInterface);
+        cDPInterfacer.CheckNPatterns(cInterface);
     }
 
-    // now go back to PS alignment and align inputs
-    // need to do this if you're going to do any kind
-    // of data tests
-    // cPSAlignment.Align();
-    // cPSAlignment.Reset();
-
-    FrontEndType cFrontEndType;
-    if(cChipType == "MPA")
-    {
-        LOG(INFO) << "Checking data for MPAs only.." << RESET;
-        cFrontEndType = FrontEndType::MPA;
-    }
-    else if(cChipType == "SSA")
-    {
-        LOG(INFO) << "Checking data for SSAs only.." << RESET;
-        cFrontEndType = FrontEndType::SSA;
-    }
-    else
-    {
-        LOG(INFO) << "Checking data for SSAs only.." << RESET;
-        cFrontEndType = FrontEndType::SSA;
-    }
-
-    LOG(INFO) << BOLDBLUE << "6" << RESET;
-    if(cmd.foundOption("checkAsync") || cmd.foundOption("checkSync"))
+    if(cmd.foundOption("checkAsync"))
     {
         DataChecker cDataChecker;
-        // front end type to tool
-
-        auto cSelectFunction = [cFrontEndType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == (FrontEndType)cFrontEndType); };
-        cHybridTester.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
         cDataChecker.Inherit(&cHybridTester);
-        cDataChecker.Initialise();
-        if(cmd.foundOption("checkAsync"))
-            cDataChecker.AsyncTest();
-        else
-            cDataChecker.ReadNeventsTest();
-        // reset
-        cHybridTester.fDetectorContainer->resetReadoutChipQueryFunction();
-        cDataChecker.writeObjects();
+        cDataChecker.AsyncTest();
         // cDataChecker.resetPointers();
     }
-    // eye scan for CIC inputs
-    if(cmd.foundOption("eyeScanCic"))
+
+    OpenFinder cOpenFinder;
+    cOpenFinder.Inherit(&cHybridTester);
+    std::string antennaValue = (cmd.foundOption("antennaValue")) ? cmd.optionValue("antennaValue") : "512";
+    cOpenFinder.SelectAntennaPosition("Disable", 512);
+    // cOpenFinder.SelectAntennaPosition("Enable", 550 );
+    if(cmd.foundOption("antennaValue"))
     {
-        DataChecker cDataChecker;
-        auto        cSelectFunction = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA); };
-        cHybridTester.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
-        cDataChecker.Inherit(&cHybridTester);
-        cDataChecker.Initialise();
-        cDataChecker.PSNominal();
-        // cDataChecker.Eye_CIC();
-        // reset
-        cHybridTester.fDetectorContainer->resetReadoutChipQueryFunction();
-        cDataChecker.writeObjects();
-    }
-    if(cmd.foundOption("triggerTestCIC"))
-    {
-        DataChecker cDataChecker;
-        cDataChecker.Inherit(&cHybridTester);
-        cDataChecker.Initialise();
-        cDataChecker.PSTriggerTests();
-        cDataChecker.writeObjects();
+        cOpenFinder.SelectAntennaPosition("Enable", std::stoi(antennaValue));
+        LOG(INFO) << "Setting antenna" << RESET;
     }
 
-    // // equalize thresholds on readout chips
-    if(cmd.foundOption("tuneOffsets"))
+    // measure noise on FE chips before calibration
+    if(cmd.foundOption("measurePedeNoise") && cmd.foundOption("antennaValue"))
     {
-        t.start();
-        // now create a PedestalEqualization object
-
-        // FrontEndType cFrontEndType   = cFirstReadoutChip->getFrontEndType();
-        // auto         cSelectFunction = [cFrontEndType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == (FrontEndType)cFrontEndType); };
-        // FrontEndType cFrontEndType   = cFrontEndType;
-        auto cSelectFunction = [cFrontEndType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == (FrontEndType)cFrontEndType); };
-        cHybridTester.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
-        PedestalEqualization cPedestalEqualization;
-        cPedestalEqualization.Inherit(&cHybridTester);
-        // second parameter disables stub logic on CBC3
-        cPedestalEqualization.Initialise(true, true);
-        cPedestalEqualization.FindVplus();
-        cPedestalEqualization.FindOffsets();
-        cPedestalEqualization.writeObjects();
-        cPedestalEqualization.dumpConfigFiles();
-        cPedestalEqualization.resetPointers();
-        cHybridTester.fDetectorContainer->resetReadoutChipQueryFunction();
-        t.show("Time to tune the front-ends on the system: ");
-    }
-    // measure noise on FE chips
-    if(cmd.foundOption("measurePedeNoise"))
-    {
+        if(cGui)
+        {
+            gui::status("Measuring noise on front-end chips before calibration");
+            gui::message("");
+            gui::progress(3.5 / 10.0);
+        }
         t.start();
         // if this is true, I need to create an object of type PedeNoise from the members of Calibration
         // tool provides an Inherit(Tool* pTool) for this purpose
         PedeNoise cPedeNoise;
-        // hard coded for now
-        // ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(cHybridTester.fDetectorContainer->at(0)->at(0)->at(0)->at(0));
-        // FrontEndType cFrontEndType   = cFirstReadoutChip->getFrontEndType();
-        // FrontEndType cFrontEndType   = cFrontEndType;
-        auto cSelectFunction = [cFrontEndType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == (FrontEndType)cFrontEndType); };
-        cHybridTester.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
         cPedeNoise.Inherit(&cHybridTester);
         // second parameter disables stub logic on CBC3
         cPedeNoise.Initialise(true, true); // canvases etc. for fast calibration
@@ -444,29 +320,119 @@ int main(int argc, char* argv[])
         cPedeNoise.dumpConfigFiles();
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
+        if(cGui) { gui::message("Noise measured"); }
 
-        // reset
-        cHybridTester.fDetectorContainer->resetReadoutChipQueryFunction();
-        LOG(INFO) << BOLDBLUE << "10" << RESET;
+        // cOpenFinder.SelectAntennaPosition("Disable", 512);
     }
-
-    if(cmd.foundOption("findOpens"))
+    // cHybridTester.SetTrim("GAINTRIMMING",7);
+    // // equalize thresholds on readout chips
+    if(cmd.foundOption("tuneOffsets"))
     {
-        OpenFinder cOpenFinder;
-        cOpenFinder.Inherit(&cHybridTester);
-        cOpenFinder.FindOpensPS();
+        if(cGui)
+        {
+            gui::status("Calibrating front-end chips");
+            gui::message("");
+            gui::progress(2 / 10.0);
+        }
+
+        t.start();
+        // now create a PedestalEqualization object
+        PedestalEqualization cPedestalEqualization;
+        cPedestalEqualization.Inherit(&cHybridTester);
+        cPedestalEqualization.Initialise(true, true);
+        cPedestalEqualization.FindVplus();
+
+        cHybridTester.ReadSSABias("CalLevel");
+
+        cPedestalEqualization.FindOffsets();
+        cPedestalEqualization.writeObjects();
+        cPedestalEqualization.dumpConfigFiles();
+        cPedestalEqualization.resetPointers();
+        t.show("Time to tune the front-ends on the system: ");
+        if(cGui)
+        {
+            gui::message("Front-end chips calibrated successfully.");
+            gui::progress(3 / 10.0);
+        }
     }
+
+    // cHybridTester.CalibrateGainTrim();
+
+    // measure noise on FE chips
+    if(cmd.foundOption("measurePedeNoise"))
+    {
+        if(cGui)
+        {
+            gui::status("Measuring noise on front-end chips");
+            gui::message("");
+            gui::progress(3.5 / 10.0);
+        }
+        t.start();
+        // if this is true, I need to create an object of type PedeNoise from the members of Calibration
+        // tool provides an Inherit(Tool* pTool) for this purpose
+        PedeNoise cPedeNoise;
+        cPedeNoise.Inherit(&cHybridTester);
+        cPedeNoise.Initialise(true, true); // canvases etc. for fast calibration
+        cPedeNoise.measureNoise();
+        cPedeNoise.writeObjects();
+        cPedeNoise.dumpConfigFiles();
+        t.stop();
+        t.show("Time to Scan Pedestals and Noise");
+        if(cGui) { gui::message("Noise measured"); }
+    }
+
+    if(cmd.foundOption("checkCountersRead")) { cHybridTester.CheckCounters(); }
     if(cmd.foundOption("findShorts"))
     {
+        if(cGui)
+        {
+            gui::status("Running short finding procedure...");
+            gui::message("");
+            gui::progress(5 / 10.0);
+        }
         ShortFinder cShortFinder;
         cShortFinder.Inherit(&cHybridTester);
         cShortFinder.Initialise();
         cShortFinder.FindShorts();
+
+        if(cGui)
+        {
+            gui::message("Short finding done");
+            gui::progress(5.5 / 10.0);
+        }
     }
+    if(cmd.foundOption("findOpens"))
+    {
+        if(cGui)
+        {
+            gui::status("Running open finding procedure...");
+            gui::message("");
+            gui::progress(6 / 10.0);
+        }
+
+        OpenFinder cOpenFinder;
+        cOpenFinder.Inherit(&cHybridTester);
+        cOpenFinder.FindOpensPS();
+
+        if(cGui)
+        {
+            gui::message("Open finding done");
+            gui::progress(7 / 10.0);
+        }
+    }
+    // test MPA outputs
     // test MPA outputs
     if(cmd.foundOption("mpaTest"))
     {
+        if(cGui)
+        {
+            gui::status("Starting CIC input lines test");
+            gui::message("");
+            gui::progress(7.5 / 10.0);
+        }
+
         cHybridTester.SelectCIC(true);
+
         // Configure and Start DataPlayer
         for(uint8_t cAttempt = 0; cAttempt < 1; cAttempt++)
         {
@@ -477,6 +443,7 @@ int main(int argc, char* argv[])
                 cDPInterfacer.Stop(cInterface);
             }
 
+            // Is this needed?
             if(cAttempt == 0)
                 LOG(INFO) << BOLDBLUE << "Attempt " << +cAttempt << RESET;
             else if(cAttempt == 1)
@@ -486,21 +453,69 @@ int main(int argc, char* argv[])
             else if(cAttempt == 3)
                 LOG(INFO) << BOLDYELLOW << "Attempt " << +cAttempt << RESET;
 
-            cDPInterfacer.Configure(cInterface, cPattern);
-            cDPInterfacer.Start(cInterface);
-            cHybridTester.MPATest(cPattern);
+            cHybridTester.MPATest(); // The pattern is not being set by the function anymore
             cDPInterfacer.Stop(cInterface);
-            cDPInterfacer.CheckNPatterns(cInterface);
         }
-        cHybridTester.SelectCIC(false);
+
+        if(cGui)
+        {
+            gui::message("MPA input test done.");
+            gui::progress(8 / 10.0);
+        }
     }
     // ssa pair tests
     if(!cSSAPair.empty())
     {
+        if(cGui)
+        {
+            gui::status("Testing SSA stubs...");
+            gui::progress(5 / 10.0);
+        }
+
+        BackEndAlignment cBackendAlignment;
+        cBackendAlignment.Inherit(&cHybridTester);
+
         LOG(INFO) << BOLDRED << "SSAOutput POGO debug" << RESET;
         // configure SSA to output something on stub lines
-        cHybridTester.SSATestStubOutput(cSSAPair);
-        // still needs to be debugged
+        if(!cSSAPair.empty())
+        {
+            BackEndAlignment cBackendAlignment;
+            cBackendAlignment.Inherit(&cHybridTester);
+
+            LOG(INFO) << BOLDRED << "SSAOutput POGO debug" << RESET;
+            // configure SSA to output something on stub lines
+            if(cSSAPair != "ALL")
+            {
+                cHybridTester.SSAPairSelect(cSSAPair);
+                cBackendAlignment.SetEnabledROCs(cSSAPair);
+                for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
+                cHybridTester.SSATestStubOutput(cSSAPair);
+                cHybridTester.SSATestL1Output(cSSAPair);
+                cHybridTester.SSATestLateralCommunication(cSSAPair);
+            }
+            else
+            {
+                std::string cCurrentSSAPair;
+                for(int i = 0; i < 7; i += 2)
+                {
+                    cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
+                    cHybridTester.SSAPairSelect(cCurrentSSAPair);
+                    cBackendAlignment.SetEnabledROCs(cSSAPair);
+                    for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
+                    cHybridTester.SSATestStubOutput(cCurrentSSAPair);
+                    cHybridTester.SSATestL1Output(cCurrentSSAPair);
+                }
+
+                for(int i = 0; i < 7; i++)
+                {
+                    cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
+                    cHybridTester.SSAPairSelect(cCurrentSSAPair);
+                    cBackendAlignment.SetEnabledROCs(cCurrentSSAPair);
+                    for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
+                    cHybridTester.SSATestLateralCommunication(cCurrentSSAPair);
+                }
+            }
+        }
         // configure SSA to output something on L1 lines
         // cHybridTester.SSATestL1Output(cSSAPair);
         // put it back in normal readout mode
@@ -534,13 +549,24 @@ int main(int argc, char* argv[])
         // }
     }
 
+    if(cGui)
+    {
+        gui::status("Saving test results...");
+        gui::progress(9 / 10.0);
+    }
+
     cHybridTester.SaveResults();
     cHybridTester.WriteRootFile();
     cHybridTester.CloseResultFile();
     cHybridTester.Destroy();
 
+    if(cGui)
+    {
+        gui::message("Results saved");
+        gui::status("Test done");
+        gui::progress(10.0 / 10.0);
+    }
+
     if(!batchMode) cApp.Run();
-    T.stop();
-    T.show("Total time = ");
     return 0;
 }

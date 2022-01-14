@@ -35,6 +35,9 @@
 
 using namespace Ph2_HwDescription;
 
+// class TC_2SSEH;
+// class TC_PSROH;
+
 class OTHybridTester : public Tool
 {
   public:
@@ -73,6 +76,8 @@ class OTHybridTester : public Tool
   private:
     float       getMeasurement(std::string name);
     std::string getVariableValue(std::string variable, std::string buffer);
+
+  protected:
 #ifdef __TCUSB__
     std::map<std::string, uint8_t> f2SSEHGPILines = {
         {"PG2V5", 13},
