@@ -352,9 +352,10 @@
             </node>
         </node>
 
-        <node id="fine_phase_tune"     address="0x3003">
+        <node id="fine_phase_tune"     address="0x003">
             <node id="control"                      address="0x000">
                 <node id="toggle_phase"             mask="0x000000FF"/>
+                <node id="phase_shift_trig_data"    mask="0x0000FF00"/>
             </node>
         </node>
 

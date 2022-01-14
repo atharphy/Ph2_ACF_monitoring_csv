@@ -1,41 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
     <BeBoard Id="0" boardType="D19C" eventType="VR">
-     <connection id="board" uri="chtcp-2.0://hybridtesting:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />      <!-- <connection id="board" uri="chtcp-2.0://cmsuptkhsetup2.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
-    <OpticalGroup Id="0" FMCId="0" >
-        <Hybrid Id="0" Status="1" LinkId="0">
-            <Global>
-                <Settings threshold="500" latency="19"/>
-                <TestPulse enable="0" polarity="0" amplitude="0xFF" channelgroup="0" delay="0" groundothers="1"/>
-                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
-                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="1" tpgclock="1" testclock="0" dll="0"/>
-                <ChannelMask disable=""/>
-                <CIC enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
-            </Global>
-
-            <CBC_Files path="./settings/CbcFiles/" />
-            <CBC Id="0" configfile="CBC3_default.txt" />
-            <CBC Id="1" configfile="CBC3_default.txt" />
-            <CBC Id="2" configfile="CBC3_default.txt" />
-            <CBC Id="3" configfile="CBC3_default.txt" />
-            <CBC Id="4" configfile="CBC3_default.txt" />
-            <CBC Id="5" configfile="CBC3_default.txt" />
-            <CBC Id="6" configfile="CBC3_default.txt" />
-            <CBC Id="7" configfile="CBC3_default.txt" />
-
-            <CIC_Files path="./settings/CicFiles/" />
-            <CIC Id="8" configfile="CIC_default.txt" />
-        </Hybrid>
-    </OpticalGroup>
-
-    <SLink>
-        <DebugMode type="FULL"/>
-        <ConditionData type="I2C" Register="VCth1" FeId="0" CbcId="0"/>
-        <ConditionData type="User" UID="0x80" FeId="0" CbcId="0"> 0x22 </ConditionData>
-        <ConditionData type="HV" FeId="0" Sensor="2"> 250 </ConditionData>
-        <ConditionData type="TDC" FeId="0xFF"/>
-    </SLink>
-
+    <connection id="board" uri="chtcp-2.0://hybridtesting:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />      <!-- <connection id="board" uri="chtcp-2.0://cmsuptkhsetup2.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
     <!--CONFIG-->
     <Register name="clock_source">3</Register> <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
     <Register name="fc7_daq_cnfg">
