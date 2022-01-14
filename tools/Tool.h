@@ -23,6 +23,7 @@
 #include "TString.h"
 #include "TSystem.h"
 #include "TTree.h"
+#include "TH1.h"
 #endif
 
 class DetectorContainer;

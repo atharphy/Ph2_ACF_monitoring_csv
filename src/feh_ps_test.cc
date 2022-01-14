@@ -487,7 +487,8 @@ int main(int argc, char* argv[])
             if(cSSAPair != "ALL")
             {
                 cHybridTester.SSAPairSelect(cSSAPair);
-                for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard, cSSAPair); }
+                cBackendAlignment.SetEnabledROCs(cSSAPair);
+                for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
                 cHybridTester.SSATestStubOutput(cSSAPair);
                 cHybridTester.SSATestL1Output(cSSAPair);
                 cHybridTester.SSATestLateralCommunication(cSSAPair);
@@ -499,7 +500,8 @@ int main(int argc, char* argv[])
                 {
                     cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
                     cHybridTester.SSAPairSelect(cCurrentSSAPair);
-                    for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard, cCurrentSSAPair); }
+                    cBackendAlignment.SetEnabledROCs(cSSAPair);
+                    for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
                     cHybridTester.SSATestStubOutput(cCurrentSSAPair);
                     cHybridTester.SSATestL1Output(cCurrentSSAPair);
                 }
@@ -508,7 +510,8 @@ int main(int argc, char* argv[])
                 {
                     cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
                     cHybridTester.SSAPairSelect(cCurrentSSAPair);
-                    for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard, cCurrentSSAPair); }
+                    cBackendAlignment.SetEnabledROCs(cCurrentSSAPair);
+                    for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
                     cHybridTester.SSATestLateralCommunication(cCurrentSSAPair);
                 }
             }

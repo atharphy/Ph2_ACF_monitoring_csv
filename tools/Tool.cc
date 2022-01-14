@@ -1,8 +1,6 @@
 #include "Tool.h"
 #include <numeric>
-#ifdef __USE_ROOT__
-#include "TH1.h"
-#endif
+
 
 #include "../HWDescription/Chip.h"
 #include "../Utils/ChannelGroupHandler.h"

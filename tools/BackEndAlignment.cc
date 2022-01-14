@@ -29,7 +29,7 @@ void BackEndAlignment::Initialise()
     SetBrdRegstoPerserve(cBrdRegsToKeep);
 
     // pair select for PS-FEHs
-    fPairSelect = std::to_string(findValueInSettings<double>("EnablePairSelect", 0));
+    fPairSelect = (uint8_t)(findValueInSettings<double>("EnablePairSelect", 0));
 
     // retreive original settings for all chips and all back-end boards
     ContainerFactory::copyAndInitHybrid<uint8_t>(*fDetectorContainer, fEnabledFEs);
@@ -53,7 +53,17 @@ void BackEndAlignment::Initialise()
     }
 }
 
-bool BackEndAlignment::PSAlignment(BeBoard* pBoard, std::string pSSAPair)
+void BackEndAlignment::SetEnabledROCs(std::string pSSAPair)
+{
+    fPairName = pSSAPair;
+    fEnabledROCs.clear();
+    for( uint8_t cId=0; cId < 8; cId++)
+    {
+        if(cId != (int)(fPairName[0] - '0') && cId != (int)(fPairName[1] - '0')) continue;
+        fEnabledROCs.push_back(cId);
+    }            
+}
+bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
 {
     bool cTuned = true;
     LOG(INFO) << GREEN << "BackEndAlignment for PS Chip(s)" << RESET;
@@ -70,22 +80,24 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard, std::string pSSAPair)
                 ReadoutChip* cReadoutChip = static_cast<ReadoutChip*>(cChip);
                 if(cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::SSA)
                 {
-                    if(cReadoutChip->getId() != (int)(pSSAPair[0] - '0') && cReadoutChip->getId() != (int)(pSSAPair[1] - '0')) continue;
+                    if( fPairSelect && std::find( fEnabledROCs.begin(), fEnabledROCs.end(), cChip->getId() ) == fEnabledROCs.end() ) continue;
                     auto cDriveStrength = fReadoutChipInterface->ReadChipReg(cChip, "SLVS_pad_current_L1");
                     LOG(INFO) << BOLDBLUE << "SSA#" << +cChip->getId() << " Alignment for L1 and stub lines.. L1 drive set to " << +cDriveStrength << RESET;
 
                     std::vector<uint8_t> cAlVals(9, 0);
                     uint8_t              cPairId = (cChip->getId() % 2 == 0) ? 1 : 0;
-                    uint8_t              cChipId = (pSSAPair != "") ? cPairId : cChip->getId();
-                    cPairId                      = (pSSAPair != "") ? cPairId : 0;
-
+                    uint8_t              cChipId = (fPairSelect) ? cPairId : cChip->getId();
                     // select SSA pair
-                    if(pSSAPair == "") fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.multiplexing_bp.ssa_pair_select", 0x4);
-                    cWordAlignmentPattern = (cPairId == 0) ? 0xCA : 0xF0;
-                    if(pSSAPair != "")
+                    if(fPairSelect)
+                    {
+                        cWordAlignmentPattern = (cPairId % 2 == 0) ? 0xCA : 0xF0;
                         LOG(INFO) << BOLDBLUE << "Backend alignment for SSA " << +cPairId << " in pair [ChipId in BE is  " << +cChip->getId() << " ]" << RESET;
+                    }
                     else
+                    {
+                        cWordAlignmentPattern = 0xF0;
                         LOG(INFO) << BOLDBLUE << "Backend alignment for SSA#" << +cChipId << RESET;
+                    }
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, "EnableSLVSTestOutput", 0x1);
                     std::vector<uint8_t> cPhaseTaps(9, 0);
                     for(uint8_t cLineId = 1; cLineId <= 8; cLineId++) // stub lines - 1 to 8
@@ -340,7 +352,7 @@ bool BackEndAlignment::Align()
             cAligned = this->CBCAlignment(theBoard);
         }
         else if(cWithMPA || cWithSSA)
-            cAligned = this->PSAlignment(theBoard, fPairSelect);
+            cAligned = this->PSAlignment(theBoard);
 
         // check alignment
         if(cAligned)

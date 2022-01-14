@@ -33,7 +33,7 @@ class BackEndAlignment : public LinkAlignmentOT
     bool Bx0Alignment(Ph2_HwDescription::BeBoard* pBoard);
     bool CICAlignment(Ph2_HwDescription::BeBoard* pBoard);
     bool CBCAlignment(Ph2_HwDescription::BeBoard* pBoard);
-    bool PSAlignment(Ph2_HwDescription::BeBoard* pBoard, std::string pSSApair = "");
+    bool PSAlignment(Ph2_HwDescription::BeBoard* pBoard);
     void Running() override;
     void Stop() override;
     void Pause() override;
@@ -43,15 +43,19 @@ class BackEndAlignment : public LinkAlignmentOT
     // get alignment results
     bool getStatus() const { return fSuccess; }
 
+    // assign ids to align 
+    void SetEnabledROCs( std::string pPairSelect ); 
   protected:
     bool        fL1Debug    = false;
     bool        fStubDebug  = false;
-    std::string fPairSelect = "";
+    uint8_t     fPairSelect{0};
+    std::string fPairName{""};
 
   private:
     //
     bool fAlignStub = true;
     // Containers
     DetectorDataContainer fEnabledFEs;
+    std::vector<uint8_t> fEnabledROCs{0};
 };
 #endif

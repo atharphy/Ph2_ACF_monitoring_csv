@@ -53,16 +53,12 @@ class ChipInterface
     uint16_t    fRegisterCount;     /*!< Counter for the number of Registers written */
     uint16_t    fTransactionCount;  /*!< Counter for the number of Transactions */
     bool        fWithlpGBT = false; /*!< lpGBT is used for configuration */
-    std::string fName{"ChipInterface"};
 
     /*!
      * \brief Set the board to talk with
      * \param pBoardId
      */
     void setBoard(uint16_t pBoardIdentifier);
-
-    void        setName(std::string pName) { fName = pName; }
-    std::string getName() { return fName; }
 
   public:
     /*!
