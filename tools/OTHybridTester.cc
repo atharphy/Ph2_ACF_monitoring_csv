@@ -414,9 +414,9 @@ bool OTHybridTester::LpGBTTestFixedADCs()
 {
     bool cReturn = true;
 #ifdef __USE_ROOT__
-#ifdef __TCUSB__
+#if defined(__TCUSB__) || defined(__SEH_USB__) || defined(__ROH_USB__)
     std::map<std::string, std::string>  cADCsMap;
-    std::map<std::string, float>*       cDefaultParameters;
+    std::map<std::string, float>*       cDefaultParameters = nullptr;
     std::map<std::string, std::string>* cADCNametoPinMapping;
     std::string                         cADCNameString;
     std::vector<int>                    cADCValueVect;
@@ -545,13 +545,14 @@ bool OTHybridTester::LpGBTTestResetLines()
     // lpGBTinterface now nows this .. so don't need the if statements
     std::vector<uint8_t> cGPIOs = static_cast<D19clpGBTInterface*>(flpGBTInterface)->getGPIOs();
 #ifdef __TCUSB__
-    float cMeasurement;
 #ifdef __ROH_USB__
     std::map<std::string, TC_PSROH::measurement> cResetLines = fResetLines;
 #elif __SEH_USB__
     std::map<std::string, TC_2SSEH::resetMeasurement> cResetLines = f2SSEHResetLines;
 #endif
 
+#if defined(__ROH_USB__) || defined(__SEH_USB__)
+    float cMeasurement;
     for(auto cLevel: cLevels)
     {
         LpGBTSetGPIOLevel(cGPIOs, cLevel.second);
@@ -560,6 +561,7 @@ bool OTHybridTester::LpGBTTestResetLines()
         bool cStatus      = true;
         do
         {
+#endif
 #ifdef __ROH_USB__
             flpGBTInterface->getExternalController()->getInterface().adc_get(cMapIterator->second, cMeasurement);
             float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement);
@@ -568,10 +570,11 @@ bool OTHybridTester::LpGBTTestResetLines()
             cMeasurement         = this->getMeasurement("read_reset:" + cMapIterator->first);
 #else
             flpGBTInterface->getExternalController()->getInterface().read_reset(cMapIterator->second, cMeasurement);
-
-#endif
             float cDifference_mV = std::fabs((cLevel.second * 1300) - cMeasurement * 1000.); // 1300
 #endif
+#endif
+
+#if defined(__ROH_USB__) || defined(__SEH_USB__)
             cStatus = cStatus && (cDifference_mV <= 100);
             cValid  = cValid && cStatus;
 
@@ -592,6 +595,7 @@ bool OTHybridTester::LpGBTTestResetLines()
         else
             LOG(INFO) << BOLDRED << "Set levels to " << cLevel.first << " : test " << BOLDRED << " failed." << RESET;
     }
+#endif
 #endif
     if(cValid) { LOG(INFO) << BOLDGREEN << "Reset test passed." << RESET; }
     else

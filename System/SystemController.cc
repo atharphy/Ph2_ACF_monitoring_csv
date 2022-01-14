@@ -223,6 +223,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap, cFirstBoard->isOptical(), cFirstBoard->ifUseCPB());
 // check link to external interface
 #ifdef __TCUSB__
+#if defined(__SEH_USB__) || defined(__ROH_USB__)
                     if(flpGBTInterface->getExternalController() != nullptr)
                     {
                         LOG(INFO) << BOLDBLUE << "TC interface should be initialized... type is " << flpGBTInterface->getExternalController()->getName() << RESET;
@@ -233,6 +234,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                         LOG(INFO) << BOLDBLUE << "Checking communication with test card by reading 1V25_Ref : " << cOutput << RESET;
 #endif
                     }
+#endif
 #endif
                 }
 
