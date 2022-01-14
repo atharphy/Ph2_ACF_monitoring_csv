@@ -41,12 +41,14 @@ class D19clpGBTInterface : public lpGBTInterface
     {
         LOG(INFO) << BOLDRED << "Destructor D19clpGBTInterface" << RESET;
 #ifdef __TCUSB__
+#if defined(__ROH_USB__) || defined(__SEH_USB__)
         if(fExternalController != nullptr)
         {
             LOG(INFO) << BOLDRED << "Deleting pointer to external controller for D19clpGBTInterface" << RESET;
             delete fExternalController;
             fExternalController = nullptr;
         }
+#endif
 #endif
     }
 
