@@ -42,7 +42,6 @@ RD53::RD53(const RD53& chipObj) : ReadoutChip(chipObj) {}
 
 void RD53::loadfRegMap(const std::string& fileName)
 {
-    std::cout << fileName << "\n";
     std::ifstream      file(fileName.c_str(), std::ios::in);
     std::stringstream  myString;
     perColumnPixelData pixData;
