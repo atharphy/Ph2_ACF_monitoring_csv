@@ -17,6 +17,7 @@ class FC7FpgaControlFWInterface : public BeBoardFWInterface
     FC7FpgaControlFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler);
     ~FC7FpgaControlFWInterface();
 
+    void                     Initialize();
     void                     FlashProm(const std::string& strConfig, const char* pstrFile);
     void                     JumpToFpgaConfig(const std::string& strConfig);
     void                     DownloadFpgaConfig(const std::string& strConfig, const std::string& strDest);
@@ -27,7 +28,7 @@ class FC7FpgaControlFWInterface : public BeBoardFWInterface
     void                     RebootBoard();
 
   private:
-    D19cFpgaConfig* fFpgaConfig;
+    D19cFpgaConfig* fFpgaConfig{nullptr};
 
 }; // namespace Ph2_HwInterface
 } // namespace Ph2_HwInterface
