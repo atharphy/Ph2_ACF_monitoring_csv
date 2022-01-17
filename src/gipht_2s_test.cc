@@ -206,22 +206,24 @@ int main(int argc, char* argv[])
 
 
     uint16_t    cRunNumber;
-    if(!cmd.foundOption("read") && !cmd.foundOption("output"))
+    if ( !cmd.foundOption("output") )
     {
-        std::ofstream cRunLog;
-        cRunNumber = returnRunNumber("RunNumbers.dat");
-        cRunLog.open("RunNumbers.dat", std::fstream::app);
-        cRunLog << cRunNumber << "\n";
-        cRunLog.close();
-        LOG(INFO) << BOLDBLUE << "Run number is " << +cRunNumber << RESET;
-        cDirectory += Form("OT_ModuleTest_%s_Run%d", cModuleId.c_str(), cRunNumber);
+        if(!cmd.foundOption("read") )
+        {
+            std::ofstream cRunLog;
+            cRunNumber = returnRunNumber("RunNumbers.dat");
+            cRunLog.open("RunNumbers.dat", std::fstream::app);
+            cRunLog << cRunNumber << "\n";
+            cRunLog.close();
+            LOG(INFO) << BOLDBLUE << "Run number is " << +cRunNumber << RESET;
+            cDirectory += Form("OT_ModuleTest_%s_Run%d", cModuleId.c_str(), cRunNumber);
+        }
+        else
+        {
+            std::string cRawFileName = cmd.foundOption("read") ? cmd.optionValue("read") : "";
+            cDirectory += Form("Raw_%s", cRawFileName.substr(0, cRawFileName.find(".raw")).c_str());
+        }
     }
-    else
-    {
-        std::string cRawFileName = cmd.foundOption("read") ? cmd.optionValue("read") : "";
-        cDirectory += Form("Raw_%s", cRawFileName.substr(0, cRawFileName.find(".raw")).c_str());
-    }
-    
     TApplication cApp("Root Application", &argc, argv);
 
     if(batchMode)
