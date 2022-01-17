@@ -872,7 +872,8 @@ bool SSAInterface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& d
             bool cWrite = this->WriteChipReg(pChip, "THTRIMMING_ALL", cVals[0], false);
             if(pVerifLoop)
             {
-                auto cReadback = this->ReadChipReg(pChip, "TrimDAC_S100");
+                // THTRIMMING_S5
+                auto cReadback = this->ReadChipReg(pChip, "THTRIMMING_S100");
                 LOG(DEBUG) << BOLDMAGENTA << "Read-back a value of " << +cReadback << " from trim-dac register" << RESET;
                 return (cReadback == cVals[0]);
             }

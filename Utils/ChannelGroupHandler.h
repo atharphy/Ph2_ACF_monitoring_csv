@@ -185,7 +185,7 @@ class ChannelGroupHandler
       public:
         explicit ChannelGroupIterator(ChannelGroupHandler& channelGroupHandler, uint32_t groupNumber) : channelGroupHandler_(channelGroupHandler), groupNumber_(groupNumber) { ; }
         const std::shared_ptr<ChannelGroupBase> operator*() const { return channelGroupHandler_.getTestGroup(groupNumber_); }
-        ChannelGroupIterator&                    operator++()
+        ChannelGroupIterator&                   operator++()
         {
             ++groupNumber_;
             return *this;

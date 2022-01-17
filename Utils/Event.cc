@@ -46,14 +46,10 @@ void Event::fillDataContainer(BoardDataContainer* boardContainer, const std::sha
     {
         for(auto hybrid: *opticalGroup)
         {
-            for(auto chip: *hybrid)
-            {
-                fillChipDataContainer(chip, testChannelGroup, hybrid->getId());
-            }
+            for(auto chip: *hybrid) { fillChipDataContainer(chip, testChannelGroup, hybrid->getId()); }
         }
     }
 }
-
 
 void Event::GetCbcEvent(const uint8_t& pFeId, const uint8_t& pCbcId, std::vector<uint32_t>& cbcData) const
 {

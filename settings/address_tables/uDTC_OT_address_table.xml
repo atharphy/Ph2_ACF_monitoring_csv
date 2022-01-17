@@ -332,7 +332,7 @@
                 <node id="setup_disconnect"                 mask="0x00000002"/>
                 <node id="check_return_clock"               mask="0x00000004" description="user request to check the return clock from SSAs"/>
                 <node id="check_payload_ntriggers"          mask="0x00000ff0" description="user required number of trigger commands to test the paylaod of the return fast command from SSAs"/>
-                <node id="setup_scan"                       mask="0x00010000"/>
+                <node id="setup_scan"                  mask="0x00010000"/>
             </node>
 
             <node id="fe_data_player"              address="0x019">
@@ -353,9 +353,10 @@
             </node>
         </node>
 
-        <node id="fine_phase_tune"     address="0x3003">
+        <node id="fine_phase_tune"     address="0x003">
             <node id="control"                      address="0x000">
                 <node id="toggle_phase"             mask="0x000000FF"/>
+                <node id="phase_shift_trig_data"    mask="0x0000FF00"/>
             </node>
         </node>
 
