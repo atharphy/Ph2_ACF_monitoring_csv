@@ -130,6 +130,9 @@ int main(int argc, char* argv[])
     cmd.defineOption("reconfigure", "Reconfigure Hardware");
     cmd.defineOption("reload", "Reload settings files and board registers");
     cmd.defineOption("realign", "Re-align module [SSA-MPA] and/or [BE]");
+    
+    cmd.defineOption("gui", "Support for running the test from a guig. The named pipe for communication needs to be passed as parameter. Default: /tmp/guiDummyPipe", ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("gui", "g");
 
     cmd.defineOption("moduleId", "Serial Number of module . Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOption("checkData", "Compare injected hits and stubs with output [please provide a comma seperated list of chips to check]", ArgvParser::OptionRequiresValue);
