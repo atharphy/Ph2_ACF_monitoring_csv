@@ -3,13 +3,13 @@
   <!--##############
       OPTICAL FC7 
   ###############-->
-  <BeBoard Id="0" boardType="D19C" eventType="SSA">
+  <BeBoard Id="0" boardType="D19C" eventType="SSA" linkReset="1" boardReset="0">
       <!--<connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.12:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
       <connection id="board" uri="ipbusudp-2.0://192.168.0.168:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <!--<connection id="board" uri="chtcp-2.0://ph2acf-01.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
     <CDCE configure="0" clockRate="320"/>
     
-    <OpticalGroup Id="0" FMCId="0" >
+    <OpticalGroup Id="0" FMCId="0" reset="1">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="./settings/lpGBTFiles/" />
         <lpGBT Id="0" configfile="CMSOT_lpGBT.txt">

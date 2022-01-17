@@ -44,8 +44,6 @@ class OTHybridTester : public Tool
     OTHybridTester();
     ~OTHybridTester();
 
-    void FindUSBHandler();
-
     // ###################################
     // # LpGBT related functions #
     // ###################################
