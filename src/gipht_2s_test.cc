@@ -206,7 +206,7 @@ int main(int argc, char* argv[])
 
 
     uint16_t    cRunNumber;
-    if(!cmd.foundOption("read"))
+    if(!cmd.foundOption("read") && !cmd.foundOption("output"))
     {
         std::ofstream cRunLog;
         cRunNumber = returnRunNumber("RunNumbers.dat");
@@ -221,6 +221,7 @@ int main(int argc, char* argv[])
         std::string cRawFileName = cmd.foundOption("read") ? cmd.optionValue("read") : "";
         cDirectory += Form("Raw_%s", cRawFileName.substr(0, cRawFileName.find(".raw")).c_str());
     }
+    
     TApplication cApp("Root Application", &argc, argv);
 
     if(batchMode)
