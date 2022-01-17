@@ -184,6 +184,13 @@ int main(int argc, char* argv[])
         LOG(INFO) << cmd.parseErrorDescription(result);
         exit(1);
     }
+    bool        cGui              = (cmd.foundOption("gui"));
+
+    std::string guiPipe = (cGui) ? cmd.optionValue("gui") : "/tmp/guiDummyPipe";
+
+    gui::init(guiPipe.c_str());
+    gui::status("Initializing test");
+    gui::progress(0);
 
     // now query the parsing results
     std::string cHWFile          = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Commissioning.xml";
@@ -194,15 +201,9 @@ int main(int argc, char* argv[])
     std::string cInjectionSource = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
     std::string cSrcLnkTst       = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
     std::string cModuleId        = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
-    std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
+    std::string cDirectory       = (cmd.foundOption("output"))  ? cmd.optionValue("output") : "Results/";
     std::cout << "DIR: " <<cDirectory << std::endl;
-    bool        cGui              = (cmd.foundOption("gui"));
 
-    std::string guiPipe = (cGui) ? cmd.optionValue("gui") : "/tmp/guiDummyPipe";
-
-    gui::init(guiPipe.c_str());
-    gui::status("Initializing test");
-    gui::progress(0);
 
     uint16_t    cRunNumber;
     if(!cmd.foundOption("read"))
