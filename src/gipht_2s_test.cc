@@ -18,6 +18,8 @@
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
 
+#include "../Utils/gui_logger.h"
+
 #ifdef __POWERSUPPLY__
 // Libraries
 #include "DeviceHandler.h"
