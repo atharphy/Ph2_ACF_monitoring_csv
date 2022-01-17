@@ -22,12 +22,13 @@ PSROHTester::~PSROHTester() {}
 
 void PSROHTester::Initialise()
 {
-    // reset I2C
-    // fc7_daq_ctrl
-    for(auto cBoard: *fDetectorContainer)
+    for(auto cBoard : *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
-        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.fe_for_ps_roh.i2c_slave_reset", 0x01);
+	for(auto cOpticalGroup : *cBoard)
+	{
+	    if(cOpticalGroup->flpGBT == nullptr) continue;
+            static_cast<D19clpGBTInterface*>(flpGBTInterface)->ConfigurePSROH(cOpticalGroup->flpGBT);
+        }
     }
 }
 
