@@ -158,12 +158,10 @@ int main(int argc, char* argv[])
     try
     {
         lstNames  = cInterface->getFpgaConfigList();
-        /*
-        timeStamp = cInterface->ReadBoardReg(pBoard, "fc7_daq_stat.general.firmware_timestamp");
-        nHybrids  = cInterface->ReadBoardReg(pBoard, "fc7_daq_stat.general.info.num_hybrids");
-        nChips    = cInterface->ReadBoardReg(pBoard, "fc7_daq_stat.general.info.num_chips");
-        chipCode  = cInterface->ReadBoardReg(pBoard, "fc7_daq_stat.general.info.chip_type");
-        */
+        timeStamp = cSystemController.fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.general.firmware_timestamp");
+        nHybrids  = cSystemController.fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.general.info.num_hybrids");
+        nChips    = cSystemController.fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.general.info.num_chips");
+        chipCode  = cSystemController.fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.general.info.chip_type");
     }
     catch(...)
     {
