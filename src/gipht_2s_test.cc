@@ -18,8 +18,6 @@
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
 
-#include "../Utils/gui_logger.h"
-
 #ifdef __POWERSUPPLY__
 // Libraries
 #include "DeviceHandler.h"
@@ -95,7 +93,7 @@ int main(int argc, char* argv[])
 
     el::Loggers::reconfigureAllLoggers(conf);
 
-    el::Helpers::installLogDispatchCallback<gui::LogDispatcher>("GUILogDispatcher");
+    //el::Helpers::installLogDispatchCallback<gui::LogDispatcher>("GUILogDispatcher");
     el::Loggers::reconfigureAllLoggers(conf);
     ArgvParser cmd;
 
