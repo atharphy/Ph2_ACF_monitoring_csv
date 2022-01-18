@@ -148,12 +148,8 @@ class D19clpGBTInterface : public lpGBTInterface
 
     void                 setFrontEndType(FrontEndType pType) { fFeType = pType; }
     FrontEndType         getFrontEndType() { return fFeType; }
-    std::vector<uint8_t> getGPIOs()
-    {
-        if(fFeType == FrontEndType::OuterTracker2S) return {fReset_LHS_CIC, fReset_LHS_CBC, fReset_RHS_CIC, fReset_RHS_CBC};
-        if(fFeType == FrontEndType::OuterTrackerPS) return {fReset_LHS_CIC, fReset_LHS_MPA, fReset_LHS_SSA, fReset_RHS_CIC, fReset_RHS_MPA, fReset_RHS_SSA};
-        return {};
-    }
+    std::vector<uint8_t> getPSResetGPIOs(){ return {fReset_LHS_CIC, fReset_LHS_MPA, fReset_LHS_SSA, fReset_RHS_CIC, fReset_RHS_MPA, fReset_RHS_SSA}; }
+    std::vector<uint8_t> get2SResetGPIOs(){ return {fReset_LHS_CIC, fReset_LHS_CBC, fReset_RHS_CIC, fReset_RHS_CBC}; }
 
   private:
     // default clock configuration
