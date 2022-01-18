@@ -159,7 +159,6 @@ int main(int argc, char* argv[])
     // Initialize BackEnd & Control LpGBT Tester
     PSROHTester cPSROHTester;
     cPSROHTester.Inherit(&cTool);
-    cPSROHTester.FindUSBHandler();
 
     /***************/
     /* TEST UPLINK */

@@ -50,6 +50,10 @@ class SSA : public ReadoutChip
             return true;
         else if(dacName.find("ThresholdTrim") != std::string::npos)
             return true;
+        if(dacName.find("GAINTRIMMING_S", 0, 12) != std::string::npos)
+            return true;
+        else if(dacName.find("GainTrim") != std::string::npos)
+            return true;
         else
             return false;
     }
@@ -59,6 +63,10 @@ class SSA : public ReadoutChip
             return 5;
         else if(dacName.find("ThresholdTrim") != std::string::npos)
             return 5;
+        if(dacName.find("GAINTRIMMING_S", 0, 12) != std::string::npos)
+            return 4;
+        else if(dacName.find("GainTrim") != std::string::npos)
+            return 4;
         else
             return 8;
     }

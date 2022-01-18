@@ -35,22 +35,14 @@
 
 using namespace Ph2_HwDescription;
 
+// class TC_2SSEH;
+// class TC_PSROH;
+
 class OTHybridTester : public Tool
 {
   public:
     OTHybridTester();
     ~OTHybridTester();
-
-    void FindUSBHandler();
-#ifdef __TCUSB__
-#ifdef __ROH_USB__
-    TC_PSROH* GetTCUSBHandler() { return fTC_USB; }
-#elif __SEH_USB__
-    TC_2SSEH* GetTCUSBHandler() { return fTC_USB; }
-#endif
-#endif
-    // void makeDir(const char* cDirName);
-    // void changeDir(const char* cDirName);
 
     // ###################################
     // # LpGBT related functions #
@@ -86,6 +78,8 @@ class OTHybridTester : public Tool
   private:
     float       getMeasurement(std::string name);
     std::string getVariableValue(std::string variable, std::string buffer);
+
+  protected:
 #ifdef __TCUSB__
     std::map<std::string, uint8_t> f2SSEHGPILines = {
         {"PG2V5", 13},

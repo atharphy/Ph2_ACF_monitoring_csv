@@ -188,7 +188,6 @@ int main(int argc, char* argv[])
     LOG(INFO) << BOLDYELLOW << "Configuring FC7" << RESET;
     SEHTester cSEHTester;
     cSEHTester.Inherit(&cTool);
-    cSEHTester.FindUSBHandler();
     cSEHTester.TurnOn(cRightLoad, cLeftLoad);
     // establishes an optical link and configures the lpgbt over the optical cable
     uint8_t cExternalPattern = (cmd.foundOption("external-pattern")) ? convertAnyInt(cmd.optionValue("external-pattern").c_str()) : 0;

@@ -36,10 +36,6 @@
 #include "gui_logger.h"
 #endif
 
-#ifdef __ANTENNA__
-#include "Antenna.h"
-#endif
-
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -177,7 +173,7 @@ int main(int argc, char* argv[])
     std::string cSrcLnkTst       = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
     std::string cModuleId        = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
     std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
-    uint16_t    cRunNumber;
+    uint16_t    cRunNumber       = 666;
     if(!cmd.foundOption("read"))
     {
         std::ofstream cRunLog;
