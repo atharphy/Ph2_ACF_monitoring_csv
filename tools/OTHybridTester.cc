@@ -316,11 +316,11 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
             {
                 // #ifdef __TCUSB__
                 // #ifdef __SEH_USB__
-                //     fTC_USB->set_load2(true, false, 0);
-                //     fTC_USB->set_load1(true, false, 0);
+                //     flpGBTInterface->getExternalController()->getInterface().set_load2(true, false, 0);
+                //     flpGBTInterface->getExternalController()->getInterface().set_load1(true, false, 0);
                 //     std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-                //     fTC_USB->read_load(fTC_USB->I_P1V2_R, cSetRightLoad);
-                //     fTC_USB->read_load(fTC_USB->I_P1V2_L, cSetLeftLoad);
+                //     flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().I_P1V2_R, cSetRightLoad);
+                //     flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().I_P1V2_L, cSetLeftLoad);
 
                 // #endif
                 // #endif
@@ -347,11 +347,11 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
                     // #ifdef __SEH_USB__
                     //                     if(j == tries / 2)
                     //                     {
-                    //                         fTC_USB->set_load2(true, false, 1500);
-                    //                         fTC_USB->set_load1(true, false, 1500);
+                    //                         flpGBTInterface->getExternalController()->getInterface().set_load2(true, false, 1500);
+                    //                         flpGBTInterface->getExternalController()->getInterface().set_load1(true, false, 1500);
                     //                         std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-                    //                         fTC_USB->read_load(fTC_USB->I_P1V2_R, cSetRightLoad);
-                    //                         fTC_USB->read_load(fTC_USB->I_P1V2_L, cSetLeftLoad);
+                    //                         flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().I_P1V2_R, cSetRightLoad);
+                    //                         flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().I_P1V2_L, cSetLeftLoad);
                     //                     }
                     // #endif
                     // #endif
@@ -410,11 +410,11 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
     }
     // #ifdef __TCUSB__
     // #ifdef __SEH_USB__
-    //     fTC_USB->set_load2(true, false, 1000);
-    //     fTC_USB->set_load1(true, false, 1000);
+    //     flpGBTInterface->getExternalController()->getInterface().set_load2(true, false, 1000);
+    //     flpGBTInterface->getExternalController()->getInterface().set_load1(true, false, 1000);
     //     std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-    //     fTC_USB->read_load(fTC_USB->I_P1V2_R, cSetRightLoad);
-    //     fTC_USB->read_load(fTC_USB->I_P1V2_L, cSetLeftLoad);
+    //     flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().I_P1V2_R, cSetRightLoad);
+    //     flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().I_P1V2_L, cSetLeftLoad);
 
     // #endif
     // #endif
@@ -701,10 +701,10 @@ bool OTHybridTester::LpGBTTestResetLines()
     //     // LpGBTSetGPIOLevel(cGPIOs, 1);
     //     //}
 
-    //     fTC_USB->read_reset(TC_2SSEH::resetMeasurement::RST_CBC_R, cMeasurement);
-    //     fTC_USB->read_reset(TC_2SSEH::resetMeasurement::RST_CIC_R, cMeasurement);
-    //     fTC_USB->read_reset(TC_2SSEH::resetMeasurement::RST_CBC_L, cMeasurement);
-    //     fTC_USB->read_reset(TC_2SSEH::resetMeasurement::RST_CIC_L, cMeasurement);
+    //     flpGBTInterface->getExternalController()->getInterface().read_reset(TC_2SSEH::resetMeasurement::RST_CBC_R, cMeasurement);
+    //     flpGBTInterface->getExternalController()->getInterface().read_reset(TC_2SSEH::resetMeasurement::RST_CIC_R, cMeasurement);
+    //     flpGBTInterface->getExternalController()->getInterface().read_reset(TC_2SSEH::resetMeasurement::RST_CBC_L, cMeasurement);
+    //     flpGBTInterface->getExternalController()->getInterface().read_reset(TC_2SSEH::resetMeasurement::RST_CIC_L, cMeasurement);
     //     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     // }
 
@@ -812,13 +812,17 @@ bool OTHybridTester::LpGBTTestVTRx()
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
+        BeBoardFWInterface* pInterface = dynamic_cast<BeBoardFWInterface*>(fBeBoardFWMap.find(cBoard->getId())->second);
         for(auto cOpticalGroup: *cBoard)
         {
             clpGBTInterface->ResetI2C(cOpticalGroup->flpGBT, {0, 1, 2});
             std::this_thread::sleep_for(std::chrono::milliseconds(30));
             clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "I2CM1Config", 8);
-            cRecent = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, 0x15, 1);
-            for(int i = 0; i < 5 && !(cRecent); i++) { cRecent = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, 0x15, 1); }
+            uint8_t  cLinkID           = cOpticalGroup->getId();
+            uint32_t cTheI2CWriteCount = 0;
+            //I2CWrite(cLinkID, cMaster, cSlaveAddress, 0x09, 1, cTheI2CWriteCount);
+            cRecent = pInterface->I2CWrite(cLinkID, 1, 0x50, 0x15, 1, cTheI2CWriteCount);
+            for(int i = 0; i < 5 && !(cRecent); i++) { cRecent = pInterface->I2CWrite(cLinkID, 1, 0x50, 0x15, 1, cTheI2CWriteCount); }
             cResult                                              = clpGBTInterface->ReadI2C(cOpticalGroup->flpGBT, 1, 0x50, 1);
             std::map<uint8_t, uint8_t> cVTRxplusDefaultRegisters = fVTRxplusDefaultRegisters;
             if(cResult == 0x15)
@@ -831,7 +835,8 @@ bool OTHybridTester::LpGBTTestVTRx()
             auto cMapIterator = cVTRxplusDefaultRegisters.begin();
             do
             {
-                cRecent  = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, cMapIterator->first, 1, 2);
+                cRecent  = pInterface->I2CWrite(cLinkID, 1, 0x50, cMapIterator->first, 1, cTheI2CWriteCount);
+                //WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, cMapIterator->first, 1, 2);
                 cResult  = clpGBTInterface->ReadI2C(cOpticalGroup->flpGBT, 1, 0x50, 1, 2);
                 cSuccess = cSuccess && cRecent && (cResult == cMapIterator->second);
                 if(cRecent && (cResult == cMapIterator->second))
@@ -839,6 +844,7 @@ bool OTHybridTester::LpGBTTestVTRx()
                 else
                 {
                     LOG(INFO) << BOLDRED << "Error in VTRx+ register " << +(cMapIterator->first) << " ." << RESET;
+                    LOG(INFO) << BOLDRED << "value " << +(cResult) << " ." << RESET;
                 }
 
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
