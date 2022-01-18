@@ -983,8 +983,72 @@ void CicInterface::UpdateExternalWordAlignmentValues(Chip* pChip)
         }
     }
 }
+std::pair<uint8_t, uint8_t> CicInterface::GetPhyPortConfig( Chip* pChip , uint8_t pFeId, uint8_t pLineId )
+{
+    std::pair<uint8_t, uint8_t> cCnfg;
+    std::vector<uint8_t> cFeMapping  = getMapping(pChip);
+    size_t      cNSLVSLines = 6; // 6 stub lines from a front-end chip to the CIC - 5 stubs + 1 L1 
+    std::vector<uint8_t> cPhaseTaps(cNSLVSLines, 15);
 
+    // read back phase alignment on stub lines - 6 stub lines
+    size_t cPortCounter       = 0;
+    size_t cInputCounter      = 0;
+    size_t cFeCounter         = 0;
+    size_t cInputLineCounter  = 0;
+    size_t cCounter           = 0;
+    size_t cNStubLines        = 5;
+    size_t cL1Line            = 5;
+    bool   cLastStubLineFound = false;
+    bool   cFound             = false; 
+    for(int cIndex = 0; cIndex < 6; cIndex++)
+    {
+        if( cFound ) break; 
+        // 1 bit per line
+        for(size_t cBitIndex = 0; cBitIndex < 8; cBitIndex++)
+        {
+            if( cFound ) break; 
+
+            cInputCounter      = (cBitIndex & 0x3);
+            cInputLineCounter  = (cIndex < 5) ? (cCounter % cNStubLines) : cL1Line;
+            cLastStubLineFound = cLastStubLineFound || (cFeCounter == 7 && cInputLineCounter == 4);
+            cFeCounter         = (cLastStubLineFound) ? cBitIndex : cFeCounter;
+            
+            // get CIC FEId
+            uint8_t cChipId_forCic        = cFeMapping[pFeId];
+            if( cFeCounter == cChipId_forCic && cInputLineCounter == pLineId )
+            {
+                LOG(DEBUG) << BOLDYELLOW << "FE#" << +pFeId << " Line#" << +pLineId 
+                    << " corresponds to PhyPort#" << +cPortCounter << " input#" << +cInputCounter
+                    << " which is CIC_FE#" << +cChipId_forCic << RESET;
+                cCnfg.first = cPortCounter;
+                cCnfg.second = cInputCounter;
+                cFound = true;
+            }
+            cPortCounter += (cBitIndex == 3) || (cBitIndex == 7);
+            cFeCounter = (!cLastStubLineFound) ? (cFeCounter + (((1 + cCounter) % cNStubLines == 0) ? 1 : 0)) : cBitIndex;
+            cCounter++;
+        }
+    } // each register stores information from 4 phyport inputs
+    return cCnfg;
+}
+bool CicInterface::SetFePhaseTap( Chip* pChip , uint8_t pFeId, uint8_t pLineId , int pPhaseTap ) 
+{
+    auto cCnfg = GetPhyPortConfig(pChip ,  pFeId, pLineId ); 
+    LOG(DEBUG) << BOLDYELLOW << "FE#" << +pFeId << " corresponds to .. PhyPort#" << +cCnfg.first << " input#" << +cCnfg.second << RESET;
+    return SetPhaseTap(pChip, cCnfg.first, cCnfg.second , pPhaseTap);
+}
 bool CicInterface::SetOptimalTap(Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel, int pOffset)
+{
+    int      cPhaseTap = int(fPhaseTaps[pPhyPortChannel][pPhyPort]) + pOffset;
+    if(cPhaseTap < 0 || cPhaseTap > 0xF)
+    {
+        LOG(DEBUG) << BOLDRED << "FAILED TO modify optimal tap for PhyPort" << +pPhyPort << " PhyPortChannel " << +pPhyPortChannel << " .. wanted to set a phase tap of " << +cPhaseTap
+                   << " when original was " << +fPhaseTaps[pPhyPortChannel][pPhyPort] << RESET;
+        cPhaseTap = int(fPhaseTaps[pPhyPortChannel][pPhyPort]);
+    }
+    return SetPhaseTap(pChip, pPhyPort, pPhyPortChannel, cPhaseTap);
+}
+bool CicInterface::SetPhaseTap(Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel, int pPhaseTap)
 {
     setBoard(pChip->getBeBoardId());
     ChipRegItem cRegItem;
@@ -1003,18 +1067,11 @@ bool CicInterface::SetOptimalTap(Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPort
     uint8_t cRegMask   = (0xF << cBitShift); //
     cRegMask           = ~(cRegMask);
     uint16_t cRegValue = this->ReadChipRegItem(pChip, cRegItem).second;
-    int      cPhaseTap = int(fPhaseTaps[pPhyPortChannel][pPhyPort]) + pOffset;
-    if(cPhaseTap < 0 || cPhaseTap > 0xF)
-    {
-        LOG(DEBUG) << BOLDRED << "FAILED TO modify optimal tap for PhyPort" << +pPhyPort << " PhyPortChannel " << +pPhyPortChannel << " .. wanted to set a phase tap of " << +cPhaseTap
-                   << " when original was " << +fPhaseTaps[pPhyPortChannel][pPhyPort] << RESET;
-        cPhaseTap = int(fPhaseTaps[pPhyPortChannel][pPhyPort]);
-    } // revert to optimal if offset makes no sense
-    uint8_t cValue = (cRegValue & cRegMask) | (cPhaseTap << cBitShift);
+    uint8_t cValue = (cRegValue & cRegMask) | (pPhaseTap << cBitShift);
 
     LOG(DEBUG) << BOLDGREEN << "Setting optimal tap for PhyPort" << +pPhyPort << " PhyPortChannel " << +pPhyPortChannel << " Register mask is 0x" << std::hex << +cRegMask << std::dec << " Register 0x"
-               << std::hex << +(cBaseReg + cRegOffset) << std::dec << " BitOffset " << +cBitShift << " to 0x" << std::hex << +cValue << std::dec << " to set a phase tap of " << +cPhaseTap
-               << " original register value is 0x" << std::hex << +cRegValue << std::dec << " - modified register so that phase value is " << +(fPhaseTaps[pPhyPortChannel][pPhyPort])
+               << std::hex << +(cBaseReg + cRegOffset) << std::dec << " BitOffset " << +cBitShift << " to 0x" << std::hex << +cValue << std::dec << " to set a phase tap of " << +pPhaseTap
+               << " original register value is 0x" << std::hex << +cRegValue << std::dec << " - modified register so that phase value is " << +cValue
                << " new register value is 0x" << std::hex << +cValue << std::dec << RESET;
     return WriteReg(pChip, cRegItem.fAddress, cValue, cVerifloop);
 }
@@ -1468,7 +1525,7 @@ bool CicInterface::SelectMux(Chip* pChip, uint8_t pPhyPort)
     if(!this->ControlMux(pChip, 1)) return false;
 
     // then select phy port
-    LOG(INFO) << BOLDBLUE << "Selecting phyPort" << +pPhyPort << " on CIC on " << +pChip->getHybridId() << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Selecting phyPort" << +pPhyPort << " on CIC on " << +pChip->getHybridId() << RESET;
     setBoard(pChip->getBeBoardId());
     std::string cRegName  = (pChip->getFrontEndType() == FrontEndType::CIC) ? "ctrlTestMux" : "MUX_CTRL";
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
@@ -1483,9 +1540,9 @@ bool CicInterface::ControlMux(Chip* pChip, uint8_t pEnable)
     uint16_t    cRegValue = this->ReadChipReg(pChip, cRegName);
     uint16_t    cValue    = (pChip->getFrontEndType() == FrontEndType::CIC) ? pEnable : (cRegValue & 0xF) | (pEnable << 4);
     if(pEnable == 1)
-        LOG(INFO) << BOLDBLUE << " Enabling CIC MUX .. so bypassing CIC logic " << RESET;
+        LOG(DEBUG) << BOLDBLUE << " Enabling CIC MUX .. so bypassing CIC logic " << RESET;
     else
-        LOG(INFO) << BOLDBLUE << " Disabling CIC MUX .. so activating CIC logic  " << RESET;
+        LOG(DEBUG) << BOLDBLUE << " Disabling CIC MUX .. so activating CIC logic  " << RESET;
 
     return this->WriteChipReg(pChip, cRegName, cValue);
 }

@@ -54,7 +54,7 @@ std::string D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
 }
 std::vector<std::string> D19cDebugFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines, bool pPrint)
 {
-    LOG(INFO) << BOLDBLUE << "D19cDebugFWInterface::StubDebug ...." << RESET;
+    LOG(DEBUG) << BOLDBLUE << "D19cDebugFWInterface::StubDebug ...." << RESET;
 
     uint8_t cReSync   = 0;
     uint8_t cCalPulse = 0;

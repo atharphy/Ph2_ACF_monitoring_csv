@@ -21,6 +21,10 @@
 typedef std::vector<uint8_t> AlignmentValues;
 #endif
 
+#ifndef StubLineData
+typedef std::vector<std::string> StubLineData;
+#endif
+
 // add break codes here
 const uint8_t FAILED_PHASE_ALIGNMENT = 1;
 const uint8_t FAILED_WORD_ALIGNMENT  = 2;
@@ -40,6 +44,9 @@ class CicFEAlignment : public OTTool
     bool CicLpGbtAlignment(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     void AlignInputs();
     void SetStaticPhaseAlignment();
+    void GenerateManualPattern();
+    DetectorDataContainer SamplePhase(uint8_t pPhase);
+    void ManualPhaseScan(uint8_t pStartScan, uint8_t pEndScan ); 
     bool PhaseAlignment(uint16_t pWait_us = 10, uint32_t pNTriggers = 500);
     bool WordAlignment(uint32_t pWait_us = 10);
     bool Bx0Alignment(uint8_t pFe = 0, uint8_t pLine = 4, uint16_t pDelay = 1, uint16_t pWait_ms = 100, int cNrials = 3);

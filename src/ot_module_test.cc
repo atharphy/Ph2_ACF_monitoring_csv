@@ -152,6 +152,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("scanL1", "Scan L1 Latency ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("scanStubs", "Scan Stub Latency ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("checkCICAlignment", "Manually scan CIC input aligner", ArgvParser::NoOptionAttribute);
     //
     cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
 
@@ -583,6 +584,16 @@ int main(int argc, char* argv[])
         }
     }
 
+    if(!cmd.foundOption("read") && cmd.foundOption("checkCICAlignment"))
+    {
+        // align FEs - CIC
+        CicFEAlignment cCicAligner;
+        cCicAligner.Inherit(&cTool);
+        cCicAligner.Initialise();
+        cCicAligner.GenerateManualPattern();
+        cCicAligner.ManualPhaseScan(0, 15); 
+        cCicAligner.Reset();
+    }
     // LOG (INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
     // StubBackEndAlignment cStubBackEndAligner;
     // cStubBackEndAligner.Inherit(&cTool);
