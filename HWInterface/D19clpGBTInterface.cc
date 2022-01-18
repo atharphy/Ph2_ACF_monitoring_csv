@@ -156,7 +156,8 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     LOG(INFO) << BOLDGREEN << "Applying PS-ROH-" << +cChipRate << "G lpGBT configuration" << RESET;
     // Clocks
     std::vector<uint8_t> cClocks  = {fClock_LHS_Hybrid, fClock_LHS_CIC, fClock_RHS_Hybrid, fClock_RHS_CIC};
-    uint8_t              cClkFreq = (cChipRate == 5) ? 4 : 5, cClkDriveStr = 1, cClkInvert = 1;
+    //clock frequency set to 0 to disable it at first and only later configure what is needed
+    uint8_t              cClkFreq = 0, cClkDriveStr = 1, cClkInvert = 1;
     uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     // Tx Groups and Channels

@@ -17,16 +17,6 @@ OTHybridTester::OTHybridTester() : Tool()
 
 OTHybridTester::~OTHybridTester() {}
 
-void OTHybridTester::FindUSBHandler()
-{
-    // should this now check if the external controller exists?
-    bool cThereIsLpGBT = fReadoutChipInterface->lpGBTFound();
-    if(cThereIsLpGBT)
-        LOG(DEBUG) << BOLDYELLOW << "Found lpGBT" << RESET;
-    else
-        LOG(DEBUG) << BOLDYELLOW << "Did not find lpGBT" << RESET;
-}
-
 void OTHybridTester::LpGBTInjectULInternalPattern(uint32_t pPattern)
 {
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
@@ -545,10 +535,10 @@ bool OTHybridTester::LpGBTTestResetLines()
     // lpGBTinterface now nows this .. so don't need the if statements
 #ifdef __TCUSB__
 #ifdef __ROH_USB__
-    std::vector<uint8_t> cGPIOs = {0,1,3,6,9,12,8};
+    std::vector<uint8_t> cGPIOs = static_cast<D19clpGBTInterface*>(flpGBTInterface)->getPSResetGPIOs();
     std::map<std::string, TC_PSROH::measurement> cResetLines = fResetLines;
 #elif __SEH_USB__
-    std::vector<uint8_t> cGPIOs = {0,3,6,8};
+    std::vector<uint8_t> cGPIOs = static_cast<D19clpGBTInterface*>(flpGBTInterface)->get2SResetGPIOs();
     std::map<std::string, TC_2SSEH::resetMeasurement> cResetLines = f2SSEHResetLines;
 #endif
 
