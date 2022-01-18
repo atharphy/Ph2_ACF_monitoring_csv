@@ -277,18 +277,18 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                 }
                                 else
                                 {
-                                    for(size_t cOffst = 2; cOffst < 2 + cHitInfoSize; cOffst++)
-                                    { LOG(INFO) << BOLDMAGENTA << "Word#" << (cOffst - 2) << " : " << std::bitset<32>(*(cIterator + cOffst)) << RESET; }
-                                    // const size_t                     cNblocks = cFullSize; // 274 bits per chip ..
-                                    // const size_t                     cRawL1   = RAW_L1_CBC - 1;
-                                    // std::vector<std::bitset<cRawL1>> cL1Words(cNblocks, 0);
-                                    // this->splitStream(pData, cL1Words, cL1Offset,
-                                    //                   cNblocks); // split 32 bit words in  blocks of 274 bits
-                                    // for(size_t cIndex = 0; cIndex < cFullSize; cIndex++)
-                                    // {
-                                    //     LOG(INFO) << BOLDBLUE << "\t...  chip " << +cIndex << "\t -- " << cL1Words[cIndex] << RESET;
-                                    //     fEventRawList[cFeIndex].second.push_back(std::bitset<RAW_L1_CBC>((cL1Words[cIndex]).to_string() + "0"));
-                                    // }
+                                    // for(size_t cOffst = 2; cOffst < 2 + cHitInfoSize; cOffst++)
+                                    // { LOG(INFO) << BOLDMAGENTA << "Word#" << (cOffst - 2) << " : " << std::bitset<32>(*(cIterator + cOffst)) << RESET; }
+                                    const size_t                     cNblocks = cFullSize; // 274 bits per chip ..
+                                    const size_t                     cRawL1   = RAW_L1_CBC - 1;
+                                    std::vector<std::bitset<cRawL1>> cL1Words(cNblocks, 0);
+                                    this->splitStream(pData, cL1Words, cL1Offset,
+                                                      cNblocks); // split 32 bit words in  blocks of 274 bits
+                                    for(size_t cIndex = 0; cIndex < cFullSize; cIndex++)
+                                    {
+                                        LOG(INFO) << BOLDBLUE << "\t...  chip " << +cIndex << "\t -- " << cL1Words[cIndex] << RESET;
+                                        fEventRawList[cFeIndex].second.push_back(std::bitset<RAW_L1_CBC>((cL1Words[cIndex]).to_string() + "0"));
+                                    }
                                 }
                             }
                         }
@@ -362,31 +362,16 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
         cNEvents++;
     } while(cEventIterator < pData.end());
 }
-void D19cCic2Event::fillDataContainer(BoardDataContainer* boardContainer, const BoardDataContainer* theChannelGroupHandler, int groupNumber)
-{
-    for(auto opticalGroup: *boardContainer)
-    {
-        for(auto hybrid: *opticalGroup)
-        {
-            // LOG(INFO) << BOLDBLUE << "Filling data container for hybrid " << +hybrid->getId() << RESET;
-            for(auto chip: *hybrid)
-            {
-                auto cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, opticalGroup->getId(), hybrid->getId(), chip->getId());
-                if(!cTestChannelGroup) continue;
 
-                std::vector<uint32_t> cHits = this->GetHits(hybrid->getId(), chip->getId());
-                // LOG(INFO) << BOLDBLUE << "Filling data container for chip " << +chip->getId()
-                //     << " at index " << +chip->getIndex()
-                //     << "\t.... " << +cHits.size() << " hits in chip."
-                //     << RESET;
-                for(auto cHit: cHits)
-                {
-                    if(cTestChannelGroup->isChannelEnabled(cHit)) { chip->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; }
-                }
-            }
-        }
+void D19cCic2Event::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId)
+{
+    std::vector<uint32_t> cHits = this->GetHits(hybridId, chipContainer->getId());
+    for(auto cHit: cHits)
+    {
+        if(testChannelGroup->isChannelEnabled(cHit)) { chipContainer->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; }
     }
 }
+
 void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::vector<uint32_t>& list)
 {
     // get the first CIC

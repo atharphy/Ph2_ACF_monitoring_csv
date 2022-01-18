@@ -118,9 +118,13 @@ int main(int argc, char* argv[])
             {
                 if(cChip->getFrontEndType() == FrontEndType::MPA)
                 {
-                    static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Set_calibration(cChip, 50);
-                    static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Set_threshold(cChip, 100);
-                    static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Activate_sync(cChip);
+                    cTool.fReadoutChipInterface->WriteChipReg(cChip, "Threshold", 100);
+                    cTool.fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", 50);
+                    cTool.fReadoutChipInterface->WriteChipReg(cChip, "AnalogueSync", 1);
+
+                    // static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Set_calibration(cChip, 50);
+                    // static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Set_threshold(cChip, 100);
+                    // static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Activate_sync(cChip);
                     // static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS_ALL", 0x57);
                     static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                     static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ClusterCut_ALL", 2);
@@ -201,7 +205,9 @@ int main(int argc, char* argv[])
                 {
                     if(cChip->getFrontEndType() == FrontEndType::MPA)
                     {
-                        static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Activate_ps(cChip);
+                        cTool.fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", 1);
+                        cTool.fReadoutChipInterface->WriteChipReg(cChip, "StubMode", 8);
+                        // static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->Activate_ps(cChip);
                         static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                         static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ClusterCut_ALL", 4);
                         static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "RetimePix", irt);

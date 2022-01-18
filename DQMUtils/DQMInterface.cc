@@ -12,6 +12,7 @@
 #include "PSPhysicsHistograms.h"
 #include "Physics2SHistograms.h"
 #include "RD53ClockDelayHistograms.h"
+#include "RD53DataTransmissionTestGraphs.h"
 #include "RD53GainHistograms.h"
 #include "RD53GainOptimizationHistograms.h"
 #include "RD53InjectionDelayHistograms.h"
@@ -127,6 +128,8 @@ void DQMInterface::configure(std::string const& calibrationName, std::string con
         fDQMHistogrammerVector.push_back(new PhysicsHistograms());
     else if(calibrationName == "ssaphysics")
         fDQMHistogrammerVector.push_back(new SSAPhysicsHistograms());
+    else if(calibrationName == "datatrtest")
+        fDQMHistogrammerVector.push_back(new DataTransmissionTestGraphs());
     else if(calibrationName == "psphysics")
         fDQMHistogrammerVector.push_back(new PSPhysicsHistograms());
     else if(calibrationName == "2sphysics")
@@ -206,14 +209,14 @@ bool DQMInterface::running()
                 theCurrentStream = reinterpret_cast<CheckStream*>(&fDataBuffer.at(0));
                 LOG(DEBUG) << "Packet number received = " << int(theCurrentStream->getPacketNumber()) << RESET;
 
-                if(packetNumber < 0)
-                    packetNumber = int(theCurrentStream->getPacketNumber()); // first packet received
-                else if(theCurrentStream->getPacketNumber() != packetNumber)
-                {
-                    LOG(ERROR) << BOLDRED << "Packet number expected = " << --packetNumber << " But received " << int(theCurrentStream->getPacketNumber()) << ", Aborting" << RESET;
-                    LOG(ERROR) << GREEN << "Did you check that the Endianness of the two comupters is the same?" << RESET;
-                    abort();
-                }
+                // if(packetNumber < 0)
+                //     packetNumber = int(theCurrentStream->getPacketNumber()); // first packet received
+                // else if(theCurrentStream->getPacketNumber() != packetNumber)
+                // {
+                //     LOG(ERROR) << BOLDRED << "Packet number expected = " << --packetNumber << " But received " << int(theCurrentStream->getPacketNumber()) << ", Aborting" << RESET;
+                //     LOG(ERROR) << GREEN << "Did you check that the Endianness of the two comupters is the same?" << RESET;
+                //     abort();
+                // }
 
                 LOG(DEBUG) << "Vector size  = " << fDataBuffer.size() << "; expected = " << theCurrentStream->getPacketSize() << RESET;
 

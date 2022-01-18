@@ -1,6 +1,6 @@
 #include <cstring>
 
-#include "ExtraChecks.h"
+#include "D19cDebugFWInterface.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
@@ -127,7 +127,6 @@ int main(int argc, char* argv[])
 
     cmd.defineOption("antennaDelay", "Delay between the antenna pulse and the delay [25 ns]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("latencyRange", "Range of latencies around pulse to scan [25 ns]", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("evaluate", "Run some more detailed tests... ", ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("evaluate", "e");
 
     cmd.defineOption("withCIC", "With CIC. Default : false", ArgvParser::NoOptionAttribute);
@@ -169,7 +168,6 @@ int main(int argc, char* argv[])
     bool        batchMode         = (cmd.foundOption("batch")) ? true : false;
     bool        cAllChan          = (cmd.foundOption("allChan")) ? true : false;
     bool        cCheckData        = (cmd.foundOption("checkData"));
-    bool        cEvaluate         = (cmd.foundOption("evaluate"));
 
     bool cSaveToFile = cmd.foundOption("save");
 
@@ -512,7 +510,7 @@ int main(int argc, char* argv[])
     cCicAligner.Initialise();
     cCicAligner.CicLpGbtAlignment();
 
-    // align back-end
+    // // align back-end
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(&cTool);
     cBackEndAligner.Start(0);
@@ -554,14 +552,14 @@ int main(int argc, char* argv[])
 
         for(auto cHybridId: cHybridIds)
         {
-            auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+            auto cDebugInterface = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
             for(const auto cBoard: *cTool.fDetectorContainer)
             {
                 cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybridId);
                 cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cChipId);
             }
             LOG(INFO) << BOLDYELLOW << "Scoping L1 data on hybrid" << +cHybridId << RESET;
-            cInterface->L1ADebug(1, false);
+            cDebugInterface->L1ADebug(1, false);
             for(const auto cBoard: *cTool.fDetectorContainer)
             {
                 LOG(INFO) << BOLDMAGENTA << "First header found after " << +cTool.fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay")
@@ -582,9 +580,29 @@ int main(int argc, char* argv[])
     // equalize thresholds on readout chips
     if(cTune)
     {
-        // uint8_t cFeId=0;
-        // auto cSelectFunction = [cFeId](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getId() == cFeId); };
-        // cTool.fDetectorContainer->setReadoutChipQueryFunction(cSelectFunction);
+        // for(auto cBoard: *cTool.fDetectorContainer)
+        // {
+        //     for(auto cOpticalGroup: *cBoard)
+        //     {
+        //         for(auto cHybrid: *cOpticalGroup)
+        //         {
+        //             // set all SSAs + MPAs to output data in async mode
+        //             for(auto cROC: *cHybrid)
+        //             {
+        //                 // TBC - what about MPA here?
+        //                 if( cROC->getFrontEndType() == FrontEndType::SSA || cROC->getFrontEndType() == FrontEndType::SSA2 )
+        //                 {
+        //                     cTool.fReadoutChipInterface->WriteChipReg(cROC, "AnalogueSync", 1);
+        //                 }
+        //             }
+        //         }
+        //     }
+        //     cTool.fBeBoardInterface->setBoard(cBoard->getId());
+        //     auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+        //     cTool.fBeBoardInterface->WriteBoardReg(cBoard,"fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select" , 0) ;
+        //     cTool.fBeBoardInterface->WriteBoardReg(cBoard,"fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select" , 0) ;
+        //     cInterface->L1ADebug();
+        // }
 
         t.start();
         // now create a PedestalEqualization object
@@ -642,18 +660,6 @@ int main(int argc, char* argv[])
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
     }
-    if(cEvaluate)
-    {
-        int cSigma = cmd.foundOption("evaluate") ? convertAnyInt(cmd.optionValue("evaluate").c_str()) : 3;
-        // some extra stuff ...
-        ExtraChecks cExtra;
-        cExtra.Inherit(&cTool);
-        cExtra.Initialise();
-        LOG(INFO) << BOLDBLUE << "Measuring noise and setting thresholds to " << +cSigma << " noise units away from pedestal...." << RESET;
-        cExtra.Evaluate(cSigma, 0, true);
-        cExtra.writeObjects();
-        cExtra.resetPointers();
-    }
     // inject hits and stubs using mask and compare input against output
     if(cmd.foundOption("memCheck"))
     {
@@ -672,8 +678,7 @@ int main(int argc, char* argv[])
             std::vector<uint8_t> cFesToCheck = getArgs(cArgsStr);
             cMemoryChecker.EvaluatePedeNoise(100); // find pedestal + noise
             cMemoryChecker.SetThreshold(-2.0);     // set threshold to 3 sigma away from pedestal
-            auto cSetting    = cTool.fSettingsMap.find("TriggerSeparation");
-            int  cTriggerGap = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 500;
+            int cTriggerGap = cTool.findValueInSettings<double>("TriggerSeparation", 500);
             cMemoryChecker.DataCheck(cFesToCheck, cTriggerGap);
         }
         cMemoryChecker.MemoryCheck2SRaw(true);  // all ones

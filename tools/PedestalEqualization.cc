@@ -81,15 +81,19 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
 
     this->fAllChan = pAllChan;
 
-    fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels", 0);
-    fMaskChannelsFromOtherGroups = findValueInSettings("MaskChannelsFromOtherGroups", 1);
-    fCheckLoop                   = findValueInSettings("VerificationLoop", 1);
-    fTestPulseAmplitude          = findValueInSettings("PedestalEqualizationPulseAmplitude", 0);
-    fEventsPerPoint              = findValueInSettings("Nevents", 10);
+    fSkipMaskedChannels          = findValueInSettings<double>("SkipMaskedChannels", 0);
+    fMaskChannelsFromOtherGroups = findValueInSettings<double>("MaskChannelsFromOtherGroups", 1);
+    fCheckLoop                   = findValueInSettings<double>("VerificationLoop", 1);
+    fTestPulseAmplitude          = findValueInSettings<double>("PedestalEqualizationPulseAmplitude", 0);
+    fEventsPerPoint              = findValueInSettings<double>("Nevents", 10);
     fNEventsPerBurst             = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
-    fOccupancyAtPedestal         = findValueInSettings("PedestalEqualizationOccupancy", 0.56);
+    fOccupancyAtPedestal         = findValueInSettings<double>("PedestalEqualizationOccupancy", 0.56);
     uint8_t cDefTargetOffset     = (cWithCBC) ? 0x7F : 0xF;
-    fTargetOffset                = findValueInSettings("PedestalEqualizationTargetOffset", cDefTargetOffset); // 0x7F;
+    fTargetOffset                = findValueInSettings<double>("PedestalEqualizationTargetOffset", cDefTargetOffset); // 0x7F;
+    // uint8_t cEnableFastCounterReadout = (uint8_t)findValueInSettings<double>("EnableFastCounterReadout", 0);
+    // uint8_t cEnablePairSelect         = (uint8_t)findValueInSettings<double>("EnablePairSelect", 0);
+    if(cWithSSA or cWithMPA) fTargetOffset = 0xF;
+
     LOG(INFO) << BOLDBLUE << "PedestalEqualization::Initialise Occupancy at pedestal is " << fOccupancyAtPedestal << " target offset is " << +fTargetOffset << RESET;
     fTargetVcth = 0x0;
     this->SetSkipMaskedChannels(fSkipMaskedChannels);
@@ -118,6 +122,10 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     for(auto cBoard: *fDetectorContainer)
     {
         fEventTypes.push_back(cBoard->getEventType());
+        fBeBoardInterface->setBoard(cBoard->getId());
+        // auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        // cInterface->SetPSCounterMode(cEnableFastCounterReadout);
+        // cInterface->SetPSPairSelect(cEnablePairSelect);
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
@@ -140,7 +148,6 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
             }
         }
     }
-
     if(fDisableStubLogic)
     {
         // ContainerFactory::copyAndInitChip<uint8_t>(*fDetectorContainer, fStubLogicCointainer);
@@ -350,7 +357,7 @@ void PedestalEqualization::FindVplus()
     auto theVCthStream = prepareHybridContainerStreamer<EmptyContainer, uint16_t, EmptyContainer>();
     for(auto board: theVcthContainer)
     {
-        if(fStreamerEnabled) theVCthStream.streamAndSendBoard(board, fNetworkStreamer);
+        if(fDQMStreamerEnabled) theVCthStream.streamAndSendBoard(board, fDQMStreamer);
     }
 #endif
 
@@ -446,13 +453,13 @@ void PedestalEqualization::FindOffsets()
     auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
     for(auto board: theOccupancyContainer)
     {
-        if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
+        if(fDQMStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fDQMStreamer);
     }
 
     auto theOffsetStream = prepareChannelContainerStreamer<uint8_t>();
     for(auto board: theOffsetsCointainer)
     {
-        if(fStreamerEnabled) theOffsetStream.streamAndSendBoard(board, fNetworkStreamer);
+        if(fDQMStreamerEnabled) theOffsetStream.streamAndSendBoard(board, fDQMStreamer);
     }
 #endif
 

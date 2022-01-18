@@ -2,7 +2,8 @@
 <HwDescription>
   <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
   <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1" boardReset="1">
-    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.72:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://outertracker01.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
+    <!-- <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.72:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
     <CDCE configure="0" clockRate="320"/>
     
     <OpticalGroup Id="0" FMCId="0" reset="1">
@@ -12,7 +13,7 @@
           <Settings
           />
         </lpGBT>
-        <Hybrid Id="0" Status="0" LinkId="0" reset="1">
+        <Hybrid Id="0" Status="1" LinkId="0" reset="1">
             <Global>
                 <!-- in electrons, file parser will take care of conversion to DAC units for each chip type --> 
                 <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  -->
@@ -27,32 +28,32 @@
                 <HipLogic        stripCut="7" pixelCut="7"/>
                 <SamplingDelay   stripCoarse="1" stripFine="0" pixelCoarse="2" pixelFine="0"/>
                 <InjectedCharge  stripCharge="0" pixelCharge="0"/> 
-                <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/>
+                <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/>
             </Global>
             
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
             <SSA Id="0" configfile="SSA.txt" />
-            <SSA Id="1" configfile="SSA.txt" />
+            <!-- <SSA Id="1" configfile="SSA.txt" />
             <SSA Id="2" configfile="SSA.txt" />
             <SSA Id="4" configfile="SSA.txt" />
             <SSA Id="5" configfile="SSA.txt" />
             <SSA Id="6" configfile="SSA.txt" />
-            <SSA Id="7" configfile="SSA.txt" />
+            <SSA Id="7" configfile="SSA.txt" /> -->
           
             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
             <MPA Id="15" configfile="MPA.txt" />
-            <MPA Id="14" configfile="MPA.txt" />
+            <!-- <MPA Id="14" configfile="MPA.txt" />
             <MPA Id="13" configfile="MPA.txt" />
             <MPA Id="12" configfile="MPA.txt" />
             <MPA Id="10" configfile="MPA.txt" />
             <MPA Id="9" configfile="MPA.txt" />
-            <MPA Id="8" configfile="MPA.txt" />
+            <MPA Id="8" configfile="MPA.txt" /> -->
  
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC Id="8" configfile="CIC_default.txt" />
+            <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
 
-        <Hybrid Id="1" Status="1" LinkId="0" reset="1">
+        <Hybrid Id="1" Status="0" LinkId="0" reset="1">
             <Global>
                 <!-- in electrons, file parser will take care of conversion to DAC units for each chip type --> 
                 <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  -->

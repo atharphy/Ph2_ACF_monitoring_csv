@@ -17,14 +17,16 @@ void Physics::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings("ROWstart");
-    rowStop        = this->findValueInSettings("ROWstop");
-    colStart       = this->findValueInSettings("COLstart");
-    colStop        = this->findValueInSettings("COLstop");
-    nTRIGxEvent    = this->findValueInSettings("nTRIGxEvent");
-    doDisplay      = this->findValueInSettings("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings("SaveBinaryData");
+    rowStart       = this->findValueInSettings<double>("ROWstart");
+    rowStop        = this->findValueInSettings<double>("ROWstop");
+    colStart       = this->findValueInSettings<double>("COLstart");
+    colStop        = this->findValueInSettings<double>("COLstop");
+    nTRIGxEvent    = this->findValueInSettings<double>("nTRIGxEvent");
+    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
+
+    frontEnd = RD53::getMajorityFE(colStart, colStop);
 
     // ################################
     // # Custom channel group handler #
@@ -50,7 +52,7 @@ void Physics::ConfigureCalibration()
     // ############################################################
     // # Create directory for: raw data, config files, histograms #
     // ############################################################
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false);
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "Physics");
 }
 
 void Physics::Running()
@@ -88,11 +90,11 @@ void Physics::sendBoardData(const BoardContainer* cBoard)
     auto theBCIDStream  = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<BCIDsize>>("BCID");
     auto theTrgIDStream = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TrgIDsize>>("TrgID");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
-        theOccStream.streamAndSendBoard(theOccContainer.at(cBoard->getIndex()), fNetworkStreamer);
-        theBCIDStream.streamAndSendBoard(theBCIDContainer.at(cBoard->getIndex()), fNetworkStreamer);
-        theTrgIDStream.streamAndSendBoard(theTrgIDContainer.at(cBoard->getIndex()), fNetworkStreamer);
+        theOccStream.streamAndSendBoard(theOccContainer.at(cBoard->getIndex()), fDQMStreamer);
+        theBCIDStream.streamAndSendBoard(theBCIDContainer.at(cBoard->getIndex()), fDQMStreamer);
+        theTrgIDStream.streamAndSendBoard(theTrgIDContainer.at(cBoard->getIndex()), fDQMStreamer);
     }
 }
 
@@ -114,7 +116,7 @@ void Physics::Stop()
     LOG(INFO) << BOLDBLUE << "\t--> Total number of received triggers: " << BOLDYELLOW << numberOfEventsPerRun / nTRIGxEvent << RESET;
 }
 
-void Physics::localConfigure(const std::string fileRes_, int currentRun)
+void Physics::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos = nullptr;
@@ -129,7 +131,7 @@ void Physics::localConfigure(const std::string fileRes_, int currentRun)
     Physics::initializeFiles(fileRes_, currentRun);
 }
 
-void Physics::initializeFiles(const std::string fileRes_, int currentRun)
+void Physics::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 
@@ -140,11 +142,14 @@ void Physics::initializeFiles(const std::string fileRes_, int currentRun)
     }
 
 #ifdef __USE_ROOT__
+    if(this->fResultFile != nullptr) this->fResultFile->Close();
     delete histos;
-    histos = new PhysicsHistograms;
-
-    if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)) this->InitResultFile(fileRes);
-    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    if(fileRes != "")
+    {
+        histos = new PhysicsHistograms;
+        this->InitResultFile(fileRes);
+        histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    }
 #endif
 }
 
@@ -155,6 +160,11 @@ void Physics::run()
     {
         RD53Event::decodedEvents.clear();
         Physics::analyze();
+
+        if(strcmp(frontEnd->name, "SYNC") == 0)
+            for(const auto cBoard: *fDetectorContainer)
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommand(RD53Cmd::GlobalPulse(RD53Constants::BROADCAST_CHIPID, 0x6).getFrames(), -1);
+
         theGuard.lock();
         genericEvtConverter(RD53Event::decodedEvents);
         numberOfEventsPerRun += RD53Event::decodedEvents.size();
@@ -174,9 +184,12 @@ void Physics::draw()
 
     LOG(INFO) << BOLDBLUE << "\t--> Physics saving histograms..." << RESET;
 
-    Physics::fillHisto();
-    histos->process();
-    this->WriteRootFile();
+    if(fileRes != "")
+    {
+        Physics::fillHisto();
+        histos->process();
+        this->WriteRootFile();
+    }
 
     if(doDisplay == true) myApp->Run(true);
 #endif
@@ -201,8 +214,7 @@ void Physics::analyze(bool doReadBinary)
 #ifdef __USE_ROOT__
             Physics::fillHisto();
 #endif
-
-            Physics::fillDataContainer(cBoard);
+            Physics::fillDataContainer(*cBoard);
             Physics::sendBoardData(cBoard);
         }
     }
@@ -217,11 +229,11 @@ void Physics::fillHisto()
 #endif
 }
 
-void Physics::fillDataContainer(BeBoard* theBoard)
+void Physics::fillDataContainer(BeBoard& theBoard)
 {
     const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
-    const auto   cBoard    = theOccContainer.at(theBoard->getIndex());
+    const auto   cBoard    = theOccContainer.at(theBoard.getIndex());
 
     // ###################
     // # Clear container #
@@ -232,7 +244,10 @@ void Physics::fillDataContainer(BeBoard* theBoard)
     // # Fill containers #
     // ###################
     const std::vector<Event*>& events = SystemController::GetEvents();
-    for(const auto& event: events) event->fillDataContainer(cBoard, fChannelGroupHandlerContainer->at(cBoard->getIndex()), -1);
+    // Assuming all chip will have all channels enabled:
+    auto allChannelGroup = getChannelGroup(-1);
+
+    for(const auto& event: events) event->fillDataContainer(cBoard, allChannelGroup);
 
     // ######################################
     // # Copy register values for streaming #
@@ -314,11 +329,13 @@ void Physics::saveChipRegisters(int currentRun)
                 }
 }
 
-void Physics::clearContainers(BeBoard* theBoard)
+void Physics::clearContainers(BeBoard& theBoard)
 {
+    RD53Event::clearEventContainer(theBoard, theOccContainer);
+
     const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
-    const auto   cBoard    = theOccContainer.at(theBoard->getIndex());
+    const auto   cBoard    = theOccContainer.at(theBoard.getIndex());
 
     // ####################
     // # Clear containers #
@@ -327,18 +344,6 @@ void Physics::clearContainers(BeBoard* theBoard)
         for(const auto cHybrid: *cOpticalGroup)
             for(const auto cChip: *cHybrid)
             {
-                for(auto row = 0u; row < RD53::nRows; row++)
-                    for(auto col = 0u; col < RD53::nCols; col++)
-                    {
-                        cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy   = 0;
-                        cChip->getChannel<OccupancyAndPh>(row, col).fPh          = 0;
-                        cChip->getChannel<OccupancyAndPh>(row, col).fPhError     = 0;
-                        cChip->getChannel<OccupancyAndPh>(row, col).readoutError = false;
-                    }
-
-                cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.clear();
-                cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.clear();
-
                 for(auto i = 0u; i < BCIDsize; i++)
                     theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[i] = 0;
                 for(auto i = 0u; i < TrgIDsize; i++)

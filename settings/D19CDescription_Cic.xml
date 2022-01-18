@@ -2,11 +2,12 @@
 <HwDescription>
     <BeBoard Id="0" boardType="D19C" eventType="VR">
       <!-- <connection id="board" uri="chtcp-2.0://pchpdaq01.cern.ch:10203?target=192.168.0.19:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />  -->
-      <!-- <connection id="board" uri="ipbusudp-2.0://192.168.13.207:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />      \ -->
-      <connection id="board" uri="chtcp-2.0://hybridtesting.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
-      <!-- <connection id="board" uri="chtcp-2.0://sbgat231.in2p3.fr:10203?target=192.168.7.230:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />  -->
-      <!-- <connection id="board" uri="chtcp-2.0://jadsdesktop.cern.ch:10203?target=192.168.2.100:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
-      
+      <!-- <connection id="board" uri="chtcp-2.0://hybridtesting.cern.ch:10203?target=192.168.0.11:50001" address_table="file://settings/address_tables/d19c_address_table_legacy.xml" />  -->
+      <!-- <connection id="board" uri="chtcp-2.0://cmsuptkhsetup2:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
+      <!-- <connection id="board" uri="chtcp-2.0://hybridtesting:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
+      <connection id="board" uri="chtcp-2.0://ph2acf-01.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />  
+      <!-- <connection id="board" uri="chtcp-2.0://jadsdesktop.cern.ch:10203?target=192.168.2.100:50001" address_table="file://settings/address_tables/d19c_address_table_legacy.xml" />  -->
+    
     <CDCE configure="0" clockRate="120"/>
 
     <!-- RHS -->

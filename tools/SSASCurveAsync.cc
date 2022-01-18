@@ -19,17 +19,17 @@ SSASCurve::~SSASCurve() {}
 
 void SSASCurve::Initialise(void)
 {
-    StartTHDAC = this->findValueInSettings("StartTHDAC");
-    StopTHDAC  = this->findValueInSettings("StopTHDAC");
-    NMsec      = this->findValueInSettings("NMsec");
-    NMpulse    = this->findValueInSettings("NMpulse");
-    Res        = this->findValueInSettings("Res");
-    Nlvl       = this->findValueInSettings("Nlvl");
-    Mrms       = this->findValueInSettings("Mrms");
-    Vfac       = this->findValueInSettings("Vfac");
-    SyncDebug  = this->findValueInSettings("SyncDebug");
+    StartTHDAC = this->findValueInSettings<double>("StartTHDAC");
+    StopTHDAC  = this->findValueInSettings<double>("StopTHDAC");
+    NMsec      = this->findValueInSettings<double>("NMsec");
+    NMpulse    = this->findValueInSettings<double>("NMpulse");
+    Res        = this->findValueInSettings<double>("Res");
+    Nlvl       = this->findValueInSettings<double>("Nlvl");
+    Mrms       = this->findValueInSettings<double>("Mrms");
+    Vfac       = this->findValueInSettings<double>("Vfac");
+    SyncDebug  = this->findValueInSettings<double>("SyncDebug");
 
-    TestPulsePotentiometer = this->findValueInSettings("TestPulsePotentiometer");
+    TestPulsePotentiometer = this->findValueInSettings<double>("TestPulsePotentiometer");
 #ifdef __USE_ROOT__
     fDQMHistogramSSASCurveAsync.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
@@ -48,20 +48,10 @@ void SSASCurve::run(void)
     {
         BeBoard* theBeBoard = static_cast<BeBoard*>(fDetectorContainer->at(cBoard->getIndex()));
 
-        if(cWithSSA)
-        {
-            if(SyncDebug)
-                LOG(INFO) << BOLDBLUE << "SYNC DEBUG!" << RESET;
-            else
-                theBeBoard->setEventType(EventType::SSAAS);
-        }
-        if(cWithMPA)
-        {
-            if(SyncDebug)
-                LOG(INFO) << BOLDBLUE << "SYNC DEBUG!" << RESET;
-            else
-                theBeBoard->setEventType(EventType::MPAAS);
-        }
+        if(SyncDebug)
+            LOG(INFO) << BOLDBLUE << "SYNC DEBUG!" << RESET;
+        else
+            theBeBoard->setEventType(EventType::SCAS);
 
         float rms  = 999.0;
         float vfac = Vfac;

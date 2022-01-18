@@ -25,20 +25,19 @@ void GainOptimization::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings("ROWstart");
-    rowStop        = this->findValueInSettings("ROWstop");
-    colStart       = this->findValueInSettings("COLstart");
-    colStop        = this->findValueInSettings("COLstop");
-    nEvents        = this->findValueInSettings("nEvents");
-    startValue     = this->findValueInSettings("VCalHstart");
-    stopValue      = this->findValueInSettings("VCalHstop");
-    targetCharge   = RD53chargeConverter::Charge2VCal(this->findValueInSettings("TargetCharge"));
-    KrumCurrStart  = this->findValueInSettings("KrumCurrStart");
-    KrumCurrStop   = this->findValueInSettings("KrumCurrStop");
-    doFast         = this->findValueInSettings("DoFast");
-    doDisplay      = this->findValueInSettings("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings("SaveBinaryData");
+    rowStart       = this->findValueInSettings<double>("ROWstart");
+    rowStop        = this->findValueInSettings<double>("ROWstop");
+    colStart       = this->findValueInSettings<double>("COLstart");
+    colStop        = this->findValueInSettings<double>("COLstop");
+    startValue     = this->findValueInSettings<double>("VCalHstart");
+    stopValue      = this->findValueInSettings<double>("VCalHstop");
+    targetCharge   = RD53chargeConverter::Charge2VCal(this->findValueInSettings<double>("TargetCharge"));
+    KrumCurrStart  = this->findValueInSettings<double>("KrumCurrStart");
+    KrumCurrStop   = this->findValueInSettings<double>("KrumCurrStop");
+    doFast         = this->findValueInSettings<double>("DoFast");
+    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
 
     frontEnd = RD53::getMajorityFE(colStart, colStop);
     colStart = std::max(colStart, frontEnd->colStart);
@@ -54,7 +53,8 @@ void GainOptimization::ConfigureCalibration()
 
 void GainOptimization::Running()
 {
-    theCurrentRun = this->fRunNumber;
+    theCurrentRun       = this->fRunNumber;
+    Gain::theCurrentRun = this->fRunNumber;
     LOG(INFO) << GREEN << "[GainOptimization::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(saveBinaryData == true)
@@ -75,8 +75,8 @@ void GainOptimization::sendData()
 {
     auto theKrumStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>();
 
-    if(fStreamerEnabled == true)
-        for(const auto cBoard: theKrumCurrContainer) theKrumStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+    if(fDQMStreamerEnabled == true)
+        for(const auto cBoard: theKrumCurrContainer) theKrumStream.streamAndSendBoard(cBoard, fDQMStreamer);
 }
 
 void GainOptimization::Stop()
@@ -91,7 +91,7 @@ void GainOptimization::Stop()
     RD53RunProgress::reset();
 }
 
-void GainOptimization::localConfigure(const std::string fileRes_, int currentRun)
+void GainOptimization::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos       = nullptr;
@@ -100,14 +100,15 @@ void GainOptimization::localConfigure(const std::string fileRes_, int currentRun
 
     if(currentRun >= 0)
     {
-        theCurrentRun = currentRun;
+        theCurrentRun       = currentRun;
+        Gain::theCurrentRun = currentRun;
         LOG(INFO) << GREEN << "[GainOptimization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     GainOptimization::ConfigureCalibration();
     GainOptimization::initializeFiles(fileRes_, currentRun);
 }
 
-void GainOptimization::initializeFiles(const std::string fileRes_, int currentRun)
+void GainOptimization::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     // ##############################
     // # Initialize sub-calibration #
@@ -130,7 +131,7 @@ void GainOptimization::initializeFiles(const std::string fileRes_, int currentRu
 
 void GainOptimization::run()
 {
-    GainOptimization::bitWiseScanGlobal(frontEnd->gainReg, nEvents, targetCharge, KrumCurrStart, KrumCurrStop);
+    GainOptimization::bitWiseScanGlobal(frontEnd->gainReg, targetCharge, KrumCurrStart, KrumCurrStop);
 
     // #######################################
     // # Fill Krummenacher Current container #
@@ -169,7 +170,6 @@ void GainOptimization::draw()
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     GainOptimization::fillHisto();
     histos->process();
-    this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
 #endif
@@ -192,11 +192,12 @@ void GainOptimization::fillHisto()
 #endif
 }
 
-void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue)
+void GainOptimization::bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue)
 {
     std::vector<uint16_t> chipCommandList;
     std::vector<uint32_t> hybridCommandList;
 
+    float    tmp;
     uint16_t init;
     uint16_t numberOfBits = floor(log2(stopValue - startValue + 1) + 1);
 
@@ -211,20 +212,8 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, midDACcontainer);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, maxDACcontainer, init = (stopValue + 1));
 
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, bestDACcontainer);
-    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer);
-
-    // #########################
-    // # Initialize containers #
-    // #########################
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = 0;
-                    bestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>()       = 0;
-                }
+    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, bestDACcontainer, init = 0);
+    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer, tmp = 0);
 
     for(auto i = 0u; i <= numberOfBits; i++)
     {
@@ -272,10 +261,11 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
         // ################
         Gain::run();
         auto output = Gain::analyze();
-        output->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandlerContainer, 1);
+        output->resetNormalizationStatus();
+        output->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), 1);
 
         // ##############################################
-        // # Send periodic data to minitor the progress #
+        // # Send periodic data to monitor the progress #
         // ##############################################
         Gain::sendData();
 
@@ -297,11 +287,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint32_t nE
                             for(auto col = 0u; col < RD53::nCols; col++)
                                 if(cChip->getChannel<GainFit>(row, col).fChi2 > 0)
                                 {
-                                    float ToTatTarget = Gain::gainFunction({cChip->getChannel<GainFit>(row, col).fIntercept,
-                                                                            cChip->getChannel<GainFit>(row, col).fSlope,
-                                                                            cChip->getChannel<GainFit>(row, col).fQuadratic,
-                                                                            cChip->getChannel<GainFit>(row, col).fLog},
-                                                                           target);
+                                    float ToTatTarget = Gain::gainFunction({cChip->getChannel<GainFit>(row, col).fIntercept, cChip->getChannel<GainFit>(row, col).fSlope}, target);
                                     avg += ToTatTarget;
                                     stdDev += ToTatTarget * ToTatTarget;
                                     cnt++;

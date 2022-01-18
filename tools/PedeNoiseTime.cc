@@ -68,12 +68,12 @@ void PedeNoiseTime::Initialise(bool pAllChan, bool pDisableStubLogic)
     initializeRecycleBin();
     fAllChan = pAllChan;
 
-    fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels", 0);
-    fMaskChannelsFromOtherGroups = findValueInSettings("MaskChannelsFromOtherGroups", 1);
-    fPlotSCurves                 = findValueInSettings("PlotSCurves", 0);
-    fFitSCurves                  = findValueInSettings("FitSCurves", 0);
-    fPulseAmplitude              = findValueInSettings("PedeNoisePulseAmplitude", 0);
-    fEventsPerPoint              = findValueInSettings("Nevents", 10);
+    fSkipMaskedChannels          = findValueInSettings<double>("SkipMaskedChannels", 0);
+    fMaskChannelsFromOtherGroups = findValueInSettings<double>("MaskChannelsFromOtherGroups", 1);
+    fPlotSCurves                 = findValueInSettings<double>("PlotSCurves", 0);
+    fFitSCurves                  = findValueInSettings<double>("FitSCurves", 0);
+    fPulseAmplitude              = findValueInSettings<double>("PedeNoisePulseAmplitude", 0);
+    fEventsPerPoint              = findValueInSettings<double>("Nevents", 10);
     fNEventsPerBurst             = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
@@ -308,20 +308,20 @@ void PedeNoiseTime::Validate(uint32_t pNoiseStripThreshold, uint32_t pMultiple)
     this->SetTestAllChannels(originalAllChannelFlag);
 #ifdef __USE_ROOT__
     fDQMHistogramPedeNoise.fillValidationPlots(theOccupancyContainer);
-    // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fStreamerEnabled << std::endl;
-    // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fStreamerEnabled << std::endl;
-    // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fStreamerEnabled << std::endl;
+    // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fDQMStreamerEnabled << std::endl;
+    // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fDQMStreamerEnabled << std::endl;
+    // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fDQMStreamerEnabled << std::endl;
 #else
-    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
-    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
-    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fStreamerEnabled << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fDQMStreamerEnabled << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fDQMStreamerEnabled << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fDQMStreamerEnabled << std::endl;
     auto theOccupancyStream = prepareHybridContainerStreamer<Occupancy, Occupancy, Occupancy>();
     // auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
 
     LOG(INFO) << "6 ";
     for(auto board: theOccupancyContainer)
     {
-        if(fStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fNetworkStreamer);
+        if(fDQMStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fDQMStreamer);
     }
 #endif
     LOG(INFO) << "7 ";
@@ -525,8 +525,8 @@ uint32_t PedeNoiseTime::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
 }
 bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSeparation)
 {
-    auto                  cMaxTriggersInBurst        = findValueInSettings("MaxNtriggersPerBurst", 1);
-    auto                  cNtriggersToSendPerAttempt = findValueInSettings("Ntriggers", 10);
+    auto                  cMaxTriggersInBurst        = findValueInSettings<double>("MaxNtriggersPerBurst", 1);
+    auto                  cNtriggersToSendPerAttempt = findValueInSettings<double>("Ntriggers", 10);
     DetectorDataContainer cNwordsContainer;
     ContainerFactory::copyAndInitBoard<uint32_t>(*fDetectorContainer, cNwordsContainer);
 
@@ -664,9 +664,9 @@ bool PedeNoiseTime::DataFromExternalTriggers()
 }
 bool PedeNoiseTime::GetDataFromFC7()
 {
-    fEventsPerPoint             = findValueInSettings("NeventsScan", 10);
-    int  cMeanTriggerSeparation = findValueInSettings("MeanTriggerSeparation", 500);
-    int  cUseFcmdBram           = findValueInSettings("UseFcmdBram", 1);
+    fEventsPerPoint             = findValueInSettings<double>("NeventsScan", 10);
+    int  cMeanTriggerSeparation = findValueInSettings<double>("MeanTriggerSeparation", 500);
+    int  cUseFcmdBram           = findValueInSettings<double>("UseFcmdBram", 1);
     bool cSuccess               = (cUseFcmdBram) ? this->DataFromRandomTriggers(cMeanTriggerSeparation) : this->DataFromExternalTriggers();
     std::this_thread::sleep_for(std::chrono::microseconds(10));
     if(cSuccess)
@@ -695,7 +695,7 @@ bool PedeNoiseTime::GetDataFromFC7()
 }
 void PedeNoiseTime::CalculateOccupancy(DetectorDataContainer* pOccupancyContainer)
 {
-    int    cUseFcmdBram     = findValueInSettings("UseFcmdBram", 1);
+    int    cUseFcmdBram     = findValueInSettings<double>("UseFcmdBram", 1);
     size_t cNeventsExpected = fEventsPerPoint;
     if(cUseFcmdBram) cNeventsExpected = fTriggersSent;
     // now retreive events
@@ -736,7 +736,8 @@ void PedeNoiseTime::CalculateOccupancy(DetectorDataContainer* pOccupancyContaine
                         for(auto cHit: cHits)
                         {
                             fEvent.fHits.push_back((uint8_t)cHit);
-                            if(fChannelGroupHandlerContainer->getObject(cBoard->getId())
+                            if(getChannelGroupHandlerContainer()
+                                   ->getObject(cBoard->getId())
                                    ->getObject(cOpticalGroup->getId())
                                    ->getObject(cHybrid->getId())
                                    ->getObject(cChip->getId())
@@ -759,7 +760,7 @@ void PedeNoiseTime::CalculateOccupancy(DetectorDataContainer* pOccupancyContaine
         fEvent.fEventCnt++;
     } // event loop - I want to keep this because I want to look at what happens in an event/per event basis
     auto cNevents = cPh2Events.size();
-    pOccupancyContainer->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandlerContainer, cNevents);
+    pOccupancyContainer->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), cNevents);
 }
 void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
 {
@@ -768,9 +769,9 @@ void PedeNoiseTime::measureSCurves(uint16_t pStartValue)
         fThresholdAndNoiseContainer = new DetectorDataContainer();
         ContainerFactory::copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *fThresholdAndNoiseContainer);
     }
-    fEventsPerPoint   = findValueInSettings("NeventsScan", 10);
-    int cStartLatency = findValueInSettings("StartLatency", 1);
-    int cLatencyRange = findValueInSettings("LatencyRange", 1);
+    fEventsPerPoint   = findValueInSettings<double>("NeventsScan", 10);
+    int cStartLatency = findValueInSettings<double>("StartLatency", 1);
+    int cLatencyRange = findValueInSettings<double>("LatencyRange", 1);
     LOG(INFO) << BOLDMAGENTA << "PedeNoiseTime::measureSCurves .. asking for " << fEventsPerPoint << " events per point on the threshold scan" << RESET;
     // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan!
     float    cLimit    = 0.05;
@@ -926,7 +927,8 @@ void PedeNoiseTime::extractPedeNoiseTime()
                     {
                         for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
                         {
-                            if(!fChannelGroupHandlerContainer->getObject(board->getId())
+                            if(!getChannelGroupHandlerContainer()
+                                    ->getObject(board->getId())
                                     ->getObject(opticalGroup->getId())
                                     ->getObject(hybrid->getId())
                                     ->getObject(chip->getId())
@@ -987,7 +989,8 @@ void PedeNoiseTime::extractPedeNoiseTime()
                 {
                     for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
                     {
-                        if(!fChannelGroupHandlerContainer->getObject(board->getId())
+                        if(!getChannelGroupHandlerContainer()
+                                ->getObject(board->getId())
                                 ->getObject(opticalGroup->getId())
                                 ->getObject(hybrid->getId())
                                 ->getObject(chip->getId())
@@ -1005,7 +1008,7 @@ void PedeNoiseTime::extractPedeNoiseTime()
                 }
             }
         }
-        board->normalizeAndAverageContainers(fDetectorContainer->at(board->getIndex()), fChannelGroupHandlerContainer->getObject(board->getId()), 0);
+        board->normalizeAndAverageContainers(fDetectorContainer->at(board->getIndex()), getChannelGroupHandlerContainer()->getObject(board->getId()), 0);
     }
 }
 
@@ -1017,7 +1020,7 @@ void PedeNoiseTime::producePedeNoiseTimePlots()
     auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
     for(auto board: *fThresholdAndNoiseContainer)
     {
-        if(fStreamerEnabled) { theThresholdAndNoiseStream.streamAndSendBoard(board, fNetworkStreamer); }
+        if(fDQMStreamerEnabled) { theThresholdAndNoiseStream.streamAndSendBoard(board, fDQMStreamer); }
     }
 #endif
 }

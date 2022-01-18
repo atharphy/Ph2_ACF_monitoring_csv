@@ -43,8 +43,6 @@ class SSAInterface : public ReadoutChipInterface
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pSSA, const std::string& pRegNode) override;
     void     ReadASEvent(Ph2_HwDescription::ReadoutChip* pSSA, std::vector<uint32_t>& pData, std::pair<uint32_t, uint32_t> pSRange = std::pair<uint32_t, uint32_t>({0, 0}));
     void     Send_pulses(Ph2_HwDescription::ReadoutChip* pSSA, uint32_t n_pulse);
-    void     Set_calibration(Ph2_HwDescription::Chip* pSSA, uint32_t cal);
-    void     Set_threshold(Ph2_HwDescription::Chip* pSSA, uint32_t th);
 
     // std::pair<uint16_t,uint16_t>      getReadBackErrorSummary(){ return std::make_pair(fReadBackErrors, fRegisterWrites); }
     // std::pair<uint16_t,uint16_t>      getWriteErrorSummary(){ return std::make_pair(fWriteErrors, fRegisterWrites); }
@@ -102,6 +100,9 @@ class SSAInterface : public ReadoutChipInterface
     uint16_t fReW  = 0;
     uint16_t fReWR = 0;
 
+    void Set_calibration(Ph2_HwDescription::Chip* pSSA, uint32_t cal);
+    void Set_threshold(Ph2_HwDescription::Chip* pSSA, uint32_t th);
+
     uint8_t                        ReadChipId(Ph2_HwDescription::Chip* pSSA);
     bool                           WriteReg(Ph2_HwDescription::Chip* pSSA, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop = true);
     bool                           WriteRegs(Ph2_HwDescription::Chip* pSSA, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop = true);
@@ -120,7 +121,9 @@ class SSAInterface : public ReadoutChipInterface
                                                {"DAC", 9},
                                                {"Bandgap", 10},
                                                {"GND", 11},
-                                               {"HighZ", 12}};
+                                               {"HighZ", 12},
+                                               {"ADC_IREF", 13},
+                                               {"ADC_VREF", 14}};
 
 }; // end class
 

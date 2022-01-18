@@ -35,6 +35,9 @@
 
 using namespace Ph2_HwDescription;
 
+// class TC_2SSEH;
+// class TC_PSROH;
+
 class OTHybridTester : public Tool
 {
   public:
@@ -69,6 +72,10 @@ class OTHybridTester : public Tool
     void LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect);
     // Run Bit Error Rate Test
     void LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint32_t pPattern = 0x00000000);
+
+  private:
+    float       getMeasurement(std::string name);
+    std::string getVariableValue(std::string variable, std::string buffer);
 
   protected:
 #ifdef __TCUSB__

@@ -50,12 +50,12 @@ void MonitorDQMInterface::destroyDQMs(void)
 }
 
 //========================================================================================================================
-void MonitorDQMInterface::configure(std::string const& monitorName, std::string const& configurationFilePath)
+void MonitorDQMInterface::configure(std::string const& configurationFilePath)
 {
     LOG(INFO) << __PRETTY_FUNCTION__ << RESET;
 
     std::string serverIP   = "127.0.0.1";
-    int         serverPort = 6000;
+    int         serverPort = 7000;
     fListener              = new TCPSubscribeClient(serverIP, serverPort);
 
     if(!fListener->connect())
@@ -151,14 +151,14 @@ bool MonitorDQMInterface::running()
                 theCurrentStream = reinterpret_cast<CheckStream*>(&fDataBuffer.at(0));
                 LOG(DEBUG) << "Packet number received = " << int(theCurrentStream->getPacketNumber()) << RESET;
 
-                if(packetNumber < 0)
-                    packetNumber = int(theCurrentStream->getPacketNumber()); // first packet received
-                else if(theCurrentStream->getPacketNumber() != packetNumber)
-                {
-                    LOG(ERROR) << BOLDRED << "Packet number expected = " << --packetNumber << " But received " << int(theCurrentStream->getPacketNumber()) << ", Aborting" << RESET;
-                    LOG(ERROR) << GREEN << "Did you check that the Endianness of the two comupters is the same?" << RESET;
-                    abort();
-                }
+                // if(packetNumber < 0)
+                //     packetNumber = int(theCurrentStream->getPacketNumber()); // first packet received
+                // else if(theCurrentStream->getPacketNumber() != packetNumber)
+                // {
+                //     LOG(ERROR) << BOLDRED << "Packet number expected = " << --packetNumber << " But received " << int(theCurrentStream->getPacketNumber()) << ", Aborting" << RESET;
+                //     LOG(ERROR) << GREEN << "Did you check that the Endianness of the two comupters is the same?" << RESET;
+                //     abort();
+                // }
 
                 LOG(DEBUG) << "Vector size  = " << fDataBuffer.size() << "; expected = " << theCurrentStream->getPacketSize() << RESET;
 

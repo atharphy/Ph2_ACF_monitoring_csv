@@ -61,10 +61,10 @@ class OTTool : public Tool
     // readout related items
     uint32_t fNevents{100};
     uint32_t fEventCountInt{0};
-    uint32_t fReadoutPause{100};
+    uint32_t fReadoutPause{1};
     uint32_t fEventCounter{0};
     // waits
-    uint32_t fThreadWait{100}; // in us
+    uint32_t fThreadWait{1}; // in us
     // stop trigger monitor
     uint8_t fStopTriggerMonitor{0};
     // type of injection
@@ -78,6 +78,8 @@ class OTTool : public Tool
     void ContinousReadout(Ph2_HwDescription::BeBoard* pBoard);
     void WaitForTriggers(Ph2_HwDescription::BeBoard* pBoard);
     void ContinousReadoutTh(uint8_t cBrdId);
+    void CheckFinishedTh(uint8_t cBrdId);
+    void StartReadoutTh(uint8_t cBrdId);
     void CatchStop();
 
   private:
@@ -87,6 +89,8 @@ class OTTool : public Tool
     PrintConfig fPrintConfig;
     // name of the tool
     std::string fMyName;
+    // Data container
+    std::map<uint8_t, std::vector<uint32_t>> fReadoutData;
 
     // list of registers to perserve
     std::vector<std::string> fBrdRegsToPerserve;

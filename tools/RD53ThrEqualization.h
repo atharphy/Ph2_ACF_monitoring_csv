@@ -30,6 +30,7 @@ class ThrEqualization : public PixelAlive
     ~ThrEqualization()
     {
 #ifdef __USE_ROOT__
+        this->WriteRootFile();
         this->CloseResultFile();
 #endif
     }
@@ -39,20 +40,21 @@ class ThrEqualization : public PixelAlive
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string fileRes_, int currentRun);
-    void   initializeFiles(const std::string fileRes_, int currentRun);
+    void   localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
+    void   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
     void   run();
     void   draw();
     void   analyze();
     size_t getNumberIterations()
     {
-        uint16_t nIterationsVCal    = floor(log2(stopValue - startValue + 1) + 1);
-        uint16_t moreIterationsVCal = 2;
-        uint16_t nIterationsTDAC    = floor(log2(frontEnd->nTDACvalues) + 1);
-        uint16_t moreIterationsTDAC = 2;
+        uint16_t nIterationsVCal    = floor(log2(stopValue - startValue + 1) + 2);
+        uint16_t moreIterationsVCal = 1;
+        uint16_t nIterationsTDAC    = floor(log2(frontEnd->nTDACvalues) + 2);
+        uint16_t moreIterationsTDAC = 1;
         return PixelAlive::getNumberIterations() * (nIterationsVCal + moreIterationsVCal) +
-               RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol) * (nIterationsTDAC + moreIterationsTDAC) * nEvents /
-                   nEvtsBurst;
+               ((RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol, doOnlyNGroups) * (nIterationsTDAC + moreIterationsTDAC)) +
+                nIterationsTDAC) *
+                   nEvents / nEvtsBurst;
     }
     void saveChipRegisters(int currentRun);
 
@@ -69,8 +71,10 @@ class ThrEqualization : public PixelAlive
     size_t nEvtsBurst;
     size_t startValue;
     size_t stopValue;
+    size_t nSteps;
     size_t nHITxCol;
     bool   doFast;
+    size_t doOnlyNGroups;
 
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
@@ -79,9 +83,10 @@ class ThrEqualization : public PixelAlive
     DetectorDataContainer                    theTDACcontainer;
 
     void fillHisto();
-    void bitWiseScanGlobal(const std::string& regName, uint32_t nEvents, const float& target, uint16_t startValue, uint16_t stopValue);
+    void bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue);
     void bitWiseScanLocal(const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
     void chipErrorReport() const;
+    void copyAndResetContainer(DetectorDataContainer& fromContainer, DetectorDataContainer& toContainer);
 
   protected:
     std::string fileRes;

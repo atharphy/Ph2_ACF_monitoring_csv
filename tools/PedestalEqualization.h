@@ -20,6 +20,7 @@
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/DQMHistogramPedestalEqualization.h"
+#include "TString.h"
 #endif
 
 class PedestalEqualization : public Tool
@@ -55,7 +56,7 @@ class PedestalEqualization : public Tool
     uint32_t fMaxNevents{65535};
     int      fNEventsPerBurst{-1};
     float    fOccupancyAtPedestal{0.56};
-    uint8_t  fUseMean{0};
+    uint8_t  fUseMean{1};
 
     // to hold the original register values
     // DetectorDataContainer fStubLogicCointainer;

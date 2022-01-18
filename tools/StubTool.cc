@@ -1437,7 +1437,7 @@ void StubTool::parseSettings()
     auto cSetting = fSettingsMap.find("HoleMode");
 
     if(cSetting != std::end(fSettingsMap))
-        fHoleMode = cSetting->second;
+        fHoleMode = boost::any_cast<double>(cSetting->second);
     else
         fHoleMode = 1;
     fHoleMode = 0;
@@ -1445,7 +1445,7 @@ void StubTool::parseSettings()
     cSetting = fSettingsMap.find("Nevents");
 
     if(cSetting != std::end(fSettingsMap))
-        fNevents = cSetting->second;
+        fNevents = boost::any_cast<double>(cSetting->second);
     else
         fNevents = 1;
     fNevents = 1;
@@ -1453,7 +1453,7 @@ void StubTool::parseSettings()
     cSetting = fSettingsMap.find("TestPulsePotentiometer");
 
     if(cSetting != std::end(fSettingsMap))
-        fTPAmplitude = cSetting->second;
+        fTPAmplitude = boost::any_cast<double>(cSetting->second);
     else
         fTPAmplitude = (fHoleMode) ? 50 : 200;
 }
