@@ -57,7 +57,9 @@ class lpGBTInterface : public ChipInterface
 {
   protected:
 #ifdef __TCUSB__
+#if defined(__ROH_USB__) || defined(__SEH_USB__)
     TestCardInterface* fExternalController{nullptr};
+#endif
 #endif
 
   protected:
@@ -68,7 +70,6 @@ class lpGBTInterface : public ChipInterface
 #ifdef __TCUSB__
     void iniitalizeExternalController()
     {
-#ifdef __TCUSB__
 #ifdef __ROH_USB__
         LOG(INFO) << BOLDYELLOW << "Initializing controller (via usb) for PS-ROH test system..." << RESET;
         fExternalController = new TestCardInterface("ROH_USB");
@@ -77,9 +78,10 @@ class lpGBTInterface : public ChipInterface
         LOG(INFO) << BOLDYELLOW << "Initializing controller (via usb) for 2S-SEH test system..." << RESET;
         fExternalController = new TestCardInterface("SEH_USB");
 #endif
-#endif
     }
+#if defined(__ROH_USB__) || defined(__SEH_USB__)
     TestCardInterface* getExternalController() const { return fExternalController; }
+#endif
 #endif
 
   public:

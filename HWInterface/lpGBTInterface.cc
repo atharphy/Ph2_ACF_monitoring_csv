@@ -27,7 +27,7 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
         LOG(ERROR) << BOLDRED << "LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pDacValue << BOLDRED << " to address " << BOLDYELLOW << cAddress << RESET;
         return false;
     }
-    if(cAddress >= 0x13C)
+    if(cAddress > 0x13C)
     {
         LOG(ERROR) << "LpGBT read-write registers end at 0x13C ... impossible to write to address " << BOLDYELLOW << cAddress << RESET;
         return false;
@@ -38,8 +38,10 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
     else
     {
 #ifdef __TCUSB__
-        cSuccess = fExternalController->getInterface().write_i2c(cAddress, static_cast<char>(pDacValue));
-        cSuccess = (!pVerifLoop) ? cSuccess : (ReadChipReg(pChip, pDacName) == pDacValue);
+#if defined(__ROH_USB__) || defined(__SEH_USB__)
+        cSuccess = (fExternalController->getInterface().write_i2c(cAddress, static_cast<char>(pDacValue)) == pDacValue);
+        // cSuccess = (!pVerifLoop) ? cSuccess : (ReadChipReg(pChip, pDacName) == pDacValue);
+#endif
 #endif
     }
     // if failed .. throw an exception
@@ -59,7 +61,9 @@ uint16_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
     else
     {
 #ifdef __TCUSB__
+#if defined(__ROH_USB__) || defined(__SEH_USB__)
         cValue = fExternalController->getInterface().read_i2c(cAddress);
+#endif
 #endif
     }
     pChip->setReg(pDacName, cValue); // make sure to update value in memory

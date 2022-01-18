@@ -189,10 +189,12 @@ int main(int argc, char* argv[])
     SEHTester cSEHTester;
     cSEHTester.Inherit(&cTool);
     cSEHTester.TurnOn(cRightLoad, cLeftLoad);
+
     // establishes an optical link and configures the lpgbt over the optical cable
     uint8_t cExternalPattern = (cmd.foundOption("external-pattern")) ? convertAnyInt(cmd.optionValue("external-pattern").c_str()) : 0;
     cSEHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
     cTool.ConfigureHw();
+    cSEHTester.Initialise();
     if(!cSEHTester.LpGBTGetLinkLock())
     {
         cSEHTester.TurnOff();

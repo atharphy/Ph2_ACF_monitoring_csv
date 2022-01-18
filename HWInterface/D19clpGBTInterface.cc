@@ -28,8 +28,8 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     // Configure High Speed Link Tx Rx Polarity
     // do this before doing anything else
     ConfigureHighSpeedPolarity(pChip, 1, 0);
-    bool cReconfigure = false; // if using I2C interface maybe I want to confiugre?
-    if(cReconfigure)           // by de
+    bool cReconfigure = true; // if using I2C interface maybe I want to confiugre?
+    if(cReconfigure)          // by de
     {
         ChipRegMap                                    clpGBTRegMap = pChip->getRegMap();
         std::vector<std::pair<std::string, uint16_t>> cRegVec;
@@ -171,7 +171,6 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     std::vector<uint8_t> cClocks  = {fClock_LHS_Hybrid, fClock_LHS_CIC, fClock_RHS_Hybrid, fClock_RHS_CIC};
     uint8_t              cClkFreq = (cChipRate == 5) ? 4 : 5, cClkDriveStr = 1, cClkInvert = 1;
     uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
-    cClkFreq = 0;
     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     // Tx Groups and Channels
     std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};

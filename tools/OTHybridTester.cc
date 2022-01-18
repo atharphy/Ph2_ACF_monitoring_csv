@@ -5,8 +5,6 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-#ifdef __USE_ROOT__
-
 OTHybridTester::OTHybridTester() : Tool()
 {
     // I think that this is where the TC interface should be initialized
@@ -240,7 +238,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                               << " for hybrid side " << +hybridNumber << RESET;
                     res = false;
                     cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
-                    cDebugFWInterface->L1ADebug(10);
+                    // cDebugFWInterface->L1ADebug(10);
                 }
 #ifdef __USE_ROOT__
                 // cLineNames.push_back(Form("L1A_hybrid_%d_match", hybridNumber));
@@ -549,9 +547,9 @@ bool OTHybridTester::LpGBTTestFixedADCs()
 {
     bool cReturn = true;
 #ifdef __USE_ROOT__
-#ifdef __TCUSB__
+#if defined(__TCUSB__) || defined(__SEH_USB__) || defined(__ROH_USB__)
     std::map<std::string, std::string>  cADCsMap;
-    std::map<std::string, float>*       cDefaultParameters;
+    std::map<std::string, float>*       cDefaultParameters = nullptr;
     std::map<std::string, std::string>* cADCNametoPinMapping;
     std::string                         cADCNameString;
     std::vector<int>                    cADCValueVect;
@@ -679,12 +677,12 @@ bool OTHybridTester::LpGBTTestResetLines()
 
     std::vector<std::pair<std::string, uint8_t>> cLevels = {{"High", 1}, {"Low", 0}};
     // lpGBTinterface now nows this .. so don't need the if statements
-    std::vector<uint8_t> cGPIOs = static_cast<D19clpGBTInterface*>(flpGBTInterface)->getGPIOs();
 #ifdef __TCUSB__
-    float cMeasurement;
 #ifdef __ROH_USB__
+    std::vector<uint8_t>                         cGPIOs      = {0, 1, 3, 6, 9, 12, 8};
     std::map<std::string, TC_PSROH::measurement> cResetLines = fResetLines;
 #elif __SEH_USB__
+    std::vector<uint8_t>                              cGPIOs      = {0, 3, 6, 8};
     std::map<std::string, TC_2SSEH::resetMeasurement> cResetLines = f2SSEHResetLines;
     // std::vector<uint8_t>                              cGPIOs      = {0, 3, 6, 8};
 #endif
@@ -716,6 +714,8 @@ bool OTHybridTester::LpGBTTestResetLines()
     // cResetTree->Branch("LineAndLevel", &cLineNames);
     // cResetTree->Branch("VoltageValue", &cValues);
 
+#if defined(__ROH_USB__) || defined(__SEH_USB__)
+    float cMeasurement;
     for(auto cLevel: cLevels)
     {
         LpGBTSetGPIOLevel(cGPIOs, cLevel.second);
@@ -724,21 +724,24 @@ bool OTHybridTester::LpGBTTestResetLines()
         bool cStatus      = true;
         do
         {
+#endif
 #ifdef __ROH_USB__
             flpGBTInterface->getExternalController()->getInterface().adc_get(cMapIterator->second, cMeasurement);
             float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement);
 #elif __SEH_USB__
 #ifdef __TCP_SERVER__
-            cMeasurement         = this->getMeasurement("read_reset:" + cMapIterator->first);
+    cMeasurement = this->getMeasurement("read_reset:" + cMapIterator->first);
 #else
-            flpGBTInterface->getExternalController()->getInterface().read_reset(cMapIterator->second, cMeasurement);
+    flpGBTInterface->getExternalController()->getInterface().read_reset(cMapIterator->second, cMeasurement);
+    float cDifference_mV = std::fabs((cLevel.second * 1300) - cMeasurement * 1000.); // 1300
+#endif
+    fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
+    cStatus   = cStatus && (cDifference_mV <= 100);
+#endif
 
-#endif
-            float cDifference_mV = std::fabs((cLevel.second * 1300) - cMeasurement * 1000.); // 1300
-#endif
-            fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
-            cStatus = cStatus && (cDifference_mV <= 200);
-            cValid  = cValid && cStatus;
+#if defined(__ROH_USB__) || defined(__SEH_USB__)
+
+            cValid = cValid && cStatus;
             // cLineNames.push_back(cMapIterator->first.c_str() + cLevel.first);
             // cValues.push_back(cMeasurement);
             if(cDifference_mV > 200)
@@ -820,10 +823,10 @@ bool OTHybridTester::LpGBTTestVTRx()
             clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "I2CM1Config", 8);
             uint8_t  cLinkID           = cOpticalGroup->getId();
             uint32_t cTheI2CWriteCount = 0;
-            //I2CWrite(cLinkID, cMaster, cSlaveAddress, 0x09, 1, cTheI2CWriteCount);
+            // I2CWrite(cLinkID, cMaster, cSlaveAddress, 0x09, 1, cTheI2CWriteCount);
             cRecent = pInterface->I2CWrite(cLinkID, 1, 0x50, 0x15, 1, cTheI2CWriteCount);
             for(int i = 0; i < 5 && !(cRecent); i++) { cRecent = pInterface->I2CWrite(cLinkID, 1, 0x50, 0x15, 1, cTheI2CWriteCount); }
-            cResult                                              = clpGBTInterface->ReadI2C(cOpticalGroup->flpGBT, 1, 0x50, 1);
+            cResult                                              = pInterface->I2CRead(cLinkID, 1, 0x50, 1,cTheI2CWriteCount);
             std::map<uint8_t, uint8_t> cVTRxplusDefaultRegisters = fVTRxplusDefaultRegisters;
             if(cResult == 0x15)
             {
@@ -835,9 +838,9 @@ bool OTHybridTester::LpGBTTestVTRx()
             auto cMapIterator = cVTRxplusDefaultRegisters.begin();
             do
             {
-                cRecent  = pInterface->I2CWrite(cLinkID, 1, 0x50, cMapIterator->first, 1, cTheI2CWriteCount);
-                //WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, cMapIterator->first, 1, 2);
-                cResult  = clpGBTInterface->ReadI2C(cOpticalGroup->flpGBT, 1, 0x50, 1, 2);
+                cRecent = pInterface->I2CWrite(cLinkID, 1, 0x50, cMapIterator->first, 1, cTheI2CWriteCount);
+                // WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, cMapIterator->first, 1, 2);
+                cResult  = pInterface->I2CRead(cLinkID, 1, 0x50, 1,cTheI2CWriteCount);
                 cSuccess = cSuccess && cRecent && (cResult == cMapIterator->second);
                 if(cRecent && (cResult == cMapIterator->second))
                 { LOG(INFO) << BOLDGREEN << "VTRx+ register " << +(cMapIterator->first) << " contains the default value " << +cResult << " ." << RESET; }

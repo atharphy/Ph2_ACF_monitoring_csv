@@ -28,9 +28,11 @@ void SEHTester::Initialise()
     // fc7_daq_ctrl
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
-        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.fe_for_ps_roh.i2c_slave_reset", 0x01);
-        LOG(INFO) << BOLDRED << "Reset I2C slave" << RESET;
+        for(auto cOpticalGroup: *cBoard)
+        {
+            if(cOpticalGroup->flpGBT == nullptr) continue;
+            static_cast<D19clpGBTInterface*>(flpGBTInterface)->Configure2SSEH(cOpticalGroup->flpGBT);
+        }
     }
 }
 
@@ -207,7 +209,6 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     flpGBTInterface->getExternalController()->getInterface().set_HV(false, true, true, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
-    
 #endif
     std::vector<float> cDACValVect;
     std::vector<float> cVHVJ7ValVect;

@@ -75,7 +75,6 @@ class BeBoardFWInterface : public RegManager
      * \param puHalConfigFileName : path of the uHal Config File*/
     BeBoardFWInterface(const char* puHalConfigFileName, uint32_t pBoardId);
     BeBoardFWInterface(const char* pId, const char* pUri, const char* pAddressTable);
-
     /*!
      * \brief set a FileHandler Object and enable saving to file!
      * \param pFileHandler : pointer to file handler for saving Raw Data*/
