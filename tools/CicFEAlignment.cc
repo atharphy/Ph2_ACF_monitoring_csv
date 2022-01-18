@@ -245,6 +245,7 @@ DetectorDataContainer CicFEAlignment::SamplePhase(uint8_t pPhase)
                     auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                     for(auto cChip: *cHybrid)
                     {
+                        if( cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2 ) continue;
                         // set phase for each FE and line 
                         fCicInterface->SetFePhaseTap( cCic , cChip->getId() , cLineId , pPhase); 
                     }// chip 
