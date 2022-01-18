@@ -108,7 +108,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 // cDebugInterface->StubDebug(true, 6);
                 // enable stub debug - allows you to 'scope' the stub output
 
-                cFWInterface->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x01);
+                cFWInterface->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable", 0x01);
                 cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
                 cFWInterface->ChipTestPulse();
                 auto                     cWords = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
@@ -177,7 +177,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
 #endif
 
                 // disable stub debug
-                cFWInterface->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x00);
+                cFWInterface->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable", 0x00);
                 cFWInterface->ResetReadout();
 
                 LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
