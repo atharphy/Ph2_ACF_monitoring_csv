@@ -535,7 +535,7 @@ void SystemController::InitializeOT(BeBoard* pBoard)
             continue;
         }
     }
-
+    
     // module start-up
     // depends on module type
     for(auto cOpticalGroup: *pBoard)
@@ -1022,6 +1022,23 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                         throw std::runtime_error(std::string("FAILED to start-up CIC... something is wrong... .. STOPPING"));
                     }
                 }
+            }
+            if(!cBoard->isOptical() && cBoard->at(0)->flpGBT != nullptr)
+            {
+                LOG(INFO) << YELLOW << "Checking LinkLock after USB configuration of lpGBT" << RESET;
+                LOG(INFO) << BOLDMAGENTA << "Resetting lpGBT-FPGA core on BeBoard#" << +cBoard->getId() << RESET;
+                // reset lpGBT core
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
+                std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+		bool cLinkLock = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->LinkLock(cBoard);
+	        if(!cLinkLock)
+		{
+		    LOG(INFO) << BOLDRED << "lpGBT link failed to LOCK!" << RESET;
+		    exit(0);
+		}
             }
             ConfigureOT(cBoard);
 
