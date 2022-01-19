@@ -11,6 +11,8 @@ D19cDebugFWInterface::~D19cDebugFWInterface() {}
 std::string D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
 {
     LOG(INFO) << BOLDBLUE << "D19cDebugFWInterface::L1ADebug ...." << RESET;
+    auto cInitFastReset = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable");
+    auto cInitBP = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable");
     // enable initial fast reset 
     this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable", 1);
     // disable back-pressure
@@ -52,6 +54,10 @@ std::string D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
         if(pPrint) LOG(INFO) << BOLDBLUE << "#" << +cLineIndx << ":" << cOutput << RESET;
         cLineIndx++;
     }
+
+    this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable", cInitFastReset);
+    this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", cInitBP);
+    this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
     return cBuffer;
 }
 std::vector<std::string> D19cDebugFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines, bool pPrint)
