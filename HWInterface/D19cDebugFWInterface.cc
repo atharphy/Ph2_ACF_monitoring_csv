@@ -11,6 +11,8 @@ D19cDebugFWInterface::~D19cDebugFWInterface() {}
 std::string D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
 {
     LOG(INFO) << BOLDBLUE << "D19cDebugFWInterface::L1ADebug ...." << RESET;
+    // enable initial fast reset 
+    this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable", 1);
     // disable back-pressure
     this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0);
     WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);

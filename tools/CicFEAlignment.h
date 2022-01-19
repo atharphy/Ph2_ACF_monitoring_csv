@@ -45,6 +45,7 @@ class CicFEAlignment : public OTTool
     void AlignInputs();
     void SetStaticPhaseAlignment();
     void GenerateManualPattern();
+    uint8_t GenManPatternOutLine(uint8_t pLine);
     DetectorDataContainer SamplePhase(uint8_t pPhase);
     void ManualPhaseScan(uint8_t pStartScan, uint8_t pEndScan ); 
     bool PhaseAlignment(uint16_t pWait_us = 10, uint32_t pNTriggers = 500);
