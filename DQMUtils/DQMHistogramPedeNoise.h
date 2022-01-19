@@ -35,7 +35,7 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     /*!
      * Book histograms
      */
-    void book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;
+    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;
 
     /*!
      * Fill histogram
@@ -70,10 +70,11 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
      * \param fSCurveOccupancyMap : maps of Vthr and DataContainer
      */
     void fillSCurvePlots(uint16_t vcthr, DetectorDataContainer& fSCurveOccupancy);
+    void fillSCurvePlots(DetectorDataContainer& fThresholds, DetectorDataContainer& fSCurveOccupancy);
 
   private:
-    void fitSCurves();
-
+    void                  fitSCurves();
+    uint32_t              NCH = 0;
     DetectorDataContainer fThresholdAndNoiseContainer;
 
     DetectorDataContainer fDetectorSCurveHistograms;
@@ -83,6 +84,7 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     DetectorDataContainer fDetectorNoiseHistograms;
     DetectorDataContainer fDetectorStripNoiseHistograms;
     DetectorDataContainer fDetectorStripPedestalHistograms;
+    DetectorDataContainer fDetector2DPixelNoiseHistograms;
     DetectorDataContainer fDetectorStripNoiseEvenHistograms;
     DetectorDataContainer fDetectorStripNoiseOddHistograms;
     DetectorDataContainer fDetectorHybridNoiseHistograms;

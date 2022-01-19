@@ -19,7 +19,7 @@ const float THRESHOLD_SHORT = 0.1;
 typedef std::vector<uint8_t> ChannelList;
 
 // add exit codes here
-const uint8_t FAILED_INJECTION = 1;
+const uint8_t FAILED_INJECTION = 6;
 
 class ShortFinder : public Tool
 {
@@ -28,7 +28,7 @@ class ShortFinder : public Tool
     ~ShortFinder();
     void Initialise();
 
-    void Count(Ph2_HwDescription::BeBoard* pBoard, const ChannelGroup<NCHANNELS>* pGroup);
+    void Count(Ph2_HwDescription::BeBoard* pBoard, const std::shared_ptr<ChannelGroupBase> pGroup);
     // void Count(Ph2_HwDescription::BeBoard* pBoard, const ChannelGroup<NSSACHANNELS>* pGroup);
 
     void FindShorts2S(Ph2_HwDescription::BeBoard* pBoard);

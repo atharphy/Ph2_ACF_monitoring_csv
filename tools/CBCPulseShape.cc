@@ -15,7 +15,7 @@ using namespace Ph2_HwInterface;
 
 CBCPulseShape::CBCPulseShape() : PedeNoise() {}
 
-CBCPulseShape::~CBCPulseShape() { delete fChannelGroupHandler; }
+CBCPulseShape::~CBCPulseShape() {}
 
 void CBCPulseShape::Initialise(void)
 {
@@ -34,12 +34,11 @@ void CBCPulseShape::Initialise(void)
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
 
     if(fChannelGroup >= 8) throw Exception(std::string(__PRETTY_FUNCTION__) + " fChannelGroup cannot be grater than 7");
-    if(fChannelGroup < 0)
-        fChannelGroupHandler = new CBCChannelGroupHandler();
-    else
-        fChannelGroupHandler = new CBCChannelGroupHandler(std::bitset<NCHANNELS>(CBC_CHANNEL_GROUP_BITSET) << (fChannelGroup * 2));
+    CBCChannelGroupHandler theChannelGroupHandler;
+    if(fChannelGroup > 0) CBCChannelGroupHandler theChannelGroupHandler(std::bitset<NCHANNELS>(CBC_CHANNEL_GROUP_BITSET) << (fChannelGroup * 2));
 
-    fChannelGroupHandler->setChannelGroupParameters(16, 2);
+    theChannelGroupHandler.setChannelGroupParameters(16, 2);
+    setChannelGroupHandler(theChannelGroupHandler);
 
     initializeRecycleBin();
 
@@ -86,7 +85,7 @@ void CBCPulseShape::runCBCPulseShape(void)
         if(fPlotPulseShapeSCurves)
             for(auto& scurveOccupancy: fSCurveOccupancyMap) { fCBCHistogramPulseShape.fillSCurvePlots(scurveOccupancy.first, latencyDAC, delayDAC, *scurveOccupancy.second); }
 #else
-        if(fStreamerEnabled)
+        if(fDQMStreamerEnabled)
         {
             auto theThresholdAndNoiseStream = prepareChipContainerStreamer<ThresholdAndNoise, ThresholdAndNoise, uint16_t>();
             theThresholdAndNoiseStream.setHeaderElement<0>(delay);

@@ -52,6 +52,7 @@ int main(int argc, char** argv)
 
     std::stringstream outp;
     Tool              cTool;
+    cTool.setInterfaceInitialization(0);
     cTool.InitializeHw(cHWFile, outp);
     cTool.InitializeSettings(cHWFile, outp);
     LOG(INFO) << outp.str();

@@ -5,7 +5,6 @@
 #include "../Utils/Occupancy.h"
 // temporary fix until we address event which is compatible for IT  + OT
 #include "../Utils/CommonVisitors.h"
-#include "../Utils/D19cCicEvent.h"
 #include "../Utils/Visitor.h"
 #include "Channel.h"
 
@@ -40,8 +39,10 @@ StubQuickCheck::~StubQuickCheck()
 void StubQuickCheck::Initialise()
 {
     // this is needed if you're going to use groups anywhere
-    fChannelGroupHandler = new CBCChannelGroupHandler(); // This will be erased in tool.resetPointers()
-    fChannelGroupHandler->setChannelGroupParameters(16, 2);
+    CBCChannelGroupHandler theChannelGroupHandler;
+    theChannelGroupHandler.setChannelGroupParameters(16, 2);
+    setChannelGroupHandler(theChannelGroupHandler);
+
 #ifdef __USE_ROOT__
 //    fDQMHistogram.book(fResultFile,*fDetectorContainer);
 #endif
@@ -92,8 +93,8 @@ void StubQuickCheck::Initialise()
                         TString cTitle  = Form("BxId from 2 CICs [%d and %d] on links [%d and %d]; Bx Id [CIC %d]; BxId [CIC%d]",
                                               cFe->getId(),
                                               cOtherFe->getId(),
-                                              static_cast<OuterTrackerHybrid*>(cFe)->getLinkId(),
-                                              static_cast<OuterTrackerHybrid*>(cOtherFe)->getLinkId(),
+                                              cFe->getOpticalId(),
+                                              cOtherFe->getOpticalId(),
                                               cFe->getId(),
                                               cOtherFe->getId());
                         TH2D*   cHist2D = new TH2D(cName, cTitle, 3565, 0, 3565, 3565, 0, 3565);

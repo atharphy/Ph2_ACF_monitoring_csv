@@ -33,10 +33,13 @@ export PH2ACF_BASE_DIR=$(pwd)
 ####################
 # External Plugins #
 ####################
+export EXTERNAL_TOOLS_BASE_DIR=${PH2ACF_BASE_DIR%/*}
+# if in the docker container I want to do this .. need to figure out how to make sure that this is set-up correctly
 export AMC13DIR=$CACTUSINCLUDE/amc13
-export ANTENNADIR=$PH2ACF_BASE_DIR/../CMSPh2_AntennaDriver
-export USBINSTDIR=$PH2ACF_BASE_DIR/../Ph2_USBInstDriver
-export EUDAQDIR=$PH2ACF_BASE_DIR/../eudaq
+export ANTENNADIR=$EXTERNAL_TOOLS_BASE_DIR/CMSPh2_AntennaDriver
+export USBINSTDIR=$EXTERNAL_TOOLS_BASE_DIR/Ph2_USBInstDriver
+export EUDAQDIR=$EXTERNAL_TOOLS_BASE_DIR/eudaq
+export POWERSUPPLYDIR=$EXTERNAL_TOOLS_BASE_DIR/power_supply
 
 ###########
 # ANTENNA #

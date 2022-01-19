@@ -8,6 +8,7 @@
 */
 
 #include "RD53EyeDiag.h"
+#include "../Utils/ContainerFactory.h"
 #ifdef __POWERSUPPLY__
 // Libraries
 #include "Scope.h"
@@ -128,7 +129,7 @@ void EyeDiag::run(std::string runName)
                 for(const auto cChip: *cHybrid)
                 {
                     std::unordered_map<std::string, std::array<float, 7>> value;
-                    fReadoutChipInterface->StartPRBSpattern(cChip);
+                    static_cast<RD53Interface*>(fReadoutChipInterface)->StartPRBSpattern(cChip);
                     std::string results = fPowerSupplyClient->sendAndReceivePacket("Scope:main:acquireEOM=" + runName);
 
                     // now parse the output from the scope

@@ -32,6 +32,7 @@ using namespace Ph2_System;
  * \class LatencyScan
  * \brief Class to perform latency and threshold scans
  */
+class Occupancy;
 
 class LatencyScan : public Tool
 {
@@ -50,11 +51,17 @@ class LatencyScan : public Tool
     void                                StubLatencyScan();
     void                                writeObjects();
 
+    //
+
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
     void Pause() override;
     void Resume() override;
+
+  protected:
+    void cleanContainerMap();
+    void initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
 
   private:
     int  countStubs(Ph2_HwDescription::Hybrid* pFe, const Ph2_HwInterface::Event* pEvent, std::string pHistName, uint8_t pParameter);
@@ -72,7 +79,7 @@ class LatencyScan : public Tool
     uint8_t  fTestPulseAmplitude;
     uint32_t trigSource;
 
-    const uint32_t fTDCBins = 8;
+    const uint32_t fTDCBins = TDCBINS;
 
     int convertLatencyPhase(uint32_t pStartLatency, uint32_t cLatency, uint32_t cPhase)
     {
@@ -97,6 +104,9 @@ class LatencyScan : public Tool
 
         return cRegVec;
     }
+
+    std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
+    ContainerRecycleBin<Occupancy>             fRecycleBin;
 
 #ifdef __USE_ROOT__
     DQMHistogramLatencyScan fDQMHistogramLatencyScan;

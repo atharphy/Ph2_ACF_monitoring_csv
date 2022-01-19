@@ -2,8 +2,8 @@
 #include "../Utils/Utilities.h"
 #include "../Utils/argvparser.h"
 #include "../tools/Tool.h"
+#include "BackEndAlignment.h"
 //#include "../Utils/gui_logger.h"
-#include "tools/BackEndAlignment.h"
 
 #include "../tools/SEHTester.h"
 
@@ -418,11 +418,11 @@ int main(int argc, char* argv[])
         // cBackEndAligner.Reset();
     }
     /*
-        D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+        D19cDebugFWInterface* cDebugInterface              = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
         LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
-        cFWInterface->StubDebug(true, 6);
+        cDebugInterface->StubDebug(true, 6);
         LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
-        cFWInterface->L1ADebug();
+        cDebugInterface->L1ADebug();
     */
     // Save Result File
     cSEHTester.TurnOff();

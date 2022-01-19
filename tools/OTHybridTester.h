@@ -28,17 +28,15 @@
 #include "TString.h"
 #include "TStyle.h"
 #include "TTree.h"
-//#endif
-
-#ifdef __TCUSB__
-#include "USB_a.h"
-#endif
 
 #include <cstring>
 #include <map>
 #include <string>
 
 using namespace Ph2_HwDescription;
+
+// class TC_2SSEH;
+// class TC_PSROH;
 
 class OTHybridTester : public Tool
 {
@@ -47,13 +45,6 @@ class OTHybridTester : public Tool
     ~OTHybridTester();
 
     void FindUSBHandler();
-#ifdef __TCUSB__
-#ifdef __ROH_USB__
-    TC_PSROH* GetTCUSBHandler() { return fTC_USB; }
-#elif __SEH_USB__
-    TC_2SSEH* GetTCUSBHandler() { return fTC_USB; }
-#endif
-#endif
 
     // ###################################
     // # LpGBT related functions #
@@ -85,8 +76,9 @@ class OTHybridTester : public Tool
   private:
     float       getMeasurement(std::string name);
     std::string getVariableValue(std::string variable, std::string buffer);
-#ifdef __TCUSB__
 
+  protected:
+#ifdef __TCUSB__
     std::map<std::string, uint8_t> f2SSEHGPILines = {
         {"PG2V5", 13},
         {"PG1V25", 14},
@@ -148,15 +140,6 @@ class OTHybridTester : public Tool
                                                             {"1V25_MONITOR_Nominal", 0.806},
                                                             {"2V55_MONITOR_Nominal", 0.808}};
     std::map<uint8_t, uint8_t>         fVTRxplusDefaultRegisters = {{0x00, 0x0f}, {0x01, 0x01}, {0x04, 0x0f}, {0x05, 0x2f}, {0x06, 0x26}, {0x07, 0x00}};
-
-  protected:
-#ifdef __TCUSB__
-#ifdef __ROH_USB__
-    TC_PSROH* fTC_USB;
-#elif __SEH_USB__
-    TC_2SSEH* fTC_USB;
-#endif
-#endif
 };
 
 #endif

@@ -35,7 +35,7 @@ class DQMHistogramLatencyScan : public DQMHistogramBase
     /*!
      * Book histograms
      */
-    void book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;
+    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;
 
     /*!
      * Fill histogram
@@ -54,6 +54,8 @@ class DQMHistogramLatencyScan : public DQMHistogramBase
     // virtual void summarizeHistos();
 
     // Histogram Fillers
+    void fillLatencyPlots(uint16_t pLatency, DetectorDataContainer& pOccupancy, DetectorDataContainer& pTDCsummary);
+    void fillLatencyPlots(DetectorDataContainer& theLatencyS0, DetectorDataContainer& theLatencyS1);
     void fillLatencyPlots(DetectorDataContainer& theLatency);
     void fillStubLatencyPlots(DetectorDataContainer& theStubLatency);
     void fill2DLatencyPlots(DetectorDataContainer& the2DLatency);
@@ -63,7 +65,11 @@ class DQMHistogramLatencyScan : public DQMHistogramBase
     void parseSettings(const Ph2_System::SettingsMap& pSettingsMap);
 
     DetectorDataContainer fDetectorData;
+    DetectorDataContainer fLatencyHitMaps;
+    DetectorDataContainer fLatencyTDCHistograms;
     DetectorDataContainer fLatencyHistograms;
+    DetectorDataContainer fLatencyHistogramsS0;
+    DetectorDataContainer fLatencyHistogramsS1;
     DetectorDataContainer fStubHistograms;
     DetectorDataContainer fLatencyScan2DHistograms;
     DetectorDataContainer fTriggerTDCHistograms;

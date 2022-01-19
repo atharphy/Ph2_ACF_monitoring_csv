@@ -33,9 +33,13 @@ namespace Ph2_HwDescription
 {
 using MPARegPair = std::pair<std::string, ChipRegItem>;
 using CommentMap = std::map<int, std::string>;
+
 class MPA : public ReadoutChip
 {
   public:
+    static constexpr size_t nRows = NSSACHANNELS;
+    static constexpr size_t nCols = NMPACOLS;
+
     MPA(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pMPAId, uint8_t pPartnerId, const std::string& filename);
     // C'tors with object FE Description
     MPA(const FrontEndDescription& pFeDesc, uint8_t pMPAId, uint8_t pPartnerId, const std::string& filename);
@@ -48,14 +52,14 @@ class MPA : public ReadoutChip
 
     bool isDACLocal(const std::string& dacName) override
     {
-        if((dacName.find("TrimDAC", 0, 9) != std::string::npos) or (dacName.find("ThresholdTrim", 0, 9) != std::string::npos))
+        if((dacName.find("TrimDAC", 0, 9) != std::string::npos) or (dacName.find("ThresholdTrim") != std::string::npos))
             return true;
         else
             return false;
     }
     uint8_t getNumberOfBits(const std::string& dacName) override
     {
-        if((dacName.find("TrimDAC_P", 0, 9) != std::string::npos) or (dacName.find("ThresholdTrim", 0, 9) != std::string::npos))
+        if((dacName.find("TrimDAC_P", 0, 9) != std::string::npos) or (dacName.find("ThresholdTrim") != std::string::npos))
             return 5;
         else
             return 8;
@@ -63,11 +67,11 @@ class MPA : public ReadoutChip
 
     // row, col starts at index 0, global pix number starts at number 1
 
-    std::pair<uint32_t, uint32_t> PNlocal(const uint32_t PN) { return std::pair<uint32_t, uint32_t>((PN + 1) / 120, ((PN + 1) % 120) - 2); }
+    std::pair<uint32_t, uint32_t> PNlocal(const uint32_t PN) { return std::pair<uint32_t, uint32_t>((PN + 1) / 120 + 1, ((PN - 1) % 120) + 1); }
 
     uint32_t getNumberOfChannels() const override { return NMPACHANNELS; }
 
-    uint32_t PNglobal(std::pair<uint32_t, uint32_t> PC) { return (PC.first) * 120 + (PC.second) + 1; }
+    uint32_t PNglobal(std::pair<uint32_t, uint32_t> PC) { return (PC.first - 1) * 120 + (PC.second - 1) + 1; }
 };
 
 struct MPARegItemComparer

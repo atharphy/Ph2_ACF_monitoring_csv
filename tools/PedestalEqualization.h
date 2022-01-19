@@ -20,6 +20,7 @@
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/DQMHistogramPedestalEqualization.h"
+#include "TString.h"
 #endif
 
 class PedestalEqualization : public Tool
@@ -39,8 +40,10 @@ class PedestalEqualization : public Tool
     void ConfigureCalibration() override;
     void Pause() override;
     void Resume() override;
+    void Reset();
 
   private:
+    std::vector<EventType> fEventTypes;
     // Settings
     bool     fTestPulse{false};
     uint8_t  fTestPulseAmplitude{0};
@@ -52,10 +55,13 @@ class PedestalEqualization : public Tool
     bool     fDisableStubLogic{true};
     uint32_t fMaxNevents{65535};
     int      fNEventsPerBurst{-1};
+    float    fOccupancyAtPedestal{0.56};
+    uint8_t  fUseMean{1};
 
     // to hold the original register values
-    DetectorDataContainer fStubLogicCointainer;
-    DetectorDataContainer fHIPCountCointainer;
+    // DetectorDataContainer fStubLogicCointainer;
+    // DetectorDataContainer fHIPCountCointainer;
+    DetectorDataContainer fBoardRegContainer;
     bool                  cWithCBC = true;
     bool                  cWithSSA = false;
     bool                  cWithMPA = false;

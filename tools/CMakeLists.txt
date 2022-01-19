@@ -87,7 +87,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
           set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBTcpServerFlag}")
         endif($ENV{UseTCUSBTcpServer})
     endif(${PH2_TCUSB_FOUND})
-
     #last but not least, find root and link against it
     if(NoDataShipping)
         if(${ROOT_FOUND})
@@ -107,7 +106,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System)
     if(NoDataShipping)
-        set(LIBS ${LIBS} Ph2_DQMUtils)
+        set(LIBS ${LIBS} Ph2_DQMUtils Ph2_MonitorDQM)
     endif()
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/tools *.cc)
@@ -151,11 +150,13 @@ else()
     MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/tools/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/uhal/include)
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/log/include)
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
 
     include_directories($ENV{PH2ACF_BASE_DIR}/Utils)
+    include_directories($ENV{PH2ACF_BASE_DIR}/HWInterface)
 
     cet_set_compiler_flags(
      EXTRA_FLAGS -Wno-reorder -Wl,--undefined
@@ -165,7 +166,10 @@ else()
             LIBRARIES
             pthread
             ${Boost_SYSTEM_LIBRARY}
-            EXCLUDE RD53eudaqProducer.h RD53eudaqProducer.cc
+            EXCLUDE 
+            RD53eudaqProducer.h RD53eudaqProducer.cc
+            SEHTester.h SEHTester.cc
+            SSAPhysics.h SSAPhysics.cc
             )
 
     install_headers()

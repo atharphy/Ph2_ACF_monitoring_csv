@@ -100,11 +100,11 @@ void PixelAlive::sendData()
     auto theBCIDStream  = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<BCIDsize>>("BCID");
     auto theTrgIDStream = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TrgIDsize>>("TrgID");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: *theOccContainer.get()) theOccStream.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theBCIDContainer) theBCIDStream.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theTrgIDContainer) theTrgIDStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: *theOccContainer.get()) theOccStream.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theBCIDContainer) theBCIDStream.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTrgIDContainer) theTrgIDStream.streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 
@@ -157,7 +157,7 @@ void PixelAlive::run()
     this->fDetectorDataContainer = theOccContainer.get();
     ContainerFactory::copyAndInitStructure<OccupancyAndPh, GenericDataVector>(*fDetectorContainer, *this->fDetectorDataContainer);
 
-    this->fChannelGroupHandler = theChnGroupHandler.get();
+    setChannelGroupHandler(theChnGroupHandler);
     this->SetTestPulse(injType);
     this->fMaskChannelsFromOtherGroups = true;
     this->measureData(nEvents, nEvtsBurst);
@@ -203,6 +203,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
     ContainerFactory::copyAndInitChip<GenericDataArray<TrgIDsize>>(*fDetectorContainer, theTrgIDContainer);
 
     for(const auto cBoard: *fDetectorContainer)
+    {
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
@@ -230,7 +231,14 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
 
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
-                            if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row, col))
+                            if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
+                                                                                                                   ->getObject(cBoard->getId())
+                                                                                                                   ->getObject(cOpticalGroup->getId())
+                                                                                                                   ->getObject(cHybrid->getId())
+                                                                                                                   ->getObject(cChip->getId())
+                                                                                                                   ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                                                                                                   ->allChannelGroup()
+                                                                                                                   ->isChannelEnabled(row, col))
                             {
                                 if(injType == INJtype::None)
                                     theOccContainer->at(cBoard->getIndex())
@@ -334,9 +342,9 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                 .data[deltaTrgID]++;
                     }
                 }
-
-    theOccContainer->normalizeAndAverageContainers(fDetectorContainer, this->fChannelGroupHandler->allChannelGroup(), 1);
-
+    }
+    theOccContainer->resetNormalizationStatus();
+    theOccContainer->normalizeAndAverageContainers(fDetectorContainer, this->getChannelGroupHandlerContainer(), 1);
     return theOccContainer;
 }
 

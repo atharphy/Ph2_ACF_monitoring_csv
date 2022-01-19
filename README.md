@@ -264,6 +264,7 @@ sudo yum install -y git-extras
 
         $> yum install centos-release-scl
         $> yum install llvm-toolset-7.0
+        $> scl enable devtoolset-7 bash
 
 2. if you already sourced the environment, you should be able to run the command to format the Ph2_ACF (to be done before each merge request!!!):
 

@@ -127,7 +127,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu threqusc gainopt thrmin "
-                     "thradj injdelay clkdelay datarbopt datatrtest physics eudaq bertest voltagetuning, gendacdac]",
+                     "thradj injdelay clkdelay datarbopt datatrtest physics eudaq bertest voltagetuning gendacdac]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 

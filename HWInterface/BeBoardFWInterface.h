@@ -7,8 +7,8 @@
 Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pierre@icloud.com
 */
 
-#ifndef __BEBOARDFWINTERFACE_H__
-#define __BEBOARDFWINTERFACE_H__
+#ifndef BEBOARDFWINTERFACE_H
+#define BEBOARDFWINTERFACE_H
 
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/Chip.h"
@@ -35,6 +35,17 @@ Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pier
 
 namespace Ph2_HwInterface
 {
+struct CPBconfig
+{
+    uint8_t  fEnable       = 0;
+    uint8_t  fReTry        = 0;
+    uint8_t  fVerbose      = 0;
+    uint32_t fWait_us      = 50;
+    uint16_t fMaxAttempts  = 500;
+    uint8_t  fI2CFrequency = 3;
+    uint8_t  fResetEn      = 1;
+};
+
 /*!
  * \class BeBoardFWInterface
  * \brief Class separating board system FW interface from uHal wrapper
@@ -44,8 +55,8 @@ class BeBoardFWInterface : public RegManager
   public:
     bool         fSaveToFile;
     FileHandler* fFileHandler;
-    FpgaConfig*  fFpgaConfig;
     uint32_t     fNthAcq{0}, fNpackets{0};
+    uint8_t      fCurrentPage = 0; // For slow control
 
     static const uint32_t cMask1 = 0xff;
     static const uint32_t cMask2 = 0xff00;
@@ -62,11 +73,6 @@ class BeBoardFWInterface : public RegManager
     BeBoardFWInterface(const char* puHalConfigFileName, uint32_t pBoardId);
     BeBoardFWInterface(const char* pId, const char* pUri, const char* pAddressTable);
 
-    void setPowerSupplyClient(TCPClient* thePowerSupplyClient) { fPowerSupplyClient = thePowerSupplyClient; };
-#ifdef __TCP_SERVER__
-    void       setTestcardClient(TCPClient* theTestcardClient) { fTestcardClient = theTestcardClient; };
-    TCPClient* getTestcardClient() { return fTestcardClient; };
-#endif
     /*!
      * \brief set a FileHandler Object and enable saving to file!
      * \param pFileHandler : pointer to file handler for saving Raw Data*/
@@ -97,26 +103,19 @@ class BeBoardFWInterface : public RegManager
      */
     virtual uint32_t getBoardInfo() = 0;
 
-    /*! \brief Upload a configuration in a board FPGA */
-    virtual void FlashProm(const std::string& strConfig, const char* pstrFile) {}
-
-    /*! \brief Jump to an FPGA configuration */
-    virtual void JumpToFpgaConfig(const std::string& strConfig) {}
-
-    virtual void DownloadFpgaConfig(const std::string& strConfig, const std::string& strDest) {}
-
-    /*! \brief Current FPGA configuration*/
-    virtual const FpgaConfig* GetConfiguringFpga() { return nullptr; }
-    virtual void              ProgramCdce() {}
-
-    // this is temporary until the modified command processor block is in place
-    virtual void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) = 0;
-
-    /*! \brief Get the list of available FPGA configuration (or firmware images)*/
+    // ###########################################
+    // # Member functions to handle the firmware #
+    // ###########################################
+    virtual void                     FlashProm(const std::string& strConfig, const char* pstrFile) {}
+    virtual void                     JumpToFpgaConfig(const std::string& strConfig) {}
+    virtual void                     DownloadFpgaConfig(const std::string& strConfig, const std::string& strDest) {}
+    virtual const FpgaConfig*        GetConfiguringFpga() { return nullptr; }
     virtual std::vector<std::string> getFpgaConfigList() { return std::vector<std::string>(); }
+    virtual void                     DeleteFpgaConfig(const std::string& strId) {}
 
-    /*! \brief Delete one Fpga configuration (or firmware image)*/
-    virtual void DeleteFpgaConfig(const std::string& strId) {}
+    virtual void ProgramCdce() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
+
+    virtual void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) = 0;
 
     /*! \brief Run Bit Error Rate test */
     virtual double RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) = 0;
@@ -124,22 +123,9 @@ class BeBoardFWInterface : public RegManager
     /*!
      * \brief Encode a/several word(s) readable for a Chip
      * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
-     * \param pChipId : Id of the Chip to work with
-     * \param pVecReq : Vector to stack the encoded words
+     * \param pChip : Chip object
      */
-    virtual void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pChipId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite)
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-    }
-
-    /*!< Encode a/several word(s) readable for a Chip*/
-    /*!
-     * \brief Encode a/several word(s) readable for a Chip
-     * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
-     * \param pChipId : Id of the Chip to work with
-     * \param pVecReq : Vector to stack the encoded words
-     */
-    virtual void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pFeId, uint8_t pChipId, std::vector<uint32_t>& pVecReq, bool pRead, bool pWrite)
+    virtual void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, Ph2_HwDescription::Chip* pChip, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     }
@@ -167,7 +153,6 @@ class BeBoardFWInterface : public RegManager
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     }
-    /*!< Decode a word from a read of a register of the Chip*/
 
     /*!
      * \brief Configure the board with its Config File
@@ -214,6 +199,11 @@ class BeBoardFWInterface : public RegManager
      * \brief Resume a DAQ
      */
     virtual void Resume() = 0;
+
+    /*!
+     * \brief Resume a DAQ
+     */
+    virtual void SendNTriggers(uint16_t pNtriggers) { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
 
     /*!
      * \brief Read data from DAQ
@@ -263,48 +253,50 @@ class BeBoardFWInterface : public RegManager
 
     virtual BoardType getBoardType() const = 0;
 
-    /*! \brief Reboot the board */
-    virtual void RebootBoard() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
-
     /*! \brief Set or reset the start signal */
     virtual void SetForceStart(bool bStart) { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
 
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    virtual void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus)                                                                                 = 0;
-    virtual void     ResetOptoLink()                                                                                                                                             = 0;
-    virtual bool     WriteOptoLinkRegister(const uint32_t linkNumber, const uint16_t LpGBTaddress, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) = 0;
-    virtual uint32_t ReadOptoLinkRegister(const uint32_t linkNumber, const uint16_t LpGBTaddress, const uint32_t pAddress)                                                       = 0;
+    virtual void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus)                                                               = 0;
+    virtual void     ResetOptoLink()                                                                                                                           = 0;
+    virtual bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) = 0;
+    virtual uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress)                                                       = 0;
 
     // ##########################################
     // # Read/Write new Command Processor Block #
     // ##########################################
-    // functions for new Command Processor Block
     virtual void                  ResetCPB() {}
-    virtual void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose = false) {}
-    virtual std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords, bool pVerbose = false) { return {}; }
-    // function to read/write lpGBT registers
-    virtual bool    WriteLpGBTRegister(uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) { return true; }
-    virtual uint8_t ReadLpGBTRegister(uint16_t pRegisterAddress) { return 0; }
-    // function for I2C transactions using lpGBT I2C Masters
-    virtual bool    I2CWrite(uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes) { return true; }
-    virtual uint8_t I2CRead(uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes) { return 0; }
-    // function for front-end slow control
+    virtual void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) {}
+    virtual std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) { return {}; }
+    // Function to read/write lpGBT registers
+    virtual bool    WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) { return true; }
+    virtual uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress) { return 0; }
+    // Function for I2C transactions using lpGBT I2C Masters
+    virtual bool    I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes, uint32_t& theI2CWriteCount) { return true; }
+    virtual uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes, uint32_t& theI2CReadCount) { return 0; }
+    // Function for front-end slow control
     virtual bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false) { return true; }
     virtual uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) { return 0; }
 
+    void ConfigureCPB(CPBconfig pConfig)
+    {
+        fCPBConfig.fEnable       = pConfig.fEnable;
+        fCPBConfig.fVerbose      = pConfig.fVerbose;
+        fCPBConfig.fWait_us      = pConfig.fWait_us;
+        fCPBConfig.fReTry        = pConfig.fReTry;
+        fCPBConfig.fMaxAttempts  = pConfig.fMaxAttempts;
+        fCPBConfig.fI2CFrequency = pConfig.fI2CFrequency;
+    }
+
   protected:
-    uint32_t   fBlockSize{0};
-    uint32_t   fNPackets{0};
-    uint32_t   numAcq{0};
-    uint32_t   nbMaxAcq{0};
-    TCPClient* fPowerSupplyClient;
-#ifdef __TCP_SERVER__
-    TCPClient* fTestcardClient;
-#endif
-    // Template to return a vector of all mismatched elements in two vectors using std::mismatch for readback value
-    // comparison
+    uint32_t  fBlockSize{0};
+    uint32_t  fNPackets{0};
+    uint32_t  numAcq{0};
+    uint32_t  nbMaxAcq{0};
+    CPBconfig fCPBConfig;
+    // Template to return a vector of all mismatched elements in two vectors using std::mismatch for readback value comparison
     template <typename T, class BinaryPredicate>
     std::vector<typename std::iterator_traits<T>::value_type> get_mismatches(T pWriteVector_begin, T pWriteVector_end, T pReadVector_begin, BinaryPredicate p)
     {
@@ -317,6 +309,7 @@ class BeBoardFWInterface : public RegManager
         return pMismatchedWriteVector;
     }
 };
+
 } // namespace Ph2_HwInterface
 
 #endif

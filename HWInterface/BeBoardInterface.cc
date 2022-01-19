@@ -38,20 +38,6 @@ void BeBoardInterface::SetFileHandler(const BeBoard* pBoard, FileHandler* pHandl
     setBoard(pBoard->getId());
     fBoardFW->setFileHandler(pHandler);
 }
-
-void BeBoardInterface::setPowerSupplyClient(const Ph2_HwDescription::BeBoard* pBoard, TCPClient* fPowerSupplyClient)
-{
-    setBoard(pBoard->getId());
-    fBoardFW->setPowerSupplyClient(fPowerSupplyClient);
-}
-#ifdef __TCP_SERVER__
-void BeBoardInterface::setTestcardClient(const Ph2_HwDescription::BeBoard* pBoard, TCPClient* fTestcardClient)
-{
-    setBoard(pBoard->getId());
-    fBoardFW->setTestcardClient(fTestcardClient);
-}
-#endif
-
 void BeBoardInterface::enableFileHandler(BeBoard* pBoard)
 {
     setBoard(pBoard->getId());
@@ -112,11 +98,6 @@ void BeBoardInterface::selectLink(BeBoard* pBoard, uint8_t pLinkId, uint32_t pWa
     setBoard(pBoard->getId());
     return fBoardFW->selectLink(pLinkId, pWait_ms);
 }
-// uint16_t BeBoardInterface::ParseEvents(const BeBoard* pBoard, const std::vector<uint32_t>& pData)
-// {
-//   setBoard(pBoard->getId());
-//   return fBoardFW->ParseEvents (pData);
-// }
 
 std::vector<uint32_t> BeBoardInterface::ReadBlockBoardReg(BeBoard* pBoard, const std::string& pRegNode, uint32_t pSize)
 {
@@ -138,23 +119,32 @@ BoardType BeBoardInterface::getBoardType(const BeBoard* pBoard)
 
 void BeBoardInterface::ConfigureBoard(const BeBoard* pBoard)
 {
-    std::lock_guard<std::mutex> theGuard(theMtx);
+    std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
     setBoard(pBoard->getId());
+    LOG(INFO) << GREEN << "Configuring Board: " << BOLDYELLOW << +pBoard->getId() << RESET;
     fBoardFW->ConfigureBoard(pBoard);
 }
 
 void BeBoardInterface::Start(BeBoard* pBoard)
 {
-    std::lock_guard<std::mutex> theGuard(theMtx);
+    std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
     setBoard(pBoard->getId());
     fBoardFW->Start();
 }
 
+void BeBoardInterface::SendNTriggers(BeBoard* pBoard, uint16_t pNtriggers)
+{
+    std::lock_guard<std::recursive_mutex> theGuard(theMtx);
+
+    setBoard(pBoard->getId());
+    fBoardFW->SendNTriggers(pNtriggers);
+}
+
 void BeBoardInterface::Stop(BeBoard* pBoard)
 {
-    std::lock_guard<std::mutex> theGuard(theMtx);
+    std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
     setBoard(pBoard->getId());
     fBoardFW->Stop();
@@ -162,7 +152,7 @@ void BeBoardInterface::Stop(BeBoard* pBoard)
 
 void BeBoardInterface::Pause(BeBoard* pBoard)
 {
-    std::lock_guard<std::mutex> theGuard(theMtx);
+    std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
     setBoard(pBoard->getId());
     fBoardFW->Pause();
@@ -170,7 +160,7 @@ void BeBoardInterface::Pause(BeBoard* pBoard)
 
 void BeBoardInterface::Resume(BeBoard* pBoard)
 {
-    std::lock_guard<std::mutex> theGuard(theMtx);
+    std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
     setBoard(pBoard->getId());
     fBoardFW->Resume();
@@ -180,7 +170,7 @@ uint32_t BeBoardInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::ve
 {
     uint32_t dataSize = 0;
 
-    std::unique_lock<std::mutex> theGuard(theMtx, std::defer_lock);
+    std::unique_lock<std::recursive_mutex> theGuard(theMtx, std::defer_lock);
     if(theGuard.try_lock() == true)
     {
         setBoard(pBoard->getId());
@@ -193,7 +183,7 @@ uint32_t BeBoardInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::ve
 
 void BeBoardInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
 {
-    std::lock_guard<std::mutex> theGuard(theMtx);
+    std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
     setBoard(pBoard->getId());
     fBoardFW->ReadNEvents(pBoard, pNEvents, pData, pWait);
@@ -269,12 +259,6 @@ void BeBoardInterface::DeleteFpgaConfig(BeBoard* pBoard, const std::string& strI
 {
     setBoard(pBoard->getId());
     fBoardFW->DeleteFpgaConfig(strId);
-}
-
-void BeBoardInterface::RebootBoard(BeBoard* pBoard)
-{
-    setBoard(pBoard->getId());
-    fBoardFW->RebootBoard();
 }
 
 void BeBoardInterface::SetForceStart(BeBoard* pBoard, bool bStart)

@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 
+#include "boost/format.hpp"
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
 
@@ -558,9 +559,10 @@ void PSROHTester::CheckHybridInputs(BeBoard* pBoard, std::vector<std::string> pI
     pCounters.resize(cIndices.size());
     for(auto cIndex: cIndices)
     {
-        char cBuffer[19];
-        sprintf(cBuffer, "debug_blk_counter%02d", cIndex);
-        std::string cRegName = cBuffer;
+        // char cBuffer[19];
+        // sprintf(cBuffer, "debug_blk_counter%02d", cIndex);
+        // std::string cRegName = cBuffer;
+        std::string cRegName = "debug_blk_counter" + (boost::format("%|02|") % cIndex).str();
         uint32_t    cCounter = fBeBoardInterface->ReadBoardReg(pBoard, cRegName);
         pCounters.push_back(cCounter);
     }
@@ -603,9 +605,10 @@ void PSROHTester::CheckHybridOutputs(BeBoard* pBoard, std::vector<std::string> p
     pCounters.resize(cIndices.size());
     for(auto cIndex: cIndices)
     {
-        char cBuffer[19];
-        sprintf(cBuffer, "debug_blk_counter%02d", cIndex);
-        std::string cRegName = cBuffer;
+        // char cBuffer[19];
+        // sprintf(cBuffer, "debug_blk_counter%02d", cIndex);
+        // std::string cRegName = cBuffer;
+        std::string cRegName = "debug_blk_counter" + (boost::format("%|02|") % cIndex).str();
         uint32_t    cCounter = fBeBoardInterface->ReadBoardReg(pBoard, cRegName);
         pCounters.push_back(cCounter);
     }
@@ -684,6 +687,27 @@ void PSROHTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vect
         if(cBoard->at(0)->flpGBT != nullptr) continue;
         this->CheckHybridOutputs(cBoard, pInputs, pCounters);
     }
+}
+
+bool PSROHTester::TestResetLines(uint8_t pLevel)
+{
+    bool cValid = true;
+#ifdef __ROH_USB__
+    float cMeasurement = 0;
+    auto  cMapIterator = fResetLines.begin();
+    do
+    {
+        flpGBTInterface->getExternalController()->getInterface().adc_get(cMapIterator->second, cMeasurement);
+        float cDifference_mV = std::fabs((pLevel * 1200) - cMeasurement);
+        cValid               = cValid && (cDifference_mV <= 100);
+        if(cDifference_mV > 100)
+            LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
+        else
+            LOG(INFO) << BOLDGREEN << "Match in GPIO connected to " << cMapIterator->first << RESET;
+        cMapIterator++;
+    } while(cMapIterator != fResetLines.end());
+#endif
+    return cValid;
 }
 
 void PSROHTester::Start(int currentRun)

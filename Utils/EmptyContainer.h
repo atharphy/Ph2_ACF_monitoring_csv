@@ -22,7 +22,10 @@ class EmptyContainer //: public streammable
     ~EmptyContainer() { ; }
     void print(void) { std::cout << "EmptyContainer" << std::endl; }
     template <typename T>
-    uint32_t makeChannelAverage(const ChipContainer* theChipContainer, const ChannelGroupBase* chipOriginalMask, const ChannelGroupBase* cTestChannelGroup, const uint32_t numberOfEvents)
+    uint32_t makeChannelAverage(const ChipContainer*                    theChipContainer,
+                                const std::shared_ptr<ChannelGroupBase> chipOriginalMask,
+                                const std::shared_ptr<ChannelGroupBase> cTestChannelGroup,
+                                const uint32_t                          numberOfEvents)
     {
         return 0;
     }

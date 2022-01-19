@@ -193,6 +193,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     if(CompileForShep OR NoDataShipping)
         add_subdirectory(DQMUtils)
         add_subdirectory(RootUtils)
+        add_subdirectory(MonitorDQM)
     endif()
 
     if(NoDataShipping OR (CompileForShep AND CompileForHerd))
@@ -205,6 +206,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     add_subdirectory(Utils)
     add_subdirectory(NetworkUtils)
+    add_subdirectory(MonitorUtils)
 
     message("--     ${BoldRed}#### Don't forget to set the path and ld_library_path by sourcing setup.sh before running ###${Reset}")
 
@@ -224,13 +226,9 @@ else() # ------------------------------- Compilation in the otsdaq environment -
 
     MESSAGE (STATUS "${CMAKE_CXX_FLAGS}")
 
-    set(CompileForShep "$ENV{CompileForShep}")
-    set(CompileForHerd "$ENV{CompileForHerd}")
-    if ((NOT CompileForShep) AND (NOT CompileForHerd))
-        set(NoDataShipping true)
-    else()
-        set(NoDataShipping false)
-    endif()
+    set(CompileForShep true)
+    set(CompileForHerd false)
+    set(NoDataShipping false)
 
     # AMC13
     if(${CACTUS_AMC13_FOUND})
@@ -278,6 +276,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     add_subdirectory(HWInterface)
     add_subdirectory(System)
     add_subdirectory(miniDAQ)
+    add_subdirectory(MonitorUtils)
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")

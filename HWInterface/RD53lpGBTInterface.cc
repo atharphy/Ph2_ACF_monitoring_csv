@@ -14,13 +14,8 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-// ###################################
-// # LpGBT register access functions #
-// ###################################
 bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
 {
-    this->setBoard(pChip->getBeBoardId());
-
     // #####################
     // # Make reverted map #
     // #####################
@@ -29,20 +24,20 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     // #########################
     // # Configure PLL and DLL #
     // #########################
-    RD53lpGBTInterface::WriteChipReg(pChip, "LDConfigH", 1 << 5, false);
-    RD53lpGBTInterface::WriteChipReg(pChip, "EPRXLOCKFILTER", 0x55, false);
-    RD53lpGBTInterface::WriteChipReg(pChip, "EPRXDllConfig", 1 << 6 | 1 << 4 | 1 << 2, false);
-    RD53lpGBTInterface::WriteChipReg(pChip, "PSDllConfig", 5 << 4 | 1 << 2 | 1, false);
-    RD53lpGBTInterface::WriteChipReg(pChip, "POWERUP2", 1 << 2 | 1 << 1, false);
+    lpGBTInterface::WriteChipReg(pChip, "LDConfigH", 1 << 5, false);
+    lpGBTInterface::WriteChipReg(pChip, "EPRXLOCKFILTER", 0x55, false);
+    lpGBTInterface::WriteChipReg(pChip, "EPRXDllConfig", 1 << 6 | 1 << 4 | 1 << 2, false);
+    lpGBTInterface::WriteChipReg(pChip, "PSDllConfig", 5 << 4 | 1 << 2 | 1, false);
+    lpGBTInterface::WriteChipReg(pChip, "POWERUP2", 1 << 2 | 1 << 1, false);
 
     // #####################
     // # Check PUSM status #
     // #####################
-    uint8_t      PUSMStatus = RD53lpGBTInterface::GetPUSMStatus(pChip);
+    uint8_t      PUSMStatus = lpGBTInterface::GetPUSMStatus(pChip);
     unsigned int nAttempts  = 0;
     while((PUSMStatus != revertedPUSMStatusMap["READY"]) && (nAttempts < RD53Shared::MAXATTEMPTS))
     {
-        PUSMStatus = RD53lpGBTInterface::GetPUSMStatus(pChip);
+        PUSMStatus = lpGBTInterface::GetPUSMStatus(pChip);
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
         nAttempts++;
     }
@@ -54,18 +49,14 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     }
     LOG(INFO) << GREEN << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[PUSMStatus] << RESET;
 
-    // ######################
-    // # Configure Up links #
-    // ######################
-    RD53lpGBTInterface::ConfigureRxGroups(
-        pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], lpGBTconstants::rxPhaseTracking);
-    RD53lpGBTInterface::ConfigureRxChannels(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), 1, 1, 1, static_cast<lpGBT*>(pChip)->getRxHSLPolarity(), 12);
+    // ###############################
+    // # Configure Up and Down links #
+    // ###############################
+    lpGBTInterface::ConfigureRxGroups(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], 0);
+    lpGBTInterface::ConfigureRxChannels(pChip, static_cast<lpGBT*>(pChip)->getRxGroups(), static_cast<lpGBT*>(pChip)->getRxChannels(), 1, 1, 1, 0, 12);
 
-    // ########################
-    // # Configure Down links #
-    // ########################
-    RD53lpGBTInterface::ConfigureTxGroups(pChip, static_cast<lpGBT*>(pChip)->getTxGroups(), static_cast<lpGBT*>(pChip)->getTxChannels(), fTxDataRateMap[static_cast<lpGBT*>(pChip)->getTxDataRate()]);
-    RD53lpGBTInterface::ConfigureTxChannels(pChip, static_cast<lpGBT*>(pChip)->getTxGroups(), static_cast<lpGBT*>(pChip)->getTxChannels(), 3, 3, 0, 0, static_cast<lpGBT*>(pChip)->getTxHSLPolarity());
+    lpGBTInterface::ConfigureTxGroups(pChip, static_cast<lpGBT*>(pChip)->getTxGroups(), static_cast<lpGBT*>(pChip)->getTxChannels(), fTxDataRateMap[static_cast<lpGBT*>(pChip)->getTxDataRate()]);
+    lpGBTInterface::ConfigureTxChannels(pChip, static_cast<lpGBT*>(pChip)->getTxGroups(), static_cast<lpGBT*>(pChip)->getTxChannels(), 3, 3, 0, 0, 1);
 
     // ####################################################
     // # Programming registers as from configuration file #
@@ -76,9 +67,8 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
         if(cRegItem.second.fPrmptCfg == true)
         {
             LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << cRegItem.first << BOLDBLUE << " = " << BOLDYELLOW << cRegItem.second.fValue << RESET;
-
             if(cRegItem.second.fAddress < 0x13C)
-                RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+                lpGBTInterface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fValue, pVerifLoop);
             else if((cRegItem.second.fAddress >= 0x1D0) && (cRegItem.second.fAddress < 0x1EB))
             {
                 lpGBTInterface::ConfigureRxPhase(
@@ -95,115 +85,65 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     // #######################
     LOG(INFO) << GREEN << "Checking DLL status of LpGBT: " << BOLDYELLOW << pChip->getId() << RESET;
     for(const auto& cGroup: static_cast<lpGBT*>(pChip)->getRxGroups())
-      LOG(INFO) << BOLDBLUE << "\t--> DLL status of Rx Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " is 0x" << BOLDYELLOW << std::hex << +lpGBTInterface::GetRxDllStatus(pChip, cGroup) << std::dec << RESET;
+        LOG(INFO) << BOLDBLUE << "\t--> DLL status of Rx Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " is 0x" << BOLDYELLOW << std::hex << +lpGBTInterface::GetRxDllStatus(pChip, cGroup)
+                  << std::dec << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 
     return true;
 }
 
-bool RD53lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
-{
-    return RD53lpGBTInterface::WriteReg(pChip, pChip->getRegItem(pRegNode).fAddress, pValue, pVerifLoop);
-}
-
-uint16_t RD53lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode) { return RD53lpGBTInterface::ReadReg(pChip, pChip->getRegItem(pRegNode).fAddress); }
-
-bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerifLoop)
-{
-    this->setBoard(pChip->getBeBoardId());
-
-    if(pValue > 0xFF)
-    {
-        LOG(ERROR) << BOLDRED << "LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pValue << BOLDRED << " to address " << BOLDYELLOW << pAddress << RESET;
-        return false;
-    }
-
-    if(pAddress >= 0x13C)
-    {
-        LOG(ERROR) << "LpGBT read-write registers end at 0x13C ... impossible to write to address " << BOLDYELLOW << pAddress << RESET;
-        return false;
-    }
-
-    int  nAttempts = 0;
-    bool status;
-    do
-    {
-        status = fBoardFW->WriteOptoLinkRegister(pChip->getId(), static_cast<lpGBT*>(pChip)->getChipAddress(), pAddress, pValue, pVerifLoop);
-        nAttempts++;
-    } while((pVerifLoop == true) && (status == false) && (nAttempts < RD53Shared::MAXATTEMPTS));
-
-    if((pVerifLoop == true) && (status == false)) throw Exception("[RD53lpGBTInterface::WriteReg] LpGBT register writing issue");
-
-    return true;
-}
-
-uint16_t RD53lpGBTInterface::ReadReg(Chip* pChip, uint16_t pAddress)
-{
-    this->setBoard(pChip->getBeBoardId());
-    return fBoardFW->ReadOptoLinkRegister(pChip->getId(), static_cast<lpGBT*>(pChip)->getChipAddress(), pAddress);
-}
-
-bool RD53lpGBTInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerifLoop)
-{
-    bool writeGood = true;
-    for(const auto& cReg: pRegVec) writeGood &= RD53lpGBTInterface::WriteChipReg(pChip, cReg.first, cReg.second);
-    return writeGood;
-}
-
 // ####################################
-// # LpGBT specific routine functions #
+// # RD53 specific routine functions #
 // ####################################
 
-void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const BeBoard* pBoard, const OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface)
-{
-    const uint8_t              cChipRate = lpGBTInterface::GetChipRate(pChip);
-    const std::vector<uint8_t> pGroups   = static_cast<lpGBT*>(pChip)->getRxGroups();
-    const std::vector<uint8_t> pChannels = static_cast<lpGBT*>(pChip)->getRxChannels();
+// void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const BeBoard* pBoard, const OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface)
+// {
+//     const uint8_t              cChipRate = lpGBTInterface::GetChipRate(pChip);
+//     const std::vector<uint8_t> pGroups   = static_cast<lpGBT*>(pChip)->getRxGroups();
+//     const std::vector<uint8_t> pChannels = static_cast<lpGBT*>(pChip)->getRxChannels();
 
-    // @TMP@
-    if(static_cast<lpGBT*>(pChip)->getPhaseRxAligned() == true)
-    {
-        LOG(INFO) << BOLDBLUE << "\t--> The phase for this LpGBT chip was already aligned (maybe from configuration file)" << RESET;
-        return;
-    }
+//     // @TMP@
+//     if(static_cast<lpGBT*>(pChip)->getPhaseRxAligned() == true)
+//     {
+//         LOG(INFO) << BOLDBLUE << "\t--> The phase for this LpGBT chip was already aligned (maybe from configuration file)" << RESET;
+//         return;
+//     }
 
-    // Configure Rx Phase Shifter
-    uint16_t cDelay = 0x0;
-    uint8_t  cFreq = (cChipRate == 5) ? 4 : 5, cEnFTune = 0, cDriveStr = 0; // 4 --> 320 MHz || 5 --> 640 MHz
-    lpGBTInterface::ConfigurePhShifter(pChip, {0, 1, 2, 3}, cFreq, cDriveStr, cEnFTune, cDelay);
+//     // Configure Rx Phase Shifter
+//     uint16_t cDelay = 0x0;
+//     uint8_t  cFreq = (cChipRate == 5) ? 4 : 5, cEnFTune = 0, cDriveStr = 0; // 4 --> 320 MHz || 5 --> 640 MHz
+//     lpGBTInterface::ConfigurePhShifter(pChip, {0, 1, 2, 3}, cFreq, cDriveStr, cEnFTune, cDelay);
 
-    static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
-    for(const auto cHybrid: *pOpticalGroup)
-        for(const auto cChip: *cHybrid) { static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip); }
+//     static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
+//     for(const auto cHybrid: *pOpticalGroup)
+//         for(const auto cChip: *cHybrid) { static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip); }
 
-    lpGBTInterface::PhaseTrainRx(pChip, pGroups, true);
+//     lpGBTInterface::PhaseTrainRx(pChip, pGroups);
+//     for(const auto& cGroup: pGroups)
+//     {
+//         // Wait until channels lock
+//         LOG(INFO) << GREEN << "Phase aligning Rx Group " << BOLDYELLOW << +cGroup << RESET;
+//         do
+//         {
+//             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+//         } while(lpGBTInterface::IsRxLocked(pChip, cGroup, pChannels) == false);
+//         LOG(INFO) << BOLDBLUE << "\t--> Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " LOCKED" << RESET;
 
-    for(const auto& cGroup: pGroups)
-    {
-        // Wait until channels lock
-        LOG(INFO) << GREEN << "Phase aligning Rx Group " << BOLDYELLOW << +cGroup << RESET;
-        do
-        {
-            std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-        } while(lpGBTInterface::IsRxLocked(pChip, cGroup, pChannels) == false);
-        LOG(INFO) << BOLDBLUE << "\t--> Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " LOCKED" << RESET;
+//         // Set new phase
+//         for(const auto& cChannel: pChannels)
+//         {
+//             uint8_t cCurrPhase = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
+//             LOG(INFO) << BOLDBLUE << "\t\t--> Channel " << BOLDYELLOW << +cChannel << BOLDBLUE << " has phase " << BOLDYELLOW << +cCurrPhase << RESET;
+//             lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, cCurrPhase);
+//         }
+//     }
 
-        // Set new phase
-        for(const auto& cChannel: pChannels)
-        {
-            uint8_t cCurrPhase = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
-            LOG(INFO) << BOLDBLUE << "\t\t--> Channel " << BOLDYELLOW << +cChannel << BOLDBLUE << " has phase " << BOLDYELLOW << +cCurrPhase << RESET;
-            lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, cCurrPhase);
-        }
-    }
-    lpGBTInterface::PhaseTrainRx(pChip, pGroups, false);
+//     for(const auto cHybrid: *pOpticalGroup)
+//         for(const auto cChip: *cHybrid) static_cast<RD53Interface*>(pReadoutChipInterface)->StopPRBSpattern(cChip);
 
-    for(const auto cHybrid: *pOpticalGroup)
-        for(const auto cChip: *cHybrid) static_cast<RD53Interface*>(pReadoutChipInterface)->StopPRBSpattern(cChip);
-
-    // Set back Rx groups to fixed phase
-    lpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], lpGBTconstants::rxPhaseTracking);
-}
+//     // Set back Rx groups to fixed phase
+//     lpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], lpGBTconstants::rxPhaseTracking);
+// }
 
 bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                                               const BeBoard*        pBoard,

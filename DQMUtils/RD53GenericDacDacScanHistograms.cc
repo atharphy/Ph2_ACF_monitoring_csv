@@ -11,7 +11,7 @@
 
 using namespace Ph2_HwDescription;
 
-void GenericDacDacScanHistograms::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
+void GenericDacDacScanHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
 {
     const std::vector<int> CDRfreq = {140, 145, 150, 155, 160, 165, 170, 176, 180}; // @CONST@
 

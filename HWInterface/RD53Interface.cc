@@ -174,6 +174,13 @@ void RD53Interface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     RD53Interface::InitRD53UplinkSpeed(pChip);
 }
 
+void RD53Interface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
+{
+    StartPRBSpattern(pChip);
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    StopPRBSpattern(pChip);
+}
+
 bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const uint16_t data, bool pVerifLoop)
 {
     this->setBoard(pChip->getBeBoardId());
@@ -477,7 +484,7 @@ bool RD53Interface::MaskAllChannels(ReadoutChip* pChip, bool mask, bool pVerifLo
     return true;
 }
 
-bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop)
+bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop)
 {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 

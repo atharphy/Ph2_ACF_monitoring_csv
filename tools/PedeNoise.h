@@ -36,6 +36,7 @@ class PedeNoise : public Tool
 
     void Initialise(bool pAllChan = false, bool pDisableStubLogic = true);
     void measureNoise(); // method based on the one below that actually analyzes the scurves and extracts the noise
+    void scanScurves();
     void sweepSCurves(); // actual methods to measure SCurves
     void Validate(uint32_t pNoiseStripThreshold = 1, uint32_t pMultiple = 100);
     void writeObjects();
@@ -45,10 +46,11 @@ class PedeNoise : public Tool
     void ConfigureCalibration() override;
     void Pause() override;
     void Resume() override;
+    void Reset();
 
   protected:
-    uint16_t findPedestal(bool forceAllChannels = false);
     void     measureSCurves(uint16_t pStartValue = 0);
+    uint16_t findPedestal(bool forceAllChannels = false);
     void     extractPedeNoise();
     void     disableStubLogic();
     void     reloadStubLogic();
@@ -63,17 +65,22 @@ class PedeNoise : public Tool
     uint16_t fMinThreshold{0};
     uint16_t fMaxThreshold{1023};
     float    fLimit{0.005};
+    float    fMean_Strps{0};
+    float    fMean_Pxls{0};
 
     DetectorDataContainer*                     fThresholdAndNoiseContainer;
     std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
 
   private:
     // to hold the original register values
+    std::vector<EventType> fEventTypes;
     DetectorDataContainer* fStubLogicValue;
     DetectorDataContainer* fHIPCountValue;
-    bool                   cWithCBC = true;
-    bool                   cWithSSA = false;
-    bool                   cWithMPA = false;
+    DetectorDataContainer  fBoardRegContainer;
+
+    bool cWithCBC = true;
+    bool cWithSSA = false;
+    bool cWithMPA = false;
 
     // Settings
     bool fPlotSCurves{false};
