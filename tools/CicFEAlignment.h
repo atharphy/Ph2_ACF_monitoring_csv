@@ -44,10 +44,12 @@ class CicFEAlignment : public OTTool
     bool CicLpGbtAlignment(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     void AlignInputs();
     void SetStaticPhaseAlignment();
-    void GenerateManualPattern();
+    // manual scan of CIC input phases 
     uint8_t GenManPatternOutLine(uint8_t pLine);
-    DetectorDataContainer SamplePhase(uint8_t pPhase);
-    void ManualPhaseScan(uint8_t pStartScan, uint8_t pEndScan ); 
+    void ScanInputPhase( uint8_t pOutLine, uint8_t pPattern, uint8_t pStartScan, uint8_t pEndScan );
+    DetectorDataContainer CheckCicInput(uint8_t pOutLine, uint8_t pPattern, uint8_t pPhase ); 
+    void CheckOutLine(uint8_t pOutLine, uint8_t pPattern , DetectorDataContainer& pLineData, DetectorDataContainer& pErrorCounter );
+    // automated configuration of CIC input phase and delay 
     bool PhaseAlignment(uint16_t pWait_us = 10, uint32_t pNTriggers = 500);
     bool WordAlignment(uint32_t pWait_us = 10);
     bool Bx0Alignment(uint8_t pFe = 0, uint8_t pLine = 4, uint16_t pDelay = 1, uint16_t pWait_ms = 100, int cNrials = 3);
