@@ -64,13 +64,17 @@ void CicFEAlignment::Initialise()
             }
         }
     }
+
+    #ifdef __USE_ROOT__
+    fDQMHistogrammer.book(fResultFile, *fDetectorContainer, fSettingsMap);
+    #endif
 }
 
 void CicFEAlignment::writeObjects()
 {
-    this->SaveResults();
 #ifdef __USE_ROOT__
-    // fDQMHistogramHybridTest.process();
+    this->SaveResults();
+    fDQMHistogrammer.process();
     fResultFile->Flush();
 #endif
 }
@@ -166,7 +170,16 @@ bool CicFEAlignment::SetBx0Delay(uint8_t pDelay, uint8_t pStubPackageDelay)
     return true;
 }
 
-
+void CicFEAlignment::InputLineScan()
+{
+    // only for stubs ... for L1 line difficult to do this for 2S 
+    for(uint8_t cLineId = 0 ; cLineId < 5 ; cLineId++ )
+    {
+        auto cPattern = GenManPatternOutLine(cLineId);
+        ScanInputPhase( cLineId, cPattern, 0, 15 );
+    }
+}
+// manually inject pattern on one of the CIC input lines from a CBC 
 uint8_t CicFEAlignment::GenManPatternOutLine(uint8_t pOutLine ) 
 { 
     uint8_t              cPattern          = 0x8A; 
@@ -273,11 +286,15 @@ DetectorDataContainer CicFEAlignment::CheckCicInput(uint8_t pOutLine, uint8_t pP
                     cErrRate = (float)cErrorCount/cData.length();
                     LOG (DEBUG) << BOLDBLUE << "Expected pattern is " << std::bitset<8>(pPattern) << RESET;
                     LOG (DEBUG) << BOLDBLUE << "Error rate on this line is " << cErrRate << " errors/bit" << RESET;
-                    LOG (INFO) << BOLDBLUE << "For a sampling phase of " << +pPhase << " " << cErrorCount << " bit errors in the scoped  data : " << cData << " out of " << cData.length() << " bits." << RESET;
+                    LOG (DEBUG) << BOLDBLUE << "For a sampling phase of " << +pPhase << " " << cErrorCount << " bit errors in the scoped  data : " << cData << " out of " << cData.length() << " bits." << RESET;
                 } // chip 
             } // hybrid 
         }// OG
     }// board 
+
+    #ifdef __USE_ROOT__
+    fDQMHistogrammer.fillManualPhaseScan(pPhase, pOutLine, cLineErrors, cStubData);
+    #endif
     return cErrorRate;
 }
 void CicFEAlignment::CheckOutLine(uint8_t pOutLine, uint8_t pPattern , DetectorDataContainer& pLineData, DetectorDataContainer& pErrorCounter)
@@ -316,7 +333,7 @@ void CicFEAlignment::CheckOutLine(uint8_t pOutLine, uint8_t pPattern , DetectorD
                     // figure out why in theFW 
                     cDebugInterface->StubDebug(true,cNStubLinesFromFE,false);
                     auto cLines = cDebugInterface->StubDebug(true,cNStubLinesFromFE,false);
-                    cData = cLines[pOutLine];
+                    cData = cLines[cPhyPortCnfg.second];
 
                     for (uint8_t cSize = 0; cSize < cData.length(); cSize += 8) 
                     {

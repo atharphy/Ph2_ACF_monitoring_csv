@@ -25,6 +25,11 @@ typedef std::vector<uint8_t> AlignmentValues;
 typedef std::vector<std::string> StubLineData;
 #endif
 
+#ifdef __USE_ROOT__
+#include "../DQMUtils/DQMHistogramCicFEAlignment.h"
+#include "TH1.h"
+#endif
+
 // add break codes here
 const uint8_t FAILED_PHASE_ALIGNMENT = 1;
 const uint8_t FAILED_WORD_ALIGNMENT  = 2;
@@ -45,6 +50,7 @@ class CicFEAlignment : public OTTool
     void AlignInputs();
     void SetStaticPhaseAlignment();
     // manual scan of CIC input phases 
+    void    InputLineScan(); 
     uint8_t GenManPatternOutLine(uint8_t pLine);
     void ScanInputPhase( uint8_t pOutLine, uint8_t pPattern, uint8_t pStartScan, uint8_t pEndScan );
     DetectorDataContainer CheckCicInput(uint8_t pOutLine, uint8_t pPattern, uint8_t pPhase ); 
@@ -91,6 +97,10 @@ class CicFEAlignment : public OTTool
     // different for CBC and MPA
     uint8_t fStubBxDelay2S = 8;
     uint8_t fStubBxDelayPS = 22;
+
+    #ifdef __USE_ROOT__
+    DQMHistogramCicFEAlignment fDQMHistogrammer;
+    #endif
 };
 
 #endif
