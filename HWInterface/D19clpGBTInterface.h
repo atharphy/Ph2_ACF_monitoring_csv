@@ -148,19 +148,25 @@ class D19clpGBTInterface : public lpGBTInterface
 
     void                 setFrontEndType(FrontEndType pType) { fFeType = pType; }
     FrontEndType         getFrontEndType() { return fFeType; }
-    std::vector<uint8_t> getPSResetGPIOs(){ return {fReset_LHS_CIC, fReset_LHS_MPA, fReset_LHS_SSA, fReset_RHS_CIC, fReset_RHS_MPA, fReset_RHS_SSA}; }
-    std::vector<uint8_t> get2SResetGPIOs(){ return {fReset_LHS_CIC, fReset_LHS_CBC, fReset_RHS_CIC, fReset_RHS_CBC}; }
+    std::vector<uint8_t> getPSResetGPIOs() { return {fReset_LHS_CIC, fReset_LHS_MPA, fReset_LHS_SSA, fReset_RHS_CIC, fReset_RHS_MPA, fReset_RHS_SSA}; }
+    std::vector<uint8_t> get2SResetGPIOs() { return {fReset_LHS_CIC, fReset_LHS_CBC, fReset_RHS_CIC, fReset_RHS_CBC}; }
     std::vector<uint8_t> getGroups()
-    { 
+    {
         std::vector<uint8_t> cGroups;
-        for( auto cMapItem : fRxChannelMap ) cGroups.push_back(cMapItem.first);
+        for(auto cMapItem: fRxChannelMap) cGroups.push_back(cMapItem.first);
         return cGroups;
     }
-    std::vector<uint8_t> getChannelsPerGroup( uint8_t pGroup) { 
+    std::vector<uint8_t> getChannelsPerGroup(uint8_t pGroup)
+    {
         auto cIterator = fRxChannelMap.find(pGroup);
-        if( cIterator != fRxChannelMap.end() ) return cIterator->second; 
-        else{ return {}; }
+        if(cIterator != fRxChannelMap.end())
+            return cIterator->second;
+        else
+        {
+            return {};
+        }
     }
+
   private:
     // default clock configuration
     lpGBTClockConfig fClkConfig;
@@ -198,11 +204,8 @@ class D19clpGBTInterface : public lpGBTInterface
     uint8_t fReset_RHS_SSA = 12;
     uint8_t fReset_RHS_CBC = 8;
 
-    // Rx Groups for both 2S+PS hybrids with lpGBT 
-    std::map<uint8_t , std::vector<uint8_t>> fRxChannelMap = {
-        {0, {0,2}}, {1, {0,2}} , {3, {0,2}} , {4,{0,2}}, {5, {0,2}} , {6,{0,2}}
-    };
-
+    // Rx Groups for both 2S+PS hybrids with lpGBT
+    std::map<uint8_t, std::vector<uint8_t>> fRxChannelMap = {{0, {0, 2}}, {1, {0, 2}}, {3, {0, 2}}, {4, {0, 2}}, {5, {0, 2}}, {6, {0, 2}}};
 };
 } // namespace Ph2_HwInterface
 #endif

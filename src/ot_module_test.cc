@@ -585,7 +585,6 @@ int main(int argc, char* argv[])
         }
     }
 
-    
     if(!cmd.foundOption("read") && cmd.foundOption("checkCICAlignment"))
     {
         // align FEs - CIC
@@ -623,7 +622,7 @@ int main(int argc, char* argv[])
     }
     if(!cmd.foundOption("read") && cmd.foundOption("checkLink"))
     {
-        uint8_t cPattern = (cmd.foundOption("checkLink")) ? convertAnyInt(cmd.optionValue("checkLink").c_str()) : 0xEA;
+        uint8_t         cPattern = (cmd.foundOption("checkLink")) ? convertAnyInt(cmd.optionValue("checkLink").c_str()) : 0xEA;
         LinkAlignmentOT cLinkAlignment;
         cLinkAlignment.Inherit(&cTool);
         cLinkAlignment.Initialise();

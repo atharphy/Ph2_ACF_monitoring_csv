@@ -61,7 +61,8 @@ class LinkAlignmentOT : public OTTool
     void                     ManuallyConfigureLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId, uint8_t pPhase, uint8_t pBitslip); // generic
     bool                     LineTuning(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId, uint8_t pAlignmentPattern, uint8_t pPeriod);  // electrical
     void                     LegacyAlignmentMPA(const Ph2_HwDescription::Chip* pChip);
-    void                     CheckLpgbtOutputs(uint8_t pPattern=0xAA);
+    void                     CheckLpgbtOutputs(uint8_t pPattern = 0xAA);
+
   protected:
   private:
     // Alignment parameters
@@ -70,7 +71,6 @@ class LinkAlignmentOT : public OTTool
     DetectorDataContainer fBeBitSlip;       // one per line per data line from hybrid
     bool                  fStubDebug{false};
     bool                  fL1Debug{false};
-
 
     bool CheckLpgbtOutputs(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, uint8_t pPattern = 0xAA);
     bool AlignLpGBTInputs(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
