@@ -304,14 +304,24 @@ SlvsLineStatus CicFEAlignment::CheckPhyPort( const Hybrid* pHybrid, PhyPortCnfg 
     auto cLines = cDebugInterface->StubDebug(true,6,false);
     cStatus.second  = cLines[pPhyPortCnfg.second];
     cStatus.first   = 0; 
-    for (uint8_t cSize = 0; cSize < cStatus.second.length(); cSize += 8) 
+    auto cFound = cStatus.second.find(cPatternToMatch);
+    std::string cPatternReceived;
+    if (cFound!=std::string::npos)
     {
-        auto cSubStr = cStatus.second.substr(cSize, 8);
+        cPatternReceived = cStatus.second.substr( cFound , cStatus.second.length() - cFound) + cStatus.second.substr(0, cFound); 
+        LOG (DEBUG) << BOLDYELLOW << "Shifted str : " << cPatternReceived << " - bit shift is " << cFound << RESET;
+    }
+    else cPatternReceived = cStatus.second;
+
+    for (uint8_t cSize = 0; cSize < cPatternReceived.length(); cSize += 8) 
+    {
+        auto cSubStr = cPatternReceived.substr(cSize, 8);
         for( uint8_t cIndx = 0; cIndx < cSubStr.size() ; cIndx++)
         {
             if( cSubStr[cIndx] != cPatternToMatch[cIndx] ) cStatus.first++; 
         }   
     }
+    cStatus.second = cPatternReceived;
     return cStatus;
 }
 void CicFEAlignment::CheckOutLine(uint8_t pOutLine, uint8_t pPattern , uint8_t pPhase , DetectorDataContainer& pLineData, DetectorDataContainer& pErrorCounter)
