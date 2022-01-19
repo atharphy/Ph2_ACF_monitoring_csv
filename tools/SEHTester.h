@@ -55,13 +55,14 @@ class SEHTester : public OTHybridTester
     void Resume();
 
     void SEHInputsDebug();
-    void TurnOn();
+    void TurnOn(uint32_t pRightLoadValue = 0, uint32_t pLeftLoadValue = 0);
     void TurnOff();
+    void SetLoad(uint32_t pRightLoadValue = 0, uint32_t pLeftLoadValue = 0);
     void RampPowerSupply(std::string powerSupplyId, std::string channelId);
     void CheckFastCommands(const std::string& sFastCommandPattern, const std::string& userFilename);
     void CheckHybridInputs(std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters);
     void CheckHybridOutputs(std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters);
-    void CheckClocks();
+    bool CheckClocks();
     void ClearBRAM(const std::string& sBRAMToReset = "ref");
     void ReadCheckAddrBRAM(int iCheckBRAMAddr = 0);
     void ReadRefAddrBRAM(int iRefBRAMAddr = 0);
@@ -87,7 +88,7 @@ class SEHTester : public OTHybridTester
     void        FastCommandScope(Ph2_HwDescription::BeBoard* pBoard);
     bool        FastCommandChecker(Ph2_HwDescription::BeBoard* pBoard, uint8_t pPattern);
     void        CheckFastCommands(Ph2_HwDescription::BeBoard* pBoard, const std::string& sFastCommandPattern, const std::string& userFilename);
-    void        CheckClocks(Ph2_HwDescription::BeBoard* pBoard);
+    bool        CheckClocks(Ph2_HwDescription::BeBoard* pBoard);
     void        CheckFastCommandsBRAM(Ph2_HwDescription::BeBoard* pBoard, const std::string& sFastCommandLine);
     void        WritePatternToBRAM(Ph2_HwDescription::BeBoard* pBoard, const std::string&);
     void        ClearRefBRAM(Ph2_HwDescription::BeBoard* pBoard);
@@ -100,10 +101,7 @@ class SEHTester : public OTHybridTester
     void        CheckHybridInputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters);
     void        CheckHybridOutputs(Ph2_HwDescription::BeBoard* pBoard, std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters);
     // void CheckFastCommands(Ph2_HwDescription::BeBoard* pBoard, const std::string & pFastCommand ,  uint8_t pDuartion=1);
-    std::map<std::string, std::string> f2SSEHClockMap = {
-        {"320_r_Clk_Test", "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r"},
-        {"320_l_Clk_Test", "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_l"},
-    };
+
     std::map<std::string, uint8_t>     fInputDebugMap = {{"l_fcmd_cic", 0},
                                                      {"r_fcmd_cic", 1},
                                                      {"l_fcmd_ssa", 2},

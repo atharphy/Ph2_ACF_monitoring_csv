@@ -22,16 +22,16 @@ PSROHTester::~PSROHTester() {}
 
 void PSROHTester::Initialise()
 {
-    for(auto cBoard : *fDetectorContainer)
+    for(auto cBoard: *fDetectorContainer)
     {
-        if (flpGBTInterface == nullptr) continue;
-	D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-	for(auto cOpticalGroup : *cBoard)
-	{
-	    if(cOpticalGroup->flpGBT == nullptr) continue;
+        if(flpGBTInterface == nullptr) continue;
+        D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+        for(auto cOpticalGroup: *cBoard)
+        {
+            if(cOpticalGroup->flpGBT == nullptr) continue;
             clpGBTInterface->ConfigurePSROH(cOpticalGroup->flpGBT);
             //
-            uint8_t cChipRate = clpGBTInterface->GetChipRate(cOpticalGroup->flpGBT);
+            uint8_t          cChipRate = clpGBTInterface->GetChipRate(cOpticalGroup->flpGBT);
             lpGBTClockConfig cClkCnfg;
             cClkCnfg.fClkFreq         = (cChipRate == 5) ? 4 : 5;
             cClkCnfg.fClkDriveStr     = 7;
@@ -39,13 +39,13 @@ void PSROHTester::Initialise()
             cClkCnfg.fClkPreEmphMode  = 0; // 3;
             cClkCnfg.fClkPreEmphStr   = 0; // 7;
 
-            cClkCnfg.fClkInvert       = 1;
+            cClkCnfg.fClkInvert = 1;
             LOG(INFO) << BOLDBLUE << "Enabling SSA clocks" << RESET;
             clpGBTInterface->hybridClock(cOpticalGroup->flpGBT, cClkCnfg, 0);
             clpGBTInterface->hybridClock(cOpticalGroup->flpGBT, cClkCnfg, 1);
 
             // enable clock to CIC
-            cClkCnfg.fClkInvert   = 0;
+            cClkCnfg.fClkInvert = 0;
             LOG(INFO) << BOLDBLUE << "Enabling CIC clocks" << RESET;
             clpGBTInterface->cicClock(cOpticalGroup->flpGBT, cClkCnfg, 0);
             clpGBTInterface->cicClock(cOpticalGroup->flpGBT, cClkCnfg, 1);
@@ -711,26 +711,26 @@ void PSROHTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vect
     }
 }
 
-bool PSROHTester::TestResetLines(uint8_t pLevel)
-{
-    bool cValid = true;
-#ifdef __ROH_USB__
-    float cMeasurement = 0;
-    auto  cMapIterator = fResetLines.begin();
-    do
-    {
-        flpGBTInterface->getExternalController()->getInterface().adc_get(cMapIterator->second, cMeasurement);
-        float cDifference_mV = std::fabs((pLevel * 1200) - cMeasurement);
-        cValid               = cValid && (cDifference_mV <= 100);
-        if(cDifference_mV > 100)
-            LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
-        else
-            LOG(INFO) << BOLDGREEN << "Match in GPIO connected to " << cMapIterator->first << RESET;
-        cMapIterator++;
-    } while(cMapIterator != fResetLines.end());
-#endif
-    return cValid;
-}
+// bool PSROHTester::TestResetLines(uint8_t pLevel)
+// {
+//     bool cValid = true;
+// #ifdef __ROH_USB__
+//     float cMeasurement = 0;
+//     auto  cMapIterator = fResetLines.begin();
+//     do
+//     {
+//         fTCInterface.getInterface().adc_get(cMapIterator->second, cMeasurement);
+//         float cDifference_mV = std::fabs((pLevel * 1200) - cMeasurement);
+//         cValid               = cValid && (cDifference_mV <= 100);
+//         if(cDifference_mV > 100)
+//             LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
+//         else
+//             LOG(INFO) << BOLDGREEN << "Match in GPIO connected to " << cMapIterator->first << RESET;
+//         cMapIterator++;
+//     } while(cMapIterator != fResetLines.end());
+// #endif
+//     return cValid;
+// }
 
 void PSROHTester::Start(int currentRun)
 {

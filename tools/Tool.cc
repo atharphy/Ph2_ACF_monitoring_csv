@@ -1,7 +1,6 @@
 #include "Tool.h"
 #include <numeric>
 
-
 #include "../HWDescription/Chip.h"
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/Container.h"
@@ -231,12 +230,15 @@ void Tool::bookSummaryTree() // MINE
  */
 void Tool::fillSummaryTree(std::string cParameter, Double_t cValue) // MINE
 {
+    // TString currentDirectory = getDirectoryName();
+    // const char* currentDirectory = gDirectory->GetPath();
     fResultFile->cd();
     fSummaryTreeParameter.Clear();
     TString cParameter_TString(cParameter);
     fSummaryTreeParameter = cParameter_TString;
     fSummaryTreeValue     = cValue;
     if(fSummaryTree) fSummaryTree->Fill();
+    // fResultFile->cd(currentDirectory);
 }
 
 Double_t Tool::getSummaryParameter(std::string cParameter)
@@ -473,6 +475,7 @@ void Tool::SaveResults()
         cCanvas.second->SaveAs(cPdfName.c_str());
     }
     // Save summary TTree
+    fResultFile->cd();
     if(fSummaryTree != nullptr) fSummaryTree->Write(); // Seems to be needed with ROOT6, seems to break with ROOT5...
 
 #endif

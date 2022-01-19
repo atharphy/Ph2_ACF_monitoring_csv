@@ -28,8 +28,25 @@ void SEHTester::Initialise()
     // fc7_daq_ctrl
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
-        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.fe_for_ps_roh.i2c_slave_reset", 0x01);
+        D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+        for(auto cOpticalGroup: *cBoard)
+        {
+            if(cOpticalGroup->flpGBT == nullptr) continue;
+            clpGBTInterface->Configure2SSEH(cOpticalGroup->flpGBT);
+            //
+
+            lpGBTClockConfig cClkCnfg;
+            cClkCnfg.fClkFreq         = 4;
+            cClkCnfg.fClkDriveStr     = 7;
+            cClkCnfg.fClkPreEmphWidth = 0;
+            cClkCnfg.fClkPreEmphMode  = 0; // 3;
+            cClkCnfg.fClkPreEmphStr   = 0; // 7;
+
+            cClkCnfg.fClkInvert = 1;
+            LOG(INFO) << BOLDBLUE << "Enabling clock" << RESET;
+            clpGBTInterface->hybridClock(cOpticalGroup->flpGBT, cClkCnfg, 0);
+            clpGBTInterface->hybridClock(cOpticalGroup->flpGBT, cClkCnfg, 1);
+        }
     }
 }
 
@@ -204,6 +221,8 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:1,hvmonx8Relay:1,HVDAC_setvalue:0,");
 #else
     flpGBTInterface->getExternalController()->getInterface().set_HV(false, true, true, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
 #endif
     std::vector<float> cDACValVect;
     std::vector<float> cVHVJ7ValVect;
@@ -560,15 +579,85 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
 #endif
 #endif
 }
-
-void SEHTester::TurnOn()
+void SEHTester::SetLoad(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
 {
 #ifdef __TCUSB__
 #ifdef __SEH_USB__
+    flpGBTInterface->getExternalController()->getInterface().set_load2(true, false, pLeftLoadValue);
+    flpGBTInterface->getExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
+#endif
+#endif
+}
+void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
+{
+    // workaround to turn on the bPOL2V5 propertly
+
+#ifdef __TCUSB__
+#ifdef __SEH_USB__
+    float T;
+    // check if the critical temperature of -35C has been reached
+    flpGBTInterface->getExternalController()->getInterface().read_temperature(flpGBTInterface->getExternalController()->getInterface().Temp1, T);
+    fillSummaryTree("StartTemperature", T);
+    if(T < -35.0)
+    {
+        // if so add additional load to the lpGBT side of the hybrid to
+        // ensure larger currents and stop the negative over-current prottection
+        // of the bPOL
+        // 0x090 correcponds to 91mA a translates to 7mA of current draw
+        // before turning on the service hybrid
+        uint32_t cLeftLoadValue = pLeftLoadValue;
+        if(pLeftLoadValue < 0x090) { cLeftLoadValue = 0x090; }
+        flpGBTInterface->getExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
+        flpGBTInterface->getExternalController()->getInterface().set_load2(true, false, cLeftLoadValue); // 1 step = 635uA 0xfff = 2.6A
+        // waiting 7 seconds before turnin on the hybrid ensures propper
+        // discharge of the side and lets the current rise so that the negative
+        // over-current protection does not activate
+        std::this_thread::sleep_for(std::chrono::milliseconds(7000));
+    }
+    else
+    {
+        flpGBTInterface->getExternalController()->getInterface().set_load2(true, false, pLeftLoadValue);
+        flpGBTInterface->getExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
+    }
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("TurnOn");
 #else
+
+    float I_SEH;
+    float U_SEH;
+    float I_P1V2_R;
+    float I_P1V2_L;
+    float U_P1V2_R;
+    float U_P1V2_L;
+    float U_P2V5 = 0;
+    // 1 step = 635uA 0xfff = 2.6A
+    // waiting 7 seconds before turnin on the hybrid ensures propper
+    // discharge of the side and lets the current rise so that the negative
+    // over-current protection does not activate
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+    flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().U_P1V2_R, U_P1V2_R);
+    flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().U_P1V2_L, U_P1V2_L);
+    flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().P2V5_VTRx_MON, U_P2V5);
     flpGBTInterface->getExternalController()->getInterface().set_SehSupply(flpGBTInterface->getExternalController()->getInterface().sehSupply_On);
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+
+    flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().I_P1V2_R, I_P1V2_R);
+    flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().I_P1V2_L, I_P1V2_L);
+    flpGBTInterface->getExternalController()->getInterface().read_supply(flpGBTInterface->getExternalController()->getInterface().I_SEH, I_SEH);
+    flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().U_P1V2_R, U_P1V2_R);
+    flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().U_P1V2_L, U_P1V2_L);
+    flpGBTInterface->getExternalController()->getInterface().read_supply(flpGBTInterface->getExternalController()->getInterface().U_SEH, U_SEH);
+    flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().P2V5_VTRx_MON, U_P2V5);
+    fillSummaryTree("TurnOnLoadRight", I_P1V2_R);
+    fillSummaryTree("TurnOnLoadLeft", I_P1V2_L);
+    if(T < -35.0)
+    {
+        // wait 4 seconds
+        std::this_thread::sleep_for(std::chrono::milliseconds(4000));
+        // to prevent indroducing a systematic current draw at -35C we turn
+        // the load off
+        flpGBTInterface->getExternalController()->getInterface().set_load2(false, false, pLeftLoadValue); // 1 step = 635uA 0xfff = 2.6A
+    }
 #endif
 #endif
 #endif
@@ -679,11 +768,12 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     cMonGraph->GetYaxis()->SetTitle("Monitoring Voltage [V]");
 
     cMonCanvas->Write();
+
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:0,hvmonx8Relay:0,HVDAC_setvalue:0,");
 #else
     flpGBTInterface->getExternalController()->getInterface().set_HV(false, false, false, 0);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(30000));
     fillSummaryTree("LeakDone", 1);
 #endif
 #endif
@@ -1541,51 +1631,130 @@ void SEHTester::ReadCheckAddrBRAM(int iCheckBRAMAddr)
     }
 }
 
-void SEHTester::CheckClocks(BeBoard* pBoard)
+bool SEHTester::CheckClocks(BeBoard* pBoard)
 {
+    bool cStatus = true;
+    //     fBeBoardInterface->setBoard(pBoard->getId());
+    //     // clk test
+    //     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x01);
+    //     auto cMapIterator = f2SSEHClockMap.begin();
+    //     bool cClkTestDone=false;
+    //     bool cClkStat=false;
+
+    //     LOG(INFO) << GREEN << "============================" << RESET;
+    //     LOG(INFO) << BOLDGREEN << "Clock test" << RESET;
+
+    //     do
+    //     {
+    //         cClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, cMapIterator->second + "_test_done") == 1);
+    //         LOG(INFO) << "Waiting for clock test";
+    //         while(!cClkTestDone)
+    //         {
+    //             std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    //             cClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, cMapIterator->second + "_test_done") == 1);
+    //         }
+    //         if(cClkTestDone)
+    //         {
+    //             cClkStat = fBeBoardInterface->ReadBoardReg(pBoard, cMapIterator->second + "_stat");
+
+    //             if(cClkStat)
+    //                 LOG(INFO) << cMapIterator->first << " test ->" << BOLDGREEN << " PASSED" << RESET;
+    //             else
+    //             {
+    //                 LOG(ERROR) << cMapIterator->first << " test ->" << BOLDRED << " FAILED" << RESET;
+    //                 cStatus &= false;
+    //             }
+    // #ifdef __USE_ROOT__
+    //             fillSummaryTree(cMapIterator->first, cClkStat);
+    // #endif
+    //         }
+    //         cMapIterator++;
+    //     } while(cMapIterator != f2SSEHClockMap.end());
     fBeBoardInterface->setBoard(pBoard->getId());
     // clk test
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x01);
-    auto cMapIterator = f2SSEHClockMap.begin();
-    bool cClkTestDone;
-    bool cClkStat;
-
+    bool c320lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_l_test_done") == 1);
+    bool c320rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r_test_done") == 1);
+    bool c640lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_l_test_done") == 1);
+    bool c640rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_r_test_done") == 1);
     LOG(INFO) << GREEN << "============================" << RESET;
     LOG(INFO) << BOLDGREEN << "Clock test" << RESET;
 
-    do
+    LOG(INFO) << "Waiting for clock test";
+    while(!c320lClkTestDone)
     {
-        cClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, cMapIterator->second + "_test_done") == 1);
-        LOG(INFO) << "Waiting for clock test";
-        while(!cClkTestDone)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            cClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, cMapIterator->second + "_test_done") == 1);
-        }
-        if(cClkTestDone)
-        {
-            cClkStat = fBeBoardInterface->ReadBoardReg(pBoard, cMapIterator->second + "_stat");
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        c320lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_l_test_done") == 1);
+    }
+    if(c320lClkTestDone)
+    {
+        bool Clk320lStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_l_stat");
 
-            if(cClkStat)
-                LOG(INFO) << cMapIterator->first << " test ->" << BOLDGREEN << " PASSED" << RESET;
-            else
-                LOG(ERROR) << cMapIterator->first << " test ->" << BOLDRED << " FAILED" << RESET;
-#ifdef __USE_ROOT__
-            fillSummaryTree(cMapIterator->first, cClkStat);
-#endif
-        }
-        cMapIterator++;
-    } while(cMapIterator != f2SSEHClockMap.end());
+        if(Clk320lStat)
+            LOG(INFO) << "320 l clk test ->" << BOLDGREEN << " PASSED" << RESET;
+        else
+            LOG(ERROR) << "320 l clock test ->" << BOLDRED << " FAILED" << RESET;
+    }
+
+    while(!c320rClkTestDone)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        c320rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r_test_done") == 1);
+    }
+    if(c320rClkTestDone)
+    {
+        bool Clk320rStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r_stat");
+
+        if(Clk320rStat)
+            LOG(INFO) << "320 r clk test ->" << BOLDGREEN << " PASSED" << RESET;
+        else
+            LOG(ERROR) << "320 r clock test ->" << BOLDRED << " FAILED" << RESET;
+    }
+
+    while(!c640lClkTestDone)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        c640lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_l_test_done") == 1);
+    }
+    if(c640lClkTestDone)
+    {
+        bool Clk640lStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_l_stat");
+
+        if(Clk640lStat)
+            LOG(INFO) << "640 l clk test ->" << BOLDGREEN << " PASSED" << RESET;
+        else
+            LOG(ERROR) << "640 l clock test ->" << BOLDRED << " FAILED" << RESET;
+    }
+
+    while(!c640rClkTestDone)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        c640rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_r_test_done") == 1);
+    }
+    if(c640rClkTestDone)
+    {
+        bool Clk640rStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_r_stat");
+        if(Clk640rStat)
+            LOG(INFO) << "640 r clk test ->" << BOLDGREEN << " PASSED" << RESET;
+        else
+            LOG(ERROR) << "640 r clock test ->" << BOLDRED << " FAILED" << RESET;
+    }
+    LOG(INFO) << GREEN << "============================" << RESET;
+
+    return cStatus;
 }
 
-void SEHTester::CheckClocks()
+bool SEHTester::CheckClocks()
 {
+    bool cStatus = true;
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT != nullptr) continue;
-        this->CheckClocks(cBoard);
+        cStatus = this->CheckClocks(cBoard);
     }
+    return cStatus;
 }
+
 void SEHTester::FastCommandScope(BeBoard* pBoard)
 {
     fBeBoardInterface->setBoard(pBoard->getId());

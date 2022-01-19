@@ -509,14 +509,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
 void SystemController::InitializeOT(BeBoard* pBoard)
 {
     LOG(INFO) << BOLDMAGENTA << "Initializing OT hardware.." << RESET;
-// turn on the SEH here - moved from the lpGBT interface
-#ifdef __SEH_USB__
-    LOG(INFO) << BOLDRED << "Intitally switching on SEH for configuration" << RESET;
-    if(flpGBTInterface != nullptr)
-    {
-        if(flpGBTInterface->getExternalController() != nullptr) flpGBTInterface->getExternalController()->getInterface().set_SehSupply(TC_2SSEH::sehSupplyState::sehSupply_On);
-    }
-#endif
+
     for(auto cOpticalGroup: *pBoard)
     {
         if(cOpticalGroup->flpGBT == nullptr) continue;
@@ -535,7 +528,7 @@ void SystemController::InitializeOT(BeBoard* pBoard)
             continue;
         }
     }
-    
+
     // module start-up
     // depends on module type
     for(auto cOpticalGroup: *pBoard)
@@ -1033,12 +1026,12 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                 static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-		bool cLinkLock = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->LinkLock(cBoard);
-	        if(!cLinkLock)
-		{
-		    LOG(INFO) << BOLDRED << "lpGBT link failed to LOCK!" << RESET;
-		    exit(0);
-		}
+                bool cLinkLock = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->LinkLock(cBoard);
+                if(!cLinkLock)
+                {
+                    LOG(INFO) << BOLDRED << "lpGBT link failed to LOCK!" << RESET;
+                    exit(0);
+                }
             }
             ConfigureOT(cBoard);
 
