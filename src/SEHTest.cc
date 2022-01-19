@@ -362,7 +362,7 @@ int main(int argc, char* argv[])
     if(cClockTest)
     {
         LOG(INFO) << BOLDBLUE << "Clock test" << RESET;
-        bool cStatus = cSEHTester.CheckClocks();
+        bool cStatus = cSEHTester.LpGBTCheckClocks();
         if(cStatus)
             LOG(INFO) << BOLDBLUE << "Clock test " << BOLDGREEN << " passed" << RESET;
         else

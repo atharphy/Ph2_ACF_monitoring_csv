@@ -24,10 +24,31 @@ void PSROHTester::Initialise()
 {
     for(auto cBoard: *fDetectorContainer)
     {
+        if(flpGBTInterface == nullptr) continue;
+        D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
         for(auto cOpticalGroup: *cBoard)
         {
             if(cOpticalGroup->flpGBT == nullptr) continue;
-            static_cast<D19clpGBTInterface*>(flpGBTInterface)->ConfigurePSROH(cOpticalGroup->flpGBT);
+            clpGBTInterface->ConfigurePSROH(cOpticalGroup->flpGBT);
+            //
+            uint8_t          cChipRate = clpGBTInterface->GetChipRate(cOpticalGroup->flpGBT);
+            lpGBTClockConfig cClkCnfg;
+            cClkCnfg.fClkFreq         = (cChipRate == 5) ? 4 : 5;
+            cClkCnfg.fClkDriveStr     = 7;
+            cClkCnfg.fClkPreEmphWidth = 0;
+            cClkCnfg.fClkPreEmphMode  = 0; // 3;
+            cClkCnfg.fClkPreEmphStr   = 0; // 7;
+
+            cClkCnfg.fClkInvert = 1;
+            LOG(INFO) << BOLDBLUE << "Enabling SSA clocks" << RESET;
+            clpGBTInterface->hybridClock(cOpticalGroup->flpGBT, cClkCnfg, 0);
+            clpGBTInterface->hybridClock(cOpticalGroup->flpGBT, cClkCnfg, 1);
+
+            // enable clock to CIC
+            cClkCnfg.fClkInvert = 0;
+            LOG(INFO) << BOLDBLUE << "Enabling CIC clocks" << RESET;
+            clpGBTInterface->cicClock(cOpticalGroup->flpGBT, cClkCnfg, 0);
+            clpGBTInterface->cicClock(cOpticalGroup->flpGBT, cClkCnfg, 1);
         }
     }
 }

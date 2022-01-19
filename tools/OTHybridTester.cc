@@ -110,13 +110,14 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 }
                 fBeBoardInterface->setBoard(cBoard->getId());
-                D19cFWInterface*      cFWInterface      = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-                D19cDebugFWInterface* cDebugFWInterface = dynamic_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+                D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+                // D19cDebugFWInterface* cDebugFWInterface = dynamic_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
                 cFWInterface->selectLink(cOpticalGroup->getId());
                 cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
                 LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
-                // D19cDebugFWInterface* cDebugInterface = dynamic_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-                // cDebugInterface->StubDebug(true, 6);
+                D19cDebugFWInterface* cDebugInterface = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+                cDebugInterface->StubDebug(true, 5);
+                cDebugInterface->StubDebug(true, 5);
                 // enable stub debug - allows you to 'scope' the stub output
 
                 cFWInterface->WriteReg("fc7_daq_cnfg.stub_debug.enable", 0x01);
@@ -194,7 +195,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 cFWInterface->ResetReadout();
 
                 LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
-                // cFWInterface->L1ADebug();
+                cDebugInterface->L1ADebug(10);
                 cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
 
                 cFWInterface->ConfigureTriggerFSM(0, 10, 3);
@@ -679,10 +680,10 @@ bool OTHybridTester::LpGBTTestResetLines()
     // lpGBTinterface now nows this .. so don't need the if statements
 #ifdef __TCUSB__
 #ifdef __ROH_USB__
-    std::vector<uint8_t>                         cGPIOs      = {0, 1, 3, 6, 9, 12, 8};
+    std::vector<uint8_t>                         cGPIOs      = static_cast<D19clpGBTInterface*>(flpGBTInterface)->getPSResetGPIOs();
     std::map<std::string, TC_PSROH::measurement> cResetLines = fResetLines;
 #elif __SEH_USB__
-    std::vector<uint8_t>                              cGPIOs      = {0, 3, 6, 8};
+    std::vector<uint8_t>                              cGPIOs      = static_cast<D19clpGBTInterface*>(flpGBTInterface)->get2SResetGPIOs();
     std::map<std::string, TC_2SSEH::resetMeasurement> cResetLines = f2SSEHResetLines;
     // std::vector<uint8_t>                              cGPIOs      = {0, 3, 6, 8};
 #endif
@@ -826,7 +827,7 @@ bool OTHybridTester::LpGBTTestVTRx()
             // I2CWrite(cLinkID, cMaster, cSlaveAddress, 0x09, 1, cTheI2CWriteCount);
             cRecent = pInterface->I2CWrite(cLinkID, 1, 0x50, 0x15, 1, cTheI2CWriteCount);
             for(int i = 0; i < 5 && !(cRecent); i++) { cRecent = pInterface->I2CWrite(cLinkID, 1, 0x50, 0x15, 1, cTheI2CWriteCount); }
-            cResult                                              = pInterface->I2CRead(cLinkID, 1, 0x50, 1,cTheI2CWriteCount);
+            cResult                                              = pInterface->I2CRead(cLinkID, 1, 0x50, 1, cTheI2CWriteCount);
             std::map<uint8_t, uint8_t> cVTRxplusDefaultRegisters = fVTRxplusDefaultRegisters;
             if(cResult == 0x15)
             {
@@ -840,7 +841,7 @@ bool OTHybridTester::LpGBTTestVTRx()
             {
                 cRecent = pInterface->I2CWrite(cLinkID, 1, 0x50, cMapIterator->first, 1, cTheI2CWriteCount);
                 // WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, cMapIterator->first, 1, 2);
-                cResult  = pInterface->I2CRead(cLinkID, 1, 0x50, 1,cTheI2CWriteCount);
+                cResult  = pInterface->I2CRead(cLinkID, 1, 0x50, 1, cTheI2CWriteCount);
                 cSuccess = cSuccess && cRecent && (cResult == cMapIterator->second);
                 if(cRecent && (cResult == cMapIterator->second))
                 { LOG(INFO) << BOLDGREEN << "VTRx+ register " << +(cMapIterator->first) << " contains the default value " << +cResult << " ." << RESET; }
@@ -1036,6 +1037,60 @@ void OTHybridTester::LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFi
         }
     }
 }
+
+bool OTHybridTester::LpGBTCheckClocks()
+{
+    bool cStatus = true;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
+        fBeBoardInterface->setBoard(cBoard->getId());
+        // clk test
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x01);
+        std::map<std::string, std::string> cClockMap;
+#ifdef __SEH_USB__
+        cClockMap = f2SSEHClockMap;
+#elif __ROH_USB__
+        cClockMap  = fPSROHClockMap;
+#endif
+        auto cMapIterator = cClockMap.begin();
+        bool cClkTestDone = false;
+        bool cClkStat     = false;
+
+        LOG(INFO) << GREEN << "============================" << RESET;
+        LOG(INFO) << BOLDGREEN << "Clock test" << RESET;
+
+        do
+        {
+            cClkTestDone = (fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second + "_test_done") == 1);
+            LOG(INFO) << "Waiting for clock test";
+            while(!cClkTestDone)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                cClkTestDone = (fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second + "_test_done") == 1);
+            }
+            if(cClkTestDone)
+            {
+                cClkStat = fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second + "_stat");
+
+                if(cClkStat)
+                    LOG(INFO) << cMapIterator->first << " test ->" << BOLDGREEN << " PASSED" << RESET;
+                else
+                {
+                    LOG(ERROR) << cMapIterator->first << " test ->" << BOLDRED << " FAILED" << RESET;
+                    cStatus &= false;
+                }
+#ifdef __USE_ROOT__
+                fillSummaryTree(cMapIterator->first, cClkStat);
+#endif
+            }
+            cMapIterator++;
+        } while(cMapIterator != cClockMap.end());
+        LOG(INFO) << GREEN << "============================" << RESET;
+    }
+    return cStatus;
+}
+
 #ifdef __TCP_SERVER__
 float OTHybridTester::getMeasurement(std::string name)
 {

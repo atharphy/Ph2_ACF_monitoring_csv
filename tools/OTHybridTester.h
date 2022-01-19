@@ -66,6 +66,7 @@ class OTHybridTester : public Tool
     bool LpGBTTestGPILines();
     bool LpGBTTestVTRx();
     bool LpGBTGetLinkLock();
+    bool LpGBTCheckClocks();
     bool LpGBTFastCommandChecker(uint8_t pPattern);
     // Run Eye Openin Monitor
     void LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect);
@@ -94,14 +95,22 @@ class OTHybridTester : public Tool
         {"FCMD_CIC_R", "fc7_daq_stat.physical_interface_block.fcmd_debug_ssa_r"},
         {"FCMD_CIC_L", "fc7_daq_stat.physical_interface_block.fcmd_debug_cic_l"},
     };
-
+    std::map<std::string, std::string> f2SSEHClockMap = {
+        {"320_r_Clk_Test", "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r"},
+        {"320_l_Clk_Test", "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_l"},
+    };
     std::map<std::string, std::string> fPSROHFCMDLines = {
         {"FCMD_CIC_R", "fc7_daq_stat.physical_interface_block.fcmd_debug_cic_r"},
         {"FCMD_CIC_L", "fc7_daq_stat.physical_interface_block.fcmd_debug_cic_l"},
         {"FCMD_SSA_R", "fc7_daq_stat.physical_interface_block.fcmd_debug_ssa_r"},
         {"FCMD_SSA_L", "fc7_daq_stat.physical_interface_block.fcmd_debug_ssa_l"},
     };
-
+    std::map<std::string, std::string> fPSROHClockMap = {
+        {"320_r_Clk_Test", "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r"},
+        {"320_l_Clk_Test", "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_l"},
+        {"640_r_Clk_Test", "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_r"},
+        {"640_l_Clk_Test", "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_l"},
+    };
     std::map<std::string, TC_2SSEH::resetMeasurement> f2SSEHResetLines = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
                                                                           {"RST_CIC_R", TC_2SSEH::resetMeasurement::RST_CIC_R},
                                                                           {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
