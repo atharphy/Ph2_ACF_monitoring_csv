@@ -254,7 +254,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("clock-test"))
     {
         LOG(INFO) << BOLDBLUE << "Clock test" << RESET;
-        cPSROHTester.CheckClocks();
+        cPSROHTester.LpGBTCheckClocks();
     }
 
     /*********************/

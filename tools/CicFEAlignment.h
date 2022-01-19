@@ -21,6 +21,10 @@
 typedef std::vector<uint8_t> AlignmentValues;
 #endif
 
+#ifndef StubLineData
+typedef std::vector<std::string> StubLineData;
+#endif
+
 // add break codes here
 const uint8_t FAILED_PHASE_ALIGNMENT = 1;
 const uint8_t FAILED_WORD_ALIGNMENT  = 2;
@@ -35,21 +39,25 @@ class CicFEAlignment : public OTTool
     CicFEAlignment();
     ~CicFEAlignment();
 
-    void Initialise();
-    bool CicLpGbtAlignment();
-    bool CicLpGbtAlignment(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    void AlignInputs();
-    void SetStaticPhaseAlignment();
-    bool PhaseAlignment(uint16_t pWait_us = 10, uint32_t pNTriggers = 500);
-    bool WordAlignment(uint32_t pWait_us = 10);
-    bool Bx0Alignment(uint8_t pFe = 0, uint8_t pLine = 4, uint16_t pDelay = 1, uint16_t pWait_ms = 100, int cNrials = 3);
-    bool SetBx0Delay(uint8_t pDelay = 8, uint8_t pStubPackageDelay = 3);
-    bool BackEndAlignment();
-    void Running() override;
-    void Stop() override;
-    void Pause() override;
-    void Resume() override;
-    void writeObjects();
+    void                  Initialise();
+    bool                  CicLpGbtAlignment();
+    bool                  CicLpGbtAlignment(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    void                  AlignInputs();
+    void                  SetStaticPhaseAlignment();
+    void                  GenerateManualPattern();
+    uint8_t               GenManPatternOutLine(uint8_t pLine);
+    DetectorDataContainer SamplePhase(uint8_t pPhase);
+    void                  ManualPhaseScan(uint8_t pStartScan, uint8_t pEndScan);
+    bool                  PhaseAlignment(uint16_t pWait_us = 10, uint32_t pNTriggers = 500);
+    bool                  WordAlignment(uint32_t pWait_us = 10);
+    bool                  Bx0Alignment(uint8_t pFe = 0, uint8_t pLine = 4, uint16_t pDelay = 1, uint16_t pWait_ms = 100, int cNrials = 3);
+    bool                  SetBx0Delay(uint8_t pDelay = 8, uint8_t pStubPackageDelay = 3);
+    bool                  BackEndAlignment();
+    void                  Running() override;
+    void                  Stop() override;
+    void                  Pause() override;
+    void                  Resume() override;
+    void                  writeObjects();
 
     // get alignment results
     uint8_t getPhaseAlignmentValue(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::OpticalGroup* pGroup, Ph2_HwDescription::Hybrid* pFe, Ph2_HwDescription::ReadoutChip* pChip, uint8_t pLine)

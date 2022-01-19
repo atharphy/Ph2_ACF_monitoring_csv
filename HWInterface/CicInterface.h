@@ -66,6 +66,8 @@ class CicInterface : public ChipInterface
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
 
     std::pair<bool, uint16_t>         ReadChipRegItem(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem pRegItem);
+    bool                              SetFePhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pLineId, int pPhaseTap);
+    bool                              SetPhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel, int pPhaseTap);
     bool                              SetOptimalTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel, int pOffset = 0);
     bool                              SetOptimalTaps(Ph2_HwDescription::Chip* pChip, int pOffset = 0);
     uint8_t                           GetOptimalTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPortChannel, uint8_t pInput);
@@ -105,6 +107,7 @@ class CicInterface : public ChipInterface
     bool                              ConfigureDriveStrength(Ph2_HwDescription::Chip* pChip, uint8_t pDriveStrength = 3);
     bool                              ConfigureFCMDEdge(Ph2_HwDescription::Chip* pChip, uint8_t pUseNegEdge = 1);
     bool                              GetResyncRequest(Ph2_HwDescription::Chip* pChip);
+    std::pair<uint8_t, uint8_t>       GetPhyPortConfig(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pLineId);
     //
     bool                          runVerification(Ph2_HwDescription::Chip* pChip, uint8_t pValue, std::string pRegName);
     std::pair<uint16_t, uint16_t> getRetrySummary() { return std::make_pair(fReW, fReWR); }
