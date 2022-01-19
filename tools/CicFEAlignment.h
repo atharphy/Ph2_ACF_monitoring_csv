@@ -25,6 +25,14 @@ typedef std::vector<uint8_t> AlignmentValues;
 typedef std::vector<std::string> StubLineData;
 #endif
 
+#ifndef PhyPortCnfg
+typedef std::pair<uint8_t,uint8_t> PhyPortCnfg;
+#endif
+
+#ifndef SlvsLineStatus  
+typedef std::pair<uint32_t,std::string> SlvsLineStatus;
+#endif
+
 #ifdef __USE_ROOT__
 #include "../DQMUtils/DQMHistogramCicFEAlignment.h"
 #include "TH1.h"
@@ -54,7 +62,8 @@ class CicFEAlignment : public OTTool
     uint8_t GenManPatternOutLine(uint8_t pLine);
     void ScanInputPhase( uint8_t pOutLine, uint8_t pPattern, uint8_t pStartScan, uint8_t pEndScan );
     DetectorDataContainer CheckCicInput(uint8_t pOutLine, uint8_t pPattern, uint8_t pPhase ); 
-    void CheckOutLine(uint8_t pOutLine, uint8_t pPattern , DetectorDataContainer& pLineData, DetectorDataContainer& pErrorCounter );
+    void CheckOutLine(uint8_t pOutLine, uint8_t pPattern , uint8_t pPhase , DetectorDataContainer& pLineData, DetectorDataContainer& pErrorCounter );
+    SlvsLineStatus    CheckPhyPort(const Ph2_HwDescription::Hybrid* pHybrid, PhyPortCnfg pPhyPortCnfg, uint8_t pPhase, uint8_t pPattern ); 
     // automated configuration of CIC input phase and delay 
     bool PhaseAlignment(uint16_t pWait_us = 10, uint32_t pNTriggers = 500);
     bool WordAlignment(uint32_t pWait_us = 10);
