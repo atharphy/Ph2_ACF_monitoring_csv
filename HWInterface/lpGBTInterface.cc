@@ -303,7 +303,7 @@ void lpGBTInterface::ConfigurePhShifter(Chip* pChip, const std::vector<uint8_t>&
         std::string cDelayReg  = "PS" + std::to_string(cClock) + "Delay";
         std::string cConfigReg = "PS" + std::to_string(cClock) + "Config";
         WriteChipReg(pChip, cConfigReg, (((pDelay & 0x100) >> 8) << 7) | pEnFTune << 6 | pDriveStr << 3 | pFreq);
-        WriteChipReg(pChip, cDelayReg, (pDelay & 0xFF));
+        WriteChipReg(pChip, cDelayReg, pDelay);
     }
 }
 
@@ -326,9 +326,7 @@ void lpGBTInterface::PhaseTrainRx(Chip* pChip, const std::vector<uint8_t>& pGrou
             cTrainRxReg = "EPRXTrainEc6";
 
         WriteChipReg(pChip, cTrainRxReg, 0x0F << 4 * (cGroup % 2));
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         WriteChipReg(pChip, cTrainRxReg, 0x00 << 4 * (cGroup % 2));
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
 

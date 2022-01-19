@@ -75,9 +75,9 @@ class lpGBT : public Chip
     std::vector<uint8_t> fClocks, fRxGroups, fRxChannels, fTxGroups, fTxChannels;
     uint16_t             fClocksFrequency, fRxDataRate, fTxDataRate, fChipAddress;
     uint8_t              fRxHSLPolarity, fTxHSLPolarity;
-    // number of write transactions - one element per master
+    // Number of write transactions - one element per master
     std::vector<uint32_t> fI2CWrites{0, 0, 0};
-    // number of read transactions - one element per master
+    // Number of read transactions - one element per master
     std::vector<uint32_t> fI2CReads{0, 0, 0};
 };
 } // namespace Ph2_HwDescription
