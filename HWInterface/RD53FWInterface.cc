@@ -1072,55 +1072,6 @@ void RD53FWInterface::WriteArbitraryRegister(const std::string& regName, const u
 
 uint32_t RD53FWInterface::ReadArbitraryRegister(const std::string& regName) { return RegManager::ReadReg(regName); }
 
-// ###########################################
-// # Member functions to handle the firmware #
-// ###########################################
-
-void RD53FWInterface::FlashProm(const std::string& strConfig, const char* fileName)
-{
-    CheckIfUploading();
-    fpgaConfig->runUpload(strConfig, fileName);
-}
-
-void RD53FWInterface::JumpToFpgaConfig(const std::string& strConfig)
-{
-    CheckIfUploading();
-    fpgaConfig->jumpToImage(strConfig);
-}
-
-void RD53FWInterface::DownloadFpgaConfig(const std::string& strConfig, const std::string& strDest)
-{
-    CheckIfUploading();
-    fpgaConfig->runDownload(strConfig, strDest.c_str());
-}
-
-std::vector<std::string> RD53FWInterface::getFpgaConfigList()
-{
-    CheckIfUploading();
-    return fpgaConfig->getFirmwareImageNames();
-}
-
-void RD53FWInterface::DeleteFpgaConfig(const std::string& strId)
-{
-    CheckIfUploading();
-    fpgaConfig->deleteFirmwareImage(strId);
-}
-
-void RD53FWInterface::CheckIfUploading()
-{
-    if(fpgaConfig && fpgaConfig->getUploadingFpga() > 0) throw Exception("[RD53FWInterface::CheckIfUploading] This board is uploading an FPGA configuration");
-
-    if(!fpgaConfig) fpgaConfig = new D19cFpgaConfig(this);
-}
-
-void RD53FWInterface::RebootBoard()
-{
-    if(!fpgaConfig) fpgaConfig = new D19cFpgaConfig(this);
-    fpgaConfig->resetBoard();
-}
-
-const FpgaConfig* RD53FWInterface::GetConfiguringFpga() { return (const FpgaConfig*)fpgaConfig; }
-
 // ###################
 // # Clock generator #
 // ###################
