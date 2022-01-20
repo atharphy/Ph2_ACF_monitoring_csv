@@ -330,6 +330,7 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
             std::this_thread::sleep_for(std::chrono::milliseconds(30));
             for(const auto cMaster: pMasters)
             {
+                uint8_t cFrequency = (cMaster == 1) ? 2 : 3;
                 // #ifdef __TCUSB__
                 // #ifdef __SEH_USB__
                 //     flpGBTInterface->getExternalController()->getInterface().set_load2(true, false, 0);
@@ -377,7 +378,7 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
                     uint8_t  i2cstatus         = 4; // clpGBTInterface->GetI2CStatus(cOpticalGroup->flpGBT, cMaster);
                     uint8_t  cLinkID           = cOpticalGroup->getId();
                     uint32_t cTheI2CWriteCount = 0;
-                    bool     cSuccess          = pInterface->I2CWrite(cLinkID, cMaster, cSlaveAddress, 0x09, 1, cTheI2CWriteCount);
+                    bool     cSuccess          = pInterface->I2CWrite(cLinkID, cMaster, cSlaveAddress, 0x09, 1, cFrequency, cTheI2CWriteCount);
 
                     if(cSuccess)
                     {
@@ -842,9 +843,10 @@ bool OTHybridTester::LpGBTTestVTRx()
             uint8_t  cLinkID           = cOpticalGroup->getId();
             uint32_t cTheI2CWriteCount = 0;
             // I2CWrite(cLinkID, cMaster, cSlaveAddress, 0x09, 1, cTheI2CWriteCount);
-            cRecent = pInterface->I2CWrite(cLinkID, 1, 0x50, 0x15, 1, cTheI2CWriteCount);
-            for(int i = 0; i < 5 && !(cRecent); i++) { cRecent = pInterface->I2CWrite(cLinkID, 1, 0x50, 0x15, 1, cTheI2CWriteCount); }
-            cResult                                              = pInterface->I2CRead(cLinkID, 1, 0x50, 1, cTheI2CWriteCount);
+            uint8_t cFrequency = 2; //I2C frequency for VTRx+
+            cRecent = pInterface->I2CWrite(cLinkID, 1, 0x50, 0x15, 1, cFrequency, cTheI2CWriteCount);
+            for(int i = 0; i < 5 && !(cRecent); i++) { cRecent = pInterface->I2CWrite(cLinkID, 1, 0x50, 0x15, 1, cFrequency, cTheI2CWriteCount); }
+            cResult                                              = pInterface->I2CRead(cLinkID, 1, 0x50, 1, cFrequency, cTheI2CWriteCount);
             std::map<uint8_t, uint8_t> cVTRxplusDefaultRegisters = fVTRxplusDefaultRegisters;
             if(cResult == 0x15)
             {
@@ -856,9 +858,9 @@ bool OTHybridTester::LpGBTTestVTRx()
             auto cMapIterator = cVTRxplusDefaultRegisters.begin();
             do
             {
-                cRecent = pInterface->I2CWrite(cLinkID, 1, 0x50, cMapIterator->first, 1, cTheI2CWriteCount);
+                cRecent = pInterface->I2CWrite(cLinkID, 1, 0x50, cMapIterator->first, 1, cFrequency, cTheI2CWriteCount);
                 // WriteI2C(cOpticalGroup->flpGBT, 1, 0x50, cMapIterator->first, 1, 2);
-                cResult  = pInterface->I2CRead(cLinkID, 1, 0x50, 1, cTheI2CWriteCount);
+                cResult  = pInterface->I2CRead(cLinkID, 1, 0x50, 1, cFrequency, cTheI2CWriteCount);
                 cSuccess = cSuccess && cRecent && (cResult == cMapIterator->second);
                 if(cRecent && (cResult == cMapIterator->second))
                 { LOG(INFO) << BOLDGREEN << "VTRx+ register " << +(cMapIterator->first) << " contains the default value " << +cResult << " ." << RESET; }

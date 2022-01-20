@@ -42,7 +42,6 @@ struct CPBconfig
     uint8_t  fVerbose      = 0;
     uint32_t fWait_us      = 50;
     uint16_t fMaxAttempts  = 500;
-    uint8_t  fI2CFrequency = 3;
     uint8_t  fResetEn      = 1;
 };
 
@@ -292,8 +291,8 @@ class BeBoardFWInterface : public RegManager
     virtual bool    WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) { return true; }
     virtual uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress) { return 0; }
     // function for I2C transactions using lpGBT I2C Masters
-    virtual bool    I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes, uint32_t& theI2CWriteCount) { return true; }
-    virtual uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes, uint32_t& theI2CReadCount) { return 0; }
+    virtual bool    I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes, uint8_t pFrequency, uint32_t& theI2CWriteCount) { return true; }
+    virtual uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes, uint8_t pFrequency, uint32_t& theI2CReadCount) { return 0; }
     // function for front-end slow control
     virtual bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false) { return true; }
     virtual uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) { return 0; }
@@ -305,7 +304,6 @@ class BeBoardFWInterface : public RegManager
         fCPBConfig.fWait_us      = pConfig.fWait_us;
         fCPBConfig.fReTry        = pConfig.fReTry;
         fCPBConfig.fMaxAttempts  = pConfig.fMaxAttempts;
-        fCPBConfig.fI2CFrequency = pConfig.fI2CFrequency;
     }
 
   protected:
