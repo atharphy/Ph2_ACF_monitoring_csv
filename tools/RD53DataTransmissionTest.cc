@@ -49,10 +49,10 @@ void DataTransmissionTest::sendData()
     // Store TAP0 value that has nearest BER to the target
     auto theStreamTAP0tgt = prepareChipContainerStreamer<EmptyContainer, uint16_t>("DataTransmissionTestTAP0target");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: theTAP0scanContainer) theStreamTAP0scan.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theTAP0tgtContainer) theStreamTAP0tgt.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theTAP0scanContainer) theStreamTAP0scan.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTAP0tgtContainer) theStreamTAP0tgt.streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 

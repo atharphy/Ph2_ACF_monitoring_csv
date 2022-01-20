@@ -75,8 +75,8 @@ void GainOptimization::sendData()
 {
     auto theKrumStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>();
 
-    if(fStreamerEnabled == true)
-        for(const auto cBoard: theKrumCurrContainer) theKrumStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+    if(fDQMStreamerEnabled == true)
+        for(const auto cBoard: theKrumCurrContainer) theKrumStream.streamAndSendBoard(cBoard, fDQMStreamer);
 }
 
 void GainOptimization::Stop()
@@ -261,6 +261,8 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, const float
         // ################
         Gain::run();
         auto output = Gain::analyze();
+        output->resetNormalizationStatus();
+        output->normalizeAndAverageContainers(fDetectorContainer, this->getChannelGroupHandlerContainer(), 1);
 
         // ##############################################
         // # Send periodic data to monitor the progress #

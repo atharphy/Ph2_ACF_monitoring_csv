@@ -13,19 +13,12 @@
 #ifndef BackEndAlignment_h__
 #define BackEndAlignment_h__
 
-#include "Tool.h"
-
-#include <map>
-
-namespace Ph2_HwInterface
-{
-class BackendAlignmentInterface;
-}
+#include "LinkAlignmentOT.h"
 
 // add breakcodes here
 const uint8_t FAILED_BACKEND_ALIGNMENT = 5;
 
-class BackEndAlignment : public Tool
+class BackEndAlignment : public LinkAlignmentOT
 {
   public:
     BackEndAlignment();
@@ -37,6 +30,7 @@ class BackEndAlignment : public Tool
     void SetL1Debug(bool pDebug) { fL1Debug = pDebug; };
     void SetStubDebug(bool pDebug) { fStubDebug = pDebug; };
 
+    bool Bx0Alignment(Ph2_HwDescription::BeBoard* pBoard);
     bool CICAlignment(Ph2_HwDescription::BeBoard* pBoard);
     bool CBCAlignment(Ph2_HwDescription::BeBoard* pBoard);
     bool PSAlignment(Ph2_HwDescription::BeBoard* pBoard);
@@ -45,25 +39,24 @@ class BackEndAlignment : public Tool
     void Pause() override;
     void Resume() override;
     void writeObjects();
-    void Reset();
 
     // get alignment results
     bool getStatus() const { return fSuccess; }
 
+    // assign ids to align
+    void SetEnabledROCs(std::string pPairSelect);
+
   protected:
-    bool fL1Debug   = false;
-    bool fStubDebug = false;
+    bool        fL1Debug   = false;
+    bool        fStubDebug = false;
+    uint8_t     fPairSelect{0};
+    std::string fPairName{""};
 
   private:
-    // status
-    bool fSuccess;
+    //
+    bool fAlignStub = true;
     // Containers
-    DetectorDataContainer fRegMapContainer;
-    DetectorDataContainer fBoardRegContainer;
-
-// booking histograms
-#ifdef __USE_ROOT__
-//  DQMHistogramCic fDQMHistogram;
-#endif
+    DetectorDataContainer fEnabledFEs;
+    std::vector<uint8_t>  fEnabledROCs{0};
 };
 #endif

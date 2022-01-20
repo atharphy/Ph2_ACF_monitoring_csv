@@ -109,7 +109,7 @@ class RD53FWInterface : public BeBoardFWInterface
     // @TMP@
     enum class AutozeroSource : uint32_t
     {
-        IPBus = 1,
+        Software = 1,
         FastCMDFSM,
         UserDefined, // --> Related to IPbus register "autozero_freq"
         Disabled = 0
@@ -162,7 +162,7 @@ class RD53FWInterface : public BeBoardFWInterface
     {
         bool     enable             = false;
         bool     ext_clk_en         = false;
-        uint32_t ch_out_en          = 0; // chn-1 = clk. to TLU, chn-2 = ext. trigger, chn-3 = busy to TLU, chn-4 = TLU reset, chn-5 = ext. clk
+        uint32_t ch_out_en          = 0; // chn-1 = clk. to TLU, chn-2 = ext. trigger, chn-3 = busy to TLU, chn-4 = reet to TLU, chn-5 = ext. clk.
         uint32_t fiftyohm_en        = 0;
         uint32_t ch1_thr            = 0x80; // [(thr/256*(5-1)V + 1V) * 3.3V/5V]
         uint32_t ch2_thr            = 0x80;
@@ -182,8 +182,8 @@ class RD53FWInterface : public BeBoardFWInterface
     void     StatusOptoLinkSlowControl(uint32_t& txIsReady, uint32_t& rxIsReady);
     void     ResetOptoLink() override;
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override;
-    bool     WriteOptoLinkRegister(const uint32_t linkNumber, const uint16_t LpGBTaddress, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override;
-    uint32_t ReadOptoLinkRegister(const uint32_t linkNumber, const uint16_t LpGBTaddress, const uint32_t pAddress) override;
+    bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override;
+    uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress) override;
 
     // ###########################################
     // # Member functions to handle the firmware #

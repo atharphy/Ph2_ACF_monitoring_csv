@@ -18,7 +18,7 @@ void SSAPhysics::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    saveRawData = this->findValueInSettings("SaveRawData", true);
+    saveRawData = this->findValueInSettings<double>("SaveRawData", true);
     doLocal     = false;
 
     // ###########################################
@@ -27,8 +27,11 @@ void SSAPhysics::ConfigureCalibration()
     this->CreateResultDirectory(RESULTDIR, false, false);
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, fOccContainer);
 
-    fChannelGroupHandler = new SSA2ChannelGroupHandler();
-    fChannelGroupHandler->setChannelGroupParameters(16, 2);
+    SSA2ChannelGroupHandler theChannelGroupHandler;
+    theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+    setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA2);
+    // fChannelGroupHandler = new SSA2ChannelGroupHandler();
+    // fChannelGroupHandler->setChannelGroupParameters(16, 2);
 }
 
 void SSAPhysics::Running()
@@ -53,7 +56,7 @@ void SSAPhysics::sendBoardData(BoardContainer* const& cBoard)
 {
     auto theOccStream = prepareChannelContainerStreamer<Occupancy>("Occ");
 
-    if(fStreamerEnabled == true) { theOccStream.streamAndSendBoard(fOccContainer.at(cBoard->getIndex()), fNetworkStreamer); }
+    if(fDQMStreamerEnabled == true) { theOccStream.streamAndSendBoard(fOccContainer.at(cBoard->getIndex()), fDQMStreamer); }
 }
 
 void SSAPhysics::Stop()
@@ -166,7 +169,10 @@ void SSAPhysics::fillDataContainer(BoardContainer* const& cBoard)
     // # Fill containers #
     // ###################
     const std::vector<Event*>& events = SystemController::GetEvents();
-    for(const auto& event: events) { event->fillDataContainer(fOccContainer.at(cBoard->getIndex()), fChannelGroupHandler->allChannelGroup()); }
+    // Assuming all chip will have all channels enabled:
+    auto allChannelGroup = getChannelGroup(-1);
+
+    for(const auto& event: events) { event->fillDataContainer(fOccContainer.at(cBoard->getIndex()), allChannelGroup); }
 }
 
 void SSAPhysics::chipErrorReport() {}

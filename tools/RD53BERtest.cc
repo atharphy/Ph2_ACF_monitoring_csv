@@ -46,8 +46,8 @@ void BERtest::sendData()
 {
     auto theStream = prepareChipContainerStreamer<EmptyContainer, double>("BERtest");
 
-    if(fStreamerEnabled == true)
-        for(const auto cBoard: theBERtestContainer) theStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+    if(fDQMStreamerEnabled == true)
+        for(const auto cBoard: theBERtestContainer) theStream.streamAndSendBoard(cBoard, fDQMStreamer);
 }
 
 void BERtest::Stop()
@@ -99,7 +99,7 @@ void BERtest::run()
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                 {
-                    flpGBTInterface->StartPRBSpattern(cOpticalGroup->flpGBT);
+                    static_cast<D19clpGBTInterface*>(flpGBTInterface)->StartPRBSpattern(cOpticalGroup->flpGBT);
 
                     auto value = fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, cHybrid->getId(), 0, frontendSpeed); // @TMP@
                     theBERtestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(0)->getSummary<double>() = value;
@@ -108,7 +108,7 @@ void BERtest::run()
                               << "]: " << BOLDYELLOW << (value == 0 ? "PASSED" : "NOT PASSED") << RESET;
 
                     static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Downlink(cBoard);
-                    flpGBTInterface->StopPRBSpattern(cOpticalGroup->flpGBT);
+                    static_cast<D19clpGBTInterface*>(flpGBTInterface)->StopPRBSpattern(cOpticalGroup->flpGBT);
                 }
         }
     else
@@ -123,7 +123,7 @@ void BERtest::run()
                         uint8_t cGroup   = static_cast<RD53*>(cChip)->getRxGroup();
                         uint8_t cChannel = static_cast<RD53*>(cChip)->getRxChannel();
 
-                        fReadoutChipInterface->StartPRBSpattern(cChip);
+                        static_cast<RD53Interface*>(this->fReadoutChipInterface)->StartPRBSpattern(cChip);
 
                         auto value =
                             (chain2test == 0 ? fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, cHybrid->getId(), static_cast<RD53*>(cChip)->getChipLane(), frontendSpeed)
@@ -133,9 +133,9 @@ void BERtest::run()
                         LOG(INFO) << GREEN << "BER test for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                                   << +cChip->getId() << RESET << GREEN << "]: " << BOLDYELLOW << (value == 0 ? "PASSED" : "NOT PASSED") << RESET;
 
-                        fReadoutChipInterface->StopPRBSpattern(cChip);
+                        static_cast<RD53Interface*>(this->fReadoutChipInterface)->StopPRBSpattern(cChip);
                         static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Downlink(cBoard);
-                        fReadoutChipInterface->StopPRBSpattern(cChip);
+                        static_cast<RD53Interface*>(this->fReadoutChipInterface)->StopPRBSpattern(cChip);
                     }
         }
 }

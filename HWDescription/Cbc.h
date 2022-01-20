@@ -78,7 +78,7 @@ class Cbc : public ReadoutChip
     {
         if(dacName.find("MaskChannel-", 0, 12) != std::string::npos)
             return 1;
-        else if(dacName == "VCth")
+        else if(dacName == "VCth" || dacName == "Threshold")
             return 10;
         else if(dacName == "VCth2")
             return 2;

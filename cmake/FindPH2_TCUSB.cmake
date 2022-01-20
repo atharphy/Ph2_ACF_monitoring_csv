@@ -6,16 +6,15 @@ if(PH2_TCUSB_SOURCE_DIR)
 
          find_library(PH2_TCUSB_LIBRARY_DIRS
          NAMES
-         lib/libcmsph2_tcusb_utils.so
+         libcmsph2_tcusb.so
+         libcmsph2_tcusb_utils.so
          PATHS
-         ${PH2_TCUSB_SOURCE_DIR}
+         ${PH2_TCUSB_SOURCE_DIR}/../lib
          )
 
          #strip away the path
          get_filename_component(PH2_TCUSB_LIBRARY_DIRS "${PH2_TCUSB_LIBRARY_DIRS}" PATH)
-         #strip again to get the path to the Ph2_USBInstDriver directory from the root of the FS
-         #get_filename_component(PH2_TCUSB_SOURCE_DIR "${PH2_TCUSB_LIBRARY_DIRS}" PATH)
-
+         
          set(PH2_TCUSB_INCLUDE_DIRS
              ${PH2_TCUSB_SOURCE_DIR})
 

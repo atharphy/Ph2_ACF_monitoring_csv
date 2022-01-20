@@ -21,49 +21,106 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-CbcInterface::CbcInterface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterface(pBoardMap) { fActiveChannels.reset(); }
+CbcInterface::CbcInterface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterface(pBoardMap)
+{
+    fActiveChannels.reset();
+    resetPageMap();
+}
 
 CbcInterface::~CbcInterface() {}
 
 bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerifLoop, uint32_t pBlockSize)
 {
-    // std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
-    // std::cout << __PRETTY_FUNCTION__ << "!!!!!!!!!!!!!!!!" << std::endl;
-    // first, identify the correct BeBoardFWInterface
+    fTrackRegisters = false;
+    std::stringstream cOutput;
     setBoard(pCbc->getBeBoardId());
+    pCbc->printChipType(cOutput);
+    LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pCbc->getId() << "] oh Hybrid" << +pCbc->getHybridId() << RESET;
 
-    // vector to encode all the registers into
-    std::vector<uint32_t> cVec;
-
+    bool cSkipLocalRegs = false;
     // Deal with the ChipRegItems and encode them
-
-    ChipRegMap cCbcRegMap = pCbc->getRegMap();
-
-    for(auto& cRegItem: cCbcRegMap)
+    bool                                             cSuccess   = false;
+    ChipRegMap                                       cCbcRegMap = pCbc->getRegMap();
+    std::vector<std::pair<std::string, ChipRegItem>> cRegList;
+    cRegList.clear();
+    for(auto cMapItem: cCbcRegMap)
     {
-        // this is to protect from readback errors during Configure as the BandgapFuse and ChipIDFuse registers should
-        // be e-fused in the CBC3
-        if(cRegItem.first != "BandgapFuse" || cRegItem.first.find("ChipIDFuse") == std::string::npos)
+        std::pair<std::string, ChipRegItem> cItem;
+        cItem.first  = cMapItem.first;
+        cItem.second = cMapItem.second;
+        cRegList.push_back(cItem);
+    }
+    struct
+    {
+        bool operator()(std::pair<std::string, ChipRegItem> a, std::pair<std::string, ChipRegItem> b) const { return a.second.fPage > b.second.fPage; }
+    } customPageDec;
+
+    struct
+    {
+        bool operator()(std::pair<std::string, ChipRegItem> a, std::pair<std::string, ChipRegItem> b) const { return a.second.fPage < b.second.fPage; }
+    } customPageInc;
+
+    // sort register map
+    bool cSortPageInc = true;
+    if(cSortPageInc)
+        std::sort(cRegList.begin(), cRegList.end(), customPageInc); // all to page0 then page 1
+    else
+        std::sort(cRegList.begin(), cRegList.end(), customPageDec); // all to page1 then page 0
+    struct
+    {
+        bool operator()(std::pair<std::string, ChipRegItem> a, std::pair<std::string, ChipRegItem> b) const { return a.second.fAddress < b.second.fAddress; }
+    } customAddressInc;
+    std::sort(cRegList.begin(), cRegList.end(), customAddressInc); // sort by address - for convenience later
+    if(!lpGBTFound())
+    {
+        // vector to encode all the registers into
+        std::vector<uint32_t> cVec;
+        for(auto& cRegItem: cRegList)
         {
+            // this is to protect from readback errors during Configure as the BandgapFuse and ChipIDFuse registers should
+            // be e-fused in the CBC3
+            if(cRegItem.first.find("Channel") != std::string::npos && cSkipLocalRegs) continue;
+            if(cRegItem.first.find("BandgapFuse") != std::string::npos) continue;
+            if(cRegItem.first.find("ChipIDFuse") != std::string::npos) continue;
+
             // if( cRegItem.second.fPage == 0 )
-            // LOG (DEBUG) << BOLDBLUE << "Writing 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " <<
-            // cRegItem.first <<  " : register address 0x" << std::hex << +cRegItem.second.fAddress << std::dec << " on
-            // page " << +cRegItem.second.fPage <<  RESET;
-            fBoardFW->EncodeReg(cRegItem.second, pCbc->getHybridId(), pCbc->getId(), cVec, pVerifLoop, true);
+            //     LOG (DEBUG) << BOLDBLUE << "Writing 0x" << std::hex << +cRegItem.second.fValue << std::dec << " to " <<
+            //         cRegItem.first <<  " : register address 0x" << std::hex << +cRegItem.second.fAddress << std::dec
+            //         << " on page " << +cRegItem.second.fPage <<  RESET;
+            fBoardFW->EncodeReg(cRegItem.second, pCbc, cVec, pVerifLoop, true);
 #ifdef COUNT_FLAG
             fRegisterCount++;
 #endif
         }
-    }
 
-    // write the registers, the answer will be in the same cVec
-    // the number of times the write operation has been attempted is given by cWriteAttempts
-    uint8_t cWriteAttempts = 0;
-    bool    cSuccess       = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
+        // write the registers, the answer will be in the same cVec
+        // the number of times the write operation has been attempted is given by cWriteAttempts
+        uint8_t cWriteAttempts = 0;
+        cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
 #ifdef COUNT_FLAG
-    fTransactionCount++;
+        fTransactionCount++;
 #endif
+    }
+    else
+    {
+        std::vector<std::pair<std::string, uint16_t>> cRegsToWrite;
+        cRegsToWrite.clear();
+        for(auto& cRegItem: cRegList)
+        {
+            // this is to protect from readback errors during Configure as the BandgapFuse and ChipIDFuse registers should
+            // be e-fused in the CBC3
+            if(cRegItem.first.find("Channel") != std::string::npos && cSkipLocalRegs) continue;
+            if(cRegItem.first.find("BandgapFuse") != std::string::npos) continue;
+            if(cRegItem.first.find("ChipIDFuse") != std::string::npos) continue;
 
+            std::pair<std::string, uint16_t> cRegToWrite;
+            cRegToWrite.first  = cRegItem.first;
+            cRegToWrite.second = cRegItem.second.fValue;
+            cRegsToWrite.push_back(cRegToWrite);
+        }
+        cSuccess = this->WriteChipMultReg(pCbc, cRegsToWrite, pVerifLoop);
+    }
+    fTrackRegisters = true;
     return cSuccess;
 }
 
@@ -71,26 +128,9 @@ bool CbcInterface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerifL
 
 bool CbcInterface::setInjectionAmplitude(ReadoutChip* pChip, uint8_t injectionAmplitude, bool pVerifLoop) { return this->WriteChipReg(pChip, "TestPulsePotNodeSel", injectionAmplitude, pVerifLoop); }
 
-bool CbcInterface::setInjectionSchema(ReadoutChip* pCbc, const ChannelGroupBase* group, bool pVerifLoop)
+bool CbcInterface::setInjectionSchema(ReadoutChip* pCbc, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop)
 {
-    // std::bitset<NCHANNELS> baseInjectionChannel (std::string(CBC_CHANNEL_GROUP_BITSET));
-    // uint8_t channelGroup = 0;
-    // for(; channelGroup<=8; ++channelGroup)
-    // {
-    //     if(static_cast<const ChannelGroup<NCHANNELS>*>(group)->getBitset() == baseInjectionChannel)
-    //     {
-    //         break;
-    //     }
-    //     baseInjectionChannel = baseInjectionChannel<<2;
-    // }
-    // if(channelGroup == 8)
-    //     throw Exception( "bool CbcInterface::setInjectionSchema (ReadoutChip* pCbc, const ChannelGroupBase *group,
-    //     bool pVerifLoop): CBC is not able to inject the channel pattern" );
-
-    // uint8_t groupLookupTable[8] = {0x0, 0x4, 0x2, 0x6, 0x1, 0x5, 0x3, 0x7};
-    // return this->WriteChipReg ( pCbc, "TestPulseGroup", groupLookupTable[channelGroup], pVerifLoop );
-
-    std::bitset<NCHANNELS> cBitset = std::bitset<NCHANNELS>(static_cast<const ChannelGroup<NCHANNELS>*>(group)->getBitset());
+    std::bitset<NCHANNELS> cBitset = std::bitset<NCHANNELS>(std::static_pointer_cast<const ChannelGroup<NCHANNELS>>(group)->getBitset());
     if(cBitset.count() == 0) // no mask set... so do nothing
         return true;
     // LOG (DEBUG) << BOLDBLUE << "Setting injection scheme for " << std::bitset<NCHANNELS>(cBitset) << RESET;
@@ -109,10 +149,10 @@ bool CbcInterface::setInjectionSchema(ReadoutChip* pCbc, const ChannelGroupBase*
     return this->WriteChipReg(pCbc, "TestPulseGroup", cGroupId, pVerifLoop);
 }
 
-bool CbcInterface::maskChannelsGroup(ReadoutChip* pCbc, const ChannelGroupBase* group, bool pVerifLoop)
+bool CbcInterface::maskChannelGroup(ReadoutChip* pCbc, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop)
 {
-    const ChannelGroup<NCHANNELS>* originalMask = static_cast<const ChannelGroup<NCHANNELS>*>(pCbc->getChipOriginalMask());
-    const ChannelGroup<NCHANNELS>* groupToMask  = static_cast<const ChannelGroup<NCHANNELS>*>(group);
+    auto originalMask = std::static_pointer_cast<const ChannelGroup<NCHANNELS>>(pCbc->getChipOriginalMask());
+    auto groupToMask  = std::static_pointer_cast<const ChannelGroup<NCHANNELS>>(group);
     LOG(DEBUG) << BOLDBLUE << "\t... Applying mask to CBC" << +pCbc->getId() << " with " << group->getNumberOfEnabledChannels()
                << " enabled channels\t... mask : " << std::bitset<NCHANNELS>(groupToMask->getBitset()) << RESET;
 
@@ -130,37 +170,37 @@ bool CbcInterface::maskChannelsGroup(ReadoutChip* pCbc, const ChannelGroupBase* 
     return WriteChipMultReg(pCbc, cRegVec, pVerifLoop);
 }
 
-bool CbcInterface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const ChannelGroupBase* group, bool mask, bool inject, bool pVerifLoop)
+bool CbcInterface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop)
 {
     bool success = true;
-    if(mask) success &= maskChannelsGroup(pChip, group, pVerifLoop);
+    if(mask) success &= maskChannelGroup(pChip, group, pVerifLoop);
     if(inject) success &= setInjectionSchema(pChip, group, pVerifLoop);
     return success;
 }
 
 bool CbcInterface::ConfigureChipOriginalMask(ReadoutChip* pCbc, bool pVerifLoop, uint32_t pBlockSize)
 {
-    ChannelGroup<NCHANNELS> allChannelEnabledGroup;
-    return CbcInterface::maskChannelsGroup(pCbc, &allChannelEnabledGroup, pVerifLoop);
+    auto allChannelEnabledGroup = std::make_shared<ChannelGroup<NCHANNELS, 1>>();
+    return CbcInterface::maskChannelGroup(pCbc, allChannelEnabledGroup, pVerifLoop);
 }
 
 std::vector<uint8_t> CbcInterface::createHitListFromStubs(uint8_t pSeed, bool pSeedLayer)
 {
     std::vector<uint8_t> cChannelList(0);
     uint32_t             cSeedStrip = std::floor(pSeed / 2.0); // counting from 1
-    LOG(DEBUG) << BOLDMAGENTA << "Seed of " << +pSeed << " means first hit is in strip " << +cSeedStrip << RESET;
+    // LOG(DEBUG) << BOLDMAGENTA << "Seed of " << +pSeed << " means first hit is in strip " << +cSeedStrip << RESET;
     size_t cNumberOfChannels = 1 + (pSeed % 2 != 0);
     for(size_t cIndex = 0; cIndex < cNumberOfChannels; cIndex++)
     {
         uint32_t cSeedChannel = 2 * (cSeedStrip - 1) + !pSeedLayer + 2 * cIndex;
-        LOG(DEBUG) << BOLDMAGENTA << ".. need to unmask channel " << +cSeedChannel << RESET;
+        // LOG(DEBUG) << BOLDMAGENTA << ".. need to unmask channel " << +cSeedChannel << RESET;
         cChannelList.push_back(static_cast<uint32_t>(cSeedChannel));
     }
     return cChannelList;
 }
 std::vector<uint8_t> CbcInterface::stubInjectionPattern(uint8_t pStubAddress, int pStubBend, bool pLayerSwap)
 {
-    LOG(DEBUG) << BOLDBLUE << "Injecting... stub in position " << +pStubAddress << " [half strips] with a bend of " << pStubBend << " [half strips]." << RESET;
+    // LOG(DEBUG) << BOLDBLUE << "Injecting... stub in position " << +pStubAddress << " [half strips] with a bend of " << pStubBend << " [half strips]." << RESET;
     std::vector<uint8_t> cSeedHits = createHitListFromStubs(pStubAddress, !pLayerSwap);
     // correlation layer
     uint8_t              cCorrelated     = pStubAddress + pStubBend; // start counting strips from 0
@@ -174,43 +214,87 @@ std::vector<uint8_t> CbcInterface::stubInjectionPattern(ReadoutChip* pChip, uint
     bool cLayerSwap = (this->ReadChipReg(pChip, "LayerSwap") == 1);
     return stubInjectionPattern(pStubAddress, pStubBend, cLayerSwap);
 }
-bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<uint8_t> pStubAddresses, std::vector<int> pStubBends, bool pUseNoise)
+bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<uint8_t> pStubAddresses, std::vector<int> pStubBends, bool pUseNoise, bool pUseOffsets, uint8_t pAllOff)
 {
     setBoard(pCbc->getBeBoardId());
-    if(pUseNoise)
-    {
-        uint16_t cVcth = 1023;
-        // LOG (DEBUG) << BOLDBLUE << "Injecting stubs in CBC" << +pCbc->getId() << RESET;
-        // LOG (DEBUG) << BOLDBLUE << "Starting by lowering threshold on this CBC and masking all channels." << RESET;
-        this->WriteChipReg(pCbc, "VCth", cVcth);
-    }
+
     ChannelGroup<NCHANNELS, 1> cChannelMask;
     cChannelMask.disableAllChannels();
+    std::vector<uint8_t> cActiveChannels(0);
+    std::vector<uint8_t> cDisabledChannels(0);
     for(size_t cIndex = 0; cIndex < pStubAddresses.size(); cIndex += 1)
     {
         std::vector<uint8_t> cPattern = this->stubInjectionPattern(pCbc, pStubAddresses[cIndex], pStubBends[cIndex]);
-        for(auto cChannel: cPattern) cChannelMask.enableChannel(cChannel);
+        // for(auto cChannel: cPattern) cChannelMask.enableChannel(cChannel);
+        for(size_t cChnl = 0; cChnl < pCbc->size(); cChnl++)
+        {
+            if(std::find(cPattern.begin(), cPattern.end(), cChnl) != cPattern.end())
+            {
+                cActiveChannels.push_back(cChnl);
+                cChannelMask.enableChannel(cChnl);
+            }
+            else
+                cDisabledChannels.push_back(cChnl);
+        }
     }
-    if(!pUseNoise)
+    if(!pUseNoise) // with TP
     {
         uint16_t               cFirstHit = 0;
         std::bitset<NCHANNELS> cBitset   = std::bitset<NCHANNELS>(cChannelMask.getBitset());
-        LOG(DEBUG) << BOLDMAGENTA << "Bitset for this mask is " << cBitset << RESET;
+        // LOG(DEBUG) << BOLDMAGENTA << "Bitset for this mask is " << cBitset << RESET;
         for(cFirstHit = 0; cFirstHit < NCHANNELS; cFirstHit++)
         {
             if(cBitset[cFirstHit] != 0) break;
         }
         uint8_t cGroupId = std::floor((cFirstHit % 16) / 2);
-        LOG(INFO) << BOLDBLUE << "First unmasked channel in position " << +cFirstHit << " --- i.e. in TP group " << +cGroupId << RESET;
+        // LOG(DEBUG) << BOLDBLUE << "First unmasked channel in position " << +cFirstHit << " --- i.e. in TP group " << +cGroupId << RESET;
         if(cGroupId > 7)
             throw Exception("bool CbcInterface::setInjectionSchema (ReadoutChip* pCbc, const ChannelGroupBase *group, "
                             "bool pVerifLoop): CBC is not able to inject the channel pattern");
         // write register which selects group
         this->WriteChipReg(pCbc, "TestPulseGroup", cGroupId);
+        // write registers which enable injection
+        this->enableInjection(pCbc, true); // enable injection
+        // write register which sets TP amplitude
+        // this->setInjectionAmplitude(pCbc, 0xFF - 100); // fix injection amplitude
+        return this->maskChannelGroup(pCbc, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask)));
     }
-    return this->maskChannelsGroup(pCbc, &cChannelMask);
+    else // with noise
+    {
+        // assuming global chip threshold
+        // is already at the pedestal
+        if(pUseOffsets)
+        {
+            uint8_t cAllOff = pAllOff;
+            uint8_t cAllOn  = 0x00;
+            // use offsets on individual disc. to shift output to all 1 or all 0
+            // always off for disabled channels
+            std::vector<std::pair<std::string, uint16_t>> cVecReq;
+            for(auto cDisabledChannel: cDisabledChannels)
+            {
+                char cDacName[20];
+                sprintf(cDacName, "Channel%03d", cDisabledChannel + 1);
+                cVecReq.push_back({cDacName, cAllOff});
+            }
+            // always on for active channels
+            for(auto cActiveChannel: cActiveChannels)
+            {
+                char cDacName[20];
+                sprintf(cDacName, "Channel%03d", cActiveChannel + 1);
+                cVecReq.push_back({cDacName, cAllOn});
+            }
+            return this->WriteChipMultReg(pCbc, cVecReq, true);
+        }
+        else
+        {
+            uint16_t cVcth = 1023;
+            this->WriteChipReg(pCbc, "VCth", cVcth);
+            return this->maskChannelGroup(pCbc, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask)));
+        }
+    }
 }
-std::vector<uint8_t> CbcInterface::readLUT(ReadoutChip* pCbc)
+
+std::vector<uint8_t> CbcInterface::readLUT(ReadoutChip* pCbc, uint8_t pMode)
 {
     setBoard(pCbc->getBeBoardId());
     std::vector<uint8_t> cBendCodes(30, 0); // bend registers are 0 -- 14. Each register encodes 2 codes
@@ -220,8 +304,8 @@ std::vector<uint8_t> CbcInterface::readLUT(ReadoutChip* pCbc)
         char         cBuffer[20];
         sprintf(cBuffer, "Bend%d", static_cast<int>(cIndex));
         std::string cRegName(cBuffer, cLength);
-        LOG(DEBUG) << BOLDBLUE << "Reading bend register " << cRegName << RESET;
-        uint16_t cValue            = this->ReadChipReg(pCbc, cRegName);
+        // LOG(DEBUG) << BOLDBLUE << "Reading bend register " << cRegName << RESET;
+        uint16_t cValue            = (pMode == 0) ? this->ReadChipReg(pCbc, cRegName) : pCbc->getReg(cRegName);
         cBendCodes[cIndex * 2]     = (cValue & 0x0F);
         cBendCodes[cIndex * 2 + 1] = (cValue & 0xF0) >> 4;
     }
@@ -234,21 +318,30 @@ uint16_t CbcInterface::readErrorRegister(ReadoutChip* pCbc)
     ChipRegItem cRegItem;
     cRegItem.fPage    = 0x01;
     cRegItem.fAddress = 0x1D;
-
-    setBoard(pCbc->getBeBoardId());
-    std::vector<uint32_t> cVecReq;
-    fBoardFW->EncodeReg(cRegItem, pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
-    fBoardFW->ReadChipBlockReg(cVecReq);
-    // bools to find the values of failed and read
-    bool    cFailed = false;
-    bool    cRead;
-    uint8_t cChipId;
-    fBoardFW->DecodeReg(cRegItem, cChipId, cVecReq[0], cRead, cFailed);
-    std::pair<bool, uint16_t> cReadBack = std::make_pair(!cFailed, cRegItem.fValue);
-    if(cReadBack.first)
-        return cReadBack.second;
+    uint8_t cErrorReg = 0xFF;
+    if(!lpGBTFound())
+    {
+        setBoard(pCbc->getBeBoardId());
+        std::vector<uint32_t> cVecReq;
+        // fBoardFW->EncodeReg(cRegItem, pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
+        fBoardFW->EncodeReg(cRegItem, pCbc, cVecReq, true, false);
+        fBoardFW->ReadChipBlockReg(cVecReq);
+        // bools to find the values of failed and read
+        bool    cFailed = false;
+        bool    cRead;
+        uint8_t cChipId;
+        fBoardFW->DecodeReg(cRegItem, cChipId, cVecReq[0], cRead, cFailed);
+        std::pair<bool, uint16_t> cReadBack = std::make_pair(!cFailed, cRegItem.fValue);
+        if(cReadBack.first) cErrorReg = cReadBack.second;
+    }
     else
-        return 0xFF;
+    {
+        std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+        bool                                  cVerifLoop = true;
+        bool                                  cSuccess   = ConfigurePage(pCbc, cRegItem.fPage, cVerifLoop);
+        if(cSuccess) { cErrorReg = fBoardFW->ReadFERegister(pCbc, cRegItem.fAddress); }
+    }
+    return cErrorReg;
 }
 
 bool CbcInterface::selectLogicMode(ReadoutChip* pCbc, std::string pModeSelect, bool pForHits, bool pForStubs, bool pVerifLoop)
@@ -316,12 +409,13 @@ bool CbcInterface::MaskAllChannels(ReadoutChip* pCbc, bool mask, bool pVerifLoop
     else
         cChannelMask.enableAllChannels();
     // LOG (DEBUG)  << BOLDBLUE << "Mask to be set is " << std::bitset<254>( cChannelMask.getBitset() ) << RESET;
-    return this->maskChannelsGroup(pCbc, &cChannelMask, pVerifLoop);
+    return this->maskChannelGroup(pCbc, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask)), pVerifLoop);
 }
 
 bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t dacValue, bool pVerifLoop)
 {
-    if(dacName == "VCth")
+    LOG(DEBUG) << BOLDYELLOW << "CbcInterface::WriteChipReg " << dacName << RESET;
+    if(dacName == "VCth" || dacName == "Threshold")
     {
         if(pCbc->getFrontEndType() == FrontEndType::CBC3)
         {
@@ -341,6 +435,12 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
         else
             LOG(ERROR) << "Not a valid chip type!";
     }
+    else if(dacName == "ClusterCut")
+    {
+        uint8_t cRegValue = ReadChipSingleReg(pCbc, "LayerSwap&CluWidth");
+        uint8_t cValue    = (cRegValue & 0xF8) | dacValue;
+        return WriteChipSingleReg(pCbc, "LayerSwap&CluWidth", cValue, pVerifLoop);
+    }
     else if(dacName == "TriggerLatency")
     {
         if(pCbc->getFrontEndType() == FrontEndType::CBC3)
@@ -355,8 +455,8 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
                 uint16_t cLat2 = (pCbc->getReg("FeCtrl&TrgLat2") & 0xFE) | ((dacValue & 0x0100) >> 8);
                 cRegVec.emplace_back("TriggerLatency1", cLat1);
                 cRegVec.emplace_back("FeCtrl&TrgLat2", cLat2);
-                LOG(DEBUG) << BOLDBLUE << "Setting latency on " << +pCbc->getId() << " to " << +dacValue << " 0x" << std::hex << +cLat1 << std::dec << " --- 0x" << std::hex << +cLat2 << std::dec
-                           << RESET;
+                // LOG(INFO) << BOLDBLUE << "Setting latency on " << +pCbc->getId() << " to " << +dacValue << " 0x" << std::hex << +cLat1 << std::dec << " --- 0x" << std::hex << +cLat2 << std::dec
+                //            << " for a latency vale of " << dacValue << RESET;
                 return WriteChipMultReg(pCbc, cRegVec, pVerifLoop);
             }
         }
@@ -373,8 +473,8 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
         std::reverse(cSelect.begin(), cSelect.end());
         std::bitset<5> cTestPulseDelay(cSelect);
         uint8_t        cRegValue = (cGroup | (static_cast<uint8_t>(cTestPulseDelay.to_ulong()) << 3));
-        LOG(DEBUG) << BOLDBLUE << "Setting test pulse delay for goup [rev.] " << std::bitset<3>(cGroup) << " to " << +dacValue << " --  register to  0x" << std::bitset<8>(+cRegValue) << std::dec
-                   << RESET;
+        // LOG(DEBUG) << BOLDBLUE << "Setting test pulse delay for goup [rev.] " << std::bitset<3>(cGroup) << " to " << +dacValue << " --  register to  0x" << std::bitset<8>(+cRegValue) << std::dec
+        //            << RESET;
         return WriteChipSingleReg(pCbc, "TestPulseDel&ChanGroup", cRegValue, pVerifLoop);
     }
     else if(dacName == "TestPulseGroup")
@@ -387,8 +487,8 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
         std::reverse(cSelect.begin(), cSelect.end());
         std::bitset<3> cTestPulseGroup(cSelect);
         uint8_t        cRegValue = (cDelay | (static_cast<uint8_t>(cTestPulseGroup.to_ulong())));
-        LOG(DEBUG) << BOLDBLUE << "Setting test pulse register on CBC" << +pCbc->getId() << " to select group " << +dacValue << " --  register to  0x" << std::bitset<8>(+cRegValue) << std::dec
-                   << RESET;
+        // LOG(DEBUG) << BOLDBLUE << "Setting test pulse register on CBC" << +pCbc->getId() << " to select group " << +dacValue << " --  register to  0x" << std::bitset<8>(+cRegValue) << std::dec
+        //            << RESET;
         return WriteChipSingleReg(pCbc, "TestPulseDel&ChanGroup", cRegValue, pVerifLoop);
     }
     else if(dacName == "AmuxOutput")
@@ -396,9 +496,11 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
         uint8_t cValue    = pCbc->getReg("MiscTestPulseCtrl&AnalogMux");
         uint8_t cRegValue = (cValue & 0xE0) | dacValue;
         LOG(DEBUG) << BOLDBLUE << "Setting AmuxOutput on Chip" << +pCbc->getId() << " to " << +dacValue << " - register set to : 0x" << std::hex << +cRegValue << std::dec << RESET;
-        return WriteChipSingleReg(pCbc, "MiscTestPulseCtrl&AnalogMux", cRegValue, pVerifLoop);
+        bool cSuccess = WriteChipSingleReg(pCbc, "MiscTestPulseCtrl&AnalogMux", cRegValue, pVerifLoop);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        return cSuccess;
     }
-    else if(dacName == "TestPulse")
+    else if(dacName == "TestPulse" || dacName == "InjectedCharge")
     {
         uint8_t cValue    = pCbc->getReg("MiscTestPulseCtrl&AnalogMux");
         uint8_t cRegValue = (cValue & 0xBF) | (dacValue << 6);
@@ -408,8 +510,8 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
     {
         uint8_t cValue    = pCbc->getReg("40MhzClk&Or254");
         uint8_t cRegValue = (cValue & 0xBf) | (dacValue << 6);
-        LOG(DEBUG) << BOLDBLUE << "Setting HITOr on Chip" << +pCbc->getId() << " from 0x" << std::hex << +cValue << std::dec << " to " << +dacValue << " - register set to : 0x" << std::hex
-                   << +cRegValue << std::dec << RESET;
+        // LOG(DEBUG) << BOLDBLUE << "Setting HITOr on Chip" << +pCbc->getId() << " from 0x" << std::hex << +cValue << std::dec << " to " << +dacValue << " - register set to : 0x" << std::hex
+        //            << +cRegValue << std::dec << RESET;
         return WriteChipSingleReg(pCbc, "40MhzClk&Or254", cRegValue, pVerifLoop);
     }
     else if(dacName == "DLL")
@@ -421,7 +523,8 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
         std::reverse(cSelect.begin(), cSelect.end());
         std::bitset<5> cClockDelay(cSelect);
         uint8_t        cNewRegValue = ((cOriginalValue & 0xE0) | static_cast<uint8_t>(cClockDelay.to_ulong()));
-        LOG(DEBUG) << BOLDBLUE << "Setting clock delay on Chip" << +pCbc->getId() << " to " << std::bitset<5>(+dacValue) << " - register set to : 0x" << std::hex << +cNewRegValue << std::dec << RESET;
+        // LOG(DEBUG) << BOLDBLUE << "Setting clock delay on Chip" << +pCbc->getId() << " to " << std::bitset<5>(+dacValue) << " - register set to : 0x" << std::hex << +cNewRegValue << std::dec <<
+        // RESET;
         return WriteChipSingleReg(pCbc, "40MhzClk&Or254", cNewRegValue, pVerifLoop);
     }
     else if(dacName == "PtCut")
@@ -434,10 +537,10 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
     {
         uint8_t cValue    = pCbc->getReg("HIP&TestMode");
         uint8_t cRegValue = (cValue & 0xFE) | !dacValue;
-        if(dacValue == 1)
-            LOG(DEBUG) << BOLDBLUE << "Enabling SLVS output on CBCs by setting register to " << std::bitset<8>(cRegValue) << RESET;
-        else
-            LOG(DEBUG) << BOLDBLUE << "Disabling SLVS output on CBCs by setting register to " << std::bitset<8>(cRegValue) << RESET;
+        // if(dacValue == 1)
+        //     LOG(DEBUG) << BOLDBLUE << "Enabling SLVS output on CBCs by setting register to " << std::bitset<8>(cRegValue) << RESET;
+        // else
+        //     LOG(DEBUG) << BOLDBLUE << "Disabling SLVS output on CBCs by setting register to " << std::bitset<8>(cRegValue) << RESET;
         return WriteChipSingleReg(pCbc, "HIP&TestMode", cRegValue, pVerifLoop);
     }
     else
@@ -449,35 +552,103 @@ bool CbcInterface::WriteChipReg(Chip* pCbc, const std::string& dacName, uint16_t
     }
     return false;
 }
+bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerifLoop)
+{
+    // only written for optical .. electrical readout the fw takes care of this
+    bool cSuccess = !lpGBTFound();
+    if(cSuccess) return cSuccess;
 
+    // address in map depends on board id, hybrid id, chip id
+    uint32_t cAddress     = (pCbc->getBeBoardId() << 16) | (pCbc->getHybridId() << 8) | pCbc->getId();
+    auto     cIter        = fPageMap.find(cAddress);
+    bool     cMapWasEmpty = false;
+    if(cIter == fPageMap.end())
+    {
+        auto        cValue = ReadChipSingleReg(pCbc, "FeCtrl&TrgLat2");
+        ChipRegMask cMask;
+        cMask.fBitShift      = 7;
+        cMask.fNbits         = 1;
+        uint8_t cDefaultPage = pCbc->getRegBits("FeCtrl&TrgLat2", cMask);
+        LOG(DEBUG) << BOLDMAGENTA << "Default page on CBC" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " is " << +cDefaultPage << " register value is 0x" << std::hex << +cValue
+                   << std::dec << RESET;
+        fPageMap.insert(std::make_pair(cAddress, cDefaultPage));
+        cMapWasEmpty = true;
+    }
+    cIter         = fPageMap.find(cAddress);
+    uint8_t cPage = cIter->second;
+    cSuccess      = (cPage == pPage);
+    // don't need to change page
+    LOG(DEBUG) << BOLDBLUE << "\t...No need to switch page on CBC#" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " current page " << +cPage << " page to write to is " << +pPage
+               << RESET;
+    if(cSuccess && !cMapWasEmpty) return true;
+
+    // switch page
+    LOG(DEBUG) << BOLDBLUE << "Switching page on CBC#" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " from page " << +cPage << " to page " << +pPage << RESET;
+    ChipRegItem cPageReg  = pCbc->getRegItem("FeCtrl&TrgLat2");
+    uint8_t     cRegValue = (cPageReg.fValue & 0x7F) | (pPage << 7);
+    // LOG (INFO) << BOLDBLUE << "\t...Current page is " << cPage << " want to write to page " << +pPage << " need to update page register on the CBC" << RESET;
+    // update page in map
+    cIter->second = pPage;
+    // write to page register in the CBC
+    cSuccess = fBoardFW->WriteFERegister(pCbc, cPageReg.fAddress, cRegValue, pVerifLoop);
+    // return false if this didn't work
+    if(!cSuccess) return cSuccess;
+    // update register value in map
+    pCbc->setReg("FeCtrl&TrgLat2", cRegValue);
+    return cSuccess;
+}
 bool CbcInterface::WriteChipSingleReg(Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
+    // first, identify the correct BeBoardFWInterface
+    setBoard(pCbc->getBeBoardId());
+    bool cSuccess = false;
+    bool cFound   = pCbc->getRegMap().find(pRegNode) != pCbc->getRegMap().end();
+    if(pRegNode.find("BandgapFuse") != std::string::npos)
+    {
+        LOG(ERROR) << "Cbc register  " << pRegNode << " is READ ONLY." << RESET;
+        return cSuccess;
+    }
     if(pValue > 0xFF)
     {
         LOG(ERROR) << "Cbc register are 8 bits, impossible to write " << pValue << " on registed " << pRegNode;
-        return false;
+        return cSuccess;
     }
+    if(!cFound) return cFound;
+    ChipRegItem cRegItem = pCbc->getRegMap().find(pRegNode)->second;
+    if(fTrackRegisters)
+    {
+        LOG(DEBUG) << BOLDYELLOW << "CbcInterface::WriteChipSingleReg updating " << pRegNode << RESET;
+        UpdateModifiedRegMap(pCbc, cRegItem.fAddress, cRegItem.fPage);
+    }
+    cRegItem.fValue = pValue & 0xFF;
+    if(!lpGBTFound())
+    {
+        // vector for transaction
+        std::vector<uint32_t> cVec;
 
-    // first, identify the correct BeBoardFWInterface
-    setBoard(pCbc->getBeBoardId());
-
-    // next, get the reg item
-    ChipRegItem cRegItem = pCbc->getRegItem(pRegNode);
-    cRegItem.fValue      = pValue & 0xFF;
-
-    // vector for transaction
-    std::vector<uint32_t> cVec;
-
-    // encode the reg specific to the FW, pVerifLoop decides if it should be read back, true means to write it
-    fBoardFW->EncodeReg(cRegItem, pCbc->getHybridId(), pCbc->getId(), cVec, pVerifLoop, true);
-    // write the registers, the answer will be in the same cVec
-    // the number of times the write operation has been attempted is given by cWriteAttempts
-    uint8_t cWriteAttempts = 0;
-    bool    cSuccess       = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
-
+        // encode the reg specific to the FW, pVerifLoop decides if it should be read back, true means to write it
+        fBoardFW->EncodeReg(cRegItem, pCbc, cVec, pVerifLoop, true);
+        // fBoardFW->EncodeReg(cRegItem, pCbc->getHybridId(), pCbc->getId(), cVec, pVerifLoop, true);
+        // write the registers, the answer will be in the same cVec
+        // the number of times the write operation has been attempted is given by cWriteAttempts
+        uint8_t cWriteAttempts = 0;
+        cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
+    }
+    else
+    {
+        std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+        cSuccess = (pRegNode == "FeCtrl&TrgLat2") ? true : ConfigurePage(pCbc, cRegItem.fPage, pVerifLoop);
+        if(!cSuccess) return cSuccess;
+        // read only  register
+        if(pRegNode.find("ChipIDFuse") != std::string::npos) { pVerifLoop = false; }
+        cSuccess = fBoardFW->WriteFERegister(pCbc, cRegItem.fAddress, pValue, pVerifLoop);
+    }
     // update the HWDescription object
-    if(cSuccess) pCbc->setReg(pRegNode, pValue);
-
+    if(cSuccess)
+    {
+        LOG(DEBUG) << BOLDMAGENTA << "CbcInterface::WriteChipSingleReg written 0x" << std::hex << +pValue << std::dec << " to register " << pRegNode << RESET;
+        pCbc->setReg(pRegNode, pValue);
+    }
 #ifdef COUNT_FLAG
     fRegisterCount++;
     fTransactionCount++;
@@ -485,50 +656,120 @@ bool CbcInterface::WriteChipSingleReg(Chip* pCbc, const std::string& pRegNode, u
 
     return cSuccess;
 }
-
+uint8_t CbcInterface::GetLastPage(Chip* pCbc)
+{
+    uint32_t cAddress = (pCbc->getBeBoardId() << 16) | (pCbc->getHybridId() << 8) | pCbc->getId();
+    auto     cIter    = fPageMap.find(cAddress);
+    if(cIter == fPageMap.end())
+    {
+        auto        cValue = ReadChipSingleReg(pCbc, "FeCtrl&TrgLat2");
+        ChipRegMask cMask;
+        cMask.fBitShift      = 7;
+        cMask.fNbits         = 1;
+        uint8_t cDefaultPage = pCbc->getRegBits("FeCtrl&TrgLat2", cMask);
+        LOG(DEBUG) << BOLDMAGENTA << "\t...Default page on CBC" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " is " << +cDefaultPage << " register value is 0x" << std::hex << +cValue
+                   << std::dec << RESET;
+        return cDefaultPage;
+    }
+    else
+        return cIter->second;
+}
 bool CbcInterface::WriteChipMultReg(Chip* pCbc, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop)
 {
-    // first, identify the correct BeBoardFWInterface
-    setBoard(pCbc->getBeBoardId());
-
-    std::vector<uint32_t> cVec;
-
-    // Deal with the ChipRegItems and encode them
-    ChipRegItem cRegItem;
-
-    for(const auto& cReg: pVecReq)
+    // remember to sort by page . that is helpful for speeding things up later
+    std::vector<std::pair<std::string, ChipRegItem>> cRegItems;
+    struct
     {
-        if(cReg.second > 0xFF)
+        bool operator()(std::pair<std::string, ChipRegItem> a, std::pair<std::string, ChipRegItem> b) const { return a.second.fPage < b.second.fPage; }
+    } customLessForPage;
+    struct
+    {
+        bool operator()(std::pair<std::string, ChipRegItem> a, std::pair<std::string, ChipRegItem> b) const { return a.second.fPage > b.second.fPage; }
+    } customGreaterForPage;
+    for(auto& cReg: pVecReq)
+    {
+        if(pCbc->getRegMap().find(cReg.first) == pCbc->getRegMap().end()) continue;
+        if(cReg.first.find("BandgapFuse") != std::string::npos) continue;
+        if(cReg.first.find("ChipIDFuse") != std::string::npos) continue;
+
+        ChipRegItem cRegister = pCbc->getRegItem(cReg.first);
+        cRegister.fValue      = cReg.second;
+        if(cRegister.fValue > 0xFF)
         {
-            LOG(ERROR) << "Cbc register are 8 bits, impossible to write " << cReg.second << " on registed " << cReg.first;
+            LOG(ERROR) << "Cbc register are 8 bits, impossible to write " << cRegister.fValue << " on register " << cReg.first;
             continue;
         }
-        cRegItem        = pCbc->getRegItem(cReg.first);
-        cRegItem.fValue = cReg.second;
-        fBoardFW->EncodeReg(cRegItem, pCbc->getHybridId(), pCbc->getId(), cVec, pVerifLoop, true);
-#ifdef COUNT_FLAG
-        fRegisterCount++;
-#endif
+
+        cRegItems.push_back(std::make_pair(cReg.first, cRegister));
     }
-
-    // write the registers, the answer will be in the same cVec
-    // the number of times the write operation has been attempted is given by cWriteAttempts
-    uint8_t cWriteAttempts = 0;
-    bool    cSuccess       = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
-#ifdef COUNT_FLAG
-    fTransactionCount++;
-#endif
-
-    // if the transaction is successfull, update the HWDescription object
-    if(cSuccess)
+    // address in map depends on board id, hybrid id, chip id
+    uint32_t cAddress = (pCbc->getBeBoardId() << 16) | (pCbc->getHybridId() << 8) | pCbc->getId();
+    auto     cIter    = fPageMap.find(cAddress);
+    if(cIter == fPageMap.end())
     {
-        for(const auto& cReg: pVecReq)
+        auto        cValue = ReadChipSingleReg(pCbc, "FeCtrl&TrgLat2");
+        ChipRegMask cMask;
+        cMask.fBitShift      = 7;
+        cMask.fNbits         = 1;
+        uint8_t cDefaultPage = pCbc->getRegBits("FeCtrl&TrgLat2", cMask);
+        LOG(DEBUG) << BOLDMAGENTA << "Default page on CBC" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " is " << +cDefaultPage << " register value is 0x" << std::hex << +cValue
+                   << std::dec << RESET;
+        fPageMap.insert(std::make_pair(cAddress, cDefaultPage));
+    }
+    cIter         = fPageMap.find(cAddress);
+    uint8_t cPage = cIter->second;
+    if(cPage == 1) std::sort(cRegItems.begin(), cRegItems.end(), customGreaterForPage); // all to page1 then page 0
+    if(cPage == 0) std::sort(cRegItems.begin(), cRegItems.end(), customLessForPage);    // all to page0 then page 1
+
+    // first, identify the correct BeBoardFWInterface
+    setBoard(pCbc->getBeBoardId());
+    bool cSuccess = false;
+    if(!lpGBTFound())
+    {
+        // Deal with the ChipRegItems and encode them
+        std::vector<uint32_t> cVec;
+        for(const auto& cRegItem: cRegItems)
         {
-            cRegItem = pCbc->getRegItem(cReg.first);
-            pCbc->setReg(cReg.first, cReg.second);
+            // update list of modified registers
+            if(fTrackRegisters)
+            {
+                LOG(DEBUG) << BOLDYELLOW << "CbcInterface::WriteChipMultReg updating " << cRegItem.first << RESET;
+                UpdateModifiedRegMap(pCbc, cRegItem.second.fAddress, cRegItem.second.fPage);
+            }
+            fBoardFW->EncodeReg(cRegItem.second, pCbc, cVec, pVerifLoop, true);
+#ifdef COUNT_FLAG
+            fRegisterCount++;
+#endif
+        }
+
+        // write the registers, the answer will be in the same cVec
+        // the number of times the write operation has been attempted is given by cWriteAttempts
+        uint8_t cWriteAttempts = 0;
+        if(cVec.size() == 0) return true;
+
+        cSuccess = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
+#ifdef COUNT_FLAG
+        fTransactionCount++;
+#endif
+        // if the transaction is successfull, update the HWDescription object
+        if(cSuccess)
+        {
+            for(const auto& cRegItem: cRegItems) { pCbc->setReg(cRegItem.first, cRegItem.second.fValue); }
         }
     }
+    else
+    {
+        for(const auto& cRegItem: cRegItems)
+        {
+            // update list of modified registers
+            // if( fTrackRegisters ) { LOG (DEBUG) << BOLDYELLOW << "CbcInterface::WriteChipMultReg updating " << cRegItem.first << RESET; UpdateModifiedRegMap(pCbc,  cRegItem.second.fAddress,
+            // cRegItem.second.fPage); }
 
+            bool cRegWriteSuccess = this->WriteChipSingleReg(pCbc, cRegItem.first, cRegItem.second.fValue, pVerifLoop);
+            if(!cRegWriteSuccess) LOG(INFO) << BOLDRED << "Failed to write to " << cRegItem.first << RESET;
+            cSuccess = cSuccess && cRegWriteSuccess;
+        }
+    }
     return cSuccess;
 }
 bool CbcInterface::WriteChipAllLocalReg(ReadoutChip* pCbc, const std::string& dacName, ChipContainer& localRegValues, bool pVerifLoop)
@@ -573,7 +814,7 @@ bool CbcInterface::WriteChipAllLocalReg(ReadoutChip* pCbc, const std::string& da
         }
     }
 
-    if(isMask) { return maskChannelsGroup(pCbc, &channelToEnable, pVerifLoop); }
+    if(isMask) { return maskChannelGroup(pCbc, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(channelToEnable)), pVerifLoop); }
     else
     {
         // uint8_t cWriteAttempts = 0 ;
@@ -585,108 +826,81 @@ bool CbcInterface::WriteChipAllLocalReg(ReadoutChip* pCbc, const std::string& da
         return WriteChipMultReg(pCbc, cRegVec, pVerifLoop);
     }
 }
+uint8_t CbcInterface::ReadChipSingleReg(Chip* pCbc, const std::string& pRegNode)
+{
+    setBoard(pCbc->getBeBoardId());
+    ChipRegItem cRegItem = pCbc->getRegItem(pRegNode);
+    uint8_t     cValue   = 0x00;
+    if(!lpGBTFound())
+    {
+        std::vector<uint32_t> cVecReq;
+        fBoardFW->EncodeReg(cRegItem, pCbc, cVecReq, true, false);
+        // fBoardFW->EncodeReg( cRegItem,  pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
+        fBoardFW->ReadChipBlockReg(cVecReq);
+        bool    cRead;
+        uint8_t cCbcId;
+        bool    cFailed = false;
+        fBoardFW->DecodeReg(cRegItem, cCbcId, cVecReq[0], cRead, cFailed);
+        cValue = cRegItem.fValue;
+    }
+    else
+    {
+        std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+        bool                                  cVerifLoop = true;
+        bool                                  cSuccess   = (pRegNode == "FeCtrl&TrgLat2") ? true : ConfigurePage(pCbc, cRegItem.fPage, cVerifLoop);
+        if(cSuccess) { cValue = fBoardFW->ReadFERegister(pCbc, cRegItem.fAddress); }
+    }
+    pCbc->setReg(pRegNode, cValue);
 
+    return cValue;
+}
 uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
 {
     ChipRegItem cRegItem;
-    bool        cFailed = false;
-    bool        cRead;
-    uint8_t     cCbcId;
     setBoard(pCbc->getBeBoardId());
     std::vector<uint32_t> cVecReq;
-    if(pRegNode == "VCth")
+    if(pRegNode == "VCth" || pRegNode == "Threshold")
     {
-        fBoardFW->EncodeReg(pCbc->getRegItem("VCth1"), pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
-        fBoardFW->EncodeReg(pCbc->getRegItem("VCth2"), pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
-        fBoardFW->ReadChipBlockReg(cVecReq);
-        fBoardFW->DecodeReg(cRegItem, cCbcId, cVecReq[0], cRead, cFailed);
-
-        uint16_t cReg0 = cRegItem.fValue;
-        pCbc->setReg("VCth1", cRegItem.fValue);
-        fBoardFW->DecodeReg(cRegItem, cCbcId, cVecReq[1], cRead, cFailed);
-        if(cFailed) return 0;
-
-        pCbc->setReg("VCth2", cRegItem.fValue);
-        uint16_t cReg1      = cRegItem.fValue;
-        uint16_t cThreshold = ((cReg1 & 0x3) << 8) | cReg0;
-        return cThreshold;
-    }
-    else if(pRegNode == "Threshold")
-    {
-        fBoardFW->EncodeReg(pCbc->getRegItem("VCth1"), pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
-        fBoardFW->EncodeReg(pCbc->getRegItem("VCth2"), pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
-        fBoardFW->ReadChipBlockReg(cVecReq);
-        fBoardFW->DecodeReg(cRegItem, cCbcId, cVecReq[0], cRead, cFailed);
-
-        uint16_t cReg0 = cRegItem.fValue;
-        pCbc->setReg("VCth1", cRegItem.fValue);
-        fBoardFW->DecodeReg(cRegItem, cCbcId, cVecReq[1], cRead, cFailed);
-        if(cFailed) return 0;
-
-        pCbc->setReg("VCth2", cRegItem.fValue);
-        uint16_t cReg1      = cRegItem.fValue;
+        uint8_t  cReg0      = ReadChipSingleReg(pCbc, "VCth1");
+        uint8_t  cReg1      = ReadChipSingleReg(pCbc, "VCth2");
         uint16_t cThreshold = ((cReg1 & 0x3) << 8) | cReg0;
         return cThreshold;
     }
     else if(pRegNode == "HitLogic")
     {
-        cRegItem = pCbc->getRegItem("Pipe&StubInpSel&Ptwidth");
-        fBoardFW->EncodeReg(cRegItem, pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
-        fBoardFW->ReadChipBlockReg(cVecReq);
-        // bools to find the values of failed and read
-        fBoardFW->DecodeReg(cRegItem, cCbcId, cVecReq[0], cRead, cFailed);
-        if(!cFailed) pCbc->setReg("Pipe&StubInpSel&Ptwidth", cRegItem.fValue);
-
-        return (cRegItem.fValue & 0xC0) >> 6;
+        uint8_t cRegValue = ReadChipSingleReg(pCbc, "Pipe&StubInpSel&Ptwidth");
+        return (cRegValue & 0xC0) >> 6;
     }
     else if(pRegNode == "StubLogic")
     {
-        cRegItem = pCbc->getRegItem("Pipe&StubInpSel&Ptwidth");
-        fBoardFW->EncodeReg(cRegItem, pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
-        fBoardFW->ReadChipBlockReg(cVecReq);
-        // bools to find the values of failed and read
-        fBoardFW->DecodeReg(cRegItem, cCbcId, cVecReq[0], cRead, cFailed);
-        if(!cFailed) pCbc->setReg("Pipe&StubInpSel&Ptwidth", cRegItem.fValue);
-
-        return (cRegItem.fValue & 0x30) >> 4;
+        uint8_t cRegValue = ReadChipSingleReg(pCbc, "Pipe&StubInpSel&Ptwidth");
+        return (cRegValue & 0x30) >> 4;
     }
     else if(pRegNode == "HitOr")
     {
-        cRegItem = pCbc->getRegItem("40MhzClk&Or254");
-        fBoardFW->EncodeReg(cRegItem, pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
-        fBoardFW->ReadChipBlockReg(cVecReq);
-        fBoardFW->DecodeReg(cRegItem, cCbcId, cVecReq[0], cRead, cFailed);
-        if(!cFailed) pCbc->setReg("40MhzClk&Or254", cRegItem.fValue);
-        return (cRegItem.fValue & 0x40) >> 6;
+        uint8_t cRegValue = ReadChipSingleReg(pCbc, "Pipe&StubInpSel&Ptwidth");
+        return (cRegValue & 0x40) >> 6;
     }
     else if(pRegNode == "LayerSwap")
     {
-        cRegItem = pCbc->getRegItem("LayerSwap&CluWidth");
-        fBoardFW->EncodeReg(cRegItem, pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
-        fBoardFW->ReadChipBlockReg(cVecReq);
-        fBoardFW->DecodeReg(cRegItem, cCbcId, cVecReq[0], cRead, cFailed);
-        if(!cFailed) pCbc->setReg("LayerSwap&CluWidth", cRegItem.fValue);
-        return (cRegItem.fValue & 0x08) >> 3;
+        uint8_t cRegValue = ReadChipSingleReg(pCbc, "LayerSwap&CluWidth");
+        return (cRegValue & 0x08) >> 3;
     }
     else if(pRegNode == "PtCut")
     {
-        cRegItem = pCbc->getRegItem("Pipe&StubInpSel&Ptwidth");
-        fBoardFW->EncodeReg(cRegItem, pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
-        fBoardFW->ReadChipBlockReg(cVecReq);
-        fBoardFW->DecodeReg(cRegItem, cCbcId, cVecReq[0], cRead, cFailed);
-        if(!cFailed) pCbc->setReg("Pipe&StubInpSel&Ptwidth", cRegItem.fValue);
-        return (cRegItem.fValue & 0x0F);
+        uint8_t cRegValue = ReadChipSingleReg(pCbc, "Pipe&StubInpSel&Ptwidth");
+        return (cRegValue & 0x0F);
+    }
+    else if(pRegNode == "TriggerLatency")
+    {
+        auto     cRegValueFirst  = ReadChipSingleReg(pCbc, "FeCtrl&TrgLat2");
+        auto     cRegValueSecond = ReadChipSingleReg(pCbc, "TriggerLatency1");
+        uint16_t cLatency        = ((cRegValueFirst & 0x1) << 8) | cRegValueSecond;
+        return cLatency;
     }
     else
     {
-        cRegItem = pCbc->getRegItem(pRegNode);
-        fBoardFW->EncodeReg(cRegItem, pCbc->getHybridId(), pCbc->getId(), cVecReq, true, false);
-        fBoardFW->ReadChipBlockReg(cVecReq);
-        // bools to find the values of failed and read
-        fBoardFW->DecodeReg(cRegItem, cCbcId, cVecReq[0], cRead, cFailed);
-        if(!cFailed) pCbc->setReg(pRegNode, cRegItem.fValue);
-
-        return cRegItem.fValue & 0xFF;
+        return ReadChipSingleReg(pCbc, pRegNode) & 0xFF;
     }
 }
 
@@ -756,15 +970,89 @@ void CbcInterface::WriteBroadcastCbcMultiReg(const Hybrid* pHybrid, const std::v
                 static_cast<ReadoutChip*>(cCbc)->setReg(cReg.first, cReg.second);
             }
 }
+void CbcInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
+{
+    LOG(INFO) << BOLDMAGENTA << "Producing phase alignment pattern on CBC#" << +pChip->getId() << RESET;
+    // mask for L1A alignment
+    auto cChannelMask = std::make_shared<ChannelGroup<NCHANNELS, 1>>();
+    cChannelMask->disableAllChannels();
+    for(uint8_t cChannel = 0; cChannel < NCHANNELS; cChannel += 2) cChannelMask->enableChannel(cChannel); // generate a hit in every Nth channel
 
+    // switch on HitOr
+    WriteChipReg(pChip, "HitOr", 1);
+    // set PtCut to maximum
+    WriteChipReg(pChip, "PtCut", 14);
+    // if I set this it doesn't work..   so no cluster cut
+    WriteChipReg(pChip, "ClusterCut", 4);
+
+    selectLogicMode(static_cast<ReadoutChip*>(pChip), "Sampled", true, true);
+
+    uint8_t              cBendCode_phAlign = 0xa;
+    std::vector<uint8_t> cBendLUT          = readLUT(static_cast<ReadoutChip*>(pChip));
+    auto                 cIterator         = std::find(cBendLUT.begin(), cBendLUT.end(), cBendCode_phAlign);
+    if(cIterator != cBendLUT.end())
+    {
+        int    cPosition    = std::distance(cBendLUT.begin(), cIterator);
+        double cBend_strips = -7. + 0.5 * cPosition;
+        // LOG(INFO) << BOLDBLUE << "Bend code of " << std::bitset<4>(cBendCode_phAlign) << " found for bend reg " << +cPosition << " which means " << cBend_strips << " strips." <<
+        // RESET;
+
+        // first pattern - stubs lines 0, 1 , 3
+        // seeds on stub line 0 , stub line 1
+        // bends on stub line 2
+        LOG(DEBUG) << BOLDBLUE << "Injecting on stub lines 0,1 and 2 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
+        std::vector<uint8_t> cSeeds_ph1{0x55, 0xAA};
+        std::vector<int>     cBends_ph1(cSeeds_ph1.size(), static_cast<int>(cBend_strips * 2));
+        injectStubs(static_cast<ReadoutChip*>(pChip), cSeeds_ph1, cBends_ph1);
+        std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));
+
+        // second pattern - 1, 2, 3 , 4
+        // whatever on stub line 0
+        // then alignment pattern on stub lines 1 + 2
+        LOG(DEBUG) << BOLDBLUE << "Injecting on stub lines 1,2,3 and 4 on CBC#" << +pChip->getId() << " on hybrid#" << +pChip->getHybridId() << RESET;
+        std::vector<uint8_t> cSeeds_ph3{42, 0x55, 0xAA};
+        std::vector<int>     cBends_ph3(cSeeds_ph3.size(), static_cast<int>(cBend_strips * 2));
+        injectStubs(static_cast<ReadoutChip*>(pChip), cSeeds_ph3, cBends_ph3);
+        std::this_thread::sleep_for(std::chrono::milliseconds(pWait_ms));
+    }
+    this->maskChannelGroup(static_cast<ReadoutChip*>(pChip), cChannelMask);
+}
+void CbcInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
+{
+    // switch off HitOr
+    WriteChipReg(pChip, "HitOr", 0);
+    // set PtCut to maximum
+    WriteChipReg(pChip, "PtCut", 14);
+    // if I set this it doesn't work..   so no cluster cut
+    WriteChipReg(pChip, "ClusterCut", 4);
+
+    selectLogicMode(static_cast<ReadoutChip*>(pChip), "Sampled", true, true);
+    std::vector<uint8_t> cStubs{fWordAlignmentPatterns[0], fWordAlignmentPatterns[1], fWordAlignmentPatterns[2]};
+    std::vector<uint8_t> cBendLUT = readLUT(static_cast<ReadoutChip*>(pChip));
+    std::vector<uint8_t> cBendCodes{
+        static_cast<uint8_t>(fWordAlignmentPatterns[3] & 0x0F), static_cast<uint8_t>((fWordAlignmentPatterns[3] & 0xF0) >> 4), static_cast<uint8_t>(fWordAlignmentPatterns[4] & 0x0F)};
+    std::vector<int> cBends(3, 0);
+    for(size_t cIndex = 0; cIndex < cBendCodes.size(); cIndex += 1)
+    {
+        auto cIterator = std::find(cBendLUT.begin(), cBendLUT.end(), cBendCodes[cIndex]);
+        if(cIterator != cBendLUT.end())
+        {
+            int    cPosition    = std::distance(cBendLUT.begin(), cIterator);
+            double cBend_strips = -7. + 0.5 * cPosition;
+            cBends[cIndex]      = cBend_strips * 2;
+            LOG(DEBUG) << BOLDBLUE << "Bend code of " << std::bitset<4>(cBendCodes[cIndex]) << " found for bend reg " << +cPosition << " which means " << cBend_strips << " strips." << RESET;
+        }
+    }
+    injectStubs(static_cast<ReadoutChip*>(pChip), cStubs, cBends);
+}
 uint32_t CbcInterface::ReadCbcIDeFuse(Chip* pCbc)
 {
-    WriteChipReg(pCbc, "ChipIDFuse3", 8);
+    // make fuse read-able
+    WriteChipReg(pCbc, "ChipIDFuse3", 8, false);
     uint8_t  IDa     = ReadChipReg(pCbc, "ChipIDFuse1");
     uint8_t  IDb     = ReadChipReg(pCbc, "ChipIDFuse2");
     uint8_t  IDc     = ReadChipReg(pCbc, "ChipIDFuse3");
     uint32_t IDeFuse = ((IDa)&0x000000FF) + (((IDb) << 8) & 0x0000FF00) + (((IDc) << 16) & 0x000F0000);
-    LOG(INFO) << BOLDBLUE << " CHIP ID FUSE " << +IDeFuse << RESET;
     return IDeFuse;
 }
 

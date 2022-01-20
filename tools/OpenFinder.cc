@@ -54,8 +54,11 @@ void OpenFinder::Reset()
 }
 void OpenFinder::Initialise(Parameters pParameters)
 {
-    fChannelGroupHandler = new CBCChannelGroupHandler();
-    fChannelGroupHandler->setChannelGroupParameters(16, 2);
+    CBCChannelGroupHandler theChannelGroupHandler;
+    theChannelGroupHandler.setChannelGroupParameters(16, 2); // 16*2*8
+    setChannelGroupHandler(theChannelGroupHandler);
+    // fChannelGroupHandler = new CBCChannelGroupHandler();
+    // fChannelGroupHandler->setChannelGroupParameters(16, 2);
 
     // Read some settings from the map
     auto cSetting       = fSettingsMap.find("Nevents");
@@ -158,7 +161,7 @@ bool OpenFinder::FindLatency(BeBoard* pBoard, std::vector<uint16_t> pLatencies)
     // scan latency and record optimal latency
     for(auto cLatency: pLatencies)
     {
-        setSameDacBeBoard(cBeBoard, "TriggerLatency", cLatency);
+        setSameDacBeBoard(static_cast<BeBoard*>(cBeBoard), "TriggerLatency", cLatency);
         fBeBoardInterface->ChipReSync(cBeBoard); // NEED THIS! ??
         LOG(DEBUG) << BOLDBLUE << "L1A latency set to " << +cLatency << RESET;
         this->ReadNEvents(cBeBoard, fEventsPerPoint);
@@ -297,7 +300,7 @@ void OpenFinder::Print()
             auto& cOpensThisOpticalGroup = cOpens->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cOpensThisHybrid = cOpensThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cOpensThisHybrid = cOpensThisOpticalGroup->at(cOpticalGroup->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     auto& cOpensThisChip = cOpensThisHybrid->at(cChip->getIndex())->getSummary<ChannelList>();
@@ -328,7 +331,7 @@ void OpenFinder::Print()
                     OpensTree->Fill();
                 }
             }
-            // fillSummaryTree( "nOpens", totalOpens );
+            fillSummaryTree("nOpens", totalOpens);
             fResultFile->cd();
             OpensTree->Write();
             if(totalOpens == 0) { gDirectory->Delete("Opens;*"); }
@@ -396,8 +399,9 @@ void OpenFinder::FindOpens2S()
     }
 #endif
 }
-void OpenFinder::SelectAntennaPosition(const std::string& cPosition)
+void OpenFinder::SelectAntennaPosition(const std::string& cPosition, uint16_t potentiometer)
 {
+    if(potentiometer != 0) fParameters.potentiometer = potentiometer;
 #ifdef __TCUSB__
     auto cMapIterator = fAntennaControl.find(cPosition);
     if(cMapIterator != fAntennaControl.end())
@@ -407,127 +411,471 @@ void OpenFinder::SelectAntennaPosition(const std::string& cPosition)
                   << " inject charge in [ " << cPosition << " ] position. This is switch position " << +cChannel << RESET;
         TC_PSFE cTC_PSFE;
         cTC_PSFE.antenna_fc7(fParameters.potentiometer, cChannel);
-        // measure level using on-board ADC
-        std::vector<float> cMeasurements(3, 0.);
-        for(int cIndex = 0; cIndex < 3; cIndex++)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            cTC_PSFE.adc_get(TC_PSFE::measurement::ANT_PULL, cMeasurements[cIndex]);
-        }
-        auto cMeasurement = this->getStats(cMeasurements);
-        LOG(INFO) << BOLDBLUE << "Antenna Pull-up Measurement : " << cMeasurement.first << " mV on average " << cMeasurement.second << " mV rms. " << RESET;
+
+        LOG(INFO) << "Antenna set" << RESET;
+
+        float measurement;
+        cTC_PSFE.adc_get(TC_PSFE::measurement::ANT_PULL, measurement);
+        LOG(INFO) << BOLDBLUE << "Antenna Pull-up Measurement : " << measurement << " mV." << RESET;
+        if(cPosition == "Disable") ReadAntennaVoltage();
     }
 #endif
 }
+
 void OpenFinder::FindOpensPS()
 {
-    fParameters.potentiometer = this->findValueInSettings<double>("AntennaPotentiometer");
-    fParameters.nTriggers     = this->findValueInSettings<double>("Nevents");
+#ifdef __TCUSB__
+    float   measurement;
+    TC_PSFE cTC_PSFE;
+    cTC_PSFE.adc_get(TC_PSFE::measurement::_3V3, measurement);
+    LOG(INFO) << "3V3 -> " << +measurement << RESET;
 
-    LOG(INFO) << BOLDBLUE << "Checking for opens in PS hybrid "
-              << " antenna potentiometer will be set to 0x" << std::hex << fParameters.potentiometer << std::dec << " units."
-              << "Going to ask for " << +fParameters.nTriggers << " events." << RESET;
-    LOG(INFO) << BOLDBLUE << "Hyrbid voltages BEFORE selecting antenna position" << RESET;
+    uint16_t antennaPullupLowEnd  = this->findValueInSettings<double>("AntennaPotentiometerLowEnd");
+    uint16_t antennaPullupHighEnd = this->findValueInSettings<double>("AntennaPotentiometerHighEnd");
+    fParameters.nTriggers         = this->findValueInSettings<double>("Nevents");
+
+    std::vector<TH2F*> fOccupancyHistVect;
+    // uint16_t antennaPullupLowEnd = 540;
+    // uint16_t antennaPullupHighEnd = 700;
+    uint16_t antennaPullup = (antennaPullupHighEnd - antennaPullupLowEnd) / 2 + antennaPullupLowEnd;
+    // fParameters.potentiometer = antennaPullup;
+
+    LOG(DEBUG) << BOLDBLUE << "Checking for opens in PS hybrid "
+               << " antenna potentiometer will be set to 0x" << std::hex << fParameters.potentiometer << std::dec << " units."
+               << "Going to ask for " << +fParameters.nTriggers << " events." << RESET;
+    LOG(INFO) << BOLDBLUE << "Hybrid voltages BEFORE selecting antenna position" << RESET;
     SelectAntennaPosition("Disable");
 
+    std::vector<uint16_t> finalAntennaOdd;
+    std::vector<uint16_t> finalAntennaEven;
+    // uint16_t              finalAntenna = 0;
+
+    // int    crosstalk_channels     = 0;
+    int    high_outliers_channels = 0;
+    double occupancy_avg          = 0;
+    // double occupancy_crosstk = 0;
+
+    std::vector<bool> AntennaOdd_set;
+    std::vector<bool> AntennaEven_set;
+    bool              antenna_set = false;
     // make sure that async mode is selected
     // that antenna source is 10
     // and set thresholds
     uint16_t cThreshold = this->findValueInSettings<double>("ThresholdForOpens");
     for(auto cBoard: *fDetectorContainer)
     {
+        // make sure async mode is enabled
+        setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "AnalogueAsync", 1);
+        // first .. set injection amplitude to 0
+        setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", 0);
         std::vector<std::pair<std::string, uint32_t>> cRegVec;
         cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
         cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.cal_pulse", 0});
         cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.antenna", 1});
+        
+            // std::vector<std::pair<std::string, uint32_t>> cRegVec;
+            // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
+            // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.cal_pulse", 0});
+            // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.antenna", 1});
+            for(auto cOpticalGroup: *cBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    for(auto cChip: *cHybrid)
+                    {
+                        if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
+                        {
+                            double cPedeMean   = getSummaryParameter(Form("AvgPedeSSA%d", cChip->getId()));
+                            double cPedeStdDev = getSummaryParameter(Form("StDvPedeSSA%d", cChip->getId()));
+                            LOG(INFO) << "Mean:" << cPedeMean << RESET;
+                            LOG(INFO) << "StdDev:" << cPedeStdDev << RESET;
+
+                            if(cPedeMean != -1.0)
+                            {
+                                if((cPedeMean + 3 * cPedeStdDev) <= 255) { cThreshold = (uint16_t)(cPedeMean + 3 * cPedeStdDev); }
+                                LOG(INFO) << BOLDBLUE << "Threshold  " << cThreshold << RESET;
+                                ;
+                            }
+                            // cThreshold = 12;
+                            std::string tmpParameter = "thresholdForOpens_" + std::to_string(cChip->getId());
+#ifdef __USE_ROOT__
+                            fillSummaryTree(tmpParameter, cThreshold);
+#endif
+
+                            // std::string cHistName  = Form("AntennaOccupancy_Even_%d", cChip->getId());
+                            // if ( gROOT->FindObject(cHistName.c_str()) != nullptr )
+                            //     cHistName  = Form("%s_%s", cHistName.c_str(), "II" );
+                            // std::string cHistTitle = Form("Occupancy in Even Channels in Chip %d", cChip->getId());
+                            // TH2F*       fOccupancyHistEven =
+                            //     new TH2F(cHistName.c_str(), cHistTitle.c_str(), (antennaPullupHighEnd - antennaPullupLowEnd), antennaPullupLowEnd -0.5, antennaPullupHighEnd+0.5, 120, -0.5,
+                            //     120+0.5);
+                            // cHistName  = Form("AntennaOccupancy_Odd_%d", cChip->getId());
+                            // if ( gROOT->FindObject(cHistName.c_str()) != nullptr )
+                            //     cHistName  = Form("%s_%s", cHistName.c_str(), "II" );
+                            // cHistTitle = Form("Occupancy in Odd Channels in Chip %d", cChip->getId());
+                            // TH2F* fOccupancyHistOdd =
+                            //     new TH2F(cHistName.c_str(), cHistTitle.c_str(), (antennaPullupHighEnd - antennaPullupLowEnd), antennaPullupLowEnd-0.5, antennaPullupHighEnd+0.5, 120, -0.5, 120+0.5);
+
+                            // fOccupancyHistVect.push_back(fOccupancyHistEven);
+                            // fOccupancyHistVect.push_back(fOccupancyHistOdd);
+
+                            finalAntennaEven.push_back(0);
+                            finalAntennaOdd.push_back(0);
+
+                            fReadoutChipInterface->WriteChipReg(cChip, "AnalogueAsync", 1);
+                            fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
+                            fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", 0);
+                            // fReadoutChipInterface->WriteChipReg(cChip, "SAMPLINGMODE", 0);
+                        }
+                    }
+                }
+            }
+            fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
+        }
+        // fBeBoardInterface->WriteBoardMultReg (cBoard, cRegVec);
+    
+
+    // For DEBUG. Sweep antenna value
+    //   TH1I* occupancyHist = new TH1I("OccupHist", "occupancy histogram for stddev", 60, 0, 60);
+    // while(true)
+    // {
+    //     antennaPullup = 750;
+    //   for(antennaPullup = antennaPullupLowEnd; antennaPullup < antennaPullupHighEnd; antennaPullup += 4)
+    //   {
+    //       std::vector<uint8_t> cPositions{0, 1};
+    //       for(auto cPosition: cPositions)
+    //       {
+    //           //   if(cPosition == 1)
+    //           //   continue;
+    //           LOG(INFO) << " Antenna pull up : " << +antennaPullup << RESET;
+
+    //           std::string chn = (cPosition == 0) ? "even" : "odd";
+
+    //           //   std::string cHistName  = Form("OccupHist_%d", cChip->getId());
+    //           //   TH1I* occupancyHist = new TH1I( cHistName.c_str(), "occupancy histogram for stddev", 60, 0, 60);
+
+    //           fParameters.potentiometer = antennaPullup;
+    //           // select antenna position
+    //           SelectAntennaPosition((cPosition == 0) ? "EvenChannels" : "OddChannels");
+
+    //           for(auto cBoard: *fDetectorContainer)
+    //           {
+    //               for(auto cOpticalGroup: *cBoard)
+    //               {
+    //                   for(auto cHybrid: *cOpticalGroup)
+    //                   {
+    //                       for(auto cChip: *cHybrid)
+    //                       {
+    //                           if(cChip->getFrontEndType() == FrontEndType::SSA)
+    //                           {
+    //                               //   TH2F* fOccupancyHist = fOccupancyHistVect[cChip->getIndex()+cPosition];
+
+    //                               //   fOccupancyHist->Clear();
+
+    //                               BeBoard* cBeBoard = static_cast<BeBoard*>(fDetectorContainer->at(cBoard->getIndex()));
+    //                               this->ReadNEvents(cBeBoard, fParameters.nTriggers);
+    //                               const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
+    //                               for(auto cEvent: cEvents)
+    //                               {
+    //                                   auto cNhits     = cEvent->GetNHits(cHybrid->getId(), cChip->getId());
+    //                                   auto cHitVector = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+
+    //                                   for(uint32_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
+    //                                   {
+    //                                       if(iChannel % 2 == cPosition)
+    //                                       {
+    //                                           occupancy_avg += cHitVector[iChannel];
+    //                                           fOccupancyHistVect[2 * cChip->getIndex() + cPosition]->Fill(antennaPullup, iChannel, cHitVector[iChannel]);
+    //                                           if(cHitVector[iChannel] >= fParameters.nTriggers)
+    //                                           {
+    //                                               high_outliers_channels++;
+    //                                               LOG(DEBUG) << "High outlier " << +iChannel << RESET;
+    //                                           }
+    //                                       }
+    //                                   } // chnl
+    //                               }
+    //                               //   LOG(INFO) << "Std dev for " << chn << " channels of chip " << +cChip->getId() << ": " << +occupancyHist->GetStdDev() << RESET;
+    //                               //   fOccupancyHist->Fill(antennaPullup, occupancy_avg, occupancyHist->GetStdDev());
+    //                               //   fOccupancyHist->Fill(antennaPullup, 2*occupancy_avg/cChip->size());
+    //                           }
+    //                       }
+    //                   }
+    //               }
+    //           }
+    //       }
+    //       //   }
+    //   }
+
+    //  for (int i=0; i+1<int(fOccupancyHistVect.size()); i+=2) {
+    //     auto fOccupancyHistEven = fOccupancyHistVect[i];
+    //     auto fOccupancyHistOdd = fOccupancyHistVect[i+1];
+    //     fOccupancyHistEven->Draw();
+    //     fOccupancyHistOdd->Draw();
+    //     // fOccupancyHistEven->Write();
+    //     // fOccupancyHistOdd->Write();
+    //  }
+
+    //   return;
+
+    LOG(INFO) << BOLDMAGENTA << "Finding the optimal values for the antenna potentiometer..." << RESET;
+
+    for(auto cBoard: *fDetectorContainer)
+    {
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::SSA)
+                    if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                     {
-                        fReadoutChipInterface->WriteChipReg(cChip, "AnalogueAsync", 1);
-                        fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
-                        fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", 0);
+                        std::vector<uint8_t> cPositions{0, 1};
+                        for(auto cPosition_index: cPositions)
+                        {
+                            // uint8_t cPosition = 1-cPosition_index;
+                            uint8_t cPosition = cPosition_index;
+                            antenna_set       = false;
+                            for(int i = 0; i < 2 && !antenna_set; i++)
+                            {
+                                std::string chn = (cPosition == 0) ? "even" : "odd";
+
+                                LOG(INFO) << BOLDMAGENTA << "Finding optimal antenna value for the " << chn << " channels of chip " << +cChip->getId() << RESET;
+
+                                antennaPullupLowEnd  = this->findValueInSettings<double>("AntennaPotentiometerLowEnd");
+                                antennaPullupHighEnd = this->findValueInSettings<double>("AntennaPotentiometerHighEnd");
+
+                                // BINARY SEARCH
+                                while(!antenna_set)
+                                {
+                                    if(antennaPullupHighEnd < antennaPullupLowEnd)
+                                    {
+                                        LOG(INFO) << BOLDRED << "Could not find a valid antenna value for " << chn << " channels of chip " << +cChip->getId() << "!!" << RESET;
+                                        break;
+                                    }
+
+                                    antennaPullup = (antennaPullupHighEnd + antennaPullupLowEnd) / 2;
+
+                                    fParameters.potentiometer = antennaPullup;
+                                    // select antenna position
+                                    SelectAntennaPosition((cPosition == 0) ? "EvenChannels" : "OddChannels");
+                                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                                    // check counters
+                                    BeBoard* cBeBoard = static_cast<BeBoard*>(fDetectorContainer->at(cBoard->getIndex()));
+                                    this->ReadNEvents(cBeBoard, fParameters.nTriggers);
+                                    const std::vector<Event*>& cEvents = this->GetEvents();
+                                    // const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
+                                    for(auto cEvent: cEvents)
+                                    {
+                                        // auto cNhits     = cEvent->GetNHits(cHybrid->getId(), cChip->getId());
+                                        auto cHitVector = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+
+                                        for(uint32_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
+                                        {
+                                            if(iChannel % 2 == cPosition)
+                                            {
+                                                occupancy_avg += cHitVector[iChannel];
+                                                if(cHitVector[iChannel] >= fParameters.nTriggers)
+                                                {
+                                                    high_outliers_channels++;
+                                                    LOG(DEBUG) << "High outlier " << +iChannel << RESET;
+                                                }
+                                            }
+                                        } // chnl
+
+                                        // Find the average ocupancy of the channels
+                                        occupancy_avg = occupancy_avg / (cChip->size() / 2 * fParameters.nTriggers);
+                                        LOG(INFO) << "Occupancy on " << chn << " channels of chip " << +cChip->getId() << " for antenna value " << fParameters.potentiometer << ": " << BOLDBLUE
+                                                  << occupancy_avg << RESET;
+
+                                        if(occupancy_avg >= 0.95 && occupancy_avg <= 0.99)
+                                        {
+                                            antenna_set = true;
+                                            LOG(INFO) << BOLDGREEN << "Antenna value for " << chn << " channels of chip " << +cChip->getId() << " set to " << antennaPullup << RESET;
+                                            if(cPosition == 0)
+                                                finalAntennaEven[cChip->getIndex()] = antennaPullup;
+                                            else
+                                                finalAntennaOdd[cChip->getIndex()] = antennaPullup;
+                                        }
+                                        else if(occupancy_avg < 0.95)
+                                        {
+                                            antennaPullupLowEnd = antennaPullup + 1;
+                                        }
+                                        else if(occupancy_avg > 0.99)
+                                        {
+                                            antennaPullupHighEnd = antennaPullup - 1;
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
-        fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
     }
 
-    // PS antenna connected to either even or odd channels
+    LOG(INFO) << BOLDBLUE << "Antenna values set, running to open finder." << RESET;
+
+#ifdef __USE_ROOT__
+    fResultFile->cd();
+    TString               fOpensTreeParameter = "";
+    std::vector<uint16_t> fOpensTreeValue     = {};
+    TTree*                fOpensTree          = new TTree("opensTree", "Opens in hybrid");
+    fOpensTree->Branch("Chip", &fOpensTreeParameter);
+    fOpensTree->Branch("Value", &fOpensTreeValue);
+#endif
+
+    bool        cOpensFound = false;
+    std::string Channels    = "";
+
     std::vector<uint8_t> cPositions{0, 1};
-    for(auto cPosition: cPositions)
+    for(auto cBoard: *fDetectorContainer)
     {
-        // select antenna position
-        SelectAntennaPosition((cPosition == 0) ? "EvenChannels" : "OddChannels");
-
-        // check counters
-        for(auto cBoard: *fDetectorContainer)
+        for(auto cOpticalGroup: *cBoard)
         {
-            BeBoard* cBeBoard = static_cast<BeBoard*>(fDetectorContainer->at(cBoard->getIndex()));
-            // cBeBoard->setEventType(EventType::SSAAS);
-
-            this->ReadNEvents(cBeBoard, fParameters.nTriggers);
-            std::stringstream          outp;
-            const std::vector<Event*>& cEvents     = this->GetEvents();
-            bool                       cOpensFound = false;
-            for(auto cEvent: cEvents)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                for(auto cOpticalGroup: *cBoard)
+                for(auto cChip: *cHybrid)
                 {
-                    for(auto cHybrid: *cOpticalGroup)
+                    for(auto cPosition: cPositions)
                     {
-                        for(auto cChip: *cHybrid)
+                        bool retry     = true;
+                        int  occupancy = 0;
+                        for(int i = 0; i < 2 && retry; i++)
                         {
-                            if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
-                            // if( cChip->getId() != 0 )
-                            //  continue;
-
-                            LOG(INFO) << BOLDBLUE << "SSA#" << +cChip->getId() << RESET;
-                            // auto cNhits = cEvent->GetNHits( cHybrid->getId(), cChip->getId());
-                            auto cHitVector = cEvent->GetHits(cHybrid->getId(), cChip->getId());
-                            for(uint32_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
+                            retry = false;
+                            // Get Antenna value for chip and channels
+                            if(cPosition == 0)
                             {
-                                if(iChannel % 2 != cPosition)
+                                if(finalAntennaEven[cChip->getIndex()] > 0)
                                 {
-                                    LOG(DEBUG) << BOLDMAGENTA << "\t\t... "
-                                               << " strip " << +iChannel << " detected " << +cHitVector[iChannel] << " hits " << RESET;
-                                    continue;
+                                    //   if (cChip->getId() == 6) {
+                                    //     fParameters.potentiometer = 600;
+                                    //     LOG(INFO) << "Potentiometer value: " << 600 << RESET;
+                                    //   }
+                                    //   else {
+                                    fParameters.potentiometer = finalAntennaEven[cChip->getIndex()] + 5;
+                                    LOG(INFO) << "Potentiometer value: " << finalAntennaEven[cChip->getIndex()] << RESET;
+                                    ;
+                                    // }
+                                    Channels = "Even";
                                 }
                                 else
                                 {
-                                    LOG(DEBUG) << BOLDBLUE << "\t... "
-                                               << " strip " << +iChannel << " detected " << +cHitVector[iChannel] << " hits " << RESET;
-                                    if(cHitVector[iChannel] <= (1.0 - THRESHOLD_OPEN) * fParameters.nTriggers)
-                                    {
-                                        cOpensFound = true;
-                                        LOG(INFO) << BOLDRED << "Chip " << +cChip->getId() << " strip " << +iChannel << " detected " << +cHitVector[iChannel] << " hits when at most "
-                                                  << +fParameters.nTriggers << " were expected." << RESET;
-                                    }
-                                    else
-                                    {
-                                        LOG(DEBUG) << BOLDGREEN << "Chip " << +cChip->getId() << " strip " << +iChannel << " detected " << +cHitVector[iChannel] << " hits when at most "
-                                                   << +fParameters.nTriggers << " were expected." << RESET;
-                                    }
+                                    LOG(INFO) << BOLDRED << "Could not set antenna value for the even channels of this chip ( chip " << +cChip->getId() << " ), skipping..." << RESET;
+                                    continue;
                                 }
-                            } // chnl
-                        }     // chip
-                    }         // hybrid
-                }             // opticalGroup
-            }
-            if(!cOpensFound) LOG(INFO) << BOLDGREEN << "No opens found on this hybrid." << RESET;
-        }
-        // disable
-        SelectAntennaPosition("Disable");
-    }
+                            }
+                            else
+                            {
+                                if(finalAntennaOdd[cChip->getIndex()] > 0)
+                                {
+                                    // if (cChip->getId() == 1) {
+                                    // fParameters.potentiometer = 781;
+                                    // LOG(INFO) << "Potentiometer value: " << 781 << RESET;
+                                    // }
+                                    // else {
+                                    fParameters.potentiometer = finalAntennaOdd[cChip->getIndex()] + 5;
+                                    LOG(INFO) << "Potentiometer value: " << finalAntennaOdd[cChip->getIndex()];
+                                    // }
+                                    Channels = "Odd";
+                                }
+                                else
+                                {
+                                    LOG(INFO) << BOLDRED << "Could not set antenna value for the odd channels of this chip ( chip " << +cChip->getId() << " ), skipping..." << RESET;
+                                    continue;
+                                }
+                            }
+                            // FillSummaryTree(Form("Antenna_",cChip->GetId(),Channels), finalAntennaEven[cChip->getIndex()] );
 
-    // std::this_thread::sleep_for (std::chrono::milliseconds (10000) );
-    fParameters.potentiometer = 512;
-    SelectAntennaPosition("Disable");
-    // check counters
+                            // select antenna position
+                            SelectAntennaPosition((cPosition == 0) ? "EvenChannels" : "OddChannels");
+
+                            // check counters
+                            BeBoard* cBeBoard = static_cast<BeBoard*>(fDetectorContainer->at(cBoard->getIndex()));
+                            // cBeBoard->setEventType(EventType::SSAAS);
+
+                            this->ReadNEvents(cBeBoard, fParameters.nTriggers);
+                            const std::vector<Event*>& cEvents = this->GetEvents();
+                            // const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
+                            cOpensFound = false;
+                            std::vector<uint16_t> opens;
+                            for(auto cEvent: cEvents)
+                            {
+                                LOG(INFO) << BOLDBLUE << "SSA#" << +cChip->getId() << RESET;
+                                // auto cNhits     = cEvent->GetNHits(cHybrid->getId(), cChip->getId());
+                                auto cHitVector = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+
+                                std::string tmpParameter = "";
+
+                                for(uint32_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
+                                {
+                                    occupancy += cHitVector[iChannel];
+                                    // LOG(INFO) << "Channels" << +cHitVector[iChannel] << RESET;
+                                    if(iChannel % 2 != cPosition)
+                                    {
+                                        if(cHitVector[iChannel] >= (THRESHOLD_OPEN)*fParameters.nTriggers)
+                                            LOG(DEBUG) << BOLDBLUE << "\t\t... "
+                                                       << " strip " << +iChannel << " detected " << +cHitVector[iChannel] << " hits " << RESET;
+                                        continue;
+                                    }
+                                    else // If channel in injected channels:
+                                    {
+                                        LOG(DEBUG) << BOLDBLUE << "\t... "
+                                                   << " strip " << +iChannel << " detected " << +cHitVector[iChannel] << " hits " << RESET;
+                                        if(cHitVector[iChannel] <= (THRESHOLD_OPEN * 2.5) * fParameters.nTriggers)
+                                        {
+                                            cOpensFound = true;
+                                            LOG(INFO) << BOLDRED << "Chip " << +cChip->getId() << " strip " << +iChannel << " detected " << +cHitVector[iChannel] << " hits when at most "
+                                                      << +fParameters.nTriggers << " were expected." << RESET;
+                                            opens.push_back(iChannel);
+                                        }
+                                        else if(cHitVector[iChannel] > (1.0) * fParameters.nTriggers)
+                                        {
+                                            LOG(INFO) << BOLDBLUE << "Chip " << +cChip->getId() << " strip " << +iChannel << " detected " << +cHitVector[iChannel] << " hits when at most "
+                                                      << +fParameters.nTriggers << " were expected." << RESET;
+                                        }
+                                        else if(cHitVector[iChannel] <= (1.0 - THRESHOLD_OPEN) * fParameters.nTriggers)
+                                            LOG(INFO) << BOLDYELLOW << "Chip " << +cChip->getId() << " strip " << +iChannel << " detected " << +cHitVector[iChannel] << " hits when at most "
+                                                      << +fParameters.nTriggers << " were expected." << RESET;
+                                        else
+                                        {
+                                            LOG(INFO) << BOLDGREEN << "Chip " << +cChip->getId() << " strip " << +iChannel << " detected " << +cHitVector[iChannel] << " hits when at most "
+                                                      << +fParameters.nTriggers << " were expected." << RESET;
+                                        }
+                                    }
+                                } // chnl
+
+                                tmpParameter = "";
+                                tmpParameter = "opens_" + std::to_string(cChip->getId()) + "_" + Channels;
+#ifdef __USE_ROOT__
+                                fillSummaryTree(tmpParameter, opens.size());
+                                if(true)
+                                {
+                                    fResultFile->cd();
+                                    fOpensTreeParameter.Clear();
+                                    fOpensTreeParameter = "Chip_" + std::to_string(cChip->getId());
+                                    fOpensTreeValue     = opens;
+                                    fOpensTree->Fill();
+                                }
+#endif
+                            }
+
+                            if(!cOpensFound)
+                                LOG(INFO) << BOLDGREEN << "No opens found on the " << Channels << " channels of chip " << +cChip->getId() << RESET;
+                            else
+                                LOG(INFO) << BOLDRED << +opens.size() << " opens found on the " << Channels << " channels of chip " << +cChip->getId() << RESET;
+                            // disable
+                            fParameters.potentiometer = 512;
+                            SelectAntennaPosition("Disable");
+
+                            LOG(INFO) << "Avg ccupancy on ALL channels is " << +occupancy / cChip->size() << RESET;
+                        }
+                    }
+                }
+            }
+        }
+    }
+#endif
 }
 void OpenFinder::FindOpens() {}

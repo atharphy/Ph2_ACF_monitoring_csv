@@ -10,10 +10,10 @@
 #ifndef RD53eudaqProducer_H
 #define RD53eudaqProducer_H
 
+#include "../user/CMSIT/module/include/CMSITEventData.hh"
 #include "RD53Physics.h"
-#include "eudaq/CMSITEventData.hh"
 #include "eudaq/Producer.hh"
-#include "eudaq/RawDataEvent.hh"
+#include "eudaq/RawEvent.hh"
 
 #include "boost/archive/binary_oarchive.hpp"
 #include "boost/serialization/vector.hpp"
@@ -21,7 +21,9 @@
 namespace EUDAQ
 {
 const std::string EVENT = "CMSIT";
-const int         WAIT  = 5000; // [ms]
+const int         WAIT  = 1000; // [ms]
+const std::string FILERUNNUMBER("./RunNumber.txt");
+constexpr char    EUDAQproducerNAME[] = "RD53eudaqProducer";
 } // namespace EUDAQ
 
 class RD53eudaqProducer : public eudaq::Producer
@@ -37,22 +39,27 @@ class RD53eudaqProducer : public eudaq::Producer
     };
 
   public:
-    RD53eudaqProducer(Ph2_System::SystemController& RD53SysCntr, const std::string& configFile, const std& ::string producerName, const std::string& runControl);
+    RD53eudaqProducer(const std::string& appName, const std::string& address) : Producer(appName, address) {}
 
-    void OnReset() override;
-    void OnInitialise(const eudaq::Configuration& param) override;
-    void OnConfigure(const eudaq::Configuration& param) override;
-    void OnStartRun(unsigned runNumber) override;
-    void OnStopRun() override;
-    void OnTerminate() override;
+    void DoReset() override;
+    void DoInitialise() override;
+    void DoConfigure() override;
+    void DoStartRun() override;
+    void DoStopRun() override;
+    void DoTerminate() override;
+    void RunLoop() override;
 
+    void Creator(Ph2_System::SystemController& RD53SysCntr, const std::string& fileName);
     void MainLoop();
-    void MySendEvent(eudaq::Event& theEvent);
+    void MySendEvent(eudaq::EventSP theEvent);
 
-    int theRunNumber;
-    int evCounter;
+    int      theRunNumber;
+    uint32_t nTRIGxEvent;
+    size_t   swTrigCnt;
 
     Physics RD53sysCntrPhys;
+
+    static const uint32_t m_id_factory = eudaq::cstr2hash(EUDAQ::EUDAQproducerNAME);
 
   private:
     std::condition_variable wakeUp;

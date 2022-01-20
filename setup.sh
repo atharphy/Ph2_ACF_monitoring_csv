@@ -3,28 +3,10 @@
 ##########
 # CACTUS #
 ##########
-export CACTUSBIN=/opt/cactus/bin
-export CACTUSLIB=/opt/cactus/lib
-export CACTUSINCLUDE=/opt/cactus/include
-export CACTUSROOT=/opt/cactus/
-
-#########
-# BOOST #
-#########
-export KERNELRELEASE=$(uname -r)
-if [[ $KERNELRELEASE == *"el6"* ]]; then
-    export BOOST_LIB=/opt/cactus/lib
-    export BOOST_INCLUDE=/opt/cactus/include
-elif [[ $KERNELRELEASE == *"el8"* ]]; then
-    export BOOST_LIB=/opt/cactus/lib
-    export BOOST_INCLUDE=/opt/cactus/include
-elif [[ $KERNELRELEASE == "5."*"-generic" ]]; then
-    export BOOST_INCLUDE=/usr/include
-    export BOOST_LIB=/usr/lib/x86_64-linux-gnu
-else
-    export BOOST_INCLUDE=/usr/include
-    export BOOST_LIB=/usr/lib64
-fi
+export CACTUSROOT=/opt/cactus
+export CACTUSBIN=$CACTUSROOT/bin
+export CACTUSLIB=$CACTUSROOT/lib
+export CACTUSINCLUDE=$CACTUSROOT/include
 
 ########
 # ROOT #
@@ -51,10 +33,13 @@ export PH2ACF_BASE_DIR=$(pwd)
 ####################
 # External Plugins #
 ####################
+export EXTERNAL_TOOLS_BASE_DIR=${PH2ACF_BASE_DIR%/*}
+# if in the docker container I want to do this .. need to figure out how to make sure that this is set-up correctly
 export AMC13DIR=$CACTUSINCLUDE/amc13
-export ANTENNADIR=$PH2ACF_BASE_DIR/../CMSPh2_AntennaDriver
-export USBINSTDIR=$PH2ACF_BASE_DIR/../Ph2_USBInstDriver
-export EUDAQDIR=$PH2ACF_BASE_DIR/../eudaq
+export ANTENNADIR=$EXTERNAL_TOOLS_BASE_DIR/CMSPh2_AntennaDriver
+export USBINSTDIR=$EXTERNAL_TOOLS_BASE_DIR/Ph2_USBInstDriver
+export EUDAQDIR=$EXTERNAL_TOOLS_BASE_DIR/eudaq
+export POWERSUPPLYDIR=$EXTERNAL_TOOLS_BASE_DIR/power_supply
 
 ###########
 # ANTENNA #

@@ -30,7 +30,7 @@ RD53::RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pHybridId, uint8_t pRD53Id, ui
     : ReadoutChip(pBeId, pFMCId, pHybridId, pRD53Id)
 {
     fMaxRegValue      = RD53Shared::setBits(RD53Constants::NBIT_MAXREG);
-    fChipOriginalMask = new ChannelGroup<nRows, nCols>;
+    fChipOriginalMask = std::make_shared<ChannelGroup<nRows, nCols>>();
     configFileName    = fileName;
     RD53::loadfRegMap(configFileName);
     this->setFrontEndType(FrontEndType::RD53);

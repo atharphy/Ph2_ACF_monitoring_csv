@@ -60,10 +60,9 @@ if(${PH2_ANTENNA_FOUND})
 endif()
 
 # Boost also needs to be linked
-if(Boost_FOUND)
-    set(LIBS ${LIBS} ${Boost_LIBRARIES})
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_date_time -lboost_iostreams")
-endif()
+include_directories(${Boost_INCLUDE_DIRS})
+link_directories(${Boost_LIBRARY_DIRS})
+set(LIBS ${LIBS} ${Boost_IOSTREAMS_LIBRARY} ${Boost_DATE_TIME_LIBRARY})
 
 ####################################
 ## EXECUTABLES
@@ -126,9 +125,11 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     #${Boost_SYSTEM_LIBRARY }
     #${Boost_THREAD_LIBRARY }
     ${Boost_REGEX_LIBRARY}
+    ${Boost_PROGRAM_OPTIONS_LIBRARY}
+
     ${Boost_IOSTREAMS_LIBRARY}
 
-            ${ROOT_BASIC_LIB_LIST}
+    #${ROOT_BASIC_LIB_LIST}
               cactus_uhal_uhal
               cactus_uhal_log
               cactus_uhal_grammars
@@ -137,6 +138,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
               Ph2_Utils_${Ph2_ACF_Master}
               NetworkUtils_${Ph2_ACF_Master}
               Ph2_Tools_${Ph2_ACF_Master}
+              Ph2_MonitorUtils_${Ph2_ACF_Master}
 
 #Ph2_DQMUtils_${Ph2_ACF_Master }
 #$ENV{XDAQ_LIB } / libxdaq.so

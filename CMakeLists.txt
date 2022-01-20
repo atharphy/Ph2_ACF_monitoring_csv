@@ -73,10 +73,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # If it's a recent gcc compiler, then let's add some
     # compiler options to avoid warnings promoted to errors
 
-    set (GCC_NOERROR_FLAGS " -Wno-error=unused-result    -Wno-error=deprecated-declarations")
+    set (GCC_NOERROR_FLAGS " -Wno-error=unused-result -Wno-error=deprecated-declarations")
     set (GCC_6_NOERROR_FLAGS "-Wno-error=misleading-indentation")
-    set (GCC_7_NOERROR_FLAGS "-Wno-expansion-to-defined -Wno-error=format-overflow")
-    set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow")
+    set (GCC_7_NOERROR_FLAGS "-Wno-expansion-to-defined -Wno-error=format-overflow -Wno-error=catch-value")
+    set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow -Wno-error=unused-function -Wno-error=pedantic")
     set (GCC_9_NOERROR_FLAGS "-Wno-error=deprecated-copy -Wno-error=int-in-bool-context -Wno-error=unused-variable")
 
     if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
@@ -153,7 +153,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     if ($ENV{CompileWithEUDAQ})
         set(USE_EUDAQ ON)
         include_directories($ENV{EUDAQDIR}/include)
-        set(EUDAQ_LIB -L$ENV{EUDAQLIB} EUDAQ)
+        set(EUDAQ_LIB -L$ENV{EUDAQLIB} eudaq_core)
         message(STATUS "    EUDAQ variable is defined. EUDAQ directory: $ENV{EUDAQDIR}")
     else($ENV{CompileWithEUDAQ})
         message(STATUS "    EUDAQ variable is not defined. Building without EUDAQ producer")
@@ -168,9 +168,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif(ZMQ_FOUND)
 
     # Boost
-    set(BOOST_INCLUDE_DIRS "$ENV{BOOST_INCLUDE}")
-    set(BOOST_LIBRARY_DIRS "$ENV{BOOST_LIB}")
-    find_package(Boost 1.53 REQUIRED system filesystem thread program_options serialization)
+    find_package(Boost 1.53 REQUIRED system filesystem serialization iostreams)
 
     message("--     ${BoldCyan}#### Done ####${Reset}")
 
@@ -195,6 +193,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     if(CompileForShep OR NoDataShipping)
         add_subdirectory(DQMUtils)
         add_subdirectory(RootUtils)
+        add_subdirectory(MonitorDQM)
     endif()
 
     if(NoDataShipping OR (CompileForShep AND CompileForHerd))
@@ -207,10 +206,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     add_subdirectory(Utils)
     add_subdirectory(NetworkUtils)
+    add_subdirectory(MonitorUtils)
 
     message("--     ${BoldRed}#### Don't forget to set the path and ld_library_path by sourcing setup.sh before running ###${Reset}")
-    #set(ENV{PATH} "$ENV{PATH}:${PROJECT_SOURCE_DIR}/bin")
-    #set(ENV{LD_LIBRARY_PATH} "${PROJECT_SOURCE_DIR}/lib:$ENV(LD_LIBRARY_PATH)")
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
@@ -228,13 +226,9 @@ else() # ------------------------------- Compilation in the otsdaq environment -
 
     MESSAGE (STATUS "${CMAKE_CXX_FLAGS}")
 
-    set(CompileForShep "$ENV{CompileForShep}")
-    set(CompileForHerd "$ENV{CompileForHerd}")
-    if ((NOT CompileForShep) AND (NOT CompileForHerd))
-        set(NoDataShipping true)
-    else()
-        set(NoDataShipping false)
-    endif()
+    set(CompileForShep true)
+    set(CompileForHerd false)
+    set(NoDataShipping false)
 
     # AMC13
     if(${CACTUS_AMC13_FOUND})
@@ -254,7 +248,6 @@ else() # ------------------------------- Compilation in the otsdaq environment -
         if(PH2_USBINSTLIB_FOUND)
         endif(PH2_USBINSTLIB_FOUND)
     endif(ZMQ_FOUND)
-
 
    # EUDAQ
     if ($ENV{CompileWithEUDAQ})
@@ -283,6 +276,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     add_subdirectory(HWInterface)
     add_subdirectory(System)
     add_subdirectory(miniDAQ)
+    add_subdirectory(MonitorUtils)
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")

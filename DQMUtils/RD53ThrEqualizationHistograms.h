@@ -23,7 +23,7 @@
 class ThrEqualizationHistograms : public DQMHistogramBase
 {
   public:
-    void book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap) override;
+    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap) override;
     void process() override;
     bool fill(std::vector<char>& dataBuffer) override;
     void reset() override{};
@@ -35,7 +35,8 @@ class ThrEqualizationHistograms : public DQMHistogramBase
     DetectorDataContainer DetectorData;
 
     DetectorDataContainer ThrEqualization;
-    DetectorDataContainer TDAC;
+    DetectorDataContainer TDAC1D;
+    DetectorDataContainer TDAC2D;
 
     size_t nEvents;
     size_t VCalHnsteps;

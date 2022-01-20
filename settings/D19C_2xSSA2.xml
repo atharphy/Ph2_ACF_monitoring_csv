@@ -1,12 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
-  <BeBoard Id="0" boardType="D19C" eventType="SSA2">
-      <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.10:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+  <BeBoard Id="0" boardType="D19C" eventType="SCAS">
+    <connection id="board" uri="chtcp-2.0://hybridtesting.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
+    <!-- <connection id="board" uri="chtcp-2.0://pcmpatest.cern.ch:10203?target=192.168.1.79:50001" address_table="file://settings/address_tables/uDTC_OT_address_table_v2.xml" />  -->
     <OpticalGroup Id="0" FMCId="0" >
-        <Hybrid Id="0" Status="1">
-            <SSA_Files path="./settings/SSAFiles/" />
-            <SSA2 Id="0" side="0" configfile="SSA2_template_v2.txt" />
-        </Hybrid>
+	<lpGBT_Interface useOpticalLink="0" useCPB="0"/>
+    <Hybrid Id="0" Status="1" >
+        <Global>
+            <CIC enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="320"/>
+        </Global>
+
+        <SSA_Files path="./settings/SSAFiles/" />
+        <SSA2 Id="0" configfile="SSA2.txt" />
+        <SSA2 Id="1" configfile="SSA2.txt" />
+        <SSA2 Id="2" configfile="SSA2.txt" />
+        <!-- <SSA2 Id="3" configfile="SSA2.txt" /> -->
+        <SSA2 Id="4" configfile="SSA2.txt" />
+        <SSA2 Id="5" configfile="SSA2.txt" />
+        <SSA2 Id="6" configfile="SSA2.txt" />
+        <SSA2 Id="7" configfile="SSA2.txt" />
+    </Hybrid>
     </OpticalGroup>
 
         <!--CONFIG-->
@@ -24,30 +37,42 @@
             <Register name="fast_command_block">
                 <Register name="triggers_to_accept"> 0 </Register>
                 <Register name="trigger_source"> 6 </Register>
-                <Register name="user_trigger_frequency"> 200 </Register>
-    		<Register name="stubs_mask"> 1 </Register>
-                    <!--this is the delay for the stub trigger-->
-    		<Register name="stub_trigger_delay_value"> 0 </Register>
-                    <Register name="stub_trigger_veto_length"> 0 </Register>
-    		<Register name="test_pulse">
-    			<Register name="delay_after_fast_reset"> 50 </Register>
-    			<Register name="delay_after_test_pulse"> 200 </Register>
-    			<Register name="delay_before_next_pulse"> 1000 </Register>
-    			<Register name="en_fast_reset"> 0 </Register>
-    			<Register name="en_test_pulse"> 1 </Register>
-    			<Register name="en_l1a"> 1 </Register>
-    			<Register name="en_shutter"> 0 </Register>
-    		</Register>
-                    <Register name="ext_trigger_delay_value"> 50 </Register>
-                    <Register name="antenna_trigger_delay_value"> 200 </Register>
-                    <Register name="delay_between_two_consecutive"> 25 </Register>
-                    <Register name="misc">
-                            <Register name="backpressure_enable"> 0 </Register>
-                            <Register name="stubOR"> 1 </Register>
-                            <Register name="initial_fast_reset_enable"> 0 </Register>
-    			<Register name="trigger_timeout_enable"> 0 </Register>
-    			<Register name="trigger_multiplicity"> 1 </Register>
-                    </Register>
+                <Register name="user_trigger_frequency"> 1 </Register>
+                <Register name="stubs_mask"> 1 </Register>
+                <Register name="stub_trigger_delay_value"> 0 </Register>
+                <Register name="stub_trigger_veto_length"> 0 </Register>
+        		<Register name="test_pulse">
+        			<Register name="delay_after_fast_reset"> 50 </Register>
+        			<Register name="delay_after_test_pulse"> 100 </Register>
+        			<Register name="delay_before_next_pulse"> 1000 </Register>
+        			<Register name="en_fast_reset"> 0 </Register>   
+        			<Register name="en_test_pulse"> 1 </Register>
+        			<Register name="en_l1a"> 1 </Register>
+        			<Register name="en_shutter"> 0 </Register>
+        		</Register>
+                <Register name="ps_async_delay">
+                    <Register name="after_clear_counters"> 200 </Register>
+                    <Register name="after_open_shutter"> 1 </Register>
+                    <Register name="after_close_shutter"> 200 </Register>
+                    <Register name="after_stop_antenna"> 200 </Register>
+                </Register>
+                <Register name="ps_async_en">
+                    <Register name="open_shutter"> 1 </Register>
+                    <Register name="close_shutter"> 1 </Register>
+                    <Register name="cal_pulse"> 1 </Register>
+                    <Register name="antenna"> 0 </Register>
+                    <Register name="clear_counters"> 0 </Register>
+                </Register>
+                <Register name="ext_trigger_delay_value"> 50 </Register>
+                <Register name="antenna_trigger_delay_value"> 1 </Register>
+                <Register name="delay_between_two_consecutive"> 25 </Register>
+                <Register name="misc">
+                    <Register name="backpressure_enable"> 0 </Register>
+                    <Register name="stubOR"> 1 </Register>
+                    <Register name="initial_fast_reset_enable"> 0 </Register>
+    		        <Register name="trigger_timeout_enable"> 0 </Register>
+        			<Register name="trigger_multiplicity"> 0 </Register>
+                </Register>
             </Register>
     	<!-- I2C manager -->
             <Register name="command_processor_block">
@@ -55,14 +80,18 @@
     	<!-- Phy Block -->
     	<Register name="physical_interface_block">
     		<Register name="i2c">
-                    	<Register name="frequency"> 4 </Register>
+                <Register name="frequency"> 4 </Register>
     		</Register>
+            <Register name="cic">
+                    <Register name = "clock_enable"> 1 </Register>
+                    <Register name = "stub_package_delay"> 2 </Register>
+            </Register>
     	</Register>
     	<!-- Readout Block -->
         	<Register name="readout_block">
                 <Register name="packet_nbr"> 499 </Register>
                 <Register name="global">
-                        <Register name="data_handshake_enable"> 1 </Register>
+                        <Register name="data_handshake_enable"> 0 </Register>
                         <Register name="int_trig_enable"> 0 </Register>
                         <Register name="int_trig_rate"> 0 </Register>
                         <Register name="trigger_type"> 0 </Register>
@@ -113,31 +142,40 @@
 
 
     <!--[>Calibration<]-->
-
-        <Setting name="StartTHDAC">0x40</Setting>
-        <Setting name="StopTHDAC">0x90</Setting>
-        <Setting name="NMsec">0</Setting>
-        <Setting name="NMpulse">3000</Setting>
-        <Setting name="Nlvl">50</Setting>
-        <Setting name="Vfac">0.9</Setting>
+    <Setting name="StartTHDAC">0x40</Setting>
+    <Setting name="StopTHDAC">0x90</Setting>
+    <Setting name="NMsec">0</Setting>
+    <Setting name="NMpulse">3000</Setting>
+    <Setting name="Nlvl">50</Setting>
+    <Setting name="Vfac">0.9</Setting>
     <Setting name="Mrms">0.6</Setting>
+    <Setting name="PedestalEqualizationPulseAmplitude">40</Setting>
+    <Setting name="PedeNoisePulseAmplitude">40</Setting>
     <Setting name="TestPulsePotentiometer">0x50</Setting>
+    <Setting name="EnableFastCounterReadout">0</Setting>
+    <Setting name="EnablePairSelect">0</Setting>
     <Setting name="SyncDebug">0</Setting>
-
+    <Setting name="PlotSCurves">1</Setting>
+    
 
 
     <Setting name="ShortsPulseAmplitude">0x120</Setting>
 
     <Setting name="TargetVcth">0x78</Setting>
     <Setting name="TargetOffset">0x50</Setting>
-    <Setting name="Nevents">500</Setting>
+    <Setting name="Nevents">100</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
 
     <!--Signal Scan Fit-->
-	  <Setting name="InitialVcth">0x78</Setting>
-	  <Setting name="SignalScanStep">2</Setting>
+    <Setting name="InitialVcth">0x78</Setting>
+    <Setting name="SignalScanStep">2</Setting>
     <Setting name="FitSignal">0</Setting>
 
+    <!--PS hybrid SSA output test -->
+    <!-- number of 10 ms periods to wait for in the case of stubs -->
+    <!-- number of triggers to send in the case of L1A data -->
+    <!-- L1 triggers sent once every 10 ms -->
+    <Setting name="PSHybridDebugDuration">1</Setting>
 </Settings>
 </HwDescription>

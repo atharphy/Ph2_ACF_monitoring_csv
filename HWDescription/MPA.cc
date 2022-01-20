@@ -24,18 +24,22 @@ namespace Ph2_HwDescription
 
 MPA::MPA(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pMPAId, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pBeId, pFMCId, pFeId, pMPAId)
 {
+    fChipAddress      = 0x40 + pMPAId % 8;
     fMaxRegValue      = 255;
-    fChipOriginalMask = new ChannelGroup<1920>;
-    fPartnerId        = pPartnerId;
+    fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS * NMPACOLS>>();
+    fChipOriginalMask->enableAllChannels();
+    fPartnerId = pPartnerId;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::MPA);
 }
 
 MPA::MPA(const FrontEndDescription& pFeDesc, uint8_t pMPAId, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pFeDesc, pMPAId)
 {
+    fChipAddress      = 0x40 + pMPAId % 8;
     fMaxRegValue      = 255; // 8 bit registers in MPA
-    fChipOriginalMask = new ChannelGroup<1920>;
-    fPartnerId        = pPartnerId;
+    fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS, NMPACOLS>>();
+    fChipOriginalMask->enableAllChannels();
+    fPartnerId = pPartnerId;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::MPA);
 }
@@ -75,18 +79,7 @@ void MPA::loadfRegMap(const std::string& filename)
                 fRegItem.fAddress  = strtoul(fAddress_str.c_str(), 0, 16);
                 fRegItem.fDefValue = strtoul(fDefValue_str.c_str(), 0, 16);
                 fRegItem.fValue    = strtoul(fValue_str.c_str(), 0, 16);
-                // FIXME this channel masking part is currently using the MPA values. Need to check what the SSA format
-                // is
-                if(fRegItem.fPage == 0x00 && fRegItem.fAddress >= 0x20 && fRegItem.fAddress <= 0x3F)
-                { // Register is a Mask
-                    if(fRegItem.fValue != 0xFF)
-                    {
-                        for(uint8_t channel = 0; channel < 8; ++channel)
-                        {
-                            if((fRegItem.fValue & (0x1 << channel)) == 0) { fChipOriginalMask->disableChannel((fRegItem.fAddress - 0x20) * 8 + channel); }
-                        }
-                    }
-                }
+
                 fRegMap[fName] = fRegItem;
                 // std::cout << __PRETTY_FUNCTION__ <<fName<<"," <<fRegItem.fValue << std::endl;
                 cLineCounter++;

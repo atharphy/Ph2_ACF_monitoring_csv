@@ -16,11 +16,15 @@
 #include <iterator>
 #include <numeric>
 
-const size_t CLUSTER_WORD_SIZE = 3 + 8 + 3;
+const size_t CLUSTER_WORD_SIZE   = 3 + 8 + 3;
+const size_t P_CLUSTER_WORD_SIZE = 3 + 7 + 3 + 4;
+const size_t S_CLUSTER_WORD_SIZE = 3 + 7 + 3 + 1;
+
 const size_t L1_BLOCK_SIZE     = 11;
 const size_t RAW_L1_CBC        = 275;
 const size_t HIT_WORD_SIZE     = 2 + 9 + 9 + 254;
-const size_t STUB_WORD_SIZE    = 3 + 8 + 4;
+const size_t STUB_WORD_SIZE_2S = 3 + 8 + 4;
+const size_t STUB_WORD_SIZE_PS = 3 + 8 + 4 + 3;
 const size_t EVENT_HEADER_SIZE = 4; // in 32 bit words
 
 const uint8_t INVALID_L1HEADER   = 1;
@@ -29,7 +33,7 @@ const uint8_t INVALID            = 3;
 
 namespace Ph2_HwInterface
 {
-using FeData    = std::pair<std::pair<uint16_t, uint16_t>, std::vector<uint16_t>>;
+using FeData    = std::pair<std::pair<uint16_t, uint16_t>, std::vector<uint32_t>>;
 using RawFeData = std::pair<std::pair<uint16_t, uint16_t>, std::vector<std::bitset<RAW_L1_CBC>>>;
 
 using EventList    = std::vector<FeData>;
@@ -47,7 +51,7 @@ class D19cCic2Event : public Event
      * \param pNbCbc
      * \param pEventBuf : the pointer to the raw Event buffer of this Event
      */
-    D19cCic2Event(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list);
+    D19cCic2Event(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list, bool pWith8CBC3, bool pWithTLU = false);
     /*!
      * \brief Copy Constructor of the Event Class
      */
@@ -190,18 +194,25 @@ class D19cCic2Event : public Event
     std::vector<uint32_t> GetHits(uint8_t pFeId, uint8_t pCbcId) const override;
     std::vector<Cluster>  clusterize(uint8_t pFeId) const;
 
-    std::vector<Cluster> getClusters(uint8_t pFeId, uint8_t pCbcId) const override;
+    std::vector<Cluster>  getClusters(uint8_t pFeId, uint8_t pCbcId) const override;
+    uint8_t               GetNStripClusters(uint8_t pFeId) const;
+    uint8_t               GetNPixelClusters(uint8_t pFeId) const;
+    std::vector<SCluster> GetStripClusters(uint8_t pFeId, uint8_t pMPAId) const;
+    std::vector<PCluster> GetPixelClusters(uint8_t pFeId, uint8_t pMPAId) const;
 
-    void fillDataContainer(BoardDataContainer* boardContainer, const ChannelGroupBase* cTestChannelGroup) override;
+    void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) override;
 
     void     print(std::ostream& out) const override;
+    uint16_t L1Status(uint8_t pFeId) const;
     uint32_t L1Id(uint8_t pFeId, uint8_t pReadoutChipId) const;
     uint32_t BxId(uint8_t pFeId) const override;
     uint16_t Status(uint8_t pFeId) const;
 
-    std::bitset<NCHANNELS>  decodeClusters(uint8_t pFeId, uint8_t pReadoutChipId) const;
-    std::bitset<RAW_L1_CBC> getRawL1Word(uint8_t pFeId, uint8_t pReadoutChipId) const;
-    size_t                  getFeIndex(const uint8_t pFeId) const
+    std::bitset<NMPACHANNELS> decodePClusters(uint8_t pFeId, uint8_t pReadoutChipId) const;
+    std::bitset<NSSACHANNELS> decodeSClusters(uint8_t pFeId, uint8_t pReadoutChipId) const;
+    std::bitset<NCHANNELS>    decodeClusters(uint8_t pFeId, uint8_t pReadoutChipId) const;
+    std::bitset<RAW_L1_CBC>   getRawL1Word(uint8_t pFeId, uint8_t pReadoutChipId) const;
+    size_t                    getFeIndex(const uint8_t pFeId) const
     {
         // first find feIndex
         auto cFeIterator = std::find(fFeIds.begin(), fFeIds.end(), pFeId);
@@ -218,15 +229,50 @@ class D19cCic2Event : public Event
             throw std::runtime_error(std::string("ROCId not found in D19cCIC2Event .. check xml!"));
     }
 
-  private:
-    std::vector<uint8_t>              fFeMapping{3, 2, 1, 0, 4, 5, 6, 7}; // FE --> FE CIC
-    std::vector<uint8_t>              fFeIds;
-    std::vector<std::vector<uint8_t>> fROCIds;
+    void set8CBC3(bool pIs8CBC3) { fIs8CBC3 = pIs8CBC3; }
 
+  private:
+    // figure out how to switch between various hybrid types here
+    std::vector<uint8_t> fFeMapping2S{0, 1, 2, 3, 7, 6, 5, 4};   // Index Hybrid FE Id , Value CIC FE Id
+    std::vector<uint8_t> fFeMapping8BC3{3, 2, 1, 0, 4, 5, 6, 7}; // Index CIC FE Id , Value Hybrid FE Id - double check this!
+    std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5};  //  Index Hybrid FE Id , Value CIC FE Id
+    std::vector<uint8_t> fFeMappingPSL{1, 0, 4, 5, 6, 7, 3, 2};  // Index hybrid FE Id , Value CIC FE Id
+
+    std::vector<uint8_t>              fFeMapping; //{3, 2, 1, 0, 4, 5, 6, 7}; // FE --> FE CIC
+    std::vector<uint8_t>              fFeIds;
+    std::vector<uint8_t>              fFeIdsCic;
+    std::vector<std::vector<uint8_t>> fROCIds;
+    std::vector<uint8_t>              fNStripClusters;
+    std::vector<uint8_t>              fNPxlClusters;
+
+    uint8_t      fTLUenabled   = 0;
+    bool         fIs2S         = true;
+    bool         fIs8CBC3      = false;
     bool         fIsSparsified = true;
     EventList    fEventHitList;
     RawEventList fEventRawList;
     EventList    fEventStubList;
+    // mapped id
+    // takes chip id on the hybrid
+    // returns chip id in the CIC
+    uint8_t getChipIdMapped(uint8_t pFeId, uint8_t pReadoutChipId) const
+    {
+        pReadoutChipId = pReadoutChipId % 8;
+        // assign front-end mapping
+        std::vector<uint8_t> cFeMapping = (fIs2S) ? fFeMapping2S : fFeMappingPSR;
+        if(!fIs2S) cFeMapping = (pFeId % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
+        if(fIs8CBC3 && fIs2S) cFeMapping = fFeMapping8BC3;
+
+        // if( fIs2S && cHybridIds.size() == 0 ) return 0;
+        // else if( fIs2S ) return (cHybridIds.size() - 1) - std::distance(cHybridIds.begin(), std::find(cHybridIds.begin(), cHybridIds.end(), pReadoutChipId));
+        // else  return std::distance(cHybridIds.begin(), std::find(cHybridIds.begin(), cHybridIds.end(), pReadoutChipId));
+        // if(fIs2S)
+        // {
+        //     return (7 - std::distance(cFeMapping.begin(), std::find(cFeMapping.begin(), cFeMapping.end(), pReadoutChipId)));
+        // }
+        // else
+        return cFeMapping[pReadoutChipId]; // std::distance(cFeMapping.begin(), std::find(cFeMapping.begin(), cFeMapping.end(), pReadoutChipId));
+    }
 
     std::vector<Cluster> formClusters(std::vector<uint32_t> pHits, int pSensorId) const
     {
@@ -255,6 +301,46 @@ class D19cCic2Event : public Event
         return cClusters;
     }
     std::bitset<NCHANNELS> hitsFromClusters(uint8_t pFeId, uint8_t pReadoutChipId);
+
+    // templated decoding function
+    // split stream of data
+    template <std::size_t N>
+    std::bitset<N> decodeCicClusters(uint8_t pFeId, uint8_t pReadoutChipId)
+    {
+        auto&          cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
+        std::bitset<N> cBitSet(0);
+        // size_t                 cClusterId = 0;
+        // for( auto cCluster : cClusterWords )
+        // {
+        // uint8_t cChipId = (cCluster & ((0x7) << (0+4+3+7))) >> (0+4+3+7);
+        // auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
+        // if(cChipId == cChipIdMapped)
+        // {
+        //     //figure out if it is an S or a P cluster
+        //     uint8_t cFlag = ( cCluster & (0x1 << 31) ) >> 31 ;
+        //     if( cFlag == 0 ) // s cluster
+        //     {
+        //         SCluster cSCluster;
+        //         cSCluster.fAddress = (cCluster & ((0x7F) << (0+1+3))) >> (0+1+3);
+        //         cSCluster.fWidth = (cCluster & ((0x7) << (0+1))) >> (0+1);
+        //         cSCluster.fMip = (cCluster & ((0x1) << 0)) >> 0;
+        //         //cSClusters.push_back(cSCluster);
+        //         LOG(DEBUG) << BOLDRED << "S-cluster, address : " << unsigned(cSCluster.fAddress)<<","<<unsigned(cSCluster.fWidth)<<","<< unsigned(cSCluster.fMip)<< RESET;
+        //     }
+        //     else
+        //     {
+        //         PCluster aPCluster;
+        //         aPCluster.fAddress = (cCluster & ((0x7F) << (0+4+3))) >> (0+4+3);
+        //         aPCluster.fWidth = (cCluster & ((0x7) << (0+4))) >> (0+4);
+        //         aPCluster.fZpos = (cCluster & ((0xF) << 0)) >> 0;
+        //         //cPClusters.push_back(aPCluster);
+        //         LOG(DEBUG) << BOLDGREEN << "P-cluster, address : " << unsigned(aPCluster.fAddress)<<","<<unsigned(aPCluster.fWidth)<<","<< unsigned(aPCluster.fZpos)<< RESET;
+        //     }
+        //     cClusterId++;
+        // }
+        // }
+        return cBitSet;
+    }
 
     // L1 Id from chip
     void       printL1Header(std::ostream& os, uint8_t pFeId, uint8_t pCbcId) const;

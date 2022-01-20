@@ -9,6 +9,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
     include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
     include_directories(${PROJECT_SOURCE_DIR}/Utils)
+    include_directories(${PROJECT_SOURCE_DIR}/MonitorUtils)
     include_directories(${PROJECT_SOURCE_DIR}/NetworkUtils)
     include_directories(${PROJECT_SOURCE_DIR})
     include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
@@ -20,6 +21,11 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     link_directories(${UHAL_UHAL_LIB_PREFIX})
     link_directories(${UHAL_LOG_LIB_PREFIX})
     link_directories(${UHAL_GRAMMARS_LIB_PREFIX})
+
+    # Boost also needs to be linked
+    include_directories(${Boost_INCLUDE_DIRS})
+    link_directories(${Boost_LIBRARY_DIRS})
+    set(LIBS ${LIBS} ${Boost_ITERATOR_LIBRARY})
 
     # Find root and link against it
     if(${ROOT_FOUND})
@@ -33,7 +39,11 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # Add the library
     add_library(Ph2_System STATIC ${SOURCES} ${HEADERS})
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils NetworkUtils)
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_MonitorUtils NetworkUtils)
+    if(NoDataShipping)
+        set(LIBS ${LIBS} Ph2_MonitorDQM)
+    endif()
+
     TARGET_LINK_LIBRARIES(Ph2_System ${LIBS})
 
       #check for TestCard USBDriver
@@ -59,6 +69,20 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
           set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBTcpServerFlag}")
       endif($ENV{UseTCUSBTcpServer})
     endif(${PH2_TCUSB_FOUND})
+
+    if(NoDataShipping)
+        if(${ROOT_FOUND})
+            include_directories(${ROOT_INCLUDE_DIRS})
+            set(LIBS ${LIBS} ${ROOT_LIBRARIES})
+            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
+            
+            #check for THttpServer
+            if(${ROOT_HAS_HTTP})
+                set(LIBS ${LIBS} ${ROOT_RHTTP_LIBRARY})
+                set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{HttpFlag}")
+            endif()
+        endif()
+    endif()
 
     ####################################
     ## EXECUTABLES

@@ -24,6 +24,7 @@ namespace Ph2_HwDescription
 
 Cic::Cic(const FrontEndDescription& pFeDesc, uint8_t pCicId, const std::string& filename) : Chip(pFeDesc, pCicId)
 {
+    fChipAddress = 0x60;
     fMaxRegValue = 255; // 8 bit registers in CIC
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::CIC);
@@ -32,6 +33,7 @@ Cic::Cic(const FrontEndDescription& pFeDesc, uint8_t pCicId, const std::string& 
 // C'tors which take BeId, FMCId, FeID, CbcId
 Cic::Cic(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCicId, const std::string& filename) : Chip(pBeId, pFMCId, pFeId, pCicId)
 {
+    fChipAddress = 0x60;
     fMaxRegValue = 255; // 8 bit registers in CIC
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::CIC);
