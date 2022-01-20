@@ -271,16 +271,6 @@ class BeBoardInterface
      */
     BeBoardFWInterface* getFirmwareInterface() { return fBoardFW; }
 
-    // ###########################################
-    // # Member functions to handle the firmware #
-    // ###########################################
-    void                     FlashProm(Ph2_HwDescription::BeBoard* pBoard, const std::string& strConfig, const char* pstrFile);
-    void                     JumpToFpgaConfig(Ph2_HwDescription::BeBoard* pBoard, const std::string& strConfig);
-    void                     DownloadFpgaConfig(Ph2_HwDescription::BeBoard* pBoard, const std::string& strConfig, const std::string& strDest);
-    const FpgaConfig*        GetConfiguringFpga(Ph2_HwDescription::BeBoard* pBoard);
-    std::vector<std::string> getFpgaConfigList(Ph2_HwDescription::BeBoard* pBoard);
-    void                     DeleteFpgaConfig(Ph2_HwDescription::BeBoard* pBoard, const std::string& strId);
-
     /*! \brief Set or reset the start signal */
     void SetForceStart(Ph2_HwDescription::BeBoard* pBoard, bool bStart);
 
