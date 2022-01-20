@@ -692,7 +692,6 @@ void OTHybridTester::LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8
 bool OTHybridTester::LpGBTTestResetLines()
 {
     bool cValid = true;
-
     std::vector<std::pair<std::string, uint8_t>> cLevels = {{"High", 1}, {"Low", 0}};
     // lpGBTinterface now nows this .. so don't need the if statements
 #ifdef __TCUSB__
@@ -779,6 +778,7 @@ bool OTHybridTester::LpGBTTestResetLines()
         else
             LOG(INFO) << BOLDRED << "Set levels to " << cLevel.first << " : test " << BOLDRED << " failed." << RESET;
     }
+    #endif
 #endif
     // if(cValid) { LOG(INFO) << BOLDGREEN << "Reset test passed." << RESET; }
     // else
@@ -1123,4 +1123,4 @@ std::string OTHybridTester::getVariableValue(std::string variable, std::string b
     return buffer.substr(begin, end - begin);
 }
 #endif
-#endif
+// #endif

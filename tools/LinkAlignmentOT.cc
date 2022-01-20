@@ -172,62 +172,66 @@ void LinkAlignmentOT::CheckLpgbtOutputs(uint8_t pPattern)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        for(auto cOpticalGroup: *cBoard) { CheckLpgbtOutputs(cOpticalGroup, pPattern); }
+        for(auto cOpticalGroup: *cBoard)
+        {
+            CheckLpgbtOutputs(cOpticalGroup, pPattern);
+        }
     }
 }
-bool LinkAlignmentOT::CheckLpgbtOutputs(const OpticalGroup* pOpticalGroup, uint8_t pPattern)
+bool LinkAlignmentOT::CheckLpgbtOutputs(const OpticalGroup* pOpticalGroup, uint8_t pPattern) 
 {
     auto cBoardId   = pOpticalGroup->getBeBoardId();
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     fBeBoardInterface->setBoard((*cBoardIter)->getId());
-    D19cDebugFWInterface* cDebugInterface = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    // D19cBackendAlignmentFWInterface* cAlignerInterface = static_cast<D19cBackendAlignmentFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-
+    D19cDebugFWInterface*            cDebugInterface   = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cBackendAlignmentFWInterface* cAlignerInterface = static_cast<D19cBackendAlignmentFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    
     LOG(INFO) << BOLDMAGENTA << "Checking lpGBT-out data on OpticalGroup#" << +pOpticalGroup->getId() << RESET;
     auto& clpGBT = pOpticalGroup->flpGBT;
     if(clpGBT == nullptr) return true;
 
-    // configure lpGBT to produce uplink pattern for all rx groups
-    D19clpGBTInterface* clpGBTInterface    = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-    uint32_t            cPatternToTransmit = pPattern << 24 | pPattern << 16 | pPattern << 8 | pPattern;
+    // configure lpGBT to produce uplink pattern for all rx groups 
+    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+    uint32_t cPatternToTransmit = pPattern << 24 | pPattern << 16 | pPattern << 8 | pPattern; 
     clpGBTInterface->ConfigureDPPattern(clpGBT, cPatternToTransmit);
     clpGBTInterface->ConfigureRxSource(clpGBT, clpGBTInterface->getGroups(), lpGBTconstants::PATTERN_CONST);
-
-    // now check output
-    // uint8_t cNlines = (pOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
+    
+    // now check output 
+    uint8_t cNlines = (pOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
     for(auto cHybrid: *pOpticalGroup)
     {
-        // LOG(INFO) << BOLDMAGENTA << "Stub debug output - pre-alignment -  hybrid#" << +cHybrid->getId() << RESET;
-        // cDebugInterface->StubDebug(true, 5, true );
-        // for(uint8_t cLineId = 1; cLineId <= cNlines; cLineId++)
-        // {
-        //     LOG(INFO) << BOLDMAGENTA << "Aligning Stub line#" << +cLineId << " on Hybrid#" << +cHybrid->getId() << RESET;
-        //     AlignerObject cAlignerObjct;
-        //     cAlignerObjct.fHybrid = cHybrid->getId();
-        //     cAlignerObjct.fChip   = 0;
-        //     cAlignerObjct.fLine   = cLineId;
-        //     LineConfiguration cLineCnfg;
-        //     cLineCnfg.fPattern       = pPattern;
-        //     cLineCnfg.fPatternPeriod = 8;
-        //     cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
-        //     cAlignerInterface->GetLineStatus(cAlignerObjct);
-        //     if( cAlignerInterface->IsLineWordAligned(cAlignerObjct) ) LOG (INFO) << BOLDYELLOW << "\t..Line#" << +cLineId << " aligned." << RESET;
-        // }
+        AlignerObject cAlignerObjct;
+        cAlignerObjct.fHybrid = cHybrid->getId();
+        cAlignerObjct.fChip   = 0;
+        LineConfiguration cLineCnfg;
+        cLineCnfg.fPattern       = pPattern;
+        cLineCnfg.fPatternPeriod = 8;
+        for(uint8_t cLineId = 1; cLineId <= cNlines; cLineId++)
+        {
+            LOG(INFO) << BOLDMAGENTA << "Aligning Stub line#" << +cLineId << " on Hybrid#" << +cHybrid->getId() << RESET;
+            cAlignerObjct.fLine   = cLineId;
+            cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
+            cAlignerInterface->GetLineStatus(cAlignerObjct);
+            if( cAlignerInterface->IsLineWordAligned(cAlignerObjct) ) LOG (INFO) << BOLDYELLOW << "\t..Line#" << +cLineId << " aligned." << RESET;
+        }
         fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
         fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-        // for( size_t cAttempt = 0 ; cAttempt < 2 ; cAttempt ++)
-        // {
-        //     LOG(INFO) << BOLDMAGENTA << "Stub debug output - post-alignment -  hybrid#" << +cHybrid->getId() << " - Attempt#" << +cAttempt << RESET;
-        //     cDebugInterface->StubDebug(true, cNlines, true );
-        // }
+        for( size_t cAttempt = 0 ; cAttempt < 2 ; cAttempt ++)
+        {
+            LOG(INFO) << BOLDMAGENTA << "Stub debug output - post-alignment -  hybrid#" << +cHybrid->getId() << " - Attempt#" << +cAttempt << RESET;
+            cDebugInterface->StubDebug(true, cNlines, ( cAttempt > 0 ) );
+        }
         // L1A debug
-        cDebugInterface->L1ADebug();
-        cDebugInterface->L1ADebug();
-        cDebugInterface->L1ADebug();
+        cAlignerObjct.fLine =0 ; 
+        cLineCnfg.fPattern       = pPattern;
+        cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
+        cAlignerInterface->GetLineStatus(cAlignerObjct);
+        if( cAlignerInterface->IsLineWordAligned(cAlignerObjct) ) LOG (INFO) << BOLDYELLOW << "\t..Line#" << +cAlignerObjct.fLine << " aligned." << RESET;
+        cDebugInterface->L1ADebug(); 
     }
-    // back to normal pattern .. i.e. data from CIC
+    // back to normal pattern .. i.e. data from CIC 
     clpGBTInterface->ConfigureRxSource(clpGBT, clpGBTInterface->getGroups(), lpGBTconstants::PATTERN_NORMAL);
-
+    
     return true;
 }
 

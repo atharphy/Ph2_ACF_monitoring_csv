@@ -470,17 +470,7 @@ int main(int argc, char* argv[])
     if(!cmd.foundOption("read") && cmd.foundOption("reconfigure"))
     {
         cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
-
-        if(!cmd.foundOption("read") && cmd.foundOption("checkLink"))
-        {
-            uint8_t         cPattern = (cmd.foundOption("checkLink")) ? convertAnyInt(cmd.optionValue("checkLink").c_str()) : 0xEA;
-            LinkAlignmentOT cLinkAlignment;
-            cLinkAlignment.Inherit(&cTool);
-            cLinkAlignment.Initialise();
-            cLinkAlignment.CheckLpgbtOutputs(cPattern);
-            cLinkAlignment.Reset();
-        }
-
+        
         // map MPA outputs for PS module
         PSAlignment cPSAlignment;
         cPSAlignment.Inherit(&cTool);
@@ -601,9 +591,7 @@ int main(int argc, char* argv[])
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit(&cTool);
         cCicAligner.Initialise();
-        cCicAligner.GenManPatternOutLine(0);
-        // cCicAligner.GenerateManualPattern();
-        // cCicAligner.ManualPhaseScan(0, 15);
+        cCicAligner.InputLineScan();
         cCicAligner.Reset();
     }
     // LOG (INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;

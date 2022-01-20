@@ -64,13 +64,17 @@ void CicFEAlignment::Initialise()
             }
         }
     }
+
+    #ifdef __USE_ROOT__
+    fDQMHistogrammer.book(fResultFile, *fDetectorContainer, fSettingsMap);
+    #endif
 }
 
 void CicFEAlignment::writeObjects()
 {
-    this->SaveResults();
 #ifdef __USE_ROOT__
-    // fDQMHistogramHybridTest.process();
+    this->SaveResults();
+    fDQMHistogrammer.process();
     fResultFile->Flush();
 #endif
 }
@@ -166,76 +170,30 @@ bool CicFEAlignment::SetBx0Delay(uint8_t pDelay, uint8_t pStubPackageDelay)
     return true;
 }
 
-// for now only on stub lines .. so line id is 0-5
-void CicFEAlignment::GenerateManualPattern()
+void CicFEAlignment::InputLineScan()
 {
-    LOG(INFO) << BOLDBLUE << "Generating Patterns used for phase alignment of CIC inputs." << RESET;
-
-    uint8_t              cBendCode_phAlign = 0xa;
-    uint8_t              cBendPattern2S    = (cBendCode_phAlign << 4) | cBendCode_phAlign;
-    uint8_t              cSyncPattern2S    = (0x8 << 4) | cBendCode_phAlign;
-    std::vector<uint8_t> cExpectedPatterns{0xA0, 0xAA, 0xCA, cBendPattern2S, cSyncPattern2S};
-    // make sure FE chips are sending expected pattern
-    for(auto cBoard: *fDetectorContainer)
+    // only for stubs ... for L1 line difficult to do this for 2S 
+    for(uint8_t cLineId = 0 ; cLineId < 5 ; cLineId++ )
     {
-        // generate alignment pattern on all stub lines
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                // configure ROCs to produce phase alignment patterns
-                for(auto cChip: *cHybrid)
-                {
-                    if(cChip->getFrontEndType() == FrontEndType::CBC3)
-                    {
-                        auto                 cInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
-                        std::vector<uint8_t> cSeeds_ph1{cExpectedPatterns[0], cExpectedPatterns[1], cExpectedPatterns[2]};
-                        std::vector<uint8_t> cBendLUT  = cInterface->readLUT(static_cast<ReadoutChip*>(cChip));
-                        auto                 cIterator = std::find(cBendLUT.begin(), cBendLUT.end(), cBendCode_phAlign);
-                        if(cIterator != cBendLUT.end())
-                        {
-                            int              cPosition    = std::distance(cBendLUT.begin(), cIterator);
-                            double           cBend_strips = -7. + 0.5 * cPosition;
-                            std::vector<int> cBends_ph1(cSeeds_ph1.size(), static_cast<int>(cBend_strips * 2));
-                            cInterface->injectStubs(static_cast<ReadoutChip*>(cChip), cSeeds_ph1, cBends_ph1);
-                        }
-                    }
-                } // chip
-            }     // hybrid
-        }         // OG
-    }             // board
+        auto cPattern = GenManPatternOutLine(cLineId);
+        ScanInputPhase( cLineId, cPattern, 0, 15 );
+    }
 }
-uint8_t CicFEAlignment::GenManPatternOutLine(uint8_t pOutLine)
-{
-    uint8_t              cPattern          = 0x8A;
-    uint8_t              cBendCode_phAlign = cPattern & 0x0F;
-    uint8_t              cBendPattern2S    = (cBendCode_phAlign << 4) | cBendCode_phAlign;
-    uint8_t              cSyncPattern2S    = cPattern;
-    std::vector<uint8_t> cStubs;
-    if(pOutLine == 0)
-    {
-        cStubs.push_back(cPattern);
-        cStubs.push_back(cPattern + 20), cStubs.push_back(cPattern + 40);
-    }
-    else if(pOutLine == 1)
-    {
-        cStubs.push_back(cPattern - 20);
-        cStubs.push_back(cPattern), cStubs.push_back(cPattern + 20);
-    }
-    else if(pOutLine == 2)
-    {
-        cStubs.push_back(cPattern - 40);
-        cStubs.push_back(cPattern - 20), cStubs.push_back(cPattern);
-    }
-    else
-    {
-        cStubs.push_back(0xA0);
-        cStubs.push_back(0xAA), cStubs.push_back(0xCA);
-    }
-
-    // std::vector<uint8_t> cExpectedPatterns{ 0xA0, 0xAA , 0xCA , cBendPattern2S, cSyncPattern2S };
-    std::vector<uint8_t> cExpectedPatterns{cStubs[0], cStubs[1], cStubs[2], cBendPattern2S, cSyncPattern2S};
-    // make sure FE chips are sending expected pattern
+// manually inject pattern on one of the CIC input lines from a CBC 
+uint8_t CicFEAlignment::GenManPatternOutLine(uint8_t pOutLine ) 
+{ 
+    uint8_t              cPattern          = 0x8A; 
+    uint8_t              cBendCode_phAlign = cPattern & 0x0F ;
+    uint8_t              cBendPattern2S    = ( cBendCode_phAlign << 4 ) | cBendCode_phAlign;
+    uint8_t              cSyncPattern2S    = cPattern; 
+    std::vector<uint8_t> cStubs; 
+    if( pOutLine == 0 ){ cStubs.push_back(cPattern); cStubs.push_back(cPattern+20), cStubs.push_back(cPattern+40); }
+    else if( pOutLine == 1 ){ cStubs.push_back(cPattern-20); cStubs.push_back(cPattern), cStubs.push_back(cPattern+20); } 
+    else if( pOutLine == 2 ){ cStubs.push_back(cPattern-40); cStubs.push_back(cPattern-20), cStubs.push_back(cPattern); } 
+    else { cStubs.push_back(0xA0); cStubs.push_back(0xAA), cStubs.push_back(0xCA); } 
+    
+    std::vector<uint8_t> cExpectedPatterns{ cStubs[0], cStubs[1], cStubs[2] , cBendPattern2S , cSyncPattern2S};
+    // make sure FE chips are sending expected pattern 
     for(auto cBoard: *fDetectorContainer)
     {
         // generate alignment pattern on all stub lines
@@ -246,142 +204,161 @@ uint8_t CicFEAlignment::GenManPatternOutLine(uint8_t pOutLine)
                 // configure ROCs to produce phase alignment patterns
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::CBC3)
+                    if( cChip->getFrontEndType() == FrontEndType::CBC3 ) 
                     {
-                        auto                 cInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
-                        std::vector<uint8_t> cBendLUT   = cInterface->readLUT(static_cast<ReadoutChip*>(cChip));
-                        auto                 cIterator  = std::find(cBendLUT.begin(), cBendLUT.end(), cBendCode_phAlign);
+                        auto cInterface = static_cast<CbcInterface*>(fReadoutChipInterface); 
+                        std::vector<uint8_t> cBendLUT          = cInterface->readLUT(static_cast<ReadoutChip*>(cChip));
+                        auto                 cIterator         = std::find(cBendLUT.begin(), cBendLUT.end(), cBendCode_phAlign);
                         if(cIterator != cBendLUT.end())
                         {
-                            int              cPosition    = std::distance(cBendLUT.begin(), cIterator);
-                            double           cBend_strips = -7. + 0.5 * cPosition;
-                            std::vector<int> cBends(cStubs.size(), static_cast<int>(cBend_strips * 2));
+                            int    cPosition    = std::distance(cBendLUT.begin(), cIterator);
+                            double cBend_strips = -7. + 0.5 * cPosition;
+                            std::vector<int>     cBends(cStubs.size(), static_cast<int>(cBend_strips * 2));
                             cInterface->injectStubs(static_cast<ReadoutChip*>(cChip), cStubs, cBends);
                         }
                     }
-                } // chip
-            }     // hybrid
-        }         // OG
-    }             // board
-
-    // retreive data and compare
-    const unsigned int cNStubLinesFromFE = 5;
-    for(auto cBoard: *fDetectorContainer)
-    {
-        fBeBoardInterface->setBoard(cBoard->getId());
-        D19cDebugFWInterface* cDebugInterface = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                for(auto cChip: *cHybrid)
-                {
-                    // select phy port and mux
-                    auto cPhyPortCnfg = fCicInterface->GetPhyPortConfig(cCic, cChip->getId(), pOutLine);
-                    fCicInterface->SelectMux(cCic, cPhyPortCnfg.first);
-                    // read back data from stub debug
-                    cDebugInterface->StubDebug(true, cNStubLinesFromFE, false);
-                    cDebugInterface->StubDebug(true, cNStubLinesFromFE, true);
-                } // chip
-            }     // hybrid
-        }         // OG
-    }             // board
+                }//chip 
+            }//hybrid
+        }//OG
+    }//board
 
     return cExpectedPatterns[pOutLine];
 }
-DetectorDataContainer CicFEAlignment::SamplePhase(uint8_t pPhase)
+void CicFEAlignment::ScanInputPhase( uint8_t pOutLine, uint8_t pPattern, uint8_t pStartScan, uint8_t pEndScan )
 {
-    const unsigned int    cNStubLinesFromFE = 5;
-    DetectorDataContainer cStubData;
-    ContainerFactory::copyAndInitChip<StubLineData>(*fDetectorContainer, cStubData);
+    LOG (INFO) << BOLDBLUE << "Scanning input phase on CIC input line#" << +pOutLine << " - expected pattern is " << std::bitset<8>(pPattern) << RESET;
+    for( uint8_t cPhase=pStartScan ; cPhase < 1+pEndScan; cPhase++)
+    {
+        CheckCicInput( pOutLine,  pPattern, cPhase ); 
+    }
+}
+DetectorDataContainer CicFEAlignment::CheckCicInput(uint8_t pOutLine, uint8_t pPattern, uint8_t pPhase ) 
+{
+    DetectorDataContainer cErrorRate;
+    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, cErrorRate);
+    
+    DetectorDataContainer cStubData, cLineErrors; 
+    ContainerFactory::copyAndInitChip<std::string>(*fDetectorContainer, cStubData);
+    ContainerFactory::copyAndInitChip<uint32_t>(*fDetectorContainer, cLineErrors);
+    CheckOutLine(pOutLine, pPattern , pPhase, cStubData, cLineErrors );
     for(auto cBoard: *fDetectorContainer)
     {
         auto& cStubDataThisBrd = cStubData.at(cBoard->getIndex());
+        auto& cErrorsThisBrd = cLineErrors.at(cBoard->getIndex());
+        auto& cErrRateThisBrd = cErrorRate.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
             auto& cStubDataThisOpticalGroup = cStubDataThisBrd->at(cOpticalGroup->getIndex());
+            auto& cLineErrorsThisOpticalGroup = cErrorsThisBrd->at(cOpticalGroup->getIndex());
+            auto& cErrRateThisOpticalGroup = cErrRateThisBrd->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
                 auto& cStubDataThisHybrid = cStubDataThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cLineErrorsThisHybrid = cLineErrorsThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cErrRateThisHybrid = cErrRateThisOpticalGroup->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     auto& cStubDataThisChip = cStubDataThisHybrid->at(cChip->getIndex());
-                    auto& cData             = cStubDataThisChip->getSummary<StubLineData>();
-                    cData.clear();
-                }
-            }
-        }
-    }
+                    auto& cLineErrorsThisChip = cLineErrorsThisHybrid->at(cChip->getIndex());
+                    auto& cErrRateThisChip = cErrRateThisHybrid->at(cChip->getIndex());
+                    auto& cData = cStubDataThisChip->getSummary<std::string>();
+                    auto& cErrorCount = cLineErrorsThisChip->getSummary<uint32_t>();
+                    auto& cErrRate    = cErrRateThisChip->getSummary<float>();
+                    cErrRate = (float)cErrorCount/cData.length();
+                    LOG (DEBUG) << BOLDBLUE << "Expected pattern is " << std::bitset<8>(pPattern) << RESET;
+                    LOG (DEBUG) << BOLDBLUE << "Error rate on this line is " << cErrRate << " errors/bit" << RESET;
+                    LOG (DEBUG) << BOLDBLUE << "For a sampling phase of " << +pPhase << " " << cErrorCount << " bit errors in the scoped  data : " << cData << " out of " << cData.length() << " bits." << RESET;
+                } // chip 
+            } // hybrid 
+        }// OG
+    }// board 
 
-    LOG(DEBUG) << BOLDBLUE << "Phase tap will be set to " << +pPhase << RESET;
-    // for the 5 stub lines
-    // set the phase for all enabled FEs
-    for(uint8_t cLineId = 0; cLineId < cNStubLinesFromFE; cLineId++)
-    {
-        LOG(DEBUG) << BOLDBLUE << "Phase tap set to " << +pPhase << " on StubLine#" << +cLineId << RESET;
-        // configure phase on all CIC inputs
-        for(auto cBoard: *fDetectorContainer)
-        {
-            for(auto cOpticalGroup: *cBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                    for(auto cChip: *cHybrid)
-                    {
-                        if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
-                        // set phase for each FE and line
-                        fCicInterface->SetFePhaseTap(cCic, cChip->getId(), cLineId, pPhase);
-                    } // chip
-                }     // hybrid
-            }         // OG
-        }             // board
-    }                 // line loop
-
-    for(uint8_t cLineId = 0; cLineId < cNStubLinesFromFE; cLineId++)
-    {
-        // retreive data and compare
-        for(auto cBoard: *fDetectorContainer)
-        {
-            auto& cStubDataThisBrd = cStubData.at(cBoard->getIndex());
-            fBeBoardInterface->setBoard(cBoard->getId());
-            D19cDebugFWInterface* cDebugInterface = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-            for(auto cOpticalGroup: *cBoard)
-            {
-                auto& cStubDataThisOpticalGroup = cStubDataThisBrd->at(cOpticalGroup->getIndex());
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    auto& cStubDataThisHybrid = cStubDataThisOpticalGroup->at(cHybrid->getIndex());
-                    auto& cCic                = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                    for(auto cChip: *cHybrid)
-                    {
-                        auto& cStubDataThisChip = cStubDataThisHybrid->at(cChip->getIndex());
-                        auto& cData             = cStubDataThisChip->getSummary<StubLineData>();
-
-                        // select phy port and mux
-                        auto cPhyPortCnfg = fCicInterface->GetPhyPortConfig(cCic, cChip->getId(), cLineId);
-                        fCicInterface->SelectMux(cCic, cPhyPortCnfg.first);
-                        // read back data from stub debug
-                        cDebugInterface->StubDebug(true, cNStubLinesFromFE, false);
-                        auto cStubLines = cDebugInterface->StubDebug(true, cNStubLinesFromFE, false);
-                        cData.push_back(cStubLines[cPhyPortCnfg.second]);
-                        if(cLineId == 0)
-                            LOG(INFO) << BOLDBLUE << "StubLine# " << +cLineId << " FE#" << +cChip->getId() << " PhaseTap " << +pPhase << " means selecting PhyPort" << +cPhyPortCnfg.first
-                                      << " and looking at stub data line#" << +cPhyPortCnfg.second << " " << cData[cLineId] << RESET;
-                    } // chip
-                }     // hybrid
-            }         // OG
-        }             // board
-    }                 // line loop
-
-    return cStubData;
+    #ifdef __USE_ROOT__
+    fDQMHistogrammer.fillManualPhaseScan(pPhase, pOutLine, cLineErrors, cStubData);
+    #endif
+    return cErrorRate;
 }
-
-void CicFEAlignment::ManualPhaseScan(uint8_t pStartScan, uint8_t pEndScan)
+SlvsLineStatus CicFEAlignment::CheckPhyPort( const Hybrid* pHybrid, PhyPortCnfg pPhyPortCnfg, uint8_t pPhase, uint8_t pPattern) 
 {
-    LOG(INFO) << BOLDBLUE << "Manual phase scan of CIC inputs ..." << RESET;
-    for(uint8_t cPhase = pStartScan; cPhase < 1 + pEndScan; cPhase++) { auto cSampledData = SamplePhase(cPhase); } // phase loop
+    SlvsLineStatus cStatus;  
+    std::bitset<8> cExpectedPattern(pPattern);
+    std::string    cPatternToMatch = cExpectedPattern.to_string();
+    auto cBoardId   = pHybrid->getBeBoardId();
+    fBeBoardInterface->setBoard(cBoardId);
+    auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+    auto& cCic = static_cast<const OuterTrackerHybrid*>(pHybrid)->fCic;
+    // select slvs debug line in FC7
+    fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", pHybrid->getId());
+    fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+    // select phyPort in CIC mux 
+    fCicInterface->SelectMux( cCic, pPhyPortCnfg.first); 
+    // set phase tap for this phy port input 
+    fCicInterface->SetPhaseTap(cCic , pPhyPortCnfg.first, pPhyPortCnfg.second, pPhase);
+    // interface to retrieve debug data 
+    D19cDebugFWInterface* cDebugInterface        = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    
+    // read back data from stub debug 
+    // for now .. I need to do this twice 
+    // figure out why in theFW 
+    cDebugInterface->StubDebug(true,6,false);
+    auto cLines = cDebugInterface->StubDebug(true,6,false);
+    cStatus.second  = cLines[pPhyPortCnfg.second];
+    cStatus.first   = 0; 
+    auto cFound = cStatus.second.find(cPatternToMatch);
+    std::string cPatternReceived;
+    if (cFound!=std::string::npos)
+    {
+        cPatternReceived = cStatus.second.substr( cFound , cStatus.second.length() - cFound) + cStatus.second.substr(0, cFound); 
+        LOG (DEBUG) << BOLDYELLOW << "Shifted str : " << cPatternReceived << " - bit shift is " << cFound << RESET;
+    }
+    else cPatternReceived = cStatus.second;
+
+    for (uint8_t cSize = 0; cSize < cPatternReceived.length(); cSize += 8) 
+    {
+        auto cSubStr = cPatternReceived.substr(cSize, 8);
+        for( uint8_t cIndx = 0; cIndx < cSubStr.size() ; cIndx++)
+        {
+            if( cSubStr[cIndx] != cPatternToMatch[cIndx] ) cStatus.first++; 
+        }   
+    }
+    cStatus.second = cPatternReceived;
+    return cStatus;
+}
+void CicFEAlignment::CheckOutLine(uint8_t pOutLine, uint8_t pPattern , uint8_t pPhase , DetectorDataContainer& pLineData, DetectorDataContainer& pErrorCounter)
+{
+    // retreive data and compare 
+    std::bitset<8> cExpectedPattern(pPattern);
+    std::string    cPatternToMatch = cExpectedPattern.to_string();
+    // const unsigned int cNStubLinesFromFE=5;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto& cStubDataThisBrd = pLineData.at(cBoard->getIndex());
+        auto& cErrorsThisBrd = pErrorCounter.at(cBoard->getIndex());
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto& cStubDataThisOpticalGroup = cStubDataThisBrd->at(cOpticalGroup->getIndex());
+            auto& cLineErrorsThisOpticalGroup = cErrorsThisBrd->at(cOpticalGroup->getIndex());
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cStubDataThisHybrid = cStubDataThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cLineErrorsThisHybrid = cLineErrorsThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                
+                for(auto cChip: *cHybrid)
+                {
+                    auto& cStubDataThisChip = cStubDataThisHybrid->at(cChip->getIndex());
+                    auto& cLineErrorsThisChip = cLineErrorsThisHybrid->at(cChip->getIndex());
+                    auto& cData = cStubDataThisChip->getSummary<std::string>();
+                    auto& cErrorCount = cLineErrorsThisChip->getSummary<uint32_t>();
+                    
+                    auto cPhyPortCnfg = fCicInterface->GetPhyPortConfig( cCic , cChip->getId() , pOutLine );
+                    auto cPhyPortStatus = CheckPhyPort( cHybrid, cPhyPortCnfg, pPhase, pPattern); 
+                    cData = cPhyPortStatus.second; 
+                    cErrorCount = cPhyPortStatus.first;
+                } // chip 
+            } // hybrid 
+        }// OG
+    }// board 
 }
 void CicFEAlignment::SetStaticPhaseAlignment()
 {
