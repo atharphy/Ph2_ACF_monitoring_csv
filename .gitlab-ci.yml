@@ -28,7 +28,7 @@ build:
     - make -j4
   artifacts:
     paths:
-      - bin/feh_2s_test
+      - bin/ot_module_test
       - bin/commission
       - bin/CMSITminiDAQ
     expire_in: 1 week
@@ -87,7 +87,7 @@ run_on_2S:
     - python ci_tools/status_manager.py 2s_status.txt --set_status 1
     - source ./setup.sh
     - cd ci_tools
-    - feh_2s_test -f CMS2S.xml -t -m -a --findShorts -b
+    - ot_module_test -f CMS2S.xml -t -m -a -b --reconfigure
   after_script:
     - python ci_tools/status_manager.py 2s_status.txt --set_status 0
     - cp ci_tools/Results/*/Hybrid.root .

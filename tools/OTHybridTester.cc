@@ -567,10 +567,10 @@ bool OTHybridTester::LpGBTTestResetLines()
             float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement);
 #elif __SEH_USB__
 #ifdef __TCP_SERVER__
-            cMeasurement         = this->getMeasurement("read_reset:" + cMapIterator->first);
+    cMeasurement                                                  = this->getMeasurement("read_reset:" + cMapIterator->first);
 #else
-            flpGBTInterface->getExternalController()->getInterface().read_reset(cMapIterator->second, cMeasurement);
-            float cDifference_mV = std::fabs((cLevel.second * 1300) - cMeasurement * 1000.); // 1300
+    flpGBTInterface->getExternalController()->getInterface().read_reset(cMapIterator->second, cMeasurement);
+    float cDifference_mV = std::fabs((cLevel.second * 1300) - cMeasurement * 1000.); // 1300
 #endif
 #endif
 

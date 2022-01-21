@@ -110,7 +110,7 @@ void lpGBTInterface::ConfigureRxAlignmentMode(Chip* pChip, const std::vector<uin
 
 uint16_t lpGBTInterface::GetRxDataRate(Chip* pChip, uint8_t pGroup)
 {
-    uint16_t cChipRate = GetChipRate(pChip);
+    uint16_t    cChipRate   = GetChipRate(pChip);
     std::string cRXCntrlReg = "EPRX" + std::to_string(pGroup) + "Control";
     auto        cRegValue   = ReadChipReg(pChip, cRXCntrlReg);
     uint16_t    cValue      = (cRegValue & 0xC);

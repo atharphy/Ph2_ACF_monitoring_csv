@@ -190,7 +190,8 @@ int main(int argc, char* argv[])
 
     bool cDone = 0;
 
-    if(cmd.foundOption("download")) cInterface.DownloadFpgaConfig(strImage, cmd.optionValue("download"));
+    if(cmd.foundOption("download"))
+        cInterface.DownloadFpgaConfig(strImage, cmd.optionValue("download"));
     else
         cInterface.FlashProm(strImage, cFWFile.c_str());
 

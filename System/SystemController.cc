@@ -44,8 +44,8 @@ SystemController::~SystemController() {}
 
 void SystemController::Inherit(const SystemController* pController)
 {
-    fBeBoardInterface     = pController->fBeBoardInterface;
-    fReadoutChipInterface = pController->fReadoutChipInterface;
+    fBeBoardInterface             = pController->fBeBoardInterface;
+    fReadoutChipInterface         = pController->fReadoutChipInterface;
     flpGBTInterface               = pController->flpGBTInterface;
     fBeBoardFWMap                 = pController->fBeBoardFWMap;
     fSettingsMap                  = pController->fSettingsMap;
