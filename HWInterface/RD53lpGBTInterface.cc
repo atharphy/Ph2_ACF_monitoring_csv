@@ -14,7 +14,6 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-
 // ##################################
 // # Read and Write LpGBT registers #
 // ##################################
@@ -152,7 +151,8 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     // #######################
     LOG(INFO) << GREEN << "Checking DLL status of LpGBT: " << BOLDYELLOW << pChip->getId() << RESET;
     for(const auto& cGroup: static_cast<lpGBT*>(pChip)->getRxGroups())
-      LOG(INFO) << BOLDBLUE << "\t--> DLL status of Rx Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " is 0x" << BOLDYELLOW << std::hex << +lpGBTInterface::GetRxDllStatus(pChip, cGroup) << std::dec << RESET;
+        LOG(INFO) << BOLDBLUE << "\t--> DLL status of Rx Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " is 0x" << BOLDYELLOW << std::hex << +lpGBTInterface::GetRxDllStatus(pChip, cGroup)
+                  << std::dec << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 
     return true;

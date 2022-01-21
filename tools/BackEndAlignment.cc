@@ -57,11 +57,11 @@ void BackEndAlignment::SetEnabledROCs(std::string pSSAPair)
 {
     fPairName = pSSAPair;
     fEnabledROCs.clear();
-    for( uint8_t cId=0; cId < 8; cId++)
+    for(uint8_t cId = 0; cId < 8; cId++)
     {
         if(cId != (int)(fPairName[0] - '0') && cId != (int)(fPairName[1] - '0')) continue;
         fEnabledROCs.push_back(cId);
-    }            
+    }
 }
 bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
 {
@@ -80,7 +80,7 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
                 ReadoutChip* cReadoutChip = static_cast<ReadoutChip*>(cChip);
                 if(cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::SSA)
                 {
-                    if( fPairSelect && std::find( fEnabledROCs.begin(), fEnabledROCs.end(), cChip->getId() ) == fEnabledROCs.end() ) continue;
+                    if(fPairSelect && std::find(fEnabledROCs.begin(), fEnabledROCs.end(), cChip->getId()) == fEnabledROCs.end()) continue;
                     auto cDriveStrength = fReadoutChipInterface->ReadChipReg(cChip, "SLVS_pad_current_L1");
                     LOG(INFO) << BOLDBLUE << "SSA#" << +cChip->getId() << " Alignment for L1 and stub lines.. L1 drive set to " << +cDriveStrength << RESET;
 

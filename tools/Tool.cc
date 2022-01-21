@@ -1,7 +1,6 @@
 #include "Tool.h"
 #include <numeric>
 
-
 #include "../HWDescription/Chip.h"
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/Container.h"
