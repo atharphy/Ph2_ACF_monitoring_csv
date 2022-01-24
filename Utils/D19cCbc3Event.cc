@@ -47,26 +47,15 @@ D19cCbc3Event::D19cCbc3Event(const BeBoard* pBoard, const std::vector<uint32_t>&
     // SetEvent (pBoard, fNCbc, list );
 }
 
-void D19cCbc3Event::fillDataContainer(BoardDataContainer* boardContainer, const BoardDataContainer* theChannelGroupHandler, int groupNumber)
+void D19cCbc3Event::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId)
 {
-    for(auto opticalGroup: *boardContainer)
+    unsigned int i = 0;
+    for(ChannelDataContainer<Occupancy>::iterator channel = chipContainer->begin<Occupancy>(); channel != chipContainer->end<Occupancy>(); channel++, i++)
     {
-        for(auto hybrid: *opticalGroup)
-        {
-            for(auto chip: *hybrid)
-            {
-                unsigned int i                 = 0;
-                auto         cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, opticalGroup->getId(), hybrid->getId(), chip->getId());
-                if(!cTestChannelGroup) continue;
-
-                for(ChannelDataContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
-                {
-                    if(cTestChannelGroup->isChannelEnabled(i)) { channel->fOccupancy += (float)privateDataBit(hybrid->getId(), chip->getId(), i); }
-                }
-            }
-        }
+        if(testChannelGroup->isChannelEnabled(i)) { channel->fOccupancy += (float)privateDataBit(hybridId, chipContainer->getId(), i); }
     }
 }
+
 void D19cCbc3Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pData)
 {
     const uint16_t LENGTH_EVENT_HEADER = 4;

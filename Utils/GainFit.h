@@ -18,10 +18,10 @@
 class GainFit
 {
   public:
-    GainFit() : fSlope(0), fSlopeError(0), fIntercept(0), fInterceptError(0), fQuadratic(0), fQuadraticError(0), fLog(0), fLogError(0), fChi2(0), fDoF(0) {}
+    GainFit() : fSlope(0), fSlopeError(0), fIntercept(0), fInterceptError(0), fSlopeLowQ(0), fSlopeLowQError(0), fInterceptLowQ(0), fInterceptLowQError(0), fChi2(0), fDoF(0) {}
     ~GainFit() {}
 
-    void print(void) { std::cout << fSlope << "\t" << fIntercept << "\t" << fQuadratic << "\t" << fLog << "\t" << fChi2 << "\t" << fDoF << std::endl; }
+    void print(void) { std::cout << fSlope << "\t" << fIntercept << "\t" << fChi2 << "\t" << fDoF << std::endl; }
 
     template <typename T>
     void
@@ -37,11 +37,11 @@ class GainFit
     float fIntercept;
     float fInterceptError;
 
-    float fQuadratic;
-    float fQuadraticError;
+    float fSlopeLowQ;
+    float fSlopeLowQError;
 
-    float fLog;
-    float fLogError;
+    float fInterceptLowQ;
+    float fInterceptLowQError;
 
     float fChi2;
     float fDoF;
@@ -55,16 +55,16 @@ inline void GainFit::makeChannelAverage<GainFit>(const ChipContainer*           
 {
     float cnt = 0;
 
-    fSlope          = 0;
-    fSlopeError     = 0;
-    fIntercept      = 0;
-    fInterceptError = 0;
-    fQuadratic      = 0;
-    fQuadraticError = 0;
-    fLog            = 0;
-    fLogError       = 0;
-    fChi2           = 0;
-    fDoF            = 0;
+    fSlope              = 0;
+    fSlopeError         = 0;
+    fIntercept          = 0;
+    fInterceptError     = 0;
+    fSlopeLowQ          = 0;
+    fSlopeLowQError     = 0;
+    fInterceptLowQ      = 0;
+    fInterceptLowQError = 0;
+    fChi2               = 0;
+    fDoF                = 0;
 
     for(auto row = 0u; row < theChipContainer->getNumberOfRows(); row++)
         for(auto col = 0u; col < theChipContainer->getNumberOfCols(); col++)
@@ -84,18 +84,18 @@ inline void GainFit::makeChannelAverage<GainFit>(const ChipContainer*           
                     fInterceptError += 1. / (theChipContainer->getChannel<GainFit>(row, col).fInterceptError * theChipContainer->getChannel<GainFit>(row, col).fInterceptError);
                 }
 
-                if(theChipContainer->getChannel<GainFit>(row, col).fQuadraticError > 0)
+                if(theChipContainer->getChannel<GainFit>(row, col).fSlopeLowQError > 0)
                 {
-                    fQuadratic += theChipContainer->getChannel<GainFit>(row, col).fQuadratic /
-                                  (theChipContainer->getChannel<GainFit>(row, col).fQuadraticError * theChipContainer->getChannel<GainFit>(row, col).fQuadraticError);
-                    fQuadraticError += 1. / (theChipContainer->getChannel<GainFit>(row, col).fQuadraticError * theChipContainer->getChannel<GainFit>(row, col).fQuadraticError);
+                    fSlopeLowQ += theChipContainer->getChannel<GainFit>(row, col).fSlopeLowQ /
+                                  (theChipContainer->getChannel<GainFit>(row, col).fSlopeLowQError * theChipContainer->getChannel<GainFit>(row, col).fSlopeLowQError);
+                    fSlopeLowQError += 1. / (theChipContainer->getChannel<GainFit>(row, col).fSlopeLowQError * theChipContainer->getChannel<GainFit>(row, col).fSlopeLowQError);
                 }
 
-                if(theChipContainer->getChannel<GainFit>(row, col).fLogError > 0)
+                if(theChipContainer->getChannel<GainFit>(row, col).fInterceptLowQError > 0)
                 {
-                    fLog +=
-                        theChipContainer->getChannel<GainFit>(row, col).fLog / (theChipContainer->getChannel<GainFit>(row, col).fLogError * theChipContainer->getChannel<GainFit>(row, col).fLogError);
-                    fLogError += 1. / (theChipContainer->getChannel<GainFit>(row, col).fLogError * theChipContainer->getChannel<GainFit>(row, col).fLogError);
+                    fInterceptLowQ += theChipContainer->getChannel<GainFit>(row, col).fInterceptLowQ /
+                                      (theChipContainer->getChannel<GainFit>(row, col).fInterceptLowQError * theChipContainer->getChannel<GainFit>(row, col).fInterceptLowQError);
+                    fInterceptLowQError += 1. / (theChipContainer->getChannel<GainFit>(row, col).fInterceptLowQError * theChipContainer->getChannel<GainFit>(row, col).fInterceptLowQError);
                 }
 
                 if(theChipContainer->getChannel<GainFit>(row, col).fChi2 > 0) fChi2 += theChipContainer->getChannel<GainFit>(row, col).fChi2;
@@ -116,16 +116,16 @@ inline void GainFit::makeChannelAverage<GainFit>(const ChipContainer*           
         fInterceptError = sqrt(1. / fInterceptError);
     }
 
-    if(fQuadraticError > 0)
+    if(fSlopeLowQError > 0)
     {
-        fQuadratic /= fQuadraticError;
-        fQuadraticError = sqrt(1. / fQuadraticError);
+        fSlopeLowQ /= fSlopeLowQError;
+        fSlopeLowQError = sqrt(1. / fSlopeLowQError);
     }
 
-    if(fLogError > 0)
+    if(fInterceptLowQError > 0)
     {
-        fLog /= fLogError;
-        fLogError = sqrt(1. / fLogError);
+        fInterceptLowQ /= fInterceptLowQError;
+        fInterceptLowQError = sqrt(1. / fInterceptLowQError);
     }
 
     if(fChi2 > 0) fChi2 /= cnt;

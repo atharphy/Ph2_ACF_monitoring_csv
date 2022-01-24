@@ -59,9 +59,9 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
     // == FrontEndType::SSA) NCH = NSSACHANNELS;
 
     auto cSetting = pSettingsMap.find("PlotSCurves");
-    fPlotSCurves  = (cSetting != std::end(pSettingsMap)) ? cSetting->second : 0;
+    fPlotSCurves  = (cSetting != std::end(pSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
     cSetting      = pSettingsMap.find("FitSCurves");
-    fFitSCurves   = (cSetting != std::end(pSettingsMap)) ? cSetting->second : 0;
+    fFitSCurves   = (cSetting != std::end(pSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
     if(fFitSCurves) fPlotSCurves = true;
 
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
@@ -201,9 +201,11 @@ void DQMHistogramPedeNoise::process()
                 hybridStripNoiseEvenHistogram->SetStats(false);
                 hybridStripNoiseOddHistogram->SetStats(false);
 
-                TCanvas* cValidation =
-                    new TCanvas(("Validation_hybrid_" + std::to_string(hybrid->getId())).data(), ("Validation hybrid " + std::to_string(hybrid->getId())).data(), 0, 0, 650, fPlotSCurves ? 900 : 650);
-                TCanvas* cPedeNoise = new TCanvas(("PedeNoise_hybrid_" + std::to_string(hybrid->getId())).data(), ("PedeNoise hybrid " + std::to_string(hybrid->getId())).data(), 670, 0, 650, 650);
+                std::string validationCanvasName = "Validation_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
+                std::string pedeNoiseCanvasName  = "PedeNoise_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
+
+                TCanvas* cValidation = new TCanvas(validationCanvasName.data(), validationCanvasName.data(), 0, 0, 650, fPlotSCurves ? 900 : 650);
+                TCanvas* cPedeNoise  = new TCanvas(pedeNoiseCanvasName.data(), pedeNoiseCanvasName.data(), 670, 0, 650, 650);
 
                 cValidation->Divide(hybrid->size(), fPlotSCurves ? 3 : 2);
                 cPedeNoise->Divide(hybrid->size(), 2);

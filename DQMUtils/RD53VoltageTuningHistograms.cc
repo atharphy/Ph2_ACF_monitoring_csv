@@ -54,8 +54,12 @@ void VoltageTuningHistograms::fillDig(const DetectorDataContainer& DataContainer
                 {
                     if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
 
-                    auto* hVoltageDig =
-                        VoltageDig.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* hVoltageDig = VoltageDig.getObject(cBoard->getId())
+                                            ->getObject(cOpticalGroup->getId())
+                                            ->getObject(cHybrid->getId())
+                                            ->getObject(cChip->getId())
+                                            ->getSummary<CanvasContainer<TH1F>>()
+                                            .fTheHistogram;
 
                     hVoltageDig->Fill(cChip->getSummary<uint16_t>());
                 }
@@ -70,8 +74,12 @@ void VoltageTuningHistograms::fillAna(const DetectorDataContainer& DataContainer
                 {
                     if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
 
-                    auto* hVoltageAna =
-                        VoltageAna.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* hVoltageAna = VoltageAna.getObject(cBoard->getId())
+                                            ->getObject(cOpticalGroup->getId())
+                                            ->getObject(cHybrid->getId())
+                                            ->getObject(cChip->getId())
+                                            ->getSummary<CanvasContainer<TH1F>>()
+                                            .fTheHistogram;
 
                     hVoltageAna->Fill(cChip->getSummary<uint16_t>());
                 }

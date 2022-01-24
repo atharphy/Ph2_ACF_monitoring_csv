@@ -215,12 +215,11 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
                 if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
 
                 // uint8_t  cMode = 3;
-                // uint8_t  cStubWindow=8;
-
-                static_cast<PSInterface*>(fReadoutChipInterface)->Activate_ps(cChip, 2);
+                uint8_t cStubWindow = 8;
+                // static_cast<PSInterface*>(fReadoutChipInterface)->Activate_ps(cChip, 2);
                 // text parsed reimplementation
-                // fReadoutChipInterface->WriteChipReg(cChip,"StubMode", cMode);
-                // fReadoutChipInterface->WriteChipReg(cChip,"StubWindow", cStubWindow);
+                fReadoutChipInterface->WriteChipReg(cChip, "StubMode", 0);
+                fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", cStubWindow);
             } // chip
         }     // hybrid
     }         // optica]l group
@@ -630,9 +629,9 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignStubs(ReadoutChip* pC
     uint32_t cNevents     = 10;
 
     auto     cSetting                = fSettingsMap.find("MinStubPhase");
-    uint32_t cStartPhase             = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 7;
+    uint32_t cStartPhase             = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 7;
     cSetting                         = fSettingsMap.find("MaxStubPhase");
-    uint32_t              cEndPhase  = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 7;
+    uint32_t              cEndPhase  = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 7;
     bool                  cOnlyFirst = true;
     bool                  cCheckL1   = true;
     std::vector<uint16_t> cStubOffsets(0);
@@ -1604,9 +1603,9 @@ bool PSAlignment::Align()
     LOG(INFO) << BOLDBLUE << "Starting MPA-SSA alignment procedure .... " << RESET;
     // not sure I need this here .. lets check
     auto     cSetting       = fSettingsMap.find("TxDrive");
-    uint32_t cTxDriveStr    = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 7;
+    uint32_t cTxDriveStr    = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 7;
     cSetting                = fSettingsMap.find("PreEmph");
-    uint32_t cTxPreEmphMode = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 1;
+    uint32_t cTxPreEmphMode = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 1;
     // configure TxDrive for lpGBT
     for(auto cBoard: *fDetectorContainer)
     {

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
     <BeBoard Id="0" boardType="D19C" eventType="VR">
-      <connection id="board" uri="chtcp-2.0://cmsuptracker003:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/d19c_address_table_legacy.xml" /> 
+      <connection id="board" uri="chtcp-2.0://ph2acf-01:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/d19c_address_table_legacy.xml" /> 
     
     <GBT_Links>
         <GBT Id="0" phaseTap="7" enable="1"/>

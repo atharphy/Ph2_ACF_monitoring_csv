@@ -9,6 +9,7 @@
 #include "../MonitorDQM/MonitorDQMPlotCBC.h"
 #include "../RootUtils/GraphContainer.h"
 #include "../RootUtils/RootContainerFactory.h"
+#include "../Utils/CharArray.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
@@ -70,6 +71,12 @@ void MonitorDQMPlotCBC::bookCBCPlots(TFile* theOutputFile, const DetectorContain
 //========================================================================================================================
 void MonitorDQMPlotCBC::bookLpGBTPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName)
 {
+    std::cout << __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
     // creating the histograms for all the chips:
     // create the GraphContainer<TGraph> as you would create a TGraph (it implements some feature needed to avoid memory
     // leaks in copying histograms like the move constructor)
@@ -89,13 +96,14 @@ void MonitorDQMPlotCBC::bookLpGBTPlots(TFile* theOutputFile, const DetectorConta
 }
 
 //========================================================================================================================
-void MonitorDQMPlotCBC::fillCBCRegisterPlots(DetectorDataContainer& theThresholdContainer, std::string registerName)
+void MonitorDQMPlotCBC::fillCBCRegisterPlots(DetectorDataContainer& theThresholdContainer, const std::string& registerName)
 {
-    if(!fCBCRegisterMonitorPlotMap.count(registerName))
+    if(fCBCRegisterMonitorPlotMap.find(registerName) == fCBCRegisterMonitorPlotMap.end())
     {
         LOG(ERROR) << BOLDRED << "No plots for CBC register " << registerName << RESET;
         LOG(ERROR) << BOLDRED << "Check that DQM and Monitor register names matches" << RESET;
-        abort();
+        std::string errorMessage = "No plots for CBC register " + registerName + " - Check that DQM and Monitor register names matches";
+        throw std::runtime_error(errorMessage);
     }
 
     for(auto board: theThresholdContainer) // for on boards - begin
@@ -129,13 +137,14 @@ void MonitorDQMPlotCBC::fillCBCRegisterPlots(DetectorDataContainer& theThreshold
 }
 
 //========================================================================================================================
-void MonitorDQMPlotCBC::fillLpGBTRegisterPlots(DetectorDataContainer& theThresholdContainer, std::string registerName)
+void MonitorDQMPlotCBC::fillLpGBTRegisterPlots(DetectorDataContainer& theThresholdContainer, const std::string& registerName)
 {
-    if(!fLpGBTRegisterMonitorPlotMap.count(registerName))
+    if(fLpGBTRegisterMonitorPlotMap.find(registerName) == fLpGBTRegisterMonitorPlotMap.end())
     {
-        LOG(FATAL) << BOLDRED << "No plots for LpGBT register " << registerName << RESET;
-        LOG(FATAL) << BOLDRED << "Check that DQM and Monitor register names matches" << RESET;
-        abort();
+        LOG(ERROR) << BOLDRED << "No plots for LpGBT register " << registerName << RESET;
+        LOG(ERROR) << BOLDRED << "Check that DQM and Monitor register names matches" << RESET;
+        std::string errorMessage = "No plots for LpGBT register " + registerName + " - Check that DQM and Monitor register names matches";
+        throw std::runtime_error(errorMessage);
     }
 
     for(auto board: theThresholdContainer) // for on boards - begin
@@ -149,6 +158,9 @@ void MonitorDQMPlotCBC::fillLpGBTRegisterPlots(DetectorDataContainer& theThresho
             LpGBTDQMPlot->SetPoint(LpGBTDQMPlot->GetN(),
                                    getTimeStampForRoot(std::get<0>(opticalGroup->getSummary<std::tuple<time_t, uint16_t>>())),
                                    std::get<1>(opticalGroup->getSummary<std::tuple<time_t, uint16_t>>()) * CONVERSION_FACTOR);
+
+            // std::cout << "Filling plot " << registerName << " at time " << std::get<0>(opticalGroup->getSummary<std::tuple<time_t, uint16_t>>()) << " with value " <<
+            // (std::get<1>(opticalGroup->getSummary<std::tuple<time_t, uint16_t>>()) * CONVERSION_FACTOR) << std::endl;
         } // for on opticalGroup - end
     }     // for on boards - end
 }
@@ -170,24 +182,35 @@ bool MonitorDQMPlotCBC::fill(std::vector<char>& dataBuffer)
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR DQM YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
 
     // I'm expecting to receive a data stream from an uint16_t contained from DQM "DQMExample"
-    ChipContainerStream<uint16_t, EmptyContainer, std::array<char, 50>> theDQMStreamer("CBCMonitor");
+    OpticalGroupContainerStream<EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, EmptyContainer, CharArray> theCBCDQMStreamer("CBCMonitorCBCRegister");
+    OpticalGroupContainerStream<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, uint16_t>, CharArray> theLpGBTDQMStreamer("CBCMonitorLpGBTRegister");
 
-    // Try to see if the char buffer matched what I'm expection (container of uint16_t from DQMExample
-    // procedure)
-    if(fDoMonitorThreshold)
+    if(theCBCDQMStreamer.attachBuffer(&dataBuffer))
     {
-        if(theDQMStreamer.attachBuffer(&dataBuffer))
-        {
-            // It matched! Decoding chip data
-            theDQMStreamer.decodeChipData(fDetectorData);
-            // Filling the histograms
-            std::string registerName = "Not working!!!";
-            fillCBCRegisterPlots(fDetectorData, registerName);
-            // Cleaning the data container to be ready for the next TCP string
-            fDetectorData.cleanDataStored();
-            return true;
-        }
+        // It matched! Decoding chip data
+        theCBCDQMStreamer.decodeData(fDetectorData);
+        // Filling the histograms
+        CharArray registerNameArray = theCBCDQMStreamer.getHeaderElement();
+
+        fillCBCRegisterPlots(fDetectorData, registerNameArray.getString());
+        // Cleaning the data container to be ready for the next TCP string
+        fDetectorData.cleanDataStored();
+        return true;
     }
+
+    if(theLpGBTDQMStreamer.attachBuffer(&dataBuffer))
+    {
+        // It matched! Decoding chip data
+        theLpGBTDQMStreamer.decodeData(fDetectorData);
+        // Filling the histograms
+        CharArray registerNameArray = theLpGBTDQMStreamer.getHeaderElement();
+
+        fillLpGBTRegisterPlots(fDetectorData, registerNameArray.getString());
+        // Cleaning the data container to be ready for the next TCP string
+        fDetectorData.cleanDataStored();
+        return true;
+    }
+
     // the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking
     // for this stream)
     return false;

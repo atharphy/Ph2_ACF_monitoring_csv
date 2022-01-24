@@ -61,8 +61,8 @@ class MonitorDQMPlotCBC : public MonitorDQMPlotBase
      * \param theCBCRegisterContainer : Container with the hits you want to plot
      * \param timeStamp : timeStamp
      */
-    void fillCBCRegisterPlots(DetectorDataContainer& theCBCRegisterContainer, std::string registerName);
-    void fillLpGBTRegisterPlots(DetectorDataContainer& theCBCRegisterContainer, std::string registerName);
+    void fillCBCRegisterPlots(DetectorDataContainer& theCBCRegisterContainer, const std::string& registerName);
+    void fillLpGBTRegisterPlots(DetectorDataContainer& theCBCRegisterContainer, const std::string& registerName);
 
   private:
     bool fDoMonitorThreshold{false};

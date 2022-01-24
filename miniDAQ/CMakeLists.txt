@@ -130,7 +130,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
 
     ${Boost_IOSTREAMS_LIBRARY}
 
-            ${ROOT_BASIC_LIB_LIST}
+    #${ROOT_BASIC_LIB_LIST}
               cactus_uhal_uhal
               cactus_uhal_log
               cactus_uhal_grammars

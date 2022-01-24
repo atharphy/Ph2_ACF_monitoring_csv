@@ -23,17 +23,15 @@ void ClockDelay::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings("ROWstart");
-    rowStop        = this->findValueInSettings("ROWstop");
-    colStart       = this->findValueInSettings("COLstart");
-    colStop        = this->findValueInSettings("COLstop");
-    nEvents        = this->findValueInSettings("nEvents");
-    doFast         = this->findValueInSettings("DoFast");
+    rowStart       = this->findValueInSettings<double>("ROWstart");
+    rowStop        = this->findValueInSettings<double>("ROWstop");
+    colStart       = this->findValueInSettings<double>("COLstart");
+    colStop        = this->findValueInSettings<double>("COLstop");
     startValue     = 0;
     stopValue      = RD53Shared::NLATENCYBINS * (RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY")) + 1) - 1;
-    doDisplay      = this->findValueInSettings("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings("SaveBinaryData");
+    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
 
     // ##############################
     // # Initialize dac scan values #
@@ -46,7 +44,7 @@ void ClockDelay::ConfigureCalibration()
     // # Initialize Latency #
     // ######################
     la.Inherit(this);
-    la.localConfigure("", -1);
+    la.localConfigure();
 
     // ##################
     // # Register masks #
@@ -86,10 +84,10 @@ void ClockDelay::sendData()
     auto theStream           = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<ClkDelaySize>>("Occ");
     auto theClockDelayStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>("ClkDelay");
 
-    if(fStreamerEnabled == true)
+    if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: theOccContainer) theStream.streamAndSendBoard(cBoard, fNetworkStreamer);
-        for(const auto cBoard: theClockDelayContainer) theClockDelayStream.streamAndSendBoard(cBoard, fNetworkStreamer);
+        for(const auto cBoard: theOccContainer) theStream.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theClockDelayContainer) theClockDelayStream.streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 
@@ -105,7 +103,7 @@ void ClockDelay::Stop()
     RD53RunProgress::reset();
 }
 
-void ClockDelay::localConfigure(const std::string fileRes_, int currentRun)
+void ClockDelay::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos = nullptr;
@@ -120,7 +118,7 @@ void ClockDelay::localConfigure(const std::string fileRes_, int currentRun)
     ClockDelay::initializeFiles(fileRes_, currentRun);
 }
 
-void ClockDelay::initializeFiles(const std::string fileRes_, int currentRun)
+void ClockDelay::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 
@@ -140,7 +138,7 @@ void ClockDelay::initializeFiles(const std::string fileRes_, int currentRun)
     // ######################
     std::string fileName = fileRes;
     fileName.replace(fileRes.find("_ClockDelay"), 15, "_Latency");
-    la.initializeFiles(fileName, -1);
+    la.initializeFiles(fileName);
 }
 
 void ClockDelay::run()
@@ -197,7 +195,7 @@ void ClockDelay::run()
                         this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", latency + i);
                     }
 
-        ClockDelay::scanDac("CLK_DATA_DELAY", halfDacList, nEvents, &theOccContainer);
+        ClockDelay::scanDac("CLK_DATA_DELAY", halfDacList, &theOccContainer);
     }
 
     // ################
@@ -225,7 +223,6 @@ void ClockDelay::draw()
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     ClockDelay::fillHisto();
     histos->process();
-    this->WriteRootFile();
 
     if(doDisplay == true) myApp->Run(true);
 #endif
@@ -288,7 +285,7 @@ void ClockDelay::fillHisto()
 #endif
 }
 
-void ClockDelay::scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, uint32_t nEvents, DetectorDataContainer* theContainer)
+void ClockDelay::scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer)
 {
     const size_t ClkDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
@@ -316,7 +313,8 @@ void ClockDelay::scanDac(const std::string& regName, const std::vector<uint16_t>
         // ################
         PixelAlive::run();
         auto output = PixelAlive::analyze();
-        output->normalizeAndAverageContainers(fDetectorContainer, fChannelGroupHandlerContainer, 1);
+        output->resetNormalizationStatus();
+        output->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), 1);
 
         // ###############
         // # Save output #
@@ -331,7 +329,7 @@ void ClockDelay::scanDac(const std::string& regName, const std::vector<uint16_t>
                     }
 
         // ##############################################
-        // # Send periodic data to minitor the progress #
+        // # Send periodic data to monitor the progress #
         // ##############################################
         ClockDelay::sendData();
     }

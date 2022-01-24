@@ -160,8 +160,7 @@ class D19cCbc3EventZS : public Event
     std::vector<uint32_t> GetHits(uint8_t pFeId, uint8_t pCbcId) const override;
 
     std::vector<Cluster> getClusters(uint8_t pFeId, uint8_t pCbcId) const override;
-
-    void fillDataContainer(BoardDataContainer* boardContainer, const BoardDataContainer* theChannelGroupHandler, int groupNumber) override;
+    void                 fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) override;
 
     void print(std::ostream& out) const override;
 

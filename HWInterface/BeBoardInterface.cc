@@ -38,13 +38,6 @@ void BeBoardInterface::SetFileHandler(const BeBoard* pBoard, FileHandler* pHandl
     setBoard(pBoard->getId());
     fBoardFW->setFileHandler(pHandler);
 }
-
-void BeBoardInterface::setPowerSupplyClient(const Ph2_HwDescription::BeBoard* pBoard, TCPClient* fPowerSupplyClient)
-{
-    setBoard(pBoard->getId());
-    fBoardFW->setPowerSupplyClient(fPowerSupplyClient);
-}
-
 void BeBoardInterface::enableFileHandler(BeBoard* pBoard)
 {
     setBoard(pBoard->getId());
@@ -237,47 +230,47 @@ uhal::HwInterface* BeBoardInterface::getHardwareInterface(const BeBoard* pBoard)
     return fBoardFW->getHardwareInterface();
 }
 
-void BeBoardInterface::FlashProm(BeBoard* pBoard, const std::string& strConfig, const char* pstrFile)
-{
-    setBoard(pBoard->getId());
-    fBoardFW->FlashProm(strConfig, pstrFile);
-}
+// void BeBoardInterface::FlashProm(BeBoard* pBoard, const std::string& strConfig, const char* pstrFile)
+// {
+//     setBoard(pBoard->getId());
+//     fBoardFW->FlashProm(strConfig, pstrFile);
+// }
 
-void BeBoardInterface::JumpToFpgaConfig(BeBoard* pBoard, const std::string& strConfig)
-{
-    setBoard(pBoard->getId());
-    fBoardFW->JumpToFpgaConfig(strConfig);
-}
+// void BeBoardInterface::JumpToFpgaConfig(BeBoard* pBoard, const std::string& strConfig)
+// {
+//     setBoard(pBoard->getId());
+//     fBoardFW->JumpToFpgaConfig(strConfig);
+// }
 
-void BeBoardInterface::DownloadFpgaConfig(BeBoard* pBoard, const std::string& strConfig, const std::string& strDest)
-{
-    setBoard(pBoard->getId());
-    fBoardFW->DownloadFpgaConfig(strConfig, strDest);
-}
+// void BeBoardInterface::DownloadFpgaConfig(BeBoard* pBoard, const std::string& strConfig, const std::string& strDest)
+// {
+//     setBoard(pBoard->getId());
+//     fBoardFW->DownloadFpgaConfig(strConfig, strDest);
+// }
 
-const FpgaConfig* BeBoardInterface::GetConfiguringFpga(BeBoard* pBoard)
-{
-    setBoard(pBoard->getId());
-    return fBoardFW->GetConfiguringFpga();
-}
+// const FpgaConfig* BeBoardInterface::GetConfiguringFpga(BeBoard* pBoard)
+// {
+//     setBoard(pBoard->getId());
+//     return fBoardFW->GetConfiguringFpga();
+// }
 
-std::vector<std::string> BeBoardInterface::getFpgaConfigList(BeBoard* pBoard)
-{
-    setBoard(pBoard->getId());
-    return fBoardFW->getFpgaConfigList();
-}
+// std::vector<std::string> BeBoardInterface::getFpgaConfigList(BeBoard* pBoard)
+// {
+//     setBoard(pBoard->getId());
+//     return fBoardFW->getFpgaConfigList();
+// }
 
-void BeBoardInterface::DeleteFpgaConfig(BeBoard* pBoard, const std::string& strId)
-{
-    setBoard(pBoard->getId());
-    fBoardFW->DeleteFpgaConfig(strId);
-}
+// void BeBoardInterface::DeleteFpgaConfig(BeBoard* pBoard, const std::string& strId)
+// {
+//     setBoard(pBoard->getId());
+//     fBoardFW->DeleteFpgaConfig(strId);
+// }
 
-void BeBoardInterface::RebootBoard(BeBoard* pBoard)
-{
-    setBoard(pBoard->getId());
-    fBoardFW->RebootBoard();
-}
+// void BeBoardInterface::RebootBoard(BeBoard* pBoard)
+// {
+//     setBoard(pBoard->getId());
+//     fBoardFW->RebootBoard();
+// }
 
 void BeBoardInterface::SetForceStart(BeBoard* pBoard, bool bStart)
 {

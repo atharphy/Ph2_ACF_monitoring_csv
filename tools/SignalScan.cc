@@ -44,7 +44,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
     bool pTimedRun = false;
     auto cSetting  = fSettingsMap.find("Nevents");
     if(cSetting != std::end(fSettingsMap))
-        fNevents = cSetting->second;
+        fNevents = boost::any_cast<double>(cSetting->second);
     else
         fNevents = 2000;
 
@@ -378,28 +378,28 @@ void SignalScan::parseSettings()
     auto cSetting = fSettingsMap.find("Nevents");
 
     if(cSetting != std::end(fSettingsMap))
-        fNevents = cSetting->second;
+        fNevents = boost::any_cast<double>(cSetting->second);
     else
         fNevents = 2000;
 
     cSetting = fSettingsMap.find("HoleMode");
 
     if(cSetting != std::end(fSettingsMap))
-        fHoleMode = cSetting->second;
+        fHoleMode = boost::any_cast<double>(cSetting->second);
     else
         fHoleMode = 1;
 
     cSetting = fSettingsMap.find("PedestalStepBack");
 
     if(cSetting != std::end(fSettingsMap))
-        fStepback = cSetting->second;
+        fStepback = boost::any_cast<double>(cSetting->second);
     else
         fStepback = 1;
 
     cSetting = fSettingsMap.find("SignalScanStep");
 
     if(cSetting != std::end(fSettingsMap))
-        fSignalScanStep = cSetting->second;
+        fSignalScanStep = boost::any_cast<double>(cSetting->second);
     else
         fSignalScanStep = 1;
 

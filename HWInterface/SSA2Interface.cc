@@ -43,7 +43,6 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockS
     this->WriteChipSingleReg(pSSA2, "mask_peri_A", 255, false);
     this->WriteChipSingleReg(pSSA2, "mask_peri_D", 255, false);
     LOG(INFO) << BOLDBLUE << "Configuring SSA2 " << RESET;
-    setBoard(pSSA2->getBeBoardId());
     std::vector<uint32_t> cVec;
     ChipRegMap            cSSA2RegMap = pSSA2->getRegMap();
     bool                  cWrite      = true;
@@ -59,7 +58,7 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockS
         if(cRegItem.first.find("bist_output") != std::string::npos) continue;
 
         LOG(DEBUG) << BOLDGREEN << "Encoding register " << cRegItem.first << " with address " << +cRegItem.second.fAddress << RESET;
-        fBoardFW->EncodeReg(cRegItem.second, pSSA2->getHybridId(), pSSA2->getId(), cVec, pVerifLoop, cWrite);
+        fBoardFW->EncodeReg(cRegItem.second, pSSA2, cVec, pVerifLoop, cWrite);
     }
     uint8_t cWriteAttempts = 0;
     cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
@@ -67,11 +66,22 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockS
     {
         cWrite = false;
         cVec.clear();
-        for(auto& cRegInMap: cSSA2RegMap) { fBoardFW->EncodeReg(cRegInMap.second, pSSA2->getHybridId(), pSSA2->getId(), cVec, pVerifLoop, cWrite); }
+        for(auto& cRegInMap: cSSA2RegMap) { fBoardFW->EncodeReg(cRegInMap.second, pSSA2, cVec, pVerifLoop, cWrite); }
         fBoardFW->ReadChipBlockReg(cVec);
         uint16_t                 cIndx = 0;
-        std::vector<std::string> cReadOnlyRegs{
-            "AC_ReadCounterLSB", "AC_ReadCounterMSB", "ENFLAGS", "DigCalibPattern_H", "DigCalibPattern_L", "THTRIMMING", "status_reg", "StripControl2", "mask_strip", "mask_peri_A", "mask_peri_D"};
+        std::vector<std::string> cReadOnlyRegs{"AC_ReadCounterLSB",
+                                               "AC_ReadCounterMSB",
+                                               "ENFLAGS",
+                                               "DigCalibPattern_H",
+                                               "DigCalibPattern_L",
+                                               "THTRIMMING",
+                                               "status_reg",
+                                               "StripControl2",
+                                               "mask_strip",
+                                               "mask_peri_A",
+                                               "mask_peri_D",
+                                               "StripControl1",
+                                               "StripControl2"};
         for(auto& cRegInMap: cSSA2RegMap)
         {
             uint8_t     cSSA2Id;
@@ -84,12 +94,27 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockS
             {
                 if(cRegInMap.second.fValue != cRegItem.fValue)
                 {
-                    LOG(INFO) << RED << cRegInMap.first << "(0x" << std::hex << cRegInMap.second.fAddress << ")  should be 0x" << cRegInMap.second.fValue << ", is 0x" << cRegItem.fValue << std::dec
-                              << "(SSA2:" << (int)pSSA2->getId() << ")" << RESET;
+                    LOG(INFO) << RED << "!!!" << cRegInMap.first << "(0x" << std::hex << cRegInMap.second.fAddress << ")  should be 0x" << cRegInMap.second.fValue << ", is 0x" << cRegItem.fValue
+                              << std::dec << "(SSA2:" << (int)pSSA2->getId() << ")" << RESET;
                 }
                 else
                     LOG(DEBUG) << BOLDGREEN << cRegInMap.first << "(0x" << std::hex << cRegInMap.second.fAddress << ")  should be 0x" << cRegInMap.second.fValue << ", is 0x" << cRegItem.fValue
                                << std::dec << "(SSA2:" << (int)pSSA2->getId() << ")" << RESET;
+            }
+            else
+            {
+                // check if _S is in the register name
+                if(cRegInMap.first.find("_S") != std::string::npos && cRegInMap.first.find("SEUcnt") == std::string::npos && cRegInMap.first.find("mask_strip") == std::string::npos)
+                {
+                    if(cRegInMap.second.fValue != cRegItem.fValue)
+                    {
+                        LOG(INFO) << RED << "----" << cRegInMap.first << "(0x" << std::hex << cRegInMap.second.fAddress << ")  should be 0x" << cRegInMap.second.fValue << ", is 0x" << cRegItem.fValue
+                                  << std::dec << "(SSA2:" << (int)pSSA2->getId() << ")" << RESET;
+                    }
+                    else
+                        LOG(DEBUG) << BOLDGREEN << cRegInMap.first << "(0x" << std::hex << cRegInMap.second.fAddress << ")  should be 0x" << cRegInMap.second.fValue << ", is 0x" << cRegItem.fValue
+                                   << std::dec << "(SSA2:" << (int)pSSA2->getId() << ")" << RESET;
+                }
             }
             cIndx++;
         }
@@ -98,24 +123,71 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockS
 #ifdef COUNT_FLAG
     LOG(INFO) << BOLDGREEN << "Wrote: " << +fRegisterCount << " resgisters in SSA2" << +pSSA2->getId() << " config." << RESET;
 #endif
-    fTrackRegisters = false;
+    // fTrackRegisters=false;
     return cSuccess;
 }
-void SSA2Interface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
+uint16_t SSA2Interface::ReadADC(ReadoutChip* pChip, uint8_t pInput)
 {
-    uint8_t                  cPhaseAlignmentPattern = 0xAA;
-    std::vector<std::string> cRegNames{"Shift_pattern_L1",
-                                       "Shift_pattern_st_0",
-                                       "Shift_pattern_st_1",
-                                       "Shift_pattern_st_2",
-                                       "Shift_pattern_st_3",
-                                       "Shift_pattern_st_4_st_5",
-                                       "Shift_pattern_st_4_st_5",
-                                       "Shift_pattern_st_6_st_7",
-                                       "Shift_pattern_st_6_st_7"};
-    this->WriteChipReg(pChip, "ReadoutMode", 0x2, false);
-    for(uint8_t cLineId = 0; cLineId < 8; cLineId++) { this->WriteChipReg(pChip, cRegNames[cLineId], cPhaseAlignmentPattern); }
+    this->WriteChipReg(pChip, "ADC_control", 0xE0 | (pInput & 0x1F));
+    this->WriteChipReg(pChip, "ADC_control", 0xC0 | (pInput & 0x1F));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    uint16_t cMSB = this->ReadChipReg(pChip, "ADC_out_H");
+    uint16_t cLSB = this->ReadChipReg(pChip, "ADC_out_L");
+    return (cMSB << 8 | cLSB);
 }
+// bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockSize)
+// {
+// 	this->WriteChipSingleReg(pSSA2, "mask_strip", 255, pVerifLoop);
+// 	this->WriteChipSingleReg(pSSA2, "mask_peri_A", 255, pVerifLoop);
+// 	this->WriteChipSingleReg(pSSA2, "mask_peri_D", 255, pVerifLoop);
+// 	LOG (INFO) << BOLDBLUE << "SSA2 --->" << RESET;
+//     setBoard(pSSA2->getBeBoardId());
+//     std::vector<uint32_t> cVec;
+//     ChipRegMap            cSSA2RegMap = pSSA2->getRegMap();
+//     bool                  cWrite     = true;
+//     bool                  cSuccess   = true;
+//     std::map<uint16_t, ChipRegItem> cMap;
+//     cMap.clear();
+//     for(auto& cRegInMap: cSSA2RegMap)
+//     {
+// 	cMap[cRegInMap.second.fAddress] = cRegInMap.second;
+//     }
+//     for(auto& cRegItem: cMap)
+//     {
+// 	fBoardFW->EncodeReg(cRegItem.second, pSSA2->getHybridId(), pSSA2->getId(), cVec, pVerifLoop, cWrite);
+//     }
+//     uint8_t cWriteAttempts = 0;
+//     cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
+//     if(pVerifLoop && cSuccess)
+//     {
+// 	cWrite = false;
+// 	cVec.clear();
+// 	for(auto& cRegInMap: cSSA2RegMap) { fBoardFW->EncodeReg(cRegInMap.second, pSSA2->getHybridId(), pSSA2->getId(), cVec, pVerifLoop, cWrite); }
+// 	fBoardFW->ReadChipBlockReg(cVec);
+// 	uint16_t cIndx = 0;
+// 	for(auto& cRegInMap: cSSA2RegMap)
+// 	{
+// 	    uint8_t     cSSA2Id;
+// 	    bool        cFailed = false;
+// 	    bool        cRead;
+// 	    ChipRegItem cRegItem;
+// 	    fBoardFW->DecodeReg(cRegItem, cSSA2Id, cVec[cIndx], cRead, cFailed);
+// 		if (cRegInMap.first != "ADC_out_H" and cRegInMap.first != "ADC_VREF" and cRegInMap.first != "THTRIMMING" and cRegInMap.first != "status_reg" and cRegInMap.first != "StripControl2"){
+// 		    if(cRegInMap.second.fValue != cRegItem.fValue)
+// 		    {	LOG (INFO) << RED << cRegInMap.first <<"(0x"<<std::hex << cRegInMap.second.fAddress <<")  should be 0x" << cRegInMap.second.fValue <<", is 0x"<<cRegItem.fValue<< std::dec << "(SSA2:"
+// << (int)pSSA2->getId() <<")"<< RESET;
+// 			//throw std::runtime_error(std::string("Failed to write to register ") + cRegInMap.first);
+// 		    }
+// 		}
+// 	    //LOG (INFO) << BLUE << cRegInMap.first <<"(0x"<<std::hex << cRegInMap.second.fAddress <<")  should be 0x" << cRegInMap.second.fValue <<", is 0x"<<cRegItem.fValue<< std::dec << "(SSA2:" <<
+// (int)pSSA2->getId() <<")"<< RESET; 	    cIndx++;
+// 	}
+//     }
+//     #ifdef COUNT_FLAG
+//     LOG(INFO) << BOLDGREEN << "Wrote: " << +fRegisterCount << " resgisters in SSA2" << +pSSA2->getId() << " config." << RESET;
+//     #endif
+//     return cSuccess;
+// }
 //	// READ REGISTER ON CHIP:
 //////////
 uint16_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode)
@@ -131,9 +203,9 @@ uint16_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode)
         int cChannel = 0;
         sscanf(pRegNode.c_str(), "CounterStrip%d", &cChannel);
         cRegItem.fPage    = 0x00;
-        cRegItem.fAddress = 0x580 + cChannel;
+        cRegItem.fAddress = 0x500 + cChannel;
         cRegItem.fValue   = 0;
-        fBoardFW->EncodeReg(cRegItem, pSSA2->getHybridId(), pSSA2->getId(), cVecReq, true, false);
+        fBoardFW->EncodeReg(cRegItem, pSSA2, cVecReq, true, false);
         fBoardFW->ReadChipBlockReg(cVecReq);
         fBoardFW->DecodeReg(cRegItem, cSSA2Id, cVecReq[0], cRead, cFailed);
         if(!cFailed)
@@ -141,9 +213,9 @@ uint16_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode)
             uint8_t cRPLSB = cRegItem.fValue & 0xFF;
             cVecReq.clear();
             cRegItem.fPage    = 0x00;
-            cRegItem.fAddress = 0x680 + cChannel;
+            cRegItem.fAddress = 0x600 + cChannel;
             cRegItem.fValue   = 0;
-            fBoardFW->EncodeReg(cRegItem, pSSA2->getHybridId(), pSSA2->getId(), cVecReq, true, false);
+            fBoardFW->EncodeReg(cRegItem, pSSA2, cVecReq, true, false);
             fBoardFW->ReadChipBlockReg(cVecReq);
             // bools to find the values of failed and read
             fBoardFW->DecodeReg(cRegItem, cSSA2Id, cVecReq[0], cRead, cFailed);
@@ -152,8 +224,8 @@ uint16_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode)
             {
                 cVecReq.clear();
                 uint16_t cCounterValue = (cRPMSB << 8) | cRPLSB;
-                LOG(DEBUG) << BOLDBLUE << "Counter MSB is 0x" << std::bitset<8>(cRPMSB) << " Counter LSB is 0x" << std::bitset<8>(cRPLSB) << " Counter value is " << std::hex << +cCounterValue
-                           << std::dec << RESET;
+                LOG(INFO) << BOLDBLUE << "Counter MSB is 0x" << std::bitset<8>(cRPMSB) << " Counter LSB is 0x" << std::bitset<8>(cRPLSB) << " Counter value is " << std::hex << +cCounterValue
+                          << std::dec << RESET;
                 return cCounterValue;
             }
             else
@@ -178,14 +250,17 @@ uint16_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode)
     }
     else
     {
-        LOG(INFO) << BOLDBLUE << "Reading back value of " << pRegNode << RESET;
         cRegItem = pSSA2->getRegItem(pRegNode);
-        fBoardFW->EncodeReg(cRegItem, pSSA2->getHybridId(), pSSA2->getId(), cVecReq, true, false);
+        fBoardFW->EncodeReg(cRegItem, pSSA2, cVecReq, true, false);
         fBoardFW->ReadChipBlockReg(cVecReq);
-
         fBoardFW->DecodeReg(cRegItem, cSSA2Id, cVecReq[0], cRead, cFailed);
-
-        if(!cFailed) pSSA2->setReg(pRegNode, cRegItem.fValue);
+        if(!cFailed)
+        {
+            LOG(DEBUG) << BOLDRED << "Reading " << pRegNode << " from SSA#" << +pSSA2->getId() << " value is 0x" << std::hex << cRegItem.fValue << std::dec << RESET;
+            pSSA2->setReg(pRegNode, cRegItem.fValue);
+        }
+        else
+            LOG(ERROR) << BOLDRED << "\t.. Reading " << pRegNode << " from SSA#" << +pSSA2->getId() << " value is 0x" << std::hex << cRegItem.fValue << std::dec << RESET;
         return cRegItem.fValue & 0xFF;
     }
 }
@@ -267,7 +342,7 @@ bool SSA2Interface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pR
     cRegItem.fPage    = 0x00;
     cRegItem.fAddress = pRegisterAddress;
     cRegItem.fValue   = pRegisterValue & 0xFF;
-    fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVec, pVerifLoop, true);
+    fBoardFW->EncodeReg(cRegItem, pChip, cVec, pVerifLoop, true);
     uint8_t cWriteAttempts = 0;
     return fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
 }
@@ -282,7 +357,7 @@ bool SSA2Interface::WriteChipMultReg(Chip* pSSA2, const std::vector<std::pair<st
     {
         cRegItem        = pSSA2->getRegItem(cReg.first);
         cRegItem.fValue = cReg.second;
-        fBoardFW->EncodeReg(cRegItem, pSSA2->getHybridId(), pSSA2->getId(), cVec, pVerifLoop, true);
+        fBoardFW->EncodeReg(cRegItem, pSSA2, cVec, pVerifLoop, true);
 #ifdef COUNT_FLAG
         fRegisterCount++;
 #endif
@@ -310,31 +385,42 @@ bool SSA2Interface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode,
     std::vector<uint32_t> cVec;
     ChipRegItem           cRegItem = pChip->getRegItem(pRegNode);
     cRegItem.fValue                = pValue & 0xFF;
-    fBoardFW->EncodeReg(cRegItem, pChip->getHybridId(), pChip->getId(), cVec, pVerifLoop, true);
+    fBoardFW->EncodeReg(cRegItem, pChip, cVec, pVerifLoop, true);
     uint8_t cWriteAttempts = 0;
     bool    cSuccess       = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
     if(cSuccess)
     {
-        pChip->setReg(pRegNode, pValue);
-        if(pVerifLoop)
+        // bug for mask strip
+        if(pRegNode == "mask_strip")
+            pChip->setReg(pRegNode, pValue);
+        else if(pVerifLoop)
         {
-            if(pRegNode != "ENFLAGS" && pRegNode != "DigCalibPattern_L" && pRegNode != "DigCalibPattern_H")
+            auto cReadBack = ReadChipReg(pChip, pRegNode);
+            if(cReadBack != pValue)
             {
-                auto cReadBack = ReadChipReg(pChip, pRegNode);
-                if(cReadBack != pValue)
-                {
-                    LOG(INFO) << BOLDRED << "Read back value (" << cReadBack << ") from " << pRegNode << BOLDBLUE << " at I2C address " << std::hex << cRegItem.fAddress << std::dec
-                              << " not equal to write value of " << std::hex << +cRegItem.fValue << std::dec << RESET;
-                    return false;
-                }
+                LOG(INFO) << BOLDRED << "Read back value (" << cReadBack << ") from " << pRegNode << BOLDBLUE << " at I2C address 0x" << std::hex << cRegItem.fAddress << std::dec
+                          << " not equal to write value of " << std::hex << +cRegItem.fValue << std::dec << RESET;
+                return false;
             }
+            else
+                pChip->setReg(pRegNode, pValue);
         }
+        else
+            pChip->setReg(pRegNode, pValue);
     }
 #ifdef COUNT_FLAG
     fRegisterCount++;
     fTransactionCount++;
 #endif
     return cSuccess;
+}
+
+bool SSA2Interface::WriteChipRegBits(Chip* pSSA2, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerifLoop)
+{
+    this->WriteChipSingleReg(pSSA2, pMaskReg, mask, pVerifLoop);
+    bool cReadoutMode = WriteChipSingleReg(pSSA2, pRegNode, pValue, pVerifLoop);
+    this->WriteChipSingleReg(pSSA2, pMaskReg, 0xFF, pVerifLoop);
+    return cReadoutMode;
 }
 //	// WRITE REGISTER (SINGLE CHIP REG <<main interface for writing>>):
 //////////
@@ -344,11 +430,6 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     {
         uint8_t cRegValue = (pValue << 2) | (1 << 0);
         return WriteChipSingleReg(pSSA2, "ENFLAGS", cRegValue, pVerifLoop);
-    }
-    else if(pRegName == "EnablePhaseAlignmentPattern")
-    {
-        this->producePhaseAlignmentPattern(static_cast<ReadoutChip*>(pSSA2), pValue);
-        return true;
     }
     else if(pRegName == "AmuxHigh")
     {
@@ -360,6 +441,10 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     // 	bool    cEnableAnalogue = WriteChipSingleReg(pSSA2, "ENFLAGS", cRegValue, pVerifLoop);
     // 	return cEnableAnalogue;
     // }
+    else if(fAmuxMap.find(pRegName) != fAmuxMap.end())
+    {
+        return this->ConfigureAmux(pSSA2, pRegName);
+    }
     else if(pRegName == "MonitorBandgap")
     {
         return this->ConfigureAmux(pSSA2, "Bandgap");
@@ -370,42 +455,229 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     }
     else if(pRegName == "ReadoutMode")
     {
-        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 7, pVerifLoop);
-        bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_1", pValue, pVerifLoop);
-        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 255, pVerifLoop);
+        bool cReadoutMode = this->WriteChipRegBits(pSSA2, "control_1", pValue, "mask_peri_D", 7, pVerifLoop);
+
+        // this->WriteChipSingleReg(pSSA2, "mask_peri_D", 7, pVerifLoop);
+        // bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_1", pValue, pVerifLoop);
+        // this->WriteChipSingleReg(pSSA2, "mask_peri_D", 255, pVerifLoop);
         return cReadoutMode;
     }
     else if(pRegName == "SamplingMode")
     {
-        this->WriteChipSingleReg(pSSA2, "mask_strip", 0x60, pVerifLoop);
-        bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_1", pValue << 5, pVerifLoop);
-        this->WriteChipSingleReg(pSSA2, "mask_strip", 0xFF, pVerifLoop);
+        bool cReadoutMode = this->WriteChipRegBits(pSSA2, "control_1", pValue << 5, "mask_strip", 0x60, pVerifLoop);
+
+        // this->WriteChipSingleReg(pSSA2, "mask_strip", 0x60, pVerifLoop);
+        // bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_1", pValue << 5, pVerifLoop);
+        // this->WriteChipSingleReg(pSSA2, "mask_strip", 0xFF, pVerifLoop);
         return cReadoutMode;
     }
     else if(pRegName == "inject")
     {
-        bool cReadoutMode  = WriteChipSingleReg(pSSA2, "control_1", 0x0, pVerifLoop);
+        return true;
+        /*
+        bool cReadoutMode       = WriteChipSingleReg(pSSA2, "control_1", 0x0, pVerifLoop);
         bool cReadoutMode2 = WriteChipSingleReg(pSSA2, "ENFLAGS", 0x31, pVerifLoop);
-        return cReadoutMode && cReadoutMode2;
+        return cReadoutMode && cReadoutMode2;*/
     }
     else if(pRegName == "TriggerLatency")
     {
-        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xFF, false);
-        bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_3", pValue & 0xFF, pVerifLoop);
-        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0x10, false);
-        cReadoutMode &= WriteChipSingleReg(pSSA2, "control_1", (pValue & 0x100 >> 8), pVerifLoop);
+        bool cReadoutMode = this->WriteChipRegBits(pSSA2, "control_3", pValue & 0xFF, "mask_peri_D", 0xFF, pVerifLoop);
+        cReadoutMode &= this->WriteChipRegBits(pSSA2, "control_1", (pValue & 0x100 >> 8), "mask_peri_D", 0x10, pVerifLoop);
+
+        // this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xFF, false);
+        // bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_3", pValue & 0xFF, pVerifLoop);
+        // this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0x10, false);
+        // cReadoutMode &= WriteChipSingleReg(pSSA2, "control_1", (pValue & 0x100 >> 8), pVerifLoop);
+
+        // mask not reset??
+
         return cReadoutMode;
+    }
+    else if(pRegName == "DigitalSync")
+    {
+        uint8_t cReadoutMode = 0x0;
+        uint8_t cEdgeSel_T1  = 0x0;
+        // readout mode
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0x7, pVerifLoop);
+        uint16_t cRegValue = this->ReadChipReg(pSSA2, "control_1");
+        LOG(DEBUG) << BOLDBLUE << "[pre-write ReadoutMode] Control_1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "control_1", cReadoutMode, false);
+        cRegValue = this->ReadChipReg(pSSA2, "control_1");
+        LOG(DEBUG) << BOLDBLUE << "Control_1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xFF, pVerifLoop);
+        // edge select
+        cRegValue = this->ReadChipReg(pSSA2, "control_1");
+        LOG(DEBUG) << BOLDBLUE << "[pre-write Edge] Control_1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", (0x1 << 3), pVerifLoop);
+        this->WriteChipSingleReg(pSSA2, "control_1", (cEdgeSel_T1 << 3), false);
+        cRegValue = this->ReadChipReg(pSSA2, "control_1");
+        LOG(DEBUG) << BOLDBLUE << "Control_1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xFF, pVerifLoop);
+
+        uint8_t cDuration = 0x1;
+        cRegValue         = this->ReadChipReg(pSSA2, "control_2");
+        LOG(DEBUG) << BOLDBLUE << "[pre-write Duration] Control_2 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", (0xF << 4), pVerifLoop);
+        this->WriteChipSingleReg(pSSA2, "control_2", (cDuration << 4), false);
+        cRegValue = this->ReadChipReg(pSSA2, "control_2");
+        LOG(DEBUG) << BOLDBLUE << "Control_2 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xFF, pVerifLoop);
+
+        // sampling mode
+        uint8_t cSamplingMode = 0;
+        cRegValue             = this->ReadChipReg(pSSA2, "ENFLAGS_S1");
+        LOG(DEBUG) << BOLDBLUE << "[pre-write] StripControl1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_strip", (0x3 << 5), pVerifLoop);
+        this->WriteChipSingleReg(pSSA2, "ENFLAGS", (cSamplingMode << 5), false);
+        this->WriteChipSingleReg(pSSA2, "mask_strip", 0xFF, pVerifLoop);
+        cRegValue = this->ReadChipReg(pSSA2, "ENFLAGS_S1");
+        LOG(DEBUG) << BOLDBLUE << "[post-set sampling] StripControl1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        // configure for injection with the strip register
+        uint8_t cMask         = 0;
+        uint8_t cPolarity     = 0;
+        uint8_t cHitCounter   = 0;
+        uint8_t cDigitalCalib = pValue;
+        uint8_t cAnalogCalib  = 0;
+        uint8_t cEnFlags      = (cAnalogCalib << 4 | cDigitalCalib << 3 | cHitCounter << 2 | cPolarity << 1 | cMask);
+        this->WriteChipSingleReg(pSSA2, "mask_strip", 0x1F, pVerifLoop);
+        this->WriteChipSingleReg(pSSA2, "ENFLAGS", cEnFlags, false);
+        bool cSuccess = this->WriteChipSingleReg(pSSA2, "mask_strip", 0xFF, pVerifLoop);
+        cRegValue     = this->ReadChipReg(pSSA2, "ENFLAGS_S1");
+        LOG(DEBUG) << BOLDBLUE << "StripControl1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+
+        return cSuccess;
+    }
+    else if(pRegName == "AsyncDelay")
+    {
+        uint8_t cLSB = pValue & 0xFF;
+        uint8_t cMSB = (pValue << 8);
+        WriteChipSingleReg(pSSA2, "AsyncRead_StartDel_LSB", cLSB, pVerifLoop);
+        WriteChipSingleReg(pSSA2, "AsyncRead_StartDel_MSB", cMSB, pVerifLoop);
+        return true;
+    }
+    else if(pRegName == "AnalogueSync")
+    {
+        uint8_t cReadoutMode = 0x0;
+        uint8_t cEdgeSel_T1  = 0x0;
+        // readout mode
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0x7, pVerifLoop);
+        uint16_t cRegValue = this->ReadChipReg(pSSA2, "control_1");
+        LOG(DEBUG) << BOLDBLUE << "[pre-write ReadoutMode] Control_1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "control_1", cReadoutMode, false);
+        cRegValue = this->ReadChipReg(pSSA2, "control_1");
+        LOG(DEBUG) << BOLDBLUE << "Control_1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xFF, pVerifLoop);
+        // edge select
+        cRegValue = this->ReadChipReg(pSSA2, "control_1");
+        LOG(DEBUG) << BOLDBLUE << "[pre-write Edge] Control_1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", (0x1 << 3), pVerifLoop);
+        this->WriteChipSingleReg(pSSA2, "control_1", (cEdgeSel_T1 << 3), false);
+        cRegValue = this->ReadChipReg(pSSA2, "control_1");
+        LOG(DEBUG) << BOLDBLUE << "Control_1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xFF, pVerifLoop);
+
+        uint8_t cDuration = 0x8;
+        cRegValue         = this->ReadChipReg(pSSA2, "control_2");
+        LOG(DEBUG) << BOLDBLUE << "[pre-write Duration] Control_2 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", (0xF << 4), pVerifLoop);
+        this->WriteChipSingleReg(pSSA2, "control_2", (cDuration << 4), false);
+        cRegValue = this->ReadChipReg(pSSA2, "control_2");
+        LOG(DEBUG) << BOLDBLUE << "Control_2 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xFF, pVerifLoop);
+
+        // sampling mode
+        uint8_t cSamplingMode = 0;
+        cRegValue             = this->ReadChipReg(pSSA2, "ENFLAGS_S1");
+        LOG(DEBUG) << BOLDBLUE << "[pre-write] StripControl1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_strip", (0x3 << 5), pVerifLoop);
+        this->WriteChipSingleReg(pSSA2, "ENFLAGS", (cSamplingMode << 5), false);
+        this->WriteChipSingleReg(pSSA2, "mask_strip", 0xFF, pVerifLoop);
+        cRegValue = this->ReadChipReg(pSSA2, "ENFLAGS_S1");
+        LOG(DEBUG) << BOLDBLUE << "[post-set sampling] StripControl1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        // configure for injection with the strip register
+        uint8_t cMask         = 1;
+        uint8_t cPolarity     = 0;
+        uint8_t cHitCounter   = 0;
+        uint8_t cDigitalCalib = 0;
+        uint8_t cAnalogCalib  = pValue;
+        uint8_t cEnFlags      = (cAnalogCalib << 4 | cDigitalCalib << 3 | cHitCounter << 2 | cPolarity << 1 | cMask);
+        this->WriteChipSingleReg(pSSA2, "mask_strip", 0x1F, pVerifLoop);
+        this->WriteChipSingleReg(pSSA2, "ENFLAGS", cEnFlags, false);
+        bool cSuccess = this->WriteChipSingleReg(pSSA2, "mask_strip", 0xFF, pVerifLoop);
+        cRegValue     = this->ReadChipReg(pSSA2, "ENFLAGS_S1");
+        LOG(DEBUG) << BOLDBLUE << "StripControl1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+
+        return cSuccess;
     }
     else if(pRegName == "AnalogueAsync")
     // cTool.fReadoutChipInterface->WriteChipReg(theSSA, "control_1", 0x1);
     //  cTool.fReadoutChipInterface->WriteChipReg(theSSA, "mask_strip", 0xff);
     //	cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ENFLAGS", 0x15);
     {
-        //	uint8_t cRegValue       = (pValue << 4) | (pValue << 2) | (1 << 0);
-        this->WriteChipSingleReg(pSSA2, "mask_strip", 0xff, false);
+        // NOTE:assume mask always 0xFF?
         bool cEnableAnalogue = WriteChipSingleReg(pSSA2, "ENFLAGS", 0x15, pVerifLoop);
-        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xff, false);
-        bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_1", 0x1, pVerifLoop);
+        bool cReadoutMode    = WriteChipSingleReg(pSSA2, "control_1", 0x1, pVerifLoop);
+        /*
+        uint8_t cReadoutMode = 0x1;
+        uint8_t cEdgeSel_T1  = 0x0;
+        // readout mode
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0x7, pVerifLoop);
+        uint16_t cRegValue = this->ReadChipReg(pSSA2, "control_1");
+        LOG(DEBUG) << BOLDBLUE << "[pre-write ReadoutMode] Control_1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "control_1", cReadoutMode, false);
+        cRegValue = this->ReadChipReg(pSSA2, "control_1");
+        LOG(DEBUG) << BOLDBLUE << "Control_1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xFF, pVerifLoop);
+        // edge select
+        cRegValue = this->ReadChipReg(pSSA2, "control_1");
+        LOG(DEBUG) << BOLDBLUE << "[pre-write Edge] Control_1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", (0x1 << 3), pVerifLoop);
+        this->WriteChipSingleReg(pSSA2, "control_1", (cEdgeSel_T1 << 3), false);
+        cRegValue = this->ReadChipReg(pSSA2, "control_1");
+        LOG(DEBUG) << BOLDBLUE << "Control_1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xFF, pVerifLoop);
+
+        uint8_t cDuration = 0x8;
+        cRegValue         = this->ReadChipReg(pSSA2, "control_2");
+        LOG(DEBUG) << BOLDBLUE << "[pre-write Duration] Control_2 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", (0xF << 4), pVerifLoop);
+        this->WriteChipSingleReg(pSSA2, "control_2", (cDuration << 4), false);
+        cRegValue = this->ReadChipReg(pSSA2, "control_2");
+        LOG(DEBUG) << BOLDBLUE << "Control_2 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xFF, pVerifLoop);
+
+        // sampling mode
+        uint8_t cSamplingMode = 0;
+        cRegValue             = this->ReadChipReg(pSSA2, "ENFLAGS_S1");
+        LOG(DEBUG) << BOLDBLUE << "[pre-write] StripControl1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_strip", (0x3 << 5), pVerifLoop);
+        this->WriteChipSingleReg(pSSA2, "ENFLAGS", (cSamplingMode << 5), false);
+        this->WriteChipSingleReg(pSSA2, "mask_strip", 0xFF, pVerifLoop);
+        cRegValue = this->ReadChipReg(pSSA2, "ENFLAGS_S1");
+        LOG(DEBUG) << BOLDBLUE << "[post-set sampling] StripControl1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        // configure for injection with the strip register
+        uint8_t cMask         = 1;
+        uint8_t cPolarity     = 0;
+        uint8_t cHitCounter   = 1;
+        uint8_t cDigitalCalib = 0;
+        uint8_t cAnalogCalib  = pValue;
+        uint8_t cEnFlags      = (cAnalogCalib << 4 | cDigitalCalib << 3 | cHitCounter << 2 | cPolarity << 1 | cMask);
+        this->WriteChipSingleReg(pSSA2, "mask_strip", 0x1F, pVerifLoop);
+        this->WriteChipSingleReg(pSSA2, "ENFLAGS", cEnFlags, false);
+        bool cSuccess = this->WriteChipSingleReg(pSSA2, "mask_strip", 0xFF, pVerifLoop);
+        cRegValue     = this->ReadChipReg(pSSA2, "ENFLAGS_S1");
+        LOG(DEBUG) << BOLDBLUE << "StripControl1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+
+        // set readout delay
+        cRegValue = this->ReadChipReg(pSSA2, "AsyncRead_StartDel_MSB");
+        LOG(DEBUG) << BOLDBLUE << "[pre-write] AsyncRead_StartDel_MSB set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xFF, pVerifLoop);
+        this->WriteChipSingleReg(pSSA2, "AsyncRead_StartDel_MSB", 0, false);
+        cRegValue = this->ReadChipReg(pSSA2, "AsyncRead_StartDel_LSB");
+        LOG(DEBUG) << BOLDBLUE << "[pre-write] AsyncRead_StartDel_LSB set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xFF, pVerifLoop);
+        this->WriteChipSingleReg(pSSA2, "AsyncRead_StartDel_LSB", 0x8, false);
+        */
         return cEnableAnalogue && cReadoutMode;
     }
     else if(pRegName == "Sync")
@@ -417,33 +689,92 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         uint8_t pStripEnable    = 1;
         uint8_t cRegValue       = (pAnalogueCalib << 4) | (pDigitalCalib << 3) | (pHitCounter << 2) | (pSignalPolarity << 1);
         cRegValue               = cRegValue | (pStripEnable << 0);
-        LOG(DEBUG) << BOLDRED << "Enable flag is 0x" << std::hex << +cRegValue << std::dec << RESET;
+        LOG(INFO) << BOLDRED << "Enable flag is 0x" << std::hex << +cRegValue << std::dec << RESET;
         bool cEnableAnalogue = WriteChipSingleReg(pSSA2, "ENFLAGS", cRegValue, pVerifLoop);
-        this->WriteChipSingleReg(pSSA2, "mask_strip", 1, pVerifLoop);
-        bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_1", (1 - pValue), pVerifLoop);
-        this->WriteChipSingleReg(pSSA2, "mask_strip", 255, pVerifLoop);
+
+        bool cReadoutMode = this->WriteChipRegBits(pSSA2, "control_1", (1 - pValue), "mask_strip", 0x1, pVerifLoop);
+
+        // this->WriteChipSingleReg(pSSA2, "mask_strip", 1, pVerifLoop);
+        // bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_1", (1 - pValue), pVerifLoop);
+        // this->WriteChipSingleReg(pSSA2, "mask_strip", 255, pVerifLoop);
 
         return cEnableAnalogue && cReadoutMode;
     }
     else if(pRegName == "DigitalAsync")
     {
-        // digital injection, async , enable all strips
-        uint8_t cRegValue = (pValue << 3) | (1 << 2) | (1 << 0);
-        return WriteChipSingleReg(pSSA2, "ENFLAGS", cRegValue, pVerifLoop);
+        // // digital injection, async , enable all strips
+        // uint8_t cRegValue = (pValue << 3) | (1 << 2) | (1 << 0);
+        // return WriteChipSingleReg(pSSA2, "ENFLAGS", cRegValue, pVerifLoop);
+
+        uint8_t cReadoutMode = 0x1;
+        uint8_t cEdgeSel_T1  = 0x0;
+        // readout mode
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0x7, pVerifLoop);
+        uint16_t cRegValue = this->ReadChipReg(pSSA2, "control_1");
+        LOG(DEBUG) << BOLDBLUE << "[pre-write ReadoutMode] Control_1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "control_1", cReadoutMode, false);
+        cRegValue = this->ReadChipReg(pSSA2, "control_1");
+        LOG(DEBUG) << BOLDBLUE << "Control_1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xFF, pVerifLoop);
+        // edge select
+        cRegValue = this->ReadChipReg(pSSA2, "control_1");
+        LOG(DEBUG) << BOLDBLUE << "[pre-write Edge] Control_1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", (0x1 << 3), pVerifLoop);
+        this->WriteChipSingleReg(pSSA2, "control_1", (cEdgeSel_T1 << 3), false);
+        cRegValue = this->ReadChipReg(pSSA2, "control_1");
+        LOG(DEBUG) << BOLDBLUE << "Control_1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xFF, pVerifLoop);
+
+        uint8_t cDuration = 0x8;
+        cRegValue         = this->ReadChipReg(pSSA2, "control_2");
+        LOG(DEBUG) << BOLDBLUE << "[pre-write Duration] Control_2 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", (0xF << 4), pVerifLoop);
+        this->WriteChipSingleReg(pSSA2, "control_2", (cDuration << 4), false);
+        cRegValue = this->ReadChipReg(pSSA2, "control_2");
+        LOG(DEBUG) << BOLDBLUE << "Control_2 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0xFF, pVerifLoop);
+
+        // sampling mode
+        uint8_t cSamplingMode = 0;
+        cRegValue             = this->ReadChipReg(pSSA2, "ENFLAGS_S1");
+        LOG(DEBUG) << BOLDBLUE << "[pre-write] StripControl1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_strip", (0x3 << 5), pVerifLoop);
+        this->WriteChipSingleReg(pSSA2, "ENFLAGS", (cSamplingMode << 5), false);
+        this->WriteChipSingleReg(pSSA2, "mask_strip", 0xFF, pVerifLoop);
+        cRegValue = this->ReadChipReg(pSSA2, "ENFLAGS_S1");
+        LOG(DEBUG) << BOLDBLUE << "[post-set sampling] StripControl1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        // configure for injection with the strip register
+        uint8_t cMask         = 1;
+        uint8_t cPolarity     = 0;
+        uint8_t cHitCounter   = 1;
+        uint8_t cDigitalCalib = pValue;
+        uint8_t cAnalogCalib  = 0;
+        uint8_t cEnFlags      = (cAnalogCalib << 4 | cDigitalCalib << 3 | cHitCounter << 2 | cPolarity << 1 | cMask);
+        this->WriteChipSingleReg(pSSA2, "mask_strip", 0x1F, pVerifLoop);
+        this->WriteChipSingleReg(pSSA2, "ENFLAGS", cEnFlags, false);
+        bool cSuccess = this->WriteChipSingleReg(pSSA2, "mask_strip", 0xFF, pVerifLoop);
+        cRegValue     = this->ReadChipReg(pSSA2, "ENFLAGS_S1");
+        LOG(DEBUG) << BOLDBLUE << "StripControl1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+
+        return cSuccess;
     }
     else if(pRegName == "DigitalSync")
     {
         uint8_t cRegValue = (pValue << 3) | (1 << 2) | (1 << 0);
-        WriteChipReg(pSSA2, "mask_strip", 0xff, false);
+
+        // NOTE:assume mask always 0xFF?
+        // WriteChipReg(pSSA2, "mask_strip", 0xff, false);
         bool cEnFlags = WriteChipSingleReg(pSSA2, "ENFLAGS", cRegValue, pVerifLoop);
         bool cMode    = WriteChipReg(pSSA2, "ReadoutMode", 0x0, pVerifLoop);
         return cEnFlags && cMode;
     }
     else if(pRegName == "DigitalDuration")
     {
-        this->WriteChipSingleReg(pSSA2, "mask_peri_D", (0xF << 4), false);
-        bool cCalDuration = WriteChipSingleReg(pSSA2, "control_2", (0xF << 4), false);
-        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 255, false);
+        bool cCalDuration = this->WriteChipRegBits(pSSA2, "control_2", (0xF << 4), "mask_peri_D", (0xF << 4), pVerifLoop);
+
+        // this->WriteChipSingleReg(pSSA2, "mask_peri_D", (0xF << 4), false);
+        // bool cCalDuration = WriteChipSingleReg(pSSA2, "control_2", (0xF << 4), false);
+        // this->WriteChipSingleReg(pSSA2, "mask_peri_D", 255, false);
         return cCalDuration;
     }
     else if(pRegName == "EnableSLVSTestOutput")
@@ -451,10 +782,31 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         LOG(INFO) << BOLDBLUE << "Enabling SLVS test output on SSA2#" << +pSSA2->getId() << RESET;
         uint8_t cRegValue = ReadChipReg(pSSA2, "ReadoutMode");
         cRegValue         = (cRegValue & 0x4) | (pValue << 1);
-        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 2, pVerifLoop);
-        bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_1", pValue << 1, pVerifLoop);
-        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 255, pVerifLoop);
+
+        bool cReadoutMode = this->WriteChipRegBits(pSSA2, "control_1", pValue << 1, "mask_peri_D", 2, pVerifLoop);
+
+        // this->WriteChipSingleReg(pSSA2, "mask_peri_D", 2, pVerifLoop);
+        // bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_1", pValue << 1, pVerifLoop);
+        // this->WriteChipSingleReg(pSSA2, "mask_peri_D", 255, pVerifLoop);
         return cReadoutMode;
+    }
+    else if(pRegName.find("OutPatternStubLine") != std::string::npos) // Stub Lines
+    {
+        int cLine;
+        std::sscanf(pRegName.c_str(), "OutPatternStubLine%d", &cLine);
+        std::vector<std::string> cRegNames{"Shift_pattern_st_0",
+                                           "Shift_pattern_st_1",
+                                           "Shift_pattern_st_2",
+                                           "Shift_pattern_st_3",
+                                           "Shift_pattern_st_4_st_5",
+                                           "Shift_pattern_st_4_st_5",
+                                           "Shift_pattern_st_6_st_7",
+                                           "Shift_pattern_st_6_st_7"};
+        return this->WriteChipSingleReg(pSSA2, cRegNames[cLine], pValue, pVerifLoop);
+    }
+    else if(pRegName.find("OutPatternL1Line") != std::string::npos) // Stub Lines
+    {
+        return this->WriteChipSingleReg(pSSA2, "Shift_pattern_L1", pValue, pVerifLoop);
     }
     else if(pRegName == "CalibrationPattern")
     {
@@ -494,17 +846,27 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     else if(pRegName == "InjectedCharge")
     {
         LOG(DEBUG) << BOLDBLUE << "Setting "
-                   << " bias calDac to " << +pValue << " on SSA2" << +pSSA2->getId() << RESET;
+                   << " bias calDac to " << +pValue << " on SSA2#" << +pSSA2->getId() << RESET;
         return WriteChipSingleReg(pSSA2, "Bias_CALDAC", pValue, pVerifLoop);
     }
-    else if(pRegName == "Threshold")
+    else if(pRegName == "Threshold" || pRegName == "Bias_THDAC")
     {
-        LOG(DEBUG) << BOLDRED << "Setting threshold to " << +pValue << RESET;
+        LOG(DEBUG) << BOLDBLUE << "Setting threshold to " << +pValue << RESET;
+        this->WriteChipSingleReg(pSSA2, "mask_peri_A", 0xFF, false);
         return WriteChipSingleReg(pSSA2, "Bias_THDAC", (pValue), pVerifLoop);
+    }
+    else if(pRegName == "LateralRX_L_PhaseData")
+    {
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0x07, false); // 0b00000111
+        return this->WriteChipSingleReg(pSSA2, "LateralRX_sampling", (pValue), pVerifLoop);
+    }
+    else if(pRegName == "LateralRX_R_PhaseData")
+    {
+        this->WriteChipSingleReg(pSSA2, "mask_peri_D", 0x70, false); // 0b01110000
+        return this->WriteChipSingleReg(pSSA2, "LateralRX_sampling", (pValue), pVerifLoop);
     }
     else
     {
-        LOG(DEBUG) << RED << pRegName << " set to " << pValue << RESET;
         return this->WriteChipSingleReg(pSSA2, pRegName, pValue, pVerifLoop);
     }
 }
@@ -515,7 +877,7 @@ bool SSA2Interface::ConfigureAmux(Chip* pChip, const std::string& pRegister)
     // first make sure amux is set to 0 to avoid shorts
     // from SSA2 python methods
     uint8_t                  cHighZValue = 0x00;
-    std::vector<std::string> cRegNames{"Bias_TEST_LSB", "Bias_TEST_MSB"};
+    std::vector<std::string> cRegNames{"Bias_TEST_lsb", "Bias_TEST_msb"};
     for(auto cReg: cRegNames)
     {
         bool cSuccess = this->WriteChipSingleReg(pChip, cReg, cHighZValue);

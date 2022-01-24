@@ -37,6 +37,7 @@ class Gain : public Tool
     {
         for(auto container: detectorContainerVector) theRecyclingBin.free(container);
 #ifdef __USE_ROOT__
+        if(saveData == true) this->WriteRootFile();
         this->CloseResultFile();
 #endif
     }
@@ -46,15 +47,15 @@ class Gain : public Tool
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void                                   localConfigure(const std::string fileRes_, int currentRun);
-    void                                   initializeFiles(const std::string fileRes_, int currentRun);
+    void                                   localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
+    void                                   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
     void                                   run();
     void                                   draw(bool saveData = true);
     std::shared_ptr<DetectorDataContainer> analyze();
-    size_t getNumberIterations() { return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol) * nSteps; }
+    size_t getNumberIterations() { return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol, doOnlyNGroups) * nSteps; }
     void   saveChipRegisters(int currentRun);
 
-    static float gainFunction(const std::vector<float>& par, float q) { return par[0] + par[1] * q + par[2] * q * q + par[3] * log(q); }
+    static float gainFunction(const std::vector<float>& par, float q) { return par[0] + par[1] * q; }
 
 #ifdef __USE_ROOT__
     GainHistograms* histos;
@@ -73,6 +74,7 @@ class Gain : public Tool
     size_t offset;
     size_t nHITxCol;
     bool   doFast;
+    size_t doOnlyNGroups;
 
     std::vector<uint16_t> dacList;
 
@@ -82,7 +84,14 @@ class Gain : public Tool
     ContainerRecycleBin<OccupancyAndPh>      theRecyclingBin;
 
     void fillHisto();
-    void computeStats(const std::vector<float>& x, const std::vector<float>& y, const std::vector<float>& e, std::vector<float>& par, std::vector<float>& parErr, float& chi2, float& DoF);
+    void computeStats(const std::vector<float>& x,
+                      const std::vector<float>& y,
+                      const std::vector<float>& e,
+                      const std::vector<float>& o,
+                      std::vector<float>&       par,
+                      std::vector<float>&       parErr,
+                      float&                    chi2,
+                      float&                    DoF);
     void chipErrorReport() const;
 
   protected:
@@ -91,6 +100,7 @@ class Gain : public Tool
     bool        doUpdateChip;
     bool        doDisplay;
     bool        saveBinaryData;
+    bool        saveData;
 };
 
 #endif

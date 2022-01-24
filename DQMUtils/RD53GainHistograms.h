@@ -20,14 +20,13 @@
 
 #include <TH1F.h>
 #include <TH2F.h>
+#include <TH3F.h>
 
 // #############
 // # CONSTANTS #
 // #############
-#define INTERCEPT_HALFRANGE 30   // [ToT]
-#define SLOPE_HALFRANGE 3e-2     // [ToT / VCal]
-#define QUADRATIC_HALFRANGE 1e-5 // [ToT / VCal^2]
-#define LOG_HALFRANGE 6          // [ToT / ln(VCal)]
+#define INTERCEPT_HALFRANGE 15 // [ToT]
+#define SLOPE_HALFRANGE 9e-2   // [ToT / VCal]
 
 class GainHistograms : public DQMHistogramBase
 {
@@ -44,19 +43,20 @@ class GainHistograms : public DQMHistogramBase
     DetectorDataContainer DetectorData;
 
     DetectorDataContainer Occupancy2D;
+    DetectorDataContainer Occupancy3D;
     DetectorDataContainer ErrorReadOut2D;
     DetectorDataContainer ErrorFit2D;
 
     DetectorDataContainer Intercept1D;
     DetectorDataContainer Slope1D;
-    DetectorDataContainer Quadratic1D;
-    DetectorDataContainer Log1D;
+    DetectorDataContainer InterceptLowQ1D; // @TMP@
+    DetectorDataContainer SlopeLowQ1D;     // @TMP@
     DetectorDataContainer Chi2DoF1D;
 
     DetectorDataContainer Intercept2D;
     DetectorDataContainer Slope2D;
-    DetectorDataContainer Quadratic2D;
-    DetectorDataContainer Log2D;
+    DetectorDataContainer InterceptLowQ2D; // @TMP@
+    DetectorDataContainer SlopeLowQ2D;     // @TMP@
     DetectorDataContainer Chi2DoF2D;
 
     size_t nEvents;

@@ -81,12 +81,22 @@ void PhysicsHistograms::fill(const DetectorDataContainer& DataContainer)
                 {
                     if(cChip->getChannelContainer<OccupancyAndPh>() == nullptr) continue;
 
-                    auto* ToT1DHist = ToT1D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
-                    auto* ToT2DHist = ToT2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
-                    auto* Occupancy2DHist =
-                        Occupancy2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
-                    auto* ErrorReadOut2DHist =
-                        ErrorReadOut2D.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+                    auto* ToT1DHist =
+                        ToT1D.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* ToT2DHist =
+                        ToT2D.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+                    auto* Occupancy2DHist = Occupancy2D.getObject(cBoard->getId())
+                                                ->getObject(cOpticalGroup->getId())
+                                                ->getObject(cHybrid->getId())
+                                                ->getObject(cChip->getId())
+                                                ->getSummary<CanvasContainer<TH2F>>()
+                                                .fTheHistogram;
+                    auto* ErrorReadOut2DHist = ErrorReadOut2D.getObject(cBoard->getId())
+                                                   ->getObject(cOpticalGroup->getId())
+                                                   ->getObject(cHybrid->getId())
+                                                   ->getObject(cChip->getId())
+                                                   ->getSummary<CanvasContainer<TH2F>>()
+                                                   .fTheHistogram;
 
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
@@ -115,9 +125,14 @@ void PhysicsHistograms::fillBCID(const DetectorDataContainer& DataContainer)
                 {
                     if(cChip->getSummaryContainer<GenericDataArray<BCIDsize>>() == nullptr) continue;
 
-                    auto* BCIDHist = BCID.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* BCIDHist =
+                        BCID.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
 
-                    for(auto i = 0u; i < BCIDsize; i++) BCIDHist->SetBinContent((i == 0 ? BCIDHist->GetNbinsX() : i), cChip->getSummary<GenericDataArray<BCIDsize>>().data[i]);
+                    for(auto i = 0u; i < BCIDsize; i++)
+                    {
+                        auto bin = (i == 0 ? BCIDHist->GetNbinsX() : i);
+                        BCIDHist->SetBinContent(bin, BCIDHist->GetBinContent(bin) + cChip->getSummary<GenericDataArray<BCIDsize>>().data[i]);
+                    }
                 }
 }
 
@@ -132,10 +147,18 @@ void PhysicsHistograms::fillTrgID(const DetectorDataContainer& DataContainer)
                 {
                     if(cChip->getSummaryContainer<GenericDataArray<TrgIDsize>>() == nullptr) continue;
 
-                    auto* TriggerIDHist =
-                        TriggerID.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* TriggerIDHist = TriggerID.getObject(cBoard->getId())
+                                              ->getObject(cOpticalGroup->getId())
+                                              ->getObject(cHybrid->getId())
+                                              ->getObject(cChip->getId())
+                                              ->getSummary<CanvasContainer<TH1F>>()
+                                              .fTheHistogram;
 
-                    for(auto i = 0u; i < TrgIDsize; i++) TriggerIDHist->SetBinContent((i == 0 ? TriggerIDHist->GetNbinsX() : i), cChip->getSummary<GenericDataArray<TrgIDsize>>().data[i]);
+                    for(auto i = 0u; i < TrgIDsize; i++)
+                    {
+                        auto bin = (i == 0 ? TriggerIDHist->GetNbinsX() : i);
+                        TriggerIDHist->SetBinContent(bin, TriggerIDHist->GetBinContent(bin) + cChip->getSummary<GenericDataArray<TrgIDsize>>().data[i]);
+                    }
                 }
 }
 

@@ -2,6 +2,8 @@
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
+
+#include <boost/any.hpp>
 #include <math.h>
 
 using namespace Ph2_HwDescription;
@@ -14,7 +16,7 @@ CalibrationExample::~CalibrationExample() {}
 void CalibrationExample::Initialise(void)
 {
     auto cSetting   = fSettingsMap.find("Nevents");
-    fEventsPerPoint = (cSetting != std::end(fSettingsMap)) ? cSetting->second : 10;
+    fEventsPerPoint = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 10;
 
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
@@ -73,10 +75,10 @@ void CalibrationExample::runCalibrationExample(void)
     // that is used when multiple calibrations are concatenated
     auto theHitStream = prepareChannelContainerStreamer<uint32_t>();
     // if the streamer was enabled (the supervisor script enable it) data are streamed
-    if(fStreamerEnabled)
+    if(fDQMStreamerEnabled)
     {
         // Disclamer: final MW will not do a for loop on board since each instance will hanlde 1 board only
-        for(auto board: theHitContainer) theHitStream.streamAndSendBoard(board, fNetworkStreamer);
+        for(auto board: theHitContainer) theHitStream.streamAndSendBoard(board, fDQMStreamer);
     }
 #endif
 }

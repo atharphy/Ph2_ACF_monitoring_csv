@@ -40,17 +40,17 @@ class SSASCurve : public Tool
     void writeObjects(void);
 
   private:
-    size_t StartTHDAC = this->findValueInSettings("StartTHDAC");
-    size_t StopTHDAC  = this->findValueInSettings("StopTHDAC");
-    size_t NMsec      = this->findValueInSettings("NMsec");
-    size_t NMpulse    = this->findValueInSettings("NMpulse");
-    size_t Res        = this->findValueInSettings("Res");
-    size_t Nlvl       = this->findValueInSettings("Nlvl");
-    bool   SyncDebug  = this->findValueInSettings("SyncDebug");
+    size_t StartTHDAC = this->findValueInSettings<double>("StartTHDAC");
+    size_t StopTHDAC  = this->findValueInSettings<double>("StopTHDAC");
+    size_t NMsec      = this->findValueInSettings<double>("NMsec");
+    size_t NMpulse    = this->findValueInSettings<double>("NMpulse");
+    size_t Res        = this->findValueInSettings<double>("Res");
+    size_t Nlvl       = this->findValueInSettings<double>("Nlvl");
+    bool   SyncDebug  = this->findValueInSettings<double>("SyncDebug");
 
-    float Mrms                   = this->findValueInSettings("Mrms");
-    float Vfac                   = this->findValueInSettings("Vfac");
-    float TestPulsePotentiometer = this->findValueInSettings("TestPulsePotentiometer");
+    float Mrms                   = this->findValueInSettings<double>("Mrms");
+    float Vfac                   = this->findValueInSettings<double>("Vfac");
+    float TestPulsePotentiometer = this->findValueInSettings<double>("TestPulsePotentiometer");
 
     float globalmax = 0;
 

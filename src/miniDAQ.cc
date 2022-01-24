@@ -17,6 +17,7 @@
 #include "../Utils/Timer.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/argvparser.h"
+#include "D19cDebugFWInterface.h"
 #include "tools/BackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
@@ -196,14 +197,10 @@ int main(int argc, char* argv[])
     if(!cmd.foundOption("skipAlignment")) { cPSAlignment.Align(); }
     cPSAlignment.dumpConfigFiles();
 
-    auto cSetting       = cTool.fSettingsMap.find("PSmoduleSSAthreshold");
-    int  cPSmoduleSSAth = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
-    cSetting            = cTool.fSettingsMap.find("PSmoduleMPAthreshold");
-    int cPSmoduleMPAth  = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
-    cSetting            = cTool.fSettingsMap.find("PSmoduleTriggerLatency");
-    int cPSmoduleLat    = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
-    cSetting            = cTool.fSettingsMap.find("PSmoduleStubWindow");
-    int cPSmoduleWindow = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : 100;
+    int cPSmoduleSSAth  = cTool.findValueInSettings<double>("PSmoduleSSAthreshold", 100);
+    int cPSmoduleMPAth  = cTool.findValueInSettings<double>("PSmoduleMPAthreshold", 100);
+    int cPSmoduleLat    = cTool.findValueInSettings<double>("PSmoduleTriggerLatency", 100);
+    int cPSmoduleWindow = cTool.findValueInSettings<double>("PSmoduleStubWindow", 100);
 
     for(auto board: *cTool.fDetectorContainer)
     {
@@ -332,7 +329,8 @@ int main(int argc, char* argv[])
         for(size_t cAttempts = 0; cAttempts < cScopingAttempts; cAttempts++)
         {
             LOG(DEBUG) << BOLDBLUE << "Attempt#" << +cAttempts << RESET;
-            auto cBuffer = dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->L1ADebug(1, false);
+            auto cDebugInterface = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+            auto cBuffer         = cDebugInterface->L1ADebug(1, false);
             // search for L1 headers
             size_t                cSearch = 0;
             size_t                cPos    = 0;

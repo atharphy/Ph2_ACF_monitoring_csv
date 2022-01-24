@@ -14,53 +14,22 @@ D19cSSA2Event::D19cSSA2Event(const BeBoard* pBoard, uint32_t pNSSA2, uint32_t pN
     fNSSA2 = pNSSA2;
     SetEvent(pBoard, pNSSA2, list);
 }
-void D19cSSA2Event::fillDataContainer(BoardDataContainer* boardContainer, const BoardDataContainer* theChannelGroupHandler, int groupNumber)
-{
-    for(auto opticalGroup: *boardContainer)
-    {
-        for(auto hybrid: *opticalGroup)
-        {
-            for(auto chip: *hybrid)
-            {
-                auto cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, opticalGroup->getId(), hybrid->getId(), chip->getId());
-                if(!cTestChannelGroup) continue;
 
-                unsigned int i = 0;
-                for(ChannelDataContainer<Occupancy>::iterator channel = chip->begin<Occupancy>(); channel != chip->end<Occupancy>(); channel++, i++)
-                {
-                    if(cTestChannelGroup->isChannelEnabled(i))
-                    {
-                        channel->fOccupancy += (float)privateDataBit(hybrid->getId(), chip->getId(), i);
-                        // if (privateDataBit(hybrid->getId(), chip->getId(), i)) LOG (INFO) << "!";
-                    }
-                }
-            }
-        }
+void D19cSSA2Event::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId)
+{
+    unsigned int i = 0;
+    for(ChannelDataContainer<Occupancy>::iterator channel = chipContainer->begin<Occupancy>(); channel != chipContainer->end<Occupancy>(); channel++, i++)
+    {
+        if(testChannelGroup->isChannelEnabled(i)) { channel->fOccupancy += (float)privateDataBit(hybridId, chipContainer->getId(), i); }
     }
 }
+
 void D19cSSA2Event::SetEvent(const BeBoard* pBoard, uint32_t pNSSA2, const std::vector<uint32_t>& list)
 {
     // LOG(INFO) << BOLDBLUE << "NEW"<< RESET;
     // for (auto L : list) LOG(INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
 
     // start reading here for first SSA2
-    auto   cIter = list.begin() + 4;
-    size_t cIndx = 0;
-    do
-    {
-        if(cIndx == 2)
-        {
-            fL1Id = ((*cIter) >> 16) & 0x1FF;
-            LOG(DEBUG) << BOLDGREEN << std::bitset<32>(*cIter) << ".....L1 Id is " << +fL1Id << RESET;
-        }
-        // if( cIndx >= 4 && cIndx <= 7 )
-        // {
-        //     LOG (INFO) << BOLDBLUE << "Hit data is " <<  std::bitset<32>(*cIter)  << RESET;
-        // }
-        cIter++;
-        cIndx++;
-    } while(cIter < list.end());
-
     std::vector<uint32_t> head;
     head.push_back(list.at(0));
     head.push_back(list.at(1));

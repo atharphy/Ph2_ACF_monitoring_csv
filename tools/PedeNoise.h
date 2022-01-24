@@ -61,6 +61,10 @@ class PedeNoise : public Tool
     uint32_t fEventsPerPoint{0};
     uint32_t fMaxNevents{65535};
     int      fNEventsPerBurst{-1};
+    bool     fUseFixRange{false};
+    uint16_t fMinThreshold{0};
+    uint16_t fMaxThreshold{1023};
+    float    fLimit{0.005};
     float    fMean_Strps{0};
     float    fMean_Pxls{0};
     uint32_t fNEventsToValidate{0};
@@ -68,7 +72,8 @@ class PedeNoise : public Tool
     bool     fMaskNoisyChannels{0};
 
 
-    DetectorDataContainer* fThresholdAndNoiseContainer;
+    DetectorDataContainer*                     fThresholdAndNoiseContainer;
+    std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
 
   private:
     // to hold the original register values
@@ -93,8 +98,7 @@ class PedeNoise : public Tool
 
     // helpers for SCurve measurement
 
-    std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
-    ContainerRecycleBin<Occupancy>             fRecycleBin;
+    ContainerRecycleBin<Occupancy> fRecycleBin;
 
 #ifdef __USE_ROOT__
     DQMHistogramPedeNoise fDQMHistogramPedeNoise;

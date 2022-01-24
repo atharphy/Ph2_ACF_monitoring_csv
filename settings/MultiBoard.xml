@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
-  <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="1" boardReset="0">
+  <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="1" boardReset="1">
         <!-- B598 skeleton -->
         <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.70:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
         <CDCE configure="0" clockRate="320"/>
@@ -14,33 +14,33 @@
         />
         </lpGBT>
         <Hybrid Id="0" Status="1" reset="1">
-        <Global>
-            <Settings threshold="560" latency="99"/>
-            <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
-            <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
-            <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
-            <ChannelMask disable=""/>
-            <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
-            <!-- <MaskedStrips 
-                CBCId="0;1" 
-                Rows="241, 240,225,224,209,208,193,192,177,176,161,160,145,144,129,128,113,112,97,96,81,80,65,64,49,48,33,32,17,16;241,240,225,224,209,208,193,192,177,176,161,160,145,144,129,128,113,112,97,96,81,80,65,64,49,48,33,32,17,16" 
-            />  -->
-        </Global>
+            <Global>
+                <Settings threshold="560" latency="99"/>
+                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
+                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
+                <ChannelMask disable=""/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+                <!-- <MaskedStrips 
+                    CBCId="0;1" 
+                    Rows="241, 240,225,224,209,208,193,192,177,176,161,160,145,144,129,128,113,112,97,96,81,80,65,64,49,48,33,32,17,16;241,240,225,224,209,208,193,192,177,176,161,160,145,144,129,128,113,112,97,96,81,80,65,64,49,48,33,32,17,16" 
+                />  -->
+            </Global>
 
-        <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
-        <CBC Id="0" configfile="CBC3_default.txt" />
-        <CBC Id="1" configfile="CBC3_default.txt" />
-        <CBC Id="2" configfile="CBC3_default.txt" />
-        <CBC Id="3" configfile="CBC3_default.txt" />
-        <CBC Id="4" configfile="CBC3_default.txt" />
-        <CBC Id="5" configfile="CBC3_default.txt" />
-        <CBC Id="6" configfile="CBC3_default.txt" />
-        <CBC Id="7" configfile="CBC3_default.txt" /> 
+            <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
+            <CBC Id="0" configfile="CBC3_default.txt" />
+            <CBC Id="1" configfile="CBC3_default.txt" />
+            <CBC Id="2" configfile="CBC3_default.txt" />
+            <CBC Id="3" configfile="CBC3_default.txt" />
+            <CBC Id="4" configfile="CBC3_default.txt" />
+            <CBC Id="5" configfile="CBC3_default.txt" />
+            <CBC Id="6" configfile="CBC3_default.txt" />
+            <CBC Id="7" configfile="CBC3_default.txt" /> 
 
-        <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-        <CIC2 Id="8" configfile="CIC2_default.txt" />
-        </Hybrid>
-        </OpticalGroup>
+            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" configfile="CIC2_default.txt" />
+            </Hybrid>
+            </OpticalGroup>
 
         <!--CONFIG-->
         <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
@@ -68,7 +68,7 @@
         <Register name="fast_command_block">
         <Register name="triggers_to_accept"> 0 </Register>
         <Register name="trigger_source"> 3 </Register>
-        <Register name="user_trigger_frequency"> 5 </Register>
+        <Register name="user_trigger_frequency"> 10 </Register>
         <Register name="stubs_mask"> 1 </Register>
         <!--this is the delay for the stub trigger-->
         <Register name="stub_trigger_delay_value"> 0 </Register>
@@ -112,7 +112,7 @@
         <!-- Phy Block -->
         <Register name="physical_interface_block">
         <Register name="i2c">
-                <Register name="frequency"> 4 </Register>
+            <Register name="frequency"> 4 </Register>
         </Register>
         <Register name="cic">
             <Register name = "clock_enable"> 1 </Register>
@@ -131,7 +131,7 @@
                 <Register name="trigger_type"> 0 </Register>
                 <Register name="data_type"> 0 </Register>
                 <!--this is what is commonly known as stub latency-->
-                <Register name="common_stubdata_delay"> 33 </Register>
+                <Register name="common_stubdata_delay"> 37 </Register>
         </Register>
         </Register>
         <!-- DIO5 Block -->
@@ -174,7 +174,7 @@
         </Register>
   </BeBoard>
 
-  <BeBoard Id="1" boardType="D19C" eventType="VR2S" linkReset="1" boardReset="0">
+  <BeBoard Id="1" boardType="D19C" eventType="VR2S" linkReset="1" boardReset="1">
         <!-- B598 skeleton -->
         <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.71:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
         <CDCE configure="0" clockRate="320"/>
@@ -189,7 +189,7 @@
             </lpGBT>
             <Hybrid Id="0" Status="1" reset="1">
                 <Global>
-                    <Settings threshold="500" latency="99"/>
+                    <Settings threshold="100" latency="99"/>
                     <TestPulse enable="1" polarity="0" amplitude="0x60" channelgroup="0" delay="0" groundothers="0"/>
                     <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                     <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
@@ -265,7 +265,7 @@
         <Register name="fast_command_block">
         <Register name="triggers_to_accept"> 0 </Register>
         <Register name="trigger_source"> 3 </Register>
-        <Register name="user_trigger_frequency"> 5 </Register>
+        <Register name="user_trigger_frequency"> 10 </Register>
         <Register name="stubs_mask"> 1 </Register>
         <!--this is the delay for the stub trigger-->
         <Register name="stub_trigger_delay_value"> 0 </Register>
@@ -372,7 +372,7 @@
   </BeBoard>
 <Settings>
     <!--PedestalEqualization-->
-    <Setting name="Nevents">100</Setting>
+    <Setting name="Nevents">10000</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>

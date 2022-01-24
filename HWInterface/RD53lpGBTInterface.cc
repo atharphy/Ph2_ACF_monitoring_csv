@@ -91,6 +91,55 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
 // # RD53 specific routine functions #
 // ####################################
 
+// void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const BeBoard* pBoard, const OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface)
+// {
+//     const uint8_t              cChipRate = lpGBTInterface::GetChipRate(pChip);
+//     const std::vector<uint8_t> pGroups   = static_cast<lpGBT*>(pChip)->getRxGroups();
+//     const std::vector<uint8_t> pChannels = static_cast<lpGBT*>(pChip)->getRxChannels();
+
+//     // @TMP@
+//     if(static_cast<lpGBT*>(pChip)->getPhaseRxAligned() == true)
+//     {
+//         LOG(INFO) << BOLDBLUE << "\t--> The phase for this LpGBT chip was already aligned (maybe from configuration file)" << RESET;
+//         return;
+//     }
+
+//     // Configure Rx Phase Shifter
+//     uint16_t cDelay = 0x0;
+//     uint8_t  cFreq = (cChipRate == 5) ? 4 : 5, cEnFTune = 0, cDriveStr = 0; // 4 --> 320 MHz || 5 --> 640 MHz
+//     lpGBTInterface::ConfigurePhShifter(pChip, {0, 1, 2, 3}, cFreq, cDriveStr, cEnFTune, cDelay);
+
+//     static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
+//     for(const auto cHybrid: *pOpticalGroup)
+//         for(const auto cChip: *cHybrid) { static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip); }
+
+//     lpGBTInterface::PhaseTrainRx(pChip, pGroups);
+//     for(const auto& cGroup: pGroups)
+//     {
+//         // Wait until channels lock
+//         LOG(INFO) << GREEN << "Phase aligning Rx Group " << BOLDYELLOW << +cGroup << RESET;
+//         do
+//         {
+//             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+//         } while(lpGBTInterface::IsRxLocked(pChip, cGroup, pChannels) == false);
+//         LOG(INFO) << BOLDBLUE << "\t--> Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " LOCKED" << RESET;
+
+//         // Set new phase
+//         for(const auto& cChannel: pChannels)
+//         {
+//             uint8_t cCurrPhase = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
+//             LOG(INFO) << BOLDBLUE << "\t\t--> Channel " << BOLDYELLOW << +cChannel << BOLDBLUE << " has phase " << BOLDYELLOW << +cCurrPhase << RESET;
+//             lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, cCurrPhase);
+//         }
+//     }
+
+//     for(const auto cHybrid: *pOpticalGroup)
+//         for(const auto cChip: *cHybrid) static_cast<RD53Interface*>(pReadoutChipInterface)->StopPRBSpattern(cChip);
+
+//     // Set back Rx groups to fixed phase
+//     lpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], lpGBTconstants::rxPhaseTracking);
+// }
+
 bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                                               const BeBoard*        pBoard,
                                               const OpticalGroup*   pOpticalGroup,
@@ -99,22 +148,19 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
 {
     const double frames_or_time = 1; // @CONST@
     const bool   given_time     = true;
-    // uint32_t     frontendSpeed  = static_cast<RD53FWInterface*>(pBeBoardFWInterface)->ReadoutSpeed();
+    bool         allGood        = true;
+    uint32_t     frontendSpeed  = static_cast<RD53FWInterface*>(pBeBoardFWInterface)->ReadoutSpeed();
 
     LOG(INFO) << GREEN << "Phase alignment ongoing for LpGBT chip: " << BOLDYELLOW << pChip->getId() << RESET;
 
     // @TMP@
     if(static_cast<lpGBT*>(pChip)->getPhaseRxAligned() == true)
     {
-        LOG(INFO) << BOLDBLUE << "\t--> The phase for this chip was already aligned (maybe from configuration file)" << RESET;
+        LOG(INFO) << BOLDBLUE << "\t--> The phase for this LpGBT chip was already aligned (maybe from configuration file)" << RESET;
         return true;
     }
 
-    bool allGood = true;
-    // do this once
-    static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
     for(const auto cHybrid: *pOpticalGroup)
-    {
         for(const auto cChip: *cHybrid)
         {
             uint8_t cGroup   = static_cast<RD53*>(cChip)->getRxGroup();
@@ -126,14 +172,15 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
             uint8_t phaseGap       = 0;
             double  bestBERtest    = -1;
 
-            // start for this ROC
-            static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip);
             for(uint8_t phase = 0; phase < 16; phase++)
             {
                 LOG(INFO) << BOLDMAGENTA << ">>> Phase value = " << BOLDYELLOW << +phase << BOLDMAGENTA << " of (0-15) <<<" << RESET;
                 lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, phase);
 
-                double result = lpGBTInterface::RunBERtest(pChip, cGroup, cChannel, given_time, frames_or_time);
+                static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
+                static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip);
+
+                const double result = lpGBTInterface::RunBERtest(pChip, cGroup, cChannel, given_time, frames_or_time, frontendSpeed);
 
                 // #########################################################
                 // # Search for largest interval and set into middle point #
@@ -149,19 +196,17 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                     bestBERtest    = result;
                 }
                 else if(result == bestBERtest)
-                {
                     bestPhaseEnd = phase;
-                }
                 else if((result > bestBERtest) && (bestPhaseEnd >= bestPhaseStart))
-                {
                     bestBERtest = result;
-                }
 
                 if((bestPhaseEnd >= bestPhaseStart) && (bestPhaseEnd - bestPhaseStart > phaseGap))
                 {
                     bestPhase = (bestPhaseStart + bestPhaseEnd) / 2;
                     phaseGap  = bestPhaseEnd - bestPhaseStart;
                 }
+
+                static_cast<RD53Interface*>(pReadoutChipInterface)->StopPRBSpattern(cChip);
             }
 
             if(bestBERtest == 0)
@@ -172,12 +217,12 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                 LOG(INFO) << BOLDBLUE << "\t--> Rx Group " << BOLDYELLOW << +cGroup << BOLDBLUE << " Channel " << BOLDYELLOW << +cChannel << BOLDRED << " has no good phase" << RESET;
                 allGood = false;
             }
+
             lpGBTInterface::ConfigureRxPhase(pChip, cGroup, cChannel, bestPhase);
-            // stop for this ROC
-            static_cast<RD53Interface*>(pReadoutChipInterface)->StopPRBSpattern(cChip);
         }
-    }
-    static_cast<lpGBT*>(pChip)->setPhaseRxAligned(allGood); // do this once
+
+    static_cast<lpGBT*>(pChip)->setPhaseRxAligned(allGood); // @TMP@
+
     return allGood;
 }
 

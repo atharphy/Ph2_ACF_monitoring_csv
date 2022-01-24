@@ -29,7 +29,7 @@ class SSA2Interface : public ReadoutChipInterface
     bool ConfigureChip(Ph2_HwDescription::Chip* pSSA2, bool pVerifLoop = true, uint32_t pBlockSize = 310) override; // FIXME
     void DumpConfiguration(Ph2_HwDescription::Chip* pSSA2, std::string filename);                                   // FIXME
 
-    void     producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
+    void     producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override {}
     bool     setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop = true) override;                                        // FIXME
     bool     enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = true) override;                                                                             // FIXME
     bool     setInjectionAmplitude(Ph2_HwDescription::ReadoutChip* pChip, uint8_t injectionAmplitude, bool pVerifLoop = true) override;                                                        // FIXME
@@ -43,13 +43,15 @@ class SSA2Interface : public ReadoutChipInterface
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pSSA2, const std::string& pRegNode) override;
     void     ReadASEvent(Ph2_HwDescription::ReadoutChip* pSSA2, std::vector<uint32_t>& pData, std::pair<uint32_t, uint32_t> pSRange = std::pair<uint32_t, uint32_t>({0, 0})); // FIXME
     void     Send_pulses(Ph2_HwDescription::ReadoutChip* pSSA2, uint32_t n_pulse);                                                                                            // FIXME
+    uint16_t ReadADC(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pInput);
 
   private:
-    uint8_t                        ReadChipId(Ph2_HwDescription::Chip* pChip);                                                                              // FIXME
-    bool                           WriteReg(Ph2_HwDescription::Chip* pCbc, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop = true);     // FIXME
-    bool                           WriteChipSingleReg(Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true); // FIXME
-    bool                           ConfigureAmux(Ph2_HwDescription::Chip* pChip, const std::string& pRegister);                                             // FIXME
-    std::map<std::string, uint8_t> fAmuxMap = {{"BoosterFeedback", 0},                                                                                      // FIXME
+    uint8_t ReadChipId(Ph2_HwDescription::Chip* pChip);                                                                                                                        // FIXME
+    bool    WriteChipRegBits(Ph2_HwDescription::Chip* pSSA2, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerifLoop = true); // FIXME
+    bool    WriteReg(Ph2_HwDescription::Chip* pCbc, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop = true);                                               // FIXME
+    bool    WriteChipSingleReg(Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true);                                           // FIXME
+    bool    ConfigureAmux(Ph2_HwDescription::Chip* pChip, const std::string& pRegister);                                                                                       // FIXME
+    std::map<std::string, uint8_t> fAmuxMap = {{"BoosterFeedback", 0},                                                                                                         // FIXME
                                                {"PreampBias", 1},
                                                {"Trim", 2},
                                                {"VoltageBias", 3},
