@@ -25,6 +25,7 @@
 #define NSSACHANNELS 120
 #define NMPACHANNELS 1920
 #define NMPACOLS 16
+#define NCHIPS_OT 8
 
 // Events
 
