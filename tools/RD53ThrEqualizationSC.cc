@@ -26,22 +26,32 @@ void ThrEqualizationSC::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    colStart       = this->findValueInSettings<double>("COLstart");
-    colStop        = this->findValueInSettings<double>("COLstop");
-    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
+    colStart     = this->findValueInSettings<double>("COLstart");
+    colStop      = this->findValueInSettings<double>("COLstop");
+    doDisplay    = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip = this->findValueInSettings<double>("UpdateChipCfg");
 
-    frontEnd = RD53::getMajorityFE(colStart, colStop);
+    frontEnd = RD53::getMajorityFE(SCurve::colStart, SCurve::colStop);
     if(frontEnd == &RD53::SYNC)
     {
         LOG(ERROR) << BOLDRED << "ThrEqualizationSC cannot be used on the Synchronous FE, please change the selected columns" << RESET;
         exit(EXIT_FAILURE);
     }
-    colStart = std::max(colStart, frontEnd->colStart);
-    colStop  = std::min(colStop, frontEnd->colStop);
-    LOG(INFO) << GREEN << "ThrEqualizationSC will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << GREEN << BOLDYELLOW << colStart << ", " << colStop
-              << RESET << GREEN << "]" << RESET;
+    SCurve::colStart = std::max(SCurve::colStart, frontEnd->colStart);
+    SCurve::colStop  = std::min(SCurve::colStop, frontEnd->colStop);
+    LOG(INFO) << GREEN << "ThrEqualizationSC will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << GREEN << BOLDYELLOW << SCurve::colStart << ", "
+              << SCurve::colStop << RESET << GREEN << "]" << RESET;
+
+    // ########################
+    // # Custom channel group #
+    // ########################
+    ChannelGroup<RD53::nRows, RD53::nCols> customChannelGroup;
+    customChannelGroup.disableAllChannels();
+
+    for(auto row = SCurve::rowStart; row <= SCurve::rowStop; row++)
+        for(auto col = SCurve::colStart; col <= SCurve::colStop; col++) customChannelGroup.enableChannel(row, col);
+
+    SCurve::theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
 
     // #######################
     // # Initialize progress #
@@ -55,7 +65,7 @@ void ThrEqualizationSC::Running()
     SCurve::theCurrentRun = this->fRunNumber;
     LOG(INFO) << GREEN << "[ThrEqualizationSC::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
-    if(saveBinaryData == true)
+    if(SCurve::saveBinaryData == true)
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_ThrEqualizationSC.raw", 'w');
         this->initializeWriteFileHandler();
@@ -115,7 +125,7 @@ void ThrEqualizationSC::initializeFiles(const std::string& fileRes_, int current
 
     fileRes = fileRes_;
 
-    if((currentRun >= 0) && (saveBinaryData == true))
+    if((currentRun >= 0) && (SCurve::saveBinaryData == true))
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrEqualizationSC.raw", 'w');
         this->initializeWriteFileHandler();
@@ -140,7 +150,6 @@ void ThrEqualizationSC::run()
     // ##############################
     size_t TDACsize = RD53Shared::setBits(RD53Constants::NBIT_TDAC) + 1;
     if(frontEnd == &RD53::DIFF) TDACsize *= 2;
-
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, theTDACcontainer);
     ThrEqualizationSC::bitWiseScanLocal(frontEnd->name, targetThr);
 
@@ -157,7 +166,7 @@ void ThrEqualizationSC::run()
                     this->fReadoutChipInterface->ReadChipAllLocalReg(
                         static_cast<RD53*>(cChip), "PIX_PORTAL", *theTDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
 
-                    auto& theChannelGroupHandler = getChannelGroupHandlerContainer()
+                    auto& theChannelGroupHandler = this->getChannelGroupHandlerContainer()
                                                        ->at(cBoard->getIndex())
                                                        ->getObject(cOpticalGroup->getId())
                                                        ->getObject(cHybrid->getId())
@@ -214,7 +223,7 @@ void ThrEqualizationSC::analyze()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    auto& theChannelGroupHandler = getChannelGroupHandlerContainer()
+                    auto& theChannelGroupHandler = this->getChannelGroupHandlerContainer()
                                                        ->at(cBoard->getIndex())
                                                        ->getObject(cOpticalGroup->getId())
                                                        ->getObject(cHybrid->getId())

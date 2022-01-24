@@ -98,11 +98,6 @@ void BeBoardInterface::selectLink(BeBoard* pBoard, uint8_t pLinkId, uint32_t pWa
     setBoard(pBoard->getId());
     return fBoardFW->selectLink(pLinkId, pWait_ms);
 }
-// uint16_t BeBoardInterface::ParseEvents(const BeBoard* pBoard, const std::vector<uint32_t>& pData)
-// {
-//   setBoard(pBoard->getId());
-//   return fBoardFW->ParseEvents (pData);
-// }
 
 std::vector<uint32_t> BeBoardInterface::ReadBlockBoardReg(BeBoard* pBoard, const std::string& pRegNode, uint32_t pSize)
 {
@@ -124,7 +119,7 @@ BoardType BeBoardInterface::getBoardType(const BeBoard* pBoard)
 
 void BeBoardInterface::ConfigureBoard(const BeBoard* pBoard)
 {
-    // std::lock_guard<std::recursive_mutex> theGuard(theMtx);
+    std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
     setBoard(pBoard->getId());
     LOG(INFO) << GREEN << "Configuring Board: " << BOLDYELLOW << +pBoard->getId() << RESET;
@@ -133,7 +128,7 @@ void BeBoardInterface::ConfigureBoard(const BeBoard* pBoard)
 
 void BeBoardInterface::Start(BeBoard* pBoard)
 {
-    // std::lock_guard<std::recursive_mutex> theGuard(theMtx);
+    std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
     setBoard(pBoard->getId());
     fBoardFW->Start();
@@ -141,7 +136,7 @@ void BeBoardInterface::Start(BeBoard* pBoard)
 
 void BeBoardInterface::SendNTriggers(BeBoard* pBoard, uint16_t pNtriggers)
 {
-    // std::lock_guard<std::recursive_mutex> theGuard(theMtx);
+    std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
     setBoard(pBoard->getId());
     fBoardFW->SendNTriggers(pNtriggers);
@@ -149,7 +144,7 @@ void BeBoardInterface::SendNTriggers(BeBoard* pBoard, uint16_t pNtriggers)
 
 void BeBoardInterface::Stop(BeBoard* pBoard)
 {
-    // std::lock_guard<std::recursive_mutex> theGuard(theMtx);
+    std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
     setBoard(pBoard->getId());
     fBoardFW->Stop();
@@ -157,7 +152,7 @@ void BeBoardInterface::Stop(BeBoard* pBoard)
 
 void BeBoardInterface::Pause(BeBoard* pBoard)
 {
-    // std::lock_guard<std::recursive_mutex> theGuard(theMtx);
+    std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
     setBoard(pBoard->getId());
     fBoardFW->Pause();
@@ -165,7 +160,7 @@ void BeBoardInterface::Pause(BeBoard* pBoard)
 
 void BeBoardInterface::Resume(BeBoard* pBoard)
 {
-    // std::lock_guard<std::recursive_mutex> theGuard(theMtx);
+    std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
     setBoard(pBoard->getId());
     fBoardFW->Resume();
@@ -175,20 +170,20 @@ uint32_t BeBoardInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::ve
 {
     uint32_t dataSize = 0;
 
-    // std::unique_lock<std::recursive_mutex> theGuard(theMtx, std::defer_lock);
-    // if(theGuard.try_lock() == true)
-    // {
-    setBoard(pBoard->getId());
-    dataSize = fBoardFW->ReadData(pBoard, pBreakTrigger, pData, pWait);
-    //     theGuard.unlock();
-    // }
+    std::unique_lock<std::recursive_mutex> theGuard(theMtx, std::defer_lock);
+    if(theGuard.try_lock() == true)
+    {
+        setBoard(pBoard->getId());
+        dataSize = fBoardFW->ReadData(pBoard, pBreakTrigger, pData, pWait);
+        theGuard.unlock();
+    }
 
     return dataSize;
 }
 
 void BeBoardInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
 {
-    // std::lock_guard<std::recursive_mutex> theGuard(theMtx);
+    std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
     setBoard(pBoard->getId());
     fBoardFW->ReadNEvents(pBoard, pNEvents, pData, pWait);
@@ -229,48 +224,6 @@ uhal::HwInterface* BeBoardInterface::getHardwareInterface(const BeBoard* pBoard)
     setBoard(pBoard->getId());
     return fBoardFW->getHardwareInterface();
 }
-
-// void BeBoardInterface::FlashProm(BeBoard* pBoard, const std::string& strConfig, const char* pstrFile)
-// {
-//     setBoard(pBoard->getId());
-//     fBoardFW->FlashProm(strConfig, pstrFile);
-// }
-
-// void BeBoardInterface::JumpToFpgaConfig(BeBoard* pBoard, const std::string& strConfig)
-// {
-//     setBoard(pBoard->getId());
-//     fBoardFW->JumpToFpgaConfig(strConfig);
-// }
-
-// void BeBoardInterface::DownloadFpgaConfig(BeBoard* pBoard, const std::string& strConfig, const std::string& strDest)
-// {
-//     setBoard(pBoard->getId());
-//     fBoardFW->DownloadFpgaConfig(strConfig, strDest);
-// }
-
-// const FpgaConfig* BeBoardInterface::GetConfiguringFpga(BeBoard* pBoard)
-// {
-//     setBoard(pBoard->getId());
-//     return fBoardFW->GetConfiguringFpga();
-// }
-
-// std::vector<std::string> BeBoardInterface::getFpgaConfigList(BeBoard* pBoard)
-// {
-//     setBoard(pBoard->getId());
-//     return fBoardFW->getFpgaConfigList();
-// }
-
-// void BeBoardInterface::DeleteFpgaConfig(BeBoard* pBoard, const std::string& strId)
-// {
-//     setBoard(pBoard->getId());
-//     fBoardFW->DeleteFpgaConfig(strId);
-// }
-
-// void BeBoardInterface::RebootBoard(BeBoard* pBoard)
-// {
-//     setBoard(pBoard->getId());
-//     fBoardFW->RebootBoard();
-// }
 
 void BeBoardInterface::SetForceStart(BeBoard* pBoard, bool bStart)
 {
