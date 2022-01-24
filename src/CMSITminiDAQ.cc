@@ -8,6 +8,7 @@
 */
 
 #include "../DQMUtils/DQMInterface.h"
+#include "../MonitorDQM/MonitorDQMInterface.h"
 #include "../System/SystemController.h"
 #include "../Utils/MiddlewareInterface.h"
 #include "../Utils/RD53Shared.h"
@@ -234,8 +235,9 @@ int main(int argc, char** argv)
         // # Instantiate DQM #
         // ###################
         gROOT->SetBatch(SETBATCH);
-        TApplication theApp("App", NULL, NULL);
-        DQMInterface theDQMInterface;
+        TApplication        theApp("App", NULL, NULL);
+        DQMInterface        theDQMInterface;
+        MonitorDQMInterface theMonitorDQMInterface;
 
         // #######################
         // # Enter State Machine #
@@ -266,6 +268,7 @@ int main(int argc, char** argv)
                     LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
                     theMiddlewareInterface.configure(cmd.optionValue("calib"), cmd.optionValue("file"));
                     theDQMInterface.configure(cmd.optionValue("calib"), cmd.optionValue("file"));
+                    theMonitorDQMInterface.configure(cmd.optionValue("file"));
                     LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
                     std::cout << std::endl;
 
@@ -277,6 +280,7 @@ int main(int argc, char** argv)
                     LOG(INFO) << BOLDBLUE << "Supervisor sending start" << RESET;
 
                     theDQMInterface.startProcessingData(RD53Shared::fromInt2Str(runNumber));
+                    theMonitorDQMInterface.startProcessingData();
                     theMiddlewareInterface.start(RD53Shared::fromInt2Str(runNumber));
 
                     stateMachineStatus = RUNNING;
@@ -302,6 +306,8 @@ int main(int argc, char** argv)
                 }
             }
         }
+
+        theMonitorDQMInterface.stopProcessingData();
 
         LOG(INFO) << BOLDBLUE << "Out of supervisor state machine. Run Controller status: " << BOLDYELLOW << runControllerStatus << RESET;
         if(SETBATCH == false)

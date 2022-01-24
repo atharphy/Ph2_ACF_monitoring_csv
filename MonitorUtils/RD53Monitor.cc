@@ -13,8 +13,8 @@ RD53Monitor::RD53Monitor(const Ph2_System::SystemController* theSystemController
 {
 #ifdef __USE_ROOT__
     fMonitorPlotDQM = new MonitorDQMPlotRD53();
-    fMonitorDQMPlot = static_cast<MonitorDQMPlotRD53*>(fMonitorPlotDQM);
-    fMonitorDQMPlot->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
+    fMonitorDQM     = static_cast<MonitorDQMPlotRD53*>(fMonitorPlotDQM);
+    fMonitorDQM->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
 #endif
 }
 
@@ -34,30 +34,42 @@ void RD53Monitor::runMonitor()
 void RD53Monitor::runRegisterMonitor(const std::string& registerName)
 {
     DetectorDataContainer theRegisterContainer;
-    ContainerFactory::copyAndInitChip<std::tuple<time_t, uint16_t>>(*fTheSystemController->fDetectorContainer, theRegisterContainer);
+    ContainerFactory::copyAndInitChip<std::tuple<time_t, float>>(*fTheSystemController->fDetectorContainer, theRegisterContainer);
 
     for(const auto cBoard: *fTheSystemController->fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    uint16_t registerValue = fTheSystemController->fReadoutChipInterface->ReadChipReg(cChip, registerName);
-                    theRegisterContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::tuple<time_t, uint16_t>>() =
-                        std::make_tuple(getTimeStamp(), registerValue);
+                    float registerValue;
+                    try
+                    {
+                        // registerValue = fTheSystemController->fReadoutChipInterface->ReadChipReg(cChip, registerName); // @TMP@
+                        registerValue = fTheSystemController->fBeBoardInterface->ReadChipMonitor(fTheSystemController->fReadoutChipInterface, cChip, registerName);
+
+                        theRegisterContainer.getObject(cBoard->getId())
+                            ->getObject(cOpticalGroup->getId())
+                            ->getObject(cHybrid->getId())
+                            ->getObject(cChip->getId())
+                            ->getSummary<std::tuple<time_t, float>>() = std::make_tuple(getTimeStamp(), registerValue);
+                    }
+                    catch(...)
+                    {
+                    }
                 }
 
 #ifdef __USE_ROOT__
-    fMonitorDQMPlot->fillRegisterPlots(theRegisterContainer, registerName);
+    fMonitorDQM->fillRegisterPlots(theRegisterContainer, registerName);
 #endif
 
     RD53Monitor::sendData(theRegisterContainer, registerName);
 }
 
-void RD53Monitor::sendData(DetectorDataContainer& theRegisterContainer, const std::string& registerName)
+void RD53Monitor::sendData(DetectorDataContainer& DataContainer, const std::string& registerName)
 {
-    auto theRegisterStreamer = prepareOpticalGroupContainerStreamer<EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, EmptyContainer, CharArray>("RD53register");
+    auto theRegisterStreamer = prepareChipContainerStreamer<EmptyContainer, std::tuple<time_t, float>, CharArray>("Register");
     theRegisterStreamer.setHeaderElement(CharArray(registerName));
 
     if(fTheSystemController->fDQMStreamerEnabled == true)
-        for(auto board: theRegisterContainer) theRegisterStreamer.streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
+        for(auto board: DataContainer) theRegisterStreamer.streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
 }

@@ -12,17 +12,9 @@
 
 #include "../MonitorDQM/MonitorDQMPlotBase.h"
 #include "../RootUtils/GraphContainer.h"
-#include "../RootUtils/RootContainerFactory.h"
 #include "../Utils/CharArray.h"
-#include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
-#include "../Utils/DataContainer.h"
-
-#include "TAxis.h"
-#include "TCanvas.h"
-#include "TFile.h"
-#include "TGraph.h"
 
 class MonitorDQMPlotRD53 : public MonitorDQMPlotBase
 {
@@ -30,13 +22,17 @@ class MonitorDQMPlotRD53 : public MonitorDQMPlotBase
     MonitorDQMPlotRD53(){};
     ~MonitorDQMPlotRD53(){};
 
-    void book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const DetectorMonitorConfig& detectorMonitorConfig) override{};
-    bool fill(std::vector<char>& dataBuffer) override { return true; };
+    void book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const DetectorMonitorConfig& detectorMonitorConfig) override;
+    bool fill(std::vector<char>& dataBuffer) override;
     void process() override{};
     void reset(void) override{};
 
-    void fillRegisterPlots(DetectorDataContainer& theCBCRegisterContainer, const std::string& registerName);
+    void fillRegisterPlots(DetectorDataContainer& DataContainer, const std::string& registerName);
 
   private:
+    DetectorDataContainer                        DetectorData;
+    std::map<std::string, DetectorDataContainer> fRegisterMonitorPlotMap;
+
+    void bookPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
 };
 #endif
