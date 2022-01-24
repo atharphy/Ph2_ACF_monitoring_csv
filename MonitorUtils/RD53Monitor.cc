@@ -53,11 +53,12 @@ void RD53Monitor::runRegisterMonitor(const std::string& registerName)
     RD53Monitor::sendData(theRegisterContainer, registerName);
 }
 
-void RD53Monitor::sendData(DetectorDataContainer& theRegisterContainer, const std::string& registerName)
+void RD53Monitor::sendData(DetectorDataContainer& DataContainer, const std::string& registerName)
 {
     auto theRegisterStreamer = prepareOpticalGroupContainerStreamer<EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, EmptyContainer, CharArray>("RD53register");
+    // auto theRegisterStreamer = prepareChipContainerStreamer<EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, EmptyContainer, CharArray>("RD53register");
     theRegisterStreamer.setHeaderElement(CharArray(registerName));
 
     if(fTheSystemController->fDQMStreamerEnabled == true)
-        for(auto board: theRegisterContainer) theRegisterStreamer.streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
+        for(auto board: DataContainer) theRegisterStreamer.streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
 }
