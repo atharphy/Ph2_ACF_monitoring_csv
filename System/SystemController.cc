@@ -394,6 +394,8 @@ void SystemController::ReadSystemMonitor(BeBoard* pBoard, const std::vector<std:
                 {
                     LOG(INFO) << GREEN << "Monitor data for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                               << +cChip->getId() << RESET << GREEN << "]" << RESET;
+                    fBeBoardInterface->ReadHybridVoltageMonitor(fReadoutChipInterface, cChip);
+                    fBeBoardInterface->ReadHybridTemperatureMonitor(fReadoutChipInterface, cChip);
                     fBeBoardInterface->ReadChipMonitor(fReadoutChipInterface, cChip, args);
                     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
                 }

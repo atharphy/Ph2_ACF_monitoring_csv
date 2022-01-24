@@ -12,15 +12,9 @@
 
 #include "../MonitorDQM/MonitorDQMPlotBase.h"
 #include "../RootUtils/GraphContainer.h"
-#include "../RootUtils/RootContainerFactory.h"
 #include "../Utils/CharArray.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
-
-#include "TAxis.h"
-#include "TCanvas.h"
-#include "TFile.h"
-#include "TGraph.h"
 
 class MonitorDQMPlotRD53 : public MonitorDQMPlotBase
 {

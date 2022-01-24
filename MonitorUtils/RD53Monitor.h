@@ -13,6 +13,7 @@
 #include "../Utils/CharArray.h"
 #include "../Utils/ContainerFactory.h"
 #include "DetectorMonitor.h"
+
 #ifdef __USE_ROOT__
 #include "../MonitorDQM/MonitorDQMPlotRD53.h"
 #endif
@@ -29,7 +30,7 @@ class RD53Monitor : public DetectorMonitor
     void sendData(DetectorDataContainer& theRegisterContainer, const std::string& registerName);
 
 #ifdef __USE_ROOT__
-    MonitorDQMPlotRD53* fMonitorDQMPlot;
+    MonitorDQMPlotRD53* fMonitorDQM{nullptr};
 #endif
 };
 
