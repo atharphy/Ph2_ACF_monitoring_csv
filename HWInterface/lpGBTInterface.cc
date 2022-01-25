@@ -776,6 +776,10 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
 
     LOG(DEBUG) << GREEN << "Reading ADC value from " << BOLDYELLOW << pADCInputP << RESET;
 
+    WriteChipReg(pChip, "ADCMon", 0x3F);
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    WriteChipReg(pChip, "ADCMon", 0x1F);
+    
     // Select ADC Input
     WriteChipReg(pChip, "ADCSelect", cADCInputP << 4 | cADCInputN << 0);
 
@@ -783,8 +787,9 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
     lpGBTInterface::ConfigureADC(pChip, pGain, true, false);
 
     // Enable Internal VREF
-    WriteChipReg(pChip, "VREFCNTR", 1 << 7);
+    WriteChipReg(pChip, "VREFCNTR", 1 << 7 | 0x00 );
 
+    // std::this_thread::sleep_for(std::chrono::milliseconds(10));
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     // Start ADC conversion
@@ -808,6 +813,10 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
 
     // Clear ADC conversion bit and disable ADC
     lpGBTInterface::ConfigureADC(pChip, pGain, false, false);
+
+    // disable Internal VREF
+    WriteChipReg(pChip, "VREFCNTR", 0 << 7);
+
 
     return (cADCvalue1 << 8 | cADCvalue2);
 }
