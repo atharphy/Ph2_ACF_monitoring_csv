@@ -37,12 +37,12 @@ namespace Ph2_HwInterface
 {
 struct CPBconfig
 {
-    uint8_t  fEnable       = 0;
-    uint8_t  fReTry        = 0;
-    uint8_t  fVerbose      = 0;
-    uint32_t fWait_us      = 50;
-    uint16_t fMaxAttempts  = 500;
-    uint8_t  fResetEn      = 1;
+    uint8_t  fEnable      = 0;
+    uint8_t  fReTry       = 0;
+    uint8_t  fVerbose     = 0;
+    uint32_t fWait_us     = 50;
+    uint16_t fMaxAttempts = 500;
+    uint8_t  fResetEn     = 1;
 };
 
 /*!
@@ -299,11 +299,11 @@ class BeBoardFWInterface : public RegManager
 
     void ConfigureCPB(CPBconfig pConfig)
     {
-        fCPBConfig.fEnable       = pConfig.fEnable;
-        fCPBConfig.fVerbose      = pConfig.fVerbose;
-        fCPBConfig.fWait_us      = pConfig.fWait_us;
-        fCPBConfig.fReTry        = pConfig.fReTry;
-        fCPBConfig.fMaxAttempts  = pConfig.fMaxAttempts;
+        fCPBConfig.fEnable      = pConfig.fEnable;
+        fCPBConfig.fVerbose     = pConfig.fVerbose;
+        fCPBConfig.fWait_us     = pConfig.fWait_us;
+        fCPBConfig.fReTry       = pConfig.fReTry;
+        fCPBConfig.fMaxAttempts = pConfig.fMaxAttempts;
     }
 
   protected:

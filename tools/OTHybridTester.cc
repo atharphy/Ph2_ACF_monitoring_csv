@@ -692,7 +692,7 @@ void OTHybridTester::LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8
 
 bool OTHybridTester::LpGBTTestResetLines()
 {
-    bool cValid = true;
+    bool                                         cValid  = true;
     std::vector<std::pair<std::string, uint8_t>> cLevels = {{"High", 1}, {"Low", 0}};
     // lpGBTinterface now nows this .. so don't need the if statements
 #ifdef __TCUSB__
@@ -754,7 +754,7 @@ bool OTHybridTester::LpGBTTestResetLines()
     float cDifference_mV = std::fabs((cLevel.second * 1300) - cMeasurement * 1000.); // 1300
 #endif
     fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
-    cStatus   = cStatus && (cDifference_mV <= 100);
+    cStatus = cStatus && (cDifference_mV <= 100);
 #endif
 
 #if defined(__ROH_USB__) || defined(__SEH_USB__)
@@ -779,7 +779,7 @@ bool OTHybridTester::LpGBTTestResetLines()
         else
             LOG(INFO) << BOLDRED << "Set levels to " << cLevel.first << " : test " << BOLDRED << " failed." << RESET;
     }
-    #endif
+#endif
 #endif
     // if(cValid) { LOG(INFO) << BOLDGREEN << "Reset test passed." << RESET; }
     // else
@@ -843,8 +843,8 @@ bool OTHybridTester::LpGBTTestVTRx()
             uint8_t  cLinkID           = cOpticalGroup->getId();
             uint32_t cTheI2CWriteCount = 0;
             // I2CWrite(cLinkID, cMaster, cSlaveAddress, 0x09, 1, cTheI2CWriteCount);
-            uint8_t cFrequency = 2; //I2C frequency for VTRx+
-            cRecent = pInterface->I2CWrite(cLinkID, 1, 0x50, 0x15, 1, cFrequency, cTheI2CWriteCount);
+            uint8_t cFrequency = 2; // I2C frequency for VTRx+
+            cRecent            = pInterface->I2CWrite(cLinkID, 1, 0x50, 0x15, 1, cFrequency, cTheI2CWriteCount);
             for(int i = 0; i < 5 && !(cRecent); i++) { cRecent = pInterface->I2CWrite(cLinkID, 1, 0x50, 0x15, 1, cFrequency, cTheI2CWriteCount); }
             cResult                                              = pInterface->I2CRead(cLinkID, 1, 0x50, 1, cFrequency, cTheI2CWriteCount);
             std::map<uint8_t, uint8_t> cVTRxplusDefaultRegisters = fVTRxplusDefaultRegisters;
@@ -1070,7 +1070,7 @@ bool OTHybridTester::LpGBTCheckClocks()
 #ifdef __SEH_USB__
         cClockMap = f2SSEHClockMap;
 #elif __ROH_USB__
-        cClockMap  = fPSROHClockMap;
+        cClockMap = fPSROHClockMap;
 #endif
         auto cMapIterator = cClockMap.begin();
         bool cClkTestDone = false;
