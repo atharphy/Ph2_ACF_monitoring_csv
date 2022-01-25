@@ -173,7 +173,7 @@ void DQMInterface::stopProcessingData(void)
 bool DQMInterface::running()
 {
     CheckStream*      theCurrentStream;
-    int               packetNumber = -1;
+    // int               packetNumber = -1;
     std::vector<char> tmpDataBuffer;
 
     while(fRunning)
@@ -185,55 +185,43 @@ bool DQMInterface::running()
         // TODO We need to optimize the data readout so we don't do multiple copies
         // TODO We need to optimize the data readout so we don't do multiple copies
         // if(fListener->receive(tmpDataBuffer, 0, 100000) > 0)
+        try
         {
-            try
+            tmpDataBuffer = fListener->receive<std::vector<char>>();
+        }
+        catch(const std::exception& e)
+        {
+            LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "Error: " << e.what() << RESET;
+            fRunning = false;
+            break;
+        }
+        LOG(DEBUG) << "Got something" << RESET;
+        fDataBuffer.insert(fDataBuffer.end(), tmpDataBuffer.begin(), tmpDataBuffer.end());
+        LOG(DEBUG) << "Data buffer size: " << fDataBuffer.size() << RESET;
+        while(fDataBuffer.size() > 0)
+        {
+            if(fDataBuffer.size() < sizeof(CheckStream))
             {
-                tmpDataBuffer = fListener->receive<std::vector<char>>();
+                LOG(WARNING) << BOLDBLUE << "Not enough bytes to retrieve data stream" << RESET;
+                break; // Not enough bytes to retreive the packet size
             }
-            catch(const std::exception& e)
+            theCurrentStream = reinterpret_cast<CheckStream*>(&fDataBuffer.at(0));
+            LOG(DEBUG) << "Packet number received = " << int(theCurrentStream->getPacketNumber()) << RESET;
+
+
+            LOG(DEBUG) << "Vector size  = " << fDataBuffer.size() << "; expected = " << theCurrentStream->getPacketSize() << RESET;
+
+            if(fDataBuffer.size() < theCurrentStream->getPacketSize())
             {
-                LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "Error: " << e.what() << RESET;
-                fRunning = false;
+                LOG(DEBUG) << "Packet not completed, waiting" << RESET;
                 break;
             }
-            LOG(DEBUG) << "Got something" << RESET;
-            fDataBuffer.insert(fDataBuffer.end(), tmpDataBuffer.begin(), tmpDataBuffer.end());
-            LOG(DEBUG) << "Data buffer size: " << fDataBuffer.size() << RESET;
-            while(fDataBuffer.size() > 0)
-            {
-                if(fDataBuffer.size() < sizeof(CheckStream))
-                {
-                    LOG(WARNING) << BOLDBLUE << "Not enough bytes to retrieve data stream" << RESET;
-                    break; // Not enough bytes to retreive the packet size
-                }
-                theCurrentStream = reinterpret_cast<CheckStream*>(&fDataBuffer.at(0));
-                LOG(DEBUG) << "Packet number received = " << int(theCurrentStream->getPacketNumber()) << RESET;
 
-                // if(packetNumber < 0)
-                //     packetNumber = int(theCurrentStream->getPacketNumber()); // first packet received
-                // else if(theCurrentStream->getPacketNumber() != packetNumber)
-                // {
-                //     LOG(ERROR) << BOLDRED << "Packet number expected = " << --packetNumber << " But received " << int(theCurrentStream->getPacketNumber()) << ", Aborting" << RESET;
-                //     LOG(ERROR) << GREEN << "Did you check that the Endianness of the two comupters is the same?" << RESET;
-                //     abort();
-                // }
+            std::vector<char> streamDataBuffer(fDataBuffer.begin(), fDataBuffer.begin() + theCurrentStream->getPacketSize());
+            fDataBuffer.erase(fDataBuffer.begin(), fDataBuffer.begin() + theCurrentStream->getPacketSize());
 
-                LOG(DEBUG) << "Vector size  = " << fDataBuffer.size() << "; expected = " << theCurrentStream->getPacketSize() << RESET;
-
-                if(fDataBuffer.size() < theCurrentStream->getPacketSize())
-                {
-                    LOG(DEBUG) << "Packet not completed, waiting" << RESET;
-                    break;
-                }
-
-                std::vector<char> streamDataBuffer(fDataBuffer.begin(), fDataBuffer.begin() + theCurrentStream->getPacketSize());
-                fDataBuffer.erase(fDataBuffer.begin(), fDataBuffer.begin() + theCurrentStream->getPacketSize());
-
-                for(auto dqmHistogrammer: fDQMHistogrammerVector)
-                    if(dqmHistogrammer->fill(streamDataBuffer)) break;
-
-                if(++packetNumber >= 256) packetNumber = 0;
-            }
+            for(auto dqmHistogrammer: fDQMHistogrammerVector)
+                if(dqmHistogrammer->fill(streamDataBuffer)) break;
         }
     }
 

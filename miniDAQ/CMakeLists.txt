@@ -62,7 +62,7 @@ endif()
 # Boost also needs to be linked
 include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
-set(LIBS ${LIBS} ${Boost_IOSTREAMS_LIBRARY} ${Boost_DATE_TIME_LIBRARY})
+set(LIBS ${LIBS} ${Boost_IOSTREAMS_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY})
 
 ####################################
 ## EXECUTABLES

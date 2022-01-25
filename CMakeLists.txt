@@ -168,7 +168,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif(ZMQ_FOUND)
 
     # Boost
-    find_package(Boost 1.53 REQUIRED system filesystem serialization iostreams)
+    find_package(Boost 1.53 REQUIRED system filesystem serialization iostreams program_options)
 
     message("--     ${BoldCyan}#### Done ####${Reset}")
 

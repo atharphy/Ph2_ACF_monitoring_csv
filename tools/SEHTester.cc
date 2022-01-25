@@ -11,6 +11,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
+#ifdef __USE_ROOT__
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -1874,4 +1875,5 @@ float SEHTester::getMeasurement(std::string name)
     return value;
 }
 
+#endif
 #endif

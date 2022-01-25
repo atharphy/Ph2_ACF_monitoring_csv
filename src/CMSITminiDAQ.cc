@@ -37,6 +37,7 @@
 #include <thread>
 
 #include "TApplication.h"
+#include "TROOT.h"
 
 #ifdef __EUDAQ__
 #include "../tools/RD53eudaqProducer.h"

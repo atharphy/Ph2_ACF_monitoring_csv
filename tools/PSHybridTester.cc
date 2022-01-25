@@ -1,6 +1,8 @@
 #include "PSHybridTester.h"
 #include "D19cDebugFWInterface.h"
 #include "SSAChannelGroupHandler.h"
+#ifdef __USE_ROOT__
+
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -1888,3 +1890,5 @@ void PSHybridTester::Stop()
 void PSHybridTester::Pause() {}
 
 void PSHybridTester::Resume() {}
+
+#endif

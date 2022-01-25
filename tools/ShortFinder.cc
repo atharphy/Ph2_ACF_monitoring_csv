@@ -461,15 +461,15 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
     //         cAllShorts.at(cInject).at((int)cReadoutChip->getId()) = cShorts;
     //     }
     // }
+#ifdef __USE_ROOT__
     for(auto cReadoutChip: *pBoard->at(0)->at(0))
     {
-#ifdef __USE_ROOT__
         fShortsTreeParameter.Clear();
         fShortsTreeParameter = "Chip_" + std::to_string(cReadoutChip->getId());
         fShortsTreeValue     = cAllShorts.at(cReadoutChip->getId());
         fShortsTree->Fill();
-#endif
     }
+#endif
 
     // print summary
     for(auto cOpticalReadout: *pBoard)

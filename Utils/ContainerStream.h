@@ -544,6 +544,7 @@ class DataStreamHybridContainer : public DataStreamBase
         {
             for(size_t chipIndex = 0; chipIndex < fNumberOfChips; ++chipIndex)
             {
+                std::cout << __PRETTY_FUNCTION__ << " chipIndex = " << chipIndex << std::endl;
                 Summary<C, T>* chipSummaryContainer = new Summary<C, T>();
                 memcpy(&(chipSummaryContainer->theSummary_), &bufferBegin[bufferReadingPosition], sizeof(C));
                 fChipSummaryContainerVector.emplace_back(chipSummaryContainer);
@@ -617,6 +618,7 @@ class HybridContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t
     ~HybridContainerStream() { ; }
 
     void setContainerCarried(const ContainerCarried& theContainerCarried) { this->fDataStream.fContainerCarried = theContainerCarried; }
+    ContainerCarried getContainerCarried() const { return this->fDataStream.fContainerCarried; }
 
     void streamAndSendBoard(BoardDataContainer* board, TCPPublishServer* networkStreamer)
     {
@@ -643,16 +645,21 @@ class HybridContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t
 
         for(auto chip: *detectorContainer.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId))
         {
+            std::cout << __PRETTY_FUNCTION__<< " ChipId = " << chip->getId() << std::endl;
             if(this->fDataStream.fContainerCarried.isChipContainerCarried())
             {
+                std::cout << __PRETTY_FUNCTION__<< " Container carried " << std::endl;
                 chip->setSummaryContainer(this->fDataStream.fChipSummaryContainerVector.at(chip->getId()));
+                std::cout << __PRETTY_FUNCTION__<< __LINE__ << std::endl;
                 this->fDataStream.fChipSummaryContainerVector.at(chip->getId()) = nullptr;
+                std::cout << __PRETTY_FUNCTION__<< __LINE__ << std::endl;
             }
             if(this->fDataStream.fContainerCarried.isChannelContainerCarried())
             {
                 chip->setChannelContainer(this->fDataStream.fChannelContainerVector.at(chip->getId()));
                 this->fDataStream.fChannelContainerVector.at(chip->getId()) = nullptr;
             }
+            std::cout << __PRETTY_FUNCTION__<< __LINE__ << std::endl;
         }
     }
 
@@ -758,7 +765,12 @@ class DataStreamOpticalGroupContainer : public DataStreamBase
             fOpticalGroupSummaryContainer = nullptr;
         }
 
-        for(auto& subContainer: fDataSteamHybridContainerVector) bufferWritingPosition = subContainer->copyToStream(&bufferBegin[bufferWritingPosition]);
+        for(auto& subContainer: fDataSteamHybridContainerVector) 
+        {
+            std::cout << __PRETTY_FUNCTION__ << "bufferWritingPosition = " << +bufferWritingPosition << std::endl;
+            bufferWritingPosition = subContainer->copyToStream(&bufferBegin[bufferWritingPosition], bufferWritingPosition);
+        }
+
 
         return bufferWritingPosition;
     }
@@ -786,7 +798,13 @@ class DataStreamOpticalGroupContainer : public DataStreamBase
             bufferReadingPosition += sizeof(O);
         }
 
-        for(auto dataSteamHybridContainerVector: fDataSteamHybridContainerVector) { bufferReadingPosition = dataSteamHybridContainerVector->copyFromStream(bufferBegin, bufferReadingPosition); }
+        for(uint8_t subContainerIndex = 0; subContainerIndex<fNumberOfSubContainers; ++subContainerIndex)
+        {
+            fDataSteamHybridContainerVector.emplace_back(new DataStreamHybridContainer<T, C, H>());
+            std::cout << __PRETTY_FUNCTION__ << "bufferReadingPosition = " << +bufferReadingPosition << std::endl;
+            bufferReadingPosition = fDataSteamHybridContainerVector.back()->copyFromStream(bufferBegin, bufferReadingPosition);
+        }
+        // for(auto dataSteamHybridContainerVector: fDataSteamHybridContainerVector) { bufferReadingPosition = dataSteamHybridContainerVector->copyFromStream(bufferBegin, bufferReadingPosition); }
 
         return bufferReadingPosition;
     }
@@ -811,7 +829,7 @@ class OpticalGroupContainerStream : public ObjectStream<HeaderStreamContainer<ui
 
   public:
     OpticalGroupContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamOpticalGroupContainer<T, C, H, O>>(creatorName) { ; }
-    ~OpticalGroupContainerStream() { ; }
+    ~OpticalGroupContainerStream() { fHybridStreamerVector.clear(); }
 
     void streamAndSendBoard(BoardDataContainer* board, TCPPublishServer* networkStreamer)
     {
@@ -837,7 +855,9 @@ class OpticalGroupContainerStream : public ObjectStream<HeaderStreamContainer<ui
 
         for(auto hybrid: *detectorContainer.getObject(boardId)->getObject(opticalGroupId))
         {
+            std::cout << __PRETTY_FUNCTION__<< " boardId = " << boardId << " opticalGroupId = " << opticalGroupId << " hybridId = " << hybrid->getId() << std::endl;
             HybridContainerStream<T, C, H> theHybridStreamer(this->fCreatorName);
+            std::cout << __PRETTY_FUNCTION__<< " Container carried = " << +this->fDataStream.fContainerCarried.fContainerCarried << std::endl;
             theHybridStreamer.setContainerCarried(this->fDataStream.fContainerCarried);
             theHybridStreamer.fHeaderStream.template setHeaderInfo<HybridContainerStream<T, C, H>::HeaderId::BoardId>(boardId);
             theHybridStreamer.fHeaderStream.template setHeaderInfo<HybridContainerStream<T, C, H>::HeaderId::OpticalGroupId>(boardId);
@@ -874,11 +894,17 @@ class OpticalGroupContainerStream : public ObjectStream<HeaderStreamContainer<ui
         }
         for(auto hybrid: *opticalGroup)
         {
-            HybridContainerStream<T, C, H> theHybridStreamer(this->fCreatorName);
-            theHybridStreamer.setContainerCarried(this->fDataStream.fContainerCarried);
-            theHybridStreamer.retrieveHybridData(boardId, opticalGroup->getId(), hybrid);
+            fHybridStreamerVector.emplace_back(new HybridContainerStream<T, C, H>(this->fCreatorName));
+            fHybridStreamerVector.back()->setContainerCarried(this->fDataStream.fContainerCarried);
+            std::cout << __PRETTY_FUNCTION__<< " Container carried = " << +this->fDataStream.fContainerCarried.fContainerCarried << std::endl;
+            fHybridStreamerVector.back()->retrieveHybridData(boardId, opticalGroup->getId(), hybrid);
+            this->fDataStream.fContainerCarried.fContainerCarried |= fHybridStreamerVector.back()->getContainerCarried().fContainerCarried;
+            std::cout << __PRETTY_FUNCTION__<< " Container carried = " << +this->fDataStream.fContainerCarried.fContainerCarried << std::endl;
+            this->fDataStream.fDataSteamHybridContainerVector.emplace_back(&fHybridStreamerVector.back()->fDataStream);
         }
     }
+
+    std::vector<HybridContainerStream<T, C, H>*> fHybridStreamerVector;
 };
 
 // // ------------------------------------------- OpticalGroupContainerStream ------------------------------------------- //
