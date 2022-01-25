@@ -82,7 +82,6 @@ class ChannelGroup : public ChannelGroupBase
     }
     inline void disableChannel(uint16_t row, uint16_t col = 0) override
     {
-        std::cout << "disableChannel " << row << " " << col << std::endl;
         channelsBitset_[row + numberOfRows_ * col] = false;
         numberOfEnabledChannels_                   = channelsBitset_.count();
     }
@@ -185,7 +184,7 @@ class ChannelGroupHandler
       public:
         explicit ChannelGroupIterator(ChannelGroupHandler& channelGroupHandler, uint32_t groupNumber) : channelGroupHandler_(channelGroupHandler), groupNumber_(groupNumber) { ; }
         const std::shared_ptr<ChannelGroupBase> operator*() const { return channelGroupHandler_.getTestGroup(groupNumber_); }
-        ChannelGroupIterator&                    operator++()
+        ChannelGroupIterator&                   operator++()
         {
             ++groupNumber_;
             return *this;

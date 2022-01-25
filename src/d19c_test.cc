@@ -119,8 +119,8 @@ int main(int argc, char** argv)
     if(cHardReset)
     {
         cTool.fBeBoardInterface->setBoard(pBoard->getId());
-        FC7FpgaControlFWInterface* cInterface = static_cast<FC7FpgaControlFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
-        cInterface->RebootBoard();
+        auto cInterface = FC7FpgaControlFWInterface(cTool.fBeBoardInterface->getFirmwareInterface());
+        cInterface.RebootBoard();
     }
     else if(cDDR3SelfTest)
     {

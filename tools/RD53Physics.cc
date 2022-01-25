@@ -163,7 +163,14 @@ void Physics::run()
 
         if(strcmp(frontEnd->name, "SYNC") == 0)
             for(const auto cBoard: *fDetectorContainer)
+            {
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])
+                    ->WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
                 static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommand(RD53Cmd::GlobalPulse(RD53Constants::BROADCAST_CHIPID, 0x6).getFrames(), -1);
+                std::this_thread::sleep_for(std::chrono::microseconds(10));
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommand(RD53Cmd::ECR().getFrames(), -1);
+                std::this_thread::sleep_for(std::chrono::microseconds(20));
+            }
 
         theGuard.lock();
         genericEvtConverter(RD53Event::decodedEvents);
@@ -244,10 +251,7 @@ void Physics::fillDataContainer(BeBoard& theBoard)
     // # Fill containers #
     // ###################
     const std::vector<Event*>& events = SystemController::GetEvents();
-    //Assuming all chip will have all channels enabled:
-    auto allChannelGroup = getChannelGroup(-1);
-
-    for(const auto& event: events) event->fillDataContainer(cBoard, allChannelGroup);
+    for(const auto& event: events) event->fillDataContainer(cBoard, getChannelGroup(-1));
 
     // ######################################
     // # Copy register values for streaming #

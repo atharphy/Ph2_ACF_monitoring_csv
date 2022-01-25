@@ -121,8 +121,8 @@ void RD53Event::fillDataContainer(BoardDataContainer* boardContainer, const std:
 
 void RD53Event::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId)
 {
-    bool vectorRequired = chipContainer->isSummaryContainerType<Summary<GenericDataVector, OccupancyAndPh>>();
-    size_t chipIndx = 0; // Fabio: not sure if it is correct, but before was left uninitialized...
+    bool   vectorRequired = chipContainer->isSummaryContainerType<Summary<GenericDataVector, OccupancyAndPh>>();
+    size_t chipIndx       = 0; // Fabio: not sure if it is correct, but before was left uninitialized...
 
     if(vectorRequired == true)
     {

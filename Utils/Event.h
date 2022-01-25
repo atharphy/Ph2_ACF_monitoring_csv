@@ -408,7 +408,6 @@ class Event
     virtual void fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup);
     virtual void fillChipDataContainer(ChipDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) = 0;
 
-
     // split stream of data
     template <std::size_t N>
     void splitStream(const std::vector<uint32_t> pData, std::vector<std::bitset<N>>& pBitSet, size_t pOffset, size_t pSize, size_t pBitOffset = 0)

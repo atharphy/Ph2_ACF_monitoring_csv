@@ -52,7 +52,7 @@ std::string D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
     }
     return cBuffer;
 }
-std::vector<std::string> D19cDebugFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines)
+std::vector<std::string> D19cDebugFWInterface::StubDebug(bool pWithTestPulse, uint8_t pNlines, bool pPrint)
 {
     LOG(INFO) << BOLDBLUE << "D19cDebugFWInterface::StubDebug ...." << RESET;
 
@@ -95,7 +95,7 @@ std::vector<std::string> D19cDebugFWInterface::StubDebug(bool pWithTestPulse, ui
             cOutput_wSpace += *cIt + " ";
             cOutput += *cIt;
         }
-        LOG(INFO) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
+        if(pPrint) LOG(INFO) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
         cLines.push_back(cOutput);
         // cStrLength = cOutput.length();
         cLine++;

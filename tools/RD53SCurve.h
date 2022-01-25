@@ -55,10 +55,6 @@ class SCurve : public Tool
 #endif
 
   private:
-    size_t rowStart;
-    size_t rowStop;
-    size_t colStart;
-    size_t colStop;
     size_t nEvents;
     size_t startValue;
     size_t stopValue;
@@ -70,10 +66,9 @@ class SCurve : public Tool
 
     std::vector<uint16_t> dacList;
 
-    std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
-    std::vector<DetectorDataContainer*>      detectorContainerVector;
-    std::shared_ptr<DetectorDataContainer>   theThresholdAndNoiseContainer;
-    ContainerRecycleBin<OccupancyAndPh>      theRecyclingBin;
+    std::vector<DetectorDataContainer*>    detectorContainerVector;
+    std::shared_ptr<DetectorDataContainer> theThresholdAndNoiseContainer;
+    ContainerRecycleBin<OccupancyAndPh>    theRecyclingBin;
 
     void fillHisto();
     void computeStats(std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
@@ -82,10 +77,16 @@ class SCurve : public Tool
   protected:
     std::string fileRes;
     int         theCurrentRun;
+    size_t      rowStart;
+    size_t      rowStop;
+    size_t      colStart;
+    size_t      colStop;
     bool        doUpdateChip;
     bool        doDisplay;
     bool        saveBinaryData;
     bool        saveData;
+
+    std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
 };
 
 #endif

@@ -24,7 +24,6 @@ namespace Ph2_System
 SystemController::SystemController()
     : fBeBoardInterface(nullptr)
     , fReadoutChipInterface(nullptr)
-    , fChipInterface(nullptr)
     , flpGBTInterface(nullptr)
     , fCicInterface(nullptr)
     , fDetectorContainer(nullptr)
@@ -47,7 +46,6 @@ void SystemController::Inherit(const SystemController* pController)
 {
     fBeBoardInterface             = pController->fBeBoardInterface;
     fReadoutChipInterface         = pController->fReadoutChipInterface;
-    fChipInterface                = pController->fChipInterface;
     flpGBTInterface               = pController->flpGBTInterface;
     fBeBoardFWMap                 = pController->fBeBoardFWMap;
     fSettingsMap                  = pController->fSettingsMap;
@@ -60,6 +58,7 @@ void SystemController::Inherit(const SystemController* pController)
     fCicInterface                 = pController->fCicInterface;
     fPowerSupplyClient            = pController->fPowerSupplyClient;
     fChannelGroupHandlerContainer = pController->fChannelGroupHandlerContainer;
+
 #ifdef __TCP_SERVER__
     fTestcardClient = pController->fTestcardClient;
 #endif
@@ -96,14 +95,16 @@ void SystemController::Destroy()
 
     delete fDetectorMonitor;
     fDetectorMonitor = nullptr;
+
     delete fBeBoardInterface;
     fBeBoardInterface = nullptr;
+
     delete fReadoutChipInterface;
     fReadoutChipInterface = nullptr;
-    delete fChipInterface;
-    fChipInterface = nullptr;
+
     delete flpGBTInterface;
     flpGBTInterface = nullptr;
+
     delete fDetectorContainer;
     fDetectorContainer = nullptr;
 
@@ -129,6 +130,7 @@ void SystemController::Destroy()
     delete fTestcardClient;
     fTestcardClient = nullptr;
 #endif
+
     LOG(INFO) << BOLDRED << ">>> Interfaces  destroyed <<<" << RESET;
 }
 
@@ -208,7 +210,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     if(fDetectorContainer->size() > 0)
     {
         const BeBoard* cFirstBoard = fDetectorContainer->at(0);
-        if(cFirstBoard->getBoardType() != BoardType::RD53)
+        if(cFirstBoard->getBoardType() != BoardType::RD53 && fInitializeInterfaces == 1)
         {
             LOG(INFO) << BOLDBLUE << "Initializing HwInterfaces for OT BeBoards.." << RESET;
             if(cFirstBoard->size() > 0) // # of optical groups connected to Board0
@@ -220,9 +222,20 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 {
                     LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for lpGBT" << RESET;
                     flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap, cFirstBoard->isOptical(), cFirstBoard->ifUseCPB());
-// link to external interface
+// check link to external interface
 #ifdef __TCUSB__
-                    flpGBTInterface->LinkExternalInterface<TestCardInterface>(fTCInterface);
+#if defined(__SEH_USB__) || defined(__ROH_USB__)
+                    if(flpGBTInterface->getExternalController() != nullptr)
+                    {
+                        LOG(INFO) << BOLDBLUE << "TC interface should be initialized... type is " << flpGBTInterface->getExternalController()->getName() << RESET;
+#ifdef __ROH_USB__
+                        // check reading of ADC from PSROH TC
+                        float cOutput;
+                        flpGBTInterface->getExternalController()->getInterface().adc_get(TC_PSROH::measurement::_1V25_REF, cOutput);
+                        LOG(INFO) << BOLDBLUE << "Checking communication with test card by reading 1V25_Ref : " << cOutput << RESET;
+#endif
+                    }
+#endif
 #endif
                 }
 
@@ -332,7 +345,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         fDetectorMonitor->forkMonitor();
     }
 
-    // set module type
+    // ###################
+    // # Set module type #
+    // ###################
     for(const auto cBoard: *fDetectorContainer)
     {
         if(cBoard->getBoardType() != BoardType::D19C) continue;
@@ -366,15 +381,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             static_cast<D19clpGBTInterface*>(flpGBTInterface)->setFrontEndType(cOpticalGroup->getFrontEndType());
         }
     }
-
-// turn on the SEH here - moved from the lpGBT interface
-// I think it makes more sense to have it in the initialization step
-#ifdef __SEH_USB__
-    fTCInterface.getInterface().set_SehSupply(TC_2SSEH::sehSupplyState::sehSupply_On);
-    LOG(INFO) << BOLDRED << "Intitally switching on SEH for configuration" << RESET;
-// move this to the TC library .. I shouldn't have to wait here - you should wait for me
-// std::this_thread::sleep_for(std::chrono::milliseconds(100));
-#endif
 }
 
 void SystemController::InitializeSettings(const std::string& pFilename, std::ostream& os, bool pIsFile) { this->fParser.parseSettings(pFilename, fSettingsMap, os, pIsFile); }
@@ -388,6 +394,8 @@ void SystemController::ReadSystemMonitor(BeBoard* pBoard, const std::vector<std:
                 {
                     LOG(INFO) << GREEN << "Monitor data for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                               << +cChip->getId() << RESET << GREEN << "]" << RESET;
+                    fBeBoardInterface->ReadHybridVoltageMonitor(fReadoutChipInterface, cChip);
+                    fBeBoardInterface->ReadHybridTemperatureMonitor(fReadoutChipInterface, cChip);
                     fBeBoardInterface->ReadChipMonitor(fReadoutChipInterface, cChip, args);
                     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
                 }
@@ -428,14 +436,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
 
             if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
             {
-                // start PRBS pattern
-                for(const auto cHybrid: *cOpticalGroup)
-                    for(const auto cChip: *cHybrid) static_cast<RD53Interface*>(fReadoutChipInterface)->StartPRBSpattern(cChip);
-                // lpGBT phase align Rx
-                flpGBTInterface->PhaseAlignRx(cOpticalGroup->flpGBT, cOpticalGroup);
-                // stop PRBS pattern
-                for(const auto cHybrid: *cOpticalGroup)
-                    for(const auto cChip: *cHybrid) static_cast<RD53Interface*>(fReadoutChipInterface)->StartPRBSpattern(cChip);
+                static_cast<RD53lpGBTInterface*>(flpGBTInterface)->InternalPhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, fReadoutChipInterface);
                 LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;
             }
             else
@@ -506,6 +507,14 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
 void SystemController::InitializeOT(BeBoard* pBoard)
 {
     LOG(INFO) << BOLDMAGENTA << "Initializing OT hardware.." << RESET;
+// turn on the SEH here - moved from the lpGBT interface
+#ifdef __SEH_USB__
+    LOG(INFO) << BOLDRED << "Intitally switching on SEH for configuration" << RESET;
+    if(flpGBTInterface != nullptr)
+    {
+        if(flpGBTInterface->getExternalController() != nullptr) flpGBTInterface->getExternalController()->getInterface().set_SehSupply(TC_2SSEH::sehSupplyState::sehSupply_On);
+    }
+#endif
     for(auto cOpticalGroup: *pBoard)
     {
         if(cOpticalGroup->flpGBT == nullptr) continue;
@@ -609,6 +618,7 @@ void SystemController::InitializeOT(BeBoard* pBoard)
             cReSyncNeeded = cReSync;
         }
     }
+
     if(cReSyncNeeded)
     {
         LOG(INFO) << BOLDMAGENTA << "Sending a ReSync at the end of the OT-module configuration step" << RESET;
@@ -761,6 +771,7 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
         } // hybrid
     }     // lpGBT part ... resets + clocks
 }
+
 void SystemController::ModuleStartUp2S(const OpticalGroup* pOpticalGroup)
 {
     auto cBoardId   = pOpticalGroup->getBeBoardId();
@@ -805,6 +816,7 @@ void SystemController::ModuleStartUp2S(const OpticalGroup* pOpticalGroup)
         }
     } // lpGBT part ... resets + clocks
 }
+
 bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStartUpSequence)
 {
     auto cBoardId    = pOpticalGroup->getBeBoardId();
@@ -914,8 +926,6 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
         else
             throw std::runtime_error(std::string("FAILED to configure CIC Bx0 delay... .. STOPPING"));
 
-        // continue;
-
     } // all hybrids connected to this OG
     LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
     return cSuccess;
@@ -1017,16 +1027,14 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
             LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
         }
         else if(cBoard->getBoardType() == BoardType::RD53)
-        {
             ConfigureIT(cBoard);
-        }
     }
+
     if(fDetectorMonitor != nullptr)
     {
         LOG(INFO) << GREEN << "Starting monitoring thread" << RESET;
         fDetectorMonitor->startMonitoring();
     }
-    // std::cout << __LINE__ << std::endl;
 }
 
 void SystemController::initializeWriteFileHandler()
@@ -1293,7 +1301,6 @@ void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGro
 {
     auto theChannelGroupHandlerPointer = std::make_shared<ChannelGroupHandler>(std::move(theChannelGroupHandler));
     setChannelGroupHandler(theChannelGroupHandlerPointer, theQueryFunction);
-    return;
 }
 
 void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandler> theChannelGroupHandlerPointer, std::function<bool(const ChipContainer*)> theQueryFunction)
@@ -1303,13 +1310,10 @@ void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandle
     {
         for(const auto opticalGroup: *board)
         {
-            for(const auto hybrid: *opticalGroup)
-            {
-                totalNumberOfChips += hybrid->size();
-            }
+            for(const auto hybrid: *opticalGroup) { totalNumberOfChips += hybrid->size(); }
         }
     }
-    
+
     uint16_t totalNumberOfQueriedChips = 0;
     fDetectorContainer->setReadoutChipQueryFunction(theQueryFunction);
     for(const auto board: *fDetectorContainer)
@@ -1333,23 +1337,18 @@ void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandle
     fDetectorContainer->resetReadoutChipQueryFunction();
 
     fSameChannelGroupForAllChannels = (totalNumberOfQueriedChips == totalNumberOfChips);
-    return;
 }
 
 void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, FrontEndType theFrontEndType)
 {
     auto selectChipFlavourFunction = [theFrontEndType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == theFrontEndType); };
     setChannelGroupHandler(theChannelGroupHandler, selectChipFlavourFunction);
-    return;
 }
 
 void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandler> theChannelGroupHandlerPointer, uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId)
 {
-    fChannelGroupHandlerContainer->getObject(boardId)
-                    ->getObject(opticalGroupId)
-                    ->getObject(hybridId)
-                    ->getObject(chipId)
-                    ->getSummary<std::shared_ptr<ChannelGroupHandler>>() = theChannelGroupHandlerPointer;               
+    fChannelGroupHandlerContainer->getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<std::shared_ptr<ChannelGroupHandler>>() =
+        theChannelGroupHandlerPointer;
 }
 
 } // namespace Ph2_System

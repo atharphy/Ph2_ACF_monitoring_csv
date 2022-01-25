@@ -736,7 +736,8 @@ void PedeNoiseTime::CalculateOccupancy(DetectorDataContainer* pOccupancyContaine
                         for(auto cHit: cHits)
                         {
                             fEvent.fHits.push_back((uint8_t)cHit);
-                            if(getChannelGroupHandlerContainer()->getObject(cBoard->getId())
+                            if(getChannelGroupHandlerContainer()
+                                   ->getObject(cBoard->getId())
                                    ->getObject(cOpticalGroup->getId())
                                    ->getObject(cHybrid->getId())
                                    ->getObject(cChip->getId())
@@ -926,7 +927,8 @@ void PedeNoiseTime::extractPedeNoiseTime()
                     {
                         for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
                         {
-                            if(!getChannelGroupHandlerContainer()->getObject(board->getId())
+                            if(!getChannelGroupHandlerContainer()
+                                    ->getObject(board->getId())
                                     ->getObject(opticalGroup->getId())
                                     ->getObject(hybrid->getId())
                                     ->getObject(chip->getId())
@@ -987,7 +989,8 @@ void PedeNoiseTime::extractPedeNoiseTime()
                 {
                     for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
                     {
-                        if(!getChannelGroupHandlerContainer()->getObject(board->getId())
+                        if(!getChannelGroupHandlerContainer()
+                                ->getObject(board->getId())
                                 ->getObject(opticalGroup->getId())
                                 ->getObject(hybrid->getId())
                                 ->getObject(chip->getId())
