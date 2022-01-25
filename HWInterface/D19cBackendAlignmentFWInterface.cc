@@ -20,18 +20,19 @@ void D19cBackendAlignmentFWInterface::ParseResult(uint32_t pReply)
         fLineConfiguration.fDelay   = (pReply & 0x000000F8) >> 3;
         fLineConfiguration.fBitslip = (pReply & 0x00000007) >> 0;
 
-        // fMode    = (pReply & (0x3)) >> 13;
-        // fDelay   = (pReply & (0x1F)) >> 4;
-        // fBitslip = (pReply & (0xF<<0)) >> 0;
+        // bit slip of 4 bits electrical 
+        // fLineConfiguration.fMode    = (pReply & (0x3)) >> 13;
+        // fLineConfiguration.fDelay   = (pReply & (0x1F)) >> 4;
+        // fLineConfiguration.fBitslip = (pReply & (0xF<<0)) >> 0;
     }
     else if(fAlignerObject.fType == 1)
     {
-        // // bit slip of 4 bits
-        // fDelay                  = (pReply & (0x1F<<19)) >> 19;
-        // fBitslip                = (pReply & (0xF<<15)) >> 15;
-        // fDone                   = (pReply & (0x1<<14)) >> 14;
-        // fWordAlignmentFSMstate  = (pReply & (0xF<<7)) >> 7;
-        // fPhaseAlignmentFSMstate = (pReply & (0xF<<0)) >> 0;
+        // bit slip of 4 bits electrical
+        // fLineConfiguration.fDelay                  = (pReply & (0x1F<<19)) >> 19;
+        // fLineConfiguration.fBitslip                = (pReply & (0xF<<15)) >> 15;
+        // fStatus.fDone                   = (pReply & (0x1<<14)) >> 14;
+        // fStatus.fWordAlignmentFSMstate  = (pReply & (0xF<<7)) >> 7;
+        // fStatus.fPhaseAlignmentFSMstate = (pReply & (0xF<<0)) >> 0;
 
         // bit slip of 3 bits
         fLineConfiguration.fDelay       = (pReply & 0x00F80000) >> 19;
