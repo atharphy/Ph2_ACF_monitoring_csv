@@ -1,21 +1,8 @@
+
+#if defined(__TCUSB__) && defined(__ROH_USB__) && defined(__USE_ROOT__)
 #include "PSROHTester.h"
 
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <sstream>
-#include <string>
-
-#include "boost/format.hpp"
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/split.hpp>
-
-using namespace Ph2_HwDescription;
-using namespace Ph2_HwInterface;
-using namespace Ph2_System;
-
 // initialize the static member
-#ifdef __USE_ROOT__
 PSROHTester::PSROHTester() : OTHybridTester() {}
 
 PSROHTester::~PSROHTester() {}
@@ -710,27 +697,6 @@ void PSROHTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vect
         this->CheckHybridOutputs(cBoard, pInputs, pCounters);
     }
 }
-
-// bool PSROHTester::TestResetLines(uint8_t pLevel)
-// {
-//     bool cValid = true;
-// #ifdef __ROH_USB__
-//     float cMeasurement = 0;
-//     auto  cMapIterator = fResetLines.begin();
-//     do
-//     {
-//         fTCInterface.getInterface().adc_get(cMapIterator->second, cMeasurement);
-//         float cDifference_mV = std::fabs((pLevel * 1200) - cMeasurement);
-//         cValid               = cValid && (cDifference_mV <= 100);
-//         if(cDifference_mV > 100)
-//             LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
-//         else
-//             LOG(INFO) << BOLDGREEN << "Match in GPIO connected to " << cMapIterator->first << RESET;
-//         cMapIterator++;
-//     } while(cMapIterator != fResetLines.end());
-// #endif
-//     return cValid;
-// }
 
 void PSROHTester::Start(int currentRun)
 {
