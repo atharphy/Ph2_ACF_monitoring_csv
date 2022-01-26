@@ -20,7 +20,7 @@ void D19cBackendAlignmentFWInterface::ParseResult(uint32_t pReply)
         fLineConfiguration.fDelay   = (pReply & 0x000000F8) >> 3;
         fLineConfiguration.fBitslip = (pReply & 0x00000007) >> 0;
 
-        // bit slip of 4 bits electrical 
+        // // bit slip of 4 bits electrical 
         // fLineConfiguration.fMode    = (pReply & (0x3)) >> 13;
         // fLineConfiguration.fDelay   = (pReply & (0x1F)) >> 4;
         // fLineConfiguration.fBitslip = (pReply & (0xF<<0)) >> 0;

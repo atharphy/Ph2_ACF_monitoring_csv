@@ -287,11 +287,14 @@ int main(int argc, char* argv[])
                         float cCurrent = (0.9e-3)*cCurrentDAC/256; 
                         cTempCurrentValues.push_back(cCurrent);
                         std::vector<float> cMeasurements(0);
-                        for(uint8_t cIndx = 0; cIndx < 10; cIndx++) { cMeasurements.push_back(cTool.flpGBTInterface->ReadADC(clpGBT, cTempADC, "VREF/2", cGain)); }
+                        for(uint8_t cIndx = 0; cIndx < 10; cIndx++) { 
+                            auto cMeasurement = cTool.flpGBTInterface->ReadADC(clpGBT, cTempADC, "VREF/2", cGain); 
+                            if( cMeasurement != 1023) cMeasurements.push_back(cMeasurement); 
+                        }
                         float cMean = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
                         float cVoltage  = (cMean)*(Vref/1023); //Vref*( cMean/(512*2.0) - offset2) - offset1; 
                         if( cWith2S ) LOG (DEBUG) << RESET;
-                        LOG(DEBUG) << BOLDBLUE << "\t\t Current DAC " << +cCurrentDAC << " ADC reading " << cMean 
+                        LOG(INFO) << BOLDBLUE << "\t\t Current DAC " << +cCurrentDAC << " ADC reading " << cMean 
                                   << " converted voltage " << cVoltage
                                   << " current setting is " << cCurrent << " A "
                                   << RESET;
@@ -302,7 +305,7 @@ int main(int argc, char* argv[])
                     for(size_t cIndx=1; cIndx < cTempVoltageReadings.size(); cIndx++)
                     {
                         float cSlope = (cTempVoltageReadings[cIndx] - cTempVoltageReadings[cIndx-1])/(cTempCurrentValues[cIndx]-cTempCurrentValues[cIndx-1]);
-                        LOG(DEBUG) << BOLDBLUE << "\t\t Slope is " << cSlope << RESET;
+                        LOG(INFO) << BOLDBLUE << "\t\t Slope is " << cSlope << RESET;
                         cSlopes.push_back(cSlope);
                     }
                     float cMeanResistance = std::accumulate(cSlopes.begin(), cSlopes.end(), 0.)*1e-3 / cSlopes.size();
