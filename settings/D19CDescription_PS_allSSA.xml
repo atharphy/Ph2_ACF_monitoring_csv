@@ -1,24 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
-  <BeBoard Id="0" boardType="D19C" eventType="VR">
-    <connection id="board" uri="chtcp-2.0://hybridtesting.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
+  <BeBoard Id="0" boardType="D19C" eventType="Async">
+    <connection id="board" uri="chtcp-2.0://hybridtesting.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table_2202.xml" /> 
     
     <CDCE configure="0" clockRate="120"/>
     <OpticalGroup Id="0" FMCId="0" >
-        <Hybrid Id="0" Status="1">
+        <Module FeId="0" ModuleId="0" Status="1">
             <Global>
+                <CIC enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="320"/>
             </Global>
 
             <SSA_Files path="./settings/SSAFiles/" />
             <SSA Id="0" configfile="SSA.txt" />
             <SSA Id="1" configfile="SSA.txt" />
-    	    <SSA Id="2" configfile="SSA.txt" />
-	    <!-- <SSA Id="3" configfile="SSA.txt" /> -->
-            <SSA Id="4" configfile="SSA.txt" />
-            <SSA Id="5" configfile="SSA.txt" />
+            <SSA Id="2" configfile="SSA.txt" />
+            <!-- <SSA Id="3" configfile="SSA.txt" /> -->
+	        <!-- <SSA Id="4" configfile="SSA.txt" /> -->
+            <SSA Id="5" configfile="SSA.txt" />/
             <SSA Id="6" configfile="SSA.txt" />
-            <SSA Id="7" configfile="SSA.txt" />
-        </Hybrid>
+            <SSA Id="7" configfile="SSA.txt" /> 
+            
+            <CIC_Files path="./settings/CicFiles/" />
+            <CIC Id="8" configfile="CIC_default.txt" />
+        </Module>
     </OpticalGroup>
 
     <!--CONFIG-->
@@ -35,7 +39,7 @@
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
     		<Register name="triggers_to_accept"> 0 </Register>
-    		<Register name="trigger_source"> 3 </Register>
+    		<Register name="trigger_source"> 10 </Register>
     		<Register name="user_trigger_frequency"> 1 </Register>
     		<Register name="stubs_mask"> 1 </Register>
                     <!--this is the delay for the stub trigger-->
@@ -140,7 +144,7 @@
 
 <Settings>
     <!--PedestalEqualization-->
-    <Setting name="Nevents">100</Setting>
+    <Setting name="Nevents">1000</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
@@ -160,12 +164,15 @@
     <Setting name="FitSignal">0</Setting>
 
     <!--Antenna for Opens -->
-    <Setting name="AntennaPotentiometer">647</Setting>
-    <Setting name="ThresholdForOpens">10</Setting>
-    <Setting name="AntennaTriggerRate">50</Setting>
+    <Setting name="AntennaPotentiometerLowEnd">550</Setting>
+    <Setting name="AntennaPotentiometerHighEnd">900</Setting>
+    <!-- Unused -->
+    <Setting name="ThresholdForOpens">15</Setting>
+    <!-- Unused -->
+    <Setting name="AntennaTriggerRate">20</Setting>
 
     <!-- Shorts -->
-    <Setting name="ShortsPulseAmplitude"> 50 </Setting>
+    <Setting name="ShortsPulseAmplitude"> 20 </Setting>
 
     <!--PS hybrid SSA output test -->
     <!-- number of 10 ms periods to wait for in the case of stubs -->

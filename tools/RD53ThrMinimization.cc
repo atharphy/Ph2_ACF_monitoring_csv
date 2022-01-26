@@ -257,7 +257,7 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, const float&
         PixelAlive::run();
         auto output = PixelAlive::analyze();
         output->resetNormalizationStatus();
-        output->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), 1);
+        output->normalizeAndAverageContainers(fDetectorContainer, this->getChannelGroupHandlerContainer(), 1);
 
         // ##############################################
         // # Send periodic data to monitor the progress #
@@ -276,6 +276,7 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, const float&
                         // # Build discriminator #
                         // #######################
                         float newValue = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
+                        // float newValue = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancyMedian; // @TMP@
 
                         // ########################
                         // # Save best DAC values #

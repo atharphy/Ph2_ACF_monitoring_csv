@@ -65,10 +65,10 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
 class BeBoardInterface
 {
   private:
-    BeBoardFWMap        fBoardMap;
-    BeBoardFWInterface* fBoardFW;
-    uint16_t            fPrevBoardIdentifier;
-    // std::recursive_mutex theMtx;
+    BeBoardFWMap         fBoardMap;
+    BeBoardFWInterface*  fBoardFW;
+    uint16_t             fPrevBoardIdentifier;
+    std::recursive_mutex theMtx;
 
   public:
     /*!
@@ -223,20 +223,31 @@ class BeBoardInterface
      */
     void SendNTriggers(Ph2_HwDescription::BeBoard* pBoard, uint16_t pNtriggers);
 
-    /*!
-     * \brief Read board monitor data
-     * \param pReadoutChipInterface
-     * \param pChip
-     * \param args
-     * \return none
-     */
+    // ########################
+    // # Monitoring functions #
+    // ########################
     void ReadChipMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip, const std::vector<std::string>& args)
     {
-        // std::lock_guard<std::recursive_mutex> theGuard(theMtx);
-
-        pReadoutChipInterface->ReadHybridVoltage(pChip);
-        pReadoutChipInterface->ReadHybridTemperature(pChip);
+        std::lock_guard<std::recursive_mutex> theGuard(theMtx);
         static_cast<Ph2_HwInterface::RD53Interface*>(pReadoutChipInterface)->ReadChipMonitor(pChip, args);
+    }
+
+    float ReadChipMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip, const std::string& arg)
+    {
+        std::lock_guard<std::recursive_mutex> theGuard(theMtx);
+        return static_cast<Ph2_HwInterface::RD53Interface*>(pReadoutChipInterface)->ReadChipMonitor(pChip, arg);
+    }
+
+    float ReadHybridVoltageMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip)
+    {
+        std::lock_guard<std::recursive_mutex> theGuard(theMtx);
+        return pReadoutChipInterface->ReadHybridVoltage(pChip);
+    }
+
+    float ReadHybridTemperatureMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip)
+    {
+        std::lock_guard<std::recursive_mutex> theGuard(theMtx);
+        return pReadoutChipInterface->ReadHybridTemperature(pChip);
     }
 
     /*!
@@ -270,39 +281,6 @@ class BeBoardInterface
      * \return pointer to the BeBoardFWInterface object
      */
     BeBoardFWInterface* getFirmwareInterface() { return fBoardFW; }
-
-    /*! \brief Upload a configuration in a board FPGA
-     * \param pBoard pointer to a board description
-     * \param numConfig FPGA configuration number to be uploaded
-     * \param pstrFile path to MCS file containing the FPGA configuration
-     */
-    // void FlashProm(Ph2_HwDescription::BeBoard* pBoard, const std::string& strConfig, const char* pstrFile);
-
-    /*! \brief Jump to an FPGA configuration
-     * \param pBoard pointer to a board description
-     * \param numConfig FPGA configuration number
-     */
-    // void JumpToFpgaConfig(Ph2_HwDescription::BeBoard* pBoard, const std::string& strConfig);
-
-    // void DownloadFpgaConfig(Ph2_HwDescription::BeBoard* pBoard, const std::string& strConfig, const std::string& strDest);
-
-    /*! \brief Current FPGA configuration
-     * \param pBoard pointer to a board description
-     * \return const pointer to an FPGA uploading process. NULL means that no upload is been processed.
-     */
-    // const FpgaConfig* GetConfiguringFpga(Ph2_HwDescription::BeBoard* pBoard);
-
-    /*! \brief Get the list of available FPGA configuration (or firmware images)
-     * \param pBoard pointer to a board description */
-    // std::vector<std::string> getFpgaConfigList(Ph2_HwDescription::BeBoard* pBoard);
-
-    /*! \brief Delete one Fpga configuration (or firmware image)
-     * \param pBoard pointer to a board description
-     * \param strId Firmware image identifier*/
-    // void DeleteFpgaConfig(Ph2_HwDescription::BeBoard* pBoard, const std::string& strId);
-
-    /*! \brief Reboot the board */
-    // void RebootBoard(Ph2_HwDescription::BeBoard* pBoard);
 
     /*! \brief Set or reset the start signal */
     void SetForceStart(Ph2_HwDescription::BeBoard* pBoard, bool bStart);
