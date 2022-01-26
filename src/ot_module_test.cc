@@ -289,24 +289,33 @@ int main(int argc, char* argv[])
                         std::vector<float> cMeasurements(0);
                         for(uint8_t cIndx = 0; cIndx < 10; cIndx++) { 
                             auto cMeasurement = cTool.flpGBTInterface->ReadADC(clpGBT, cTempADC, "VREF/2", cGain); 
-                            if( cMeasurement != 1023) cMeasurements.push_back(cMeasurement); 
+                            if( cMeasurement != 1023 && std::isnan(cMeasurement) ) cMeasurements.push_back(cMeasurement); 
                         }
-                        float cMean = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
-                        float cVoltage  = (cMean)*(Vref/1023); //Vref*( cMean/(512*2.0) - offset2) - offset1; 
-                        if( cWith2S ) LOG (DEBUG) << RESET;
-                        LOG(INFO) << BOLDBLUE << "\t\t Current DAC " << +cCurrentDAC << " ADC reading " << cMean 
-                                  << " converted voltage " << cVoltage
-                                  << " current setting is " << cCurrent << " A "
-                                  << RESET;
-                        cTempVoltageReadings.push_back(cVoltage);
+                        if( cMeasurements.size() > 0 ) 
+                        {
+                            float cMean = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
+                            float cVoltage  = (cMean)*(Vref/1023); //Vref*( cMean/(512*2.0) - offset2) - offset1; 
+                            if( cWith2S ) LOG (DEBUG) << RESET;
+                            LOG(INFO) << BOLDBLUE << "\t\t Current DAC " << +cCurrentDAC << " ADC reading " << cMean 
+                                    << " converted voltage " << cVoltage
+                                    << " current setting is " << cCurrent << " A "
+                                    << RESET;
+                            cTempVoltageReadings.push_back(cVoltage);
+                        }
+                        else LOG (INFO) << BOLDBLUE << "\t\t Current DAC " << +cCurrentDAC << " no valid ADC readings.." << RESET;
                     }
                     cTool.flpGBTInterface->ConfigureCurrentDAC(clpGBT, {cTempADC}, 0x00);
                     std::vector<float> cSlopes(0);
                     for(size_t cIndx=1; cIndx < cTempVoltageReadings.size(); cIndx++)
                     {
-                        float cSlope = (cTempVoltageReadings[cIndx] - cTempVoltageReadings[cIndx-1])/(cTempCurrentValues[cIndx]-cTempCurrentValues[cIndx-1]);
-                        LOG(INFO) << BOLDBLUE << "\t\t Slope is " << cSlope << RESET;
-                        cSlopes.push_back(cSlope);
+                        auto  cNum = (cTempVoltageReadings[cIndx] - cTempVoltageReadings[cIndx-1]);
+                        auto  cDenom   = (cTempCurrentValues[cIndx]-cTempCurrentValues[cIndx-1]);
+                        if( cDenom != 0 )
+                        {
+                            float cSlope = cNum/cDenom;
+                            LOG(INFO) << BOLDBLUE << "\t\t Slope is " << cSlope << RESET;
+                            cSlopes.push_back(cSlope);
+                        }
                     }
                     float cMeanResistance = std::accumulate(cSlopes.begin(), cSlopes.end(), 0.)*1e-3 / cSlopes.size();
                     float cR0             = cWith2S ? 10.0 : 1.0; 
