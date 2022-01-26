@@ -313,16 +313,19 @@ int main(int argc, char* argv[])
                         if( cDenom != 0 )
                         {
                             float cSlope = cNum/cDenom;
-                            LOG(INFO) << BOLDBLUE << "\t\t Slope is " << cSlope << RESET;
+                            //LOG(INFO) << BOLDBLUE << "\t\t Slope is " << cSlope << RESET;
                             cSlopes.push_back(cSlope);
                         }
                     }
                     float cMeanResistance = std::accumulate(cSlopes.begin(), cSlopes.end(), 0.)*1e-3 / cSlopes.size();
+                    float cLSQResistance  = getLeastSquareSlope<float>( cTempCurrentValues, cTempVoltageReadings)*1e-3;
                     float cR0             = cWith2S ? 10.0 : 1.0; 
                     float cB              = cWith2S ? 3950 : 3500; 
                     float cTinvK          = 1.0/(25+273.5) + (1./cB)*std::log(cMeanResistance/cR0); 
                     float cT              = 1.0/cTinvK - 273.5; 
-                    LOG (INFO) << BOLDBLUE << "Mean resistance is " << cMeanResistance << " kOhms, R[25°C] is " << cR0 
+                    LOG (INFO) << BOLDBLUE << "Mean resistance is " << cMeanResistance << " kOhms"
+                        << " least squares method is " << cLSQResistance 
+                        << " R[25°C] is " << cR0 
                         << " temperature [inv K ] " << cTinvK 
                         << " temperature in celsius is " << cT
                         <<  RESET;
