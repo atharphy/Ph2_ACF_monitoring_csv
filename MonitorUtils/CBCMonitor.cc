@@ -29,6 +29,8 @@ CBCMonitor::CBCMonitor(const Ph2_System::SystemController* theSystemController, 
 void CBCMonitor::runMonitor()
 {
     if(fDoMonitorThreshold) runCBCRegisterMonitor("VCth");
+    std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
+
     if(fDoMonitorLpGBT_ADC1) runLpGBTRegisterMonitor("ADC1");
     if(fDoMonitorLpGBT_VDD) runLpGBTRegisterMonitor("VDD");
     if(fDoMonitorLpGBT_VDDA) runLpGBTRegisterMonitor("VDDA");
@@ -61,12 +63,14 @@ void CBCMonitor::runCBCRegisterMonitor(std::string registerName)
     fMonitorDQMPlotCBC->fillCBCRegisterPlots(theCBCRegisterContainer, registerName);
 #else
     auto theCBCRegisterStreamer = prepareOpticalGroupContainerStreamer<EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, EmptyContainer, CharArray>("CBCRegister");
-    theCBCRegisterStreamer.setHeaderElement(CharArray(registerName));
+    theCBCRegisterStreamer->setHeaderElement(CharArray(registerName));
     if(fTheSystemController->fDQMStreamerEnabled)
     {
-        for(auto board: theCBCRegisterContainer) theCBCRegisterStreamer.streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
+        for(auto board: theCBCRegisterContainer) theCBCRegisterStreamer->streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
+        std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
     }
 #endif
+    std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
 }
 
 void CBCMonitor::runLpGBTRegisterMonitor(std::string registerName)
@@ -88,10 +92,10 @@ void CBCMonitor::runLpGBTRegisterMonitor(std::string registerName)
     fMonitorDQMPlotCBC->fillLpGBTRegisterPlots(theLpGBTRegisterContainer, registerName);
 #else
     auto theLpGBTRegisterStreamer = prepareOpticalGroupContainerStreamer<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, uint16_t>, CharArray>("LpGBTRegister");
-    theLpGBTRegisterStreamer.setHeaderElement(CharArray(registerName));
+    theLpGBTRegisterStreamer->setHeaderElement(CharArray(registerName));
     if(fTheSystemController->fDQMStreamerEnabled)
     {
-        for(auto board: theLpGBTRegisterContainer) theLpGBTRegisterStreamer.streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
+        for(auto board: theLpGBTRegisterContainer) theLpGBTRegisterStreamer->streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
     }
 #endif
 }

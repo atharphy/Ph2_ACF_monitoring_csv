@@ -191,20 +191,20 @@ bool MonitorDQMPlotCBC::fill(std::vector<char>& dataBuffer)
     OpticalGroupContainerStream<EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, EmptyContainer, CharArray> theCBCDQMStreamer("CBCMonitorCBCRegister");
     OpticalGroupContainerStream<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, uint16_t>, CharArray> theLpGBTDQMStreamer("CBCMonitorLpGBTRegister");
 
-    if(theCBCDQMStreamer.attachBuffer(&dataBuffer))
-    {
-        std::cout <<  __PRETTY_FUNCTION__ << "Matches CBC monitor" << std::endl;
-        // It matched! Decoding chip data
-        theCBCDQMStreamer.decodeData(fDetectorData);
-        // Filling the histograms
-        CharArray registerNameArray = theCBCDQMStreamer.getHeaderElement();
-        std::cout <<  __PRETTY_FUNCTION__ << "registerNameArray = " << registerNameArray.getString() << std::endl;
+    // if(theCBCDQMStreamer.attachBuffer(&dataBuffer))
+    // {
+    //     std::cout <<  __PRETTY_FUNCTION__ << "Matches CBC monitor" << std::endl;
+    //     // It matched! Decoding chip data
+    //     theCBCDQMStreamer.decodeData(fDetectorData);
+    //     // Filling the histograms
+    //     CharArray registerNameArray = theCBCDQMStreamer.getHeaderElement();
+    //     std::cout <<  __PRETTY_FUNCTION__ << "registerNameArray = " << registerNameArray.getString() << std::endl;
 
-        fillCBCRegisterPlots(fDetectorData, registerNameArray.getString());
-        // Cleaning the data container to be ready for the next TCP string
-        fDetectorData.cleanDataStored();
-        return true;
-    }
+    //     fillCBCRegisterPlots(fDetectorData, registerNameArray.getString());
+    //     // Cleaning the data container to be ready for the next TCP string
+    //     fDetectorData.cleanDataStored();
+    //     return true;
+    // }
 
     if(theLpGBTDQMStreamer.attachBuffer(&dataBuffer))
     {

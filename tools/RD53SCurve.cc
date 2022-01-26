@@ -94,13 +94,13 @@ void SCurve::sendData()
         size_t index = 0;
         for(const auto theOccContainer: detectorContainerVector)
         {
-            theOccStream.setHeaderElement(dacList[index] - offset);
-            for(const auto cBoard: *theOccContainer) theOccStream.streamAndSendBoard(cBoard, fDQMStreamer);
+            theOccStream->setHeaderElement(dacList[index] - offset);
+            for(const auto cBoard: *theOccContainer) theOccStream->streamAndSendBoard(cBoard, fDQMStreamer);
             index++;
         }
 
         if(theThresholdAndNoiseContainer != nullptr)
-            for(const auto cBoard: *theThresholdAndNoiseContainer.get()) theThrAndNoiseStream.streamAndSendBoard(cBoard, fDQMStreamer);
+            for(const auto cBoard: *theThresholdAndNoiseContainer.get()) theThrAndNoiseStream->streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 

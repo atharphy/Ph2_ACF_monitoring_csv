@@ -98,13 +98,13 @@ void Gain::sendData()
         size_t index = 0;
         for(const auto theOccContainer: detectorContainerVector)
         {
-            theOccStream.setHeaderElement(dacList[index] - offset);
-            for(const auto cBoard: *theOccContainer) theOccStream.streamAndSendBoard(cBoard, fDQMStreamer);
+            theOccStream->setHeaderElement(dacList[index] - offset);
+            for(const auto cBoard: *theOccContainer) theOccStream->streamAndSendBoard(cBoard, fDQMStreamer);
             index++;
         }
 
         if(theGainContainer != nullptr)
-            for(const auto cBoard: *theGainContainer.get()) theGainStream.streamAndSendBoard(cBoard, fDQMStreamer);
+            for(const auto cBoard: *theGainContainer.get()) theGainStream->streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 

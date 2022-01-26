@@ -68,8 +68,8 @@ void RD53Monitor::runRegisterMonitor(const std::string& registerName)
 void RD53Monitor::sendData(DetectorDataContainer& DataContainer, const std::string& registerName)
 {
     auto theRegisterStreamer = prepareChipContainerStreamer<EmptyContainer, std::tuple<time_t, float>, CharArray>("Register");
-    theRegisterStreamer.setHeaderElement(CharArray(registerName));
+    theRegisterStreamer->setHeaderElement(CharArray(registerName));
 
     if(fTheSystemController->fDQMStreamerEnabled == true)
-        for(auto board: DataContainer) theRegisterStreamer.streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
+        for(auto board: DataContainer) theRegisterStreamer->streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
 }
