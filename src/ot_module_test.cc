@@ -289,7 +289,7 @@ int main(int argc, char* argv[])
                         std::vector<float> cMeasurements(0);
                         for(uint8_t cIndx = 0; cIndx < 10; cIndx++) { 
                             auto cMeasurement = cTool.flpGBTInterface->ReadADC(clpGBT, cTempADC, "VREF/2", cGain); 
-                            if( cMeasurement != 1023 && std::isnan(cMeasurement) ) cMeasurements.push_back(cMeasurement); 
+                            if( cMeasurement != 1023 ) cMeasurements.push_back(cMeasurement); 
                         }
                         if( cMeasurements.size() > 0 ) 
                         {
