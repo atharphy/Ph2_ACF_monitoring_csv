@@ -10,7 +10,7 @@
 
 #ifdef __USE_ROOT__
 class TFile;
-#include "MonitorDQM/MonitorDQMPlotBase.h"
+#include "../MonitorDQM/MonitorDQMPlotBase.h"
 #endif
 
 class DetectorMonitor

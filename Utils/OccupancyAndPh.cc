@@ -18,15 +18,20 @@ void OccupancyAndPh::makeSummaryAverage(const std::vector<OccupancyAndPh>* theOc
         abort();
     }
 
-    fOccupancy = 0;
-    fPh        = 0;
-    fPhError   = 0;
+    fOccupancy       = 0;
+    fOccupancyMedian = 0;
+    fPh              = 0;
+    fPhError         = 0;
 
-    size_t totalNumberOfEnableChannels = 0;
+    std::vector<float> sortedOcc;
+    size_t             totalNumberOfEnableChannels = 0;
 
     for(size_t iContainer = 0; iContainer < theOccupancyVector->size(); iContainer++)
     {
         fOccupancy += theOccupancyVector->at(iContainer).fOccupancy * theNumberOfEnabledChannelsList[iContainer];
+
+        sortedOcc.insert(std::upper_bound(sortedOcc.begin(), sortedOcc.end(), theOccupancyVector->at(iContainer).fOccupancy * theNumberOfEnabledChannelsList[iContainer]),
+                         theOccupancyVector->at(iContainer).fOccupancy * theNumberOfEnabledChannelsList[iContainer]);
 
         if(theOccupancyVector->at(iContainer).fPhError > 0)
         {
@@ -38,6 +43,14 @@ void OccupancyAndPh::makeSummaryAverage(const std::vector<OccupancyAndPh>* theOc
     }
 
     fOccupancy /= (totalNumberOfEnableChannels > 0 ? totalNumberOfEnableChannels : 1);
+
+    if(totalNumberOfEnableChannels != 0)
+    {
+        if(totalNumberOfEnableChannels % 2 == 0)
+            fOccupancyMedian = (sortedOcc[sortedOcc.size() / 2 - 1] + sortedOcc[sortedOcc.size() / 2]) / 2;
+        else
+            fOccupancyMedian = sortedOcc[sortedOcc.size() / 2];
+    }
 
     if(fPhError > 0)
     {

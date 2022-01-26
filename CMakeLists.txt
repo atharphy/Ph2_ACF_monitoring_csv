@@ -73,11 +73,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # If it's a recent gcc compiler, then let's add some
     # compiler options to avoid warnings promoted to errors
 
-    set (GCC_NOERROR_FLAGS " -Wno-error=unused-result    -Wno-error=deprecated-declarations")
+    set (GCC_NOERROR_FLAGS " -Wno-error=unused-result -Wno-error=deprecated-declarations")
     set (GCC_6_NOERROR_FLAGS "-Wno-error=misleading-indentation")
-    set (GCC_7_NOERROR_FLAGS "-Wno-expansion-to-defined -Wno-error=format-overflow")
-    #set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow")
-    set (GCC_8_NOERROR_FLAGS "-Wno-error=deprecated-declarations -Wno-error=format-overflow -Wno-error=deprecated-declarations -Wno-error=sign-compare -Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow")
+    set (GCC_7_NOERROR_FLAGS "-Wno-expansion-to-defined -Wno-error=format-overflow -Wno-error=catch-value")
+    set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow -Wno-error=unused-function -Wno-error=pedantic")
     set (GCC_9_NOERROR_FLAGS "-Wno-error=deprecated-copy -Wno-error=int-in-bool-context -Wno-error=unused-variable")
 
     if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
@@ -154,7 +153,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     if ($ENV{CompileWithEUDAQ})
         set(USE_EUDAQ ON)
         include_directories($ENV{EUDAQDIR}/include)
-        set(EUDAQ_LIB -L$ENV{EUDAQLIB} EUDAQ)
+        set(EUDAQ_LIB -L$ENV{EUDAQLIB} eudaq_core)
         message(STATUS "    EUDAQ variable is defined. EUDAQ directory: $ENV{EUDAQDIR}")
     else($ENV{CompileWithEUDAQ})
         message(STATUS "    EUDAQ variable is not defined. Building without EUDAQ producer")
@@ -169,9 +168,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif(ZMQ_FOUND)
 
     # Boost
-    set(BOOST_INCLUDE_DIRS "$ENV{BOOST_INCLUDE}")
-    set(BOOST_LIBRARY_DIRS "$ENV{BOOST_LIB}")
-    find_package(Boost 1.53 REQUIRED system filesystem thread program_options serialization)
+    find_package(Boost 1.53 REQUIRED system filesystem serialization iostreams)
 
     message("--     ${BoldCyan}#### Done ####${Reset}")
 
@@ -212,8 +209,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     add_subdirectory(MonitorUtils)
 
     message("--     ${BoldRed}#### Don't forget to set the path and ld_library_path by sourcing setup.sh before running ###${Reset}")
-    #set(ENV{PATH} "$ENV{PATH}:${PROJECT_SOURCE_DIR}/bin")
-    #set(ENV{LD_LIBRARY_PATH} "${PROJECT_SOURCE_DIR}/lib:$ENV(LD_LIBRARY_PATH)")
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
@@ -253,7 +248,6 @@ else() # ------------------------------- Compilation in the otsdaq environment -
         if(PH2_USBINSTLIB_FOUND)
         endif(PH2_USBINSTLIB_FOUND)
     endif(ZMQ_FOUND)
-
 
    # EUDAQ
     if ($ENV{CompileWithEUDAQ})
