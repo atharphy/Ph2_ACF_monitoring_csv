@@ -1,4 +1,4 @@
-#if defined(__TCUSB__) && defined(__USE_ROOT__) && ( defined(__ROH_USB__) || defined(__SEH_USB__))
+#if defined(__TCUSB__) && defined(__USE_ROOT__) && ( defined(__ROH_USB__) || defined(__SEH_USB__) )
 
 #include "OTHybridTester.h"
 

@@ -1,3 +1,4 @@
+
 #include "../Utils/Timer.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/argvparser.h"
@@ -33,6 +34,7 @@ INITIALIZE_EASYLOGGINGPP
 
 int main(int argc, char* argv[])
 {
+#if defined(__TCUSB__) && defined(__ROH_USB__) && defined(__USE_ROOT__)
     // configure the logger
     el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
@@ -339,5 +341,6 @@ int main(int argc, char* argv[])
     cTool.Destroy();
 
     if(!batchMode) cApp.Run();
+#endif
     return 0;
 }

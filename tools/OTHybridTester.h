@@ -12,7 +12,7 @@
 #ifndef OTHybridTester_h__
 #define OTHybridTester_h__
 
-#if defined(__TCUSB__) && defined(__USE_ROOT__) 
+#if defined(__TCUSB__) && defined(__USE_ROOT__) && ( defined(__ROH_USB__) || defined(__SEH_USB__) )
 
 #include "Tool.h"
 #include "D19cDebugFWInterface.h"
