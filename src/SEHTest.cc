@@ -35,7 +35,7 @@ INITIALIZE_EASYLOGGINGPP
 
 int main(int argc, char* argv[])
 {
-#if defined(__TCUSB__) && defined(__SEH_USB__) && defined(__USE_ROOT__) 
+#if defined(__TCUSB__) && defined(__SEH_USB__) && defined(__USE_ROOT__)
     // configure the logger
     el::Configurations conf("settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);

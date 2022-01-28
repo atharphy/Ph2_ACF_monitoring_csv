@@ -1,4 +1,4 @@
-#if defined(__TCUSB__) && defined(__USE_ROOT__) && ( defined(__ROH_USB__) || defined(__SEH_USB__) )
+#if defined(__TCUSB__) && defined(__USE_ROOT__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
 
 #include "OTHybridTester.h"
 
@@ -550,7 +550,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
 // Need statistics on spread of RSSI and temperature sensors
 bool OTHybridTester::LpGBTTestFixedADCs()
 {
-    bool cReturn = true;
+    bool                                cReturn = true;
     std::map<std::string, std::string>  cADCsMap;
     std::map<std::string, float>*       cDefaultParameters = nullptr;
     std::map<std::string, std::string>* cADCNametoPinMapping;
@@ -681,7 +681,7 @@ bool OTHybridTester::LpGBTTestResetLines()
     std::vector<uint8_t>                         cGPIOs      = static_cast<D19clpGBTInterface*>(flpGBTInterface)->getPSResetGPIOs();
     std::map<std::string, TC_PSROH::measurement> cResetLines = fResetLines;
 #elif __SEH_USB__
-    std::vector<uint8_t>                              cGPIOs      = static_cast<D19clpGBTInterface*>(flpGBTInterface)->get2SResetGPIOs();
+    std::vector<uint8_t> cGPIOs = static_cast<D19clpGBTInterface*>(flpGBTInterface)->get2SResetGPIOs();
     std::map<std::string, TC_2SSEH::resetMeasurement> cResetLines = f2SSEHResetLines;
 #endif
     LpGBTSetGPIOLevel(cGPIOs, 1);
@@ -700,15 +700,14 @@ bool OTHybridTester::LpGBTTestResetLines()
             float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement);
 #elif __SEH_USB__
 #ifdef __TCP_SERVER__
-    cMeasurement                                                  = this->getMeasurement("read_reset:" + cMapIterator->first);
+            cMeasurement = this->getMeasurement("read_reset:" + cMapIterator->first);
 #else
-    flpGBTInterface->getExternalController()->getInterface().read_reset(cMapIterator->second, cMeasurement);
-    float cDifference_mV = std::fabs((cLevel.second * 1300) - cMeasurement * 1000.); // 1300
+            flpGBTInterface->getExternalController()->getInterface().read_reset(cMapIterator->second, cMeasurement);
+            float cDifference_mV = std::fabs((cLevel.second * 1300) - cMeasurement * 1000.); // 1300
 #endif
-    fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
-    cStatus = cStatus && (cDifference_mV <= 100);
+            fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
+            cStatus = cStatus && (cDifference_mV <= 100);
 #endif
-
 
             cValid = cValid && cStatus;
             // cLineNames.push_back(cMapIterator->first.c_str() + cLevel.first);

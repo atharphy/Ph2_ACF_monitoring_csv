@@ -10,7 +10,7 @@
  */
 #ifndef SEHTester_h__
 #define SEHTester_h__
-#if defined(__TCUSB__) && defined(__SEH_USB__) && defined(__USE_ROOT__) 
+#if defined(__TCUSB__) && defined(__SEH_USB__) && defined(__USE_ROOT__)
 
 #include "OTHybridTester.h"
 //
@@ -152,11 +152,11 @@ class SEHTester : public OTHybridTester
                                                                                              {"Temp3", TC_2SSEH::temperatureMeasurement::Temp3},
                                                                                              {"Temp_SEH", TC_2SSEH::temperatureMeasurement::Temp_SEH}};
 
-    std::map<std::string, TC_2SSEH::resetMeasurement> f2SSEHResetLines = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
+    std::map<std::string, TC_2SSEH::resetMeasurement> f2SSEHResetLines   = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
                                                                           {"RST_CIC_R", TC_2SSEH::resetMeasurement::RST_CIC_R},
                                                                           {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
                                                                           {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
-    std::map<std::string, float> fDefaultParameters = {{"Spannung", 2},
+    std::map<std::string, float>                      fDefaultParameters = {{"Spannung", 2},
                                                        {"Strom", 0.5},
                                                        {"HV", 1},
                                                        {"VMON_P1V25_L_Nominal", 0.806},

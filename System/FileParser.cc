@@ -289,13 +289,13 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
                 }
             }
             else
-            { 
+            {
                 thelpGBT->setOpticalId(cOpticalGroupId);
-                thelpGBT->setChipAddress(0x70);               // default lpGBT address                                                                                                                                                                                  
-                thelpGBT->addRxGroups({0, 1, 2, 3, 4, 5, 6}); // be default we always use all 6 groups                                                                                                                                                                  
-                thelpGBT->addRxChannels({0, 2});              // and always channel 0 and channel 2 of each group                                                                                                                                                       
-            } 
-            
+                thelpGBT->setChipAddress(0x70);               // default lpGBT address
+                thelpGBT->addRxGroups({0, 1, 2, 3, 4, 5, 6}); // be default we always use all 6 groups
+                thelpGBT->addRxChannels({0, 2});              // and always channel 0 and channel 2 of each group
+            }
+
             pugi::xml_node clpGBTSettings = theChild.child("Settings");
             if(clpGBTSettings != nullptr)
             {
