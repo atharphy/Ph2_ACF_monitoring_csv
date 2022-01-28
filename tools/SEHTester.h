@@ -31,7 +31,6 @@
 #include "TStyle.h"
 #include "TTree.h"
 
-#include "linearFitter.h"
 #include <fstream>
 #include <iostream>
 #include <map>
