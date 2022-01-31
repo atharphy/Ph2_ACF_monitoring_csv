@@ -7,11 +7,12 @@
 workflow:
   rules:
     - if: $CI_MERGE_REQUEST_ID
+      when: always
     - if: '$CI_PIPELINE_SOURCE == "push"'
       changes: # when any file matching the below is edited, create a pipeline
         - .gitlab/ci/*
         - .gitlab-ci.yml
-      when: never
+      when: always
       allow_failure: true
 
 image: gitlab-registry.cern.ch/cms-iphc/tk_ph2/dockerimageph2acf
