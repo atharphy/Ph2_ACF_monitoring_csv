@@ -35,7 +35,7 @@ then
 fi
 
 perl -pi -e 's|\\.|\\\\.|g' ${inputfile}
-perl -pi -e "s|${CMAKE_DIR}/${QUALITY_CHECK_DIR}/../${CI_PROJECT_NAME}/|../${CI_PROJECT_NAME}/|g" ${inputfile}
+perl -pi -e "s|${CI_PROJECT_DIR}/${QUALITY_CHECK_DIR}/../${CI_PROJECT_NAME}/|../${CI_PROJECT_NAME}/|g" ${inputfile}
 
 cat ${inputfile} | \
     grep -Ev "(^ |/cvmfs/|_deps|extern/|DAL_${CI_PROJECT_NAME}.tmp.cpp|${CI_PROJECT_NAME}Dal)" |
@@ -50,9 +50,9 @@ cat ${inputfile} | \
 # perl -pi -e "s|${PWD}/||g" ${outputfile}
 
 ## Out-of-source build in the CI
-perl -pi -e "s|${CMAKE_DIR}/${QUALITY_CHECK_DIR}/${CI_PROJECT_NAME}/||g" ${outputfile}
-# perl -pi -e "s|${CMAKE_DIR}/${QUALITY_CHECK_DIR}/../${CI_PROJECT_NAME}/||g" ${outputfile}
-perl -pi -e "s|${CMAKE_DIR}/${CI_PROJECT_NAME}/||g" ${outputfile}
+perl -pi -e "s|${CI_PROJECT_DIR}/${QUALITY_CHECK_DIR}/${CI_PROJECT_NAME}/||g" ${outputfile}
+# perl -pi -e "s|${CI_PROJECT_DIR}/${QUALITY_CHECK_DIR}/../${CI_PROJECT_NAME}/||g" ${outputfile}
+perl -pi -e "s|${CI_PROJECT_DIR}/${CI_PROJECT_NAME}/||g" ${outputfile}
 perl -pi -e "s|..//${CI_PROJECT_NAME}/||g" ${outputfile}
 perl -pi -e "s|../${CI_PROJECT_NAME}/||g" ${outputfile}
 
