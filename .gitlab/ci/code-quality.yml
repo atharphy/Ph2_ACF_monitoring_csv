@@ -38,12 +38,7 @@ code_quality:
       artifacts: true
   script:
     - ls -l ${REPORTS_PATH}
-    - |
-        shopt -s nullglob
-        for f in $(ls ${REPORTS_PATH}/*.txt) ; do
-            bash ${CI_PROJECT_DIR}/.gitlab/ci/scripts/generate-report.sh $f
-        done
-        bash ${CI_PROJECT_DIR}/.gitlab/ci/scripts/merge-reports.sh
+    - bash ${CI_PROJECT_DIR}/.gitlab/ci/scripts/merge-reports.sh
   artifacts:
     reports:
       codequality: artifacts/reports/gl-code-quality-report.json
