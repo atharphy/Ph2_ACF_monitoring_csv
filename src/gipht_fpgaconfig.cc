@@ -145,9 +145,10 @@ int main(int argc, char* argv[])
     cSystemController.InitializeHw(cHWFile, cStr);
     BeBoard* pBoard = cSystemController.fDetectorContainer->at((cmd.foundOption("board")) ? convertAnyInt(cmd.optionValue("board").c_str()) : 0);
     cSystemController.fBeBoardInterface->setBoard(pBoard->getId());
-    FC7FpgaControlFWInterface* cInterface = static_cast<FC7FpgaControlFWInterface*>(cSystemController.fBeBoardInterface->getFirmwareInterface());
+    auto cInterface = FC7FpgaControlFWInterface(cSystemController.fBeBoardInterface->getFirmwareInterface());
 
     //std::vector<std::string> lstNames = cInterface->getFpgaConfigList(); // cSystemController.fBeBoardInterface->getFpgaConfigList(pBoard);
+
     // First get list of FW files
     std::vector<std::string> lstNames;
     uint32_t       timeStamp = 0;
@@ -157,7 +158,7 @@ int main(int argc, char* argv[])
     // getFpgaConfigList will fail when Board is busy
     try
     {
-        lstNames  = cInterface->getFpgaConfigList();
+        lstNames  = cInterface.getFpgaConfigList();
         timeStamp = cSystemController.fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.general.firmware_timestamp");
         nHybrids  = cSystemController.fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.general.info.num_hybrids");
         nChips    = cSystemController.fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.general.info.num_chips");
@@ -235,7 +236,7 @@ int main(int argc, char* argv[])
     {
         strImage = cmd.optionValue("delete");
         verifyImageName(strImage, lstNames);
-        cInterface->DeleteFpgaConfig(strImage);
+        cInterface.DeleteFpgaConfig(strImage);
         // cSystemController.fBeBoardInterface->DeleteFpgaConfig(pBoard, strImage);
         LOG(INFO) << "Firmware image: " << strImage << " deleted from SD card";
         exit(0);
@@ -268,7 +269,7 @@ int main(int argc, char* argv[])
         LOG(INFO) << ss;
         gui::status(ss.c_str());
         gui::progress(0);
-        cInterface->JumpToFpgaConfig(strImage);
+        cInterface.JumpToFpgaConfig(strImage);
         gui::progress(1);
         skipUpload = true;
         gui::data("NewFirmware",strImage.c_str());
@@ -278,7 +279,7 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("download"))
     {
-        cInterface->DownloadFpgaConfig(strImage, cmd.optionValue("download"));
+        cInterface.DownloadFpgaConfig(strImage, cmd.optionValue("download"));
     }
     else if (!skipUpload)
     {
@@ -294,7 +295,7 @@ int main(int argc, char* argv[])
             LOG(INFO) << ss;
             gui::status(ss.str().c_str());
             gui::progress(0);
-            cInterface->FlashProm(strImage, cFWFile.c_str());
+            cInterface.FlashProm(strImage, cFWFile.c_str());
         }
     }
 
@@ -302,7 +303,7 @@ int main(int argc, char* argv[])
 
     while(cDone == 0 && !skipUpload)
     {
-        progress = cInterface->GetConfiguringFpga()->getProgressValue();
+        progress = cInterface.GetConfiguringFpga()->getProgressValue();
         // progress = cSystemController.fBeBoardInterface->GetConfiguringFpga(pBoard)->getProgressValue();
 
         if(progress == 100)
@@ -314,7 +315,7 @@ int main(int argc, char* argv[])
         else
         {
             gui::progress(((float)((int)progress)) / 100);
-            LOG(INFO) << progress << "%  " << cInterface->GetConfiguringFpga()->getProgressString() << "                 \r" << std::flush;
+            LOG(INFO) << progress << "%  " << cInterface.GetConfiguringFpga()->getProgressString() << "                 \r" << std::flush;
             sleep(1);
         }
     }
