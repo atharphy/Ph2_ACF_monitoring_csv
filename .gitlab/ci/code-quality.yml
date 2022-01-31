@@ -16,7 +16,7 @@ quality:cpplint:
 
   before_script:
     - echo "Running code quality cpplint checks"
-    - yum install -y python3 jq
+    - yum install -y python3
     - mkdir -p ${REPORTS_PATH}
   script:
     - python3 ${CI_PROJECT_DIR}/.gitlab/ci/scripts/runcpplint.py --files ./**/*.cxx ./**/*.cpp ./**/*.h ./**/*.hpp
@@ -36,6 +36,8 @@ code_quality:
   needs:
     - job: quality:cpplint
       artifacts: true
+  before_script:
+    - yum install -y jq
   script:
     - ls -l ${REPORTS_PATH}
     - bash ${CI_PROJECT_DIR}/.gitlab/ci/scripts/merge-reports.sh
