@@ -7,7 +7,7 @@
 workflow:
   rules:
     - if: $CI_MERGE_REQUEST_ID
-    - if:
+    - if: '$CI_PIPELINE_SOURCE == "push"'
       changes:  # Include the job and set to when:manual if any of the follow paths match a modified file.
         - .gitlab/ci/*
         - .gitlab-ci.yml
