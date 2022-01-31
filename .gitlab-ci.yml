@@ -11,6 +11,7 @@ workflow:
     - if: '$CI_PIPELINE_SOURCE == "push"'
       changes: # when any file matching the below is edited, create a pipeline
         - .gitlab/ci/*
+        - .gitlab/ci/*/*
         - .gitlab-ci.yml
       when: always
       allow_failure: true
