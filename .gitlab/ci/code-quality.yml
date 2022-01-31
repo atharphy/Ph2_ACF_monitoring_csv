@@ -16,7 +16,7 @@ quality:cpplint:
 
   before_script:
     - echo "Running code quality cpplint checks"
-    - yum install -y python3
+    - yum install -y python3 jq
     - mkdir -p ${REPORTS_PATH}
   script:
     - python3 ${CI_PROJECT_DIR}/.gitlab/ci/scripts/runcpplint.py --files ./**/*.cxx ./**/*.cpp ./**/*.h ./**/*.hpp
