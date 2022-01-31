@@ -27,7 +27,7 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
         LOG(ERROR) << BOLDRED << "LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pDacValue << BOLDRED << " to address " << BOLDYELLOW << cAddress << RESET;
         return false;
     }
-    if(cAddress >= 0x13C)
+    if(cAddress > 0x13C)
     {
         LOG(ERROR) << "LpGBT read-write registers end at 0x13C ... impossible to write to address " << BOLDYELLOW << cAddress << RESET;
         return false;
@@ -40,8 +40,8 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
     {
 #ifdef __TCUSB__
 #if defined(__ROH_USB__) || defined(__SEH_USB__)
-        cSuccess = fExternalController->getInterface().write_i2c(cAddress, static_cast<char>(pDacValue));
-        cSuccess = (!pVerifLoop) ? cSuccess : (ReadChipReg(pChip, pDacName) == pDacValue);
+        cSuccess = (fExternalController->getInterface().write_i2c(cAddress, static_cast<char>(pDacValue)) == pDacValue);
+        // cSuccess = (!pVerifLoop) ? cSuccess : (ReadChipReg(pChip, pDacName) == pDacValue);
 #endif
 #endif
     }
@@ -1248,7 +1248,7 @@ uint8_t lpGBTInterface::GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMa
 {
     std::string cI2CStatReg = "I2CM" + std::to_string(pMaster) + "Status";
     uint8_t     cStatus     = ReadChipReg(pChip, cI2CStatReg);
-    LOG(DEBUG) << GREEN << "I2C Master " << +pMaster << " -- Status : " << lpGBTInterface::fI2CStatusMap[cStatus] << RESET;
+    LOG(INFO) << GREEN << "I2C Master " << +pMaster << " -- Status : " << lpGBTInterface::fI2CStatusMap[cStatus] << RESET;
     return cStatus;
 }
 

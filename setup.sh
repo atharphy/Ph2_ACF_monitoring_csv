@@ -126,7 +126,7 @@ export UseTCUSBTcpServer=false
 
 # Clang-format command
 if command -v clang-format &> /dev/null; then
-  clang_command="clang-format"
+ clang_command="clang-format" 
 else
   clang_command="/opt/rh/llvm-toolset-7.0/root/usr/bin/clang-format"
 fi

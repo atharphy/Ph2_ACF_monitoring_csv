@@ -12,6 +12,7 @@ class FC7FpgaControlFWInterface
   public:
     FC7FpgaControlFWInterface(BeBoardFWInterface* fBeBoardFW) : fFpgaConfig(nullptr), fBeBoardFW(fBeBoardFW){};
 
+    void                     Initialize();
     void                     FlashProm(const std::string& strConfig, const char* pstrFile);
     void                     JumpToFpgaConfig(const std::string& strConfig);
     void                     DownloadFpgaConfig(const std::string& strConfig, const std::string& strDest);

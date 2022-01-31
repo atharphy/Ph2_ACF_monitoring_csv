@@ -10,9 +10,23 @@
  */
 #ifndef PSROHTester_h__
 #define PSROHTester_h__
+
+#if defined(__TCUSB__) && defined(__ROH_USB__) && defined(__USE_ROOT__)
 #include "OTHybridTester.h"
-#ifdef __USE_ROOT__
+
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <sstream>
+#include <string>
+
+#include "boost/format.hpp"
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/split.hpp>
+
 using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+using namespace Ph2_System;
 
 class PSROHTester : public OTHybridTester
 {
