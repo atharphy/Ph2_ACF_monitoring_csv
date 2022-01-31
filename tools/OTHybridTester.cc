@@ -690,7 +690,7 @@ bool OTHybridTester::LpGBTTestResetLines()
     for(auto cLevel: cLevels)
     {
         LpGBTSetGPIOLevel(cGPIOs, cLevel.second);
-        std::this_thread::sleep_for(std::chrono::milliseconds(12000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         auto cMapIterator = cResetLines.begin();
         bool cStatus      = true;
         do
