@@ -39,8 +39,8 @@ code_quality:
   script:
     - ls -l ${REPORTS_PATH}
     - |
-        for f in $(ls ${REPORTS_PATH}/*.txt)
-        do
+        shopt -s nullglob
+        for f in $(ls ${REPORTS_PATH}/*.txt) ; do
             ${CI_PROJECT_DIR}/.gitlab/ci/scripts/generate-report.sh $f
         done
         ${CI_PROJECT_DIR}/.gitlab/ci/scripts/merge-reports.sh
