@@ -19,7 +19,7 @@ quality:cpplint:
     - yum install -y python3
     - mkdir -p ${REPORTS_PATH}
   script:
-    - ${CI_PROJECT_DIR}/.gitlab/ci/scripts/runcpplint.py --files ./**/*.cxx ./**/*.cpp ./**/*.h ./**/*.hpp
+    - python ${CI_PROJECT_DIR}/.gitlab/ci/scripts/runcpplint.py --files ./**/*.cxx ./**/*.cpp ./**/*.h ./**/*.hpp
     - mv cpplint-report.json ${REPORTS_PATH}
   after_script:
     - echo "Running code quality checks after script"
