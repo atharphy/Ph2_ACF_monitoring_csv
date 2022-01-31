@@ -7,6 +7,12 @@
 workflow:
   rules:
     - if: $CI_MERGE_REQUEST_ID
+    - if:
+      changes:  # Include the job and set to when:manual if any of the follow paths match a modified file.
+        - .gitlab/ci/*
+        - .gitlab-ci.yml
+      when: manual
+      allow_failure: true
 
 image: gitlab-registry.cern.ch/cms-iphc/tk_ph2/dockerimageph2acf
 
