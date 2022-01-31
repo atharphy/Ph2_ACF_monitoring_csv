@@ -1,0 +1,50 @@
+# GitLab CI -- Code Quality Checks
+
+variables:
+  REPORTS_PATH: ${CI_PROJECT_DIR}/artifacts/reports
+
+# See: https://gitlab.cern.ch/gitlabci-examples/static_code_analysis
+quality:cpplint:
+  image: gitlab-registry.cern.ch/computersecurity/security-services-code-checking:latest
+  stage: quality
+  tags:
+    - cvmfs
+  stage: quality
+  needs: []
+  allow_failure: true
+
+  before_script:
+    - echo "Running code quality cpplint checks"
+    - yum install -y python3
+    - mkdir -p ${REPORTS_PATH}
+  script:
+    - ${CMAKE_DIR}/.gitlab/ci/scripts/runcpplint.py --files ./**/*.cxx ./**/*.cpp ./**/*.h ./**/*.hpp
+    - mv cpplint-report.json ${REPORTS_PATH}
+  after_script:
+    - echo "Running code quality checks after script"
+    - ls -l ${ARTIFACTS_DIR}/*
+    - ls -l ${REPORTS_PATH}
+  artifacts:
+    expire_in: 1 month
+    paths:
+      - artifacts
+
+code_quality:
+  stage: quality
+  allow_failure: false
+  needs:
+    - job: quality:cpplint
+      artifacts: true
+  script:
+    - ls -l ${REPORTS_PATH}
+    - |
+        for f in $(ls ${REPORTS_PATH}/*.txt)
+        do
+            ${CMAKE_DIR}/.gitlab/ci/scripts/generate-report.sh $f
+        done
+        ${CMAKE_DIR}/.gitlab/ci/scripts/merge-reports.sh
+  artifacts:
+    reports:
+      codequality: artifacts/reports/gl-code-quality-report.json
+    paths: [artifacts/reports/gl-code-quality-report.json]
+    expire_in: 1 month
