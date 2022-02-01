@@ -168,9 +168,9 @@ void ThrEqualizationSC::run()
 
                     auto& theChannelGroupHandler = this->getChannelGroupHandlerContainer()
                                                        ->at(cBoard->getIndex())
-                                                       ->getObject(cOpticalGroup->getId())
-                                                       ->getObject(cHybrid->getId())
-                                                       ->getObject(cChip->getId())
+                                                       ->at(cOpticalGroup->getIndex())
+                                                       ->at(cHybrid->getIndex())
+                                                       ->at(cChip->getIndex())
                                                        ->getSummary<std::shared_ptr<ChannelGroupHandler>>();
                     auto cTestChannelGroup = theChannelGroupHandler->getTestGroup(cGroupNumber);
                     for(auto row = 0u; row < RD53::nRows; row++)
@@ -225,9 +225,9 @@ void ThrEqualizationSC::analyze()
                 {
                     auto& theChannelGroupHandler = this->getChannelGroupHandlerContainer()
                                                        ->at(cBoard->getIndex())
-                                                       ->getObject(cOpticalGroup->getId())
-                                                       ->getObject(cHybrid->getId())
-                                                       ->getObject(cChip->getId())
+                                                       ->at(cOpticalGroup->getIndex())
+                                                       ->at(cHybrid->getIndex())
+                                                       ->at(cChip->getIndex())
                                                        ->getSummary<std::shared_ptr<ChannelGroupHandler>>();
                     auto cTestChannelGroup = theChannelGroupHandler->getTestGroup(cGroupNumber);
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
