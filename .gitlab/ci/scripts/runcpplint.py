@@ -59,32 +59,14 @@ def run_cpplint(files):
             if result:
                 issues.append(result)
 
-        # issues.append({
-        #         "fingerprint": f"{len(issues):x}",
-        #         "type": "issue",
-        #         "description": f"Total number of issues: {len(issues):d}",
-        #         "categories": ["Style"],
-        #         "location": {
-        #             "path": ".",
-        #             "lines": {
-        #                 "begin": 1,
-        #                 "end": 1
-        #             }
-        #         }
-        #     }
-        # )
-
         print(">>> Writing JSON report to cpplint-report.json")
         with open('cpplint-report.json', 'w') as f:
             json.dump(issues, f, indent=4)
-
-
 
 def main():
     run_cpplint(args.files)
     print("\0")
     pass
-
 
 if __name__ == "__main__":
     main()
