@@ -25,9 +25,9 @@ def get_issue(line):
     (fname, line, message, check, level) = matches.group(1, 2, 3, 4, 5)
     codeline = linecache.getline(fname, int(line))
     issue = {
-        # "fingerprint": f"{abs(hash(check+message+fname+codeline)):x}",
         "fingerprint": f"{hashlib.md5(str(check+message+fname+codeline).encode()).hexdigest()}",
         "type": "issue",
+        "severity": "minor",
         "check_name": check,
         "description": message,
         "categories": ["Style"],
@@ -59,20 +59,20 @@ def run_cpplint(files):
             if result:
                 issues.append(result)
 
-        issues.append({
-                "fingerprint": f"{len(issues):x}",
-                "type": "issue",
-                "description": f"Total number of issues: {len(issues):d}",
-                "categories": ["Style"],
-                "location": {
-                    "path": ".",
-                    "lines": {
-                        "begin": 1,
-                        "end": 1
-                    }
-                }
-            }
-        )
+        # issues.append({
+        #         "fingerprint": f"{len(issues):x}",
+        #         "type": "issue",
+        #         "description": f"Total number of issues: {len(issues):d}",
+        #         "categories": ["Style"],
+        #         "location": {
+        #             "path": ".",
+        #             "lines": {
+        #                 "begin": 1,
+        #                 "end": 1
+        #             }
+        #         }
+        #     }
+        # )
 
         print(">>> Writing JSON report to cpplint-report.json")
         with open('cpplint-report.json', 'w') as f:
