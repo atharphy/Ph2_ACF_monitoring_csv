@@ -430,7 +430,7 @@ uint32_t RD53FWInterface::ReadoutSpeed()
 
 void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
 {
-    // const unsigned int MAXSEQUENCES = 5; // @CONST@
+    const unsigned int MAXSEQUENCES = 5; // @CONST@
 
     for(const auto cOpticalGroup: *pBoard)
         for(const auto cHybrid: *cOpticalGroup)
@@ -445,15 +445,15 @@ void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
             // # Try different init sequences #
             // ################################
             bool lanes_up;
-            // for(unsigned int seq = 0; seq < MAXSEQUENCES; seq++)
+            for(unsigned int seq = 0; seq < MAXSEQUENCES; seq++)
             {
-                // LOG(INFO) << GREEN << "Trying initialization sequence number: " << BOLDYELLOW << seq << RESET;
+                LOG(INFO) << GREEN << "Trying initialization sequence number: " << BOLDYELLOW << seq << RESET;
                 LOG(INFO) << BOLDBLUE << "\t--> Number of required data lanes for [board/opticalGroup/hybrid = " << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << hybrid_id
                           << BOLDBLUE << "]: " << BOLDYELLOW << RD53Shared::countBitsOne(chips_en_to_check) << BOLDBLUE << " i.e. " << BOLDYELLOW << std::bitset<20>(chips_en_to_check) << RESET;
 
-                std::vector<uint16_t> initSequence = RD53FWInterface::GetInitSequence(this->singleChip == true ? 4 : 0);
+                std::vector<uint16_t> initSequence = RD53FWInterface::GetInitSequence(this->singleChip == true ? 4 : seq);
 
-                // for(unsigned int i = 0; i < RD53Shared::MAXATTEMPTS; i++)
+                for(unsigned int i = 0; i < RD53Shared::MAXATTEMPTS; i++)
                 {
                     RD53FWInterface::WriteChipCommand(initSequence, hybrid_id);
                     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
@@ -462,15 +462,15 @@ void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
                     // # Check if all lanes are active #
                     // #################################
                     lanes_up            = false;
-                    // uint32_t channel_up = RegManager::ReadReg("user.stat_regs.aurora_rx_channel_up");
+                    uint32_t channel_up = RegManager::ReadReg("user.stat_regs.aurora_rx_channel_up");
 
-                    // LOG(INFO) << BOLDBLUE << "\t--> Total number of active data lanes for tentative n. " << BOLDYELLOW << i << BOLDBLUE << ": " << BOLDYELLOW << RD53Shared::countBitsOne(channel_up)
-                    //           << BOLDBLUE << " i.e. " << BOLDYELLOW << std::bitset<20>(channel_up) << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t--> Total number of active data lanes for tentative n. " << BOLDYELLOW << i << BOLDBLUE << ": " << BOLDYELLOW << RD53Shared::countBitsOne(channel_up)
+                              << BOLDBLUE << " i.e. " << BOLDYELLOW << std::bitset<20>(channel_up) << RESET;
 
-                    // if((channel_up & chips_en_to_check) == chips_en_to_check)
+                    if((channel_up & chips_en_to_check) == chips_en_to_check)
                     {
-                        // LOG(INFO) << GREEN << "Board/OpticalGroup/Hybrid [" << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << hybrid_id << RESET << GREEN
-                        //           << "] locked with sequence " << BOLDYELLOW << seq << RESET << GREEN << " on tentative n. " << BOLDYELLOW << i << RESET;
+                        LOG(INFO) << GREEN << "Board/OpticalGroup/Hybrid [" << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << hybrid_id << RESET << GREEN
+                                  << "] locked with sequence " << BOLDYELLOW << seq << RESET << GREEN << " on tentative n. " << BOLDYELLOW << i << RESET;
                         lanes_up = true;
                         break;
                     }
