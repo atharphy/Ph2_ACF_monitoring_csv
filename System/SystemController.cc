@@ -501,6 +501,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
     RD53Event::ForkDecodingThreads();
 }
+
 // ######################################
 // # Configuring Outer Tracker hardware #
 // ######################################
@@ -643,6 +644,7 @@ void SystemController::InitializeOT(BeBoard* pBoard)
     else
         LOG(INFO) << BOLDMAGENTA << "No ReSync needed after OT-module configuration step" << RESET;
 }
+
 void SystemController::ConfigureOT(BeBoard* pBoard)
 {
     // hard reset ROCs on hybrid if lpGBT is there; if no lpGBT this
@@ -691,6 +693,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
     }                                                                                  // OG
     LOG(INFO) << BOLDMAGENTA << "Configured OT module" << RESET;
 }
+
 void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
 {
     auto cBoardId   = pOpticalGroup->getBeBoardId();
@@ -1334,8 +1337,8 @@ void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandle
             }
         }
     }
-    fDetectorContainer->resetReadoutChipQueryFunction();
 
+    fDetectorContainer->resetReadoutChipQueryFunction();
     fSameChannelGroupForAllChannels = (totalNumberOfQueriedChips == totalNumberOfChips);
 }
 

@@ -62,8 +62,6 @@ void PixelAlive::ConfigureCalibration()
                 {
                     auto val = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT");
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT", inj | (val & maxDelay));
-
-                    std::cout << "AAAAA " << cChip->getIndex() << std::endl;
                 }
 
     // #######################
