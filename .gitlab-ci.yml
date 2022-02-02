@@ -40,6 +40,7 @@ include:
 
 .build:
   stage: build
+  needs: []
   before_script:
     - source ./setup.sh
   script:
