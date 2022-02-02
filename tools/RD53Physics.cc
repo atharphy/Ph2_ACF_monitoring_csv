@@ -39,7 +39,7 @@ void Physics::ConfigureCalibration()
 
     theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup, RD53GroupType::AllPixels);
     theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
-    setChannelGroupHandler(theChnGroupHandler);
+    this->setChannelGroupHandler(theChnGroupHandler);
 
     // ##############################
     // # Initialize data containers #

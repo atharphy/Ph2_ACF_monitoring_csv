@@ -48,7 +48,7 @@ void Gain::ConfigureCalibration()
 
     theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup, doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol, doOnlyNGroups);
     theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
-    setChannelGroupHandler(theChnGroupHandler);
+    this->setChannelGroupHandler(theChnGroupHandler);
 
     // ##############################
     // # Initialize dac scan values #

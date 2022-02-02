@@ -46,7 +46,7 @@ void PixelAlive::ConfigureCalibration()
     theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(
         customChannelGroup, injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels, nHITxCol, doOnlyNGroups);
     theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
-    setChannelGroupHandler(theChnGroupHandler);
+    this->setChannelGroupHandler(theChnGroupHandler);
 
     // ######################
     // # Set injection type #
@@ -60,9 +60,10 @@ void PixelAlive::ConfigureCalibration()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    std::cout << "AAAAAAAA " << cChip->getId() << std::endl;
                     auto val = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT");
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT", inj | (val & maxDelay));
+
+                    std::cout << "AAAAA " << cChip->getIndex() << std::endl;
                 }
 
     // #######################
