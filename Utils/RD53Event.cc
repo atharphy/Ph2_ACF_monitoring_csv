@@ -105,24 +105,18 @@ void RD53Event::addBoardInfo2Events(const BeBoard* pBoard, std::vector<RD53Event
 
 void RD53Event::fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup)
 {
-    size_t chipIndx = 0; // Fabio: not sure if it is correct, but before was left uninitialized...
+    size_t chipIndx;
 
     for(const auto& cOpticalGroup: *boardContainer)
         for(const auto& cHybrid: *cOpticalGroup)
             for(const auto& cChip: *cHybrid)
                 if((eventStatus == RD53FWEvtEncoder::GOOD) && (RD53Event::isHittedChip(cHybrid->getId(), cChip->getId(), chipIndx) == true))
-                {
-                    // auto cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, cOpticalGroup->getId(), cHybrid->getId(), cChip->getId());
-                    // if(!cTestChannelGroup) continue;
-
-                    fillChipDataContainer(cChip, testChannelGroup, cHybrid->getId());
-                }
+                    RD53Event::fillRD53ChipDataContainer(cChip, testChannelGroup, cHybrid->getId(), chipIndx);
 }
 
-void RD53Event::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId)
+void RD53Event::fillRD53ChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId, size_t chipIndx)
 {
-    bool   vectorRequired = chipContainer->isSummaryContainerType<Summary<GenericDataVector, OccupancyAndPh>>();
-    size_t chipIndx       = 0; // Fabio: not sure if it is correct, but before was left uninitialized...
+    bool vectorRequired = chipContainer->isSummaryContainerType<Summary<GenericDataVector, OccupancyAndPh>>();
 
     if(vectorRequired == true)
     {

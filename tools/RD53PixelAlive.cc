@@ -46,6 +46,7 @@ void PixelAlive::ConfigureCalibration()
     theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(
         customChannelGroup, injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels, nHITxCol, doOnlyNGroups);
     theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
+    this->setChannelGroupHandler(theChnGroupHandler);
 
     // ######################
     // # Set injection type #
@@ -157,7 +158,6 @@ void PixelAlive::run()
     this->fDetectorDataContainer = theOccContainer.get();
     ContainerFactory::copyAndInitStructure<OccupancyAndPh, GenericDataVector>(*fDetectorContainer, *this->fDetectorDataContainer);
 
-    setChannelGroupHandler(theChnGroupHandler);
     this->SetTestPulse(injType);
     this->fMaskChannelsFromOtherGroups = true;
     this->measureData(nEvents, nEvtsBurst);
@@ -232,10 +232,10 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
                             if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
-                                                                                                                   ->getObject(cBoard->getId())
-                                                                                                                   ->getObject(cOpticalGroup->getId())
-                                                                                                                   ->getObject(cHybrid->getId())
-                                                                                                                   ->getObject(cChip->getId())
+                                                                                                                   ->at(cBoard->getIndex())
+                                                                                                                   ->at(cOpticalGroup->getIndex())
+                                                                                                                   ->at(cHybrid->getIndex())
+                                                                                                                   ->at(cChip->getIndex())
                                                                                                                    ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                                                                                                    ->allChannelGroup()
                                                                                                                    ->isChannelEnabled(row, col))
