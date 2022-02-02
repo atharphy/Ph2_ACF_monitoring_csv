@@ -795,6 +795,32 @@ uint8_t lpGBTInterface::GetInternalTemperature(Chip* pChip)
     }
     return std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
 }
+float lpGBTInterface::ReadResistance(Chip* pChip, std::string pADC, std::vector<uint8_t> pCurrents, uint8_t pGain)
+{
+    std::vector<float> cTempVoltageReadings;
+    std::vector<float> cTempCurrentValues;
+    for( auto cCurrentDAC : pCurrents )
+    {
+        ConfigureCurrentDAC(pChip, {pADC} , cCurrentDAC);
+        float cCurrent = (0.9e-3)*cCurrentDAC/256; 
+        cTempCurrentValues.push_back(cCurrent);
+        std::vector<float> cMeasurements(0);
+        for(uint8_t cIndx = 0; cIndx < 10; cIndx++) { 
+            auto cMeasurement = ReadADC(pChip, pADC, "VREF/2", pGain); 
+            if( cMeasurement != 1023 ) cMeasurements.push_back(cMeasurement); 
+        }
+        if( cMeasurements.size() > 0 ) 
+        {
+            float cMean = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
+            cTempVoltageReadings.push_back(cMean);
+        }
+        else LOG (DEBUG) << BOLDBLUE << "\t\t Current DAC " << +cCurrentDAC << " no valid ADC readings.." << RESET;
+    }
+    ConfigureCurrentDAC(pChip, {pADC}, 0x00);
+    float cLSQResistance  = (cTempVoltageReadings.size() == 0 ) ? getLeastSquareSlope<float>( cTempCurrentValues, cTempVoltageReadings) : -1 ;
+    return cLSQResistance;
+}
+
 uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain)
 {
     // Read differential (converted) data on two ADC inputs

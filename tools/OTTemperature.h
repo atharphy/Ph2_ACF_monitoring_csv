@@ -38,6 +38,7 @@ class OTTemperature : public OTTool
     void SetGain(uint8_t pGain){ fGain = pGain; }
     void SetVref(float pVref){ fVref = pVref; }
     void Set2SInputVoltage(float pInput){ fVinput2S = pInput; }
+    void SetCurrents(std::vector<uint8_t> pCurrents);
     
   protected:
     

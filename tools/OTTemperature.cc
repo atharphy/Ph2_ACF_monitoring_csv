@@ -22,36 +22,20 @@ void OTTemperature::Running()
     ReadModuleTemperatures();
     Reset();
 }
+// Set current 
+void OTTemperature::SetCurrents(std::vector<uint8_t> pCurrents)
+{
+    fCurrentDACs.clear();
+    for( auto cCurrent : pCurrents) fCurrentDACs.push_back(cCurrent);
+}
 // Read thermistor temperature   
 float OTTemperature::ReadThermistor(const OpticalGroup* pOpticalGroup, std::string pADC, float pR0, float pB )
 {
     auto& clpGBT = pOpticalGroup->flpGBT;
     if(clpGBT == nullptr) return -1;
     
-    std::vector<float> cTempVoltageReadings;
-    std::vector<float> cTempCurrentValues;
-    LOG(INFO) << BOLDBLUE << "Gain of " << +fGain << "\t"  << pADC 
-        << " will measure resistance using " << fCurrentDACs.size() << " current values" << RESET;
-    for( auto cCurrentDAC : fCurrentDACs )
-    {
-        flpGBTInterface->ConfigureCurrentDAC(clpGBT, {pADC} , cCurrentDAC);
-        float cCurrent = (0.9e-3)*cCurrentDAC/256; 
-        cTempCurrentValues.push_back(cCurrent);
-        std::vector<float> cMeasurements(0);
-        for(uint8_t cIndx = 0; cIndx < 10; cIndx++) { 
-            auto cMeasurement = flpGBTInterface->ReadADC(clpGBT, pADC, "VREF/2", fGain); 
-            if( cMeasurement != 1023 ) cMeasurements.push_back(cMeasurement); 
-        }
-        if( cMeasurements.size() > 0 ) 
-        {
-            float cMean = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
-            float cVoltage  = (cMean)*(fVref/1023); //Vref*( cMean/(512*2.0) - offset2) - offset1; 
-            cTempVoltageReadings.push_back(cVoltage);
-        }
-        else LOG (INFO) << BOLDBLUE << "\t\t Current DAC " << +cCurrentDAC << " no valid ADC readings.." << RESET;
-    }
-    flpGBTInterface->ConfigureCurrentDAC(clpGBT, {pADC}, 0x00);
-    float cLSQResistance  = getLeastSquareSlope<float>( cTempCurrentValues, cTempVoltageReadings)*1e-3;
+    auto cLSQResistance = flpGBTInterface->ReadResistance(clpGBT, pADC, fCurrentDACs, fGain);// in ADC units 
+    cLSQResistance = (cLSQResistance*fVref/1023)*1e-3; // in kOhms 
     float cTinvK          = 1.0/(25+273.5) + (1./pB)*std::log(cLSQResistance/pR0); 
     float cT              = 1.0/cTinvK - 273.5; 
     LOG (INFO) << BOLDBLUE << "Resistance is " << cLSQResistance << " kOhms"
