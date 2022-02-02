@@ -1,22 +1,6 @@
+#if defined(__TCUSB__) && defined(__USE_ROOT__) && defined(__SEH_USB__)
+
 #include "SEHTester.h"
-#include "linearFitter.h"
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <math.h>
-#include <sstream>
-#include <stdlib.h>
-#include <string>
-#include <sys/time.h>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/split.hpp>
-
-using namespace Ph2_HwDescription;
-using namespace Ph2_HwInterface;
-using namespace Ph2_System;
-
-// initialize the static member
 
 SEHTester::SEHTester() : OTHybridTester() {}
 
@@ -84,7 +68,6 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
         throw std::runtime_error("RampPowerSupply cannot be executed");
     }
 
-#ifdef __USE_ROOT__
     // Create TTree for Iout to Iin conversion in DC/DC
     auto cUinIinTree = new TTree("tUinIinTree", "Uin to Iin during power-up");
 
@@ -107,8 +90,6 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
         fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
         std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
-#ifdef __TCUSB__
-#ifdef __SEH_USB__
 #ifdef __TCP_SERVER__
         I_SEH = this->getMeasurement("read_supply:I_SEH");
         U_SEH = this->getMeasurement("read_supply:U_SEH");
@@ -116,9 +97,6 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
         flpGBTInterface->getExternalController()->getInterface().read_supply(flpGBTInterface->getExternalController()->getInterface().I_SEH, I_SEH);
         flpGBTInterface->getExternalController()->getInterface().read_supply(flpGBTInterface->getExternalController()->getInterface().U_SEH, U_SEH);
 #endif
-#endif
-#endif
-
         cIinValVect.push_back(I_SEH);
         cUinValVect.push_back(U_SEH);
         cVolts += 0.1;
@@ -139,8 +117,6 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
     cUinIinGraph->GetYaxis()->SetTitle("Iin [A]");
 
     cUinIinCanvas->Write();
-
-#endif
 }
 
 int SEHTester::exampleFit()
@@ -172,7 +148,7 @@ int SEHTester::exampleFit()
     LOG(INFO) << BOLDBLUE << "Using custom class: Parameter 1  " << Reg_Class.b_0 << " +/- " << Reg_Class.b_0_error << "  Parameter 2   " << Reg_Class.b_1 << " +/- " << Reg_Class.b_1_error << RESET;
     LOG(INFO) << BOLDBLUE << "Using custom class: Parameter 1  " << Reg_Classint.b_0 << " +/- " << Reg_Classint.b_0_error << "  Parameter 2   " << Reg_Classint.b_1 << " +/- " << Reg_Classint.b_1_error
               << RESET;
-#ifdef __USE_ROOT__
+
     auto cGraph = new TGraphErrors(X.size(), X.data(), Y.data(), 0, Yerrors.data());
     cGraph->Fit("pol1");
     cGraph->SetName("test");
@@ -190,15 +166,11 @@ int SEHTester::exampleFit()
     // cEfficencyCanvas->BuildLegend();
     cCanvas->Write();
 
-#endif
     return 0;
 }
 
 void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
 {
-#ifdef __USE_ROOT__
-#ifdef __TCUSB__
-#ifdef __SEH_USB__
     float cUMon  = 0;
     float cVHVJ7 = 0;
     float cVHVJ8 = 0;
@@ -312,17 +284,11 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
 #endif
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     fillSummaryTree("BiasDone", 1);
-#endif
-#endif
-#endif
 }
 void SEHTester::ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTime, std::string powerSupplyId, std::string channelId)
 {
     // time_t startTime;
     // time(&startTime);
-#ifdef __USE_ROOT__
-#ifdef __TCUSB__
-#ifdef __SEH_USB__
     struct timespec startTime, timer;
     srand(time(NULL));
 
@@ -448,15 +414,9 @@ void SEHTester::ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTi
 
     fillSummaryTree("ExternalLeakDone", 1);
 #endif
-#endif
-#endif
-#endif
 }
 void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string channelId)
 {
-#ifdef __USE_ROOT__
-#ifdef __TCUSB__
-#ifdef __SEH_USB__
     // float cHvSet  = 0;
     float cHvMea = 0;
     float cVHVJ7 = 0;
@@ -575,25 +535,16 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
 #endif
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     fillSummaryTree("ExternalBiasDone", 1);
-#endif
-#endif
-#endif
 }
 void SEHTester::SetLoad(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
 {
-#ifdef __TCUSB__
-#ifdef __SEH_USB__
     flpGBTInterface->getExternalController()->getInterface().set_load2(true, false, pLeftLoadValue);
     flpGBTInterface->getExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
-#endif
-#endif
 }
 void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
 {
     // workaround to turn on the bPOL2V5 propertly
 
-#ifdef __TCUSB__
-#ifdef __SEH_USB__
     float T;
     // check if the critical temperature of -35C has been reached
     flpGBTInterface->getExternalController()->getInterface().read_temperature(flpGBTInterface->getExternalController()->getInterface().Temp1, T);
@@ -659,28 +610,19 @@ void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
         flpGBTInterface->getExternalController()->getInterface().set_load2(false, false, pLeftLoadValue); // 1 step = 635uA 0xfff = 2.6A
     }
 #endif
-#endif
-#endif
 }
 void SEHTester::TurnOff()
 {
-#ifdef __TCUSB__
-#ifdef __SEH_USB__
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("TurnOff");
 #else
     flpGBTInterface->getExternalController()->getInterface().set_SehSupply(flpGBTInterface->getExternalController()->getInterface().sehSupply_Off);
-#endif
-#endif
 #endif
 }
 void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 {
     // time_t startTime;
     // time(&startTime);
-#ifdef __USE_ROOT__
-#ifdef __TCUSB__
-#ifdef __SEH_USB__
     struct timespec startTime, timer;
     srand(time(NULL));
 
@@ -776,16 +718,10 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     std::this_thread::sleep_for(std::chrono::milliseconds(30000));
     fillSummaryTree("LeakDone", 1);
 #endif
-#endif
-#endif
-#endif
 }
 
 void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, uint32_t pStep)
 {
-#ifdef __USE_ROOT__
-#ifdef __TCUSB__
-#ifdef __SEH_USB__
     // Create TTree for Iout to Iin conversion in DC/DC
     auto cEfficiencyTree = new TTree("tEfficiency", "DC/DC Efficiency");
     // Create variables for TTree branches
@@ -984,9 +920,6 @@ void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, u
     cIouttoIinCanvas->Write();
 
     fillSummaryTree("EfficiencyDone", 1);
-#endif
-#endif
-#endif
 }
 // Fixed in this context means: The ADC pin is not an AMUX pin
 // Need statistics on spread of RSSI and temperature sensors
@@ -1140,8 +1073,6 @@ void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, u
 
 void SEHTester::TestCardVoltages()
 {
-#ifdef __TCUSB__
-#ifdef __SEH_USB__
     float k;
     auto  c2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
     do
@@ -1151,9 +1082,7 @@ void SEHTester::TestCardVoltages()
 #else
         flpGBTInterface->getExternalController()->getInterface().read_supply(c2SSEHMapIterator->second, k);
 #endif
-#ifdef __USE_ROOT__
         fillSummaryTree(c2SSEHMapIterator->first, k);
-#endif
         c2SSEHMapIterator++;
 
     } while(c2SSEHMapIterator != f2SSEHSupplyMeasurements.end());
@@ -1167,22 +1096,15 @@ void SEHTester::TestCardVoltages()
 #else
         flpGBTInterface->getExternalController()->getInterface().read_supply(d2SSEHMapIterator->second, k);
 #endif
-#ifdef __USE_ROOT__
         fillSummaryTree(d2SSEHMapIterator->first, k);
-#endif
         d2SSEHMapIterator++;
 
     } while(d2SSEHMapIterator != f2SSEHSupplyMeasurements.end());
     // flpGBTInterface->getExternalController()->getInterface().set_SehSupply(flpGBTInterface->getExternalController()->getInterface().sehSupply_Off);
-#endif
-#endif
 }
 
 void SEHTester::DCDCOutputEvaluation()
 {
-#ifdef __USE_ROOT__
-#ifdef __TCUSB__
-#ifdef __SEH_USB__
     std::map<std::string, TC_2SSEH::loadMeasurement> c2SSEHOutputVoltageMeasurements = {
         {"U_P1V2_R", TC_2SSEH::loadMeasurement::U_P1V2_R}, {"U_P1V2_L", TC_2SSEH::loadMeasurement::U_P1V2_L}, {"P2V5_VTRx_MON", TC_2SSEH::loadMeasurement::P2V5_VTRx_MON}};
     std::vector<float> cDCDCValueVect;
@@ -1230,9 +1152,6 @@ void SEHTester::DCDCOutputEvaluation()
     fResultFile->cd();
     cDCDCOutputCanvas->Write();
     cDCDCOutputTree->Write();
-#endif
-#endif
-#endif
 }
 
 void SEHTester::UserFCMDTranslate(const std::string& userFilename = "fcmd_file.txt")
@@ -1810,12 +1729,11 @@ bool SEHTester::FastCommandChecker(BeBoard* pBoard, uint8_t pPattern)
     LOG(INFO) << BOLDBLUE << "Found for CIC_L a minimal bit difference of " << +cMatchL << " for a bit shift of " << +cShiftL << RESET;
     LOG(INFO) << BOLDBLUE << "Found for CIC_R a minimal bit difference of " << +cMatchR << " for a bit shift of " << +cShiftR << RESET;
 
-#ifdef __USE_ROOT__
     fillSummaryTree("FCMD_CIC_R_match", cMatchR);
     fillSummaryTree("FCMD_CIC_L_match", cMatchL);
     fillSummaryTree("FCMD_CIC_R_shift", cShiftR);
     fillSummaryTree("FCMD_CIC_L_shift", cShiftL);
-#endif
+
     if((cMatchR == 0) & (cMatchL == 0))
     {
         LOG(INFO) << BOLDGREEN << "FCMD Test passed" << RESET;
@@ -2042,5 +1960,5 @@ float SEHTester::getMeasurement(std::string name)
     float value = std::stof(this->getVariableValue("value", buffer));
     return value;
 }
-
+#endif
 #endif

@@ -44,6 +44,7 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 **Important webpages:**
 - Mattermost forum: [`cms-it-daq`](https://mattermost.web.cern.ch/cms-it-daq/)
 - DAQ web page: https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/
+- Detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
 
 **FC7 setup:**
 1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of the ethernet card of your PC to which the FC7 is connected to)
@@ -107,7 +108,6 @@ Through `CMSITminiDAQ`, and with the right command line option, you can run the 
 15. Generic DAC-DAC scan
 16. Physics
 ```
-Here you can find a detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
 
 It might be useful to create one `CMSIT.xml` file for each "set" of calibrations. In the following it's reported the suggested sequence of calibrations, implemented in bash shell script:
 ```

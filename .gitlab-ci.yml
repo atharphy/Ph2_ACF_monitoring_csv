@@ -7,16 +7,28 @@
 workflow:
   rules:
     - if: $CI_MERGE_REQUEST_ID
+      when: always
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+      changes: # when any file matching the below is edited, create a pipeline
+        - .gitlab/ci/*
+        - .gitlab/ci/*/*
+        - .gitlab-ci.yml
+      when: always
+      allow_failure: true
 
 image: gitlab-registry.cern.ch/cms-iphc/tk_ph2/dockerimageph2acf
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
-  
+
 stages:
+  - quality
   - compile
   - run
   - check
+
+include:
+  - .gitlab/ci/code-quality.yml
 
 build:
   stage: compile
@@ -28,7 +40,7 @@ build:
     - make -j4
   artifacts:
     paths:
-      - bin/feh_2s_test
+      - bin/ot_module_test
       - bin/commission
       - bin/CMSITminiDAQ
     expire_in: 1 week
@@ -87,7 +99,7 @@ run_on_2S:
     - python ci_tools/status_manager.py 2s_status.txt --set_status 1
     - source ./setup.sh
     - cd ci_tools
-    - feh_2s_test -f CMS2S.xml -t -m -a --findShorts -b
+    - ot_module_test -f CMS2S.xml -t -m -a -b --reconfigure
   after_script:
     - python ci_tools/status_manager.py 2s_status.txt --set_status 0
     - cp ci_tools/Results/*/Hybrid.root .

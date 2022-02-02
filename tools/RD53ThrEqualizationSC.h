@@ -16,11 +16,6 @@
 #include "../DQMUtils/RD53ThrEqualizationHistograms.h"
 #endif
 
-// #############
-// # CONSTANTS #
-// #############
-#define TARGETEFF 0.50 // Target efficiency for optimization algorithm
-
 // #####################################
 // # Threshold equalization test suite #
 // #####################################
@@ -76,7 +71,6 @@ class ThrEqualizationSC : public SCurve
     int         theCurrentRun;
     bool        doUpdateChip;
     bool        doDisplay;
-    bool        saveBinaryData;
 };
 
 #endif

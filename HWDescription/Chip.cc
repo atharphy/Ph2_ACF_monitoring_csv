@@ -42,8 +42,7 @@ ChipRegItem Chip::getRegItem(const std::string& pReg)
 
     if(i != std::end(fRegMap)) return (i->second);
 
-    if(!pReg.empty()) { LOG(INFO) << "EMPTY"; }
-    LOG(ERROR) << "Error, no register " << pReg << " found in the RegisterMap of Chip " << +fChipId << "!";
+    LOG(ERROR) << BOLDRED << "Error, no register " << BOLDYELLOW << pReg << BOLDRED << " found in the RegisterMap of ChipID: " << BOLDYELLOW << +fChipId << RESET;
     throw Exception("Chip: no matching register found");
     return cItem;
 }

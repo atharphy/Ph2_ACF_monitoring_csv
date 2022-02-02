@@ -10,16 +10,13 @@
  */
 #ifndef SEHTester_h__
 #define SEHTester_h__
-#ifdef __USE_ROOT__
+#if defined(__TCUSB__) && defined(__SEH_USB__) && defined(__USE_ROOT__)
 
 #include "OTHybridTester.h"
 //
-#ifdef __TCUSB__
 #include "USB_a.h"
 #include "USB_libusb.h"
-#endif
 
-#ifdef __USE_ROOT__
 #include "TAxis.h"
 #include "TF1.h"
 #include "TGraph.h"
@@ -33,20 +30,28 @@
 #include "TString.h"
 #include "TStyle.h"
 #include "TTree.h"
-#endif
+
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <math.h>
+#include <sstream>
+#include <stdlib.h>
+#include <string>
+#include <sys/time.h>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/split.hpp>
 
 using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+using namespace Ph2_System;
 
 class SEHTester : public OTHybridTester
 {
   public:
     SEHTester();
     ~SEHTester();
-
-#ifdef __TCUSB__
-    // TC_2SSEH fTC_2SSEH;
-// TC_PSROH fTC_PSROH;
-#endif
 
     void Initialise();
     void Start(int currentRun);
@@ -124,7 +129,7 @@ class SEHTester : public OTHybridTester
         {{"cic_in_6", 0}, {"cic_in_5", 1}, {"cic_in_4", 2}, {"cic_in_3", 3}, {"cic_in_2", 4}, {"cic_in_1", 5}, {"cic_in_0", 6}, {"r_i2c_sda_i", 7}, {"l_i2c_sda_i", 8}, {"na", 9}};
 
     static const int NBRAMADDR = 1024;
-#ifdef __TCUSB__
+
     std::map<std::string, TC_2SSEH::supplyMeasurement> f2SSEHSupplyMeasurements = {{"U_P5V", TC_2SSEH::supplyMeasurement::U_P5V},
                                                                                    {"I_P5V", TC_2SSEH::supplyMeasurement::I_P5V},
                                                                                    {"U_P3V3", TC_2SSEH::supplyMeasurement::U_P3V3},
@@ -147,12 +152,11 @@ class SEHTester : public OTHybridTester
                                                                                              {"Temp3", TC_2SSEH::temperatureMeasurement::Temp3},
                                                                                              {"Temp_SEH", TC_2SSEH::temperatureMeasurement::Temp_SEH}};
 
-    std::map<std::string, TC_2SSEH::resetMeasurement> f2SSEHResetLines = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
+    std::map<std::string, TC_2SSEH::resetMeasurement> f2SSEHResetLines   = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
                                                                           {"RST_CIC_R", TC_2SSEH::resetMeasurement::RST_CIC_R},
                                                                           {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
                                                                           {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
-#endif
-    std::map<std::string, float> fDefaultParameters = {{"Spannung", 2},
+    std::map<std::string, float>                      fDefaultParameters = {{"Spannung", 2},
                                                        {"Strom", 0.5},
                                                        {"HV", 1},
                                                        {"VMON_P1V25_L_Nominal", 0.806},

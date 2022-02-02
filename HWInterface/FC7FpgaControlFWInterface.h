@@ -1,21 +1,16 @@
 #ifndef _FC7FpgaControlFWInterface_H__
 #define __FC7FpgaControlFWInterface_H__
 
+#include "../HWInterface/D19cFpgaConfig.h"
 #include "BeBoardFWInterface.h"
 #include <string>
 
 namespace Ph2_HwInterface
 {
-class D19cFpgaConfig;
-class FC7FpgaControlFWInterface : public BeBoardFWInterface
+class FC7FpgaControlFWInterface
 {
   public:
-    FC7FpgaControlFWInterface(const char* puHalConfigFileName, uint32_t pBoardId);
-    FC7FpgaControlFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler);
-
-    FC7FpgaControlFWInterface(const char* pId, const char* pUri, const char* pAddressTable);
-    FC7FpgaControlFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler);
-    ~FC7FpgaControlFWInterface();
+    FC7FpgaControlFWInterface(BeBoardFWInterface* fBeBoardFW) : fFpgaConfig(nullptr), fBeBoardFW(fBeBoardFW){};
 
     void                     Initialize();
     void                     FlashProm(const std::string& strConfig, const char* pstrFile);
@@ -28,8 +23,8 @@ class FC7FpgaControlFWInterface : public BeBoardFWInterface
     void                     RebootBoard();
 
   private:
-    D19cFpgaConfig* fFpgaConfig{nullptr};
-
-}; // namespace Ph2_HwInterface
+    D19cFpgaConfig*     fFpgaConfig;
+    BeBoardFWInterface* fBeBoardFW;
+};
 } // namespace Ph2_HwInterface
 #endif

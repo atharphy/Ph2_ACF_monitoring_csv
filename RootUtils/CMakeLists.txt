@@ -19,6 +19,11 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     link_directories(${UHAL_LOG_LIB_PREFIX})
     link_directories(${UHAL_GRAMMARS_LIB_PREFIX})
 
+    # Boost also needs to be linked
+    include_directories(${Boost_INCLUDE_DIRS})
+    link_directories(${Boost_LIBRARY_DIRS})
+    set(LIBS ${LIBS} ${Boost_FILESYSTEM_LIBRARY} ${Boost_ITERATOR_LIBRARY})
+
     # Find source files
     file(GLOB HEADERS *.h)
     file(GLOB SOURCES *.cc)

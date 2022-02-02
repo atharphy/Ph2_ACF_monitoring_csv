@@ -51,10 +51,7 @@ class ThrEqualization : public PixelAlive
         uint16_t moreIterationsVCal = 1;
         uint16_t nIterationsTDAC    = floor(log2(frontEnd->nTDACvalues) + 2);
         uint16_t moreIterationsTDAC = 1;
-        return PixelAlive::getNumberIterations() * (nIterationsVCal + moreIterationsVCal) +
-               ((RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol, doOnlyNGroups) * (nIterationsTDAC + moreIterationsTDAC)) +
-                nIterationsTDAC) *
-                   nEvents / nEvtsBurst;
+        return PixelAlive::getNumberIterations() * ((nIterationsVCal + moreIterationsVCal) + (nIterationsTDAC + moreIterationsTDAC));
     }
     void saveChipRegisters(int currentRun);
 
@@ -63,37 +60,26 @@ class ThrEqualization : public PixelAlive
 #endif
 
   private:
-    size_t rowStart;
-    size_t rowStop;
-    size_t colStart;
-    size_t colStop;
     size_t nEvents;
     size_t nEvtsBurst;
     size_t startValue;
     size_t stopValue;
-    size_t nSteps;
-    size_t nHITxCol;
-    bool   doFast;
-    size_t doOnlyNGroups;
 
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
-    std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
-    DetectorDataContainer                    theOccContainer;
-    DetectorDataContainer                    theTDACcontainer;
+    std::shared_ptr<DetectorDataContainer> theOccContainer;
+    DetectorDataContainer                  theTDACcontainer;
 
     void fillHisto();
     void bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue);
     void bitWiseScanLocal(const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
     void chipErrorReport() const;
-    void copyAndResetContainer(DetectorDataContainer& fromContainer, DetectorDataContainer& toContainer);
 
   protected:
     std::string fileRes;
     int         theCurrentRun;
     bool        doUpdateChip;
     bool        doDisplay;
-    bool        saveBinaryData;
 };
 
 #endif

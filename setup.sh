@@ -3,20 +3,10 @@
 ##########
 # CACTUS #
 ##########
-export CACTUSBIN=/opt/cactus/bin
-export CACTUSLIB=/opt/cactus/lib
-export CACTUSINCLUDE=/opt/cactus/include
-export CACTUSROOT=/opt/cactus/
-#export CACTUSROOT=/opt/cactus_from_source/uhal/
-
-#export CACTUSINCLUDE=$CACTUSROOT/uhal/include/
-#export CACTUSLIB=$CACTUSROOT/uhal/lib
-
-#export CACTUSLOGINCLUDE=$CACTUSROOT/log/include/
-#export CACTUSLOGLIB=$CACTUSROOT/log/lib/
-
-#export CACTUSGRAMMARINCLUDE=$CACTUSROOT/grammars/include/
-#export CACTUSGRAMMARLIB=$CACTUSROOT/grammars/lib/
+export CACTUSROOT=/opt/cactus
+export CACTUSBIN=$CACTUSROOT/bin
+export CACTUSLIB=$CACTUSROOT/lib
+export CACTUSINCLUDE=$CACTUSROOT/include
 
 #########
 # BOOST #
@@ -62,9 +52,7 @@ export PH2ACF_BASE_DIR=$(pwd)
 # External Plugins #
 ####################
 export EXTERNAL_TOOLS_BASE_DIR=${PH2ACF_BASE_DIR%/*}
-# if in the docker container I want to do this .. need to figure out how to make sure that this 
-# is set-up correctly 
-#export EXTERNAL_TOOLS_BASE_DIR=/home/cmsTkUser 
+# if in the docker container I want to do this .. need to figure out how to make sure that this is set-up correctly
 export AMC13DIR=$CACTUSINCLUDE/amc13
 export ANTENNADIR=$EXTERNAL_TOOLS_BASE_DIR/CMSPh2_AntennaDriver
 export USBINSTDIR=$EXTERNAL_TOOLS_BASE_DIR/Ph2_USBInstDriver

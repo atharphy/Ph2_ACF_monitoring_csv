@@ -35,9 +35,8 @@ void DQMHistogramCicFEAlignment::book(TFile* theOutputFile, DetectorContainer& t
 
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
 
-    HistContainer<TH2F> hManualPhaseScan("ManualPhaseScan", ";CIC Input Sampling Phase; Output SLVS Line", 15 , 0, 15, 5, 0, 5);
+    HistContainer<TH2F> hManualPhaseScan("ManualPhaseScan", ";CIC Input Sampling Phase; Output SLVS Line", 15, 0, 15, 5, 0, 5);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fManualPhaseScan, hManualPhaseScan);
-
 }
 
 //========================================================================================================================
@@ -63,7 +62,7 @@ void DQMHistogramCicFEAlignment::process()
                     cHistogram->GetXaxis()->SetTitle("CIC Input Sampling Phase");
                     cHistogram->GetYaxis()->SetTitle("Output SLVS Line");
                     cHistogram->GetZaxis()->SetTitle("Number of successfully transmitted bits");
-                    cHistogram->GetXaxis()->SetRangeUser(0,15);
+                    cHistogram->GetXaxis()->SetRangeUser(0, 15);
                     cHistogram->DrawCopy();
                 }
             }
@@ -74,8 +73,6 @@ void DQMHistogramCicFEAlignment::process()
 //========================================================================================================================
 
 void DQMHistogramCicFEAlignment::reset(void) {}
-
-
 
 void DQMHistogramCicFEAlignment::parseSettings(const Ph2_System::SettingsMap& pSettingsMap)
 {
@@ -96,24 +93,24 @@ void DQMHistogramCicFEAlignment::fillManualPhaseScan(uint8_t pPhase, uint8_t pLi
 {
     for(auto board: pErrors)
     {
-        auto& cBrdData     = pData.at(board->getIndex());
-        auto& cBrdHist     = fManualPhaseScan.at(board->getIndex());
+        auto& cBrdData = pData.at(board->getIndex());
+        auto& cBrdHist = fManualPhaseScan.at(board->getIndex());
         for(auto opticalGroup: *board)
         {
-            auto& cOGData     = cBrdData->at(opticalGroup->getIndex());
-            auto& cOGHist        = cBrdHist->at(opticalGroup->getIndex());
+            auto& cOGData = cBrdData->at(opticalGroup->getIndex());
+            auto& cOGHist = cBrdHist->at(opticalGroup->getIndex());
             for(auto hybrid: *opticalGroup)
             {
-                auto& cHybrdData        = cOGData->at(hybrid->getIndex());
-                auto& cHybrdHist        = cOGHist->at(hybrid->getIndex());
+                auto& cHybrdData = cOGData->at(hybrid->getIndex());
+                auto& cHybrdHist = cOGHist->at(hybrid->getIndex());
                 for(auto chip: *hybrid)
                 {
-                    auto& cChipData           = cHybrdData->at(chip->getIndex());
-                    auto& cInputData          = cChipData->getSummary<std::string>();
-                    auto& cErrors           = chip->getSummary<uint32_t>();
-                    TH2F* cChipHist        = cHybrdHist->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                    auto cBin        = cChipHist->FindBin(pPhase, pLine); 
-                    auto cBinContent = cChipHist->GetBinContent(cBin);
+                    auto& cChipData   = cHybrdData->at(chip->getIndex());
+                    auto& cInputData  = cChipData->getSummary<std::string>();
+                    auto& cErrors     = chip->getSummary<uint32_t>();
+                    TH2F* cChipHist   = cHybrdHist->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    auto  cBin        = cChipHist->FindBin(pPhase, pLine);
+                    auto  cBinContent = cChipHist->GetBinContent(cBin);
                     cChipHist->SetBinContent(cBin, cBinContent + cInputData.length() - cErrors);
                     LOG(DEBUG) << BOLDYELLOW << "Chip#" << +chip->getId() << " " << cChipHist->GetBinContent(cBin) << " correctly transmitted bits " << RESET;
                 }

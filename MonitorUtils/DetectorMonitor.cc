@@ -15,7 +15,7 @@ DetectorMonitor::DetectorMonitor(const Ph2_System::SystemController* theSystemCo
     }
     catch(std::exception& e)
     {
-        LOG(ERROR) << "Exceptin when trying to create MonitorResults Directory: " << e.what();
+        LOG(ERROR) << "Exceptin when trying to create MonitorResults directory: " << e.what();
     }
 
     std::string monitorOutputFileName = monitorOutputDir + "/" + "MonitorDQM" + currentDateTime() + ".root";

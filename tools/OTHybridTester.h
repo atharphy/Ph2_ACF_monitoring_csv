@@ -12,10 +12,13 @@
 #ifndef OTHybridTester_h__
 #define OTHybridTester_h__
 
-#include "../HWInterface/DPInterface.h"
-#include "Tool.h"
+#if defined(__TCUSB__) && defined(__USE_ROOT__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
 
-#ifdef __USE_ROOT__
+#include "../HWInterface/DPInterface.h"
+#include "D19cDebugFWInterface.h"
+#include "Tool.h"
+#include "linearFitter.h"
+
 #include "TAxis.h"
 #include "TF1.h"
 #include "TGraph.h"
@@ -34,9 +37,8 @@
 #include <string>
 
 using namespace Ph2_HwDescription;
-
-// class TC_2SSEH;
-// class TC_PSROH;
+using namespace Ph2_HwInterface;
+using namespace Ph2_System;
 
 class OTHybridTester : public Tool
 {
@@ -81,7 +83,6 @@ class OTHybridTester : public Tool
     std::string getVariableValue(std::string variable, std::string buffer);
 
   protected:
-#ifdef __TCUSB__
     std::map<std::string, uint8_t> f2SSEHGPILines = {
         {"PG2V5", 13},
         {"PG1V25", 14},
@@ -116,14 +117,13 @@ class OTHybridTester : public Tool
                                                                           {"RST_CBC_L", TC_2SSEH::resetMeasurement::RST_CBC_L},
                                                                           {"RST_CIC_L", TC_2SSEH::resetMeasurement::RST_CIC_L}};
 
-    std::map<std::string, TC_PSROH::measurement> fResetLines = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
+    std::map<std::string, TC_PSROH::measurement> fResetLines             = {{"L_MPA", TC_PSROH::measurement::L_MPA_RST},
                                                                 {"L_CIC", TC_PSROH::measurement::L_CIC_RST},
                                                                 {"L_SSA", TC_PSROH::measurement::L_SSA_RST},
                                                                 {"R_MPA", TC_PSROH::measurement::R_MPA_RST},
                                                                 {"R_CIC", TC_PSROH::measurement::R_CIC_RST},
                                                                 {"R_SSA", TC_PSROH::measurement::R_SSA_RST}};
-#endif
-    std::map<std::string, float>       f2SSEHDefaultParameters = {{"Spannung", 2},
+    std::map<std::string, float>                 f2SSEHDefaultParameters = {{"Spannung", 2},
                                                             {"Strom", 0.5},
                                                             {"HV", 1},
                                                             {"VMON_P1V25_L_Nominal", 0.806},
@@ -132,7 +132,7 @@ class OTHybridTester : public Tool
                                                             {"VTRX+_RSSI_ADC_Nominal", 0.6},
                                                             {"PTAT_BPOL2V5_Nominal", 0.6},
                                                             {"PTAT_BPOL12V_Nominal", 0.6}};
-    std::map<std::string, std::string> f2SSEHADCInputMap =
+    std::map<std::string, std::string>           f2SSEHADCInputMap =
         {{"AMUX_L", "ADC0"}, {"VMON_P1V25_L", "ADC1"}, {"VMIN", "ADC2"}, {"AMUX_R", "ADC3"}, {"TEMPP", "ADC4"}, {"VTRX+_RSSI_ADC", "ADC5"}, {"PTAT_BPOL2V5", "ADC6"}, {"PTAT_BPOL12V", "ADC7"}};
     std::map<std::string, std::string> fPSROHADCInputMap            = {{"L_AMUX_OUT", "ADC0"},
                                                             {"1V_MONITOR", "ADC1"},
@@ -155,16 +155,6 @@ class OTHybridTester : public Tool
     std::map<uint8_t, std::string>     fI2CStatusMap                = {{4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
 
     std::map<std::string, uint8_t> fBackendAlignmentLineMap = {{"SSA_FCMD_L", 0}, {"SSA_FCMD_R", 1}, {"CIC_FCMD_L", 2}, {"CIC_FCMD_R", 3}, {"2S_R", 1}, {"2S_L", 2}};
-
-  protected:
-#ifdef __TCUSB__
-#ifdef __ROH_USB__
-    TC_PSROH* fTC_USB;
-#elif __SEH_USB__
-    TC_2SSEH* fTC_USB;
-#endif
-#endif
 };
-
 #endif
 #endif

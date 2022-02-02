@@ -587,7 +587,7 @@ int main(int argc, char* argv[])
     if(!cmd.foundOption("read") && cmd.foundOption("reconfigure"))
     {
         cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
-        
+
         // map MPA outputs for PS module
         PSAlignment cPSAlignment;
         cPSAlignment.Inherit(&cTool);
