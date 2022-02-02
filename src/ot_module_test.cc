@@ -17,6 +17,7 @@
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
+#include "tools/OTTemperature.h"
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -225,180 +226,13 @@ int main(int argc, char* argv[])
     {
         LOG(INFO) << BOLDBLUE << "Reading internal monitors from lpGBT-ADCs.." << RESET;
         auto cGain = (cmd.foundOption("readMonitors")) ? convertAnyInt(cmd.optionValue("readMonitors").c_str()) : 0;
-
-        for(const auto cBoard: *cTool.fDetectorContainer)
-        {
-            for(auto cOpticalGroup: *cBoard)
-            {
-                auto& clpGBT = cOpticalGroup->flpGBT;
-                if(clpGBT == nullptr) continue;
-
-                
-                float Vref = 0.87;
-                std::vector<std::string> cVoltages = {"VREF/2","VDDIO", "VDD", "VDDA", "TEMP"};
-                std::vector<float> cVoltageADCReadings;
-                for(auto cVoltageADC: cVoltages)
-                {
-                    std::vector<float> cMeasurements(0);
-                    for(uint8_t cIndx = 0; cIndx < 10; cIndx++) { 
-                        cMeasurements.push_back(cTool.flpGBTInterface->ReadADC(clpGBT, cVoltageADC,"VREF/2", cGain)); 
-                    }
-                    float cMean = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
-                    float cVoltage  = (cMean)*(Vref/1023); 
-                    LOG(INFO) << BOLDBLUE << "Gain of " << +cGain << "\t" 
-                                  << cVoltageADC 
-                                  << " ADC reading " << cMean 
-                                  << " converted voltage " << cVoltage
-                                  << RESET;
-                    cVoltageADCReadings.push_back(cMean);
-                }
-
-                bool cWith2S = true;
-                std::vector<std::string> cReferenceADC = {"ADC2"};
-                if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) { cWith2S = false; cReferenceADC.clear(); }
-                for(auto cRefADC: cReferenceADC)
-                {
-                    float cExpected = (10.4 * 0.49 / 10.);// for 2S modules powered at 10.4 V
-                    std::vector<float> cMeasurements(0);
-                    for(uint8_t cIndx = 0; cIndx < 10; cIndx++) { cMeasurements.push_back(cTool.flpGBTInterface->ReadADC(clpGBT, cRefADC, "VREF/2", cGain)); }
-                    float cMean = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
-                    float cVoltage  = (cMean)*(Vref/1023); 
-                    LOG(INFO) << BOLDBLUE << "Gain of " << +cGain << "\t" 
-                                  << cRefADC 
-                                  << " ADC reading " << cMean 
-                                  << " converted voltage " << cVoltage
-                                  << " expected voltage is " << cExpected 
-                                  << " offset is " << std::fabs(cVoltage-cExpected)
-                                  << RESET;
-                    
-                }
-
-                std::vector<uint8_t> cCurrentDACs{0x01, 0x02 , 0x03 , 0x04, 0x05 , 0x07, 0x10, 0x12 , 0x15};
-                std::vector<std::string> cTemperatures = {"ADC4"};
-                for(auto cTempADC: cTemperatures)
-                {
-                    std::vector<float> cTempVoltageReadings;
-                    std::vector<float> cTempCurrentValues;
-                    LOG(INFO) << BOLDBLUE << "Gain of " << +cGain << "\t"  << cTempADC 
-                        << " will measure resistance using " << cCurrentDACs.size() << " current values" << RESET;
-                    for( auto cCurrentDAC : cCurrentDACs )
-                    {
-                        cTool.flpGBTInterface->ConfigureCurrentDAC(clpGBT, {cTempADC} , cCurrentDAC);
-                        float cCurrent = (0.9e-3)*cCurrentDAC/256; 
-                        cTempCurrentValues.push_back(cCurrent);
-                        std::vector<float> cMeasurements(0);
-                        for(uint8_t cIndx = 0; cIndx < 10; cIndx++) { 
-                            auto cMeasurement = cTool.flpGBTInterface->ReadADC(clpGBT, cTempADC, "VREF/2", cGain); 
-                            if( cMeasurement != 1023 ) cMeasurements.push_back(cMeasurement); 
-                        }
-                        if( cMeasurements.size() > 0 ) 
-                        {
-                            float cMean = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
-                            float cVoltage  = (cMean)*(Vref/1023); //Vref*( cMean/(512*2.0) - offset2) - offset1; 
-                            if( cWith2S ) LOG (DEBUG) << RESET;
-                            LOG(INFO) << BOLDBLUE << "\t\t Current DAC " << +cCurrentDAC << " ADC reading " << cMean 
-                                    << " converted voltage " << cVoltage
-                                    << " current setting is " << cCurrent << " A "
-                                    << RESET;
-                            cTempVoltageReadings.push_back(cVoltage);
-                        }
-                        else LOG (INFO) << BOLDBLUE << "\t\t Current DAC " << +cCurrentDAC << " no valid ADC readings.." << RESET;
-                    }
-                    cTool.flpGBTInterface->ConfigureCurrentDAC(clpGBT, {cTempADC}, 0x00);
-                    std::vector<float> cSlopes(0);
-                    for(size_t cIndx=1; cIndx < cTempVoltageReadings.size(); cIndx++)
-                    {
-                        auto  cNum = (cTempVoltageReadings[cIndx] - cTempVoltageReadings[cIndx-1]);
-                        auto  cDenom   = (cTempCurrentValues[cIndx]-cTempCurrentValues[cIndx-1]);
-                        if( cDenom != 0 )
-                        {
-                            float cSlope = cNum/cDenom;
-                            //LOG(INFO) << BOLDBLUE << "\t\t Slope is " << cSlope << RESET;
-                            cSlopes.push_back(cSlope);
-                        }
-                    }
-                    float cMeanResistance = std::accumulate(cSlopes.begin(), cSlopes.end(), 0.)*1e-3 / cSlopes.size();
-                    float cLSQResistance  = getLeastSquareSlope<float>( cTempCurrentValues, cTempVoltageReadings)*1e-3;
-                    float cR0             = cWith2S ? 10.0 : 1.0; 
-                    float cB              = cWith2S ? 3950 : 3500; 
-                    float cTinvK          = 1.0/(25+273.5) + (1./cB)*std::log(cMeanResistance/cR0); 
-                    float cT              = 1.0/cTinvK - 273.5; 
-                    LOG (INFO) << BOLDBLUE << "Mean resistance is " << cMeanResistance << " kOhms"
-                        << " least squares method is " << cLSQResistance 
-                        << " R[25°C] is " << cR0 
-                        << " temperature [inv K ] " << cTinvK 
-                        << " temperature in celsius is " << cT
-                        <<  RESET;
-                        
-                }
-            }
-        }
+        OTTemperature cTemperatureReader;
+        cTemperatureReader.Inherit(&cTool);
+        cTemperatureReader.SetGain(cGain);
+        cTemperatureReader.Start(0);
+        cTemperatureReader.waitForRunToBeCompleted();
     }
     
-    if(cmd.foundOption("readTemperatures"))
-    {
-        LOG(INFO) << BOLDBLUE << "Reading temperatures from lpGBT-ADCs.." << RESET;
-        // auto cCurrentDAC = (cmd.foundOption("readTemperatures")) ? convertAnyInt(cmd.optionValue("readTemperatures").c_str()) : 0x10;
-
-        for(const auto cBoard: *cTool.fDetectorContainer)
-        {
-            for(auto cOpticalGroup: *cBoard)
-            {
-                auto& clpGBT = cOpticalGroup->flpGBT;
-                if(clpGBT == nullptr) continue;
-
-                std::vector<std::string> cVoltages = {"VDD", "VDDA", "TEMP"};
-                std::vector<float> cVoltageADCReadings;
-                for(auto cVoltageADC: cVoltages)
-                {
-                    std::vector<float> cMeasurements(0);
-                    for(uint8_t cIndx = 0; cIndx < 10; cIndx++) { 
-                        cMeasurements.push_back(cTool.flpGBTInterface->ReadADC(clpGBT, cVoltageADC)); 
-                        LOG(DEBUG) << BOLDBLUE << "\t..." << cVoltageADC << " : " << cMeasurements[cMeasurements.size()-1] << RESET;
-                    }
-                    float cMean = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
-                    LOG(INFO) << BOLDBLUE << cVoltageADC << " : " << cMean << RESET;
-                    cVoltageADCReadings.push_back(cMean);
-                }
-
-                
-                // std::vector<std::string> cReferenceADC = {"ADC2"};
-                // std::vector<float>       cCorrections;
-                // // change once we have a reference for PS
-                // if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) { cReferenceADC[0] = "ADC2"; }
-                // float cExpected = (10.4 * 0.49 / 10.) * 1024;
-                // if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) { cExpected = 0; }
-
-                // for(auto cRefADC: cReferenceADC)
-                // {
-                //     std::vector<float> cMeasurements(0);
-                //     for(uint8_t cIndx = 0; cIndx < 10; cIndx++) { cMeasurements.push_back(cTool.flpGBTInterface->ReadADC(clpGBT, cRefADC)); }
-                //     float cMean = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
-                //     LOG(INFO) << BOLDBLUE << cRefADC << " : " << cMean << " expected ADC reading is " << cExpected << RESET;
-                //     cCorrections.push_back(cMean - cExpected);
-                // }
-
-                // // constants for different NTCs
-                // std::vector<float> cCoefs{-177.029, 267.091, -0.125408};
-                // // change once we have a reference for PS
-                // if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS)
-                // {
-                //     std::vector<float> cCoefsPS = {-177.029, 267.091, -0.125408};
-                //     cCoefs                      = cCoefsPS;
-                // }
-                // float cVoltageDrop           = cTempADCReadings[1] * 1.0 / 1024;
-                // float cCorrectedVoltageDrop  = (cTempADCReadings[1] - cCorrections[0]) * 1.0 / 1024;
-                // float cCurrent               = (0.9 * cCurrentDAC / 256) / 1e3;
-                // float cTemperatureSensor     = cCoefs[0] + cCoefs[1] * std::pow(cVoltageDrop * 1e-3 / cCurrent, cCoefs[2]);
-                // float cTemperatureSensorCorr = cCoefs[0] + cCoefs[1] * std::pow(cCorrectedVoltageDrop * 1e-3 / cCurrent, cCoefs[2]);
-                // LOG(DEBUG) << BOLDMAGENTA << "Corrected temperature reading [ADC units] " << cCorrectedVoltageDrop << RESET;
-                // LOG(DEBUG) << BOLDMAGENTA << "Resistance " << cCorrectedVoltageDrop * 1e-3 / cCurrent << " kOhm" << RESET;
-                // LOG(INFO) << BOLDMAGENTA << "Temperature of sensor [via NTC + lpGBT] is " << cTemperatureSensor << " [ corr is " << cTemperatureSensorCorr << " ] " << RESET;
-
-            } // configure lpGBT
-        }
-    }
-
     if(cmd.foundOption("calibrateADC"))
     {
         LOG(INFO) << BOLDBLUE << "Calibrating ADC.." << RESET;

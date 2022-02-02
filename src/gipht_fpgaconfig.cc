@@ -3,27 +3,19 @@
 #include <string>
 #include <vector>
 
-#include "../HWDescription/BeBoard.h"
-#include "../HWDescription/Chip.h"
-#include "../HWDescription/Definition.h"
-#include "../HWDescription/Hybrid.h"
-#include "../HWInterface/BeBoardInterface.h"
-#include "../HWInterface/ChipInterface.h"
-#include "../System/SystemController.h"
-#include "../Utils/ConsoleColor.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/argvparser.h"
+#define __NAMEDPIPE__
+#ifdef __NAMEDPIPE__
+#include "gui_logger.h"
+#endif
+
+#include "System/SystemController.h"
+#include "Utils/argvparser.h"
 #include "FC7FpgaControlFWInterface.h"
-
-#include "../Utils/gui_logger.h"
-
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
-
 using namespace CommandLineProcessing;
-
 INITIALIZE_EASYLOGGINGPP
 
 class AcqVisitor : public HwInterfaceVisitor
@@ -292,7 +284,7 @@ int main(int argc, char* argv[])
         {
             std::stringstream ss;
             ss << "Upload FW " << cFWFile.c_str();
-            LOG(INFO) << ss;
+            LOG(INFO) << ss.str();
             gui::status(ss.str().c_str());
             gui::progress(0);
             cInterface.FlashProm(strImage, cFWFile.c_str());

@@ -775,7 +775,26 @@ void lpGBTInterface::ConfigureCurrentDAC(Chip* pChip, const std::vector<std::str
         WriteChipReg(pChip, "CURDACCHN", cCURDACCHN);
     }
 }
+void lpGBTInterface::ConfigureInternalMonitoring(Chip* pChip, uint8_t pEnable)
+{
+    WriteChipReg(pChip, "ADCMon", (pEnable == 1 ) ? 0x1F : 0x00 );
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+}
+uint8_t lpGBTInterface::GetInternalTemperature(Chip* pChip)
+{
+    auto cVal = ( ReadChipReg(pChip,"ADCMon") & 0x1F ); 
+    // enable reset on temperature sensor 
+    WriteChipReg(pChip, "ADCMon", ( 1 << 4 | cVal ) );
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    // disable reset on temperature sensor 
+    WriteChipReg(pChip, "ADCMon", ( 0 << 4 | cVal ) );
 
+    std::vector<float> cMeasurements(0);
+    for(uint8_t cIndx = 0; cIndx < 10; cIndx++) { 
+        cMeasurements.push_back(ReadADC(pChip, "TEMP","VREF/2", 0)); 
+    }
+    return std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
+}
 uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain)
 {
     // Read differential (converted) data on two ADC inputs
@@ -784,10 +803,6 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
 
     LOG(DEBUG) << GREEN << "Reading ADC value from " << BOLDYELLOW << pADCInputP << RESET;
 
-    WriteChipReg(pChip, "ADCMon", 0x3F);
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-    WriteChipReg(pChip, "ADCMon", 0x1F);
-    
     // Select ADC Input
     WriteChipReg(pChip, "ADCSelect", cADCInputP << 4 | cADCInputN << 0);
 

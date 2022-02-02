@@ -3,15 +3,8 @@
 #include <string>
 #include <vector>
 
-#include "../HWDescription/BeBoard.h"
-#include "../HWDescription/Chip.h"
-#include "../HWDescription/Definition.h"
-#include "../HWDescription/Hybrid.h"
-#include "../HWInterface/BeBoardInterface.h"
-#include "../HWInterface/ChipInterface.h"
+
 #include "../System/SystemController.h"
-#include "../Utils/ConsoleColor.h"
-#include "../Utils/Utilities.h"
 #include "../Utils/argvparser.h"
 #include "FC7FpgaControlFWInterface.h"
 
