@@ -132,7 +132,7 @@ build:StandAlone_wTC_USB:
 ## IT hybrid
 run_on_IT:
   stage: run
-  dependencies:
+  needs:
     - build:StandAlone_woDS
   before_script:
     - printf $USER_PASS | base64 -d | kinit $USER_NAME
@@ -161,7 +161,7 @@ run_on_IT:
 ## 2S hybrid
 run_on_2S:
   stage: run
-  dependencies:
+  needs:
     - build:StandAlone_woDS
   before_script:
     - printf $USER_PASS | base64 -d | kinit $USER_NAME
