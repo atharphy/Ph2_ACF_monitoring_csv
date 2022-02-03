@@ -245,7 +245,11 @@ int main(int argc, char* argv[])
     /********************/
     /* TEST EYE OPENING */
     /********************/
-    if(cmd.foundOption("eye-monitor")) { cPSROHTester.LpGBTRunEyeOpeningMonitor(7); }
+    if(cmd.foundOption("eye-monitor")) 
+    { 
+      uint8_t cEQAttenuation = cmd.foundOption("eq-attenuation") ? convertAnyInt(cmd.optionValue("eq-attenuation").c_str()) : 0;
+      cPSROHTester.LpGBTRunEyeOpeningMonitor(7, cEQAttenuation); 
+    }
 
     /***********************/
     /* TEST BIT ERROR RATE */
