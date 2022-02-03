@@ -18,12 +18,12 @@
 #ifdef __USE_ROOT__
 #include "TCanvas.h"
 #include "TFile.h"
+#include "TH1.h"
 #include "TObject.h"
 #include "TROOT.h"
 #include "TString.h"
 #include "TSystem.h"
 #include "TTree.h"
-#include "TH1.h"
 #endif
 
 class DetectorContainer;

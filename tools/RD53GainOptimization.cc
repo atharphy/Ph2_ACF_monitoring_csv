@@ -262,7 +262,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, const float
         Gain::run();
         auto output = Gain::analyze();
         output->resetNormalizationStatus();
-        output->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), 1);
+        output->normalizeAndAverageContainers(fDetectorContainer, this->getChannelGroupHandlerContainer(), 1);
 
         // ##############################################
         // # Send periodic data to monitor the progress #

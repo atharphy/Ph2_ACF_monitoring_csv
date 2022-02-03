@@ -58,20 +58,11 @@ class PixelAlive : public Tool
 #endif
 
   private:
-    size_t rowStart;
-    size_t rowStop;
-    size_t colStart;
-    size_t colStop;
-    size_t nEvents;
-    size_t nEvtsBurst;
-    size_t nHITxCol;
-    float  thrOccupancy;
-    bool   unstuckPixels;
+    bool unstuckPixels;
 
-    std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
-    std::shared_ptr<DetectorDataContainer>   theOccContainer;
-    DetectorDataContainer                    theBCIDContainer;
-    DetectorDataContainer                    theTrgIDContainer;
+    std::shared_ptr<DetectorDataContainer> theOccContainer;
+    DetectorDataContainer                  theBCIDContainer;
+    DetectorDataContainer                  theTrgIDContainer;
 
     void fillHisto();
     void chipErrorReport() const;
@@ -87,12 +78,23 @@ class PixelAlive : public Tool
 
     std::string fileRes;
     int         theCurrentRun;
-    bool        doUpdateChip;
-    bool        doDisplay;
+    size_t      rowStart;
+    size_t      rowStop;
+    size_t      colStart;
+    size_t      colStop;
+    size_t      nEvents;
+    size_t      nEvtsBurst;
+    size_t      nTRIGxEvent;
+    size_t      nHITxCol;
+    float       thrOccupancy;
     bool        doFast;
     size_t      doOnlyNGroups;
+    bool        doDisplay;
+    bool        doUpdateChip;
     bool        saveBinaryData;
     bool        saveData;
+
+    std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
 };
 
 #endif

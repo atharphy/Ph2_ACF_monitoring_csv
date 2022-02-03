@@ -103,20 +103,6 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 
     fAllChan = pAllChan;
 
-<<<<<<< HEAD
-    fSkipMaskedChannels          = findValueInSettings("SkipMaskedChannels", 0);
-    fMaskChannelsFromOtherGroups = findValueInSettings("MaskChannelsFromOtherGroups", 1);
-    fPlotSCurves                 = findValueInSettings("PlotSCurves", 0);
-    fFitSCurves                  = findValueInSettings("FitSCurves", 0);
-    fPulseAmplitude              = findValueInSettings("PedeNoisePulseAmplitude", 0);
-    fEventsPerPoint              = findValueInSettings("Nevents", 10);
-    fNEventsPerBurst             = 0xffff;
-    fNEventsToValidate           = findValueInSettings("Nevents_Validation", 100000);
-    fMaskingThreshold            = findValueInSettings("Masking_Threshold", 0.001);
-    fMaskNoisyChannels           = findValueInSettings("MaskNoisyChannels", 0);
-
-    LOG(INFO) << BOLDRED << "I8" << RESET;
-=======
     fSkipMaskedChannels          = findValueInSettings<double>("SkipMaskedChannels", 0);
     fMaskChannelsFromOtherGroups = findValueInSettings<double>("MaskChannelsFromOtherGroups", 1);
     fPlotSCurves                 = findValueInSettings<double>("PlotSCurves", 0);
@@ -126,11 +112,14 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fUseFixRange                 = findValueInSettings<double>("PedeNoiseUseFixRange", 0);
     fMinThreshold                = findValueInSettings<double>("PedeNoiseMinThreshold", 0);
     fMaxThreshold                = findValueInSettings<double>("PedeNoiseMaxThreshold", 1023);
+    fNEventsPerBurst             = 0xffff;
+    fNEventsToValidate           = findValueInSettings("Nevents_Validation", 100000);
+    fMaskingThreshold            = findValueInSettings("Masking_Threshold", 0.001);
+    fMaskNoisyChannels           = findValueInSettings("MaskNoisyChannels", 0);
 
     fNEventsPerBurst = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
     // uint8_t cEnableFastCounterReadout = (uint8_t)findValueInSettings<double>("EnableFastCounterReadout", 0);
     // uint8_t cEnablePairSelect         = (uint8_t)findValueInSettings<double>("EnablePairSelect", 0);
->>>>>>> Dev
     LOG(INFO) << "Parsed settings:";
     LOG(INFO) << " Nevents = " << fEventsPerPoint;
     // LOG(INFO) << " Fast Counter Readout [PS] " << +cEnableFastCounterReadout << RESET;

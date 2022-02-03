@@ -1069,7 +1069,6 @@ int main(int argc, char* argv[])
         // Runs on 10*Nevents
         CMTester cTester;
         cTester.Inherit(&cTool);
-        cTester.StartHttpServer(8082);
         cTester.Initialize();
         cTester.SetTotalNoise(cNoiseV);
 

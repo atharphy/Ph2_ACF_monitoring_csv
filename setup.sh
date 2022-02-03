@@ -3,10 +3,10 @@
 ##########
 # CACTUS #
 ##########
-export CACTUSBIN=/opt/cactus/bin
-export CACTUSLIB=/opt/cactus/lib
-export CACTUSINCLUDE=/opt/cactus/include
-export CACTUSROOT=/opt/cactus/
+export CACTUSROOT=/opt/cactus
+export CACTUSBIN=$CACTUSROOT/bin
+export CACTUSLIB=$CACTUSROOT/lib
+export CACTUSINCLUDE=$CACTUSROOT/include
 
 #########
 # BOOST #
@@ -52,9 +52,7 @@ export PH2ACF_BASE_DIR=$(pwd)
 # External Plugins #
 ####################
 export EXTERNAL_TOOLS_BASE_DIR=${PH2ACF_BASE_DIR%/*}
-# if in the docker container I want to do this .. need to figure out how to make sure that this 
-# is set-up correctly 
-#export EXTERNAL_TOOLS_BASE_DIR=/home/cmsTkUser 
+# if in the docker container I want to do this .. need to figure out how to make sure that this is set-up correctly
 export AMC13DIR=$CACTUSINCLUDE/amc13
 export ANTENNADIR=$EXTERNAL_TOOLS_BASE_DIR/CMSPh2_AntennaDriver
 export USBINSTDIR=$EXTERNAL_TOOLS_BASE_DIR/Ph2_USBInstDriver
@@ -103,12 +101,12 @@ export EuDaqFlag='-D__EUDAQ__'
 ################
 
 # Stand-alone application, without data streaming
-export CompileForHerd=false
-export CompileForShep=false
+# export CompileForHerd=false
+# export CompileForShep=false
 
 # Stand-alone application, with data streaming
-# export CompileForHerd=true
-# export CompileForShep=true
+export CompileForHerd=true
+export CompileForShep=true
 
 # Herd application
 # export CompileForHerd=true

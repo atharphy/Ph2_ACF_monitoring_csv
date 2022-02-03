@@ -9,125 +9,91 @@
 
 #include "RD53eudaqProducer.h"
 
-RD53eudaqProducer::RD53eudaqProducer(Ph2_System::SystemController& RD53SysCntr, const std::string& configFile, const std::string& producerName, const std::string& runControl)
-    : eudaq::Producer(producerName, runControl), configFile(configFile)
+void RD53eudaqProducer::DoReset()
 {
-    try
-    {
-        doExit = false;
-        RD53sysCntrPhys.Inherit(&RD53SysCntr);
-        RD53sysCntrPhys.setGenericEvtConverter(RD53eudaqProducer::RD53eudaqEvtConverter(this));
-
-        this->SetConnectionState(eudaq::ConnectionState::STATE_UNINIT, "RD53eudaqProducer::Uninitialized");
-    }
-    catch(...)
-    {
-        this->SetConnectionState(eudaq::ConnectionState::STATE_ERROR, "RD53eudaqProducer::Constructor Error");
-    }
+    RD53sysCntrPhys.Stop();
+    RD53eudaqProducer::DoTerminate();
 }
 
-void RD53eudaqProducer::OnReset()
+void RD53eudaqProducer::DoInitialise()
 {
-    try
-    {
-        RD53sysCntrPhys.Stop();
-
-        this->SetConnectionState(eudaq::ConnectionState::STATE_UNINIT, "RD53eudaqProducer::Uninitialized");
-    }
-    catch(...)
-    {
-        this->SetConnectionState(eudaq::ConnectionState::STATE_ERROR, "RD53eudaqProducer::Resetting Error");
-    }
+    std::stringstream outp;
+    RD53sysCntrPhys.InitializeHw(configFile, outp, true, false);
+    RD53sysCntrPhys.InitializeSettings(configFile, outp);
+    nTRIGxEvent = RD53sysCntrPhys.findValueInSettings<double>("nTRIGxEvent");
 }
 
-void RD53eudaqProducer::OnInitialise(const eudaq::Configuration& param)
-{
-    try
-    {
-        std::stringstream outp;
-        RD53sysCntrPhys.InitializeHw(configFile, outp, true, false);
-        RD53sysCntrPhys.InitializeSettings(configFile, outp);
+void RD53eudaqProducer::DoConfigure() { RD53sysCntrPhys.localConfigure(); }
 
-        this->SetConnectionState(eudaq::ConnectionState::STATE_UNCONF, "RD53eudaqProducer::Unconfigured");
-    }
-    catch(...)
-    {
-        this->SetConnectionState(eudaq::ConnectionState::STATE_ERROR, "RD53eudaqProducer::Initialisation Error");
-    }
+void RD53eudaqProducer::DoStartRun()
+{
+    // #################################
+    // # Reconfigure all readout chips #
+    // #################################
+    LOG(INFO) << GREEN << "[RD53eudaqProducer::OnStartRun] Reconfiguring all readout chips" << RESET;
+    for(const auto cBoard: *RD53sysCntrPhys.fDetectorContainer)
+        for(auto cOpticalGroup: *cBoard)
+            for(auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid) static_cast<Ph2_HwInterface::RD53Interface*>(RD53sysCntrPhys.fReadoutChipInterface)->ConfigureChip(cChip);
+
+    theRunNumber = GetRunNumber();
+    swTrigCnt    = 0;
+
+    // #####################
+    // # Send a BORE event #
+    // #####################
+    // auto ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
+    // ev->SetBORE();
+    // RD53eudaqProducer::MySendEvent(std::move(ev));
+
+    // #############################
+    // # Add extra event if needed #
+    // #############################
+    // ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
+    // ev->SetTriggerN(swTrigCnt++);
+    // this->MySendEvent(std::move(ev));
+
+    // ###################################################
+    // # Get configuration directly from EUDAQ framework #
+    // ###################################################
+    std::string fileName("Run" + RD53Shared::fromInt2Str(theRunNumber) + "_Physics");
+    RD53sysCntrPhys.initializeFiles(fileName);
+    RD53sysCntrPhys.Start(theRunNumber);
+
+    doExit = false;
 }
 
-void RD53eudaqProducer::OnConfigure(const eudaq::Configuration& param)
+void RD53eudaqProducer::DoStopRun()
 {
-    try
-    {
-        RD53sysCntrPhys.localConfigure();
+    RD53sysCntrPhys.Stop();
 
-        this->SetConnectionState(eudaq::ConnectionState::STATE_CONF, "RD53eudaqProducer::Configured");
-    }
-    catch(...)
-    {
-        this->SetConnectionState(eudaq::ConnectionState::STATE_ERROR, "RD53eudaqProducer::Configuration Error");
-    }
+    // #####################
+    // # Send a EORE event #
+    // #####################
+    auto ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
+    ev->SetEORE();
+    RD53eudaqProducer::MySendEvent(std::move(ev));
+
+    // ###########################
+    // # Copy configuration file #
+    // ###########################
+    const auto configFileBasename = configFile.substr(configFile.find_last_of("/\\") + 1);
+    const auto outputConfigFile   = std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(theRunNumber) + "_" + configFileBasename;
+    system(("cp " + configFile + " " + outputConfigFile).c_str());
+
+    // #####################
+    // # Update run number #
+    // #####################
+    std::ofstream fileRunNumberOut;
+    theRunNumber++;
+    fileRunNumberOut.open(EUDAQ::FILERUNNUMBER, std::ios::out);
+    if(fileRunNumberOut.is_open() == true) fileRunNumberOut << RD53Shared::fromInt2Str(theRunNumber) << std::endl;
+    fileRunNumberOut.close();
+
+    RD53eudaqProducer::DoTerminate();
 }
 
-void RD53eudaqProducer::OnStartRun(unsigned runNumber)
-{
-    try
-    {
-        theRunNumber = runNumber;
-        evCounter    = 0;
-
-        // #####################
-        // # Send a BORE event #
-        // #####################
-        eudaq::RawDataEvent evBORE(eudaq::RawDataEvent::BORE(EUDAQ::EVENT, theRunNumber));
-        RD53eudaqProducer::MySendEvent(evBORE);
-
-        // ###################################################
-        // # Get configuration directly from EUDAQ framework #
-        // ###################################################
-        // auto eudaqConf = this->GetConfiguration();
-        // std::string fileName(eudaqConf->Get("Results", "Run" + RD53Shared::fromInt2Str(runNumber) + "_Physics"));
-        std::string fileName("Run" + RD53Shared::fromInt2Str(theRunNumber) + "_Physics");
-        RD53sysCntrPhys.initializeFiles(fileName);
-        RD53sysCntrPhys.Start(theRunNumber);
-
-        this->SetConnectionState(eudaq::ConnectionState::STATE_RUNNING, "RD53eudaqProducer::Running");
-    }
-    catch(...)
-    {
-        this->SetConnectionState(eudaq::ConnectionState::STATE_ERROR, "RD53eudaqProducer::Running Error");
-    }
-}
-
-void RD53eudaqProducer::OnStopRun()
-{
-    try
-    {
-        RD53sysCntrPhys.Stop();
-
-        // #####################
-        // # Send a EORE event #
-        // #####################
-        eudaq::RawDataEvent evEORE(eudaq::RawDataEvent::EORE(EUDAQ::EVENT, theRunNumber, evCounter));
-        RD53eudaqProducer::MySendEvent(evEORE);
-
-        // ###########################
-        // # Copy configuration file #
-        // ###########################
-        const auto configFileBasename = configFile.substr(configFile.find_last_of("/\\") + 1);
-        const auto outputConfigFile   = std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(theRunNumber) + "_" + configFileBasename;
-        system(("cp " + configFile + " " + outputConfigFile).c_str());
-
-        this->SetConnectionState(eudaq::ConnectionState::STATE_CONF, "RD53eudaqProducer::Configured");
-    }
-    catch(...)
-    {
-        this->SetConnectionState(eudaq::ConnectionState::STATE_ERROR, "RD53eudaqProducer::Stopping Error");
-    }
-}
-
-void RD53eudaqProducer::OnTerminate()
+void RD53eudaqProducer::DoTerminate()
 {
     std::unique_lock<std::mutex> theGuard(theMtx);
     doExit = true;
@@ -135,15 +101,29 @@ void RD53eudaqProducer::OnTerminate()
     wakeUp.notify_one();
 }
 
-void RD53eudaqProducer::MainLoop()
+void RD53eudaqProducer::RunLoop()
 {
     std::unique_lock<std::mutex> theGuard(theMtx);
     wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 
-void RD53eudaqProducer::MySendEvent(eudaq::Event& theEvent)
+void RD53eudaqProducer::Creator(Ph2_System::SystemController& RD53SysCntr, const std::string& fileName)
 {
-    while(true)
+    configFile = fileName;
+    doExit     = false;
+    RD53sysCntrPhys.Inherit(&RD53SysCntr);
+    RD53sysCntrPhys.setGenericEvtConverter(RD53eudaqProducer::RD53eudaqEvtConverter(this));
+}
+
+void RD53eudaqProducer::MainLoop()
+{
+    while(this->IsConnected() == true) std::this_thread::sleep_for(std::chrono::milliseconds(EUDAQ::WAIT));
+}
+
+void RD53eudaqProducer::MySendEvent(eudaq::EventSP theEvent)
+{
+    const auto MAXATTEMPTS = 2;
+    for(auto i = 0; i < MAXATTEMPTS; i++)
     {
         try
         {
@@ -152,7 +132,7 @@ void RD53eudaqProducer::MySendEvent(eudaq::Event& theEvent)
         }
         catch(...)
         {
-            std::cout << "Resource unavailable" << std::endl;
+            std::cout << "[RD53eudaqProducer::MySendEvent] Resource unavailable, attempt " << i + 1 << "/" << MAXATTEMPTS << std::endl;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(EUDAQ::WAIT));
     }
@@ -165,10 +145,11 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
         size_t it = 0;
         while(it < RD53EvtList.size())
         {
-            eudaq::RawDataEvent eudaqEvent(EUDAQ::EVENT, eudaqProducer->theRunNumber, eudaqProducer->evCounter);
-
-            auto                      tluTrigId = RD53EvtList[it].tlu_trigger_id;
-            CMSITEventData::EventData theEvent{std::time(nullptr), RD53EvtList[it].l1a_counter, RD53EvtList[it].tdc, RD53EvtList[it].bx_counter, tluTrigId, {}};
+            auto                      ev         = eudaq::Event::MakeUnique(EUDAQ::EVENT);
+            auto                      eudaqEvent = static_cast<eudaq::RawEvent*>(ev.get());
+            auto                      tluTrigId  = RD53EvtList[it].tlu_trigger_id;
+            CMSITEventData::EventData theEvent{std::time(nullptr), eudaqProducer->nTRIGxEvent, RD53EvtList[it].l1a_counter, RD53EvtList[it].tdc, RD53EvtList[it].bx_counter, tluTrigId, {}};
+            ev->SetTriggerN(eudaqProducer->swTrigCnt++);
 
             // ##################################################
             // # Collect all hits that have same TLU trigger ID #
@@ -198,10 +179,13 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
             theArchive << theEvent;
             const std::string& theStream = theSerialized.str();
 
-            eudaqEvent.AddBlock(eudaqProducer->evCounter, theStream.c_str(), theStream.size());
-            eudaqProducer->MySendEvent(eudaqEvent);
-
-            eudaqProducer->evCounter++;
+            eudaqEvent->AddBlock(0, theStream.c_str(), theStream.size());
+            eudaqProducer->MySendEvent(std::move(ev));
         }
     }
+}
+
+namespace
+{
+auto dummy0 = eudaq::Factory<eudaq::Producer>::Register<RD53eudaqProducer, const std::string&, const std::string&>(RD53eudaqProducer::m_id_factory);
 }
