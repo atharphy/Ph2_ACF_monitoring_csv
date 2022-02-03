@@ -16,6 +16,23 @@ set(BoldMagenta "${Esc}[1;35m")
 set(BoldCyan    "${Esc}[1;36m")
 set(BoldWhite   "${Esc}[1;37m")
 
+include(ExternalProject)
+set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
+
+
+# ExternalProject_Add(googletest
+#     GIT_REPOSITORY https://github.com/google/googletest
+#     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
+# )
+# MESSAGE(STATUS "${EXTERNAL_INSTALL_LOCATION}")
+
+# include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
+# link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
+
+# # add_executable(FirstTest main.cpp)
+# # add_dependencies(FirstTest googletest)
+# # target_link_libraries(FirstTest gtest gtest_main pthread)
+
 if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     MESSAGE(STATUS " ")
@@ -133,8 +150,17 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # Ph2_TCUSB [USB control of hybrids]
     if ($ENV{CompileWithTCUSB})
-      find_package(PH2_TCUSB)
-      if(PH2_TCUSB_FOUND)
+        find_package(PH2_TCUSB)
+
+        if(NOT PH2_TCUSB_FOUND)
+            message(STATUS "    Couldn't find PH2_TCUSB. Obtaining from gitlab ref $ENV{PH2_TCUSB_REF}")
+            ExternalProject_Add( proj_tcusb 
+                    GIT_REPOSITORY https://gitlab.cern.ch/cms_tk_ph2/cmsph2_tcusb.git
+                    GIT_TAG $ENV{PH2_TCUSB_REF}
+                    INSTALL_COMMAND : # This will skip the install step
+                )
+        endif(NOT PH2_TCUSB_FOUND)
+
         if($ENV{UseTCUSBforROH})
             message(STATUS "    Building the ROH TestCards USB components")
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforROHFlag}")
@@ -142,19 +168,22 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
             message(STATUS "    Building the SEH TestCards USB components")
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
         endif($ENV{UseTCUSBforROH})
+
         if($ENV{UseTCUSBTcpServer})
             message(STATUS "    Building the components to use the TCP Server")
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBTcpServerFlag}")
         endif($ENV{UseTCUSBTcpServer})
-      endif(PH2_TCUSB_FOUND)
+
     endif($ENV{CompileWithTCUSB})
 
     # EUDAQ
-    if ($ENV{CompileWithEUDAQ})
+    if ($ENV{CompileWithEUDAQ}) # Asked for EUDAQ
         set(USE_EUDAQ ON)
-        include_directories($ENV{EUDAQDIR}/include)
-        set(EUDAQ_LIB -L$ENV{EUDAQLIB} eudaq_core)
-        message(STATUS "    EUDAQ variable is defined. EUDAQ directory: $ENV{EUDAQDIR}")
+        if ($ENV{EUDAQDIR}) # User is providing installation
+            include_directories($ENV{EUDAQDIR}/include)
+            set(EUDAQ_LIB -L$ENV{EUDAQLIB} eudaq_core)
+            message(STATUS "    EUDAQ variable is defined. EUDAQ directory: $ENV{EUDAQDIR}")
+        endif($ENV{EUDAQDIR})
     else($ENV{CompileWithEUDAQ})
         message(STATUS "    EUDAQ variable is not defined. Building without EUDAQ producer")
     endif($ENV{CompileWithEUDAQ})
