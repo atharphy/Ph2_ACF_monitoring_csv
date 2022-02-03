@@ -135,7 +135,7 @@ class lpGBTInterface : public ChipInterface
     // ###########################
     // # LpGBT retreive temperature #
     // ###########################
-    uint8_t GetInternalTemperature(Ph2_HwDescription::Chip* pChip); 
+    float GetInternalTemperature(Ph2_HwDescription::Chip* pChip); 
     float   ReadResistance(Ph2_HwDescription::Chip* pChip, std::string pADC, std::vector<uint8_t> pCurrents, uint8_t pGain=0); 
 
     // ####################################

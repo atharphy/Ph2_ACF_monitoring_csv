@@ -780,9 +780,9 @@ void lpGBTInterface::ConfigureInternalMonitoring(Chip* pChip, uint8_t pEnable)
     WriteChipReg(pChip, "ADCMon", (pEnable == 1 ) ? 0x1F : 0x00 );
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 }
-uint8_t lpGBTInterface::GetInternalTemperature(Chip* pChip)
+float lpGBTInterface::GetInternalTemperature(Chip* pChip)
 {
-    auto cVal = ( ReadChipReg(pChip,"ADCMon") & 0x1F ); 
+    auto cVal = ReadChipReg(pChip,"ADCMon"); 
     // enable reset on temperature sensor 
     WriteChipReg(pChip, "ADCMon", ( 1 << 4 | cVal ) );
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
@@ -803,21 +803,26 @@ float lpGBTInterface::ReadResistance(Chip* pChip, std::string pADC, std::vector<
     {
         ConfigureCurrentDAC(pChip, {pADC} , cCurrentDAC);
         float cCurrent = (0.9e-3)*cCurrentDAC/256; 
-        cTempCurrentValues.push_back(cCurrent);
         std::vector<float> cMeasurements(0);
         for(uint8_t cIndx = 0; cIndx < 10; cIndx++) { 
             auto cMeasurement = ReadADC(pChip, pADC, "VREF/2", pGain); 
-            if( cMeasurement != 1023 ) cMeasurements.push_back(cMeasurement); 
+            if( cMeasurement != 1023 ){ 
+                LOG (DEBUG) << BOLDBLUE << "Current DAC " << cCurrentDAC << " \t... " << cMeasurement << RESET;
+                cMeasurements.push_back(cMeasurement); 
+            }
         }
         if( cMeasurements.size() > 0 ) 
         {
             float cMean = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
+            cTempCurrentValues.push_back(cCurrent);
             cTempVoltageReadings.push_back(cMean);
+            LOG (DEBUG) << "Current of " << cCurrent << " mean voltage reading is " << cMean << " ADC units." << RESET;
         }
         else LOG (DEBUG) << BOLDBLUE << "\t\t Current DAC " << +cCurrentDAC << " no valid ADC readings.." << RESET;
     }
     ConfigureCurrentDAC(pChip, {pADC}, 0x00);
-    float cLSQResistance  = (cTempVoltageReadings.size() == 0 ) ? getLeastSquareSlope<float>( cTempCurrentValues, cTempVoltageReadings) : -1 ;
+    float cLSQResistance  = (cTempVoltageReadings.size() != 0 ) ? getLeastSquareSlope<float>( cTempCurrentValues, cTempVoltageReadings) : -1 ;
+    LOG (DEBUG) << BOLDBLUE << "Resistance \t... " << cLSQResistance << RESET;
     return cLSQResistance;
 }
 
