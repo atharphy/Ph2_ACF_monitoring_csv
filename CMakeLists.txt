@@ -150,13 +150,15 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # Ph2_TCUSB [USB control of hybrids]
     if ($ENV{CompileWithTCUSB})
+        message(STATUS "    Building with TCUSB")
         find_package(PH2_TCUSB)
 
         if(NOT PH2_TCUSB_FOUND)
             message(STATUS "    Couldn't find PH2_TCUSB. Obtaining from gitlab ref $ENV{PH2_TCUSB_REF}")
-            ExternalProject_Add( proj_tcusb 
+            ExternalProject_Add( ext_tcusb 
                     GIT_REPOSITORY https://gitlab.cern.ch/cms_tk_ph2/cmsph2_tcusb.git
                     GIT_TAG $ENV{PH2_TCUSB_REF}
+                    PREFIX ${CMAKE_CURRENT_BINARY_DIR}
                     INSTALL_COMMAND : # This will skip the install step
                 )
         endif(NOT PH2_TCUSB_FOUND)
@@ -178,12 +180,21 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # EUDAQ
     if ($ENV{CompileWithEUDAQ}) # Asked for EUDAQ
+        message(STATUS "    Building with EUDAQ")
         set(USE_EUDAQ ON)
-        if ($ENV{EUDAQDIR}) # User is providing installation
-            include_directories($ENV{EUDAQDIR}/include)
-            set(EUDAQ_LIB -L$ENV{EUDAQLIB} eudaq_core)
-            message(STATUS "    EUDAQ variable is defined. EUDAQ directory: $ENV{EUDAQDIR}")
-        endif($ENV{EUDAQDIR})
+        if(NOT $ENV{EUDAQDIR})
+            message(STATUS "    Couldn't find EUDAQ. Obtaining from gitlab ref $ENV{EUDAQ_REF}")
+            ExternalProject_Add( ext_eudaq 
+                    GIT_REPOSITORY https://gitlab.cern.ch/cms_tk_ph2/eudaq.git
+                    GIT_TAG $ENV{EUDAQ_REF}
+                    PREFIX ${CMAKE_CURRENT_BINARY_DIR}
+                )
+            set(ENV{EUDAQDIR} ${CMAKE_CURRENT_BINARY_DIR}/src/ext_eudaq/ )
+        endif(NOT $ENV{EUDAQDIR})
+
+        include_directories($ENV{EUDAQDIR}/include)
+        set(EUDAQ_LIB -L$ENV{EUDAQDIR}/lib eudaq_core)
+        message(STATUS "    EUDAQ variable is defined. EUDAQ directory: $ENV{EUDAQDIR}")
     else($ENV{CompileWithEUDAQ})
         message(STATUS "    EUDAQ variable is not defined. Building without EUDAQ producer")
     endif($ENV{CompileWithEUDAQ})
