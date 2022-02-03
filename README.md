@@ -81,8 +81,8 @@ A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/
 11. Run the command: `CMSITminiDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSITminiDAQ --help` for help)
 
 **N.B.:**
-  - a skeleton/template file to build your own IT mini DAQ can be found in `src/templateCMSITminiDAQ.cc`
-  - to syncrhonize only the submodule: git submodule sync; git submodule update --init --recursive --remote
+   - a skeleton/template file to build your own IT mini DAQ can be found in `src/templateCMSITminiDAQ.cc`
+   - to syncrhonize only the submodule: git submodule sync; git submodule update --init --recursive --remote
 
 **Basic list of commands for the `fpgaconfig` program (run from the `choose_a_name` directory):**
 - Run the command: `fpgaconfig -c CMSIT.xml -l` to check which firmware is on the microSD card
