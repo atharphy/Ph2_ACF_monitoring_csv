@@ -46,7 +46,7 @@ include:
   script:
     - mkdir -p build; cd build
     - cmake ..
-    - make -j4
+    - make -j1 #4
 
 # Stand-alone application, without data streaming
 build:StandAlone_woDS:
