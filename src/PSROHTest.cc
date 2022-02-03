@@ -71,6 +71,9 @@ int main(int argc, char* argv[])
     // run Eye Opening Monitor
     cmd.defineOption("eye-monitor", "Run Eye Opening Monitor test");
     cmd.defineOptionAlternative("eye-monitor", "eom");
+    //
+    cmd.defineOption("eq-attenuation", "EQ attenuation for eye opening measurement", ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("eq-attenuation", "eqa");
     // run Bit Error Test
     cmd.defineOption("bit-error-rate", "Run Bit Error Rate test");
     cmd.defineOptionAlternative("bit-error-rate", "ber");
@@ -106,9 +109,14 @@ int main(int argc, char* argv[])
     // Test VTRx+ registers
     cmd.defineOption("testVTRx+", "Test testVTRx+ slow control");
     cmd.defineOptionAlternative("testVTRx+", "v");
+    // Check ROM
+    cmd.defineOption("test-rom", "Test ROM loading [only lpGBT-v1]");
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
+
+    //
+    cmd.defineOption("hybridId", "Name or serial number of ROH", ArgvParser::OptionRequiresValue);
 
     int result = cmd.parse(argc, argv);
     if(result != ArgvParser::NoParserError)
