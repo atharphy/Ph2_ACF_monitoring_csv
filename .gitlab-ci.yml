@@ -114,10 +114,23 @@ build:StandAlone_wEUDAQ:
     - export UseTCUSBforROH=false
     - export UseTCUSBTcpServer=false
 
+# Herd application with EUDAQ libraries
+build:HerdApplication_wEUDAQ:
+  extends: .build
+  before_script:
+    - source ./setup.sh
+    - export CompileForHerd=true
+    - export CompileForShep=false
+    - export CompileWithEUDAQ=true
+    - export CompileWithTCUSB=false
+    - export UseTCUSBforROH=false
+    - export UseTCUSBTcpServer=false
+
 # Compile with TC_USB library
 build:StandAlone_wTC_USB:
   extends: .build
   before_script:
+    - yum install libusb-devel
     - source ./setup.sh
     - export CompileForHerd=false
     - export CompileForShep=false
