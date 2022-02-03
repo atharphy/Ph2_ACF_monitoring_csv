@@ -105,37 +105,32 @@ void RD53Event::addBoardInfo2Events(const BeBoard* pBoard, std::vector<RD53Event
 
 void RD53Event::fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup)
 {
-    size_t chipIndx = 0; // Fabio: not sure if it is correct, but before was left uninitialized...
-
     for(const auto& cOpticalGroup: *boardContainer)
         for(const auto& cHybrid: *cOpticalGroup)
             for(const auto& cChip: *cHybrid)
-                if((eventStatus == RD53FWEvtEncoder::GOOD) && (RD53Event::isHittedChip(cHybrid->getId(), cChip->getId(), chipIndx) == true))
-                {
-                    // auto cTestChannelGroup = getChannelGroup(theChannelGroupHandler, groupNumber, cOpticalGroup->getId(), cHybrid->getId(), cChip->getId());
-                    // if(!cTestChannelGroup) continue;
-
-                    fillChipDataContainer(cChip, testChannelGroup, cHybrid->getId());
-                }
+                    RD53Event::fillChipDataContainer(cChip, testChannelGroup, cHybrid->getId());
 }
 
 void RD53Event::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId)
 {
-    bool   vectorRequired = chipContainer->isSummaryContainerType<Summary<GenericDataVector, OccupancyAndPh>>();
-    size_t chipIndx       = 0; // Fabio: not sure if it is correct, but before was left uninitialized...
+    bool vectorRequired = chipContainer->isSummaryContainerType<Summary<GenericDataVector, OccupancyAndPh>>();
+    size_t chipIndx;
 
-    if(vectorRequired == true)
+    if((eventStatus == RD53FWEvtEncoder::GOOD) && (RD53Event::isHittedChip(hybridId, chipContainer->getId(), chipIndx) == true))
     {
-        chipContainer->getSummary<GenericDataVector, OccupancyAndPh>().data1.push_back(chip_frames_events[chipIndx].second.bc_id);
-        chipContainer->getSummary<GenericDataVector, OccupancyAndPh>().data2.push_back(chip_frames_events[chipIndx].second.trigger_id);
-    }
+        if(vectorRequired == true)
+        {
+            chipContainer->getSummary<GenericDataVector, OccupancyAndPh>().data1.push_back(chip_frames_events[chipIndx].second.bc_id);
+            chipContainer->getSummary<GenericDataVector, OccupancyAndPh>().data2.push_back(chip_frames_events[chipIndx].second.trigger_id);
+        }
 
-    for(const auto& hit: chip_frames_events[chipIndx].second.hit_data)
-    {
-        chipContainer->getChannel<OccupancyAndPh>(hit.row, hit.col).fOccupancy++;
-        chipContainer->getChannel<OccupancyAndPh>(hit.row, hit.col).fPh += static_cast<float>(hit.tot);
-        chipContainer->getChannel<OccupancyAndPh>(hit.row, hit.col).fPhError += static_cast<float>(hit.tot * hit.tot);
-        if(testChannelGroup->isChannelEnabled(hit.row, hit.col) == false) chipContainer->getChannel<OccupancyAndPh>(hit.row, hit.col).readoutError = true;
+        for(const auto& hit: chip_frames_events[chipIndx].second.hit_data)
+        {
+            chipContainer->getChannel<OccupancyAndPh>(hit.row, hit.col).fOccupancy++;
+            chipContainer->getChannel<OccupancyAndPh>(hit.row, hit.col).fPh += static_cast<float>(hit.tot);
+            chipContainer->getChannel<OccupancyAndPh>(hit.row, hit.col).fPhError += static_cast<float>(hit.tot * hit.tot);
+            if(testChannelGroup->isChannelEnabled(hit.row, hit.col) == false) chipContainer->getChannel<OccupancyAndPh>(hit.row, hit.col).readoutError = true;
+        }
     }
 }
 
