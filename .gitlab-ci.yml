@@ -130,7 +130,7 @@ build:HerdApplication_wEUDAQ:
 build:StandAlone_wTC_USB:
   extends: .build
   before_script:
-    - yum install -y libusb-devel
+    - yum install -y libusb-devel libusbx-devel
     - source ./setup.sh
     - export CompileForHerd=false
     - export CompileForShep=false
