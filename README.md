@@ -70,7 +70,7 @@ A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/
 **IT-DAQ setup and run:**
 1. `sudo yum install pugixml-devel` (if necesary run `sudo yum install epel-release` before point 1.)
 2. Install: `boost` by running `sudo yum install boost-devel`, `CERN ROOT` from https://root.cern.ch, and `IPbus` from http://ipbus.web.cern.ch/ipbus (either using `sudo yum` or from source)
-3. Checkout the DAQ code from git: `git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git`
+3. Checkout the DAQ code from git: `git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git` (N.B. to syncrhonize only the submodule: `git submodule sync; git submodule update --init --recursive --remote`)
 4. `cd Ph2_ACF; source setup.sh; mkdir myBuild; cd myBuild; cmake ..; make -j4; cd ..`
 5. `mkdir choose_a_name`
 6. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
@@ -80,9 +80,7 @@ A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/
 10. Run the command: `CMSITminiDAQ -f CMSIT.xml -r` to reset the FC7 (just once)
 11. Run the command: `CMSITminiDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSITminiDAQ --help` for help)
 
-**N.B.:**
-   - a skeleton/template file to build your own IT mini DAQ can be found in `src/templateCMSITminiDAQ.cc`
-   - to syncrhonize only the submodule: git submodule sync; git submodule update --init --recursive --remote
+**N.B.:** a skeleton/template file to build your own IT mini DAQ can be found in `src/templateCMSITminiDAQ.cc`
 
 **Basic list of commands for the `fpgaconfig` program (run from the `choose_a_name` directory):**
 - Run the command: `fpgaconfig -c CMSIT.xml -l` to check which firmware is on the microSD card
