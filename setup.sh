@@ -101,12 +101,12 @@ export EuDaqFlag='-D__EUDAQ__'
 ################
 
 # Stand-alone application, without data streaming
-# export CompileForHerd=false
-# export CompileForShep=false
+export CompileForHerd=false
+export CompileForShep=false
 
 # Stand-alone application, with data streaming
-export CompileForHerd=true
-export CompileForShep=true
+# export CompileForHerd=true
+# export CompileForShep=true
 
 # Herd application
 # export CompileForHerd=true
@@ -126,7 +126,7 @@ export UseTCUSBTcpServer=false
 
 # Clang-format command
 if command -v clang-format &> /dev/null; then
-  clang_command="clang-format"
+ clang_command="clang-format" 
 else
   clang_command="/opt/rh/llvm-toolset-7.0/root/usr/bin/clang-format"
 fi

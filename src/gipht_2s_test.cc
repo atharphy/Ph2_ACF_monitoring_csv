@@ -17,7 +17,6 @@
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
-#include "tools/CMTester.h"
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -35,6 +34,10 @@
 
 #ifdef __NAMEDPIPE__
 #include "gui_logger.h"
+#endif
+
+#ifdef __ANTENNA__
+#include "Antenna.h"
 #endif
 
 using namespace Ph2_HwDescription;
@@ -77,10 +80,21 @@ std::vector<uint8_t> getArgs(std::string pArgsStr)
 
 int main(int argc, char* argv[])
 {
-    // configure the logger
-    el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
+    auto* baseDirChar_p = std::getenv("PH2ACF_BASE_DIR");
+    if(baseDirChar_p == nullptr)
+    {
+        LOG(ERROR) << "Error, the environment variable PH2ACF_BASE_DIR is not initialized (hint: source setup.sh)";
+        exit(1);
+    }
+
+    std::string loggerConfigFile = std::getenv("PH2ACF_BASE_DIR");
+    loggerConfigFile += "/settings/logger.conf";
+    el::Configurations conf(loggerConfigFile);
+
     el::Loggers::reconfigureAllLoggers(conf);
 
+    //el::Helpers::installLogDispatchCallback<gui::LogDispatcher>("GUILogDispatcher");
+    el::Loggers::reconfigureAllLoggers(conf);
     ArgvParser cmd;
 
     // init
@@ -100,8 +114,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("linkTest", "Check data coming over link....", ArgvParser::OptionRequiresValue);
     cmd.defineOption("measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC.");
     cmd.defineOptionAlternative("measurePedeNoise", "m");
-
-    cmd.defineOption("cmNoise", "measure common mode noise");
+    cmd.defineOption("output", "output directory for result files.", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
+    cmd.defineOptionAlternative("output", "o");
 
     cmd.defineOption("read", "Read data from a raw file.  ", ArgvParser::OptionRequiresValue);
     cmd.defineOption("save", "Save the data to a raw file.  ", ArgvParser::NoOptionAttribute);
@@ -116,6 +130,9 @@ int main(int argc, char* argv[])
     cmd.defineOption("reconfigure", "Reconfigure Hardware");
     cmd.defineOption("reload", "Reload settings files and board registers");
     cmd.defineOption("realign", "Re-align module [SSA-MPA] and/or [BE]");
+    
+    cmd.defineOption("gui", "Support for running the test from a guig. The named pipe for communication needs to be passed as parameter. Default: /tmp/guiDummyPipe", ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("gui", "g");
 
     cmd.defineOption("moduleId", "Serial Number of module . Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOption("checkData", "Compare injected hits and stubs with output [please provide a comma seperated list of chips to check]", ArgvParser::OptionRequiresValue);
@@ -155,8 +172,6 @@ int main(int argc, char* argv[])
     cmd.defineOption("scanL1", "Scan L1 Latency ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("scanStubs", "Scan Stub Latency ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("checkCICAlignment", "Manually scan CIC input aligner", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("checkLink", "Check that I can receive constant pattern from link", ArgvParser::OptionRequiresValue);
     //
     cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
 
@@ -167,6 +182,13 @@ int main(int argc, char* argv[])
         LOG(INFO) << cmd.parseErrorDescription(result);
         exit(1);
     }
+    bool        cGui              = (cmd.foundOption("gui"));
+
+    std::string guiPipe = (cGui) ? cmd.optionValue("gui") : "/tmp/guiDummyPipe";
+
+    gui::init(guiPipe.c_str());
+    gui::status("Initializing test");
+    gui::progress(0);
 
     // now query the parsing results
     std::string cHWFile          = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Commissioning.xml";
@@ -177,22 +199,28 @@ int main(int argc, char* argv[])
     std::string cInjectionSource = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
     std::string cSrcLnkTst       = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
     std::string cModuleId        = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
-    std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
-    uint16_t    cRunNumber       = 666;
-    if(!cmd.foundOption("read"))
+    std::string cDirectory       = (cmd.foundOption("output"))  ? cmd.optionValue("output") : "Results/";
+    std::cout << "DIR: " <<cDirectory << std::endl;
+
+
+    uint16_t    cRunNumber;
+    if ( !cmd.foundOption("output") )
     {
-        std::ofstream cRunLog;
-        cRunNumber = returnRunNumber("RunNumbers.dat");
-        cRunLog.open("RunNumbers.dat", std::fstream::app);
-        cRunLog << cRunNumber << "\n";
-        cRunLog.close();
-        LOG(INFO) << BOLDBLUE << "Run number is " << +cRunNumber << RESET;
-        cDirectory += Form("OT_ModuleTest_%s_Run%d", cModuleId.c_str(), cRunNumber);
-    }
-    else
-    {
-        std::string cRawFileName = cmd.foundOption("read") ? cmd.optionValue("read") : "";
-        cDirectory += Form("Raw_%s", cRawFileName.substr(0, cRawFileName.find(".raw")).c_str());
+        if(!cmd.foundOption("read") )
+        {
+            std::ofstream cRunLog;
+            cRunNumber = returnRunNumber("RunNumbers.dat");
+            cRunLog.open("RunNumbers.dat", std::fstream::app);
+            cRunLog << cRunNumber << "\n";
+            cRunLog.close();
+            LOG(INFO) << BOLDBLUE << "Run number is " << +cRunNumber << RESET;
+            cDirectory += Form("OT_ModuleTest_%s_Run%d", cModuleId.c_str(), cRunNumber);
+        }
+        else
+        {
+            std::string cRawFileName = cmd.foundOption("read") ? cmd.optionValue("read") : "";
+            cDirectory += Form("Raw_%s", cRawFileName.substr(0, cRawFileName.find(".raw")).c_str());
+        }
     }
     TApplication cApp("Root Application", &argc, argv);
 
@@ -222,6 +250,10 @@ int main(int argc, char* argv[])
     LOG(INFO) << outp.str();
     cTool.CreateResultDirectory(cDirectory, false, false);
     cTool.InitResultFile(cResultfile);
+
+    gui::message("Hardware configured");
+    gui::progress(0.5 / 10.0);
+
 
     if(cmd.foundOption("readTemperatures"))
     {
@@ -468,6 +500,9 @@ int main(int argc, char* argv[])
 
     // align CIC-lpGBT-BE
 
+    gui::status("Aligning links");
+    gui::progress(0.75 / 10.0);
+
     bool cIgnoreI2c    = false;
     bool cReInitialize = true;
     if(!cmd.foundOption("read") && cmd.foundOption("reconfigure"))
@@ -500,7 +535,9 @@ int main(int argc, char* argv[])
             LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
             return (666);
         }
-
+        gui::message("Backend aligned successfully");
+        gui::status("Aligning CIC");
+        gui::progress(1.75 / 10.0);
         // align FEs - CIC
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit(&cTool);
@@ -508,6 +545,9 @@ int main(int argc, char* argv[])
         cCicAligner.waitForRunToBeCompleted();
         cCicAligner.dumpConfigFiles();
     }
+
+
+
     // reload settings on-to FE chips
     if(!cmd.foundOption("read") && cmd.foundOption("reload"))
     {
@@ -588,15 +628,6 @@ int main(int argc, char* argv[])
         }
     }
 
-    if(!cmd.foundOption("read") && cmd.foundOption("checkCICAlignment"))
-    {
-        // align FEs - CIC
-        CicFEAlignment cCicAligner;
-        cCicAligner.Inherit(&cTool);
-        cCicAligner.Initialise();
-        cCicAligner.InputLineScan();
-        cCicAligner.Reset();
-    }
     // LOG (INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
     // StubBackEndAlignment cStubBackEndAligner;
     // cStubBackEndAligner.Inherit(&cTool);
@@ -604,6 +635,11 @@ int main(int argc, char* argv[])
     // cStubBackEndAligner.waitForRunToBeCompleted();
 
     // equalize thresholds on readout chips
+    // equalize thresholds on readout chips
+    gui::message("CIC aligned successfully");
+    gui::status("Tuning front-end chips");
+    gui::progress(2.75 / 10.0);
+
     if(cmd.foundOption("tuneOffsets") && !cmd.foundOption("read"))
     {
         bool cAllChan = (cmd.foundOption("allChan")) ? true : false;
@@ -623,15 +659,9 @@ int main(int argc, char* argv[])
         // // reset
         // cTool.fDetectorContainer->resetReadoutChipQueryFunction();
     }
-    if(!cmd.foundOption("read") && cmd.foundOption("checkLink"))
-    {
-        uint8_t         cPattern = (cmd.foundOption("checkLink")) ? convertAnyInt(cmd.optionValue("checkLink").c_str()) : 0xEA;
-        LinkAlignmentOT cLinkAlignment;
-        cLinkAlignment.Inherit(&cTool);
-        cLinkAlignment.Initialise();
-        cLinkAlignment.CheckLpgbtOutputs(cPattern);
-        cLinkAlignment.Reset();
-    }
+    gui::message("Front-end chips calibrated successfully.");
+    gui::progress(3.75 / 10.0);
+
     // if(cmd.foundOption("linkTest") && !cmd.foundOption("read"))
     // {
     //     auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
@@ -1001,6 +1031,9 @@ int main(int argc, char* argv[])
         //     }
         // }
 
+        gui::message("Measure Noise");
+        gui::progress(4.75 / 10.0);
+
         bool cAllChan = (cmd.foundOption("allChan")) ? true : false;
         LOG(INFO) << BOLDMAGENTA << "Measuring pedestal and noise" << RESET;
         t.start();
@@ -1011,101 +1044,13 @@ int main(int argc, char* argv[])
         cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
         // cPedeNoise.scanScurves();
         cPedeNoise.measureNoise();
-        cPedeNoise.Validate();
+        // cPedeNoise.Validate();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
         cPedeNoise.Reset();
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
     }
-
-    if( cmd.foundOption("cmNoise") && !cmd.foundOption("read")){
-        
-        int         cManualVcth    = (cmd.foundOption("manualVCTH")) ? convertAnyInt(cmd.optionValue("manualvcth").c_str()) : 0;
-        int         cPedestalShift = (cmd.foundOption("pedestalshift")) ? convertAnyInt(cmd.optionValue("pedestalshift").c_str()) : 0;
-        bool        cAllChan = (cmd.foundOption("allChan")) ? true : false;
-
-        LOG(INFO) << BOLDBLUE << "OT_MODULE_TEST:: Measuring CM Noise" << RESET;
-
-        
-        if(cManualVcth == 0) // Calibrate Voffset
-        {
-            LOG(INFO) << "OT_MODULE_TEST:: Measuring Voffset" << RESET;
-            // Find offsets
-            PedestalEqualization cPedestalEqualization;
-            cPedestalEqualization.Inherit(&cTool);
-            cPedestalEqualization.Initialise(false);
-            cPedestalEqualization.FindVplus();
-            cPedestalEqualization.FindOffsets();
-            cPedestalEqualization.writeObjects();
-            // cPedestalEqualization.dumpConfigFiles();
-        }
-        
-        LOG(INFO) << "OT_MODULE_TEST:: Measuring Noise" << RESET;
-        //first measure noise -- needed for CM test measurement
-        PedeNoise cPedeNoise;
-        cPedeNoise.Inherit(&cTool);
-        cPedeNoise.Initialise(cAllChan, true); // true = all channels (as opposed to test groups)
-        cPedeNoise.measureNoise();
-        // cPedeNoise.Validate(); // This masks noisy channels, already done optionally by CMTester ScanNoiseChannels
-        cPedeNoise.writeObjects();
-        
-        // Set Vcth to pedestal, or overload with manual setting
-        std::vector<double> cNoiseV;
-        ThresholdVisitor    cVisitor(cTool.fReadoutChipInterface, 0);
-        HybridContainer*    cFe = cPedeNoise.fDetectorContainer->at(0)->at(0)->at(0);
-        int                 i   = 0;
-
-        LOG(INFO) << "OT_MODULE_TEST:: Setting threshold on each chip" << RESET;
-        for(auto cCbc: *cFe)
-        {
-            uint16_t cPedestal = 0;  // round (cPedeNoise.getPedestal (cCbc) );
-            double   cNoise    = 0.; // cPedeNoise.getNoise (cCbc);
-            cNoiseV.push_back(cNoise);
-
-            if(cManualVcth == 0)
-            {
-                cPedestal = cVisitor.getThreshold();
-                LOG(INFO) << "threshold is " << cVisitor.getThreshold();  
-                ReadoutChip* theCbc = static_cast<ReadoutChip*>(cCbc);
-                cTool.setSameDac("VCth", cPedestal);
-                //cVisitor.setThreshold(cPedestal + cPedestalShift);
-                cVisitor.visitReadoutChip(*theCbc); // Visit a specific CBC
-                theCbc->accept(cVisitor);           // Should probably make a special Visitor to set a vector of Vcth's
-                LOG(INFO) << BOLDRED << "CBC" << i << ": set threshold to pedestal (" << cPedestal << ") plus " << cPedestalShift << ": " << cPedestal + cPedestalShift << RESET;
-            }
-            else
-            {
-                cVisitor.setThreshold(cManualVcth);
-                cTool.accept(cVisitor); // Do this for all CBCs
-                LOG(INFO) << BOLDRED << "CBC" << i << ": set threshold manually to " << cManualVcth << RESET;
-            }
-
-            i++;
-        }
-
-        LOG(INFO) << "OT_MODULE_TEST:: Measuring Common Noise" << RESET;
-        // Runs on 10*Nevents
-        CMTester cTester;
-        cTester.Inherit(&cTool);
-        cTester.Initialize();
-        cTester.SetTotalNoise(cNoiseV);
-
-        //if(cScan) cTester.ScanNoiseChannels();
-
-        cTester.TakeData();
-        cTester.FinishRun();
-        cTester.SaveResults();
-        cTester.CloseResultFile();
-        cTester.Destroy();
-
-        if(!batchMode) cApp.Run();
-
-
-
-
-    }
-
     // inject hits and stubs using mask and compare input against output
     if(cmd.foundOption("memCheck") && !cmd.foundOption("read"))
     {
@@ -1306,6 +1251,10 @@ int main(int argc, char* argv[])
     if(!batchMode) cApp.Run();
     cGlobalTimer.stop();
     cGlobalTimer.show("Total execution time: ");
+
+    gui::message("Results saved");
+    gui::status("Test done");
+    gui::progress(10.0 / 10.0);
 
     return 0;
 }

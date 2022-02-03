@@ -1,25 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
-  <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="1">
+  <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="1" boardReset="1">
     <!-- B598 skeleton -->
-    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.13.204:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" useI2Cpatch="1"/>
+    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.13.204:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <CDCE configure="0" clockRate="320"/>
     
-    <OpticalGroup Id="0" FMCId="0">
+    <!-- skeleton -->
+    <OpticalGroup Id="0" FMCId="0" reset="1">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="./settings/lpGBTFiles/" />
         <lpGBT Id="0" configfile="CMSOT_lpGBT.txt">
           <Settings
           />
         </lpGBT>
-        <Hybrid Id="0" Status="1">
+        <Hybrid Id="0" Status="1" reset="1">
             <Global>
-                <Settings threshold="550" latency="201"/>
+                <Settings threshold="560" latency="99"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
-                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="0" hipCount="1"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
                 <ChannelMask disable=""/>
-                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+
             </Global>
 
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
@@ -30,20 +32,20 @@
             <CBC Id="4" configfile="CBC3_default.txt" />
             <CBC Id="5" configfile="CBC3_default.txt" />
             <CBC Id="6" configfile="CBC3_default.txt" />
-            <CBC Id="7" configfile="CBC3_default.txt" />
+            <CBC Id="7" configfile="CBC3_default.txt" /> 
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
-            </Hybrid>
-
-        <Hybrid Id="1" Status="1">
+        </Hybrid>
+        <Hybrid Id="1" Status="1" reset="1">
             <Global>
-                <Settings threshold="550" latency="201"/>
+                <Settings threshold="560" latency="99"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
-                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="0" hipCount="1"/>
+                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
                 <ChannelMask disable=""/>
-                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320"/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+
             </Global>
 
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
@@ -54,16 +56,12 @@
             <CBC Id="4" configfile="CBC3_default.txt" />
             <CBC Id="5" configfile="CBC3_default.txt" />
             <CBC Id="6" configfile="CBC3_default.txt" />
-            <CBC Id="7" configfile="CBC3_default.txt" />
+            <CBC Id="7" configfile="CBC3_default.txt" /> 
 
-           
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
-            </Hybrid>
-        
-     </OpticalGroup>
-
-    <!--CONFIG-->
+        </Hybrid>
+    </OpticalGroup>
     <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
     <Register name="clock_source_u7">3</Register> 
     <!-- 3 = 3 = internal oscillator (default), 1 = fmc_l8_clk1, 2 = fmc_l8_clk0, 0 = COAX_IN -->
@@ -71,8 +69,8 @@
     <Register name="fc7_daq_cnfg">
 	   <!-- Sync block control -->
         <Register name="sync_block">
-            <Register name="enable"          >1</Register>
-            <Register name="is_bc0_enable"   >1</Register>
+            <Register name="enable"          >0</Register>
+            <Register name="is_bc0_enable"   >0</Register>
             <Register name="is_resync_enable">0</Register>
             <Register name="delay">10</Register>
             <Register name="num_triggers"    >499</Register>
@@ -89,19 +87,19 @@
         <Register name="fast_command_block">
     		<Register name="triggers_to_accept"> 0 </Register>
     		<Register name="trigger_source"> 3 </Register>
-    		<Register name="user_trigger_frequency"> 10 </Register>
+    		<Register name="user_trigger_frequency"> 5 </Register>
     		<Register name="stubs_mask"> 1 </Register>
             <!--this is the delay for the stub trigger-->
     		<Register name="stub_trigger_delay_value"> 0 </Register>
             <Register name="stub_trigger_veto_length"> 0 </Register>
     		<Register name="test_pulse">
-    			<Register name="delay_after_fast_reset"> 400 </Register>
-    			<Register name="delay_after_test_pulse"> 200 </Register>
-    			<Register name="delay_before_next_pulse"> 300 </Register>
-    			<Register name="en_fast_reset"> 0 </Register>
-    			<Register name="en_test_pulse"> 1 </Register>
-    			<Register name="en_l1a"> 1 </Register>
-    			<Register name="en_shutter"> 0 </Register>
+                <Register name="delay_after_fast_reset"> 100 </Register>
+                <Register name="delay_after_test_pulse"> 100 </Register>
+                <Register name="delay_before_next_pulse"> 200 </Register>
+                <Register name="en_fast_reset"> 0 </Register>
+                <Register name="en_test_pulse"> 1 </Register>
+                <Register name="en_l1a"> 1 </Register>
+                <Register name="en_shutter"> 0 </Register>
     		</Register>
             <Register name="ps_async_delay">
                 <Register name="after_clear_counters"> 200 </Register>
@@ -116,7 +114,7 @@
                 <Register name="antenna"> 0 </Register>
                 <Register name="clear_counters"> 0 </Register>
             </Register>
-            <Register name="ext_trigger_delay_value"> 50 </Register>
+            <Register name="ext_trigger_delay_value"> 75 </Register>
             <Register name="antenna_trigger_delay_value"> 1 </Register>
             <Register name="delay_between_two_consecutive"> 25 </Register>
             <Register name="misc">
@@ -137,7 +135,9 @@
 		</Register>
         <Register name="cic">
                 <Register name = "clock_enable"> 1 </Register>
-                <Register name = "stub_package_delay"> 2 </Register>
+        </Register>
+        <Register name="stubs">
+            <Register name = "stub_package_delay"> 7 </Register>
         </Register>
 	</Register>
 	<!-- Readout Block -->
@@ -150,61 +150,64 @@
                     <Register name="trigger_type"> 0 </Register>
                     <Register name="data_type"> 0 </Register>
                     <!--this is what is commonly known as stub latency-->
-                    <Register name="common_stubdata_delay"> 136 </Register>
+                    <Register name="common_stubdata_delay"> 33 </Register>
             </Register>
     	</Register>
-	<!-- DIO5 Block -->
-	<Register name="dio5_block">
-	    <Register name="dio5_en"> 0 </Register>
+    <!-- DIO5 Block -->
+    <Register name="dio5_block">
+        <Register name="dio5_en"> 1 </Register>
             <Register name="ch1">
-                <Register name="out_enable"> 1 </Register>
-                <Register name="term_enable"> 0 </Register>
-                <Register name="threshold"> 0 </Register>
-            </Register>
-	    <Register name="ch2">
                 <Register name="out_enable"> 0 </Register>
-                <Register name="term_enable"> 0 </Register>
+                <Register name="term_enable"> 1 </Register>
                 <Register name="threshold"> 50 </Register>
             </Register>
-	    <Register name="ch3">
+        <Register name="ch2">
                 <Register name="out_enable"> 1 </Register>
                 <Register name="term_enable"> 0 </Register>
                 <Register name="threshold"> 0 </Register>
             </Register>
-	    <Register name="ch4">
+        <Register name="ch3">
                 <Register name="out_enable"> 1 </Register>
                 <Register name="term_enable"> 0 </Register>
-                <Register name="threshold"> 50 </Register>
+                <Register name="threshold"> 0 </Register>
             </Register>
-	    <Register name="ch5">
+        <Register name="ch4">
+                <Register name="out_enable"> 1 </Register>
+                <Register name="term_enable"> 0 </Register>
+                <Register name="threshold"> 0 </Register>
+            </Register>
+        <Register name="ch5">
                 <Register name="out_enable"> 0 </Register>
                 <Register name="term_enable"> 0 </Register>
                 <Register name="threshold"> 0 </Register>
             </Register>
-	</Register>
+    </Register>
 	<!-- TLU Block -->
 	<Register name="tlu_block">
         <Register name="tlu_enabled"> 0 </Register>
-        <Register name="handshake_mode"> 2 </Register>
+        <Register name="handshake_mode"> 0 </Register>
         <Register name="trigger_id_delay"> 2 </Register>
+
 	</Register>
     </Register>
   </BeBoard>
 
 <Settings>
     <!--PedestalEqualization-->
-    <Setting name="Nevents">10000</Setting>
+    <Setting name="Nevents">100</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
-    <Setting name="FitSCurves">1</Setting>
+    <Setting name="FitSCurves">0</Setting>
     <Setting name="PlotSCurves">1</Setting>
     <Setting name="PedestalEqualizationPulseAmplitude">0</Setting>
     <Setting name="PedeNoisePulseAmplitude">0</Setting>
     <Setting name="TriggerRate">10</Setting>
-    <Setting name="StubAlignmentThreshold">550</Setting>
+    <Setting name="StubAlignmentThreshold">590</Setting>
     <Setting name="StubAlignmentScanStart">70</Setting>
 
+    <Setting name="StartLatency">85</Setting>
+    <Setting name="LatencyRange">20</Setting>
 
     <Setting name="TargetVcth">0x78</Setting>
     <Setting name="TargetOffset">0x50</Setting>
@@ -249,14 +252,32 @@
     <Setting name="TriggerSeparation">500</Setting>
     <Setting name="TestPulseSeparation">70</Setting>
 
-    <Setting name="StartLatency">195</Setting>
-    <Setting name="LatencyRange">10</Setting>
     <Setting name="UseFcmdBram">0</Setting>
     <Setting name="MeanTriggerSeparation">100</Setting>
-
-    <!-- <Setting name="PedestalEqualizationOccupancy">0.10</Setting> -->
-        
+    
+    <Setting name="Check2SUseReadNEvents">0</Setting>
+    <Setting name="Check2Swait">2000</Setting>   <!-- wait is in ms --> 
+    <Setting name="Check2STPamplitude">10</Setting>
+    <Setting name="Check2STPdelay">10</Setting>
+    <Setting name="Check2Sthreshold">550</Setting>
+    <Setting name="Check2SRefSensor">0</Setting>   <!--bottom == 0 ; top == 1 --> 
+    <Setting name="Check2SRefSide">1</Setting>   <!-- L == 1  ; R== 0 --> 
+    <Setting name="Check2SRefChip">0</Setting>   <!-- L == 1  ; R== 0 --> 
+    
 </Settings>
 
+
+<MonitoringSettings>
+<Monitoring type="2S" enable="0">
+    <MonitoringSleepTime> 500 </MonitoringSleepTime>
+    <MonitoringElements
+    CBCThreshold  = "1"
+    LpGBT_ADC1    = "1"
+    LpGBT_VDD     = "1"
+    LpGBT_VDDA    = "1"
+    LpGBT_TEMP    = "1"
+    />
+</Monitoring>
+</MonitoringSettings>
 
 </HwDescription>

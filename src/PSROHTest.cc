@@ -1,3 +1,4 @@
+
 #include "../Utils/Timer.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/argvparser.h"
@@ -33,6 +34,7 @@ INITIALIZE_EASYLOGGINGPP
 
 int main(int argc, char* argv[])
 {
+#if defined(__TCUSB__) && defined(__ROH_USB__) && defined(__USE_ROOT__)
     // configure the logger
     el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
@@ -159,7 +161,7 @@ int main(int argc, char* argv[])
     // Initialize BackEnd & Control LpGBT Tester
     PSROHTester cPSROHTester;
     cPSROHTester.Inherit(&cTool);
-    cPSROHTester.FindUSBHandler();
+    cPSROHTester.Initialise();
 
     /***************/
     /* TEST UPLINK */
@@ -172,14 +174,14 @@ int main(int argc, char* argv[])
             uint8_t  cInternalPattern8  = (cmd.foundOption("internal-pattern")) ? convertAnyInt(cmd.optionValue("internal-pattern").c_str()) : 0;
             uint32_t cInternalPattern32 = cInternalPattern8 << 24 | cInternalPattern8 << 16 | cInternalPattern8 << 8 | cInternalPattern8 << 0;
             cPSROHTester.LpGBTInjectULInternalPattern(cInternalPattern32);
-            cPSROHTester.LpGBTCheckULPattern(false);
+            cPSROHTester.LpGBTCheckULPattern(false, cInternalPattern8);
         }
         /* EXTERNALLY GENERATED PATTERN */
         else if(cmd.foundOption("external-pattern"))
         {
             uint8_t cExternalPattern = (cmd.foundOption("external-pattern")) ? convertAnyInt(cmd.optionValue("external-pattern").c_str()) : 0;
             cPSROHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
-            cPSROHTester.LpGBTCheckULPattern(true);
+            cPSROHTester.LpGBTCheckULPattern(true, cExternalPattern);
             cPSROHTester.LpGBTInjectULExternalPattern(false, cExternalPattern);
         }
     }
@@ -254,7 +256,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("clock-test"))
     {
         LOG(INFO) << BOLDBLUE << "Clock test" << RESET;
-        cPSROHTester.CheckClocks();
+        cPSROHTester.LpGBTCheckClocks();
     }
 
     /*********************/
@@ -339,5 +341,6 @@ int main(int argc, char* argv[])
     cTool.Destroy();
 
     if(!batchMode) cApp.Run();
+#endif
     return 0;
 }

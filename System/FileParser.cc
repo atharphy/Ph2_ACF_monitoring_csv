@@ -181,7 +181,9 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
     {
         if(cBeBoard->getBoardType() == BoardType::D19C) { pBeBoardFWMap[cBeBoard->getId()] = new D19cFWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str()); }
         else if(cBeBoard->getBoardType() == BoardType::RD53)
+        {
             pBeBoardFWMap[cBeBoard->getId()] = new RD53FWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str());
+        }
     }
     os << BOLDCYAN << "|"
        << "       "
@@ -287,13 +289,13 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
                 }
             }
             else
-            { 
+            {
                 thelpGBT->setOpticalId(cOpticalGroupId);
-                thelpGBT->setChipAddress(0x70);               // default lpGBT address                                                                                                                                                                                  
-                thelpGBT->addRxGroups({0, 1, 2, 3, 4, 5, 6}); // be default we always use all 6 groups                                                                                                                                                                  
-                thelpGBT->addRxChannels({0, 2});              // and always channel 0 and channel 2 of each group                                                                                                                                                       
-            } 
-            
+                thelpGBT->setChipAddress(0x70);               // default lpGBT address
+                thelpGBT->addRxGroups({0, 1, 2, 3, 4, 5, 6}); // be default we always use all 6 groups
+                thelpGBT->addRxChannels({0, 2});              // and always channel 0 and channel 2 of each group
+            }
+
             pugi::xml_node clpGBTSettings = theChild.child("Settings");
             if(clpGBTSettings != nullptr)
             {
