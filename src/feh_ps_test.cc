@@ -18,10 +18,6 @@
 #include "TROOT.h"
 #endif
 
-#ifdef __TCUSB__
-#include "USB_a.h"
-#endif
-
 #define __NAMEDPIPE__
 
 #ifdef __NAMEDPIPE__
@@ -38,6 +34,7 @@ INITIALIZE_EASYLOGGINGPP
 
 int main(int argc, char* argv[])
 {
+#if defined(__TCUSB__) && defined(__USE_ROOT__) & defined(__ANTENNA__)
     // configure the logger
     el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
@@ -162,9 +159,7 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("USBBus") && cmd.foundOption("USBDev"))
     {
-#ifdef __TCUSB__
         TC_PSFE cTC_PSFE(cUsbBus, cUsbDev);
-#endif
     }
 
     cHybridTester.SetHybridVoltage(cUsbBus, cUsbDev);
@@ -258,9 +253,7 @@ int main(int argc, char* argv[])
             LOG(INFO) << "Phase alignment MPA" << RESET;
             cAligned       = cCicAligner.PhaseAlignment(100);
             cAlignedDouble = cAligned ? 1.0 : 0.0;
-#ifdef __USE_ROOT__
             cHybridTester.fillSummaryTree(Form("MPA Alignment attemp %d", i + 1), cAlignedDouble);
-#endif
             // for (uint8_t value = 0; value < 16; value ++ ) {
             //     cAligned = cCicAligner.ManualPhaseAlignment(value);
             //     if (cAligned)
@@ -568,5 +561,6 @@ int main(int argc, char* argv[])
     }
 
     if(!batchMode) cApp.Run();
+#endif
     return 0;
 }

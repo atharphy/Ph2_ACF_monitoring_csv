@@ -10,11 +10,10 @@
 #ifndef PSHybridTester_h__
 #define PSHybridTester_h__
 
+#if defined(__TCUSB__) && defined(__USE_ROOT__)
 #include "LinkAlignmentOT.h"
 #include "Tool.h"
-#ifdef __TCUSB__
 #include "USB_a.h"
-#endif
 
 #include "../Utils/SSAChannelGroupHandler.h"
 #include "DPInterface.h"
@@ -102,7 +101,6 @@ class PSHybridTester : public LinkAlignmentOT
         {"67", 0xB}  // 0b1011}};
     };
 
-#ifdef __TCUSB__
     // Maps for electrical measurements on the hybrid:
     std::map<std::string, TC_PSFE::measurement> fHybridVoltageMap = {
         {"TC_GND", TC_PSFE::measurement::GROUND},           {"ROH_GND", TC_PSFE::measurement::ROH_GND},          {"Hybrid1V00", TC_PSFE::measurement::_1V},
@@ -159,16 +157,14 @@ class PSHybridTester : public LinkAlignmentOT
                                                               {"DAC", "Bias_D5DAC8"}};
     // fDACsCalibrationTargetMap = {<DAC to be calibrated>, <Target ADC value>}
     std::map<std::string, float> fDACsCalibrationTargetMap = {{"BoosterFeedback", 82.0}, {"PreampBias", 82.0}, {"VoltageBias", 82.0}, {"CurrentBias", 82.0}, {"DAC", 86.0}};
-#endif
-#ifdef __USE_ROOT__
     TTree*      fSSATree          = nullptr;
     std::string fSSATreeParameter = "";
     std::string fSSATreeValue     = "";
-#endif
     int                     fVoltageMeasurementWait_ms = 100;
     int                     fNreadings                 = 3;
     std::pair<float, float> fVoltageMeasurement;
     std::pair<float, float> fCurrentMeasurement;
 };
 
+#endif
 #endif

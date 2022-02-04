@@ -134,6 +134,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
             # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -")
             message(STATUS "    Using ROOT version ${ROOT_VERSION}")
         endif(ROOT_FOUND)
+    else()
+	message(STATUS "Building without ROOT")
     endif()
 
     # AMC13
@@ -150,8 +152,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # Ph2_TCUSB [USB control of hybrids]
     if ($ENV{CompileWithTCUSB})
-        message(STATUS "    Building with TCUSB")
         find_package(PH2_TCUSB)
+        message(STATUS "    Building with TCUSB")
 
         if(NOT PH2_TCUSB_FOUND)
             message(STATUS "    Couldn't find PH2_TCUSB. Obtaining from gitlab ref $ENV{PH2_TCUSB_REF}")
@@ -166,10 +168,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         if($ENV{UseTCUSBforROH})
             message(STATUS "    Building the ROH TestCards USB components")
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforROHFlag}")
-        else($ENV{UseTCUSBforROH})
+        elseif($ENV{UseTCUSBforSEH})
             message(STATUS "    Building the SEH TestCards USB components")
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
-        endif($ENV{UseTCUSBforROH})
+        endif()
 
         if($ENV{UseTCUSBTcpServer})
             message(STATUS "    Building the components to use the TCP Server")
@@ -180,9 +182,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # EUDAQ
     if ($ENV{CompileWithEUDAQ}) # Asked for EUDAQ
-        message(STATUS "    Building with EUDAQ")
+        message(STATUS "Building with EUDAQ")
         set(USE_EUDAQ ON)
-        if(NOT $ENV{EUDAQDIR})
+        if(NOT DEFINED ENV{EUDAQDIR})
             message(STATUS "    Couldn't find EUDAQ. Obtaining from gitlab ref $ENV{EUDAQ_REF}")
             ExternalProject_Add( ext_eudaq 
                     GIT_REPOSITORY https://gitlab.cern.ch/cms_tk_ph2/eudaq.git
@@ -190,13 +192,13 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
                     PREFIX ${CMAKE_CURRENT_BINARY_DIR}
                 )
             set(ENV{EUDAQDIR} ${CMAKE_CURRENT_BINARY_DIR}/src/ext_eudaq/ )
-        endif(NOT $ENV{EUDAQDIR})
+        endif(NOT DEFINED ENV{EUDAQDIR})
 
         include_directories($ENV{EUDAQDIR}/include)
         set(EUDAQ_LIB -L$ENV{EUDAQDIR}/lib eudaq_core)
         message(STATUS "    EUDAQ variable is defined. EUDAQ directory: $ENV{EUDAQDIR}")
     else($ENV{CompileWithEUDAQ})
-        message(STATUS "    EUDAQ variable is not defined. Building without EUDAQ producer")
+        message(STATUS "EUDAQ variable is not defined. Building without EUDAQ producer")
     endif($ENV{CompileWithEUDAQ})
 
     # ZeroMQ
@@ -208,7 +210,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif(ZMQ_FOUND)
 
     # Boost
-    find_package(Boost 1.53 REQUIRED system filesystem serialization iostreams)
+    find_package(Boost 1.53 REQUIRED system filesystem serialization iostreams program_options)
 
     message("--     ${BoldCyan}#### Done ####${Reset}")
 
@@ -294,9 +296,9 @@ else() # ------------------------------- Compilation in the otsdaq environment -
         set(USE_EUDAQ ON)
         include_directories($ENV{EUDAQDIR}/include $ENV{EUDAQDIR}/user/tlu/module/src)
         set(EUDAQ_LIB -L$ENV{EUDAQLIB} eudaq_core)
-        message(STATUS "    EUDAQ variable is defined. EUDAQ directory: $ENV{EUDAQDIR}")
+        message(STATUS "EUDAQ variable is defined. EUDAQ directory: $ENV{EUDAQDIR}")
     else($ENV{CompileWithEUDAQ})
-        message(STATUS "    EUDAQ variable is not defined. Building without EUDAQ producer")
+        message(STATUS "EUDAQ variable is not defined. Building without EUDAQ producer")
     endif($ENV{CompileWithEUDAQ})
 
     message("--     ${BoldCyan}#### Done ####${Reset}")

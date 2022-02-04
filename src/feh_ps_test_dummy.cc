@@ -34,6 +34,7 @@ INITIALIZE_EASYLOGGINGPP
 
 int main(int argc, char* argv[])
 {
+#if defined(__TCUSB__) && defined(__USE_ROOT__) && defined(__ANTENNA__)
     // configure the logger
     el::Configurations conf("settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
@@ -111,9 +112,6 @@ int main(int argc, char* argv[])
     std::string cResultfile = "Hybrid";
     Timer       t;
 
-#ifdef __TCUSB__
-#endif
-
     if(cGui)
     {
         // Initialize gui communication with named pipe
@@ -122,9 +120,6 @@ int main(int argc, char* argv[])
         gui::status("Initializing test");
         gui::progress(0 / 10.0);
     }
-
-#ifdef __TCUSB__
-#endif
 
     std::stringstream outp;
     // hybrid testing tool
@@ -166,5 +161,6 @@ int main(int argc, char* argv[])
     cHybridTester.Destroy();
     if(!batchMode) cApp.Run();
     LOG(INFO) << "Exiting" << RESET;
+#endif
     return 0;
 }

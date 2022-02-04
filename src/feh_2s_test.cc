@@ -81,6 +81,7 @@ std::vector<uint8_t> getArgs(std::string pArgsStr)
 
 int main(int argc, char* argv[])
 {
+#if defined(__TCUSB__) && defined(__USE_ROOT__) & defined(__ANTENNA__)
     // configure the logger
     el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
@@ -741,7 +742,7 @@ int main(int argc, char* argv[])
         cOfp.potentiometer = 0x265;
         // antenna group
         auto cSetting     = cTool.fSettingsMap.find("AntennaGroup");
-        cOfp.antennaGroup = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : (0);
+        cOfp.antennaGroup = (cSetting != std::end(cTool.fSettingsMap)) ? boost::any_cast<uint8_t>(cSetting->second) : (0);
 
         // antenna delay
         if(cAntennaDelay > 0)
@@ -749,7 +750,7 @@ int main(int argc, char* argv[])
         else
         {
             auto cSetting     = cTool.fSettingsMap.find("AntennaDelay");
-            cOfp.antennaDelay = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : (200);
+            cOfp.antennaDelay = (cSetting != std::end(cTool.fSettingsMap)) ? boost::any_cast<uint16_t>(cSetting->second) : (200);
         }
 
         // scan range for latency
@@ -758,7 +759,7 @@ int main(int argc, char* argv[])
         else
         {
             auto cSetting     = cTool.fSettingsMap.find("ScanRange");
-            cOfp.latencyRange = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : (10);
+            cOfp.latencyRange = (cSetting != std::end(cTool.fSettingsMap)) ? boost::any_cast<uint16_t>(cSetting->second) : (10);
         }
 
         OpenFinder cOpenFinder;
@@ -832,6 +833,7 @@ int main(int argc, char* argv[])
         cPowerLog << "\n";
     }
     cPowerLog.close();
+#endif
 #endif
 
     return 0;

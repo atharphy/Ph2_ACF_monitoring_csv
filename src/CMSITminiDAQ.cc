@@ -36,7 +36,9 @@
 #include <sys/wait.h>
 #include <thread>
 
+#if defined(__USE_ROOT__)
 #include "TApplication.h"
+#endif
 
 #ifdef __EUDAQ__
 #include "../tools/RD53eudaqProducer.h"
@@ -114,6 +116,7 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
 
 int main(int argc, char** argv)
 {
+#if defined(__USE_ROOT__)
     // #############################
     // # Initialize command parser #
     // #############################
@@ -746,6 +749,6 @@ int main(int argc, char** argv)
 
         LOG(INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
     }
-
+#endif
     return EXIT_SUCCESS;
 }

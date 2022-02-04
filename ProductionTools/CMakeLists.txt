@@ -77,9 +77,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
         if($ENV{UseTCUSBforROH})
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforROHFlag}")
-        else($ENV{UseTCUSBforROH})
+        elseif($ENV{UseTCUSBforSEH})
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
-        endif($ENV{UseTCUSBforROH})
+        endif()
     endif(${PH2_TCUSB_FOUND})
 
     #last but not least, find root and link against it
@@ -94,7 +94,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{HttpFlag}")
         endif()
     endif()
-    
+
     set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_DQMUtils Ph2_Tools NetworkUtils)
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/ProductionTools *.cc)
