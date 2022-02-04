@@ -69,9 +69,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
         if($ENV{UseTCUSBforROH})
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforROHFlag}")
-        elseif($ENV{UseTCUSBforSEH})
+        else($ENV{UseTCUSBforROH})
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
-        endif()
+        endif($ENV{UseTCUSBforROH})
     endif(${PH2_TCUSB_FOUND})
     
     #last but not least, find root and link against it

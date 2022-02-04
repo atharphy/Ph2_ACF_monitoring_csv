@@ -38,11 +38,9 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
     // TO-DO .. figure out what to do if piGBT is used
     else
     {
-#ifdef __TCUSB__
-#if defined(__ROH_USB__) || defined(__SEH_USB__)
+#if defined(__TCUSB__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
         cSuccess = (fExternalController->getInterface().write_i2c(cAddress, static_cast<char>(pDacValue)) == pDacValue);
         // cSuccess = (!pVerifLoop) ? cSuccess : (ReadChipReg(pChip, pDacName) == pDacValue);
-#endif
 #endif
     }
 
@@ -62,10 +60,8 @@ uint16_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
         cValue = fBoardFW->ReadOptoLinkRegister(pChip, cAddress);
     else
     {
-#ifdef __TCUSB__
-#if defined(__ROH_USB__) || defined(__SEH_USB__)
+#if defined(__TCUSB__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
         cValue = fExternalController->getInterface().read_i2c(cAddress);
-#endif
 #endif
     }
 
@@ -1179,7 +1175,7 @@ bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, u
     if(cIter == RD53Shared::MAXATTEMPTS)
     {
         LOG(INFO) << BOLDRED << "I2C Write transaction FAILED" << RESET;
-#ifdef __TCUSB__
+#if defined(__TCUSB__)
         // In the test system a run time error is undesired
         return false;
 #else
@@ -1218,7 +1214,7 @@ uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster
     if(cIter == RD53Shared::MAXATTEMPTS)
     {
         LOG(INFO) << BOLDRED << "I2C Read Transaction FAILED" << RESET;
-#ifdef __TCUSB__
+#if defined(__TCUSB__)
         // In the test system a run time error is undesired
         return false;
 #else
