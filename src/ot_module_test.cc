@@ -1093,7 +1093,7 @@ int main(int argc, char* argv[])
         cBeamTestCheck.ConfigureScans(cScanL1, cScanStubs);
         PrintConfig cCng;
         cCng.fVerbose    = 1;
-        cCng.fPrintEvery = 1;
+        cCng.fPrintEvery = 10000;
         cBeamTestCheck.ConfigurePrintout(cCng);
         cBeamTestCheck.CheckWithInternal();
         cBeamTestCheck.writeObjects();
