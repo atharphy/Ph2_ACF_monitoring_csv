@@ -58,7 +58,6 @@ build:StandAlone_woDS:
     - export CompileWithEUDAQ=false
     - export CompileWithTCUSB=false
     - export UseTCUSBforROH=false
-    - export UseTCUSBforSEH=false
     - export UseTCUSBTcpServer=false
   artifacts:
     paths:
@@ -77,7 +76,6 @@ build:StandAlone_wDS:
     - export CompileWithEUDAQ=false
     - export CompileWithTCUSB=false
     - export UseTCUSBforROH=false
-    - export UseTCUSBforSEH=false
     - export UseTCUSBTcpServer=false
 
 # Herd application
@@ -90,7 +88,6 @@ build:HerdApplication:
     - export CompileWithEUDAQ=false
     - export CompileWithTCUSB=false
     - export UseTCUSBforROH=false
-    - export UseTCUSBforSEH=false
     - export UseTCUSBTcpServer=false
 
 # Shep application
@@ -103,7 +100,6 @@ build:ShepApplication:
     - export CompileWithEUDAQ=false
     - export CompileWithTCUSB=false
     - export UseTCUSBforROH=false
-    - export UseTCUSBforSEH=false
     - export UseTCUSBTcpServer=false
 
 # Compile with EUDAQ libraries
@@ -116,7 +112,6 @@ build:StandAlone_wEUDAQ:
     - export CompileWithEUDAQ=true
     - export CompileWithTCUSB=false
     - export UseTCUSBforROH=false
-    - export UseTCUSBforSEH=false
     - export UseTCUSBTcpServer=false
 
 # Herd application with EUDAQ libraries
@@ -128,8 +123,7 @@ build:HerdApplication_wEUDAQ:
     - export CompileForShep=false
     - export CompileWithEUDAQ=true
     - export CompileWithTCUSB=false
-    - export UseTCUSBforROH=true
-    - export UseTCUSBforSEH=false
+    - export UseTCUSBforROH=false
     - export UseTCUSBTcpServer=false
 
 # Compile with TC_USB library
@@ -143,7 +137,6 @@ build:StandAlone_wTC_USB:
     - export CompileWithEUDAQ=false
     - export CompileWithTCUSB=true
     - export UseTCUSBforROH=false
-    - export UseTCUSBforSEH=false
     - export UseTCUSBTcpServer=true
 
 
@@ -158,22 +151,6 @@ build:StandAlone_wTC_USB_ROH:
     - export CompileWithEUDAQ=false
     - export CompileWithTCUSB=true
     - export UseTCUSBforROH=true
-    - export UseTCUSBforSEH=false
-    - export UseTCUSBTcpServer=true
-
-
-# Compile with TC_USB library for SEH
-build:StandAlone_wTC_USB_SEH:
-  extends: .build
-  before_script:
-    - yum install -y libusb-devel libusbx-devel
-    - source ./setup.sh
-    - export CompileForHerd=false
-    - export CompileForShep=false
-    - export CompileWithEUDAQ=false
-    - export CompileWithTCUSB=true
-    - export UseTCUSBforROH=false
-    - export UseTCUSBforSEH=true
     - export UseTCUSBTcpServer=true
 
 
