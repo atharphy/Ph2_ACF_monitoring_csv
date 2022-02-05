@@ -742,7 +742,7 @@ int main(int argc, char* argv[])
         cOfp.potentiometer = 0x265;
         // antenna group
         auto cSetting     = cTool.fSettingsMap.find("AntennaGroup");
-        cOfp.antennaGroup = (cSetting != std::end(cTool.fSettingsMap)) ? boost::any_cast<uint8_t>(cSetting->second) : (0);
+        cOfp.antennaGroup = (cSetting != std::end(cTool.fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : (0);
 
         // antenna delay
         if(cAntennaDelay > 0)
@@ -750,7 +750,7 @@ int main(int argc, char* argv[])
         else
         {
             auto cSetting     = cTool.fSettingsMap.find("AntennaDelay");
-            cOfp.antennaDelay = (cSetting != std::end(cTool.fSettingsMap)) ? boost::any_cast<uint16_t>(cSetting->second) : (200);
+            cOfp.antennaDelay = (cSetting != std::end(cTool.fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : (200);
         }
 
         // scan range for latency
@@ -759,7 +759,7 @@ int main(int argc, char* argv[])
         else
         {
             auto cSetting     = cTool.fSettingsMap.find("ScanRange");
-            cOfp.latencyRange = (cSetting != std::end(cTool.fSettingsMap)) ? boost::any_cast<uint16_t>(cSetting->second) : (10);
+            cOfp.latencyRange = (cSetting != std::end(cTool.fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : (10);
         }
 
         OpenFinder cOpenFinder;
