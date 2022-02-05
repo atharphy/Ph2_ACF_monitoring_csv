@@ -13,9 +13,13 @@
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
 
-#ifdef __USE_ROOT__
+#if defined(__USE_ROOT__)
 #include "TApplication.h"
 #include "TROOT.h"
+#endif
+
+#if defined(__TCUSB__)
+#include "USB_a.h"
 #endif
 
 #define __NAMEDPIPE__
@@ -34,7 +38,6 @@ INITIALIZE_EASYLOGGINGPP
 
 int main(int argc, char* argv[])
 {
-#if defined(__TCUSB__) && defined(__USE_ROOT__) & defined(__ANTENNA__)
     // configure the logger
     el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
@@ -159,7 +162,9 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("USBBus") && cmd.foundOption("USBDev"))
     {
+#if defined(__TCUSB__)
         TC_PSFE cTC_PSFE(cUsbBus, cUsbDev);
+#endif
     }
 
     cHybridTester.SetHybridVoltage(cUsbBus, cUsbDev);
@@ -253,7 +258,9 @@ int main(int argc, char* argv[])
             LOG(INFO) << "Phase alignment MPA" << RESET;
             cAligned       = cCicAligner.PhaseAlignment(100);
             cAlignedDouble = cAligned ? 1.0 : 0.0;
+#if defined(__USE_ROOT__)
             cHybridTester.fillSummaryTree(Form("MPA Alignment attemp %d", i + 1), cAlignedDouble);
+#endif
             // for (uint8_t value = 0; value < 16; value ++ ) {
             //     cAligned = cCicAligner.ManualPhaseAlignment(value);
             //     if (cAligned)
@@ -281,6 +288,7 @@ int main(int argc, char* argv[])
         // cDataChecker.resetPointers();
     }
 
+#if defined(__ANTENNA__)
     OpenFinder cOpenFinder;
     cOpenFinder.Inherit(&cHybridTester);
     std::string antennaValue = (cmd.foundOption("antennaValue")) ? cmd.optionValue("antennaValue") : "512";
@@ -291,6 +299,7 @@ int main(int argc, char* argv[])
         cOpenFinder.SelectAntennaPosition("Enable", std::stoi(antennaValue));
         LOG(INFO) << "Setting antenna" << RESET;
     }
+#endif
 
     // measure noise on FE chips before calibration
     if(cmd.foundOption("measurePedeNoise") && cmd.foundOption("antennaValue"))
@@ -394,6 +403,8 @@ int main(int argc, char* argv[])
             gui::progress(5.5 / 10.0);
         }
     }
+
+#if defined(__ANTENNA__)
     if(cmd.foundOption("findOpens"))
     {
         if(cGui)
@@ -413,6 +424,8 @@ int main(int argc, char* argv[])
             gui::progress(7 / 10.0);
         }
     }
+#endif
+
     // test MPA outputs
     // test MPA outputs
     if(cmd.foundOption("mpaTest"))
@@ -561,6 +574,5 @@ int main(int argc, char* argv[])
     }
 
     if(!batchMode) cApp.Run();
-#endif
     return 0;
 }
