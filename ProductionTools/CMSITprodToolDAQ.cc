@@ -11,7 +11,9 @@
 #include <sys/wait.h>
 #include <thread>
 
+#if defined(__USE_ROOT__)
 #include "TApplication.h"
+#endif
 
 // ##################
 // # Default values #
