@@ -17,7 +17,6 @@
 
 #include "../Utils/gui_logger.h"
 
-
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -123,7 +122,6 @@ int main(int argc, char* argv[])
     cmd.defineOption("gui", "fpgaconfig is called from the gui, hand over named pipe", ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("gui", "g");
 
-
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -132,13 +130,11 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-
     // Check if there is a gui involved, if not dump information in a dummy pipe
     std::string guiPipe = (cmd.foundOption("gui")) ? cmd.optionValue("gui") : "/tmp/guiDummyPipe";
     gui::init(guiPipe.c_str());
     gui::progress(0);
     bool skipUpload = false; // Set true if the last while loop should be skipped to update FW information output
-
 
     std::string        cHWFile = (cmd.foundOption("config")) ? cmd.optionValue("config") : "settings/HWDescription_2CBC.xml";
     std::ostringstream cStr;
@@ -147,14 +143,14 @@ int main(int argc, char* argv[])
     cSystemController.fBeBoardInterface->setBoard(pBoard->getId());
     auto cInterface = FC7FpgaControlFWInterface(cSystemController.fBeBoardInterface->getFirmwareInterface());
 
-    //std::vector<std::string> lstNames = cInterface->getFpgaConfigList(); // cSystemController.fBeBoardInterface->getFpgaConfigList(pBoard);
+    // std::vector<std::string> lstNames = cInterface->getFpgaConfigList(); // cSystemController.fBeBoardInterface->getFpgaConfigList(pBoard);
 
     // First get list of FW files
     std::vector<std::string> lstNames;
-    uint32_t       timeStamp = 0;
-    uint32_t       nHybrids  = 0;
-    uint32_t       nChips    = 0;
-    uint32_t       chipCode  = 0;
+    uint32_t                 timeStamp = 0;
+    uint32_t                 nHybrids  = 0;
+    uint32_t                 nChips    = 0;
+    uint32_t                 chipCode  = 0;
     // getFpgaConfigList will fail when Board is busy
     try
     {
@@ -170,8 +166,8 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    std::string              cFWFile;
-    std::string              strImage("1");
+    std::string cFWFile;
+    std::string strImage("1");
 
     // Provide information for the gui
     if(cmd.foundOption("gui"))
@@ -184,12 +180,12 @@ int main(int argc, char* argv[])
         std::string chipType = "UNKNOWN";
         switch(chipCode)
         {
-            case 0x0: chipType = "CBC2"; break;
-            case 0x1: chipType = "CBC3"; break;
-            case 0x2: chipType = "MPA"; break;
-            case 0x3: chipType = "SSA"; break;
-            case 0x4: chipType = "CIC"; break;
-            case 0x5: chipType = "CIC2"; break;
+        case 0x0: chipType = "CBC2"; break;
+        case 0x1: chipType = "CBC3"; break;
+        case 0x2: chipType = "MPA"; break;
+        case 0x3: chipType = "SSA"; break;
+        case 0x4: chipType = "CIC"; break;
+        case 0x5: chipType = "CIC2"; break;
         }
         // Process FW Date
         std::stringstream ss;
@@ -272,16 +268,13 @@ int main(int argc, char* argv[])
         cInterface.JumpToFpgaConfig(strImage);
         gui::progress(1);
         skipUpload = true;
-        gui::data("NewFirmware",strImage.c_str());
+        gui::data("NewFirmware", strImage.c_str());
     }
 
     bool cDone = 0;
 
-    if(cmd.foundOption("download"))
-    {
-        cInterface.DownloadFpgaConfig(strImage, cmd.optionValue("download"));
-    }
-    else if (!skipUpload)
+    if(cmd.foundOption("download")) { cInterface.DownloadFpgaConfig(strImage, cmd.optionValue("download")); }
+    else if(!skipUpload)
     {
         if(std::find(std::begin(lstNames), std::end(lstNames), strImage) != std::end(lstNames))
         {
@@ -330,12 +323,12 @@ int main(int argc, char* argv[])
         std::string chipType = "UNKNOWN";
         switch(chipCode)
         {
-            case 0x0: chipType = "CBC2"; break;
-            case 0x1: chipType = "CBC3"; break;
-            case 0x2: chipType = "MPA"; break;
-            case 0x3: chipType = "SSA"; break;
-            case 0x4: chipType = "CIC"; break;
-            case 0x5: chipType = "CIC2"; break;
+        case 0x0: chipType = "CBC2"; break;
+        case 0x1: chipType = "CBC3"; break;
+        case 0x2: chipType = "MPA"; break;
+        case 0x3: chipType = "SSA"; break;
+        case 0x4: chipType = "CIC"; break;
+        case 0x5: chipType = "CIC2"; break;
         }
         // Process FW Date
         std::stringstream ss;
