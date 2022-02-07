@@ -310,6 +310,7 @@ void PSHybridTester::AlignCICout(uint8_t pPattern)
 }
 void PSHybridTester::MPATest(BeBoard* pBoard)
 {
+#if defined(__USE_ROOT__)
     uint32_t cTestPatterns[4] = {0xAA, 0xCC, 0x00, 0xFF};
     // String with the binary representation of the pattern
     // int         cTotalBadLines = 0;                // Number of bad CIC in lines
@@ -368,6 +369,7 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
         fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
         static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 4);
     }
+#endif
 }
 
 void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAPairSel)
@@ -1525,7 +1527,7 @@ void PSHybridTester::CalibrateGainTrim(BeBoard* pBoard)
                 {
                     for(uint32_t channel = 0; channel < cReadoutChip->size(); channel++)
                     {
-                        std::string cRegName = Form("GAINTRIMMING_S%d", channel + 1);
+                        std::string cRegName = "GAINTRIMMING_S" + std::to_string(channel + 1);
                         // int         cRegValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegName);
                         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 7);
                     }
@@ -1569,7 +1571,7 @@ void PSHybridTester::CalibrateGainTrim(BeBoard* pBoard)
 
                             LOG(INFO) << "Threshold: " << cThresholdValue << " Occupancy: " << cHitVector[channel];
 
-                            std::string cRegName  = Form("GAINTRIMMING_S%d", channel + 1);
+                            std::string cRegName  = "GAINTRIMMING_S" + std::to_string(channel + 1);
                             int         cRegValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegName);
 
                             if(cHitVector[channel] / 1000 < 0.55)
@@ -1769,7 +1771,7 @@ void PSHybridTester::SetTrim(BeBoard* pBoard, std::string pTrimRegister, uint16_
             {
                 for(uint cChannel = 0; cChannel < cReadoutChip->size(); cChannel++)
                 {
-                    std::string cRegName = Form("%s_S%d", pTrimRegister.c_str(), cChannel + 1);
+                    std::string cRegName = pTrimRegister + "_S" + std::to_string(cChannel + 1);
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, pTrimValue);
                 }
             }
