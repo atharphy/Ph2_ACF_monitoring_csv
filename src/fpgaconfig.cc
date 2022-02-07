@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 
-
 #include "../System/SystemController.h"
 #include "../Utils/argvparser.h"
 #include "FC7FpgaControlFWInterface.h"

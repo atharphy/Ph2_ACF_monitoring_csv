@@ -618,7 +618,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         this->WriteChipSingleReg(pSSA2, "mask_strip", 0x1F, pVerifLoop);
         bool cEnableAnalogue = WriteChipSingleReg(pSSA2, "ENFLAGS", 0x15, false);
         this->WriteChipSingleReg(pSSA2, "mask_strip", 0x07, pVerifLoop);
-        bool cReadoutMode    = WriteChipSingleReg(pSSA2, "control_1", 0x1, pVerifLoop);
+        bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_1", 0x1, pVerifLoop);
         /*
         uint8_t cReadoutMode = 0x1;
         uint8_t cEdgeSel_T1  = 0x0;
@@ -787,7 +787,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
             LOG(INFO) << BOLDBLUE << "Disabling SLVS test output on SSA2#" << +pSSA2->getId() << RESET;
         uint8_t cRegValue = ReadChipReg(pSSA2, "control_1");
         cRegValue         = (cRegValue & 0x4) | (pValue << 1); // What does this do?
-        pVerifLoop = false;
+        pVerifLoop        = false;
         bool cReadoutMode = this->WriteChipRegBits(pSSA2, "control_1", pValue << 1, "mask_peri_D", 2, pVerifLoop);
         return cReadoutMode;
     }

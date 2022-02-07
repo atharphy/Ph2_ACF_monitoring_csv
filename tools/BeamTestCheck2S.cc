@@ -1015,7 +1015,7 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
         DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
         fDetectorDataContainer                       = theOccupancyContainer;
 
-        auto cMaxEventsToProc = (fNevents >= 10000 ) ? 10000 : fNevents;
+        auto cMaxEventsToProc = (fNevents >= 10000) ? 10000 : fNevents;
         do
         {
             if(cEventIter >= pEvents.end()) break;
