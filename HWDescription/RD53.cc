@@ -318,14 +318,22 @@ void RD53::copyMaskFromDefault()
     }
 }
 
-void RD53::copyMaskToDefault()
+void RD53::copyMaskToDefault(const std::string& which)
+// ########################
+// # which = all          #
+// # which =  en : Enable #
+// # which =  hb : HitBus #
+// # which =  in : InjEn  #
+// # which =  td : TDAC   #
+// ########################
 {
     for(auto col = 0u; col < fPixelsMaskDefault.size(); col++)
     {
-        fPixelsMaskDefault[col].Enable = fPixelsMask[col].Enable;
-        fPixelsMaskDefault[col].HitBus = fPixelsMask[col].HitBus;
-        fPixelsMaskDefault[col].InjEn  = fPixelsMask[col].InjEn;
-        for(auto row = 0u; row < fPixelsMaskDefault[col].TDAC.size(); row++) fPixelsMaskDefault[col].TDAC[row] = fPixelsMask[col].TDAC[row];
+        if((which == "all") || (which == "en")) fPixelsMaskDefault[col].Enable = fPixelsMask[col].Enable;
+        if((which == "all") || (which == "hb")) fPixelsMaskDefault[col].HitBus = fPixelsMask[col].HitBus;
+        if((which == "all") || (which == "in")) fPixelsMaskDefault[col].InjEn = fPixelsMask[col].InjEn;
+        if((which == "all") || (which == "td"))
+            for(auto row = 0u; row < fPixelsMaskDefault[col].TDAC.size(); row++) fPixelsMaskDefault[col].TDAC[row] = fPixelsMask[col].TDAC[row];
     }
 }
 
