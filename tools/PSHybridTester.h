@@ -10,10 +10,11 @@
 #ifndef PSHybridTester_h__
 #define PSHybridTester_h__
 
-#if defined(__TCUSB__) && defined(__USE_ROOT__)
 #include "LinkAlignmentOT.h"
 #include "Tool.h"
+#if defined(__TCUSB__)
 #include "USB_a.h"
+#endif
 
 #include "../Utils/SSAChannelGroupHandler.h"
 #include "DPInterface.h"
@@ -101,6 +102,7 @@ class PSHybridTester : public LinkAlignmentOT
         {"67", 0xB}  // 0b1011}};
     };
 
+#if defined(__TCUSB__)
     // Maps for electrical measurements on the hybrid:
     std::map<std::string, TC_PSFE::measurement> fHybridVoltageMap = {
         {"TC_GND", TC_PSFE::measurement::GROUND},           {"ROH_GND", TC_PSFE::measurement::ROH_GND},          {"Hybrid1V00", TC_PSFE::measurement::_1V},
@@ -117,6 +119,7 @@ class PSHybridTester : public LinkAlignmentOT
                                                                    {"PGLineContinuity", TC_PSFE::measurement::C_TEST_PG},
                                                                    {"12VLineContinuity", TC_PSFE::measurement::C_TEST_P12},
                                                                    {"MPAContinuity", TC_PSFE::measurement::MPA_RST_TEST}};
+#endif
     // 0 means there is no nominal value and it does not have to be checked
     std::map<std::string, int> fHybridNominalValues = {{"TC_GND", 0},
                                                        {"ROH_GND", 0},
@@ -157,7 +160,9 @@ class PSHybridTester : public LinkAlignmentOT
                                                               {"DAC", "Bias_D5DAC8"}};
     // fDACsCalibrationTargetMap = {<DAC to be calibrated>, <Target ADC value>}
     std::map<std::string, float> fDACsCalibrationTargetMap = {{"BoosterFeedback", 82.0}, {"PreampBias", 82.0}, {"VoltageBias", 82.0}, {"CurrentBias", 82.0}, {"DAC", 86.0}};
+#if defined(__USE_ROOT__)
     TTree*      fSSATree          = nullptr;
+#endif
     std::string fSSATreeParameter = "";
     std::string fSSATreeValue     = "";
     int                     fVoltageMeasurementWait_ms = 100;
@@ -166,5 +171,4 @@ class PSHybridTester : public LinkAlignmentOT
     std::pair<float, float> fCurrentMeasurement;
 };
 
-#endif
 #endif
