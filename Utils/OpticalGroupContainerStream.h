@@ -32,14 +32,13 @@
 #pragma GCC diagnostic ignored "-Wclass-memaccess"
 #endif
 
-// ------------------------------------------- OpticalGroupContainerStream ------------------------------------------- //
-
-template <typename T, typename C, typename H, typename O>
-class DataStreamOpticalGroupContainer : public DataStreamBase
+template <uint8_t Layer, typename This, typename Sub, template <typename, typename...> class SubStream, typename... Args>
+class DataStreamContainer : public DataStreamBase
 {
+
   public:
-    DataStreamOpticalGroupContainer() : fSummaryContainer(nullptr) { check_if_retrivable<O>(); }
-    ~DataStreamOpticalGroupContainer()
+    DataStreamContainer() : fSummaryContainer(nullptr) { check_if_retrivable<This>(); }
+    ~DataStreamContainer()
     {
         if(fDeletePointers)
         {
@@ -52,14 +51,50 @@ class DataStreamOpticalGroupContainer : public DataStreamBase
         }
     }
 
+
+    DataStreamContainer(const DataStreamContainer&) = delete;
+
+    DataStreamContainer(DataStreamContainer&& theOriginalStream)
+    : DataStreamBase(std::move(theOriginalStream))
+    {
+        fContainerCarried = theOriginalStream.fContainerCarried;
+        for(auto& fDataSteamSubContainer : theOriginalStream.fDataSteamSubContainerMap)
+        {
+            fDataSteamSubContainerMap[fDataSteamSubContainer.first] = std::move(fDataSteamSubContainer.second);
+        }
+        fNumberOfSubContainers = theOriginalStream.fNumberOfSubContainers;
+        fSummaryContainer = theOriginalStream.fSummaryContainer;
+        theOriginalStream.fSummaryContainer = nullptr;
+        fDeletePointers = theOriginalStream.fDeletePointers;
+    }
+
+    DataStreamContainer& operator=(const DataStreamContainer&) = delete;
+
+    DataStreamContainer& operator=(DataStreamContainer&& theOriginalStream)
+    {
+        fContainerCarried = theOriginalStream.fContainerCarried;
+        fDataSteamSubContainerMap.clear();
+        for(auto& fDataSteamSubContainer : theOriginalStream.fDataSteamSubContainerMap)
+        {
+            fDataSteamSubContainerMap[fDataSteamSubContainer.first] = std::move(fDataSteamSubContainer.second);
+        }
+        fNumberOfSubContainers = theOriginalStream.fNumberOfSubContainers;
+        delete fSummaryContainer;
+        fSummaryContainer = theOriginalStream.fSummaryContainer;
+        theOriginalStream.fSummaryContainer = nullptr;
+        fDeletePointers = theOriginalStream.fDeletePointers;
+
+        return *this;
+    }
+
     uint32_t size(void) override
     {
         fDataSize = sizeof(fDataSize) + sizeof(fContainerCarried) + sizeof(fNumberOfSubContainers);
-        for(auto& dataSteamHybridContainer: fDataSteamSubContainerMap) 
+        for(auto& dataSteamSubContainer: fDataSteamSubContainerMap) 
         {
-            fDataSize += (sizeof(uint16_t) + dataSteamHybridContainer.second.size());
+            fDataSize += (sizeof(uint16_t) + dataSteamSubContainer.second.size());
         }
-        if(fSummaryContainer != nullptr) { fDataSize += sizeof(O); }
+        if(fSummaryContainer != nullptr) { fDataSize += sizeof(This); }
         return fDataSize;
     }
 
@@ -74,10 +109,10 @@ class DataStreamOpticalGroupContainer : public DataStreamBase
         memcpy(&bufferBegin[bufferWritingPosition], &fNumberOfSubContainers, sizeof(fNumberOfSubContainers));
         bufferWritingPosition += sizeof(fNumberOfSubContainers);
 
-        if(fContainerCarried.isOpticalGroupContainerCarried())
+        if(fContainerCarried.isContainerCarried<Layer>())
         {
-            memcpy(&bufferBegin[bufferWritingPosition], &(fSummaryContainer->theSummary_), sizeof(O));
-            bufferWritingPosition += sizeof(O);
+            memcpy(&bufferBegin[bufferWritingPosition], &(fSummaryContainer->theSummary_), sizeof(This));
+            bufferWritingPosition += sizeof(This);
             fSummaryContainer = nullptr;
         }
 
@@ -106,11 +141,11 @@ class DataStreamOpticalGroupContainer : public DataStreamBase
         memcpy(&fNumberOfSubContainers, &bufferBegin[bufferReadingPosition], sizeof(fNumberOfSubContainers));
         bufferReadingPosition += sizeof(fNumberOfSubContainers);
 
-        if(fContainerCarried.isOpticalGroupContainerCarried())
+        if(fContainerCarried.isContainerCarried<Layer>())
         {
-            fSummaryContainer = new Summary<O, H>();
-            memcpy(&(fSummaryContainer->theSummary_), &bufferBegin[bufferReadingPosition], sizeof(O));
-            bufferReadingPosition += sizeof(O);
+            fSummaryContainer = new Summary<This,Sub>();
+            memcpy(&(fSummaryContainer->theSummary_), &bufferBegin[bufferReadingPosition], sizeof(This));
+            bufferReadingPosition += sizeof(This);
         }
 
         for(uint8_t subContainerIndex = 0; subContainerIndex<fNumberOfSubContainers; ++subContainerIndex)
@@ -119,27 +154,27 @@ class DataStreamOpticalGroupContainer : public DataStreamBase
             memcpy(&subContainerId, &bufferBegin[bufferReadingPosition], sizeof(uint16_t));
             bufferReadingPosition += sizeof(uint16_t);
 
-            DataStreamHybridContainer<T, C, H> theDataSteamHybridContainer;
-            // fDataSteamSubContainerMap.emplace_back(DataStreamHybridContainer<T, C, H>());
-            theDataSteamHybridContainer.fContainerCarried = fContainerCarried;
-            bufferReadingPosition = theDataSteamHybridContainer.copyFromStream(bufferBegin, bufferReadingPosition);
-            fDataSteamSubContainerMap[subContainerId] = std::move(theDataSteamHybridContainer);
+            SubStream<Args..., Sub> theDataSteamSubContainer;
+            theDataSteamSubContainer.fContainerCarried = fContainerCarried;
+            bufferReadingPosition = theDataSteamSubContainer.copyFromStream(bufferBegin, bufferReadingPosition);
+            fDataSteamSubContainerMap[subContainerId] = std::move(theDataSteamSubContainer);
         }
-        // for(auto dataSteamHybridContainerVector: fDataSteamSubContainerMap) { bufferReadingPosition = dataSteamHybridContainerVector->copyFromStream(bufferBegin, bufferReadingPosition); }
-
+        
         return bufferReadingPosition;
     }
 
   public:
-    ContainerCarried                                fContainerCarried{};
-    std::map<uint16_t, DataStreamHybridContainer<T, C, H>> fDataSteamSubContainerMap{};
-    uint8_t                                         fNumberOfSubContainers{0};
-    Summary<O, H>*                                  fSummaryContainer{nullptr};
-    bool                                            fDeletePointers{false};
+    ContainerCarried                            fContainerCarried{};
+    std::map<uint16_t, SubStream<Args..., Sub>> fDataSteamSubContainerMap{};
+    uint8_t                                     fNumberOfSubContainers{0};
+    Summary<This,Sub>*                          fSummaryContainer{nullptr};
+    bool                                        fDeletePointers{false};
 };
 
+// ------------------------------------------- OpticalGroupContainerStream ------------------------------------------- //
+
 template <typename T, typename C, typename H, typename O, typename... I>
-class OpticalGroupContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamOpticalGroupContainer<T, C, H, O>>
+class OpticalGroupContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamContainer<3, O, H, DataStreamHybridContainer, T, C>>
 {
     enum HeaderId
     {
@@ -149,9 +184,9 @@ class OpticalGroupContainerStream : public ObjectStream<HeaderStreamContainer<ui
     static constexpr size_t getEnumSize() { return OpticalGroupId + 1; }
 
   public:
-    OpticalGroupContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamOpticalGroupContainer<T, C, H, O>>(creatorName) {}
+    OpticalGroupContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamContainer<3, O, H, DataStreamHybridContainer, T, C>>(creatorName) {}
     OpticalGroupContainerStream(OpticalGroupContainerStream<T, C, H, O, I...>&& theContainerStream)
-    : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, I...>, DataStreamOpticalGroupContainer<T, C, H, O>>(std::move(theContainerStream))
+    : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, I...>, DataStreamContainer<3, O, H, DataStreamHybridContainer, T, C, H>>(std::move(theContainerStream))
     {}
     OpticalGroupContainerStream(const OpticalGroupContainerStream<T, C, H, O, I...>&) = delete;
     ~OpticalGroupContainerStream() 

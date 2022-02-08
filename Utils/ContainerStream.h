@@ -65,17 +65,29 @@ class ContainerCarried
 
     void reset() { fContainerCarried = 0; }
 
-    void carryChannelContainer() { fContainerCarried |= (1 << 0); }
-    void carryChipContainer() { fContainerCarried |= (1 << 1); }
-    void carryHybridContainer() { fContainerCarried |= (1 << 2); }
-    void carryOpticalGroupContainer() { fContainerCarried |= (1 << 3); }
-    void carryBoardContainer() { fContainerCarried |= (1 << 4); }
+    void carryChannelContainer()      { carryCarried<0>(); }
+    void carryChipContainer()         { carryCarried<1>(); }
+    void carryHybridContainer()       { carryCarried<2>(); }
+    void carryOpticalGroupContainer() { carryCarried<3>(); }
+    void carryBoardContainer()        { carryCarried<4>(); }
 
-    bool isChannelContainerCarried() { return (fContainerCarried >> 0) & 1; }
-    bool isChipContainerCarried() { return (fContainerCarried >> 1) & 1; }
-    bool isHybridContainerCarried() { return (fContainerCarried >> 2) & 1; }
-    bool isOpticalGroupContainerCarried() { return (fContainerCarried >> 3) & 1; }
-    bool isBoardContainerCarried() { return (fContainerCarried >> 4) & 1; }
+    bool isChannelContainerCarried()      { return isContainerCarried<0>(); }
+    bool isChipContainerCarried()         { return isContainerCarried<1>(); }
+    bool isHybridContainerCarried()       { return isContainerCarried<2>(); }
+    bool isOpticalGroupContainerCarried() { return isContainerCarried<3>(); }
+    bool isBoardContainerCarried()        { return isContainerCarried<4>(); }
+
+    template<uint8_t N>
+    bool isContainerCarried()
+    {
+        return (fContainerCarried >> N) & 1; 
+    }
+
+    template<uint8_t N>
+    void carryCarried()
+    {
+        fContainerCarried |= (1 << N); 
+    }
 
     uint8_t fContainerCarried;
 } __attribute__((packed));
