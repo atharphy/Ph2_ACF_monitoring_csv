@@ -14,6 +14,7 @@ INITIALIZE_EASYLOGGINGPP
 
 int main(int argc, char** argv)
 {
+#ifdef __EUDAQ__
     // configure the logger
     el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
@@ -47,8 +48,6 @@ int main(int argc, char** argv)
     std::string cName              = (cmd.foundOption("name")) ? cmd.optionValue("name") : "ph2producer";
     std::string cOutputFile;
 
-// create eudaq2 producer (if need can also create eudaq1 here)
-#ifdef __EUDAQ__
     Eudaq2Producer cProducer(cName, cRunControlAddress);
     try
     {
@@ -63,9 +62,9 @@ int main(int argc, char** argv)
     LOG(INFO) << "Connected";
 
     // while(cProducer.IsConnected()) { std::this_thread::sleep_for(std::chrono::seconds(1)); }
-#endif
 
     // as well damn if u want, cdz
     // cProducer.Destroy();
+#endif
     return 0;
 }
