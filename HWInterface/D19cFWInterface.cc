@@ -1032,18 +1032,18 @@ void D19cFWInterface::Start()
         // prints to debug and also checks that things are ok
         this->TriggerConfiguration();
         cTriggerState = GetTriggerState();
-        LOG(INFO) << BOLDBLUE << "D19cFWInterface::Start Trigger state is " << cTriggerState << RESET;
+        LOG(DEBUG) << BOLDBLUE << "D19cFWInterface::Start Trigger state is " << cTriggerState << RESET;
 
         // now check if I should try and start again
         if(cHandshake)
         {
             auto cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-            LOG(INFO) << BOLDMAGENTA << "Hand-shake is on .. readout-request after start is " << +cReadoutReq << RESET;
+            LOG(DEBUG) << BOLDMAGENTA << "Hand-shake is on .. readout-request after start is " << +cReadoutReq << RESET;
             cBreak           = (cReadoutReq == 1) || (cTriggerState != 0);
             if(cBreak)
-                LOG(INFO) << BOLDMAGENTA << "Hand-shake is on .. readout-request after start is " << +cReadoutReq << " - triggers have started and I've got all the events I've asked for " << RESET;
+                LOG(DEBUG) << BOLDMAGENTA << "Hand-shake is on .. readout-request after start is " << +cReadoutReq << " - triggers have started and I've got all the events I've asked for " << RESET;
             else
-                LOG(INFO) << BOLDMAGENTA << "Hand-shake is on .. readout-request after start is " << +cReadoutReq << " - trigger state is " << +cTriggerState << RESET;
+                LOG(DEBUG) << BOLDMAGENTA << "Hand-shake is on .. readout-request after start is " << +cReadoutReq << " - trigger state is " << +cTriggerState << RESET;
         }
         else
             cBreak = (cTriggerState != 0);
