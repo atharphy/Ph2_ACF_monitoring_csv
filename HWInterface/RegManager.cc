@@ -21,13 +21,13 @@
 
 namespace Ph2_HwInterface
 {
-RegManager::RegManager(const char* puHalConfigFileName, uint32_t pBoardId)
+RegManager::RegManager(const std::string& puHalConfigFileName, uint32_t pBoardId)
+: fUHalConfigFileName(puHalConfigFileName)
 {
     if(mode != Mode::Replay)
     {
         uhal::disableLogging();
-        fUHalConfigFileName = puHalConfigFileName;
-        uhal::ConnectionManager cm(fUHalConfigFileName);
+        uhal::ConnectionManager cm(fUHalConfigFileName.c_str());
         char                    cBuff[7];
         sprintf(cBuff, "board%d", pBoardId);
         fBoard = new uhal::HwInterface(cm.getDevice((cBuff)));
@@ -35,7 +35,7 @@ RegManager::RegManager(const char* puHalConfigFileName, uint32_t pBoardId)
     }
 }
 
-RegManager::RegManager(const char* pId, const char* pUri, const char* pAddressTable) : fBoard(nullptr), fUri(pUri), fAddressTable(pAddressTable), fId(pId)
+RegManager::RegManager(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : fBoard(nullptr), fUri(pUri), fAddressTable(pAddressTable), fId(pId)
 {
     if(mode != Mode::Replay)
     {
@@ -301,14 +301,14 @@ RegManager::Mode                    RegManager::mode = RegManager::Mode::Default
 boost::iostreams::filtering_ostream capture_file{};
 boost::iostreams::filtering_istream replay_file{};
 
-void RegManager::enableCapture(const std::string filename)
+void RegManager::enableCapture(const std::string& filename)
 {
     capture_file.push(boost::iostreams::gzip_compressor());
     capture_file.push(boost::iostreams::file_sink(filename));
     mode = Mode::Capture;
 }
 
-void RegManager::enableReplay(const std::string filename)
+void RegManager::enableReplay(const std::string& filename)
 {
     replay_file.push(boost::iostreams::gzip_decompressor());
     replay_file.push(boost::iostreams::file_source(filename));
