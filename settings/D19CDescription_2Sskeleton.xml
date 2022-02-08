@@ -24,18 +24,18 @@
 
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
             <CBC Id="0" configfile="CBC3_default.txt" />
-            <CBC Id="1" configfile="CBC3_default.txt" />
+            <!-- <CBC Id="1" configfile="CBC3_default.txt" />
             <CBC Id="2" configfile="CBC3_default.txt" />
             <CBC Id="3" configfile="CBC3_default.txt" />
             <CBC Id="4" configfile="CBC3_default.txt" />
             <CBC Id="5" configfile="CBC3_default.txt" />
             <CBC Id="6" configfile="CBC3_default.txt" />
-            <CBC Id="7" configfile="CBC3_default.txt" /> 
+            <CBC Id="7" configfile="CBC3_default.txt" />  -->
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
-        <Hybrid Id="1" Status="1" reset="1"> <!-- i2cMaster="1"> -->
+        <Hybrid Id="1" Status="0" reset="1"> <!-- i2cMaster="1"> -->
             <Global>
                 <Settings threshold="720" latency="108"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
@@ -86,7 +86,7 @@
         <Register name="fast_command_block">
     		<Register name="triggers_to_accept"> 0 </Register>
     		<Register name="trigger_source"> 3 </Register>
-    		<Register name="user_trigger_frequency"> 10 </Register>
+    		<Register name="user_trigger_frequency"> 100 </Register>
     		<Register name="stubs_mask"> 1 </Register>
             <!--this is the delay for the stub trigger-->
     		<Register name="stub_trigger_delay_value"> 0 </Register>
