@@ -88,7 +88,7 @@ void CBCPulseShape::runCBCPulseShape(void)
         if(fDQMStreamerEnabled)
         {
             auto theThresholdAndNoiseStream = prepareChipContainerStreamer<ThresholdAndNoise, ThresholdAndNoise, uint16_t>();
-            theThresholdAndNoiseStream.setHeaderElement<0>(delay);
+            theThresholdAndNoiseStream->setHeaderElement<0>(delay);
 
             for(auto board: *fThresholdAndNoiseContainer) { theThresholdAndNoiseStream->streamAndSendBoard(board, fDQMStreamer); }
 

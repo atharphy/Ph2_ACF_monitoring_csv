@@ -35,7 +35,7 @@
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
-        <Hybrid Id="1" Status="1" reset="1" i2cMaster="1">
+        <Hybrid Id="1" Status="1" reset="1" i2cMaster="0">
             <Global>
                 <Settings threshold="550" latency="108"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
@@ -269,13 +269,13 @@
 
 <MonitoringSettings>
 <Monitoring type="2S" enable="1">
-    <MonitoringSleepTime> 10000 </MonitoringSleepTime>
+    <MonitoringSleepTime> 1000 </MonitoringSleepTime>
     <MonitoringElements
     CBCThreshold  = "1"
-    LpGBT_ADC1    = "0"
-    LpGBT_VDD     = "0"
-    LpGBT_VDDA    = "0"
-    LpGBT_TEMP    = "0"
+    LpGBT_ADC1    = "1"
+    LpGBT_VDD     = "1"
+    LpGBT_VDDA    = "1"
+    LpGBT_TEMP    = "1"
     />
 </Monitoring>
 </MonitoringSettings>

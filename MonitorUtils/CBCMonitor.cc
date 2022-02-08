@@ -4,6 +4,7 @@
 #include "../HWInterface/D19clpGBTInterface.h"
 #include "../Utils/CharArray.h"
 #include "../Utils/ContainerFactory.h"
+#include "../Utils/OpticalGroupContainerStream.h"
 
 #ifdef __USE_ROOT__
 #include "TFile.h"
@@ -66,7 +67,11 @@ void CBCMonitor::runCBCRegisterMonitor(std::string registerName)
     theCBCRegisterStreamer->setHeaderElement(CharArray(registerName));
     if(fTheSystemController->fDQMStreamerEnabled)
     {
-        for(auto board: theCBCRegisterContainer) theCBCRegisterStreamer->streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
+        for(auto board: theCBCRegisterContainer)
+        {
+            std::cout << __PRETTY_FUNCTION__ << "board index = " << board->getIndex() << " board size = " << board->size() << std::endl;
+            theCBCRegisterStreamer->streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
+        }
         std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
     }
 #endif
