@@ -292,7 +292,7 @@ int main(int argc, char* argv[])
         {
             std::stringstream ss;
             ss << "Upload FW " << cFWFile.c_str();
-            LOG(INFO) << ss;
+            LOG(INFO) << ss.str();
             gui::status(ss.str().c_str());
             gui::progress(0);
             cInterface.FlashProm(strImage, cFWFile.c_str());

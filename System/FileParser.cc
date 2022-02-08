@@ -184,6 +184,8 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
         {
             pBeBoardFWMap[cBeBoard->getId()] = new RD53FWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str());
         }
+        LOG (INFO) << BOLDYELLOW << "ParseHW [FileParser] " << pBeBoardFWMap[cBeBoard->getId()] << "\t" << pBeBoardFWMap[cBeBoard->getId()]->getId() << RESET;
+        
     }
     os << BOLDCYAN << "|"
        << "       "

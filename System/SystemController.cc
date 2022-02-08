@@ -179,8 +179,10 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
+    LOG (INFO) << BOLDYELLOW << "ParseHW [pre-Board interface] " << (*fBeBoardFWMap.begin()).second << "\t" << (*fBeBoardFWMap.begin()).second->getId() << RESET;
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
-
+    LOG (INFO) << BOLDYELLOW << "ParseHW [post-Board interface] " << (*fBeBoardFWMap.begin()).second << "\t" << (*fBeBoardFWMap.begin()).second->getId() << RESET;
+    
     fChannelGroupHandlerContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitChip<std::shared_ptr<ChannelGroupHandler>>(*fDetectorContainer, *fChannelGroupHandlerContainer);
 
