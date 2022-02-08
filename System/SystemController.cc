@@ -13,7 +13,7 @@
 #include "../MonitorUtils/RD53Monitor.h"
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
-#include "../tools/SEHMonitor.h"
+#include "../MonitorUtils/SEHMonitor.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -501,20 +501,14 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
     RD53Event::ForkDecodingThreads();
 }
+
 // ######################################
 // # Configuring Outer Tracker hardware #
 // ######################################
 void SystemController::InitializeOT(BeBoard* pBoard)
 {
     LOG(INFO) << BOLDMAGENTA << "Initializing OT hardware.." << RESET;
-// turn on the SEH here - moved from the lpGBT interface
-#ifdef __SEH_USB__
-    LOG(INFO) << BOLDRED << "Intitally switching on SEH for configuration" << RESET;
-    if(flpGBTInterface != nullptr)
-    {
-        if(flpGBTInterface->getExternalController() != nullptr) flpGBTInterface->getExternalController()->getInterface().set_SehSupply(TC_2SSEH::sehSupplyState::sehSupply_On);
-    }
-#endif
+
     for(auto cOpticalGroup: *pBoard)
     {
         if(cOpticalGroup->flpGBT == nullptr) continue;
@@ -643,6 +637,7 @@ void SystemController::InitializeOT(BeBoard* pBoard)
     else
         LOG(INFO) << BOLDMAGENTA << "No ReSync needed after OT-module configuration step" << RESET;
 }
+
 void SystemController::ConfigureOT(BeBoard* pBoard)
 {
     // hard reset ROCs on hybrid if lpGBT is there; if no lpGBT this
@@ -691,6 +686,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
     }                                                                                  // OG
     LOG(INFO) << BOLDMAGENTA << "Configured OT module" << RESET;
 }
+
 void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
 {
     auto cBoardId   = pOpticalGroup->getBeBoardId();
@@ -1022,6 +1018,23 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                     }
                 }
             }
+            if(!cBoard->isOptical() && cBoard->at(0)->flpGBT != nullptr)
+            {
+                LOG(INFO) << YELLOW << "Checking LinkLock after USB configuration of lpGBT" << RESET;
+                LOG(INFO) << BOLDMAGENTA << "Resetting lpGBT-FPGA core on BeBoard#" << +cBoard->getId() << RESET;
+                // reset lpGBT core
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
+                std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+                bool cLinkLock = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->LinkLock(cBoard);
+                if(!cLinkLock)
+                {
+                    LOG(INFO) << BOLDRED << "lpGBT link failed to LOCK!" << RESET;
+                    exit(0);
+                }
+            }
             ConfigureOT(cBoard);
 
             LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
@@ -1334,8 +1347,8 @@ void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandle
             }
         }
     }
-    fDetectorContainer->resetReadoutChipQueryFunction();
 
+    fDetectorContainer->resetReadoutChipQueryFunction();
     fSameChannelGroupForAllChannels = (totalNumberOfQueriedChips == totalNumberOfChips);
 }
 

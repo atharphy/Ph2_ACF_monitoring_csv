@@ -28,8 +28,8 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     // Configure High Speed Link Tx Rx Polarity
     // do this before doing anything else
     ConfigureHighSpeedPolarity(pChip, 1, 0);
-    bool cReconfigure = false; // if using I2C interface maybe I want to confiugre?
-    if(cReconfigure)           // by de
+    bool cReconfigure = true; // if using I2C interface maybe I want to confiugre?
+    if(cReconfigure)          // by de
     {
         ChipRegMap                                    clpGBTRegMap = pChip->getRegMap();
         std::vector<std::pair<std::string, uint16_t>> cRegVec;
@@ -72,7 +72,7 @@ void D19clpGBTInterface::SetConfigMode(bool pUseOpticalLink, bool pUseCPB, bool 
     if(pUseOpticalLink)
     {
         LOG(INFO) << BOLDGREEN << "Using Serial Interface configuration mode" << RESET;
-#ifdef __ROH_USB__
+#if defined(__TC_USB__) && defined(__ROH_USB__)
         LOG(INFO) << BOLDBLUE << "Toggling Test Card" << RESET;
         if(pToggleTC && fExternalController != nullptr) fExternalController->getInterface().toggle_SCI2C();
 #endif
@@ -148,6 +148,19 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
         this->cbcReset(pChip, true, cSide);
         this->cicReset(pChip, true, cSide);
     }
+#if defined(__TCUSB__)
+    ContinuousPhaseAlignRx(pChip, cRxGroups, cRxChannels);
+    // InternalPhaseAlignRx(pChip, cRxGroups, cRxChannels);
+    // DpPhaseAlignRx(pChip, cRxGroups, cRxChannels);
+    ConfigureCurrentDAC(pChip, std::vector<std::string>{"ADC4"}, 0x1c); // current chosen according to measurement range
+#endif
+
+} // namespace Ph2_HwInterface
+void D19clpGBTInterface::ContinuousPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
+{
+    // Configure Rx Phase Shifter
+
+    D19clpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, 2, 2);
 }
 
 void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
@@ -155,10 +168,10 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     uint8_t cChipRate = GetChipRate(pChip);
     LOG(INFO) << BOLDGREEN << "Applying PS-ROH-" << +cChipRate << "G lpGBT configuration" << RESET;
     // Clocks
-    std::vector<uint8_t> cClocks  = {fClock_LHS_Hybrid, fClock_LHS_CIC, fClock_RHS_Hybrid, fClock_RHS_CIC};
-    uint8_t              cClkFreq = (cChipRate == 5) ? 4 : 5, cClkDriveStr = 1, cClkInvert = 1;
-    uint8_t              cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
-    cClkFreq = 0;
+    std::vector<uint8_t> cClocks = {fClock_LHS_Hybrid, fClock_LHS_CIC, fClock_RHS_Hybrid, fClock_RHS_CIC};
+    // clock frequency set to 0 to disable it at first and only later configure what is needed
+    uint8_t cClkFreq = 0, cClkDriveStr = 1, cClkInvert = 1;
+    uint8_t cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     // Tx Groups and Channels
     std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};

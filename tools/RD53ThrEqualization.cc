@@ -169,10 +169,10 @@ void ThrEqualization::run()
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
                             if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !this->getChannelGroupHandlerContainer()
-                                                                                                                     ->getObject(cBoard->getId())
-                                                                                                                     ->getObject(cOpticalGroup->getId())
-                                                                                                                     ->getObject(cHybrid->getId())
-                                                                                                                     ->getObject(cChip->getId())
+                                                                                                                     ->at(cBoard->getIndex())
+                                                                                                                     ->at(cOpticalGroup->getIndex())
+                                                                                                                     ->at(cHybrid->getIndex())
+                                                                                                                     ->at(cChip->getIndex())
                                                                                                                      ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                                                                                                      ->allChannelGroup()
                                                                                                                      ->isChannelEnabled(row, col))
@@ -237,10 +237,10 @@ void ThrEqualization::analyze()
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
                             if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
-                                                                                                                   ->getObject(cBoard->getId())
-                                                                                                                   ->getObject(cOpticalGroup->getId())
-                                                                                                                   ->getObject(cHybrid->getId())
-                                                                                                                   ->getObject(cChip->getId())
+                                                                                                                   ->at(cBoard->getIndex())
+                                                                                                                   ->at(cOpticalGroup->getIndex())
+                                                                                                                   ->at(cHybrid->getIndex())
+                                                                                                                   ->at(cChip->getIndex())
                                                                                                                    ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                                                                                                    ->allChannelGroup()
                                                                                                                    ->isChannelEnabled(row, col))
@@ -281,8 +281,6 @@ void ThrEqualization::analyze()
                                      << " entries and high TDAC value with " << BOLDYELLOW << counterMaxBin << BOLDRED << " entries) for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW
                                      << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << BOLDRED << "]" << std::setprecision(-1) << RESET;
                     }
-
-                    static_cast<RD53*>(cChip)->copyMaskToDefault();
                 }
 }
 
@@ -498,7 +496,6 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
         // ################
         // # Run analysis #
         // ################
-        // this->measureData(nEvents, nEvtsBurst);
         PixelAlive::run();
         auto output = PixelAlive::analyze();
 
@@ -561,7 +558,7 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
                 {
                     this->fReadoutChipInterface->WriteChipAllLocalReg(
                         static_cast<RD53*>(cChip), regName, *bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
-                    static_cast<RD53*>(cChip)->copyMaskToDefault();
+                    static_cast<RD53*>(cChip)->copyMaskToDefault("td");
                 }
 
     // ################

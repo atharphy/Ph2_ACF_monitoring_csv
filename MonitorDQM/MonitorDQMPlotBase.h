@@ -102,8 +102,8 @@ class MonitorDQMPlotBase
         if(XTitle != nullptr) graphContainer.fTheGraph->GetXaxis()->SetTitle(XTitle);
         if(YTitle != nullptr)
         {
-            graphContainer.fTheGraph->GetYaxis()->SetTitle(YTitle);
             graphContainer.setNameTitle("DQM_" + std::string{YTitle}, "DQM_" + std::string{YTitle});
+            graphContainer.fTheGraph->GetYaxis()->SetTitle(YTitle);
         }
         graphContainer.fTheGraph->SetMarkerStyle(20);
         graphContainer.fTheGraph->SetMarkerSize(0.4);

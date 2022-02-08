@@ -15,7 +15,7 @@
 #include "../Utils/RD53Shared.h"
 #include "ChipInterface.h"
 #include "ReadoutChipInterface.h"
-#ifdef __TCUSB__
+#if defined(__TCUSB__)
 #include "TCInterface.h"
 #endif
 // ##########################
@@ -25,6 +25,8 @@ namespace lpGBTconstants
 {
 const uint8_t PATTERN_PRBS      = 0x1; // Start PRBS pattern
 const uint8_t PATTERN_NORMAL    = 0x0; // Start normal-mode pattern
+const uint8_t PATTERN_CONST     = 0x4; // Constant pattern set by DP pattern
+const uint8_t PATTERN_CONST_INV = 0x5; // Inverted constant pattern
 const uint8_t fictitiousGroup   = 6;   // Fictitious group used when no need to speficy frontend chip
 const uint8_t fictitiousChannel = 0;   // Fictitious channel used when no need to speficy frontend chip
 const uint8_t rxPhaseTracking   = 2;   // Rx phase tracking mode [0 = no-tracking, 2 = automatic-tracking]
@@ -32,10 +34,10 @@ const uint8_t rxPhaseTracking   = 2;   // Rx phase tracking mode [0 = no-trackin
 
 namespace Ph2_HwInterface
 {
-#ifdef __TCUSB__
-#ifdef __ROH_USB__
+#if defined(__TCUSB__)
+#if defined(__ROH_USB__)
 using TestCardInterface = TCInterface<TC_PSROH>;
-#elif __SEH_USB__
+#elif defined(__SEH_USB__)
 using TestCardInterface = TCInterface<TC_2SSEH>;
 #endif
 #endif
@@ -56,10 +58,8 @@ struct lpGBTClockConfig
 class lpGBTInterface : public ChipInterface
 {
   protected:
-#ifdef __TCUSB__
-#if defined(__ROH_USB__) || defined(__SEH_USB__)
+#if defined(__TCUSB__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
     TestCardInterface* fExternalController{nullptr};
-#endif
 #endif
 
   protected:
@@ -67,13 +67,13 @@ class lpGBTInterface : public ChipInterface
                                     // std::vector<i2cConfig> fI2Cconfigs(3);
                                     // if external interface is compiled then return the ptr to access the controller
   public:
-#ifdef __TCUSB__
+#if defined(__TCUSB__)
     void iniitalizeExternalController()
     {
-#ifdef __ROH_USB__
+#if defined(__ROH_USB__)
         LOG(INFO) << BOLDYELLOW << "Initializing controller (via usb) for PS-ROH test system..." << RESET;
         fExternalController = new TestCardInterface("ROH_USB");
-#elif __SEH_USB__
+#elif defined(__SEH_USB__)
 
         LOG(INFO) << BOLDYELLOW << "Initializing controller (via usb) for 2S-SEH test system..." << RESET;
         fExternalController = new TestCardInterface("SEH_USB");

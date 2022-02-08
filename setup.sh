@@ -59,6 +59,10 @@ export USBINSTDIR=$EXTERNAL_TOOLS_BASE_DIR/Ph2_USBInstDriver
 export EUDAQDIR=$EXTERNAL_TOOLS_BASE_DIR/eudaq
 export POWERSUPPLYDIR=$EXTERNAL_TOOLS_BASE_DIR/power_supply
 
+# These are git references for the dependencies that are included via CMake ExternalProjects
+export PH2_TCUSB_REF=e28b79c090b35d9fc686b5d56a4ebab0c36a1a22
+export EUDAQ_REF=ac59b87fca12806d775e95df2d253c3bf96420ee
+
 ###########
 # ANTENNA #
 ###########
@@ -101,12 +105,12 @@ export EuDaqFlag='-D__EUDAQ__'
 ################
 
 # Stand-alone application, without data streaming
-# export CompileForHerd=false
-# export CompileForShep=false
+export CompileForHerd=false
+export CompileForShep=false
 
 # Stand-alone application, with data streaming
-export CompileForHerd=true
-export CompileForShep=true
+# export CompileForHerd=true
+# export CompileForShep=true
 
 # Herd application
 # export CompileForHerd=true
@@ -126,7 +130,7 @@ export UseTCUSBTcpServer=false
 
 # Clang-format command
 if command -v clang-format &> /dev/null; then
-  clang_command="clang-format"
+ clang_command="clang-format" 
 else
   clang_command="/opt/rh/llvm-toolset-7.0/root/usr/bin/clang-format"
 fi

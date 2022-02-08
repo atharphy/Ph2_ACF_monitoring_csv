@@ -44,7 +44,6 @@ void RD53Monitor::runRegisterMonitor(const std::string& registerName)
                     float registerValue;
                     try
                     {
-                        // registerValue = fTheSystemController->fReadoutChipInterface->ReadChipReg(cChip, registerName); // @TMP@
                         registerValue = fTheSystemController->fBeBoardInterface->ReadChipMonitor(fTheSystemController->fReadoutChipInterface, cChip, registerName);
 
                         theRegisterContainer.getObject(cBoard->getId())
