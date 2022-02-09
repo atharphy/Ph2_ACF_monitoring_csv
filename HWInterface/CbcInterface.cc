@@ -44,11 +44,13 @@ bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerifLoop, uint32_t pBlockSiz
     std::vector<ChipRegItem> cRegItems; 
     for( auto cReg : cCbcRegMap ) 
     {
-        if( cReg.second.fPage == 0 && cReg.second.fAddress == 0x20 ){ 
+        if( cReg.second.fPage == 0 && ( cReg.second.fAddress == 0x20 || cReg.second.fAddress == 0x21 ) ){ 
             cReg.second.fValue = 0xAA;
-            fBoardFW->SingleRegisterWriteRead(pCbc, cReg.second );
+            cRegItems.push_back( cReg.second );
+            // fBoardFW->SingleRegisterWriteRead(pCbc, cReg.second );
         }
     }
+    fBoardFW->MultiRegisterWriteRead(pCbc, cRegItems); 
     return true;
 
     std::vector<std::pair<std::string, ChipRegItem>> cRegList;
