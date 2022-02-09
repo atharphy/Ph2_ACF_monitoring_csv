@@ -268,6 +268,16 @@ class BeBoardFWInterface : public RegManager
     virtual bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false) { return true; }
     virtual uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) { return 0; }
 
+    // ##########################################
+    // # Configuration FE Read/Write #
+    // ##########################################
+    virtual bool    SingleRegisterWrite(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pRetry = false) { return true; }
+    virtual bool    MultiRegisterWrite(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem, bool pRetry = false) { return true; }
+    
+    virtual bool    SingleRegisterWriteRead(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false) { return true; }
+    virtual uint8_t SingleRegisterRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem ) { return 0; }
+    virtual std::vector<uint8_t> MultiRegisterRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem ) { std::vector<uint8_t> cData(0); return cData; }
+   
     void ConfigureCPB(CPBconfig pConfig)
     {
         fCPBConfig.fEnable      = pConfig.fEnable;
@@ -283,18 +293,6 @@ class BeBoardFWInterface : public RegManager
     uint32_t  numAcq{0};
     uint32_t  nbMaxAcq{0};
     CPBconfig fCPBConfig;
-    // Template to return a vector of all mismatched elements in two vectors using std::mismatch for readback value comparison
-    template <typename T, class BinaryPredicate>
-    std::vector<typename std::iterator_traits<T>::value_type> get_mismatches(T pWriteVector_begin, T pWriteVector_end, T pReadVector_begin, BinaryPredicate p)
-    {
-        std::vector<typename std::iterator_traits<T>::value_type> pMismatchedWriteVector;
-
-        for(std::pair<T, T> cPair = std::make_pair(pWriteVector_begin, pReadVector_begin); (cPair = std::mismatch(cPair.first, pWriteVector_end, cPair.second, p)).first != pWriteVector_end;
-            ++cPair.first, ++cPair.second)
-            pMismatchedWriteVector.push_back(*cPair.first);
-
-        return pMismatchedWriteVector;
-    }
 };
 
 } // namespace Ph2_HwInterface

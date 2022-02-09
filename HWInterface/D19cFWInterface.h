@@ -17,6 +17,7 @@
 #include "../Utils/Event.h"
 #include "../Utils/easylogging++.h"
 #include "BeBoardFWInterface.h"
+#include "FEConfigurationInterface.h"
 #include <limits.h>
 #include <map>
 #include <mutex>
@@ -95,6 +96,7 @@ class D19cFWInterface : public BeBoardFWInterface
 {
   private:
     // std::recursive_mutex                     fMutex;
+    FEConfigurationInterface*                 fFEConfigurationInterface; 
     D19cFWEvtEncoder::D19cFWEvt              fD19cFWEvts;
     std::vector<std::vector<uint32_t>>       fSlaveMap;
     std::map<uint8_t, std::vector<uint32_t>> fI2CSlaveMap;
@@ -468,6 +470,14 @@ class D19cFWInterface : public BeBoardFWInterface
     bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false) override;
     bool    localWriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry, uint32_t& theI2CWriteCount, uint32_t& theI2CReadMismatches);
     uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) override;
+    
+    // Generic FE configuration functions
+    uint8_t SingleRegisterRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem ) override ;
+    std::vector<uint8_t> MultiRegisterRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem ) override;
+    bool    SingleRegisterWrite(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pRetry = false) override;
+    bool    MultiRegisterWrite(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem, bool pRetry = false ) override;
+    
+
     // fast command generic block
     void ResetFCMDBram();
     void ConfigureFCMDBram(std::vector<uint8_t> pFastCommands);

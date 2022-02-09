@@ -179,9 +179,11 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
-    LOG (INFO) << BOLDYELLOW << "ParseHW [pre-Board interface] " << (*fBeBoardFWMap.begin()).second << "\t" << (*fBeBoardFWMap.begin()).second->getId() << RESET;
+    std::cout << BOLDYELLOW << "ParseHW [pre-Board interface] " << (*fBeBoardFWMap.begin()).second << "\t" << (*fBeBoardFWMap.begin()).second->getId() << RESET << "\n";
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
-    LOG (INFO) << BOLDYELLOW << "ParseHW [post-Board interface] " << (*fBeBoardFWMap.begin()).second << "\t" << (*fBeBoardFWMap.begin()).second->getId() << RESET;
+    std::cout << BOLDYELLOW << "ParseHW [post-Board interface] " << (*fBeBoardFWMap.begin()).second << "\t" << (*fBeBoardFWMap.begin()).second->getId() << RESET << "\n";
+    fBeBoardInterface->setBoard(0);
+    std::cout << BOLDRED << "ParseHW [post-Board interface fBoardFW ] " << fBeBoardInterface->getFirmwareInterface() << "\t" << fBeBoardInterface->getFirmwareInterface()->getId() << RESET "\n";
     
     fChannelGroupHandlerContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitChip<std::shared_ptr<ChannelGroupHandler>>(*fDetectorContainer, *fChannelGroupHandlerContainer);
@@ -941,6 +943,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
     for(const auto cBoard: *fDetectorContainer)
     {
         cBoard->printBoardType();
+        fBeBoardInterface->setBoard(0);
         fBeBoardInterface->ConfigureBoard(cBoard);
         if(cBoard->getBoardType() == BoardType::D19C)
         {

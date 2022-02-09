@@ -127,4 +127,17 @@ uint8_t reverseBits(uint8_t cValue)
     // cValue = (cValue & 0xAA) >> 1 | (cValue & 0x55) << 1;
     return cReverseBiset.to_ulong();
 }
+
+// Template to return a vector of all mismatched elements in two vectors using std::mismatch for readback value comparison
+template <typename T, class BinaryPredicate>
+std::vector<typename std::iterator_traits<T>::value_type> get_mismatches(T pWriteVector_begin, T pWriteVector_end, T pReadVector_begin, BinaryPredicate p)
+{
+    std::vector<typename std::iterator_traits<T>::value_type> pMismatchedWriteVector;
+
+    for(std::pair<T, T> cPair = std::make_pair(pWriteVector_begin, pReadVector_begin); (cPair = std::mismatch(cPair.first, pWriteVector_end, cPair.second, p)).first != pWriteVector_end;
+        ++cPair.first, ++cPair.second)
+        pMismatchedWriteVector.push_back(*cPair.first);
+
+    return pMismatchedWriteVector;
+}
 #endif

@@ -38,13 +38,29 @@ void SSA2Interface::DumpConfiguration(Chip* pSSA2, std::string filename)
 }
 bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockSize)
 {
+    setBoard(pSSA2->getBeBoardId());
+    std::stringstream cOutput;
+    pSSA2->printChipType(cOutput);
+    ChipRegMap            cSSA2RegMap = pSSA2->getRegMap();
+    LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pSSA2->getId() << "] oh Hybrid" << +pSSA2->getHybridId() << RESET;
+
+    std::vector<ChipRegItem> cRegItems; 
+    for( auto cReg : cSSA2RegMap ) 
+    {
+        if( cReg.first == "THTRIMMING_S79" ){ cReg.second.fValue = 0x00;}// fBoardFW->SingleRegisterWrite( pSSA2, cReg.second ); }
+        cRegItems.push_back(cReg.second);
+    }
+    fBoardFW->MultiRegisterWrite(pSSA2, cRegItems);
+    // fBoardFW->MultiRegisterRead(pSSA2, cRegItems);
+    
+    return true;
+
     fTrackRegisters = false;
     this->WriteChipSingleReg(pSSA2, "mask_strip", 255, false);
     this->WriteChipSingleReg(pSSA2, "mask_peri_A", 255, false);
     this->WriteChipSingleReg(pSSA2, "mask_peri_D", 255, false);
     LOG(INFO) << BOLDBLUE << "Configuring SSA2 " << RESET;
     std::vector<uint32_t> cVec;
-    ChipRegMap            cSSA2RegMap = pSSA2->getRegMap();
     bool                  cWrite      = true;
     bool                  cSuccess    = true;
     // do not overwrite these registers..
@@ -256,7 +272,7 @@ uint16_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode)
         fBoardFW->DecodeReg(cRegItem, cSSA2Id, cVecReq[0], cRead, cFailed);
         if(!cFailed)
         {
-            LOG(DEBUG) << BOLDRED << "Reading " << pRegNode << " from SSA#" << +pSSA2->getId() << " value is 0x" << std::hex << cRegItem.fValue << std::dec << RESET;
+            LOG(INFO) << BOLDRED << "Reading " << pRegNode << " from SSA#" << +pSSA2->getId() << " value is 0x" << std::hex << cRegItem.fValue << std::dec << RESET;
             pSSA2->setReg(pRegNode, cRegItem.fValue);
         }
         else
