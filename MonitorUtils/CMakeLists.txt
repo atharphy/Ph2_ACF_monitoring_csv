@@ -102,9 +102,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     if(${USE_EUDAQ})
         set(LIBS ${LIBS} ${EUDAQ_LIB})
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{EuDaqFlag}")
-    else(${USE_EUDAQ})
-        list(REMOVE_ITEM BINARIES RD53eudaqProducer.cc)
-        list(REMOVE_ITEM SOURCES ${PROJECT_SOURCE_DIR}/tools/RD53eudaqProducer.cc)
     endif(${USE_EUDAQ})
 
     ###############

@@ -86,8 +86,8 @@ void ThrEqualization::sendData()
 
     if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: *theOccContainer.get()) theOccStream.streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theTDACcontainer) theTDACStream.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: *theOccContainer.get()) theOccStream->streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTDACcontainer) theTDACStream->streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 

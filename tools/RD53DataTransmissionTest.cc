@@ -51,8 +51,8 @@ void DataTransmissionTest::sendData()
 
     if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: theTAP0scanContainer) theStreamTAP0scan.streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theTAP0tgtContainer) theStreamTAP0tgt.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTAP0scanContainer) theStreamTAP0scan->streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTAP0tgtContainer) theStreamTAP0tgt->streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 

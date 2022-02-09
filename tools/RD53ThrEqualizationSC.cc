@@ -84,7 +84,7 @@ void ThrEqualizationSC::sendData()
     auto theTDACStream = prepareChannelContainerStreamer<uint16_t>("TDAC");
 
     if(fDQMStreamerEnabled == true)
-        for(const auto cBoard: theTDACcontainer) theTDACStream.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTDACcontainer) theTDACStream->streamAndSendBoard(cBoard, fDQMStreamer);
 }
 
 void ThrEqualizationSC::Stop()

@@ -21,8 +21,7 @@
 
 namespace Ph2_HwInterface
 {
-RegManager::RegManager(const std::string& puHalConfigFileName, uint32_t pBoardId)
-: fUHalConfigFileName(puHalConfigFileName)
+RegManager::RegManager(const std::string& puHalConfigFileName, uint32_t pBoardId) : fUHalConfigFileName(puHalConfigFileName)
 {
     if(mode != Mode::Replay)
     {
