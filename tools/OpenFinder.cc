@@ -1,3 +1,4 @@
+#if defined(__TCUSB__) && defined(__USE_ROOT__) && defined(__ANTENNA__)
 #include "OpenFinder.h"
 #include "CBCChannelGroupHandler.h"
 #include "ContainerFactory.h"
@@ -278,7 +279,6 @@ void OpenFinder::CountOpens(BeBoard* pBoard)
     }
 }
 
-#ifdef __USE_ROOT__
 void OpenFinder::Print()
 {
     for(auto cBoard: *fDetectorContainer)
@@ -338,14 +338,13 @@ void OpenFinder::Print()
         }
     }
 }
-#endif
 
 void OpenFinder::FindOpens2S()
 {
-#ifdef __ANTENNA__
     // The main antenna object is needed here
     // Antenna cAntenna;
-    Antenna cAntenna = Antenna(fParameters.UsbId.c_str());
+    //Antenna cAntenna = Antenna(fParameters.UsbId.c_str());
+    Antenna cAntenna = Antenna();
     // Trigger source for the antenna
     cAntenna.SelectTriggerSource(fParameters.fAntennaTriggerSource);
     // Configure SPI (again?) and the clock
@@ -397,12 +396,10 @@ void OpenFinder::FindOpens2S()
         // de-select all channels
         cAntenna.TurnOnAnalogSwitchChannel(9);
     }
-#endif
 }
 void OpenFinder::SelectAntennaPosition(const std::string& cPosition, uint16_t potentiometer)
 {
     if(potentiometer != 0) fParameters.potentiometer = potentiometer;
-#ifdef __TCUSB__
     auto cMapIterator = fAntennaControl.find(cPosition);
     if(cMapIterator != fAntennaControl.end())
     {
@@ -419,12 +416,10 @@ void OpenFinder::SelectAntennaPosition(const std::string& cPosition, uint16_t po
         LOG(INFO) << BOLDBLUE << "Antenna Pull-up Measurement : " << measurement << " mV." << RESET;
         if(cPosition == "Disable") ReadAntennaVoltage();
     }
-#endif
 }
 
 void OpenFinder::FindOpensPS()
 {
-#ifdef __TCUSB__
     float   measurement;
     TC_PSFE cTC_PSFE;
     cTC_PSFE.adc_get(TC_PSFE::measurement::_3V3, measurement);
@@ -498,9 +493,7 @@ void OpenFinder::FindOpensPS()
                         }
                         // cThreshold = 12;
                         std::string tmpParameter = "thresholdForOpens_" + std::to_string(cChip->getId());
-#ifdef __USE_ROOT__
                         fillSummaryTree(tmpParameter, cThreshold);
-#endif
 
                         // std::string cHistName  = Form("AntennaOccupancy_Even_%d", cChip->getId());
                         // if ( gROOT->FindObject(cHistName.c_str()) != nullptr )
@@ -715,14 +708,12 @@ void OpenFinder::FindOpensPS()
 
     LOG(INFO) << BOLDBLUE << "Antenna values set, running to open finder." << RESET;
 
-#ifdef __USE_ROOT__
     fResultFile->cd();
     TString               fOpensTreeParameter = "";
     std::vector<uint16_t> fOpensTreeValue     = {};
     TTree*                fOpensTree          = new TTree("opensTree", "Opens in hybrid");
     fOpensTree->Branch("Chip", &fOpensTreeParameter);
     fOpensTree->Branch("Value", &fOpensTreeValue);
-#endif
 
     bool        cOpensFound = false;
     std::string Channels    = "";
@@ -847,7 +838,6 @@ void OpenFinder::FindOpensPS()
 
                                 tmpParameter = "";
                                 tmpParameter = "opens_" + std::to_string(cChip->getId()) + "_" + Channels;
-#ifdef __USE_ROOT__
                                 fillSummaryTree(tmpParameter, opens.size());
                                 if(true)
                                 {
@@ -857,7 +847,6 @@ void OpenFinder::FindOpensPS()
                                     fOpensTreeValue     = opens;
                                     fOpensTree->Fill();
                                 }
-#endif
                             }
 
                             if(!cOpensFound)
@@ -875,6 +864,6 @@ void OpenFinder::FindOpensPS()
             }
         }
     }
-#endif
 }
 void OpenFinder::FindOpens() {}
+#endif

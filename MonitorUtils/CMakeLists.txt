@@ -99,17 +99,17 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/tools *.cc)
 
     # Build eudaq producer
-    if (USE_EUDAQ)
+    if(${USE_EUDAQ})
         set(LIBS ${LIBS} ${EUDAQ_LIB})
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{EuDaqFlag}")
-    else(USE_EUDAQ)
+    else(${USE_EUDAQ})
         list(REMOVE_ITEM BINARIES RD53eudaqProducer.cc)
         list(REMOVE_ITEM SOURCES ${PROJECT_SOURCE_DIR}/tools/RD53eudaqProducer.cc)
-    endif(USE_EUDAQ)
+    endif(${USE_EUDAQ})
 
-    ####################################
-    ## EXECUTABLES
-    ####################################
+    ###############
+    # EXECUTABLES #
+    ###############
 
     message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")
 

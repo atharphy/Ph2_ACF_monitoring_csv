@@ -173,21 +173,21 @@ void BeamTestCheck2S::ValidateTP()
 void BeamTestCheck2S::ValidateRaw() { Validate(); }
 void BeamTestCheck2S::Validate()
 {
-    LOG(INFO) << BOLDYELLOW << "Creating root file [hit map] from raw file" << RESET;
     // validate
     // read events
     if(fReadoutMode == 0) ContinousReadout();
 
+    // LOG(INFO) << BOLDYELLOW << "Creating root file [hit map] from raw file" << RESET;
     // for(auto cBoard: *fDetectorContainer)
     // {
     //     fBeBoardInterface->setBoard(cBoard->getId());
     //     const std::vector<Event*>& cEvents              = this->GetEvents();
     //     float                      cNormalizationFactor = fNevents; // cEvents.size() / (1 + cTriggerMult);
     //     LOG(INFO) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " events from BeBoard#" << +cBoard->getId() << " - normalization factor for occupancy is " << +cNormalizationFactor << RESET;
-    //     // BeBoardRegMap              cRegMap              = cBoard->getBeBoardRegMap();
-    //     // std::string                cMultRegName         = "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity";
-    //     // size_t                     cTriggerMult         = (fReadoutMode == 0) ? fBeBoardInterface->ReadBoardReg(cBoard, cMultRegName) : cRegMap[cMultRegName];
-    //     // for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++) { Count(cEvents, cTriggerId, 1); }
+    //     BeBoardRegMap              cRegMap              = cBoard->getBeBoardRegMap();
+    //     std::string                cMultRegName         = "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity";
+    //     size_t                     cTriggerMult         = (fReadoutMode == 0) ? fBeBoardInterface->ReadBoardReg(cBoard, cMultRegName) : cRegMap[cMultRegName];
+    //     for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++) { Count(cEvents, cTriggerId, 1); }
     // }
     // #ifdef __USE_ROOT__
     //     fDQMHistogrammer.fillHitMaps(fHitMap, fStubMap, fHitContainerTDC);
@@ -1015,6 +1015,7 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
         DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
         fDetectorDataContainer                       = theOccupancyContainer;
 
+        auto cMaxEventsToProc = (fNevents >= 10000) ? 10000 : fNevents;
         do
         {
             if(cEventIter >= pEvents.end()) break;
@@ -1358,7 +1359,7 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
             }
             cEventIter += (1 + cTriggerMult);
             cEventCount++;
-        } while(cEventIter < pEvents.end() && cEventCount < fNevents); // I've only asked to look at fNEvents
+        } while(cEventIter < pEvents.end() && cEventCount < cMaxEventsToProc); // I've only asked to look at fNEvents
     }
 
     for(auto cBoard: *fDetectorContainer)
