@@ -36,7 +36,9 @@
 #include <sys/wait.h>
 #include <thread>
 
+#ifdef __USE_ROOT__
 #include "TApplication.h"
+#endif
 
 #ifdef __EUDAQ__
 #include "../tools/RD53eudaqProducer.h"
@@ -202,6 +204,7 @@ int main(int argc, char** argv)
     // ######################
     if(supervisor == true)
     {
+#ifdef __USE_ROOT__
         // #######################
         // # Run Supervisor Mode #
         // #######################
@@ -314,6 +317,7 @@ int main(int argc, char** argv)
             theApp.Run();
         else
             theApp.Terminate(0);
+#endif
     }
     else
     {
