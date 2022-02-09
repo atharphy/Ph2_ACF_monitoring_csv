@@ -78,7 +78,7 @@ void CalibrationExample::runCalibrationExample(void)
     if(fDQMStreamerEnabled)
     {
         // Disclamer: final MW will not do a for loop on board since each instance will hanlde 1 board only
-        for(auto board: theHitContainer) theHitStream.streamAndSendBoard(board, fDQMStreamer);
+        for(auto board: theHitContainer) theHitStream->streamAndSendBoard(board, fDQMStreamer);
     }
 #endif
 }

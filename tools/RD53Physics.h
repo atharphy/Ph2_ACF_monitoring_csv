@@ -70,6 +70,7 @@ class Physics : public Tool
     size_t colStart;
     size_t colStop;
     size_t nTRIGxEvent;
+    size_t errors;
 
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 

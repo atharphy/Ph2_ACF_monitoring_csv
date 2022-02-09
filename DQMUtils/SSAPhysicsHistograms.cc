@@ -9,6 +9,7 @@
 
 #include "SSAPhysicsHistograms.h"
 #include "../HWDescription/Definition.h"
+#include "../Utils/ChannelContainerStream.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
 #include "../Utils/Occupancy.h"

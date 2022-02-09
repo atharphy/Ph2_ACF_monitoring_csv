@@ -35,7 +35,7 @@ using namespace Ph2_HwInterface;
 void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, std::vector<RD53Event>& decodedEvents)
 {
     const unsigned int    wordDataSize = 32; // @CONST@
-    unsigned int          errors       = 0;
+    size_t                errors       = 0;
     std::vector<uint32_t> data;
 
     RD53Event::ForkDecodingThreads();

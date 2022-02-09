@@ -90,10 +90,10 @@ void EyeScanOptimization::sendData()
 
     if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: theTAP0scanContainer) theStreamTAP0scan.streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theTAP1scanContainer) theStreamTAP1scan.streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theTAP2scanContainer) theStreamTAP2scan.streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: the3DContainer) theStream3Dscan.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTAP0scanContainer) theStreamTAP0scan->streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTAP1scanContainer) theStreamTAP1scan->streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTAP2scanContainer) theStreamTAP2scan->streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: the3DContainer) theStream3Dscan->streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 

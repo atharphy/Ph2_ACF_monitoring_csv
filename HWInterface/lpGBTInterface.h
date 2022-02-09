@@ -129,6 +129,12 @@ class lpGBTInterface : public ChipInterface
     // # LpGBT ADC-DAC functions #
     // ###########################
     uint16_t ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN = "VREF/2", uint8_t pGain = 0);
+    void     ConfigureInternalMonitoring(Ph2_HwDescription::Chip* pChip, uint8_t pEnable);
+    // ###########################
+    // # LpGBT retreive temperature #
+    // ###########################
+    float GetInternalTemperature(Ph2_HwDescription::Chip* pChip);
+    float ReadResistance(Ph2_HwDescription::Chip* pChip, std::string pADC, std::vector<uint8_t> pCurrents, uint8_t pGain = 0);
 
     // ####################################
     // # LpGBT eye opening monitor tester #

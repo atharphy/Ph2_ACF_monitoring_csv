@@ -47,7 +47,7 @@ void BERtest::sendData()
     auto theStream = prepareChipContainerStreamer<EmptyContainer, double>("BERtest");
 
     if(fDQMStreamerEnabled == true)
-        for(const auto cBoard: theBERtestContainer) theStream.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theBERtestContainer) theStream->streamAndSendBoard(cBoard, fDQMStreamer);
 }
 
 void BERtest::Stop()

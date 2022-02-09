@@ -19,20 +19,6 @@ set(BoldWhite   "${Esc}[1;37m")
 include(ExternalProject)
 set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
 
-
-# ExternalProject_Add(googletest
-#     GIT_REPOSITORY https://github.com/google/googletest
-#     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
-# )
-# MESSAGE(STATUS "${EXTERNAL_INSTALL_LOCATION}")
-
-# include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
-# link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
-
-# # add_executable(FirstTest main.cpp)
-# # add_dependencies(FirstTest googletest)
-# # target_link_libraries(FirstTest gtest gtest_main pthread)
-
 if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     MESSAGE(STATUS " ")
@@ -156,11 +142,11 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         message(STATUS "    Building with TCUSB")
 
         if(NOT PH2_TCUSB_FOUND)
-            message(STATUS "    Couldn't find PH2_TCUSB. Obtaining from gitlab ref $ENV{PH2_TCUSB_REF}")
+            message(WARNING "    Couldn't find PH2_TCUSB. Obtaining from gitlab ref $ENV{PH2_TCUSB_REF}")
             ExternalProject_Add( ext_tcusb 
                     GIT_REPOSITORY https://gitlab.cern.ch/cms_tk_ph2/cmsph2_tcusb.git
                     GIT_TAG $ENV{PH2_TCUSB_REF}
-                    PREFIX ${CMAKE_CURRENT_BINARY_DIR}
+                    PREFIX ${EXTERNAL_INSTALL_LOCATION}
                     INSTALL_COMMAND : # This will skip the install step
                 )
         endif(NOT PH2_TCUSB_FOUND)
@@ -184,15 +170,15 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     if ($ENV{CompileWithEUDAQ}) # Asked for EUDAQ
         message(STATUS "Building with EUDAQ")
         set(USE_EUDAQ ON)
-        if(NOT DEFINED ENV{EUDAQDIR})
-            message(STATUS "    Couldn't find EUDAQ. Obtaining from gitlab ref $ENV{EUDAQ_REF}")
+        if(NOT (DEFINED ENV{EUDAQDIR} AND EXISTS ENV{EUDAQDIR} ) )
+            message(WARNING "    Couldn't find EUDAQ. Obtaining from gitlab ref $ENV{EUDAQ_REF}")
             ExternalProject_Add( ext_eudaq 
                     GIT_REPOSITORY https://gitlab.cern.ch/cms_tk_ph2/eudaq.git
                     GIT_TAG $ENV{EUDAQ_REF}
-                    PREFIX ${CMAKE_CURRENT_BINARY_DIR}
+                    PREFIX ${EXTERNAL_INSTALL_LOCATION}
                 )
-            set(ENV{EUDAQDIR} ${CMAKE_CURRENT_BINARY_DIR}/src/ext_eudaq/ )
-        endif(NOT DEFINED ENV{EUDAQDIR})
+            set(ENV{EUDAQDIR} ${EXTERNAL_INSTALL_LOCATION}/src/ext_eudaq/ )
+        endif(NOT (DEFINED ENV{EUDAQDIR} AND EXISTS ENV{EUDAQDIR} ) )
 
         include_directories($ENV{EUDAQDIR}/include)
         set(EUDAQ_LIB -L$ENV{EUDAQDIR}/lib eudaq_core)

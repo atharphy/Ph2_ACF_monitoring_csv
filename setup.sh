@@ -1,4 +1,8 @@
 #!/bin/bash
+###########
+# Ph2_ACF #
+###########
+export PH2ACF_BASE_DIR=$(pwd)
 
 ##########
 # CACTUS #
@@ -42,11 +46,6 @@ fi
 # ZMQ #
 #######
 export ZMQ_HEADER_PATH=/usr/include/zmq.hpp
-
-###########
-# Ph2_ACF #
-###########
-export PH2ACF_BASE_DIR=$(pwd)
 
 ####################
 # External Plugins #
@@ -126,7 +125,6 @@ export CompileWithEUDAQ=false
 # Compile with TC_USB library
 export CompileWithTCUSB=false
 export UseTCUSBforROH=false
-export UseTCUSBforSEH=false
 export UseTCUSBTcpServer=false
 
 # Clang-format command
