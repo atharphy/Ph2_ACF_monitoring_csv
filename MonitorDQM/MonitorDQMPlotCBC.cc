@@ -9,6 +9,7 @@
 #include "../MonitorDQM/MonitorDQMPlotCBC.h"
 #include "../RootUtils/GraphContainer.h"
 #include "../RootUtils/RootContainerFactory.h"
+#include "../Utils/BoardContainerStream.h"
 #include "../Utils/CharArray.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
@@ -98,6 +99,7 @@ void MonitorDQMPlotCBC::bookLpGBTPlots(TFile* theOutputFile, const DetectorConta
 //========================================================================================================================
 void MonitorDQMPlotCBC::fillCBCRegisterPlots(DetectorDataContainer& theThresholdContainer, const std::string& registerName)
 {
+    // std::cout <<  __PRETTY_FUNCTION__ << __LINE__ << std::endl;
     if(fCBCRegisterMonitorPlotMap.find(registerName) == fCBCRegisterMonitorPlotMap.end())
     {
         LOG(ERROR) << BOLDRED << "No plots for CBC register " << registerName << RESET;
@@ -109,12 +111,15 @@ void MonitorDQMPlotCBC::fillCBCRegisterPlots(DetectorDataContainer& theThreshold
     for(auto board: theThresholdContainer) // for on boards - begin
     {
         size_t boardIndex = board->getIndex();
+        // std::cout <<  __PRETTY_FUNCTION__ << boardIndex << std::endl;
         for(auto opticalGroup: *board) // for on opticalGroup - begin
         {
             size_t opticalGroupIndex = opticalGroup->getIndex();
+            // std::cout <<  __PRETTY_FUNCTION__ << opticalGroupIndex << std::endl;
             for(auto hybrid: *opticalGroup) // for on hybrid - begin
             {
                 size_t hybridIndex = hybrid->getIndex();
+                // std::cout <<  __PRETTY_FUNCTION__ << hybridIndex << std::endl;
                 for(auto chip: *hybrid) // for on chip - begin
                 {
                     size_t chipIndex = chip->getIndex();
@@ -125,8 +130,11 @@ void MonitorDQMPlotCBC::fillCBCRegisterPlots(DetectorDataContainer& theThreshold
                     // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip
                     // by chip and not in one shot)
                     if(!chip->hasSummary()) continue;
+                    // std::cout <<  __PRETTY_FUNCTION__ << "has summary" << std::endl;
                     // // Get channel data and fill the histogram
                     // for(auto channel: *chip->getChannelContainer<uint32_t>())   // for on channel - begin
+                    // std::cout <<  __PRETTY_FUNCTION__ << "Filling CBC plot with " << std::get<0>(chip->getSummary<std::tuple<time_t, uint16_t>>()) << " - " <<
+                    // std::get<1>(chip->getSummary<std::tuple<time_t, uint16_t>>()) << std::endl;
                     chipDQMPlot->SetPoint(chipDQMPlot->GetN(),
                                           getTimeStampForRoot(std::get<0>(chip->getSummary<std::tuple<time_t, uint16_t>>())),
                                           std::get<1>(chip->getSummary<std::tuple<time_t, uint16_t>>())); // for on channel - end
@@ -182,15 +190,19 @@ bool MonitorDQMPlotCBC::fill(std::vector<char>& dataBuffer)
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR DQM YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
 
     // I'm expecting to receive a data stream from an uint16_t contained from DQM "DQMExample"
-    OpticalGroupContainerStream<EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, EmptyContainer, CharArray> theCBCDQMStreamer("CBCMonitorCBCRegister");
-    OpticalGroupContainerStream<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, uint16_t>, CharArray> theLpGBTDQMStreamer("CBCMonitorLpGBTRegister");
+    BoardContainerStream<EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, EmptyContainer, EmptyContainer, CharArray> theCBCDQMStreamer("CBCMonitorCBCRegister");
+    BoardContainerStream<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, CharArray> theLpGBTDQMStreamer("CBCMonitorLpGBTRegister");
+
+    // std::cout <<  __PRETTY_FUNCTION__ << __LINE__ << std::endl;
 
     if(theCBCDQMStreamer.attachBuffer(&dataBuffer))
     {
+        // std::cout <<  __PRETTY_FUNCTION__ << "Matches CBC monitor" << std::endl;
         // It matched! Decoding chip data
         theCBCDQMStreamer.decodeData(fDetectorData);
         // Filling the histograms
         CharArray registerNameArray = theCBCDQMStreamer.getHeaderElement();
+        // std::cout <<  __PRETTY_FUNCTION__ << "registerNameArray = " << registerNameArray.getString() << std::endl;
 
         fillCBCRegisterPlots(fDetectorData, registerNameArray.getString());
         // Cleaning the data container to be ready for the next TCP string

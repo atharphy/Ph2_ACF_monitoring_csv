@@ -8,6 +8,7 @@
 */
 
 #include "RD53DataTransmissionTestGraphs.h"
+#include "../Utils/ChipContainerStream.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

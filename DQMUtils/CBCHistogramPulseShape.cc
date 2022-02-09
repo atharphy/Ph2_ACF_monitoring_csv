@@ -8,6 +8,8 @@
 #include "../DQMUtils/CBCHistogramPulseShape.h"
 #include "../RootUtils/HistContainer.h"
 #include "../RootUtils/RootContainerFactory.h"
+#include "../Utils/ChannelContainerStream.h"
+#include "../Utils/ChipContainerStream.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"

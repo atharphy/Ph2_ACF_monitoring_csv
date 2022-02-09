@@ -2,7 +2,7 @@
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="1" boardReset="1">
     <!-- B598 skeleton -->
-    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.71:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.12:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <CDCE configure="0" clockRate="320"/>
     
     <OpticalGroup Id="0" FMCId="0" reset="1">
@@ -194,15 +194,15 @@
 
 <Settings>
     <!--PedestalEqualization-->
-    <Setting name="Nevents">100000</Setting>
+    <Setting name="Nevents">100</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
     <Setting name="FitSCurves">1</Setting>
     <Setting name="PlotSCurves">1</Setting>
     <Setting name="NoiseMeasurementLimit">10</Setting>
-    <Setting name="PedeNoiseMinThreshold">375</Setting>
-    <Setting name="PedeNoiseMaxThreshold">750</Setting>
+    <!-- <Setting name="PedeNoiseMinThreshold">375</Setting>
+    <Setting name="PedeNoiseMaxThreshold">750</Setting> -->
 
     <Setting name="PedestalEqualizationPulseAmplitude">0</Setting>
     <Setting name="PedeNoisePulseAmplitude">0</Setting>
@@ -273,13 +273,13 @@
 
 <MonitoringSettings>
 <Monitoring type="2S" enable="1">
-    <MonitoringSleepTime> 500 </MonitoringSleepTime>
+    <MonitoringSleepTime> 1000 </MonitoringSleepTime>
     <MonitoringElements
-    CBCThreshold  = "0"
-    LpGBT_ADC1    = "0"
-    LpGBT_VDD     = "0"
-    LpGBT_VDDA    = "0"
-    LpGBT_TEMP    = "0"
+    CBCThreshold  = "1"
+    LpGBT_ADC1    = "1"
+    LpGBT_VDD     = "1"
+    LpGBT_VDDA    = "1"
+    LpGBT_TEMP    = "1"
     />
 </Monitoring>
 </MonitoringSettings>

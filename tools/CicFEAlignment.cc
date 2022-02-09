@@ -543,15 +543,15 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
             for(size_t cIndx = 0; cIndx < cFcmdRegs.size(); cIndx++)
             {
                 std::string cRegName = "fc7_daq_cnfg.fast_command_block." + cFcmdRegs[cIndx];
-                cFcmdRegOrigVals.push_back( fBeBoardInterface->ReadBoardReg(cBoard, cRegName) ); 
+                cFcmdRegOrigVals.push_back(fBeBoardInterface->ReadBoardReg(cBoard, cRegName));
                 cVecReg.push_back({cRegName, cFcmdRegVals[cIndx]});
             }
             cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
             fBeBoardInterface->WriteBoardMultReg(cBoard, cVecReg);
             // send N triggers to make sure CIC receives L1 packets from CBC
             fBeBoardInterface->SendNTriggers(cBoard, pNTriggers);
-            
-            // // reload original configuration 
+
+            // // reload original configuration
             cVecReg.clear();
             for(size_t cIndx = 0; cIndx < cFcmdRegOrigVals.size(); cIndx++)
             {
