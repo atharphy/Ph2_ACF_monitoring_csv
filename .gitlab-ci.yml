@@ -2,11 +2,14 @@
 ## Author: Emery Nibigira (IPHC-Strasbourg)
 ##         emery.nibigira@cern.ch
 
+## SETUP ##########
+
 ## The pipeline starts when a merge request is created
+## or when the CI config is changed
 
 workflow:
   rules:
-    - if: $CI_MERGE_REQUEST_ID
+    - if: $CI_MERGE_REQUEST_ID || $CI_PIPELINE_SOURCE == "web"
       when: always
     - if: '$CI_PIPELINE_SOURCE == "push"'
       changes: # when any file matching the below is edited, create a pipeline
@@ -23,21 +26,39 @@ variables:
 
 stages:
   - quality
-  - compile
+  - build
   - run
   - check
+
+## QUALITY ##########
 
 include:
   - .gitlab/ci/code-quality.yml
 
-build:
-  stage: compile
+
+## BUILD ##########
+
+.build:
+  stage: build
+  needs: []
   before_script:
     - source ./setup.sh
   script:
     - mkdir -p build; cd build
     - cmake ..
     - make -j4
+
+# Stand-alone application, without data streaming
+build:StandAlone_woDS:
+  extends: .build
+  before_script:
+    - source ./setup.sh
+    - export CompileForHerd=false
+    - export CompileForShep=false
+    - export CompileWithEUDAQ=false
+    - export CompileWithTCUSB=false
+    - export UseTCUSBforROH=false
+    - export UseTCUSBTcpServer=false
   artifacts:
     paths:
       - bin/ot_module_test
@@ -45,11 +66,101 @@ build:
       - bin/CMSITminiDAQ
     expire_in: 1 week
 
+# Stand-alone application, with data streaming
+build:StandAlone_wDS:
+  extends: .build
+  before_script:
+    - source ./setup.sh
+    - export CompileForHerd=true
+    - export CompileForShep=true
+    - export CompileWithEUDAQ=false
+    - export CompileWithTCUSB=false
+    - export UseTCUSBforROH=false
+    - export UseTCUSBTcpServer=false
+
+# Herd application
+build:HerdApplication:
+  extends: .build
+  before_script:
+    - source ./setup.sh
+    - export CompileForHerd=true
+    - export CompileForShep=false
+    - export CompileWithEUDAQ=false
+    - export CompileWithTCUSB=false
+    - export UseTCUSBforROH=false
+    - export UseTCUSBTcpServer=false
+
+# Shep application
+build:ShepApplication:
+  extends: .build
+  before_script:
+    - source ./setup.sh
+    - export CompileForHerd=false
+    - export CompileForShep=true
+    - export CompileWithEUDAQ=false
+    - export CompileWithTCUSB=false
+    - export UseTCUSBforROH=false
+    - export UseTCUSBTcpServer=false
+
+# Compile with EUDAQ libraries
+build:StandAlone_wEUDAQ:
+  extends: .build
+  before_script:
+    - source ./setup.sh
+    - export CompileForHerd=false
+    - export CompileForShep=false
+    - export CompileWithEUDAQ=true
+    - export CompileWithTCUSB=false
+    - export UseTCUSBforROH=false
+    - export UseTCUSBTcpServer=false
+
+# Herd application with EUDAQ libraries
+build:HerdApplication_wEUDAQ:
+  extends: .build
+  before_script:
+    - source ./setup.sh
+    - export CompileForHerd=true
+    - export CompileForShep=false
+    - export CompileWithEUDAQ=true
+    - export CompileWithTCUSB=false
+    - export UseTCUSBforROH=false
+    - export UseTCUSBTcpServer=false
+
+# Compile with TC_USB library
+build:StandAlone_wTC_USB_SEH:
+  extends: .build
+  before_script:
+    - yum install -y libusb-devel libusbx-devel
+    - source ./setup.sh
+    - export CompileForHerd=false
+    - export CompileForShep=false
+    - export CompileWithEUDAQ=false
+    - export CompileWithTCUSB=true
+    - export UseTCUSBforROH=false
+    - export UseTCUSBTcpServer=true
+
+
+# Compile with TC_USB library for ROH
+build:StandAlone_wTC_USB_ROH:
+  extends: .build
+  before_script:
+    - yum install -y libusb-devel libusbx-devel
+    - source ./setup.sh
+    - export CompileForHerd=false
+    - export CompileForShep=false
+    - export CompileWithEUDAQ=false
+    - export CompileWithTCUSB=true
+    - export UseTCUSBforROH=true
+    - export UseTCUSBTcpServer=true
+
+
+## RUN ##########
+
 ## IT hybrid
 run_on_IT:
   stage: run
-  dependencies:
-    - build
+  needs:
+    - build:StandAlone_woDS
   before_script:
     - printf $USER_PASS | base64 -d | kinit $USER_NAME
     - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
@@ -74,23 +185,11 @@ run_on_IT:
       - ci_tools/CMSIT*
     expire_in: 1 week
 
-check_run_on_IT:
-  stage: check
-  needs: [run_on_IT]
-  script:
-    - python ci_tools/plot_canvas.py Run000000_PixelAlive.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_PixelAlive_Chip(0)" -o plots
-    - python ci_tools/plot_canvas.py Run000001_ThrEqualization.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_ThrEqualization_Chip(0)" -o plots
-    - python ci_tools/plot_canvas.py Run000002_SCurve.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_SCurves_Chip(0)" -o plots
-  artifacts:
-    paths:
-      - plots
-    expire_in: 1 week
-
 ## 2S hybrid
 run_on_2S:
   stage: run
-  dependencies:
-    - build
+  needs:
+    - build:StandAlone_woDS
   before_script:
     - printf $USER_PASS | base64 -d | kinit $USER_NAME
     - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
@@ -107,6 +206,22 @@ run_on_2S:
     paths:
       - Hybrid.root
       - ci_tools/plot_hist.py
+    expire_in: 1 week
+
+
+## CHECK ##########
+
+
+check_run_on_IT:
+  stage: check
+  needs: [run_on_IT]
+  script:
+    - python ci_tools/plot_canvas.py Run000000_PixelAlive.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_PixelAlive_Chip(0)" -o plots
+    - python ci_tools/plot_canvas.py Run000001_ThrEqualization.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_ThrEqualization_Chip(0)" -o plots
+    - python ci_tools/plot_canvas.py Run000002_SCurve.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_SCurves_Chip(0)" -o plots
+  artifacts:
+    paths:
+      - plots
     expire_in: 1 week
 
 check_run_on_2S:
