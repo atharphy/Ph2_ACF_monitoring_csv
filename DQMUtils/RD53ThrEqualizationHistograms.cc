@@ -9,6 +9,7 @@
 */
 
 #include "RD53ThrEqualizationHistograms.h"
+#include "../Utils/ChannelContainerStream.h"
 
 using namespace Ph2_HwDescription;
 

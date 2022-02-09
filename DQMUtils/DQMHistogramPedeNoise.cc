@@ -11,10 +11,12 @@
 #include "../HWDescription/ReadoutChip.h"
 #include "../RootUtils/HistContainer.h"
 #include "../RootUtils/RootContainerFactory.h"
+#include "../Utils/ChannelContainerStream.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
 #include "../Utils/EmptyContainer.h"
+#include "../Utils/HybridContainerStream.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/ThresholdAndNoise.h"
 #include "../Utils/Utilities.h"
@@ -149,7 +151,7 @@ bool DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
     if(theOccupancy.attachBuffer(&dataBuffer))
     {
         std::cout << "Matched PedeNoise Occupancy!!!!!\n";
-        theOccupancy.decodeHybridData(fDetectorData);
+        theOccupancy.decodeData(fDetectorData);
         fillValidationPlots(fDetectorData);
 
         fDetectorData.cleanDataStored();

@@ -122,7 +122,7 @@ uint8_t reverseBits(uint8_t cValue)
     std::string        cSelect = cBitset.to_string();
     std::reverse(cSelect.begin(), cSelect.end());
     std::bitset<NBITS> cReverseBiset(cSelect);
-    std::cout << std::bitset<8>(cValue) << " reversed " << std::bitset<NBITS>(cReverseBiset) << "\n";
+    // std::cout << std::bitset<8>(cValue) << " reversed " << std::bitset<NBITS>(cReverseBiset) << "\n";
     // cValue = (cValue & 0xF0) >> 4 | (cValue & 0x0F) << 4;
     // cValue = (cValue & 0xCC) >> 2 | (cValue & 0x33) << 2;
     // cValue = (cValue & 0xAA) >> 1 | (cValue & 0x55) << 1;
