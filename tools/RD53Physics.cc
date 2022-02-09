@@ -254,8 +254,8 @@ void Physics::fillDataContainer(BeBoard& theBoard)
     // ###################
     // # Fill containers #
     // ###################
-    const std::vector<Event*>& events = SystemController::GetEvents();
-    size_t evtCounter = numberOfEventsPerRun;
+    const std::vector<Event*>& events     = SystemController::GetEvents();
+    size_t                     evtCounter = numberOfEventsPerRun;
     for(const auto& event: events)
     {
         event->fillDataContainer(cBoard, getChannelGroup(-1));

@@ -57,4 +57,3 @@ int main(int argc, char** argv)
     cSystemController.Destroy();
     return 0;
 }
-
