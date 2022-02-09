@@ -23,13 +23,13 @@
 #include <limits>
 #include <math.h>
 #include <memory>
+#include <numeric>
 #include <sstream>
 #include <stdint.h>
 #include <string>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <vector>
-#include <numeric>
 
 #include <tuple> // new
 
@@ -130,24 +130,20 @@ uint8_t reverseBits(uint8_t cValue)
 }
 
 // credit to A.Rossi
-template <typename T> 
+template <typename T>
 T getLeastSquareSlope(std::vector<T>& x, const std::vector<T>& y)
 {
-    std::vector<float> cCross(x.size(), 0.); 
-    std::transform( x.begin(), x.end(),
-                    y.begin(), cCross.begin(),   
-                    std::multiplies<float>{} ); // sum(xy)
-    auto cSumCross = std::accumulate ( cCross.begin(), cCross.end() , 0.);
-    std::vector<float> cSq( x.size(), 0.);
-    std::transform( x.begin(), x.end(),
-                    x.begin(), cSq.begin(),   
-                    std::multiplies<float>{} ); // sum(x2)
-    auto cSumSq = std::accumulate ( cSq.begin(), cSq.end() , 0.);
-    auto cSumX  = std::accumulate ( x.begin(), x.end() ,0.);
-    auto cSumY  = std::accumulate ( y.begin(), y.end() ,0.);
-    
-    float cLSQN = cCross.size()*cSumCross - cSumX*cSumY;
-    float cLSQD = cSq.size()*cSumSq - cSumX*cSumX; 
-    return static_cast<T>(cLSQN/cLSQD);   
+    std::vector<float> cCross(x.size(), 0.);
+    std::transform(x.begin(), x.end(), y.begin(), cCross.begin(), std::multiplies<float>{}); // sum(xy)
+    auto               cSumCross = std::accumulate(cCross.begin(), cCross.end(), 0.);
+    std::vector<float> cSq(x.size(), 0.);
+    std::transform(x.begin(), x.end(), x.begin(), cSq.begin(), std::multiplies<float>{}); // sum(x2)
+    auto cSumSq = std::accumulate(cSq.begin(), cSq.end(), 0.);
+    auto cSumX  = std::accumulate(x.begin(), x.end(), 0.);
+    auto cSumY  = std::accumulate(y.begin(), y.end(), 0.);
+
+    float cLSQN = cCross.size() * cSumCross - cSumX * cSumY;
+    float cLSQD = cSq.size() * cSumSq - cSumX * cSumX;
+    return static_cast<T>(cLSQN / cLSQD);
 }
 #endif

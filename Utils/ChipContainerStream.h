@@ -52,15 +52,14 @@ class DataStreamChipContainer : public DataStreamBase
 
     DataStreamChipContainer(const DataStreamChipContainer& theOriginalStream) = delete;
 
-    DataStreamChipContainer(DataStreamChipContainer&& theOriginalStream)
-    : DataStreamBase(std::move(theOriginalStream))
+    DataStreamChipContainer(DataStreamChipContainer&& theOriginalStream) : DataStreamBase(std::move(theOriginalStream))
     {
-        fContainerCarried = theOriginalStream.fContainerCarried;
-        fChannelContainer = theOriginalStream.fChannelContainer;
-        theOriginalStream.fChannelContainer = nullptr;
-        fChipSummaryContainer = theOriginalStream.fChipSummaryContainer;
+        fContainerCarried                       = theOriginalStream.fContainerCarried;
+        fChannelContainer                       = theOriginalStream.fChannelContainer;
+        theOriginalStream.fChannelContainer     = nullptr;
+        fChipSummaryContainer                   = theOriginalStream.fChipSummaryContainer;
         theOriginalStream.fChipSummaryContainer = nullptr;
-        fDeletePointers = theOriginalStream.fDeletePointers;
+        fDeletePointers                         = theOriginalStream.fDeletePointers;
     }
 
     DataStreamChipContainer& operator=(const DataStreamChipContainer&) = delete;
@@ -69,12 +68,12 @@ class DataStreamChipContainer : public DataStreamBase
     {
         fContainerCarried = theOriginalStream.fContainerCarried;
         delete fChannelContainer;
-        fChannelContainer = theOriginalStream.fChannelContainer;
+        fChannelContainer                   = theOriginalStream.fChannelContainer;
         theOriginalStream.fChannelContainer = nullptr;
         delete fChipSummaryContainer;
-        fChipSummaryContainer = theOriginalStream.fChipSummaryContainer;
+        fChipSummaryContainer                   = theOriginalStream.fChipSummaryContainer;
         theOriginalStream.fChipSummaryContainer = nullptr;
-        fDeletePointers = theOriginalStream.fDeletePointers;
+        fDeletePointers                         = theOriginalStream.fDeletePointers;
 
         return *this;
     }
@@ -152,7 +151,7 @@ class ChipContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, 
 {
     template <typename T1, typename C1, typename H, typename... I1>
     friend class HybridContainerStream;
- 
+
     enum HeaderId
     {
         BoardId,
@@ -166,7 +165,7 @@ class ChipContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, 
     ChipContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, uint16_t, I...>, DataStreamChipContainer<T, C>>(creatorName) { ; }
     ~ChipContainerStream() { ; }
 
-    void setContainerCarried(const ContainerCarried& theContainerCarried) { this->fDataStream.fContainerCarried = theContainerCarried; }
+    void             setContainerCarried(const ContainerCarried& theContainerCarried) { this->fDataStream.fContainerCarried = theContainerCarried; }
     ContainerCarried getContainerCarried() const { return this->fDataStream.fContainerCarried; }
 
     void streamAndSendBoard(const BoardDataContainer* board, TCPPublishServer* networkStreamer)

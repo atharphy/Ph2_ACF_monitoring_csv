@@ -9,6 +9,7 @@
 #include "../MonitorDQM/MonitorDQMPlotCBC.h"
 #include "../RootUtils/GraphContainer.h"
 #include "../RootUtils/RootContainerFactory.h"
+#include "../Utils/BoardContainerStream.h"
 #include "../Utils/CharArray.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
@@ -17,7 +18,6 @@
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TGraph.h"
-#include "../Utils/BoardContainerStream.h"
 
 //========================================================================================================================
 MonitorDQMPlotCBC::MonitorDQMPlotCBC() {}
@@ -111,15 +111,15 @@ void MonitorDQMPlotCBC::fillCBCRegisterPlots(DetectorDataContainer& theThreshold
     for(auto board: theThresholdContainer) // for on boards - begin
     {
         size_t boardIndex = board->getIndex();
-    // std::cout <<  __PRETTY_FUNCTION__ << boardIndex << std::endl;
+        // std::cout <<  __PRETTY_FUNCTION__ << boardIndex << std::endl;
         for(auto opticalGroup: *board) // for on opticalGroup - begin
         {
             size_t opticalGroupIndex = opticalGroup->getIndex();
-    // std::cout <<  __PRETTY_FUNCTION__ << opticalGroupIndex << std::endl;
+            // std::cout <<  __PRETTY_FUNCTION__ << opticalGroupIndex << std::endl;
             for(auto hybrid: *opticalGroup) // for on hybrid - begin
             {
                 size_t hybridIndex = hybrid->getIndex();
-    // std::cout <<  __PRETTY_FUNCTION__ << hybridIndex << std::endl;
+                // std::cout <<  __PRETTY_FUNCTION__ << hybridIndex << std::endl;
                 for(auto chip: *hybrid) // for on chip - begin
                 {
                     size_t chipIndex = chip->getIndex();
@@ -130,10 +130,11 @@ void MonitorDQMPlotCBC::fillCBCRegisterPlots(DetectorDataContainer& theThreshold
                     // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip
                     // by chip and not in one shot)
                     if(!chip->hasSummary()) continue;
-    // std::cout <<  __PRETTY_FUNCTION__ << "has summary" << std::endl;
+                    // std::cout <<  __PRETTY_FUNCTION__ << "has summary" << std::endl;
                     // // Get channel data and fill the histogram
                     // for(auto channel: *chip->getChannelContainer<uint32_t>())   // for on channel - begin
-    // std::cout <<  __PRETTY_FUNCTION__ << "Filling CBC plot with " << std::get<0>(chip->getSummary<std::tuple<time_t, uint16_t>>()) << " - " << std::get<1>(chip->getSummary<std::tuple<time_t, uint16_t>>()) << std::endl;
+                    // std::cout <<  __PRETTY_FUNCTION__ << "Filling CBC plot with " << std::get<0>(chip->getSummary<std::tuple<time_t, uint16_t>>()) << " - " <<
+                    // std::get<1>(chip->getSummary<std::tuple<time_t, uint16_t>>()) << std::endl;
                     chipDQMPlot->SetPoint(chipDQMPlot->GetN(),
                                           getTimeStampForRoot(std::get<0>(chip->getSummary<std::tuple<time_t, uint16_t>>())),
                                           std::get<1>(chip->getSummary<std::tuple<time_t, uint16_t>>())); // for on channel - end
@@ -193,7 +194,6 @@ bool MonitorDQMPlotCBC::fill(std::vector<char>& dataBuffer)
     BoardContainerStream<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, CharArray> theLpGBTDQMStreamer("CBCMonitorLpGBTRegister");
 
     // std::cout <<  __PRETTY_FUNCTION__ << __LINE__ << std::endl;
-
 
     if(theCBCDQMStreamer.attachBuffer(&dataBuffer))
     {

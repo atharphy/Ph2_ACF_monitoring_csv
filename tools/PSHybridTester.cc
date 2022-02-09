@@ -303,10 +303,7 @@ void PSHybridTester::AlignCICout(uint8_t pPattern)
 #if defined(__USE_ROOT__)
     for(int cLine = 1; cLine < 5; cLine++)
     {
-        if(cBadLines[cLine - 1] == 2)
-        {
-            fillSummaryTree("Bad_CIC_OUT_Line", (double)cLine);
-        }
+        if(cBadLines[cLine - 1] == 2) { fillSummaryTree("Bad_CIC_OUT_Line", (double)cLine); }
     }
 #endif
 }

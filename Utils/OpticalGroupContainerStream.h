@@ -12,8 +12,8 @@
 #ifndef __OPTICALGROUPCONTAINERSTREAM_H__
 #define __OPTICALGROUPCONTAINERSTREAM_H__
 // pointers to base class
-#include "../HWDescription/ReadoutChip.h"
 #include "../HWDescription/OpticalGroup.h"
+#include "../HWDescription/ReadoutChip.h"
 #include "../NetworkUtils/TCPPublishServer.h"
 #include "../Utils/ContainerStream.h"
 #include "../Utils/HybridContainerStream.h"
@@ -37,11 +37,11 @@
 template <typename T, typename C, typename H, typename O, typename... I>
 class OpticalGroupContainerStream;
 
-template<typename T, typename C, typename H, typename O>
+template <typename T, typename C, typename H, typename O>
 using DataStreamOpticalGroupContainer = DataStreamContainer<3, O, H, DataStreamHybridContainer, T, C>;
 
 template <typename T, typename C, typename H, typename O, typename... I>
-class OpticalGroupContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamOpticalGroupContainer<T,C,H,O>>
+class OpticalGroupContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamOpticalGroupContainer<T, C, H, O>>
 {
     template <typename T1, typename C1, typename H1, typename O1, typename B, typename... I1>
     friend class BoardContainerStream;
@@ -54,23 +54,21 @@ class OpticalGroupContainerStream : public ObjectStream<HeaderStreamContainer<ui
     static constexpr size_t getEnumSize() { return OpticalGroupId + 1; }
 
   public:
-    OpticalGroupContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamOpticalGroupContainer<T,C,H,O>>(creatorName) {}
+    OpticalGroupContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamOpticalGroupContainer<T, C, H, O>>(creatorName) {}
     OpticalGroupContainerStream(OpticalGroupContainerStream<T, C, H, O, I...>&& theContainerStream)
-    : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamOpticalGroupContainer<T,C,H,O>>(std::move(theContainerStream))
-    {}
-    OpticalGroupContainerStream(const OpticalGroupContainerStream<T, C, H, O, I...>&) = delete;
-    ~OpticalGroupContainerStream() 
-    { 
+        : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, I...>, DataStreamOpticalGroupContainer<T, C, H, O>>(std::move(theContainerStream))
+    {
     }
+    OpticalGroupContainerStream(const OpticalGroupContainerStream<T, C, H, O, I...>&) = delete;
+    ~OpticalGroupContainerStream() {}
 
-    void setContainerCarried(const ContainerCarried& theContainerCarried) { this->fDataStream.fContainerCarried = theContainerCarried; }
+    void             setContainerCarried(const ContainerCarried& theContainerCarried) { this->fDataStream.fContainerCarried = theContainerCarried; }
     ContainerCarried getContainerCarried() const { return this->fDataStream.fContainerCarried; }
 
     void streamAndSendBoard(const BoardDataContainer* board, TCPPublishServer* networkStreamer)
     {
         for(auto opticalGroup: *board)
         {
-
             retrieveData(board->getId(), opticalGroup);
             auto stream = this->encodeStream();
             this->incrementStreamPacketNumber();
@@ -127,7 +125,7 @@ class OpticalGroupContainerStream : public ObjectStream<HeaderStreamContainer<ui
             this->fDataStream.fContainerCarried.carryOpticalGroupContainer();
             this->fDataStream.fSummaryContainer = opticalGroup->getSummaryContainer<O, H>();
         }
-        
+
         for(auto hybrid: *opticalGroup)
         {
             HybridContainerStream<T, C, H> theHybridStreamer(this->fCreatorName);

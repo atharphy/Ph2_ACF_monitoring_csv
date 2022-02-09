@@ -63,12 +63,11 @@ class DataStreamBase
   public:
     DataStreamBase() : fDataSize(0) { ; }
     DataStreamBase(const DataStreamBase&) = delete;
-    DataStreamBase(DataStreamBase&&) = default;
+    DataStreamBase(DataStreamBase&&)      = default;
 
     DataStreamBase& operator=(const DataStreamBase&) = delete;
     DataStreamBase& operator=(DataStreamBase&&) = default;
 
-    
     virtual ~DataStreamBase() { ; }
 
     virtual uint32_t size(void) = 0;
@@ -175,28 +174,28 @@ class ObjectStream
 
   public:
     ObjectStream(const std::string& creatorName) : fTheStream(nullptr), fObjectName(""), fCreatorName(creatorName){};
-    ObjectStream(ObjectStream<H,D>&& theObjectStream)
-    : fHeaderStream (std::move(theObjectStream.fHeaderStream))
-    , fDataStream   (std::move(theObjectStream.fDataStream))
-    , fObjectName (theObjectStream.fObjectName)
-    , fCreatorName (theObjectStream.fCreatorName)
+    ObjectStream(ObjectStream<H, D>&& theObjectStream)
+        : fHeaderStream(std::move(theObjectStream.fHeaderStream))
+        , fDataStream(std::move(theObjectStream.fDataStream))
+        , fObjectName(theObjectStream.fObjectName)
+        , fCreatorName(theObjectStream.fCreatorName)
     {
-        fMetadataStream = theObjectStream.fMetadataStream;
+        fMetadataStream                 = theObjectStream.fMetadataStream;
         theObjectStream.fMetadataStream = nullptr;
 
-        fTheStream = theObjectStream.fTheStream;
+        fTheStream                 = theObjectStream.fTheStream;
         theObjectStream.fTheStream = nullptr;
     }
-    ObjectStream(const ObjectStream<H,D>&) = delete;
+    ObjectStream(const ObjectStream<H, D>&) = delete;
     virtual ~ObjectStream()
     {
         // std::cout << __PRETTY_FUNCTION__ << __LINE__ << " pointer = " << this << std::endl;
         if(fTheStream != nullptr)
         {
-        // std::cout << __PRETTY_FUNCTION__ << __LINE__ << " pointer = " << this << std::endl;
-        // std::cout << " Deleting fStream in object with pointer = " << this << std::endl;
+            // std::cout << __PRETTY_FUNCTION__ << __LINE__ << " pointer = " << this << std::endl;
+            // std::cout << " Deleting fStream in object with pointer = " << this << std::endl;
             delete fTheStream;
-        // std::cout << __PRETTY_FUNCTION__ << __LINE__ << " pointer = " << this << std::endl;
+            // std::cout << __PRETTY_FUNCTION__ << __LINE__ << " pointer = " << this << std::endl;
             fTheStream = nullptr;
         }
         // std::cout << __PRETTY_FUNCTION__ << __LINE__ << " pointer = " << this << std::endl;
@@ -205,12 +204,10 @@ class ObjectStream
     // Creates the buffer to stream copying the object metadata, header and data into it
     std::unique_ptr<std::vector<char>> encodeStream(void)
     {
-
         auto theStream  = std::unique_ptr<std::vector<char>>(new std::vector<char>(Metadata::size(getObjectName(), fCreatorName) + fHeaderStream.size() + fDataStream.size()));
         fMetadataStream = reinterpret_cast<Metadata*>(&theStream->at(0));
         fMetadataStream->setObjectName(getObjectName());
         fMetadataStream->setCreatorName(fCreatorName);
-
 
         fMetadataStream->fStreamSizeAndNumber.setPacketSize(fMetadataStream->size() + fHeaderStream.size() + fDataStream.size());
         fHeaderStream.copyToStream(&theStream->at(fMetadataStream->size()));

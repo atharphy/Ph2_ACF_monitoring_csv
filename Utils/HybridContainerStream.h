@@ -12,11 +12,11 @@
 #ifndef __HybridCONTAINERSTREAM_H__
 #define __HybridCONTAINERSTREAM_H__
 // pointers to base class
-#include "../HWDescription/ReadoutChip.h"
 #include "../HWDescription/Hybrid.h"
+#include "../HWDescription/ReadoutChip.h"
 #include "../NetworkUtils/TCPPublishServer.h"
-#include "../Utils/ContainerStream.h"
 #include "../Utils/ChipContainerStream.h"
+#include "../Utils/ContainerStream.h"
 #include "../Utils/ObjectStream.h"
 #include <cmath>
 #include <cstdint>
@@ -38,11 +38,11 @@
 template <typename T, typename C, typename H, typename O, typename... I>
 class OpticalGroupContainerStream;
 
-template<typename T, typename C, typename H>
+template <typename T, typename C, typename H>
 using DataStreamHybridContainer = DataStreamContainer<2, H, C, DataStreamChipContainer, T>;
 
 template <typename T, typename C, typename H, typename... I>
-class HybridContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, I...>, DataStreamHybridContainer<T,C,H>>
+class HybridContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, I...>, DataStreamHybridContainer<T, C, H>>
 {
     template <typename T1, typename C1, typename H1, typename O, typename... I1>
     friend class OpticalGroupContainerStream;
@@ -56,16 +56,15 @@ class HybridContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t
     static constexpr size_t getEnumSize() { return HybridId + 1; }
 
   public:
-    HybridContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, I...>, DataStreamHybridContainer<T,C,H>>(creatorName) {}
+    HybridContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, I...>, DataStreamHybridContainer<T, C, H>>(creatorName) {}
     HybridContainerStream(HybridContainerStream&& theHybridContainerStream)
-    : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, I...>, DataStreamHybridContainer<T,C,H>>(std::move(theHybridContainerStream))
+        : ObjectStream<HeaderStreamContainer<uint16_t, uint16_t, uint16_t, I...>, DataStreamHybridContainer<T, C, H>>(std::move(theHybridContainerStream))
     {
-
     }
     HybridContainerStream(const HybridContainerStream&) = delete;
     ~HybridContainerStream() { ; }
 
-    void setContainerCarried(const ContainerCarried& theContainerCarried) { this->fDataStream.fContainerCarried = theContainerCarried; }
+    void             setContainerCarried(const ContainerCarried& theContainerCarried) { this->fDataStream.fContainerCarried = theContainerCarried; }
     ContainerCarried getContainerCarried() const { return this->fDataStream.fContainerCarried; }
 
     void streamAndSendBoard(const BoardDataContainer* board, TCPPublishServer* networkStreamer)
@@ -142,7 +141,6 @@ class HybridContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t
             this->fDataStream.fDataSteamSubContainerMap[chip->getId()] = std::move(theChipStreamer.fDataStream);
         }
     }
-
 };
 
 #if defined(__GNUC__) && !defined(__INTEL_COMPILER) && (((__GNUC__ * 100) + __GNUC_MINOR__) >= 800)

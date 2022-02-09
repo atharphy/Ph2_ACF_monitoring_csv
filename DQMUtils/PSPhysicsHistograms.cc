@@ -9,9 +9,9 @@
 
 #include "PSPhysicsHistograms.h"
 #include "../HWDescription/Definition.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ChipContainerStream.h"
 #include "../Utils/ChannelContainerStream.h"
+#include "../Utils/ChipContainerStream.h"
+#include "../Utils/ContainerFactory.h"
 
 #include "../Utils/ContainerStream.h"
 #include "../Utils/PSSync.h"

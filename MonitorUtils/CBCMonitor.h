@@ -2,8 +2,8 @@
 #define CBC_MONITOR_H
 
 #include "../Utils/EmptyContainer.h"
-#include "DetectorMonitor.h"
 #include "../Utils/OpticalGroupContainerStream.h"
+#include "DetectorMonitor.h"
 #ifdef __USE_ROOT__
 #include "MonitorDQM/MonitorDQMPlotCBC.h"
 #endif

@@ -114,7 +114,7 @@ void MonitorDQMInterface::stopProcessingData(void)
 //========================================================================================================================
 bool MonitorDQMInterface::running()
 {
-    CheckStream*      theCurrentStream;
+    CheckStream* theCurrentStream;
     // int               packetNumber = -1;
     std::vector<char> tmpDataBuffer;
 
@@ -158,7 +158,6 @@ bool MonitorDQMInterface::running()
             for(auto monitorDQM: fMonitorDQMVector)
                 if(monitorDQM->fill(streamDataBuffer)) break;
         }
-
     }
 
     return fRunning;

@@ -2,11 +2,11 @@
 #define DETECTOR_MONITOR_H
 
 #include "../System/SystemController.h"
+#include "../Utils/BoardContainerStream.h"
 #include "../Utils/ChannelContainerStream.h"
 #include "../Utils/ChipContainerStream.h"
 #include "../Utils/HybridContainerStream.h"
 #include "../Utils/OpticalGroupContainerStream.h"
-#include "../Utils/BoardContainerStream.h"
 #include "DetectorMonitorConfig.h"
 
 #include "chrono"

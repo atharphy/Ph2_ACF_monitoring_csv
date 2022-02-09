@@ -65,28 +65,28 @@ class ContainerCarried
 
     void reset() { fContainerCarried = 0; }
 
-    void carryChannelContainer()      { carryCarried<0>(); }
-    void carryChipContainer()         { carryCarried<1>(); }
-    void carryHybridContainer()       { carryCarried<2>(); }
+    void carryChannelContainer() { carryCarried<0>(); }
+    void carryChipContainer() { carryCarried<1>(); }
+    void carryHybridContainer() { carryCarried<2>(); }
     void carryOpticalGroupContainer() { carryCarried<3>(); }
-    void carryBoardContainer()        { carryCarried<4>(); }
+    void carryBoardContainer() { carryCarried<4>(); }
 
-    bool isChannelContainerCarried()      { return isContainerCarried<0>(); }
-    bool isChipContainerCarried()         { return isContainerCarried<1>(); }
-    bool isHybridContainerCarried()       { return isContainerCarried<2>(); }
+    bool isChannelContainerCarried() { return isContainerCarried<0>(); }
+    bool isChipContainerCarried() { return isContainerCarried<1>(); }
+    bool isHybridContainerCarried() { return isContainerCarried<2>(); }
     bool isOpticalGroupContainerCarried() { return isContainerCarried<3>(); }
-    bool isBoardContainerCarried()        { return isContainerCarried<4>(); }
+    bool isBoardContainerCarried() { return isContainerCarried<4>(); }
 
-    template<uint8_t N>
+    template <uint8_t N>
     bool isContainerCarried()
     {
-        return (fContainerCarried >> N) & 1; 
+        return (fContainerCarried >> N) & 1;
     }
 
-    template<uint8_t N>
+    template <uint8_t N>
     void carryCarried()
     {
-        fContainerCarried |= (1 << N); 
+        fContainerCarried |= (1 << N);
     }
 
     uint8_t fContainerCarried;
@@ -98,8 +98,8 @@ class HeaderStreamContainerBase : public DataStreamBase
   public:
     HeaderStreamContainerBase(){};
     ~HeaderStreamContainerBase(){};
-    HeaderStreamContainerBase(HeaderStreamContainerBase &&) = default;
-    HeaderStreamContainerBase(const HeaderStreamContainerBase &) = delete;
+    HeaderStreamContainerBase(HeaderStreamContainerBase&&)      = default;
+    HeaderStreamContainerBase(const HeaderStreamContainerBase&) = delete;
 
     uint32_t size(void) override
     {
@@ -122,8 +122,7 @@ class HeaderStreamContainer : public HeaderStreamContainerBase<HeaderStreamConta
   public:
     HeaderStreamContainer(){};
     ~HeaderStreamContainer(){};
-    HeaderStreamContainer(HeaderStreamContainer<I...>&& theHeaderStreamContainer)
-    : HeaderStreamContainerBase<HeaderStreamContainer<I...>>(std::move(theHeaderStreamContainer)) {}
+    HeaderStreamContainer(HeaderStreamContainer<I...>&& theHeaderStreamContainer) : HeaderStreamContainerBase<HeaderStreamContainer<I...>>(std::move(theHeaderStreamContainer)) {}
     HeaderStreamContainer(const HeaderStreamContainer<I...>&) = delete;
 
     template <std::size_t N = 0>
@@ -153,7 +152,6 @@ class HeaderStreamContainer<> : public HeaderStreamContainerBase<HeaderStreamCon
 template <uint8_t Layer, typename This, typename Sub, template <typename, typename...> class SubStream, typename... Args>
 class DataStreamContainer : public DataStreamBase
 {
-
   public:
     DataStreamContainer() : fSummaryContainer(nullptr) { check_if_retrivable<This>(); }
     ~DataStreamContainer()
@@ -169,21 +167,16 @@ class DataStreamContainer : public DataStreamBase
         }
     }
 
-
     DataStreamContainer(const DataStreamContainer&) = delete;
 
-    DataStreamContainer(DataStreamContainer&& theOriginalStream)
-    : DataStreamBase(std::move(theOriginalStream))
+    DataStreamContainer(DataStreamContainer&& theOriginalStream) : DataStreamBase(std::move(theOriginalStream))
     {
         fContainerCarried = theOriginalStream.fContainerCarried;
-        for(auto& fDataSteamSubContainer : theOriginalStream.fDataSteamSubContainerMap)
-        {
-            fDataSteamSubContainerMap[fDataSteamSubContainer.first] = std::move(fDataSteamSubContainer.second);
-        }
-        fNumberOfSubContainers = theOriginalStream.fNumberOfSubContainers;
-        fSummaryContainer = theOriginalStream.fSummaryContainer;
+        for(auto& fDataSteamSubContainer: theOriginalStream.fDataSteamSubContainerMap) { fDataSteamSubContainerMap[fDataSteamSubContainer.first] = std::move(fDataSteamSubContainer.second); }
+        fNumberOfSubContainers              = theOriginalStream.fNumberOfSubContainers;
+        fSummaryContainer                   = theOriginalStream.fSummaryContainer;
         theOriginalStream.fSummaryContainer = nullptr;
-        fDeletePointers = theOriginalStream.fDeletePointers;
+        fDeletePointers                     = theOriginalStream.fDeletePointers;
     }
 
     DataStreamContainer& operator=(const DataStreamContainer&) = delete;
@@ -192,15 +185,12 @@ class DataStreamContainer : public DataStreamBase
     {
         fContainerCarried = theOriginalStream.fContainerCarried;
         fDataSteamSubContainerMap.clear();
-        for(auto& fDataSteamSubContainer : theOriginalStream.fDataSteamSubContainerMap)
-        {
-            fDataSteamSubContainerMap[fDataSteamSubContainer.first] = std::move(fDataSteamSubContainer.second);
-        }
+        for(auto& fDataSteamSubContainer: theOriginalStream.fDataSteamSubContainerMap) { fDataSteamSubContainerMap[fDataSteamSubContainer.first] = std::move(fDataSteamSubContainer.second); }
         fNumberOfSubContainers = theOriginalStream.fNumberOfSubContainers;
         delete fSummaryContainer;
-        fSummaryContainer = theOriginalStream.fSummaryContainer;
+        fSummaryContainer                   = theOriginalStream.fSummaryContainer;
         theOriginalStream.fSummaryContainer = nullptr;
-        fDeletePointers = theOriginalStream.fDeletePointers;
+        fDeletePointers                     = theOriginalStream.fDeletePointers;
 
         return *this;
     }
@@ -208,10 +198,7 @@ class DataStreamContainer : public DataStreamBase
     uint32_t size(void) override
     {
         fDataSize = sizeof(fDataSize) + sizeof(fContainerCarried) + sizeof(fNumberOfSubContainers);
-        for(auto& dataSteamSubContainer: fDataSteamSubContainerMap) 
-        {
-            fDataSize += (sizeof(uint16_t) + dataSteamSubContainer.second.size());
-        }
+        for(auto& dataSteamSubContainer: fDataSteamSubContainerMap) { fDataSize += (sizeof(uint16_t) + dataSteamSubContainer.second.size()); }
         if(fSummaryContainer != nullptr) { fDataSize += sizeof(This); }
         return fDataSize;
     }
@@ -234,14 +221,13 @@ class DataStreamContainer : public DataStreamBase
             fSummaryContainer = nullptr;
         }
 
-        for(auto& subContainer: fDataSteamSubContainerMap) 
+        for(auto& subContainer: fDataSteamSubContainerMap)
         {
             memcpy(&bufferBegin[bufferWritingPosition], &(subContainer.first), sizeof(uint16_t));
             bufferWritingPosition += sizeof(uint16_t);
 
             bufferWritingPosition = subContainer.second.copyToStream(bufferBegin, bufferWritingPosition);
         }
-
 
         return bufferWritingPosition;
     }
@@ -261,12 +247,12 @@ class DataStreamContainer : public DataStreamBase
 
         if(fContainerCarried.isContainerCarried<Layer>())
         {
-            fSummaryContainer = new Summary<This,Sub>();
+            fSummaryContainer = new Summary<This, Sub>();
             memcpy(&(fSummaryContainer->theSummary_), &bufferBegin[bufferReadingPosition], sizeof(This));
             bufferReadingPosition += sizeof(This);
         }
 
-        for(uint8_t subContainerIndex = 0; subContainerIndex<fNumberOfSubContainers; ++subContainerIndex)
+        for(uint8_t subContainerIndex = 0; subContainerIndex < fNumberOfSubContainers; ++subContainerIndex)
         {
             uint16_t subContainerId = 65535;
             memcpy(&subContainerId, &bufferBegin[bufferReadingPosition], sizeof(uint16_t));
@@ -274,10 +260,10 @@ class DataStreamContainer : public DataStreamBase
 
             SubStream<Args..., Sub> theDataSteamSubContainer;
             theDataSteamSubContainer.fContainerCarried = fContainerCarried;
-            bufferReadingPosition = theDataSteamSubContainer.copyFromStream(bufferBegin, bufferReadingPosition);
-            fDataSteamSubContainerMap[subContainerId] = std::move(theDataSteamSubContainer);
+            bufferReadingPosition                      = theDataSteamSubContainer.copyFromStream(bufferBegin, bufferReadingPosition);
+            fDataSteamSubContainerMap[subContainerId]  = std::move(theDataSteamSubContainer);
         }
-        
+
         return bufferReadingPosition;
     }
 
@@ -285,7 +271,7 @@ class DataStreamContainer : public DataStreamBase
     ContainerCarried                            fContainerCarried{};
     std::map<uint16_t, SubStream<Args..., Sub>> fDataSteamSubContainerMap{};
     uint8_t                                     fNumberOfSubContainers{0};
-    Summary<This,Sub>*                          fSummaryContainer{nullptr};
+    Summary<This, Sub>*                         fSummaryContainer{nullptr};
     bool                                        fDeletePointers{false};
 };
 

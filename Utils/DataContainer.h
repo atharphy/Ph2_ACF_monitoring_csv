@@ -295,7 +295,6 @@ class BaseDataContainer
         return static_cast<Summary<S, T>*>(summary_);
     }
 
-
     bool hasSummary() { return (summary_ != nullptr); }
 
     template <typename T>

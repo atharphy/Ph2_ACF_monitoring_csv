@@ -12,12 +12,12 @@
 #ifndef __BOARDCONTAINERSTREAM_H__
 #define __BOARDCONTAINERSTREAM_H__
 // pointers to base class
-#include "../HWDescription/ReadoutChip.h"
 #include "../HWDescription/OpticalGroup.h"
+#include "../HWDescription/ReadoutChip.h"
 #include "../NetworkUtils/TCPPublishServer.h"
 #include "../Utils/ContainerStream.h"
-#include "../Utils/OpticalGroupContainerStream.h"
 #include "../Utils/ObjectStream.h"
+#include "../Utils/OpticalGroupContainerStream.h"
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -37,7 +37,7 @@
 template <typename T, typename C, typename H, typename O, typename B, typename... I>
 class BoardContainerStream;
 
-template<typename T, typename C, typename H, typename O, typename B>
+template <typename T, typename C, typename H, typename O, typename B>
 using DataStreamBoardContainer = DataStreamContainer<4, B, O, DataStreamOpticalGroupContainer, T, C, H>;
 
 template <typename T, typename C, typename H, typename O, typename B, typename... I>
@@ -51,13 +51,9 @@ class BoardContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t,
 
   public:
     BoardContainerStream(const std::string& creatorName) : ObjectStream<HeaderStreamContainer<uint16_t, I...>, DataStreamBoardContainer<T, C, H, O, B>>(creatorName) {}
-    BoardContainerStream(BoardContainerStream&& theContainerStream)
-    : ObjectStream<HeaderStreamContainer<uint16_t, I...>, DataStreamBoardContainer<T, C, H, O, B>>(std::move(theContainerStream))
-    {}
+    BoardContainerStream(BoardContainerStream&& theContainerStream) : ObjectStream<HeaderStreamContainer<uint16_t, I...>, DataStreamBoardContainer<T, C, H, O, B>>(std::move(theContainerStream)) {}
     BoardContainerStream(const BoardContainerStream&) = delete;
-    ~BoardContainerStream() 
-    { 
-    }
+    ~BoardContainerStream() {}
 
     void streamAndSendBoard(BoardDataContainer* board, TCPPublishServer* networkStreamer)
     {
@@ -69,7 +65,7 @@ class BoardContainerStream : public ObjectStream<HeaderStreamContainer<uint16_t,
 
     void decodeData(DetectorDataContainer& detectorContainer)
     {
-        uint16_t boardId        = this->fHeaderStream.template getHeaderInfo<HeaderId::BoardId>();
+        uint16_t boardId = this->fHeaderStream.template getHeaderInfo<HeaderId::BoardId>();
 
         if(this->fDataStream.fContainerCarried.isBoardContainerCarried())
         {

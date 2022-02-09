@@ -172,7 +172,7 @@ void DQMInterface::stopProcessingData(void)
 //========================================================================================================================
 bool DQMInterface::running()
 {
-    CheckStream*      theCurrentStream;
+    CheckStream* theCurrentStream;
     // int               packetNumber = -1;
     std::vector<char> tmpDataBuffer;
 
@@ -207,7 +207,6 @@ bool DQMInterface::running()
             }
             theCurrentStream = reinterpret_cast<CheckStream*>(&fDataBuffer.at(0));
             LOG(DEBUG) << "Packet number received = " << int(theCurrentStream->getPacketNumber()) << RESET;
-
 
             LOG(DEBUG) << "Vector size  = " << fDataBuffer.size() << "; expected = " << theCurrentStream->getPacketSize() << RESET;
 
