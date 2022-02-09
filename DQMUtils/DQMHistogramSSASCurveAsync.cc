@@ -8,6 +8,7 @@
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
+#include "../Utils/ChannelContainerStream.h"
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TH2F.h"

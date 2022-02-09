@@ -11,6 +11,9 @@
 #include "../HWDescription/Definition.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
+#include "../Utils/ChipContainerStream.h"
+#include "../Utils/ChannelContainerStream.h"
+
 #include "../Utils/Data2S.h"
 #include "../Utils/Occupancy.h"
 

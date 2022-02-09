@@ -17,7 +17,7 @@
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TGraph.h"
-#include "../Utils/OpticalGroupContainerStream.h"
+#include "../Utils/BoardContainerStream.h"
 
 //========================================================================================================================
 MonitorDQMPlotCBC::MonitorDQMPlotCBC() {}
@@ -189,8 +189,8 @@ bool MonitorDQMPlotCBC::fill(std::vector<char>& dataBuffer)
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR DQM YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
 
     // I'm expecting to receive a data stream from an uint16_t contained from DQM "DQMExample"
-    OpticalGroupContainerStream<EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, EmptyContainer, CharArray> theCBCDQMStreamer("CBCMonitorCBCRegister");
-    OpticalGroupContainerStream<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, uint16_t>, CharArray> theLpGBTDQMStreamer("CBCMonitorLpGBTRegister");
+    BoardContainerStream<EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, EmptyContainer, EmptyContainer, CharArray> theCBCDQMStreamer("CBCMonitorCBCRegister");
+    BoardContainerStream<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, CharArray> theLpGBTDQMStreamer("CBCMonitorLpGBTRegister");
 
     // std::cout <<  __PRETTY_FUNCTION__ << __LINE__ << std::endl;
 

@@ -11,6 +11,8 @@
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
+#include "../Utils/ChannelContainerStream.h"
+#include "../Utils/ChipContainerStream.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/ThresholdAndNoise.h"
 #include "TCanvas.h"

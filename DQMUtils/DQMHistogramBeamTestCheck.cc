@@ -12,6 +12,7 @@
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerStream.h"
+#include "../Utils/HybridContainerStream.h"
 #include "../Utils/EmptyContainer.h"
 #include "../Utils/GenericDataArray.h"
 #include "../Utils/Occupancy.h"
@@ -191,7 +192,7 @@ bool DQMHistogramBeamTestCheck::fill(std::vector<char>& dataBuffer)
     if(theLatencyStream.attachBuffer(&dataBuffer))
     {
         std::cout << "Matched Latency Stream!!!!!\n";
-        theLatencyStream.decodeHybridData(fDetectorData);
+        theLatencyStream.decodeData(fDetectorData);
         fillLatencyPlots(fDetectorData);
         fDetectorData.cleanDataStored();
         return true;
@@ -200,7 +201,7 @@ bool DQMHistogramBeamTestCheck::fill(std::vector<char>& dataBuffer)
     if(theTriggerTDCStream.attachBuffer(&dataBuffer))
     {
         std::cout << "Matched TriggerTDC!!!!!\n";
-        theTriggerTDCStream.decodeHybridData(fDetectorData);
+        theTriggerTDCStream.decodeData(fDetectorData);
         fillTriggerTDCPlots(fDetectorData);
         fDetectorData.cleanDataStored();
         return true;
@@ -209,7 +210,7 @@ bool DQMHistogramBeamTestCheck::fill(std::vector<char>& dataBuffer)
     if(theTriggerTDCStream.attachBuffer(&dataBuffer))
     {
         std::cout << "Matched Stub Latency!!!!!\n";
-        theStubStream.decodeHybridData(fDetectorData);
+        theStubStream.decodeData(fDetectorData);
         fillStubLatencyPlots(fDetectorData);
         fDetectorData.cleanDataStored();
         return true;
@@ -218,7 +219,7 @@ bool DQMHistogramBeamTestCheck::fill(std::vector<char>& dataBuffer)
     if(the2DStream.attachBuffer(&dataBuffer))
     {
         std::cout << "Matched 2D Latency!!!!!\n";
-        the2DStream.decodeHybridData(fDetectorData);
+        the2DStream.decodeData(fDetectorData);
         fill2DLatencyPlots(fDetectorData);
         fDetectorData.cleanDataStored();
         return true;

@@ -2,7 +2,11 @@
 #define DETECTOR_MONITOR_H
 
 #include "../System/SystemController.h"
-#include "../Utils/ContainerStream.h"
+#include "../Utils/ChannelContainerStream.h"
+#include "../Utils/ChipContainerStream.h"
+#include "../Utils/HybridContainerStream.h"
+#include "../Utils/OpticalGroupContainerStream.h"
+#include "../Utils/BoardContainerStream.h"
 #include "DetectorMonitorConfig.h"
 
 #include "chrono"
@@ -60,6 +64,13 @@ class DetectorMonitor
     std::unique_ptr<OpticalGroupContainerStream<T, C, H, O, I...>> prepareOpticalGroupContainerStreamer(std::string appendName = "")
     {
         auto theContainerStreamer = std::unique_ptr<OpticalGroupContainerStream<T, C, H, O, I...>>(new OpticalGroupContainerStream<T, C, H, O, I...>(getMonitorName() + appendName));
+        return theContainerStreamer;
+    }
+
+    template <typename T, typename C, typename H, typename O, typename B, typename... I>
+    std::unique_ptr<BoardContainerStream<T, C, H, O, B, I...>> prepareBoardContainerStreamer(std::string appendName = "")
+    {
+        auto theContainerStreamer = std::unique_ptr<BoardContainerStream<T, C, H, O, B, I...>>(new BoardContainerStream<T, C, H, O, B, I...>(getMonitorName() + appendName));
         return theContainerStreamer;
     }
 

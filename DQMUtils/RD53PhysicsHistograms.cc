@@ -8,6 +8,8 @@
 */
 
 #include "RD53PhysicsHistograms.h"
+#include "../Utils/ChipContainerStream.h"
+#include "../Utils/ChannelContainerStream.h"
 
 using namespace Ph2_HwDescription;
 
