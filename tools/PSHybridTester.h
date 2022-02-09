@@ -161,10 +161,10 @@ class PSHybridTester : public LinkAlignmentOT
     // fDACsCalibrationTargetMap = {<DAC to be calibrated>, <Target ADC value>}
     std::map<std::string, float> fDACsCalibrationTargetMap = {{"BoosterFeedback", 82.0}, {"PreampBias", 82.0}, {"VoltageBias", 82.0}, {"CurrentBias", 82.0}, {"DAC", 86.0}};
 #if defined(__USE_ROOT__)
-    TTree*      fSSATree          = nullptr;
+    TTree* fSSATree = nullptr;
 #endif
-    std::string fSSATreeParameter = "";
-    std::string fSSATreeValue     = "";
+    std::string             fSSATreeParameter          = "";
+    std::string             fSSATreeValue              = "";
     int                     fVoltageMeasurementWait_ms = 100;
     int                     fNreadings                 = 3;
     std::pair<float, float> fVoltageMeasurement;

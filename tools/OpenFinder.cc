@@ -343,7 +343,7 @@ void OpenFinder::FindOpens2S()
 {
     // The main antenna object is needed here
     // Antenna cAntenna;
-    //Antenna cAntenna = Antenna(fParameters.UsbId.c_str());
+    // Antenna cAntenna = Antenna(fParameters.UsbId.c_str());
     Antenna cAntenna = Antenna();
     // Trigger source for the antenna
     cAntenna.SelectTriggerSource(fParameters.fAntennaTriggerSource);
