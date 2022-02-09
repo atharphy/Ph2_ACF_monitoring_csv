@@ -41,6 +41,16 @@ bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerifLoop, uint32_t pBlockSiz
     // Deal with the ChipRegItems and encode them
     bool                                             cSuccess   = false;
     ChipRegMap                                       cCbcRegMap = pCbc->getRegMap();
+    std::vector<ChipRegItem> cRegItems; 
+    for( auto cReg : cCbcRegMap ) 
+    {
+        if( cReg.second.fPage == 0 && cReg.second.fAddress == 0x20 ){ 
+            cReg.second.fValue = 0xAA;
+            fBoardFW->SingleRegisterWriteRead(pCbc, cReg.second );
+        }
+    }
+    return true;
+
     std::vector<std::pair<std::string, ChipRegItem>> cRegList;
     cRegList.clear();
     for(auto cMapItem: cCbcRegMap)

@@ -44,14 +44,27 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockS
     ChipRegMap            cSSA2RegMap = pSSA2->getRegMap();
     LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pSSA2->getId() << "] oh Hybrid" << +pSSA2->getHybridId() << RESET;
 
+    cSSA2RegMap["mask_strip"].fValue = 255;
+    cSSA2RegMap["mask_peri_A"].fValue = 255;
+    cSSA2RegMap["mask_peri_D"].fValue = 255;
+    fBoardFW->SingleRegisterWrite( pSSA2, cSSA2RegMap["mask_strip"] );
+    fBoardFW->SingleRegisterWrite( pSSA2, cSSA2RegMap["mask_peri_A"] );
+    fBoardFW->SingleRegisterWrite( pSSA2, cSSA2RegMap["mask_peri_D"] );
     std::vector<ChipRegItem> cRegItems; 
     for( auto cReg : cSSA2RegMap ) 
     {
-        if( cReg.first == "THTRIMMING_S79" ){ cReg.second.fValue = 0x00;}// fBoardFW->SingleRegisterWrite( pSSA2, cReg.second ); }
-        cRegItems.push_back(cReg.second);
+        // if( cReg.first == "THTRIMMING_S79" ){ 
+        //     cReg.second.fValue = 0x10;
+        //     // fBoardFW->SingleRegisterWriteRead(pSSA2, cReg.second );
+        // }
+        if( cReg.first == "THTRIMMING_S1" || cReg.first == "THTRIMMING_S10" ){ 
+            cReg.second.fValue = 0x05;
+            cRegItems.push_back(cReg.second);
+        }
+        
     }
     fBoardFW->MultiRegisterWrite(pSSA2, cRegItems);
-    // fBoardFW->MultiRegisterRead(pSSA2, cRegItems);
+    fBoardFW->MultiRegisterRead(pSSA2, cRegItems);
     
     return true;
 

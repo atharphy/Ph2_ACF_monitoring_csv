@@ -475,9 +475,9 @@ class D19cFWInterface : public BeBoardFWInterface
     uint8_t SingleRegisterRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem ) override ;
     std::vector<uint8_t> MultiRegisterRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem ) override;
     bool    SingleRegisterWrite(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pRetry = false) override;
+    bool    SingleRegisterWriteRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pRetry = false) override;
     bool    MultiRegisterWrite(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem, bool pRetry = false ) override;
     
-
     // fast command generic block
     void ResetFCMDBram();
     void ConfigureFCMDBram(std::vector<uint8_t> pFastCommands);

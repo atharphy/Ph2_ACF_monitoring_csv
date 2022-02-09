@@ -14,6 +14,7 @@
 #include "../HWDescription/Hybrid.h"
 #include "../HWDescription/OuterTrackerHybrid.h"
 #include "D19cI2CInterface.h"
+#include "D19cOpticalInterface.h"
 #include <algorithm>
 #include <chrono>
 #include <time.h>
@@ -680,16 +681,29 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         }
     }
 
+    Config cConfig; 
     if(!pBoard->isOptical())
     {
         LOG (INFO) << BOLDYELLOW << "Electrical readout.. iniitialize I2C interface" << RESET;
         fFEConfigurationInterface = new D19cI2CInterface( this->getId() , this->getUri(), this->getAddressTable() ); 
         (static_cast<D19cI2CInterface*>(fFEConfigurationInterface))->ConfigureI2CMap(pBoard);
+        cConfig.fVerbose     = 0;
+        cConfig.fReTry       = 0;
+        cConfig.fMaxAttempts = 10;
+        cConfig.fVerify      = 0; 
     }
     else
     { 
         LOG (INFO) << BOLDBLUE << "Optical readout . initializing Optical interface" << RESET;
+        fFEConfigurationInterface = new D19cOpticalInterface( this->getId() , this->getUri(), this->getAddressTable() ); 
+        (static_cast<D19cOpticalInterface*>(fFEConfigurationInterface))->setResetEnable( fCPBConfig.fEnable ); 
+        (static_cast<D19cOpticalInterface*>(fFEConfigurationInterface))->setWait( fCPBConfig.fWait_us ); 
+        cConfig.fVerbose     = fCPBConfig.fVerbose;
+        cConfig.fReTry       = fCPBConfig.fReTry;
+        cConfig.fMaxAttempts = fCPBConfig.fMaxAttempts;
+        cConfig.fVerify      = 0; 
     }
+    fFEConfigurationInterface->Configure(cConfig);
 
     if(fI2CVersion >= 1 || !cWithlpGBT)
     {
@@ -2875,16 +2889,20 @@ std::vector<uint8_t> D19cFWInterface::MultiRegisterRead(Chip* pChip, std::vector
     if( fFEConfigurationInterface->MultiRead(pChip, pItems) )
     {
         // update map 
-        for( auto cItem : pChip->getRegMap() ) 
+        auto cRegisterMap = pChip->getRegMap(); 
+        for( auto cItem : pItems ) 
         {
-            auto cIterator = find_if(pItems.begin(), pItems.end(), [&cItem](const ChipRegItem& obj) {return obj.fAddress == cItem.second.fAddress && obj.fPage == cItem.second.fPage ;});
-            if (cIterator == pItems.end()) LOG (INFO) << BOLDRED << "Could not find " << cItem.first << " addresss 0x" << std::hex << cItem.second.fAddress << std::dec << RESET; 
-            pChip->setReg(cItem.first, cIterator->fValue);
-            cValues.push_back( pChip->getReg( cItem.first) ) ;
-            if( cValues.at(cValues.size()-1) != 0x00 && cValues.at(cValues.size()-1) != 0xFF ) LOG (DEBUG) << BOLDYELLOW << "D19cFWInterface::MultiRegisterRead Register "
-                << cItem.first << " 0x"  << std::hex << +cItem.second.fAddress << std::dec 
-                << " set to 0x" << std::hex << +cValues.at(cValues.size()-1) << std::dec 
-                << RESET;
+            auto cIterator = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&cItem](const ChipRegPair& obj) {return obj.second.fAddress == cItem.fAddress && obj.second.fPage == cItem.fPage ;});
+            if (cIterator == cRegisterMap.end()) LOG (INFO) << BOLDRED << "Could not find " << cIterator->first << " addresss 0x" << std::hex << cItem.fAddress << std::dec << RESET; 
+            else 
+            {
+                pChip->setReg(cIterator->first, cItem.fValue);
+                cValues.push_back( pChip->getReg( cIterator->first) ) ;
+                LOG (INFO) << BOLDYELLOW << "D19cFWInterface::MultiRegisterRead Register "
+                    << cIterator->first << " 0x"  << std::hex << +cItem.fAddress << std::dec 
+                    << " set to 0x" << std::hex << +cValues.at(cValues.size()-1) << std::dec 
+                    << RESET;
+            }// update map 
         }
     } 
     else LOG (ERROR) << BOLDRED << "D19cFWInterface::MultiRegisterRead Registe FAILED " << RESET;
@@ -2913,32 +2931,17 @@ uint8_t D19cFWInterface::SingleRegisterRead(Chip* pChip, ChipRegItem& pItem )
         else LOG (INFO) << BOLDRED << "D19cFWInterface::SingleRegisterRead Register 0x" << std::hex << +pItem.fAddress << " not in register map " << RESET;
     }
     else LOG (ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterRead Register 0x" << std::hex << +pItem.fAddress << " FAILED " << RESET;
-
-    // for( auto cItem : pChip->getRegMap() )// I do this because I also want to update the map here 
-    // {
-    //     if( cItem.second.fAddress != pItem.fAddress ) continue; // check address matches 
-    //     if( cItem.second.fPage != pItem.fPage ) continue; // check page matches 
-        
-    //     if( fFEConfigurationInterface->SingleRead(pChip, cItem.second ) ) 
-    //     {
-    //         pChip->setReg(cItem.first, cItem.second.fValue); 
-    //         cValue = pChip->getReg( cItem.first); 
-    //         if( cValue != 0x00 && cValue != 0xFF ) LOG (INFO) << BOLDYELLOW << "D19cFWInterface::SingleRegisterRead Register " << 
-    //             cItem.first << " 0x" << std::hex << +cItem.second.fAddress << std::dec << " set to 0x" << std::hex << +cValue << std::dec << RESET;
-    //     }
-    //     else LOG (ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterRead Register 0x" << std::hex << +cItem.second.fAddress << " FAILED " << RESET;
-    //     break;
-    // }
     return cValue;
 }
 bool D19cFWInterface::SingleRegisterWrite(Chip* pChip, ChipRegItem& pItem, bool pRetry)
 {
+    fFEConfigurationInterface->setRetry( (pRetry) ? 1 : 0 ); 
     std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
     auto cRegisterMap = pChip->getRegMap(); 
     auto cIterator = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&pItem](const ChipRegPair& obj) {return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage ;});
     if( cIterator != cRegisterMap.end() ) 
     {
-        if( fFEConfigurationInterface->SingleWrite(pChip, pItem , pRetry ) ){
+        if( fFEConfigurationInterface->SingleWrite(pChip, pItem) ){
             // update map 
             auto cPreviousValue = cIterator->second.fValue; 
             pChip->setReg(cIterator->first , pItem.fValue);  
@@ -2949,14 +2952,41 @@ bool D19cFWInterface::SingleRegisterWrite(Chip* pChip, ChipRegItem& pItem, bool 
             pItem = pChip->getRegItem(cIterator->first); 
         }
         else LOG (ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterWrite FAILEd to write to Register " << cIterator->first << RESET;
+        return true;
     }
     else LOG (INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWrite Could not find register address in register map " << RESET; 
-    return true;
+    return false;
 }
+bool D19cFWInterface::SingleRegisterWriteRead(Chip* pChip, ChipRegItem& pItem, bool pRetry )
+{
+    fFEConfigurationInterface->setRetry( (pRetry) ? 1 : 0 ); 
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
+    auto cRegisterMap = pChip->getRegMap(); 
+    auto cIterator = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&pItem](const ChipRegPair& obj) {return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage ;});
+    if( cIterator != cRegisterMap.end() ) 
+    {
+        auto cPreviousValue = cIterator->second.fValue; 
+        if( fFEConfigurationInterface->SingleWriteRead(pChip, pItem) ){
+            // update map 
+            pChip->setReg(cIterator->first , pItem.fValue);  
+            LOG (INFO) << BOLDGREEN << " D19cFWInterface::SingleRegisterWriteRead successful write of 0x" 
+                << std::hex << +pItem.fValue << std::dec << " to " << cIterator->first 
+                << "\t.. value in register is now 0x" << std::hex << +pChip->getReg( cIterator->first) << std::dec 
+                << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
+            pItem = pChip->getRegItem(cIterator->first); 
+        }
+        else LOG (ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead FAILEd to write to Register " << cIterator->first << RESET;
+        return true;
+    }
+    else LOG (INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead Could not find register address in register map " << RESET; 
+    return false;
+}
+
 bool D19cFWInterface::MultiRegisterWrite(Chip* pChip, std::vector<ChipRegItem>& pItems, bool pRetry)
 {
+    fFEConfigurationInterface->setRetry( (pRetry) ? 1 : 0 ); 
     std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
-    if( fFEConfigurationInterface->MultiWrite(pChip, pItems, pRetry ) ) 
+    if( fFEConfigurationInterface->MultiWrite(pChip, pItems ) ) 
     {
         LOG (INFO) << BOLDGREEN << "D19cFWInterface::MultiRegisterWrite successful write to " << pItems.size() << " registers" << RESET;
         // update map
