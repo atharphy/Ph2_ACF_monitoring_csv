@@ -18,7 +18,6 @@
 #ifdef __USE_ROOT__
 #endif
 
-
 using namespace Ph2_HwDescription;
 
 class OTTemperature : public OTTool
@@ -34,21 +33,19 @@ class OTTemperature : public OTTool
     void Resume() override;
     // void Reset();
     void writeObjects();
-    // configure setttings for reading 
-    void SetGain(uint8_t pGain){ fGain = pGain; }
-    void SetVref(float pVref){ fVref = pVref; }
-    void Set2SInputVoltage(float pInput){ fVinput2S = pInput; }
+    // configure setttings for reading
+    void SetGain(uint8_t pGain) { fGain = pGain; }
+    void SetVref(float pVref) { fVref = pVref; }
+    void Set2SInputVoltage(float pInput) { fVinput2S = pInput; }
     void SetCurrents(std::vector<uint8_t> pCurrents);
-    
+
   protected:
-    
   private:
-    float ReadThermistor(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, std::string pADC, float pR0, float pB ) ;
-    void ReadModuleTemperatures(); 
-    float fVref{0.87};// reference voltage for lpgBT 
-    uint8_t fGain{0};// gain 
-    float fVinput2S{10.4};// input voltage to 2S-SEH
-    std::vector<uint8_t> fCurrentDACs{0x01, 0x02 , 0x03 , 0x04, 0x05 , 0x07, 0x10, 0x12 , 0x15};
-            
+    float                ReadThermistor(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, std::string pADC, float pR0, float pB);
+    void                 ReadModuleTemperatures();
+    float                fVref{0.87};     // reference voltage for lpgBT
+    uint8_t              fGain{0};        // gain
+    float                fVinput2S{10.4}; // input voltage to 2S-SEH
+    std::vector<uint8_t> fCurrentDACs{0x01, 0x02, 0x03, 0x04, 0x05, 0x07, 0x10, 0x12, 0x15};
 };
 #endif
