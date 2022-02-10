@@ -3,14 +3,12 @@
 
 #include "L1ReadoutInterface.h"
 #include "FEConfigurationInterface.h"
-
-#include <string>
+#include "FastCommandInterface.h"
 
 namespace Ph2_HwInterface
 {
 #ifndef PSCounterData
-typedef std::map<uint8_t, std::vector<uint16_t>> PSCounterData;
-typedef std::map<uint32_t, PSCounterData>        PSModuleCounterData;
+typedef std::map<uint32_t, std::vector<uint16_t>> PSCounterData; // counter data per FEId 
 #endif
 
 class D19cPSCounterFWInterface : public L1ReadoutInterface
@@ -22,6 +20,8 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
     ~D19cPSCounterFWInterface();
 
   public:
+    void FillData() override;
+
     void ReadNEvents(Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = false);
 
     void SetPSCounterDelay(uint8_t pDelay) { fPSCounterDelay = pDelay; };
@@ -41,8 +41,12 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
 
     // function to link FEConfigurationInterface 
     void LinkFEConfigurationInterface(FEConfigurationInterface* pInterface) {fFEConfigurationInterface=pInterface;}
+    void LinkFastCommandInterface(FastCommandInterface* pInterface) {fFastCommandInterface=pInterface;}
+
   private:
     FEConfigurationInterface* fFEConfigurationInterface; 
+    FastCommandInterface*    fFastCommandInterface;
+
     uint32_t fDuration{0};
     uint32_t fWait_us{100};
     uint32_t fPSCounterDelay{29};
@@ -51,21 +55,20 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
     uint32_t fReadoutAttempts{0};
 
     std::vector<uint8_t> fStubBuffer;
-    PSModuleCounterData  fPSModulesCounterData;
-
-    void Compose_fast_command(uint32_t resync_en, uint32_t l1a_en, uint32_t cal_pulse_en, uint32_t bc0_en);
+    PSCounterData         fPSCounterData;
+    uint32_t Compose_Id( Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::OpticalGroup* pGroup, Ph2_HwDescription::Hybrid* pHybrid, Ph2_HwDescription::Chip* pChip);
 
     // function read-back counters
     void ReadMPACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
     void ReadSSACounters(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
     void ReadPSSCCountersFast(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, uint8_t pRawMode = 0);
     bool ReadPSCountersFast(uint8_t pRawMode, size_t pChipId, size_t pHybridId);
+    
+    // 
     bool CheckStartPattern();
-    bool DecodeRawCounterDataPS(PSCounterData& pFeCounters, std::vector<uint8_t> pIds);
 
     // data get/wait functions
-    uint32_t GetData(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
-    bool     WaitForData(Ph2_HwDescription::BeBoard* pBoard);
+    bool     WaitForData();
 };
 } // namespace Ph2_HwInterface
 #endif

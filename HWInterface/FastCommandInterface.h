@@ -18,25 +18,10 @@ class FastCommandInterface : public RegManager
     ~FastCommandInterface();
 
     public: // virtual functions 
-    
-        virtual void ResetTriggerFSM()
-        {
-            LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FastCommandInterface::ResetTriggerFSM is absent" << RESET;
-        }
-        virtual void ReconfigureTriggerFSM(std::vector<std::pair<std::string, uint32_t>> pTriggerConfig)
-        {
-            LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FastCommandInterface::ReconfigureTriggerFSM is absent" << RESET;
-        }
         
-        virtual bool Start()
+        virtual void ComposeFastCommand(uint32_t resync_en, uint32_t l1a_en, uint32_t cal_pulse_en, uint32_t bc0_en)
         {
-            LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FastCommandInterface::Start is absent" << RESET;
-            return false;
-        }
-        virtual bool Stop()
-        {
-            LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FastCommandInterface::Stop is absent" << RESET;
-            return false;
+            LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FastCommandInterface::ComposeFastCommand is absent" << RESET;
         }
 
     private : 
