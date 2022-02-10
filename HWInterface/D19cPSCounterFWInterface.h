@@ -1,7 +1,9 @@
 #ifndef _D19cPSCounterFWInterface_H__
 #define __D19cPSCounterFWInterface_H__
 
-#include "D19cFWInterface.h"
+#include "L1ReadoutInterface.h"
+#include "FEConfigurationInterface.h"
+
 #include <string>
 
 namespace Ph2_HwInterface
@@ -11,14 +13,12 @@ typedef std::map<uint8_t, std::vector<uint16_t>> PSCounterData;
 typedef std::map<uint32_t, PSCounterData>        PSModuleCounterData;
 #endif
 
-class D19cPSCounterFWInterface : public D19cFWInterface
+class D19cPSCounterFWInterface : public L1ReadoutInterface
 {
-  public:
-    D19cPSCounterFWInterface(const char* puHalConfigFileName, uint32_t pBoardId);
-    D19cPSCounterFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler);
 
-    D19cPSCounterFWInterface(const char* pId, const char* pUri, const char* pAddressTable);
-    D19cPSCounterFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler);
+  public:
+    D19cPSCounterFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
+    D19cPSCounterFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
     ~D19cPSCounterFWInterface();
 
   public:
@@ -39,7 +39,10 @@ class D19cPSCounterFWInterface : public D19cFWInterface
     void PS_Clear_counters();
     void PS_Start_counters_read();
 
+    // function to link FEConfigurationInterface 
+    void LinkFEConfigurationInterface(FEConfigurationInterface* pInterface) {fFEConfigurationInterface=pInterface;}
   private:
+    FEConfigurationInterface* fFEConfigurationInterface; 
     uint32_t fDuration{0};
     uint32_t fWait_us{100};
     uint32_t fPSCounterDelay{29};

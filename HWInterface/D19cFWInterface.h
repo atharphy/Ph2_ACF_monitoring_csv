@@ -17,7 +17,8 @@
 #include "../Utils/Event.h"
 #include "../Utils/easylogging++.h"
 #include "BeBoardFWInterface.h"
-#include "FEConfigurationInterface.h"
+// #include "FEConfigurationInterface.h"
+
 #include <limits.h>
 #include <map>
 #include <mutex>
@@ -28,6 +29,7 @@
 //#include "../Utils/OccupancyAndPh.h"
 //#include "../Utils/GenericDataVector.h"
 #include <uhal/uhal.hpp>
+
 
 namespace D19cFWEvtEncoder
 {
@@ -87,6 +89,9 @@ struct D19cFWEvt
  */
 namespace Ph2_HwInterface
 {
+  class L1ReadoutInterface;   
+  class FEConfigurationInterface;
+
 /*!
  * \class Cbc3Fc7FWInterface
  *
@@ -97,6 +102,8 @@ class D19cFWInterface : public BeBoardFWInterface
   private:
     // std::recursive_mutex                     fMutex;
     FEConfigurationInterface*                 fFEConfigurationInterface; 
+    L1ReadoutInterface*                       fL1ReadoutInterface; 
+
     D19cFWEvtEncoder::D19cFWEvt              fD19cFWEvts;
     std::vector<std::vector<uint32_t>>       fSlaveMap;
     std::map<uint8_t, std::vector<uint32_t>> fI2CSlaveMap;

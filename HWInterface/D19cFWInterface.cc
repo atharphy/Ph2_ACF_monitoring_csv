@@ -15,6 +15,7 @@
 #include "../HWDescription/OuterTrackerHybrid.h"
 #include "D19cI2CInterface.h"
 #include "D19cOpticalInterface.h"
+#include "L1ReadoutInterface.h"
 #include <algorithm>
 #include <chrono>
 #include <time.h>
@@ -681,31 +682,35 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         }
     }
 
-    Config cConfig; 
-    if(!pBoard->isOptical())
-    {
-        LOG (INFO) << BOLDYELLOW << "Electrical readout.. iniitialize I2C interface" << RESET;
-        fFEConfigurationInterface = new D19cI2CInterface( this->getId() , this->getUri(), this->getAddressTable() ); 
-        (static_cast<D19cI2CInterface*>(fFEConfigurationInterface))->ConfigureI2CMap(pBoard);
-        cConfig.fVerbose     = 0;
-        cConfig.fReTry       = 0;
-        cConfig.fMaxAttempts = 10;
-        cConfig.fVerify      = 0; 
-    }
-    else
-    { 
-        LOG (INFO) << BOLDBLUE << "Optical readout . initializing Optical interface" << RESET;
-        fFEConfigurationInterface = new D19cOpticalInterface( this->getId() , this->getUri(), this->getAddressTable() ); 
-        (static_cast<D19cOpticalInterface*>(fFEConfigurationInterface))->setResetEnable( fCPBConfig.fEnable ); 
-        (static_cast<D19cOpticalInterface*>(fFEConfigurationInterface))->setWait( fCPBConfig.fWait_us ); 
-        cConfig.fVerbose     = fCPBConfig.fVerbose;
-        cConfig.fReTry       = fCPBConfig.fReTry;
-        cConfig.fMaxAttempts = fCPBConfig.fMaxAttempts;
-        cConfig.fVerify      = 0; 
-        cConfig.fReTry       = 0;
-    }
-    fFEConfigurationInterface->Configure(cConfig);
 
+    if(fFEConfigurationInterface == nullptr)
+    {
+        Config cConfig; 
+        if(!pBoard->isOptical())
+        {
+            LOG (INFO) << BOLDYELLOW << "Electrical readout.. iniitialize I2C interface" << RESET;
+            fFEConfigurationInterface = new D19cI2CInterface( this->getId() , this->getUri(), this->getAddressTable() ); 
+            (static_cast<D19cI2CInterface*>(fFEConfigurationInterface))->ConfigureI2CMap(pBoard);
+            cConfig.fVerbose     = 0;
+            cConfig.fReTry       = 0;
+            cConfig.fMaxAttempts = 10;
+            cConfig.fVerify      = 0; 
+        }
+        else 
+        { 
+            LOG (INFO) << BOLDBLUE << "Optical readout . initializing Optical interface" << RESET;
+            fFEConfigurationInterface = new D19cOpticalInterface( this->getId() , this->getUri(), this->getAddressTable() ); 
+            (static_cast<D19cOpticalInterface*>(fFEConfigurationInterface))->setResetEnable( fCPBConfig.fEnable ); 
+            (static_cast<D19cOpticalInterface*>(fFEConfigurationInterface))->setWait( fCPBConfig.fWait_us ); 
+            cConfig.fVerbose     = fCPBConfig.fVerbose;
+            cConfig.fReTry       = fCPBConfig.fReTry;
+            cConfig.fMaxAttempts = fCPBConfig.fMaxAttempts;
+            cConfig.fVerify      = 0; 
+            cConfig.fReTry       = 0;
+        }
+        fFEConfigurationInterface->Configure(cConfig);
+    }
+    
     if(fI2CVersion >= 1 || !cWithlpGBT)
     {
         fI2CSlaveMap.clear();
@@ -832,9 +837,16 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         LOG(INFO) << BOLDBLUE << "Firmware NOT configured for a CIC" << RESET;
     }
 
-    // now check that I2C communication is functioning
+    // Enable hybrids + ROCs for readout 
     LOG(INFO) << BOLDGREEN << "According to the Firmware status registers, it was compiled for: " << fFWNHybrids << " hybrid(s), " << fFWNChips << " " << cChipName << " chip(s) per hybrid" << RESET;
     this->EnableFrontEnds(pBoard);
+
+    // configure L1 readout interface 
+    if( fL1ReadoutInterface == nullptr ) 
+    {
+        fL1ReadoutInterface = new L1ReadoutInterface(this->getId() , this->getUri(), this->getAddressTable()); 
+        LOG (INFO) << BOLDYELLOW << "Created L1ReadoutInterface for BeBoard#" << +pBoard->getId() << RESET;
+    }
 
     // adding an ReSync to align CBC L1A counters
     this->ChipReSync();
