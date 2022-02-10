@@ -12,7 +12,7 @@
 
 #include "LinkAlignmentOT.h"
 #include "Tool.h"
-#ifdef __TCUSB__
+#if defined(__TCUSB__)
 #include "USB_a.h"
 #endif
 
@@ -102,7 +102,7 @@ class PSHybridTester : public LinkAlignmentOT
         {"67", 0xB}  // 0b1011}};
     };
 
-#ifdef __TCUSB__
+#if defined(__TCUSB__)
     // Maps for electrical measurements on the hybrid:
     std::map<std::string, TC_PSFE::measurement> fHybridVoltageMap = {
         {"TC_GND", TC_PSFE::measurement::GROUND},           {"ROH_GND", TC_PSFE::measurement::ROH_GND},          {"Hybrid1V00", TC_PSFE::measurement::_1V},
@@ -119,6 +119,7 @@ class PSHybridTester : public LinkAlignmentOT
                                                                    {"PGLineContinuity", TC_PSFE::measurement::C_TEST_PG},
                                                                    {"12VLineContinuity", TC_PSFE::measurement::C_TEST_P12},
                                                                    {"MPAContinuity", TC_PSFE::measurement::MPA_RST_TEST}};
+#endif
     // 0 means there is no nominal value and it does not have to be checked
     std::map<std::string, int> fHybridNominalValues = {{"TC_GND", 0},
                                                        {"ROH_GND", 0},
@@ -159,12 +160,11 @@ class PSHybridTester : public LinkAlignmentOT
                                                               {"DAC", "Bias_D5DAC8"}};
     // fDACsCalibrationTargetMap = {<DAC to be calibrated>, <Target ADC value>}
     std::map<std::string, float> fDACsCalibrationTargetMap = {{"BoosterFeedback", 82.0}, {"PreampBias", 82.0}, {"VoltageBias", 82.0}, {"CurrentBias", 82.0}, {"DAC", 86.0}};
+#if defined(__USE_ROOT__)
+    TTree* fSSATree = nullptr;
 #endif
-#ifdef __USE_ROOT__
-    TTree*      fSSATree          = nullptr;
-    std::string fSSATreeParameter = "";
-    std::string fSSATreeValue     = "";
-#endif
+    std::string             fSSATreeParameter          = "";
+    std::string             fSSATreeValue              = "";
     int                     fVoltageMeasurementWait_ms = 100;
     int                     fNreadings                 = 3;
     std::pair<float, float> fVoltageMeasurement;

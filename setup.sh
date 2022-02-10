@@ -1,12 +1,16 @@
 #!/bin/bash
+###########
+# Ph2_ACF #
+###########
+export PH2ACF_BASE_DIR=$(pwd)
 
 ##########
 # CACTUS #
 ##########
-export CACTUSBIN=/opt/cactus/bin
-export CACTUSLIB=/opt/cactus/lib
-export CACTUSINCLUDE=/opt/cactus/include
-export CACTUSROOT=/opt/cactus/
+export CACTUSROOT=/opt/cactus
+export CACTUSBIN=$CACTUSROOT/bin
+export CACTUSLIB=$CACTUSROOT/lib
+export CACTUSINCLUDE=$CACTUSROOT/include
 
 #########
 # BOOST #
@@ -43,23 +47,20 @@ fi
 #######
 export ZMQ_HEADER_PATH=/usr/include/zmq.hpp
 
-###########
-# Ph2_ACF #
-###########
-export PH2ACF_BASE_DIR=$(pwd)
-
 ####################
 # External Plugins #
 ####################
 export EXTERNAL_TOOLS_BASE_DIR=${PH2ACF_BASE_DIR%/*}
-# if in the docker container I want to do this .. need to figure out how to make sure that this 
-# is set-up correctly 
-#export EXTERNAL_TOOLS_BASE_DIR=/home/cmsTkUser 
+# if in the docker container I want to do this .. need to figure out how to make sure that this is set-up correctly
 export AMC13DIR=$CACTUSINCLUDE/amc13
 export ANTENNADIR=$EXTERNAL_TOOLS_BASE_DIR/CMSPh2_AntennaDriver
 export USBINSTDIR=$EXTERNAL_TOOLS_BASE_DIR/Ph2_USBInstDriver
 export EUDAQDIR=$EXTERNAL_TOOLS_BASE_DIR/eudaq
 export POWERSUPPLYDIR=$EXTERNAL_TOOLS_BASE_DIR/power_supply
+
+# These are git references for the dependencies that are included via CMake ExternalProjects
+export PH2_TCUSB_REF=e28b79c090b35d9fc686b5d56a4ebab0c36a1a22
+export EUDAQ_REF=ac59b87fca12806d775e95df2d253c3bf96420ee
 
 ###########
 # ANTENNA #
@@ -98,9 +99,9 @@ export UseRootFlag='-D__USE_ROOT__'
 export MultiplexingFlag='-D__MULTIPLEXING__'
 export EuDaqFlag='-D__EUDAQ__'
 
-################
-# Compilations #
-################
+#####################
+# Compilation flags #
+#####################
 
 # Stand-alone application, without data streaming
 export CompileForHerd=false
@@ -128,7 +129,7 @@ export UseTCUSBTcpServer=false
 
 # Clang-format command
 if command -v clang-format &> /dev/null; then
-  clang_command="clang-format"
+ clang_command="clang-format"
 else
   clang_command="/opt/rh/llvm-toolset-7.0/root/usr/bin/clang-format"
 fi

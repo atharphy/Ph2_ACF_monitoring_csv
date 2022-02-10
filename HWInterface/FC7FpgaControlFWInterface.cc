@@ -1,31 +1,18 @@
 #include "FC7FpgaControlFWInterface.h"
-#include "D19cFpgaConfig.h"
 
 using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-FC7FpgaControlFWInterface::FC7FpgaControlFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler) : BeBoardFWInterface(puHalConfigFileName, pBoardId)
-{
-    fFpgaConfig = nullptr;
-}
-FC7FpgaControlFWInterface::FC7FpgaControlFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler) : BeBoardFWInterface(pId, pUri, pAddressTable)
-{
-    fFpgaConfig = nullptr;
-}
-FC7FpgaControlFWInterface::~FC7FpgaControlFWInterface() {}
-
 void FC7FpgaControlFWInterface::FlashProm(const std::string& strConfig, const char* pstrFile)
 {
     checkIfUploading();
-
     fFpgaConfig->runUpload(strConfig, pstrFile);
 }
 
 void FC7FpgaControlFWInterface::JumpToFpgaConfig(const std::string& strConfig)
 {
     checkIfUploading();
-
     fFpgaConfig->jumpToImage(strConfig);
 }
 
@@ -50,16 +37,15 @@ void FC7FpgaControlFWInterface::DeleteFpgaConfig(const std::string& strId)
 void FC7FpgaControlFWInterface::checkIfUploading()
 {
     if(fFpgaConfig && fFpgaConfig->getUploadingFpga() > 0) throw Exception("This board is uploading an FPGA configuration");
-
-    if(!fFpgaConfig) fFpgaConfig = new D19cFpgaConfig(this);
+    if(!fFpgaConfig) fFpgaConfig = new D19cFpgaConfig(fBeBoardFW);
 }
 
 const FpgaConfig* FC7FpgaControlFWInterface::GetConfiguringFpga() { return (const FpgaConfig*)fFpgaConfig; }
 
 void FC7FpgaControlFWInterface::RebootBoard()
 {
-    if(!fFpgaConfig) fFpgaConfig = new D19cFpgaConfig(this);
-
+    if(!fFpgaConfig) fFpgaConfig = new D19cFpgaConfig(fBeBoardFW);
     fFpgaConfig->resetBoard();
 }
+
 } // namespace Ph2_HwInterface

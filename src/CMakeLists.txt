@@ -84,13 +84,12 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
       endif($ENV{UseTCUSBTcpServer})
     endif(${PH2_TCUSB_FOUND})
 
-    #boost also needs to be linked
-    if(Boost_FOUND)
-        set(LIBS ${LIBS} ${Boost_LIBRARIES})
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lboost_date_time -lboost_iostreams")
-    endif()
+    # Boost also needs to be linked
+    include_directories(${Boost_INCLUDE_DIRS})
+    link_directories(${Boost_LIBRARY_DIRS})
+    set(LIBS ${LIBS} ${Boost_DATE_TIME_LIBRARY} ${Boost_IOSTREAMS_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE})
 
-    # Find root and link against it
+    # Find ROOT and link against it
     if(${ROOT_FOUND})
         include_directories(${ROOT_INCLUDE_DIRS})
         set(LIBS ${LIBS} ${ROOT_LIBRARIES})
@@ -111,14 +110,14 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif(DEFINED ENV{MultiplexingFlag})
 
     # Build eudaq producer
-    if (USE_EUDAQ)
+    if(${USE_EUDAQ})
         set(LIBS ${LIBS} ${EUDAQ_LIB})
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{EuDaqFlag}")
-    endif(USE_EUDAQ)
+    endif(${USE_EUDAQ})
 
-    ####################################
-    ## EXECUTABLES
-    ####################################
+    ###############
+    # EXECUTABLES #
+    ###############
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src *.cc)
 

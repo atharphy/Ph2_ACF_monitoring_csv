@@ -74,8 +74,8 @@ void Latency::sendData()
 
     if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: theOccContainer) theStream.streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theLatencyContainer) theLatencyStream.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theOccContainer) theStream->streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theLatencyContainer) theLatencyStream->streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 
@@ -225,7 +225,7 @@ void Latency::scanDac(const std::string& regName, const std::vector<uint16_t>& d
         PixelAlive::run();
         auto output = PixelAlive::analyze();
         output->resetNormalizationStatus();
-        output->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), 1);
+        output->normalizeAndAverageContainers(fDetectorContainer, this->getChannelGroupHandlerContainer(), 1);
 
         // ###############
         // # Save output #

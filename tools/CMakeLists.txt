@@ -26,6 +26,11 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     file(GLOB HEADERS *.h)
     file(GLOB SOURCES *.cc)
 
+    # Boost also needs to be linked
+    include_directories(${Boost_INCLUDE_DIRS})
+    link_directories(${Boost_LIBRARY_DIRS})
+    set(LIBS ${LIBS} ${Boost_ARCHIVE_LIBRARY} ${Boost_SERIALIZATION_LIBRARY} ${Boost_MULTIPRECISION_LIBRARY})
+
     # Check for ZMQ installed
     if(ZMQ_FOUND)
         #here, now check for UsbInstLib
@@ -107,17 +112,17 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/tools *.cc)
 
     # Build eudaq producer
-    if (USE_EUDAQ)
+    if(${USE_EUDAQ})
         set(LIBS ${LIBS} ${EUDAQ_LIB})
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{EuDaqFlag}")
-    else(USE_EUDAQ)
+    else(${USE_EUDAQ})
         list(REMOVE_ITEM BINARIES RD53eudaqProducer.cc)
         list(REMOVE_ITEM SOURCES ${PROJECT_SOURCE_DIR}/tools/RD53eudaqProducer.cc)
-    endif(USE_EUDAQ)
+    endif(${USE_EUDAQ})
 
-    ####################################
-    ## EXECUTABLES
-    ####################################
+    ###############
+    # EXECUTABLES #
+    ###############
 
     message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")
 

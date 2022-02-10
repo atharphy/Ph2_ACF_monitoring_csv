@@ -70,7 +70,9 @@ void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoard
 
     const std::string strUhalConfig = expandEnvironmentVariables(doc.child("HwDescription").child("Connections").attribute("name").value());
 
-    // Iterate over the BeBoard Nodes
+    // ##################################
+    // # Iterate over the BeBoard Nodes #
+    // ##################################
     for(pugi::xml_node cBeBoardNode = doc.child("HwDescription").child("BeBoard"); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling())
     {
         if(static_cast<std::string>(cBeBoardNode.name()) == "BeBoard") { this->parseBeBoard(cBeBoardNode, pBeBoardFWMap, pDetectorContainer, os); }
@@ -139,14 +141,6 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
     else
     {
         cEventTypeString = cEventTypeAttribute.value();
-        // std::cout << cEventTypeString << std::endl;
-        // std::cout << cEventTypeString << std::endl;
-        // std::cout << cEventTypeString << std::endl;
-        // std::cout << cEventTypeString << std::endl;
-        // std::cout << cEventTypeString << std::endl;
-        // std::cout << cEventTypeString << std::endl;
-        // std::cout << cEventTypeString << std::endl;
-        // std::cout << cEventTypeString << std::endl;
         if(cEventTypeString == "ZS")
             cBeBoard->setEventType(EventType::ZS);
         else if(cEventTypeString == "SCAS")
@@ -187,7 +181,9 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
     {
         if(cBeBoard->getBoardType() == BoardType::D19C) { pBeBoardFWMap[cBeBoard->getId()] = new D19cFWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str()); }
         else if(cBeBoard->getBoardType() == BoardType::RD53)
+        {
             pBeBoardFWMap[cBeBoard->getId()] = new RD53FWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str());
+        }
     }
     os << BOLDCYAN << "|"
        << "       "
@@ -255,7 +251,6 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
         if(static_cast<std::string>(theChild.name()) == "Hybrid") { this->parseHybridContainer(theChild, theOpticalGroup, os, pBoard); }
         else if(static_cast<std::string>(theChild.name()) == "lpGBT_Interface")
         {
-            // pBoard->setOptical(convertAnyInt(theChild.attribute("useOpticalLink").value()));
             pBoard->setUseCPB(convertAnyInt(theChild.attribute("useCPB").value()));
         }
         else if(static_cast<std::string>(theChild.name()) == "lpGBT_Files")
@@ -269,12 +264,11 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             os << BOLDBLUE << "|\t|----" << theChild.name() << " --> File: " << BOLDYELLOW << fileName << RESET << std::endl;
             lpGBT* thelpGBT = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, fileName);
             thelpGBT->setOptical(pBoard->isOptical());
-            thelpGBT->setOpticalId(cOpticalGroupId);
-            thelpGBT->setChipAddress(0x70);               // default lpGBT address
-            thelpGBT->addRxGroups({0, 1, 2, 3, 4, 5, 6}); // be default we always use all 6 groups
-            thelpGBT->addRxChannels({0, 2});              // and always channel 0 and channel 2 of each group
             theOpticalGroup->addlpGBT(thelpGBT);
-            // Initialize LpGBT settings from XML (only for IT)
+
+            // ####################################################
+            // # Initialize LpGBT settings from XML (only for IT) #
+            // ####################################################
             if(pBoard->getBoardType() == BoardType::RD53)
             {
                 for(const pugi::xml_attribute& attr: theChild.attributes())
@@ -294,11 +288,18 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
                         thelpGBT->setClocksFrequency(convertAnyInt(theChild.attribute("ClockFrequency").value()));
                 }
             }
+            else
+            {
+                thelpGBT->setOpticalId(cOpticalGroupId);
+                thelpGBT->setChipAddress(0x70);               // default lpGBT address
+                thelpGBT->addRxGroups({0, 1, 2, 3, 4, 5, 6}); // be default we always use all 6 groups
+                thelpGBT->addRxChannels({0, 2});              // and always channel 0 and channel 2 of each group
+            }
 
             pugi::xml_node clpGBTSettings = theChild.child("Settings");
             if(clpGBTSettings != nullptr)
             {
-                os << BOLDCYAN << "|\t|\t|----LpGBT settings" << RESET << std::endl;
+                os << BOLDCYAN << "|\t|\t|---- LpGBT Settings:" << RESET << std::endl;
 
                 for(const pugi::xml_attribute& attr: clpGBTSettings.attributes())
                 {
@@ -358,7 +359,6 @@ void FileParser::parseSLink(pugi::xml_node pSLinkNode, BeBoard* pBoard, std::ost
         pugi::xml_node cDebugModeNode = pSLinkNode.child("DebugMode");
         std::string    cDebugString;
 
-        // the debug mode node exists
         if(cDebugModeNode != nullptr)
         {
             cDebugString = cDebugModeNode.attribute("type").value();
@@ -389,7 +389,6 @@ void FileParser::parseSLink(pugi::xml_node pSLinkNode, BeBoard* pBoard, std::ost
            << "|"
            << "----" << pSLinkNode.child("DebugMode").name() << MAGENTA << " : SLinkDebugMode::" << cDebugString << RESET << std::endl;
 
-        // now loop the condition data node
         for(pugi::xml_node cNode = pSLinkNode.child("ConditionData"); cNode; cNode = cNode.next_sibling())
         {
             if(cNode != nullptr)
@@ -425,13 +424,10 @@ void FileParser::parseSLink(pugi::xml_node pSLinkNode, BeBoard* pBoard, std::ost
                 }
                 else if(cTypeString == "I2C")
                 {
-                    // here is where it gets nasty
                     cUID     = 1;
                     cRegName = cNode.attribute("Register").value();
                     cFeId    = convertAnyInt(cNode.attribute("Id").value());
                     cCbcId   = convertAnyInt(cNode.attribute("CbcId").value());
-
-                    // ok, now I need to loop th CBCs to find page & address and the initial value
 
                     for(auto cOpticalGroup: *pBoard)
                         for(auto cHybrid: *cOpticalGroup)
@@ -839,6 +835,9 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
         {
             cHybrid = pOpticalGroup->addHybridContainer(
                 pHybridNode.attribute("Id").as_int(), new Hybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pHybridNode.attribute("Id").as_int(), pHybridNode.attribute("Id").as_int()));
+
+            uint8_t cHybridReset = convertAnyInt(pHybridNode.attribute("reset").value());
+            cHybrid->setReset(cHybridReset);
         }
         else
         {
@@ -851,16 +850,14 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             cHybrid = pOpticalGroup->addHybridContainer(
                 pHybridNode.attribute("Id").as_int(),
                 new OuterTrackerHybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pHybridNode.attribute("Id").as_int(), pHybridNode.attribute("Id").as_int()));
-            // probably this can be removed now
+
             static_cast<OuterTrackerHybrid*>(cHybrid)->setLinkId(pHybridNode.attribute("LinkId").as_int());
             cHybrid->setMasterId(cMasterId);
-        }
-        uint8_t cHybridReset = convertAnyInt(pHybridNode.attribute("reset").value());
-        cHybrid->setReset(cHybridReset);
 
-        cHybrid->setOptical(pBoard->isOptical());
-        cHybrid->setOpticalId(pOpticalGroup->getOpticalId());
-        os << BOLDBLUE << "|       |       | HybridOpticalId is " << +cHybrid->getOpticalId() << RESET;
+            cHybrid->setOptical(pBoard->isOptical());
+            cHybrid->setOpticalId(pOpticalGroup->getOpticalId());
+            os << BOLDBLUE << "|       |       | HybridOpticalId is " << +cHybrid->getOpticalId() << RESET;
+        }
 
         std::string cConfigFileDirectory;
         for(pugi::xml_node cChild: pHybridNode.children())
@@ -1017,13 +1014,17 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                 }
             }
         }
-        // parse global hybrids container - masks for noisy pixels/strips
-        parseGlobalHybridMask(pHybridNode, cHybrid, os);
+
         // Finally map front-end to LpGBT
-        if(pBoard->getBoardType() == BoardType::RD53 && pOpticalGroup->flpGBT != nullptr) this->parseHybridToLpGBT(pHybridNode, cHybrid, pOpticalGroup->flpGBT, os);
+        if(pBoard->getBoardType() == BoardType::RD53 && pOpticalGroup->flpGBT != nullptr)
+            this->parseHybridToLpGBT(pHybridNode, cHybrid, pOpticalGroup->flpGBT, os);
+        else if(pBoard->getBoardType() != BoardType::RD53)
+            // parse global hybrids container - masks for noisy pixels/strips
+            parseGlobalHybridMask(pHybridNode, cHybrid, os);
     }
 }
-// so far implemented for MPA/SSA/CBC
+
+// So far implemented for MPA/SSA/CBC
 void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybrid, std::ostream& os)
 {
     os << BOLDCYAN << "|"
@@ -1031,7 +1032,6 @@ void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybr
        << "\n";
 
     pugi::xml_node cGlobalSettingsNode = pHybridNode.child("Global");
-    // parse masked channels
     for(pugi::xml_node cChildGlobal: cGlobalSettingsNode.children())
     {
         std::string cName = cChildGlobal.name();
@@ -1041,7 +1041,7 @@ void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybr
 
         std::vector<uint8_t>                     cFeIds(0);
         std::map<uint8_t, std::vector<uint16_t>> cMapOfMaks;  // key FeId, ChannelIds
-        std::map<uint8_t, FrontEndType>          cMapOfTypes; // key FeId , value Type
+        std::map<uint8_t, FrontEndType>          cMapOfTypes; // key FeId, value Type
         for(const pugi::xml_attribute cAttribute: cChildGlobal.attributes())
         {
             std::string       cAttrName = cAttribute.name();
@@ -1092,47 +1092,6 @@ void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybr
                     cIndx++;
                 }
             }
-            // while(std::getline(cStr, ctoken, cDelimiter))
-            // {
-            //     uint8_t cItem = convertAnyInt(ctoken.c_str());
-            //     if(cAttrName.find("Id") != std::string::npos)
-            //     {
-            //         // check if item exists in map
-            //         cFeIds.push_back(cItem);
-            //         auto cIter = cMapOfMaks.find(cItem);
-            //         if(cIter == cMapOfMaks.end())
-            //         {
-            //             std::vector<uint16_t> cMskedChnls;
-            //             cMapOfMaks[cItem]  = cMskedChnls;
-            //             FrontEndType cType = FrontEndType::CBC3;
-            //             if(cAttrName.find("MPA") != std::string::npos) cType = FrontEndType::MPA;
-            //             if(cAttrName.find("SSA") != std::string::npos) cType = FrontEndType::SSA;
-            //             if(cAttrName.find("SSA2") != std::string::npos) cType = FrontEndType::SSA2;
-            //             if(cAttrName.find("CBCId") != std::string::npos){
-            //                 cType = FrontEndType::CBC3;
-            //                 os << GREEN << "|\n|\t|\t|\t|\t|----- " << +cItem << "\n";
-            //             }
-            //             cMapOfTypes[cItem] = cType;
-            //         }
-            //         else
-            //             cMapOfMaks[cItem].clear();
-            //     }
-            //     else if(cAttrName.find("Rows") != std::string::npos)
-            //     {
-            //         auto cFeId = cFeIds[cFeIds.size() - 1];
-            //         cMapOfMaks[cFeId].push_back(cItem + 1); // registers for masking start from 1
-            //         // auto cPos = cMapOfMaks[cFeId].size();
-            //         // os << YELLOW << "FeId " << +cFeIds[cFeIds.size()-1] << " mask contained " << +cPos << " channels and have just added " <<  +cItem <<  ", ";
-            //     }
-            //     // fix me
-            //     // else if(cAttrName.find("Columns") != std::string::npos)
-            //     // {
-            //     //     uint16_t cPixelId                  = 120 * cItem + cMapOfMaks[cFeIds[cIndex]][cIndex];
-            //     //     cMapOfMaks[cFeIds[cIndex]][cIndex] = cPixelId;
-            //     // }
-            //     // os << GREEN << +cItem << ", ";
-            //     cIndex++;
-            // }
             os << "\n";
         }
 
@@ -1214,6 +1173,7 @@ void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybr
         }
     }
 }
+
 void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os)
 {
     os << BOLDCYAN << "|"
@@ -1316,39 +1276,6 @@ void FileParser::parseGlobalCbcSettings(pugi::xml_node pHybridNode, Hybrid* pHyb
         }
     }
 }
-// void FileParser::parseGlobalPSSettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, std::ostream& os)
-// {
-//     LOG(INFO) << BOLDBLUE << "Now I'm parsing global PS settings " << RESET;
-
-//     // THRESHOLD & LATENCY
-//     pugi::xml_node cThresholdNode = pCbcNode.child("Settings");
-
-//     if(cThresholdNode != nullptr)
-//     {
-//         uint8_t cThresholdStrips  = static_cast<uint8_t>( convertAnyInt(cThresholdNode.attribute("stripThreshold").value())/250. );
-//         uint8_t cThresholdPxls   = static_cast<uint8_t>(  convertAnyInt(cThresholdNode.attribute("stripThreshold").value())/94. ) ;
-//         for(auto pROC: *pHybrid)
-//         {
-//             // the moment the cbc object is constructed, it knows which chip type it is
-//             if(cType == FrontEndType::SSA)
-//             {
-//                 pROC->setReg("Bias_THDAC", cThresholdStrips);
-//             }
-//             if( cType == FrontEndType::MPA )
-//             {
-//                 for(size_t cIndx=0; cIndx < 7 ; cIndx++)
-//                 {
-//                     std::stringstream cRegName;
-//                     cRegName << "ThDAC" << +cIndx;
-//                     pROC->setReg(cRegName.str(), cThresholdPxls);
-//                 }
-//             }
-//             os << GREEN << "|\t|\t|\t|---- Threshold: Pxls 0x" << RED << std::hex << +cThresholdPxls << std::dec << " Strips 0x" <<  YELLOW << std::hex << +cThresholdStrips << std::dec << RESET <<
-//             std::endl;
-//         }
-//     }
-
-// }
 
 void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, std::ostream& os)
 {

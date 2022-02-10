@@ -34,7 +34,7 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 30/08/2021
++ Last change made to this section: 03/02/2022
 ```
 
 **Suggested software and firmware versions:**
@@ -44,6 +44,7 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 **Important webpages:**
 - Mattermost forum: [`cms-it-daq`](https://mattermost.web.cern.ch/cms-it-daq/)
 - DAQ web page: https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/
+- Detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
 
 **FC7 setup:**
 1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of the ethernet card of your PC to which the FC7 is connected to)
@@ -69,7 +70,7 @@ A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/
 **IT-DAQ setup and run:**
 1. `sudo yum install pugixml-devel` (if necesary run `sudo yum install epel-release` before point 1.)
 2. Install: `boost` by running `sudo yum install boost-devel`, `CERN ROOT` from https://root.cern.ch, and `IPbus` from http://ipbus.web.cern.ch/ipbus (either using `sudo yum` or from source)
-3. Checkout the DAQ code from git: `git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git`
+3. Checkout the DAQ code from git: `git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git` (**N.B.** to syncrhonize only the submodule: `git submodule sync; git submodule update --init --recursive --remote`)
 4. `cd Ph2_ACF; source setup.sh; mkdir myBuild; cd myBuild; cmake ..; make -j4; cd ..`
 5. `mkdir choose_a_name`
 6. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
@@ -107,7 +108,6 @@ Through `CMSITminiDAQ`, and with the right command line option, you can run the 
 15. Generic DAC-DAC scan
 16. Physics
 ```
-Here you can find a detailed description of the various calibrations: https://cernbox.cern.ch/index.php/s/O07UiVaX3wKiZ78
 
 It might be useful to create one `CMSIT.xml` file for each "set" of calibrations. In the following it's reported the suggested sequence of calibrations, implemented in bash shell script:
 ```

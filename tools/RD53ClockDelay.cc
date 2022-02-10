@@ -86,8 +86,8 @@ void ClockDelay::sendData()
 
     if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: theOccContainer) theStream.streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theClockDelayContainer) theClockDelayStream.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theOccContainer) theStream->streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theClockDelayContainer) theClockDelayStream->streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 
@@ -314,7 +314,7 @@ void ClockDelay::scanDac(const std::string& regName, const std::vector<uint16_t>
         PixelAlive::run();
         auto output = PixelAlive::analyze();
         output->resetNormalizationStatus();
-        output->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), 1);
+        output->normalizeAndAverageContainers(fDetectorContainer, this->getChannelGroupHandlerContainer(), 1);
 
         // ###############
         // # Save output #

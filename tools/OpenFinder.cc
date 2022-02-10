@@ -1,3 +1,4 @@
+#if defined(__TCUSB__) && defined(__USE_ROOT__) && defined(__ANTENNA__)
 #include "OpenFinder.h"
 #include "CBCChannelGroupHandler.h"
 #include "ContainerFactory.h"
@@ -278,7 +279,6 @@ void OpenFinder::CountOpens(BeBoard* pBoard)
     }
 }
 
-#ifdef __USE_ROOT__
 void OpenFinder::Print()
 {
     for(auto cBoard: *fDetectorContainer)
@@ -338,14 +338,13 @@ void OpenFinder::Print()
         }
     }
 }
-#endif
 
 void OpenFinder::FindOpens2S()
 {
-#ifdef __ANTENNA__
     // The main antenna object is needed here
     // Antenna cAntenna;
-    Antenna cAntenna = Antenna(fParameters.UsbId.c_str());
+    // Antenna cAntenna = Antenna(fParameters.UsbId.c_str());
+    Antenna cAntenna = Antenna();
     // Trigger source for the antenna
     cAntenna.SelectTriggerSource(fParameters.fAntennaTriggerSource);
     // Configure SPI (again?) and the clock
@@ -397,12 +396,10 @@ void OpenFinder::FindOpens2S()
         // de-select all channels
         cAntenna.TurnOnAnalogSwitchChannel(9);
     }
-#endif
 }
 void OpenFinder::SelectAntennaPosition(const std::string& cPosition, uint16_t potentiometer)
 {
     if(potentiometer != 0) fParameters.potentiometer = potentiometer;
-#ifdef __TCUSB__
     auto cMapIterator = fAntennaControl.find(cPosition);
     if(cMapIterator != fAntennaControl.end())
     {
@@ -419,12 +416,10 @@ void OpenFinder::SelectAntennaPosition(const std::string& cPosition, uint16_t po
         LOG(INFO) << BOLDBLUE << "Antenna Pull-up Measurement : " << measurement << " mV." << RESET;
         if(cPosition == "Disable") ReadAntennaVoltage();
     }
-#endif
 }
 
 void OpenFinder::FindOpensPS()
 {
-#ifdef __TCUSB__
     float   measurement;
     TC_PSFE cTC_PSFE;
     cTC_PSFE.adc_get(TC_PSFE::measurement::_3V3, measurement);
@@ -472,68 +467,65 @@ void OpenFinder::FindOpensPS()
         cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
         cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.cal_pulse", 0});
         cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.antenna", 1});
-        
-            // std::vector<std::pair<std::string, uint32_t>> cRegVec;
-            // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
-            // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.cal_pulse", 0});
-            // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.antenna", 1});
-            for(auto cOpticalGroup: *cBoard)
+
+        // std::vector<std::pair<std::string, uint32_t>> cRegVec;
+        // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
+        // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.cal_pulse", 0});
+        // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.antenna", 1});
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
             {
-                for(auto cHybrid: *cOpticalGroup)
+                for(auto cChip: *cHybrid)
                 {
-                    for(auto cChip: *cHybrid)
+                    if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                     {
-                        if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
+                        double cPedeMean   = getSummaryParameter(Form("AvgPedeSSA%d", cChip->getId()));
+                        double cPedeStdDev = getSummaryParameter(Form("StDvPedeSSA%d", cChip->getId()));
+                        LOG(INFO) << "Mean:" << cPedeMean << RESET;
+                        LOG(INFO) << "StdDev:" << cPedeStdDev << RESET;
+
+                        if(cPedeMean != -1.0)
                         {
-                            double cPedeMean   = getSummaryParameter(Form("AvgPedeSSA%d", cChip->getId()));
-                            double cPedeStdDev = getSummaryParameter(Form("StDvPedeSSA%d", cChip->getId()));
-                            LOG(INFO) << "Mean:" << cPedeMean << RESET;
-                            LOG(INFO) << "StdDev:" << cPedeStdDev << RESET;
-
-                            if(cPedeMean != -1.0)
-                            {
-                                if((cPedeMean + 3 * cPedeStdDev) <= 255) { cThreshold = (uint16_t)(cPedeMean + 3 * cPedeStdDev); }
-                                LOG(INFO) << BOLDBLUE << "Threshold  " << cThreshold << RESET;
-                                ;
-                            }
-                            // cThreshold = 12;
-                            std::string tmpParameter = "thresholdForOpens_" + std::to_string(cChip->getId());
-#ifdef __USE_ROOT__
-                            fillSummaryTree(tmpParameter, cThreshold);
-#endif
-
-                            // std::string cHistName  = Form("AntennaOccupancy_Even_%d", cChip->getId());
-                            // if ( gROOT->FindObject(cHistName.c_str()) != nullptr )
-                            //     cHistName  = Form("%s_%s", cHistName.c_str(), "II" );
-                            // std::string cHistTitle = Form("Occupancy in Even Channels in Chip %d", cChip->getId());
-                            // TH2F*       fOccupancyHistEven =
-                            //     new TH2F(cHistName.c_str(), cHistTitle.c_str(), (antennaPullupHighEnd - antennaPullupLowEnd), antennaPullupLowEnd -0.5, antennaPullupHighEnd+0.5, 120, -0.5,
-                            //     120+0.5);
-                            // cHistName  = Form("AntennaOccupancy_Odd_%d", cChip->getId());
-                            // if ( gROOT->FindObject(cHistName.c_str()) != nullptr )
-                            //     cHistName  = Form("%s_%s", cHistName.c_str(), "II" );
-                            // cHistTitle = Form("Occupancy in Odd Channels in Chip %d", cChip->getId());
-                            // TH2F* fOccupancyHistOdd =
-                            //     new TH2F(cHistName.c_str(), cHistTitle.c_str(), (antennaPullupHighEnd - antennaPullupLowEnd), antennaPullupLowEnd-0.5, antennaPullupHighEnd+0.5, 120, -0.5, 120+0.5);
-
-                            // fOccupancyHistVect.push_back(fOccupancyHistEven);
-                            // fOccupancyHistVect.push_back(fOccupancyHistOdd);
-
-                            finalAntennaEven.push_back(0);
-                            finalAntennaOdd.push_back(0);
-
-                            fReadoutChipInterface->WriteChipReg(cChip, "AnalogueAsync", 1);
-                            fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
-                            fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", 0);
-                            // fReadoutChipInterface->WriteChipReg(cChip, "SAMPLINGMODE", 0);
+                            if((cPedeMean + 3 * cPedeStdDev) <= 255) { cThreshold = (uint16_t)(cPedeMean + 3 * cPedeStdDev); }
+                            LOG(INFO) << BOLDBLUE << "Threshold  " << cThreshold << RESET;
+                            ;
                         }
+                        // cThreshold = 12;
+                        std::string tmpParameter = "thresholdForOpens_" + std::to_string(cChip->getId());
+                        fillSummaryTree(tmpParameter, cThreshold);
+
+                        // std::string cHistName  = Form("AntennaOccupancy_Even_%d", cChip->getId());
+                        // if ( gROOT->FindObject(cHistName.c_str()) != nullptr )
+                        //     cHistName  = Form("%s_%s", cHistName.c_str(), "II" );
+                        // std::string cHistTitle = Form("Occupancy in Even Channels in Chip %d", cChip->getId());
+                        // TH2F*       fOccupancyHistEven =
+                        //     new TH2F(cHistName.c_str(), cHistTitle.c_str(), (antennaPullupHighEnd - antennaPullupLowEnd), antennaPullupLowEnd -0.5, antennaPullupHighEnd+0.5, 120, -0.5,
+                        //     120+0.5);
+                        // cHistName  = Form("AntennaOccupancy_Odd_%d", cChip->getId());
+                        // if ( gROOT->FindObject(cHistName.c_str()) != nullptr )
+                        //     cHistName  = Form("%s_%s", cHistName.c_str(), "II" );
+                        // cHistTitle = Form("Occupancy in Odd Channels in Chip %d", cChip->getId());
+                        // TH2F* fOccupancyHistOdd =
+                        //     new TH2F(cHistName.c_str(), cHistTitle.c_str(), (antennaPullupHighEnd - antennaPullupLowEnd), antennaPullupLowEnd-0.5, antennaPullupHighEnd+0.5, 120, -0.5, 120+0.5);
+
+                        // fOccupancyHistVect.push_back(fOccupancyHistEven);
+                        // fOccupancyHistVect.push_back(fOccupancyHistOdd);
+
+                        finalAntennaEven.push_back(0);
+                        finalAntennaOdd.push_back(0);
+
+                        fReadoutChipInterface->WriteChipReg(cChip, "AnalogueAsync", 1);
+                        fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
+                        fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", 0);
+                        // fReadoutChipInterface->WriteChipReg(cChip, "SAMPLINGMODE", 0);
                     }
                 }
             }
-            fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
         }
-        // fBeBoardInterface->WriteBoardMultReg (cBoard, cRegVec);
-    
+        fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
+    }
+    // fBeBoardInterface->WriteBoardMultReg (cBoard, cRegVec);
 
     // For DEBUG. Sweep antenna value
     //   TH1I* occupancyHist = new TH1I("OccupHist", "occupancy histogram for stddev", 60, 0, 60);
@@ -716,14 +708,12 @@ void OpenFinder::FindOpensPS()
 
     LOG(INFO) << BOLDBLUE << "Antenna values set, running to open finder." << RESET;
 
-#ifdef __USE_ROOT__
     fResultFile->cd();
     TString               fOpensTreeParameter = "";
     std::vector<uint16_t> fOpensTreeValue     = {};
     TTree*                fOpensTree          = new TTree("opensTree", "Opens in hybrid");
     fOpensTree->Branch("Chip", &fOpensTreeParameter);
     fOpensTree->Branch("Value", &fOpensTreeValue);
-#endif
 
     bool        cOpensFound = false;
     std::string Channels    = "";
@@ -848,7 +838,6 @@ void OpenFinder::FindOpensPS()
 
                                 tmpParameter = "";
                                 tmpParameter = "opens_" + std::to_string(cChip->getId()) + "_" + Channels;
-#ifdef __USE_ROOT__
                                 fillSummaryTree(tmpParameter, opens.size());
                                 if(true)
                                 {
@@ -858,7 +847,6 @@ void OpenFinder::FindOpensPS()
                                     fOpensTreeValue     = opens;
                                     fOpensTree->Fill();
                                 }
-#endif
                             }
 
                             if(!cOpensFound)
@@ -876,6 +864,6 @@ void OpenFinder::FindOpensPS()
             }
         }
     }
-#endif
 }
 void OpenFinder::FindOpens() {}
+#endif

@@ -16,6 +16,9 @@ set(BoldMagenta "${Esc}[1;35m")
 set(BoldCyan    "${Esc}[1;36m")
 set(BoldWhite   "${Esc}[1;37m")
 
+include(ExternalProject)
+set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
+
 if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     MESSAGE(STATUS " ")
@@ -27,7 +30,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     cmake_minimum_required(VERSION 2.8)
     project(Ph2_ACF)
 
-   # Set the output directory
+# Set the output directory
     if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR} )
        MESSAGE( STATUS "${BoldRed}" )
        MESSAGE( FATAL_ERROR "${Reset}In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there. You may need to remove CMakeCache.txt." )
@@ -73,11 +76,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # If it's a recent gcc compiler, then let's add some
     # compiler options to avoid warnings promoted to errors
 
-    set (GCC_NOERROR_FLAGS " -Wno-error=unused-result    -Wno-error=deprecated-declarations")
+    set (GCC_NOERROR_FLAGS " -Wno-error=unused-result -Wno-error=deprecated-declarations")
     set (GCC_6_NOERROR_FLAGS "-Wno-error=misleading-indentation")
-    set (GCC_7_NOERROR_FLAGS "-Wno-expansion-to-defined -Wno-error=format-overflow")
-    #set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow")
-    set (GCC_8_NOERROR_FLAGS "-Wno-error=deprecated-declarations -Wno-error=format-overflow -Wno-error=deprecated-declarations -Wno-error=sign-compare -Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow")
+    set (GCC_7_NOERROR_FLAGS "-Wno-expansion-to-defined -Wno-error=format-overflow -Wno-error=catch-value")
+    set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow -Wno-error=unused-function -Wno-error=pedantic")
     set (GCC_9_NOERROR_FLAGS "-Wno-error=deprecated-copy -Wno-error=int-in-bool-context -Wno-error=unused-variable")
 
     if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
@@ -105,10 +107,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     message("--")
     message("--     ${BoldCyan}#### Checking for external Dependencies ####${Reset}")
     if(CompileForShep OR NoDataShipping)
-        #ROOT
+        # ROOT
         find_package(ROOT COMPONENTS RHTTP)
         if(ROOT_FOUND)
-            #check for THttpServer
+            # Check for THttpServer
             if(EXISTS ${ROOT_RHTTP_LIBRARY})
                 message(STATUS "    Found THttp Server support - enabling compiler flags")
                 set(ROOT_HAS_HTTP TRUE)
@@ -118,6 +120,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
             # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -")
             message(STATUS "    Using ROOT version ${ROOT_VERSION}")
         endif(ROOT_FOUND)
+    else()
+    message(STATUS "Building without ROOT")
     endif()
 
     # AMC13
@@ -134,8 +138,19 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # Ph2_TCUSB [USB control of hybrids]
     if ($ENV{CompileWithTCUSB})
-      find_package(PH2_TCUSB)
-      if(PH2_TCUSB_FOUND)
+        find_package(PH2_TCUSB)
+        message(STATUS "    Building with TCUSB")
+
+        if(NOT PH2_TCUSB_FOUND)
+            message(WARNING "    Couldn't find PH2_TCUSB. Obtaining from gitlab ref $ENV{PH2_TCUSB_REF}")
+            ExternalProject_Add( ext_tcusb
+                    GIT_REPOSITORY https://gitlab.cern.ch/cms_tk_ph2/cmsph2_tcusb.git
+                    GIT_TAG $ENV{PH2_TCUSB_REF}
+                    PREFIX ${EXTERNAL_INSTALL_LOCATION}
+                    INSTALL_COMMAND : # This will skip the install step
+                )
+        endif(NOT PH2_TCUSB_FOUND)
+
         if($ENV{UseTCUSBforROH})
             message(STATUS "    Building the ROH TestCards USB components")
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforROHFlag}")
@@ -143,21 +158,33 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
             message(STATUS "    Building the SEH TestCards USB components")
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBforSEHFlag}")
         endif($ENV{UseTCUSBforROH})
+
         if($ENV{UseTCUSBTcpServer})
             message(STATUS "    Building the components to use the TCP Server")
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBTcpServerFlag}")
         endif($ENV{UseTCUSBTcpServer})
-      endif(PH2_TCUSB_FOUND)
+
     endif($ENV{CompileWithTCUSB})
 
     # EUDAQ
-    if ($ENV{CompileWithEUDAQ})
+    if ($ENV{CompileWithEUDAQ}) # Asked for EUDAQ
+        message(STATUS "Building with EUDAQ")
         set(USE_EUDAQ ON)
+        if(NOT (DEFINED ENV{EUDAQDIR} AND EXISTS ENV{EUDAQDIR} ) )
+            message(WARNING "    Couldn't find EUDAQ. Obtaining from gitlab ref $ENV{EUDAQ_REF}")
+            ExternalProject_Add( ext_eudaq
+                    GIT_REPOSITORY https://gitlab.cern.ch/cms_tk_ph2/eudaq.git
+                    GIT_TAG $ENV{EUDAQ_REF}
+                    PREFIX ${EXTERNAL_INSTALL_LOCATION}
+                )
+            set(ENV{EUDAQDIR} ${EXTERNAL_INSTALL_LOCATION}/src/ext_eudaq/ )
+        endif(NOT (DEFINED ENV{EUDAQDIR} AND EXISTS ENV{EUDAQDIR} ) )
+
         include_directories($ENV{EUDAQDIR}/include)
-        set(EUDAQ_LIB -L$ENV{EUDAQLIB} EUDAQ)
+        set(EUDAQ_LIB -L$ENV{EUDAQDIR}/lib eudaq_core)
         message(STATUS "    EUDAQ variable is defined. EUDAQ directory: $ENV{EUDAQDIR}")
     else($ENV{CompileWithEUDAQ})
-        message(STATUS "    EUDAQ variable is not defined. Building without EUDAQ producer")
+        message(STATUS "EUDAQ variable is not defined. Building without EUDAQ producer")
     endif($ENV{CompileWithEUDAQ})
 
     # ZeroMQ
@@ -169,9 +196,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif(ZMQ_FOUND)
 
     # Boost
-    set(BOOST_INCLUDE_DIRS "$ENV{BOOST_INCLUDE}")
-    set(BOOST_LIBRARY_DIRS "$ENV{BOOST_LIB}")
-    find_package(Boost 1.53 REQUIRED system filesystem thread program_options serialization)
+    find_package(Boost 1.53 REQUIRED system filesystem serialization iostreams program_options)
 
     message("--     ${BoldCyan}#### Done ####${Reset}")
 
@@ -212,8 +237,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     add_subdirectory(MonitorUtils)
 
     message("--     ${BoldRed}#### Don't forget to set the path and ld_library_path by sourcing setup.sh before running ###${Reset}")
-    #set(ENV{PATH} "$ENV{PATH}:${PROJECT_SOURCE_DIR}/bin")
-    #set(ENV{LD_LIBRARY_PATH} "${PROJECT_SOURCE_DIR}/lib:$ENV(LD_LIBRARY_PATH)")
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
@@ -254,16 +277,15 @@ else() # ------------------------------- Compilation in the otsdaq environment -
         endif(PH2_USBINSTLIB_FOUND)
     endif(ZMQ_FOUND)
 
-
-   # EUDAQ
-    if ($ENV{CompileWithEUDAQ})
+    # EUDAQ
+    if(${USE_EUDAQ})
         set(USE_EUDAQ ON)
         include_directories($ENV{EUDAQDIR}/include $ENV{EUDAQDIR}/user/tlu/module/src)
         set(EUDAQ_LIB -L$ENV{EUDAQLIB} eudaq_core)
-        message(STATUS "    EUDAQ variable is defined. EUDAQ directory: $ENV{EUDAQDIR}")
-    else($ENV{CompileWithEUDAQ})
-        message(STATUS "    EUDAQ variable is not defined. Building without EUDAQ producer")
-    endif($ENV{CompileWithEUDAQ})
+        message(STATUS "EUDAQ variable is defined. EUDAQ directory: $ENV{EUDAQDIR}")
+    else(${USE_EUDAQ})
+        message(STATUS "EUDAQ variable is not defined. Building without EUDAQ producer")
+    endif(${USE_EUDAQ})
 
     message("--     ${BoldCyan}#### Done ####${Reset}")
 

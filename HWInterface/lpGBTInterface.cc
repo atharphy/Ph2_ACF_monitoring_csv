@@ -14,61 +14,61 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-// #######################################
+// ################################################
 // # LpGBT chip register write and read functions #
-// #######################################
+// ################################################
 bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerifLoop)
 {
-    // set board
     this->setBoard(pChip->getBeBoardId());
     auto cAddress = pChip->getRegItem(pDacName).fAddress;
+
     if(pDacValue > 0xFF)
     {
         LOG(ERROR) << BOLDRED << "LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pDacValue << BOLDRED << " to address " << BOLDYELLOW << cAddress << RESET;
         return false;
     }
-    if(cAddress >= 0x13C)
+    if(cAddress > 0x13C)
     {
         LOG(ERROR) << "LpGBT read-write registers end at 0x13C ... impossible to write to address " << BOLDYELLOW << cAddress << RESET;
         return false;
     }
+
     bool cSuccess = fBoardFW->WriteOptoLinkRegister(pChip, cAddress, pDacValue, pVerifLoop);
     if(pChip->isOptical()) { cSuccess = fBoardFW->WriteOptoLinkRegister(pChip, cAddress, pDacValue, pVerifLoop); }
     // TO-DO .. figure out what to do if piGBT is used
     else
     {
-#ifdef __TCUSB__
-#if defined(__ROH_USB__) || defined(__SEH_USB__)
-        cSuccess = fExternalController->getInterface().write_i2c(cAddress, static_cast<char>(pDacValue));
-        cSuccess = (!pVerifLoop) ? cSuccess : (ReadChipReg(pChip, pDacName) == pDacValue);
-#endif
+#if defined(__TCUSB__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
+        cSuccess = (fExternalController->getInterface().write_i2c(cAddress, static_cast<char>(pDacValue)) == pDacValue);
+        // cSuccess = (!pVerifLoop) ? cSuccess : (ReadChipReg(pChip, pDacName) == pDacValue);
 #endif
     }
-    // if failed .. throw an exception
+
     if(!cSuccess) throw Exception("[lpGBTInterface::WriteReg] LpGBT register writing issue");
 
-    // update register value in memory
-    pChip->setReg(pDacName, pDacValue); // make sure to update value in memory
+    pChip->setReg(pDacName, pDacValue);
     return cSuccess;
 }
+
 uint16_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
 {
     this->setBoard(pChip->getBeBoardId());
     auto     cAddress = pChip->getRegItem(pDacName).fAddress;
     uint16_t cValue   = 0x00;
+
     if(pChip->isOptical())
         cValue = fBoardFW->ReadOptoLinkRegister(pChip, cAddress);
     else
     {
-#ifdef __TCUSB__
-#if defined(__ROH_USB__) || defined(__SEH_USB__)
+#if defined(__TCUSB__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
         cValue = fExternalController->getInterface().read_i2c(cAddress);
 #endif
-#endif
     }
-    pChip->setReg(pDacName, cValue); // make sure to update value in memory
+
+    pChip->setReg(pDacName, cValue);
     return cValue;
 }
+
 bool lpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerifLoop)
 {
     bool writeGood = true;
@@ -93,9 +93,9 @@ void lpGBTInterface::ConfigureRxGroups(Chip* pChip, const std::vector<uint8_t>& 
         WriteChipReg(pChip, cRXCntrlReg, (cValueEnableRx << 4) | (pDataRate << 2) | (pTrackMode << 0));
     }
 }
+
 void lpGBTInterface::ConfigureRxAlignmentMode(Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pTrackMode)
 {
-    // Configure Rx Groups Phase Tracking mode
     for(const auto& cGroup: pGroups)
     {
         std::string cRXCntrlReg = "EPRX" + std::to_string(cGroup) + "Control";
@@ -103,11 +103,10 @@ void lpGBTInterface::ConfigureRxAlignmentMode(Chip* pChip, const std::vector<uin
         WriteChipReg(pChip, cRXCntrlReg, (cRegValue & 0xFC) | pTrackMode);
     }
 }
+
 uint16_t lpGBTInterface::GetRxDataRate(Chip* pChip, uint8_t pGroup)
 {
-    // chip rate
-    uint16_t cChipRate = GetChipRate(pChip);
-    // rx rate - encoded
+    uint16_t    cChipRate   = GetChipRate(pChip);
     std::string cRXCntrlReg = "EPRX" + std::to_string(pGroup) + "Control";
     auto        cRegValue   = ReadChipReg(pChip, cRXCntrlReg);
     uint16_t    cValue      = (cRegValue & 0xC);
@@ -300,7 +299,7 @@ void lpGBTInterface::ConfigurePhShifter(Chip* pChip, const std::vector<uint8_t>&
         std::string cDelayReg  = "PS" + std::to_string(cClock) + "Delay";
         std::string cConfigReg = "PS" + std::to_string(cClock) + "Config";
         WriteChipReg(pChip, cConfigReg, (((pDelay & 0x100) >> 8) << 7) | pEnFTune << 6 | pDriveStr << 3 | pFreq);
-        WriteChipReg(pChip, cDelayReg, (pDelay & 0xFF));
+        WriteChipReg(pChip, cDelayReg, pDelay);
     }
 }
 
@@ -323,11 +322,10 @@ void lpGBTInterface::PhaseTrainRx(Chip* pChip, const std::vector<uint8_t>& pGrou
             cTrainRxReg = "EPRXTrainEc6";
 
         WriteChipReg(pChip, cTrainRxReg, 0x0F << 4 * (cGroup % 2));
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         WriteChipReg(pChip, cTrainRxReg, 0x00 << 4 * (cGroup % 2));
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
+
 void lpGBTInterface::ResetRxDll(Chip* pChip, const std::vector<uint8_t>& pGroups)
 {
     std::string cRegName = "RST1";
@@ -337,6 +335,7 @@ void lpGBTInterface::ResetRxDll(Chip* pChip, const std::vector<uint8_t>& pGroups
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     this->WriteChipReg(pChip, "RST1", 0x00);
 }
+
 void lpGBTInterface::InternalPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
 {
     const uint8_t cChipRate = lpGBTInterface::GetChipRate(pChip);
@@ -380,6 +379,7 @@ void lpGBTInterface::InternalPhaseAlignRx(Chip* pChip, const std::vector<uint8_t
     // Set back Rx source to normal data
     lpGBTInterface::ConfigureRxSource(pChip, pGroups, lpGBTconstants::PATTERN_NORMAL);
 }
+
 uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
 {
     LOG(INFO) << BOLDBLUE << "Aligning lpGBT#" << +pChip->getId() << RESET;
@@ -397,6 +397,7 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
     std::vector<uint8_t> cAligned(pGroups.size(), 0);
     bool                 cSuccess = true;
     std::vector<uint8_t> cOptimalTaps(0);
+
     for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++)
     {
         uint8_t cGroup   = pGroups[cIndx];
@@ -455,6 +456,7 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
             cPhases.push_back(cCurrPhase);
             cUniquePhases.push_back(cCurrPhase);
         }
+
         cSuccess = cSuccess && (cAligned[cIndx] == cMaxAttempts);
         // for now we just choose the first
         // what I want is the mode
@@ -474,6 +476,7 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
                 cIndxBstPhase = cIndx2;
             }
         }
+
         cSuccess = cSuccess && (cUniquePhases[cIndxBstPhase] != 15);
         if(cUniquePhases[cIndxBstPhase] != 15)
         {
@@ -485,6 +488,7 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
 
         ConfigureRxPhase(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
     }
+
     // find mode
     std::vector<uint8_t> cTapsHist(15, 0);
     for(auto cItem: cOptimalTaps) cTapsHist[cItem]++;
@@ -767,6 +771,57 @@ void lpGBTInterface::ConfigureCurrentDAC(Chip* pChip, const std::vector<std::str
         WriteChipReg(pChip, "CURDACCHN", cCURDACCHN);
     }
 }
+void lpGBTInterface::ConfigureInternalMonitoring(Chip* pChip, uint8_t pEnable)
+{
+    WriteChipReg(pChip, "ADCMon", (pEnable == 1) ? 0x1F : 0x00);
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+}
+float lpGBTInterface::GetInternalTemperature(Chip* pChip)
+{
+    auto cVal = ReadChipReg(pChip, "ADCMon");
+    // enable reset on temperature sensor
+    WriteChipReg(pChip, "ADCMon", (1 << 4 | cVal));
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    // disable reset on temperature sensor
+    WriteChipReg(pChip, "ADCMon", (0 << 4 | cVal));
+
+    std::vector<float> cMeasurements(0);
+    for(uint8_t cIndx = 0; cIndx < 10; cIndx++) { cMeasurements.push_back(ReadADC(pChip, "TEMP", "VREF/2", 0)); }
+    return std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
+}
+float lpGBTInterface::ReadResistance(Chip* pChip, std::string pADC, std::vector<uint8_t> pCurrents, uint8_t pGain)
+{
+    std::vector<float> cTempVoltageReadings;
+    std::vector<float> cTempCurrentValues;
+    for(auto cCurrentDAC: pCurrents)
+    {
+        ConfigureCurrentDAC(pChip, {pADC}, cCurrentDAC);
+        float              cCurrent = (0.9e-3) * cCurrentDAC / 256;
+        std::vector<float> cMeasurements(0);
+        for(uint8_t cIndx = 0; cIndx < 10; cIndx++)
+        {
+            auto cMeasurement = ReadADC(pChip, pADC, "VREF/2", pGain);
+            if(cMeasurement != 1023)
+            {
+                LOG(DEBUG) << BOLDBLUE << "Current DAC " << cCurrentDAC << " \t... " << cMeasurement << RESET;
+                cMeasurements.push_back(cMeasurement);
+            }
+        }
+        if(cMeasurements.size() > 0)
+        {
+            float cMean = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
+            cTempCurrentValues.push_back(cCurrent);
+            cTempVoltageReadings.push_back(cMean);
+            LOG(DEBUG) << "Current of " << cCurrent << " mean voltage reading is " << cMean << " ADC units." << RESET;
+        }
+        else
+            LOG(DEBUG) << BOLDBLUE << "\t\t Current DAC " << +cCurrentDAC << " no valid ADC readings.." << RESET;
+    }
+    ConfigureCurrentDAC(pChip, {pADC}, 0x00);
+    float cLSQResistance = (cTempVoltageReadings.size() != 0) ? getLeastSquareSlope<float>(cTempCurrentValues, cTempVoltageReadings) : -1;
+    LOG(DEBUG) << BOLDBLUE << "Resistance \t... " << cLSQResistance << RESET;
+    return cLSQResistance;
+}
 
 uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain)
 {
@@ -783,8 +838,9 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
     lpGBTInterface::ConfigureADC(pChip, pGain, true, false);
 
     // Enable Internal VREF
-    WriteChipReg(pChip, "VREFCNTR", 1 << 7);
+    WriteChipReg(pChip, "VREFCNTR", 1 << 7 | 0x00);
 
+    // std::this_thread::sleep_for(std::chrono::milliseconds(10));
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     // Start ADC conversion
@@ -808,6 +864,9 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
 
     // Clear ADC conversion bit and disable ADC
     lpGBTInterface::ConfigureADC(pChip, pGain, false, false);
+
+    // disable Internal VREF
+    WriteChipReg(pChip, "VREFCNTR", 0 << 7);
 
     return (cADCvalue1 << 8 | cADCvalue2);
 }
@@ -972,13 +1031,13 @@ double lpGBTInterface::BERtestCL(Chip* pChip, uint8_t pGroup, uint8_t pChannel, 
     nErrors = lpGBTInterface::GetBERTErrors(pChip);
     lpGBTInterface::StartBERT(pChip, false);                                                            // Stop
     float cErrorRate = (nErrors == 0) ? -1 * log(1.0 - cConfidenceLevel) / bitsRxd : nErrors / bitsRxd; // upper limit on BERT is I see no errors detected
-    // Read PRBS frame counter
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
     LOG(INFO) << GREEN << "Final number of bits received : " << BOLDYELLOW << bitsRxd << RESET;
     LOG(INFO) << GREEN << "Final BER counter: " << BOLDYELLOW << nErrors << RESET << GREEN << " bits in error i.e. a BERT of " << BOLDYELLOW << cErrorRate << RESET;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
     return nErrors;
 }
+
 double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed)
 // ####################
 // # frontendSpeed    #
@@ -1171,7 +1230,7 @@ bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, u
     if(cIter == RD53Shared::MAXATTEMPTS)
     {
         LOG(INFO) << BOLDRED << "I2C Write transaction FAILED" << RESET;
-#ifdef __TCUSB__
+#if defined(__TCUSB__)
         // In the test system a run time error is undesired
         return false;
 #else
@@ -1210,7 +1269,7 @@ uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster
     if(cIter == RD53Shared::MAXATTEMPTS)
     {
         LOG(INFO) << BOLDRED << "I2C Read Transaction FAILED" << RESET;
-#ifdef __TCUSB__
+#if defined(__TCUSB__)
         // In the test system a run time error is undesired
         return false;
 #else
@@ -1240,15 +1299,16 @@ uint8_t lpGBTInterface::GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMa
 {
     std::string cI2CStatReg = "I2CM" + std::to_string(pMaster) + "Status";
     uint8_t     cStatus     = ReadChipReg(pChip, cI2CStatReg);
-    LOG(DEBUG) << GREEN << "I2C Master " << +pMaster << " -- Status : " << lpGBTInterface::fI2CStatusMap[cStatus] << RESET;
+    LOG(INFO) << GREEN << "I2C Master " << +pMaster << " -- Status : " << lpGBTInterface::fI2CStatusMap[cStatus] << RESET;
     return cStatus;
 }
 
 bool lpGBTInterface::IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster) { return (lpGBTInterface::GetI2CStatus(pChip, pMaster) == 4); }
 
-// ##############################################
-// # LpGBT Manual phase alignment of Rx ports
-// ##############################################
+// ############################################
+// # LpGBT Manual phase alignment of Rx ports #
+// ############################################
+
 void lpGBTInterface::ManualPhaseAlignRx(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel)
 {
     const double frames_or_time = 1; // @CONST@
@@ -1262,9 +1322,10 @@ void lpGBTInterface::ManualPhaseAlignRx(Ph2_HwDescription::Chip* pChip, uint8_t 
     double   bestBERtest    = -1;
     uint16_t cRxRate        = GetRxDataRate(pChip, pGroup); // number of bits received per second
     uint8_t  cRxRate_40MHz  = cRxRate * 25e-9;
-    // make sure that the chip is in manual alignment mode
+
     const uint8_t cFixedTrackMode = 0;
     ConfigureRxAlignmentMode(pChip, {pGroup}, cFixedTrackMode);
+
     // #########################################################
     // # Search for largest interval and set into middle point #
     // #########################################################

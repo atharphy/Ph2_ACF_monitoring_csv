@@ -7,8 +7,8 @@
 Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pierre@icloud.com
 */
 
-#ifndef __BEBOARDFWINTERFACE_H__
-#define __BEBOARDFWINTERFACE_H__
+#ifndef BEBOARDFWINTERFACE_H
+#define BEBOARDFWINTERFACE_H
 
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/Chip.h"
@@ -37,13 +37,12 @@ namespace Ph2_HwInterface
 {
 struct CPBconfig
 {
-    uint8_t  fEnable       = 0;
-    uint8_t  fReTry        = 0;
-    uint8_t  fVerbose      = 0;
-    uint32_t fWait_us      = 50;
-    uint16_t fMaxAttempts  = 500;
-    uint8_t  fI2CFrequency = 3;
-    uint8_t  fResetEn      = 1;
+    uint8_t  fEnable      = 0;
+    uint8_t  fReTry       = 0;
+    uint8_t  fVerbose     = 0;
+    uint32_t fWait_us     = 50;
+    uint16_t fMaxAttempts = 500;
+    uint8_t  fResetEn     = 1;
 };
 
 /*!
@@ -55,11 +54,8 @@ class BeBoardFWInterface : public RegManager
   public:
     bool         fSaveToFile;
     FileHandler* fFileHandler;
-    // FpgaConfig*  fFpgaConfig;
-    uint32_t fNthAcq{0}, fNpackets{0};
-
-    // for slow control
-    uint8_t fCurrentPage = 0;
+    uint32_t     fNthAcq{0}, fNpackets{0};
+    uint8_t      fCurrentPage = 0; // For slow control
 
     static const uint32_t cMask1 = 0xff;
     static const uint32_t cMask2 = 0xff00;
@@ -75,7 +71,6 @@ class BeBoardFWInterface : public RegManager
      * \param puHalConfigFileName : path of the uHal Config File*/
     BeBoardFWInterface(const char* puHalConfigFileName, uint32_t pBoardId);
     BeBoardFWInterface(const char* pId, const char* pUri, const char* pAddressTable);
-
     /*!
      * \brief set a FileHandler Object and enable saving to file!
      * \param pFileHandler : pointer to file handler for saving Raw Data*/
@@ -106,32 +101,8 @@ class BeBoardFWInterface : public RegManager
      */
     virtual uint32_t getBoardInfo() = 0;
 
-    // // ###########################################
-    // // # Member functions to handle the firmware #
-    // // ###########################################
+    virtual void ProgramCdce() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
 
-    /*! \brief Upload a configuration in a board FPGA */
-    // virtual void FlashProm(const std::string& strConfig, const char* pstrFile) {}
-
-    /*! \brief Jump to an FPGA configuration */
-    // virtual void JumpToFpgaConfig(const std::string& strConfig) {}
-
-    // virtual void DownloadFpgaConfig(const std::string& strConfig, const std::string& strDest) {}
-
-    /*! \brief Get the list of available FPGA configuration (or firmware images)*/
-    // virtual std::vector<std::string> getFpgaConfigList() { return std::vector<std::string>(); }
-
-    /*! \brief Delete one Fpga configuration (or firmware image)*/
-    // virtual void DeleteFpgaConfig(const std::string& strId) {}
-    /*! \brief Current FPGA configuration*/
-    // virtual const FpgaConfig* GetConfiguringFpga() { return nullptr; }
-
-    /*! \brief Reboot the board */
-    // virtual void RebootBoard() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
-
-    virtual void ProgramCdce() {}
-
-    // this is temporary until the modified command processor block is in place
     virtual void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) = 0;
 
     /*! \brief Run Bit Error Rate test */
@@ -170,7 +141,6 @@ class BeBoardFWInterface : public RegManager
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     }
-    /*!< Decode a word from a read of a register of the Chip*/
 
     /*!
      * \brief Configure the board with its Config File
@@ -221,7 +191,7 @@ class BeBoardFWInterface : public RegManager
     /*!
      * \brief Resume a DAQ
      */
-    virtual void SendNTriggers(uint16_t pNtriggers) = 0;
+    virtual void SendNTriggers(uint16_t pNtriggers) { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
 
     /*!
      * \brief Read data from DAQ
@@ -285,7 +255,6 @@ class BeBoardFWInterface : public RegManager
     // ##########################################
     // # Read/Write new Command Processor Block #
     // ##########################################
-    // functions for new Command Processor Block
     virtual void                  ResetCPB() {}
     virtual void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose=false) {}
     virtual std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords, bool pVerbose=false) { return {}; }
@@ -295,18 +264,18 @@ class BeBoardFWInterface : public RegManager
     // function for I2C transactions using lpGBT I2C Masters
     virtual bool    I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes, bool pVerbose=false) { return true; }
     virtual uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes, bool pVerbose=false) { return 0; }
+
     // function for front-end slow control
     virtual bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerify = true, bool pVerbose=false) { return true; }
     virtual uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, bool pVerbose=false) { return 0; }
 
     void ConfigureCPB(CPBconfig pConfig)
     {
-        fCPBConfig.fEnable       = pConfig.fEnable;
-        fCPBConfig.fVerbose      = pConfig.fVerbose;
-        fCPBConfig.fWait_us      = pConfig.fWait_us;
-        fCPBConfig.fReTry        = pConfig.fReTry;
-        fCPBConfig.fMaxAttempts  = pConfig.fMaxAttempts;
-        fCPBConfig.fI2CFrequency = pConfig.fI2CFrequency;
+        fCPBConfig.fEnable      = pConfig.fEnable;
+        fCPBConfig.fVerbose     = pConfig.fVerbose;
+        fCPBConfig.fWait_us     = pConfig.fWait_us;
+        fCPBConfig.fReTry       = pConfig.fReTry;
+        fCPBConfig.fMaxAttempts = pConfig.fMaxAttempts;
     }
 
   protected:
@@ -315,8 +284,7 @@ class BeBoardFWInterface : public RegManager
     uint32_t  numAcq{0};
     uint32_t  nbMaxAcq{0};
     CPBconfig fCPBConfig;
-    // Template to return a vector of all mismatched elements in two vectors using std::mismatch for readback value
-    // comparison
+    // Template to return a vector of all mismatched elements in two vectors using std::mismatch for readback value comparison
     template <typename T, class BinaryPredicate>
     std::vector<typename std::iterator_traits<T>::value_type> get_mismatches(T pWriteVector_begin, T pWriteVector_end, T pReadVector_begin, BinaryPredicate p)
     {
@@ -329,6 +297,7 @@ class BeBoardFWInterface : public RegManager
         return pMismatchedWriteVector;
     }
 };
+
 } // namespace Ph2_HwInterface
 
 #endif

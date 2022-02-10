@@ -8,6 +8,7 @@
 */
 
 #include "../DQMUtils/DQMInterface.h"
+#include "../MonitorDQM/MonitorDQMInterface.h"
 #include "../System/SystemController.h"
 #include "../Utils/MiddlewareInterface.h"
 #include "../Utils/RD53Shared.h"
@@ -35,7 +36,9 @@
 #include <sys/wait.h>
 #include <thread>
 
+#ifdef __USE_ROOT__
 #include "TApplication.h"
+#endif
 
 #ifdef __EUDAQ__
 #include "../tools/RD53eudaqProducer.h"
@@ -74,7 +77,7 @@ void interruptHandler(int handler)
 void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, std::vector<RD53Event>& decodedEvents)
 {
     const unsigned int    wordDataSize = 32; // @CONST@
-    unsigned int          errors       = 0;
+    size_t                errors       = 0;
     std::vector<uint32_t> data;
 
     RD53Event::ForkDecodingThreads();
@@ -127,7 +130,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu threqusc gainopt thrmin "
-                     "thradj injdelay clkdelay datarbopt datatrtest physics eudaq bertest voltagetuning, gendacdac]",
+                     "thradj injdelay clkdelay datarbopt datatrtest physics eudaq bertest voltagetuning gendacdac]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -201,6 +204,7 @@ int main(int argc, char** argv)
     // ######################
     if(supervisor == true)
     {
+#ifdef __USE_ROOT__
         // #######################
         // # Run Supervisor Mode #
         // #######################
@@ -234,8 +238,9 @@ int main(int argc, char** argv)
         // # Instantiate DQM #
         // ###################
         gROOT->SetBatch(SETBATCH);
-        TApplication theApp("App", NULL, NULL);
-        DQMInterface theDQMInterface;
+        TApplication        theApp("App", NULL, NULL);
+        DQMInterface        theDQMInterface;
+        MonitorDQMInterface theMonitorDQMInterface;
 
         // #######################
         // # Enter State Machine #
@@ -266,6 +271,7 @@ int main(int argc, char** argv)
                     LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
                     theMiddlewareInterface.configure(cmd.optionValue("calib"), cmd.optionValue("file"));
                     theDQMInterface.configure(cmd.optionValue("calib"), cmd.optionValue("file"));
+                    theMonitorDQMInterface.configure(cmd.optionValue("file"));
                     LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
                     std::cout << std::endl;
 
@@ -277,6 +283,7 @@ int main(int argc, char** argv)
                     LOG(INFO) << BOLDBLUE << "Supervisor sending start" << RESET;
 
                     theDQMInterface.startProcessingData(RD53Shared::fromInt2Str(runNumber));
+                    theMonitorDQMInterface.startProcessingData();
                     theMiddlewareInterface.start(RD53Shared::fromInt2Str(runNumber));
 
                     stateMachineStatus = RUNNING;
@@ -303,11 +310,14 @@ int main(int argc, char** argv)
             }
         }
 
+        theMonitorDQMInterface.stopProcessingData();
+
         LOG(INFO) << BOLDBLUE << "Out of supervisor state machine. Run Controller status: " << BOLDYELLOW << runControllerStatus << RESET;
         if(SETBATCH == false)
             theApp.Run();
         else
             theApp.Terminate(0);
+#endif
     }
     else
     {
@@ -684,9 +694,28 @@ int main(int argc, char** argv)
 
             gROOT->SetBatch(true);
 
-            RD53eudaqProducer theEUDAQproducer(mySysCntr, configFile, "RD53eudaqProducer", eudaqRunCtr);
-            theEUDAQproducer.MainLoop();
-            runNumber = theEUDAQproducer.theRunNumber;
+            auto theEUDAQproducer = eudaq::Producer::Make(EUDAQ::EUDAQproducerNAME, EUDAQ::EUDAQproducerNAME, eudaqRunCtr);
+
+            if(!theEUDAQproducer)
+            {
+                LOG(ERROR) << BOLDRED << "Unknown Producer: " << EUDAQ::EUDAQproducerNAME << std::endl;
+                exit(EXIT_FAILURE);
+            }
+
+            static_cast<RD53eudaqProducer*>(theEUDAQproducer.get())->Creator(mySysCntr, configFile);
+
+            try
+            {
+                theEUDAQproducer->Connect();
+            }
+            catch(...)
+            {
+                LOG(ERROR) << BOLDRED << "Could not connect to RunControl: " << eudaqRunCtr << std::endl;
+                exit(EXIT_FAILURE);
+            }
+
+            static_cast<RD53eudaqProducer*>(theEUDAQproducer.get())->MainLoop();
+            runNumber = static_cast<RD53eudaqProducer*>(theEUDAQproducer.get())->theRunNumber;
 #else
             LOG(WARNING) << BOLDBLUE << "EUDAQ flag was OFF during compilation" << RESET;
             exit(EXIT_FAILURE);

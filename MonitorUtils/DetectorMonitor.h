@@ -2,7 +2,11 @@
 #define DETECTOR_MONITOR_H
 
 #include "../System/SystemController.h"
-#include "../Utils/ContainerStream.h"
+#include "../Utils/BoardContainerStream.h"
+#include "../Utils/ChannelContainerStream.h"
+#include "../Utils/ChipContainerStream.h"
+#include "../Utils/HybridContainerStream.h"
+#include "../Utils/OpticalGroupContainerStream.h"
 #include "DetectorMonitorConfig.h"
 
 #include "chrono"
@@ -10,7 +14,7 @@
 
 #ifdef __USE_ROOT__
 class TFile;
-#include "MonitorDQM/MonitorDQMPlotBase.h"
+#include "../MonitorDQM/MonitorDQMPlotBase.h"
 #endif
 
 class DetectorMonitor
@@ -38,28 +42,35 @@ class DetectorMonitor
     template <typename T, typename... H>
     ChannelContainerStream<T, H...> prepareChannelContainerStreamer(std::string appendName = "")
     {
-        ChannelContainerStream<T, H...> theContainerStreamer(getMonitorName() + appendName);
+        auto theContainerStreamer = std::unique_ptr<ChannelContainerStream<T, H...>>(new ChannelContainerStream<T, H...>(getMonitorName() + appendName));
         return theContainerStreamer;
     }
 
     template <typename T, typename C, typename... I>
-    ChipContainerStream<T, C, I...> prepareChipContainerStreamer(std::string appendName = "")
+    std::unique_ptr<ChipContainerStream<T, C, I...>> prepareChipContainerStreamer(std::string appendName = "")
     {
-        ChipContainerStream<T, C, I...> theContainerStreamer(getMonitorName() + appendName);
+        auto theContainerStreamer = std::unique_ptr<ChipContainerStream<T, C, I...>>(new ChipContainerStream<T, C, I...>(getMonitorName() + appendName));
         return theContainerStreamer;
     }
 
     template <typename T, typename C, typename H, typename... I>
     HybridContainerStream<T, C, H, I...> prepareHybridContainerStreamer(std::string appendName = "")
     {
-        HybridContainerStream<T, C, H, I...> theContainerStreamer(getMonitorName() + appendName);
+        auto theContainerStreamer = std::unique_ptr<HybridContainerStream<T, C, H, I...>>(new HybridContainerStream<T, C, H, I...>(getMonitorName() + appendName));
         return theContainerStreamer;
     }
 
     template <typename T, typename C, typename H, typename O, typename... I>
-    OpticalGroupContainerStream<T, C, H, O, I...> prepareOpticalGroupContainerStreamer(std::string appendName = "")
+    std::unique_ptr<OpticalGroupContainerStream<T, C, H, O, I...>> prepareOpticalGroupContainerStreamer(std::string appendName = "")
     {
-        OpticalGroupContainerStream<T, C, H, O, I...> theContainerStreamer(getMonitorName() + appendName);
+        auto theContainerStreamer = std::unique_ptr<OpticalGroupContainerStream<T, C, H, O, I...>>(new OpticalGroupContainerStream<T, C, H, O, I...>(getMonitorName() + appendName));
+        return theContainerStreamer;
+    }
+
+    template <typename T, typename C, typename H, typename O, typename B, typename... I>
+    std::unique_ptr<BoardContainerStream<T, C, H, O, B, I...>> prepareBoardContainerStreamer(std::string appendName = "")
+    {
+        auto theContainerStreamer = std::unique_ptr<BoardContainerStream<T, C, H, O, B, I...>>(new BoardContainerStream<T, C, H, O, B, I...>(getMonitorName() + appendName));
         return theContainerStreamer;
     }
 
