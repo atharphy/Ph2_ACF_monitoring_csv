@@ -289,6 +289,12 @@ class BaseDataContainer
         return static_cast<Summary<S, T>*>(summary_);
     }
 
+    template <typename S, typename T = EmptyContainer>
+    const Summary<S, T>* getSummaryContainer() const
+    {
+        return static_cast<Summary<S, T>*>(summary_);
+    }
+
     bool hasSummary() { return (summary_ != nullptr); }
 
     template <typename T>

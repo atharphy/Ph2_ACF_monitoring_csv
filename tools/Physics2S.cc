@@ -83,8 +83,8 @@ void Physics2S::sendBoardData(BoardContainer* const& cBoard)
 
     if(fDQMStreamerEnabled == true)
     {
-        theOccupancyStream.streamAndSendBoard(fOccupancyContainer.at(cBoard->getIndex()), fDQMStreamer);
-        theStubStream.streamAndSendBoard(fStubContainer.at(cBoard->getIndex()), fDQMStreamer);
+        theOccupancyStream->streamAndSendBoard(fOccupancyContainer.at(cBoard->getIndex()), fDQMStreamer);
+        theStubStream->streamAndSendBoard(fStubContainer.at(cBoard->getIndex()), fDQMStreamer);
     }
 }
 

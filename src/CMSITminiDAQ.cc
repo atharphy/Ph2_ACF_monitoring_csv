@@ -36,7 +36,9 @@
 #include <sys/wait.h>
 #include <thread>
 
+#ifdef __USE_ROOT__
 #include "TApplication.h"
+#endif
 
 #ifdef __EUDAQ__
 #include "../tools/RD53eudaqProducer.h"
@@ -75,7 +77,7 @@ void interruptHandler(int handler)
 void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, std::vector<RD53Event>& decodedEvents)
 {
     const unsigned int    wordDataSize = 32; // @CONST@
-    unsigned int          errors       = 0;
+    size_t                errors       = 0;
     std::vector<uint32_t> data;
 
     RD53Event::ForkDecodingThreads();
@@ -202,6 +204,7 @@ int main(int argc, char** argv)
     // ######################
     if(supervisor == true)
     {
+#ifdef __USE_ROOT__
         // #######################
         // # Run Supervisor Mode #
         // #######################
@@ -314,6 +317,7 @@ int main(int argc, char** argv)
             theApp.Run();
         else
             theApp.Terminate(0);
+#endif
     }
     else
     {

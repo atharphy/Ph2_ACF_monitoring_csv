@@ -37,6 +37,7 @@ DetectorMonitor::~DetectorMonitor()
     fOutputFile->Write();
     // fOutputFile->Close();
     // delete fOutputFile;
+    // fOutputFile = nullptr;
     delete fMonitorPlotDQM;
 #endif
 }

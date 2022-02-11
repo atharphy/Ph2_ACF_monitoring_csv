@@ -703,8 +703,8 @@ bool OTHybridTester::LpGBTTestResetLines()
             cMeasurement = this->getMeasurement("read_reset:" + cMapIterator->first);
 #else
             flpGBTInterface->getExternalController()->getInterface().read_reset(cMapIterator->second, cMeasurement);
-            float cDifference_mV = std::fabs((cLevel.second * 1300) - cMeasurement * 1000.); // 1300
 #endif
+            float cDifference_mV = std::fabs((cLevel.second * 1300) - cMeasurement * 1000.); // 1300
             fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
             cStatus = cStatus && (cDifference_mV <= 100);
 #endif

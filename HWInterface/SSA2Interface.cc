@@ -615,8 +615,10 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     //	cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ENFLAGS", 0x15);
     {
         // NOTE:assume mask always 0xFF?
-        bool cEnableAnalogue = WriteChipSingleReg(pSSA2, "ENFLAGS", 0x15, pVerifLoop);
-        bool cReadoutMode    = WriteChipSingleReg(pSSA2, "control_1", 0x1, pVerifLoop);
+        this->WriteChipSingleReg(pSSA2, "mask_strip", 0x1F, pVerifLoop);
+        bool cEnableAnalogue = WriteChipSingleReg(pSSA2, "ENFLAGS", 0x15, false);
+        this->WriteChipSingleReg(pSSA2, "mask_strip", 0x07, pVerifLoop);
+        bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_1", 0x1, pVerifLoop);
         /*
         uint8_t cReadoutMode = 0x1;
         uint8_t cEdgeSel_T1  = 0x0;
@@ -779,15 +781,14 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     }
     else if(pRegName == "EnableSLVSTestOutput")
     {
-        LOG(INFO) << BOLDBLUE << "Enabling SLVS test output on SSA2#" << +pSSA2->getId() << RESET;
-        uint8_t cRegValue = ReadChipReg(pSSA2, "ReadoutMode");
-        cRegValue         = (cRegValue & 0x4) | (pValue << 1);
-
+        if(pValue == 1)
+            LOG(INFO) << BOLDBLUE << "Enabling SLVS test output on SSA2#" << +pSSA2->getId() << RESET;
+        else if(pValue == 0)
+            LOG(INFO) << BOLDBLUE << "Disabling SLVS test output on SSA2#" << +pSSA2->getId() << RESET;
+        uint8_t cRegValue = ReadChipReg(pSSA2, "control_1");
+        cRegValue         = (cRegValue & 0x4) | (pValue << 1); // What does this do?
+        pVerifLoop        = false;
         bool cReadoutMode = this->WriteChipRegBits(pSSA2, "control_1", pValue << 1, "mask_peri_D", 2, pVerifLoop);
-
-        // this->WriteChipSingleReg(pSSA2, "mask_peri_D", 2, pVerifLoop);
-        // bool cReadoutMode = WriteChipSingleReg(pSSA2, "control_1", pValue << 1, pVerifLoop);
-        // this->WriteChipSingleReg(pSSA2, "mask_peri_D", 255, pVerifLoop);
         return cReadoutMode;
     }
     else if(pRegName.find("OutPatternStubLine") != std::string::npos) // Stub Lines

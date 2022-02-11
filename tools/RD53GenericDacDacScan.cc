@@ -81,8 +81,8 @@ void GenericDacDacScan::sendData()
 
     if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: theOccContainer) theStream.streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theGenericDacDacScanContainer) theGenericDacDacScanStream.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theOccContainer) theStream->streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theGenericDacDacScanContainer) theGenericDacDacScanStream->streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 

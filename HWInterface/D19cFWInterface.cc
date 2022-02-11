@@ -677,7 +677,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         }
     }
 
-    if(fI2CVersion >= 1 || !cWithlpGBT)
+    if(fI2CVersion >= 1 && !cWithlpGBT)
     {
         fI2CSlaveMap.clear();
         fSlaveMap.clear();
@@ -1038,7 +1038,8 @@ void D19cFWInterface::Start()
         if(cHandshake)
         {
             auto cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-            cBreak           = (cReadoutReq == 1) || (cTriggerState != 0);
+            LOG(DEBUG) << BOLDMAGENTA << "Hand-shake is on .. readout-request after start is " << +cReadoutReq << RESET;
+            cBreak = (cReadoutReq == 1) || (cTriggerState != 0);
             if(cBreak)
                 LOG(DEBUG) << BOLDMAGENTA << "Hand-shake is on .. readout-request after start is " << +cReadoutReq << " - triggers have started and I've got all the events I've asked for " << RESET;
             else
