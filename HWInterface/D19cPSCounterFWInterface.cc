@@ -365,7 +365,8 @@ bool D19cPSCounterFWInterface::ReadEvents(const BeBoard* pBoard)
         FillData();
         LOG (DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::ReadEvents filled data vector with " << fData.size() << " 32-bit words" << RESET;
         return (fData.size() > 0 );
-    } 
+    }
+    else LOG (INFO) << BOLDRED << "D19cPSCounterFWInterface::ReadEvents did not receive all triggers..." << RESET; 
     return false;
 }
 bool D19cPSCounterFWInterface::CheckStartPattern()

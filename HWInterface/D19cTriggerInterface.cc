@@ -198,8 +198,8 @@ bool D19cTriggerInterface::RunTriggerFSM()
         LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
         cIterations++;
-    } while(this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cIterations < 10);
-    bool cFailed = (this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") || cIterations == 10);
+    } while(this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cIterations < fMaxIterations);
+    bool cFailed = (this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") || cIterations == fMaxIterations);
     this->Stop();
     return !cFailed;
 }

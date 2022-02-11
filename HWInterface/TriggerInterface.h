@@ -72,6 +72,7 @@ class TriggerInterface : public RegManager
         
     protected : 
         uint32_t fWait_us{10};
+        uint32_t fMaxIterations{10000};
         TriggerConfiguration fTriggerConfiguration;
 };
 } // namespace Ph2_HwInterface
