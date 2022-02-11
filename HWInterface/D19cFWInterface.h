@@ -91,6 +91,8 @@ namespace Ph2_HwInterface
 {
   class L1ReadoutInterface;   
   class FEConfigurationInterface;
+  class TriggerInterface;
+  class FastCommandInterface;
 
 /*!
  * \class Cbc3Fc7FWInterface
@@ -103,7 +105,9 @@ class D19cFWInterface : public BeBoardFWInterface
     // std::recursive_mutex                     fMutex;
     FEConfigurationInterface*                 fFEConfigurationInterface; 
     L1ReadoutInterface*                       fL1ReadoutInterface; 
-
+    TriggerInterface*                         fTriggerInterface; 
+    FastCommandInterface*                     fFastCommandInterface; 
+    
     D19cFWEvtEncoder::D19cFWEvt              fD19cFWEvts;
     std::vector<std::vector<uint32_t>>       fSlaveMap;
     std::map<uint8_t, std::vector<uint32_t>> fI2CSlaveMap;

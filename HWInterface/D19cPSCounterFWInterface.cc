@@ -16,48 +16,25 @@ D19cPSCounterFWInterface::~D19cPSCounterFWInterface() {}
 
 void D19cPSCounterFWInterface::PS_Open_shutter()
 {
-    uint8_t cReSync   = 0;
-    uint8_t cCalPulse = 0;
-    uint8_t cL1A      = 1;
-    uint8_t cBC0      = 0;
-    fFastCommandInterface->ComposeFastCommand(cReSync, cL1A, cCalPulse, cBC0);
+    fFastCommandInterface->SendGlobalL1A();
 }
 
 void D19cPSCounterFWInterface::PS_Close_shutter()
 {
-    uint8_t cReSync   = 0;
-    uint8_t cCalPulse = 0;
-    uint8_t cL1A      = 0;
-    uint8_t cBC0      = 1;
-    fFastCommandInterface->ComposeFastCommand(cReSync, cL1A, cCalPulse, cBC0);
+    fFastCommandInterface->SendGlobalCounterReset();
 }
 void D19cPSCounterFWInterface::PS_Clear_counters()
 {
-    uint8_t cReSync   = 0;
-    uint8_t cCalPulse = 0;
-    uint8_t cL1A      = 1;
-    uint8_t cBC0      = 1;
-    // clear
-    fFastCommandInterface->ComposeFastCommand(cReSync, cL1A, cCalPulse, cBC0);
+    fFastCommandInterface->SendGlobalCounterResetL1A();
 }
 void D19cPSCounterFWInterface::PS_Inject()
 {
-    uint8_t cReSync   = 0;
-    uint8_t cCalPulse = 1;
-    uint8_t cL1A      = 0;
-    uint8_t cBC0      = 0;
-    // clear
-    fFastCommandInterface->ComposeFastCommand(cReSync, cL1A, cCalPulse, cBC0);
+    fFastCommandInterface->SendGlobalCalPulse();
 }
 void D19cPSCounterFWInterface::PS_Start_counters_read()
 {
-    uint8_t cReSync   = 1;
-    uint8_t cCalPulse = 0;
-    uint8_t cL1A      = 0;
-    uint8_t cBC0      = 1;
-    fFastCommandInterface->ComposeFastCommand(cReSync, cL1A, cCalPulse, cBC0);
+    fFastCommandInterface->SendGlobalCounterResetResync();
 }
-
 // some overlap for now...
 void D19cPSCounterFWInterface::PS_Send_pulses(uint32_t pNtriggers, bool manual)
 {
@@ -405,14 +382,20 @@ void D19cPSCounterFWInterface::FillData()
 }
 bool D19cPSCounterFWInterface::WaitForData()
 {
+    fTriggerInterface->ResetTriggerFSM();
     auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
+    LOG (INFO) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData After resetting trigger FSM.. trigger source is " << cTriggerSource << RESET; 
     if(cTriggerSource == 10 || cTriggerSource == 12 ) 
     {
-        LOG(INFO) << BOLDBLUE << "D19cPSCounterFWInterface::Async triggers" << RESET;
-        // fTriggerInterface->ReconfigureTriggerFSM();
+        LOG(INFO) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData Running Trigger FSM ..." << RESET;
         return fTriggerInterface->RunTriggerFSM();
     }
     else return false; // wrong trigger source for this type of readout 
+}
+bool D19cPSCounterFWInterface::ReadEvents()
+{   
+    WaitForData(); 
+    return true;
 }
 bool D19cPSCounterFWInterface::CheckStartPattern()
 {

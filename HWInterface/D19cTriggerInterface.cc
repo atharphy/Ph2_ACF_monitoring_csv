@@ -165,7 +165,7 @@ bool D19cTriggerInterface::RunTriggerFSM()
     uint32_t cIterations = 0;
     do
     {
-        LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
+        LOG(INFO) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
         cIterations++;
     } while(this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cIterations < 10);

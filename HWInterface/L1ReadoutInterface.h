@@ -42,11 +42,12 @@ class L1ReadoutInterface : public RegManager
         }
 
         std::vector<uint32_t> getData(){return fData;}
-        void setNEvents(uint32_t pNEvents){fNEvents=pNEvents;}
         // function to link FEConfigurationInterface 
         void LinkFastCommandInterface(FastCommandInterface* pInterface) {fFastCommandInterface=pInterface;}
         void LinkTriggerInterface(TriggerInterface* pInterface) {fTriggerInterface=pInterface;}
 
+        void setNEvents(uint32_t pNEvents){ fNEvents = pNEvents; }
+        uint32_t getNEvents(){ return fNEvents; }
     private : 
         std::vector<uint32_t> fData; 
         uint32_t              fNEvents; 

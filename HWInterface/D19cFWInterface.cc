@@ -15,7 +15,9 @@
 #include "../HWDescription/OuterTrackerHybrid.h"
 #include "D19cI2CInterface.h"
 #include "D19cOpticalInterface.h"
-#include "L1ReadoutInterface.h"
+#include "D19cTriggerInterface.h"
+#include "D19cPSCounterFWInterface.h"
+#include "D19cFastCommandInterface.h"
 #include <algorithm>
 #include <chrono>
 #include <time.h>
@@ -30,6 +32,20 @@ D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoar
     : BeBoardFWInterface(puHalConfigFileName, pBoardId), fBroadcastCbcId(0), fNReadoutChip(0), fNHybrids(0), fNCic(0), fFMCId(1)
 {
     fResetAttempts = 0;
+    // do this here 
+    // configure L1 readout interface 
+    if( fTriggerInterface == nullptr )
+    {
+        fTriggerInterface = new D19cTriggerInterface(this->getId() , this->getUri(), this->getAddressTable()); 
+        LOG (INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
+    }
+    if( fFastCommandInterface == nullptr ) 
+    {
+        fFastCommandInterface = new D19cFastCommandInterface(this->getId() , this->getUri(), this->getAddressTable()); 
+        LOG (INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
+    }
+    fFEConfigurationInterface=nullptr;
+    fL1ReadoutInterface=nullptr;
 }
 
 D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler)
@@ -40,6 +56,13 @@ D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoar
     else
         fSaveToFile = true;
     fResetAttempts = 0;
+    if( fTriggerInterface == nullptr )
+    {
+        fTriggerInterface = new D19cTriggerInterface(this->getId() , this->getUri(), this->getAddressTable()); 
+        LOG (INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
+    }
+    fFEConfigurationInterface=nullptr;
+    fL1ReadoutInterface=nullptr;
 }
 
 D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* pAddressTable)
@@ -48,6 +71,13 @@ D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* 
     LOG (INFO) << BOLDYELLOW << "D19cFWInterface Constructor" << RESET;
     std::cout << pId << "\t" << pUri << "\t" << pAddressTable << "\n";
     fResetAttempts = 0;
+    if( fTriggerInterface == nullptr )
+    {
+        fTriggerInterface = new D19cTriggerInterface(this->getId() , this->getUri(), this->getAddressTable()); 
+        LOG (INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
+    }
+    fFEConfigurationInterface=nullptr;
+    fL1ReadoutInterface=nullptr;
 }
 
 D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler)
@@ -58,6 +88,13 @@ D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* 
     else
         fSaveToFile = true;
     fResetAttempts = 0;
+    if( fTriggerInterface == nullptr )
+    {
+        fTriggerInterface = new D19cTriggerInterface(this->getId() , this->getUri(), this->getAddressTable()); 
+        LOG (INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
+    }
+    fFEConfigurationInterface=nullptr;
+    fL1ReadoutInterface=nullptr;
 }
 
 void D19cFWInterface::setFileHandler(FileHandler* pHandler)
@@ -682,7 +719,6 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         }
     }
 
-
     if(fFEConfigurationInterface == nullptr)
     {
         Config cConfig; 
@@ -711,6 +747,22 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         fFEConfigurationInterface->Configure(cConfig);
     }
     
+    
+    // configure L1 readout interface 
+    // this depends on the event type 
+    if( fL1ReadoutInterface == nullptr ) 
+    {
+        if( pBoard->getEventType() == EventType::SCAS ) 
+        {
+            fL1ReadoutInterface = new D19cPSCounterFWInterface(this->getId() , this->getUri(), this->getAddressTable()); 
+            LOG (INFO) << BOLDYELLOW << "Created D19cPSCounterFWInterface ..." << RESET;
+            //fL1ReadoutInterface->LinkFastCommandInterface();
+            fL1ReadoutInterface->LinkTriggerInterface(fTriggerInterface);
+            if( fFEConfigurationInterface != nullptr && pBoard->getEventType() == EventType::SCAS ) 
+                static_cast<D19cPSCounterFWInterface*>(fL1ReadoutInterface)->LinkFEConfigurationInterface(fFEConfigurationInterface); 
+        }
+    }
+
     if(fI2CVersion >= 1 || !cWithlpGBT)
     {
         fI2CSlaveMap.clear();
@@ -841,12 +893,6 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     LOG(INFO) << BOLDGREEN << "According to the Firmware status registers, it was compiled for: " << fFWNHybrids << " hybrid(s), " << fFWNChips << " " << cChipName << " chip(s) per hybrid" << RESET;
     this->EnableFrontEnds(pBoard);
 
-    // configure L1 readout interface 
-    if( fL1ReadoutInterface == nullptr ) 
-    {
-        fL1ReadoutInterface = new L1ReadoutInterface(this->getId() , this->getUri(), this->getAddressTable()); 
-        LOG (INFO) << BOLDYELLOW << "Created L1ReadoutInterface for BeBoard#" << +pBoard->getId() << RESET;
-    }
 
     // adding an ReSync to align CBC L1A counters
     this->ChipReSync();
@@ -1708,86 +1754,88 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
 }
 void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
 {
-    // write number of triggers to accept
-    // in the handshake mode offset is cleared after each handshake
-    // fDDR3Offset = 0;
-    auto cHandshakeMode     = ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
-    auto cNtriggersToAccept = ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
-    this->WriteReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNEvents);
-    LOG(DEBUG) << BOLDMAGENTA << "D19cFWInterface::ReadNEvents asking for " << +pNEvents << " events "
-               << " number of triggers to accept is currently " << +cNtriggersToAccept << " handshake mode is currently " << +cHandshakeMode << RESET;
-    bool cFailed = WaitForData(pBoard);
-    if(!cFailed)
-    {
-        LOG(DEBUG) << BOLDGREEN << "D19cFWInterface::ReadNEvents WaitForData Succeeded now going to try and GetData" << RESET;
-        // if trigger multiplicity is not 0 check
-        auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-        pNEvents           = (cMultiplicity != 0) ? pNEvents * (cMultiplicity + 1) : pNEvents;
-        auto cNevents      = this->GetData(pBoard, pData);
-        LOG(DEBUG) << BOLDYELLOW << "D19cFWInterface::ReadNEvents GetData returned " << cNevents << RESET;
-        EventType cEventType = pBoard->getEventType();
-        bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::PSAS);
-        if(cNevents != pNEvents && !cAsync)
-        {
-            if(fReadoutAttempts < 10)
-            {
-                ResetTriggerFSM();
-                std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
-                // reset the readout
-                this->ResetReadout();
-                std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
-                this->TriggerConfiguration();
-                fReadoutAttempts++;
-                LOG(INFO) << BOLDRED << "D19cFWInterface::ReadNEvents Failed to read back correct number of words from FC7.. Will try again" << RESET;
-                this->ReadNEvents(pBoard, pNEvents, pData);
-            }
-            else
-            {
-                LOG(INFO) << BOLDRED << "After " << +fReadoutAttempts << " attempts at reading out data .. I'm giving up! " << RESET;
-                throw Exception("Too many failures when attempting to read data from the FC7..somethign is wrong!");
-            }
-        }
-        WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", cHandshakeMode);
-        WriteReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept", cNtriggersToAccept);
-        // fDDR3Offset = 0;
-    }
-    // again check if failed to re-run in case
-    else if(fReadoutAttempts < 10)
-    {
-        LOG(INFO) << BOLDRED << "Failed to readout all events..... Retrying..." << RESET;
+    fL1ReadoutInterface->setNEvents(pNEvents); 
+    fL1ReadoutInterface->ReadEvents(); 
+    // // write number of triggers to accept
+    // // in the handshake mode offset is cleared after each handshake
+    // // fDDR3Offset = 0;
+    // auto cHandshakeMode     = ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
+    // auto cNtriggersToAccept = ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
+    // this->WriteReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNEvents);
+    // LOG(DEBUG) << BOLDMAGENTA << "D19cFWInterface::ReadNEvents asking for " << +pNEvents << " events "
+    //            << " number of triggers to accept is currently " << +cNtriggersToAccept << " handshake mode is currently " << +cHandshakeMode << RESET;
+    // bool cFailed = WaitForData(pBoard);
+    // if(!cFailed)
+    // {
+    //     LOG(DEBUG) << BOLDGREEN << "D19cFWInterface::ReadNEvents WaitForData Succeeded now going to try and GetData" << RESET;
+    //     // if trigger multiplicity is not 0 check
+    //     auto cMultiplicity = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    //     pNEvents           = (cMultiplicity != 0) ? pNEvents * (cMultiplicity + 1) : pNEvents;
+    //     auto cNevents      = this->GetData(pBoard, pData);
+    //     LOG(DEBUG) << BOLDYELLOW << "D19cFWInterface::ReadNEvents GetData returned " << cNevents << RESET;
+    //     EventType cEventType = pBoard->getEventType();
+    //     bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::PSAS);
+    //     if(cNevents != pNEvents && !cAsync)
+    //     {
+    //         if(fReadoutAttempts < 10)
+    //         {
+    //             ResetTriggerFSM();
+    //             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
+    //             // reset the readout
+    //             this->ResetReadout();
+    //             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
+    //             this->TriggerConfiguration();
+    //             fReadoutAttempts++;
+    //             LOG(INFO) << BOLDRED << "D19cFWInterface::ReadNEvents Failed to read back correct number of words from FC7.. Will try again" << RESET;
+    //             this->ReadNEvents(pBoard, pNEvents, pData);
+    //         }
+    //         else
+    //         {
+    //             LOG(INFO) << BOLDRED << "After " << +fReadoutAttempts << " attempts at reading out data .. I'm giving up! " << RESET;
+    //             throw Exception("Too many failures when attempting to read data from the FC7..somethign is wrong!");
+    //         }
+    //     }
+    //     WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", cHandshakeMode);
+    //     WriteReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept", cNtriggersToAccept);
+    //     // fDDR3Offset = 0;
+    // }
+    // // again check if failed to re-run in case
+    // else if(fReadoutAttempts < 10)
+    // {
+    //     LOG(INFO) << BOLDRED << "Failed to readout all events..... Retrying..." << RESET;
 
-        uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-        uint32_t cNtriggers  = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-        uint32_t cNWords     = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-        LOG(INFO) << BOLDRED << "Read back " << +cNWords << " from FC7... readout request is " << +cReadoutReq << RESET;
-        LOG(INFO) << BOLDGREEN << "Waiting for data:" << fReadoutAttempts << "sec - triggers received:" << +cNtriggers << RESET;
+    //     uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+    //     uint32_t cNtriggers  = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+    //     uint32_t cNWords     = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+    //     LOG(INFO) << BOLDRED << "Read back " << +cNWords << " from FC7... readout request is " << +cReadoutReq << RESET;
+    //     LOG(INFO) << BOLDGREEN << "Waiting for data:" << fReadoutAttempts << "sec - triggers received:" << +cNtriggers << RESET;
 
-        pData.clear();
-        this->Stop();
-        ResetTriggerFSM();
-        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
-        // reset the readout
-        this->ResetReadout();
-        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
-        this->TriggerConfiguration();
+    //     pData.clear();
+    //     this->Stop();
+    //     ResetTriggerFSM();
+    //     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
+    //     // reset the readout
+    //     this->ResetReadout();
+    //     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
+    //     this->TriggerConfiguration();
 
-        fReadoutAttempts++;
-        // // send a ReSync
-        // // if this helps then the problem is a system level one
-        // // and now simply a FW/back-end one
-        // this->ChipReSync();
-        WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", cHandshakeMode);
-        // try again
-        this->ReadNEvents(pBoard, pNEvents, pData);
-    }
-    else
-    {
-        LOG(INFO) << BOLDRED << "After " << +fReadoutAttempts << " attempts at reading out data .. I'm giving up! " << RESET;
-        throw Exception("Too many failures when attempting to read data from the FC7..somethign is wrong!");
-    }
-    if(fSaveToFile) fFileHandler->setData(pData);
-    // reset readout attempts
-    fReadoutAttempts = 0;
+    //     fReadoutAttempts++;
+    //     // // send a ReSync
+    //     // // if this helps then the problem is a system level one
+    //     // // and now simply a FW/back-end one
+    //     // this->ChipReSync();
+    //     WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", cHandshakeMode);
+    //     // try again
+    //     this->ReadNEvents(pBoard, pNEvents, pData);
+    // }
+    // else
+    // {
+    //     LOG(INFO) << BOLDRED << "After " << +fReadoutAttempts << " attempts at reading out data .. I'm giving up! " << RESET;
+    //     throw Exception("Too many failures when attempting to read data from the FC7..somethign is wrong!");
+    // }
+    // if(fSaveToFile) fFileHandler->setData(pData);
+    // // reset readout attempts
+    // fReadoutAttempts = 0;
 }
 
 /** compute the block size according to the number of CBC's on this board
@@ -3008,7 +3056,7 @@ bool D19cFWInterface::MultiRegisterWriteRead(Chip* pChip, std::vector<ChipRegIte
             {
                 auto cPreviousValue = cIterator->second.fValue; 
                 pChip->setReg(cIterator->first , cItem.fValue);  
-                LOG (INFO) << BOLDGREEN << " D19cFWInterface::MultiRegisterWriteRead successful write of 0x" 
+                LOG (DEBUG) << BOLDGREEN << " D19cFWInterface::MultiRegisterWriteRead successful write of 0x" 
                     << std::hex << +cItem.fValue << std::dec << " to " << cIterator->first 
                     << "\t.. value in register is now 0x" << std::hex << +pChip->getReg( cIterator->first) << std::dec 
                     << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;

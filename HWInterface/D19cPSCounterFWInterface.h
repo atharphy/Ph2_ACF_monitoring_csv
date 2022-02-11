@@ -21,6 +21,8 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
 
   public:
     void FillData() override;
+    bool ReadEvents() override;
+    bool WaitForData() override;
 
     void ReadNEvents(Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = false);
 
@@ -41,12 +43,10 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
 
     // function to link FEConfigurationInterface 
     void LinkFEConfigurationInterface(FEConfigurationInterface* pInterface) {fFEConfigurationInterface=pInterface;}
-    void LinkFastCommandInterface(FastCommandInterface* pInterface) {fFastCommandInterface=pInterface;}
 
   private:
     FEConfigurationInterface* fFEConfigurationInterface; 
-    FastCommandInterface*    fFastCommandInterface;
-
+    
     uint32_t fDuration{0};
     uint32_t fWait_us{100};
     uint32_t fPSCounterDelay{29};
@@ -66,9 +66,6 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
     
     // 
     bool CheckStartPattern();
-
-    // data get/wait functions
-    bool     WaitForData();
 };
 } // namespace Ph2_HwInterface
 #endif
