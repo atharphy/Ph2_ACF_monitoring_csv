@@ -422,7 +422,7 @@ void WorkerTester::EnableMPAClocks(OpticalGroup* cOpticalGroup)
 
 void WorkerTester::PrepareForTests()
 {
-    ResetCPB();
+    // ResetCPB();
     for(auto cBoard : *fDetectorContainer)
     {
         fBeBoardInterface->setBoard(cBoard->getId());
