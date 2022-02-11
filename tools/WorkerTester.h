@@ -47,6 +47,7 @@ class WorkerTester : public Tool {
         void ResetI2CMasters(OpticalGroup* cOpticalGroup);
         void SetHybridClocks(OpticalGroup* cOpticalGroup);
         void EnableHybridChips(OpticalGroup* cOptialGroup);
+        void EnableMPAClocks(OpticalGroup* cOpticalGroup);
         void PrintI2CMasterRegisters(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
         void PrintLpGBTReplyFrame();
 

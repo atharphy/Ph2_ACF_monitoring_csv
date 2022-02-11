@@ -71,7 +71,6 @@ uint8_t WorkerTester::ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddre
 {
     D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     cFWInterface->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
-    // ResetCPB();
     uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 2;
     if(pVerbose){ LOG(INFO) << BOLDMAGENTA << "ReadLpGBTRegister from Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET; }
     std::vector<uint32_t> cCommandVector;
@@ -80,6 +79,7 @@ uint8_t WorkerTester::ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddre
     WriteCommandCPB(cCommandVector, pVerbose);
     while(!IsICToolDone())
     { 
+        //LOG(INFO) << BOLDRED << "IC Try counter : " << +cFWInterface->ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters") & 0xFF << RESET;
         // if(pVerbose) PrintFSMState();
         continue;
     }
@@ -93,7 +93,6 @@ bool WorkerTester::WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress
 {
     D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     cFWInterface->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
-    // ResetCPB();
     uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 3;
     if(pVerbose){ LOG(INFO) << BOLDMAGENTA << "WriteLpGBTRegister from Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET; }
     std::vector<uint32_t> cCommandVector;
@@ -103,6 +102,7 @@ bool WorkerTester::WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress
     WriteCommandCPB(cCommandVector, pVerbose);
     while(!IsICToolDone())
     { 
+        //LOG(INFO) << BOLDRED << "IC Try counter : " << +cFWInterface->ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters") & 0xFF << RESET;
         if(pVerbose) PrintFSMState();
         continue; 
     }
@@ -131,7 +131,6 @@ uint8_t WorkerTester::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlave
 {
     D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     cFWInterface->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
-    // ResetCPB();
     uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 4, cMasterConfig = (pNBytes << 2) | 3;
     if(pVerbose){ LOG(INFO) << BOLDMAGENTA << "I2CRead from Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET; }
     std::vector<uint32_t> cCommandVector;
@@ -141,6 +140,7 @@ uint8_t WorkerTester::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlave
     WriteCommandCPB(cCommandVector, pVerbose);
     while(!IsI2CToolDone())
     { 
+        //LOG(INFO) << BOLDRED << "I2C Try counter : " << +cFWInterface->ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters") & 0xFF00 << RESET;
         if(pVerbose) PrintFSMState();
         continue; 
     }
@@ -149,7 +149,6 @@ uint8_t WorkerTester::I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlave
     uint8_t cI2CErrorCode = cReplyVector[0] & (0xFF << 8);
     if(cI2CErrorCode != 0)
     {
-        PrintLpGBTReplyFrame();
         LOG(INFO) << RED << "I2CRead : I2C ERROR read ... " << RESET;
         exit(0);
         return false;
@@ -170,6 +169,7 @@ bool WorkerTester::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAd
     WriteCommandCPB(cCommandVector, pVerbose);
     while(!IsI2CToolDone())
     { 
+        //LOG(INFO) << BOLDRED << "I2C Try counter : " << +cFWInterface->ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters") & 0xFF00 << RESET;
         if(pVerbose) PrintFSMState();
         continue; 
     }
@@ -177,7 +177,7 @@ bool WorkerTester::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAd
     uint8_t cI2CTransStatus = cReplyVector[0] & 0xFF;
     if(cI2CTransStatus != 4)
     {
-        PrintLpGBTReplyFrame();
+        //PrintLpGBTReplyFrame();
         LOG(INFO) << RED << "I2CWrite : Wrong I2C status read back ... I2C status " << +cI2CTransStatus << RESET;
         PrintI2CMasterRegisters(fDetectorContainer->at(0)->at(0)->flpGBT, pMasterId);
         exit(0);
@@ -213,6 +213,7 @@ uint8_t WorkerTester::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pR
     WriteCommandCPB(cCommandVector, pVerbose);
     while(!IsFEToolDone())
     { 
+    	//LOG(INFO) << BOLDRED << "FE Try counter : " << +cFWInterface->ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters") & 0xFF0000 << RESET;
         if(pVerbose) PrintFSMState();
         continue; 
     }
@@ -240,6 +241,7 @@ bool WorkerTester::WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pReg
     WriteCommandCPB(cCommandVector, pVerbose);
     while(!IsFEToolDone())
     { 
+    	//LOG(INFO) << BOLDRED << "FE Try counter : " << +cFWInterface->ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters") & 0xFF0000<< RESET;
         if(pVerbose) PrintFSMState();
         continue; 
     }
@@ -404,6 +406,20 @@ void WorkerTester::EnableHybridChips(OpticalGroup* cOpticalGroup)
     std::this_thread::sleep_for(std::chrono::microseconds(10));
 }
 
+void WorkerTester::EnableMPAClocks(OpticalGroup* cOpticalGroup)
+{
+    LOG(INFO) << "Enabling clocks to MPA" << RESET;
+    for(auto cHybrid : *cOpticalGroup)
+    {
+        for(auto cChip : *cHybrid)
+        {
+            if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
+            ChipRegMap cChipRegMap = cChip->getRegMap();
+            WriteFERegister(cChip, cChipRegMap["SLVS_pad_current"].fAddress, 0x7);
+        }
+    }
+}
+
 void WorkerTester::PrepareForTests()
 {
     ResetCPB();
@@ -423,6 +439,7 @@ void WorkerTester::PrepareForTests()
             ResetI2CMasters(cOpticalGroup);
             SetHybridClocks(cOpticalGroup);
             EnableHybridChips(cOpticalGroup);
+            EnableMPAClocks(cOpticalGroup);
         }
     }
 }
@@ -642,7 +659,7 @@ void WorkerTester::Benchmark(int pNIterations)
                     uint16_t cInvertedRegister = ((cRegisterAddress & (0xFF << 8 * 0)) << 8) | ((cRegisterAddress & (0xFF << 8 * 1)) >> 8);
                     uint32_t cSlaveDataRead                 = cInvertedRegister;
                     uint8_t cMaster = (cChip->getHybridId() == 0) ? 2 : 1;
-                    uint8_t cSlaveAddress = fChipAddressMap[cChip->getFrontEndType()] + cChipId;
+                    uint8_t cSlaveAddress = fChipAddressMap[cChip->getFrontEndType()] + cChipId%8;
 
                     LOG(INFO) << BOLDMAGENTA << "Bencharking " << fChipTypeMap[cChip->getFrontEndType()] << "_" << +cChipId << RESET;
                     auto cStart = std::chrono::system_clock::now();
@@ -654,7 +671,7 @@ void WorkerTester::Benchmark(int pNIterations)
                             bool cSuccess = WriteFERegister(cChip, cRegisterAddress, cValue);
                             if(!cSuccess)
                             {
-                                PrintLpGBTReplyFrame();
+                                //PrintLpGBTReplyFrame();
                                 LOG(INFO) << RED << "Benchmarking iteration " << +cIteration << ": read wrong value using FE functions" << RESET;
                                 // ResetCPB();
                                 exit(0);
@@ -681,7 +698,7 @@ void WorkerTester::Benchmark(int pNIterations)
                             // PrintI2CMasterRegisters(cOpticalGroup->flpGBT, cMaster);
                             if(cReadBack != cValue)
                             {
-                                PrintLpGBTReplyFrame();
+                                //PrintLpGBTReplyFrame();
                                 LOG(INFO) << RED << "Benchmarking iteration " << +cIteration << ": read wrong value using I2C functions" << RESET;
                                 // ResetCPB();
                                 exit(0);
@@ -692,6 +709,7 @@ void WorkerTester::Benchmark(int pNIterations)
                     cEnd = std::chrono::system_clock::now();
                     cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEnd - cStart);
                     LOG(INFO) << "One FE register write with verification using I2C functions takes in average " << (cDuration.count() / (255*pNIterations)) << " us" << RESET;
+
                 }
             }
         }
