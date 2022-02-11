@@ -50,34 +50,16 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     cWithMPA = false;
     for(auto cBoard: *fDetectorContainer)
     {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                if(!cWithCBC)
-                {
-                    cWithCBC = (std::find_if(cHybrid->begin(), cHybrid->end(), [](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::CBC3; }) != cHybrid->end());
-                }
-                if(!cWithSSA)
-                {
-                    cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::SSA; }) != cHybrid->end());
-                }
-                if(!cWithMPA)
-                {
-                    cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::MPA; }) != cHybrid->end());
-                }
-            }
-        }
+        auto cFeTypes = cBoard->connectedFrontEndTypes(); 
+        cWithCBC = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::CBC3) != cFeTypes.end(); 
+        cWithSSA = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::SSA) != cFeTypes.end() || std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::SSA2) != cFeTypes.end(); 
+        cWithMPA = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::MPA) != cFeTypes.end(); 
     }
     if(cWithCBC) LOG(INFO) << BOLDBLUE << "PedeNoise with CBCs" << RESET;
     if(cWithSSA && !cWithMPA) LOG(INFO) << BOLDBLUE << "PedeNoise with SSAs" << RESET;
     if(cWithMPA && !cWithSSA) LOG(INFO) << BOLDBLUE << "PedeNoise with MPAs" << RESET;
     if(cWithSSA && cWithMPA) LOG(INFO) << BOLDBLUE << "PedeNoise with SSAs+MPAs" << RESET;
 
-    // ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
-    // cWithCBC                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-    // cWithSSA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
-    // cWithMPA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
     if(cWithCBC)
     {
         CBCChannelGroupHandler theChannelGroupHandler;
@@ -88,8 +70,9 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     {
         SSAChannelGroupHandler theChannelGroupHandler;
         theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
-        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA);
+        // temporary
         setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA2);
+        // setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA);
     }
     if(cWithMPA)
     {
@@ -111,7 +94,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fEventsPerPoint              = findValueInSettings<double>("Nevents", 10);
     fUseFixRange                 = findValueInSettings<double>("PedeNoiseUseFixRange", 0);
     fMinThreshold                = findValueInSettings<double>("PedeNoiseMinThreshold", 0);
-    fMaxThreshold                = findValueInSettings<double>("PedeNoiseMaxThreshold", 1023);
+    fMaxThreshold                = findValueInSettings<double>("PedeNoiseMaxThreshold", 0);
 
     fNEventsPerBurst = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
     // uint8_t cEnableFastCounterReadout = (uint8_t)findValueInSettings<double>("EnableFastCounterReadout", 0);
@@ -137,51 +120,14 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     for(auto cBoard: *fDetectorContainer)
     {
         fEventTypes.push_back(cBoard->getEventType());
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                auto cType    = FrontEndType::SSA;
-                bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                cType         = FrontEndType::MPA;
-                bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                if(!cWithSSA && !cWithMPA) continue;
-
-                if(!cForcePSasync) continue;
-
-                cBoard->setEventType(EventType::PSAS);
-                // set all SSAs + MPAs to output data in async mode
-                for(auto cROC: *cHybrid) { fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1); }
-            }
-        }
+        if(!cWithSSA && !cWithMPA) continue;
+        if(!cForcePSasync) continue;
+        cBoard->setEventType(EventType::PSAS);
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->InitializePSCounterFWInterface(cBoard);
     }
 #ifdef __USE_ROOT__
     fDQMHistogramPedeNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
-
-    // enable ASYNC mode for PS asics
-    for(auto cBoard: *fDetectorContainer)
-    {
-        fBeBoardInterface->setBoard(cBoard->getId());
-        // auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-        // cInterface->SetPSCounterMode(cEnableFastCounterReadout);
-        // cInterface->SetPSPairSelect(cEnablePairSelect);
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                // set all SSAs + MPAs to output data in async mode
-                for(auto cROC: *cHybrid)
-                {
-                    if(cROC->getFrontEndType() == FrontEndType::CBC3) continue;
-
-                    // TBC - what about MPA here?
-                    LOG(INFO) << BOLDBLUE << "Setting up for analogue async injection in SSA/MPAs" << RESET;
-                    fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
-                }
-            }
-        }
-    }
 }
 
 void PedeNoise::Reset()
@@ -322,7 +268,10 @@ void PedeNoise::sweepSCurves()
     }
 
     bool forceAllChannels = false;
-    if(fPulseAmplitude != 0) { LOG(INFO) << BLUE << "Enabled test pulse. " << RESET; }
+    if(fPulseAmplitude != 0) { 
+        LOG(INFO) << BOLDYELLOW << "Enabled test pulse. " << RESET; 
+        this->enableTestPulse(true);
+    }
     else
     {
         LOG(INFO) << BOLDYELLOW << "sweepSCurves without TP injection" << RESET;
@@ -334,36 +283,12 @@ void PedeNoise::sweepSCurves()
     {
         cStartValue = (fMaxThreshold + fMinThreshold) / 2.;
     }
-    this->enableTestPulse(fPulseAmplitude != 0);
-    cStartValue = this->findPedestal(fPulseAmplitude == 0);
     if(fDisableStubLogic) disableStubLogic();
     LOG(INFO) << BLUE << "Sweep of S-curves will start at an average threshold of " << cStartValue << RESET;
     measureSCurves(cStartValue);
     // scanScurves();
-
     // if(fDisableStubLogic) reloadStubLogic();
     this->SetTestAllChannels(originalAllChannelFlag);
-    // if(fPulseAmplitude != 0)
-    // {
-    //     this->enableTestPulse(false);
-    //     if(cWithSSA)
-    //         setSameGlobalDac("InjectedCharge", 0);
-    //     else if(cWithMPA)
-    //     {
-    //         setSameGlobalDac("CalDAC0", 0);
-    //         setSameGlobalDac("CalDAC1", 0);
-    //         setSameGlobalDac("CalDAC2", 0);
-    //         setSameGlobalDac("CalDAC3", 0);
-    //         setSameGlobalDac("CalDAC4", 0);
-    //         setSameGlobalDac("CalDAC5", 0);
-    //         setSameGlobalDac("CalDAC6", 0);
-    //     }
-    //     else
-    //         setSameGlobalDac("TestPulsePotNodeSel", 0);
-
-    //     LOG(INFO) << BLUE << "Disabled test pulse. " << RESET;
-    // }
-
     LOG(INFO) << BOLDBLUE << "Finished sweeping SCurves..." << RESET;
     return;
 }
@@ -480,12 +405,12 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
     bool originalAllChannelFlag = this->fAllChan;
     if(forceAllChannels) this->SetTestAllChannels(true);
 
-    // figure  out if you should normalize or not
+    // // figure  out if you should normalize or not
     uint8_t cNormalizationOrig = getNormalization();
-    uint8_t cNormalize         = 0;
-    if(cWithCBC or (cWithSSA && !cWithMPA) or (cWithMPA && !cWithSSA)) { cNormalize = 1; }
-    LOG(INFO) << BOLDBLUE << "normalization will be set to " << +cNormalize << RESET;
-    setNormalization(cNormalize);
+    // uint8_t cNormalize         = 0;
+    // if(cWithCBC or (cWithSSA && !cWithMPA) or (cWithMPA && !cWithSSA)) { cNormalize = 1; }
+    // LOG(INFO) << BOLDBLUE << "normalization will be set to " << +cNormalize << RESET;
+    // setNormalization(cNormalize);
 
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
@@ -506,7 +431,7 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
                 {
                     uint16_t tmpVthr = 0;
                     if(cROC->getFrontEndType() == FrontEndType::CBC3) tmpVthr = (static_cast<ReadoutChip*>(cROC)->getReg("VCth1") + (static_cast<ReadoutChip*>(cROC)->getReg("VCth2") << 8));
-                    if(cROC->getFrontEndType() == FrontEndType::SSA) tmpVthr = static_cast<ReadoutChip*>(cROC)->getReg("Bias_THDAC");
+                    if(cROC->getFrontEndType() == FrontEndType::SSA || cROC->getFrontEndType() == FrontEndType::SSA2 ) tmpVthr = static_cast<ReadoutChip*>(cROC)->getReg("Bias_THDAC");
                     if(cROC->getFrontEndType() == FrontEndType::MPA) tmpVthr = static_cast<ReadoutChip*>(cROC)->getReg("ThDAC0");
 
                     cMean += tmpVthr;
@@ -515,9 +440,7 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
             }
         }
     }
-
     cMean /= nCbc;
-
     LOG(INFO) << BOLDBLUE << "Found Pedestals to be around " << BOLDRED << cMean << RESET;
     setNormalization(cNormalizationOrig);
     return cMean;

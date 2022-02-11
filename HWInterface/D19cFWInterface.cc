@@ -17,6 +17,7 @@
 #include "D19cOpticalInterface.h"
 #include "D19cTriggerInterface.h"
 #include "D19cPSCounterFWInterface.h"
+#include "D19cL1ReadoutInterface.h"
 #include "D19cFastCommandInterface.h"
 #include <algorithm>
 #include <chrono>
@@ -32,7 +33,8 @@ D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoar
     : BeBoardFWInterface(puHalConfigFileName, pBoardId), fBroadcastCbcId(0), fNReadoutChip(0), fNHybrids(0), fNCic(0), fFMCId(1)
 {
     fResetAttempts = 0;
-    // do this here 
+    // can only link one type of trigger + FC interface to this type of FW 
+    // so do it in the contructor 
     // configure L1 readout interface 
     if( fTriggerInterface == nullptr )
     {
@@ -56,10 +58,18 @@ D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoar
     else
         fSaveToFile = true;
     fResetAttempts = 0;
+    // can only link one type of trigger + FC interface to this type of FW 
+    // so do it in the contructor 
+    // configure L1 readout interface 
     if( fTriggerInterface == nullptr )
     {
         fTriggerInterface = new D19cTriggerInterface(this->getId() , this->getUri(), this->getAddressTable()); 
         LOG (INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
+    }
+    if( fFastCommandInterface == nullptr ) 
+    {
+        fFastCommandInterface = new D19cFastCommandInterface(this->getId() , this->getUri(), this->getAddressTable()); 
+        LOG (INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
     }
     fFEConfigurationInterface=nullptr;
     fL1ReadoutInterface=nullptr;
@@ -71,10 +81,18 @@ D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* 
     LOG (INFO) << BOLDYELLOW << "D19cFWInterface Constructor" << RESET;
     std::cout << pId << "\t" << pUri << "\t" << pAddressTable << "\n";
     fResetAttempts = 0;
+   // can only link one type of trigger + FC interface to this type of FW 
+    // so do it in the contructor 
+    // configure L1 readout interface 
     if( fTriggerInterface == nullptr )
     {
         fTriggerInterface = new D19cTriggerInterface(this->getId() , this->getUri(), this->getAddressTable()); 
         LOG (INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
+    }
+    if( fFastCommandInterface == nullptr ) 
+    {
+        fFastCommandInterface = new D19cFastCommandInterface(this->getId() , this->getUri(), this->getAddressTable()); 
+        LOG (INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
     }
     fFEConfigurationInterface=nullptr;
     fL1ReadoutInterface=nullptr;
@@ -88,10 +106,18 @@ D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* 
     else
         fSaveToFile = true;
     fResetAttempts = 0;
+    // can only link one type of trigger + FC interface to this type of FW 
+    // so do it in the contructor 
+    // configure L1 readout interface 
     if( fTriggerInterface == nullptr )
     {
         fTriggerInterface = new D19cTriggerInterface(this->getId() , this->getUri(), this->getAddressTable()); 
         LOG (INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
+    }
+    if( fFastCommandInterface == nullptr ) 
+    {
+        fFastCommandInterface = new D19cFastCommandInterface(this->getId() , this->getUri(), this->getAddressTable()); 
+        LOG (INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
     }
     fFEConfigurationInterface=nullptr;
     fL1ReadoutInterface=nullptr;
@@ -502,7 +528,24 @@ void D19cFWInterface::selectLink(const uint8_t pLinkId, uint32_t cWait_ms)
         // std::this_thread::sleep_for (std::chrono::microseconds (fWait_us*10) );
     }
 }
-
+void D19cFWInterface::InitializePSCounterFWInterface(const BeBoard* pBoard)
+{
+    fL1ReadoutInterface = nullptr; delete fL1ReadoutInterface; 
+    fL1ReadoutInterface = new D19cPSCounterFWInterface(this->getId() , this->getUri(), this->getAddressTable()); 
+    static_cast<D19cPSCounterFWInterface*>(fL1ReadoutInterface)->LinkFEConfigurationInterface(fFEConfigurationInterface); 
+    LOG (INFO) << BOLDYELLOW << "Initialized D19cPSCounterFWInterface ..." << fL1ReadoutInterface << RESET;
+    fL1ReadoutInterface->LinkTriggerInterface(fTriggerInterface);
+    fL1ReadoutInterface->LinkFastCommandInterface(fFastCommandInterface);  
+}
+void D19cFWInterface::IniitalizeL1ReadoutInterface(const BeBoard* pBoard)
+{
+    fL1ReadoutInterface = nullptr; delete fL1ReadoutInterface; 
+    fL1ReadoutInterface = new D19cL1ReadoutInterface(this->getId() , this->getUri(), this->getAddressTable()); 
+    LOG (INFO) << BOLDYELLOW << "Initialized D19cL1ReadoutInterface ..." << fL1ReadoutInterface << RESET;
+    fL1ReadoutInterface->LinkTriggerInterface(fTriggerInterface);
+    fL1ReadoutInterface->LinkFastCommandInterface(fFastCommandInterface);  
+}
+    
 void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
 {
     // unique link Ids
@@ -752,15 +795,8 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     // this depends on the event type 
     if( fL1ReadoutInterface == nullptr ) 
     {
-        if( pBoard->getEventType() == EventType::SCAS ) 
-        {
-            fL1ReadoutInterface = new D19cPSCounterFWInterface(this->getId() , this->getUri(), this->getAddressTable()); 
-            LOG (INFO) << BOLDYELLOW << "Created D19cPSCounterFWInterface ..." << RESET;
-            //fL1ReadoutInterface->LinkFastCommandInterface();
-            fL1ReadoutInterface->LinkTriggerInterface(fTriggerInterface);
-            if( fFEConfigurationInterface != nullptr && pBoard->getEventType() == EventType::SCAS ) 
-                static_cast<D19cPSCounterFWInterface*>(fL1ReadoutInterface)->LinkFEConfigurationInterface(fFEConfigurationInterface); 
-        }
+        if( pBoard->getEventType() == EventType::PSAS )  InitializePSCounterFWInterface(pBoard); 
+        else IniitalizeL1ReadoutInterface(pBoard); 
     }
 
     if(fI2CVersion >= 1 || !cWithlpGBT)
@@ -1754,8 +1790,18 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
 }
 void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
 {
+    pData.clear(); 
+    // LOG (INFO) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET;
+    if( fL1ReadoutInterface == nullptr ) LOG (INFO) << BOLDRED << "L1ReadoutInterface is a nullptr.." << RESET;
+    
     fL1ReadoutInterface->setNEvents(pNEvents); 
-    fL1ReadoutInterface->ReadEvents(); 
+    if( fL1ReadoutInterface->ReadEvents(pBoard) ){ 
+        pData = fL1ReadoutInterface->getData();
+        // std::copy(fL1ReadoutInterface->getData().begin(), fL1ReadoutInterface->getData().end(), std::back_inserter(pData));
+        // fL1ReadoutInterface->clearData(); 
+    }
+    else LOG (INFO) << BOLDRED << "Failed to ReadNEvents" << RESET;
+    
     // // write number of triggers to accept
     // // in the handshake mode offset is cleared after each handshake
     // // fDDR3Offset = 0;
@@ -2985,7 +3031,7 @@ uint8_t D19cFWInterface::SingleRegisterRead(Chip* pChip, ChipRegItem& pItem )
             auto cPreviousValue = cIterator->second.fValue; 
             pChip->setReg(cIterator->first , pItem.fValue);  
             pItem = pChip->getRegItem(cIterator->first); 
-            LOG (INFO) << BOLDGREEN << " D19cFWInterface::SingleRegisterRead successful read from 0x" 
+            LOG (DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterRead successful read from 0x" 
                 << std::hex << +pItem.fValue << std::dec << " to " << cIterator->first 
                 << "\t.. value in register is now 0x" << std::hex << +pChip->getReg( cIterator->first) << std::dec 
                 << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;

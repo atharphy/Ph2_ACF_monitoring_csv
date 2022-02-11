@@ -118,4 +118,20 @@ void BeBoard::loadConfigFile(const std::string& filename)
     }
 }
 
+std::vector<FrontEndType> BeBoard::connectedFrontEndTypes() const
+{
+    std::vector<FrontEndType> cFeTypes; 
+    for(auto cOpticalGroup: *this)
+    {
+        for(auto cFe: *cOpticalGroup)
+        {
+            for(auto cChip: *cFe)
+            {
+                auto cIter = std::find(cFeTypes.begin(), cFeTypes.end() , cChip->getFrontEndType() );
+                if( cIter == cFeTypes.end() ) cFeTypes.push_back( cChip->getFrontEndType() );
+            } // chips
+        }     // hybrids
+    }         // opticalGroup
+    return cFeTypes;
+}
 } // namespace Ph2_HwDescription

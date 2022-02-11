@@ -22,7 +22,10 @@ class L1ReadoutInterface : public RegManager
     protected : 
         FastCommandInterface* fFastCommandInterface; 
         TriggerInterface*     fTriggerInterface;
-
+        uint8_t               fHandshake;
+        std::vector<uint32_t> fData; 
+        uint32_t              fNEvents; 
+        uint32_t              fNReadoutEvents;
 
     public: // virtual functions 
     
@@ -30,31 +33,31 @@ class L1ReadoutInterface : public RegManager
         {
             LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function L1ReadoutInterface::ReadData is absent" << RESET;
         }
-        virtual bool WaitForData()
+        virtual bool WaitForReadout()
         {
             LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function L1ReadoutInterface::WaitForData is absent" << RESET;
             return false;
         }
-        virtual bool ReadEvents()
+        virtual bool WaitForNTriggers()
+        {
+            LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function L1ReadoutInterface::WaitForNTriggers is absent" << RESET;
+            return false;
+        }
+        virtual bool ReadEvents(const Ph2_HwDescription::BeBoard* pBoard)
         {
             LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function L1ReadoutInterface::ReadEvents is absent" << RESET;
             return false;
         }
 
         std::vector<uint32_t> getData(){return fData;}
+        void clearData(){ fData.clear(); }
         // function to link FEConfigurationInterface 
         void LinkFastCommandInterface(FastCommandInterface* pInterface) {fFastCommandInterface=pInterface;}
         void LinkTriggerInterface(TriggerInterface* pInterface) {fTriggerInterface=pInterface;}
 
         void setNEvents(uint32_t pNEvents){ fNEvents = pNEvents; }
         uint32_t getNEvents(){ return fNEvents; }
-    private : 
-        std::vector<uint32_t> fData; 
-        uint32_t              fNEvents; 
-
-
-
-    
+        void setHandshake(uint8_t pHandshake){fHandshake=pHandshake;}
     
 };
 } // namespace Ph2_HwInterface

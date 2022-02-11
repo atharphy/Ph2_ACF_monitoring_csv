@@ -14,18 +14,18 @@ using namespace Ph2_HwDescription;
 namespace Ph2_HwInterface
 {
 BeBoardInterface::BeBoardInterface(const BeBoardFWMap& pBoardMap) : fBoardMap(pBoardMap), fBoardFW(nullptr), fPrevBoardIdentifier(65535) {
-    for( const auto& cItem : fBoardMap) 
-    {
-        // auto cIterator = fBoardMap.find(cItem.first);
-        std::cout << BOLDYELLOW << "BeBoardInterface::BeBoardInterface " << cItem.second << "\t" << cItem.second->getId() << RESET << "\n" ;
-    }
+    // for( const auto& cItem : fBoardMap) 
+    // {
+    //     // auto cIterator = fBoardMap.find(cItem.first);
+    //     // std::cout << BOLDYELLOW << "BeBoardInterface::BeBoardInterface " << cItem.second << "\t" << cItem.second->getId() << RESET << "\n" ;
+    // }
 }
 
 BeBoardInterface::~BeBoardInterface() {}
 
 void BeBoardInterface::setBoard(uint16_t pBoardIdentifier)
 {
-    std::cout << BOLDRED <<  "BeBoardInterface::SetBoard [first set]" << fBoardMap[pBoardIdentifier] << "\t" << fBoardMap[pBoardIdentifier]->getId() << RESET << "\n";
+    // std::cout << BOLDRED <<  "BeBoardInterface::SetBoard [first set]" << fBoardMap[pBoardIdentifier] << "\t" << fBoardMap[pBoardIdentifier]->getId() << RESET << "\n";
             
     if(fPrevBoardIdentifier != pBoardIdentifier)
     {
@@ -36,14 +36,14 @@ void BeBoardInterface::setBoard(uint16_t pBoardIdentifier)
         {
             fBoardFW             = i->second;
             fPrevBoardIdentifier = pBoardIdentifier;
-            std::cout << BOLDRED <<  "BeBoardInterface::SetBoard [first set]" << i->second << "\t" << i->second->getId() << RESET << "\n";
-            std::cout << BOLDYELLOW << "BeBoardInterface::SetBoard [first set]" << (*fBoardMap.begin()).second << "\t" << (*fBoardMap.begin()).second->getId() << RESET << "\n";
+            // std::cout << BOLDRED <<  "BeBoardInterface::SetBoard [first set]" << i->second << "\t" << i->second->getId() << RESET << "\n";
+            // std::cout << BOLDYELLOW << "BeBoardInterface::SetBoard [first set]" << (*fBoardMap.begin()).second << "\t" << (*fBoardMap.begin()).second->getId() << RESET << "\n";
         }
     }
     else
     {
-        std::cout << BOLDRED << "BeBoardInterface::SetBoard [already set board]" << fBoardFW << "\t" << fBoardFW->getId() << RESET "\n";
-        std::cout << BOLDYELLOW << "BeBoardInterface::SetBoard [already set board] " << (*fBoardMap.begin()).second << "\t" << (*fBoardMap.begin()).second->getId() << RESET << "\n";
+        // std::cout << BOLDRED << "BeBoardInterface::SetBoard [already set board]" << fBoardFW << "\t" << fBoardFW->getId() << RESET "\n";
+        // std::cout << BOLDYELLOW << "BeBoardInterface::SetBoard [already set board] " << (*fBoardMap.begin()).second << "\t" << (*fBoardMap.begin()).second->getId() << RESET << "\n";
     }
 }
 

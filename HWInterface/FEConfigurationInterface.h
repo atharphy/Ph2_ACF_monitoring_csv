@@ -20,6 +20,14 @@ struct Config
     uint8_t  fVerify      = 0; 
 };
 
+enum class ConfigurationType
+{
+    I2C    = 1,
+    IC    = 2,
+    EC   = 3
+};
+
+
 class FEConfigurationInterface : public RegManager
 {
   public:
@@ -86,13 +94,15 @@ class FEConfigurationInterface : public RegManager
     void setRetry(uint8_t pReTry){ fConfig.fReTry = pReTry; }
     void setRegisterTracking(uint8_t pTrack){ fTrackRegisters = pTrack; }
 
+    void setConfigurationType(ConfigurationType pType){ fType = pType;}
+    ConfigurationType getConfigurationType(){ return fType; }
   protected:
     uint8_t fTrackRegisters{true}; 
     std::map<uint32_t, Ph2_HwDescription::ChipRegMap> fModifiedRegisters;
     std::map<uint16_t, std::string>                   fMap;
     uint8_t fNReadoutChip{0};
     Config  fConfig; 
-
+    ConfigurationType fType;
 };
 } // namespace Ph2_HwInterface
 #endif

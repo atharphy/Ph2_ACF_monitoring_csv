@@ -470,7 +470,11 @@ int main(int argc, char* argv[])
     if(!cmd.foundOption("read") && cmd.foundOption("reconfigure"))
     {
         cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
-
+        // for(const auto cBoard: *cTool.fDetectorContainer)
+        // {
+        //     cTool.ReadNEvents(cBoard, 10);
+        // }
+        
         // map MPA outputs for PS module
         PSAlignment cPSAlignment;
         cPSAlignment.Inherit(&cTool);

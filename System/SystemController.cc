@@ -1207,7 +1207,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
     // ####################
     // # Decoding OT data #
     // ####################
-    else if(pType == BoardType::D19C)
+    else if(pType == BoardType::D19C && pBoard->getEventType() != EventType::PSAS ) 
     {
         bool cTLUconfig = 2;
         // bool cTLUconfig = (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(pBoard->getIndex()), "fc7_daq_cnfg.tlu_block.handshake_mode") == 2 &&
@@ -1234,9 +1234,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                 for(auto hybrid: *opticalGroup) { maxind = std::max(maxind, uint32_t(hybrid->size())); }
             }
 
-            if(fEventType == EventType::SCAS) { fEventList.push_back(new D19SCEventAS(pBoard, pData)); }
-            if(fEventType == EventType::PSAS) { fEventList.push_back(new D19cPSEventAS(pBoard, pData)); }
-            else if(fEventType != EventType::ZS)
+            if(fEventType != EventType::ZS)
             {
                 // check data words because I'm desperate
                 // for( auto cWord : pData )
@@ -1313,10 +1311,23 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
             }
         } // end zero check
     }
+    else if( pType == BoardType::D19C && pBoard->getEventType() == EventType::PSAS ) 
+    {
+        fEventList.clear();
+        fEventList.push_back(new D19cPSEventAS(pBoard, pData));
+    }
+}
+
+void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, FrontEndType theFrontEndType)
+{
+    LOG (INFO) << BOLDYELLOW << "SystemController::setChannelGroupHandler for a chipType " << RESET;
+    auto selectChipFlavourFunction = [theFrontEndType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == theFrontEndType); };
+    setChannelGroupHandler(theChannelGroupHandler, selectChipFlavourFunction);
 }
 
 void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, std::function<bool(const ChipContainer*)> theQueryFunction)
 {
+    LOG (INFO) << BOLDYELLOW << "SystemController::setChannelGroupHandler for a queryFunction" << RESET; 
     auto theChannelGroupHandlerPointer = std::make_shared<ChannelGroupHandler>(std::move(theChannelGroupHandler));
     setChannelGroupHandler(theChannelGroupHandlerPointer, theQueryFunction);
 }
@@ -1331,7 +1342,8 @@ void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandle
             for(const auto hybrid: *opticalGroup) { totalNumberOfChips += hybrid->size(); }
         }
     }
-
+    LOG (INFO) << BOLDYELLOW << "SystemController::setChannelGroupHandler for a queryFunction" << totalNumberOfChips << " ROCs." << RESET;
+    
     uint16_t totalNumberOfQueriedChips = 0;
     fDetectorContainer->setReadoutChipQueryFunction(theQueryFunction);
     for(const auto board: *fDetectorContainer)
@@ -1343,6 +1355,7 @@ void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandle
                 totalNumberOfQueriedChips += hybrid->size();
                 for(const auto chip: *hybrid)
                 {
+                    LOG (INFO) << BOLDYELLOW << "Creating channel group handler for Chip#" << +chip->getId() << RESET;
                     fChannelGroupHandlerContainer->getObject(board->getId())
                         ->getObject(opticalGroup->getId())
                         ->getObject(hybrid->getId())
@@ -1357,11 +1370,7 @@ void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandle
     fSameChannelGroupForAllChannels = (totalNumberOfQueriedChips == totalNumberOfChips);
 }
 
-void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, FrontEndType theFrontEndType)
-{
-    auto selectChipFlavourFunction = [theFrontEndType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == theFrontEndType); };
-    setChannelGroupHandler(theChannelGroupHandler, selectChipFlavourFunction);
-}
+
 
 void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandler> theChannelGroupHandlerPointer, uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId)
 {

@@ -14,7 +14,7 @@ class D19cTriggerInterface : public TriggerInterface
     ~D19cTriggerInterface();
 
     public: // virtual functions 
-
+        bool SetNTriggersToAccept(uint32_t pNTriggersToAccept) override;
         void ResetTriggerFSM() override;
         void ReconfigureTriggerFSM(std::vector<std::pair<std::string, uint32_t>> pTriggerConfig) override;
         bool Start() override;

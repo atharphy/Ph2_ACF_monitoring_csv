@@ -11,8 +11,10 @@ namespace Ph2_HwInterface
 
 
 D19cOpticalInterface::D19cOpticalInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : FEConfigurationInterface(pId, pUri, pAddressTable) {
+    fType = ConfigurationType::IC; 
 }
 D19cOpticalInterface::D19cOpticalInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : FEConfigurationInterface(puHalConfigFileName, pBoardId) {
+    fType = ConfigurationType::IC; 
 }
 D19cOpticalInterface::~D19cOpticalInterface() {}
 

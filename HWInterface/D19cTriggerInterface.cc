@@ -5,22 +5,21 @@ using namespace Ph2_HwDescription;
 namespace Ph2_HwInterface
 {
 D19cTriggerInterface::D19cTriggerInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : TriggerInterface(pId, pUri, pAddressTable) {
+    LOG (INFO) << BOLDYELLOW << "D19cTriggerInterface::D19cTriggerInterface Constructor" << RESET;
+    TriggerConfiguration();
 }
 D19cTriggerInterface::D19cTriggerInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : TriggerInterface(puHalConfigFileName, pBoardId) {
     
     LOG (INFO) << BOLDYELLOW << "D19cTriggerInterface::D19cTriggerInterface Constructor" << RESET;
+    TriggerConfiguration();
 }
 D19cTriggerInterface::~D19cTriggerInterface() {}
 
 void D19cTriggerInterface::TriggerConfiguration()
 {
-    auto cConfiguredSrc = ReadReg("fc7_daq_stat.fast_command_block.general.source");
+    fTriggerConfiguration.fTriggerSource = ReadReg("fc7_daq_stat.fast_command_block.general.source");
     auto cSource        = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source");
-    auto cRate          = this->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
-    auto cMultiplicity  = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-    if(cSource != 6 && cSource != 10) LOG(DEBUG) << BOLDMAGENTA << "Trigger Rate is : " << +cRate << RESET;
-    LOG(DEBUG) << BOLDMAGENTA << "Trigger Multiplicity is : " << +cMultiplicity << RESET;
-    if(cConfiguredSrc != cSource)
+    if(fTriggerConfiguration.fTriggerSource != cSource)
     {
         LOG(ERROR) << BOLDRED << "Mismatch in trigger source configuration... going to reload and check again " << RESET;
         std::vector<std::pair<std::string, uint32_t>> cRegVec;
@@ -30,6 +29,12 @@ void D19cTriggerInterface::TriggerConfiguration()
         this->WriteStackReg(cRegVec);
         TriggerConfiguration();
     }
+    else{ 
+        LOG(DEBUG) << BOLDGREEN << "Trigger source is : " << +cSource << " matches configured source " << fTriggerConfiguration.fTriggerSource << RESET;
+        fTriggerConfiguration.fTriggerRate = ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
+        fTriggerConfiguration.fNtriggersToAccept = ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
+    }
+    
 }
 
 uint32_t D19cTriggerInterface::GetTriggerState()
@@ -102,49 +107,74 @@ bool D19cTriggerInterface::Start()
     }
 
     cTriggerState = GetTriggerState();
-    // get handshake mode
-    // this changes how I check if I've actually started
-    auto cHandshake = ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
-    bool cBreak     = false;
-    do
-    {
-        LOG(DEBUG) << BOLDBLUE << "D19cFWInterface::Start Trigger state is " << cTriggerState << RESET;
-        // this stops triggers  + resets
-        this->ResetTriggerFSM();
-        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 100));
-        this->TriggerConfiguration();
+    LOG (DEBUG) << BOLDYELLOW << "D19cTriggerInterface::Start - trigger state is " << cTriggerState << RESET; 
+    // this stops triggers  + resets
+    this->ResetTriggerFSM();
+    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 100));
+    this->TriggerConfiguration();
+    
+    // here open the shutter for the stub counter block (for some reason self clear doesn't work, that why we have to
+    // clear the register manually)
+    WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x1);
+    WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x0);
+    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 
-        // here open the shutter for the stub counter block (for some reason self clear doesn't work, that why we have to
-        // clear the register manually)
-        WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x1);
-        WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x0);
-        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-
-        WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
-        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-
-        // prints to debug and also checks that things are ok
-        this->TriggerConfiguration();
-        cTriggerState = GetTriggerState();
-        LOG(DEBUG) << BOLDBLUE << "D19cFWInterface::Start Trigger state is " << cTriggerState << RESET;
-
-        // now check if I should try and start again
-        if(cHandshake)
-        {
-            auto cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-            cBreak           = (cReadoutReq == 1) || (cTriggerState != 0);
-            if(cBreak)
-                LOG(DEBUG) << BOLDMAGENTA << "Hand-shake is on .. readout-request after start is " << +cReadoutReq << " - triggers have started and I've got all the events I've asked for " << RESET;
-            else
-                LOG(DEBUG) << BOLDMAGENTA << "Hand-shake is on .. readout-request after start is " << +cReadoutReq << " - trigger state is " << +cTriggerState << RESET;
-        }
-        else
-            cBreak = (cTriggerState != 0);
-        if(!cBreak) LOG(INFO) << BOLDRED << "Triggers failed to START - trying again" << RESET;
-    } while(!cBreak);
-    LOG(DEBUG) << BOLDBLUE << "D19cFWInterface::Start Trigger state at the end of start is " << +cTriggerState << RESET;
+    WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
+    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
     return true;
+
+    // // get handshake mode
+    // // this changes how I check if I've actually started
+    // auto cHandshake = ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
+    // bool cBreak     = false;
+    // do
+    // {
+    //     LOG(DEBUG) << BOLDBLUE << "D19cFWInterface::Start Trigger state is " << cTriggerState << RESET;
+    //     // this stops triggers  + resets
+    //     this->ResetTriggerFSM();
+    //     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 100));
+    //     this->TriggerConfiguration();
+
+    //     // here open the shutter for the stub counter block (for some reason self clear doesn't work, that why we have to
+    //     // clear the register manually)
+    //     WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x1);
+    //     WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x0);
+    //     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+
+    //     WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
+    //     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+
+    //     // prints to debug and also checks that things are ok
+    //     this->TriggerConfiguration();
+    //     cTriggerState = GetTriggerState();
+    //     LOG(DEBUG) << BOLDBLUE << "D19cFWInterface::Start Trigger state is " << cTriggerState << RESET;
+
+    //     // now check if I should try and start again
+    //     if(cHandshake)
+    //     {
+    //         auto cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+    //         cBreak           = (cReadoutReq == 1) || (cTriggerState != 0);
+    //         if(cBreak)
+    //             LOG(DEBUG) << BOLDMAGENTA << "Hand-shake is on .. readout-request after start is " << +cReadoutReq << " - triggers have started and I've got all the events I've asked for " << RESET;
+    //         else
+    //             LOG(DEBUG) << BOLDMAGENTA << "Hand-shake is on .. readout-request after start is " << +cReadoutReq << " - trigger state is " << +cTriggerState << RESET;
+    //     }
+    //     else
+    //         cBreak = (cTriggerState != 0);
+    //     if(!cBreak) LOG(INFO) << BOLDRED << "Triggers failed to START - trying again" << RESET;
+    // } while(!cBreak);
+    // LOG(DEBUG) << BOLDBLUE << "D19cFWInterface::Start Trigger state at the end of start is " << +cTriggerState << RESET;
+    // return true;
 }
+// configure number of triggers to accept 
+bool D19cTriggerInterface::SetNTriggersToAccept(uint32_t pNTriggersToAccept)
+{
+    std::vector<std::pair<std::string, uint32_t>> cTriggerConfig;
+    cTriggerConfig.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept",pNTriggersToAccept});
+    ReconfigureTriggerFSM(cTriggerConfig);
+    return (this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept") == pNTriggersToAccept);
+}
+
 // reconfigure trigger
 void D19cTriggerInterface::ReconfigureTriggerFSM(std::vector<std::pair<std::string, uint32_t>> pTriggerConfig)
 {
@@ -165,7 +195,7 @@ bool D19cTriggerInterface::RunTriggerFSM()
     uint32_t cIterations = 0;
     do
     {
-        LOG(INFO) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
+        LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
         cIterations++;
     } while(this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cIterations < 10);

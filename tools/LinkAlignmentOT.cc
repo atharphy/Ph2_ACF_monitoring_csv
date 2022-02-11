@@ -16,7 +16,7 @@ LinkAlignmentOT::~LinkAlignmentOT() {}
 // Processing
 void LinkAlignmentOT::AlignStubPackage()
 {
-    for(auto cBoard: *fDetectorContainer) { AlignStubPackage(cBoard); } // align stubs
+    for(const auto cBoard: *fDetectorContainer) { AlignStubPackage(cBoard); } // align stubs
 }
 bool LinkAlignmentOT::Align()
 {
@@ -249,7 +249,7 @@ bool LinkAlignmentOT::WordAlignBEdata(const BeBoard* pBoard)
             }
         }
     }
-    return cAligned;
+   return cAligned;
 }
 bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
 {
@@ -387,7 +387,9 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
         fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
         cIndx++;
     }
-
+    LOG (INFO) << BOLDYELLOW << "Reached end of WordAlignBEData" << RESET;
+    LOG (INFO) << BOLDYELLOW << "LinkAlignmentOT::WordAlignBEdata ... trying to readout L1 data.. "<< RESET;
+    ReadNEvents(*cBoardIter, 10);
     return cAligned;
 }
 
@@ -943,7 +945,7 @@ bool LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                 LOG(INFO) << BOLDMAGENTA << "Trying a stub package delay set to " << +cPackageDelay << ".. check BxIds in SW" << RESET;
                 fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay", cPackageDelay);
                 cInterface->Bx0Alignment();
-
+        
                 ReadNEvents(pBoard, cNevents);
                 const std::vector<Event*>& cEvents = this->GetEvents();
                 LOG(DEBUG) << BOLDBLUE << "Read back " << +cEvents.size() << " events from the FC7 ..." << RESET;

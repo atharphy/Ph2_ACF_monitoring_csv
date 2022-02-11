@@ -189,6 +189,22 @@ int main(int argc, char* argv[])
     // cHybridTester.CheckHybridCurrents();
     if(cmd.foundOption("checkI2C")) cHybridTester.CheckI2C();
 
+    // quick check of event readout 
+    cHybridTester.setFWTestPulse();
+    // configure counter readout 
+    cHybridTester.setSameGlobalDac("AnalogueAsync", 1);
+    // configure CalPulse amplitude 
+    cHybridTester.setSameGlobalDac("InjectedCharge", 0x20);
+    // configure threshold 
+    cHybridTester.setSameGlobalDac("Threshold", 0x15);
+    // cHybridTester.measureData(10);
+    // for(const auto cBoard: *cHybridTester.fDetectorContainer)
+    // {
+    //     cBoard->setEventType(EventType::PSAS);
+    //     // static_cast<D19cFWInterface*>(cHybridTester.fBeBoardInterface->getFirmwareInterface())->InitializePSCounterFWInterface(cBoard);
+    //     cHybridTester.ReadNEvents(cBoard, 10);
+    // }
+    
     // cHybridTester.ReadSSABias("MonitorGround");
     // cHybridTester.ReadSSABias("MonitorVoltageBias");
     // cHybridTester.ReadSSABias("MonitorCurrentBias");

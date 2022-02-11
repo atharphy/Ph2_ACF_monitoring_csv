@@ -9,16 +9,26 @@
 
 namespace Ph2_HwInterface
 {
-class TriggerInterface : public RegManager
+struct TriggerConfiguration
 {
-    public: // constructors 
+    uint8_t     fTriggerSource;
+    uint16_t    fTriggerRate; 
+    uint32_t    fNtriggersToAccept; 
+};
+
+class TriggerInterface : public RegManager
+{   public: // constructors 
   
     TriggerInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
     TriggerInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
     ~TriggerInterface();
 
     public: // virtual functions 
-    
+        virtual bool SetNTriggersToAccept(uint32_t pNTriggersToAccept) 
+        {
+            LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function TriggerInterface::SetNTriggersToAccept is absent" << RESET;
+            return false;
+        }
         virtual void ResetTriggerFSM()
         {
             LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function TriggerInterface::ResetTriggerFSM is absent" << RESET;
@@ -57,8 +67,12 @@ class TriggerInterface : public RegManager
             return false;
         }
 
+        uint8_t getTriggerSource(){ return fTriggerConfiguration.fTriggerSource; }
+        uint8_t getTriggerRate(){ return fTriggerConfiguration.fTriggerRate; }
+        
     protected : 
         uint32_t fWait_us{10};
+        TriggerConfiguration fTriggerConfiguration;
 };
 } // namespace Ph2_HwInterface
 #endif

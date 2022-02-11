@@ -10,10 +10,12 @@ namespace Ph2_HwInterface
 D19cI2CInterface::D19cI2CInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : FEConfigurationInterface(pId, pUri, pAddressTable) {
     fI2CVersion = RegManager::ReadReg("fc7_daq_stat.command_processor_block.i2c.master_version");
     fI2CSlaveMap.clear();
+    fType = ConfigurationType::I2C; 
 }
 D19cI2CInterface::D19cI2CInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : FEConfigurationInterface(puHalConfigFileName, pBoardId) {
     fI2CVersion = RegManager::ReadReg("fc7_daq_stat.command_processor_block.i2c.master_version");
     fI2CSlaveMap.clear();
+    fType = ConfigurationType::I2C; 
 }
 D19cI2CInterface::~D19cI2CInterface() {}
 

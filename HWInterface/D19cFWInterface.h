@@ -103,10 +103,10 @@ class D19cFWInterface : public BeBoardFWInterface
 {
   private:
     // std::recursive_mutex                     fMutex;
-    FEConfigurationInterface*                 fFEConfigurationInterface; 
-    L1ReadoutInterface*                       fL1ReadoutInterface; 
-    TriggerInterface*                         fTriggerInterface; 
-    FastCommandInterface*                     fFastCommandInterface; 
+    FEConfigurationInterface*                 fFEConfigurationInterface{nullptr};
+    L1ReadoutInterface*                       fL1ReadoutInterface{nullptr};
+    TriggerInterface*                         fTriggerInterface{nullptr};
+    FastCommandInterface*                     fFastCommandInterface{nullptr};
     
     D19cFWEvtEncoder::D19cFWEvt              fD19cFWEvts;
     std::vector<std::vector<uint32_t>>       fSlaveMap;
@@ -179,6 +179,11 @@ class D19cFWInterface : public BeBoardFWInterface
     ///////////////////////////////////////////////////////
     //      d19c Methods                                //
     /////////////////////////////////////////////////////
+
+    // initialize interfaces to handle communication with certain blocks
+    void InitializePSCounterFWInterface(const Ph2_HwDescription::BeBoard* pBoard ); 
+    void IniitalizeL1ReadoutInterface(const Ph2_HwDescription::BeBoard* pBoard);
+    
 
     // uint16_t ParseEvents(const std::vector<uint32_t>& pData) override;
     /*! \brief Read a block of a given size
