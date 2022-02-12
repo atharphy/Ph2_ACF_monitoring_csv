@@ -518,6 +518,17 @@ int main(int argc, char* argv[])
         cCicAligner.Start(0);
         cCicAligner.waitForRunToBeCompleted();
         cCicAligner.dumpConfigFiles();
+
+        // quickly check ReadData 
+        // for(const auto cBoard: *cTool.fDetectorContainer)
+        // {
+        //     cTool.fBeBoardInterface->Start(cBoard);
+        //     std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        //     std::vector<uint32_t> cData;
+        //     bool                cWait    = false;
+        //     cTool.ReadData(cBoard, cData, cWait);
+        //     cTool.fBeBoardInterface->Stop(cBoard);
+        // }
     }
     // reload settings on-to FE chips
     if(!cmd.foundOption("read") && cmd.foundOption("reload"))

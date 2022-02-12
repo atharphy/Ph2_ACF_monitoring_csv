@@ -91,14 +91,12 @@ void D19cL1ReadoutInterface::CountFwEvents()
     if(cValidData.size() == 0) return ;
 
     std::move(cValidData.begin(), cValidData.end(), std::back_inserter(fData));
-    LOG(INFO) << BOLDMAGENTA << "Returning a data vector with " << +fData.size() << " valid 32 bit words which are " << +fNReadoutEvents << " events." << RESET;
 }
 
 bool D19cL1ReadoutInterface::WaitForReadout()
 {
     bool cFailed     = true;
     auto cNWords     = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-    auto cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
     auto cStartTime = std::chrono::high_resolution_clock::now(), cEndTime = cStartTime;
     auto cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
     if(!fWaitForReadoutReq) // wait until words in the readout have stopped inreasing 
@@ -120,100 +118,143 @@ bool D19cL1ReadoutInterface::WaitForReadout()
     }
     else // send triggers until the readout request flag is '1'
     {
-        // try this
-        do
-        {
-            std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
-            cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-            cEndTime = std::chrono::high_resolution_clock::now();
-            cDuration     = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
-        } while(cReadoutReq == 0  && cDuration < fTimeout_us); 
-        // fails if either one of these is true
-        cFailed = ( cReadoutReq == 0);
-        if( cFailed ) LOG (INFO) << BOLDRED << "D19cL1ReadoutInterface::WaitForReadout ReadoutReq not cleared.." << RESET; 
+        cFailed = !CheckReadoutReq();
+        if( cFailed ) LOG (INFO) << BOLDRED << "D19cL1ReadoutInterface::WaitForReadout readout request not fullfilled .." << RESET; 
     }
     return !cFailed;
 }
 bool D19cL1ReadoutInterface::WaitForNTriggers()
 {
     fTriggerInterface->ResetTriggerFSM();
+
     // wait for trigger state machine to send all triggers 
     auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
     LOG (INFO) << BOLDYELLOW << "D19cL1ReadoutInterface::WaitForNTriggers After resetting trigger FSM.. trigger source is " << cTriggerSource << RESET; 
     LOG(INFO) << BOLDYELLOW << "D19cL1ReadoutInterface::WaitForNTriggers Running Trigger FSM ..." << RESET;
-    return fTriggerInterface->RunTriggerFSM();  
+    bool cSuccess = fTriggerInterface->RunTriggerFSM(); 
+    if(!cSuccess) LOG (INFO) << BOLDRED << "D19cL1ReadoutInterface timed-out while waiting for trigger FSM..." << RESET; 
+    return cSuccess;
 }
 
 bool D19cL1ReadoutInterface::WaitForData()
 {
     return true;
 }
+bool D19cL1ReadoutInterface::CheckReadoutReq()
+{
+    uint32_t cIterations = 0;
+    auto cStartTime = std::chrono::high_resolution_clock::now(), cEndTime = cStartTime;
+    auto cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
+    auto   cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+    do
+    {
+        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+        cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+        LOG(DEBUG) << BOLDYELLOW << "D19cL1ReadoutInterface::CheckReadoutReq ReadoutReq is " << +cReadoutReq << RESET;
+        cEndTime = std::chrono::high_resolution_clock::now();
+        cDuration     = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
+        cIterations++;
+    } while(cReadoutReq == 0 && cDuration < fTimeout_us);
+    if(cReadoutReq == 0) { LOG(INFO) << BOLDRED << "Readout request 0 [i.e words missing in the readout] ... " << RESET; }
+    else  LOG(INFO) << BOLDGREEN << "ReadoutReq fullfilled.... " << RESET;
+    return (cReadoutReq == 1 );
+}
+bool D19cL1ReadoutInterface::CheckForWordsInReadout()
+{
+    uint32_t cIterations = 0;
+    auto cStartTime = std::chrono::high_resolution_clock::now(), cEndTime = cStartTime;
+    auto cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
+    auto cNWords  = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+    do
+    {
+        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+        cNWords  = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+        LOG(DEBUG) << BOLDYELLOW << "D19cL1ReadoutInterface::CheckForWordsInReadout words_cnt is " << +cNWords << RESET;
+        cEndTime = std::chrono::high_resolution_clock::now();
+        cDuration     = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
+        cIterations++;
+    } while(cNWords == 0 && cDuration < fTimeout_us);
+    if(cNWords == 0) { LOG(INFO) << BOLDRED << "No words in the readout .... " << RESET; }
+    else  LOG(INFO) << BOLDGREEN << "Found words in the readout ... " << RESET;
+    return (cNWords > 0 );
+}
 void D19cL1ReadoutInterface::FillData()
 {
     fHandshake=ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
     fData.clear();
     uint32_t cNWords  = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-    if(fHandshake == 0x1)
-    {
-        size_t cCounter    = 0;
-        auto   cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-        do
-        {
-            std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
-            // if(cCounter % 10 == 0) 
-            LOG(INFO) << BOLDRED << "D19cFWInterface::GetData ReadoutReq is " << +cReadoutReq << RESET;
-            cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-            cCounter++;
-        } while(cReadoutReq == 0 && cCounter < 100);
-        if(cReadoutReq == 0) { LOG(INFO) << BOLDRED << "Readout request 0 [i.e words missing in the readout] ... " << RESET; }
-        else
-            LOG(DEBUG) << BOLDGREEN << "ReadoutReq fullfilled.... " << RESET;
-    }
-    else
-        LOG(DEBUG) << BOLDBLUE << "Data handshake not enabled" << RESET;
-    
     if( cNWords == 0 ) return;
     
     fData = ReadBlockRegOffset("fc7_daq_ddr3", cNWords, fDDR3Offset);
     LOG(INFO) << BOLDGREEN << +cNWords << " words read back from DDR3 memory " << RESET;
     fDDR3Offset += cNWords;
     LOG(DEBUG) << BOLDGREEN << "\t... " << +fDDR3Offset << " current offset in DDR3 " << RESET;
-    
-    // figure out how many events I've got
-    // LOG (INFO) << BOLDMAGENTA << "D19cFWInterface::GetData " << +pData.size() << " words in the readout." << RESET;
-    // cNEvents = this->CountFwEvents(pBoard, pData);
-    // if(cNEvents == 0) LOG(INFO) << BOLDMAGENTA << "Read back " << +pData.size() << " valid words with " << +cNWords << " in the readout." << RESET;
-    // LOG(INFO) << BOLDBLUE << "D19cL1ReadoutInterface has received ... " << +fNEvents << " ... events from DDR3.."
-                // << " data size is " << +fData.size() << " 32 bit words." << RESET;
 }
-bool D19cL1ReadoutInterface::ReadEvents(const Ph2_HwDescription::BeBoard* pBoard)
+bool D19cL1ReadoutInterface::PollReadoutData(const BeBoard* pBoard, bool pWait) 
+{
+    LOG (INFO) << BOLDYELLOW << "D19cL1ReadoutInterface::PollReadoutData " << RESET;
+    fData.clear();
+    // here check if the trigger state machine is running
+    if(fTriggerInterface->GetTriggerState() == 0) // 0, idle - 1 running
+    {
+        LOG(INFO) << BOLDRED << "Triggers not running.. no data to read " << RESET;
+        return false;
+    }
+
+    bool cSuccess=!pWait;
+    if( pWait )
+    { 
+        if( fTriggerInterface->WaitForNTriggers(1) ) // wait until at least 1 trigger has been sent 
+        {
+           cSuccess = CheckForWordsInReadout();
+        }
+    }
+
+    if( cSuccess )
+    {
+        FillData();
+        CountFwEvents(); 
+        LOG(INFO) << BOLDYELLOW << "D19cL1ReadoutInterface::PollReadoutData " << fData.size() << " valid 32 bit words .. which are " << +fNReadoutEvents << " events." << RESET;
+    }
+    return cSuccess;
+}
+bool D19cL1ReadoutInterface::ReadEvents(const BeBoard* pBoard)
 {
     LOG (INFO) << BOLDYELLOW << "D19cL1ReadoutInterface::ReadEvents " << fNEvents <<  RESET;
+    // configure readout 
     fHandshake = 1; 
     auto cOriginalHandshakeMode     = ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
+    auto cOriginalPackNbr           = ReadReg("fc7_daq_cnfg.readout_block.packet_nbr");
     WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable",fHandshake);
     auto cHandshake =  ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
-    // reset readout 
-    ResetReadout();
     // write number of triggers to accept
     // in the handshake mode offset is cleared after each handshake
     auto     cMultiplicity  = ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     fNEvents = fNEvents*(cMultiplicity+1);
     fTriggerInterface->SetNTriggersToAccept(fNEvents);
-    LOG(INFO) << BOLDYELLOW << "D19cL1ReadoutInterface::ReadNEvents asking for " << fNEvents << " events handshake mode is currently " << cHandshake << RESET;
+    WriteReg("fc7_daq_cnfg.readout_block.packet_nbr",fNEvents-1);
+    LOG(INFO) << BOLDYELLOW << "D19cL1ReadoutInterface::ReadEvents asking for " << fNEvents << " events handshake mode is currently " << cHandshake << RESET;
+    // reset readout 
+    ResetReadout();
     if( WaitForNTriggers() ) // sure that all triggers have been sent 
     {
+        LOG (INFO) << BOLDYELLOW << "D19cL1ReadoutInterface::ReadEvents triggers succesfully sent" << RESET;
         if( WaitForReadout() ) // sure that readout has finished 
         {
-            LOG (INFO) << BOLDYELLOW << "D19cL1ReadoutInterface::ReadEvents triggers succesfully sent" << RESET;
-            FillData();
-            LOG (INFO) << BOLDYELLOW << "D19cL1ReadoutInterface::ReadEvents filled data vector with " << fData.size() << " 32-bit words" << RESET;
-            CountFwEvents(); 
-            WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable",cOriginalHandshakeMode);
-            return (fData.size() > 0 );
+            LOG (INFO) << BOLDYELLOW << "D19cL1ReadoutInterface::ReadEvents finished waiting for readout" << RESET;
+            if( CheckReadoutReq() ) // sure that readout request has been fullfilled 
+            {
+                LOG (INFO) << BOLDYELLOW << "D19cL1ReadoutInterface::ReadEvents readout req fullfilled" << RESET;
+                // fill data vector + count FW events 
+                FillData();
+                CountFwEvents(); 
+                LOG(INFO) << BOLDYELLOW << "D19cL1ReadoutInterface::ReadEvent " << fData.size() << " valid 32 bit words .. which are " << +fNReadoutEvents << " events." << RESET;
+            }
         }
     }
-    return false;
+    WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable",cOriginalHandshakeMode);
+    WriteReg("fc7_daq_cnfg.readout_block.packet_nbr",cOriginalPackNbr);
+    return (fData.size() > 0 );
 }
 
 } // namespace Ph2_HwInterface

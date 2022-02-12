@@ -26,6 +26,7 @@ class L1ReadoutInterface : public RegManager
         std::vector<uint32_t> fData; 
         uint32_t              fNEvents; 
         uint32_t              fNReadoutEvents;
+        uint32_t fTimeout_us{5000000}; //time-out after 5s
 
     public: // virtual functions 
     
@@ -48,6 +49,11 @@ class L1ReadoutInterface : public RegManager
             LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function L1ReadoutInterface::ReadEvents is absent" << RESET;
             return false;
         }
+        virtual bool PollReadoutData(const Ph2_HwDescription::BeBoard* pBoard, bool pWait = false )
+        {
+            LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function L1ReadoutInterface::ReadEvents is absent" << RESET;
+            return false;
+        }
 
         std::vector<uint32_t> getData(){return fData;}
         void clearData(){ fData.clear(); }
@@ -57,6 +63,7 @@ class L1ReadoutInterface : public RegManager
 
         void setNEvents(uint32_t pNEvents){ fNEvents = pNEvents; }
         uint32_t getNEvents(){ return fNEvents; }
+        uint32_t getNReadoutEvents(){ return fNReadoutEvents; }
         void setHandshake(uint8_t pHandshake){fHandshake=pHandshake;}
     
 };

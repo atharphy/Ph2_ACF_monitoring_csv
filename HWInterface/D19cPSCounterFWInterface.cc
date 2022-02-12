@@ -351,6 +351,11 @@ bool D19cPSCounterFWInterface::WaitForReadout()
     LOG (INFO) << BOLDRED << "D19cPSCounterFWInterface::WaitForData.. .no real data readout" << RESET; 
     return false;
 }
+bool D19cPSCounterFWInterface::PollReadoutData(const Ph2_HwDescription::BeBoard* pBoard, bool pWait)
+{
+    LOG (INFO) << BOLDRED << "D19cPSCounterFWInterface::WaitForData.. .no real data readout" << RESET; 
+    return false;
+}
 bool D19cPSCounterFWInterface::ReadEvents(const BeBoard* pBoard)
 {
     // clear data vector

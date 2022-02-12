@@ -1454,7 +1454,7 @@ uint32_t D19cFWInterface::GetData(BeBoard* pBoard, std::vector<uint32_t>& pData)
             } while(cReadoutReq == 0 && cCounter < 100);
             if(cReadoutReq == 0) { LOG(INFO) << BOLDRED << "Readout request 0 [i.e words missing in the readout] ... " << RESET; }
             else
-                LOG(DEBUG) << BOLDGREEN << "ReadoutReq fullfilled.... " << RESET;
+                LOG(INFO) << BOLDGREEN << "ReadoutReq fullfilled.... " << RESET;
         }
         else
             LOG(DEBUG) << BOLDBLUE << "Data handshake not enabled" << RESET;
@@ -1503,149 +1503,172 @@ uint32_t D19cFWInterface::GetTriggerState()
 }
 uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
 {
-    // LOG(INFO) << BOLDYELLOW << "ReadData D19cFWInterface" << RESET;
-    uint32_t cNWords        = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-    uint32_t cNtriggers     = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-    uint32_t data_handshake = ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
-
-    bool      pFailed    = false;
-    EventType cEventType = pBoard->getEventType();
-    bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
-
-    // here check if the trigger state machine is running
-    // if it is not .. stop it , reset and start again
-    if(GetTriggerState() == 0) // 0, idle - 1 running
-    {
-        LOG(DEBUG) << BOLDRED << "Triggers not running.. no data to read " << RESET;
-        return 0;
+    pData.clear(); 
+    uint32_t cNEvents = 0; 
+    LOG (INFO) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET;
+    if( fL1ReadoutInterface == nullptr ){ 
+        LOG (INFO) << BOLDRED << "L1ReadoutInterface is a nullptr.." << RESET;
+        return cNEvents;
+    }
+    
+    if( fL1ReadoutInterface->PollReadoutData(pBoard,pWait) ){ 
+        pData = fL1ReadoutInterface->getData();
+        cNEvents = fL1ReadoutInterface->getNReadoutEvents();
+    }
+    else{ 
+        LOG (INFO) << BOLDRED << "Failed to poll readout-data from BeBoard" << RESET;
+        return cNEvents; 
     }
 
-    // don't wait
-    // check what happens in system controller
-    if(pWait)
-    {
-        // first ... wait to see 'some' triggers
-        size_t   cCounter  = 0;
-        uint32_t cTrigPrev = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-        do
-        {
-            std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-            cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-            if((1 + cCounter) % 1000 == 0) LOG(INFO) << BOLDYELLOW << "\t.. after " << +cCounter << " waits have counted " << +cNtriggers << " received by the FC7." << RESET;
-            cCounter++;
-        } while(cCounter < 1000 && (cTrigPrev == cNtriggers));
-        cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-        // LOG(INFO) << BOLDGREEN << "Number of triggers received = " << cNtriggers << RESET;
-
-        // now wait until there are some words in the readout
-        cCounter = 0;
-        cNWords  = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-        while(cNWords == 0)
-        {
-            if((1 + cCounter) % 100 == 0)
-                LOG(INFO) << BOLDYELLOW << "\t.. after " << +cCounter << " waits have counted " << +cNtriggers << " received by the FC7 "
-                          << " and " << +cNWords << " in the readout " << RESET;
-            std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-            cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-            cNWords    = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-            cCounter++;
-            break;
-        }
-        cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-        cNWords    = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-
-        // failed to read any data
-        pFailed = (!cAsync) ? (cNWords == 0) : false;
-        if(pFailed) LOG(INFO) << BOLDYELLOW << "ReadData has found " << +cNtriggers << " triggers received by FC7 and " << +cNWords << " words in the readout." << RESET;
-    }
-    uint32_t cNEvents = 0;
-    if(!pWait && data_handshake == 0)
-    {
-        pData.clear();
-        // LOG(INFO) << BOLDMAGENTA << "D19cFWInterface::ReadData with DataHandshake OFF and no WAIT" << RESET;
-        cNWords = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-        if(cNWords == 0) return 0;
-        auto cNewEvents = this->GetData(pBoard, pData);
-        pFailed         = (cNewEvents == 0);
-        if(!pFailed) cNEvents += cNewEvents;
-        // check if if the DD3 is almost full
-        uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-        if(cReadoutReq == 1) // DD3 almost full ? check this!!
-        {
-            LOG(INFO) << BOLDMAGENTA << "D19cFWInterface::ReadData resetting readout ... " << RESET;
-            Pause();
-            ResetReadout();
-            Resume();
-        }
-    }
-    else if(data_handshake == 1 && !pFailed && !cAsync) // check this properly!!
-    {
-        pData.clear();
-        LOG(DEBUG) << BOLDMAGENTA << "D19cFWInterface::ReadData with DataHandshake ON" << RESET;
-        cNWords = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-        if(cNWords == 0) return 0;
-
-        uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-        do
-        {
-            cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-        } while(cReadoutReq == 0);
-        auto cNewEvents = this->GetData(pBoard, pData);
-        pFailed         = (cNewEvents == 0);
-        if(cReadoutReq == 1)
-        {
-            this->ResetReadout();
-            cNEvents += cNewEvents;
-        }
-    }
-    else if(!pFailed)
-    {
-        if(pBoard->getEventType() == EventType::ZS)
-        {
-            LOG(ERROR) << "ZS Event only with handshake!!! Exiting...";
-            exit(1);
-        }
-        cNEvents = this->GetData(pBoard, pData);
-        // read all the words
-        if(ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type"))
-        {
-            // readout_req high when buffer is almost full
-            uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-            if(cReadoutReq == 1) // DD3 almost full ? check this!!
-            {
-                Pause();
-                ResetReadout();
-                Resume();
-            }
-        }
-    }
-
-    if(pFailed)
-    {
-        pData.clear();
-
-        LOG(INFO) << BOLDRED << "Resetting the readout" << RESET;
-
-        // this->Stop();
-        // std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        // LOG(INFO) << BOLDGREEN << " ... Run Stopped, current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;
-
-        // RESET the readout
-        this->ResetReadout();
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-        // this->Start();
-        // std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        // LOG(INFO) << BOLDGREEN << " ... Run Started, current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;
-
-        LOG(INFO) << BOLDRED << " ... trying to read data again .... " << RESET;
-        cNEvents = this->ReadData(pBoard, pBreakTrigger, pData, pWait);
-    }
-    if(fSaveToFile) fFileHandler->setData(pData);
+    if(fSaveToFile && pData.size() > 0 ) fFileHandler->setData(pData);
     // update local event counter
     fEventCounter += cNEvents;
     // need to return the number of events read
     return cNEvents;
+
+    // // LOG(INFO) << BOLDYELLOW << "ReadData D19cFWInterface" << RESET;
+    // uint32_t cNWords        = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+    // uint32_t cNtriggers     = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+    // uint32_t data_handshake = ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
+
+    // bool      pFailed    = false;
+    // EventType cEventType = pBoard->getEventType();
+    // bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS);
+
+    // // here check if the trigger state machine is running
+    // // if it is not .. stop it , reset and start again
+    // if(GetTriggerState() == 0) // 0, idle - 1 running
+    // {
+    //     LOG(DEBUG) << BOLDRED << "Triggers not running.. no data to read " << RESET;
+    //     return 0;
+    // }
+
+    // // don't wait
+    // // check what happens in system controller
+    // if(pWait)
+    // {
+    //     // first ... wait to see 'some' triggers
+    //     size_t   cCounter  = 0;
+    //     uint32_t cTrigPrev = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+    //     do
+    //     {
+    //         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+    //         cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+    //         if((1 + cCounter) % 1000 == 0) LOG(INFO) << BOLDYELLOW << "\t.. after " << +cCounter << " waits have counted " << +cNtriggers << " received by the FC7." << RESET;
+    //         cCounter++;
+    //     } while(cCounter < 1000 && (cTrigPrev == cNtriggers));
+    //     cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+    //     // LOG(INFO) << BOLDGREEN << "Number of triggers received = " << cNtriggers << RESET;
+
+    //     // now wait until there are some words in the readout
+    //     cCounter = 0;
+    //     cNWords  = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+    //     while(cNWords == 0)
+    //     {
+    //         if((1 + cCounter) % 100 == 0)
+    //             LOG(INFO) << BOLDYELLOW << "\t.. after " << +cCounter << " waits have counted " << +cNtriggers << " received by the FC7 "
+    //                       << " and " << +cNWords << " in the readout " << RESET;
+    //         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+    //         cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+    //         cNWords    = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+    //         cCounter++;
+    //         break;
+    //     }
+    //     cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+    //     cNWords    = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+
+    //     // failed to read any data
+    //     pFailed = (!cAsync) ? (cNWords == 0) : false;
+    //     if(pFailed) LOG(INFO) << BOLDYELLOW << "ReadData has found " << +cNtriggers << " triggers received by FC7 and " << +cNWords << " words in the readout." << RESET;
+    // }
+    // uint32_t cNEvents = 0;
+    // if(!pWait && data_handshake == 0)
+    // {
+    //     pData.clear();
+    //     // LOG(INFO) << BOLDMAGENTA << "D19cFWInterface::ReadData with DataHandshake OFF and no WAIT" << RESET;
+    //     cNWords = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+    //     if(cNWords == 0) return 0;
+    //     auto cNewEvents = this->GetData(pBoard, pData);
+    //     pFailed         = (cNewEvents == 0);
+    //     if(!pFailed) cNEvents += cNewEvents;
+    //     // check if if the DD3 is almost full
+    //     uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+    //     if(cReadoutReq == 1) // DD3 almost full ? check this!!
+    //     {
+    //         LOG(INFO) << BOLDMAGENTA << "D19cFWInterface::ReadData resetting readout ... " << RESET;
+    //         Pause();
+    //         ResetReadout();
+    //         Resume();
+    //     }
+    // }
+    // else if(data_handshake == 1 && !pFailed && !cAsync) // check this properly!!
+    // {
+    //     pData.clear();
+    //     LOG(DEBUG) << BOLDMAGENTA << "D19cFWInterface::ReadData with DataHandshake ON" << RESET;
+    //     cNWords = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+    //     if(cNWords == 0) return 0;
+
+    //     uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+    //     do
+    //     {
+    //         cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+    //     } while(cReadoutReq == 0);
+    //     auto cNewEvents = this->GetData(pBoard, pData);
+    //     pFailed         = (cNewEvents == 0);
+    //     if(cReadoutReq == 1)
+    //     {
+    //         this->ResetReadout();
+    //         cNEvents += cNewEvents;
+    //     }
+    // }
+    // else if(!pFailed)
+    // {
+    //     if(pBoard->getEventType() == EventType::ZS)
+    //     {
+    //         LOG(ERROR) << "ZS Event only with handshake!!! Exiting...";
+    //         exit(1);
+    //     }
+    //     cNEvents = this->GetData(pBoard, pData);
+    //     // read all the words
+    //     if(ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type"))
+    //     {
+    //         // readout_req high when buffer is almost full
+    //         uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+    //         if(cReadoutReq == 1) // DD3 almost full ? check this!!
+    //         {
+    //             Pause();
+    //             ResetReadout();
+    //             Resume();
+    //         }
+    //     }
+    // }
+
+    // if(pFailed)
+    // {
+    //     pData.clear();
+
+    //     LOG(INFO) << BOLDRED << "Resetting the readout" << RESET;
+
+    //     // this->Stop();
+    //     // std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    //     // LOG(INFO) << BOLDGREEN << " ... Run Stopped, current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;
+
+    //     // RESET the readout
+    //     this->ResetReadout();
+    //     std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    //     // this->Start();
+    //     // std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    //     // LOG(INFO) << BOLDGREEN << " ... Run Started, current trigger FSM state: " << +ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << RESET;
+
+    //     LOG(INFO) << BOLDRED << " ... trying to read data again .... " << RESET;
+    //     cNEvents = this->ReadData(pBoard, pBreakTrigger, pData, pWait);
+    // }
+    // if(fSaveToFile) fFileHandler->setData(pData);
+    // // update local event counter
+    // fEventCounter += cNEvents;
+    // // need to return the number of events read
+    // return cNEvents;
 }
 
 bool D19cFWInterface::WaitForData(BeBoard* pBoard)
@@ -1841,9 +1864,10 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     else LOG (INFO) << BOLDRED << "Failed to ReadNEvents" << RESET;
     if(fSaveToFile) fFileHandler->setData(pData);
 
-    // // write number of triggers to accept
-    // // in the handshake mode offset is cleared after each handshake
-    // // fDDR3Offset = 0;
+    // write number of triggers to accept
+    // in the handshake mode offset is cleared after each handshake
+    // fDDR3Offset = 0;
+    
     // auto cHandshakeMode     = ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
     // auto cNtriggersToAccept = ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
     // this->WriteReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNEvents);

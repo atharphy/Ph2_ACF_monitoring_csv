@@ -221,13 +221,17 @@ bool D19cTriggerInterface::RunTriggerFSM()
 {
     this->Start();
     uint32_t cIterations = 0;
+    auto cStartTime = std::chrono::high_resolution_clock::now(), cEndTime = cStartTime;
+    auto cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
     do
     {
-        LOG(DEBUG) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-        cIterations++;
-    } while(this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cIterations < fMaxIterations);
-    bool cFailed = (this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") || cIterations == fMaxIterations);
+        LOG(INFO) << "Trigger State: " << BOLDGREEN << "Running.." << RESET;
+        cEndTime = std::chrono::high_resolution_clock::now();
+        cDuration     = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
+        cIterations++; 
+    } while(this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cDuration < fTimeout_us);
+    bool cFailed = (this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"));
     this->Stop();
     return !cFailed;
 }

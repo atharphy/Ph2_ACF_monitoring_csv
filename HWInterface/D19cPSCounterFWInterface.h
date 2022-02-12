@@ -24,7 +24,8 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
     bool ReadEvents(const Ph2_HwDescription::BeBoard* pBoard) override;
     bool WaitForReadout() override;
     bool WaitForNTriggers() override; 
-
+    bool PollReadoutData(const Ph2_HwDescription::BeBoard* pBoard, bool pWait = false )  override;
+    
     void SetPSCounterDelay(uint8_t pDelay) { fPSCounterDelay = pDelay; };
     void SetPSCounterMode(uint8_t pMode) { fPSCounterFast = pMode; };
     void SetPSPairSelect(uint8_t pMode) { fPairSelect = pMode; };

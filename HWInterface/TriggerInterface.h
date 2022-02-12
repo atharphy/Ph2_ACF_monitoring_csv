@@ -77,8 +77,8 @@ class TriggerInterface : public RegManager
         
     protected : 
         uint32_t fWait_us{10};
-        uint32_t fMaxIterations{10000};
         TriggerConfiguration fTriggerConfiguration;
+        uint32_t fTimeout_us{5000000}; //time-out after 5s
 };
 } // namespace Ph2_HwInterface
 #endif
