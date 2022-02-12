@@ -5,6 +5,7 @@ using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
 #include "../Utils/ContainerFactory.h"
+#include "TriggerInterface.h"
 
 OTTool::OTTool() : Tool()
 {
@@ -244,7 +245,8 @@ void OTTool::WaitForTriggers(BeBoard* pBoard)
     // get D19cFW Interface
     fBeBoardInterface->setBoard(pBoard->getId());
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-
+    auto cTriggerInterface = cInterface->getTriggerInterface();
+         
     LOG(INFO) << BOLDBLUE << fMyName << "::WaitForTriggers with ReadData.. will wait to readout until I've seen " << fNevents << " triggers " << RESET;
     std::vector<uint32_t> cCompleteData(0);
 
@@ -258,10 +260,10 @@ void OTTool::WaitForTriggers(BeBoard* pBoard)
     do
     {
         // check state of triggers FSM
-        if(cInterface->GetTriggerState() != 1)
+        if(cTriggerInterface->GetTriggerState() != 1)
         {
-            fBeBoardInterface->Stop(pBoard);
-            fBeBoardInterface->Start(pBoard);
+            cTriggerInterface->Stop();
+            cTriggerInterface->Start();
         }
 
         std::this_thread::sleep_for(std::chrono::microseconds(fReadoutPause));
@@ -273,7 +275,7 @@ void OTTool::WaitForTriggers(BeBoard* pBoard)
         cBreak = (cTriggerCounter >= fNevents);
     } while(!cBreak);
     // stop triggers
-    fBeBoardInterface->Stop(pBoard);
+    cTriggerInterface->Stop();
     // wait for 100 ms after stopping triggers just in case
     // we are still reading out a very large event
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -296,7 +298,8 @@ void OTTool::TriggerMonitor(uint32_t pDelta_s)
     {
         fBeBoardInterface->setBoard(cBoard->getId());
         auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-        if(cInterface->GetTriggerState() == 0) fBeBoardInterface->Start(cBoard);
+        auto cTriggerInterface = cInterface->getTriggerInterface();
+        if(cTriggerInterface->GetTriggerState() == 0) cTriggerInterface->Start();
     }
 
     // get start time for monitoring
@@ -333,7 +336,8 @@ void OTTool::TriggerMonitor(uint32_t pDelta_s)
             {
                 fBeBoardInterface->setBoard(cBoard->getId());
                 auto  cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-                auto  cTriggerState   = cInterface->GetTriggerState();
+                auto cTriggerInterface = cInterface->getTriggerInterface();
+                auto  cTriggerState   = cTriggerInterface->GetTriggerState();
                 auto& cCounterThisBrd = cTrigCounters.at(cBoard->getIndex())->getSummary<std::vector<uint32_t>>();
                 cCounterThisBrd.push_back(fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter"));
                 auto cDeltaTriggers   = (cCounterThisBrd.size() == 1) ? cCounterThisBrd[0] : cCounterThisBrd[cCounterThisBrd.size() - 1] - cCounterThisBrd[cCounterThisBrd.size() - 2];
@@ -478,7 +482,8 @@ void OTTool::StartReadoutTh(uint8_t cBrdId)
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBrdId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBrdId; });
     fBeBoardInterface->setBoard((*cBoardIter)->getId());
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    cInterface->Start();
+    auto cTriggerInterface = cInterface->getTriggerInterface(); 
+    cTriggerInterface->Start();
     LOG(INFO) << BOLDMAGENTA << "Started triggers on BeBoard#" << +cBrdId << RESET;
 }
 // continuous readout
@@ -489,11 +494,12 @@ void OTTool::ContinousReadout(BeBoard* pBoard)
     // get D19cFW Interface
     fBeBoardInterface->setBoard(pBoard->getId());
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cTriggerInterface = cInterface->getTriggerInterface();
 
     LOG(INFO) << BOLDBLUE << fMyName << "::ContinousReadout ... until I've received " << fNevents << " events in the readout" << RESET;
     std::vector<uint32_t> cCompleteData(0);
     // stop triggers
-    fBeBoardInterface->Start(pBoard);
+    cTriggerInterface->Start();
     fEventCounter                = 0;
     size_t              cCounter = 0;
     bool                cBreak   = false;
@@ -502,10 +508,10 @@ void OTTool::ContinousReadout(BeBoard* pBoard)
     do
     {
         // check state of triggers FSM
-        if(cInterface->GetTriggerState() != 1)
+        if(cTriggerInterface->GetTriggerState() != 1)
         {
-            fBeBoardInterface->Stop(pBoard);
-            fBeBoardInterface->Start(pBoard);
+            cTriggerInterface->Stop();
+            cTriggerInterface->Start();
         }
         std::this_thread::sleep_for(std::chrono::microseconds(fReadoutPause));
         auto                  cTriggerCounter = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
@@ -518,7 +524,7 @@ void OTTool::ContinousReadout(BeBoard* pBoard)
         cCounter++;
         cBreak = (fEventCounter >= fNevents);
     } while(!cBreak);
-    fBeBoardInterface->Stop(pBoard);
+    cTriggerInterface->Stop();
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     std::vector<uint32_t> cData(0);
     fEventCounter += ReadData(pBoard, cData, cWait);
@@ -534,6 +540,8 @@ void OTTool::CheckFinishedTh(uint8_t cBrdId)
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBrdId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBrdId; });
     fBeBoardInterface->setBoard((*cBoardIter)->getId());
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cTriggerInterface = cInterface->getTriggerInterface();
+
     // wait until triggers have started
     size_t cWaitCounter = 0;
     size_t cMaxWait     = 10000;
@@ -542,12 +550,12 @@ void OTTool::CheckFinishedTh(uint8_t cBrdId)
         std::this_thread::sleep_for(std::chrono::microseconds(fThreadWait));
         if(cWaitCounter % 100 == 0) LOG(DEBUG) << BOLDBLUE << "\t\t" << fMyName << ":Waiting for triggers to start on BeBoard#" << +cBrdId << RESET;
         cWaitCounter++;
-    } while(cInterface->GetTriggerState() != 1 && cWaitCounter < cMaxWait);
+    } while(cTriggerInterface->GetTriggerState() != 1 && cWaitCounter < cMaxWait);
 
     auto cCounter = cInterface->GetEventCounter();
     do
     {
-        if(cCounter >= fNevents || cInterface->GetTriggerState() == 0)
+        if(cCounter >= fNevents || cTriggerInterface->GetTriggerState() == 0)
         { LOG(INFO) << BOLDBLUE << fMyName << ":Main thread ... finished collecting all requested events from BeBoard" << +cBrdId << RESET; }
         std::this_thread::sleep_for(std::chrono::microseconds(fReadoutPause));
         cCounter = cInterface->GetEventCounter();
@@ -565,6 +573,7 @@ void OTTool::ContinousReadoutTh(uint8_t cBrdId)
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBrdId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBrdId; });
     fBeBoardInterface->setBoard((*cBoardIter)->getId());
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cTriggerInterface = cInterface->getTriggerInterface(); 
     // wait until triggers have started
     size_t cWaitCounter = 0;
     size_t cMaxWait     = 10000;
@@ -573,17 +582,17 @@ void OTTool::ContinousReadoutTh(uint8_t cBrdId)
         std::this_thread::sleep_for(std::chrono::microseconds(fThreadWait));
         if(cWaitCounter % 100 == 0) LOG(DEBUG) << BOLDBLUE << "\t\t" << fMyName << ":Waiting for triggers to start on BeBoard#" << +cBrdId << RESET;
         cWaitCounter++;
-    } while(cInterface->GetTriggerState() != 1 && cWaitCounter < cMaxWait);
+    } while(cTriggerInterface->GetTriggerState() != 1 && cWaitCounter < cMaxWait);
 
     if(cWaitCounter == cMaxWait)
     {
         LOG(INFO) << BOLDRED << "Triggers not started on this board.. start them myself!" << RESET;
-        cInterface->Start();
+        cTriggerInterface->Start();
         do
         {
             std::this_thread::sleep_for(std::chrono::microseconds(fThreadWait));
             LOG(INFO) << BOLDRED << " ... waiting  for triggers to start... " << RESET;
-        } while(cInterface->GetTriggerState() == 0);
+        } while(cTriggerInterface->GetTriggerState() == 0);
     }
 
     LOG(DEBUG) << BOLDBLUE << fMyName << ":Triggers started .. now polling readout.." << RESET;
@@ -598,7 +607,7 @@ void OTTool::ContinousReadoutTh(uint8_t cBrdId)
     {
         cAccumulatedWaits += fReadoutPause;
         std::this_thread::sleep_for(std::chrono::microseconds(fReadoutPause));
-        auto                  cTriggerState   = cInterface->GetTriggerState();
+        auto                  cTriggerState   = cTriggerInterface->GetTriggerState();
         auto                  cTriggerSource  = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_cnfg.fast_command_block.trigger_source");
         auto                  cTriggerCounter = fBeBoardInterface->ReadBoardReg((*cBoardIter), "fc7_daq_stat.fast_command_block.trigger_in_counter");
         std::vector<uint32_t> cData(0);
@@ -613,7 +622,7 @@ void OTTool::ContinousReadoutTh(uint8_t cBrdId)
                        << " trigger source is " << +cTriggerSource << " trigger state is " << +cTriggerState << " and " << cLclEvntCntr << " events in the readout so far ... " << RESET;
         }
         cWaitCounter++;
-    } while(cInterface->GetTriggerState() == 1);
+    } while(cTriggerInterface->GetTriggerState() == 1);
     // now decode data
     cAccumulatedWaits += 100 * 1e3;
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));

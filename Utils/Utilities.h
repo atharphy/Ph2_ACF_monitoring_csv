@@ -140,4 +140,17 @@ std::vector<typename std::iterator_traits<T>::value_type> get_mismatches(T pWrit
 
     return pMismatchedWriteVector;
 }
+
+// method to split a vector in vectors that contain elements from even and odd indices
+// void splitVectorEvenOdd(std::vector<uint32_t> pInputVector, std::vector<uint32_t>& pEvenVector, std::vector<uint32_t>& pOddVector);
+// {
+//     bool ctoggle = false;
+//     std::partition_copy(pInputVector.begin(), pInputVector.end(), std::back_inserter(pEvenVector), std::back_inserter(pOddVector), [&ctoggle](int) { return ctoggle = !ctoggle; });
+// }
+
+// void getOddElements(std::vector<uint32_t> pInputVector, std::vector<uint32_t>& pOddVector);
+// {
+//     bool ctoggle = true;
+//     std::copy_if(pInputVector.begin(), pInputVector.end(), std::back_inserter(pOddVector), [&ctoggle](int) { return ctoggle = !ctoggle; });
+// }
 #endif

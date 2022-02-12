@@ -5,6 +5,8 @@
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ThresholdAndNoise.h"
+#include "TriggerInterface.h"
+#include "L1ReadoutInterface.h"
 #include "Occupancy.h"
 #include "boost/format.hpp"
 using namespace Ph2_HwDescription;
@@ -508,7 +510,9 @@ uint32_t MemoryCheck2S::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
 
     // this stops triggers and
     // re-loads the configuration
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cTriggerInterface = cInterface->getTriggerInterface(); 
+    cTriggerInterface->ResetTriggerFSM();
 
     cNWords    = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.readout_block.general.words_cnt");
     cNtriggers = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
@@ -525,7 +529,7 @@ uint32_t MemoryCheck2S::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
     std::this_thread::sleep_for(std::chrono::microseconds(10));
 
     // re-load configuration
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
+    cTriggerInterface->ResetTriggerFSM();
 
     return cNevents;
 }
@@ -1195,7 +1199,9 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
         // const auto cStartTime = std::chrono::system_clock::now();
         // send enough triggers
         // to cover full pipeline N times
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface(); 
+        cL1ReadoutInterface->ResetReadout();
         fExpectedPipelineAddress.clear();
         fTriggeredBxs.clear();
         fTriggerNumberInBurst.clear();
@@ -1382,7 +1388,9 @@ void MemoryCheck2S::MemoryCheck2SRaw(bool pAllOnes)
 
         // send enough triggers
         // to cover full pipeline N times
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface(); 
+        cL1ReadoutInterface->ResetReadout();
         fExpectedPipelineAddress.clear();
         fTotalEventsExpected = 0;
         fTriggeredBxs.clear();
@@ -1519,7 +1527,9 @@ void MemoryCheck2S::MemoryCheck2SSparse()
             fBeBoardInterface->ChipReSync(cBoard);
         } // Board  - configure threshold and latency
 
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface(); 
+        cL1ReadoutInterface->ResetReadout();
         // clear vector holding expected pipeline addresses
         fExpectedPipelineAddress.clear();
         fTotalEventsExpected = 0;

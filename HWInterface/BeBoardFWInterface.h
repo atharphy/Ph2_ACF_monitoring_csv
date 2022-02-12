@@ -187,12 +187,7 @@ class BeBoardFWInterface : public RegManager
      * \brief Resume a DAQ
      */
     virtual void Resume() = 0;
-
-    /*!
-     * \brief Resume a DAQ
-     */
-    virtual void SendNTriggers(uint16_t pNtriggers) { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
-
+    
     /*!
      * \brief Read data from DAQ
      * \param pBoard

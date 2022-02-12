@@ -5,6 +5,7 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Occupancy.h"
 #include "D19cDebugFWInterface.h"
+#include "TriggerInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -518,7 +519,8 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
         bool cWithCBC = false;
         // generate alignment pattern on all stub lines
         LOG(INFO) << BOLDBLUE << "Generating Patterns needed for phase alignment of CIC inputs." << RESET;
-
+        fBeBoardInterface->setBoard(cBoard->getId());
+        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
@@ -553,8 +555,9 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
                 cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
                 fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
             }
-            fBeBoardInterface->SendNTriggers(cBoard, pNTriggers);
-
+            auto cTriggerInterface = cInterface->getTriggerInterface();
+            cTriggerInterface->SendNTriggers(pNTriggers);
+            
             // set trigger source back
             if(cReconfigureTrigger)
             {

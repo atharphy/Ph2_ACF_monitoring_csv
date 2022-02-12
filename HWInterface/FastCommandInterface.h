@@ -26,33 +26,37 @@ class FastCommandInterface : public RegManager
     FastCommandInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
     ~FastCommandInterface();
 
+    protected : 
+        FastCommand fFastCmd;
+
     public: // virtual functions 
+        void setDuration(uint32_t pDuration){ fFastCmd.duration = pDuration; }
         
-        virtual void SendGlobalReSync()
+        virtual void SendGlobalReSync(uint8_t pDuration=0) // 1 clk cycle 
         {
             LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FastCommandInterface::SendGlobalReSync is absent" << RESET;
         }
-        virtual void SendGlobalCalPulse()
+        virtual void SendGlobalCalPulse(uint8_t pDuration=0) // 1 clk cycle 
         {
             LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FastCommandInterface::SendGlobalCalPulse is absent" << RESET;
         }
-        virtual void SendGlobalL1A()
+        virtual void SendGlobalL1A(uint8_t pDuration=0) // 1 clk cycle 
         {
             LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FastCommandInterface::SendGlobalL1A is absent" << RESET;
         }
-        virtual void SendGlobalCounterReset()
+        virtual void SendGlobalCounterReset(uint8_t pDuration=0) // 1 clk cycle 
         {
             LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FastCommandInterface::SendGlobalCounterReset is absent" << RESET;
         }
-        virtual void SendGlobalCounterResetResync() // BC0 + ReScync 
+        virtual void SendGlobalCounterResetResync(uint8_t pDuration=0) // 1 clk cycle  // BC0 + ReScync 
         {
             LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FastCommandInterface::SendGlobalCounterResetResync is absent" << RESET;
         }
-         virtual void SendGlobalCounterResetL1A() // BC0 + ReScync 
+         virtual void SendGlobalCounterResetL1A(uint8_t pDuration=0) // 1 clk cycle  // BC0 + ReScync 
         {
             LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FastCommandInterface::SendGlobalCounterResetL1A is absent" << RESET;
         }
-        virtual void SendGlobalCounterResetCalPulse() // BC0 + ReScync 
+        virtual void SendGlobalCounterResetCalPulse(uint8_t pDuration=0) // 1 clk cycle  // BC0 + ReScync 
         {
             LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FastCommandInterface::SendGlobalCounterResetCalPulse is absent" << RESET;
         }

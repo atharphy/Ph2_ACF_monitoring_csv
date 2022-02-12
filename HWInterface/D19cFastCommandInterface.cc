@@ -12,63 +12,78 @@ D19cFastCommandInterface::D19cFastCommandInterface(const std::string& puHalConfi
 }
 D19cFastCommandInterface::~D19cFastCommandInterface() {}
 
-void D19cFastCommandInterface::SendGlobalReSync()
+void D19cFastCommandInterface::SendGlobalReSync(uint8_t pDuration)
 {
     FastCommand cFastCommand;
     cFastCommand.resync_en=1; 
-    ComposeFastCommand(cFastCommand);
+    cFastCommand.duration = pDuration;
+    fFastCmd=cFastCommand;
+    ComposeFastCommand(fFastCmd);
     WriteReg("fc7_daq_ctrl.fast_command_block.control", fFastCommand);
 }
-void D19cFastCommandInterface::SendGlobalCalPulse()
+void D19cFastCommandInterface::SendGlobalCalPulse(uint8_t pDuration)
 {
     FastCommand cFastCommand;
     cFastCommand.cal_pulse_en=1; 
-    ComposeFastCommand(cFastCommand);
+    cFastCommand.duration = pDuration;
+    fFastCmd=cFastCommand;
+    ComposeFastCommand(fFastCmd);
     WriteReg("fc7_daq_ctrl.fast_command_block.control", fFastCommand);
 }
-void D19cFastCommandInterface::SendGlobalL1A()
+void D19cFastCommandInterface::SendGlobalL1A(uint8_t pDuration)
 {
     FastCommand cFastCommand;
     cFastCommand.l1a_en=1; 
-    ComposeFastCommand(cFastCommand);
+    cFastCommand.duration = pDuration;
+    fFastCmd=cFastCommand;
+    ComposeFastCommand(fFastCmd);
     WriteReg("fc7_daq_ctrl.fast_command_block.control", fFastCommand);
 }
-void D19cFastCommandInterface::SendGlobalCounterReset()
+void D19cFastCommandInterface::SendGlobalCounterReset(uint8_t pDuration)
 {
     FastCommand cFastCommand;
     cFastCommand.bc0_en=1; 
-    ComposeFastCommand(cFastCommand);
+    cFastCommand.duration = pDuration;
+    fFastCmd=cFastCommand;
+    ComposeFastCommand(fFastCmd);
     WriteReg("fc7_daq_ctrl.fast_command_block.control", fFastCommand);
 }
-void D19cFastCommandInterface::SendGlobalCounterResetResync()
+void D19cFastCommandInterface::SendGlobalCounterResetResync(uint8_t pDuration)
 {
     FastCommand cFastCommand;
     cFastCommand.bc0_en=1; 
     cFastCommand.resync_en=1; 
-    ComposeFastCommand(cFastCommand);
+    cFastCommand.duration = pDuration;
+    fFastCmd=cFastCommand;
+    ComposeFastCommand(fFastCmd);
     WriteReg("fc7_daq_ctrl.fast_command_block.control", fFastCommand);
 }
-void D19cFastCommandInterface::SendGlobalCounterResetL1A()
+void D19cFastCommandInterface::SendGlobalCounterResetL1A(uint8_t pDuration)
 {
     FastCommand cFastCommand;
     cFastCommand.bc0_en=1; 
     cFastCommand.l1a_en=1; 
-    ComposeFastCommand(cFastCommand);
+    cFastCommand.duration = pDuration;
+    fFastCmd=cFastCommand;
+    ComposeFastCommand(fFastCmd);
     WriteReg("fc7_daq_ctrl.fast_command_block.control", fFastCommand);
 }
-void D19cFastCommandInterface::SendGlobalCounterResetCalPulse()
+void D19cFastCommandInterface::SendGlobalCounterResetCalPulse(uint8_t pDuration)
 {
     FastCommand cFastCommand;
     cFastCommand.bc0_en=1; 
     cFastCommand.cal_pulse_en=1; 
-    ComposeFastCommand(cFastCommand);
+    cFastCommand.duration = pDuration;
+    fFastCmd=cFastCommand;
+    ComposeFastCommand(fFastCmd);
     WriteReg("fc7_daq_ctrl.fast_command_block.control", fFastCommand);
 }
 void D19cFastCommandInterface::SendGlobalCustomFastCommands(std::vector<FastCommand> &pFastCmd)
 {
     std::vector<std::pair<std::string, uint32_t>> cVecReq; 
     for(auto cFastCmd : pFastCmd){ 
-        ComposeFastCommand(cFastCmd);
+        fFastCmd=cFastCmd;
+        ComposeFastCommand(fFastCmd);
         cVecReq.push_back({"fc7_daq_ctrl.fast_command_block.control", fFastCommand});
     }
     WriteStackReg(cVecReq);

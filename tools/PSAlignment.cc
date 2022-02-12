@@ -1,5 +1,6 @@
 #include "PSAlignment.h"
 
+#include "L1ReadoutInterface.h"
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
 
@@ -1631,7 +1632,10 @@ bool PSAlignment::Align()
     for(auto cBoard: *fDetectorContainer)
     {
         fBeBoardInterface->ChipReSync(cBoard);
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface(); 
+        cL1ReadoutInterface->ResetReadout();
+
         bool cWithMPA = false;
         bool cWithSSA = false;
         for(auto cOpticalReadout: *cBoard)

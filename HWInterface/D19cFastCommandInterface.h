@@ -15,13 +15,13 @@ class D19cFastCommandInterface : public FastCommandInterface
     ~D19cFastCommandInterface();
 
     public: // functions 
-        void SendGlobalReSync() override;
-        void SendGlobalCalPulse() override;
-        void SendGlobalL1A() override;
-        void SendGlobalCounterReset() override;
-        void SendGlobalCounterResetResync() override;
-        void SendGlobalCounterResetL1A() override;
-        void SendGlobalCounterResetCalPulse() override;
+        void SendGlobalReSync(uint8_t pDuration=0) override; // 1 clk cycle  ;
+        void SendGlobalCalPulse(uint8_t pDuration=0) override;  // 1 clk cycle  ;
+        void SendGlobalL1A(uint8_t pDuration=0) override;  // 1 clk cycle  ;
+        void SendGlobalCounterReset(uint8_t pDuration=0) override;  // 1 clk cycle  ;
+        void SendGlobalCounterResetResync(uint8_t pDuration=0) override;  // 1 clk cycle  ;
+        void SendGlobalCounterResetL1A(uint8_t pDuration=0) override;  // 1 clk cycle  ;
+        void SendGlobalCounterResetCalPulse(uint8_t pDuration=0) override;  // 1 clk cycle  ;
         void SendGlobalCustomFastCommands(std::vector<FastCommand> &pFastCmd) override;
         void ComposeFastCommand(const FastCommand& pFastCommand) override;
         

@@ -4,6 +4,8 @@
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
+#include "TriggerInterface.h"
+#include "L1ReadoutInterface.h"
 #include "BackEndAlignment.h"
 #include "D19cDebugFWInterface.h"
 #include "Occupancy.h"
@@ -627,10 +629,13 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
         // make sure data handshake is disabled
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x00);
     }
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cTriggerInterface = cInterface->getTriggerInterface(); 
+    auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface(); 
     // re-load configuration
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
+    cTriggerInterface->ResetTriggerFSM();
     // also .. reset the readout
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+    cL1ReadoutInterface->ResetReadout();
 
     // configure latencies
     auto   cSetting       = fSettingsMap.find("DelayAfterInjection");
@@ -994,7 +999,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                 // LOG (INFO) << BOLDMAGENTA << "Found " << cTotalStubsFound << " when " << cTotalStubsExpected << " were expected." << RESET;
             }
             // reset readout
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+            cL1ReadoutInterface->ResetReadout();
         } // stub sel
     }     // configure latencies
 }
@@ -1072,9 +1077,13 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x00);
     }
     // re-load configuration
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cTriggerInterface = cInterface->getTriggerInterface(); 
+    auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface(); 
+    
+    cTriggerInterface->ResetTriggerFSM();
     // also .. reset the readout
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+    cL1ReadoutInterface->ResetReadout();
 
     // configure latencies
     auto   cSetting       = fSettingsMap.find("DelayAfterInjection");
@@ -1482,7 +1491,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                 LOG(INFO) << BOLDMAGENTA << cMatchCounter << " out of " << cInjectionCounter << " injections match... " << RESET;
             }
             // reset readout
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+            cL1ReadoutInterface->ResetReadout();
         } // stub sel
     }     // configure latencies
 }
@@ -2221,8 +2230,14 @@ uint32_t DataChecker::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
     // stop triggers
     fBeBoardInterface->Stop(pBoard);
     std::this_thread::sleep_for(std::chrono::microseconds(10));
+
+    
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cTriggerInterface = cInterface->getTriggerInterface(); 
+    auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface(); 
+    
     // re-load configuration
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
+    cTriggerInterface->ResetTriggerFSM();
 
     cNWords    = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.readout_block.general.words_cnt");
     cNtriggers = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
@@ -2239,9 +2254,9 @@ uint32_t DataChecker::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
     std::this_thread::sleep_for(std::chrono::microseconds(10));
 
     // re-load configuration
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
+    cTriggerInterface->ResetTriggerFSM();
     // also .. reset the readout
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+    cL1ReadoutInterface->ResetReadout();
     // and just check trigger config
 
     return cNevents;

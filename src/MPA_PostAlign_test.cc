@@ -18,6 +18,7 @@
 #include "../Utils/Utilities.h"
 #include "../Utils/argvparser.h"
 #include "../tools/BackEndAlignment.h"
+#include "L1ReadoutInterface.h"
 #include "../tools/Tool.h"
 #include "TCanvas.h"
 #include "TH1.h"
@@ -136,7 +137,9 @@ int main(int argc, char* argv[])
     uint32_t gpix = 0;
 
     cTool.fBeBoardInterface->ChipReSync(pBoard);
-    static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+    auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+    auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface(); 
+    cL1ReadoutInterface->ResetReadout();
     std::this_thread::sleep_for(ShortWait);
 
     for(size_t row = rows.first; row < rows.second; row++)
