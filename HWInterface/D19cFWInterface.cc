@@ -19,6 +19,8 @@
 #include "D19cPSCounterFWInterface.h"
 #include "D19cL1ReadoutInterface.h"
 #include "D19cFastCommandInterface.h"
+#include "D19cBackendAlignmentFWInterface.h"
+#include "D19cDebugFWInterface.h"
 #include <algorithm>
 #include <chrono>
 #include <time.h>
@@ -46,6 +48,16 @@ D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoar
         fFastCommandInterface = new D19cFastCommandInterface(this->getId() , this->getUri(), this->getAddressTable()); 
         LOG (INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
     }
+    if( fBackendAlignmentInterface == nullptr )
+    {
+        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId() , this->getUri(), this->getAddressTable()); 
+        LOG (INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
+    }
+    if( fDebugInterface == nullptr )
+    {
+        fDebugInterface = new D19cDebugFWInterface(this->getId() , this->getUri(), this->getAddressTable()); 
+        LOG (INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
+    }
     fFEConfigurationInterface=nullptr;
     fL1ReadoutInterface=nullptr;
 }
@@ -71,6 +83,16 @@ D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoar
         fFastCommandInterface = new D19cFastCommandInterface(this->getId() , this->getUri(), this->getAddressTable()); 
         LOG (INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
     }
+    if( fBackendAlignmentInterface == nullptr )
+    {
+        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId() , this->getUri(), this->getAddressTable()); 
+        LOG (INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
+    }
+    if( fDebugInterface == nullptr )
+    {
+        fDebugInterface = new D19cDebugFWInterface(this->getId() , this->getUri(), this->getAddressTable()); 
+        LOG (INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
+    }
     fFEConfigurationInterface=nullptr;
     fL1ReadoutInterface=nullptr;
 }
@@ -93,6 +115,16 @@ D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* 
     {
         fFastCommandInterface = new D19cFastCommandInterface(this->getId() , this->getUri(), this->getAddressTable()); 
         LOG (INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
+    }
+    if( fBackendAlignmentInterface == nullptr )
+    {
+        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId() , this->getUri(), this->getAddressTable()); 
+        LOG (INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
+    }
+    if( fDebugInterface == nullptr )
+    {
+        fDebugInterface = new D19cDebugFWInterface(this->getId() , this->getUri(), this->getAddressTable()); 
+        LOG (INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
     fFEConfigurationInterface=nullptr;
     fL1ReadoutInterface=nullptr;
@@ -118,6 +150,16 @@ D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* 
     {
         fFastCommandInterface = new D19cFastCommandInterface(this->getId() , this->getUri(), this->getAddressTable()); 
         LOG (INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
+    }
+    if( fBackendAlignmentInterface == nullptr )
+    {
+        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId() , this->getUri(), this->getAddressTable()); 
+        LOG (INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
+    }
+    if( fDebugInterface == nullptr )
+    {
+        fDebugInterface = new D19cDebugFWInterface(this->getId() , this->getUri(), this->getAddressTable()); 
+        LOG (INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
     fFEConfigurationInterface=nullptr;
     fL1ReadoutInterface=nullptr;
@@ -1791,17 +1833,14 @@ bool D19cFWInterface::WaitForData(BeBoard* pBoard)
 void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
 {
     pData.clear(); 
-    // LOG (INFO) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET;
+    LOG (INFO) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET;
     if( fL1ReadoutInterface == nullptr ) LOG (INFO) << BOLDRED << "L1ReadoutInterface is a nullptr.." << RESET;
     
     fL1ReadoutInterface->setNEvents(pNEvents); 
-    if( fL1ReadoutInterface->ReadEvents(pBoard) ){ 
-        pData = fL1ReadoutInterface->getData();
-        // std::copy(fL1ReadoutInterface->getData().begin(), fL1ReadoutInterface->getData().end(), std::back_inserter(pData));
-        // fL1ReadoutInterface->clearData(); 
-    }
+    if( fL1ReadoutInterface->ReadEvents(pBoard) ) pData = fL1ReadoutInterface->getData();
     else LOG (INFO) << BOLDRED << "Failed to ReadNEvents" << RESET;
-    
+    if(fSaveToFile) fFileHandler->setData(pData);
+
     // // write number of triggers to accept
     // // in the handshake mode offset is cleared after each handshake
     // // fDDR3Offset = 0;

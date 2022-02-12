@@ -299,6 +299,8 @@ SlvsLineStatus CicFEAlignment::CheckPhyPort(const Hybrid* pHybrid, PhyPortCnfg p
     std::string    cPatternToMatch = cExpectedPattern.to_string();
     auto           cBoardId        = pHybrid->getBeBoardId();
     fBeBoardInterface->setBoard(cBoardId);
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    
     auto  cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     auto& cCic       = static_cast<const OuterTrackerHybrid*>(pHybrid)->fCic;
     // select slvs debug line in FC7
@@ -309,7 +311,7 @@ SlvsLineStatus CicFEAlignment::CheckPhyPort(const Hybrid* pHybrid, PhyPortCnfg p
     // set phase tap for this phy port input
     fCicInterface->SetPhaseTap(cCic, pPhyPortCnfg.first, pPhyPortCnfg.second, pPhase);
     // interface to retrieve debug data
-    D19cDebugFWInterface* cDebugInterface = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
 
     // read back data from stub debug
     // for now .. I need to do this twice
@@ -588,7 +590,9 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
         if(!cDebug) continue;
 
         fBeBoardInterface->setBoard(cBoard->getId());
-        D19cDebugFWInterface* cDebugInterface = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    
+        D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)

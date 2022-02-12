@@ -4850,7 +4850,10 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic, bool pShiftRegMode)
     for(auto cBoard: *fDetectorContainer)
     {
         BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
-
+        fBeBoardInterface->setBoard(cBoard->getId());
+        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        D19cDebugFWInterface*            cDebugInterface   = cInterface->getDebugInterface();
+        
         uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
         cTriggerSrc          = (cTriggerSrc == 6) ? cTriggerSrc : 6;
         LOG(INFO) << BOLDBLUE << "Trigger source is set to " << +cTriggerSrc << RESET;
@@ -4911,7 +4914,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic, bool pShiftRegMode)
                         }
                         if(pShiftRegMode)
                         {
-                            auto cLines    = (static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->ScopeStubLines();
+                            auto cLines    = cDebugInterface->ScopeStubLines();
                             int  cLineIndx = 0;
                             for(auto cLine: cLines)
                             {
@@ -4924,7 +4927,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic, bool pShiftRegMode)
                         {
                             for(int cAttempt = 0; cAttempt < 100; cAttempt++)
                             {
-                                auto cLines    = (static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->ScopeStubLines();
+                                auto cLines    = cDebugInterface->ScopeStubLines();
                                 int  cLineIndx = 0;
                                 for(auto cLine: cLines)
                                 {
@@ -6554,8 +6557,12 @@ void DataChecker::StubCheckWNoise(std::vector<uint8_t> pChipIds)
         }         // hybrid
 
         // now want to see the CIC output
-        (static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 5);
+        fBeBoardInterface->setBoard(cBoard->getId());
+        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        D19cDebugFWInterface*            cDebugInterface   = cInterface->getDebugInterface();
+        cDebugInterface->StubDebug(true, 5);
         auto cBeBoard       = static_cast<BeBoard*>(cBoard);
+        
         auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
         LOG(INFO) << BOLDMAGENTA << "Stub package delay set to " << +cOriginalDelay << RESET;
         int cPackageDelayStart = (cSweepPackageDelay == 0) ? cOriginalDelay : 0;

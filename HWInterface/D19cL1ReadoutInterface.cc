@@ -96,106 +96,41 @@ void D19cL1ReadoutInterface::CountFwEvents()
 
 bool D19cL1ReadoutInterface::WaitForReadout()
 {
-    bool cFailed=false;
-    uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-    uint32_t cNtriggers  = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-    uint32_t cNWords     = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-    auto     cTriggerRate   = fTriggerInterface->getTriggerSource(); 
-    uint32_t cTimeSingleTrigger_us = std::ceil(1.5 / (cTriggerRate));
-    
-    uint32_t cTimeoutValue = 100;
-    if(fCountTriggers) // use trigger_in_counter to check state of trigger FSM
+    bool cFailed     = true;
+    auto cNWords     = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+    auto cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+    auto cStartTime = std::chrono::high_resolution_clock::now(), cEndTime = cStartTime;
+    auto cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
+    if(!fWaitForReadoutReq) // wait until words in the readout have stopped inreasing 
     {
-        // wait until all triggers received
-        uint32_t cNtriggersPrev = cNtriggers;
-        size_t   cFoundSame     = 0;
-        size_t   cCounter       = 0;
+        // LOG (INFO) << BOLDMAGENTA << "D19cL1ReadoutInterface::WaitForReadout Now checking words from the FC7" << RESET;
+        uint32_t cNWordsPrev    = cNWords;
+        bool     cStopIncrement = false;
         do
         {
             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
-            cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-            cFoundSame += (cNtriggers == cNtriggersPrev) ? 1 : 0;
-            cNtriggersPrev = cNtriggers;
-            if(cCounter % 100 == 0) LOG(DEBUG) << BOLDRED << "D19cL1ReadoutInterface::WaitForReadout Number of triggers received is " << +cNtriggers << RESET;
-            cCounter++;
-        } while(cNtriggers < fNEvents && cFoundSame < cTimeoutValue);
-        cFailed = !(cNtriggers >= fNEvents);
-        if(cFailed)
-        {
-            auto cState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state");
-            LOG(INFO) << BOLDRED << "Trigger FSM failed to receive all triggers .. expected " << +fNEvents << " and received " << +cNtriggers << " FSM state is "
-                        << +cState << " .. re-trying" << RESET;
-        }
-        if(!cFailed)
-        {
-            // wait until words in the readout have stopped inreasing
-            // LOG (INFO) << BOLDMAGENTA << "D19cL1ReadoutInterface::WaitForReadout Now checking words from the FC7" << RESET;
-            cNWords                 = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-            uint32_t cNWordsPrev    = cNWords;
-            bool     cStopIncrement = false;
-            cCounter                = 0;
-            do
-            {
-                std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
-                cNWords        = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-                cStopIncrement = (cNWords == cNWordsPrev);
-                // cNWordsPrev    = cNWords;
-                // if(cCounter % 100 == 0) LOG(INFO) << BOLDRED << "D19cL1ReadoutInterface::WaitForReadout Number of words received is " << +cNWords << RESET;
-                cCounter++;
-            } while(!cStopIncrement);
-            LOG(DEBUG) << BOLDGREEN << "Trigger FSM received all triggers .. expected " << +fNEvents << " and received " << +cNtriggers << " .. continuing" << RESET;
-            LOG(DEBUG) << BOLDGREEN << "Trigger to accept was = " << this->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept") << RESET;
-        }
+            cNWords        = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
+            cStopIncrement = (cNWords == cNWordsPrev);
+            cEndTime = std::chrono::high_resolution_clock::now();
+            cDuration     = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
+        
+        } while(!cStopIncrement && cDuration < fTimeout_us);
+        cFailed = ( cNWords == 0 );
+        if( cFailed ) LOG (INFO) << BOLDRED << "D19cL1ReadoutInterface::WaitForReadout no words in the readout .." << RESET; 
     }
     else // send triggers until the readout request flag is '1'
     {
-        uint32_t cTimeoutCounter = 0;
-        // uint32_t cFailures       = 0;
-        uint32_t cPause           = fNEvents * static_cast<uint32_t>(cTimeSingleTrigger_us);
-        uint32_t cNWords_previous = cNWords;
-        uint32_t cAttempt         = 0;
-        // also possible to keep counting until trigger_in_counter has stopped incrementing
         // try this
         do
         {
-            std::this_thread::sleep_for(std::chrono::microseconds(cPause));
-
-            cNtriggers  = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+            std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
             cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-            cNWords     = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-            cTimeoutCounter += ((cNWords == 0 || (cNWords - cNWords_previous) == 0)) ? 1 : 0;
-            if((cNWords == 0 || (cNWords - cNWords_previous) == 0))
-                LOG(INFO) << MAGENTA << "Waiting for data.. attempt#" << +cAttempt << " ... ReadoutReq," << cReadoutReq << " Ntriggers," << cNtriggers << " NWords," << cNWords
-                            << " [ timeout ==  " << +cTimeoutValue << " ]" << RESET;
-            // cFailures += ((cNtriggers == 0));// || ( (cNWords_previous==cNWords) &&cReadoutReq==0) );
-            cNWords_previous = cNWords;
-            cAttempt++;
-        } while(cReadoutReq == 0 && (cTimeoutCounter < cTimeoutValue)); // && (cFailures<5));
+            cEndTime = std::chrono::high_resolution_clock::now();
+            cDuration     = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
+        } while(cReadoutReq == 0  && cDuration < fTimeout_us); 
         // fails if either one of these is true
-        cFailed = (cNWords == 0 || cTimeoutCounter >= cTimeoutValue);
-        // pFailed = (cReadoutReq == 0) || (cNWords == 0);
-        // pFailed = ((cReadoutReq == 0 && cNtriggers < cNevents * (cMultiplicity + 1)) || (cNWords == 0));
-    }
-    cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-    cNtriggers  = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-    cNWords     = ReadReg("fc7_daq_stat.readout_block.general.words_cnt");
-    if((cReadoutReq == 0 && cNtriggers < fNEvents) && cNWords != 0)
-    {
-        LOG(INFO) << BOLDRED << "\t...Readout request not cleared... Trigger in counter is " << cNtriggers << " asked for " << fNEvents << " events and have " << cNWords
-                    << " words in the readout... Re-trying point" << RESET;
-        cFailed = true;
-    }
-    else if(cNWords == 0)
-    {
-        LOG(INFO) << BOLDRED << "\t...No data in the readout ... Trigger in counter is " << cNtriggers << " asked for " << fNEvents << " events and have " << cNWords
-                    << " words in the readout... Re-trying point" << RESET;
-        cFailed = true;
-    }
-    else
-    {
-        LOG(DEBUG) << BOLDGREEN << "\t...Have data in the readout ... Trigger in counter is " << cNtriggers << " asked for " << fNEvents << " events and have " << cNWords
-                    << " words in the readout... reading out data." << RESET;
-        cFailed = false;
+        cFailed = ( cReadoutReq == 0);
+        if( cFailed ) LOG (INFO) << BOLDRED << "D19cL1ReadoutInterface::WaitForReadout ReadoutReq not cleared.." << RESET; 
     }
     return !cFailed;
 }
@@ -225,7 +160,8 @@ void D19cL1ReadoutInterface::FillData()
         do
         {
             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
-            if(cCounter % 10 == 0) LOG(DEBUG) << BOLDRED << "D19cFWInterface::GetData ReadoutReq is " << +cReadoutReq << RESET;
+            // if(cCounter % 10 == 0) 
+            LOG(INFO) << BOLDRED << "D19cFWInterface::GetData ReadoutReq is " << +cReadoutReq << RESET;
             cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
             cCounter++;
         } while(cReadoutReq == 0 && cCounter < 100);

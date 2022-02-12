@@ -4,9 +4,11 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-D19cBackendAlignmentFWInterface::D19cBackendAlignmentFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler) : BeBoardFWInterface(puHalConfigFileName, pBoardId) {}
-D19cBackendAlignmentFWInterface::D19cBackendAlignmentFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler) : BeBoardFWInterface(pId, pUri, pAddressTable)
-{
+D19cBackendAlignmentFWInterface::D19cBackendAlignmentFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : RegManager(pId, pUri, pAddressTable) {
+}
+D19cBackendAlignmentFWInterface::D19cBackendAlignmentFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : RegManager(puHalConfigFileName, pBoardId) {
+    
+    LOG (INFO) << BOLDYELLOW << "D19cBackendAlignmentFWInterface::D19cBackendAlignmentFWInterface Constructor" << RESET;
 }
 D19cBackendAlignmentFWInterface::~D19cBackendAlignmentFWInterface() {}
 

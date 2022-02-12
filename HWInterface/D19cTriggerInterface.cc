@@ -188,7 +188,35 @@ void D19cTriggerInterface::ReconfigureTriggerFSM(std::vector<std::pair<std::stri
     this->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 }
-
+bool D19cTriggerInterface::WaitForNTriggers(uint32_t pNTriggers) 
+{
+    bool cFailed=false;
+    TriggerConfiguration();
+    uint32_t cNtriggers  = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+    uint32_t cTimeSingleTrigger_us = std::ceil(1.5 / (fTriggerConfiguration.fTriggerRate));
+    uint32_t cTimeoutValue = cTimeSingleTrigger_us*pNTriggers*10;
+    // wait until all triggers received
+    uint32_t cNtriggersPrev = cNtriggers;
+    size_t   cFoundSame     = 0;
+    size_t   cCounter       = 0;
+    do
+    {
+        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
+        cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+        cFoundSame += (cNtriggers == cNtriggersPrev) ? 1 : 0;
+        cNtriggersPrev = cNtriggers;
+        if(cCounter % 100 == 0) LOG(DEBUG) << BOLDRED << "D19cL1ReadoutInterface::WaitForReadout Number of triggers received is " << +cNtriggers << RESET;
+        cCounter++;
+    } while(cNtriggers < pNTriggers && cFoundSame < cTimeoutValue);
+    cFailed = !(cNtriggers >= pNTriggers);
+    if(cFailed)
+    {
+        auto cState = this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state");
+        LOG(INFO) << BOLDRED << "Trigger FSM failed to receive all triggers .. expected " << +pNTriggers << " and received " << +cNtriggers << " FSM state is "
+                    << +cState << " .. re-trying" << RESET;
+    }
+    return !cFailed;
+}
 bool D19cTriggerInterface::RunTriggerFSM()
 {
     this->Start();

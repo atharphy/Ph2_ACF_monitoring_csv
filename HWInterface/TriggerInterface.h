@@ -66,6 +66,11 @@ class TriggerInterface : public RegManager
             LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function TriggerInterface::RunTriggerFSM is absent" << RESET;
             return false;
         }
+        virtual bool WaitForNTriggers(uint32_t pNTriggers)
+        {
+            LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function TriggerInterface::WaitForNTriggers is absent" << RESET;
+            return false;
+        }
 
         uint8_t getTriggerSource(){ return fTriggerConfiguration.fTriggerSource; }
         uint8_t getTriggerRate(){ return fTriggerConfiguration.fTriggerRate; }

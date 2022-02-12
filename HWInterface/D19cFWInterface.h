@@ -93,6 +93,8 @@ namespace Ph2_HwInterface
   class FEConfigurationInterface;
   class TriggerInterface;
   class FastCommandInterface;
+  class D19cBackendAlignmentFWInterface;
+  class D19cDebugFWInterface;
 
 /*!
  * \class Cbc3Fc7FWInterface
@@ -107,6 +109,8 @@ class D19cFWInterface : public BeBoardFWInterface
     L1ReadoutInterface*                       fL1ReadoutInterface{nullptr};
     TriggerInterface*                         fTriggerInterface{nullptr};
     FastCommandInterface*                     fFastCommandInterface{nullptr};
+    D19cBackendAlignmentFWInterface*          fBackendAlignmentInterface{nullptr};
+    D19cDebugFWInterface*                     fDebugInterface{nullptr};
     
     D19cFWEvtEncoder::D19cFWEvt              fD19cFWEvts;
     std::vector<std::vector<uint32_t>>       fSlaveMap;
@@ -166,6 +170,9 @@ class D19cFWInterface : public BeBoardFWInterface
     D19cFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler);
     void setFileHandler(FileHandler* pHandler);
 
+    void printReadoutInterface(){ LOG (INFO) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET; }
+    D19cBackendAlignmentFWInterface* getBackendAlignmentInterface(){ return fBackendAlignmentInterface;}
+    D19cDebugFWInterface*            getDebugInterface(){ return fDebugInterface;}
     /*!
      *
      * \brief Destructor of the Cbc3Fc7FWInterface class

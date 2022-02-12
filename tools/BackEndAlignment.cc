@@ -68,7 +68,9 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
     bool cTuned = true;
     LOG(INFO) << GREEN << "BackEndAlignment for PS Chip(s)" << RESET;
     fBeBoardInterface->setBoard(pBoard->getId());
-    D19cDebugFWInterface* cDebugInterface        = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    
+    D19cDebugFWInterface*            cDebugInterface   = cInterface->getDebugInterface();
     uint8_t               cPhaseAlignmentPattern = 0xAA;
     uint8_t               cWordAlignmentPattern  = 0xEA;
     for(auto cOpticalReadout: *pBoard)
@@ -233,6 +235,10 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
 bool BackEndAlignment::CBCAlignment(BeBoard* pBoard)
 {
     bool cAligned = true;
+    fBeBoardInterface->setBoard(pBoard->getId());
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cDebugFWInterface*            cDebugInterface   = cInterface->getDebugInterface();
+    
 
     for(auto cOpticalReadout: *pBoard)
     {
@@ -302,7 +308,7 @@ bool BackEndAlignment::CBCAlignment(BeBoard* pBoard)
                 LOG(INFO) << BOLDMAGENTA << "Expect pattern : " << std::bitset<8>((cBendCode_phAlign << 4) | cBendCode_phAlign) << " on stub line  4." << RESET;
                 LOG(INFO) << BOLDMAGENTA << "Expect pattern : " << std::bitset<8>((1 << 7) | cBendCode_phAlign) << " on stub line  5." << RESET;
                 LOG(INFO) << BOLDMAGENTA << "After alignment of last stub line ... stub lines 0-5: " << RESET;
-                (static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 5);
+                cDebugInterface->StubDebug(true, 5);
 
                 // now unmask all channels and set threshold and hit or logic back to their original values
                 fReadoutChipInterface->maskChannelGroup(theReadoutChip, cOriginalMask);

@@ -47,7 +47,10 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
 {
     LinkAlignmentOT::Inherit(this);
     LinkAlignmentOT::Initialise();
-
+    fBeBoardInterface->setBoard(pBoard->getId());
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
+        
     uint32_t cNtriggers = this->findValueInSettings<double>("PSHybridDebugDuration");
     if(pTrigger)
         LOG(INFO) << BOLDBLUE << "Going to send " << +cNtriggers << " triggers to debug L1 SSA output " << RESET;
@@ -78,16 +81,20 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
         }
         fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cPairId);
         if(pTrigger)
-            static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1ADebug((uint8_t)1, false);
+           cDebugInterface->L1ADebug((uint8_t)1, false);
         else
         {
-            static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 7);
+            cDebugInterface->StubDebug(true, 7);
         }
     }
 }
 
 void PSHybridTester::SSAOutputsPogoScope(std::vector<std::vector<std::string>>& cReadLines, std::string pSSAPairSel, BeBoard* pBoard, bool pTrigger, bool pPrintScoped)
 {
+    fBeBoardInterface->setBoard(pBoard->getId());
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
+    
     for(uint8_t cPairId = 0; cPairId < 2; cPairId++)
     {
         if(!pTrigger) { LOG(INFO) << "SLVS debug [stub lines] : Chip " << +cPairId << RESET; }
@@ -101,13 +108,13 @@ void PSHybridTester::SSAOutputsPogoScope(std::vector<std::vector<std::string>>& 
             std::string              cReadLine;
             std::vector<std::string> cReadLineVector(0);
 
-            cReadLine = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface())->L1ADebug((uint8_t)1, pPrintScoped);
+            cReadLine = cDebugInterface->L1ADebug((uint8_t)1, pPrintScoped);
             cReadLineVector.push_back(cReadLine);
             cReadLines.push_back(cReadLineVector);
         }
         else
         {
-            auto cStubLines = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 8, pPrintScoped);
+            auto cStubLines = cDebugInterface->StubDebug(true, 8, pPrintScoped);
             cReadLines.push_back(cStubLines);
         }
     }
@@ -310,6 +317,10 @@ void PSHybridTester::AlignCICout(uint8_t pPattern)
 }
 void PSHybridTester::MPATest(BeBoard* pBoard)
 {
+    fBeBoardInterface->setBoard(pBoard->getId());
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
+    
 #if defined(__USE_ROOT__)
     uint32_t cTestPatterns[4] = {0xAA, 0xCC, 0x00, 0xFF};
     // String with the binary representation of the pattern
@@ -367,7 +378,7 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
         }     // hybrid
         // check output
         fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-        static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 4);
+        cDebugInterface->StubDebug(true, 4);
     }
 #endif
 }

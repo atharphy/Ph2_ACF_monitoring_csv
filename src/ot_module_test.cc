@@ -17,6 +17,7 @@
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
+#include "D19cDebugFWInterface.h"
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -470,6 +471,15 @@ int main(int argc, char* argv[])
     if(!cmd.foundOption("read") && cmd.foundOption("reconfigure"))
     {
         cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
+        // just to check 
+        // D19cDebugFWInterface* cDebugInterface   = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+        // for(const auto cBoard: *cTool.fDetectorContainer)
+        // {
+        //     cDebugInterface->L1ADebug();
+        //     cTool.ReadNEvents(cBoard, 10);
+        // }
+        // exit(0);
+
         // for(const auto cBoard: *cTool.fDetectorContainer)
         // {
         //     cTool.ReadNEvents(cBoard, 10);

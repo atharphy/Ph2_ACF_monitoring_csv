@@ -329,7 +329,8 @@ int main(int argc, char* argv[])
         for(size_t cAttempts = 0; cAttempts < cScopingAttempts; cAttempts++)
         {
             LOG(DEBUG) << BOLDBLUE << "Attempt#" << +cAttempts << RESET;
-            auto cDebugInterface = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+            auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+            D19cDebugFWInterface*            cDebugInterface   = cInterface->getDebugInterface();
             auto cBuffer         = cDebugInterface->L1ADebug(1, false);
             // search for L1 headers
             size_t                cSearch = 0;

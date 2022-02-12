@@ -23,6 +23,8 @@ class D19cTriggerInterface : public TriggerInterface
         bool Stop() override;
         bool RunTriggerFSM() override;
         uint32_t GetTriggerState()  override;
+        bool WaitForNTriggers(uint32_t pNTriggers) override;
+
 
     private : 
         void TriggerConfiguration();
