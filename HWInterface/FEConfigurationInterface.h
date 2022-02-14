@@ -16,15 +16,16 @@ struct Config
 {
     uint8_t  fReTry       = 0;
     uint8_t  fVerbose     = 0;
-    uint16_t fMaxAttempts = 500;
+    uint16_t fMaxAttempts = 5000;
     uint8_t  fVerify      = 0; 
 };
 
 enum class ConfigurationType
 {
-    I2C    = 1,
-    IC    = 2,
-    EC   = 3
+    I2C    = 1, // electrical I2C via FW 
+    IC    = 2, // IC on optical link 
+    EC   = 3, // EC on optical link 
+    SLAVE = 4  // to an I2C slave on the optical link 
 };
 
 

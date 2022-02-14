@@ -841,7 +841,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         else IniitalizeL1ReadoutInterface(pBoard); 
     }
 
-    if(fI2CVersion >= 1 || !cWithlpGBT)
+    if(fI2CVersion >= 1 && !pBoard->isOptical())
     {
         fI2CSlaveMap.clear();
         fSlaveMap.clear();
@@ -2025,92 +2025,12 @@ std::vector<uint32_t> D19cFWInterface::WriteCommandCPBandReadReply(const std::ve
 
 bool D19cFWInterface::WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop)
 {
-    if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "D19cFWInterface::WriteLpGBTRegister" << RESET;
-    size_t cExpectedReplySize = 10 * 1;
-    this->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
-    if(fCPBConfig.fResetEn) ResetCPB();
-    // Use new Command Processor Block
-    // uint8_t cWorkerId = 1 , cFunctionId = 3;
-    // uint8_t cWorkerId = 1 + pLinkId, cFunctionId = 3;
-    uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 3;
-    // uint8_t cWorkerId = 16, cFunctionId = 3;
-    if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "WriteLpGBTRegister to Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
-
-    std::vector<uint32_t> cCommandVector;
-    cCommandVector.clear();
-    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pRegisterAddress << 0);
-    cCommandVector.push_back(pRegisterValue << 0);
-    std::vector<uint32_t> cReplyVector     = WriteCommandCPBandReadReply(cCommandVector, cExpectedReplySize);
-    uint8_t               cParityCheck     = cReplyVector[2] & 0xFF;
-    uint8_t               cReadBack        = cReplyVector[7] & 0xFF;
-    uint16_t              cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
-    // always check parity
-    size_t cIter             = 0;
-    bool   cValidTransaction = (cParityCheck == 1);
-    while(!cValidTransaction && fCPBConfig.fReTry && cIter < fCPBConfig.fMaxAttempts)
-    {
-        if(fCPBConfig.fVerbose)
-            LOG(INFO) << BOLDRED << "[Iter# " << cIter << "/" << fCPBConfig.fMaxAttempts
-                      << " of D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply (mismatch in readbacks or failed parity check) from command processor block ... retrying" << RESET;
-        ResetCPB();
-        cReplyVector.clear();
-        cReplyVector      = WriteCommandCPBandReadReply(cCommandVector, cExpectedReplySize);
-        cParityCheck      = cReplyVector[2] & 0xFF;
-        cReadBackRegAddr  = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
-        cReadBack         = cReplyVector[7] & 0xFF;
-        cValidTransaction = (cParityCheck == 1);
-        if(cValidTransaction && pVerifLoop)
-        {
-            cValidTransaction = cValidTransaction && ((cReadBack == pRegisterValue) && (cReadBackRegAddr == pRegisterAddress));
-            if(fCPBConfig.fVerbose && !cValidTransaction)
-                LOG(INFO) << BOLDRED << "[Iter# " << cIter << "/" << fCPBConfig.fMaxAttempts
-                          << " of D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply (mismatch in readbacks) from command processor block ... retrying" << RESET;
-        }
-        cIter++;
-    }
-    // throw exception based on failure
-    if(cIter > 1) LOG(INFO) << BOLDYELLOW << "D19cFWInterface::WriteLpGBTRegister had to try " << cIter << "/" << fCPBConfig.fMaxAttempts << " possible attempts to complete transaction." << RESET;
-    if(cParityCheck != 1) throw std::runtime_error(std::string("[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block - failed parity check"));
-    if(pVerifLoop && cReadBack != pRegisterValue)
-        throw std::runtime_error(std::string("[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block - mismatch in read-back lpGBT register value"));
-    if(pVerifLoop && cReadBackRegAddr != pRegisterAddress)
-        throw std::runtime_error(std::string("[D19cFWInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block - mismatch in read-back lpGBT register address"));
-    return (pVerifLoop) ? ((cReadBack == pRegisterValue) && (cReadBackRegAddr == pRegisterAddress)) : (cParityCheck == 1);
+    return static_cast<D19cOpticalInterface*>(fFEConfigurationInterface)->WriteLpGBTRegister(pLinkId, pRegisterAddress, pRegisterValue, pVerifLoop);
 }
 
 uint8_t D19cFWInterface::ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress)
 {
-    size_t cExpectedReplySize = 10 * 1;
-    this->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
-    if(fCPBConfig.fResetEn) ResetCPB();
-    // uint8_t cWorkerId = 1, cFunctionId = 2;
-    // uint8_t cWorkerId = 1 + pLinkId, cFunctionId = 2;
-    uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 2;
-    // uint8_t cWorkerId = 16, cFunctionId = 2;
-    if(fCPBConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "ReadLpGBTRegister from Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
-    std::vector<uint32_t> cCommandVector;
-    cCommandVector.clear();
-    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pRegisterAddress << 0);
-    std::vector<uint32_t> cReplyVector     = WriteCommandCPBandReadReply(cCommandVector, cExpectedReplySize);
-    uint8_t               cReadBack        = cReplyVector[7] & 0xFF;
-    uint16_t              cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
-    // uint8_t               cParityCheck     = cReplyVector[2] & 0xFF;
-    size_t cIter = 0;
-    while((cReadBackRegAddr != pRegisterAddress) && cIter < fCPBConfig.fMaxAttempts && fCPBConfig.fReTry)
-    {
-        if(fCPBConfig.fResetEn) ResetCPB();
-        if(fCPBConfig.fVerbose)
-            LOG(INFO) << BOLDRED << "[Iter# " << cIter << "/" << fCPBConfig.fMaxAttempts
-                      << " of D19cFWInterface::ReadLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
-        cReplyVector.clear();
-        cReplyVector     = WriteCommandCPBandReadReply(cCommandVector, cExpectedReplySize);
-        cReadBack        = cReplyVector[7] & 0xFF;
-        cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
-        cIter++;
-    };
-    if(cIter == (size_t)fCPBConfig.fMaxAttempts) throw std::runtime_error(std::string("[D19cFWInterface::ReadLpGBTRegister] : Received corrupted reply from command processor block"));
-    // LOG(DEBUG) << BOLDWHITE << "\t Reading 0x" << std::hex << +cReadBack << std::dec << " from [0x" << std::hex << +pRegisterAddress << std::dec << "]" << RESET;
-    return cReadBack;
+    return static_cast<D19cOpticalInterface*>(fFEConfigurationInterface)->ReadLpGBTRegister(pLinkId, pRegisterAddress);
 }
 
 // ##########################################
@@ -2325,6 +2245,8 @@ bool D19cFWInterface::localWriteFERegister(Ph2_HwDescription::Chip* pChip, uint1
 std::vector<uint8_t> D19cFWInterface::MultiRegisterRead(Chip* pChip, std::vector<ChipRegItem>& pItems )
 {
     std::vector<uint8_t> cValues(0);
+    if( pItems.size() == 0 ) return cValues;
+
     if( fFEConfigurationInterface->MultiRead(pChip, pItems) )
     {
         // update map 
@@ -2385,7 +2307,7 @@ bool D19cFWInterface::SingleRegisterWrite(Chip* pChip, ChipRegItem& pItem, bool 
             // update map 
             auto cPreviousValue = cIterator->second.fValue; 
             pChip->setReg(cIterator->first , pItem.fValue);  
-            LOG (DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterWrite successful write of 0x" 
+            LOG (INFO) << BOLDGREEN << " D19cFWInterface::SingleRegisterWrite successful write of 0x" 
                 << std::hex << +pItem.fValue << std::dec << " to " << cIterator->first 
                 << "\t.. value in register is now 0x" << std::hex << +pChip->getReg( cIterator->first) << std::dec 
                 << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
@@ -2424,6 +2346,8 @@ bool D19cFWInterface::SingleRegisterWriteRead(Chip* pChip, ChipRegItem& pItem )
 }
 bool D19cFWInterface::MultiRegisterWriteRead(Chip* pChip, std::vector<ChipRegItem>& pItems )
 {
+    if ( pItems.size() == 0 ) return true;
+
     std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
     if( fFEConfigurationInterface->MultiWriteRead( pChip, pItems) ) 
     {
@@ -2450,6 +2374,8 @@ bool D19cFWInterface::MultiRegisterWriteRead(Chip* pChip, std::vector<ChipRegIte
 
 bool D19cFWInterface::MultiRegisterWrite(Chip* pChip, std::vector<ChipRegItem>& pItems, bool pVerify)
 {
+    if(pItems.size() == 0 ) return true;
+    
     std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
     if( pVerify ) return MultiRegisterWriteRead(pChip, pItems); 
     

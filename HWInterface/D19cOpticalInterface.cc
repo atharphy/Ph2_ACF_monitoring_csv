@@ -56,10 +56,25 @@ bool D19cOpticalInterface::MultiWriteRead(Chip* pChip, std::vector<ChipRegItem>&
 }
 bool D19cOpticalInterface::SingleWrite(Chip* pChip, ChipRegItem& pItem )
 {
+   if( pChip->getFrontEndType() == FrontEndType::LpGBT) return SingleWriteIC(pChip,pItem,false);
+   else return SingleWriteSlave(pChip,pItem);
+}
+bool D19cOpticalInterface::SingleWriteIC(Chip* pChip, ChipRegItem& pItem, bool pVerifLoop )
+{
+    LOG (INFO) << BOLDYELLOW << "D19cOpticalInterface::SingleWriteIC" << RESET;
+    return WriteLpGBTRegister(pChip->getOpticalId(), pItem.fAddress, pItem.fValue, pVerifLoop); 
+}
+bool D19cOpticalInterface::SingleWriteSlave(Chip* pChip, ChipRegItem& pItem  )
+{
     auto    cLinkId = pChip->getOpticalId();
     uint8_t cMasterId = pChip->getMasterId();
-    
-    LOG(DEBUG) << BOLDBLUE << " Writing 0x" << std::hex << +pItem.fValue << std::dec << " to [0x" << std::hex << +pItem.fAddress << std::dec << "] I2C master" << +cMasterId << RESET;
+    std::stringstream cOutput;
+    pChip->printChipType(cOutput);
+   
+    LOG (DEBUG) << BOLDYELLOW << "D19cOpticalInterface::SingleWriteSlave Writing 0x" 
+        << std::hex << +pItem.fValue << std::dec << " to [0x" << std::hex << +pItem.fAddress << std::dec << "] I2C master" << +cMasterId 
+        << " chipType " << cOutput.str()
+        << RESET;
     uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId();
     if(pChip->getFrontEndType() == FrontEndType::MPA) cChipId = cChipId % 8;
     uint8_t cChipAddress = pChip->getChipAddress(); 
@@ -79,24 +94,36 @@ bool D19cOpticalInterface::SingleWrite(Chip* pChip, ChipRegItem& pItem )
         cSlaveData = (pItem.fValue << 8) | (pItem.fAddress & 0xFF);
     }
     fI2CWriteCount = 0;
+
     bool cSuccess    = I2CWrite(cLinkId, cMasterId, cChipAddress, cSlaveData, cNbytes, cFrequency, fI2CWriteCount);
     pChip->updateWriteCount(fI2CWriteCount);
     if(fI2CWriteCount != 1)
     {
-        std::stringstream cOutput;
-        pChip->printChipType(cOutput);
         LOG(INFO) << BOLDYELLOW << "\t\t... Pre-verfication - took " << +fI2CWriteCount << " I2C writes to succeed in writing " << +pItem.fValue << " on register " << +pItem.fAddress << " for "
-                  << cOutput.str() << "#" << +pChip->getId() << " on Hybrid#" << +pChip->getHybridId() << RESET;
+            << cOutput.str() << "#" << +pChip->getId() << " on Hybrid#" << +pChip->getHybridId() 
+            << RESET;
     }
     pChip->updateRegWriteCount();
     return cSuccess;
 }
 bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem ) 
 {
+    if( pChip->getFrontEndType() == FrontEndType::LpGBT) return SingleReadIC(pChip,pItem);
+    else return SingleReadSlave(pChip,pItem);
+}
+bool D19cOpticalInterface::SingleReadSlave(Chip* pChip, ChipRegItem& pItem)
+{
     auto                                  cLinkId   = pChip->getOpticalId();
     uint8_t                               cMasterId = pChip->getMasterId();
 
-    // LOG (INFO) << BOLDGREEN << "D19cOpticalInterface::SingleRead Reading FE register on link " << +cLinkId << RESET;
+    std::stringstream cOutput;
+    pChip->printChipType(cOutput);
+   
+    LOG (DEBUG) << BOLDYELLOW << "D19cOpticalInterface::SingleReadSlave Reading from 0x" 
+        << std::hex << +pItem.fAddress << std::dec << "] I2C master" << +cMasterId 
+        << " chipType " << cOutput.str()
+        << RESET;
+    
     uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId();
     if(pChip->getFrontEndType() == FrontEndType::MPA) cChipId = cChipId % 8;
     uint8_t cChipAddress = pChip->getChipAddress(); // fFEAddressMap[pChip->getFrontEndType()] + cChipId;
@@ -124,6 +151,13 @@ bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem )
     pChip->updateRegReadCount();
     return (fI2CReadCount < fConfig.fMaxAttempts );
 }
+bool D19cOpticalInterface::SingleReadIC(Chip* pChip, ChipRegItem& pItem )
+{
+    auto                                  cLinkId   = pChip->getOpticalId();
+    auto cValue = ReadLpGBTRegister(cLinkId, pItem.fAddress); 
+    pItem.fValue  = cValue;
+    return true; 
+}
 // for now this is just looping over single write 
 bool D19cOpticalInterface::MultiWrite(Chip* pChip, std::vector<ChipRegItem>& pRegisterItems )
 {
@@ -147,6 +181,97 @@ bool D19cOpticalInterface::MultiRead(Chip* pChip, std::vector<ChipRegItem>& pReg
 // ##########################################
 // # Read/Write registers with CPB I2C functions #
 // #########################################
+
+bool D19cOpticalInterface::WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop)
+{
+    auto cReTry = fConfig.fReTry; 
+    fConfig.fReTry = 1; // for now.. always re-try this  
+    if(fConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "D19cOpticalInterface::WriteLpGBTRegister" << RESET;
+    size_t cExpectedReplySize = 10 * 1;
+    this->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
+    if(fResetEn) ResetCPB();
+    // Use new Command Processor Block
+    uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 3;
+    // uint8_t cWorkerId = 16, cFunctionId = 3;
+    if(fConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "WriteLpGBTRegister to Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
+
+    std::vector<uint32_t> cCommandVector;
+    cCommandVector.clear();
+    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pRegisterAddress << 0);
+    cCommandVector.push_back(pRegisterValue << 0);
+    std::vector<uint32_t> cReplyVector     = WriteCommandCPBandReadReply(cCommandVector, cExpectedReplySize);
+    uint8_t               cParityCheck     = cReplyVector[2] & 0xFF;
+    uint8_t               cReadBack        = cReplyVector[7] & 0xFF;
+    uint16_t              cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
+    // always check parity
+    size_t cIter             = 0;
+    bool   cValidTransaction = (cParityCheck == 1);
+    while(!cValidTransaction && fConfig.fReTry && cIter < fConfig.fMaxAttempts)
+    {
+        if(fConfig.fVerbose)
+            LOG(INFO) << BOLDRED << "[Iter# " << cIter << "/" << fConfig.fMaxAttempts
+                      << " of D19cOpticalInterface::WriteLpGBTRegister] : Received corrupted reply (mismatch in readbacks or failed parity check) from command processor block ... retrying" << RESET;
+        ResetCPB();
+        cReplyVector.clear();
+        cReplyVector      = WriteCommandCPBandReadReply(cCommandVector, cExpectedReplySize);
+        cParityCheck      = cReplyVector[2] & 0xFF;
+        cReadBackRegAddr  = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
+        cReadBack         = cReplyVector[7] & 0xFF;
+        cValidTransaction = (cParityCheck == 1);
+        if(cValidTransaction && pVerifLoop)
+        {
+            cValidTransaction = cValidTransaction && ((cReadBack == pRegisterValue) && (cReadBackRegAddr == pRegisterAddress));
+            if(fConfig.fVerbose && !cValidTransaction)
+                LOG(INFO) << BOLDRED << "[Iter# " << cIter << "/" << fConfig.fMaxAttempts
+                          << " of D19cOpticalInterface::WriteLpGBTRegister] : Received corrupted reply (mismatch in readbacks) from command processor block ... retrying" << RESET;
+        }
+        cIter++;
+    }
+   
+    fConfig.fReTry  = cReTry;
+    // throw exception based on failure
+    if(cIter > 1) LOG(INFO) << BOLDYELLOW << "D19cOpticalInterface::WriteLpGBTRegister had to try " << cIter << "/" << fConfig.fMaxAttempts << " possible attempts to complete transaction." << RESET;
+    if(cParityCheck != 1) throw std::runtime_error(std::string("[D19cOpticalInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block - failed parity check"));
+    if(pVerifLoop && cReadBack != pRegisterValue)
+        throw std::runtime_error(std::string("[D19cOpticalInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block - mismatch in read-back lpGBT register value"));
+    if(pVerifLoop && cReadBackRegAddr != pRegisterAddress)
+        throw std::runtime_error(std::string("[D19cOpticalInterface::WriteLpGBTRegister] : Received corrupted reply from command processor block - mismatch in read-back lpGBT register address"));
+    return (pVerifLoop) ? ((cReadBack == pRegisterValue) && (cReadBackRegAddr == pRegisterAddress)) : (cParityCheck == 1);
+}
+
+uint8_t D19cOpticalInterface::ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress)
+{
+    auto cReTry = fConfig.fReTry; 
+    fConfig.fReTry = 1; // for now.. always re-try this
+    size_t cExpectedReplySize = 10 * 1;
+    this->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
+    if(fResetEn) ResetCPB();
+    uint8_t cWorkerId = 16 + pLinkId, cFunctionId = 2;
+    if(fConfig.fVerbose) LOG(INFO) << BOLDMAGENTA << "D19cOpticalInterface::ReadLpGBTRegister from Link#" << +pLinkId << " -- workerId is " << +cWorkerId << RESET;
+    std::vector<uint32_t> cCommandVector;
+    cCommandVector.clear();
+    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pRegisterAddress << 0);
+    std::vector<uint32_t> cReplyVector     = WriteCommandCPBandReadReply(cCommandVector, cExpectedReplySize);
+    uint8_t               cReadBack        = cReplyVector[7] & 0xFF;
+    uint16_t              cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
+    // uint8_t               cParityCheck     = cReplyVector[2] & 0xFF;
+    size_t cIter = 0;
+    while((cReadBackRegAddr != pRegisterAddress) && cIter < fConfig.fMaxAttempts && fConfig.fReTry)
+    {
+        if(fResetEn) ResetCPB();
+        if(fConfig.fVerbose)
+            LOG(INFO) << BOLDRED << "[Iter# " << cIter << "/" << fConfig.fMaxAttempts
+                      << " of D19cOpticalInterface::ReadLpGBTRegister] : Received corrupted reply from command processor block ... retrying" << RESET;
+        cReplyVector.clear();
+        cReplyVector     = WriteCommandCPBandReadReply(cCommandVector, cExpectedReplySize);
+        cReadBack        = cReplyVector[7] & 0xFF;
+        cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
+        cIter++;
+    };
+    fConfig.fReTry  = cReTry;
+    if(cIter == (size_t)fConfig.fMaxAttempts || cReadBackRegAddr != pRegisterAddress) throw std::runtime_error(std::string("[D19cOpticalInterface::ReadLpGBTRegister] : Received corrupted reply from command processor block"));
+    return cReadBack;
+}
 
 bool D19cOpticalInterface::I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes, uint8_t pFrequency, uint32_t& theI2CWriteCount)
 {

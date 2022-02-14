@@ -253,7 +253,7 @@ bool D19cTriggerInterface::RunTriggerFSM()
     do
     {
         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-        LOG(INFO) << "Trigger State: " << BOLDGREEN << "Running.." << RESET;
+        if( cIterations%100 == 0 ) LOG(INFO) << "Trigger FSM State: " << BOLDGREEN << "Running.." << RESET;
         cEndTime = std::chrono::high_resolution_clock::now();
         cDuration     = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
         cIterations++; 

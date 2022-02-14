@@ -27,9 +27,11 @@ class D19cOpticalInterface : public FEConfigurationInterface
     bool SingleWriteRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem) override;
     bool MultiWriteRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem) override;
     
-    
     void setResetEnable(uint8_t pEnable){ fResetEn = pEnable; }
     void setWait(uint32_t pWait_us){ fWait_us = pWait_us; }
+    
+    bool    WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop);
+    uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress); 
     
   private:
   
@@ -46,6 +48,13 @@ class D19cOpticalInterface : public FEConfigurationInterface
     bool    I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes, uint8_t pFrequency, uint32_t& pNWrites) ;
     uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes, uint8_t pFrequency, uint32_t& pNReads) ;
     
+    // function for Write + Read to lpGBT I2C slave 
+    bool SingleReadSlave(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem ) ; 
+    bool SingleReadIC(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem ) ; 
+
+    bool SingleWriteSlave(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem) ; 
+    bool SingleWriteIC(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerifLoop ) ; 
+    
     // ############################
     // # Read/Write Optical Group #
     // ############################
@@ -53,7 +62,7 @@ class D19cOpticalInterface : public FEConfigurationInterface
     uint32_t      fI2CWriteCount = 0; 
     uint32_t      fI2CReadCount = 0; 
     uint8_t       fResetEn     = 1;
-    uint32_t      fWait_us     = 50;
+    uint32_t      fWait_us     = 100;
 
 
 };
