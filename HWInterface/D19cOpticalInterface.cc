@@ -35,7 +35,7 @@ bool D19cOpticalInterface::SingleWriteRead(Chip* pChip, ChipRegItem& pWriteReg )
         {
             LOG (DEBUG) << BOLDGREEN << "D19cOpticalInterface::SingleWriteRead - write worked" << RESET;   
             if( SingleRead(pChip, cReadBackReg )  ){ 
-                LOG (INFO) << BOLDGREEN << "\t.. D19cOpticalInterface::SingleWriteRead - read worked " 
+                LOG (DEBUG) << BOLDGREEN << "\t.. D19cOpticalInterface::SingleWriteRead - read worked " 
                     << " value read back was 0x" << std::hex << +cReadBackReg.fValue 
                     << " expected value is 0x" << +pWriteReg.fValue 
                     << std::dec 
@@ -144,8 +144,6 @@ bool D19cOpticalInterface::MultiRead(Chip* pChip, std::vector<ChipRegItem>& pReg
     }
     return cSuccess;
 }
-
-
 // ##########################################
 // # Read/Write registers with CPB I2C functions #
 // #########################################

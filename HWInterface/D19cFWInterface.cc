@@ -1140,26 +1140,6 @@ void D19cFWInterface::TriggerConfiguration()
         TriggerConfiguration();
     }
 }
-// void D19cFWInterface::SendNTriggers(uint16_t pNtriggers)
-// {
-//     // count triggers sent to the CIC
-//     bool   cAllTriggersSent = false;
-//     size_t cAttempt         = 0;
-//     size_t cMaxAttempts     = 10;
-//     this->ResetTriggerFSM();
-//     auto cNTriggersSent = this->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-//     do
-//     {
-//         this->Start();
-//         do
-//         {
-//             cNTriggersSent   = this->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-//             cAllTriggersSent = (cNTriggersSent >= pNtriggers);
-//         } while(!cAllTriggersSent);
-//         this->ResetTriggerFSM();
-//         cAttempt++;
-//     } while(cNTriggersSent == 0 && cAttempt < cMaxAttempts);
-// }
 void D19cFWInterface::Start()
 {
     fTriggerInterface->Start();
@@ -1179,32 +1159,6 @@ void D19cFWInterface::Resume()
     fTriggerInterface->Resume();
 }
 
-// void D19cFWInterface::ResetReadout()
-// {
-//     // LOG (INFO) << BOLDBLUE << "Resetting readout..." << RESET;
-//     auto cPkgDelay = this->ReadReg("fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
-//     LOG(DEBUG) << "Package delay is set to " << +cPkgDelay << RESET;
-//     WriteReg("fc7_daq_ctrl.readout_block.control.readout_reset", 0x1);
-//     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-
-//     WriteReg("fc7_daq_ctrl.readout_block.control.readout_reset", 0x0);
-//     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-
-//     if(ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type"))
-//     {
-//         LOG(DEBUG) << BOLDBLUE << "Reseting DDR3 " << RESET;
-//         fDDR3Offset     = 0;
-//         fDDR3Calibrated = (ReadReg("fc7_daq_stat.ddr3_block.init_calib_done") == 1);
-//         bool i          = false;
-//         while(!fDDR3Calibrated)
-//         {
-//             if(i == false) LOG(DEBUG) << "Waiting for DDR3 to finish initial calibration";
-//             i = true;
-//             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-//             fDDR3Calibrated = (ReadReg("fc7_daq_stat.ddr3_block.init_calib_done") == 1);
-//         }
-//     }
-// }
 
 void D19cFWInterface::DDR3SelfTest()
 {
@@ -2378,7 +2332,7 @@ std::vector<uint8_t> D19cFWInterface::MultiRegisterRead(Chip* pChip, std::vector
         for( auto cItem : pItems ) 
         {
             auto cIterator = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&cItem](const ChipRegPair& obj) {return obj.second.fAddress == cItem.fAddress && obj.second.fPage == cItem.fPage ;});
-            if (cIterator == cRegisterMap.end()) LOG (INFO) << BOLDRED << "Could not find " << cIterator->first << " addresss 0x" << std::hex << cItem.fAddress << std::dec << RESET; 
+            if (cIterator == cRegisterMap.end() && cItem.fStatusReg == 0x00 ) LOG (INFO) << BOLDRED << "Could not find " << cIterator->first << " addresss 0x" << std::hex << cItem.fAddress << std::dec << RESET; 
             else 
             {
                 pChip->setReg(cIterator->first, cItem.fValue);
@@ -2413,7 +2367,7 @@ uint8_t D19cFWInterface::SingleRegisterRead(Chip* pChip, ChipRegItem& pItem )
                 << "\t.. value in register is now 0x" << std::hex << +pChip->getReg( cIterator->first) << std::dec 
                 << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
         }
-        else LOG (INFO) << BOLDRED << "D19cFWInterface::SingleRegisterRead Register 0x" << std::hex << +pItem.fAddress << " not in register map " << RESET;
+        else if (pItem.fStatusReg == 0x00) LOG (INFO) << BOLDRED << "D19cFWInterface::SingleRegisterRead Register 0x" << std::hex << +pItem.fAddress << " not in register map " << RESET;
     }
     else LOG (ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterRead Register 0x" << std::hex << +pItem.fAddress << " FAILED " << RESET;
     return cValue;
@@ -2463,7 +2417,9 @@ bool D19cFWInterface::SingleRegisterWriteRead(Chip* pChip, ChipRegItem& pItem )
         }
         else LOG (ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead FAILED to write to Register " << cIterator->first << RESET;
     }
-    else LOG (INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead Could not find register address in register map " << RESET; 
+    else{ 
+        LOG (INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead Could not find register address " << std::hex << +pItem.fAddress << std::dec << " in register map " << RESET; 
+    }
     return false;
 }
 bool D19cFWInterface::MultiRegisterWriteRead(Chip* pChip, std::vector<ChipRegItem>& pItems )
@@ -2499,7 +2455,7 @@ bool D19cFWInterface::MultiRegisterWrite(Chip* pChip, std::vector<ChipRegItem>& 
     
     if( fFEConfigurationInterface->MultiWrite(pChip, pItems ) ) 
     {
-        LOG (INFO) << BOLDGREEN << "D19cFWInterface::MultiRegisterWrite successful write to " << pItems.size() << " registers" << RESET;
+        LOG (DEBUG) << BOLDGREEN << "D19cFWInterface::MultiRegisterWrite successful write to " << pItems.size() << " registers" << RESET;
         // update map
         auto cRegisterMap = pChip->getRegMap(); 
         for( auto& cItem : pItems )
@@ -2509,7 +2465,7 @@ bool D19cFWInterface::MultiRegisterWrite(Chip* pChip, std::vector<ChipRegItem>& 
             {
                 auto cPreviousValue = cIterator->second.fValue; 
                 pChip->setReg(cIterator->first , cItem.fValue);  
-                LOG (INFO) << BOLDGREEN << " D19cFWInterface::MultiRegisterWrite successful write of 0x" 
+                LOG (DEBUG) << BOLDGREEN << " D19cFWInterface::MultiRegisterWrite successful write of 0x" 
                     << std::hex << +cItem.fValue << std::dec << " to " << cIterator->first 
                     << "\t.. value in register is now 0x" << std::hex << +pChip->getReg( cIterator->first) << std::dec 
                     << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
