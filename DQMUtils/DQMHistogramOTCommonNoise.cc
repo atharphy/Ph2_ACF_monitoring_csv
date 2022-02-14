@@ -36,6 +36,8 @@ void DQMHistogramOTCommonNoise::book(TFile* theOutputFile, DetectorContainer& th
     HistContainer<TH1F> hHybridHits("HybridHits", "HybridHits", (NCHANNELS+1)*NCHIPS_OT, -0.5, (NCHANNELS+1)*NCHIPS_OT+1.5);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fHybridHitHistograms, hHybridHits);
 
+    //TODO - include 2d hybrid histogram, channel occupancy vs channel occupancy 
+
     
 }
 
@@ -56,11 +58,7 @@ void DQMHistogramOTCommonNoise::reset(void)
 //========================================================================================================================
 bool DQMHistogramOTCommonNoise::fill(std::vector<char>& dataBuffer)
 {
-    // SoC utilities only - BEGIN
-    // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
-    // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
-
-    // As example, I'm expecting to receive a data stream from an uint32_t contained from calibration "OTCommonNoise"
+    // Contains CM Noise summary per channel at hybrid and chip level
     HybridContainerStream<EmptyContainer, GenericDataArray<NCHANNELS, uint32_t>, GenericDataArray<NCHANNELS*NCHIPS_OT, uint32_t>> theHybridHitStreamer("CMNoise_HitStream");
 
     // Try to see if the char buffer matched what I'm expection (container of uint32_t from OTCommonNoise
@@ -97,18 +95,6 @@ bool DQMHistogramOTCommonNoise::fillHitPlots(DetectorDataContainer& theHitData)
                         chipHitHistogram->SetBinContent(iChan, chip->getSummary<GenericDataArray<(NCHANNELS+1), uint32_t>>()[iChan]);
                     }
                     
-                    //Now fit to get the common noise
-                    //TH1F* cTmpNHits = static_cast<TH1F*>(chipHitHistogram->Clone());
-                    //TF1*  cNHitsFit = dynamic_cast<TF1*>(chipHitHistogram->Clone());
-                    //cTmpNHits->Reset();
-                    //fitCMNoise(cTmpNHits, cNHitsFit, NCHANNELS+1);
-
-                    //float CMNoise = fabs(cNHitsFit->GetParameter(1));
-                    //float CMNoiseError = fabs(cNHitsFit->GetParError(1));
-
-                    //LOG(INFO) << BOLDRED << "FE " << +hybrid->getIndex() << " CBC " << +chip->getIndex() << " CM is " << CMNoise << "+/-"
-                    // << CMNoiseError << "%" << RESET;
-                    
                 }
 
                 for(uint16_t iChan=0; iChan < (NCHANNELS + 1) * NCHIPS_OT; iChan++)
@@ -120,7 +106,18 @@ bool DQMHistogramOTCommonNoise::fillHitPlots(DetectorDataContainer& theHitData)
         }
     }
 
-    //TODO do fitting
+        //Now fit to get the common noise
+    // TH1F* cTmpNHits = static_cast<TH1F*>(chipHitHistogram->Clone());
+    // //fit with custom function (defined below) with 4 parameters -- threshold, CMNoise fraction, # events, # active strips
+    // TF1*  cCmFit = new TF1(cName, hitProbFunction, 0, 255, 4);
+    // cTmpNHits->Reset();
+    // fitCMNoise(cTmpNHits, cNHitsFit, NCHANNELS+1);
+
+    // float CMNoise = fabs(cNHitsFit->GetParameter(1));
+    // float CMNoiseError = fabs(cNHitsFit->GetParError(1));
+
+    // LOG(INFO) << BOLDRED << "FE " << +hybrid->getIndex() << " CBC " << +chip->getIndex() << " CM is " << CMNoise << "+/-"
+    // << CMNoiseError << "%" << RESET;
 
     return true;
 }
@@ -162,24 +159,59 @@ bool DQMHistogramOTCommonNoise::fitCMNoise(TH1F* pHitCountHist, TF1* pFit, uint3
 }
 
 
-double DQMHistogramOTCommonNoise::findMaximum(TH1F* histogram)
+double DQMHistogramOTCommonNoise::findMaximum(TH1F* pHistogram)
 {
-    int maxbin = histogram->GetMaximumBin();
-    return histogram->GetXaxis()->GetBinCenter(maxbin);
+    int maxbin = pHistogram->GetMaximumBin();
+    return pHistogram->GetXaxis()->GetBinCenter(maxbin);
 }
 
-double DQMHistogramOTCommonNoise::hitProbability(double threshold)
+double DQMHistogramOTCommonNoise::hitProbability(double pThreshold)
 {
-    return 0.5 - (TMath::Erf(threshold / sqrt(2)) / 2);
+    return 0.5 - (TMath::Erf(pThreshold / sqrt(2)) / 2);
     // area above threshold under the gaussian curve.
     // The Factors are to only treat the positive half
     // 1-erf(x/sqrt(2)/2 + .5)
 }
 
-double DQMHistogramOTCommonNoise::inverse_hitProbability(double probability)
+double DQMHistogramOTCommonNoise::inverse_hitProbability(double pProbability)
 {
     // the inverse of the above function!
-    return sqrt(2) * TMath::ErfInverse(1 - 2 * probability);
+    return sqrt(2) * TMath::ErfInverse(1 - 2 * pProbability);
 }
 
+double DQMHistogramOTCommonNoise::binomialPdf(int n, int k, double p) { return TMath::Binomial(n, k) * pow(p, k) * pow((1 - p), n - k); }
 
+
+double DQMHistogramOTCommonNoise::hitProbFunction(double* pStrips, Double_t* pPar)
+{
+    uint32_t cNSamplingsCM = 100;
+    uint32_t cSigmaRange = 6;
+
+    const double samplingHalfStep = cSigmaRange / static_cast<double>(cNSamplingsCM);
+    double&      threshold        = pPar[0];
+    double&      cmnFraction      = pPar[1];
+    double&      nEvents          = pPar[2];
+    double&      nActiveStrips    = pPar[3];
+
+    double result = 0;
+    double hitProb;
+    double sampleProbability, x;
+
+    int iStrips = int(ceil(*pStrips - 0.5));                 // round to nearest integer
+    if((iStrips < 0) || (iStrips > nActiveStrips)) return 0; // only defined in range
+
+    for(uint32_t  j = 0; j < cNSamplingsCM; ++j)
+    {
+        // loop over all x values
+        x = -cSigmaRange + j * 2 * samplingHalfStep;
+        // approximate probability at sampling point by interpolating
+        sampleProbability = hitProbability(x - samplingHalfStep);
+        sampleProbability -= hitProbability(x + samplingHalfStep);
+
+        // probability of hit taking cmn into account
+        hitProb = hitProbability(threshold + x * cmnFraction);
+        // distribution function scaled to nevents
+        result += binomialPdf(int(nActiveStrips), iStrips, hitProb) * sampleProbability * nEvents;
+    }
+    return result;
+}

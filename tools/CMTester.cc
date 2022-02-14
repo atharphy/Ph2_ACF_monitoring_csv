@@ -122,8 +122,7 @@ void CMTester::TakeData()
     //can have 0 or 255 hits, need NCHANNELS+1 (inclusive)
     ContainerFactory::copyAndInitStructure<EmptyContainer, GenericDataArray<(NCHANNELS+1), uint32_t>, GenericDataArray<((NCHANNELS+1)*NCHIPS_OT), uint32_t>, EmptyContainer, EmptyContainer, EmptyContainer>(*fDetectorContainer, theHitContainer);
 
-    //LESYA TODO
-    //currently missing the channel by channel data per event, need to think about how to implement this to make the 2D plot.
+    //TODO LESYA -- currently missing the channel by channel data per event, need to think about how to implement this to make the 2D plot.
 
     for(auto cBoard: theHitContainer)
     {
@@ -157,7 +156,8 @@ void CMTester::TakeData()
 
                     }
                     //save per hybrid
-                   cHybrid->getSummary<GenericDataArray<((NCHANNELS+1)*NCHIPS_OT), uint32_t>>()[cHybridHits] = cHybridHits; 
+                    if(cHybrid->getIndex() == 0) LOG(INFO) << "hybrid hits " << cHybridHits; 
+                    cHybrid->getSummary<GenericDataArray<((NCHANNELS+1)*NCHIPS_OT), uint32_t>>()[cHybridHits] += 1; 
                 }
             }
             
