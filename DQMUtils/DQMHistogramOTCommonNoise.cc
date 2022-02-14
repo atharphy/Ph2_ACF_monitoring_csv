@@ -35,6 +35,9 @@ void DQMHistogramOTCommonNoise::book(TFile* theOutputFile, DetectorContainer& th
 
     HistContainer<TH1F> hHybridHits("HybridHits", "HybridHits", (NCHANNELS+1)*NCHIPS_OT, -0.5, (NCHANNELS+1)*NCHIPS_OT+1.5);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fHybridHitHistograms, hHybridHits);
+    
+    HistContainer<TH1F> hModuleHits("ModuleHits", "ModuleHits", (NCHANNELS+1)*NCHIPS_OT*2, -0.5, (NCHANNELS+1)*NCHIPS_OT*2+1.5);
+    RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fModuleHitHistograms, hModuleHits);
 
     //TODO - include 2d hybrid histogram, channel occupancy vs channel occupancy 
 
@@ -102,6 +105,12 @@ bool DQMHistogramOTCommonNoise::fillHitPlots(DetectorDataContainer& theHitData)
                     TH1F* hybridHitHistogram = fHybridHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                     hybridHitHistogram->SetBinContent(iChan, hybrid->getSummary<GenericDataArray<((NCHANNELS + 1) * NCHIPS_OT), uint32_t>>()[iChan]);
                 }
+            }
+
+            for(uint16_t iChan=0; iChan < (NCHANNELS + 1) * NCHIPS_OT*2; iChan++)
+            {
+                TH1F* moduleHitHistogram = fModuleHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                moduleHitHistogram->SetBinContent(iChan, opticalGroup->getSummary<GenericDataArray<((NCHANNELS + 1) * NCHIPS_OT*2), uint32_t>>()[iChan]);
             }
         }
     }
@@ -200,7 +209,8 @@ double DQMHistogramOTCommonNoise::hitProbFunction(double* pStrips, Double_t* pPa
     int iStrips = int(ceil(*pStrips - 0.5));                 // round to nearest integer
     if((iStrips < 0) || (iStrips > nActiveStrips)) return 0; // only defined in range
 
-    for(uint32_t  j = 0; j < cNSamplingsCM; ++j)
+    for(uint32_t 
+     j = 0; j < cNSamplingsCM; ++j)
     {
         // loop over all x values
         x = -cSigmaRange + j * 2 * samplingHalfStep;

@@ -118,9 +118,13 @@ void CMTester::TakeData()
     LOG(INFO) << "Checking threshold on latest CBC that was touched...: " << fVcth << std::endl;
 
     DetectorDataContainer theHitContainer;
+    DetectorDataContainer the2DHitContainer;
     //channel, chip, hybrid, optical group, board, detector
     //can have 0 or 255 hits, need NCHANNELS+1 (inclusive)
-    ContainerFactory::copyAndInitStructure<EmptyContainer, GenericDataArray<(NCHANNELS+1), uint32_t>, GenericDataArray<((NCHANNELS+1)*NCHIPS_OT), uint32_t>, EmptyContainer, EmptyContainer, EmptyContainer>(*fDetectorContainer, theHitContainer);
+    ContainerFactory::copyAndInitStructure<EmptyContainer, GenericDataArray<(NCHANNELS+1), uint32_t>, GenericDataArray<((NCHANNELS+1)*NCHIPS_OT), uint32_t>, GenericDataArray<((NCHANNELS+1)*NCHIPS_OT*2), uint32_t>, EmptyContainer, EmptyContainer>(*fDetectorContainer, theHitContainer);
+    //2D arrays for 
+    ContainerFactory::copyAndInitStructure<EmptyContainer, EmptyContainer, GenericDataArray<((NCHANNELS+1)*NCHIPS_OT), uint32_t>, GenericDataArray<((NCHANNELS+1)*NCHIPS_OT*2), uint32_t>, EmptyContainer, EmptyContainer>(*fDetectorContainer, the2DHitContainer);
+
 
     //TODO LESYA -- currently missing the channel by channel data per event, need to think about how to implement this to make the 2D plot.
 
@@ -142,6 +146,7 @@ void CMTester::TakeData()
 
             for(auto cOpticalGroup: *cBoard)
             {
+                uint32_t cModuleHits = 0;
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     uint32_t cHybridHits = 0;
@@ -156,9 +161,11 @@ void CMTester::TakeData()
 
                     }
                     //save per hybrid
-                    if(cHybrid->getIndex() == 0) LOG(INFO) << "hybrid hits " << cHybridHits; 
+                    cModuleHits += cHybridHits;
                     cHybrid->getSummary<GenericDataArray<((NCHANNELS+1)*NCHIPS_OT), uint32_t>>()[cHybridHits] += 1; 
                 }
+                cOpticalGroup->getSummary<GenericDataArray<((NCHANNELS+1)*NCHIPS_OT*2), uint32_t>>()[cModuleHits] += 1;
+
             }
             
             //print out event counter

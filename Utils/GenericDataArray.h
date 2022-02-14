@@ -31,6 +31,30 @@ class GenericDataArray
     T data[size];
 };
 
+
+//2D generic array, accessed with () instead of [] to make overloading easier
+template <size_t size_0, size_t size_1, typename T = float>
+class GenericDataArray_2D
+{
+  public:
+    GenericDataArray_2D()
+    {
+        for(size_t i = 0; i < size_0; ++i){
+          for(size_t j = 0; j < size_1; ++i){
+            data[i][j] = T();
+          }
+        }
+    }
+    ~GenericDataArray_2D() {}
+
+    size_t getSize_0() { return size_0; }
+    size_t getSize_1() { return size_1; }
+    T&     operator()(size_t position_0, size_t position_1) { return data[position_0][position_1]; }
+
+    T data[size_0][size_1];
+};
+
+
 template <size_t size, typename T = float>
 inline GenericDataArray<size, T> fromVectorToGenericDataArray(const std::vector<T>& theInputVector)
 {
