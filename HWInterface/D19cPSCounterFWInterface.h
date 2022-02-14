@@ -25,7 +25,11 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
     bool WaitForReadout() override;
     bool WaitForNTriggers() override; 
     bool PollReadoutData(const Ph2_HwDescription::BeBoard* pBoard, bool pWait = false )  override;
-    
+    bool ResetReadout() override 
+    {
+      LOG (INFO) << BOLDRED << "Nothing to reset for PS counter interface.." << RESET;
+      return true;
+    }
     void SetPSCounterDelay(uint8_t pDelay) { fPSCounterDelay = pDelay; };
     void SetPSCounterMode(uint8_t pMode) { fPSCounterFast = pMode; };
     void SetPSPairSelect(uint8_t pMode) { fPairSelect = pMode; };

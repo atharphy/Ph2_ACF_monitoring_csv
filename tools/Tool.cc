@@ -685,7 +685,6 @@ void Tool::setSystemTestPulse(uint8_t pTPAmplitude, uint8_t pTestGroup, bool pTP
 void Tool::enableTestPulse(bool enableTP)
 {
     fTestPulse = enableTP;
-    LOG (INFO) << BOLDYELLOW << "Tool::enableTestPulse " << +(uint8_t)enableTP << RESET;
     if( enableTP ) setFWTestPulse();
     for(auto cBoard: *fDetectorContainer)
     {
@@ -722,7 +721,6 @@ void Tool::selectGroupTestPulse(Chip* cChip, uint8_t pTestGroup)
 
 void Tool::setFWTestPulse()
 {
-    LOG (INFO) << BOLDYELLOW << "Tool::setFWTestPulse" << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
         std::vector<std::pair<std::string, uint32_t>> cRegVec;

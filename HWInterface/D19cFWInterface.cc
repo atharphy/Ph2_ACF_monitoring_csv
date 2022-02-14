@@ -2314,7 +2314,7 @@ bool D19cFWInterface::SingleRegisterWrite(Chip* pChip, ChipRegItem& pItem, bool 
             // update map 
             auto cPreviousValue = cIterator->second.fValue; 
             pChip->setReg(cIterator->first , pItem.fValue);  
-            LOG (INFO) << BOLDGREEN << " D19cFWInterface::SingleRegisterWrite successful write of 0x" 
+            LOG (DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterWrite successful write of 0x" 
                 << std::hex << +pItem.fValue << std::dec << " to " << cIterator->first 
                 << "\t.. value in register is now 0x" << std::hex << +pChip->getReg( cIterator->first) << std::dec 
                 << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
