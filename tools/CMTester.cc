@@ -119,7 +119,7 @@ void CMTester::TakeData()
     DetectorDataContainer the2DHitContainer;
     //channel, chip, hybrid, optical group, board, detector
     //can have 0 or 255 hits, need NCHANNELS+1 (inclusive)
-    ContainerFactory::copyAndInitStructure<EmptyContainer, GenericDataArray<(NCHANNELS+1), uint32_t>, GenericDataArray<((NCHANNELS+1)*NCHIPS_OT), uint32_t>, GenericDataArray<TOTAL_CHANNELS_OT, uint32_t>, EmptyContainer, EmptyContainer>(*fDetectorContainer, theHitContainer);
+    ContainerFactory::copyAndInitStructure<EmptyContainer, GenericDataArray<(NCHANNELS+1), uint32_t>, GenericDataArray<(HYBRID_CHANNELS_OT+1), uint32_t>, GenericDataArray<TOTAL_CHANNELS_OT+1, uint32_t>, EmptyContainer, EmptyContainer>(*fDetectorContainer, theHitContainer);
     //3D arrays for module-level and hybrid-level correlation
     ContainerFactory::copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>, EmptyContainer, EmptyContainer>(*fDetectorContainer, the2DHitContainer);
 
@@ -169,7 +169,7 @@ void CMTester::TakeData()
 
                         //for 2d correlation, save channels with hits per chip 
                         //TODO add checking for masked channels
-                        uint32_t chipOffset_module = (cHybrid->getIndex() * (NCHIPS_OT * (NCHANNELS+1) ) ) + (cCbc->getIndex() * (NCHANNELS+1) );
+                        uint32_t chipOffset_module = (cHybrid->getIndex() * HYBRID_CHANNELS_OT) + (cCbc->getIndex() * NCHANNELS );
                         for(uint32_t iCh = 0; iCh < NCHANNELS+1; iCh++){
                             if(cEvent->DataBit(cHybrid->getId(), cCbc->getId(), iCh)){
                                 hit_channels.push_back(iCh + chipOffset_module);
@@ -179,10 +179,10 @@ void CMTester::TakeData()
 
                     //save per hybrid
                     cModuleHits += cHybridHits;
-                    cHybrid->getSummary<GenericDataArray<((NCHANNELS+1)*NCHIPS_OT), uint32_t>>()[cHybridHits] += 1; 
+                    cHybrid->getSummary<GenericDataArray<(HYBRID_CHANNELS_OT+1), uint32_t>>()[cHybridHits] += 1; 
 
                 }
-                cOpticalGroup->getSummary<GenericDataArray<TOTAL_CHANNELS_OT, uint32_t>>()[cModuleHits] += 1;
+                cOpticalGroup->getSummary<GenericDataArray<TOTAL_CHANNELS_OT+1, uint32_t>>()[cModuleHits] += 1;
 
                 //per module correlation also tells us per hybrid correlation
                 for(size_t iCh1 = 0; iCh1 < hit_channels.size(); iCh1 ++ ){
@@ -207,7 +207,7 @@ void CMTester::TakeData()
     fDQMHistogramOTCommonNoise.fillHitPlots(theHitContainer);
     fDQMHistogramOTCommonNoise.fill2DHitPlots(the2DHitContainer);
 #else
-    auto theHitStream = prepareOpticalGroupContainerStreamer<EmptyContainer, GenericDataArray<(NCHANNELS+1), uint32_t>, GenericDataArray<((NCHANNELS+1)*NCHIPS_OT), uint32_t>, GenericDataArray<total_channels, uint32_t>>("CMNoise_HitStream");
+    auto theHitStream = prepareOpticalGroupContainerStreamer<EmptyContainer, GenericDataArray<NCHANNELS+1, uint32_t>, GenericDataArray<HYBRID_CHANNELS_OT+1, uint32_t>, GenericDataArray<TOTAL_CHANNELS_OT+1, uint32_t>>("CMNoise_HitStream");
     for(auto board: theHitContainer)
     {
         if(fDQMStreamerEnabled) theHitStream.streamAndSendBoard(board, fDQMStreamer);

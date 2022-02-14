@@ -30,22 +30,36 @@ void DQMHistogramOTCommonNoise::book(TFile* theOutputFile, DetectorContainer& th
 
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
 
-    HistContainer<TH1F> hChipHits("ChipHits", "ChipHits", NCHANNELS+1, -0.5, NCHANNELS+1.5);
+    HistContainer<TH1F> hChipHits("ChipHits", "ChipHits", NCHANNELS+1, -0.5, NCHANNELS+1+0.5);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fChipHitHistograms, hChipHits);
-    
-    HistContainer<TH1F> hHybridHits("HybridHits", "HybridHits", (NCHANNELS+1)*NCHIPS_OT, -0.5, (NCHANNELS+1)*NCHIPS_OT+1.5);
+
+    HistContainer<TH1F> hHybridHits("HybridHits", "HybridHits", NCHANNELS*NCHIPS_OT+1, -0.5, NCHANNELS*NCHIPS_OT+1+0.5);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fHybridHitHistograms, hHybridHits);
     
-    HistContainer<TH1F> hModuleHits("ModuleHits", "ModuleHits", TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT+1.5);
+    HistContainer<TH1F> hModuleHits("ModuleHits", "ModuleHits", TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT+0.5);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fModuleHitHistograms, hModuleHits);
+
+    HistContainer<TH1F> hModuleHitsEven("ModuleHitsEven", "ModuleHitsEven", TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT+0.5);
+    RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fModuleHitHistogramsEven, hModuleHitsEven);
+    
+    HistContainer<TH1F> hModuleHitsOdd("ModuleHitsOdd", "ModuleHitsOdd", TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT+0.5);
+    RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fModuleHitHistogramsOdd, hModuleHitsOdd);
 
     HistContainer<TH2F> h2DModuleHits("2DModuleHits", "2DModuleHits", TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT*2+1.5, TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT*2+1.5);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, f2DModuleHitHistograms, h2DModuleHits);
+       
+    HistContainer<TH2F> h2DModuleHitsEven("2DModuleHitsEven", "2DModuleHitsEven", TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT*2+1.5, TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT*2+0.5);
+    RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, f2DModuleHitHistogramsEven, h2DModuleHitsEven);
 
-    HistContainer<TH2F> h2DHybridHits("2DHybridHits", "2DHybridHits", (NCHANNELS+1)*NCHIPS_OT, -0.5, (NCHANNELS+1)*NCHIPS_OT+1.5, (NCHANNELS+1)*NCHIPS_OT, -0.5, (NCHANNELS+1)*NCHIPS_OT+1.5);
+    HistContainer<TH2F> h2DModuleHitsOdd("2DModuleHitsOdd", "2DModuleHitsOdd", TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT*2+1.5, TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT*2+0.5);
+    RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, f2DModuleHitHistogramsOdd, h2DModuleHitsOdd);
+
+    HistContainer<TH2F> h2DHybridHits("2DHybridHits", "2DHybridHits", NCHANNELS*NCHIPS_OT+1, -0.5, NCHANNELS*NCHIPS_OT+1+1.5, NCHANNELS*NCHIPS_OT+1, -0.5, NCHANNELS*NCHIPS_OT+1+-.5);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, f2DHybridHitHistograms, h2DHybridHits);
 
-    //TODO - can i include a fit container?
+    HistContainer<TH2F> h2DChipHits("2DChipHits", "2DChipHits", NCHANNELS, -0.5, NCHANNELS, NCHANNELS, -0.5, NCHANNELS+0.5);
+    RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, f2DChipHitHistograms, h2DChipHits);
+
 
     
 }
@@ -68,7 +82,7 @@ void DQMHistogramOTCommonNoise::reset(void)
 bool DQMHistogramOTCommonNoise::fill(std::vector<char>& dataBuffer)
 {
     // Contains CM Noise summary per channel at hybrid and chip level
-    OpticalGroupContainerStream<EmptyContainer, GenericDataArray<(NCHANNELS+1), uint32_t>, GenericDataArray<((NCHANNELS+1)*NCHIPS_OT), uint32_t>, GenericDataArray<TOTAL_CHANNELS_OT, uint32_t>> theOpticalGroupHitStreamer("CMNoise_HitStream");
+    OpticalGroupContainerStream<EmptyContainer, GenericDataArray<NCHANNELS+1, uint32_t>, GenericDataArray<HYBRID_CHANNELS_OT+1, uint32_t>, GenericDataArray<TOTAL_CHANNELS_OT+1, uint32_t>> theOpticalGroupHitStreamer("CMNoise_HitStream");
     OpticalGroupContainerStream<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>> the2DOpticalGroupHitStreamer("CMNoise_2DHitStream");
 
     // Try to see if the char buffer matched what I'm expection (container of uint32_t from OTCommonNoise
@@ -94,20 +108,75 @@ bool DQMHistogramOTCommonNoise::fill(std::vector<char>& dataBuffer)
 //========================================================================================================================
 bool DQMHistogramOTCommonNoise::fill2DHitPlots(DetectorDataContainer& the2DHitData)
 {
+
+    //make a vector of the channel boundaries of each chip
+    //checking later I will start with 1, so we can check that a channel is between two bins, add an extra for the last bin and an extra for 0
+    std::vector<uint32_t> chipChannelBoundaries;
+    for(size_t iChip = 0; iChip < (NCHIPS_OT*2)+2; iChip++){
+        chipChannelBoundaries.push_back(iChip * NCHANNELS);
+    }
+
     for(auto board: the2DHitData)
     {
         for(auto opticalGroup: *board)
         {
             TH2F* moduleHitHistogram = f2DModuleHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+            TH2F* moduleHitHistogramEven = f2DModuleHitHistogramsEven.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+            TH2F* moduleHitHistogramOdd = f2DModuleHitHistogramsOdd.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
 
             for(size_t iCh1=0; iCh1 < TOTAL_CHANNELS_OT; iCh1++){
                 for(size_t iCh2=0; iCh2 < TOTAL_CHANNELS_OT; iCh2++){
                     moduleHitHistogram->SetBinContent(iCh1, iCh2, opticalGroup->getSummary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>()(iCh1, iCh2) );
+                    
+                    //Even/odd
+                    if( iCh1%2 == 0 && iCh2%2 == 0){
+                        moduleHitHistogramEven->SetBinContent(iCh1, iCh2, opticalGroup->getSummary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>()(iCh1, iCh2) );
+                    }
+                    else if( iCh1%2 == 1 && iCh2%2 == 1){
+                        moduleHitHistogramOdd->SetBinContent(iCh1, iCh2, opticalGroup->getSummary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>()(iCh1, iCh2) );
+                    }
+
+
                 }
             }
-            for(auto hybrid: *opticalGroup)
-            {
-                if( hybrid->getIndex() == 1) channelOffset = TOTAL_CHANNELS_OT/2;
+
+            for( auto hybrid: *opticalGroup){
+
+                TH2F* hybridHitHistogram = f2DHybridHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                uint32_t hybridOffset =  HYBRID_CHANNELS_OT+1;
+
+                for(size_t iCh1=0; iCh1 < TOTAL_CHANNELS_OT; iCh1++){
+                    for(size_t iCh2=0; iCh2 < TOTAL_CHANNELS_OT; iCh2++){
+                        //on hybrid 0
+                        if(iCh1 < hybridOffset && iCh2 < hybridOffset && hybrid->getIndex() == 0){
+                            hybridHitHistogram->SetBinContent(iCh1, iCh2, opticalGroup->getSummary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>()(iCh1, iCh2) );
+                        }
+                        //on hybrid 1
+                        else if(iCh1 >= hybridOffset && iCh2 >= hybridOffset && hybrid->getIndex() == 1){
+                            hybridHitHistogram->SetBinContent(iCh1-hybridOffset, iCh2-hybridOffset, opticalGroup->getSummary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>()(iCh1, iCh2) );
+                        }
+                    }
+                }
+
+                for( auto chip : *hybrid){
+                    
+                    TH2F* chipHitHistogram = f2DChipHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    uint16_t iChan_high = chip->getIndex()+1 + (hybrid->getIndex()*NCHIPS_OT);
+                    uint16_t iChan_low  = chip->getIndex()   + (hybrid->getIndex()*NCHIPS_OT);
+
+                    uint32_t chipOffset = (hybrid->getIndex() * HYBRID_CHANNELS_OT ) + (chip->getIndex() * (NCHANNELS) );
+                    LOG(INFO) << "filling chip " << chip->getIndex() << " with offset " << chipOffset;
+                    LOG(INFO) << "        the boundaries are " << chipChannelBoundaries[iChan_low] << " " << chipChannelBoundaries[iChan_high];
+
+
+
+                    for(size_t iCh1= chipChannelBoundaries[iChan_low]  ; iCh1 < chipChannelBoundaries[iChan_high]; iCh1++){
+                        for(size_t iCh2= chipChannelBoundaries[iChan_low]; iCh2 <= chipChannelBoundaries[iChan_high]; iCh2++){                                
+                            chipHitHistogram->SetBinContent(iCh1-chipOffset, iCh2-chipOffset, opticalGroup->getSummary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>()(iCh1, iCh2) );
+                            
+                        }
+                    }
+                }
 
             }
         }
@@ -128,6 +197,7 @@ bool DQMHistogramOTCommonNoise::fillHitPlots(DetectorDataContainer& theHitData)
         {
             for(auto hybrid: *opticalGroup)
             {
+
                 for(auto chip: *hybrid)
                 {
                     TH1F* chipHitHistogram = fChipHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
@@ -135,22 +205,29 @@ bool DQMHistogramOTCommonNoise::fillHitPlots(DetectorDataContainer& theHitData)
                     for(uint16_t iChan=0; iChan < NCHANNELS + 1; iChan++)
                     {
                         
-                        chipHitHistogram->SetBinContent(iChan, chip->getSummary<GenericDataArray<(NCHANNELS+1), uint32_t>>()[iChan]);
+                        chipHitHistogram->SetBinContent(iChan, chip->getSummary<GenericDataArray<NCHANNELS+1, uint32_t>>()[iChan]);
                     }
                     
                 }
-
-                for(uint16_t iChan=0; iChan < (NCHANNELS + 1) * NCHIPS_OT; iChan++)
+                TH1F* hybridHitHistogram = fHybridHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                for(uint16_t iChan=0; iChan < (NCHANNELS * NCHIPS_OT)+1; iChan++)
                 {
-                    TH1F* hybridHitHistogram = fHybridHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                    hybridHitHistogram->SetBinContent(iChan, hybrid->getSummary<GenericDataArray<((NCHANNELS + 1) * NCHIPS_OT), uint32_t>>()[iChan]);
+                    hybridHitHistogram->SetBinContent(iChan, hybrid->getSummary<GenericDataArray<HYBRID_CHANNELS_OT+1, uint32_t>>()[iChan]);
                 }
             }
 
+            TH1F* moduleHitHistogram = fModuleHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+            TH1F* moduleHitHistogramEven = fModuleHitHistogramsEven.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+            TH1F* moduleHitHistogramOdd = fModuleHitHistogramsOdd.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+
             for(uint16_t iChan=0; iChan < (NCHANNELS + 1) * NCHIPS_OT*2; iChan++)
             {
-                TH1F* moduleHitHistogram = fModuleHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                moduleHitHistogram->SetBinContent(iChan, opticalGroup->getSummary<GenericDataArray<((NCHANNELS + 1) * NCHIPS_OT*2), uint32_t>>()[iChan]);
+
+
+                moduleHitHistogram->SetBinContent(iChan, opticalGroup->getSummary<GenericDataArray<TOTAL_CHANNELS_OT, uint32_t>>()[iChan]);
+
+                if(iChan %2 == 0 ) moduleHitHistogramEven->SetBinContent(iChan, opticalGroup->getSummary<GenericDataArray<TOTAL_CHANNELS_OT, uint32_t>>()[iChan]);
+                else moduleHitHistogramOdd->SetBinContent(iChan, opticalGroup->getSummary<GenericDataArray<TOTAL_CHANNELS_OT, uint32_t>>()[iChan]);
             }
         }
     }
