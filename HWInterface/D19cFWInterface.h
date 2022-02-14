@@ -121,6 +121,10 @@ class D19cFWInterface : public BeBoardFWInterface
     D19cDebugFWInterface*            getDebugInterface(){ return fDebugInterface;}
     TriggerInterface*                getTriggerInterface(){ return fTriggerInterface;}
     L1ReadoutInterface*              getL1ReadoutInterface(){ return fL1ReadoutInterface;}
+    FEConfigurationInterface*        getFEConfigurationInterface(){ return fFEConfigurationInterface; }
+    //
+    void ConfigureInterfaces(const Ph2_HwDescription::BeBoard* pBoard ); 
+
     /*!
      *
      * \brief Destructor of the Cbc3Fc7FWInterface class
@@ -420,7 +424,8 @@ class D19cFWInterface : public BeBoardFWInterface
     // Registe read 
     uint8_t SingleRegisterRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem ) override;
     std::vector<uint8_t> MultiRegisterRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem ) override;
-   
+    
+    
     // fast command generic block
     void ResetFCMDBram();
     void ConfigureFCMDBram(std::vector<uint8_t> pFastCommands);

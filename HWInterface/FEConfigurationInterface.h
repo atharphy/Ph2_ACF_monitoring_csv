@@ -72,18 +72,6 @@ class FEConfigurationInterface : public RegManager
     }
 
     
-
-     /*!
-     * \brief Clear Register Map
-     */
-
-    // keeping track of register configuration 
-    // these are shared functions between any implementation 
-    void ClearModifiedRegisterMap();
-    Ph2_HwDescription::ChipRegMap GetModifiedRegisterMap(Ph2_HwDescription::Chip* pChip);
-    void OverwriteModifiedRegisterMap(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegMap pRegMap);
-    void UpdateModifiedRegMap(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pPage = 0);
-    
     void Configure(Config pConfig)
     {
         fConfig.fVerbose     = pConfig.fVerbose;
@@ -93,14 +81,13 @@ class FEConfigurationInterface : public RegManager
     }
     void setVerify(uint8_t pVerify){ fConfig.fVerify = pVerify; }
     void setRetry(uint8_t pReTry){ fConfig.fReTry = pReTry; }
-    void setRegisterTracking(uint8_t pTrack){ fTrackRegisters = pTrack; }
 
     void setConfigurationType(ConfigurationType pType){ fType = pType;}
     ConfigurationType getConfigurationType(){ return fType; }
+    void setRegisterTracking(uint8_t pTrackRegisters){ fTrackRegisters = pTrackRegisters;} 
+
   protected:
-    uint8_t fTrackRegisters{true}; 
-    std::map<uint32_t, Ph2_HwDescription::ChipRegMap> fModifiedRegisters;
-    std::map<uint16_t, std::string>                   fMap;
+    uint8_t fTrackRegisters{0};
     uint8_t fNReadoutChip{0};
     Config  fConfig; 
     ConfigurationType fType;

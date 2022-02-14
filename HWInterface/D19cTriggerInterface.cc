@@ -71,6 +71,7 @@ bool D19cTriggerInterface::Stop()
 // reconfigure trigger
 void D19cTriggerInterface::ResetTriggerFSM()
 {
+    LOG (DEBUG) << BOLDYELLOW << "D19cTriggerInterface::ResetTriggerFSM" << RESET;
     this->Stop();
 
     // reset trigger
@@ -99,6 +100,8 @@ void D19cTriggerInterface::Resume()
 
 bool D19cTriggerInterface::Start()
 {
+    
+    LOG(DEBUG) << BOLDYELLOW << "................................Starting triggers  ... " << RESET;
     auto cTriggerState = GetTriggerState();
     if(cTriggerState == 1)
     {
@@ -110,8 +113,6 @@ bool D19cTriggerInterface::Start()
     LOG (DEBUG) << BOLDYELLOW << "D19cTriggerInterface::Start - trigger state is " << cTriggerState << RESET; 
     // this stops triggers  + resets
     this->ResetTriggerFSM();
-    std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 100));
-    this->TriggerConfiguration();
     
     // here open the shutter for the stub counter block (for some reason self clear doesn't work, that why we have to
     // clear the register manually)
@@ -253,7 +254,7 @@ bool D19cTriggerInterface::RunTriggerFSM()
     do
     {
         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-        if( cIterations%100 == 0 ) LOG(INFO) << "Trigger FSM State: " << BOLDGREEN << "Running.." << RESET;
+        if( cIterations%1000 == 0 && cIterations > 0) LOG(INFO) << "Trigger FSM State: " << BOLDGREEN << "Running.." << RESET;
         cEndTime = std::chrono::high_resolution_clock::now();
         cDuration     = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
         cIterations++; 

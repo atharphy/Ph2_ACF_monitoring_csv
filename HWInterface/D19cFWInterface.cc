@@ -587,7 +587,45 @@ void D19cFWInterface::IniitalizeL1ReadoutInterface(const BeBoard* pBoard)
     fL1ReadoutInterface->LinkTriggerInterface(fTriggerInterface);
     fL1ReadoutInterface->LinkFastCommandInterface(fFastCommandInterface);  
 }
-    
+void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
+{
+    if(fFEConfigurationInterface == nullptr)
+    {
+        Config cConfig; 
+        if(!pBoard->isOptical())
+        {
+            LOG (INFO) << BOLDYELLOW << "Electrical readout.. iniitialize I2C interface" << RESET;
+            fFEConfigurationInterface = new D19cI2CInterface( this->getId() , this->getUri(), this->getAddressTable() ); 
+            (static_cast<D19cI2CInterface*>(fFEConfigurationInterface))->ConfigureI2CMap(pBoard);
+            cConfig.fVerbose     = 0;
+            cConfig.fReTry       = 0;
+            cConfig.fMaxAttempts = 10;
+            cConfig.fVerify      = 0; 
+        }
+        else 
+        { 
+            LOG (INFO) << BOLDBLUE << "Optical readout . initializing Optical interface" << RESET;
+            fFEConfigurationInterface = new D19cOpticalInterface( this->getId() , this->getUri(), this->getAddressTable() ); 
+            (static_cast<D19cOpticalInterface*>(fFEConfigurationInterface))->setResetEnable( fCPBConfig.fEnable ); 
+            (static_cast<D19cOpticalInterface*>(fFEConfigurationInterface))->setWait( fCPBConfig.fWait_us ); 
+            cConfig.fVerbose     = fCPBConfig.fVerbose;
+            cConfig.fReTry       = fCPBConfig.fReTry;
+            cConfig.fMaxAttempts = fCPBConfig.fMaxAttempts;
+            cConfig.fVerify      = 0; 
+            cConfig.fReTry       = 0;
+        }
+        fFEConfigurationInterface->Configure(cConfig);
+    }
+
+    // configure L1 readout interface 
+    // this depends on the event type 
+    if( fL1ReadoutInterface == nullptr ) 
+    {
+        if( pBoard->getEventType() == EventType::PSAS )  InitializePSCounterFWInterface(pBoard); 
+        else IniitalizeL1ReadoutInterface(pBoard); 
+    }
+
+}
 void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
 {
     // unique link Ids
@@ -804,43 +842,8 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         }
     }
 
-    if(fFEConfigurationInterface == nullptr)
-    {
-        Config cConfig; 
-        if(!pBoard->isOptical())
-        {
-            LOG (INFO) << BOLDYELLOW << "Electrical readout.. iniitialize I2C interface" << RESET;
-            fFEConfigurationInterface = new D19cI2CInterface( this->getId() , this->getUri(), this->getAddressTable() ); 
-            (static_cast<D19cI2CInterface*>(fFEConfigurationInterface))->ConfigureI2CMap(pBoard);
-            cConfig.fVerbose     = 0;
-            cConfig.fReTry       = 0;
-            cConfig.fMaxAttempts = 10;
-            cConfig.fVerify      = 0; 
-        }
-        else 
-        { 
-            LOG (INFO) << BOLDBLUE << "Optical readout . initializing Optical interface" << RESET;
-            fFEConfigurationInterface = new D19cOpticalInterface( this->getId() , this->getUri(), this->getAddressTable() ); 
-            (static_cast<D19cOpticalInterface*>(fFEConfigurationInterface))->setResetEnable( fCPBConfig.fEnable ); 
-            (static_cast<D19cOpticalInterface*>(fFEConfigurationInterface))->setWait( fCPBConfig.fWait_us ); 
-            cConfig.fVerbose     = fCPBConfig.fVerbose;
-            cConfig.fReTry       = fCPBConfig.fReTry;
-            cConfig.fMaxAttempts = fCPBConfig.fMaxAttempts;
-            cConfig.fVerify      = 0; 
-            cConfig.fReTry       = 0;
-        }
-        fFEConfigurationInterface->Configure(cConfig);
-    }
+    ConfigureInterfaces(pBoard);
     
-    
-    // configure L1 readout interface 
-    // this depends on the event type 
-    if( fL1ReadoutInterface == nullptr ) 
-    {
-        if( pBoard->getEventType() == EventType::PSAS )  InitializePSCounterFWInterface(pBoard); 
-        else IniitalizeL1ReadoutInterface(pBoard); 
-    }
-
     if(fI2CVersion >= 1 && !pBoard->isOptical())
     {
         fI2CSlaveMap.clear();
@@ -1223,7 +1226,7 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
 {
     pData.clear(); 
     uint32_t cNEvents = 0; 
-    LOG (INFO) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET;
+    LOG (DEBUG) << BOLDYELLOW << "D19cFWInterface::ReadData L1ReadoutInterface " << fL1ReadoutInterface << RESET;
     if( fL1ReadoutInterface == nullptr ){ 
         LOG (INFO) << BOLDRED << "L1ReadoutInterface is a nullptr.." << RESET;
         return cNEvents;
@@ -1235,6 +1238,7 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     }
     else{ 
         LOG (INFO) << BOLDRED << "Failed to poll readout-data from BeBoard" << RESET;
+        throw Exception("Failed to poll readout-data from BeBoard");
         return cNEvents; 
     }
 
@@ -1247,12 +1251,15 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
 void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
 {
     pData.clear(); 
-    LOG (INFO) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET;
+    LOG (DEBUG) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET;
     if( fL1ReadoutInterface == nullptr ) LOG (INFO) << BOLDRED << "L1ReadoutInterface is a nullptr.." << RESET;
     
     fL1ReadoutInterface->setNEvents(pNEvents); 
     if( fL1ReadoutInterface->ReadEvents(pBoard) ) pData = fL1ReadoutInterface->getData();
-    else LOG (INFO) << BOLDRED << "Failed to ReadNEvents" << RESET;
+    else{ 
+        LOG (INFO) << BOLDRED << "Failed to ReadNEvents" << RESET;
+        throw Exception("Failed to ReadNEvents....");
+    }
     if(fSaveToFile) fFileHandler->setData(pData);
 }
 
@@ -2404,7 +2411,6 @@ bool D19cFWInterface::MultiRegisterWrite(Chip* pChip, std::vector<ChipRegItem>& 
     else LOG (ERROR) << BOLDRED << "D19cFWInterface::MultiRegisterWrite FAILED" << RESET;
     return false;
 }
-
 uint8_t D19cFWInterface::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress)
 {
     auto                                  cLinkId   = pChip->getOpticalId();

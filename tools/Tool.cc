@@ -686,7 +686,7 @@ void Tool::enableTestPulse(bool enableTP)
 {
     fTestPulse = enableTP;
     LOG (INFO) << BOLDYELLOW << "Tool::enableTestPulse " << +(uint8_t)enableTP << RESET;
-    setFWTestPulse();
+    if( enableTP ) setFWTestPulse();
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)

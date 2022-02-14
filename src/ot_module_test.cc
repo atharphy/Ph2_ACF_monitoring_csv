@@ -220,7 +220,14 @@ int main(int argc, char* argv[])
     LOG(INFO) << outp.str();
     cTool.CreateResultDirectory(cDirectory, false, false);
     cTool.InitResultFile(cResultfile);
-
+    // make sure  all interfaces are configured
+    for(const auto cBoard: *cTool.fDetectorContainer)
+    {
+        cTool.fBeBoardInterface->setBoard(cBoard->getId());
+        auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+        cInterface->ConfigureInterfaces(cBoard);
+    }
+    
     if(cmd.foundOption("readTemperatures"))
     {
         LOG(INFO) << BOLDBLUE << "Reading temperatures from lpGBT-ADCs.." << RESET;

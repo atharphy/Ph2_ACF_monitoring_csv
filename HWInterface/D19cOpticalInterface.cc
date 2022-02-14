@@ -25,6 +25,7 @@ D19cOpticalInterface::~D19cOpticalInterface() {}
 // for now this is just a write followed by a read 
 bool D19cOpticalInterface::SingleWriteRead(Chip* pChip, ChipRegItem& pWriteReg )
 {
+    LOG (DEBUG) << BOLDYELLOW << "D19cOpticalInterface::SingleWriteRead" << RESET;
     size_t cAttempts = 0; 
     bool cSuccess = false;
     ChipRegItem cReadBackReg; 
@@ -56,8 +57,9 @@ bool D19cOpticalInterface::MultiWriteRead(Chip* pChip, std::vector<ChipRegItem>&
 }
 bool D19cOpticalInterface::SingleWrite(Chip* pChip, ChipRegItem& pItem )
 {
-   if( pChip->getFrontEndType() == FrontEndType::LpGBT) return SingleWriteIC(pChip,pItem,false);
-   else return SingleWriteSlave(pChip,pItem);
+    pChip->UpdateModifiedRegMap(pItem);
+    if( pChip->getFrontEndType() == FrontEndType::LpGBT) return SingleWriteIC(pChip,pItem,false);
+    else return SingleWriteSlave(pChip,pItem);
 }
 bool D19cOpticalInterface::SingleWriteIC(Chip* pChip, ChipRegItem& pItem, bool pVerifLoop )
 {
