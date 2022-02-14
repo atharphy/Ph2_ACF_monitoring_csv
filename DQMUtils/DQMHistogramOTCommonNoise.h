@@ -46,6 +46,7 @@ class DQMHistogramOTCommonNoise : public DQMHistogramBase
     bool fill(std::vector<char>& dataBuffer) override;
 
     bool fillHitPlots(DetectorDataContainer& theHitData);
+    bool fill2DHitPlots(DetectorDataContainer& theHitData);
 
     /*!
      * \brief process : do something with the histogram like colors, fit, drawing canvases, etc
@@ -62,6 +63,8 @@ class DQMHistogramOTCommonNoise : public DQMHistogramBase
     DetectorDataContainer fChipHitHistograms;
     DetectorDataContainer fHybridHitHistograms;
     DetectorDataContainer fModuleHitHistograms;
+    DetectorDataContainer f2DHybridHitHistograms;
+    DetectorDataContainer f2DModuleHitHistograms;
 
     //fitting function
     bool fitCMNoise(TH1F* pHitCountHist, TF1* pFit, uint32_t pRange);

@@ -40,7 +40,7 @@ class GenericDataArray_2D
     GenericDataArray_2D()
     {
         for(size_t i = 0; i < size_0; ++i){
-          for(size_t j = 0; j < size_1; ++i){
+          for(size_t j = 0; j < size_1; ++j){
             data[i][j] = T();
           }
         }
@@ -54,6 +54,30 @@ class GenericDataArray_2D
     T data[size_0][size_1];
 };
 
+
+template <size_t size_0, size_t size_1, size_t size_2, typename T = float>
+class GenericDataArray_3D
+{
+  public:
+    GenericDataArray_3D()
+    {
+        for(size_t i = 0; i < size_0; ++i){
+          for(size_t j = 0; j < size_1; ++i){
+            for(size_t k = 0; k < size_2; ++i){
+              data[i][j][k] = T();
+            }
+          }
+        }
+    }
+    ~GenericDataArray_3D() {}
+
+    size_t getSize_0() { return size_0; }
+    size_t getSize_1() { return size_1; }
+    size_t getSize_2() { return size_2; }
+    T&     operator()(size_t position_0, size_t position_1, size_t position_2) { return data[position_0][position_1][position_2]; }
+
+    T data[size_0][size_1][size_2];
+};
 
 template <size_t size, typename T = float>
 inline GenericDataArray<size, T> fromVectorToGenericDataArray(const std::vector<T>& theInputVector)

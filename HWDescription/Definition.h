@@ -26,6 +26,7 @@
 #define NMPACHANNELS 1920
 #define NMPACOLS 16
 #define NCHIPS_OT 8
+#define TOTAL_CHANNELS_OT NCHIPS_OT*(NCHANNELS+1)*2
 
 // Events
 

@@ -11,8 +11,6 @@ void CMTester::Initialize()
 {    
     parseSettings();
     
-    fNevents = 6000; //TODO should come from settings file
-
 #ifdef __USE_ROOT__
     fDQMHistogramOTCommonNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
@@ -121,9 +119,9 @@ void CMTester::TakeData()
     DetectorDataContainer the2DHitContainer;
     //channel, chip, hybrid, optical group, board, detector
     //can have 0 or 255 hits, need NCHANNELS+1 (inclusive)
-    ContainerFactory::copyAndInitStructure<EmptyContainer, GenericDataArray<(NCHANNELS+1), uint32_t>, GenericDataArray<((NCHANNELS+1)*NCHIPS_OT), uint32_t>, GenericDataArray<((NCHANNELS+1)*NCHIPS_OT*2), uint32_t>, EmptyContainer, EmptyContainer>(*fDetectorContainer, theHitContainer);
-    //2D arrays for 
-    ContainerFactory::copyAndInitStructure<EmptyContainer, EmptyContainer, GenericDataArray<((NCHANNELS+1)*NCHIPS_OT), uint32_t>, GenericDataArray<((NCHANNELS+1)*NCHIPS_OT*2), uint32_t>, EmptyContainer, EmptyContainer>(*fDetectorContainer, the2DHitContainer);
+    ContainerFactory::copyAndInitStructure<EmptyContainer, GenericDataArray<(NCHANNELS+1), uint32_t>, GenericDataArray<((NCHANNELS+1)*NCHIPS_OT), uint32_t>, GenericDataArray<TOTAL_CHANNELS_OT, uint32_t>, EmptyContainer, EmptyContainer>(*fDetectorContainer, theHitContainer);
+    //3D arrays for module-level and hybrid-level correlation
+    ContainerFactory::copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>, EmptyContainer, EmptyContainer>(*fDetectorContainer, the2DHitContainer);
 
 
     //TODO LESYA -- currently missing the channel by channel data per event, need to think about how to implement this to make the 2D plot.
@@ -138,57 +136,91 @@ void CMTester::TakeData()
         fBeBoardInterface->Start(theBoard);
         ReadNEvents(theBoard, fNevents);
         const std::vector<Event*>& events = GetEvents();
+        
 
-        for(auto& cEvent: events)
+        for(auto cOpticalGroup: *cBoard)
         {
 
-            if(cN > fNevents) continue; // Needed when using ReadData on CBC3
+            //basically make the 2d histogram here, I am not sure if there's a better way to do this..
+            //GenericDataArray_2D<(NCHANNELS+1)*NCHIPS_OT, (NCHANNELS+1)*NCHIPS_OT, uint32_t> cChannels_hybrid_0;
+            //GenericDataArray_2D<(NCHANNELS+1)*NCHIPS_OT, (NCHANNELS+1)*NCHIPS_OT, uint32_t> cChannels_hybrid_1;
+            //GenericDataArray_2D<(NCHANNELS+1)*NCHIPS_OT*2, (NCHANNELS+1)*NCHIPS_OT*2, uint32_t> cChannels_module;
 
-            for(auto cOpticalGroup: *cBoard)
+            for(auto& cEvent: events)
             {
+
+                if(cN > fNevents) continue; // Needed when using ReadData on CBC3
+                
                 uint32_t cModuleHits = 0;
+                std::vector<uint32_t> hit_channels;
+                    
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     uint32_t cHybridHits = 0;
+
+
                     for(auto cCbc: *cHybrid)
                     {
                         uint32_t cEventHits = cEvent->GetNHits(cHybrid->getId(), cCbc->getId());
-
                         //basically filling the histogram, then we will set bin content later
                         cCbc->getSummary<GenericDataArray<(NCHANNELS+1), uint32_t>>()[cEventHits] += 1;
-
                         cHybridHits += cEventHits;
+ 
 
+                        //for 2d correlation, save channels with hits per chip 
+                        //TODO add checking for masked channels
+                        uint32_t chipOffset_module = (cHybrid->getIndex() * (NCHIPS_OT * (NCHANNELS+1) ) ) + (cCbc->getIndex() * (NCHANNELS+1) );
+                        for(uint32_t iCh = 0; iCh < NCHANNELS+1; iCh++){
+                            if(cEvent->DataBit(cHybrid->getId(), cCbc->getId(), iCh)){
+                                hit_channels.push_back(iCh + chipOffset_module);
+                            }
+                        }
                     }
+
                     //save per hybrid
                     cModuleHits += cHybridHits;
                     cHybrid->getSummary<GenericDataArray<((NCHANNELS+1)*NCHIPS_OT), uint32_t>>()[cHybridHits] += 1; 
+
                 }
-                cOpticalGroup->getSummary<GenericDataArray<((NCHANNELS+1)*NCHIPS_OT*2), uint32_t>>()[cModuleHits] += 1;
+                cOpticalGroup->getSummary<GenericDataArray<TOTAL_CHANNELS_OT, uint32_t>>()[cModuleHits] += 1;
 
-            }
-            
-            //print out event counter
-            if(cN % 100 == 0)
-            {
-                LOG(INFO) << cN << " Events recorded!";
-                // updateHists();
-            }
-            cN++;
+                //per module correlation also tells us per hybrid correlation
+                for(size_t iCh1 = 0; iCh1 < hit_channels.size(); iCh1 ++ ){
+                    for(size_t iCh2 = 0; iCh2 < hit_channels.size(); iCh2 ++){
+                        //LOG(INFO) << "found " << hit_channels[iCh1] << " " << hit_channels[iCh2];
+                        the2DHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->getSummary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>()(hit_channels[iCh1], hit_channels[iCh2]) += 1;
+                    }
+                }
 
-        }
+                //print out event counter
+                if(cN % 100 == 0)
+                {
+                    LOG(INFO) << cN << " Events recorded!";
+                    // updateHists();
+                }
+                cN++;
+            } //end events loop
+
+        } //end module loop
     }
 #ifdef __USE_ROOT__
     fDQMHistogramOTCommonNoise.fillHitPlots(theHitContainer);
+    fDQMHistogramOTCommonNoise.fill2DHitPlots(the2DHitContainer);
 #else
-    auto theHitStream = prepareHybridContainerStreamer<EmptyContainer, GenericDataArray<(NCHANNELS+1), uint32_t>, GenericDataArray<((NCHANNELS+1)*NCHIPS_OT), uint32_t>>("CMNoise_HitStream");
+    auto theHitStream = prepareOpticalGroupContainerStreamer<EmptyContainer, GenericDataArray<(NCHANNELS+1), uint32_t>, GenericDataArray<((NCHANNELS+1)*NCHIPS_OT), uint32_t>, GenericDataArray<total_channels, uint32_t>>("CMNoise_HitStream");
     for(auto board: theHitContainer)
     {
         if(fDQMStreamerEnabled) theHitStream.streamAndSendBoard(board, fDQMStreamer);
     }
+    auto the2DHitStream = prepareOpticalGroupContainerStreamer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>("CMNoise_2DHitStream");
+    for(auto board: the2DHitContainer)
+    {
+        if(fDQMStreamerEnabled) the2DHitStream.streamAndSendBoard(board, fDQMStreamer);
+    }
 #endif
 
 }
+
 
 float CMTester::getLambda(ChipContainer *theCbc)
 {
@@ -617,7 +649,7 @@ void CMTester::parseSettings()
     auto cSetting = fSettingsMap.find("Nevents");
 
     if(cSetting != std::end(fSettingsMap))
-        fNevents = 10 * boost::any_cast<double>(cSetting->second);
+        fNevents = boost::any_cast<double>(cSetting->second);
     else
         fNevents = 2000;
 
@@ -636,7 +668,7 @@ void CMTester::parseSettings()
         fSimOccupancy = 50;
 
     LOG(INFO) << "Parsed the following settings:";
-    LOG(INFO) << "	Nevents (.XML value times 10)= " << fNevents;
+    LOG(INFO) << "	Running " << fNevents;
     LOG(INFO) << "	simulate = " << int(fDoSimulate);
     LOG(INFO) << "	sim. Occupancy (%) = " << int(fSimOccupancy);
 }

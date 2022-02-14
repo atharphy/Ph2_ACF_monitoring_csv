@@ -3,13 +3,13 @@
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/GenericDataArray.h"
-#include "../Utils/ChipContainerStream.h"
-#include "../Utils/HybridContainerStream.h"
+#include "../Utils/OpticalGroupContainerStream.h"
 #include "TFile.h"
 #include "TCanvas.h"
 #include "TF1.h"
 #include "TFile.h"
 #include "TH1F.h"
+#include "TH2F.h"
 
 
 
@@ -32,14 +32,20 @@ void DQMHistogramOTCommonNoise::book(TFile* theOutputFile, DetectorContainer& th
 
     HistContainer<TH1F> hChipHits("ChipHits", "ChipHits", NCHANNELS+1, -0.5, NCHANNELS+1.5);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fChipHitHistograms, hChipHits);
-
+    
     HistContainer<TH1F> hHybridHits("HybridHits", "HybridHits", (NCHANNELS+1)*NCHIPS_OT, -0.5, (NCHANNELS+1)*NCHIPS_OT+1.5);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fHybridHitHistograms, hHybridHits);
     
-    HistContainer<TH1F> hModuleHits("ModuleHits", "ModuleHits", (NCHANNELS+1)*NCHIPS_OT*2, -0.5, (NCHANNELS+1)*NCHIPS_OT*2+1.5);
+    HistContainer<TH1F> hModuleHits("ModuleHits", "ModuleHits", TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT+1.5);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fModuleHitHistograms, hModuleHits);
 
-    //TODO - include 2d hybrid histogram, channel occupancy vs channel occupancy 
+    HistContainer<TH2F> h2DModuleHits("2DModuleHits", "2DModuleHits", TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT*2+1.5, TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT*2+1.5);
+    RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, f2DModuleHitHistograms, h2DModuleHits);
+
+    HistContainer<TH2F> h2DHybridHits("2DHybridHits", "2DHybridHits", (NCHANNELS+1)*NCHIPS_OT, -0.5, (NCHANNELS+1)*NCHIPS_OT+1.5, (NCHANNELS+1)*NCHIPS_OT, -0.5, (NCHANNELS+1)*NCHIPS_OT+1.5);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, f2DHybridHitHistograms, h2DHybridHits);
+
+    //TODO - can i include a fit container?
 
     
 }
@@ -62,22 +68,56 @@ void DQMHistogramOTCommonNoise::reset(void)
 bool DQMHistogramOTCommonNoise::fill(std::vector<char>& dataBuffer)
 {
     // Contains CM Noise summary per channel at hybrid and chip level
-    HybridContainerStream<EmptyContainer, GenericDataArray<NCHANNELS, uint32_t>, GenericDataArray<NCHANNELS*NCHIPS_OT, uint32_t>> theHybridHitStreamer("CMNoise_HitStream");
+    OpticalGroupContainerStream<EmptyContainer, GenericDataArray<(NCHANNELS+1), uint32_t>, GenericDataArray<((NCHANNELS+1)*NCHIPS_OT), uint32_t>, GenericDataArray<TOTAL_CHANNELS_OT, uint32_t>> theOpticalGroupHitStreamer("CMNoise_HitStream");
+    OpticalGroupContainerStream<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>> the2DOpticalGroupHitStreamer("CMNoise_2DHitStream");
 
     // Try to see if the char buffer matched what I'm expection (container of uint32_t from OTCommonNoise
     // procedure)
-    if(theHybridHitStreamer.attachBuffer(&dataBuffer))
+    if(theOpticalGroupHitStreamer.attachBuffer(&dataBuffer))
     {
-        theHybridHitStreamer.decodeData(fDetectorData);
+        theOpticalGroupHitStreamer.decodeData(fDetectorData);
         fillHitPlots(fDetectorData);
         fDetectorData.cleanDataStored();
         return true;
     }
-    // the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking
-    // for this stream)
+    if(the2DOpticalGroupHitStreamer.attachBuffer(&dataBuffer))
+    {
+        the2DOpticalGroupHitStreamer.decodeData(fDetectorData);
+        fill2DHitPlots(fDetectorData);
+        fDetectorData.cleanDataStored();
+        return true;
+    }
+
     return false;
-    // SoC utilities only - END
 }
+
+//========================================================================================================================
+bool DQMHistogramOTCommonNoise::fill2DHitPlots(DetectorDataContainer& the2DHitData)
+{
+    for(auto board: the2DHitData)
+    {
+        for(auto opticalGroup: *board)
+        {
+            TH2F* moduleHitHistogram = f2DModuleHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+
+            for(size_t iCh1=0; iCh1 < TOTAL_CHANNELS_OT; iCh1++){
+                for(size_t iCh2=0; iCh2 < TOTAL_CHANNELS_OT; iCh2++){
+                    moduleHitHistogram->SetBinContent(iCh1, iCh2, opticalGroup->getSummary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>()(iCh1, iCh2) );
+                }
+            }
+            for(auto hybrid: *opticalGroup)
+            {
+                if( hybrid->getIndex() == 1) channelOffset = TOTAL_CHANNELS_OT/2;
+
+            }
+        }
+    }
+
+
+    return true;
+
+}
+
 
 //========================================================================================================================
 bool DQMHistogramOTCommonNoise::fillHitPlots(DetectorDataContainer& theHitData)
@@ -166,6 +206,10 @@ bool DQMHistogramOTCommonNoise::fitCMNoise(TH1F* pHitCountHist, TF1* pFit, uint3
 
     return true;
 }
+
+
+
+
 
 
 double DQMHistogramOTCommonNoise::findMaximum(TH1F* pHistogram)
