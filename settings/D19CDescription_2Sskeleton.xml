@@ -268,16 +268,16 @@
     <Setting name="Check2SRefSide">1</Setting>   <!-- L == 1  ; R== 0 --> 
     <Setting name="Check2SRefChip">0</Setting>   <!-- L == 1  ; R== 0 --> 
 
+    <!-- Common Noise-->
+    <Setting name="CMNoise_manualVcth">600</Setting>
+
+
 </Settings>
 
 
 <MonitoringSettings>
 <Monitoring type="2S" enable="1">
-<<<<<<< HEAD
-    <MonitoringSleepTime> 10000 </MonitoringSleepTime>
-=======
     <MonitoringSleepTime> 1000 </MonitoringSleepTime>
->>>>>>> b81e063214deefa01857f9eef0f8c4c437dc10a0
     <MonitoringElements
     CBCThreshold  = "1"
     LpGBT_ADC1    = "0"

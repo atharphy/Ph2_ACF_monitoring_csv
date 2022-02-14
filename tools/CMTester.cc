@@ -152,7 +152,7 @@ void CMTester::TakeData()
 
                         //basically filling the histogram, then we will set bin content later
                         cCbc->getSummary<GenericDataArray<(NCHANNELS+1), uint32_t>>()[cEventHits] += 1;
-                        //LOG(INFO) << " GOT " << cEventHits << " HITS";
+
                         cHybridHits += cEventHits;
 
                     }

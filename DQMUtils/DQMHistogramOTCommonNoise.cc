@@ -3,7 +3,8 @@
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/GenericDataArray.h"
-#include "../Utils/ContainerStream.h"
+#include "../Utils/ChipContainerStream.h"
+#include "../Utils/HybridContainerStream.h"
 #include "TFile.h"
 #include "TCanvas.h"
 #include "TF1.h"
@@ -25,7 +26,6 @@ void DQMHistogramOTCommonNoise::book(TFile* theOutputFile, DetectorContainer& th
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
     // make fDetectorData ready to receive the information fromm the stream
-    ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
     // SoC utilities only - END
 
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
@@ -33,7 +33,7 @@ void DQMHistogramOTCommonNoise::book(TFile* theOutputFile, DetectorContainer& th
     HistContainer<TH1F> hChipHits("ChipHits", "ChipHits", NCHANNELS+1, -0.5, NCHANNELS+1.5);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fChipHitHistograms, hChipHits);
 
-    HistContainer<TH1F> hHybridHits("HybridHits", "HybridHits", (NCHANNELS+1)*NCHIPS_OT, -0.5, NCHANNELS+1.5);
+    HistContainer<TH1F> hHybridHits("HybridHits", "HybridHits", (NCHANNELS+1)*NCHIPS_OT, -0.5, (NCHANNELS+1)*NCHIPS_OT+1.5);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fHybridHitHistograms, hHybridHits);
 
     
@@ -67,7 +67,7 @@ bool DQMHistogramOTCommonNoise::fill(std::vector<char>& dataBuffer)
     // procedure)
     if(theHybridHitStreamer.attachBuffer(&dataBuffer))
     {
-        theHybridHitStreamer.decodeHybridData(fDetectorData);
+        theHybridHitStreamer.decodeData(fDetectorData);
         fillHitPlots(fDetectorData);
         fDetectorData.cleanDataStored();
         return true;
@@ -91,10 +91,10 @@ bool DQMHistogramOTCommonNoise::fillHitPlots(DetectorDataContainer& theHitData)
                 {
                     TH1F* chipHitHistogram = fChipHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                     //fill the histogram from the vector
-                    for(uint16_t iChan; iChan < NCHANNELS + 1; iChan++)
+                    for(uint16_t iChan=0; iChan < NCHANNELS + 1; iChan++)
                     {
-                        LOG(INFO) << "filling histogram with channel " << iChan << " and info " << chip->getSummary<GenericDataArray<(NCHANNELS + 1), uint32_t>>()[iChan];
-                        chipHitHistogram->SetBinContent(iChan, chip->getSummary<GenericDataArray<(NCHANNELS + 1), uint32_t>>()[iChan]);
+                        
+                        chipHitHistogram->SetBinContent(iChan, chip->getSummary<GenericDataArray<(NCHANNELS+1), uint32_t>>()[iChan]);
                     }
                     
                     //Now fit to get the common noise
@@ -111,7 +111,7 @@ bool DQMHistogramOTCommonNoise::fillHitPlots(DetectorDataContainer& theHitData)
                     
                 }
 
-                for(uint16_t iChan; iChan < (NCHANNELS + 1) * NCHIPS_OT; iChan++)
+                for(uint16_t iChan=0; iChan < (NCHANNELS + 1) * NCHIPS_OT; iChan++)
                 {
                     TH1F* hybridHitHistogram = fHybridHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                     hybridHitHistogram->SetBinContent(iChan, hybrid->getSummary<GenericDataArray<((NCHANNELS + 1) * NCHIPS_OT), uint32_t>>()[iChan]);
