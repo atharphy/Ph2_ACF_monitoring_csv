@@ -93,20 +93,21 @@ bool DQMHistogramOTCommonNoise::fillHitPlots(DetectorDataContainer& theHitData)
                     //fill the histogram from the vector
                     for(uint16_t iChan; iChan < NCHANNELS + 1; iChan++)
                     {
+                        LOG(INFO) << "filling histogram with channel " << iChan << " and info " << chip->getSummary<GenericDataArray<(NCHANNELS + 1), uint32_t>>()[iChan];
                         chipHitHistogram->SetBinContent(iChan, chip->getSummary<GenericDataArray<(NCHANNELS + 1), uint32_t>>()[iChan]);
                     }
                     
                     //Now fit to get the common noise
-                    TH1F* cTmpNHits = static_cast<TH1F*>(chipHitHistogram->Clone());
-                    cTmpNHits->Reset();
-                    TF1*  cNHitsFit = new TF1();
-                    fitCMNoise(cTmpNHits, cNHitsFit, NCHANNELS+1);
+                    //TH1F* cTmpNHits = static_cast<TH1F*>(chipHitHistogram->Clone());
+                    //TF1*  cNHitsFit = dynamic_cast<TF1*>(chipHitHistogram->Clone());
+                    //cTmpNHits->Reset();
+                    //fitCMNoise(cTmpNHits, cNHitsFit, NCHANNELS+1);
 
-                    float CMNoise = fabs(cNHitsFit->GetParameter(1));
-                    float CMNoiseError = fabs(cNHitsFit->GetParError(1));
+                    //float CMNoise = fabs(cNHitsFit->GetParameter(1));
+                    //float CMNoiseError = fabs(cNHitsFit->GetParError(1));
 
-                    LOG(INFO) << BOLDRED << "FE " << +hybrid->getIndex() << " CBC " << +chip->getIndex() << " CM is " << CMNoise << "+/-"
-                      << CMNoiseError << "%" << RESET;
+                    //LOG(INFO) << BOLDRED << "FE " << +hybrid->getIndex() << " CBC " << +chip->getIndex() << " CM is " << CMNoise << "+/-"
+                    // << CMNoiseError << "%" << RESET;
                     
                 }
 
@@ -134,16 +135,11 @@ bool DQMHistogramOTCommonNoise::fitCMNoise(TH1F* pHitCountHist, TF1* pFit, uint3
 
     // retrieve the threshold from the maximum of the actual nhit distribution
     double threshold = inverse_hitProbability(prob);
+    LOG(INFO) << "Threshold is " << threshold; 
 
     // initialize cmnFraction to 0 anc later extract from fit
     double cmnFraction = 0;
     pFit->SetRange(0, pRange);
-
-    // Name Parameters
-    pFit->SetParName(0, "threshold");
-    pFit->SetParName(1, "cmnFraction");
-    pFit->SetParName(2, "nEvents");
-    pFit->SetParName(3, "nActiveStrips");
 
     // Set Parameters
     pFit->SetParameter(0, threshold);
@@ -152,6 +148,12 @@ bool DQMHistogramOTCommonNoise::fitCMNoise(TH1F* pHitCountHist, TF1* pFit, uint3
     // Fix Parameters nEvents & nActiveStrips as these I know
     pFit->FixParameter(2, pHitCountHist->GetEntries());
     pFit->FixParameter(3, pRange);
+
+    // Name Parameters
+    pFit->SetParName(0, "threshold");
+    pFit->SetParName(1, "cmnFraction");
+    pFit->SetParName(2, "nEvents");
+    pFit->SetParName(3, "nActiveStrips");
 
     // Fit and return
     pHitCountHist->Fit(pFit, "RQNM+");

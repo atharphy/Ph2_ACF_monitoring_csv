@@ -152,6 +152,7 @@ void CMTester::TakeData()
 
                         //basically filling the histogram, then we will set bin content later
                         cCbc->getSummary<GenericDataArray<(NCHANNELS+1), uint32_t>>()[cEventHits] += 1;
+                        //LOG(INFO) << " GOT " << cEventHits << " HITS";
                         cHybridHits += cEventHits;
 
                     }
@@ -176,7 +177,7 @@ void CMTester::TakeData()
     auto theHitStream = prepareHybridContainerStreamer<EmptyContainer, GenericDataArray<(NCHANNELS+1), uint32_t>, GenericDataArray<((NCHANNELS+1)*NCHIPS_OT), uint32_t>>("CMNoise_HitStream");
     for(auto board: theHitContainer)
     {
-        if(fStreamerEnabled) theHitStream.streamAndSendBoard(board, fNetworkStreamer);
+        if(fDQMStreamerEnabled) theHitStream.streamAndSendBoard(board, fDQMStreamer);
     }
 #endif
 

@@ -1020,12 +1020,14 @@ int main(int argc, char* argv[])
     }
 
     if( cmd.foundOption("cmNoise") && !cmd.foundOption("read")){
+
+        int cManualVcth = cTool.findValueInSettings<double>("CMNoise_manualVcth", 0);
+        int cPedestalShift = cTool.findValueInSettings<double>("CMNoise_pedestalShift", 0);
         
-        int         cManualVcth    = (cmd.foundOption("manualVCTH")) ? convertAnyInt(cmd.optionValue("manualvcth").c_str()) : 0;
-        int         cPedestalShift = (cmd.foundOption("pedestalshift")) ? convertAnyInt(cmd.optionValue("pedestalshift").c_str()) : 0;
         bool        cAllChan = (cmd.foundOption("allChan")) ? true : false;
 
-        LOG(INFO) << BOLDBLUE << "OT_MODULE_TEST:: Measuring CM Noise" << RESET;
+        LOG(INFO) << "OT_MODULE_TEST:: Measuring CM Noise" << RESET;
+        LOG(INFO) << BLUE << "cManualVcth? " << cManualVcth << " cPedestalShift? " << cPedestalShift << RESET;
 
         
         if(cManualVcth == 0) // Calibrate Voffset
@@ -1046,9 +1048,9 @@ int main(int argc, char* argv[])
         PedeNoise cPedeNoise;
         cPedeNoise.Inherit(&cTool);
         cPedeNoise.Initialise(cAllChan, true); // true = all channels (as opposed to test groups)
-        cPedeNoise.measureNoise();
+        //cPedeNoise.measureNoise();
         // cPedeNoise.Validate(); // This masks noisy channels, already done optionally by CMTester ScanNoiseChannels
-        cPedeNoise.writeObjects();
+        //cPedeNoise.writeObjects();
         
         // Set Vcth to pedestal, or overload with manual setting
         std::vector<double> cNoiseV;
