@@ -47,14 +47,14 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockS
 
     // write mask registers 
     std::vector<std::string> cMaskRegs{"strip","peri_A","peri_D"};
-    std::vector<ChipRegItem> cRegItems; 
+    std::vector<ChipRegItem> cRegItems; cRegItems.clear();
     for( auto cName : cMaskRegs ) 
     {
         auto cItem = cSSA2RegMap["mask_" + cName];
         cItem.fValue = 0xFF; 
         cRegItems.push_back(cItem);
     }
-    fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, pVerifLoop); 
+    fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, true); 
     
     // configure W/R registers 
     // do not overwrite these registers..
@@ -156,21 +156,47 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
     // set board
     setBoard(pChip->getBeBoardId());
     auto cRegMap = pChip->getRegMap();
+    
+    // check if all registers are the same
+    std::vector<uint8_t> cVals(0);
+    for(uint16_t iChannel = 0; iChannel < pChip->getNumberOfChannels(); ++iChannel)
+    {
+        cVals.push_back(localRegValues.getChannel<uint16_t>(iChannel));
+        LOG(DEBUG) << BOLDMAGENTA << +cVals[cVals.size() - 1] << RESET;
+    }
+    auto cAllTheSame = (std::adjacent_find(cVals.begin(), cVals.end(), std::not_equal_to<uint16_t>()) == cVals.end());
+    if( cAllTheSame && dacName != "GainTrim" ){ 
+        LOG(INFO) << BOLDGREEN << " All local registers are the same " << RESET;
+        auto cRegItem = cRegMap["THTRIMMING"];cRegItem.fValue = localRegValues.getChannel<uint8_t>(0);
+        cSuccess = fBoardFW->SingleRegisterWrite(pChip, cRegItem ,false );
+        auto cRegValue = fBoardFW->SingleRegisterRead(pChip, cRegMap["THTRIMMING_S32"]);
+        LOG(INFO) << BOLDBLUE << "THTRIMMING_S32 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        return cSuccess;
+    }
+    
     // check that you are actually configuring all local registers 
     assert(localRegValues.size() == pChip->getNumberOfChannels());
     // figure out a few items based on the template 
-    std::string dacTemplate = (dacName == "GainTrim") ? "GAINTRIMMING_S%d" : "THTRIMMING_S%d";
+    std::string dacTemplate = (dacName == "GainTrim") ? "GAINTRIMMING_S" : "THTRIMMING_S";
     uint8_t     cMaskValue = (dacName == "GainTrim") ? 120 : 31; 
     // write mask 
-    std::vector<std::string> cMaskRegs{"strip"};
+    // for some reason I have to write to all the mask registers... why!?
+    std::vector<std::string> cMaskRegs{"strip","peri_A","peri_D"};
     std::vector<ChipRegItem> cRegItems; 
     for( auto cName : cMaskRegs ) 
     {
-        auto cItem = cRegMap["mask_" + cName];
-        cItem.fValue = cMaskValue; 
+        auto cRegName = "mask_" + cName; 
+        auto cItem = cRegMap[cRegName];
+        cItem.fValue = ( cRegName == "strip" ) ? cMaskValue : 0xFF;
         cRegItems.push_back(cItem);
     }
-    cSuccess = fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerifLoop); 
+    cSuccess = fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerifLoop );
+    if(!cSuccess){ 
+        LOG (INFO) << BOLDRED << "Failed to write to one of these registers" << RESET;
+        for(auto cName : cMaskRegs ) LOG (INFO) << BOLDRED << "mask_" << cName << RESET;
+        return cSuccess;
+    }
+    
     // write local registers 
     cRegItems.clear();
     ChannelGroup<NCHANNELS, 1>                    channelToEnable;
@@ -179,9 +205,11 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
         std::stringstream dacName;
         dacName << dacTemplate.c_str() << 1+iChannel; 
         auto cIterator = cRegMap.find(dacName.str());
+        if( cIterator == cRegMap.end() ) continue;
+
         ChipRegItem cItem = cIterator->second; 
         cItem.fValue = localRegValues.getChannel<uint16_t>(iChannel) & 0x1F; 
-        LOG(DEBUG) << BOLDBLUE << "Setting register " << dacName.str() << " to " << cItem.fValue << RESET;
+        LOG(INFO) << BOLDBLUE << "Setting register " << dacName.str() << " to " << cItem.fValue << RESET;
         if( cIterator == cRegMap.end() )
         {
             LOG (ERROR) << BOLDRED << "SSA2Interaface::WriteChipAllLocalReg trtying to write to a register that doesn't exist in the map : " << dacName.str() << RESET;
@@ -192,13 +220,15 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
     cSuccess  = cSuccess && fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerifLoop); 
     // write mask 
     cRegItems.clear();
+    cMaskValue = 0xFF;
     for( auto cName : cMaskRegs ) 
     {
-        auto cItem = cRegMap["mask_" + cName];
-        cItem.fValue = 0xFF; 
+        auto cRegName = "mask_" + cName; 
+        auto cItem = cRegMap[cRegName];
+        cItem.fValue = cMaskValue;
         cRegItems.push_back(cItem);
     }
-    cSuccess  = cSuccess && fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerifLoop); 
+    cSuccess  = cSuccess && fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerifLoop );
     return cSuccess; 
 }
 
@@ -228,21 +258,37 @@ bool SSA2Interface::WriteChipRegBits(Chip* pSSA2, const std::string& pRegNode, u
 {
     bool cSuccess=true;
     setBoard(pSSA2->getBeBoardId());
-    // using FW functions directly 
     auto cRegMap = pSSA2->getRegMap();
-    auto cRegItem = cRegMap[pMaskReg]; cRegItem.fValue = mask; 
-    LOG(DEBUG) << BOLDYELLOW << "SSA2Interface::WriteChipRegBits Writing 0x" << std::hex << +mask << " to " <<  pMaskReg << std::dec << RESET;
-    if ( fBoardFW->SingleRegisterWrite( pSSA2, cRegItem , pVerifLoop) ) 
+    
+    // write mask registers 
+    std::vector<std::string> cMaskRegs{"strip","peri_A","peri_D"};
+    std::vector<ChipRegItem> cRegItems; 
+    LOG(DEBUG) << BOLDYELLOW << "Testing writing 0xFF to mask registers" << RESET; 
+    for( auto cName : cMaskRegs ) 
+    {
+        auto cRegName = "mask_" + cName; 
+        auto cItem = cRegMap[cRegName];
+        cItem.fValue = ( cRegName == pMaskReg ) ? mask : 0xFF;
+        cRegItems.push_back(cItem);
+    }
+    LOG(DEBUG) << BOLDYELLOW << "SSA2Interface::WriteChipRegBits Writing mask ... writing 0x" << std::hex << +mask << " to " <<  pMaskReg << std::dec << RESET;
+    if ( fBoardFW->MultiRegisterWrite( pSSA2, cRegItems , true) ) 
     {
         LOG(DEBUG) << BOLDYELLOW << "\t..SSA2Interface::WriteChipRegBits Writing 0x" << std::hex << +pValue << " to " <<  pRegNode << std::dec << RESET;
-        cRegItem = cRegMap[pRegNode]; cRegItem.fValue = pValue; 
+        auto cRegItem = cRegMap[pRegNode]; cRegItem.fValue = pValue; 
         cSuccess = fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerifLoop);
     }
     // ensure mask is always reset 
-    mask = 0xFF; 
-    cRegItem = cRegMap[pMaskReg]; cRegItem.fValue = mask;
+    cRegItems.clear();
+    for( auto cName : cMaskRegs ) 
+    {
+        auto cRegName = "mask_" + cName; 
+        auto cItem = cRegMap["mask_" + cName];
+        cItem.fValue = 0xFF;
+        cRegItems.push_back(cItem);
+    }
     LOG(DEBUG) << BOLDYELLOW << "SSA2Interface::WriteChipRegBits Resetting mask ... writing 0x" << std::hex << +mask << " to " <<  pMaskReg << std::dec << RESET;
-    return cSuccess && fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerifLoop) ;
+    return cSuccess && fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, true) ;
 
     // this->WriteChipSingleReg(pSSA2, pMaskReg, mask, pVerifLoop);
     // bool cReadoutMode = WriteChipSingleReg(pSSA2, pRegNode, pValue, pVerifLoop);
