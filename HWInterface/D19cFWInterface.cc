@@ -677,7 +677,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         }
     }
 
-    if(fI2CVersion >= 1 || !cWithlpGBT)
+    if(fI2CVersion >= 1 && !cWithlpGBT)
     {
         fI2CSlaveMap.clear();
         fSlaveMap.clear();

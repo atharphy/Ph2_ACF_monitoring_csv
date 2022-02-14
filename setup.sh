@@ -99,9 +99,9 @@ export UseRootFlag='-D__USE_ROOT__'
 export MultiplexingFlag='-D__MULTIPLEXING__'
 export EuDaqFlag='-D__EUDAQ__'
 
-################
-# Compilations #
-################
+#####################
+# Compilation flags #
+#####################
 
 # Stand-alone application, without data streaming
 export CompileForHerd=false
@@ -129,7 +129,7 @@ export UseTCUSBTcpServer=false
 
 # Clang-format command
 if command -v clang-format &> /dev/null; then
- clang_command="clang-format" 
+ clang_command="clang-format"
 else
   clang_command="/opt/rh/llvm-toolset-7.0/root/usr/bin/clang-format"
 fi

@@ -8,6 +8,7 @@
 */
 
 #include "RD53EyeScanOptimizationHistograms.h"
+#include "../Utils/ChipContainerStream.h"
 
 using namespace Ph2_HwDescription;
 

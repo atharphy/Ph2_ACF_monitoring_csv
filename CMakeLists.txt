@@ -30,7 +30,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     cmake_minimum_required(VERSION 2.8)
     project(Ph2_ACF)
 
-   # Set the output directory
+# Set the output directory
     if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR} )
        MESSAGE( STATUS "${BoldRed}" )
        MESSAGE( FATAL_ERROR "${Reset}In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there. You may need to remove CMakeCache.txt." )
@@ -107,10 +107,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     message("--")
     message("--     ${BoldCyan}#### Checking for external Dependencies ####${Reset}")
     if(CompileForShep OR NoDataShipping)
-        #ROOT
+        # ROOT
         find_package(ROOT COMPONENTS RHTTP)
         if(ROOT_FOUND)
-            #check for THttpServer
+            # Check for THttpServer
             if(EXISTS ${ROOT_RHTTP_LIBRARY})
                 message(STATUS "    Found THttp Server support - enabling compiler flags")
                 set(ROOT_HAS_HTTP TRUE)
@@ -121,7 +121,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
             message(STATUS "    Using ROOT version ${ROOT_VERSION}")
         endif(ROOT_FOUND)
     else()
-	message(STATUS "Building without ROOT")
+    message(STATUS "Building without ROOT")
     endif()
 
     # AMC13
@@ -143,7 +143,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
         if(NOT PH2_TCUSB_FOUND)
             message(WARNING "    Couldn't find PH2_TCUSB. Obtaining from gitlab ref $ENV{PH2_TCUSB_REF}")
-            ExternalProject_Add( ext_tcusb 
+            ExternalProject_Add( ext_tcusb
                     GIT_REPOSITORY https://gitlab.cern.ch/cms_tk_ph2/cmsph2_tcusb.git
                     GIT_TAG $ENV{PH2_TCUSB_REF}
                     PREFIX ${EXTERNAL_INSTALL_LOCATION}
@@ -172,7 +172,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set(USE_EUDAQ ON)
         if(NOT (DEFINED ENV{EUDAQDIR} AND EXISTS ENV{EUDAQDIR} ) )
             message(WARNING "    Couldn't find EUDAQ. Obtaining from gitlab ref $ENV{EUDAQ_REF}")
-            ExternalProject_Add( ext_eudaq 
+            ExternalProject_Add( ext_eudaq
                     GIT_REPOSITORY https://gitlab.cern.ch/cms_tk_ph2/eudaq.git
                     GIT_TAG $ENV{EUDAQ_REF}
                     PREFIX ${EXTERNAL_INSTALL_LOCATION}
@@ -277,15 +277,15 @@ else() # ------------------------------- Compilation in the otsdaq environment -
         endif(PH2_USBINSTLIB_FOUND)
     endif(ZMQ_FOUND)
 
-   # EUDAQ
-    if ($ENV{CompileWithEUDAQ})
+    # EUDAQ
+    if(${USE_EUDAQ})
         set(USE_EUDAQ ON)
         include_directories($ENV{EUDAQDIR}/include $ENV{EUDAQDIR}/user/tlu/module/src)
         set(EUDAQ_LIB -L$ENV{EUDAQLIB} eudaq_core)
         message(STATUS "EUDAQ variable is defined. EUDAQ directory: $ENV{EUDAQDIR}")
-    else($ENV{CompileWithEUDAQ})
+    else(${USE_EUDAQ})
         message(STATUS "EUDAQ variable is not defined. Building without EUDAQ producer")
-    endif($ENV{CompileWithEUDAQ})
+    endif(${USE_EUDAQ})
 
     message("--     ${BoldCyan}#### Done ####${Reset}")
 
