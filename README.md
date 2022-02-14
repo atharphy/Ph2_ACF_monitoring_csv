@@ -34,7 +34,7 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 30/08/2021
++ Last change made to this section: 03/02/2022
 ```
 
 **Suggested software and firmware versions:**
@@ -70,7 +70,7 @@ A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/
 **IT-DAQ setup and run:**
 1. `sudo yum install pugixml-devel` (if necesary run `sudo yum install epel-release` before point 1.)
 2. Install: `boost` by running `sudo yum install boost-devel`, `CERN ROOT` from https://root.cern.ch, and `IPbus` from http://ipbus.web.cern.ch/ipbus (either using `sudo yum` or from source)
-3. Checkout the DAQ code from git: `git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git`
+3. Checkout the DAQ code from git: `git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git` (**N.B.** to syncrhonize only the submodule: `git submodule sync; git submodule update --init --recursive --remote`)
 4. `cd Ph2_ACF; source setup.sh; mkdir myBuild; cd myBuild; cmake ..; make -j4; cd ..`
 5. `mkdir choose_a_name`
 6. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`

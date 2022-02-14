@@ -46,8 +46,8 @@ void VoltageTuning::sendData()
 
     if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: theDigContainer) theDigStreamer.streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theAnaContainer) theAnaStreamer.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theDigContainer) theDigStreamer->streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theAnaContainer) theAnaStreamer->streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 

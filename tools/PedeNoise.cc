@@ -43,6 +43,18 @@ void PedeNoise::clearDataMembers()
 
 void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 {
+    for(auto cBoard: *fDetectorContainer)
+    {
+        BeBoardRegMap cRegMap      = cBoard->getBeBoardRegMap();
+        uint32_t      cTriggerFreq = cRegMap["fc7_daq_cnfg.fast_command_block.user_trigger_frequency"];
+
+        std::vector<std::pair<std::string, uint32_t>> cRegVec;
+        cRegVec.clear();
+        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", cTriggerFreq});
+        cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+        fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
+        LOG(INFO) << BOLDYELLOW << "Noise measured on BeBoard#" << +cBoard->getId() << " with a trigger rate of " << cTriggerFreq << "kHz." << RESET;
+    }
     fDisableStubLogic = pDisableStubLogic;
 
     cWithCBC = false;
@@ -111,11 +123,10 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fEventsPerPoint              = findValueInSettings<double>("Nevents", 10);
     fUseFixRange                 = findValueInSettings<double>("PedeNoiseUseFixRange", 0);
     fMinThreshold                = findValueInSettings<double>("PedeNoiseMinThreshold", 0);
-    fMaxThreshold                = findValueInSettings<double>("PedeNoiseMaxThreshold", 1023);
-    fNEventsPerBurst             = 0xffff;
-    fNEventsToValidate           = findValueInSettings("Nevents_Validation", 100000);
-    fMaskingThreshold            = findValueInSettings("Masking_Threshold", 0.001);
-    fMaskNoisyChannels           = findValueInSettings("MaskNoisyChannels", 0);
+    fMaxThreshold                = findValueInSettings<double>("PedeNoiseMaxThreshold", 0);
+    // if you forget to use the PedeNoiseUseFixRange setting but instead declare
+    // min and max threshold ... will still work
+    if(!fUseFixRange && fMinThreshold != fMaxThreshold) fUseFixRange = true;
 
     fNEventsPerBurst = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
     // uint8_t cEnableFastCounterReadout = (uint8_t)findValueInSettings<double>("EnableFastCounterReadout", 0);
@@ -338,8 +349,9 @@ void PedeNoise::sweepSCurves()
     {
         cStartValue = (fMaxThreshold + fMinThreshold) / 2.;
     }
-    this->enableTestPulse(fPulseAmplitude != 0);
-    cStartValue = this->findPedestal(fPulseAmplitude == 0);
+    // shouldn't really be doing this twice..
+    // this->enableTestPulse(fPulseAmplitude != 0);
+    // cStartValue = this->findPedestal(fPulseAmplitude == 0);
     if(fDisableStubLogic) disableStubLogic();
     LOG(INFO) << BLUE << "Sweep of S-curves will start at an average threshold of " << cStartValue << RESET;
     measureSCurves(cStartValue);
@@ -414,7 +426,7 @@ void PedeNoise::Validate()
 
     for(auto board: theOccupancyContainer)
     {
-        if(fDQMStreamerEnabled) theOccupancyStream.streamAndSendBoard(board, fDQMStreamer);
+        if(fDQMStreamerEnabled) theOccupancyStream->streamAndSendBoard(board, fDQMStreamer);
     }
 #endif
     for(auto cBoard: *fDetectorContainer)
@@ -781,9 +793,14 @@ void PedeNoise::scanScurves()
 }
 void PedeNoise::measureSCurves(uint16_t pStartValue)
 {
+    auto cChannels     = findValueInSettings<double>("NoiseMeasurementLimit", 1);
+    auto cLowerLimitTh = findValueInSettings<double>("PedeNoiseMinThreshold", 0);
+    auto cUpperLimitTh = findValueInSettings<double>("PedeNoiseMaxThreshold", 0);
+    if(fUseFixRange) LOG(INFO) << BOLDYELLOW << "Scan should be between " << cLowerLimitTh << " and " << cUpperLimitTh << " DAC units" << RESET;
+
     // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan!
     float    cMaxOccupancy  = 1.0;
-    float    cLimit         = 0.05;
+    float    cLimit         = cChannels / (100.);
     int      cMinBreakCount = 10;
     uint16_t cValue         = pStartValue;
     uint16_t cMaxValue      = (1 << 10) - 1;
@@ -816,10 +833,10 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
             if(fPlotSCurves)
             {
                 auto theSCurveStreamer = prepareChannelContainerStreamer<Occupancy, uint16_t>("SCurve");
-                theSCurveStreamer.setHeaderElement(cValue);
+                theSCurveStreamer->setHeaderElement(cValue);
                 for(auto board: *theOccupancyContainer)
                 {
-                    if(fDQMStreamerEnabled) theSCurveStreamer.streamAndSendBoard(board, fDQMStreamer);
+                    if(fDQMStreamerEnabled) theSCurveStreamer->streamAndSendBoard(board, fDQMStreamer);
                 }
             }
 #endif
@@ -837,8 +854,16 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
             }
 
             cValue += cSign;
-            cLimitFound = (cValue == 0 || cValue >= cMaxValue) || (cLimitCounter >= cMinBreakCount);
-            if(cLimitFound) { LOG(INFO) << BOLDYELLOW << "Switching sign.." << RESET; }
+            if(!fUseFixRange)
+            {
+                cLimitFound = (cValue == 0 || cValue >= cMaxValue) || (cLimitCounter >= cMinBreakCount);
+                if(cLimitFound) { LOG(INFO) << BOLDYELLOW << "Switching sign during auto scan .." << RESET; }
+            }
+            else
+            {
+                cLimitFound = (cSign < 0) ? (cValue == cLowerLimitTh) : (cValue == cUpperLimitTh);
+                if(cLimitFound) { LOG(INFO) << BOLDYELLOW << "Switching sign because threshold limit was reached .." << RESET; }
+            }
 
         } while(!cLimitFound);
         cCounter++;
@@ -1025,7 +1050,7 @@ void PedeNoise::producePedeNoisePlots()
     auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
     for(auto board: *fThresholdAndNoiseContainer)
     {
-        if(fDQMStreamerEnabled) { theThresholdAndNoiseStream.streamAndSendBoard(board, fDQMStreamer); }
+        if(fDQMStreamerEnabled) { theThresholdAndNoiseStream->streamAndSendBoard(board, fDQMStreamer); }
     }
 #endif
 }

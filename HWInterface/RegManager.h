@@ -34,11 +34,11 @@ class RegManager
 {
   protected:
     uhal::HwInterface*                            fBoard;              /*!< Board in use*/
-    const char*                                   fUHalConfigFileName; /*!< path of the uHal Config File*/
+    const std::string                             fUHalConfigFileName; /*!< path of the uHal Config File*/
     std::vector<std::pair<std::string, uint32_t>> fStackReg;           /*!< Stack of registers*/
-    const char*                                   fUri;
-    const char*                                   fAddressTable;
-    const char*                                   fId;
+    const std::string                             fUri;
+    const std::string                             fAddressTable;
+    const std::string                             fId;
     std::recursive_mutex                          fMutex;
 
   public:
@@ -49,7 +49,7 @@ class RegManager
      * \param pBoardId Board Id in the XML configuration file. The uHAL connection name will be boardX where X is the
      * number Id.
      */
-    RegManager(const char* puHalConfigFileName, uint32_t pBoardId);
+    RegManager(const std::string& puHalConfigFileName, uint32_t pBoardId);
 
     /*!
      * \brief Constructor of the RegManager class
@@ -57,7 +57,7 @@ class RegManager
      * \param pUri: URI string for uHAL
      * \param pAddressTable: address table path
      */
-    RegManager(const char* pId, const char* pUri, const char* pAddressTable);
+    RegManager(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
 
     /*!
      * \brief Destructor of the RegManager class
@@ -130,7 +130,7 @@ class RegManager
     /*!
      * \brief Reset the HW Interface with different Id, Uri and Address Table
      */
-    virtual void ResetRegManager(const char* pId, const char* pUri, const char* pAddressTable)
+    virtual void ResetRegManager(const std::string& pId, const std::string& pUri, const std::string& pAddressTable)
     {
         if(fBoard)
         {
@@ -155,17 +155,17 @@ class RegManager
     /*!
      * \brief get the uHAL HW Id
      */
-    const char* getId() { return fId; }
+    const std::string getId() { return fId; }
 
     /*!
      * \brief get the uHAL HW Uri
      */
-    const char* getUri() { return fUri; }
+    const std::string getUri() { return fUri; }
 
     /*!
      * \brief get the uHAL HW AddressTable
      */
-    const char* getAddressTable() { return fAddressTable; }
+    const std::string getAddressTable() { return fAddressTable; }
 
     /*!
      * \brief get the uHAL node
@@ -175,8 +175,8 @@ class RegManager
     // ##############################################
     // # Capure and replay data stream to/from FPGA #
     // ##############################################
-    static void enableCapture(const std::string filename);
-    static void enableReplay(const std::string filename);
+    static void enableCapture(const std::string& filename);
+    static void enableReplay(const std::string& filename);
 
   private:
     enum class Mode

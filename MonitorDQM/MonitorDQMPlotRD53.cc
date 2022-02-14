@@ -8,6 +8,7 @@
 */
 
 #include "MonitorDQMPlotRD53.h"
+#include "../Utils/ChipContainerStream.h"
 
 void MonitorDQMPlotRD53::book(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, const DetectorMonitorConfig& fDetectorMonitorConfig)
 {

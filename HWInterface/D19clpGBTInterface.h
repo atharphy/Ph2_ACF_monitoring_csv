@@ -20,7 +20,7 @@ class D19clpGBTInterface : public lpGBTInterface
     D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB)
     {
         LOG(INFO) << BOLDRED << "Constructor D19clpGBTInterface" << RESET;
-#ifdef __TCUSB__
+#if defined(__TCUSB__)
         iniitalizeExternalController();
 #endif
         // configure during constructor now when configuring chip
@@ -44,15 +44,13 @@ class D19clpGBTInterface : public lpGBTInterface
     ~D19clpGBTInterface()
     {
         LOG(DEBUG) << BOLDRED << "Destructor D19clpGBTInterface" << RESET;
-#ifdef __TCUSB__
-#if defined(__ROH_USB__) || defined(__SEH_USB__)
+#if defined(__TC_USB__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
         if(fExternalController != nullptr)
         {
             LOG(INFO) << BOLDRED << "Deleting pointer to external controller for D19clpGBTInterface" << RESET;
             delete fExternalController;
             fExternalController = nullptr;
         }
-#endif
 #endif
     }
 

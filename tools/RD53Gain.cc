@@ -48,6 +48,7 @@ void Gain::ConfigureCalibration()
 
     theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup, doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol, doOnlyNGroups);
     theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
+    this->setChannelGroupHandler(theChnGroupHandler);
 
     // ##############################
     // # Initialize dac scan values #
@@ -98,13 +99,13 @@ void Gain::sendData()
         size_t index = 0;
         for(const auto theOccContainer: detectorContainerVector)
         {
-            theOccStream.setHeaderElement(dacList[index] - offset);
-            for(const auto cBoard: *theOccContainer) theOccStream.streamAndSendBoard(cBoard, fDQMStreamer);
+            theOccStream->setHeaderElement(dacList[index] - offset);
+            for(const auto cBoard: *theOccContainer) theOccStream->streamAndSendBoard(cBoard, fDQMStreamer);
             index++;
         }
 
         if(theGainContainer != nullptr)
-            for(const auto cBoard: *theGainContainer.get()) theGainStream.streamAndSendBoard(cBoard, fDQMStreamer);
+            for(const auto cBoard: *theGainContainer.get()) theGainStream->streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 
@@ -162,7 +163,6 @@ void Gain::run()
     detectorContainerVector.clear();
     for(auto i = 0u; i < dacList.size(); i++) detectorContainerVector.push_back(theRecyclingBin.get(&ContainerFactory::copyAndInitStructure<OccupancyAndPh>, OccupancyAndPh()));
 
-    setChannelGroupHandler(theChnGroupHandler);
     this->SetBoardBroadcast(true);
     this->SetTestPulse(true);
     this->fMaskChannelsFromOtherGroups = true;
@@ -178,10 +178,10 @@ void Gain::run()
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
                             if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !this->getChannelGroupHandlerContainer()
-                                                                                                                     ->getObject(cBoard->getId())
-                                                                                                                     ->getObject(cOpticalGroup->getId())
-                                                                                                                     ->getObject(cHybrid->getId())
-                                                                                                                     ->getObject(cChip->getId())
+                                                                                                                     ->at(cBoard->getIndex())
+                                                                                                                     ->at(cOpticalGroup->getIndex())
+                                                                                                                     ->at(cHybrid->getIndex())
+                                                                                                                     ->at(cChip->getIndex())
                                                                                                                      ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                                                                                                      ->allChannelGroup()
                                                                                                                      ->isChannelEnabled(row, col))
@@ -248,10 +248,10 @@ void Gain::draw(bool doSaveData)
                             for(auto row = 0u; row < RD53::nRows; row++)
                                 for(auto col = 0u; col < RD53::nCols; col++)
                                     if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
-                                                                                                                           ->getObject(cBoard->getId())
-                                                                                                                           ->getObject(cOpticalGroup->getId())
-                                                                                                                           ->getObject(cHybrid->getId())
-                                                                                                                           ->getObject(cChip->getId())
+                                                                                                                           ->at(cBoard->getIndex())
+                                                                                                                           ->at(cOpticalGroup->getIndex())
+                                                                                                                           ->at(cHybrid->getIndex())
+                                                                                                                           ->at(cChip->getIndex())
                                                                                                                            ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                                                                                                            ->allChannelGroup()
                                                                                                                            ->isChannelEnabled(row, col))
@@ -303,10 +303,10 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
                             if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
-                                                                                                                   ->getObject(cBoard->getId())
-                                                                                                                   ->getObject(cOpticalGroup->getId())
-                                                                                                                   ->getObject(cHybrid->getId())
-                                                                                                                   ->getObject(cChip->getId())
+                                                                                                                   ->at(cBoard->getIndex())
+                                                                                                                   ->at(cOpticalGroup->getIndex())
+                                                                                                                   ->at(cHybrid->getIndex())
+                                                                                                                   ->at(cChip->getIndex())
                                                                                                                    ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                                                                                                    ->allChannelGroup()
                                                                                                                    ->isChannelEnabled(row, col))

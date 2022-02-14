@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
 
     el::Loggers::reconfigureAllLoggers(conf);
 
-    //el::Helpers::installLogDispatchCallback<gui::LogDispatcher>("GUILogDispatcher");
+    // el::Helpers::installLogDispatchCallback<gui::LogDispatcher>("GUILogDispatcher");
     el::Loggers::reconfigureAllLoggers(conf);
     ArgvParser cmd;
 
@@ -130,7 +130,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("reconfigure", "Reconfigure Hardware");
     cmd.defineOption("reload", "Reload settings files and board registers");
     cmd.defineOption("realign", "Re-align module [SSA-MPA] and/or [BE]");
-    
+
     cmd.defineOption("gui", "Support for running the test from a guig. The named pipe for communication needs to be passed as parameter. Default: /tmp/guiDummyPipe", ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("gui", "g");
 
@@ -182,7 +182,7 @@ int main(int argc, char* argv[])
         LOG(INFO) << cmd.parseErrorDescription(result);
         exit(1);
     }
-    bool        cGui              = (cmd.foundOption("gui"));
+    bool cGui = (cmd.foundOption("gui"));
 
     std::string guiPipe = (cGui) ? cmd.optionValue("gui") : "/tmp/guiDummyPipe";
 
@@ -199,14 +199,13 @@ int main(int argc, char* argv[])
     std::string cInjectionSource = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
     std::string cSrcLnkTst       = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
     std::string cModuleId        = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
-    std::string cDirectory       = (cmd.foundOption("output"))  ? cmd.optionValue("output") : "Results/";
-    std::cout << "DIR: " <<cDirectory << std::endl;
+    std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
+    std::cout << "DIR: " << cDirectory << std::endl;
 
-
-    uint16_t    cRunNumber;
-    if ( !cmd.foundOption("output") )
+    uint16_t cRunNumber;
+    if(!cmd.foundOption("output"))
     {
-        if(!cmd.foundOption("read") )
+        if(!cmd.foundOption("read"))
         {
             std::ofstream cRunLog;
             cRunNumber = returnRunNumber("RunNumbers.dat");
@@ -253,7 +252,6 @@ int main(int argc, char* argv[])
 
     gui::message("Hardware configured");
     gui::progress(0.5 / 10.0);
-
 
     if(cmd.foundOption("readTemperatures"))
     {
@@ -545,8 +543,6 @@ int main(int argc, char* argv[])
         cCicAligner.waitForRunToBeCompleted();
         cCicAligner.dumpConfigFiles();
     }
-
-
 
     // reload settings on-to FE chips
     if(!cmd.foundOption("read") && cmd.foundOption("reload"))

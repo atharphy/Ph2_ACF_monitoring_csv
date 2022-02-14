@@ -11,6 +11,7 @@
 #include "tools/LatencyScan.h"
 #include "tools/LinkAlignmentOT.h"
 #include "tools/MemoryCheck2S.h"
+#include "tools/OTTemperature.h"
 #include "tools/PSAlignment.h"
 #include "tools/PedeNoise.h"
 #include "tools/PedeNoiseTime.h"
@@ -159,6 +160,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("checkLink", "Check that I can receive constant pattern from link", ArgvParser::OptionRequiresValue);
     //
     cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("readMonitors", "Read internal monitors on lpGBT [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
 
     int result = cmd.parse(argc, argv);
 
@@ -223,66 +225,15 @@ int main(int argc, char* argv[])
     cTool.CreateResultDirectory(cDirectory, false, false);
     cTool.InitResultFile(cResultfile);
 
-    if(cmd.foundOption("readTemperatures"))
+    if(cmd.foundOption("readMonitors"))
     {
-        LOG(INFO) << BOLDBLUE << "Reading temperatures from lpGBT-ADCs.." << RESET;
-        auto cCurrentDAC = (cmd.foundOption("readTemperatures")) ? convertAnyInt(cmd.optionValue("readTemperatures").c_str()) : 0x10;
-
-        for(const auto cBoard: *cTool.fDetectorContainer)
-        {
-            for(auto cOpticalGroup: *cBoard)
-            {
-                auto& clpGBT = cOpticalGroup->flpGBT;
-                if(clpGBT == nullptr) continue;
-
-                std::vector<std::string> cTemperatures = {"TEMP", "ADC4"};
-                cTool.flpGBTInterface->ConfigureCurrentDAC(clpGBT, {cTemperatures[1]}, cCurrentDAC);
-                std::vector<float> cTempADCReadings;
-                for(auto cTempADC: cTemperatures)
-                {
-                    std::vector<float> cMeasurements(0);
-                    for(uint8_t cIndx = 0; cIndx < 10; cIndx++) { cMeasurements.push_back(cTool.flpGBTInterface->ReadADC(clpGBT, cTempADC)); }
-                    float cMean = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
-                    LOG(INFO) << BOLDBLUE << cTempADC << " : " << cMean << RESET;
-                    cTempADCReadings.push_back(cMean);
-                }
-                cTool.flpGBTInterface->ConfigureCurrentDAC(clpGBT, {cTemperatures[1]}, 0x00);
-
-                std::vector<std::string> cReferenceADC = {"ADC2"};
-                std::vector<float>       cCorrections;
-                // change once we have a reference for PS
-                if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) { cReferenceADC[0] = "ADC2"; }
-                float cExpected = (10.4 * 0.49 / 10.) * 1024;
-                if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) { cExpected = 0; }
-
-                for(auto cRefADC: cReferenceADC)
-                {
-                    std::vector<float> cMeasurements(0);
-                    for(uint8_t cIndx = 0; cIndx < 10; cIndx++) { cMeasurements.push_back(cTool.flpGBTInterface->ReadADC(clpGBT, cRefADC)); }
-                    float cMean = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
-                    LOG(INFO) << BOLDBLUE << cRefADC << " : " << cMean << RESET;
-                    cCorrections.push_back(cMean - cExpected);
-                }
-
-                // constants for different NTCs
-                std::vector<float> cCoefs{-177.029, 267.091, -0.125408};
-                // change once we have a reference for PS
-                if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS)
-                {
-                    std::vector<float> cCoefsPS = {-177.029, 267.091, -0.125408};
-                    cCoefs                      = cCoefsPS;
-                }
-                float cVoltageDrop           = cTempADCReadings[1] * 1.0 / 1024;
-                float cCorrectedVoltageDrop  = (cTempADCReadings[1] - cCorrections[0]) * 1.0 / 1024;
-                float cCurrent               = (0.9 * cCurrentDAC / 256) / 1e3;
-                float cTemperatureSensor     = cCoefs[0] + cCoefs[1] * std::pow(cVoltageDrop * 1e-3 / cCurrent, cCoefs[2]);
-                float cTemperatureSensorCorr = cCoefs[0] + cCoefs[1] * std::pow(cCorrectedVoltageDrop * 1e-3 / cCurrent, cCoefs[2]);
-                LOG(DEBUG) << BOLDMAGENTA << "Corrected temperature reading [ADC units] " << cCorrectedVoltageDrop << RESET;
-                LOG(DEBUG) << BOLDMAGENTA << "Resistance " << cCorrectedVoltageDrop * 1e-3 / cCurrent << " kOhm" << RESET;
-                LOG(INFO) << BOLDMAGENTA << "Temperature of sensor [via NTC + lpGBT] is " << cTemperatureSensor << " [ corr is " << cTemperatureSensorCorr << " ] " << RESET;
-
-            } // configure lpGBT
-        }
+        LOG(INFO) << BOLDBLUE << "Reading internal monitors from lpGBT-ADCs.." << RESET;
+        auto          cGain = (cmd.foundOption("readMonitors")) ? convertAnyInt(cmd.optionValue("readMonitors").c_str()) : 0;
+        OTTemperature cTemperatureReader;
+        cTemperatureReader.Inherit(&cTool);
+        cTemperatureReader.SetGain(cGain);
+        cTemperatureReader.Start(0);
+        cTemperatureReader.waitForRunToBeCompleted();
     }
 
     if(cmd.foundOption("calibrateADC"))
@@ -1235,7 +1186,7 @@ int main(int argc, char* argv[])
         cBeamTestCheck.ConfigureScans(cScanL1, cScanStubs);
         PrintConfig cCng;
         cCng.fVerbose    = 1;
-        cCng.fPrintEvery = 1;
+        cCng.fPrintEvery = 10000;
         cBeamTestCheck.ConfigurePrintout(cCng);
         cBeamTestCheck.CheckWithInternal();
         cBeamTestCheck.writeObjects();

@@ -535,33 +535,32 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
         if(cWithCBC)
         {
             LOG(INFO) << BOLDBLUE << "Sending triggers to FEs to align L1 output from CBCs.." << RESET;
-            uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
-            // if external or async triggers are used then revert to internal here
-            bool                                          cReconfigureTrigger = (cTriggerSrc == 4 || cTriggerSrc || 5 || cTriggerSrc == 10);
-            std::vector<std::pair<std::string, uint32_t>> cRegVec;
-            if(cReconfigureTrigger)
+            std::vector<std::pair<std::string, uint32_t>> cVecReg;
+            cVecReg.clear();
+            std::vector<std::string> cFcmdRegs{"misc.trigger_multiplicity", "user_trigger_frequency", "trigger_source", "misc.backpressure_enable", "triggers_to_accept"};
+            std::vector<uint8_t>     cFcmdRegOrigVals(0);
+            std::vector<uint16_t>    cFcmdRegVals{0, 100, 3, 0, 0};
+            for(size_t cIndx = 0; cIndx < cFcmdRegs.size(); cIndx++)
             {
-                uint16_t cSrc = 3;
-                if(cTriggerSrc != cSrc)
-                {
-                    LOG(INFO) << BOLDBLUE << "\t.. Changing trigger source is set to " << +cSrc << RESET;
-                    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cSrc});
-                }
-                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNTriggers});
-                cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-                fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
+                std::string cRegName = "fc7_daq_cnfg.fast_command_block." + cFcmdRegs[cIndx];
+                cFcmdRegOrigVals.push_back(fBeBoardInterface->ReadBoardReg(cBoard, cRegName));
+                cVecReg.push_back({cRegName, cFcmdRegVals[cIndx]});
             }
+            cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+            fBeBoardInterface->WriteBoardMultReg(cBoard, cVecReg);
+            // send N triggers to make sure CIC receives L1 packets from CBC
             fBeBoardInterface->SendNTriggers(cBoard, pNTriggers);
 
-            // set trigger source back
-            if(cReconfigureTrigger)
+            // // reload original configuration
+            cVecReg.clear();
+            for(size_t cIndx = 0; cIndx < cFcmdRegOrigVals.size(); cIndx++)
             {
-                LOG(INFO) << BOLDBLUE << "\t.. Changing trigger source back to " << +cTriggerSrc << RESET;
-                std::vector<std::pair<std::string, uint32_t>> cRegVec;
-                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
-                cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-                fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
+                std::string cRegName = "fc7_daq_cnfg.fast_command_block." + cFcmdRegs[cIndx];
+                cVecReg.push_back({cRegName, cFcmdRegOrigVals[cIndx]});
             }
+            cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+            fBeBoardInterface->WriteBoardMultReg(cBoard, cVecReg);
+
         } // in the CBC case you need to send triggers to get alignment data on L1 line
         // check alignment
         for(auto cOpticalGroup: *cBoard)

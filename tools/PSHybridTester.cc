@@ -1,6 +1,9 @@
+
 #include "PSHybridTester.h"
 #include "D19cDebugFWInterface.h"
 #include "SSAChannelGroupHandler.h"
+#ifdef __USE_ROOT__
+
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -14,7 +17,7 @@ PSHybridTester::~PSHybridTester() {}
 
 void PSHybridTester::Initialise()
 {
-#ifdef __TCUSB__
+#if defined(__TCUSB__)
     LOG(INFO) << BOLDBLUE << "Selecting antenna channel to "
               << " disable all charge injection" << RESET;
     TC_PSFE cTC_PSFE;
@@ -114,7 +117,7 @@ void PSHybridTester::SSAOutputsPogoScope(std::vector<std::vector<std::string>>& 
 
 void PSHybridTester::FillSSATree(std::string pParameter, std::string pValue)
 {
-#ifdef __USE_ROOT__
+#if defined(__USE_ROOT__)
     fResultFile->cd();
 
     if(gROOT->FindObject("SSATree") != nullptr)
@@ -244,7 +247,7 @@ void PSHybridTester::SSATestLateralCommunication(const std::string& cSSAPairSel,
 }
 void PSHybridTester::SelectCIC(bool pSelect)
 {
-#ifdef __TCUSB__
+#if defined(__TCUSB__)
     TC_PSFE cTC_PSFE;
     // enable CIC in mode of front-end hybrid
     if(pSelect)
@@ -297,18 +300,16 @@ void PSHybridTester::AlignCICout(uint8_t pPattern)
             }
         }
     }
+#if defined(__USE_ROOT__)
     for(int cLine = 1; cLine < 5; cLine++)
     {
-        if(cBadLines[cLine - 1] == 2)
-        {
-#ifdef __USE_ROOT__
-            fillSummaryTree("Bad_CIC_OUT_Line", (double)cLine);
-#endif
-        }
+        if(cBadLines[cLine - 1] == 2) { fillSummaryTree("Bad_CIC_OUT_Line", (double)cLine); }
     }
+#endif
 }
 void PSHybridTester::MPATest(BeBoard* pBoard)
 {
+#if defined(__USE_ROOT__)
     uint32_t cTestPatterns[4] = {0xAA, 0xCC, 0x00, 0xFF};
     // String with the binary representation of the pattern
     // int         cTotalBadLines = 0;                // Number of bad CIC in lines
@@ -367,13 +368,12 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
         fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
         static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface())->StubDebug(true, 4);
     }
+#endif
 }
 
 void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAPairSel)
 {
-#ifdef __TC_USB__
     this->SelectCIC(false);
-#endif
     this->SSAPairSelect(pBoard, cSSAPairSel);
     // now cycle through chips one at a time ..
     // and configure chips to output a fixed pattern
@@ -513,25 +513,23 @@ void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAP
                 }
                 cValue = cLine;
                 LOG(INFO) << cParameter << "  " << cValue << RESET;
-#ifdef __USE_ROOT__
                 // SSATree->Fill();
+#if defined(__USE_ROOT__)
                 FillSSATree(cParameter, cValue);
 #endif
                 badLines++;
             }
         }
+#if defined(__USE_ROOT__)
         if((((int)cSSAPairSel.at(0) - '0') % 2 == 0))
         { // Check this
-#ifdef __USE_ROOT__
             fillSummaryTree(Form("SSA%d_stub", (int)cSSAPairSel.at(1 - a) - '0'), badLines);
-#endif
         }
         else
         {
-#ifdef __USE_ROOT__
             fillSummaryTree(Form("SSA%d_stub", (int)cSSAPairSel.at(a) - '0'), badLines);
-#endif
         }
+#endif
     }
     // SSATree->Write();
 
@@ -670,14 +668,14 @@ void PSHybridTester::SSATestL1Output(BeBoard* pBoard, const std::string& cSSAPai
         if(cLinesInPairOK[cPairId])
         {
             LOG(INFO) << "L1 line in SSA#" << +cChipId << " (chip " << +cPairId << " in pair) is " << BOLDGREEN << "OK." << RESET;
-#ifdef __USE_ROOT__
+#if defined(__USE_ROOT__)
             fillSummaryTree("SSA" + std::to_string(cChipId) + "_L1", 0.0);
 #endif
         }
         else
         {
             LOG(INFO) << "L1 line in SSA#" << +cChipId << " (chip " << +cPairId << " in pair) is " << BOLDRED << "BAD." << RESET;
-#ifdef __USE_ROOT__
+#if defined(__USE_ROOT__)
             fillSummaryTree("SSA" + std::to_string(cChipId) + "_L1", 1.0);
             cParameter = " ";
             // cParameter = "FE"+std::to_string(cChipId)+"_L1";
@@ -955,14 +953,14 @@ void PSHybridTester::SSATestLateralCommunication(Ph2_HwDescription::BeBoard* pBo
         if(cLineGood)
         {
             LOG(INFO) << "Lateral communication line from SSA#" << +cInjectedSSAId << " to SSA# " << +cAdjacentSSAId << " is " << BOLDGREEN << "GOOD." << RESET;
-#ifdef __USE_ROOT__
+#if defined(__USE_ROOT__)
             fillSummaryTree(Form("SSA%d_to_%d_lateral_line", cInjectedSSAId, cAdjacentSSAId), 0.0);
 #endif
         }
         else
         {
             LOG(INFO) << "Lateral communication line from SSA#" << +cInjectedSSAId << " to SSA#" << +cAdjacentSSAId << " is " << BOLDRED << "BAD." << RESET;
-#ifdef __USE_ROOT__
+#if defined(__USE_ROOT__)
             fillSummaryTree(Form("SSA%d_to_%d_lateral_line", cInjectedSSAId, cAdjacentSSAId), 1.0);
             cParameter = " ";
             // cParameter = "FE"+std::to_string(cInjectedSSAId)+"_to_"+std::to_string(cAdjacentSSAId)+"_lateral_line";
@@ -1013,7 +1011,7 @@ std::vector<std::string> PSHybridTester::DecodeSSAL1Packet(int pSSAType, std::st
 }
 void PSHybridTester::SetHybridVoltage(uint32_t pUsbBus, uint8_t pUsbDev)
 {
-#ifdef __TCUSB__
+#if defined(__TCUSB__)
     LOG(INFO) << "Setting hybrid voltage..." << RESET;
     // TC_PSFE cTC_PSFE( pUsbBus, pUsbDev );
     TC_PSFE cTC_PSFE;
@@ -1025,10 +1023,6 @@ void PSHybridTester::SetHybridVoltage(uint32_t pUsbBus, uint8_t pUsbDev)
 
 void PSHybridTester::CheckI2C(BeBoard* pBoard)
 {
-#ifdef __ROOT__
-    TH1I* fI2CTransactions = new TH1I("I2CTransactions", "I2C transactions status");
-#endif
-
     int total = 0;
     int value = 0;
     int bad   = 0;
@@ -1179,7 +1173,7 @@ void PSHybridTester::CheckCounters(BeBoard* pBoard)
                     {
                         LOG(DEBUG) << BOLDRED << "All injected channels on all chips have 0 hits." << RESET;
                         LOG(INFO) << BOLDRED << "Event number " << +event_loop << " is \'empty\'." << RESET;
-#ifdef __USE_ROOT__
+#if defined(__USE_ROOT__)
                         fillSummaryTree("Empty event", event_loop);
 #endif
                         bad_events++;
@@ -1201,9 +1195,8 @@ void PSHybridTester::CheckCounters(BeBoard* pBoard)
     Checks the hybrid and test card measurements using the TC USB library, and compares the measurement to the nominal value, allowing for a percentage of variation, defined in the settings file.
 */
 void PSHybridTester::RunHybridETest()
-
 {
-#ifdef __TCUSB__
+#if defined(__TCUSB__) && defined(__USE_ROOT__)
     TC_PSFE cTC_PSFE;
     float   result;
 
@@ -1217,16 +1210,12 @@ void PSHybridTester::RunHybridETest()
         cTC_PSFE.adc_get(cMeasurement, result);
         LOG(INFO) << cMapIterator.first << " : " << result << RESET;
         std::string cMeasurementName = "EM_" + (cMapIterator.first);
-#ifdef __USE_ROOT__
         fillSummaryTree(cMeasurementName, result);
-#endif
         if(cNominalValue != fHybridNominalValues.end())
         {
             if(cNominalValue->second != 0 && cNominalValue->second != 1)
             {
-#ifdef __USE_ROOT__
                 fillSummaryTree(cMeasurementName + "_dev", cNominalValue->second - result);
-#endif
                 if(cAcceptancePercentage != 0)
                 {
                     if(result < cNominalValue->second * (1 + cAcceptancePercentage) && result > cNominalValue->second * (1 - cAcceptancePercentage)) { LOG(INFO) << BOLDGREEN << "OK" << RESET; }
@@ -1244,9 +1233,7 @@ void PSHybridTester::RunHybridETest()
         auto& cMeasurement = cMapIterator.second;
         cTC_PSFE.adc_get(cMeasurement, result);
         LOG(INFO) << cMapIterator.first << " : " << result << RESET;
-#ifdef __USE_ROOT__
         fillSummaryTree(cMapIterator.first, result);
-#endif
 
         if(cMapIterator.first == "Hybrid1V00_current" || cMapIterator.first == "Hybrid1V25_current")
         {
@@ -1263,15 +1250,13 @@ void PSHybridTester::RunHybridETest()
         auto& cMeasurement = cMapIterator.second;
         cTC_PSFE.adc_get(cMeasurement, result);
         LOG(INFO) << cMapIterator.first << " : " << result << RESET;
-#ifdef __USE_ROOT__
         fillSummaryTree(cMapIterator.first, result);
-#endif
     }
 #endif
 }
 void PSHybridTester::ReadHybridVoltage(const std::string& pVoltageName)
 {
-#ifdef __TCUSB__
+#if defined(__TCUSB__)
     auto cMapIterator = fHybridVoltageMap.find(pVoltageName);
     if(cMapIterator != fHybridVoltageMap.end())
     {
@@ -1291,7 +1276,7 @@ void PSHybridTester::ReadHybridVoltage(const std::string& pVoltageName)
 }
 void PSHybridTester::ReadHybridCurrent(const std::string& pVoltageName)
 {
-#ifdef __TCUSB__
+#if defined(__TCUSB__)
     // auto cMapIterator = fHybridCurrentMap.find(pVoltageName);
     // if( cMapIterator != fHybridCurrentMap.end() )
     // {
@@ -1320,7 +1305,9 @@ void PSHybridTester::ReadHybridCurrent(const std::string& pVoltageName)
 }
 void PSHybridTester::CheckHybridCurrents()
 {
+#if defined(__TCUSB__)
     ReadHybridCurrent("Hybrid1V00");
+#endif
     // LOG (INFO) << BOLDBLUE << "Current consumption on 1V00 : "
     //     << fCurrentMeasurement.first << " mA on average "
     //     << fCurrentMeasurement.second << " mA rms. " << RESET;
@@ -1337,8 +1324,7 @@ void PSHybridTester::CheckHybridCurrents()
 }
 void PSHybridTester::CheckHybridVoltages()
 {
-#ifdef __TCUSB__
-#ifdef __USE_ROOT__
+#if defined(__TCUSB__) && defined(__USE_ROOT__)
     ReadHybridVoltage("TC_GND");
     LOG(INFO) << BOLDBLUE << "Test card ground : " << fVoltageMeasurement.first << " mV on average " << fVoltageMeasurement.second << " mV rms. " << RESET;
 
@@ -1371,11 +1357,10 @@ void PSHybridTester::CheckHybridVoltages()
 
     if(fVoltageMeasurement.first * 1e-3 >= PSHYBRIDMAXV) { throw std::runtime_error(std::string("Exceeded maximum voltage of 1V25 of PS FEH")); }
 #endif
-#endif
 }
 void PSHybridTester::CalibrateSSABias(BeBoard* pBoard)
 {
-#ifdef __TCUSB__
+#if defined(__TCUSB__)
     TC_PSFE cTC_PSFE;
     // now cycle through chips one at a time ..
     for(auto cOpticalReadout: *pBoard)
@@ -1451,7 +1436,6 @@ void PSHybridTester::CalibrateSSABias(BeBoard* pBoard)
 }
 void PSHybridTester::ReadSSABias(BeBoard* pBoard, const std::string& pBiasName)
 {
-#ifdef __TCUSB__
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
@@ -1492,9 +1476,6 @@ void PSHybridTester::ReadSSABias(BeBoard* pBoard, const std::string& pBiasName)
             }
         } // hybrid
     }     // board
-#else
-    LOG(ERROR) << BOLDRED << "Can't read SSA bias value, the TC USB library is not built. Check the installation." << RESET;
-#endif
 }
 void PSHybridTester::CalibrateGainTrim(BeBoard* pBoard)
 {
@@ -1545,7 +1526,7 @@ void PSHybridTester::CalibrateGainTrim(BeBoard* pBoard)
                 {
                     for(uint32_t channel = 0; channel < cReadoutChip->size(); channel++)
                     {
-                        std::string cRegName = Form("GAINTRIMMING_S%d", channel + 1);
+                        std::string cRegName = "GAINTRIMMING_S" + std::to_string(channel + 1);
                         // int         cRegValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegName);
                         fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, 7);
                     }
@@ -1589,7 +1570,7 @@ void PSHybridTester::CalibrateGainTrim(BeBoard* pBoard)
 
                             LOG(INFO) << "Threshold: " << cThresholdValue << " Occupancy: " << cHitVector[channel];
 
-                            std::string cRegName  = Form("GAINTRIMMING_S%d", channel + 1);
+                            std::string cRegName  = "GAINTRIMMING_S" + std::to_string(channel + 1);
                             int         cRegValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, cRegName);
 
                             if(cHitVector[channel] / 1000 < 0.55)
@@ -1789,7 +1770,7 @@ void PSHybridTester::SetTrim(BeBoard* pBoard, std::string pTrimRegister, uint16_
             {
                 for(uint cChannel = 0; cChannel < cReadoutChip->size(); cChannel++)
                 {
-                    std::string cRegName = Form("%s_S%d", pTrimRegister.c_str(), cChannel + 1);
+                    std::string cRegName = pTrimRegister + "_S" + std::to_string(cChannel + 1);
                     fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegName, pTrimValue);
                 }
             }
@@ -1834,22 +1815,12 @@ void PSHybridTester::CheckHybridOutputs(BeBoard* pBoard, std::vector<std::string
 }
 void PSHybridTester::ReadSSABias(const std::string& pBiasName)
 {
-#ifdef __TCUSB__
-    LOG(DEBUG) << BOLDBLUE << "TC USB built." << RESET;
     for(auto cBoard: *fDetectorContainer) { this->ReadSSABias(cBoard, pBiasName); }
-#else
-    LOG(INFO) << BOLDRED << "TC USB not built .. check that you have the lib installed!" << RESET;
-#endif
 }
 
 void PSHybridTester::CalibrateSSABias()
 {
-#ifdef __TCUSB__
-    LOG(DEBUG) << BOLDBLUE << "TC USB built." << RESET;
     for(auto cBoard: *fDetectorContainer) { this->CalibrateSSABias(cBoard); }
-#else
-    LOG(INFO) << BOLDRED << "TC USB not built .. check that you have the lib installed!" << RESET;
-#endif
 }
 
 void PSHybridTester::CalibrateGainTrim()
@@ -1888,3 +1859,5 @@ void PSHybridTester::Stop()
 void PSHybridTester::Pause() {}
 
 void PSHybridTester::Resume() {}
+
+#endif

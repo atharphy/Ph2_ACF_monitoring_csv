@@ -152,7 +152,7 @@ class RD53 : public ReadoutChip
     std::vector<perColumnPixelData>* getPixelsMaskDefault() { return &fPixelsMaskDefault; }
 
     void        copyMaskFromDefault();
-    void        copyMaskToDefault();
+    void        copyMaskToDefault(const std::string& which = "all");
     void        resetMask();
     void        enableAllPixels();
     void        disableAllPixels();

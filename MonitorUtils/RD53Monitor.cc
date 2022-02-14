@@ -8,6 +8,7 @@
 */
 
 #include "RD53Monitor.h"
+#include "../Utils/ChipContainerStream.h"
 
 RD53Monitor::RD53Monitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {
@@ -44,7 +45,6 @@ void RD53Monitor::runRegisterMonitor(const std::string& registerName)
                     float registerValue;
                     try
                     {
-                        // registerValue = fTheSystemController->fReadoutChipInterface->ReadChipReg(cChip, registerName); // @TMP@
                         registerValue = fTheSystemController->fBeBoardInterface->ReadChipMonitor(fTheSystemController->fReadoutChipInterface, cChip, registerName);
 
                         theRegisterContainer.getObject(cBoard->getId())
@@ -68,8 +68,8 @@ void RD53Monitor::runRegisterMonitor(const std::string& registerName)
 void RD53Monitor::sendData(DetectorDataContainer& DataContainer, const std::string& registerName)
 {
     auto theRegisterStreamer = prepareChipContainerStreamer<EmptyContainer, std::tuple<time_t, float>, CharArray>("Register");
-    theRegisterStreamer.setHeaderElement(CharArray(registerName));
+    theRegisterStreamer->setHeaderElement(CharArray(registerName));
 
     if(fTheSystemController->fDQMStreamerEnabled == true)
-        for(auto board: DataContainer) theRegisterStreamer.streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
+        for(auto board: DataContainer) theRegisterStreamer->streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
 }

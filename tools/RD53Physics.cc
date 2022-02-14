@@ -39,6 +39,7 @@ void Physics::ConfigureCalibration()
 
     theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup, RD53GroupType::AllPixels);
     theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
+    this->setChannelGroupHandler(theChnGroupHandler);
 
     // ##############################
     // # Initialize data containers #
@@ -78,6 +79,7 @@ void Physics::Running()
     SystemController::Start(theCurrentRun);
 
     numberOfEventsPerRun = 0;
+    errors               = 0;
     Physics::run();
 }
 
@@ -92,9 +94,9 @@ void Physics::sendBoardData(const BoardContainer* cBoard)
 
     if(fDQMStreamerEnabled == true)
     {
-        theOccStream.streamAndSendBoard(theOccContainer.at(cBoard->getIndex()), fDQMStreamer);
-        theBCIDStream.streamAndSendBoard(theBCIDContainer.at(cBoard->getIndex()), fDQMStreamer);
-        theTrgIDStream.streamAndSendBoard(theTrgIDContainer.at(cBoard->getIndex()), fDQMStreamer);
+        theOccStream->streamAndSendBoard(theOccContainer.at(cBoard->getIndex()), fDQMStreamer);
+        theBCIDStream->streamAndSendBoard(theBCIDContainer.at(cBoard->getIndex()), fDQMStreamer);
+        theTrgIDStream->streamAndSendBoard(theTrgIDContainer.at(cBoard->getIndex()), fDQMStreamer);
     }
 }
 
@@ -114,6 +116,8 @@ void Physics::Stop()
     LOG(INFO) << GREEN << "[Physics::Stop] Stopped" << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded events: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Total number of received triggers: " << BOLDYELLOW << numberOfEventsPerRun / nTRIGxEvent << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Total number of corrupted events: " << BOLDYELLOW << std::setprecision(3) << errors << " (" << 1. * errors / numberOfEventsPerRun * 100. << "%)"
+              << std::setprecision(-1) << RESET;
 }
 
 void Physics::localConfigure(const std::string& fileRes_, int currentRun)
@@ -250,8 +254,21 @@ void Physics::fillDataContainer(BeBoard& theBoard)
     // ###################
     // # Fill containers #
     // ###################
-    const std::vector<Event*>& events = SystemController::GetEvents();
-    for(const auto& event: events) event->fillDataContainer(cBoard, getChannelGroup(-1));
+    const std::vector<Event*>& events     = SystemController::GetEvents();
+    size_t                     evtCounter = numberOfEventsPerRun;
+    for(const auto& event: events)
+    {
+        event->fillDataContainer(cBoard, getChannelGroup(-1));
+
+        if(RD53Event::EvtErrorHandler(static_cast<RD53Event*>(event)->eventStatus) == false)
+        {
+            LOG(ERROR) << BOLDBLUE << "\t--> Corrupted event n. " << BOLDYELLOW << evtCounter << RESET;
+            errors++;
+            RD53Event::PrintEvents({*static_cast<RD53Event*>(event)});
+        }
+
+        evtCounter++;
+    }
 
     // ######################################
     // # Copy register values for streaming #
