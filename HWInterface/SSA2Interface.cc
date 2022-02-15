@@ -191,7 +191,7 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
         cSuccess        = fBoardFW->SingleRegisterWrite(pChip, cRegItem, false);
         cRegName        = (dacName == "GainTrim") ? "StripControl2_S32" : "THTRIMMING_S32";
         auto cRegValue  = fBoardFW->SingleRegisterRead(pChip, cRegMap[cRegName]);
-        LOG(INFO) << BOLDBLUE << cRegName << " set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        LOG(INFO) << BOLDBLUE << cRegName << " set to 0x" << std::hex << +cRegValue << std::dec << RESET;
         cSuccess = (cRegValue == localRegValues.getChannel<uint8_t>(0));
         return cSuccess;
     }
