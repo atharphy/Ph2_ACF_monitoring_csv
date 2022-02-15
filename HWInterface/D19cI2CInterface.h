@@ -5,11 +5,9 @@
 
 namespace Ph2_HwInterface
 {
-
 class D19cI2CInterface : public FEConfigurationInterface
 {
   public:
-  
     D19cI2CInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
     D19cI2CInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
     ~D19cI2CInterface();
@@ -17,28 +15,28 @@ class D19cI2CInterface : public FEConfigurationInterface
   public:
     bool SingleWriteRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem) override;
     bool MultiWriteRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem) override;
-    
-    bool MultiWrite(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pRegisterItems) override ;
+
+    bool MultiWrite(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pRegisterItems) override;
     bool MultiRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pRegisterItems) override;
 
     bool SingleWrite(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem) override;
-    bool SingleRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem ) override; 
-    
-    void    ChipI2CRefresh(); 
-    void    ConfigureI2CMap(const Ph2_HwDescription::BeBoard* pBoard);
+    bool SingleRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem) override;
+
+    void ChipI2CRefresh();
+    void ConfigureI2CMap(const Ph2_HwDescription::BeBoard* pBoard);
 
   private:
-    // encode and decode information from D19c 
+    // encode and decode information from D19c
     void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, Ph2_HwDescription::Chip* pChip, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite);
-    void DecodeReg(Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed) ;
-    // write block reg 
-    bool WriteChipBlockReg(std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback) ;
+    void DecodeReg(Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed);
+    // write block reg
+    bool WriteChipBlockReg(std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback);
     void ReadChipBlockReg(std::vector<uint32_t>& pVecReg);
 
     // write and read I2C
-    bool WriteI2C(std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pReadback, bool pBroadcast); 
-    bool ReadI2C(uint32_t pNReplies, std::vector<uint32_t>& pReplies);
-    void ReadErrors();
+    bool        WriteI2C(std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pReadback, bool pBroadcast);
+    bool        ReadI2C(uint32_t pNReplies, std::vector<uint32_t>& pReplies);
+    void        ReadErrors();
     static bool cmd_reply_comp(const uint32_t& cWord1, const uint32_t& cWord2) { return true; }
     static bool cmd_reply_ack(const uint32_t& cWord1, const uint32_t& cWord2)
     {
@@ -52,9 +50,8 @@ class D19cI2CInterface : public FEConfigurationInterface
 
     std::map<uint8_t, std::vector<uint32_t>> fI2CSlaveMap;
     // i2c version of master
-    uint32_t fI2CVersion;
+    uint32_t       fI2CVersion;
     const uint32_t SINGLE_I2C_WAIT = 200; // used for 1MHz I2C
-    
 };
 } // namespace Ph2_HwInterface
 #endif

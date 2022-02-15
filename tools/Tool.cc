@@ -685,7 +685,7 @@ void Tool::setSystemTestPulse(uint8_t pTPAmplitude, uint8_t pTestGroup, bool pTP
 void Tool::enableTestPulse(bool enableTP)
 {
     fTestPulse = enableTP;
-    if( enableTP ) setFWTestPulse();
+    if(enableTP) setFWTestPulse();
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -729,7 +729,7 @@ void Tool::setFWTestPulse()
         case BoardType::D19C:
         {
             EventType cEventType = cBoard->getEventType();
-            bool cAsync = (cEventType == EventType::PSAS);
+            bool      cAsync     = (cEventType == EventType::PSAS);
             if(!cAsync)
             {
                 cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
@@ -1331,7 +1331,6 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
     }
     else
     {
-        
         groupScan->setGroup(-1);
         (*groupScan)();
     }
@@ -1387,15 +1386,16 @@ class MeasureBeBoardDataPerGroup : public ScanBase
             {
                 // LOG (INFO) << BOLDYELLOW << "MeasureBeBoardDataPerGroup fSameChannelGroupForAllChannels read-back " << events.size() << " event." << RESET;
                 auto channelGroup = this->getChannelGroup(fGroupNumber);
-                if(channelGroup == nullptr ) LOG(ERROR) << BOLDRED << "Channel group does not exist..." << RESET;
-                else 
+                if(channelGroup == nullptr)
+                    LOG(ERROR) << BOLDRED << "Channel group does not exist..." << RESET;
+                else
                 {
                     for(auto& event: events) event->fillDataContainer(fDetectorDataContainer->at(fBoardIndex), channelGroup);
                 }
             }
             else
             {
-                LOG (INFO) << BOLDYELLOW << "MeasureBeBoardDataPerGroup !fSameChannelGroupForAllChannels read-back " << events.size() << RESET;
+                LOG(INFO) << BOLDYELLOW << "MeasureBeBoardDataPerGroup !fSameChannelGroupForAllChannels read-back " << events.size() << RESET;
                 for(auto cOpticalGroup: *fDetectorDataContainer->at(fBoardIndex))
                 {
                     for(const auto cHybrid: *cOpticalGroup)
@@ -1425,17 +1425,17 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     // make sure async mode uses ReadNEvents
     bool cUseReadNEvents = fUseReadNEvents;
     if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::PSAS)
-    { 
+    {
         this->setSameGlobalDac("AnalogueAsync", 1);
-        fUseReadNEvents = true; 
+        fUseReadNEvents = true;
     }
     doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
     // if in async mode normalization is a little different ..
     // normalize by the number of triggers to accept
     if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::PSAS)
     {
-        numberOfEvents   = fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_stat.fast_command_block.trigger_in_counter");
-        // LOG (INFO) << BOLDYELLOW << "Tool::measureBeBoardData number of events with PSAS " << numberOfEvents << RESET; 
+        numberOfEvents = fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_stat.fast_command_block.trigger_in_counter");
+        // LOG (INFO) << BOLDYELLOW << "Tool::measureBeBoardData number of events with PSAS " << numberOfEvents << RESET;
         fNReadbackEvents = numberOfEvents;
     }
     if(fDetectorContainer->at(boardIndex)->getBoardType() == BoardType::D19C)

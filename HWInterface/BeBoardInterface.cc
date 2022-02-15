@@ -13,8 +13,9 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-BeBoardInterface::BeBoardInterface(const BeBoardFWMap& pBoardMap) : fBoardMap(pBoardMap), fBoardFW(nullptr), fPrevBoardIdentifier(65535) {
-    // for( const auto& cItem : fBoardMap) 
+BeBoardInterface::BeBoardInterface(const BeBoardFWMap& pBoardMap) : fBoardMap(pBoardMap), fBoardFW(nullptr), fPrevBoardIdentifier(65535)
+{
+    // for( const auto& cItem : fBoardMap)
     // {
     //     // auto cIterator = fBoardMap.find(cItem.first);
     //     // std::cout << BOLDYELLOW << "BeBoardInterface::BeBoardInterface " << cItem.second << "\t" << cItem.second->getId() << RESET << "\n" ;
@@ -26,7 +27,7 @@ BeBoardInterface::~BeBoardInterface() {}
 void BeBoardInterface::setBoard(uint16_t pBoardIdentifier)
 {
     // std::cout << BOLDRED <<  "BeBoardInterface::SetBoard [first set]" << fBoardMap[pBoardIdentifier] << "\t" << fBoardMap[pBoardIdentifier]->getId() << RESET << "\n";
-            
+
     if(fPrevBoardIdentifier != pBoardIdentifier)
     {
         BeBoardFWMap::iterator i = fBoardMap.find(pBoardIdentifier);

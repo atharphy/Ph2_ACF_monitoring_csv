@@ -94,7 +94,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
-        
+
         for(auto cOpticalGroup: *cBoard)
         {
             for(int hybridNumber = 0; hybridNumber < 2; hybridNumber++)
@@ -111,7 +111,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
                 LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
 
-                D19cDebugFWInterface*            cDebugInterface   = cFWInterface->getDebugInterface();
+                D19cDebugFWInterface* cDebugInterface = cFWInterface->getDebugInterface();
                 cDebugInterface->StubDebug(true, 5);
                 cDebugInterface->StubDebug(true, 5);
                 // enable stub debug - allows you to 'scope' the stub output

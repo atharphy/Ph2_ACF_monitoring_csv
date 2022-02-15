@@ -1,10 +1,10 @@
 #ifndef _D19cDebugFWInterface_H__
 #define __D19cDebugFWInterface_H__
 
-#include "RegManager.h"
-#include "BeBoard.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/easylogging++.h"
+#include "BeBoard.h"
+#include "RegManager.h"
 #include <string>
 
 namespace Ph2_HwInterface
@@ -14,7 +14,7 @@ class D19cDebugFWInterface : public RegManager
   public:
     D19cDebugFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
     D19cDebugFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
-  
+
     ~D19cDebugFWInterface();
 
   public:

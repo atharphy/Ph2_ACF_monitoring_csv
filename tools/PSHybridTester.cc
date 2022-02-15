@@ -50,9 +50,9 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
     LinkAlignmentOT::Inherit(this);
     LinkAlignmentOT::Initialise();
     fBeBoardInterface->setBoard(pBoard->getId());
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto                  cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
-        
+
     uint32_t cNtriggers = this->findValueInSettings<double>("PSHybridDebugDuration");
     if(pTrigger)
         LOG(INFO) << BOLDBLUE << "Going to send " << +cNtriggers << " triggers to debug L1 SSA output " << RESET;
@@ -83,7 +83,7 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
         }
         fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cPairId);
         if(pTrigger)
-           cDebugInterface->L1ADebug((uint8_t)1, false);
+            cDebugInterface->L1ADebug((uint8_t)1, false);
         else
         {
             cDebugInterface->StubDebug(true, 7);
@@ -94,9 +94,9 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
 void PSHybridTester::SSAOutputsPogoScope(std::vector<std::vector<std::string>>& cReadLines, std::string pSSAPairSel, BeBoard* pBoard, bool pTrigger, bool pPrintScoped)
 {
     fBeBoardInterface->setBoard(pBoard->getId());
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto                  cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
-    
+
     for(uint8_t cPairId = 0; cPairId < 2; cPairId++)
     {
         if(!pTrigger) { LOG(INFO) << "SLVS debug [stub lines] : Chip " << +cPairId << RESET; }
@@ -317,9 +317,9 @@ void PSHybridTester::AlignCICout(uint8_t pPattern)
 void PSHybridTester::MPATest(BeBoard* pBoard)
 {
     fBeBoardInterface->setBoard(pBoard->getId());
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto                  cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
-    
+
 #if defined(__USE_ROOT__)
     uint32_t cTestPatterns[4] = {0xAA, 0xCC, 0x00, 0xFF};
     // String with the binary representation of the pattern

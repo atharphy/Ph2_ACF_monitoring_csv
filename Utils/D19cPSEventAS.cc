@@ -54,49 +54,49 @@ D19cPSEventAS::D19cPSEventAS(const BeBoard* pBoard, const std::vector<uint32_t>&
 void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pData)
 {
     LOG(DEBUG) << BOLDBLUE << "Setting event for Async PS counters " << RESET;
-    auto cDataIterator = pData.begin();
-    auto cFeTypes = pBoard->connectedFrontEndTypes(); 
-    std::vector<FrontEndType> cValidTypes{FrontEndType::MPA, FrontEndType::SSA, FrontEndType::SSA2}; 
-    for( auto cValidType : cValidTypes ) 
+    auto                      cDataIterator = pData.begin();
+    auto                      cFeTypes      = pBoard->connectedFrontEndTypes();
+    std::vector<FrontEndType> cValidTypes{FrontEndType::MPA, FrontEndType::SSA, FrontEndType::SSA2};
+    for(auto cValidType: cValidTypes)
     {
-        if( std::find(cFeTypes.begin(), cFeTypes.end(), cValidType )  == cFeTypes.end() ) continue; 
-        
+        if(std::find(cFeTypes.begin(), cFeTypes.end(), cValidType) == cFeTypes.end()) continue;
+
         for(auto cOpticalGroup: *pBoard)
         {
             for(auto cFe: *cOpticalGroup)
             {
-                uint8_t cFeIndex  = getFeIndex(cFe->getId());
+                uint8_t cFeIndex = getFeIndex(cFe->getId());
                 for(auto cChip: *cFe)
                 {
-                    if( cChip->getFrontEndType() != cValidType ) continue; 
-                    
+                    if(cChip->getFrontEndType() != cValidType) continue;
+
                     uint8_t cRocIndex = getROCIndex(cFeIndex, cChip->getId());
                     fCounterData[cFeIndex][cRocIndex].clear();
-                    for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl+=2) 
+                    for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl += 2)
                     {
-                        // each 32-bit word hold information from two counters 
-                        for( int cOffset=0; cOffset < 2 ; cOffset++)
+                        // each 32-bit word hold information from two counters
+                        for(int cOffset = 0; cOffset < 2; cOffset++)
                         {
                             // LOG (DEBUG) << BOLDYELLOW << "Chnl#" << cChnl + cOffset << "\t" << ((*cDataIterator & ( 0x7FFF <<  15*cOffset) ) >> 15*cOffset)  << RESET;
-                            fCounterData[cFeIndex][cRocIndex].push_back((*cDataIterator & ( 0x7FFF <<  15*cOffset) ) >> 15*cOffset );
+                            fCounterData[cFeIndex][cRocIndex].push_back((*cDataIterator & (0x7FFF << 15 * cOffset)) >> 15 * cOffset);
                         }
                         cDataIterator++;
-                    }// channels
-                }//chips
-            }//hybrids
-        }//optical groups
-    }//valid types.. MPA then SSA 
+                    } // channels
+                }     // chips
+            }         // hybrids
+        }             // optical groups
+    }                 // valid types.. MPA then SSA
 }
 // required by event but not sure if makes sense for AS
 void D19cPSEventAS::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId)
 {
     uint8_t cFeIndex  = getFeIndex(hybridId);
     uint8_t cRocIndex = getROCIndex(cFeIndex, chipContainer->getId());
-    LOG (DEBUG) << BOLDYELLOW << "FEIndex " << +cFeIndex << " ROCIndex " << +cRocIndex << " -- " << fCounterData.at(cFeIndex).at(cRocIndex).size() << RESET;
+    LOG(DEBUG) << BOLDYELLOW << "FEIndex " << +cFeIndex << " ROCIndex " << +cRocIndex << " -- " << fCounterData.at(cFeIndex).at(cRocIndex).size() << RESET;
     std::vector<uint32_t> cHits = GetHits(hybridId, chipContainer->getId());
-    LOG (DEBUG) << BOLDYELLOW << "FEIndex " << +cFeIndex << " ROCIndex " << +cRocIndex << " -- " << cHits.size() << RESET;
-    float                 cOcc  = 0;
-    size_t                cChnl = 0;
+    LOG(DEBUG) << BOLDYELLOW << "FEIndex " << +cFeIndex << " ROCIndex " << +cRocIndex << " -- " << cHits.size() << RESET;
+    float  cOcc  = 0;
+    size_t cChnl = 0;
     for(auto cHit: cHits)
     {
         if(testChannelGroup == nullptr) break;

@@ -189,7 +189,7 @@ int main(int argc, char* argv[])
     // cHybridTester.CheckHybridCurrents();
     if(cmd.foundOption("checkI2C")) cHybridTester.CheckI2C();
 
-      // cHybridTester.ReadSSABias("MonitorGround");
+    // cHybridTester.ReadSSABias("MonitorGround");
     // cHybridTester.ReadSSABias("MonitorVoltageBias");
     // cHybridTester.ReadSSABias("MonitorCurrentBias");
 
@@ -301,7 +301,6 @@ int main(int argc, char* argv[])
     }
 #endif
 
-
     // measure noise on FE chips before calibration
     if(cmd.foundOption("measurePedeNoise") && cmd.foundOption("antennaValue"))
     {
@@ -328,7 +327,7 @@ int main(int argc, char* argv[])
 
         // cOpenFinder.SelectAntennaPosition("Disable", 512);
     }
-    
+
     // cHybridTester.SetTrim("GAINTRIMMING",7);
     // // equalize thresholds on readout chips
     if(cmd.foundOption("tuneOffsets"))

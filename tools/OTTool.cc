@@ -5,8 +5,8 @@ using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
 #include "../Utils/ContainerFactory.h"
-#include "TriggerInterface.h"
 #include "FEConfigurationInterface.h"
+#include "TriggerInterface.h"
 
 OTTool::OTTool() : Tool()
 {
@@ -43,9 +43,9 @@ void OTTool::Reset()
             cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
         }
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
-    }// for the board - reset registers 
-    
-    for(auto cBoard: *fDetectorContainer) // now reset ROC registers 
+    } // for the board - reset registers
+
+    for(auto cBoard: *fDetectorContainer) // now reset ROC registers
     {
         auto& cROCRegsToPreserveThisBrd = fROCRegsToPerserve.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
@@ -59,7 +59,7 @@ void OTTool::Reset()
                 {
                     auto& cROCRegsToPreserveThisROC = cROCRegsToPreserveThisHybrd->at(cChip->getIndex());
                     auto& cRegsToPerserve           = cROCRegsToPreserveThisROC->getSummary<std::vector<std::string>>();
-                    // reset registers 
+                    // reset registers
                     auto cModMap = cChip->GetModifiedRegisterMap();
                     LOG(INFO) << BOLDYELLOW << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
                     std::vector<std::pair<std::string, uint16_t>> cRegList;
@@ -74,17 +74,17 @@ void OTTool::Reset()
 
                         auto cValueInMemory = cChip->getReg(cMapItem.first);
                         LOG(INFO) << BOLDYELLOW << fMyName << "::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
-                                   << cMapItem.second.fValue << RESET;
-                        
-                        cRegList.push_back( std::make_pair(cMapItem.first, cMapItem.second.fValue) );
+                                  << cMapItem.second.fValue << RESET;
+
+                        cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second.fValue));
                     }
-                    fReadoutChipInterface->WriteChipMultReg(cChip, cRegList); 
-                    
+                    fReadoutChipInterface->WriteChipMultReg(cChip, cRegList);
+
                     // then clear modified register map
-                    // and also disable register tracking for this chip 
+                    // and also disable register tracking for this chip
                     cChip->ClearModifiedRegisterMap();
                     cChip->setRegisterTracking(0);
-                    LOG (INFO) << BOLDYELLOW << fMyName << "::Reset Chip#" << +cChip->getId() <<  " register tracking set to " << +cChip->getRegisterTracking() << RESET;
+                    LOG(INFO) << BOLDYELLOW << fMyName << "::Reset Chip#" << +cChip->getId() << " register tracking set to " << +cChip->getRegisterTracking() << RESET;
                 }
             }
         }
@@ -126,7 +126,7 @@ void OTTool::Prepare()
     fWithSSA   = 0;
     fWithMPA   = 0;
     fWithCBC   = 0;
-    // set-up register tracking 
+    // set-up register tracking
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -137,19 +137,19 @@ void OTTool::Prepare()
                 {
                     cChip->setRegisterTracking(1);
                     cChip->ClearModifiedRegisterMap();
-                    LOG (INFO) << BOLDYELLOW << fMyName << "::Prepare Chip#" << +cChip->getId() <<  " register tracking set to " << +cChip->getRegisterTracking() << RESET;
-                } //chips 
-            }//hybrids
-        }//optical groups
-    }//board
+                    LOG(INFO) << BOLDYELLOW << fMyName << "::Prepare Chip#" << +cChip->getId() << " register tracking set to " << +cChip->getRegisterTracking() << RESET;
+                } // chips
+            }     // hybrids
+        }         // optical groups
+    }             // board
 
     // figure out what type of FEs are connected
     for(auto cBoard: *fDetectorContainer)
     {
         auto cConnectedFEs = cBoard->connectedFrontEndTypes();
-        fWithSSA = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return x == FrontEndType::SSA; }) != cConnectedFEs.end()) ? 1 : 0;
-        fWithMPA = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return x == FrontEndType::MPA; }) != cConnectedFEs.end()) ? 1 : 0;
-        fWithCBC = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return x == FrontEndType::CBC3; }) != cConnectedFEs.end()) ? 1 : 0;
+        fWithSSA           = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return x == FrontEndType::SSA; }) != cConnectedFEs.end()) ? 1 : 0;
+        fWithMPA           = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return x == FrontEndType::MPA; }) != cConnectedFEs.end()) ? 1 : 0;
+        fWithCBC           = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return x == FrontEndType::CBC3; }) != cConnectedFEs.end()) ? 1 : 0;
         for(auto cOpticalGroup: *cBoard)
         {
             fWithLpGBT = (cOpticalGroup->flpGBT != nullptr) ? 1 : 0;
@@ -158,10 +158,9 @@ void OTTool::Prepare()
             {
                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 fWithCIC   = fWithCIC || (cCic != nullptr);
-            }//hybrid
-        }//optical group
-    }//board
-    
+            } // hybrid
+        }     // optical group
+    }         // board
 
     // prepare list of ROC registers to perserve
     fDetectorDataContainer = &fROCRegsToPerserve;
@@ -252,9 +251,9 @@ void OTTool::WaitForTriggers(BeBoard* pBoard)
 {
     // get D19cFW Interface
     fBeBoardInterface->setBoard(pBoard->getId());
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     auto cTriggerInterface = cInterface->getTriggerInterface();
-         
+
     LOG(INFO) << BOLDBLUE << fMyName << "::WaitForTriggers with ReadData.. will wait to readout until I've seen " << fNevents << " triggers " << RESET;
     std::vector<uint32_t> cCompleteData(0);
 
@@ -305,7 +304,7 @@ void OTTool::TriggerMonitor(uint32_t pDelta_s)
     for(auto cBoard: *fDetectorContainer)
     {
         fBeBoardInterface->setBoard(cBoard->getId());
-        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
         auto cTriggerInterface = cInterface->getTriggerInterface();
         if(cTriggerInterface->GetTriggerState() == 0) cTriggerInterface->Start();
     }
@@ -343,10 +342,10 @@ void OTTool::TriggerMonitor(uint32_t pDelta_s)
             for(auto cBoard: *fDetectorContainer)
             {
                 fBeBoardInterface->setBoard(cBoard->getId());
-                auto  cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-                auto cTriggerInterface = cInterface->getTriggerInterface();
-                auto  cTriggerState   = cTriggerInterface->GetTriggerState();
-                auto& cCounterThisBrd = cTrigCounters.at(cBoard->getIndex())->getSummary<std::vector<uint32_t>>();
+                auto  cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+                auto  cTriggerInterface = cInterface->getTriggerInterface();
+                auto  cTriggerState     = cTriggerInterface->GetTriggerState();
+                auto& cCounterThisBrd   = cTrigCounters.at(cBoard->getIndex())->getSummary<std::vector<uint32_t>>();
                 cCounterThisBrd.push_back(fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter"));
                 auto cDeltaTriggers   = (cCounterThisBrd.size() == 1) ? cCounterThisBrd[0] : cCounterThisBrd[cCounterThisBrd.size() - 1] - cCounterThisBrd[cCounterThisBrd.size() - 2];
                 auto cTriggerSource   = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
@@ -489,8 +488,8 @@ void OTTool::StartReadoutTh(uint8_t cBrdId)
     // get D19cFW Interface
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBrdId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBrdId; });
     fBeBoardInterface->setBoard((*cBoardIter)->getId());
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    auto cTriggerInterface = cInterface->getTriggerInterface(); 
+    auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cTriggerInterface = cInterface->getTriggerInterface();
     cTriggerInterface->Start();
     LOG(INFO) << BOLDMAGENTA << "Started triggers on BeBoard#" << +cBrdId << RESET;
 }
@@ -501,7 +500,7 @@ void OTTool::ContinousReadout(BeBoard* pBoard)
 {
     // get D19cFW Interface
     fBeBoardInterface->setBoard(pBoard->getId());
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     auto cTriggerInterface = cInterface->getTriggerInterface();
 
     LOG(INFO) << BOLDBLUE << fMyName << "::ContinousReadout ... until I've received " << fNevents << " events in the readout" << RESET;
@@ -547,7 +546,7 @@ void OTTool::CheckFinishedTh(uint8_t cBrdId)
     // get D19cFW Interface
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBrdId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBrdId; });
     fBeBoardInterface->setBoard((*cBoardIter)->getId());
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     auto cTriggerInterface = cInterface->getTriggerInterface();
 
     // wait until triggers have started
@@ -580,8 +579,8 @@ void OTTool::ContinousReadoutTh(uint8_t cBrdId)
     // get D19cFW Interface
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBrdId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBrdId; });
     fBeBoardInterface->setBoard((*cBoardIter)->getId());
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    auto cTriggerInterface = cInterface->getTriggerInterface(); 
+    auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cTriggerInterface = cInterface->getTriggerInterface();
     // wait until triggers have started
     size_t cWaitCounter = 0;
     size_t cMaxWait     = 10000;

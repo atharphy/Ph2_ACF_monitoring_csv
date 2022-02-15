@@ -20,10 +20,10 @@ struct ChipRegItem
     {
     }
 
-    uint8_t  fPage = 0 ;
-    uint16_t fAddress = 0;
-    uint16_t fDefValue = 0;
-    uint16_t fValue = 0;
+    uint8_t  fPage      = 0;
+    uint16_t fAddress   = 0;
+    uint16_t fDefValue  = 0;
+    uint16_t fValue     = 0;
     uint8_t  fStatusReg = 0;
     bool     fPrmptCfg  = false;
     uint8_t  fBitSize   = 0;

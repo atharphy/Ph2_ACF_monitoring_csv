@@ -4,11 +4,10 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-D19cDebugFWInterface::D19cDebugFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : RegManager(pId, pUri, pAddressTable) {
-}
-D19cDebugFWInterface::D19cDebugFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : RegManager(puHalConfigFileName, pBoardId) {
-    
-    LOG (INFO) << BOLDYELLOW << "D19cDebugFWInterface::D19cBackendAlignmentFWInterface Constructor" << RESET;
+D19cDebugFWInterface::D19cDebugFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : RegManager(pId, pUri, pAddressTable) {}
+D19cDebugFWInterface::D19cDebugFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : RegManager(puHalConfigFileName, pBoardId)
+{
+    LOG(INFO) << BOLDYELLOW << "D19cDebugFWInterface::D19cBackendAlignmentFWInterface Constructor" << RESET;
 }
 D19cDebugFWInterface::~D19cDebugFWInterface() {}
 
@@ -34,7 +33,7 @@ std::string D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
     auto cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
     do
     {
-        cEndTime = std::chrono::high_resolution_clock::now();
+        cEndTime      = std::chrono::high_resolution_clock::now();
         cDuration     = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
         cNTriggersRxd = this->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
         LOG(INFO) << BOLDMAGENTA << "Trigger in counter is " << +cNTriggersRxd << " waited for " << cDuration << " us so far" << RESET;

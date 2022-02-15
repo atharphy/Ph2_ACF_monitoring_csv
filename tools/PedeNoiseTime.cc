@@ -10,8 +10,8 @@
 #include "../Utils/Occupancy.h"
 #include "../Utils/SSAChannelGroupHandler.h"
 #include "../Utils/ThresholdAndNoise.h"
-#include "TriggerInterface.h"
 #include "L1ReadoutInterface.h"
+#include "TriggerInterface.h"
 #include "boost/format.hpp"
 #include <math.h>
 
@@ -492,9 +492,9 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
 uint32_t PedeNoiseTime::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
 {
     fBeBoardInterface->setBoard(pBoard->getId());
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    auto cTriggerInterface = cInterface->getTriggerInterface(); 
-    
+    auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cTriggerInterface = cInterface->getTriggerInterface();
+
     LOG(DEBUG) << BOLDMAGENTA << "PedeNoiseTime setting TriggerConfig " << RESET;
 
     // repeat the sequence N times
@@ -624,8 +624,8 @@ bool PedeNoiseTime::DataFromRandomTriggers(int pTriggerSeparation)
     for(auto cBoard: *fDetectorContainer)
     {
         fBeBoardInterface->setBoard(cBoard->getId());
-        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-        auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface(); 
+        auto cInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface();
         cBoard->setEventType(EventType::VR); // temp for PS tests
         // fReadoutChipInterface->setBoard(cBoard->getId());
         fBeBoardInterface->Stop(cBoard);
@@ -642,9 +642,9 @@ bool PedeNoiseTime::DataFromExternalTriggers()
     for(auto cBoard: *fDetectorContainer)
     {
         fBeBoardInterface->setBoard(cBoard->getId());
-        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-        auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface(); 
-        
+        auto cInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface();
+
         cBoard->setEventType(EventType::VR); // temp for PS tests
         auto& cNtriggers = fTriggerCounter.at(cBoard->getIndex())->getSummary<uint32_t>();
         fBeBoardInterface->Stop(cBoard);

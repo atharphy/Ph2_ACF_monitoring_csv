@@ -1,10 +1,10 @@
 #ifndef __D19cBackendAlignmentFWInterface_H__
 #define __D19cBackendAlignmentFWInterface_H__
 
-#include "RegManager.h"
-#include "BeBoard.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/easylogging++.h"
+#include "BeBoard.h"
+#include "RegManager.h"
 #include <string>
 
 namespace Ph2_HwInterface

@@ -30,10 +30,10 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     cWithMPA = false;
     for(auto cBoard: *fDetectorContainer)
     {
-        auto cFeTypes = cBoard->connectedFrontEndTypes(); 
-        cWithCBC = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::CBC3) != cFeTypes.end(); 
-        cWithSSA = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::SSA) != cFeTypes.end() || std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::SSA2) != cFeTypes.end(); 
-        cWithMPA = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::MPA) != cFeTypes.end(); 
+        auto cFeTypes = cBoard->connectedFrontEndTypes();
+        cWithCBC      = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::CBC3) != cFeTypes.end();
+        cWithSSA      = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::SSA) != cFeTypes.end() || std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::SSA2) != cFeTypes.end();
+        cWithMPA      = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::MPA) != cFeTypes.end();
     }
     if(cWithCBC) LOG(INFO) << BOLDBLUE << "PedestalEqualization with CBCs" << RESET;
     if(cWithSSA && !cWithMPA) LOG(INFO) << BOLDBLUE << "PedestalEqualization with SSAs" << RESET;
@@ -109,7 +109,7 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->InitializePSCounterFWInterface(cBoard);
     }
 
-    // make sure register tracking is on 
+    // make sure register tracking is on
     for(auto board: *fDetectorContainer)
     {
         for(auto opticalGroup: *board)
@@ -123,7 +123,7 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
                 }
             }
         }
-    }              
+    }
 
     if(fDisableStubLogic)
     {
@@ -194,13 +194,12 @@ void PedestalEqualization::Reset()
 
                         LOG(INFO) << BOLDYELLOW << "PedestalEqualization::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
                                   << cMapItem.second.fValue << RESET;
-                        cRegList.push_back( std::make_pair(cMapItem.first, cMapItem.second.fValue) );
+                        cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second.fValue));
                     }
-                    fReadoutChipInterface->WriteChipMultReg(cChip, cRegList,false); 
-                    // don't track registers + clear mod reg map 
+                    fReadoutChipInterface->WriteChipMultReg(cChip, cRegList, false);
+                    // don't track registers + clear mod reg map
                     cChip->setRegisterTracking(0);
                     cChip->ClearModifiedRegisterMap();
-                    
                 }
             }
         }

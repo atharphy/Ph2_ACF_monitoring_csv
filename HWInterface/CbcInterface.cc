@@ -56,28 +56,30 @@ bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerifLoop, uint32_t pBlockSiz
         std::sort(cRegList.begin(), cRegList.end(), customPageInc); // all to page0 then page 1
     else
         std::sort(cRegList.begin(), cRegList.end(), customPageDec); // all to page1 then page 0
-    std::sort(cRegList.begin(), cRegList.end(), customAddressInc); // sort by address - for convenience later
+    std::sort(cRegList.begin(), cRegList.end(), customAddressInc);  // sort by address - for convenience later
 
-    // First configure all registers on page0 
-    std::vector<ChipRegItem> cRegItemsPg0;  
-    std::vector<ChipRegItem> cRegItemsPg1; 
-    for( auto& cReg : cRegList ) 
+    // First configure all registers on page0
+    std::vector<ChipRegItem> cRegItemsPg0;
+    std::vector<ChipRegItem> cRegItemsPg1;
+    for(auto& cReg: cRegList)
     {
-        // skip fused registers .. can't write to them 
-        if( cReg.first.find("Fuse") != std::string::npos ) continue; 
-        if( cReg.second.fPage == 0) cRegItemsPg0.push_back( cReg.second );
-        else cRegItemsPg1.push_back( cReg.second );
+        // skip fused registers .. can't write to them
+        if(cReg.first.find("Fuse") != std::string::npos) continue;
+        if(cReg.second.fPage == 0)
+            cRegItemsPg0.push_back(cReg.second);
+        else
+            cRegItemsPg1.push_back(cReg.second);
     }
-    // set page 0 
+    // set page 0
     resetPageMap();
-    if( !ConfigurePage(pCbc,0, pVerifLoop) ) return false;
-    if( !fBoardFW->MultiRegisterWrite(pCbc, cRegItemsPg0, pVerifLoop) ) return false;
-    LOG (INFO) << BOLDGREEN << "Configured all registers on page0 [" << cRegItemsPg0.size() << " regs]" RESET;
+    if(!ConfigurePage(pCbc, 0, pVerifLoop)) return false;
+    if(!fBoardFW->MultiRegisterWrite(pCbc, cRegItemsPg0, pVerifLoop)) return false;
+    LOG(INFO) << BOLDGREEN << "Configured all registers on page0 [" << cRegItemsPg0.size() << " regs]" RESET;
 
-    if( !ConfigurePage(pCbc,1, pVerifLoop) ) return false;
-    if( !fBoardFW->MultiRegisterWrite(pCbc, cRegItemsPg1, pVerifLoop) ) return false;
-    LOG (INFO) << BOLDGREEN << "Configured all registers on page1 [" << cRegItemsPg1.size() << " regs]" RESET;
-    
+    if(!ConfigurePage(pCbc, 1, pVerifLoop)) return false;
+    if(!fBoardFW->MultiRegisterWrite(pCbc, cRegItemsPg1, pVerifLoop)) return false;
+    LOG(INFO) << BOLDGREEN << "Configured all registers on page1 [" << cRegItemsPg1.size() << " regs]" RESET;
+
     pCbc->setRegisterTracking(1);
     pCbc->ClearModifiedRegisterMap();
     return true;
@@ -279,7 +281,7 @@ uint16_t CbcInterface::readErrorRegister(ReadoutChip* pCbc)
     cRegItem.fPage    = 0x01;
     cRegItem.fAddress = 0x1D;
     ConfigurePage(pCbc, cRegItem.fPage, true);
-    return fBoardFW->SingleRegisterRead(pCbc, cRegItem); 
+    return fBoardFW->SingleRegisterRead(pCbc, cRegItem);
 }
 
 bool CbcInterface::selectLogicMode(ReadoutChip* pCbc, std::string pModeSelect, bool pForHits, bool pForStubs, bool pVerifLoop)
@@ -498,13 +500,13 @@ bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerifLoop)
 
     cSuccess = true;
     setBoard(pCbc->getBeBoardId());
-    std::string cRegName = "FeCtrl&TrgLat2";
-    ChipRegMap                                       cCbcRegMap = pCbc->getRegMap();
+    std::string cRegName   = "FeCtrl&TrgLat2";
+    ChipRegMap  cCbcRegMap = pCbc->getRegMap();
     // address in map depends on board id, hybrid id, chip id
-    uint32_t cAddress     = (pCbc->getBeBoardId() << 16) | (pCbc->getHybridId() << 8) | pCbc->getId();
-    auto     cIter        = fPageMap.find(cAddress);
-    auto cTrack = pCbc->getRegisterTracking();
-    pCbc->setRegisterTracking(0); // don't keep track of page register 
+    uint32_t cAddress = (pCbc->getBeBoardId() << 16) | (pCbc->getHybridId() << 8) | pCbc->getId();
+    auto     cIter    = fPageMap.find(cAddress);
+    auto     cTrack   = pCbc->getRegisterTracking();
+    pCbc->setRegisterTracking(0); // don't keep track of page register
     if(cIter == fPageMap.end())
     {
         auto        cValue = pCbc->getReg("FeCtrl&TrgLat2");
@@ -513,35 +515,34 @@ bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerifLoop)
         cMask.fNbits         = 1;
         uint8_t cDefaultPage = pCbc->getRegBits("FeCtrl&TrgLat2", cMask);
         LOG(INFO) << BOLDYELLOW << "Default page on CBC" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " is " << +cDefaultPage << " register value is 0x" << std::hex << +cValue
-                   << std::dec << RESET;
+                  << std::dec << RESET;
         fPageMap.insert(std::make_pair(cAddress, cDefaultPage));
-        LOG (INFO) << BOLDYELLOW << "Page was not explicitly selected on CBC#" << +pCbc->getId() << " setting to default value." << RESET;
+        LOG(INFO) << BOLDYELLOW << "Page was not explicitly selected on CBC#" << +pCbc->getId() << " setting to default value." << RESET;
         cSuccess = fBoardFW->SingleRegisterWrite(pCbc, cCbcRegMap[cRegName], pVerifLoop);
     }
     if(!cSuccess)
     {
-        LOG (ERROR) << BOLDRED << "Could not configure page register on CBC#" << +pCbc->getId() << RESET;
+        LOG(ERROR) << BOLDRED << "Could not configure page register on CBC#" << +pCbc->getId() << RESET;
         pCbc->setRegisterTracking(cTrack);
         return cSuccess;
-    }// failed to write page register 
+    } // failed to write page register
 
     cIter         = fPageMap.find(cAddress);
     uint8_t cPage = cIter->second;
-    if(cPage == pPage){ 
+    if(cPage == pPage)
+    {
         // don't need to change page
         LOG(DEBUG) << BOLDBLUE << "\t...No need to switch page on CBC#" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " current page " << +cPage << " page to write to is " << +pPage
-               << RESET;
+                   << RESET;
         pCbc->setRegisterTracking(cTrack);
         return true;
-    }// don't need to do anything 
+    } // don't need to do anything
 
     // switch page
-    ChipRegItem cPageReg  = pCbc->getRegItem("FeCtrl&TrgLat2");
-    cPageReg.fValue = (cPageReg.fValue & 0x7F) | (pPage << 7);
-    LOG(INFO) << BOLDBLUE << "Switching page on CBC#" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() 
-        << " from page " << +cPage << " to page " << +pPage 
-        << "\t...Current page is " << cPage << " want to write to page " << +pPage 
-        << " need to update page register on the CBC" << RESET;
+    ChipRegItem cPageReg = pCbc->getRegItem("FeCtrl&TrgLat2");
+    cPageReg.fValue      = (cPageReg.fValue & 0x7F) | (pPage << 7);
+    LOG(INFO) << BOLDBLUE << "Switching page on CBC#" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " from page " << +cPage << " to page " << +pPage << "\t...Current page is " << cPage
+              << " want to write to page " << +pPage << " need to update page register on the CBC" << RESET;
     // update page in map
     cIter->second = pPage;
     // write to page register in the CBC
@@ -553,10 +554,10 @@ bool CbcInterface::WriteChipSingleReg(Chip* pCbc, const std::string& pRegNode, u
 {
     // first, identify the correct BeBoardFWInterface
     setBoard(pCbc->getBeBoardId());
-    auto cRegMap = pCbc->getRegMap(); 
+    auto cRegMap             = pCbc->getRegMap();
     cRegMap[pRegNode].fValue = pValue;
-    ConfigurePage(pCbc,cRegMap[pRegNode].fPage, pVerifLoop);
-    return fBoardFW->SingleRegisterWrite(pCbc, cRegMap[pRegNode] , pVerifLoop ); 
+    ConfigurePage(pCbc, cRegMap[pRegNode].fPage, pVerifLoop);
+    return fBoardFW->SingleRegisterWrite(pCbc, cRegMap[pRegNode], pVerifLoop);
 }
 uint8_t CbcInterface::GetLastPage(Chip* pCbc)
 {
@@ -579,50 +580,52 @@ uint8_t CbcInterface::GetLastPage(Chip* pCbc)
 bool CbcInterface::WriteChipMultReg(Chip* pCbc, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop)
 {
     setBoard(pCbc->getBeBoardId());
-    auto cRegMap = pCbc->getRegMap();
+    auto                     cRegMap = pCbc->getRegMap();
     std::vector<ChipRegItem> cRegItemsPg0;
-    std::vector<ChipRegItem> cRegItemsPg1; 
-    for(auto cReq : pVecReq )
+    std::vector<ChipRegItem> cRegItemsPg1;
+    for(auto cReq: pVecReq)
     {
         auto cIterator = cRegMap.find(cReq.first);
-        if( cIterator == cRegMap.end() )
+        if(cIterator == cRegMap.end())
         {
-            LOG (ERROR) << BOLDRED << "CbcInterface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq.first << RESET;
+            LOG(ERROR) << BOLDRED << "CbcInterface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq.first << RESET;
             continue;
         }
-        if(cIterator->first.find("Fuse") != std::string::npos){ 
-            LOG (ERROR) << BOLDRED << "CbcInterface::WriteChipMultReg trtying to write to a FUSE register " << cReq.first << RESET;
+        if(cIterator->first.find("Fuse") != std::string::npos)
+        {
+            LOG(ERROR) << BOLDRED << "CbcInterface::WriteChipMultReg trtying to write to a FUSE register " << cReq.first << RESET;
             continue;
         }
-        ChipRegItem cItem = cIterator->second; 
-        cItem.fValue = cReq.second; 
-        if( cIterator->second.fPage == 0 )  cRegItemsPg0.push_back( cItem ); 
-        else cRegItemsPg1.push_back(cItem);
+        ChipRegItem cItem = cIterator->second;
+        cItem.fValue      = cReq.second;
+        if(cIterator->second.fPage == 0)
+            cRegItemsPg0.push_back(cItem);
+        else
+            cRegItemsPg1.push_back(cItem);
     }
-    if( cRegItemsPg0.size() > 0 ) 
+    if(cRegItemsPg0.size() > 0)
     {
-        if( ConfigurePage(pCbc,0, pVerifLoop) ) 
-        {   
-            if( !fBoardFW->MultiRegisterWrite(pCbc, cRegItemsPg0, pVerifLoop) ) 
-            {
-                LOG (ERROR) << BOLDRED << "Coult not perform CbcInterface::WriteChipMultReg to Page0" << RESET; 
-                return false;
-            }
-            
-        }
-    }    
-
-    if( cRegItemsPg1.size() > 0 ) 
-    {
-        if( ConfigurePage(pCbc,1, pVerifLoop) ) 
+        if(ConfigurePage(pCbc, 0, pVerifLoop))
         {
-            if( !fBoardFW->MultiRegisterWrite(pCbc, cRegItemsPg1, pVerifLoop) ) 
+            if(!fBoardFW->MultiRegisterWrite(pCbc, cRegItemsPg0, pVerifLoop))
             {
-                LOG (ERROR) << BOLDRED << "Coult not perform CbcInterface::WriteChipMultReg to Page1" << RESET; 
+                LOG(ERROR) << BOLDRED << "Coult not perform CbcInterface::WriteChipMultReg to Page0" << RESET;
                 return false;
             }
         }
-    }    
+    }
+
+    if(cRegItemsPg1.size() > 0)
+    {
+        if(ConfigurePage(pCbc, 1, pVerifLoop))
+        {
+            if(!fBoardFW->MultiRegisterWrite(pCbc, cRegItemsPg1, pVerifLoop))
+            {
+                LOG(ERROR) << BOLDRED << "Coult not perform CbcInterface::WriteChipMultReg to Page1" << RESET;
+                return false;
+            }
+        }
+    }
 
     return true;
 }
@@ -641,17 +644,14 @@ bool CbcInterface::WriteChipAllLocalReg(ReadoutChip* pCbc, const std::string& da
         LOG(ERROR) << "Error, DAC " << dacName << " is not a Local DAC";
 
     std::vector<std::pair<std::string, uint16_t>> cRegVec;
-    ChannelGroup<NCHANNELS, 1> channelToEnable;
-    std::vector<uint32_t> cVec;
+    ChannelGroup<NCHANNELS, 1>                    channelToEnable;
+    std::vector<uint32_t>                         cVec;
     cVec.clear();
     for(uint8_t iChannel = 0; iChannel < pCbc->getNumberOfChannels(); ++iChannel)
     {
         if(isMask)
         {
-            if(localRegValues.getChannel<uint16_t>(iChannel))
-            {
-                channelToEnable.enableChannel(iChannel);
-            }
+            if(localRegValues.getChannel<uint16_t>(iChannel)) { channelToEnable.enableChannel(iChannel); }
         }
         else
         {
@@ -662,14 +662,15 @@ bool CbcInterface::WriteChipAllLocalReg(ReadoutChip* pCbc, const std::string& da
     }
 
     if(isMask) { return maskChannelGroup(pCbc, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(channelToEnable)), pVerifLoop); }
-    else return WriteChipMultReg(pCbc, cRegVec, pVerifLoop);
+    else
+        return WriteChipMultReg(pCbc, cRegVec, pVerifLoop);
 }
 uint8_t CbcInterface::ReadChipSingleReg(Chip* pCbc, const std::string& pRegNode)
 {
     setBoard(pCbc->getBeBoardId());
     ChipRegItem cRegItem = pCbc->getRegItem(pRegNode);
-    ConfigurePage(pCbc, cRegItem.fPage ); 
-    return fBoardFW->SingleRegisterRead(pCbc, cRegItem); 
+    ConfigurePage(pCbc, cRegItem.fPage);
+    return fBoardFW->SingleRegisterRead(pCbc, cRegItem);
 }
 uint16_t CbcInterface::ReadChipReg(Chip* pCbc, const std::string& pRegNode)
 {

@@ -107,7 +107,7 @@ class CicInterface : public ChipInterface
     bool                              ConfigureFCMDEdge(Ph2_HwDescription::Chip* pChip, uint8_t pUseNegEdge = 1);
     bool                              GetResyncRequest(Ph2_HwDescription::Chip* pChip);
     std::pair<uint8_t, uint8_t>       GetPhyPortConfig(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pLineId);
-    // TO-DO.. clean-up 
+    // TO-DO.. clean-up
     bool                          runVerification(Ph2_HwDescription::Chip* pChip, uint8_t pValue, std::string pRegName);
     std::pair<uint16_t, uint16_t> getRetrySummary() { return std::make_pair(fReW, fReWR); }
     std::pair<int, float>         getWRattempts();

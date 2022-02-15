@@ -160,9 +160,8 @@ class BeBoard : public BoardContainer
     void    setReset(uint8_t pReset) { fReset = pReset; }
     uint8_t getReset() const { return fReset; }
 
-
     std::vector<FrontEndType> connectedFrontEndTypes() const;
-    int dummyValue_ = 1989;
+    int                       dummyValue_ = 1989;
 
   protected:
     BoardType    fBoardType;

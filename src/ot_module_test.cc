@@ -1,5 +1,6 @@
 #include <cstring>
 
+#include "D19cDebugFWInterface.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
@@ -18,7 +19,6 @@
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
-#include "D19cDebugFWInterface.h"
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -229,7 +229,7 @@ int main(int argc, char* argv[])
         auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
         cInterface->ConfigureInterfaces(cBoard);
     }
-    
+
     if(cmd.foundOption("readTemperatures"))
     {
         LOG(INFO) << BOLDBLUE << "Reading internal monitors from lpGBT-ADCs.." << RESET;
@@ -429,7 +429,7 @@ int main(int argc, char* argv[])
     if(!cmd.foundOption("read") && cmd.foundOption("reconfigure"))
     {
         cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
-        // just to check 
+        // just to check
         // D19cDebugFWInterface* cDebugInterface   = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
         // for(const auto cBoard: *cTool.fDetectorContainer)
         // {
@@ -442,7 +442,7 @@ int main(int argc, char* argv[])
         // {
         //     cTool.ReadNEvents(cBoard, 10);
         // }
-        
+
         // map MPA outputs for PS module
         PSAlignment cPSAlignment;
         cPSAlignment.Inherit(&cTool);
@@ -477,7 +477,7 @@ int main(int argc, char* argv[])
         cCicAligner.waitForRunToBeCompleted();
         cCicAligner.dumpConfigFiles();
 
-        // quickly check ReadData 
+        // quickly check ReadData
         // for(const auto cBoard: *cTool.fDetectorContainer)
         // {
         //     cTool.fBeBoardInterface->Start(cBoard);

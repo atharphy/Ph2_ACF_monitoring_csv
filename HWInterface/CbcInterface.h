@@ -148,7 +148,7 @@ class CbcInterface : public ReadoutChipInterface
     uint32_t ReadCbcIDeFuse(Ph2_HwDescription::Chip* pCbc);
 
   private:
-    bool fSortPageInc = true;
+    bool                        fSortPageInc           = true;
     std::vector<uint8_t>        fWordAlignmentPatterns = {0x7A, 0xBC, 0xD4, 0x31, 0x81};
     bool                        fRetry                 = true;
     std::map<uint32_t, uint8_t> fPageMap;
@@ -184,11 +184,10 @@ class CbcInterface : public ReadoutChipInterface
     {
         bool operator()(std::pair<std::string, Ph2_HwDescription::ChipRegItem> a, std::pair<std::string, Ph2_HwDescription::ChipRegItem> b) const { return a.second.fPage < b.second.fPage; }
     } customPageInc;
-     struct
+    struct
     {
         bool operator()(std::pair<std::string, Ph2_HwDescription::ChipRegItem> a, std::pair<std::string, Ph2_HwDescription::ChipRegItem> b) const { return a.second.fAddress < b.second.fAddress; }
     } customAddressInc;
-    
 };
 } // namespace Ph2_HwInterface
 

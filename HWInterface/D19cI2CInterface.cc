@@ -2,45 +2,44 @@
 
 using namespace Ph2_HwDescription;
 
-
 #include "../HWDescription/OuterTrackerHybrid.h"
 namespace Ph2_HwInterface
 {
-    
-D19cI2CInterface::D19cI2CInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : FEConfigurationInterface(pId, pUri, pAddressTable) {
+D19cI2CInterface::D19cI2CInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : FEConfigurationInterface(pId, pUri, pAddressTable)
+{
     fI2CVersion = RegManager::ReadReg("fc7_daq_stat.command_processor_block.i2c.master_version");
     fI2CSlaveMap.clear();
-    fType = ConfigurationType::I2C; 
+    fType = ConfigurationType::I2C;
 }
-D19cI2CInterface::D19cI2CInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : FEConfigurationInterface(puHalConfigFileName, pBoardId) {
+D19cI2CInterface::D19cI2CInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : FEConfigurationInterface(puHalConfigFileName, pBoardId)
+{
     fI2CVersion = RegManager::ReadReg("fc7_daq_stat.command_processor_block.i2c.master_version");
     fI2CSlaveMap.clear();
-    fType = ConfigurationType::I2C; 
+    fType = ConfigurationType::I2C;
 }
 D19cI2CInterface::~D19cI2CInterface() {}
 
 void D19cI2CInterface::ConfigureI2CMap(const BeBoard* pBoard)
 {
-    if(fI2CVersion >= 1 )
+    if(fI2CVersion >= 1)
     {
-        LOG (INFO) << BOLDBLUE << "Configuring I2C Map for I2C version" << +fI2CVersion << " of uDTC FW" << RESET;
+        LOG(INFO) << BOLDBLUE << "Configuring I2C Map for I2C version" << +fI2CVersion << " of uDTC FW" << RESET;
         // assuming only one type of CIC per board ...
-        bool cWithCBC3=false;
+        bool cWithCBC3 = false;
         for(auto cModule: *pBoard)
         {
-            if( cWithCBC3 ) break;
+            if(cWithCBC3) break;
             for(auto cFe: *cModule)
             {
-                if( cWithCBC3 ) break;
+                if(cWithCBC3) break;
                 for(auto cChip: *cFe)
                 {
-
-                    if( cWithCBC3 ) break;
-                    cWithCBC3 = ( cChip->getFrontEndType() == FrontEndType::CBC3) ;
+                    if(cWithCBC3) break;
+                    cWithCBC3 = (cChip->getFrontEndType() == FrontEndType::CBC3);
                 }
             }
         }
-        
+
         for(auto cModule: *pBoard)
         {
             // default I2C map is for 8CBC3
@@ -109,7 +108,7 @@ void D19cI2CInterface::ConfigureI2CMap(const BeBoard* pBoard)
                 this->WriteReg(curreg, final_item);
             }
         }
-    }   
+    }
 }
 void D19cI2CInterface::EncodeReg(const ChipRegItem& pRegItem, Chip* pChip, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
 {
@@ -152,7 +151,7 @@ void D19cI2CInterface::DecodeReg(ChipRegItem& pRegItem, uint8_t& pCbcId, uint32_
         pFailed           = 0;
         pRegItem.fPage    = pRegItem.fPage;
         pRead             = true;
-        pRegItem.fAddress = ( pRegItem.fAddress <= 0xFF )  ? (pWord & 0x0000FF00) >> 8 : pRegItem.fAddress ; // check in the FW what it does with 16 bit addresses here 
+        pRegItem.fAddress = (pRegItem.fAddress <= 0xFF) ? (pWord & 0x0000FF00) >> 8 : pRegItem.fAddress; // check in the FW what it does with 16 bit addresses here
         pRegItem.fValue   = (pWord & 0x000000FF);
         // LOG (INFO) << BOLDYELLOW << "Reg 0x" << std::hex << +pRegItem.fAddress  << " set to 0x" << +pRegItem.fValue << std::dec << RESET;
     }
@@ -168,50 +167,53 @@ void D19cI2CInterface::DecodeReg(ChipRegItem& pRegItem, uint8_t& pCbcId, uint32_
     }
 }
 
-// Write + Read functions 
-bool D19cI2CInterface::SingleWriteRead(Chip* pChip, ChipRegItem& pItem )
+// Write + Read functions
+bool D19cI2CInterface::SingleWriteRead(Chip* pChip, ChipRegItem& pItem)
 {
-    std::vector<ChipRegItem> cItems; cItems.push_back(pItem);
+    std::vector<ChipRegItem> cItems;
+    cItems.push_back(pItem);
     return MultiWriteRead(pChip, cItems);
 }
-// for now this is just a write to all followed by a read from all 
+// for now this is just a write to all followed by a read from all
 bool D19cI2CInterface::MultiWriteRead(Chip* pChip, std::vector<ChipRegItem>& pWriteRegs)
 {
-    size_t cAttempts = 0; 
-    
+    size_t cAttempts = 0;
+
     // prepare vector to hold read-back values
     std::vector<ChipRegItem> cReadbackRegs;
-    for( auto cItem : pWriteRegs ){
-        ChipRegItem cRegister; 
+    for(auto cItem: pWriteRegs)
+    {
+        ChipRegItem cRegister;
         cRegister.fAddress = cItem.fAddress;
-        cRegister.fPage = cItem.fPage;
+        cRegister.fPage    = cItem.fPage;
         cReadbackRegs.push_back(cRegister);
     }
-    
-    // perform write + check read-back 
-    // until it works or you've tried 
-    // too many times 
+
+    // perform write + check read-back
+    // until it works or you've tried
+    // too many times
     bool cSuccess = false;
     do
     {
-        if( MultiWrite(pChip,  pWriteRegs ) ) 
+        if(MultiWrite(pChip, pWriteRegs))
         {
-            std::this_thread::sleep_for(std::chrono::microseconds(1000));// need this pause for SSA I2C to work .. why?
-            if( MultiRead(pChip, cReadbackRegs ) )
+            std::this_thread::sleep_for(std::chrono::microseconds(1000)); // need this pause for SSA I2C to work .. why?
+            if(MultiRead(pChip, cReadbackRegs))
             {
-                // check read against write 
-                for( auto cReadBackReg : cReadbackRegs )
+                // check read against write
+                for(auto cReadBackReg: cReadbackRegs)
                 {
-                    auto cIterator = find_if(pWriteRegs.begin(), pWriteRegs.end(), [&cReadBackReg](const ChipRegItem& obj) {return obj.fAddress == cReadBackReg.fAddress && obj.fPage == cReadBackReg.fPage ;});
-                    if( cIterator != pWriteRegs.end() ) cSuccess = (cReadBackReg.fValue == cIterator->fValue); 
+                    auto cIterator =
+                        find_if(pWriteRegs.begin(), pWriteRegs.end(), [&cReadBackReg](const ChipRegItem& obj) { return obj.fAddress == cReadBackReg.fAddress && obj.fPage == cReadBackReg.fPage; });
+                    if(cIterator != pWriteRegs.end()) cSuccess = (cReadBackReg.fValue == cIterator->fValue);
                 }
-            } 
+            }
         }
-    }while( cAttempts < fConfig.fMaxAttempts && !cSuccess && fConfig.fReTry );
-    return cSuccess; 
+    } while(cAttempts < fConfig.fMaxAttempts && !cSuccess && fConfig.fReTry);
+    return cSuccess;
 }
-    
-bool D19cI2CInterface::MultiWrite(Chip* pChip, std::vector<ChipRegItem>& pRegisterItems )
+
+bool D19cI2CInterface::MultiWrite(Chip* pChip, std::vector<ChipRegItem>& pRegisterItems)
 {
     if(pRegisterItems.size() == 0) return true;
     // Deal with the ChipRegItems and encode them
@@ -220,47 +222,50 @@ bool D19cI2CInterface::MultiWrite(Chip* pChip, std::vector<ChipRegItem>& pRegist
     {
         // update list of modified registers
         pChip->UpdateModifiedRegMap(cItem);
-        EncodeReg(cItem, pChip, cVec, fConfig.fVerify , true);
+        EncodeReg(cItem, pChip, cVec, fConfig.fVerify, true);
     }
 
     uint8_t cWriteAttempts = 0;
     // if the transaction is successfull, update the HWDescription object
     return WriteChipBlockReg(cVec, cWriteAttempts, fConfig.fVerify);
 }
-bool D19cI2CInterface::SingleWrite(Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem )
+bool D19cI2CInterface::SingleWrite(Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem)
 {
-    std::vector<ChipRegItem> cItems; cItems.push_back(pItem);
-    return MultiWrite(pChip, cItems );
+    std::vector<ChipRegItem> cItems;
+    cItems.push_back(pItem);
+    return MultiWrite(pChip, cItems);
 }
-bool D19cI2CInterface::MultiRead(Chip* pChip, std::vector<ChipRegItem>& pRegisterItems) 
+bool D19cI2CInterface::MultiRead(Chip* pChip, std::vector<ChipRegItem>& pRegisterItems)
 {
     std::vector<uint32_t> cVecReq;
-    for( auto cRegItem : pRegisterItems )  EncodeReg(cRegItem, pChip, cVecReq, true, false);
+    for(auto cRegItem: pRegisterItems) EncodeReg(cRegItem, pChip, cVecReq, true, false);
     ReadChipBlockReg(cVecReq);
-    
-    bool cSucess=true; 
-    size_t cIndx=0; 
-    for( auto& cRegItem : pRegisterItems )
+
+    bool   cSucess = true;
+    size_t cIndx   = 0;
+    for(auto& cRegItem: pRegisterItems)
     {
         uint8_t cChipId;
-        bool    cRead=true;
+        bool    cRead   = true;
         bool    cFailed = false;
         DecodeReg(cRegItem, cChipId, cVecReq[cIndx], cRead, cFailed);
-        LOG (DEBUG) << BOLDYELLOW << "D19cI2CInterface::MultiRead Reg#" << +cIndx << " at 0x" << std::hex << +cRegItem.fAddress << " set to 0x" << +cRegItem.fValue << " page " << +cRegItem.fPage << std::dec << RESET;
-        cSucess = cSucess && !cFailed; 
+        LOG(DEBUG) << BOLDYELLOW << "D19cI2CInterface::MultiRead Reg#" << +cIndx << " at 0x" << std::hex << +cRegItem.fAddress << " set to 0x" << +cRegItem.fValue << " page " << +cRegItem.fPage
+                   << std::dec << RESET;
+        cSucess = cSucess && !cFailed;
         cIndx++;
     }
     return cSucess;
 }
-bool D19cI2CInterface::SingleRead(Chip* pChip, ChipRegItem& pRegisterItem) 
+bool D19cI2CInterface::SingleRead(Chip* pChip, ChipRegItem& pRegisterItem)
 {
-    std::vector<ChipRegItem> cItems; cItems.push_back(pRegisterItem);
-    bool cSuccess = MultiRead(pChip, cItems); 
+    std::vector<ChipRegItem> cItems;
+    cItems.push_back(pRegisterItem);
+    bool cSuccess = MultiRead(pChip, cItems);
     pRegisterItem = cItems[0];
     return cSuccess;
 }
 
-// D19c I2C write and read 
+// D19c I2C write and read
 bool D19cI2CInterface::WriteI2C(std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pReadback, bool pBroadcast)
 {
     // std::lock_guard<std::recursive_mutex> theGuard(fMutex);
@@ -365,7 +370,7 @@ void D19cI2CInterface::ReadErrors()
         }
     }
 }
-// Write block reg 
+// Write block reg
 bool D19cI2CInterface::WriteChipBlockReg(std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback)
 {
     uint8_t cMaxWriteAttempts = 5;
@@ -443,5 +448,4 @@ void D19cI2CInterface::ChipI2CRefresh()
     WriteReg("fc7_daq_ctrl.fast_command_block.control.fast_i2c_refresh", 0x1);
 }
 
-
-}
+} // namespace Ph2_HwInterface

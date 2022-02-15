@@ -13,14 +13,14 @@
 #include "D19cFWInterface.h"
 #include "../HWDescription/Hybrid.h"
 #include "../HWDescription/OuterTrackerHybrid.h"
-#include "D19cI2CInterface.h"
-#include "D19cOpticalInterface.h"
-#include "D19cTriggerInterface.h"
-#include "D19cPSCounterFWInterface.h"
-#include "D19cL1ReadoutInterface.h"
-#include "D19cFastCommandInterface.h"
 #include "D19cBackendAlignmentFWInterface.h"
 #include "D19cDebugFWInterface.h"
+#include "D19cFastCommandInterface.h"
+#include "D19cI2CInterface.h"
+#include "D19cL1ReadoutInterface.h"
+#include "D19cOpticalInterface.h"
+#include "D19cPSCounterFWInterface.h"
+#include "D19cTriggerInterface.h"
 #include <algorithm>
 #include <chrono>
 #include <time.h>
@@ -35,31 +35,31 @@ D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoar
     : BeBoardFWInterface(puHalConfigFileName, pBoardId), fBroadcastCbcId(0), fNReadoutChip(0), fNHybrids(0), fNCic(0), fFMCId(1)
 {
     fResetAttempts = 0;
-    // can only link one type of trigger + FC interface to this type of FW 
-    // so do it in the contructor 
-    // configure L1 readout interface 
-    if( fTriggerInterface == nullptr )
+    // can only link one type of trigger + FC interface to this type of FW
+    // so do it in the contructor
+    // configure L1 readout interface
+    if(fTriggerInterface == nullptr)
     {
-        fTriggerInterface = new D19cTriggerInterface(this->getId() , this->getUri(), this->getAddressTable()); 
-        LOG (INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
+        fTriggerInterface = new D19cTriggerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        LOG(INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
     }
-    if( fFastCommandInterface == nullptr ) 
+    if(fFastCommandInterface == nullptr)
     {
-        fFastCommandInterface = new D19cFastCommandInterface(this->getId() , this->getUri(), this->getAddressTable()); 
-        LOG (INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
+        fFastCommandInterface = new D19cFastCommandInterface(this->getId(), this->getUri(), this->getAddressTable());
+        LOG(INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
     }
-    if( fBackendAlignmentInterface == nullptr )
+    if(fBackendAlignmentInterface == nullptr)
     {
-        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId() , this->getUri(), this->getAddressTable()); 
-        LOG (INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
+        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        LOG(INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
     }
-    if( fDebugInterface == nullptr )
+    if(fDebugInterface == nullptr)
     {
-        fDebugInterface = new D19cDebugFWInterface(this->getId() , this->getUri(), this->getAddressTable()); 
-        LOG (INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
+        fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
-    fFEConfigurationInterface=nullptr;
-    fL1ReadoutInterface=nullptr;
+    fFEConfigurationInterface = nullptr;
+    fL1ReadoutInterface       = nullptr;
 }
 
 D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler)
@@ -70,64 +70,64 @@ D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoar
     else
         fSaveToFile = true;
     fResetAttempts = 0;
-    // can only link one type of trigger + FC interface to this type of FW 
-    // so do it in the contructor 
-    // configure L1 readout interface 
-    if( fTriggerInterface == nullptr )
+    // can only link one type of trigger + FC interface to this type of FW
+    // so do it in the contructor
+    // configure L1 readout interface
+    if(fTriggerInterface == nullptr)
     {
-        fTriggerInterface = new D19cTriggerInterface(this->getId() , this->getUri(), this->getAddressTable()); 
-        LOG (INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
+        fTriggerInterface = new D19cTriggerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        LOG(INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
     }
-    if( fFastCommandInterface == nullptr ) 
+    if(fFastCommandInterface == nullptr)
     {
-        fFastCommandInterface = new D19cFastCommandInterface(this->getId() , this->getUri(), this->getAddressTable()); 
-        LOG (INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
+        fFastCommandInterface = new D19cFastCommandInterface(this->getId(), this->getUri(), this->getAddressTable());
+        LOG(INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
     }
-    if( fBackendAlignmentInterface == nullptr )
+    if(fBackendAlignmentInterface == nullptr)
     {
-        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId() , this->getUri(), this->getAddressTable()); 
-        LOG (INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
+        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        LOG(INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
     }
-    if( fDebugInterface == nullptr )
+    if(fDebugInterface == nullptr)
     {
-        fDebugInterface = new D19cDebugFWInterface(this->getId() , this->getUri(), this->getAddressTable()); 
-        LOG (INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
+        fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
-    fFEConfigurationInterface=nullptr;
-    fL1ReadoutInterface=nullptr;
+    fFEConfigurationInterface = nullptr;
+    fL1ReadoutInterface       = nullptr;
 }
 
 D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* pAddressTable)
     : BeBoardFWInterface(pId, pUri, pAddressTable), fFileHandler(nullptr), fBroadcastCbcId(0), fNReadoutChip(0), fNHybrids(0), fNCic(0), fFMCId(1)
 {
-    LOG (INFO) << BOLDYELLOW << "D19cFWInterface Constructor" << RESET;
+    LOG(INFO) << BOLDYELLOW << "D19cFWInterface Constructor" << RESET;
     std::cout << pId << "\t" << pUri << "\t" << pAddressTable << "\n";
     fResetAttempts = 0;
-   // can only link one type of trigger + FC interface to this type of FW 
-    // so do it in the contructor 
-    // configure L1 readout interface 
-    if( fTriggerInterface == nullptr )
+    // can only link one type of trigger + FC interface to this type of FW
+    // so do it in the contructor
+    // configure L1 readout interface
+    if(fTriggerInterface == nullptr)
     {
-        fTriggerInterface = new D19cTriggerInterface(this->getId() , this->getUri(), this->getAddressTable()); 
-        LOG (INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
+        fTriggerInterface = new D19cTriggerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        LOG(INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
     }
-    if( fFastCommandInterface == nullptr ) 
+    if(fFastCommandInterface == nullptr)
     {
-        fFastCommandInterface = new D19cFastCommandInterface(this->getId() , this->getUri(), this->getAddressTable()); 
-        LOG (INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
+        fFastCommandInterface = new D19cFastCommandInterface(this->getId(), this->getUri(), this->getAddressTable());
+        LOG(INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
     }
-    if( fBackendAlignmentInterface == nullptr )
+    if(fBackendAlignmentInterface == nullptr)
     {
-        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId() , this->getUri(), this->getAddressTable()); 
-        LOG (INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
+        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        LOG(INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
     }
-    if( fDebugInterface == nullptr )
+    if(fDebugInterface == nullptr)
     {
-        fDebugInterface = new D19cDebugFWInterface(this->getId() , this->getUri(), this->getAddressTable()); 
-        LOG (INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
+        fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
-    fFEConfigurationInterface=nullptr;
-    fL1ReadoutInterface=nullptr;
+    fFEConfigurationInterface = nullptr;
+    fL1ReadoutInterface       = nullptr;
 }
 
 D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler)
@@ -138,31 +138,31 @@ D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* 
     else
         fSaveToFile = true;
     fResetAttempts = 0;
-    // can only link one type of trigger + FC interface to this type of FW 
-    // so do it in the contructor 
-    // configure L1 readout interface 
-    if( fTriggerInterface == nullptr )
+    // can only link one type of trigger + FC interface to this type of FW
+    // so do it in the contructor
+    // configure L1 readout interface
+    if(fTriggerInterface == nullptr)
     {
-        fTriggerInterface = new D19cTriggerInterface(this->getId() , this->getUri(), this->getAddressTable()); 
-        LOG (INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
+        fTriggerInterface = new D19cTriggerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        LOG(INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
     }
-    if( fFastCommandInterface == nullptr ) 
+    if(fFastCommandInterface == nullptr)
     {
-        fFastCommandInterface = new D19cFastCommandInterface(this->getId() , this->getUri(), this->getAddressTable()); 
-        LOG (INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
+        fFastCommandInterface = new D19cFastCommandInterface(this->getId(), this->getUri(), this->getAddressTable());
+        LOG(INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
     }
-    if( fBackendAlignmentInterface == nullptr )
+    if(fBackendAlignmentInterface == nullptr)
     {
-        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId() , this->getUri(), this->getAddressTable()); 
-        LOG (INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
+        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        LOG(INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
     }
-    if( fDebugInterface == nullptr )
+    if(fDebugInterface == nullptr)
     {
-        fDebugInterface = new D19cDebugFWInterface(this->getId() , this->getUri(), this->getAddressTable()); 
-        LOG (INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
+        fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+        LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
-    fFEConfigurationInterface=nullptr;
-    fL1ReadoutInterface=nullptr;
+    fFEConfigurationInterface = nullptr;
+    fL1ReadoutInterface       = nullptr;
 }
 
 void D19cFWInterface::setFileHandler(FileHandler* pHandler)
@@ -572,59 +572,62 @@ void D19cFWInterface::selectLink(const uint8_t pLinkId, uint32_t cWait_ms)
 }
 void D19cFWInterface::InitializePSCounterFWInterface(const BeBoard* pBoard)
 {
-    fL1ReadoutInterface = nullptr; delete fL1ReadoutInterface; 
-    fL1ReadoutInterface = new D19cPSCounterFWInterface(this->getId() , this->getUri(), this->getAddressTable()); 
-    static_cast<D19cPSCounterFWInterface*>(fL1ReadoutInterface)->LinkFEConfigurationInterface(fFEConfigurationInterface); 
-    LOG (INFO) << BOLDYELLOW << "Initialized D19cPSCounterFWInterface ..." << fL1ReadoutInterface << RESET;
+    fL1ReadoutInterface = nullptr;
+    delete fL1ReadoutInterface;
+    fL1ReadoutInterface = new D19cPSCounterFWInterface(this->getId(), this->getUri(), this->getAddressTable());
+    static_cast<D19cPSCounterFWInterface*>(fL1ReadoutInterface)->LinkFEConfigurationInterface(fFEConfigurationInterface);
+    LOG(INFO) << BOLDYELLOW << "Initialized D19cPSCounterFWInterface ..." << fL1ReadoutInterface << RESET;
     fL1ReadoutInterface->LinkTriggerInterface(fTriggerInterface);
-    fL1ReadoutInterface->LinkFastCommandInterface(fFastCommandInterface);  
+    fL1ReadoutInterface->LinkFastCommandInterface(fFastCommandInterface);
 }
 void D19cFWInterface::IniitalizeL1ReadoutInterface(const BeBoard* pBoard)
 {
-    fL1ReadoutInterface = nullptr; delete fL1ReadoutInterface; 
-    fL1ReadoutInterface = new D19cL1ReadoutInterface(this->getId() , this->getUri(), this->getAddressTable()); 
-    LOG (INFO) << BOLDYELLOW << "Initialized D19cL1ReadoutInterface ..." << fL1ReadoutInterface << RESET;
+    fL1ReadoutInterface = nullptr;
+    delete fL1ReadoutInterface;
+    fL1ReadoutInterface = new D19cL1ReadoutInterface(this->getId(), this->getUri(), this->getAddressTable());
+    LOG(INFO) << BOLDYELLOW << "Initialized D19cL1ReadoutInterface ..." << fL1ReadoutInterface << RESET;
     fL1ReadoutInterface->LinkTriggerInterface(fTriggerInterface);
-    fL1ReadoutInterface->LinkFastCommandInterface(fFastCommandInterface);  
+    fL1ReadoutInterface->LinkFastCommandInterface(fFastCommandInterface);
 }
 void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
 {
     if(fFEConfigurationInterface == nullptr)
     {
-        Config cConfig; 
+        Config cConfig;
         if(!pBoard->isOptical())
         {
-            LOG (INFO) << BOLDYELLOW << "Electrical readout.. iniitialize I2C interface" << RESET;
-            fFEConfigurationInterface = new D19cI2CInterface( this->getId() , this->getUri(), this->getAddressTable() ); 
+            LOG(INFO) << BOLDYELLOW << "Electrical readout.. iniitialize I2C interface" << RESET;
+            fFEConfigurationInterface = new D19cI2CInterface(this->getId(), this->getUri(), this->getAddressTable());
             (static_cast<D19cI2CInterface*>(fFEConfigurationInterface))->ConfigureI2CMap(pBoard);
             cConfig.fVerbose     = 0;
             cConfig.fReTry       = 0;
             cConfig.fMaxAttempts = 10;
-            cConfig.fVerify      = 0; 
+            cConfig.fVerify      = 0;
         }
-        else 
-        { 
-            LOG (INFO) << BOLDBLUE << "Optical readout . initializing Optical interface" << RESET;
-            fFEConfigurationInterface = new D19cOpticalInterface( this->getId() , this->getUri(), this->getAddressTable() ); 
-            (static_cast<D19cOpticalInterface*>(fFEConfigurationInterface))->setResetEnable( fCPBConfig.fEnable ); 
-            (static_cast<D19cOpticalInterface*>(fFEConfigurationInterface))->setWait( fCPBConfig.fWait_us ); 
+        else
+        {
+            LOG(INFO) << BOLDBLUE << "Optical readout . initializing Optical interface" << RESET;
+            fFEConfigurationInterface = new D19cOpticalInterface(this->getId(), this->getUri(), this->getAddressTable());
+            (static_cast<D19cOpticalInterface*>(fFEConfigurationInterface))->setResetEnable(fCPBConfig.fEnable);
+            (static_cast<D19cOpticalInterface*>(fFEConfigurationInterface))->setWait(fCPBConfig.fWait_us);
             cConfig.fVerbose     = fCPBConfig.fVerbose;
             cConfig.fReTry       = fCPBConfig.fReTry;
             cConfig.fMaxAttempts = fCPBConfig.fMaxAttempts;
-            cConfig.fVerify      = 0; 
+            cConfig.fVerify      = 0;
             cConfig.fReTry       = 0;
         }
         fFEConfigurationInterface->Configure(cConfig);
     }
 
-    // configure L1 readout interface 
-    // this depends on the event type 
-    if( fL1ReadoutInterface == nullptr ) 
+    // configure L1 readout interface
+    // this depends on the event type
+    if(fL1ReadoutInterface == nullptr)
     {
-        if( pBoard->getEventType() == EventType::PSAS )  InitializePSCounterFWInterface(pBoard); 
-        else IniitalizeL1ReadoutInterface(pBoard); 
+        if(pBoard->getEventType() == EventType::PSAS)
+            InitializePSCounterFWInterface(pBoard);
+        else
+            IniitalizeL1ReadoutInterface(pBoard);
     }
-
 }
 void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
 {
@@ -843,7 +846,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     }
 
     ConfigureInterfaces(pBoard);
-    
+
     if(fI2CVersion >= 1 && !pBoard->isOptical())
     {
         fI2CSlaveMap.clear();
@@ -921,7 +924,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
             }
         }
     }
-    
+
     // resetting hard
     if(fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2)
     {
@@ -970,10 +973,9 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         LOG(INFO) << BOLDBLUE << "Firmware NOT configured for a CIC" << RESET;
     }
 
-    // Enable hybrids + ROCs for readout 
+    // Enable hybrids + ROCs for readout
     LOG(INFO) << BOLDGREEN << "According to the Firmware status registers, it was compiled for: " << fFWNHybrids << " hybrid(s), " << fFWNChips << " " << cChipName << " chip(s) per hybrid" << RESET;
     this->EnableFrontEnds(pBoard);
-
 
     // adding an ReSync to align CBC L1A counters
     this->ChipReSync();
@@ -1143,25 +1145,12 @@ void D19cFWInterface::TriggerConfiguration()
         TriggerConfiguration();
     }
 }
-void D19cFWInterface::Start()
-{
-    fTriggerInterface->Start();
-}
+void D19cFWInterface::Start() { fTriggerInterface->Start(); }
 
-void D19cFWInterface::Stop()
-{
-    fTriggerInterface->Stop();
-}
-void D19cFWInterface::Pause()
-{
-    fTriggerInterface->Pause();
-}
+void D19cFWInterface::Stop() { fTriggerInterface->Stop(); }
+void D19cFWInterface::Pause() { fTriggerInterface->Pause(); }
 
-void D19cFWInterface::Resume()
-{
-    fTriggerInterface->Resume();
-}
-
+void D19cFWInterface::Resume() { fTriggerInterface->Resume(); }
 
 void D19cFWInterface::DDR3SelfTest()
 {
@@ -1224,25 +1213,28 @@ void D19cFWInterface::ConfigureFastCommandBlock(const BeBoard* pBoard)
 
 uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait)
 {
-    pData.clear(); 
-    uint32_t cNEvents = 0; 
-    LOG (DEBUG) << BOLDYELLOW << "D19cFWInterface::ReadData L1ReadoutInterface " << fL1ReadoutInterface << RESET;
-    if( fL1ReadoutInterface == nullptr ){ 
-        LOG (INFO) << BOLDRED << "L1ReadoutInterface is a nullptr.." << RESET;
+    pData.clear();
+    uint32_t cNEvents = 0;
+    LOG(DEBUG) << BOLDYELLOW << "D19cFWInterface::ReadData L1ReadoutInterface " << fL1ReadoutInterface << RESET;
+    if(fL1ReadoutInterface == nullptr)
+    {
+        LOG(INFO) << BOLDRED << "L1ReadoutInterface is a nullptr.." << RESET;
         return cNEvents;
     }
-    
-    if( fL1ReadoutInterface->PollReadoutData(pBoard,pWait) ){ 
-        pData = fL1ReadoutInterface->getData();
+
+    if(fL1ReadoutInterface->PollReadoutData(pBoard, pWait))
+    {
+        pData    = fL1ReadoutInterface->getData();
         cNEvents = fL1ReadoutInterface->getNReadoutEvents();
     }
-    else{ 
-        LOG (INFO) << BOLDRED << "Failed to poll readout-data from BeBoard" << RESET;
+    else
+    {
+        LOG(INFO) << BOLDRED << "Failed to poll readout-data from BeBoard" << RESET;
         throw Exception("Failed to poll readout-data from BeBoard");
-        return cNEvents; 
+        return cNEvents;
     }
 
-    if(fSaveToFile && pData.size() > 0 ) fFileHandler->setData(pData);
+    if(fSaveToFile && pData.size() > 0) fFileHandler->setData(pData);
     // update local event counter
     fEventCounter += cNEvents;
     // need to return the number of events read
@@ -1250,14 +1242,16 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
 }
 void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait)
 {
-    pData.clear(); 
-    LOG (DEBUG) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET;
-    if( fL1ReadoutInterface == nullptr ) LOG (INFO) << BOLDRED << "L1ReadoutInterface is a nullptr.." << RESET;
-    
-    fL1ReadoutInterface->setNEvents(pNEvents); 
-    if( fL1ReadoutInterface->ReadEvents(pBoard) ) pData = fL1ReadoutInterface->getData();
-    else{ 
-        LOG (INFO) << BOLDRED << "Failed to ReadNEvents" << RESET;
+    pData.clear();
+    LOG(DEBUG) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET;
+    if(fL1ReadoutInterface == nullptr) LOG(INFO) << BOLDRED << "L1ReadoutInterface is a nullptr.." << RESET;
+
+    fL1ReadoutInterface->setNEvents(pNEvents);
+    if(fL1ReadoutInterface->ReadEvents(pBoard))
+        pData = fL1ReadoutInterface->getData();
+    else
+    {
+        LOG(INFO) << BOLDRED << "Failed to ReadNEvents" << RESET;
         throw Exception("Failed to ReadNEvents....");
     }
     if(fSaveToFile) fFileHandler->setData(pData);
@@ -1607,7 +1601,7 @@ void D19cFWInterface::ChipI2CRefresh()
 void D19cFWInterface::ReadoutChipReset()
 {
     // std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    LOG (INFO) << BOLDRED << "Sending HARD RESET to ReadoutChips" << RESET;
+    LOG(INFO) << BOLDRED << "Sending HARD RESET to ReadoutChips" << RESET;
     WriteReg("fc7_daq_ctrl.physical_interface_block.control.chip_hard_reset", 0x1);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 }
@@ -1616,30 +1610,25 @@ void D19cFWInterface::ChipReset()
     // for CBCs
     ReadoutChipReset();
     // for CICs
-    LOG (INFO) << BOLDRED << "Sending HARD RESET to CIC" << RESET;
+    LOG(INFO) << BOLDRED << "Sending HARD RESET to CIC" << RESET;
     WriteReg("fc7_daq_ctrl.physical_interface_block.control.cic_hard_reset", 0x1);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
 }
 void D19cFWInterface::ChipReSync()
 {
     std::vector<FastCommand> cFastCmds;
-    FastCommand cFastCmd;
-    cFastCmd.resync_en=1;
+    FastCommand              cFastCmd;
+    cFastCmd.resync_en     = 1;
     auto cFrontEndTypeCode = ReadReg("fc7_daq_stat.general.info.chip_type");
-    bool    cWithCIC = (getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC || getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC2);
-    cFastCmd.bc0_en     = (cWithCIC && fIs2S) ? 1 : 0;
+    bool cWithCIC          = (getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC || getFrontEndType(cFrontEndTypeCode) == FrontEndType::CIC2);
+    cFastCmd.bc0_en        = (cWithCIC && fIs2S) ? 1 : 0;
     cFastCmds.push_back(cFastCmd);
     fFastCommandInterface->SendGlobalCustomFastCommands(cFastCmds);
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
 }
-void D19cFWInterface::ChipTestPulse()
-{
-    fFastCommandInterface->SendGlobalCalPulse();
-}
+void D19cFWInterface::ChipTestPulse() { fFastCommandInterface->SendGlobalCalPulse(); }
 
-void D19cFWInterface::ChipTrigger() { 
-    fFastCommandInterface->SendGlobalL1A();
-}
+void D19cFWInterface::ChipTrigger() { fFastCommandInterface->SendGlobalL1A(); }
 
 bool D19cFWInterface::Bx0Alignment()
 {
@@ -2246,181 +2235,183 @@ bool D19cFWInterface::localWriteFERegister(Ph2_HwDescription::Chip* pChip, uint1
     pChip->updateRegWriteCount();
     return cSuccess;
 }
-// Read 
-std::vector<uint8_t> D19cFWInterface::MultiRegisterRead(Chip* pChip, std::vector<ChipRegItem>& pItems )
+// Read
+std::vector<uint8_t> D19cFWInterface::MultiRegisterRead(Chip* pChip, std::vector<ChipRegItem>& pItems)
 {
     std::vector<uint8_t> cValues(0);
-    if( pItems.size() == 0 ) return cValues;
+    if(pItems.size() == 0) return cValues;
 
-    if( fFEConfigurationInterface->MultiRead(pChip, pItems) )
+    if(fFEConfigurationInterface->MultiRead(pChip, pItems))
     {
-        // update map 
-        auto cRegisterMap = pChip->getRegMap(); 
-        for( auto cItem : pItems ) 
+        // update map
+        auto cRegisterMap = pChip->getRegMap();
+        for(auto cItem: pItems)
         {
-            auto cIterator = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&cItem](const ChipRegPair& obj) {return obj.second.fAddress == cItem.fAddress && obj.second.fPage == cItem.fPage ;});
-            if (cIterator == cRegisterMap.end() && cItem.fStatusReg == 0x0 ) LOG (INFO) << BOLDRED << "Could not find " << cIterator->first << " addresss 0x" << std::hex << cItem.fAddress << std::dec << RESET;
+            auto cIterator = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&cItem](const ChipRegPair& obj) { return obj.second.fAddress == cItem.fAddress && obj.second.fPage == cItem.fPage; });
+            if(cIterator == cRegisterMap.end() && cItem.fStatusReg == 0x0)
+                LOG(INFO) << BOLDRED << "Could not find " << cIterator->first << " addresss 0x" << std::hex << cItem.fAddress << std::dec << RESET;
             else
-            {  
+            {
                 // LOG (INFO) << BOLDGREEN << "Found " << cIterator->first << " addresss 0x" << std::hex << cItem.fAddress << std::dec << RESET;
-                if( cItem.fStatusReg == 0x00 )
+                if(cItem.fStatusReg == 0x00)
                 {
                     pChip->setReg(cIterator->first, cItem.fValue);
-                    cValues.push_back( pChip->getReg( cIterator->first) ) ;
-                    LOG (DEBUG) << BOLDYELLOW << "D19cFWInterface::MultiRegisterRead Register "
-                        << cIterator->first << " 0x"  << std::hex << +cItem.fAddress << std::dec 
-                        << " set to 0x" << std::hex << +cValues.at(cValues.size()-1) << std::dec 
-                        << RESET;
+                    cValues.push_back(pChip->getReg(cIterator->first));
+                    LOG(DEBUG) << BOLDYELLOW << "D19cFWInterface::MultiRegisterRead Register " << cIterator->first << " 0x" << std::hex << +cItem.fAddress << std::dec << " set to 0x" << std::hex
+                               << +cValues.at(cValues.size() - 1) << std::dec << RESET;
                 }
-                else 
+                else
                 {
-                    cValues.push_back( cItem.fValue ); 
+                    cValues.push_back(cItem.fValue);
                 }
-            }// update map 
+            } // update map
         }
-    } 
-    else LOG (ERROR) << BOLDRED << "D19cFWInterface::MultiRegisterRead Register FAILED " << RESET;
+    }
+    else
+        LOG(ERROR) << BOLDRED << "D19cFWInterface::MultiRegisterRead Register FAILED " << RESET;
     return cValues;
 }
-uint8_t D19cFWInterface::SingleRegisterRead(Chip* pChip, ChipRegItem& pItem ) 
+uint8_t D19cFWInterface::SingleRegisterRead(Chip* pChip, ChipRegItem& pItem)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
-    uint8_t cValue=0;
-    if( fFEConfigurationInterface->SingleRead(pChip, pItem) )
+    uint8_t                               cValue = 0;
+    if(fFEConfigurationInterface->SingleRead(pChip, pItem))
     {
-        cValue =  pItem.fValue;
-        //update map 
-        auto cRegisterMap = pChip->getRegMap(); 
-        auto cIterator = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&pItem](const ChipRegPair& obj) {return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage ;});
-        if( cIterator != cRegisterMap.end () )
+        cValue = pItem.fValue;
+        // update map
+        auto cRegisterMap = pChip->getRegMap();
+        auto cIterator    = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&pItem](const ChipRegPair& obj) { return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage; });
+        if(cIterator != cRegisterMap.end())
         {
-            auto cPreviousValue = cIterator->second.fValue; 
-            pChip->setReg(cIterator->first , pItem.fValue);  
-            pItem = pChip->getRegItem(cIterator->first); 
-            LOG (DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterRead successful read from 0x" 
-                << std::hex << +pItem.fValue << std::dec << " to " << cIterator->first 
-                << "\t.. value in register is now 0x" << std::hex << +pChip->getReg( cIterator->first) << std::dec 
-                << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
+            auto cPreviousValue = cIterator->second.fValue;
+            pChip->setReg(cIterator->first, pItem.fValue);
+            pItem = pChip->getRegItem(cIterator->first);
+            LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterRead successful read from 0x" << std::hex << +pItem.fValue << std::dec << " to " << cIterator->first
+                       << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
         }
-        else if (pItem.fStatusReg == 0x00) LOG (INFO) << BOLDRED << "D19cFWInterface::SingleRegisterRead Register 0x" << std::hex << +pItem.fAddress << " not in register map " << RESET;
+        else if(pItem.fStatusReg == 0x00)
+            LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterRead Register 0x" << std::hex << +pItem.fAddress << " not in register map " << RESET;
     }
-    else LOG (ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterRead Register 0x" << std::hex << +pItem.fAddress << " FAILED " << RESET;
+    else
+        LOG(ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterRead Register 0x" << std::hex << +pItem.fAddress << " FAILED " << RESET;
     return cValue;
 }
-bool D19cFWInterface::SingleRegisterWrite(Chip* pChip, ChipRegItem& pItem, bool pVerify )
+bool D19cFWInterface::SingleRegisterWrite(Chip* pChip, ChipRegItem& pItem, bool pVerify)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
-    if( pVerify ) return SingleRegisterWriteRead(pChip, pItem); 
-    
-    auto cRegisterMap = pChip->getRegMap(); 
-    auto cIterator = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&pItem](const ChipRegPair& obj) {return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage ;});
-    if( cIterator != cRegisterMap.end() ) 
+    if(pVerify) return SingleRegisterWriteRead(pChip, pItem);
+
+    auto cRegisterMap = pChip->getRegMap();
+    auto cIterator    = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&pItem](const ChipRegPair& obj) { return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage; });
+    if(cIterator != cRegisterMap.end())
     {
-        if( fFEConfigurationInterface->SingleWrite(pChip, pItem) ){
-            // update map 
-            auto cPreviousValue = cIterator->second.fValue; 
-            pChip->setReg(cIterator->first , pItem.fValue);  
-            LOG (DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterWrite successful write of 0x" 
-                << std::hex << +pItem.fValue << std::dec << " to " << cIterator->first 
-                << "\t.. value in register is now 0x" << std::hex << +pChip->getReg( cIterator->first) << std::dec 
-                << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
-            pItem = pChip->getRegItem(cIterator->first); 
+        if(fFEConfigurationInterface->SingleWrite(pChip, pItem))
+        {
+            // update map
+            auto cPreviousValue = cIterator->second.fValue;
+            pChip->setReg(cIterator->first, pItem.fValue);
+            LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterWrite successful write of 0x" << std::hex << +pItem.fValue << std::dec << " to " << cIterator->first
+                       << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
+            pItem = pChip->getRegItem(cIterator->first);
         }
-        else LOG (ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterWrite FAILEd to write to Register " << cIterator->first << RESET;
+        else
+            LOG(ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterWrite FAILEd to write to Register " << cIterator->first << RESET;
         return true;
     }
-    else LOG (INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWrite Could not find register address in register map " << RESET; 
+    else
+        LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWrite Could not find register address in register map " << RESET;
     return false;
 }
-bool D19cFWInterface::SingleRegisterWriteRead(Chip* pChip, ChipRegItem& pItem )
+bool D19cFWInterface::SingleRegisterWriteRead(Chip* pChip, ChipRegItem& pItem)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
-    auto cRegisterMap = pChip->getRegMap(); 
-    auto cIterator = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&pItem](const ChipRegPair& obj) {return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage ;});
-    if( cIterator != cRegisterMap.end() ) 
+    auto                                  cRegisterMap = pChip->getRegMap();
+    auto cIterator = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&pItem](const ChipRegPair& obj) { return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage; });
+    if(cIterator != cRegisterMap.end())
     {
-        auto cPreviousValue = cIterator->second.fValue; 
-        if( fFEConfigurationInterface->SingleWriteRead(pChip, pItem) ){
-            // update map 
-            pChip->setReg(cIterator->first , pItem.fValue);  
-            LOG (DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterWriteRead successful write of 0x" 
-                << std::hex << +pItem.fValue << std::dec << " to " << cIterator->first 
-                << "\t.. value in register is now 0x" << std::hex << +pChip->getReg( cIterator->first) << std::dec 
-                << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
-            pItem = pChip->getRegItem(cIterator->first); 
+        auto cPreviousValue = cIterator->second.fValue;
+        if(fFEConfigurationInterface->SingleWriteRead(pChip, pItem))
+        {
+            // update map
+            pChip->setReg(cIterator->first, pItem.fValue);
+            LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::SingleRegisterWriteRead successful write of 0x" << std::hex << +pItem.fValue << std::dec << " to " << cIterator->first
+                       << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
+            pItem = pChip->getRegItem(cIterator->first);
             return true;
         }
-        else LOG (ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead FAILED to write to Register " << cIterator->first << RESET;
+        else
+            LOG(ERROR) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead FAILED to write to Register " << cIterator->first << RESET;
     }
-    else{ 
-        LOG (INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead Could not find register address " << std::hex << +pItem.fAddress << std::dec << " in register map " << RESET; 
+    else
+    {
+        LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead Could not find register address " << std::hex << +pItem.fAddress << std::dec << " in register map " << RESET;
     }
     return false;
 }
-bool D19cFWInterface::MultiRegisterWriteRead(Chip* pChip, std::vector<ChipRegItem>& pItems )
+bool D19cFWInterface::MultiRegisterWriteRead(Chip* pChip, std::vector<ChipRegItem>& pItems)
 {
-    if ( pItems.size() == 0 ) return true;
+    if(pItems.size() == 0) return true;
 
     std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
-    if( fFEConfigurationInterface->MultiWriteRead( pChip, pItems) ) 
+    if(fFEConfigurationInterface->MultiWriteRead(pChip, pItems))
     {
-        auto cRegisterMap = pChip->getRegMap(); 
-        for( auto cItem : pItems )
+        auto cRegisterMap = pChip->getRegMap();
+        for(auto cItem: pItems)
         {
-            auto cIterator = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&cItem](const ChipRegPair& obj) {return obj.second.fAddress == cItem.fAddress && obj.second.fPage == cItem.fPage ;});
-            if( cIterator != cRegisterMap.end() ) 
+            auto cIterator = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&cItem](const ChipRegPair& obj) { return obj.second.fAddress == cItem.fAddress && obj.second.fPage == cItem.fPage; });
+            if(cIterator != cRegisterMap.end())
             {
-                auto cPreviousValue = cIterator->second.fValue; 
-                pChip->setReg(cIterator->first , cItem.fValue);  
-                LOG (DEBUG) << BOLDGREEN << " D19cFWInterface::MultiRegisterWriteRead successful write of 0x" 
-                    << std::hex << +cItem.fValue << std::dec << " to " << cIterator->first 
-                    << "\t.. value in register is now 0x" << std::hex << +pChip->getReg( cIterator->first) << std::dec 
-                    << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
+                auto cPreviousValue = cIterator->second.fValue;
+                pChip->setReg(cIterator->first, cItem.fValue);
+                LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::MultiRegisterWriteRead successful write of 0x" << std::hex << +cItem.fValue << std::dec << " to " << cIterator->first
+                           << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
             }
-            else LOG (INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead Could not find register address in register map " << RESET; 
+            else
+                LOG(INFO) << BOLDRED << "D19cFWInterface::SingleRegisterWriteRead Could not find register address in register map " << RESET;
         }
         return true;
-    }// update map 
-    else LOG (ERROR) << BOLDRED << "D19cFWInterface::MultiRegisterWriteRead FAILED to write to " << pItems.size() << " registers." << RESET;
+    } // update map
+    else
+        LOG(ERROR) << BOLDRED << "D19cFWInterface::MultiRegisterWriteRead FAILED to write to " << pItems.size() << " registers." << RESET;
     return false;
 }
 
 bool D19cFWInterface::MultiRegisterWrite(Chip* pChip, std::vector<ChipRegItem>& pItems, bool pVerify)
 {
-    if(pItems.size() == 0 ) return true;
-    
+    if(pItems.size() == 0) return true;
+
     std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
-    if( pVerify ) return MultiRegisterWriteRead(pChip, pItems); 
-    
-    if( fFEConfigurationInterface->MultiWrite(pChip, pItems ) ) 
+    if(pVerify) return MultiRegisterWriteRead(pChip, pItems);
+
+    if(fFEConfigurationInterface->MultiWrite(pChip, pItems))
     {
-        LOG (DEBUG) << BOLDGREEN << "D19cFWInterface::MultiRegisterWrite successful write to " << pItems.size() << " registers" << RESET;
+        LOG(DEBUG) << BOLDGREEN << "D19cFWInterface::MultiRegisterWrite successful write to " << pItems.size() << " registers" << RESET;
         // update map
-        auto cRegisterMap = pChip->getRegMap(); 
-        for( auto& cItem : pItems )
+        auto cRegisterMap = pChip->getRegMap();
+        for(auto& cItem: pItems)
         {
-            auto cIterator = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&cItem](const ChipRegPair& obj) {return obj.second.fAddress == cItem.fAddress && obj.second.fPage == cItem.fPage ;});
-            if( cIterator != cRegisterMap.end() ) // if item is in the map 
+            auto cIterator = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&cItem](const ChipRegPair& obj) { return obj.second.fAddress == cItem.fAddress && obj.second.fPage == cItem.fPage; });
+            if(cIterator != cRegisterMap.end()) // if item is in the map
             {
-                auto cPreviousValue = cIterator->second.fValue; 
-                pChip->setReg(cIterator->first , cItem.fValue);  
-                LOG (DEBUG) << BOLDGREEN << " D19cFWInterface::MultiRegisterWrite successful write of 0x" 
-                    << std::hex << +cItem.fValue << std::dec << " to " << cIterator->first 
-                    << "\t.. value in register is now 0x" << std::hex << +pChip->getReg( cIterator->first) << std::dec 
-                    << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
-                cItem = pChip->getRegItem(cIterator->first); 
+                auto cPreviousValue = cIterator->second.fValue;
+                pChip->setReg(cIterator->first, cItem.fValue);
+                LOG(DEBUG) << BOLDGREEN << " D19cFWInterface::MultiRegisterWrite successful write of 0x" << std::hex << +cItem.fValue << std::dec << " to " << cIterator->first
+                           << "\t.. value in register is now 0x" << std::hex << +pChip->getReg(cIterator->first) << std::dec << " it was 0x" << std::hex << +cPreviousValue << std::dec << RESET;
+                cItem = pChip->getRegItem(cIterator->first);
             }
-            else LOG (INFO) << BOLDRED << "D19cFWInterface::MultiRegisterWrite Register 0x" << std::hex << +cItem.fAddress << " not in register map " << RESET;
+            else
+                LOG(INFO) << BOLDRED << "D19cFWInterface::MultiRegisterWrite Register 0x" << std::hex << +cItem.fAddress << " not in register map " << RESET;
         }
         return true;
     }
-    else LOG (ERROR) << BOLDRED << "D19cFWInterface::MultiRegisterWrite FAILED" << RESET;
+    else
+        LOG(ERROR) << BOLDRED << "D19cFWInterface::MultiRegisterWrite FAILED" << RESET;
     return false;
 }
 uint8_t D19cFWInterface::ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress)
 {
-    auto                                  cLinkId   = pChip->getOpticalId();
-    uint8_t                               cMasterId = pChip->getMasterId();
+    auto    cLinkId   = pChip->getOpticalId();
+    uint8_t cMasterId = pChip->getMasterId();
 
     // LOG (INFO) << BOLDGREEN << "Reading FE register on link " << +cLinkId << RESET;
     uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId();

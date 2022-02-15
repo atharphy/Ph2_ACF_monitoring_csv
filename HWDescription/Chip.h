@@ -182,16 +182,16 @@ class Chip : public FrontEndDescription
     uint8_t getMasterId() const { return fMasterId; };
     void    setMasterId(uint8_t pMasterId) { fMasterId = pMasterId; };
 
-    // register maps 
+    // register maps
 
-    void UpdateModifiedRegMap(ChipRegItem pRegItem);
-    void UpdateModifiedRegMap(uint16_t pRegisterAddress, uint8_t pPage);
-    void UpdateModifiedRegMap(const std::string& pReg);
-    void ClearModifiedRegisterMap(){ fModifiedRegs.clear(); }
+    void        UpdateModifiedRegMap(ChipRegItem pRegItem);
+    void        UpdateModifiedRegMap(uint16_t pRegisterAddress, uint8_t pPage);
+    void        UpdateModifiedRegMap(const std::string& pReg);
+    void        ClearModifiedRegisterMap() { fModifiedRegs.clear(); }
     ChipRegMap& GetModifiedRegisterMap() { return fModifiedRegs; }
-    void  setRegisterTracking(uint8_t pEnable){ fTrackRegisters = pEnable;}
-    uint8_t getRegisterTracking(){return fTrackRegisters;}
-    
+    void        setRegisterTracking(uint8_t pEnable) { fTrackRegisters = pEnable; }
+    uint8_t     getRegisterTracking() { return fTrackRegisters; }
+
   protected:
     uint8_t    fChipId;
     uint8_t    fChipAddress; // I2C addess of chip
@@ -199,7 +199,7 @@ class Chip : public FrontEndDescription
     uint16_t   fClockFrequency;
     uint8_t    fMasterId;
     ChipRegMap fRegMap;
-    ChipRegMap fModifiedRegs; 
+    ChipRegMap fModifiedRegs;
     CommentMap fCommentMap;
 
   private:
@@ -208,7 +208,7 @@ class Chip : public FrontEndDescription
     uint32_t fI2CReadMismatches = 0;
     uint32_t fRegWrites         = 0;
     uint32_t fRegReads          = 0;
-    uint8_t  fTrackRegisters    = 0; 
+    uint8_t  fTrackRegisters    = 0;
 };
 
 /*!

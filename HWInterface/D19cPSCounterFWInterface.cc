@@ -5,59 +5,46 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-    
-D19cPSCounterFWInterface::D19cPSCounterFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : L1ReadoutInterface(pId, pUri, pAddressTable) {
+D19cPSCounterFWInterface::D19cPSCounterFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : L1ReadoutInterface(pId, pUri, pAddressTable)
+{
     fFEConfigurationInterface = nullptr;
     // handshake should always be off for this readout mode
-    fHandshake=0;
+    fHandshake = 0;
 }
-D19cPSCounterFWInterface::D19cPSCounterFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : L1ReadoutInterface(puHalConfigFileName, pBoardId) {
+D19cPSCounterFWInterface::D19cPSCounterFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : L1ReadoutInterface(puHalConfigFileName, pBoardId)
+{
     fFEConfigurationInterface = nullptr;
     // handshake should always be off for this readout mode
-    fHandshake=0;
+    fHandshake = 0;
 }
 D19cPSCounterFWInterface::~D19cPSCounterFWInterface() {}
 
-void D19cPSCounterFWInterface::PS_Open_shutter()
-{
-    fFastCommandInterface->SendGlobalL1A();
-}
+void D19cPSCounterFWInterface::PS_Open_shutter() { fFastCommandInterface->SendGlobalL1A(); }
 
-void D19cPSCounterFWInterface::PS_Close_shutter()
-{
-    fFastCommandInterface->SendGlobalCounterReset();
-}
-void D19cPSCounterFWInterface::PS_Clear_counters()
-{
-    fFastCommandInterface->SendGlobalCounterResetL1A();
-}
-void D19cPSCounterFWInterface::PS_Inject()
-{
-    fFastCommandInterface->SendGlobalCalPulse();
-}
-void D19cPSCounterFWInterface::PS_Start_counters_read()
-{
-    fFastCommandInterface->SendGlobalCounterResetResync();
-}
+void D19cPSCounterFWInterface::PS_Close_shutter() { fFastCommandInterface->SendGlobalCounterReset(); }
+void D19cPSCounterFWInterface::PS_Clear_counters() { fFastCommandInterface->SendGlobalCounterResetL1A(); }
+void D19cPSCounterFWInterface::PS_Inject() { fFastCommandInterface->SendGlobalCalPulse(); }
+void D19cPSCounterFWInterface::PS_Start_counters_read() { fFastCommandInterface->SendGlobalCounterResetResync(); }
 void D19cPSCounterFWInterface::PS_Send_pulses(uint32_t pNtriggers, bool manual)
 {
     if(manual)
     {
         for(uint16_t numit = 0; numit < pNtriggers; numit++) this->PS_Inject();
     }
-    else fTriggerInterface->RunTriggerFSM();  
+    else
+        fTriggerInterface->RunTriggerFSM();
 }
 
-// compose id for counter data 
-uint32_t D19cPSCounterFWInterface::Compose_Id( const BeBoard* pBoard, const OpticalGroup* pGroup, const Hybrid* pHybrid, const Chip* pChip)
+// compose id for counter data
+uint32_t D19cPSCounterFWInterface::Compose_Id(const BeBoard* pBoard, const OpticalGroup* pGroup, const Hybrid* pHybrid, const Chip* pChip)
 {
-    uint8_t  cType = ( pChip->getFrontEndType() == FrontEndType::MPA ) ? 1 : 0; 
-    uint32_t cId = (pBoard->getId() << (3+6+4+1+4)) | (pGroup->getId() << (3+6+4+1) ) | (pHybrid->getId() << (3+6+1) ) | ( pChip->getId() << (3+1) ) | cType ;
-    return cId;             
+    uint8_t  cType = (pChip->getFrontEndType() == FrontEndType::MPA) ? 1 : 0;
+    uint32_t cId   = (pBoard->getId() << (3 + 6 + 4 + 1 + 4)) | (pGroup->getId() << (3 + 6 + 4 + 1)) | (pHybrid->getId() << (3 + 6 + 1)) | (pChip->getId() << (3 + 1)) | cType;
+    return cId;
 }
 
 // method to read counter from regiseter
-void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard, FrontEndType pType ) 
+void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard, FrontEndType pType)
 {
     for(auto cOpticalGroup: *pBoard)
     {
@@ -67,61 +54,73 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard, FrontEndType pTyp
             {
                 std::stringstream cChipType;
                 cChip->printChipType(cChipType);
-                
-                if(cChip->getFrontEndType() != pType ) continue;
+
+                if(cChip->getFrontEndType() != pType) continue;
                 LOG(DEBUG) << BOLDBLUE << "Directly reading back counters from ROC#" << +cChip->getId() << RESET;
-                std::vector<ChipRegItem> cRegItems; 
-                auto cId = Compose_Id(pBoard, cOpticalGroup, cFe, cChip); 
-                auto cIterator = fPSCounterData.find(cId);
-                if( cIterator != fPSCounterData.end() ) cIterator->second.clear();
+                std::vector<ChipRegItem> cRegItems;
+                auto                     cId       = Compose_Id(pBoard, cOpticalGroup, cFe, cChip);
+                auto                     cIterator = fPSCounterData.find(cId);
+                if(cIterator != fPSCounterData.end()) cIterator->second.clear();
                 for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
                 {
-                    uint32_t cBaseRegisterLSB, cBaseRegisterMSB; 
-                    cBaseRegisterLSB = 0 ; cBaseRegisterMSB =0;
-                    if( cChip->getFrontEndType() == FrontEndType::MPA ){ cBaseRegisterLSB = ((12 + 8 * (cChnl / 120)) << 8) + 0x81; cBaseRegisterMSB = cBaseRegisterLSB + 128;} 
-                    if( cChip->getFrontEndType() == FrontEndType::SSA ){ cBaseRegisterLSB = 0x0901; cBaseRegisterMSB = 0x0801; }  
-                    if( cChip->getFrontEndType() == FrontEndType::SSA2 ){ cBaseRegisterLSB = 0x0580; cBaseRegisterMSB = 0x0680; }  
-                    
+                    uint32_t cBaseRegisterLSB, cBaseRegisterMSB;
+                    cBaseRegisterLSB = 0;
+                    cBaseRegisterMSB = 0;
+                    if(cChip->getFrontEndType() == FrontEndType::MPA)
+                    {
+                        cBaseRegisterLSB = ((12 + 8 * (cChnl / 120)) << 8) + 0x81;
+                        cBaseRegisterMSB = cBaseRegisterLSB + 128;
+                    }
+                    if(cChip->getFrontEndType() == FrontEndType::SSA)
+                    {
+                        cBaseRegisterLSB = 0x0901;
+                        cBaseRegisterMSB = 0x0801;
+                    }
+                    if(cChip->getFrontEndType() == FrontEndType::SSA2)
+                    {
+                        cBaseRegisterLSB = 0x0580;
+                        cBaseRegisterMSB = 0x0680;
+                    }
+
                     // MSB
                     ChipRegItem cReg_Counters_MSB;
                     cReg_Counters_MSB.fPage    = 0x00;
                     cReg_Counters_MSB.fAddress = cBaseRegisterMSB + cChnl;
                     cReg_Counters_MSB.fValue   = 0x00;
-                    cRegItems.push_back( cReg_Counters_MSB);
+                    cRegItems.push_back(cReg_Counters_MSB);
                     // LSB
                     ChipRegItem cReg_Counters_LSB;
                     cReg_Counters_LSB.fPage    = 0x00;
                     cReg_Counters_LSB.fAddress = cBaseRegisterLSB + cChnl;
                     cReg_Counters_LSB.fValue   = 0x00;
-                    cRegItems.push_back( cReg_Counters_LSB);
+                    cRegItems.push_back(cReg_Counters_LSB);
                 }
-                if( !fFEConfigurationInterface->MultiRead(cChip, cRegItems) ) continue;
-                LOG (DEBUG) << BOLDYELLOW << "Read-back " << cRegItems.size() << " counters from " << cChipType.str() << "#" << +cChip->getId() << RESET; 
-                // fill counter information 
-                for(auto cIter = cRegItems.begin(); cIter < cRegItems.end(); cIter+=2 )
+                if(!fFEConfigurationInterface->MultiRead(cChip, cRegItems)) continue;
+                LOG(DEBUG) << BOLDYELLOW << "Read-back " << cRegItems.size() << " counters from " << cChipType.str() << "#" << +cChip->getId() << RESET;
+                // fill counter information
+                for(auto cIter = cRegItems.begin(); cIter < cRegItems.end(); cIter += 2)
                 {
-                    auto cMSB = (*cIter).fValue; 
-                    auto cLSB = (*(cIter+1)).fValue; 
-                    // LOG (DEBUG) << BOLDYELLOW << "\t.. Counter#" << fPSCounterData[cId].size() 
-                    //     << " MSBs " << +cMSB 
-                    //     << " LSBs " << +cLSB 
+                    auto cMSB = (*cIter).fValue;
+                    auto cLSB = (*(cIter + 1)).fValue;
+                    // LOG (DEBUG) << BOLDYELLOW << "\t.. Counter#" << fPSCounterData[cId].size()
+                    //     << " MSBs " << +cMSB
+                    //     << " LSBs " << +cLSB
                     //     << std::hex
-                    //     << " : 0x" << ( (cMSB << 7) | cLSB ) 
-                    //     << std::dec 
+                    //     << " : 0x" << ( (cMSB << 7) | cLSB )
+                    //     << std::dec
                     //     << RESET;
-                    fPSCounterData[cId].push_back( (cMSB << 8) | cLSB );
+                    fPSCounterData[cId].push_back((cMSB << 8) | cLSB);
                 }
             } // chip loop
         }     // hybrid loop
-    } // board loop
-       
+    }         // board loop
 }
 bool D19cPSCounterFWInterface::ReadPSCountersFast(uint8_t pRawMode, size_t pChipId, size_t pHybridId)
 {
     bool                                          cSuccess = false;
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
-    uint32_t cIteration    = 0;
-    auto     cDecoderState = this->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.state");
+    uint32_t                                      cIteration    = 0;
+    auto                                          cDecoderState = this->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.state");
     // wait until fifo is ready to start readout of counters
     do
     {
@@ -283,95 +282,96 @@ void D19cPSCounterFWInterface::ReadPSSCCountersFast(BeBoard* pBoard, std::vector
 
 void D19cPSCounterFWInterface::GetCounterData(const BeBoard* pBoard)
 {
-    LOG (DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::GetCounterData" << RESET;   
-    auto cFeTypes = pBoard->connectedFrontEndTypes(); 
-    LOG (DEBUG) << BOLDYELLOW << cFeTypes.size() << " different types of ROCs connected to BeBoard#" << +pBoard->getId() << RESET;
-    if( fPSCounterFast == 0 ) // readout over registers 
+    LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::GetCounterData" << RESET;
+    auto cFeTypes = pBoard->connectedFrontEndTypes();
+    LOG(DEBUG) << BOLDYELLOW << cFeTypes.size() << " different types of ROCs connected to BeBoard#" << +pBoard->getId() << RESET;
+    if(fPSCounterFast == 0) // readout over registers
     {
-        std::vector<FrontEndType> cValidTypes{FrontEndType::MPA, FrontEndType::SSA, FrontEndType::SSA2}; 
-        for( auto cValidType : cValidTypes ) 
+        std::vector<FrontEndType> cValidTypes{FrontEndType::MPA, FrontEndType::SSA, FrontEndType::SSA2};
+        for(auto cValidType: cValidTypes)
         {
-            if( std::find(cFeTypes.begin(), cFeTypes.end(), cValidType )  == cFeTypes.end() ) continue; 
-            SlowRead( pBoard , cValidType );
+            if(std::find(cFeTypes.begin(), cFeTypes.end(), cValidType) == cFeTypes.end()) continue;
+            SlowRead(pBoard, cValidType);
         }
     }
-    else  // readout over fast interface 
+    else // readout over fast interface
     {
-
     }
 }
 void D19cPSCounterFWInterface::FillData()
 {
-    // use fPSCounterData to fill 32-bit word vector 
-    // this should match what you expect in the event decoder 
-    fData.clear(); 
-    // counter data will be filled into data vector 
+    // use fPSCounterData to fill 32-bit word vector
+    // this should match what you expect in the event decoder
+    fData.clear();
+    // counter data will be filled into data vector
     // each 32-bit word contains 2 counters (30 bits)
-    // will first fill in MPA data .. then SSA data 
+    // will first fill in MPA data .. then SSA data
     // order of MPAs/SSAs will be the same as that defined
     // MSB indicates if its an MPA/SSA
     // 1 for MPA, 0 for SSA
-    // by the hybrid node in the xml 
-    for(auto cCountersFromFE : fPSCounterData ) 
+    // by the hybrid node in the xml
+    for(auto cCountersFromFE: fPSCounterData)
     {
-        LOG (DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::FillData Filling data vector with counter information from Id" << cCountersFromFE.first << RESET;
-        for(auto cIter = cCountersFromFE.second.begin(); cIter < cCountersFromFE.second.end(); cIter+=2 )
+        LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::FillData Filling data vector with counter information from Id" << cCountersFromFE.first << RESET;
+        for(auto cIter = cCountersFromFE.second.begin(); cIter < cCountersFromFE.second.end(); cIter += 2)
         {
-            uint32_t cValue = (cCountersFromFE.first << 31) | (*(cIter+1) << 15) | (*cIter);
-            // LOG (DEBUG) << BOLDYELLOW << "\t... First counter 0x" << std::hex << (*cIter) 
-            //     << " .. second counter is 0x" << *(cIter+1) 
-            //     << " .. value saved in 32-bit word is 0x" << cValue 
-            //     << std::dec 
+            uint32_t cValue = (cCountersFromFE.first << 31) | (*(cIter + 1) << 15) | (*cIter);
+            // LOG (DEBUG) << BOLDYELLOW << "\t... First counter 0x" << std::hex << (*cIter)
+            //     << " .. second counter is 0x" << *(cIter+1)
+            //     << " .. value saved in 32-bit word is 0x" << cValue
+            //     << std::dec
             //     << RESET;
-            fData.push_back(cValue); 
+            fData.push_back(cValue);
         }
     }
 }
 bool D19cPSCounterFWInterface::WaitForNTriggers()
 {
     fTriggerInterface->ResetTriggerFSM();
-    // make sure counters have been cleared and reset 
+    // make sure counters have been cleared and reset
     // not sure its needed but.. to be safe
     PS_Close_shutter();
     fFastCommandInterface->SendGlobalReSync();
     PS_Clear_counters();
-   
-    // wait for trigger state machine to send all triggers 
+
+    // wait for trigger state machine to send all triggers
     auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
-    LOG (DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData After resetting trigger FSM.. trigger source is " << cTriggerSource << RESET; 
-    if(cTriggerSource == 10 || cTriggerSource == 12 ) 
+    LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData After resetting trigger FSM.. trigger source is " << cTriggerSource << RESET;
+    if(cTriggerSource == 10 || cTriggerSource == 12)
     {
         LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData Running Trigger FSM ..." << RESET;
         return fTriggerInterface->RunTriggerFSM();
     }
-    else return false; // wrong trigger source for this type of readout 
+    else
+        return false; // wrong trigger source for this type of readout
 }
 bool D19cPSCounterFWInterface::WaitForReadout()
 {
-    LOG (INFO) << BOLDRED << "D19cPSCounterFWInterface::WaitForData.. .no real data readout" << RESET; 
+    LOG(INFO) << BOLDRED << "D19cPSCounterFWInterface::WaitForData.. .no real data readout" << RESET;
     return false;
 }
 bool D19cPSCounterFWInterface::PollReadoutData(const Ph2_HwDescription::BeBoard* pBoard, bool pWait)
 {
-    LOG (INFO) << BOLDRED << "D19cPSCounterFWInterface::WaitForData.. .no real data readout" << RESET; 
+    LOG(INFO) << BOLDRED << "D19cPSCounterFWInterface::WaitForData.. .no real data readout" << RESET;
     return false;
 }
 bool D19cPSCounterFWInterface::ReadEvents(const BeBoard* pBoard)
 {
     // clear data vector
     fData.clear();
-    // make sure handshake is configured 
+    // make sure handshake is configured
     WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", fHandshake);
     fTriggerInterface->SetNTriggersToAccept(fNEvents);
-    if( WaitForNTriggers() ) 
+    if(WaitForNTriggers())
     {
-        LOG (DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::ReadEvents triggers succesfully sent" << RESET;
+        LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::ReadEvents triggers succesfully sent" << RESET;
         GetCounterData(pBoard);
         FillData();
-        LOG (DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::ReadEvents filled data vector with " << fData.size() << " 32-bit words" << RESET;
-        return (fData.size() > 0 );
+        LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::ReadEvents filled data vector with " << fData.size() << " 32-bit words" << RESET;
+        return (fData.size() > 0);
     }
-    else LOG (INFO) << BOLDRED << "D19cPSCounterFWInterface::ReadEvents did not receive all triggers..." << RESET; 
+    else
+        LOG(INFO) << BOLDRED << "D19cPSCounterFWInterface::ReadEvents did not receive all triggers..." << RESET;
     return false;
 }
 bool D19cPSCounterFWInterface::CheckStartPattern()

@@ -301,7 +301,7 @@ SlvsLineStatus CicFEAlignment::CheckPhyPort(const Hybrid* pHybrid, PhyPortCnfg p
     auto           cBoardId        = pHybrid->getBeBoardId();
     fBeBoardInterface->setBoard(cBoardId);
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    
+
     auto  cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     auto& cCic       = static_cast<const OuterTrackerHybrid*>(pHybrid)->fCic;
     // select slvs debug line in FC7
@@ -557,7 +557,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
             }
             auto cTriggerInterface = cInterface->getTriggerInterface();
             cTriggerInterface->SendNTriggers(pNTriggers);
-            
+
             // set trigger source back
             if(cReconfigureTrigger)
             {
@@ -594,7 +594,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
 
         fBeBoardInterface->setBoard(cBoard->getId());
         auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    
+
         D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
         for(auto cOpticalGroup: *cBoard)
         {

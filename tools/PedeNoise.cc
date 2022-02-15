@@ -62,10 +62,10 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     cWithMPA = false;
     for(auto cBoard: *fDetectorContainer)
     {
-        auto cFeTypes = cBoard->connectedFrontEndTypes(); 
-        cWithCBC = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::CBC3) != cFeTypes.end(); 
-        cWithSSA = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::SSA) != cFeTypes.end() || std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::SSA2) != cFeTypes.end(); 
-        cWithMPA = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::MPA) != cFeTypes.end(); 
+        auto cFeTypes = cBoard->connectedFrontEndTypes();
+        cWithCBC      = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::CBC3) != cFeTypes.end();
+        cWithSSA      = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::SSA) != cFeTypes.end() || std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::SSA2) != cFeTypes.end();
+        cWithMPA      = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::MPA) != cFeTypes.end();
     }
     if(cWithCBC) LOG(INFO) << BOLDBLUE << "PedeNoise with CBCs" << RESET;
     if(cWithSSA && !cWithMPA) LOG(INFO) << BOLDBLUE << "PedeNoise with SSAs" << RESET;
@@ -130,7 +130,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 
     // for now.. force to use async mode here
     bool cForcePSasync = true;
-    // make sure register tracking is on 
+    // make sure register tracking is on
     for(auto board: *fDetectorContainer)
     {
         for(auto opticalGroup: *board)
@@ -144,7 +144,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
                 }
             }
         }
-    }    
+    }
 
     // event types
     fEventTypes.clear();
@@ -180,7 +180,7 @@ void PedeNoise::Reset()
             for(auto cHybrid: *cOpticalGroup)
             {
                 LOG(INFO) << BOLDBLUE << "PedeNoise::Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
-            
+
                 for(auto cChip: *cHybrid)
                 {
                     auto cModMap = cChip->GetModifiedRegisterMap();
@@ -196,10 +196,10 @@ void PedeNoise::Reset()
 
                         LOG(INFO) << BOLDYELLOW << "PedestalEqualization::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
                                   << cMapItem.second.fValue << RESET;
-                        cRegList.push_back( std::make_pair(cMapItem.first, cMapItem.second.fValue) );
+                        cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second.fValue));
                     }
-                    fReadoutChipInterface->WriteChipMultReg(cChip, cRegList,false); 
-                    // don't track registers + clear mod reg map 
+                    fReadoutChipInterface->WriteChipMultReg(cChip, cRegList, false);
+                    // don't track registers + clear mod reg map
                     cChip->setRegisterTracking(0);
                     cChip->ClearModifiedRegisterMap();
                 }
@@ -291,8 +291,9 @@ void PedeNoise::sweepSCurves()
     }
 
     bool forceAllChannels = false;
-    if(fPulseAmplitude != 0) { 
-        LOG(INFO) << BOLDYELLOW << "Enabled test pulse. " << RESET; 
+    if(fPulseAmplitude != 0)
+    {
+        LOG(INFO) << BOLDYELLOW << "Enabled test pulse. " << RESET;
         this->enableTestPulse(true);
     }
     else
@@ -454,7 +455,7 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
                 {
                     uint16_t tmpVthr = 0;
                     if(cROC->getFrontEndType() == FrontEndType::CBC3) tmpVthr = (static_cast<ReadoutChip*>(cROC)->getReg("VCth1") + (static_cast<ReadoutChip*>(cROC)->getReg("VCth2") << 8));
-                    if(cROC->getFrontEndType() == FrontEndType::SSA || cROC->getFrontEndType() == FrontEndType::SSA2 ) tmpVthr = static_cast<ReadoutChip*>(cROC)->getReg("Bias_THDAC");
+                    if(cROC->getFrontEndType() == FrontEndType::SSA || cROC->getFrontEndType() == FrontEndType::SSA2) tmpVthr = static_cast<ReadoutChip*>(cROC)->getReg("Bias_THDAC");
                     if(cROC->getFrontEndType() == FrontEndType::MPA) tmpVthr = static_cast<ReadoutChip*>(cROC)->getReg("ThDAC0");
 
                     cMean += tmpVthr;

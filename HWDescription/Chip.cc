@@ -78,18 +78,18 @@ void Chip::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, u
 
 void Chip::UpdateModifiedRegMap(ChipRegItem pItem)
 {
-    if( fTrackRegisters == 0 )  return;
+    if(fTrackRegisters == 0) return;
 
     std::stringstream cOutput;
     this->printChipType(cOutput);
-    auto cIterator = find_if(fRegMap.begin(), fRegMap.end(), [&pItem](const ChipRegPair& obj) {return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage ;});
-    if( cIterator !=  fRegMap.end() ) // is register in the original map 
+    auto cIterator = find_if(fRegMap.begin(), fRegMap.end(), [&pItem](const ChipRegPair& obj) { return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage; });
+    if(cIterator != fRegMap.end()) // is register in the original map
     {
-        auto cName = cIterator->first; 
-        auto cRegItem = cIterator->second; 
-        // only add the first time 
-        cIterator = fModifiedRegs.find( cName );
-        if( cIterator == fModifiedRegs.end() )
+        auto cName    = cIterator->first;
+        auto cRegItem = cIterator->second;
+        // only add the first time
+        cIterator = fModifiedRegs.find(cName);
+        if(cIterator == fModifiedRegs.end())
         {
             // auto cSize              = fModifiedRegs.size();
             fModifiedRegs[cName] = cRegItem;
@@ -99,19 +99,19 @@ void Chip::UpdateModifiedRegMap(ChipRegItem pItem)
 }
 void Chip::UpdateModifiedRegMap(const std::string& pRegName)
 {
-    if( fTrackRegisters == 0 )  return;
-    
+    if(fTrackRegisters == 0) return;
+
     std::stringstream cOutput;
     this->printChipType(cOutput);
-    
-    auto cIterator = find_if(fRegMap.begin(), fRegMap.end(), [&pRegName](const ChipRegPair& obj) {return obj.first == pRegName ;});
-    if( cIterator !=  fRegMap.end() ) 
+
+    auto cIterator = find_if(fRegMap.begin(), fRegMap.end(), [&pRegName](const ChipRegPair& obj) { return obj.first == pRegName; });
+    if(cIterator != fRegMap.end())
     {
-        auto cName = cIterator->first; 
-        auto cRegItem = cIterator->second; 
-        // only add the first time 
-        cIterator = fModifiedRegs.find( cName );
-        if( cIterator == fModifiedRegs.end() )
+        auto cName    = cIterator->first;
+        auto cRegItem = cIterator->second;
+        // only add the first time
+        cIterator = fModifiedRegs.find(cName);
+        if(cIterator == fModifiedRegs.end())
         {
             // auto cSize              = fModifiedRegs.size();
             fModifiedRegs[cName] = cRegItem;
@@ -121,19 +121,19 @@ void Chip::UpdateModifiedRegMap(const std::string& pRegName)
 }
 void Chip::UpdateModifiedRegMap(uint16_t pRegisterAddress, uint8_t pPage)
 {
-    if( fTrackRegisters == 0 )  return;
-    
+    if(fTrackRegisters == 0) return;
+
     std::stringstream cOutput;
     this->printChipType(cOutput);
-    
-    auto cIterator = find_if(fRegMap.begin(), fRegMap.end(), [&pRegisterAddress,&pPage](const ChipRegPair& obj) {return obj.second.fAddress == pRegisterAddress && obj.second.fPage == pPage ;});
-    if( cIterator !=  fRegMap.end() ) 
+
+    auto cIterator = find_if(fRegMap.begin(), fRegMap.end(), [&pRegisterAddress, &pPage](const ChipRegPair& obj) { return obj.second.fAddress == pRegisterAddress && obj.second.fPage == pPage; });
+    if(cIterator != fRegMap.end())
     {
-        auto cName = cIterator->first; 
-        auto cRegItem = cIterator->second; 
-        // only add the first time 
-        cIterator = fModifiedRegs.find( cName );
-        if( cIterator == fModifiedRegs.end() )
+        auto cName    = cIterator->first;
+        auto cRegItem = cIterator->second;
+        // only add the first time
+        cIterator = fModifiedRegs.find(cName);
+        if(cIterator == fModifiedRegs.end())
         {
             // auto cSize              = fModifiedRegs.size();
             fModifiedRegs[cName] = cRegItem;
@@ -141,7 +141,6 @@ void Chip::UpdateModifiedRegMap(uint16_t pRegisterAddress, uint8_t pPage)
         }
     }
 }
-
 
 bool ChipComparer::operator()(const Chip& chip1, const Chip& chip2) const
 {
@@ -162,6 +161,5 @@ bool RegItemComparer::operator()(const ChipRegPair& pRegItem1, const ChipRegPair
     else
         return pRegItem1.second.fAddress < pRegItem2.second.fAddress;
 }
-
 
 } // namespace Ph2_HwDescription

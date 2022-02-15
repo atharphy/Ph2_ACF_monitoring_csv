@@ -5,29 +5,26 @@
 
 namespace Ph2_HwInterface
 {
-
 class D19cFastCommandInterface : public FastCommandInterface
 {
-    public: // constructors 
-  
+  public: // constructors
     D19cFastCommandInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
     D19cFastCommandInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
     ~D19cFastCommandInterface();
 
-    public: // functions 
-        void SendGlobalReSync(uint8_t pDuration=0) override; // 1 clk cycle  ;
-        void SendGlobalCalPulse(uint8_t pDuration=0) override;  // 1 clk cycle  ;
-        void SendGlobalL1A(uint8_t pDuration=0) override;  // 1 clk cycle  ;
-        void SendGlobalCounterReset(uint8_t pDuration=0) override;  // 1 clk cycle  ;
-        void SendGlobalCounterResetResync(uint8_t pDuration=0) override;  // 1 clk cycle  ;
-        void SendGlobalCounterResetL1A(uint8_t pDuration=0) override;  // 1 clk cycle  ;
-        void SendGlobalCounterResetCalPulse(uint8_t pDuration=0) override;  // 1 clk cycle  ;
-        void SendGlobalCustomFastCommands(std::vector<FastCommand> &pFastCmd) override;
-        void ComposeFastCommand(const FastCommand& pFastCommand) override;
-        
-    private : 
-        uint32_t fFastCommand{0};
+  public:                                                                // functions
+    void SendGlobalReSync(uint8_t pDuration = 0) override;               // 1 clk cycle  ;
+    void SendGlobalCalPulse(uint8_t pDuration = 0) override;             // 1 clk cycle  ;
+    void SendGlobalL1A(uint8_t pDuration = 0) override;                  // 1 clk cycle  ;
+    void SendGlobalCounterReset(uint8_t pDuration = 0) override;         // 1 clk cycle  ;
+    void SendGlobalCounterResetResync(uint8_t pDuration = 0) override;   // 1 clk cycle  ;
+    void SendGlobalCounterResetL1A(uint8_t pDuration = 0) override;      // 1 clk cycle  ;
+    void SendGlobalCounterResetCalPulse(uint8_t pDuration = 0) override; // 1 clk cycle  ;
+    void SendGlobalCustomFastCommands(std::vector<FastCommand>& pFastCmd) override;
+    void ComposeFastCommand(const FastCommand& pFastCommand) override;
 
+  private:
+    uint32_t fFastCommand{0};
 };
 } // namespace Ph2_HwInterface
 #endif
