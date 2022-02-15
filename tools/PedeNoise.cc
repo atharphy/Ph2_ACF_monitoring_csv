@@ -60,12 +60,17 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     cWithCBC = false;
     cWithSSA = false;
     cWithMPA = false;
+    std::vector<FrontEndType> cAllFrontEndTypes;
     for(auto cBoard: *fDetectorContainer)
     {
         auto cFeTypes = cBoard->connectedFrontEndTypes();
         cWithCBC      = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::CBC3) != cFeTypes.end();
         cWithSSA      = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::SSA) != cFeTypes.end() || std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::SSA2) != cFeTypes.end();
         cWithMPA      = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::MPA) != cFeTypes.end();
+        for( auto cFeType : cFeTypes)
+        {
+            if( std::find(cAllFrontEndTypes.begin(), cAllFrontEndTypes.end(), cFeType) == cAllFrontEndTypes.end() ) cAllFrontEndTypes.push_back(cFeType);
+        }
     }
     if(cWithCBC) LOG(INFO) << BOLDBLUE << "PedeNoise with CBCs" << RESET;
     if(cWithSSA && !cWithMPA) LOG(INFO) << BOLDBLUE << "PedeNoise with SSAs" << RESET;
@@ -83,17 +88,18 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
         SSAChannelGroupHandler theChannelGroupHandler;
         theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
         // temporary
-        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA2);
+        setChannelGroupHandler(theChannelGroupHandler,cAllFrontEndTypes);
+        // setChannelGroupHandler(theChannelGroupHandler, {FrontEndType::SSA2,FrontEndType::SSA});
         // setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA);
     }
     if(cWithMPA)
     {
         MPAChannelGroupHandler theChannelGroupHandler;
         theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
-        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA);
-        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA2);
+        setChannelGroupHandler(theChannelGroupHandler,cAllFrontEndTypes);
+        // setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA);
+        // setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA2);
     }
-
     initializeRecycleBin();
 
     fAllChan = pAllChan;

@@ -71,6 +71,7 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockS
     cCntrlRegItems.clear();
     for(auto cMapItem: cSSA2RegMap)
     {
+        if( cMapItem.second.fControlReg == 0x1 ) LOG (INFO) << BOLDYELLOW << cMapItem.first << RESET;
         if(std::find(cRegsToSkip.begin(), cRegsToSkip.end(), cMapItem.first) != cRegsToSkip.end()) continue;
         bool cReadOnly = false;
         for(auto cReadOnlyReg: cReadOnlyRegs) cReadOnly = cReadOnly || (cMapItem.first.find(cReadOnlyReg) != std::string::npos);

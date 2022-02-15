@@ -15,6 +15,7 @@
 #include "Occupancy.h"
 #include "PSAlignment.h"
 #include "StubBackEndAlignment.h"
+#include "L1ReadoutInterface.h"
 #include <boost/algorithm/string.hpp>
 
 #include <fstream>
