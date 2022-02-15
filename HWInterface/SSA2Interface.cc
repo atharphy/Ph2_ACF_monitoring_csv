@@ -442,7 +442,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     else if(pRegName == "AnalogueAsync")
     {
         uint8_t cReadoutMode = 0x1;
-        uint8_t cEdgeSel_T1  = 0x1;
+        uint8_t cEdgeSel_T1  = 0x0;
         // readout mode
         bool cSuccess = this->WriteChipRegBits(pSSA2, "control_1", cReadoutMode, "mask_peri_D", 0x7);
         // edge select
@@ -713,7 +713,7 @@ bool SSA2Interface::setInjectionSchema(ReadoutChip* pChip, const std::shared_ptr
         cRegItems.push_back(cRegMap[cRegName.str()]);
     }
     auto   cRegValues = fBoardFW->MultiRegisterRead(pChip, cRegItems);
-    size_t cIndx;
+    size_t cIndx=0;
     for(auto& cReg: cRegItems)
     {
         uint16_t regval  = cReg.fValue;
