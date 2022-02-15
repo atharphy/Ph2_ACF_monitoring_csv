@@ -748,7 +748,7 @@ bool SSA2Interface::maskChannelGroup(ReadoutChip* pChip, const std::shared_ptr<C
         cRegItems.push_back(cRegMap[cRegName.str()]);
     }
     auto   cRegValues = fBoardFW->MultiRegisterRead(pChip, cRegItems);
-    size_t cIndx;
+    size_t cIndx=0;
     for(auto& cReg: cRegItems)
     {
         uint16_t regval  = cReg.fValue;
