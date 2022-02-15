@@ -192,6 +192,53 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
         }
     } // check that L1 data is there
 
+    if(cTuned)
+    {    
+        LOG(INFO) << BOLDGREEN << "PS Phase+Word Alignment succesful" << RESET;
+        uint16_t cTriggerSrc         = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+        uint16_t cOriginalTPdelay    = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
+        LOG (INFO) << BOLDYELLOW << "Trigger source : " << +cTriggerSrc << "\t TP delay " << +cOriginalTPdelay << RESET;
+
+        for(auto cOpticalReadout: *pBoard)
+            {
+                for(auto cHybrid: *cOpticalReadout)
+                {
+                    for(auto cChip: *cHybrid)
+                    {
+
+                        // fReadoutChipInterface->WriteChipReg(cChip, "DigitalSync", 0x1);
+                        std::vector<std::pair<std::string, uint16_t>> cRegList;
+                        for( int cStrip=10; cStrip<20; cStrip++)
+                        {
+                            std::stringstream cRegName; 
+                            cRegName << "DigitalSync_S" << cStrip; 
+                            LOG (INFO) << BOLDYELLOW << cRegName.str() << RESET;
+                            fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), 0x1);
+                        }
+                    }
+                }
+            } // enable digital sync on all strips
+        for( int cLatencyOffset = -5; cLatencyOffset <= 0; cLatencyOffset++)
+        {
+            LOG (INFO) << BOLDYELLOW << "Latency will be set to " << (cOriginalTPdelay+cLatencyOffset) << RESET;
+            for(auto cOpticalReadout: *pBoard)
+            {
+                for(auto cHybrid: *cOpticalReadout)
+                {
+                    for(auto cChip: *cHybrid)
+                    {
+                        fReadoutChipInterface->WriteChipReg(cChip,"TriggerLatency", cOriginalTPdelay+cLatencyOffset); 
+                    }
+                }
+            } // enable digital sync on all strips
+            cDebugInterface->L1ADebug();
+        }
+        // exit(0);
+    
+    }else
+        LOG(INFO) << BOLDRED << "FAILED PS BE-Alignment" << RESET;
+    return cTuned;
+
     return cTuned;
 }
 /*bool BackEndAlignment::PSAlignment(BeBoard* pBoard)

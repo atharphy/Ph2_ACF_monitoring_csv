@@ -362,37 +362,6 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         cSuccess &= this->WriteChipRegBits(pSSA2, "control_1", (pValue & 0x100 >> 8), "mask_peri_D", 0x10);
         return cSuccess;
     }
-    else if(pRegName == "DigitalSync")
-    {
-        uint8_t cReadoutMode = 0x0;
-        uint8_t cEdgeSel_T1  = 0x0;
-        // readout mode
-        bool cSuccess = this->WriteChipRegBits(pSSA2, "control_1", cReadoutMode, "mask_peri_D", 0x7);
-        // edge select
-        cSuccess = cSuccess && this->WriteChipRegBits(pSSA2, "control_1", (cEdgeSel_T1 << 3), "mask_peri_D", (0x1 << 3));
-        // duration
-        uint8_t cDuration = 0x1;
-        cSuccess          = cSuccess && this->WriteChipRegBits(pSSA2, "control_2", (cDuration << 4), "mask_peri_D", (0xF << 4));
-
-        // sampling mode
-        uint8_t cSamplingMode = 0;
-        cSuccess              = cSuccess && this->WriteChipRegBits(pSSA2, "ENFLAGS", (cSamplingMode << 5), "mask_strip", (0x3 << 5));
-        cRegItem              = cRegMap["ENFLAGS_S1"];
-        auto cRegValue        = fBoardFW->SingleRegisterRead(pSSA2, cRegItem);
-        LOG(DEBUG) << BOLDBLUE << "[post-set sampling] StripControl1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
-        // configure for injection with the strip register
-        uint8_t cMask         = 0;
-        uint8_t cPolarity     = 0;
-        uint8_t cHitCounter   = 0;
-        uint8_t cDigitalCalib = pValue;
-        uint8_t cAnalogCalib  = 0;
-        uint8_t cEnFlags      = (cAnalogCalib << 4 | cDigitalCalib << 3 | cHitCounter << 2 | cPolarity << 1 | cMask);
-        cSuccess              = cSuccess && this->WriteChipRegBits(pSSA2, "ENFLAGS", cEnFlags, "mask_strip", 0x1F);
-        cRegValue             = fBoardFW->SingleRegisterRead(pSSA2, cRegItem);
-        LOG(DEBUG) << BOLDBLUE << "StripControl1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
-
-        return cSuccess;
-    }
     else if(pRegName == "AsyncDelay")
     {
         uint8_t                  cLSB = pValue & 0xFF;
@@ -410,7 +379,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     else if(pRegName == "AnalogueSync")
     {
         uint8_t cReadoutMode = 0x0;
-        uint8_t cEdgeSel_T1  = 0x1;
+        uint8_t cEdgeSel_T1  = 0x0;
         // readout mode
         bool cSuccess = this->WriteChipRegBits(pSSA2, "control_1", cReadoutMode, "mask_peri_D", 0x7, pVerifLoop);
         // edge select
@@ -480,7 +449,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     else if(pRegName == "DigitalAsync")
     {
         uint8_t cReadoutMode = 0x1;
-        uint8_t cEdgeSel_T1  = 0x1;
+        uint8_t cEdgeSel_T1  = 0x0;
         // readout mode
         bool cSuccess = this->WriteChipRegBits(pSSA2, "control_1", cReadoutMode, "mask_peri_D", 0x7);
         // edge select
@@ -513,6 +482,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     }
     else if(pRegName == "DigitalSync")
     {
+        LOG (INFO) << BOLDYELLOW << pRegName << RESET;
         uint8_t cReadoutMode = 0x0;
         uint8_t cEdgeSel_T1  = 0x1;
         // readout mode
@@ -520,26 +490,50 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         // edge select
         cSuccess = cSuccess && this->WriteChipRegBits(pSSA2, "control_1", (cEdgeSel_T1 << 3), "mask_peri_D", (0x1 << 3));
         // duration
-        uint8_t cDuration = 0x8;
+        uint8_t cDuration = 0x1;    
         cSuccess          = cSuccess && this->WriteChipRegBits(pSSA2, "control_2", (cDuration << 4), "mask_peri_D", (0xF << 4));
 
-        // sampling mode
-        // sampling mode
-        uint8_t cSamplingMode = 0;
-        cSuccess              = cSuccess && this->WriteChipRegBits(pSSA2, "ENFLAGS", (cSamplingMode << 5), "mask_strip", (0x3 << 5));
-        cRegItem              = cRegMap["ENFLAGS_S1"];
-        auto cRegValue        = fBoardFW->SingleRegisterRead(pSSA2, cRegItem);
-        LOG(DEBUG) << BOLDBLUE << "[post-set sampling] StripControl1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
         // configure for injection with the strip register
         uint8_t cMask         = 0;
         uint8_t cPolarity     = 0;
         uint8_t cHitCounter   = 0;
-        uint8_t cDigitalCalib = 1;
-        uint8_t cAnalogCalib  = pValue;
+        uint8_t cDigitalCalib = pValue;
+        uint8_t cAnalogCalib  = 0;
         uint8_t cEnFlags      = (cAnalogCalib << 4 | cDigitalCalib << 3 | cHitCounter << 2 | cPolarity << 1 | cMask);
         cSuccess              = cSuccess && this->WriteChipRegBits(pSSA2, "ENFLAGS", cEnFlags, "mask_strip", 0x1F);
-        cRegValue             = fBoardFW->SingleRegisterRead(pSSA2, cRegItem);
-        LOG(DEBUG) << BOLDBLUE << "StripControl1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        auto cRegItem              = cRegMap["ENFLAGS_S1"];
+        auto cRegValue             = fBoardFW->SingleRegisterRead(pSSA2, cRegItem);
+        LOG(INFO) << BOLDYELLOW << "ENFLAGS_S1 set to 0x" << std::hex << +cRegValue << std::dec << RESET;
+    }
+    else if(pRegName.find("DigitalSync") != std::string::npos)
+    {
+        int cStripId = 0; 
+        std::stringstream cRegName; 
+        std::sscanf(pRegName.c_str(), "DigitalSync_S%d", &cStripId);
+        cRegName << "ENFLAGS_S" << (1+cStripId) << RESET;
+        LOG (INFO) << BOLDYELLOW << "Digital injection on Strip#" << +cStripId << "\t" << cRegName.str() << RESET;
+        
+        uint8_t cReadoutMode = 0x0;
+        uint8_t cEdgeSel_T1  = 0x0;
+        // readout mode
+        bool cSuccess = this->WriteChipRegBits(pSSA2, "control_1", cReadoutMode, "mask_peri_D", 0x7);
+        // edge select
+        cSuccess = cSuccess && this->WriteChipRegBits(pSSA2, "control_1", (cEdgeSel_T1 << 3), "mask_peri_D", (0x1 << 3));
+        // duration
+        uint8_t cDuration = 0x1;    
+        cSuccess          = cSuccess && this->WriteChipRegBits(pSSA2, "control_2", (cDuration << 4), "mask_peri_D", (0xF << 4));
+
+        /// configure for injection with the strip register
+        auto cRegItem = cRegMap[cRegName.str()];
+        uint8_t cMask         = 0;
+        uint8_t cPolarity     = 0;
+        uint8_t cHitCounter   = 0;
+        uint8_t cDigitalCalib = pValue;
+        uint8_t cAnalogCalib  = 0;
+        uint8_t cEnFlags      = (cAnalogCalib << 4 | cDigitalCalib << 3 | cHitCounter << 2 | cPolarity << 1 | cMask);
+        cSuccess              = cSuccess && this->WriteChipRegBits(pSSA2, cRegName.str(), cEnFlags, "mask_strip", 0x1F);
+        auto cRegValue             = fBoardFW->SingleRegisterRead(pSSA2, cRegItem);
+        LOG(INFO) << BOLDBLUE << cRegName.str() << " set to 0x" << std::hex << +cRegValue << std::dec << RESET;
     }
     else if(pRegName == "DigitalDuration")
     {

@@ -20,6 +20,7 @@ namespace Ph2_HwInterface
 bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerifLoop)
 {
     this->setBoard(pChip->getBeBoardId());
+    auto cBoardType = fBoardFW->getBoardType();
     auto cAddress = pChip->getRegItem(pDacName).fAddress;
 
     if(pDacValue > 0xFF)
@@ -32,9 +33,15 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
         LOG(ERROR) << "LpGBT read-write registers end at 0x13C ... impossible to write to address " << BOLDYELLOW << cAddress << RESET;
         return false;
     }
+    bool cSuccess = false;
 
-    bool cSuccess = fBoardFW->WriteOptoLinkRegister(pChip, cAddress, pDacValue, pVerifLoop);
-    if(pChip->isOptical()) { cSuccess = fBoardFW->WriteOptoLinkRegister(pChip, cAddress, pDacValue, pVerifLoop); }
+    if( cBoardType != BoardType::RD53 && pChip->isOptical() )
+    { 
+        auto cRegisterMap = pChip->getRegMap();
+        cRegisterMap[pDacName].fValue = pDacValue;
+        cSuccess = fBoardFW->SingleRegisterWrite(pChip, cRegisterMap[pDacName], pVerifLoop);
+    }
+    else if(pChip->isOptical()) cSuccess = fBoardFW->WriteOptoLinkRegister(pChip, cAddress, pDacValue, pVerifLoop);
     // TO-DO .. figure out what to do if piGBT is used
     else
     {
