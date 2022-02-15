@@ -27,6 +27,7 @@ struct ChipRegItem
     uint8_t  fStatusReg = 0;
     bool     fPrmptCfg  = false;
     uint8_t  fBitSize   = 0;
+    uint8_t  fControlReg = 0;
 };
 } // namespace Ph2_HwDescription
 
