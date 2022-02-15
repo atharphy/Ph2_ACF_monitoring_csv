@@ -2,6 +2,8 @@
 #include "PSHybridTester.h"
 #include "D19cDebugFWInterface.h"
 #include "SSAChannelGroupHandler.h"
+#ifdef __USE_ROOT__
+
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -308,10 +310,7 @@ void PSHybridTester::AlignCICout(uint8_t pPattern)
 #if defined(__USE_ROOT__)
     for(int cLine = 1; cLine < 5; cLine++)
     {
-        if(cBadLines[cLine - 1] == 2)
-        {
-            fillSummaryTree("Bad_CIC_OUT_Line", (double)cLine);
-        }
+        if(cBadLines[cLine - 1] == 2) { fillSummaryTree("Bad_CIC_OUT_Line", (double)cLine); }
     }
 #endif
 }
@@ -1871,3 +1870,5 @@ void PSHybridTester::Stop()
 void PSHybridTester::Pause() {}
 
 void PSHybridTester::Resume() {}
+
+#endif

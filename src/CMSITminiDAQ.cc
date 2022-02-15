@@ -36,7 +36,7 @@
 #include <sys/wait.h>
 #include <thread>
 
-#if defined(__USE_ROOT__)
+#ifdef __USE_ROOT__
 #include "TApplication.h"
 #endif
 
@@ -116,7 +116,6 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
 
 int main(int argc, char** argv)
 {
-#if defined(__USE_ROOT__)
     // #############################
     // # Initialize command parser #
     // #############################
@@ -205,6 +204,7 @@ int main(int argc, char** argv)
     // ######################
     if(supervisor == true)
     {
+#ifdef __USE_ROOT__
         // #######################
         // # Run Supervisor Mode #
         // #######################
@@ -317,6 +317,7 @@ int main(int argc, char** argv)
             theApp.Run();
         else
             theApp.Terminate(0);
+#endif
     }
     else
     {
@@ -749,6 +750,6 @@ int main(int argc, char** argv)
 
         LOG(INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
     }
-#endif
+
     return EXIT_SUCCESS;
 }

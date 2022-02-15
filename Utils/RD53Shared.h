@@ -59,9 +59,9 @@ T mtxInversion(const boost::numeric::ublas::matrix<T>& input, boost::numeric::ub
     if((isSingular = boost::numeric::ublas::lu_factorize(mLU, pivots)) != false) return 0;
 
     T det = 1;
-    for(auto i = 0u; i < pivots.size(); i++)
+    for(unsigned int i = 0u; i < pivots.size(); i++)
     {
-        if((int)pivots(i) != (int)i) det *= -1;
+        if(static_cast<unsigned int>(pivots(i)) != i) det *= -1;
         det *= mLU(i, i);
     }
 

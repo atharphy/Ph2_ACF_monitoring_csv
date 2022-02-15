@@ -62,6 +62,12 @@ class DataStreamBase
 {
   public:
     DataStreamBase() : fDataSize(0) { ; }
+    DataStreamBase(const DataStreamBase&) = delete;
+    DataStreamBase(DataStreamBase&&)      = default;
+
+    DataStreamBase& operator=(const DataStreamBase&) = delete;
+    DataStreamBase& operator=(DataStreamBase&&) = default;
+
     virtual ~DataStreamBase() { ; }
 
     virtual uint32_t size(void) = 0;
@@ -102,7 +108,11 @@ class CheckStream
   private:
     void setPacketSize(uint32_t packetSize)
     {
-        if(packetSize >= 0xFFFFFF) { abort(); }
+        if(packetSize >= 0xFFFFFF)
+        {
+            // std::cout << __PRETTY_FUNCTION__ << "Packet size bigger than " << 0xFFFFFF << ". Please split the stream in smaller packets... Aborting" << std::endl;
+            abort();
+        }
         fPacketNumberAndSize = (packetSize) | (fPacketNumberAndSize & 0xFF000000);
     }
 
@@ -164,34 +174,47 @@ class ObjectStream
 
   public:
     ObjectStream(const std::string& creatorName) : fTheStream(nullptr), fObjectName(""), fCreatorName(creatorName){};
+    ObjectStream(ObjectStream<H, D>&& theObjectStream)
+        : fHeaderStream(std::move(theObjectStream.fHeaderStream))
+        , fDataStream(std::move(theObjectStream.fDataStream))
+        , fObjectName(theObjectStream.fObjectName)
+        , fCreatorName(theObjectStream.fCreatorName)
+    {
+        fMetadataStream                 = theObjectStream.fMetadataStream;
+        theObjectStream.fMetadataStream = nullptr;
+
+        fTheStream                 = theObjectStream.fTheStream;
+        theObjectStream.fTheStream = nullptr;
+    }
+    ObjectStream(const ObjectStream<H, D>&) = delete;
     virtual ~ObjectStream()
     {
+        // std::cout << __PRETTY_FUNCTION__ << __LINE__ << " pointer = " << this << std::endl;
         if(fTheStream != nullptr)
         {
+            // std::cout << __PRETTY_FUNCTION__ << __LINE__ << " pointer = " << this << std::endl;
+            // std::cout << " Deleting fStream in object with pointer = " << this << std::endl;
             delete fTheStream;
+            // std::cout << __PRETTY_FUNCTION__ << __LINE__ << " pointer = " << this << std::endl;
             fTheStream = nullptr;
         }
+        // std::cout << __PRETTY_FUNCTION__ << __LINE__ << " pointer = " << this << std::endl;
     };
 
     // Creates the buffer to stream copying the object metadata, header and data into it
-    const std::vector<char>& encodeStream(void)
+    std::unique_ptr<std::vector<char>> encodeStream(void)
     {
-        if(fTheStream == nullptr)
-        {
-            fTheStream      = new std::vector<char>(Metadata::size(getObjectName(), fCreatorName) + fHeaderStream.size() + fDataStream.size());
-            fMetadataStream = reinterpret_cast<Metadata*>(&fTheStream->at(0));
-            fMetadataStream->setObjectName(getObjectName());
-            fMetadataStream->setCreatorName(fCreatorName);
-        }
-        else
-        {
-            fTheStream->resize(fMetadataStream->size() + fHeaderStream.size() + fDataStream.size());
-        }
+        auto theStream  = std::unique_ptr<std::vector<char>>(new std::vector<char>(Metadata::size(getObjectName(), fCreatorName) + fHeaderStream.size() + fDataStream.size()));
+        fMetadataStream = reinterpret_cast<Metadata*>(&theStream->at(0));
+        fMetadataStream->setObjectName(getObjectName());
+        fMetadataStream->setCreatorName(fCreatorName);
 
         fMetadataStream->fStreamSizeAndNumber.setPacketSize(fMetadataStream->size() + fHeaderStream.size() + fDataStream.size());
-        fHeaderStream.copyToStream(&fTheStream->at(fMetadataStream->size()));
-        fDataStream.copyToStream(&fTheStream->at(fMetadataStream->size() + fHeaderStream.size()));
-        return *fTheStream;
+        fHeaderStream.copyToStream(&theStream->at(fMetadataStream->size()));
+        // std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
+        fDataStream.copyToStream(&theStream->at(fMetadataStream->size() + fHeaderStream.size()));
+        // std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
+        return theStream;
     }
 
     // First checks if the buffer has the right metadata and, if so, copies the header and data

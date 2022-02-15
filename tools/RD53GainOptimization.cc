@@ -76,7 +76,7 @@ void GainOptimization::sendData()
     auto theKrumStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>();
 
     if(fDQMStreamerEnabled == true)
-        for(const auto cBoard: theKrumCurrContainer) theKrumStream.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theKrumCurrContainer) theKrumStream->streamAndSendBoard(cBoard, fDQMStreamer);
 }
 
 void GainOptimization::Stop()

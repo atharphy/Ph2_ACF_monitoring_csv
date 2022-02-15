@@ -94,9 +94,9 @@ void Physics::sendBoardData(const BoardContainer* cBoard)
 
     if(fDQMStreamerEnabled == true)
     {
-        theOccStream.streamAndSendBoard(theOccContainer.at(cBoard->getIndex()), fDQMStreamer);
-        theBCIDStream.streamAndSendBoard(theBCIDContainer.at(cBoard->getIndex()), fDQMStreamer);
-        theTrgIDStream.streamAndSendBoard(theTrgIDContainer.at(cBoard->getIndex()), fDQMStreamer);
+        theOccStream->streamAndSendBoard(theOccContainer.at(cBoard->getIndex()), fDQMStreamer);
+        theBCIDStream->streamAndSendBoard(theBCIDContainer.at(cBoard->getIndex()), fDQMStreamer);
+        theTrgIDStream->streamAndSendBoard(theTrgIDContainer.at(cBoard->getIndex()), fDQMStreamer);
     }
 }
 
@@ -254,8 +254,8 @@ void Physics::fillDataContainer(BeBoard& theBoard)
     // ###################
     // # Fill containers #
     // ###################
-    const std::vector<Event*>& events = SystemController::GetEvents();
-    size_t evtCounter = numberOfEventsPerRun;
+    const std::vector<Event*>& events     = SystemController::GetEvents();
+    size_t                     evtCounter = numberOfEventsPerRun;
     for(const auto& event: events)
     {
         event->fillDataContainer(cBoard, getChannelGroup(-1));

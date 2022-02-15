@@ -34,11 +34,11 @@ class RegManager
 {
   protected:
     uhal::HwInterface*                            fBoard;              /*!< Board in use*/
-    const std::string                                   fUHalConfigFileName; /*!< path of the uHal Config File*/
+    const std::string                             fUHalConfigFileName; /*!< path of the uHal Config File*/
     std::vector<std::pair<std::string, uint32_t>> fStackReg;           /*!< Stack of registers*/
-    const std::string                                   fUri;
-    const std::string                                   fAddressTable;
-    const std::string                                   fId;
+    const std::string                             fUri;
+    const std::string                             fAddressTable;
+    const std::string                             fId;
     std::recursive_mutex                          fMutex;
 
   public:
