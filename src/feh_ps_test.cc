@@ -189,23 +189,7 @@ int main(int argc, char* argv[])
     // cHybridTester.CheckHybridCurrents();
     if(cmd.foundOption("checkI2C")) cHybridTester.CheckI2C();
 
-    // quick check of event readout 
-    cHybridTester.setFWTestPulse();
-    // configure counter readout 
-    cHybridTester.setSameGlobalDac("AnalogueAsync", 1);
-    // configure CalPulse amplitude 
-    cHybridTester.setSameGlobalDac("InjectedCharge", 0x20);
-    // configure threshold 
-    cHybridTester.setSameGlobalDac("Threshold", 0x15);
-    // cHybridTester.measureData(10);
-    // for(const auto cBoard: *cHybridTester.fDetectorContainer)
-    // {
-    //     cBoard->setEventType(EventType::PSAS);
-    //     // static_cast<D19cFWInterface*>(cHybridTester.fBeBoardInterface->getFirmwareInterface())->InitializePSCounterFWInterface(cBoard);
-    //     cHybridTester.ReadNEvents(cBoard, 10);
-    // }
-    
-    // cHybridTester.ReadSSABias("MonitorGround");
+      // cHybridTester.ReadSSABias("MonitorGround");
     // cHybridTester.ReadSSABias("MonitorVoltageBias");
     // cHybridTester.ReadSSABias("MonitorCurrentBias");
 
@@ -317,6 +301,7 @@ int main(int argc, char* argv[])
     }
 #endif
 
+
     // measure noise on FE chips before calibration
     if(cmd.foundOption("measurePedeNoise") && cmd.foundOption("antennaValue"))
     {
@@ -336,12 +321,14 @@ int main(int argc, char* argv[])
         cPedeNoise.measureNoise();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
+        cPedeNoise.Reset();
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
         if(cGui) { gui::message("Noise measured"); }
 
         // cOpenFinder.SelectAntennaPosition("Disable", 512);
     }
+    
     // cHybridTester.SetTrim("GAINTRIMMING",7);
     // // equalize thresholds on readout chips
     if(cmd.foundOption("tuneOffsets"))
@@ -356,6 +343,7 @@ int main(int argc, char* argv[])
         t.start();
         // now create a PedestalEqualization object
         PedestalEqualization cPedestalEqualization;
+
         cPedestalEqualization.Inherit(&cHybridTester);
         cPedestalEqualization.Initialise(true, true);
         cPedestalEqualization.FindVplus();
@@ -363,6 +351,7 @@ int main(int argc, char* argv[])
         cHybridTester.ReadSSABias("CalLevel");
 
         cPedestalEqualization.FindOffsets();
+        cPedestalEqualization.Reset();
         cPedestalEqualization.writeObjects();
         cPedestalEqualization.dumpConfigFiles();
         cPedestalEqualization.resetPointers();
@@ -373,7 +362,6 @@ int main(int argc, char* argv[])
             gui::progress(3 / 10.0);
         }
     }
-
     // cHybridTester.CalibrateGainTrim();
 
     // measure noise on FE chips
@@ -394,6 +382,7 @@ int main(int argc, char* argv[])
         cPedeNoise.measureNoise();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
+        cPedeNoise.Reset();
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
         if(cGui) { gui::message("Noise measured"); }

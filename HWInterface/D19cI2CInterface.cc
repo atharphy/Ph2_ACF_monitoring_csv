@@ -196,6 +196,7 @@ bool D19cI2CInterface::MultiWriteRead(Chip* pChip, std::vector<ChipRegItem>& pWr
     {
         if( MultiWrite(pChip,  pWriteRegs ) ) 
         {
+            std::this_thread::sleep_for(std::chrono::microseconds(1000));// need this pause for SSA I2C to work .. why?
             if( MultiRead(pChip, cReadbackRegs ) )
             {
                 // check read against write 

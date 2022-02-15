@@ -39,6 +39,7 @@ void SSA2Interface::DumpConfiguration(Chip* pSSA2, std::string filename)
 bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockSize)
 {
     fTrackRegisters = false;
+    pSSA2->setRegisterTracking(0);
     ChipRegMap            cSSA2RegMap = pSSA2->getRegMap();
     std::stringstream cOutput;
     setBoard(pSSA2->getBeBoardId());
@@ -62,6 +63,10 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockS
     std::vector<std::string> cReadOnlyRegs{"SEUcnt","Ring_oscillator","ADC_out","bist_output", "AC_ReadCounter"};
     
     cRegItems.clear();
+    // need to split between control and enable registers 
+    // don't read back enable registers 
+    std::vector<std::string> cCntrlRegs{"THTRIMMING","StripControl2","ENFLAGS","DigCalibPattern_H","DigCalibPattern_L"};
+    std::vector<ChipRegItem> cCntrlRegItems; cCntrlRegItems.clear();
     for( auto cMapItem : cSSA2RegMap ) 
     {
         if(std::find(cRegsToSkip.begin(), cRegsToSkip.end(), cMapItem.first) != cRegsToSkip.end()) continue;
@@ -69,10 +74,17 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockS
         for(auto cReadOnlyReg : cReadOnlyRegs ) cReadOnly =  cReadOnly || (cMapItem.first.find(cReadOnlyReg) != std::string::npos); 
         if( cReadOnly ) continue; 
 
-        cRegItems.push_back( cMapItem.second ); 
+        if(std::find(cCntrlRegs.begin(), cCntrlRegs.end(), cMapItem.first) != cCntrlRegs.end()) cCntrlRegItems.push_back( cMapItem.second ); 
+        else cRegItems.push_back( cMapItem.second ); 
     }
-    bool cSuccess = fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, pVerifLoop); 
+    bool cSuccess = fBoardFW->MultiRegisterWrite(pSSA2, cCntrlRegItems, false);
+    if( cSuccess ) LOG (INFO) << BOLDGREEN << "Wrote " << cCntrlRegItems.size() << " control registers in SSA#" << +pSSA2->getId() << RESET; 
+    
+    cSuccess = fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, pVerifLoop); 
+    if( cSuccess ) LOG (INFO) << BOLDGREEN << "Wrote " << cRegItems.size() << " R/W registers in SSA#" << +pSSA2->getId() << RESET; 
+    
     fTrackRegisters = false;
+    pSSA2->setRegisterTracking(1);
     return cSuccess;
 }
 
@@ -165,12 +177,15 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
         LOG(DEBUG) << BOLDMAGENTA << +cVals[cVals.size() - 1] << RESET;
     }
     auto cAllTheSame = (std::adjacent_find(cVals.begin(), cVals.end(), std::not_equal_to<uint16_t>()) == cVals.end());
-    if( cAllTheSame && dacName != "GainTrim" ){ 
+    if( cAllTheSame ){
+        std::string cRegName = (dacName == "GainTrim") ? "StripControl2" : "THTRIMMING";
         LOG(INFO) << BOLDGREEN << " All local registers are the same " << RESET;
-        auto cRegItem = cRegMap["THTRIMMING"];cRegItem.fValue = localRegValues.getChannel<uint8_t>(0);
+        auto cRegItem = cRegMap[cRegName];cRegItem.fValue = localRegValues.getChannel<uint8_t>(0);
         cSuccess = fBoardFW->SingleRegisterWrite(pChip, cRegItem ,false );
-        auto cRegValue = fBoardFW->SingleRegisterRead(pChip, cRegMap["THTRIMMING_S32"]);
-        LOG(INFO) << BOLDBLUE << "THTRIMMING_S32 set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        cRegName = (dacName == "GainTrim") ? "StripControl2_S32" : "THTRIMMING_S32";
+        auto cRegValue = fBoardFW->SingleRegisterRead(pChip, cRegMap[cRegName]);
+        LOG(INFO) << BOLDBLUE << cRegName << " set to 0x" << std::hex << cRegValue << std::dec << RESET;
+        cSuccess = (cRegValue == localRegValues.getChannel<uint8_t>(0));
         return cSuccess;
     }
     
@@ -209,7 +224,7 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
 
         ChipRegItem cItem = cIterator->second; 
         cItem.fValue = localRegValues.getChannel<uint16_t>(iChannel) & 0x1F; 
-        LOG(INFO) << BOLDBLUE << "Setting register " << dacName.str() << " to " << cItem.fValue << RESET;
+        // LOG(INFO) << BOLDBLUE << "Setting register " << dacName.str() << " to " << cItem.fValue << RESET;
         if( cIterator == cRegMap.end() )
         {
             LOG (ERROR) << BOLDRED << "SSA2Interaface::WriteChipAllLocalReg trtying to write to a register that doesn't exist in the map : " << dacName.str() << RESET;

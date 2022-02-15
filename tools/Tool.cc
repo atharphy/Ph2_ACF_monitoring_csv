@@ -739,7 +739,6 @@ void Tool::setFWTestPulse()
             {
                 LOG(INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 12" << RESET;
                 cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 12});
-                // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
                 cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
             }
             break;
@@ -1182,7 +1181,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                                                   .fOccupancy;
                         }
                     }
-                    LOG(INFO) << BOLDYELLOW << cOut.str() << RESET;
+                    LOG(DEBUG) << BOLDYELLOW << cOut.str() << RESET;
                 }
             }
         }

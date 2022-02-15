@@ -91,9 +91,9 @@ void Chip::UpdateModifiedRegMap(ChipRegItem pItem)
         cIterator = fModifiedRegs.find( cName );
         if( cIterator == fModifiedRegs.end() )
         {
-            auto cSize              = fModifiedRegs.size();
+            // auto cSize              = fModifiedRegs.size();
             fModifiedRegs[cName] = cRegItem;
-            LOG (INFO) << BOLDYELLOW << "ModMap for " << cOutput.str() << " contained " << cSize << " items.... will add " << cName << "\t Original Value " << fModifiedRegs[cName].fValue << RESET;
+            // LOG (INFO) << BOLDYELLOW << "ModMap for " << cOutput.str() << " contained " << cSize << " items.... will add " << cName << "\t Original Value " << fModifiedRegs[cName].fValue << RESET;
         }
     }
 }
@@ -113,9 +113,9 @@ void Chip::UpdateModifiedRegMap(const std::string& pRegName)
         cIterator = fModifiedRegs.find( cName );
         if( cIterator == fModifiedRegs.end() )
         {
-            auto cSize              = fModifiedRegs.size();
+            // auto cSize              = fModifiedRegs.size();
             fModifiedRegs[cName] = cRegItem;
-            LOG (INFO) << BOLDYELLOW << "ModMap for " << cOutput.str() << " contained " << cSize << " items.... will add " << cName << "\t Original Value " << fModifiedRegs[cName].fValue << RESET;
+            // LOG (INFO) << BOLDYELLOW << "ModMap for " << cOutput.str() << " contained " << cSize << " items.... will add " << cName << "\t Original Value " << fModifiedRegs[cName].fValue << RESET;
         }
     }
 }
@@ -135,9 +135,9 @@ void Chip::UpdateModifiedRegMap(uint16_t pRegisterAddress, uint8_t pPage)
         cIterator = fModifiedRegs.find( cName );
         if( cIterator == fModifiedRegs.end() )
         {
-            auto cSize              = fModifiedRegs.size();
+            // auto cSize              = fModifiedRegs.size();
             fModifiedRegs[cName] = cRegItem;
-            LOG (INFO) << BOLDYELLOW << "ModMap for " << cOutput.str() << " contained " << cSize << " items.... will add " << cName << "\t Original Value " << fModifiedRegs[cName].fValue << RESET;
+            // LOG (INFO) << BOLDYELLOW << "ModMap for " << cOutput.str() << " contained " << cSize << " items.... will add " << cName << "\t Original Value " << fModifiedRegs[cName].fValue << RESET;
         }
     }
 }

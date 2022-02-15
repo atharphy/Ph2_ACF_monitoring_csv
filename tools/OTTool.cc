@@ -62,6 +62,7 @@ void OTTool::Reset()
                     // reset registers 
                     auto cModMap = cChip->GetModifiedRegisterMap();
                     LOG(INFO) << BOLDYELLOW << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
+                    std::vector<std::pair<std::string, uint16_t>> cRegList;
                     for(auto cMapItem: cModMap)
                     {
                         // skip registers that I should perserve for this ROC
@@ -74,8 +75,11 @@ void OTTool::Reset()
                         auto cValueInMemory = cChip->getReg(cMapItem.first);
                         LOG(INFO) << BOLDYELLOW << fMyName << "::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
                                    << cMapItem.second.fValue << RESET;
-                        fReadoutChipInterface->WriteChipReg(cChip, cMapItem.first, cMapItem.second.fValue);
+                        
+                        cRegList.push_back( std::make_pair(cMapItem.first, cMapItem.second.fValue) );
                     }
+                    fReadoutChipInterface->WriteChipMultReg(cChip, cRegList); 
+                    
                     // then clear modified register map
                     // and also disable register tracking for this chip 
                     cChip->ClearModifiedRegisterMap();
