@@ -138,7 +138,9 @@ bool CicInterface::ConfigureChip(Chip* pCic, bool pVerifLoop, uint32_t pBlockSiz
     {
         cRegItems.push_back(cItem.second);
     }
-    return fBoardFW->MultiRegisterWrite(pCic, cRegItems, pVerifLoop); 
+    bool cSuccess = fBoardFW->MultiRegisterWrite(pCic, cRegItems, pVerifLoop); ;//fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
+    if( cSuccess ) LOG (INFO) << BOLDGREEN << "Succesful write to " << cRegItems.size() << " registers on CIC" << RESET;
+    return cSuccess;
 }
 
 bool CicInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
@@ -199,7 +201,7 @@ bool CicInterface::CheckFastCommandLock(Chip* pChip)
     cRegItem.fAddress                   = cRegAddress;
     cRegItem.fStatusReg                 = 0x01;
     auto cRegValue = fBoardFW->SingleRegisterRead(pChip, cRegItem); 
-    LOG(DEBUG) << BOLDBLUE << "Read back value of " << std::bitset<5>(cRegValue) << " from RO status register" << RESET;
+    LOG(INFO) << BOLDYELLOW << "Read back value of " << std::bitset<5>(cRegValue) << " from RO status register" << RESET;
     return (pChip->getFrontEndType() == FrontEndType::CIC) ? (cRegValue == 1) : ((cRegValue & 0x10) >> 4);
 }
 // configure alignment patterns on CIC
@@ -423,16 +425,16 @@ bool CicInterface::CheckDLL(Chip* pChip)
     uint16_t cRegAddress = (pChip->getFrontEndType() == FrontEndType::CIC) ? 0x5A : 0x9A;
     setBoard(pChip->getBeBoardId());
     LOG(INFO) << BOLDBLUE << "Checking DLL lock in CIC" << +pChip->getHybridId() << RESET;
-    ChipRegItem           cRegItem;
-    std::vector<uint16_t> cValues(2);
-    for(int cIndex = 0; cIndex < (int)cValues.size(); cIndex += 1)
+    std::vector<ChipRegItem> cRegItems;
+    for(int cIndx = 0; cIndx < 2; cIndx += 1)
     {
+        ChipRegItem           cRegItem;
         cRegItem.fPage                      = 0x00;
-        cRegItem.fAddress                   = cRegAddress + cIndex;
+        cRegItem.fAddress                   = cRegAddress + cIndx;
         cRegItem.fStatusReg                 = 0x01;
-        cValues[cIndex] = fBoardFW->SingleRegisterRead(pChip, cRegItem);
-        LOG(DEBUG) << BOLDBLUE << "Lock" << cIndex << " -- " << cValues[cIndex] << RESET;
+        cRegItems.push_back(cRegItem);
     }
+    auto cValues = fBoardFW->MultiRegisterRead(pChip, cRegItems);
     uint16_t cLock   = (cValues[1] << 8) | cValues[0];
     bool     cLocked = (cLock == 0xFFF);
     return cLocked;

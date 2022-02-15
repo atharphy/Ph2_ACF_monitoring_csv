@@ -356,33 +356,25 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     {
         if(cBoard->getBoardType() != BoardType::D19C) continue;
 
+        auto cConnectedFeTypes = cBoard->connectedFrontEndTypes(); 
+        bool cMPAfound =  (std::find_if(cConnectedFeTypes.begin(), cConnectedFeTypes.end(), [](FrontEndType x) { return x == FrontEndType::MPA || x == FrontEndType::MPA2; }) != cConnectedFeTypes.end());
+        bool cSSAfound =  (std::find_if(cConnectedFeTypes.begin(), cConnectedFeTypes.end(), [](FrontEndType x) { return x == FrontEndType::SSA || x == FrontEndType::SSA2; }) != cConnectedFeTypes.end());
+        bool cCBCfound =  (std::find_if(cConnectedFeTypes.begin(), cConnectedFeTypes.end(), [](FrontEndType x) { return x == FrontEndType::CBC3; }) != cConnectedFeTypes.end());
         for(auto cOpticalGroup: *cBoard)
         {
-            if(cOpticalGroup->flpGBT == nullptr) continue;
+            bool cWithLpGBT = ( cOpticalGroup->flpGBT != nullptr );
+            bool cWithPSmodule = (cMPAfound || cSSAfound) && cWithLpGBT;
+            bool cWith2Smodule = cCBCfound && cWithLpGBT ;
+            bool cWithPSHybrid = (cSSAfound && !cWithLpGBT); 
+            bool cWith2SHybrid = (cCBCfound && !cWithLpGBT); 
 
-            bool cWithPSmodule = false;
-            bool cWith2Smodule = false;
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                auto cType     = FrontEndType::MPA;
-                auto cMPAfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                cType          = FrontEndType::SSA;
-                auto cSSAfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                cType          = FrontEndType::CBC3;
-                auto cCBCfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-
-                cWith2Smodule = cWith2Smodule || cCBCfound;
-                cWithPSmodule = cWithPSmodule || cMPAfound || cSSAfound;
-            }
             if(cWithPSmodule) { cOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS); }
-            else if(cWith2Smodule)
-            {
-                cOpticalGroup->setFrontEndType(FrontEndType::OuterTracker2S);
-            }
+            else if(cWith2Smodule){ cOpticalGroup->setFrontEndType(FrontEndType::OuterTracker2S); }
+            else if(cWithPSHybrid){ LOG (INFO) << BOLDYELLOW << "HYBRIDPS" << RESET; cOpticalGroup->setFrontEndType(FrontEndType::HYBRIDPS); }
+            else if(cWith2SHybrid){ cOpticalGroup->setFrontEndType(FrontEndType::HYBRID2S); }
+            else if(cWithLpGBT && flpGBTInterface != nullptr ) static_cast<D19clpGBTInterface*>(flpGBTInterface)->setFrontEndType(cOpticalGroup->getFrontEndType());
             else
                 LOG(INFO) << BOLDMAGENTA << "UN-KNOWN MODULE TYPE" << RESET;
-
-            static_cast<D19clpGBTInterface*>(flpGBTInterface)->setFrontEndType(cOpticalGroup->getFrontEndType());
         }
     }
 }
@@ -580,8 +572,6 @@ void SystemController::InitializeOT(BeBoard* pBoard)
     // CIC start-up
     for(auto cOpticalGroup: *pBoard)
     {
-        auto& clpGBT = cOpticalGroup->flpGBT;
-        if(clpGBT == nullptr) continue;
         // CIC configuration part .. first configure
         for(auto cHybrid: *cOpticalGroup)
         {
@@ -678,7 +668,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->resetCBC(clpGBT, cSide);
             }
         } // hybrid
-    }     // OG
+    } // OG
 
     // configure chips
     for(auto cOpticalGroup: *pBoard)
@@ -867,7 +857,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
         for(auto cReadoutChip: *cHybrid)
         {
             // only consider MPAs and CBCs
-            if(cReadoutChip->getFrontEndType() == FrontEndType::SSA) continue;
+            if(cReadoutChip->getFrontEndType() == FrontEndType::SSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA2) continue;
             cFeIds.push_back(cReadoutChip->getId() % 8);
         }
         fCicInterface->EnableFEs(cCic, cFeIds, true);
@@ -1003,9 +993,10 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                 // CIC configure
                 for(auto cOpticalGroup: *cBoard)
                 {
-                    auto& clpGBT = cOpticalGroup->flpGBT;
-                    if(clpGBT == nullptr) continue;
+                    // auto& clpGBT = cOpticalGroup->flpGBT;
+                    // if(clpGBT == nullptr) continue;
                     // CIC configuration part .. first configure
+                    LOG (INFO) << BOLDYELLOW << "Configuring CIC connected to OG#" << +cOpticalGroup->getId() << RESET;
                     for(auto cHybrid: *cOpticalGroup)
                     {
                         auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;

@@ -61,7 +61,7 @@ void D19cI2CInterface::ConfigureI2CMap(const BeBoard* pBoard)
                             std::vector<uint32_t> cOldI2CSlaveDescription = {cChip->getChipAddress(), cNBytes, 1, 1, 1, cLastValue, (uint32_t)(cChip->getId() % 8)};
                             std::vector<uint32_t> cI2CSlaveDescription    = {cChip->getChipAddress(), cNBytes, 1, 1, 1, cLastValue};
 
-                            LOG(INFO) << BOLDBLUE << "Adding chip with address " << +cChip->getChipAddress() << " to I2C slave map.." << RESET;
+                            LOG(INFO) << BOLDBLUE << "Adding chip with address 0x" << std::hex << +cChip->getChipAddress() << std::dec << " to I2C slave map.." << RESET;
                             fI2CSlaveMap[cChip->getId()] = cI2CSlaveDescription;
                         }
                     } // chips
@@ -70,7 +70,7 @@ void D19cI2CInterface::ConfigureI2CMap(const BeBoard* pBoard)
                     std::vector<uint32_t> cOldI2CSlaveDescription = {cCic->getChipAddress(), cNBytes, 1, 1, 1, 1, cCic->getId()};
                     std::vector<uint32_t> cI2CSlaveDescription    = {cCic->getChipAddress(), cNBytes, 1, 1, 1, 1};
                     fI2CSlaveMap[cCic->getId()]                   = cI2CSlaveDescription;
-                    LOG(INFO) << BOLDBLUE << "Adding chip with address " << +cCic->getChipAddress() << " to I2C slave map.." << RESET;
+                    LOG(INFO) << BOLDBLUE << "Adding chip with address 0x" << std::hex << +cCic->getChipAddress() << std::dec << " to I2C slave map.." << RESET;
                 }
                 else
                 {
@@ -113,7 +113,7 @@ void D19cI2CInterface::ConfigureI2CMap(const BeBoard* pBoard)
 }
 void D19cI2CInterface::EncodeReg(const ChipRegItem& pRegItem, Chip* pChip, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
 {
-    uint8_t pCbcId       = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2  ) ? 0 : pChip->getId();
+    uint8_t pCbcId       = pChip->getId();
     uint8_t pFeId        = pChip->getHybridId();
     auto    cMapIterator = fI2CSlaveMap.find(pCbcId);
     bool    cFound       = (cMapIterator != fI2CSlaveMap.end());
@@ -150,7 +150,7 @@ void D19cI2CInterface::DecodeReg(ChipRegItem& pRegItem, uint8_t& pCbcId, uint32_
         // pFeId    =  ( ( pWord & 0x07800000 ) >> 27) ;
         pCbcId            = ((pWord & 0x007c0000) >> 22);
         pFailed           = 0;
-        pRegItem.fPage    = 0;
+        pRegItem.fPage    = pRegItem.fPage;
         pRead             = true;
         pRegItem.fAddress = ( pRegItem.fAddress <= 0xFF )  ? (pWord & 0x0000FF00) >> 8 : pRegItem.fAddress ; // check in the FW what it does with 16 bit addresses here 
         pRegItem.fValue   = (pWord & 0x000000FF);
@@ -246,6 +246,7 @@ bool D19cI2CInterface::MultiRead(Chip* pChip, std::vector<ChipRegItem>& pRegiste
         bool    cRead=true;
         bool    cFailed = false;
         DecodeReg(cRegItem, cChipId, cVecReq[cIndx], cRead, cFailed);
+        LOG (DEBUG) << BOLDYELLOW << "D19cI2CInterface::MultiRead Reg#" << +cIndx << " at 0x" << std::hex << +cRegItem.fAddress << " set to 0x" << +cRegItem.fValue << " page " << +cRegItem.fPage << std::dec << RESET;
         cSucess = cSucess && !cFailed; 
         cIndx++;
     }
@@ -254,7 +255,9 @@ bool D19cI2CInterface::MultiRead(Chip* pChip, std::vector<ChipRegItem>& pRegiste
 bool D19cI2CInterface::SingleRead(Chip* pChip, ChipRegItem& pRegisterItem) 
 {
     std::vector<ChipRegItem> cItems; cItems.push_back(pRegisterItem);
-    return MultiRead(pChip, cItems );
+    bool cSuccess = MultiRead(pChip, cItems); 
+    pRegisterItem = cItems[0];
+    return cSuccess;
 }
 
 // D19c I2C write and read 

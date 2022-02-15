@@ -1325,7 +1325,7 @@ bool D19cFWInterface::WriteBlockReg(const std::string& pRegNode, const std::vect
 
 void D19cFWInterface::EncodeReg(const ChipRegItem& pRegItem, Chip* pChip, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
 {
-    uint8_t pCbcId       = pChip->getId() % 8;
+    uint8_t pCbcId       = pChip->getId();
     uint8_t pLinkId      = pChip->getOpticalId();
     uint8_t pFeId        = pChip->getHybridId();
     auto    cMapIterator = fI2CSlaveMap.find(pCbcId);
@@ -1615,11 +1615,9 @@ void D19cFWInterface::ChipReset()
 {
     // for CBCs
     ReadoutChipReset();
-    std::vector<std::pair<std::string, uint32_t>> cVecReg;
     // for CICs
-    cVecReg.push_back({"fc7_daq_ctrl.physical_interface_block.control.cic_hard_reset", 0x1});
-    // std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    this->WriteStackReg(cVecReg);
+    LOG (INFO) << BOLDRED << "Sending HARD RESET to CIC" << RESET;
+    WriteReg("fc7_daq_ctrl.physical_interface_block.control.cic_hard_reset", 0x1);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
 }
 void D19cFWInterface::ChipReSync()
@@ -2261,19 +2259,27 @@ std::vector<uint8_t> D19cFWInterface::MultiRegisterRead(Chip* pChip, std::vector
         for( auto cItem : pItems ) 
         {
             auto cIterator = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&cItem](const ChipRegPair& obj) {return obj.second.fAddress == cItem.fAddress && obj.second.fPage == cItem.fPage ;});
-            if (cIterator == cRegisterMap.end() && cItem.fStatusReg == 0x00 ) LOG (INFO) << BOLDRED << "Could not find " << cIterator->first << " addresss 0x" << std::hex << cItem.fAddress << std::dec << RESET; 
-            else 
-            {
-                pChip->setReg(cIterator->first, cItem.fValue);
-                cValues.push_back( pChip->getReg( cIterator->first) ) ;
-                LOG (DEBUG) << BOLDYELLOW << "D19cFWInterface::MultiRegisterRead Register "
-                    << cIterator->first << " 0x"  << std::hex << +cItem.fAddress << std::dec 
-                    << " set to 0x" << std::hex << +cValues.at(cValues.size()-1) << std::dec 
-                    << RESET;
+            if (cIterator == cRegisterMap.end() && cItem.fStatusReg == 0x0 ) LOG (INFO) << BOLDRED << "Could not find " << cIterator->first << " addresss 0x" << std::hex << cItem.fAddress << std::dec << RESET;
+            else
+            {  
+                // LOG (INFO) << BOLDGREEN << "Found " << cIterator->first << " addresss 0x" << std::hex << cItem.fAddress << std::dec << RESET;
+                if( cItem.fStatusReg == 0x00 )
+                {
+                    pChip->setReg(cIterator->first, cItem.fValue);
+                    cValues.push_back( pChip->getReg( cIterator->first) ) ;
+                    LOG (DEBUG) << BOLDYELLOW << "D19cFWInterface::MultiRegisterRead Register "
+                        << cIterator->first << " 0x"  << std::hex << +cItem.fAddress << std::dec 
+                        << " set to 0x" << std::hex << +cValues.at(cValues.size()-1) << std::dec 
+                        << RESET;
+                }
+                else 
+                {
+                    cValues.push_back( cItem.fValue ); 
+                }
             }// update map 
         }
     } 
-    else LOG (ERROR) << BOLDRED << "D19cFWInterface::MultiRegisterRead Registe FAILED " << RESET;
+    else LOG (ERROR) << BOLDRED << "D19cFWInterface::MultiRegisterRead Register FAILED " << RESET;
     return cValues;
 }
 uint8_t D19cFWInterface::SingleRegisterRead(Chip* pChip, ChipRegItem& pItem ) 
