@@ -29,9 +29,9 @@ SSA2::SSA2(const FrontEndDescription& pFeDesc, uint8_t pSSAId, uint8_t pPartnerI
     fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS>>();
     fPartnerId        = pPartnerId;
     loadfRegMap(filename);
-    // select control regs 
+    // select control regs
     std::vector<std::string> cCntrlRegs{"THTRIMMING", "StripControl2", "ENFLAGS", "DigCalibPattern_H", "DigCalibPattern_L"};
-    for(auto& cMapItem : fRegMap ) 
+    for(auto& cMapItem: fRegMap)
     {
         if(std::find(cCntrlRegs.begin(), cCntrlRegs.end(), cMapItem.first) == cCntrlRegs.end()) continue;
         cMapItem.second.fControlReg = 1;
@@ -46,8 +46,8 @@ SSA2::SSA2(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pSSAId, uint8_t
     fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS>>();
     fPartnerId        = pPartnerId;
     loadfRegMap(filename);
-     std::vector<std::string> cCntrlRegs{"THTRIMMING", "StripControl2", "ENFLAGS", "DigCalibPattern_H", "DigCalibPattern_L"};
-    for(auto& cMapItem : fRegMap ) 
+    std::vector<std::string> cCntrlRegs{"THTRIMMING", "StripControl2", "ENFLAGS", "DigCalibPattern_H", "DigCalibPattern_L"};
+    for(auto& cMapItem: fRegMap)
     {
         if(std::find(cCntrlRegs.begin(), cCntrlRegs.end(), cMapItem.first) == cCntrlRegs.end()) continue;
         cMapItem.second.fControlReg = 1;

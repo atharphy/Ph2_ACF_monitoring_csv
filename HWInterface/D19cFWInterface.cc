@@ -808,14 +808,15 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         }
     }
     if(cWithlpGBT) LOG(INFO) << BOLDBLUE << "D19cFWInterface::ConfigureBoard with lpGBT" << RESET;
-    if(pBoard->isOptical()){ 
+    if(pBoard->isOptical())
+    {
         LOG(INFO) << BOLDBLUE << "D19cFWInterface::ConfigureBoard for optical readout" << RESET;
-        LOG(INFO) << BOLDYELLOW << "Configuring BackEndAligner assuming maximum 3 bits for bitslop " << RESET; 
+        LOG(INFO) << BOLDYELLOW << "Configuring BackEndAligner assuming maximum 3 bits for bitslop " << RESET;
         fBackendAlignmentInterface->setNbits(3);
     }
-    else 
+    else
     {
-        LOG(INFO) << BOLDYELLOW << "Configuring BackEndAligner assuming maximum 4 bits for bitslop " << RESET; 
+        LOG(INFO) << BOLDYELLOW << "Configuring BackEndAligner assuming maximum 4 bits for bitslop " << RESET;
         fBackendAlignmentInterface->setNbits(4);
     }
     fOptical = pBoard->isOptical() && !cWithlpGBT;

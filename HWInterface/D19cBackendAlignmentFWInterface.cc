@@ -16,7 +16,7 @@ void D19cBackendAlignmentFWInterface::ParseResult(uint32_t pReply)
     fAlignerObject.fType = (pReply >> 24) & 0xF;
     if(fAlignerObject.fType == 0)
     {
-        if( fNbits == 3 ) // bit slip of 3 bits
+        if(fNbits == 3) // bit slip of 3 bits
         {
             fLineConfiguration.fMode    = (pReply & 0x00003000) >> 12;
             fLineConfiguration.fDelay   = (pReply & 0x000000F8) >> 3;
@@ -26,13 +26,13 @@ void D19cBackendAlignmentFWInterface::ParseResult(uint32_t pReply)
         {
             fLineConfiguration.fMode    = (pReply & (0x3)) >> 13;
             fLineConfiguration.fDelay   = (pReply & (0x1F)) >> 4;
-            fLineConfiguration.fBitslip = (pReply & (0xF<<0)) >> 0;
+            fLineConfiguration.fBitslip = (pReply & (0xF << 0)) >> 0;
         }
     }
     else if(fAlignerObject.fType == 1)
     {
         // bit slip of 4 bits electrical
-        if( fNbits == 3 ) // bit slip of 3 bits
+        if(fNbits == 3) // bit slip of 3 bits
         {
             fLineConfiguration.fDelay       = (pReply & 0x00F80000) >> 19;
             fLineConfiguration.fBitslip     = (pReply & 0x00070000) >> 16;
@@ -42,11 +42,11 @@ void D19cBackendAlignmentFWInterface::ParseResult(uint32_t pReply)
         }
         else
         {
-            fLineConfiguration.fDelay                  = (pReply & (0x1F<<19)) >> 19;
-            fLineConfiguration.fBitslip                = (pReply & (0xF<<15)) >> 15;
-            fStatus.fDone                   = (pReply & (0x1<<14)) >> 14;
-            fStatus.fWordAlignmentFSMstate  = (pReply & (0xF<<7)) >> 7;
-            fStatus.fPhaseAlignmentFSMstate = (pReply & (0xF<<0)) >> 0;
+            fLineConfiguration.fDelay       = (pReply & (0x1F << 19)) >> 19;
+            fLineConfiguration.fBitslip     = (pReply & (0xF << 15)) >> 15;
+            fStatus.fDone                   = (pReply & (0x1 << 14)) >> 14;
+            fStatus.fWordAlignmentFSMstate  = (pReply & (0xF << 7)) >> 7;
+            fStatus.fPhaseAlignmentFSMstate = (pReply & (0xF << 0)) >> 0;
         }
         // bit slip of 3 bits
     }
@@ -199,7 +199,7 @@ void D19cBackendAlignmentFWInterface::SetLineMode(AlignerObject pAlignerObject, 
     // set defaults - bit slip of 3 bits
     uint32_t mode_raw, l1a_en_raw, master_line_id_raw, delay_raw, bitslip_raw;
 
-    if( fNbits == 3  )
+    if(fNbits == 3)
     {
         mode_raw           = (fLineConfiguration.fMode & 0x3) << 12;
         l1a_en_raw         = (fLineConfiguration.fMode == 0) ? ((fLineConfiguration.fEnableL1 & 0x1) << 11) : 0;
@@ -209,7 +209,7 @@ void D19cBackendAlignmentFWInterface::SetLineMode(AlignerObject pAlignerObject, 
     }
     else
     {
-        mode_raw           = (fLineConfiguration.fMode & 0x3) << 13 ;
+        mode_raw           = (fLineConfiguration.fMode & 0x3) << 13;
         l1a_en_raw         = (fLineConfiguration.fMode == 0) ? ((fLineConfiguration.fEnableL1 & 0x1) << 11) : 0;
         master_line_id_raw = (fLineConfiguration.fMode == 1) ? ((fLineConfiguration.fMasterLine & 0xF) << 8) : 0;
         delay_raw          = (fLineConfiguration.fMode == 2) ? ((fLineConfiguration.fDelay & 0x1F) << 4) : 0;

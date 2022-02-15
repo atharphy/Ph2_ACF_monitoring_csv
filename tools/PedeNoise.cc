@@ -67,9 +67,9 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
         cWithCBC      = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::CBC3) != cFeTypes.end();
         cWithSSA      = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::SSA) != cFeTypes.end() || std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::SSA2) != cFeTypes.end();
         cWithMPA      = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::MPA) != cFeTypes.end();
-        for( auto cFeType : cFeTypes)
+        for(auto cFeType: cFeTypes)
         {
-            if( std::find(cAllFrontEndTypes.begin(), cAllFrontEndTypes.end(), cFeType) == cAllFrontEndTypes.end() ) cAllFrontEndTypes.push_back(cFeType);
+            if(std::find(cAllFrontEndTypes.begin(), cAllFrontEndTypes.end(), cFeType) == cAllFrontEndTypes.end()) cAllFrontEndTypes.push_back(cFeType);
         }
     }
     if(cWithCBC) LOG(INFO) << BOLDBLUE << "PedeNoise with CBCs" << RESET;
@@ -88,7 +88,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
         SSAChannelGroupHandler theChannelGroupHandler;
         theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
         // temporary
-        setChannelGroupHandler(theChannelGroupHandler,cAllFrontEndTypes);
+        setChannelGroupHandler(theChannelGroupHandler, cAllFrontEndTypes);
         // setChannelGroupHandler(theChannelGroupHandler, {FrontEndType::SSA2,FrontEndType::SSA});
         // setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA);
     }
@@ -96,7 +96,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     {
         MPAChannelGroupHandler theChannelGroupHandler;
         theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
-        setChannelGroupHandler(theChannelGroupHandler,cAllFrontEndTypes);
+        setChannelGroupHandler(theChannelGroupHandler, cAllFrontEndTypes);
         // setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA);
         // setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA2);
     }
@@ -115,9 +115,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fMaxThreshold                = findValueInSettings<double>("PedeNoiseMaxThreshold", 0);
     // if you forget to use the PedeNoiseUseFixRange setting but instead declare
     // min and max threshold ... will still work
-    if(!fUseFixRange && fMinThreshold != fMaxThreshold){ 
-        fUseFixRange = true;
-    }
+    if(!fUseFixRange && fMinThreshold != fMaxThreshold) { fUseFixRange = true; }
 
     fNEventsPerBurst = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
     // uint8_t cEnableFastCounterReadout = (uint8_t)findValueInSettings<double>("EnableFastCounterReadout", 0);

@@ -1325,7 +1325,9 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
 void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, std::vector<FrontEndType> cFrontEndTypes)
 {
     LOG(INFO) << BOLDYELLOW << "SystemController::setChannelGroupHandler for a chipType " << RESET;
-    auto selectChipFlavourFunction = [cFrontEndTypes](const ChipContainer* theChip) { return ( std::find(cFrontEndTypes.begin(), cFrontEndTypes.end() , static_cast<const ReadoutChip*>(theChip)->getFrontEndType()) != cFrontEndTypes.end() ); };
+    auto selectChipFlavourFunction = [cFrontEndTypes](const ChipContainer* theChip) {
+        return (std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), static_cast<const ReadoutChip*>(theChip)->getFrontEndType()) != cFrontEndTypes.end());
+    };
     setChannelGroupHandler(theChannelGroupHandler, selectChipFlavourFunction);
 }
 

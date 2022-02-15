@@ -12,10 +12,10 @@
 #include "Channel.h"
 #include "CicFEAlignment.h"
 #include "ContainerFactory.h"
+#include "L1ReadoutInterface.h"
 #include "Occupancy.h"
 #include "PSAlignment.h"
 #include "StubBackEndAlignment.h"
-#include "L1ReadoutInterface.h"
 #include <boost/algorithm/string.hpp>
 
 #include <fstream>
@@ -362,8 +362,8 @@ void Eudaq2Producer::DoStopRun()
     for(auto cBoard: *fDetectorContainer)
     {
         fBeBoardInterface->setBoard(cBoard->getId());
-        auto                             cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-        auto                             cReadoutInterface   = cInterface->getL1ReadoutInterface();
+        auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cReadoutInterface = cInterface->getL1ReadoutInterface();
         this->fBeBoardInterface->Stop(static_cast<BeBoard*>(cBoard));
         LOG(INFO) << BOLDBLUE << "[CMS-OT Producer] Shutter closed on board " << +cBoard->getId() << RESET;
         cReadoutInterface->ResetReadout();
@@ -418,9 +418,9 @@ void Eudaq2Producer::DoReset()
         for(auto cBoard: *fDetectorContainer)
         {
             fBeBoardInterface->setBoard(cBoard->getId());
-            auto                             cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-            auto                             cReadoutInterface   = cInterface->getL1ReadoutInterface();
-            
+            auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+            auto cReadoutInterface = cInterface->getL1ReadoutInterface();
+
             fBeBoardInterface->Stop(static_cast<BeBoard*>(cBoard));
             cReadoutInterface->ResetReadout();
             LOG(INFO) << BOLDBLUE << "Reset readout on D19cFWInterface" << RESET;

@@ -239,8 +239,9 @@ bool D19cI2CInterface::MultiRead(Chip* pChip, std::vector<ChipRegItem>& pRegiste
 {
     std::vector<uint32_t> cVecReq;
     // make sure you don't read ctrl registers
-    for(auto cRegItem: pRegisterItems){ 
-        if( cRegItem.fControlReg == 0x1 ) continue;
+    for(auto cRegItem: pRegisterItems)
+    {
+        if(cRegItem.fControlReg == 0x1) continue;
         EncodeReg(cRegItem, pChip, cVecReq, true, false);
     }
     ReadChipBlockReg(cVecReq);

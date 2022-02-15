@@ -75,7 +75,7 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockS
         for(auto cReadOnlyReg: cReadOnlyRegs) cReadOnly = cReadOnly || (cMapItem.first.find(cReadOnlyReg) != std::string::npos);
         if(cReadOnly) continue;
 
-        if(cMapItem.second.fControlReg )
+        if(cMapItem.second.fControlReg)
             cCntrlRegItems.push_back(cMapItem.second);
         else
             cRegItems.push_back(cMapItem.second);
@@ -712,7 +712,7 @@ bool SSA2Interface::setInjectionSchema(ReadoutChip* pChip, const std::shared_ptr
         cRegItems.push_back(cRegMap[cRegName.str()]);
     }
     auto   cRegValues = fBoardFW->MultiRegisterRead(pChip, cRegItems);
-    size_t cIndx=0;
+    size_t cIndx      = 0;
     for(auto& cReg: cRegItems)
     {
         uint16_t regval  = cReg.fValue;
@@ -747,7 +747,7 @@ bool SSA2Interface::maskChannelGroup(ReadoutChip* pChip, const std::shared_ptr<C
         cRegItems.push_back(cRegMap[cRegName.str()]);
     }
     auto   cRegValues = fBoardFW->MultiRegisterRead(pChip, cRegItems);
-    size_t cIndx=0;
+    size_t cIndx      = 0;
     for(auto& cReg: cRegItems)
     {
         uint16_t regval  = cReg.fValue;
