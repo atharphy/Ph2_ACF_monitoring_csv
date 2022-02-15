@@ -484,7 +484,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     {
         LOG (INFO) << BOLDYELLOW << pRegName << RESET;
         uint8_t cReadoutMode = 0x0;
-        uint8_t cEdgeSel_T1  = 0x1;
+        uint8_t cEdgeSel_T1  = 0x0;
         // readout mode
         bool cSuccess = this->WriteChipRegBits(pSSA2, "control_1", cReadoutMode, "mask_peri_D", 0x7);
         // edge select
@@ -514,7 +514,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         LOG (INFO) << BOLDYELLOW << "Digital injection on Strip#" << +cStripId << "\t" << cRegName.str() << RESET;
         
         uint8_t cReadoutMode = 0x0;
-        uint8_t cEdgeSel_T1  = 0x0;
+        uint8_t cEdgeSel_T1  = 0x1;
         // readout mode
         bool cSuccess = this->WriteChipRegBits(pSSA2, "control_1", cReadoutMode, "mask_peri_D", 0x7);
         // edge select
@@ -525,13 +525,16 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
 
         /// configure for injection with the strip register
         auto cRegItem = cRegMap[cRegName.str()];
-        uint8_t cMask         = 0;
+        uint8_t cMask         = 1;
         uint8_t cPolarity     = 0;
         uint8_t cHitCounter   = 0;
         uint8_t cDigitalCalib = pValue;
         uint8_t cAnalogCalib  = 0;
         uint8_t cEnFlags      = (cAnalogCalib << 4 | cDigitalCalib << 3 | cHitCounter << 2 | cPolarity << 1 | cMask);
-        cSuccess              = cSuccess && this->WriteChipRegBits(pSSA2, cRegName.str(), cEnFlags, "mask_strip", 0x1F);
+        cRegItem.fValue = cEnFlags;
+        cSuccess = fBoardFW->SingleRegisterWrite(pSSA2, cRegItem);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        // cSuccess              = cSuccess && this->WriteChipRegBits(pSSA2, cRegName.str(), cEnFlags, "mask_strip", 0x1F);
         auto cRegValue             = fBoardFW->SingleRegisterRead(pSSA2, cRegItem);
         LOG(INFO) << BOLDBLUE << cRegName.str() << " set to 0x" << std::hex << +cRegValue << std::dec << RESET;
     }

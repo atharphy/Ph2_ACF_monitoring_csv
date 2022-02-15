@@ -137,11 +137,11 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
                     LOG(INFO) << BOLDYELLOW << "Skipping word alignment on Chip#" << +cChip->getId() << RESET;
                     continue;
                 }
-                for(uint8_t cLineId = 1; cLineId <= 8; cLineId++) // stub lines - 1 to 8
+                for(uint8_t cLineId = 0; cLineId <= 8; cLineId++) // stub lines - 1 to 8
                 { WordAlignLine(cChip, cLineId, cWordAlignmentPattern, 8); }
             }
         }
-    } // run word aligner on stub lines
+    } // run word aligner on all lines
 
     for(auto cOpticalReadout: *pBoard)
     {
@@ -154,6 +154,7 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
                 fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
                 fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cChip->getId());
                 cDebugInterface->StubDebug(true, 8, true);
+                cDebugInterface->L1ADebug();
             }
         }
     } // check data
@@ -200,25 +201,24 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
         LOG (INFO) << BOLDYELLOW << "Trigger source : " << +cTriggerSrc << "\t TP delay " << +cOriginalTPdelay << RESET;
 
         for(auto cOpticalReadout: *pBoard)
+        {
+            for(auto cHybrid: *cOpticalReadout)
             {
-                for(auto cHybrid: *cOpticalReadout)
+                for(auto cChip: *cHybrid)
                 {
-                    for(auto cChip: *cHybrid)
-                    {
-
-                        // fReadoutChipInterface->WriteChipReg(cChip, "DigitalSync", 0x1);
-                        std::vector<std::pair<std::string, uint16_t>> cRegList;
-                        for( int cStrip=10; cStrip<20; cStrip++)
-                        {
-                            std::stringstream cRegName; 
-                            cRegName << "DigitalSync_S" << cStrip; 
-                            LOG (INFO) << BOLDYELLOW << cRegName.str() << RESET;
-                            fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), 0x1);
-                        }
-                    }
+                    fReadoutChipInterface->WriteChipReg(cChip, "DigitalSync", 0x1);
+                    // std::vector<std::pair<std::string, uint16_t>> cRegList;
+                    // for( int cStrip=110; cStrip<120; cStrip++)
+                    // {
+                    //     std::stringstream cRegName; 
+                    //     cRegName << "DigitalSync_S" << cStrip; 
+                    //     LOG (INFO) << BOLDYELLOW << cRegName.str() << RESET;
+                    //     fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), 0x1);
+                    // }
                 }
-            } // enable digital sync on all strips
-        for( int cLatencyOffset = -5; cLatencyOffset <= 0; cLatencyOffset++)
+            }
+        } // enable digital sync on all strips
+        for( int cLatencyOffset = -3; cLatencyOffset <= 0; cLatencyOffset++)
         {
             LOG (INFO) << BOLDYELLOW << "Latency will be set to " << (cOriginalTPdelay+cLatencyOffset) << RESET;
             for(auto cOpticalReadout: *pBoard)
@@ -231,14 +231,25 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
                     }
                 }
             } // enable digital sync on all strips
-            cDebugInterface->L1ADebug();
+
+            for(auto cOpticalReadout: *pBoard)
+            {
+                for(auto cHybrid: *cOpticalReadout)
+                {
+                    for( uint8_t cChipId=0; cChipId < 2 ; cChipId++)
+                    {                    
+                        LOG (INFO) << BOLDYELLOW << "Chip#" << +cChipId << RESET;
+                        fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
+                        fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cChipId);
+                        cDebugInterface->L1ADebug();
+                    }
+                }
+            }
         }
         // exit(0);
-    
-    }else
+    }
+    else
         LOG(INFO) << BOLDRED << "FAILED PS BE-Alignment" << RESET;
-    return cTuned;
-
     return cTuned;
 }
 /*bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
