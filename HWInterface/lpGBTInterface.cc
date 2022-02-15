@@ -36,10 +36,11 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
     bool cSuccess = false;
 
     if( cBoardType != BoardType::RD53 && pChip->isOptical() )
-    { 
-        auto cRegisterMap = pChip->getRegMap();
-        cRegisterMap[pDacName].fValue = pDacValue;
-        cSuccess = fBoardFW->SingleRegisterWrite(pChip, cRegisterMap[pDacName], pVerifLoop);
+    {
+        cSuccess = fBoardFW->WriteOptoLinkRegister(pChip, cAddress, pDacValue, pVerifLoop);
+        // auto cRegisterMap = pChip->getRegMap();
+        // cRegisterMap[pDacName].fValue = pDacValue;
+        // cSuccess = fBoardFW->SingleRegisterWrite(pChip, cRegisterMap[pDacName], pVerifLoop);
     }
     else if(pChip->isOptical()) cSuccess = fBoardFW->WriteOptoLinkRegister(pChip, cAddress, pDacValue, pVerifLoop);
     // TO-DO .. figure out what to do if piGBT is used
