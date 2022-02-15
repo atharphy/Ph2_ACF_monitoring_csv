@@ -68,6 +68,140 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
     bool cTuned = true;
     LOG(INFO) << GREEN << "BackEndAlignment for PS Chip(s)" << RESET;
     fBeBoardInterface->setBoard(pBoard->getId());
+    auto                  cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
+    uint8_t               cPhaseAlignmentPattern = 0xAA;
+    uint8_t               cWordAlignmentPattern  = 0xEA;
+    
+    for(auto cOpticalReadout: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalReadout)
+        {
+            for(auto cChip: *cHybrid)
+            {
+                fReadoutChipInterface->WriteChipReg(cChip, "EnableSLVSTestOutput", 0x1);
+                for(uint8_t cLineId = 0; cLineId < 8; cLineId++) // stub lines - 1 to 8
+                {
+                    std::stringstream cRegName;
+                    cRegName << "OutPatternStubLine" << +(cLineId);
+                    fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), cPhaseAlignmentPattern);
+                }
+                fReadoutChipInterface->WriteChipReg(cChip,"OutPatternL1Line", cPhaseAlignmentPattern);
+            }
+        }
+    }// configure PA pattern on all SLVS lines 
+
+    for(auto cOpticalReadout: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalReadout)
+        {
+            for(auto cChip: *cHybrid)
+            {
+                if( fEnabledROCs.size() != cHybrid->size() && cChip->getIndex() > 1 ){ 
+                    LOG (INFO) << BOLDYELLOW << "Skipping Phase tuning on Chip#" << +cChip->getId() << RESET;
+                    continue;
+                }
+                for(uint8_t cLineId = 0; cLineId <=8 ; cLineId++) // stub lines - 1 to 8
+                {
+                    PhaseTuneLine(cChip, cLineId);
+                }
+            }
+        }
+    }// run phase aligner on all lines 
+
+    for(auto cOpticalReadout: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalReadout)
+        {
+            for(auto cChip: *cHybrid)
+            {
+                fReadoutChipInterface->WriteChipReg(cChip, "EnableSLVSTestOutput", 0x1);
+                for(uint8_t cLineId = 0; cLineId < 8; cLineId++) // stub lines - 1 to 8
+                {
+                    std::stringstream cRegName;
+                    cRegName << "OutPatternStubLine" << +(cLineId);
+                    fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), cWordAlignmentPattern);
+                }
+                fReadoutChipInterface->WriteChipReg(cChip,"OutPatternL1Line", cWordAlignmentPattern);
+            }
+        }
+    }// configure WA pattern on all SLVS lines 
+
+    for(auto cOpticalReadout: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalReadout)
+        {
+            for(auto cChip: *cHybrid)
+            {
+                if( fEnabledROCs.size() != cHybrid->size() && cChip->getIndex() > 1 ){ 
+                    LOG (INFO) << BOLDYELLOW << "Skipping word alignment on Chip#" << +cChip->getId() << RESET;
+                    continue;
+                }
+                for(uint8_t cLineId = 1; cLineId <=8 ; cLineId++) // stub lines - 1 to 8
+                {
+                    WordAlignLine(cChip, cLineId, cWordAlignmentPattern, 8);
+                }
+            }
+        }
+    }// run word aligner on stub lines 
+
+    for(auto cOpticalReadout: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalReadout)
+        {
+            for(auto cChip: *cHybrid)
+            {
+                if( fEnabledROCs.size() != cHybrid->size() && cChip->getIndex() > 1 ){ 
+                    continue;
+                }
+                LOG (INFO) << BOLDYELLOW << "Hybrid#" << +cHybrid->getId() << " Chip#" << +cChip->getId() << RESET;
+                fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
+                fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cChip->getId());
+                cDebugInterface->StubDebug(true, 8, true);
+            }
+        }
+    }// check data 
+
+    for(auto cOpticalReadout: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalReadout)
+        {
+            for(auto cChip: *cHybrid)
+            {
+                fReadoutChipInterface->WriteChipReg(cChip, "EnableSLVSTestOutput", 0x0);
+                for(uint8_t cLineId = 0; cLineId < 8; cLineId++) // stub lines - 1 to 8
+                {
+                    std::stringstream cRegName;
+                    cRegName << "OutPatternStubLine" << +(cLineId);
+                    fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), 0x00);
+                }
+                fReadoutChipInterface->WriteChipReg(cChip,"OutPatternL1Line", 0x00);
+            }
+        }
+    }// disable SLVS output on all chips - this makes sure we now have L1 data back on L1 line 
+
+    for(auto cOpticalReadout: *pBoard)
+    {
+        for(auto cHybrid: *cOpticalReadout)
+        {
+            for(auto cChip: *cHybrid)
+            {
+                if( fEnabledROCs.size() != cHybrid->size() && cChip->getIndex() <= 1 ){ 
+                    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
+                    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cChip->getId());
+                    cDebugInterface->L1ADebug();
+                }
+            }
+        }
+    }// check that L1 data is there 
+
+    return cTuned;
+}
+/*bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
+{
+    bool cTuned = true;
+    LOG(INFO) << GREEN << "BackEndAlignment for PS Chip(s)" << RESET;
+    fBeBoardInterface->setBoard(pBoard->getId());
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
 
     D19cDebugFWInterface* cDebugInterface        = cInterface->getDebugInterface();
@@ -201,7 +335,7 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
     else
         LOG(INFO) << BOLDRED << "FAILED PS BE-Alignment" << RESET;
     return cTuned;
-}
+}*/
 // re-use function from link alignment
 bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
 {

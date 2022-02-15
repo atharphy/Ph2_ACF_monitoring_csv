@@ -489,9 +489,6 @@ int main(int argc, char* argv[])
         // configure SSA to output something on stub lines
         if(!cSSAPair.empty())
         {
-            BackEndAlignment cBackendAlignment;
-            cBackendAlignment.Inherit(&cHybridTester);
-
             LOG(INFO) << BOLDRED << "SSAOutput POGO debug" << RESET;
             // configure SSA to output something on stub lines
             if(cSSAPair != "ALL")

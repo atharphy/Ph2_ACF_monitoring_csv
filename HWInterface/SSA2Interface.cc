@@ -66,18 +66,16 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockS
     cRegItems.clear();
     // need to split between control and enable registers
     // don't read back enable registers
-    std::vector<std::string> cCntrlRegs{"THTRIMMING", "StripControl2", "ENFLAGS", "DigCalibPattern_H", "DigCalibPattern_L"};
     std::vector<ChipRegItem> cCntrlRegItems;
     cCntrlRegItems.clear();
     for(auto cMapItem: cSSA2RegMap)
     {
-        if( cMapItem.second.fControlReg == 0x1 ) LOG (INFO) << BOLDYELLOW << cMapItem.first << RESET;
         if(std::find(cRegsToSkip.begin(), cRegsToSkip.end(), cMapItem.first) != cRegsToSkip.end()) continue;
         bool cReadOnly = false;
         for(auto cReadOnlyReg: cReadOnlyRegs) cReadOnly = cReadOnly || (cMapItem.first.find(cReadOnlyReg) != std::string::npos);
         if(cReadOnly) continue;
 
-        if(std::find(cCntrlRegs.begin(), cCntrlRegs.end(), cMapItem.first) != cCntrlRegs.end())
+        if(cMapItem.second.fControlReg )
             cCntrlRegItems.push_back(cMapItem.second);
         else
             cRegItems.push_back(cMapItem.second);

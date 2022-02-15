@@ -59,11 +59,15 @@ class D19cBackendAlignmentFWInterface : public RegManager
     bool    IsLineWordAligned(AlignerObject pAlignerObject);
     bool    IsLinePhaseAligned(AlignerObject pAlignerObject);
 
+    void    setNbits(uint8_t pNbits){ fNbits = pNbits; }
+    uint8_t getNbits(){ return fNbits; }
+
   private:
     AlignerObject     fAlignerObject;
     LineConfiguration fLineConfiguration;
     Status            fStatus;
     uint8_t           fVerbose{0};
+    uint8_t           fNbits{3};
 
   private:
     void    ConfigureInput();

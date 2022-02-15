@@ -112,6 +112,8 @@ bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem)
 }
 bool D19cOpticalInterface::SingleReadSlave(Chip* pChip, ChipRegItem& pItem)
 {
+    if(pItem.fControlReg == 0x1) return true;
+    
     auto    cLinkId   = pChip->getOpticalId();
     uint8_t cMasterId = pChip->getMasterId();
 
@@ -151,8 +153,11 @@ bool D19cOpticalInterface::SingleReadSlave(Chip* pChip, ChipRegItem& pItem)
 bool D19cOpticalInterface::SingleReadIC(Chip* pChip, ChipRegItem& pItem)
 {
     auto cLinkId = pChip->getOpticalId();
-    auto cValue  = ReadLpGBTRegister(cLinkId, pItem.fAddress);
-    pItem.fValue = cValue;
+    if( pItem.fControlReg == 0x00 ) 
+    {
+        auto cValue  = ReadLpGBTRegister(cLinkId, pItem.fAddress);
+        pItem.fValue = cValue;
+    }
     return true;
 }
 // for now this is just looping over single write
