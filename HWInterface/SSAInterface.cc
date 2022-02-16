@@ -469,6 +469,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         cRegItem.fValue = pValue;
         LOG(INFO) << BOLDYELLOW << "Setting "
                    << " bias calDac to " << +cRegItem.fValue << " on SSA" << +pSSA->getId() << RESET;
+        if( fBoardFW == nullptr ) LOG (INFO) << BOLDYELLOW << "!!!" << RESET;
         return fBoardFW->SingleRegisterWrite(pSSA, cRegItem, pVerifLoop);
     }
     else if(pRegName == "Threshold")
