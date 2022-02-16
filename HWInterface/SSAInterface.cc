@@ -647,9 +647,9 @@ bool SSAInterface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& d
     // bool isMask = false;
 
     if(dacName == "GainTrim")
-        dacTemplate = "GAINTRIMMING_S%d";
+        dacTemplate = "GAINTRIMMING_S";
     else if(dacName == "ThresholdTrim")
-        dacTemplate = "THTRIMMING_S%d";
+        dacTemplate = "THTRIMMING_S";
     // else if(dacName == "Mask") isMask = true;
     else
         LOG(ERROR) << "Error, DAC " << dacName << " is not a Local DAC";
