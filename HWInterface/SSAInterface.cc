@@ -465,7 +465,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     }
     else if(pRegName == "InjectedCharge")
     {
-        LOG(DEBUG) << BOLDBLUE << "Setting "
+        LOG(INFO) << BOLDYELLOW << "Setting "
                    << " bias calDac to " << +pValue << " on SSA" << +pSSA->getId() << RESET;
         auto cRegItem = pSSA->getRegItem("Bias_CALDAC");
         cRegItem.fValue = pValue;
