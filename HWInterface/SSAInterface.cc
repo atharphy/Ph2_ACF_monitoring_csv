@@ -91,7 +91,7 @@ void SSAInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
     for(uint8_t cLineId = 0; cLineId < 8; cLineId++)
     {
         std::stringstream cRegName;
-        if(cLineId < 8)
+        if(cLineId < 7)
             cRegName << "OutPattern" << +cLineId;
         else
             cRegName << "OutPattern7/FIFOconfig";
