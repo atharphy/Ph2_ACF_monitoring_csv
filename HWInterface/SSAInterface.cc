@@ -196,6 +196,8 @@ bool SSAInterface::MaskAllChannels(ReadoutChip* pSSA, bool mask, bool pVerifLoop
 // I actually want this one!
 bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_t pValue, bool pVerifLoop)
 {
+    setBoard(pSSA->getBeBoardId());
+    
     // LOG(INFO) << BOLDRED << "SSA! " << RESET;
     if(pRegName == "CountingMode")
     {
