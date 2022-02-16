@@ -270,7 +270,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     else if(pRegName == "AnalogueAsync")
     {
         uint8_t cRegValue       = (pValue << 4) | (pValue << 2) | (1 << 0);
-        auto cRegItem = pSSA->getRegItem("L1-ENFLAGS_ALL");
+        auto cRegItem = pSSA->getRegItem("ENFLAGS_ALL");
         cRegItem.fValue = cRegValue;
         
         bool    cEnableAnalogue = fBoardFW->SingleRegisterWrite(pSSA, cRegItem, pVerifLoop);
@@ -284,7 +284,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     else if(pRegName == "AnalogueSync")
     {
         uint8_t cRegValue       = (pValue << 4) | (pValue << 2) | (1 << 0);
-        auto cRegItem = pSSA->getRegItem("L1-ENFLAGS_ALL");
+        auto cRegItem = pSSA->getRegItem("ENFLAGS_ALL");
         cRegItem.fValue = cRegValue;
         
         bool    cEnableAnalogue = fBoardFW->SingleRegisterWrite(pSSA, cRegItem, pVerifLoop);
