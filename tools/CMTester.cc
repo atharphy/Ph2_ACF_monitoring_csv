@@ -136,16 +136,19 @@ void CMTester::TakeData()
     fDQMHistogramOTCommonNoise.fillHitPlots(theHitContainer);
     fDQMHistogramOTCommonNoise.fill2DHitPlots(the2DHitContainer);
 #else
-    auto theHitStream = prepareOpticalGroupContainerStreamer<EmptyContainer, GenericDataArray<NCHANNELS+1, uint32_t>, GenericDataArray<HYBRID_CHANNELS_OT+1, uint32_t>, GenericDataArray<TOTAL_CHANNELS_OT+1, uint32_t>>("CMNoise_HitStream");
+    //TODO optical group contianer streamer doesnt exist
+    /* 
+    auto theHitStream = prepareOpticalGroupContainerStream<EmptyContainer, GenericDataArray<NCHANNELS+1, uint32_t>, GenericDataArray<HYBRID_CHANNELS_OT+1, uint32_t>, GenericDataArray<TOTAL_CHANNELS_OT+1, uint32_t>>("CMNoise_HitStream");
     for(auto board: theHitContainer)
     {
         if(fDQMStreamerEnabled) theHitStream.streamAndSendBoard(board, fDQMStreamer);
     }
-    auto the2DHitStream = prepareOpticalGroupContainerStreamer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>("CMNoise_2DHitStream");
+    auto the2DHitStream = prepareOpticalGroupContainerStream<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>("CMNoise_2DHitStream");
     for(auto board: the2DHitContainer)
     {
         if(fDQMStreamerEnabled) the2DHitStream.streamAndSendBoard(board, fDQMStreamer);
     }
+    */
 #endif
 
 }

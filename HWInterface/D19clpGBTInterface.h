@@ -29,7 +29,6 @@ class D19clpGBTInterface : public lpGBTInterface
         CPBconfig cCPBconfig;
 
         cCPBconfig.fEnable       = pUseCPB;
-        cCPBconfig.fI2CFrequency = 3;
         cCPBconfig.fWait_us      = 100;  // TO-DO - make configurable from xml
         cCPBconfig.fEnable      = pUseCPB;
         cCPBconfig.fWait_us     = 100;  // TO-DO - make configurable from xml
