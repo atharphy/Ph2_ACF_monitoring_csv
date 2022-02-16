@@ -477,7 +477,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     else if(pRegName == "Threshold")
     {
         LOG(DEBUG) << BOLDMAGENTA << "Setting threshold on SSA#" << +pSSA->getId() << " to " << pValue << RESET;
-        auto cRegItem = pSSA->getRegItem("Threshold");
+        auto cRegItem = pSSA->getRegItem("Bias_THDAC");
         cRegItem.fValue = pValue;
         return fBoardFW->SingleRegisterWrite(pSSA, cRegItem, pVerifLoop);
     }
