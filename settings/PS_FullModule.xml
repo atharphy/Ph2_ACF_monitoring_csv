@@ -50,7 +50,7 @@
             <MPA Id="8" configfile="MPA.txt" /> -->
  
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC2 Id="8" configfile="CIC2_default.txt" />
+            <CIC Id="8" configfile="CIC_default.txt" />
         </Hybrid>
 
         <Hybrid Id="1" Status="0" LinkId="0" reset="1">
