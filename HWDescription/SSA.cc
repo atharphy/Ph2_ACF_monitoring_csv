@@ -34,6 +34,7 @@ SSA::SSA(const FrontEndDescription& pFeDesc, uint8_t pSSAId, uint8_t pPartnerId,
     for(auto& cMapItem: fRegMap)
     {
         if(cMapItem.first.find("_ALL") == std::string::npos) continue;
+        LOG (INFO) << BOLDYELLOW << "Control register on SSA : " << cMapItem.first << RESET;
         cMapItem.second.fControlReg = 1;
     }
 }
@@ -50,6 +51,7 @@ SSA::SSA(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pSSAId, uint8_t p
     for(auto& cMapItem: fRegMap)
     {
         if(cMapItem.first.find("_ALL") == std::string::npos) continue;
+        LOG (INFO) << BOLDYELLOW << "Control register on SSA : " << cMapItem.first << RESET;
         cMapItem.second.fControlReg = 1;
     }
 }
