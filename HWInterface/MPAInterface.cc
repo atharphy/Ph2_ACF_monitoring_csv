@@ -788,15 +788,15 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
     }
     // cntrl
     bool cSuccess = fBoardFW->MultiRegisterWrite(pMPA, cCntrlRegItems, false);
-    if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cCntrlRegItems.size() << " control registers in SSA#" << +pMPA->getId() << RESET;
+    if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cCntrlRegItems.size() << " control registers in" << cOutput.str() << "#" << +pMPA->getId() << RESET;
     // glbl
     cSuccess = fBoardFW->MultiRegisterWrite(pMPA, cRegItems, pVerifLoop);
-    if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cRegItems.size() << " R/W registers in SSA#" << +pMPA->getId() << RESET;
+    if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cRegItems.size() << " R/W registers in" << cOutput.str() << "#" << +pMPA->getId() << RESET;
     // lcl 
     if( cConfigLocalRegs )
     {
         cSuccess = fBoardFW->MultiRegisterWrite(pMPA, cLocalRegItems, pVerifLoop);
-        if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cLocalRegItems.size() << " local R/W registers in SSA#" << +pMPA->getId() << RESET;
+        if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cLocalRegItems.size() << " local R/W registers in" << cOutput.str() << "#" << +pMPA->getId() << RESET;
     }
     fTrackRegisters = false;
     pMPA->setRegisterTracking(1);

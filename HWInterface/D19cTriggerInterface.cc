@@ -16,6 +16,41 @@ D19cTriggerInterface::D19cTriggerInterface(const std::string& puHalConfigFileNam
 }
 D19cTriggerInterface::~D19cTriggerInterface() {}
 
+void D19cTriggerInterface::PrintStatus()
+{
+    // temporary used for board status printing
+    LOG(INFO) << YELLOW << "============================" << RESET;
+    LOG(INFO) << BOLDBLUE << "Current Status" << RESET;
+
+    int    source_id      = ReadReg("fc7_daq_stat.fast_command_block.general.source");
+    double user_frequency = ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
+
+    if(source_id == 1)
+        LOG(INFO) << "Trigger Source: " << BOLDGREEN << "L1-Trigger" << RESET;
+    else if(source_id == 2)
+        LOG(INFO) << "Trigger Source: " << BOLDGREEN << "Stubs" << RESET;
+    else if(source_id == 3)
+        LOG(INFO) << "Trigger Source: " << BOLDGREEN << "User Frequency (" << user_frequency << " kHz)" << RESET;
+    else if(source_id == 4)
+        LOG(INFO) << "Trigger Source: " << BOLDGREEN << "TLU" << RESET;
+    else if(source_id == 5)
+        LOG(INFO) << "Trigger Source: " << BOLDGREEN << "Ext Trigger (DIO5)" << RESET;
+    else if(source_id == 6)
+        LOG(INFO) << "Trigger Source: " << BOLDGREEN << "Test Pulse Trigger" << RESET;
+    else
+        LOG(WARNING) << " Trigger Source: " << BOLDRED << "Unknown" << RESET;
+
+    int state_id = ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state");
+
+    if(state_id == 0)
+        LOG(INFO) << "Trigger State: " << BOLDGREEN << "Idle" << RESET;
+    else if(state_id == 1)
+        LOG(INFO) << "Trigger State: " << BOLDGREEN << "Running" << RESET;
+    else if(state_id == 2)
+        LOG(INFO) << "Trigger State: " << BOLDGREEN << "Paused. Waiting for readout" << RESET;
+    else
+        LOG(WARNING) << " Trigger State: " << BOLDRED << "Unknown" << RESET;
+}
 void D19cTriggerInterface::TriggerConfiguration()
 {
     fTriggerConfiguration.fTriggerSource = ReadReg("fc7_daq_stat.fast_command_block.general.source");

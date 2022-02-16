@@ -59,8 +59,6 @@ class D19cFWInterface : public BeBoardFWInterface
     D19cBackendAlignmentFWInterface* fBackendAlignmentInterface{nullptr};
     D19cDebugFWInterface*            fDebugInterface{nullptr};
 
-    std::vector<std::vector<uint32_t>>       fSlaveMap;
-    std::map<uint8_t, std::vector<uint32_t>> fI2CSlaveMap;
     FileHandler*                             fFileHandler;
     uint32_t                                 fBroadcastCbcId;
     uint32_t                                 fNReadoutChip;
@@ -198,14 +196,6 @@ class D19cFWInterface : public BeBoardFWInterface
     void Resume() override;
 
     /*!
-     * \brief Reset Readout
-     */
-    // void ResetReadout();
-
-    // print trigger config
-    void TriggerConfiguration();
-
-    /*!
      * \brief DDR3 Self-test
      */
     void DDR3SelfTest();
@@ -238,10 +228,7 @@ class D19cFWInterface : public BeBoardFWInterface
     // get data from FC7
     // split data per hybrid/chip for a given board
     uint32_t computeEventSize(Ph2_HwDescription::BeBoard* pBoard);
-    // I2C command sending implementation
-    bool WriteI2C(std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pWriteRead, bool pBroadcast);
-    bool ReadI2C(uint32_t pNReplies, std::vector<uint32_t>& pReplies);
-
+    
     // binary predicate for comparing sent I2C commands with replies using std::mismatch
     static bool cmd_reply_comp(const uint32_t& cWord1, const uint32_t& cWord2);
     static bool cmd_reply_ack(const uint32_t& cWord1, const uint32_t& cWord2);
@@ -294,30 +281,10 @@ class D19cFWInterface : public BeBoardFWInterface
         return r;
     }
 
-    void ReadErrors(); // I2C
     void EnableFrontEnds(const Ph2_HwDescription::BeBoard* pBoard);
 
   public:
-    ///////////////////////////////////////////////////////
-    //      CBC Methods                                 //
-    /////////////////////////////////////////////////////
-
-    // Encode/Decode Chip values
-    /*!
-     * \brief Encode a/several word(s) readable for a Chip
-     * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
-     * \param pCbcId : Id of the Chip to work with
-     * \param pVecReq : Vector to stack the encoded words
-     */
-    // for testing, move back
-    void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, Ph2_HwDescription::Chip* pChip, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override;
-    void BCEncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override;
-    void DecodeReg(Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed) override;
-
-    bool WriteChipBlockReg(std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback) override;
-    bool BCWriteChipBlockReg(std::vector<uint32_t>& pVecReg, bool pReadback) override;
-    void ReadChipBlockReg(std::vector<uint32_t>& pVecReg);
-
+    
     void ChipReSync() override;
 
     void ChipReset() override;
@@ -325,8 +292,6 @@ class D19cFWInterface : public BeBoardFWInterface
     void ChipTrigger() override;
 
     void ChipTestPulse() override;
-
-    void ChipI2CRefresh();
 
     void ReadoutChipReset();
     // CIC BE stuff

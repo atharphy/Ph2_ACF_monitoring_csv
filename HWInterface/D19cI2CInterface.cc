@@ -19,6 +19,24 @@ D19cI2CInterface::D19cI2CInterface(const std::string& puHalConfigFileName, uint3
 }
 D19cI2CInterface::~D19cI2CInterface() {}
 
+void D19cI2CInterface::PrintStatus()
+{
+    // temporary used for board status printing
+    LOG(INFO) << YELLOW << "============================" << RESET;
+    LOG(INFO) << BOLDBLUE << "Current Status" << RESET;
+
+
+    ReadErrors();
+
+    int i2c_replies_empty = ReadReg("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");
+    if(i2c_replies_empty == 0)
+        LOG(INFO) << "I2C Replies Available: " << BOLDGREEN << "Yes" << RESET;
+    else
+        LOG(INFO) << "I2C Replies Available: " << BOLDGREEN << "No" << RESET;
+
+    LOG(INFO) << YELLOW << "============================" << RESET;
+
+}
 void D19cI2CInterface::ConfigureI2CMap(const BeBoard* pBoard)
 {
     if(fI2CVersion >= 1)
@@ -451,6 +469,54 @@ void D19cI2CInterface::ChipI2CRefresh()
 {
     // std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     WriteReg("fc7_daq_ctrl.fast_command_block.control.fast_i2c_refresh", 0x1);
+}
+
+void D19cI2CInterface::BCEncodeReg(const ChipRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
+{
+    // use fBroadcastCBCId for broadcast commands
+    bool pUseMask = false;
+    pVecReq.push_back((2 << 28) | (pReadBack << 19) | (pUseMask << 18) | ((pRegItem.fPage) << 17) | ((!pWrite) << 16) | (pRegItem.fAddress << 8) | pRegItem.fValue);
+}
+
+
+bool D19cI2CInterface::BCWriteChipBlockReg(std::vector<uint32_t>& pVecReg, bool pReadback)
+{
+    // std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+
+    std::vector<uint32_t> cReplies;
+    bool                  cSuccess = !WriteI2C(pVecReg, cReplies, false, true);
+
+    // just as above, I can check the replies - there will be NCbc * pVecReg.size() write replies and also read replies
+    // if I chose to enable readback this needs to be adapted
+    if(pReadback)
+    {
+        // TODO: actually, i just need to check the read write and the info bit in each reply - if all info bits are 0,
+        // this is as good as it gets, else collect the replies that faild for decoding - potentially no iterative
+        // retrying
+        // TODO: maybe I can do something with readback here - think about it
+        for(auto& cWord: cReplies)
+        {
+            // it was a write transaction!
+            if(((cWord >> 16) & 0x1) == 0)
+            {
+                // infor bit is 0 which means that the transaction was acknowledged by the CBC
+                // if ( ( (cWord >> 20) & 0x1) == 0)
+                cSuccess = true;
+                // else cSuccess == false;
+            }
+            else
+                cSuccess = false;
+
+            // LOG(INFO) << std::bitset<32>(cWord) ;
+        }
+
+        // cWriteAgain = get_mismatches (pVecReg.begin(), pVecReg.end(), cReplies.begin(),
+        // Cbc3Fc7FWInterface::cmd_reply_ack);
+        pVecReg.clear();
+        pVecReg = cReplies;
+    }
+
+    return cSuccess;
 }
 
 } // namespace Ph2_HwInterface

@@ -85,10 +85,10 @@ void SSAInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWai
 }
 void SSAInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
 {
-    LOG(INFO) << GREEN << "SSA Alignment" << RESET;
+    LOG(INFO) << GREEN << "SSA Word Alignment" << RESET;
     this->WriteChipReg(pChip, "ReadoutMode", 2);
     uint8_t cAlignmentPattern = 0xEA;
-    for(uint8_t cLineId = 0; cLineId < 9; cLineId++)
+    for(uint8_t cLineId = 0; cLineId < 8; cLineId++)
     {
         std::stringstream cRegName;
         if(cLineId < 8)

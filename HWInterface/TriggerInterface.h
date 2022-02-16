@@ -67,6 +67,11 @@ class TriggerInterface : public RegManager
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function TriggerInterface::SendNTriggers is absent" << RESET;
         return false;
     }
+    virtual void PrintStatus()
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function TriggerInterface::PrintStatus is absent" << RESET;
+        return;
+    }
 
     uint8_t getTriggerSource() { return fTriggerConfiguration.fTriggerSource; }
     uint8_t getTriggerRate() { return fTriggerConfiguration.fTriggerRate; }

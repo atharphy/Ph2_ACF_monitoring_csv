@@ -67,7 +67,12 @@ class FEConfigurationInterface : public RegManager
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FEConfiguration::SingleRead is absent" << RESET;
         return 0;
     }
-
+    virtual void PrintStatus()
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function TriggerInterface::PrintStatus is absent" << RESET;
+        return;
+    }
+    
     void Configure(Config pConfig)
     {
         fConfig.fVerbose     = pConfig.fVerbose;
