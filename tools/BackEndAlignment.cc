@@ -67,9 +67,9 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
 {
     bool cTuned = true;
     LOG(INFO) << GREEN << "BackEndAlignment for PS Chip(s)" << RESET;
-    fBeBoardInterface->setBoard(pBoard->getId());
-    auto                  cInterface             = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    D19cDebugFWInterface* cDebugInterface        = cInterface->getDebugInterface();
+    // fBeBoardInterface->setBoard(pBoard->getId());
+    // auto                  cInterface             = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    // D19cDebugFWInterface* cDebugInterface        = cInterface->getDebugInterface();
     uint8_t               cPhaseAlignmentPattern = 0xAA;
     uint8_t               cWordAlignmentPattern  = 0xEA;
 

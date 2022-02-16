@@ -31,6 +31,11 @@ MPA::MPA(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pMPAId, uint8_t p
     fPartnerId = pPartnerId;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::MPA);
+    for(auto& cMapItem: fRegMap)
+    {
+        if(cMapItem.first.find("_ALL") == std::string::npos) continue;
+        cMapItem.second.fControlReg = 1;
+    }
 }
 
 MPA::MPA(const FrontEndDescription& pFeDesc, uint8_t pMPAId, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pFeDesc, pMPAId)
@@ -42,6 +47,11 @@ MPA::MPA(const FrontEndDescription& pFeDesc, uint8_t pMPAId, uint8_t pPartnerId,
     fPartnerId = pPartnerId;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::MPA);
+    for(auto& cMapItem: fRegMap)
+    {
+        if(cMapItem.first.find("_ALL") == std::string::npos) continue;
+        cMapItem.second.fControlReg = 1;
+    }
 }
 
 void MPA::loadfRegMap(const std::string& filename)
