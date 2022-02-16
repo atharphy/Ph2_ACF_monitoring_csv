@@ -19,23 +19,10 @@
 // ROOT
 
 #ifdef __USE_ROOT__
-#include "TCanvas.h"
-#include "TDirectoryFile.h"
-#include "TF1.h"
-#include "TH1F.h"
-#include "TH2F.h"
-#include "TLegend.h"
-#include "TLine.h"
-#include "TMath.h"
-#include "TProfile.h"
-#include "TProfile2D.h"
-#include "TString.h"
 #include "../DQMUtils/DQMHistogramOTCommonNoise.h"
 #endif
 
 #include <math.h>
-
-#include "CMFits.h"
 
 using namespace Ph2_System;
 
@@ -54,22 +41,14 @@ class CMTester : public Tool
     CMTester();
     ~CMTester();
     void Initialize();
+    void SetThresholds(uint32_t pManualVcth);
     void ScanNoiseChannels();
     void TakeData();
-    void FinishRun();
-    void SetTotalNoise(std::vector<double> pTotalNoise);
 
   private:
-    void updateHists(bool pFinal = false);
     void parseSettings();
-    void analyze(Ph2_HwDescription::BeBoard* pBoard, const Ph2_HwInterface::Event* pEvent);
-    bool randHit(float pProbability);
-    bool isMasked(Ph2_HwDescription::ReadoutChip* pCbc, int pChan);
-    bool isMasked(int pGlobalChannel);
-    float getLambda(ChipContainer *theCbc);
 
-    uint32_t            fNevents, fDoSimulate, fSimOccupancy;
-    std::vector<double> fTotalNoise;
+    uint32_t            fNevents;
     uint32_t            fVcth;
 
     std::map<ChipContainer*, std::set<int>> fNoiseStripMap;

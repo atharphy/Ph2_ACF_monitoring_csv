@@ -4,12 +4,14 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/GenericDataArray.h"
 #include "../Utils/OpticalGroupContainerStream.h"
+#include "../Utils/Utilities.h"
 #include "TFile.h"
 #include "TCanvas.h"
 #include "TF1.h"
 #include "TFile.h"
 #include "TH1F.h"
 #include "TH2F.h"
+
 
 
 
@@ -28,16 +30,31 @@ void DQMHistogramOTCommonNoise::book(TFile* theOutputFile, DetectorContainer& th
     // make fDetectorData ready to receive the information fromm the stream
     // SoC utilities only - END
 
+    auto cSetting = pSettingsMap.find("Nevents");
+    if(cSetting != std::end(pSettingsMap))
+        fNevents = boost::any_cast<double>(cSetting->second);
+    else
+        fNevents = 1000; //this should never be the case,since we ran events to get here.
+
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
 
     HistContainer<TH1F> hChipHits("ChipHits", "ChipHits", NCHANNELS+1, -0.5, NCHANNELS+1+0.5);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fChipHitHistograms, hChipHits);
+    
+    HistContainer<TH1F> hChipFits("ChipFits", "ChipFits", NCHANNELS+1, -0.5, NCHANNELS+1+0.5);
+    RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fChipFitHistograms, hChipFits);
 
-    HistContainer<TH1F> hHybridHits("HybridHits", "HybridHits", NCHANNELS*NCHIPS_OT+1, -0.5, NCHANNELS*NCHIPS_OT+1+0.5);
+    HistContainer<TH1F> hHybridHits("HybridHits", "HybridHits", HYBRID_CHANNELS_OT+1, -0.5, HYBRID_CHANNELS_OT+1+0.5);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fHybridHitHistograms, hHybridHits);
+
+    HistContainer<TH1F> hHybridFits("HybridFits", "HybridFits", HYBRID_CHANNELS_OT+1, -0.5, HYBRID_CHANNELS_OT+1+0.5);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fHybridFitHistograms, hHybridFits);
     
     HistContainer<TH1F> hModuleHits("ModuleHits", "ModuleHits", TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT+0.5);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fModuleHitHistograms, hModuleHits);
+    
+    HistContainer<TH1F> hModuleFits("ModuleFits", "ModuleFits", TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT+0.5);
+    RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fModuleFitHistograms, hModuleFits);
 
     HistContainer<TH1F> hModuleHitsEven("ModuleHitsEven", "ModuleHitsEven", TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT+0.5);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fModuleHitHistogramsEven, hModuleHitsEven);
@@ -165,10 +182,6 @@ bool DQMHistogramOTCommonNoise::fill2DHitPlots(DetectorDataContainer& the2DHitDa
                     uint16_t iChan_low  = chip->getIndex()   + (hybrid->getIndex()*NCHIPS_OT);
 
                     uint32_t chipOffset = (hybrid->getIndex() * HYBRID_CHANNELS_OT ) + (chip->getIndex() * (NCHANNELS) );
-                    LOG(INFO) << "filling chip " << chip->getIndex() << " with offset " << chipOffset;
-                    LOG(INFO) << "        the boundaries are " << chipChannelBoundaries[iChan_low] << " " << chipChannelBoundaries[iChan_high];
-
-
 
                     for(size_t iCh1= chipChannelBoundaries[iChan_low]  ; iCh1 < chipChannelBoundaries[iChan_high]; iCh1++){
                         for(size_t iCh2= chipChannelBoundaries[iChan_low]; iCh2 <= chipChannelBoundaries[iChan_high]; iCh2++){                                
@@ -200,50 +213,59 @@ bool DQMHistogramOTCommonNoise::fillHitPlots(DetectorDataContainer& theHitData)
 
                 for(auto chip: *hybrid)
                 {
-                    TH1F* chipHitHistogram = fChipHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    TH1F* cChipHitHistogram = fChipHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                     
                     //fill the histogram from the vector
                     for(uint16_t iChan=0; iChan < NCHANNELS + 1; iChan++)
                     {
                         
-                        chipHitHistogram->SetBinContent(iChan, chip->getSummary<GenericDataArray<NCHANNELS+1, uint32_t>>()[iChan]);
+                        cChipHitHistogram->SetBinContent(iChan, chip->getSummary<GenericDataArray<NCHANNELS+1, uint32_t>>()[iChan]);
                     }
+                    //do fitting
+                    TF1* cChipFit = new TF1("chipFit", hitProbabilityFunction, 0, NCHANNELS+1, 4);
+                    fitCMNoise(cChipHitHistogram, cChipFit, NCHANNELS+1);
+                    LOG(INFO) << BOLDRED << "FE " << hybrid->getIndex() << " CBC " << chip->getIndex() << " CM is " << fabs(cChipFit->GetParameter(1)) << "+/-" << fabs(cChipFit->GetParError(1)) << "%" << RESET;
+
                     
                 }
-                TH1F* hybridHitHistogram = fHybridHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                for(uint16_t iChan=0; iChan < (NCHANNELS * NCHIPS_OT)+1; iChan++)
+                TH1F* cHybridHitHistogram = fHybridHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                for(uint16_t iChan=0; iChan < HYBRID_CHANNELS_OT+1; iChan++)
                 {
-                    hybridHitHistogram->SetBinContent(iChan, hybrid->getSummary<GenericDataArray<HYBRID_CHANNELS_OT+1, uint32_t>>()[iChan]);
+                    cHybridHitHistogram->SetBinContent(iChan, hybrid->getSummary<GenericDataArray<HYBRID_CHANNELS_OT+1, uint32_t>>()[iChan]);
                 }
+                /*
+                TF1* cHybridFit = new TF1("hybridFit", hitProbabilityFunction, 0, HYBRID_CHANNELS_OT+1, 4);
+                fitCMNoise(cHybridHitHistogram, cHybridFit, HYBRID_CHANNELS_OT+1);
+                LOG(INFO) << BOLDRED << "FE " << hybrid->getIndex() << " CM is " << fabs(cHybridFit->GetParameter(1)) << "+/-" << fabs(cHybridFit->GetParError(1)) << "%" << RESET;
+                */
             }
 
-            TH1F* moduleHitHistogram = fModuleHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-            TH1F* moduleHitHistogramEven = fModuleHitHistogramsEven.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-            TH1F* moduleHitHistogramOdd = fModuleHitHistogramsOdd.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+            TH1F* cModuleHitHistogram = fModuleHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+            TH1F* cModuleHitHistogramEven = fModuleHitHistogramsEven.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+            TH1F* cModuleHitHistogramOdd = fModuleHitHistogramsOdd.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
 
             for(uint16_t iChan=0; iChan < (NCHANNELS + 1) * NCHIPS_OT*2; iChan++)
             {
 
 
-                moduleHitHistogram->SetBinContent(iChan, opticalGroup->getSummary<GenericDataArray<TOTAL_CHANNELS_OT, uint32_t>>()[iChan]);
+                cModuleHitHistogram->SetBinContent(iChan, opticalGroup->getSummary<GenericDataArray<TOTAL_CHANNELS_OT, uint32_t>>()[iChan]);
 
-                if(iChan %2 == 0 ) moduleHitHistogramEven->SetBinContent(iChan, opticalGroup->getSummary<GenericDataArray<TOTAL_CHANNELS_OT, uint32_t>>()[iChan]);
-                else moduleHitHistogramOdd->SetBinContent(iChan, opticalGroup->getSummary<GenericDataArray<TOTAL_CHANNELS_OT, uint32_t>>()[iChan]);
+                if(iChan %2 == 0 ) cModuleHitHistogramEven->SetBinContent(iChan, opticalGroup->getSummary<GenericDataArray<TOTAL_CHANNELS_OT, uint32_t>>()[iChan]);
+                else cModuleHitHistogramOdd->SetBinContent(iChan, opticalGroup->getSummary<GenericDataArray<TOTAL_CHANNELS_OT, uint32_t>>()[iChan]);
             }
+            /*
+            TF1* cModuleFit = new TF1("hybridFit", hitProbabilityFunction, 0, TOTAL_CHANNELS_OT+1, 4);
+            fitCMNoise(cModuleHitHistogram, cModuleFit, TOTAL_CHANNELS_OT+1);
+            LOG(INFO) << BOLDRED << "Full Module " << opticalGroup->getIndex() << " CM is " << fabs(cModuleFit->GetParameter(1)) << "+/-" << fabs(cModuleFit->GetParameter(1)) << "%" << RESET;
+            fitCMNoise(cModuleHitHistogramEven, cModuleFit, TOTAL_CHANNELS_OT+1);
+            LOG(INFO) << BOLDRED << "Full Module " << opticalGroup->getIndex() << " Even CM is " << fabs(cModuleFit->GetParameter(1)) << "+/-" << fabs(cModuleFit->GetParameter(1)) << "%" << RESET;
+            fitCMNoise(cModuleHitHistogramOdd, cModuleFit, TOTAL_CHANNELS_OT+1);
+            LOG(INFO) << BOLDRED << "Full Module " << opticalGroup->getIndex() << " Odd CM is " << fabs(cModuleFit->GetParameter(1)) << "+/-" << fabs(cModuleFit->GetParameter(1)) << "%" << RESET;
+            */
+
+
         }
     }
-
-        //Now fit to get the common noise
-    // TH1F* cTmpNHits = static_cast<TH1F*>(chipHitHistogram->Clone());
-    // //fit with custom function (defined below) with 4 parameters -- threshold, CMNoise fraction, # events, # active strips
-    // TF1*  cCmFit = new TF1(cName, hitProbFunction, 0, 255, 4);
-    // cTmpNHits->Reset();
-    // fitCMNoise(cTmpNHits, cNHitsFit, NCHANNELS+1);
-
-    // float CMNoise = fabs(cNHitsFit->GetParameter(1));
-    // float CMNoiseError = fabs(cNHitsFit->GetParError(1));
-
-    // LOG(INFO) << BOLDRED << "FE " << +hybrid->getIndex() << " CBC " << +chip->getIndex() << " CM is " << CMNoise << "+/-"
-    // << CMNoiseError << "%" << RESET;
 
     return true;
 }
@@ -258,10 +280,9 @@ bool DQMHistogramOTCommonNoise::fitCMNoise(TH1F* pHitCountHist, TF1* pFit, uint3
 
     // retrieve the threshold from the maximum of the actual nhit distribution
     double threshold = inverse_hitProbability(prob);
-    LOG(INFO) << "Threshold is " << threshold; 
 
     // initialize cmnFraction to 0 anc later extract from fit
-    double cmnFraction = 0;
+    double cmnFraction = 0.5;
     pFit->SetRange(0, pRange);
 
     // Set Parameters
@@ -269,7 +290,7 @@ bool DQMHistogramOTCommonNoise::fitCMNoise(TH1F* pHitCountHist, TF1* pFit, uint3
     pFit->SetParameter(1, cmnFraction);
 
     // Fix Parameters nEvents & nActiveStrips as these I know
-    pFit->FixParameter(2, pHitCountHist->GetEntries());
+    pFit->FixParameter(2, fNevents);
     pFit->FixParameter(3, pRange);
 
     // Name Parameters
@@ -279,13 +300,10 @@ bool DQMHistogramOTCommonNoise::fitCMNoise(TH1F* pHitCountHist, TF1* pFit, uint3
     pFit->SetParName(3, "nActiveStrips");
 
     // Fit and return
-    pHitCountHist->Fit(pFit, "RQNM+");
+    pHitCountHist->Fit(pFit, "RQ+");
 
     return true;
 }
-
-
-
 
 
 
@@ -295,54 +313,7 @@ double DQMHistogramOTCommonNoise::findMaximum(TH1F* pHistogram)
     return pHistogram->GetXaxis()->GetBinCenter(maxbin);
 }
 
-double DQMHistogramOTCommonNoise::hitProbability(double pThreshold)
+double DQMHistogramOTCommonNoise::inverse_hitProbability(double probability)
 {
-    return 0.5 - (TMath::Erf(pThreshold / sqrt(2)) / 2);
-    // area above threshold under the gaussian curve.
-    // The Factors are to only treat the positive half
-    // 1-erf(x/sqrt(2)/2 + .5)
-}
-
-double DQMHistogramOTCommonNoise::inverse_hitProbability(double pProbability)
-{
-    // the inverse of the above function!
-    return sqrt(2) * TMath::ErfInverse(1 - 2 * pProbability);
-}
-
-double DQMHistogramOTCommonNoise::binomialPdf(int n, int k, double p) { return TMath::Binomial(n, k) * pow(p, k) * pow((1 - p), n - k); }
-
-
-double DQMHistogramOTCommonNoise::hitProbFunction(double* pStrips, Double_t* pPar)
-{
-    uint32_t cNSamplingsCM = 100;
-    uint32_t cSigmaRange = 6;
-
-    const double samplingHalfStep = cSigmaRange / static_cast<double>(cNSamplingsCM);
-    double&      threshold        = pPar[0];
-    double&      cmnFraction      = pPar[1];
-    double&      nEvents          = pPar[2];
-    double&      nActiveStrips    = pPar[3];
-
-    double result = 0;
-    double hitProb;
-    double sampleProbability, x;
-
-    int iStrips = int(ceil(*pStrips - 0.5));                 // round to nearest integer
-    if((iStrips < 0) || (iStrips > nActiveStrips)) return 0; // only defined in range
-
-    for(uint32_t 
-     j = 0; j < cNSamplingsCM; ++j)
-    {
-        // loop over all x values
-        x = -cSigmaRange + j * 2 * samplingHalfStep;
-        // approximate probability at sampling point by interpolating
-        sampleProbability = hitProbability(x - samplingHalfStep);
-        sampleProbability -= hitProbability(x + samplingHalfStep);
-
-        // probability of hit taking cmn into account
-        hitProb = hitProbability(threshold + x * cmnFraction);
-        // distribution function scaled to nevents
-        result += binomialPdf(int(nActiveStrips), iStrips, hitProb) * sampleProbability * nEvents;
-    }
-    return result;
+    return sqrt(2) * TMath::ErfInverse(1 - 2 * probability);
 }

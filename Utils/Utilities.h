@@ -106,6 +106,13 @@ void getRunNumber(const std::string& pPath, int& pRunNumber, bool pIncrement = t
 // split int string list into int vector
 std::vector<uint8_t> splitToVector(const std::string& str, const char delimiter);
 
+
+//CM Noise fitting functions
+double hitProbability(double pThreshold);
+double binomialPdf(uint32_t n, uint32_t k, double p);
+double hitProbabilityFunction(double* pStrips, double* pPar);
+
+
 template <typename T>
 void addNoDuplicate(std::vector<T>& vector, const std::vector<T>& vector2add)
 {

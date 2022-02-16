@@ -58,11 +58,16 @@ class DQMHistogramOTCommonNoise : public DQMHistogramBase
      */
     void reset(void) override;
 
+
+
   private:
     DetectorDataContainer fDetectorData;
     DetectorDataContainer fChipHitHistograms;
     DetectorDataContainer fHybridHitHistograms;
     DetectorDataContainer fModuleHitHistograms;
+    DetectorDataContainer fChipFitHistograms;
+    DetectorDataContainer fHybridFitHistograms;
+    DetectorDataContainer fModuleFitHistograms;
     DetectorDataContainer fModuleHitHistogramsEven;
     DetectorDataContainer fModuleHitHistogramsOdd;
     DetectorDataContainer f2DChipHitHistograms;
@@ -71,12 +76,12 @@ class DQMHistogramOTCommonNoise : public DQMHistogramBase
     DetectorDataContainer f2DModuleHitHistogramsEven;
     DetectorDataContainer f2DModuleHitHistogramsOdd;
 
+    uint32_t fNevents;
+
     //fitting function
     bool fitCMNoise(TH1F* pHitCountHist, TF1* pFit, uint32_t pRange);
     double findMaximum(TH1F* pHistogram);
-    double hitProbability(double pThreshold);
-    double inverse_hitProbability(double pProbability);
-    double binomialPdf(int n, int k, double p);
-    double hitProbFunction(double* pStrips, Double_t* pPar);
+    double inverse_hitProbability(double probability);
+
 };
 #endif

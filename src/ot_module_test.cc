@@ -972,82 +972,18 @@ int main(int argc, char* argv[])
 
     if( cmd.foundOption("cmNoise") && !cmd.foundOption("read")){
 
-        int cManualVcth = cTool.findValueInSettings<double>("CMNoise_manualVcth", 0);
-        int cPedestalShift = cTool.findValueInSettings<double>("CMNoise_pedestalShift", 0);
-        
-        bool        cAllChan = (cmd.foundOption("allChan")) ? true : false;
-
+        uint32_t cManualVcth = cTool.findValueInSettings<double>("CMNoise_manualVcth", 0);
+    
         LOG(INFO) << "OT_MODULE_TEST:: Measuring CM Noise" << RESET;
-        LOG(INFO) << BLUE << "cManualVcth? " << cManualVcth << " cPedestalShift? " << cPedestalShift << RESET;
 
-        
-        if(cManualVcth == 0) // Calibrate Voffset
-        {
-            LOG(INFO) << "OT_MODULE_TEST:: Measuring Voffset" << RESET;
-            // Find offsets
-            PedestalEqualization cPedestalEqualization;
-            cPedestalEqualization.Inherit(&cTool);
-            cPedestalEqualization.Initialise(false);
-            cPedestalEqualization.FindVplus();
-            cPedestalEqualization.FindOffsets();
-            cPedestalEqualization.writeObjects();
-            // cPedestalEqualization.dumpConfigFiles();
-        }
-        
-        LOG(INFO) << "OT_MODULE_TEST:: Measuring Noise" << RESET;
-        //first measure noise -- needed for CM test measurement
-        PedeNoise cPedeNoise;
-        cPedeNoise.Inherit(&cTool);
-        cPedeNoise.Initialise(cAllChan, true); // true = all channels (as opposed to test groups)
-        //cPedeNoise.measureNoise();
-        // cPedeNoise.Validate(); // This masks noisy channels, already done optionally by CMTester ScanNoiseChannels
-        //cPedeNoise.writeObjects();
-        
-        // Set Vcth to pedestal, or overload with manual setting
-        std::vector<double> cNoiseV;
-        ThresholdVisitor    cVisitor(cTool.fReadoutChipInterface, 0);
-        HybridContainer*    cFe = cPedeNoise.fDetectorContainer->at(0)->at(0)->at(0);
-        int                 i   = 0;
-
-        LOG(INFO) << "OT_MODULE_TEST:: Setting threshold on each chip" << RESET;
-        for(auto cCbc: *cFe)
-        {
-            uint16_t cPedestal = 0;  // round (cPedeNoise.getPedestal (cCbc) );
-            double   cNoise    = 0.; // cPedeNoise.getNoise (cCbc);
-            cNoiseV.push_back(cNoise);
-
-            if(cManualVcth == 0)
-            {
-                cPedestal = cVisitor.getThreshold();
-                LOG(INFO) << "threshold is " << cVisitor.getThreshold();  
-                ReadoutChip* theCbc = static_cast<ReadoutChip*>(cCbc);
-                cTool.setSameDac("VCth", cPedestal);
-                //cVisitor.setThreshold(cPedestal + cPedestalShift);
-                cVisitor.visitReadoutChip(*theCbc); // Visit a specific CBC
-                theCbc->accept(cVisitor);           // Should probably make a special Visitor to set a vector of Vcth's
-                LOG(INFO) << BOLDRED << "CBC" << i << ": set threshold to pedestal (" << cPedestal << ") plus " << cPedestalShift << ": " << cPedestal + cPedestalShift << RESET;
-            }
-            else
-            {
-                cVisitor.setThreshold(cManualVcth);
-                cTool.accept(cVisitor); // Do this for all CBCs
-                LOG(INFO) << BOLDRED << "CBC" << i << ": set threshold manually to " << cManualVcth << RESET;
-            }
-
-            i++;
-        }
-
-        LOG(INFO) << "OT_MODULE_TEST:: Measuring Common Noise" << RESET;
-        // Runs on 10*Nevents
         CMTester cTester;
         cTester.Inherit(&cTool);
         cTester.Initialize();
-        cTester.SetTotalNoise(cNoiseV);
-
-        //if(cScan) cTester.ScanNoiseChannels();
-
+        LOG(INFO) << "OT_MODULE_TEST:: Setting thresholds" << RESET;
+        cTester.SetThresholds(cManualVcth);
+        
+        LOG(INFO) << "OT_MODULE_TEST:: Taking measurements " << RESET;
         cTester.TakeData();
-        cTester.FinishRun();
 
     }
 
