@@ -37,7 +37,7 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
 
     if( cBoardType != BoardType::RD53 && pChip->isOptical() )
     {
-        auto cRegisterMap = pChip->getRegMap();
+    	auto cRegisterMap = pChip->getRegMap();
         cRegisterMap[pDacName].fValue = pDacValue;
         cSuccess = fBoardFW->SingleRegisterWrite(pChip, cRegisterMap[pDacName], pVerifLoop);
     }

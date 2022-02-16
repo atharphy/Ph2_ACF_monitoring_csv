@@ -2283,6 +2283,8 @@ std::vector<uint8_t> D19cFWInterface::MultiRegisterRead(Chip* pChip, std::vector
 }
 uint8_t D19cFWInterface::SingleRegisterRead(Chip* pChip, ChipRegItem& pItem)
 {
+    if(pItem.fControlReg == 1 ) return 0;
+
     std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
     uint8_t                               cValue = 0;
     if(fFEConfigurationInterface->SingleRead(pChip, pItem))
@@ -2309,7 +2311,7 @@ uint8_t D19cFWInterface::SingleRegisterRead(Chip* pChip, ChipRegItem& pItem)
 bool D19cFWInterface::SingleRegisterWrite(Chip* pChip, ChipRegItem& pItem, bool pVerify)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
-    if(pVerify) return SingleRegisterWriteRead(pChip, pItem);
+    if(pVerify && pItem.fControlReg == 0 ) return SingleRegisterWriteRead(pChip, pItem);
 
     auto cRegisterMap = pChip->getRegMap();
     auto cIterator    = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&pItem](const ChipRegPair& obj) { return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage; });
@@ -2334,6 +2336,11 @@ bool D19cFWInterface::SingleRegisterWrite(Chip* pChip, ChipRegItem& pItem, bool 
 }
 bool D19cFWInterface::SingleRegisterWriteRead(Chip* pChip, ChipRegItem& pItem)
 {
+    if(pItem.fControlReg == 1 )
+    {
+        LOG (INFO) << BOLDYELLOW << "D19cFWInterface::SingleRegisterWriteRead Control register..." << RESET;
+        return false;
+    }
     std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
     auto                                  cRegisterMap = pChip->getRegMap();
     auto cIterator = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&pItem](const ChipRegPair& obj) { return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage; });

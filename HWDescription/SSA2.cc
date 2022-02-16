@@ -34,6 +34,7 @@ SSA2::SSA2(const FrontEndDescription& pFeDesc, uint8_t pSSAId, uint8_t pPartnerI
     for(auto& cMapItem: fRegMap)
     {
         if(std::find(cCntrlRegs.begin(), cCntrlRegs.end(), cMapItem.first) == cCntrlRegs.end()) continue;
+        LOG (INFO) << BOLDYELLOW << cMapItem.first << " is a CtrlReg" << RESET;
         cMapItem.second.fControlReg = 1;
     }
     setFrontEndType(FrontEndType::SSA2);
@@ -50,6 +51,8 @@ SSA2::SSA2(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pSSAId, uint8_t
     for(auto& cMapItem: fRegMap)
     {
         if(std::find(cCntrlRegs.begin(), cCntrlRegs.end(), cMapItem.first) == cCntrlRegs.end()) continue;
+        LOG (INFO) << BOLDYELLOW << cMapItem.first << " is a CtrlReg" << RESET;
+        
         cMapItem.second.fControlReg = 1;
     }
     setFrontEndType(FrontEndType::SSA2);
