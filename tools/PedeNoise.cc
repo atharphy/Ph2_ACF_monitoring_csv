@@ -128,7 +128,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     // min and max threshold ... will still work
     if(!fUseFixRange && fMinThreshold != fMaxThreshold) fUseFixRange = true;
 
-    fNEventsPerBurst = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
+    fNEventsPerBurst = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : 0xffff;
     // uint8_t cEnableFastCounterReadout = (uint8_t)findValueInSettings<double>("EnableFastCounterReadout", 0);
     // uint8_t cEnablePairSelect         = (uint8_t)findValueInSettings<double>("EnablePairSelect", 0);
     LOG(INFO) << "Parsed settings:";
@@ -408,15 +408,15 @@ void PedeNoise::Validate()
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
     bool originalAllChannelFlag = this->fAllChan;
-
+    
+    LOG(INFO) << "Setting all channels";
     this->SetTestAllChannels(true);
+    LOG(INFO) << "measuring with " << fNEventsToValidate << "events and " << fNEventsPerBurst << " per burst";
     this->measureData(fNEventsToValidate, fNEventsPerBurst);
+    LOG(INFO) << "setting al channels v2";
     this->SetTestAllChannels(originalAllChannelFlag);
 #ifdef __USE_ROOT__
     fDQMHistogramPedeNoise.fillValidationPlots(theOccupancyContainer);
-    // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fDQMStreamerEnabled << std::endl;
-    // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fDQMStreamerEnabled << std::endl;
-    // std::cout << __PRETTY_FUNCTION__ << "__USE_ROOT__Is stream enabled: " << fDQMStreamerEnabled << std::endl;
 #else
     std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fDQMStreamerEnabled << std::endl;
     std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fDQMStreamerEnabled << std::endl;
@@ -1089,7 +1089,7 @@ void PedeNoise::setThresholdtoNSigma(BoardContainer* board, float pNSigma)
                     cThresholdWorkingPoint = cPedestal;
                 }
                 fReadoutChipInterface->WriteChipReg(chip,"Threshold", cThresholdWorkingPoint);
-
+                
                 ThresholdVisitor cThresholdVisitor(fReadoutChipInterface, cThresholdWorkingPoint);
                 static_cast<ReadoutChip*>(chip)->accept(cThresholdVisitor);
             }
