@@ -298,6 +298,8 @@ bool D19cTriggerInterface::RunTriggerFSM()
         cIterations++;
     } while(this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cDuration < fTimeout_us);
     bool cFailed = (this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"));
+    auto cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+    LOG (DEBUG) << BOLDYELLOW << "D19cTriggerInterface::RunTriggerFSM " << cNtriggers << " received." << RESET;
     this->Stop();
     return !cFailed;
 }

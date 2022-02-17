@@ -117,7 +117,7 @@ void D19cPSEventAS::fillChipDataContainer(ChipDataContainer* chipContainer, cons
         }
         cChnl++;
     }
-    LOG(INFO) << BOLDYELLOW << "ROC#" << +chipContainer->getId() << " chip occupancy is " << cOcc / chipContainer->size() << RESET;
+    LOG(DEBUG) << BOLDYELLOW << "ROC#" << +chipContainer->getId() << " chip occupancy is " << cOcc / chipContainer->size() << RESET;
 }
 
 void D19cPSEventAS::SetEvent(const BeBoard* pBoard, uint32_t pNMPA, const std::vector<uint32_t>& list)
