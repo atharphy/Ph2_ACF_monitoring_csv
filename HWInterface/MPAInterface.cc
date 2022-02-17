@@ -760,7 +760,6 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
 
 bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSize)
 {
-    fTrackRegisters = false;
     // for now ..
     bool              cConfigLocalRegs = true;
     std::stringstream cOutput;
@@ -798,7 +797,6 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
         cSuccess = fBoardFW->MultiRegisterWrite(pMPA, cLocalRegItems, pVerifLoop);
         if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cLocalRegItems.size() << " local R/W registers in" << cOutput.str() << "#" << +pMPA->getId() << RESET;
     }
-    fTrackRegisters = false;
     pMPA->setRegisterTracking(1);
     return cSuccess;
 }

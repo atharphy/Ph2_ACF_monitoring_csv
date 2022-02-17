@@ -38,7 +38,6 @@ void SSA2Interface::DumpConfiguration(Chip* pSSA2, std::string filename)
 }
 bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockSize)
 {
-    fTrackRegisters = false;
     bool              cConfigLocalRegs = true;
     pSSA2->setRegisterTracking(0);
     ChipRegMap        cSSA2RegMap = pSSA2->getRegMap();
@@ -96,7 +95,6 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockS
         if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cLocalRegItems.size() << " local R/W registers in SSA#" << +pSSA2->getId() << RESET;
     }
     
-    fTrackRegisters = false;
     pSSA2->setRegisterTracking(1);
     return cSuccess;
 }

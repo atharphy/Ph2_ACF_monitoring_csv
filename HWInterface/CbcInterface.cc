@@ -31,7 +31,6 @@ CbcInterface::~CbcInterface() {}
 
 bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerifLoop, uint32_t pBlockSize)
 {
-    fTrackRegisters = 0;
     pCbc->setRegisterTracking(0);
     std::stringstream cOutput;
     setBoard(pCbc->getBeBoardId());

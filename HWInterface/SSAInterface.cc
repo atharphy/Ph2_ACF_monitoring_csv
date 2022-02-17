@@ -26,7 +26,6 @@ SSAInterface::~SSAInterface() {}
 
 bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSize)
 {
-    fTrackRegisters = false;
     // for now ..
     bool              cConfigLocalRegs = true;
     std::stringstream cOutput;
@@ -64,7 +63,6 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
         cSuccess = fBoardFW->MultiRegisterWrite(pSSA, cLocalRegItems, pVerifLoop);
         if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cLocalRegItems.size() << " local R/W registers in SSA#" << +pSSA->getId() << RESET;
     }
-    fTrackRegisters = false;
     pSSA->setRegisterTracking(1);
     return cSuccess;
 }
