@@ -65,9 +65,6 @@ class DQMHistogramOTCommonNoise : public DQMHistogramBase
     DetectorDataContainer fChipHitHistograms;
     DetectorDataContainer fHybridHitHistograms;
     DetectorDataContainer fModuleHitHistograms;
-    DetectorDataContainer fChipFitHistograms;
-    DetectorDataContainer fHybridFitHistograms;
-    DetectorDataContainer fModuleFitHistograms;
     DetectorDataContainer fModuleHitHistogramsEven;
     DetectorDataContainer fModuleHitHistogramsOdd;
     DetectorDataContainer f2DChipHitHistograms;

@@ -40,21 +40,12 @@ void DQMHistogramOTCommonNoise::book(TFile* theOutputFile, DetectorContainer& th
 
     HistContainer<TH1F> hChipHits("ChipHits", "ChipHits", NCHANNELS+1, -0.5, NCHANNELS+1+0.5);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fChipHitHistograms, hChipHits);
-    
-    HistContainer<TH1F> hChipFits("ChipFits", "ChipFits", NCHANNELS+1, -0.5, NCHANNELS+1+0.5);
-    RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fChipFitHistograms, hChipFits);
 
     HistContainer<TH1F> hHybridHits("HybridHits", "HybridHits", HYBRID_CHANNELS_OT+1, -0.5, HYBRID_CHANNELS_OT+1+0.5);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fHybridHitHistograms, hHybridHits);
-
-    HistContainer<TH1F> hHybridFits("HybridFits", "HybridFits", HYBRID_CHANNELS_OT+1, -0.5, HYBRID_CHANNELS_OT+1+0.5);
-    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fHybridFitHistograms, hHybridFits);
     
     HistContainer<TH1F> hModuleHits("ModuleHits", "ModuleHits", TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT+0.5);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fModuleHitHistograms, hModuleHits);
-    
-    HistContainer<TH1F> hModuleFits("ModuleFits", "ModuleFits", TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT+0.5);
-    RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fModuleFitHistograms, hModuleFits);
 
     HistContainer<TH1F> hModuleHitsEven("ModuleHitsEven", "ModuleHitsEven", TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT+0.5);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fModuleHitHistogramsEven, hModuleHitsEven);
