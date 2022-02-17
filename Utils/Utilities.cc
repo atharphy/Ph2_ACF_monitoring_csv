@@ -213,7 +213,6 @@ double binomialPdf(uint32_t n, uint32_t k, double p)
     double value = 0;
     try{
         value = boost::math::binomial_coefficient<double>(n, k) * pow(p, k) * pow((1 - p), n - k);
-        //std::cout << "n=" << n << " k=" << k << " p=" << p << std::endl;
     } catch(...){
         std::cout << "binomial PDF failed with n=" << n << " k=" << k << " p=" << p <<  std::endl; 
     }

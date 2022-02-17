@@ -972,7 +972,6 @@ int main(int argc, char* argv[])
 
     if( cmd.foundOption("cmNoise") && !cmd.foundOption("read")){
 
-        uint32_t cManualVcth = cTool.findValueInSettings<double>("CMNoise_manualVcth", 0);
     
         LOG(INFO) << "OT_MODULE_TEST:: Measuring CM Noise" << RESET;
 
@@ -980,7 +979,7 @@ int main(int argc, char* argv[])
         cTester.Inherit(&cTool);
         cTester.Initialize();
         LOG(INFO) << "OT_MODULE_TEST:: Setting thresholds" << RESET;
-        cTester.SetThresholds(cManualVcth);
+        cTester.SetThresholds();
         
         LOG(INFO) << "OT_MODULE_TEST:: Taking measurements " << RESET;
         cTester.TakeData();

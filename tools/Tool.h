@@ -325,6 +325,21 @@ class Tool : public Ph2_System::SystemController
         return theContainerStreamer;
     }
 
+    template <typename T, typename C, typename H, typename O, typename... I>
+    std::unique_ptr<OpticalGroupContainerStream<T, C, H, O, I...>> prepareOpticalGroupContainerStreamer(std::string appendName = "")
+    {
+        auto theContainerStreamer = std::unique_ptr<OpticalGroupContainerStream<T, C, H, O, I...>>(new OpticalGroupContainerStream<T, C, H, O, I...>(getCalibrationName() + appendName));
+        return theContainerStreamer;
+    }
+
+    template <typename T, typename C, typename H, typename O, typename B, typename... I>
+    std::unique_ptr<BoardContainerStream<T, C, H, O, B, I...>> prepareBoardContainerStreamer(std::string appendName = "")
+    {
+        auto theContainerStreamer = std::unique_ptr<BoardContainerStream<T, C, H, O, B, I...>>(new BoardContainerStream<T, C, H, O, B, I...>(getCalibrationName() + appendName));
+        return theContainerStreamer;
+    }
+
+
     std::string getDirectoryName() { return fDirectoryName; }
 
     // summarize stats
