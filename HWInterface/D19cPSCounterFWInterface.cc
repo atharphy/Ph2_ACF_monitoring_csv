@@ -96,14 +96,14 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard, FrontEndType pTyp
                     cRegItems.push_back(cReg_Counters_LSB);
                 }
                 if(!fFEConfigurationInterface->MultiRead(cChip, cRegItems)) continue;
-                LOG(INFO) << BOLDYELLOW << "Read-back " << cRegItems.size() << " counters from " << cChipType.str() << "#" << +cChip->getId() << RESET;
+                LOG(DEBUG) << BOLDYELLOW << "Read-back " << cRegItems.size() << " counters from " << cChipType.str() << "#" << +cChip->getId() << RESET;
                 // fill counter information
                 for(auto cIter = cRegItems.begin(); cIter < cRegItems.end(); cIter += 2)
                 {
                     auto cMSB = (*cIter).fValue;
                     auto cLSB = (*(cIter + 1)).fValue;
                     if(  fPSCounterData[cId].size() < 10 ) 
-                        LOG (INFO) << BOLDYELLOW << "\t.. Counter#" << fPSCounterData[cId].size()
+                        LOG (DEBUG) << BOLDYELLOW << "\t.. Counter#" << fPSCounterData[cId].size()
                             << " MSBs " << +cMSB
                             << " LSBs " << +cLSB
                             << std::hex
@@ -335,16 +335,18 @@ bool D19cPSCounterFWInterface::WaitForNTriggers()
     fFastCommandInterface->SendGlobalReSync();
     PS_Clear_counters();
 
-    // wait for trigger state machine to send all triggers
-    auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
-    LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData After resetting trigger FSM.. trigger source is " << cTriggerSource << RESET;
-    if(cTriggerSource == 10 || cTriggerSource == 12)
-    {
-        LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData Running Trigger FSM ..." << RESET;
-        return fTriggerInterface->RunTriggerFSM();
-    }
-    else
-        return false; // wrong trigger source for this type of readout
+    for(size_t cIndx=0; cIndx < fNEvents; cIndx++) PS_Inject();
+    return true;
+    // // wait for trigger state machine to send all triggers
+    // auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
+    // LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData After resetting trigger FSM.. trigger source is " << cTriggerSource << RESET;
+    // if(cTriggerSource == 10 || cTriggerSource == 12)
+    // {
+    //     LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData Running Trigger FSM ..." << RESET;
+    //     return fTriggerInterface->RunTriggerFSM();
+    // }
+    // else
+    //     return false; // wrong trigger source for this type of readout
 }
 bool D19cPSCounterFWInterface::WaitForReadout()
 {

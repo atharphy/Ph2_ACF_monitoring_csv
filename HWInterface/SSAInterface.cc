@@ -223,12 +223,6 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     {
         return this->ConfigureAmux(pSSA, "GND");
     }
-
-    else if(pRegName.substr(0, pRegName.find("__")) == "AMUX")
-    {
-        return this->ConfigureAmux(pSSA, pRegName.substr(1, pRegName.find("__")));
-    }
-
     else if(pRegName.find("MaskChannel") != std::string::npos)
     {
         std::string cToken    = "MaskChannel";
@@ -470,13 +464,13 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
     {
         auto cRegItem = pSSA->getRegItem("Bias_CALDAC");
         cRegItem.fValue = pValue;
-        LOG(DEBUG) << BOLDYELLOW << "Setting "
+        LOG(INFO) << BOLDYELLOW << "Setting "
                    << " bias calDac to " << +cRegItem.fValue << " on SSA" << +pSSA->getId() << RESET;
         return fBoardFW->SingleRegisterWrite(pSSA, cRegItem, pVerifLoop);
     }
     else if(pRegName == "Threshold")
     {
-        LOG(DEBUG) << BOLDMAGENTA << "Setting threshold on SSA#" << +pSSA->getId() << " to " << pValue << RESET;
+        LOG(INFO) << BOLDMAGENTA << "Setting threshold on SSA#" << +pSSA->getId() << " to " << pValue << RESET;
         auto cRegItem = pSSA->getRegItem("Bias_THDAC");
         cRegItem.fValue = pValue;
         return fBoardFW->SingleRegisterWrite(pSSA, cRegItem, pVerifLoop);
@@ -489,6 +483,10 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         auto cRegItem = pSSA->getRegItem("SLVS_pad_current");
         cRegItem.fValue = pValue;
         return fBoardFW->SingleRegisterWrite(pSSA, cRegItem, pVerifLoop);
+    }
+    else if(pRegName.substr(0, pRegName.find("__")) == "AMUX")
+    {
+        return this->ConfigureAmux(pSSA, pRegName.substr(1, pRegName.find("__")));
     }
     else
     {
