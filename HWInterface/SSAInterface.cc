@@ -26,8 +26,8 @@ SSAInterface::~SSAInterface() {}
 
 bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSize)
 {
-    // for now ..
     bool              cConfigLocalRegs = true;
+    // for now ..
     std::stringstream cOutput;
     setBoard(pSSA->getBeBoardId());
     pSSA->printChipType(cOutput);
@@ -44,25 +44,28 @@ bool SSAInterface::ConfigureChip(Chip* pSSA, bool pVerifLoop, uint32_t pBlockSiz
     cCntrlRegItems.clear();
     for(auto cMapItem: cSSARegMap)
     {
-        if(cMapItem.second.fControlReg)
+        if(cMapItem.second.fControlReg == 0x1)
+        {
             cCntrlRegItems.push_back(cMapItem.second);
-        else if( (cMapItem.first.find("_S") != std::string::npos) ) 
-            cLocalRegItems.push_back(cMapItem.second); 
+        }
+        else if( (cMapItem.first.find("_S") != std::string::npos) &&  (cMapItem.first.find("SampleEdge") == std::string::npos) 
+        &&  (cMapItem.first.find("AsyncRead") == std::string::npos) ) cLocalRegItems.push_back(cMapItem.second); 
         else
             cRegItems.push_back(cMapItem.second);
     }
     // cntrl
-    bool cSuccess = fBoardFW->MultiRegisterWrite(pSSA, cCntrlRegItems, false);
+    bool cSuccess = fBoardFW->MultiRegisterWrite(pSSA, cCntrlRegItems, pVerifLoop);
     if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cCntrlRegItems.size() << " control registers in SSA#" << +pSSA->getId() << RESET;
-    // glbl
-    cSuccess = fBoardFW->MultiRegisterWrite(pSSA, cRegItems, pVerifLoop);
-    if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cRegItems.size() << " R/W registers in SSA#" << +pSSA->getId() << RESET;
     // lcl 
     if( cConfigLocalRegs )
     {
         cSuccess = fBoardFW->MultiRegisterWrite(pSSA, cLocalRegItems, pVerifLoop);
         if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cLocalRegItems.size() << " local R/W registers in SSA#" << +pSSA->getId() << RESET;
     }
+    // glbl
+    cSuccess = fBoardFW->MultiRegisterWrite(pSSA, cRegItems, false);
+    if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cRegItems.size() << " R/W registers in SSA#" << +pSSA->getId() << RESET;
+    
     pSSA->setRegisterTracking(1);
     return cSuccess;
 }

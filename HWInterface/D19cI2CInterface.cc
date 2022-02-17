@@ -201,10 +201,7 @@ bool D19cI2CInterface::MultiWriteRead(Chip* pChip, std::vector<ChipRegItem>& pWr
     std::vector<ChipRegItem> cReadbackRegs;
     for(auto cItem: pWriteRegs)
     {
-        ChipRegItem cRegister;
-        cRegister.fAddress = cItem.fAddress;
-        cRegister.fPage    = cItem.fPage;
-        cReadbackRegs.push_back(cRegister);
+        cReadbackRegs.push_back(cItem);
     }
 
     // perform write + check read-back
@@ -215,15 +212,23 @@ bool D19cI2CInterface::MultiWriteRead(Chip* pChip, std::vector<ChipRegItem>& pWr
     {
         if(MultiWrite(pChip, pWriteRegs))
         {
-            std::this_thread::sleep_for(std::chrono::microseconds(1000)); // need this pause for SSA I2C to work .. why?
+            std::this_thread::sleep_for(std::chrono::microseconds(30000)); // need this pause for SSA I2C to work .. why?
             if(MultiRead(pChip, cReadbackRegs))
             {
                 // check read against write
                 for(auto cReadBackReg: cReadbackRegs)
                 {
-                    auto cIterator =
-                        find_if(pWriteRegs.begin(), pWriteRegs.end(), [&cReadBackReg](const ChipRegItem& obj) { return obj.fAddress == cReadBackReg.fAddress && obj.fPage == cReadBackReg.fPage; });
-                    if(cIterator != pWriteRegs.end()) cSuccess = (cReadBackReg.fValue == cIterator->fValue);
+                    auto cIterator = find_if(pWriteRegs.begin(), pWriteRegs.end(), [&cReadBackReg](const ChipRegItem& obj) { return obj.fAddress == cReadBackReg.fAddress && obj.fPage == cReadBackReg.fPage; });
+                    if(cIterator != pWriteRegs.end()){ 
+                        if( cReadBackReg.fValue != cIterator->fValue ) 
+                        LOG (INFO) << BOLDRED << "D19cI2CInterface::MultiWriteRead" 
+                            << " mismatch in readback register " << std::hex << +cIterator->fAddress << " NO MATCH!" << std::dec << RESET;
+                        else
+                        LOG (DEBUG) << BOLDGREEN << "D19cI2CInterface::MultiWriteRead" 
+                            << " match in readback register " << std::hex << +cIterator->fAddress << " MATCH!" << std::dec << RESET;
+                        
+                        cSuccess = (cReadBackReg.fValue == cIterator->fValue);
+                    }
                 }
             }
         }
@@ -259,23 +264,31 @@ bool D19cI2CInterface::MultiRead(Chip* pChip, std::vector<ChipRegItem>& pRegiste
     // make sure you don't read ctrl registers
     for(auto cRegItem: pRegisterItems)
     {
-        if(cRegItem.fControlReg == 0x1) continue;
+        if(cRegItem.fControlReg == 0x1){ 
+            LOG (DEBUG) << BOLDRED << "Control register MultiRead" << std::hex << +cRegItem.fAddress << std::dec << RESET;
+            continue;
+        }
+        else LOG (DEBUG) << BOLDGREEN << std::hex << +cRegItem.fAddress << std::dec << "\t" << +cRegItem.fControlReg << RESET;
         EncodeReg(cRegItem, pChip, cVecReq, true, false);
     }
-    ReadChipBlockReg(cVecReq);
-
+    
     bool   cSucess = true;
-    size_t cIndx   = 0;
-    for(auto& cRegItem: pRegisterItems)
+    if( cVecReq.size() > 0 ) 
     {
-        uint8_t cChipId;
-        bool    cRead   = true;
-        bool    cFailed = false;
-        DecodeReg(cRegItem, cChipId, cVecReq[cIndx], cRead, cFailed);
-        LOG(DEBUG) << BOLDYELLOW << "D19cI2CInterface::MultiRead Reg#" << +cIndx << " at 0x" << std::hex << +cRegItem.fAddress << " set to 0x" << +cRegItem.fValue << " page " << +cRegItem.fPage
-                   << std::dec << RESET;
-        cSucess = cSucess && !cFailed;
-        cIndx++;
+        ReadChipBlockReg(cVecReq);
+        size_t cIndx   = 0;
+        for(auto& cRegItem: pRegisterItems)
+        {
+            uint8_t cChipId;
+            bool    cRead   = true;
+            bool    cFailed = false;
+            DecodeReg(cRegItem, cChipId, cVecReq[cIndx], cRead, cFailed);
+            LOG(DEBUG) << BOLDYELLOW << "D19cI2CInterface::MultiRead Reg#" << +cIndx << " at 0x" << std::hex << +cRegItem.fAddress << " set to 0x" << +cRegItem.fValue << " page " << +cRegItem.fPage
+                    << std::dec << RESET;
+            cSucess = cSucess && !cFailed;
+            cIndx++;
+     
+       }   
     }
     return cSucess;
 }

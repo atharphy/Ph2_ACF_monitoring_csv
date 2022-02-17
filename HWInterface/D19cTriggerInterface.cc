@@ -289,7 +289,10 @@ bool D19cTriggerInterface::RunTriggerFSM()
     do
     {
         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-        if(cIterations % 1000 == 0 && cIterations > 0) LOG(INFO) << "Trigger FSM State: " << BOLDGREEN << "Running.." << RESET;
+        auto cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+        if(cIterations % 1000 == 0 && cIterations > 0){ 
+            LOG(INFO) << "Trigger FSM State: " << BOLDGREEN << "Running.. : " << cNtriggers <<  RESET;
+        }
         cEndTime  = std::chrono::high_resolution_clock::now();
         cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
         cIterations++;
