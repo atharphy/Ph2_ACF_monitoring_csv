@@ -47,7 +47,7 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockS
     LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pSSA2->getId() << "] oh Hybrid" << +pSSA2->getHybridId() << RESET;
 
     // write mask registers
-    std::vector<std::string> cMaskRegs{"strip", "peri_A", "peri_D"};
+    std::vector<std::string> cMaskRegs{"peri_A", "peri_D", "strip"};
     std::vector<ChipRegItem> cRegItems;
     cRegItems.clear();
     for(auto cName: cMaskRegs)
@@ -56,12 +56,12 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockS
         cItem.fValue = 0xFF;
         cRegItems.push_back(cItem);
     }
-    fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, true);
-
+    fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, false);
+    
     // configure W/R registers
     // do not overwrite these registers..
     std::vector<std::string> cRegsToSkip{"mask_strip", "mask_peri_A", "mask_peri_D"};
-    std::vector<std::string> cReadOnlyRegs{"SEUcnt", "Ring_oscillator", "ADC_out", "bist_output", "AC_ReadCounter"};
+    std::vector<std::string> cReadOnlyRegs{"SEUcnt", "Ring_oscillator", "ADC_out", "bist_output", "AC_ReadCounter", "status_reg"};
 
     cRegItems.clear();
     // need to split between control and enable registers
@@ -299,7 +299,7 @@ bool SSA2Interface::WriteChipRegBits(Chip* pSSA2, const std::string& pRegNode, u
         cRegItems.push_back(cItem);
     }
     LOG(DEBUG) << BOLDYELLOW << "SSA2Interface::WriteChipRegBits Writing mask ... writing 0x" << std::hex << +mask << " to " << pMaskReg << std::dec << RESET;
-    if(fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, true))
+    if(fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, false))
     {
         LOG(DEBUG) << BOLDYELLOW << "\t..SSA2Interface::WriteChipRegBits Writing 0x" << std::hex << +pValue << " to " << pRegNode << std::dec << RESET;
         auto cRegItem   = cRegMap[pRegNode];
@@ -316,7 +316,7 @@ bool SSA2Interface::WriteChipRegBits(Chip* pSSA2, const std::string& pRegNode, u
         cRegItems.push_back(cItem);
     }
     LOG(DEBUG) << BOLDYELLOW << "SSA2Interface::WriteChipRegBits Resetting mask ... writing 0x" << std::hex << +mask << " to " << pMaskReg << std::dec << RESET;
-    return cSuccess && fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, true);
+    return cSuccess && fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, false);
 
     // this->WriteChipSingleReg(pSSA2, pMaskReg, mask, pVerifLoop);
     // bool cReadoutMode = WriteChipSingleReg(pSSA2, pRegNode, pValue, pVerifLoop);

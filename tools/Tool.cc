@@ -737,8 +737,8 @@ void Tool::setFWTestPulse()
             }
             else
             {
-                LOG(INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 10" << RESET;
-                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
+                LOG(INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 12" << RESET;
+                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 12});
                 cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
             }
             break;

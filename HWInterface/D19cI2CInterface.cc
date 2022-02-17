@@ -212,7 +212,7 @@ bool D19cI2CInterface::MultiWriteRead(Chip* pChip, std::vector<ChipRegItem>& pWr
     {
         if(MultiWrite(pChip, pWriteRegs))
         {
-            std::this_thread::sleep_for(std::chrono::microseconds(30000)); // need this pause for SSA I2C to work .. why?
+            std::this_thread::sleep_for(std::chrono::microseconds(100000)); // need this pause for SSA I2C to work .. why?
             if(MultiRead(pChip, cReadbackRegs))
             {
                 // check read against write
@@ -222,7 +222,10 @@ bool D19cI2CInterface::MultiWriteRead(Chip* pChip, std::vector<ChipRegItem>& pWr
                     if(cIterator != pWriteRegs.end()){ 
                         if( cReadBackReg.fValue != cIterator->fValue ) 
                         LOG (INFO) << BOLDRED << "D19cI2CInterface::MultiWriteRead" 
-                            << " mismatch in readback register " << std::hex << +cIterator->fAddress << " NO MATCH!" << std::dec << RESET;
+                            << " mismatch in readback register " << std::hex << +cIterator->fAddress << " NO MATCH!" 
+                            << " expected " << cIterator->fValue 
+                            << " read back " << cReadBackReg.fValue 
+                            << std::dec << RESET;
                         else
                         LOG (DEBUG) << BOLDGREEN << "D19cI2CInterface::MultiWriteRead" 
                             << " match in readback register " << std::hex << +cIterator->fAddress << " MATCH!" << std::dec << RESET;

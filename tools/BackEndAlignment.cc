@@ -72,7 +72,8 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
     // D19cDebugFWInterface* cDebugInterface        = cInterface->getDebugInterface();
     uint8_t               cPhaseAlignmentPattern = 0xAA;
     uint8_t               cWordAlignmentPattern  = 0xEA;
-
+    auto cFeTypes = pBoard->connectedFrontEndTypes();
+        
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
@@ -91,6 +92,7 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
         }
     } // configure PA pattern on all SLVS lines
 
+    uint8_t cFirstLine = ( std::find( cFeTypes.begin(), cFeTypes.end(), FrontEndType::SSA) != cFeTypes.end() )  ? 1 : 0;
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
@@ -102,7 +104,7 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
                     LOG(INFO) << BOLDYELLOW << "Skipping Phase tuning on Chip#" << +cChip->getId() << RESET;
                     continue;
                 }
-                for(uint8_t cLineId = 0; cLineId <= 8; cLineId++) // stub lines - 1 to 8
+                for(uint8_t cLineId = cFirstLine; cLineId <= 8; cLineId++) // stub lines - 1 to 8
                 { PhaseTuneLine(cChip, cLineId); }
             }
         }
@@ -137,7 +139,7 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
                     LOG(INFO) << BOLDYELLOW << "Skipping word alignment on Chip#" << +cChip->getId() << RESET;
                     continue;
                 }
-                for(uint8_t cLineId = 0; cLineId <= 8; cLineId++) // stub lines - 1 to 8
+                for(uint8_t cLineId = cFirstLine; cLineId <= 8; cLineId++) // stub lines - 1 to 8
                 { WordAlignLine(cChip, cLineId, cWordAlignmentPattern, 8); }
             }
         }

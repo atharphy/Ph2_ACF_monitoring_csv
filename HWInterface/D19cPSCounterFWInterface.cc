@@ -328,7 +328,7 @@ void D19cPSCounterFWInterface::FillData()
 }
 bool D19cPSCounterFWInterface::WaitForNTriggers()
 {
-    fTriggerInterface->ResetTriggerFSM();
+    // fTriggerInterface->ResetTriggerFSM();
     // make sure counters have been cleared and reset
     // not sure its needed but.. to be safe
     PS_Close_shutter();
@@ -366,8 +366,8 @@ bool D19cPSCounterFWInterface::ReadEvents(const BeBoard* pBoard)
     // clear data vector
     fData.clear();
     // make sure handshake is configured
-    WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", fHandshake);
     fTriggerInterface->SetNTriggersToAccept(fNEvents);
+    WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", fHandshake);
     if(WaitForNTriggers())
     {
         LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::ReadEvents triggers succesfully sent" << RESET;
