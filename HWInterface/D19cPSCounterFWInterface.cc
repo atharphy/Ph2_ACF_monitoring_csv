@@ -335,8 +335,12 @@ bool D19cPSCounterFWInterface::WaitForNTriggers()
     fFastCommandInterface->SendGlobalReSync();
     PS_Clear_counters();
 
+    PS_Open_shutter();
     for(size_t cIndx=0; cIndx < fNEvents; cIndx++) PS_Inject();
+    PS_Close_shutter();
+    
     return true;
+    
     // // wait for trigger state machine to send all triggers
     // auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
     // LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData After resetting trigger FSM.. trigger source is " << cTriggerSource << RESET;
