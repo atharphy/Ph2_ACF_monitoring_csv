@@ -74,6 +74,7 @@ class DQMHistogramOTCommonNoise : public DQMHistogramBase
     DetectorDataContainer f2DModuleHitHistogramsOdd;
 
     uint32_t fNevents;
+    bool f2DHistograms; 
 
     //fitting function
     bool fitCMNoise(TH1F* pHitCountHist, TF1* pFit, uint32_t pRange);

@@ -35,7 +35,17 @@ void DQMHistogramOTCommonNoise::book(TFile* theOutputFile, DetectorContainer& th
         fNevents = boost::any_cast<double>(cSetting->second);
     else
         fNevents = 1000; //this should never be the case,since we ran events to get here.
-
+    
+    cSetting = pSettingsMap.find("CMNoise_2DHistograms");
+    if(cSetting != std::end(pSettingsMap)){
+        if(boost::any_cast<double>(cSetting->second) == 1)
+            f2DHistograms = true;
+        else
+            f2DHistograms = false;
+    }
+    else
+        f2DHistograms = false; 
+        
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
 
     HistContainer<TH1F> hChipHits("ChipHits", "ChipHits", NCHANNELS+1, -0.5, NCHANNELS+1+0.5);
@@ -52,21 +62,24 @@ void DQMHistogramOTCommonNoise::book(TFile* theOutputFile, DetectorContainer& th
     
     HistContainer<TH1F> hModuleHitsOdd("ModuleHitsOdd", "ModuleHitsOdd", TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT+0.5);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fModuleHitHistogramsOdd, hModuleHitsOdd);
+    
+    if(f2DHistograms){
 
-    HistContainer<TH2F> h2DModuleHits("2DModuleHits", "2DModuleHits", TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT*2+1.5, TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT*2+1.5);
-    RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, f2DModuleHitHistograms, h2DModuleHits);
-       
-    HistContainer<TH2F> h2DModuleHitsEven("2DModuleHitsEven", "2DModuleHitsEven", TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT*2+1.5, TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT*2+0.5);
-    RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, f2DModuleHitHistogramsEven, h2DModuleHitsEven);
+        HistContainer<TH2F> h2DModuleHits("2DModuleHits", "2DModuleHits", TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT*2+1.5, TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT*2+1.5);
+        RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, f2DModuleHitHistograms, h2DModuleHits);
+        
+        HistContainer<TH2F> h2DModuleHitsEven("2DModuleHitsEven", "2DModuleHitsEven", TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT*2+1.5, TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT*2+0.5);
+        RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, f2DModuleHitHistogramsEven, h2DModuleHitsEven);
 
-    HistContainer<TH2F> h2DModuleHitsOdd("2DModuleHitsOdd", "2DModuleHitsOdd", TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT*2+1.5, TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT*2+0.5);
-    RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, f2DModuleHitHistogramsOdd, h2DModuleHitsOdd);
+        HistContainer<TH2F> h2DModuleHitsOdd("2DModuleHitsOdd", "2DModuleHitsOdd", TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT*2+1.5, TOTAL_CHANNELS_OT, -0.5, TOTAL_CHANNELS_OT*2+0.5);
+        RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, f2DModuleHitHistogramsOdd, h2DModuleHitsOdd);
 
-    HistContainer<TH2F> h2DHybridHits("2DHybridHits", "2DHybridHits", NCHANNELS*NCHIPS_OT+1, -0.5, NCHANNELS*NCHIPS_OT+1+1.5, NCHANNELS*NCHIPS_OT+1, -0.5, NCHANNELS*NCHIPS_OT+1+-.5);
-    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, f2DHybridHitHistograms, h2DHybridHits);
+        HistContainer<TH2F> h2DHybridHits("2DHybridHits", "2DHybridHits", NCHANNELS*NCHIPS_OT+1, -0.5, NCHANNELS*NCHIPS_OT+1+1.5, NCHANNELS*NCHIPS_OT+1, -0.5, NCHANNELS*NCHIPS_OT+1+-.5);
+        RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, f2DHybridHitHistograms, h2DHybridHits);
 
-    HistContainer<TH2F> h2DChipHits("2DChipHits", "2DChipHits", NCHANNELS, -0.5, NCHANNELS, NCHANNELS, -0.5, NCHANNELS+0.5);
-    RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, f2DChipHitHistograms, h2DChipHits);
+        HistContainer<TH2F> h2DChipHits("2DChipHits", "2DChipHits", NCHANNELS, -0.5, NCHANNELS, NCHANNELS, -0.5, NCHANNELS+0.5);
+        RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, f2DChipHitHistograms, h2DChipHits);
+    }
 
 
     
@@ -224,9 +237,10 @@ bool DQMHistogramOTCommonNoise::fillHitPlots(DetectorDataContainer& theHitData)
                 {
                     cHybridHitHistogram->SetBinContent(iChan, hybrid->getSummary<GenericDataArray<HYBRID_CHANNELS_OT+1, uint32_t>>()[iChan]);
                 }
-                /*
-                TF1* cHybridFit = new TF1("hybridFit", hitProbabilityFunction, 0, HYBRID_CHANNELS_OT+1, 4);
-                fitCMNoise(cHybridHitHistogram, cHybridFit, HYBRID_CHANNELS_OT+1);
+                
+                /* unfortuantely this requires computing a binomial coefficient, which overflows a double in this range
+                TF1* cHybridFit = new TF1("hybridFit", hitProbabilityFunction, 0, 2032, 4);
+                fitCMNoise(cHybridHitHistogram, cHybridFit, 2032); 
                 LOG(INFO) << BOLDRED << "FE " << hybrid->getIndex() << " CM is " << fabs(cHybridFit->GetParameter(1)) << "+/-" << fabs(cHybridFit->GetParError(1)) << "%" << RESET;
                 */
             }
@@ -244,7 +258,7 @@ bool DQMHistogramOTCommonNoise::fillHitPlots(DetectorDataContainer& theHitData)
                 if(iChan %2 == 0 ) cModuleHitHistogramEven->SetBinContent(iChan, opticalGroup->getSummary<GenericDataArray<TOTAL_CHANNELS_OT, uint32_t>>()[iChan]);
                 else cModuleHitHistogramOdd->SetBinContent(iChan, opticalGroup->getSummary<GenericDataArray<TOTAL_CHANNELS_OT, uint32_t>>()[iChan]);
             }
-            /*
+            /* unfortuantely this requires computing a binomial coefficient, which overflows a double in this range
             TF1* cModuleFit = new TF1("hybridFit", hitProbabilityFunction, 0, TOTAL_CHANNELS_OT+1, 4);
             fitCMNoise(cModuleHitHistogram, cModuleFit, TOTAL_CHANNELS_OT+1);
             LOG(INFO) << BOLDRED << "Full Module " << opticalGroup->getIndex() << " CM is " << fabs(cModuleFit->GetParameter(1)) << "+/-" << fabs(cModuleFit->GetParameter(1)) << "%" << RESET;

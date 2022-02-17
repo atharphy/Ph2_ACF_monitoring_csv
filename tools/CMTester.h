@@ -2,10 +2,10 @@
 
         \file                   CMTester.h
         \brief                 class for performing Common Mode noise studies
-        \author              Georg AUZINGER
+        \author                 Georg AUZINGER adapted by Lesya Horyn
         \version                1.0
-        \date                   29/10/14
-        Support :               mail to : georg.auzinger@cern.ch
+        \date                   29/10/14 -- LH 2/17/22
+        Support :               mail to : georg.auzinger@cern.ch || lesya.horyn@cern.ch
 
  */
 #ifndef CMTESTER_H__
@@ -41,19 +41,23 @@ class CMTester : public Tool
     CMTester();
     ~CMTester();
     void Initialize();
-    void SetThresholds(uint32_t pManualVcth);
-    void ScanNoiseChannels();
+    void SetThresholds();
     void TakeData();
+
+    void writeObjects();
+    void Running() override;
+    void Stop() override;
+    void ConfigureCalibration() override;
+    void Pause() override;
+    void Resume() override;
 
   private:
     void parseSettings();
 
     uint32_t            fNevents;
     uint32_t            fVcth;
-
-    std::map<ChipContainer*, std::set<int>> fNoiseStripMap;
-    std::map<ChipContainer*, float> averageMap;
-    std::map<ChipContainer*, float> squareAverageMap;
+    bool                f2DHistograms;
+    uint32_t            fManualVcth;
 
 
 #ifdef __USE_ROOT__
