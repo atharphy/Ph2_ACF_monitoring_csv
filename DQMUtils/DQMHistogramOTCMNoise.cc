@@ -1,4 +1,4 @@
-#include "../DQMUtils/DQMHistogramOTCommonNoise.h"
+#include "../DQMUtils/DQMHistogramOTCMNoise.h"
 #include "../RootUtils/RootContainerFactory.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
@@ -16,13 +16,13 @@
 
 
 //========================================================================================================================
-DQMHistogramOTCommonNoise::DQMHistogramOTCommonNoise() {}
+DQMHistogramOTCMNoise::DQMHistogramOTCMNoise() {}
 
 //========================================================================================================================
-DQMHistogramOTCommonNoise::~DQMHistogramOTCommonNoise() {}
+DQMHistogramOTCMNoise::~DQMHistogramOTCMNoise() {}
 
 //========================================================================================================================
-void DQMHistogramOTCommonNoise::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramOTCMNoise::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
 {
     // SoC utilities only - BEGIN
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
@@ -86,7 +86,7 @@ void DQMHistogramOTCommonNoise::book(TFile* theOutputFile, DetectorContainer& th
 }
 
 //========================================================================================================================
-void DQMHistogramOTCommonNoise::process()
+void DQMHistogramOTCMNoise::process()
 {
     // This step it is not necessary, unless you want to format / draw histograms,
     // otherwise they will be automatically saved
@@ -94,19 +94,19 @@ void DQMHistogramOTCommonNoise::process()
 }
 
 //========================================================================================================================
-void DQMHistogramOTCommonNoise::reset(void)
+void DQMHistogramOTCMNoise::reset(void)
 {
     // Clear histograms if needed
 }
 
 //========================================================================================================================
-bool DQMHistogramOTCommonNoise::fill(std::vector<char>& dataBuffer)
+bool DQMHistogramOTCMNoise::fill(std::vector<char>& dataBuffer)
 {
     // Contains CM Noise summary per channel at hybrid and chip level
     OpticalGroupContainerStream<EmptyContainer, GenericDataArray<NCHANNELS+1, uint32_t>, GenericDataArray<HYBRID_CHANNELS_OT+1, uint32_t>, GenericDataArray<TOTAL_CHANNELS_OT+1, uint32_t>> theOpticalGroupHitStreamer("CMNoise_HitStream");
     OpticalGroupContainerStream<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>> the2DOpticalGroupHitStreamer("CMNoise_2DHitStream");
 
-    // Try to see if the char buffer matched what I'm expection (container of uint32_t from OTCommonNoise
+    // Try to see if the char buffer matched what I'm expection (container of uint32_t from OTCMNoise
     // procedure)
     if(theOpticalGroupHitStreamer.attachBuffer(&dataBuffer))
     {
@@ -127,7 +127,7 @@ bool DQMHistogramOTCommonNoise::fill(std::vector<char>& dataBuffer)
 }
 
 //========================================================================================================================
-bool DQMHistogramOTCommonNoise::fill2DHitPlots(DetectorDataContainer& the2DHitData)
+bool DQMHistogramOTCMNoise::fill2DHitPlots(DetectorDataContainer& the2DHitData)
 {
 
     //make a vector of the channel boundaries of each chip
@@ -206,7 +206,7 @@ bool DQMHistogramOTCommonNoise::fill2DHitPlots(DetectorDataContainer& the2DHitDa
 
 
 //========================================================================================================================
-bool DQMHistogramOTCommonNoise::fillHitPlots(DetectorDataContainer& theHitData)
+bool DQMHistogramOTCMNoise::fillHitPlots(DetectorDataContainer& theHitData)
 {
     for(auto board: theHitData)
     {
@@ -278,7 +278,7 @@ bool DQMHistogramOTCommonNoise::fillHitPlots(DetectorDataContainer& theHitData)
 //========================================================================================================================
 
 //this used to be in CMFits.h -- Written by G. Auzinger
-bool DQMHistogramOTCommonNoise::fitCMNoise(TH1F* pHitCountHist, TF1* pFit, uint32_t pRange)
+bool DQMHistogramOTCMNoise::fitCMNoise(TH1F* pHitCountHist, TF1* pFit, uint32_t pRange)
 {  
     // First-order approximation
     double prob = findMaximum(pHitCountHist) / pHitCountHist->GetNbinsX();
@@ -312,13 +312,13 @@ bool DQMHistogramOTCommonNoise::fitCMNoise(TH1F* pHitCountHist, TF1* pFit, uint3
 
 
 
-double DQMHistogramOTCommonNoise::findMaximum(TH1F* pHistogram)
+double DQMHistogramOTCMNoise::findMaximum(TH1F* pHistogram)
 {
     int maxbin = pHistogram->GetMaximumBin();
     return pHistogram->GetXaxis()->GetBinCenter(maxbin);
 }
 
-double DQMHistogramOTCommonNoise::inverse_hitProbability(double probability)
+double DQMHistogramOTCMNoise::inverse_hitProbability(double probability)
 {
     return sqrt(2) * TMath::ErfInverse(1 - 2 * probability);
 }

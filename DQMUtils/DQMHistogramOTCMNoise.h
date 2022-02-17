@@ -1,12 +1,12 @@
 /*!
-        \file                DQMHistogramOTCommonNoise.h
-        \brief               DQM class for OTCommonNoise
-        \author              Fabio Ravera
-        \date                17/09/21
+        \file                DQMHistogramOTCMNoise.h
+        \brief               DQM class for OTCMNoise
+        \author              Lesya Horyn
+        \date                17/02/22
 */
 
-#ifndef DQMHistogramOTCommonNoise_h_
-#define DQMHistogramOTCommonNoise_h_
+#ifndef DQMHistogramOTCMNoise_h_
+#define DQMHistogramOTCMNoise_h_
 #include "../DQMUtils/DQMHistogramBase.h"
 #include "../Utils/Container.h"
 #include "../Utils/DataContainer.h"
@@ -14,21 +14,21 @@
 class TFile;
 
 /*!
- * \class DQMHistogramOTCommonNoise
- * \brief Class for OTCommonNoise monitoring histograms
+ * \class DQMHistogramOTCMNoise
+ * \brief Class for OTCMNoise monitoring histograms
  */
-class DQMHistogramOTCommonNoise : public DQMHistogramBase
+class DQMHistogramOTCMNoise : public DQMHistogramBase
 {
   public:
     /*!
      * constructor
      */
-    DQMHistogramOTCommonNoise();
+    DQMHistogramOTCMNoise();
 
     /*!
      * destructor
      */
-    ~DQMHistogramOTCommonNoise();
+    ~DQMHistogramOTCMNoise();
 
     /*!
      * \brief Book histograms

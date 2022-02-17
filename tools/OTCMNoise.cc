@@ -1,13 +1,13 @@
-#include "CMTester.h"
+#include "OTCMNoise.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/GenericDataArray.h"
 
 // PUBLIC METHODS
-CMTester::CMTester() : Tool() {}
+OTCMNoise::OTCMNoise() : Tool() {}
 
-CMTester::~CMTester() {}
+OTCMNoise::~OTCMNoise() {}
 
-void CMTester::Initialize()
+void OTCMNoise::Initialize()
 {    
     parseSettings();
     
@@ -18,7 +18,7 @@ void CMTester::Initialize()
     LOG(INFO) << "Histograms and Settings initialised.";
 }
 
-void CMTester::SetThresholds()
+void OTCMNoise::SetThresholds()
 {
     // Set Vcth to pedestal, or overload with manual setting
     ThresholdVisitor cVisitor(fReadoutChipInterface, 0);
@@ -44,7 +44,7 @@ void CMTester::SetThresholds()
 }
 
 
-void CMTester::TakeData()
+void OTCMNoise::TakeData()
 {
     ThresholdVisitor cVisitor(fReadoutChipInterface);
     this->accept(cVisitor);
@@ -133,8 +133,8 @@ void CMTester::TakeData()
         } //end module loop
     }
 #ifdef __USE_ROOT__
-    fDQMHistogramOTCommonNoise.fillHitPlots(theHitContainer);
-    if(f2DHistograms) fDQMHistogramOTCommonNoise.fill2DHitPlots(the2DHitContainer);
+    fDQMHistogramOTCMNoise.fillHitPlots(theHitContainer);
+    if(f2DHistograms) fDQMHistogramOTCMNoise.fill2DHitPlots(the2DHitContainer);
 #else
     auto theHitStream = prepareOpticalGroupContainerStream<EmptyContainer, GenericDataArray<NCHANNELS+1, uint32_t>, GenericDataArray<HYBRID_CHANNELS_OT+1, uint32_t>, GenericDataArray<TOTAL_CHANNELS_OT+1, uint32_t>>("CMNoise_HitStream");
     for(auto board: theHitContainer)
@@ -154,7 +154,7 @@ void CMTester::TakeData()
 }
 
 
-void CMTester::parseSettings()
+void OTCMNoise::parseSettings()
 {
     // now read the settings from the map
     fNevents             = findValueInSettings<double>("Nevents", 100);
@@ -170,11 +170,11 @@ void CMTester::parseSettings()
 }
 
 
-void CMTester::writeObjects() {}
+void OTCMNoise::writeObjects() {}
 
-void CMTester::ConfigureCalibration() { CreateResultDirectory("Results/Run_CMNoise"); }
+void OTCMNoise::ConfigureCalibration() { CreateResultDirectory("Results/Run_CMNoise"); }
 
-void CMTester::Running()
+void OTCMNoise::Running()
 {
     LOG(INFO) << "Starting CM noise measurement";
     Initialize();
@@ -183,7 +183,7 @@ void CMTester::Running()
     LOG(INFO) << "Done with CM noise";
 }
 
-void CMTester::Stop()
+void OTCMNoise::Stop()
 {
     LOG(INFO) << "Stopping CM noise measurement";
     writeObjects();
@@ -193,6 +193,6 @@ void CMTester::Stop()
     LOG(INFO) << "CM Noise measurement stopped.";
 }
 
-void CMTester::Pause() {}
+void OTCMNoise::Pause() {}
 
-void CMTester::Resume() {}
+void OTCMNoise::Resume() {}

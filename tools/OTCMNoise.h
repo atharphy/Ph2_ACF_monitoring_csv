@@ -1,6 +1,6 @@
 /*!
 
-        \file                   CMTester.h
+        \file                   OTCMNoise.h
         \brief                 class for performing Common Mode noise studies
         \author                 Georg AUZINGER adapted by Lesya Horyn
         \version                1.0
@@ -8,8 +8,8 @@
         Support :               mail to : georg.auzinger@cern.ch || lesya.horyn@cern.ch
 
  */
-#ifndef CMTESTER_H__
-#define CMTESTER_H__
+#ifndef OTCMNoise_H__
+#define OTCMNoise_H__
 
 #include "Tool.h"
 
@@ -19,7 +19,7 @@
 // ROOT
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/DQMHistogramOTCommonNoise.h"
+#include "../DQMUtils/DQMHistogramOTCMNoise.h"
 #endif
 
 #include <math.h>
@@ -31,15 +31,15 @@ using namespace Ph2_System;
 //typedef std::map<Ph2_HwDescription::Hybrid*, std::map<std::string, TObject*>> HybridHistogramMap;
 
 /*!
- * \class CMTester
+ * \class OTCMNoise
  * \brief Class to perform Common Mode noise studies
  */
 
-class CMTester : public Tool
+class OTCMNoise : public Tool
 {
   public:
-    CMTester();
-    ~CMTester();
+    OTCMNoise();
+    ~OTCMNoise();
     void Initialize();
     void SetThresholds();
     void TakeData();
