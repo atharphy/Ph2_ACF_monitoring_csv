@@ -1181,7 +1181,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                                                   .fOccupancy;
                         }
                     }
-                    LOG(DEBUG) << BOLDYELLOW << cOut.str() << RESET;
+                    LOG(INFO) << BOLDYELLOW << cOut.str() << RESET;
                 }
             }
         }
@@ -1430,14 +1430,16 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
         fUseReadNEvents = true;
     }
     doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
+    
     // if in async mode normalization is a little different ..
     // normalize by the number of triggers to accept
-    if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::PSAS)
-    {
-        numberOfEvents = fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_stat.fast_command_block.trigger_in_counter");
-        // LOG (INFO) << BOLDYELLOW << "Tool::measureBeBoardData number of events with PSAS " << numberOfEvents << RESET;
-        fNReadbackEvents = numberOfEvents;
-    }
+    // if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::PSAS)
+    // {
+    //     numberOfEvents = fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_stat.fast_command_block.trigger_in_counter");
+    //     // LOG (INFO) << BOLDYELLOW << "Tool::measureBeBoardData number of events with PSAS " << numberOfEvents << RESET;
+    //     fNReadbackEvents = numberOfEvents;
+    // }
+
     if(fDetectorContainer->at(boardIndex)->getBoardType() == BoardType::D19C)
     { numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1); }
     if(!fUseReadNEvents) numberOfEvents = fNReadbackEvents;

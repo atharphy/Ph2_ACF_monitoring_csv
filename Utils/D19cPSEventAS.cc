@@ -77,7 +77,7 @@ void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         // each 32-bit word hold information from two counters
                         for(int cOffset = 0; cOffset < 2; cOffset++)
                         {
-                            // LOG (DEBUG) << BOLDYELLOW << "Chnl#" << cChnl + cOffset << "\t" << ((*cDataIterator & ( 0x7FFF <<  15*cOffset) ) >> 15*cOffset)  << RESET;
+                            if( cChnl < 10 ) LOG (DEBUG) << BOLDYELLOW << "Chnl#" << cChnl + cOffset << "\t" << ((*cDataIterator & ( 0x7FFF <<  15*cOffset) ) >> 15*cOffset)  << RESET;
                             fCounterData[cFeIndex][cRocIndex].push_back((*cDataIterator & (0x7FFF << 15 * cOffset)) >> 15 * cOffset);
                         }
                         cDataIterator++;
@@ -102,19 +102,22 @@ void D19cPSEventAS::fillChipDataContainer(ChipDataContainer* chipContainer, cons
         if(testChannelGroup == nullptr) break;
         if(testChannelGroup->isChannelEnabled(cChnl))
         {
-            // LOG (INFO) << BOLDYELLOW << "Chnl#" << cChnl << "\t" << cHit  << RESET;
+            if( cChnl < 10 ) LOG (DEBUG) << BOLDYELLOW << "Chnl#" << cChnl << "\t" << cHit  << RESET;
             uint32_t cRow = cChnl % testChannelGroup->getNumberOfRows();
             uint32_t cCol;
             if(testChannelGroup->getNumberOfCols() == 0)
                 cCol = 0;
             else
                 cCol = cChnl / testChannelGroup->getNumberOfRows();
+
+            // if( cChnl < 10 ) LOG (INFO) << BOLDYELLOW << "Chnl#" << cChnl << "\t" << cHit  << "Row " << cRow << " Col" << cCol << RESET;
+             
             chipContainer->getChannel<Occupancy>(cRow, cCol).fOccupancy += cHit;
             cOcc += cHit;
         }
         cChnl++;
     }
-    LOG(DEBUG) << BOLDYELLOW << "ROC#" << +chipContainer->getId() << " chip occupancy is " << cOcc / chipContainer->size() << RESET;
+    LOG(INFO) << BOLDYELLOW << "ROC#" << +chipContainer->getId() << " chip occupancy is " << cOcc / chipContainer->size() << RESET;
 }
 
 void D19cPSEventAS::SetEvent(const BeBoard* pBoard, uint32_t pNMPA, const std::vector<uint32_t>& list)

@@ -95,6 +95,7 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard, FrontEndType pTyp
                     cReg_Counters_LSB.fValue   = 0x00;
                     cRegItems.push_back(cReg_Counters_LSB);
                 }
+                // for( auto& cItem : cRegItems ) fFEConfigurationInterface->SingleRead(cChip, cItem);
                 if(!fFEConfigurationInterface->MultiRead(cChip, cRegItems)) continue;
                 LOG(DEBUG) << BOLDYELLOW << "Read-back " << cRegItems.size() << " counters from " << cChipType.str() << "#" << +cChip->getId() << RESET;
                 // fill counter information
@@ -107,7 +108,7 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard, FrontEndType pTyp
                             << " MSBs " << +cMSB
                             << " LSBs " << +cLSB
                             << std::hex
-                            << " : 0x" << ( (cMSB << 7) | cLSB )
+                            << " : 0x" << ( (cMSB << 8) | cLSB )
                             << std::dec
                             << RESET;
                     fPSCounterData[cId].push_back((cMSB << 8) | cLSB);
@@ -329,28 +330,27 @@ void D19cPSCounterFWInterface::FillData()
 bool D19cPSCounterFWInterface::WaitForNTriggers()
 {
     fTriggerInterface->ResetTriggerFSM();
-    // // make sure counters have been cleared and reset
-    // // not sure its needed but.. to be safe
-    // PS_Close_shutter();
-    // fFastCommandInterface->SendGlobalReSync();
-    // PS_Clear_counters();
+    // make sure counters have been cleared and reset
+    // not sure its needed but.. to be safe
+    PS_Close_shutter();
+    fFastCommandInterface->SendGlobalReSync();
+    PS_Clear_counters();
 
-    // PS_Open_shutter();
-    // for(size_t cIndx=0; cIndx < fNEvents; cIndx++) PS_Inject();
-    // PS_Close_shutter();
+    PS_Open_shutter();
+    for(size_t cIndx=0; cIndx < fNEvents; cIndx++) PS_Inject();
+    PS_Close_shutter();
+    return true;
     
-    // return true;
-    
-    // wait for trigger state machine to send all triggers
-    auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
-    LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData After resetting trigger FSM.. trigger source is " << cTriggerSource << RESET;
-    if(cTriggerSource == 10 || cTriggerSource == 12)
-    {
-        LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData Running Trigger FSM ..." << RESET;
-        return fTriggerInterface->RunTriggerFSM();
-    }
-    else
-        return false; // wrong trigger source for this type of readout
+    // // wait for trigger state machine to send all triggers
+    // auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
+    // LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData After resetting trigger FSM.. trigger source is " << cTriggerSource << RESET;
+    // if(cTriggerSource == 10 || cTriggerSource == 12)
+    // {
+    //     LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData Running Trigger FSM ..." << RESET;
+    //     return fTriggerInterface->RunTriggerFSM();
+    // }
+    // else
+    //     return false; // wrong trigger source for this type of readout
 }
 bool D19cPSCounterFWInterface::WaitForReadout()
 {

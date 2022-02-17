@@ -26,8 +26,7 @@ bool D19cOpticalInterface::SingleWriteRead(Chip* pChip, ChipRegItem& pWriteReg)
     size_t      cAttempts = 0;
     bool        cSuccess  = false;
     ChipRegItem cReadBackReg;
-    cReadBackReg.fAddress = pWriteReg.fAddress;
-    cReadBackReg.fPage    = pWriteReg.fPage;
+    cReadBackReg = pWriteReg;
     do
     {
         if(SingleWrite(pChip, pWriteReg))

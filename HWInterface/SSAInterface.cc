@@ -274,7 +274,12 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         cRegItem = pSSA->getRegItem("ReadoutMode");
         cRegItem.fValue = cRegValue;
         bool cReadoutMode       = fBoardFW->SingleRegisterWrite(pSSA, cRegItem, pVerifLoop);
-        return cEnableAnalogue && cReadoutMode;
+
+        cRegItem = pSSA->getRegItem("FE_Calibration");
+        cRegItem.fValue = 1; 
+        bool    cEnableFECal    = fBoardFW->SingleRegisterWrite(pSSA, cRegItem, pVerifLoop);
+
+        return cEnableAnalogue && cReadoutMode && cEnableFECal;
     }
     else if(pRegName == "AnalogueSync")
     {

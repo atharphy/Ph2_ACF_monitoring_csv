@@ -89,8 +89,6 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
         theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
         // temporary
         setChannelGroupHandler(theChannelGroupHandler, cAllFrontEndTypes);
-        // setChannelGroupHandler(theChannelGroupHandler, {FrontEndType::SSA2,FrontEndType::SSA});
-        // setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA);
     }
     if(cWithMPA)
     {
