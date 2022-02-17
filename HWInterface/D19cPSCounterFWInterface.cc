@@ -96,19 +96,20 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard, FrontEndType pTyp
                     cRegItems.push_back(cReg_Counters_LSB);
                 }
                 if(!fFEConfigurationInterface->MultiRead(cChip, cRegItems)) continue;
-                LOG(DEBUG) << BOLDYELLOW << "Read-back " << cRegItems.size() << " counters from " << cChipType.str() << "#" << +cChip->getId() << RESET;
+                LOG(INFO) << BOLDYELLOW << "Read-back " << cRegItems.size() << " counters from " << cChipType.str() << "#" << +cChip->getId() << RESET;
                 // fill counter information
                 for(auto cIter = cRegItems.begin(); cIter < cRegItems.end(); cIter += 2)
                 {
                     auto cMSB = (*cIter).fValue;
                     auto cLSB = (*(cIter + 1)).fValue;
-                    // LOG (DEBUG) << BOLDYELLOW << "\t.. Counter#" << fPSCounterData[cId].size()
-                    //     << " MSBs " << +cMSB
-                    //     << " LSBs " << +cLSB
-                    //     << std::hex
-                    //     << " : 0x" << ( (cMSB << 7) | cLSB )
-                    //     << std::dec
-                    //     << RESET;
+                    if(  fPSCounterData[cId].size() < 10 ) 
+                        LOG (INFO) << BOLDYELLOW << "\t.. Counter#" << fPSCounterData[cId].size()
+                            << " MSBs " << +cMSB
+                            << " LSBs " << +cLSB
+                            << std::hex
+                            << " : 0x" << ( (cMSB << 7) | cLSB )
+                            << std::dec
+                            << RESET;
                     fPSCounterData[cId].push_back((cMSB << 8) | cLSB);
                 }
             } // chip loop
