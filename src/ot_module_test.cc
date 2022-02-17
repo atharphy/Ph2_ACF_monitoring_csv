@@ -18,7 +18,7 @@
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
-#include "tools/CMTester.h"
+#include "tools/OTCMNoise.h"
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -975,7 +975,7 @@ int main(int argc, char* argv[])
     
         LOG(INFO) << "OT_MODULE_TEST:: Measuring CM Noise" << RESET;
 
-        CMTester cTester;
+        OTCMNoise cTester;
         cTester.Inherit(&cTool);
         cTester.Initialize();
         LOG(INFO) << "OT_MODULE_TEST:: Setting thresholds" << RESET;

@@ -12,7 +12,7 @@ void OTCMNoise::Initialize()
     parseSettings();
     
 #ifdef __USE_ROOT__
-    fDQMHistogramOTCommonNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
+    fDQMHistogramOTCMNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 
     LOG(INFO) << "Histograms and Settings initialised.";
@@ -158,7 +158,7 @@ void OTCMNoise::parseSettings()
 {
     // now read the settings from the map
     fNevents             = findValueInSettings<double>("Nevents", 100);
-    f2DHistograms        = findValueInSettings<double>("CMNoise_2DHistograms", 1);
+    f2DHistograms        = findValueInSettings<double>("CMNoise_2DHistograms", 0);
     fManualVcth          = findValueInSettings<double>("CMNoise_manualVcth", 0);
 
 

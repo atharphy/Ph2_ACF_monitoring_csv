@@ -61,7 +61,7 @@ class OTCMNoise : public Tool
 
 
 #ifdef __USE_ROOT__
-    DQMHistogramOTCommonNoise fDQMHistogramOTCommonNoise;
+    DQMHistogramOTCMNoise fDQMHistogramOTCMNoise;
 #endif
 };
 
