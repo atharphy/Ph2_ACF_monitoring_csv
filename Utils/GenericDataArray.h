@@ -31,18 +31,16 @@ class GenericDataArray
     T data[size];
 };
 
-
-//2D generic array, accessed with () instead of [] to make overloading easier
+// 2D generic array, accessed with () instead of [] to make overloading easier
 template <size_t size_0, size_t size_1, typename T = float>
 class GenericDataArray_2D
 {
   public:
     GenericDataArray_2D()
     {
-        for(size_t i = 0; i < size_0; ++i){
-          for(size_t j = 0; j < size_1; ++j){
-            data[i][j] = T();
-          }
+        for(size_t i = 0; i < size_0; ++i)
+        {
+            for(size_t j = 0; j < size_1; ++j) { data[i][j] = T(); }
         }
     }
     ~GenericDataArray_2D() {}

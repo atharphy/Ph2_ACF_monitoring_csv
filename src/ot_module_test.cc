@@ -11,6 +11,7 @@
 #include "tools/LatencyScan.h"
 #include "tools/LinkAlignmentOT.h"
 #include "tools/MemoryCheck2S.h"
+#include "tools/OTCMNoise.h"
 #include "tools/OTTemperature.h"
 #include "tools/PSAlignment.h"
 #include "tools/PedeNoise.h"
@@ -18,7 +19,6 @@
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
-#include "tools/OTCMNoise.h"
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -970,9 +970,8 @@ int main(int argc, char* argv[])
         t.show("Time to Scan Pedestals and Noise");
     }
 
-    if( cmd.foundOption("cmNoise") && !cmd.foundOption("read")){
-
-    
+    if(cmd.foundOption("cmNoise") && !cmd.foundOption("read"))
+    {
         LOG(INFO) << "OT_MODULE_TEST:: Measuring CM Noise" << RESET;
 
         OTCMNoise cTester;
@@ -980,10 +979,9 @@ int main(int argc, char* argv[])
         cTester.Initialize();
         LOG(INFO) << "OT_MODULE_TEST:: Setting thresholds" << RESET;
         cTester.SetThresholds();
-        
+
         LOG(INFO) << "OT_MODULE_TEST:: Taking measurements " << RESET;
         cTester.TakeData();
-
     }
 
     // inject hits and stubs using mask and compare input against output

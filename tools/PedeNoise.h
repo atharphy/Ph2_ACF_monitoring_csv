@@ -71,7 +71,6 @@ class PedeNoise : public Tool
     float    fMaskingThreshold{0};
     bool     fMaskNoisyChannels{0};
 
-
     DetectorDataContainer*                     fThresholdAndNoiseContainer;
     std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
 

@@ -13,7 +13,6 @@
 
 #include "Tool.h"
 
-
 #include "../Utils/CommonVisitors.h"
 
 // ROOT
@@ -26,9 +25,9 @@
 
 using namespace Ph2_System;
 
-//typedef std::map<Ph2_HwDescription::Chip*, std::map<std::string, TObject*>> CbcHistogramMap;
+// typedef std::map<Ph2_HwDescription::Chip*, std::map<std::string, TObject*>> CbcHistogramMap;
 // typedef std::map<Chip*, TCanvas*> CanvasMap;
-//typedef std::map<Ph2_HwDescription::Hybrid*, std::map<std::string, TObject*>> HybridHistogramMap;
+// typedef std::map<Ph2_HwDescription::Hybrid*, std::map<std::string, TObject*>> HybridHistogramMap;
 
 /*!
  * \class OTCMNoise
@@ -54,11 +53,10 @@ class OTCMNoise : public Tool
   private:
     void parseSettings();
 
-    uint32_t            fNevents;
-    uint32_t            fVcth;
-    bool                f2DHistograms;
-    uint32_t            fManualVcth;
-
+    uint32_t fNevents;
+    uint32_t fVcth;
+    bool     f2DHistograms;
+    uint32_t fManualVcth;
 
 #ifdef __USE_ROOT__
     DQMHistogramOTCMNoise fDQMHistogramOTCMNoise;

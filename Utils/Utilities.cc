@@ -209,21 +209,23 @@ double hitProbability(double pThreshold)
 }
 
 double binomialPdf(uint32_t n, uint32_t k, double p)
-{ 
+{
     double value = 0;
-    try{
+    try
+    {
         value = boost::math::binomial_coefficient<double>(n, k) * pow(p, k) * pow((1 - p), n - k);
-    } catch(...){
-        std::cout << "binomial PDF failed with n=" << n << " k=" << k << " p=" << p <<  std::endl; 
+    }
+    catch(...)
+    {
+        std::cout << "binomial PDF failed with n=" << n << " k=" << k << " p=" << p << std::endl;
     }
     return value;
 }
 
-
 double hitProbabilityFunction(double* pStrips, double* pPar)
 {
     double cNSamplingsCM = 100;
-    double cSigmaRange = 6;
+    double cSigmaRange   = 6;
 
     const double samplingHalfStep = cSigmaRange / static_cast<double>(cNSamplingsCM);
     double&      threshold        = pPar[0];
@@ -235,7 +237,7 @@ double hitProbabilityFunction(double* pStrips, double* pPar)
     double hitProb;
     double sampleProbability, x;
 
-    int iStrips = int(ceil(pStrips[0] - 0.5));                 // round to nearest integer
+    int iStrips = int(ceil(pStrips[0] - 0.5));               // round to nearest integer
     if((iStrips < 0) || (iStrips > nActiveStrips)) return 0; // only defined in range
 
     for(uint32_t j = 0; j < cNSamplingsCM; ++j)
@@ -251,7 +253,6 @@ double hitProbabilityFunction(double* pStrips, double* pPar)
         hitProb = hitProbability(threshold + x * cmnFraction);
         // distribution function scaled to nevents
         result += binomialPdf(int(nActiveStrips), iStrips, hitProb) * sampleProbability * nEvents;
-
     }
     return result;
 }

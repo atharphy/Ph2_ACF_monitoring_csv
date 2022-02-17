@@ -339,7 +339,6 @@ class Tool : public Ph2_System::SystemController
         return theContainerStreamer;
     }
 
-
     std::string getDirectoryName() { return fDirectoryName; }
 
     // summarize stats
