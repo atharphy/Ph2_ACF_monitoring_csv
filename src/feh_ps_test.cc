@@ -507,20 +507,21 @@ int main(int argc, char* argv[])
                 {
                     cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
                     cHybridTester.SSAPairSelect(cCurrentSSAPair);
-                    cBackendAlignment.SetEnabledROCs(cSSAPair);
-                    for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
-                    cHybridTester.SSATestStubOutput(cCurrentSSAPair);
-                    cHybridTester.SSATestL1Output(cCurrentSSAPair);
-                }
-
-                for(int i = 0; i < 7; i++)
-                {
-                    cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
-                    cHybridTester.SSAPairSelect(cCurrentSSAPair);
                     cBackendAlignment.SetEnabledROCs(cCurrentSSAPair);
                     for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
+                    // cHybridTester.SSATestStubOutput(cCurrentSSAPair);
+                    // cHybridTester.SSATestL1Output(cCurrentSSAPair);
                     cHybridTester.SSATestLateralCommunication(cCurrentSSAPair);
                 }
+
+                // for(int i = 0; i < 7; i++)
+                // {
+                //     cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
+                //     cHybridTester.SSAPairSelect(cCurrentSSAPair);
+                //     cBackendAlignment.SetEnabledROCs(cCurrentSSAPair);
+                //     for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
+                //     cHybridTester.SSATestLateralCommunication(cCurrentSSAPair);
+                // }
             }
         }
         // configure SSA to output something on L1 lines

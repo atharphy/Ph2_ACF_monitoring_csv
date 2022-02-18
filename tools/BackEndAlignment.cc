@@ -60,6 +60,7 @@ void BackEndAlignment::SetEnabledROCs(std::string pSSAPair)
     for(uint8_t cId = 0; cId < 8; cId++)
     {
         if(cId != (int)(fPairName[0] - '0') && cId != (int)(fPairName[1] - '0')) continue;
+        LOG (INFO) << BOLDYELLOW << "Enabling ROC#" << +cId << RESET;
         fEnabledROCs.push_back(cId);
     }
 }
@@ -201,22 +202,21 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
 
     if(cTuned)
     {    
+        LOG(INFO) << BOLDGREEN << "PS Phase+Word Alignment succesful" << RESET;
+        uint16_t cTriggerSrc         = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+        uint16_t cOriginalTPdelay    = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
+        LOG (INFO) << BOLDYELLOW << "Trigger source : " << +cTriggerSrc << "\t TP delay " << +cOriginalTPdelay << RESET;
 
         std::vector<std::pair<std::string, uint32_t>> cRegVec;
         cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
-        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", 50});
-        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse", 50});
-        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset", 50});
+        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", 10});
+        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse", 10});
+        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset", 10});
         cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0});
         cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
         fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
         fBeBoardInterface->Start(pBoard);
         
-
-        LOG(INFO) << BOLDGREEN << "PS Phase+Word Alignment succesful" << RESET;
-        uint16_t cTriggerSrc         = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
-        uint16_t cOriginalTPdelay    = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
-        LOG (INFO) << BOLDYELLOW << "Trigger source : " << +cTriggerSrc << "\t TP delay " << +cOriginalTPdelay << RESET;
 
         // just checking digital injection 
         auto                  cInterface             = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
@@ -228,13 +228,18 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
                 for(auto cChip: *cHybrid)
                 {
                     fReadoutChipInterface->WriteChipReg(cChip,"EdgeSel", 0);
-                    fReadoutChipInterface->WriteChipReg(cChip,"DigCalibPattern_H", 0x1);
-                    std::vector<int> cStrips{1,118};
-                    for( auto cStrip : cStrips )
+                    fReadoutChipInterface->WriteChipReg(cChip,"DigCalibPattern_H", 0xFF);
+                    fReadoutChipInterface->WriteChipReg(cChip,"DigitalSync", 0x0);
+                    fReadoutChipInterface->WriteChipReg(cChip,"PulseDuration",0x8);
+                    // std::vector<int> cStrips{0,117};
+                    for( int cStrip = 1 ; cStrip < 120 ; cStrip+= 5)
                     {
-                        std::stringstream cRegName; 
-                        cRegName << "DigitalSync_S" << cStrip; 
-                        fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), 0x1);
+                        if( cStrip < 5 || cStrip > 115 )
+                        { 
+                            std::stringstream cRegName1, cRegName2; 
+                            cRegName2 << "DigitalSync_S" << cStrip; 
+                            fReadoutChipInterface->WriteChipReg(cChip, cRegName2.str(), 0x1);
+                       }
                     }
                 }
             }

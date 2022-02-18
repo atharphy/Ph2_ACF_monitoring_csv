@@ -530,9 +530,10 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         uint8_t cAnalogCalib  = 0;
         uint8_t cEnFlags      = (cAnalogCalib << 4 | cDigitalCalib << 3 | cHitCounter << 2 | cPolarity << 1 | cMask);
         bool cSuccess              = this->WriteChipRegBits(pSSA2, cRegName.str() , cEnFlags, "mask_strip", 0x1F);
-        // auto cRegItem              = pSSA2->getRegItem(cRegName.str());
-        // auto cRegValue             = fBoardFW->SingleRegisterRead(pSSA2, cRegItem);
-        // LOG(INFO) << BOLDYELLOW << cRegName.str() << " set to 0x" << std::hex << +cRegValue << std::dec << RESET;
+        
+        auto cRegItem              = pSSA2->getRegItem(cRegName.str());
+        auto cRegValue             = fBoardFW->SingleRegisterRead(pSSA2, cRegItem);
+        LOG(INFO) << BOLDYELLOW << cRegName.str() << " set to 0x" << std::hex << +cRegValue << std::dec << RESET;
         return cSuccess;
     }
     else if(pRegName == "DigitalDuration")

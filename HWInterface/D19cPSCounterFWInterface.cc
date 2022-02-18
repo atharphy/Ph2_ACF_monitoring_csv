@@ -68,30 +68,33 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard, FrontEndType pTyp
                     cBaseRegisterMSB = 0;
                     if(cChip->getFrontEndType() == FrontEndType::MPA)
                     {
-                        cBaseRegisterLSB = ((12 + 8 * (cChnl / 120)) << 8) + 0x81;
-                        cBaseRegisterMSB = cBaseRegisterLSB + 128;
+                        int              cRowNumber       = 1 + cChnl / 120 ;
+                        int              cPixelNumber     = 1 + cChnl % 120 ;
+
+                        cBaseRegisterLSB = ((cRowNumber << 11) | (9 << 7) | cPixelNumber);
+                        cBaseRegisterMSB = ((cRowNumber << 11) | (10 << 7) | cPixelNumber);
                     }
                     if(cChip->getFrontEndType() == FrontEndType::SSA)
                     {
-                        cBaseRegisterLSB = 0x0901;
-                        cBaseRegisterMSB = 0x0801;
+                        cBaseRegisterLSB = 0x0901 + cChnl;
+                        cBaseRegisterMSB = 0x0801 + cChnl;
                     }
                     if(cChip->getFrontEndType() == FrontEndType::SSA2)
                     {
-                        cBaseRegisterLSB = 0x0580;
-                        cBaseRegisterMSB = 0x0680;
+                        cBaseRegisterLSB = 0x0580 + cChnl;
+                        cBaseRegisterMSB = 0x0680 + cChnl;
                     }
 
                     // MSB
                     ChipRegItem cReg_Counters_MSB;
                     cReg_Counters_MSB.fPage    = 0x00;
-                    cReg_Counters_MSB.fAddress = cBaseRegisterMSB + cChnl;
+                    cReg_Counters_MSB.fAddress = cBaseRegisterMSB ;
                     cReg_Counters_MSB.fValue   = 0x00;
                     cRegItems.push_back(cReg_Counters_MSB);
                     // LSB
                     ChipRegItem cReg_Counters_LSB;
                     cReg_Counters_LSB.fPage    = 0x00;
-                    cReg_Counters_LSB.fAddress = cBaseRegisterLSB + cChnl;
+                    cReg_Counters_LSB.fAddress = cBaseRegisterLSB ;
                     cReg_Counters_LSB.fValue   = 0x00;
                     cRegItems.push_back(cReg_Counters_LSB);
                 }
