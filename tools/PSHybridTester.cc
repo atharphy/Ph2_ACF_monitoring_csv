@@ -728,35 +728,33 @@ void PSHybridTester::SSATestLateralCommunication(Ph2_HwDescription::BeBoard* pBo
     std::vector<std::pair<std::string, uint32_t>> cRegVec;
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", 10});
-    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse", 10});
-    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset", 10});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse", 2});
+    // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset", 10});
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0});
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
     fBeBoardInterface->Start(pBoard);
 
     for(auto cOpticalReadout: *pBoard)
-    {
-        for(auto cHybrid: *cOpticalReadout)
         {
-            for(auto cChip: *cHybrid)
+            for(auto cHybrid: *cOpticalReadout)
             {
-                fReadoutChipInterface->WriteChipReg(cChip,"EdgeSel", 0);
-                fReadoutChipInterface->WriteChipReg(cChip,"DigCalibPattern_H", 0xFF);
-                fReadoutChipInterface->WriteChipReg(cChip,"DigitalSync", 0x0);
-                fReadoutChipInterface->WriteChipReg(cChip,"PulseDuration",0x8);
-                for( int cStrip = 1 ; cStrip < 120 ; cStrip+= 5)
+                for(auto cChip: *cHybrid)
                 {
-                    if( cStrip < 5 || cStrip > 115 )
-                    { 
+                    fReadoutChipInterface->WriteChipReg(cChip,"EdgeSel", 0);
+                    fReadoutChipInterface->WriteChipReg(cChip,"DigCalibPattern_H", 0xFF);
+                    fReadoutChipInterface->WriteChipReg(cChip,"DigitalSync", 0x0);
+                    fReadoutChipInterface->WriteChipReg(cChip,"PulseDuration",0x8);
+                    std::vector<int> cStrips{0,119};
+                    for(auto cStrip : cStrips ) 
+                    {
                         std::stringstream cRegName1, cRegName2; 
                         cRegName2 << "DigitalSync_S" << cStrip; 
                         fReadoutChipInterface->WriteChipReg(cChip, cRegName2.str(), 0x1);
                     }
                 }
             }
-        }
-    } // enable digital sync on all strips
+        } // enable digital sync on all strips
 
     // just checking digital injection 
     auto                  cInterface             = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
