@@ -365,8 +365,11 @@ bool D19cPSCounterFWInterface::ReadEvents(const BeBoard* pBoard)
 {
     // clear data vector
     fData.clear();
-    // make sure handshake is configured
+    // make sure trigger mult is taken into account
+    auto cMultiplicity = ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    fNEvents           = fNEvents * (cMultiplicity + 1);
     fTriggerInterface->SetNTriggersToAccept(fNEvents);
+    // make sure handshake is configured
     WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", fHandshake);
     if(WaitForNTriggers())
     {

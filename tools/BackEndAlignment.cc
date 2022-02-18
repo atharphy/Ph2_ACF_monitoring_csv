@@ -67,9 +67,7 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
 {
     bool cTuned = true;
     LOG(INFO) << GREEN << "BackEndAlignment for PS Chip(s)" << RESET;
-    // fBeBoardInterface->setBoard(pBoard->getId());
-    // auto                  cInterface             = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    // D19cDebugFWInterface* cDebugInterface        = cInterface->getDebugInterface();
+    fBeBoardInterface->setBoard(pBoard->getId());
     uint8_t               cPhaseAlignmentPattern = 0xAA;
     uint8_t               cWordAlignmentPattern  = 0xEA;
     auto cFeTypes = pBoard->connectedFrontEndTypes();
@@ -141,9 +139,15 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
                 }
                 for(uint8_t cLineId = cFirstLine; cLineId <= 8; cLineId++) // stub lines - 1 to 8
                 { WordAlignLine(cChip, cLineId, cWordAlignmentPattern, 8); }
+
+                // replace this with something that gets the value 
+                // from one of the stub lines 
+                // ManuallyConfigureLine(cChip,0, 15,0);
             }
         }
     } // run word aligner on all lines
+
+    // manually set on L1 if SSA1 
 
     // for(auto cOpticalReadout: *pBoard)
     // {
@@ -203,6 +207,8 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
         LOG (INFO) << BOLDYELLOW << "Trigger source : " << +cTriggerSrc << "\t TP delay " << +cOriginalTPdelay << RESET;
 
         // just checking digital injection 
+        // auto                  cInterface             = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        // D19cDebugFWInterface* cDebugInterface        = cInterface->getDebugInterface();
         // for(auto cOpticalReadout: *pBoard)
         // {
         //     for(auto cHybrid: *cOpticalReadout)
@@ -211,7 +217,8 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
         //         {
         //             fReadoutChipInterface->WriteChipReg(cChip,"EdgeSel", 0);
         //             fReadoutChipInterface->WriteChipReg(cChip,"DigCalibPattern_H", 0x1);
-        //             for( int cStrip=0; cStrip<120; cStrip+=2)
+        //             std::vector<int> cStrips{1,118};
+        //             for( auto cStrip : cStrips )
         //             {
         //                 std::stringstream cRegName; 
         //                 cRegName << "DigitalSync_S" << cStrip; 
@@ -220,7 +227,22 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
         //         }
         //     }
         // } // enable digital sync on all strips
-        // for( int cLatencyOffset = -10; cLatencyOffset <= 0; cLatencyOffset++)
+
+        // for(auto cOpticalReadout: *pBoard)
+        // {
+        //     for(auto cHybrid: *cOpticalReadout)
+        //     {
+        //         for( uint8_t cChipId=0; cChipId < 2 ; cChipId++)
+        //         {                    
+        //             LOG (INFO) << BOLDYELLOW << "Chip#" << +cChipId << RESET;
+        //             fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
+        //             fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cChipId);
+        //             cDebugInterface->StubDebug(true, 8);
+        //         }
+        //     }
+        // }// check stub debug 
+        
+        // for( int cLatencyOffset = -2; cLatencyOffset <= -2; cLatencyOffset++)
         // {
         //     LOG (INFO) << BOLDYELLOW << "Latency will be set to " << (cOriginalTPdelay+cLatencyOffset) << RESET;
         //     for(auto cOpticalReadout: *pBoard)
@@ -241,10 +263,11 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
         //             for( uint8_t cChipId=0; cChipId < 2 ; cChipId++)
         //             {                    
         //                 LOG (INFO) << BOLDYELLOW << "Chip#" << +cChipId << RESET;
-        //                 fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.auto_l1_capture", 1);
+        //                 fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.auto_l1_capture", 0);
         //                 fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
         //                 fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cChipId);
         //                 cDebugInterface->L1ADebug();
+        //                 cDebugInterface->StubDebug(true, 8);
         //             }
         //         }
         //     }
