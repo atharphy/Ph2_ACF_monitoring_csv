@@ -675,6 +675,7 @@ void SSAInterface::Set_threshold(Chip* pSSA, uint32_t th)
 
 bool SSAInterface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& dacName, ChipContainer& localRegValues, bool pVerifLoop)
 {
+    setBoard(pChip->getBeBoardId());
     assert(localRegValues.size() == pChip->getNumberOfChannels());
     std::string dacTemplate;
     // bool isMask = false;
@@ -700,7 +701,7 @@ bool SSAInterface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& d
 
     if(std::adjacent_find(cVals.begin(), cVals.end(), std::not_equal_to<uint16_t>()) == cVals.end())
     {
-        LOG(DEBUG) << BOLDBLUE << "All elements of " << dacName << " are equal to one  another .. will use global register" << RESET;
+        LOG(INFO) << BOLDBLUE << "All elements of " << dacName << " are equal to one  another .. will use global register" << RESET;
         if(dacName == "TrimDAC_S" or dacName == "ThresholdTrim")
         {
             bool cWrite = this->WriteChipReg(pChip, "THTRIMMING_ALL", cVals[0], false);
@@ -724,13 +725,13 @@ bool SSAInterface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& d
     bool cSuccess = true;
     std::vector<ChipRegItem> cRegItems;
     auto cRegMap = pChip->getRegMap();
+    cRegItems.clear();
     for(uint8_t iChannel = 0; iChannel < pChip->getNumberOfChannels(); ++iChannel)
     {
         std::stringstream dacName1; 
         dacName1 << dacTemplate.c_str() << 1 + iChannel;
         LOG(DEBUG) << BOLDBLUE << "Setting register " << dacName1.str() << " to " << (localRegValues.getChannel<uint16_t>(iChannel) & 0x1F) << RESET;
-        cRegItems.clear();
-
+        
         auto cIterator = cRegMap.find(dacName1.str());
         if(cIterator == cRegMap.end()) 
         {
