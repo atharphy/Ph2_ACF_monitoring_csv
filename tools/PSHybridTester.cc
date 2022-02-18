@@ -737,6 +737,8 @@ void PSHybridTester::SSATestLateralCommunication(Ph2_HwDescription::BeBoard* pBo
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
+    fBeBoardInterface->Start(pBoard);
+    // fBeBoardInterface->Stop(pBoard);
     for(uint8_t cPairId = 0; cPairId < 2; cPairId++)
     {
         int         cInjectedSSAId       = (int)(pSSAPairSel[cPairId] - '0');
