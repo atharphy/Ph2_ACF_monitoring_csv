@@ -146,7 +146,7 @@ void OTCMNoise::TakeData()
                                                            GenericDataArray<TOTAL_CHANNELS_OT + 1, uint32_t>>("CMNoise_HitStream");
     for(auto board: theHitContainer)
     {
-        if(fDQMStreamerEnabled) theHitStream.streamAndSendBoard(board, fDQMStreamer);
+        if(fDQMStreamerEnabled) theHitStream->streamAndSendBoard(board, fDQMStreamer);
     }
     if(f2DHistograms)
     {
@@ -154,7 +154,7 @@ void OTCMNoise::TakeData()
             prepareOpticalGroupContainerStreamer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>("CMNoise_2DHitStream");
         for(auto board: the2DHitContainer)
         {
-            if(fDQMStreamerEnabled) the2DHitStream.streamAndSendBoard(board, fDQMStreamer);
+            if(fDQMStreamerEnabled) the2DHitStream->streamAndSendBoard(board, fDQMStreamer);
         }
     }
 
