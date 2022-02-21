@@ -2,6 +2,9 @@
 ## Author: Emery Nibigira (IPHC-Strasbourg)
 ##         emery.nibigira@cern.ch
 
+## Updates: Lawrence Lee (U. of Tennessee)
+##          lawrence.lee.jr@cern.ch
+
 ## SETUP ##########
 
 ## The pipeline starts when a merge request is created
@@ -19,7 +22,9 @@ workflow:
       when: always
       allow_failure: true
 
-image: gitlab-registry.cern.ch/cms-iphc/tk_ph2/dockerimageph2acf
+image:
+  name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_c7:latest
+  entrypoint: ["/bin/sh","-c"]
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
@@ -41,8 +46,11 @@ include:
 .build:
   stage: build
   needs: []
+  image:
+    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_c7:latest
+    entrypoint: ["/bin/sh","-c"]
   before_script:
-    - source ./setup.sh
+    - source ./setup.sh ci
   script:
     - mkdir -p build; cd build
     - cmake ..
@@ -51,14 +59,6 @@ include:
 # Stand-alone application, without data streaming
 build:StandAlone_woDS:
   extends: .build
-  before_script:
-    - source ./setup.sh
-    - export CompileForHerd=false
-    - export CompileForShep=false
-    - export CompileWithEUDAQ=false
-    - export CompileWithTCUSB=false
-    - export UseTCUSBforROH=false
-    - export UseTCUSBTcpServer=false
   artifacts:
     paths:
       - bin/ot_module_test
@@ -70,73 +70,46 @@ build:StandAlone_woDS:
 build:StandAlone_wDS:
   extends: .build
   before_script:
-    - source ./setup.sh
+    - source ./setup.sh ci
     - export CompileForHerd=true
     - export CompileForShep=true
-    - export CompileWithEUDAQ=false
-    - export CompileWithTCUSB=false
-    - export UseTCUSBforROH=false
-    - export UseTCUSBTcpServer=false
 
 # Herd application
 build:HerdApplication:
   extends: .build
   before_script:
-    - source ./setup.sh
+    - source ./setup.sh ci
     - export CompileForHerd=true
-    - export CompileForShep=false
-    - export CompileWithEUDAQ=false
-    - export CompileWithTCUSB=false
-    - export UseTCUSBforROH=false
-    - export UseTCUSBTcpServer=false
 
 # Shep application
 build:ShepApplication:
   extends: .build
   before_script:
-    - source ./setup.sh
-    - export CompileForHerd=false
+    - source ./setup.sh ci
     - export CompileForShep=true
-    - export CompileWithEUDAQ=false
-    - export CompileWithTCUSB=false
-    - export UseTCUSBforROH=false
-    - export UseTCUSBTcpServer=false
 
 # Compile with EUDAQ libraries
 build:StandAlone_wEUDAQ:
   extends: .build
   before_script:
-    - source ./setup.sh
-    - export CompileForHerd=false
-    - export CompileForShep=false
+    - source ./setup.sh ci
     - export CompileWithEUDAQ=true
-    - export CompileWithTCUSB=false
-    - export UseTCUSBforROH=false
-    - export UseTCUSBTcpServer=false
 
 # Herd application with EUDAQ libraries
 build:HerdApplication_wEUDAQ:
   extends: .build
   before_script:
-    - source ./setup.sh
+    - source ./setup.sh ci
     - export CompileForHerd=true
-    - export CompileForShep=false
     - export CompileWithEUDAQ=true
-    - export CompileWithTCUSB=false
-    - export UseTCUSBforROH=false
-    - export UseTCUSBTcpServer=false
 
 # Compile with TC_USB library
 build:StandAlone_wTC_USB_SEH:
   extends: .build
   before_script:
     - yum install -y libusb-devel libusbx-devel
-    - source ./setup.sh
-    - export CompileForHerd=false
-    - export CompileForShep=false
-    - export CompileWithEUDAQ=false
+    - source ./setup.sh ci
     - export CompileWithTCUSB=true
-    - export UseTCUSBforROH=false
     - export UseTCUSBTcpServer=true
 
 
@@ -145,27 +118,35 @@ build:StandAlone_wTC_USB_ROH:
   extends: .build
   before_script:
     - yum install -y libusb-devel libusbx-devel
-    - source ./setup.sh
-    - export CompileForHerd=false
-    - export CompileForShep=false
-    - export CompileWithEUDAQ=false
+    - source ./setup.sh ci
     - export CompileWithTCUSB=true
     - export UseTCUSBforROH=true
     - export UseTCUSBTcpServer=true
 
 
+
 ## RUN ##########
 
-## IT hybrid
-run_on_IT:
+.run:
   stage: run
   needs:
-    - build:StandAlone_woDS
+    - build:StandAlone_woDS:c7
   before_script:
     - printf $USER_PASS | base64 -d | kinit $USER_NAME
     - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+      when: always
+      allow_failure: false
+    - when: manual
+      allow_failure: true
+
+
+## IT hybrid
+run:IT:
+  extends: .run
   script:
-    - source ./setup.sh
+    - source ./setup.sh ci
     - cd ci_tools
     - cp CMSIT_RD53.txt CMSIT_RD53_default.txt
     - CMSITminiDAQ -f CMSIT.xml -r
@@ -186,17 +167,11 @@ run_on_IT:
     expire_in: 1 week
 
 ## 2S hybrid
-run_on_2S:
-  stage: run
-  needs:
-    - build:StandAlone_woDS
-  before_script:
-    - printf $USER_PASS | base64 -d | kinit $USER_NAME
-    - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
-   #- python ci_tools/status_manager.py 2s_status.txt --get_status  --delay 180 --iter 3
+run:2S:
+  extends: .run
   script:
     - python ci_tools/status_manager.py 2s_status.txt --set_status 1
-    - source ./setup.sh
+    - source ./setup.sh ci
     - cd ci_tools
     - ot_module_test -f CMS2S.xml -t -m -a -b --reconfigure
   after_script:
@@ -209,27 +184,34 @@ run_on_2S:
     expire_in: 1 week
 
 
+
+
 ## CHECK ##########
 
-
-check_run_on_IT:
+.check:
   stage: check
-  needs: [run_on_IT]
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+      when: always
+      allow_failure: false
+    - when: manual
+      allow_failure: true
+  artifacts:
+    paths:
+      - plots
+    expire_in: 1 week
+
+check:IT:
+  extends: .check
+  needs: [run:IT]
   script:
     - python ci_tools/plot_canvas.py Run000000_PixelAlive.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_PixelAlive_Chip(0)" -o plots
     - python ci_tools/plot_canvas.py Run000001_ThrEqualization.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_ThrEqualization_Chip(0)" -o plots
     - python ci_tools/plot_canvas.py Run000002_SCurve.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_SCurves_Chip(0)" -o plots
-  artifacts:
-    paths:
-      - plots
-    expire_in: 1 week
 
-check_run_on_2S:
-  stage: check
-  needs: [run_on_2S]
+check:2S:
+  extends: .check
+  needs: [run:2S]
   script:
     - python ci_tools/plot_hist.py Hybrid.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/D_B(0)_O(0)_HybridNoiseDistribution_Hybrid(0)" -o plots
-  artifacts:
-    paths:
-      - plots
-    expire_in: 1 week
+
