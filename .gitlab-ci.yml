@@ -130,7 +130,7 @@ build:StandAlone_wTC_USB_ROH:
 .run:
   stage: run
   needs:
-    - build:StandAlone_woDS:c7
+    - build:StandAlone_woDS
   before_script:
     - printf $USER_PASS | base64 -d | kinit $USER_NAME
     - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
