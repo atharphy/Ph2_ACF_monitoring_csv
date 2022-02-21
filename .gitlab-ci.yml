@@ -56,22 +56,20 @@ include:
     - mkdir -p build; cd build
     - cmake ..
     - make -j4
-  rules:
-    - if: $CI_COMMIT_TAG || $CI_COMMIT_BRANCH == "Dev" || $DEBUG
-      artifacts:
-        paths:
-          - $CI_PROJECT_DIR/
-
+  artifacts:
+    paths:
+      - $CI_PROJECT_DIR/
+    expire_in: 1 week
 
 # Stand-alone application, without data streaming
 build:StandAlone_woDS:
   extends: .build
-  artifacts:
-    paths:
-      - bin/ot_module_test
-      - bin/commission
-      - bin/CMSITminiDAQ
-    expire_in: 1 week
+  # artifacts:
+  #   paths:
+  #     - bin/ot_module_test
+  #     - bin/commission
+  #     - bin/CMSITminiDAQ
+  #   expire_in: 1 week
 
 # Stand-alone application, with data streaming
 build:StandAlone_wDS:
