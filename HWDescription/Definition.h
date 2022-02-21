@@ -169,7 +169,10 @@ enum class FrontEndType
     OuterTracker2S,
     OuterTrackerPS,
     InnerTrackerDouble,
-    InnerTrackerQuad
+    InnerTrackerQuad,
+    HYBRID2S,
+    HYBRIDPS,
+    LpGBT
 };
 enum class SLinkDebugMode
 {

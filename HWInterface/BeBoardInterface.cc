@@ -13,23 +13,38 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-BeBoardInterface::BeBoardInterface(const BeBoardFWMap& pBoardMap) : fBoardMap(pBoardMap), fBoardFW(nullptr), fPrevBoardIdentifier(65535) {}
+BeBoardInterface::BeBoardInterface(const BeBoardFWMap& pBoardMap) : fBoardMap(pBoardMap), fBoardFW(nullptr), fPrevBoardIdentifier(65535)
+{
+    // for( const auto& cItem : fBoardMap)
+    // {
+    //     // auto cIterator = fBoardMap.find(cItem.first);
+    //     // std::cout << BOLDYELLOW << "BeBoardInterface::BeBoardInterface " << cItem.second << "\t" << cItem.second->getId() << RESET << "\n" ;
+    // }
+}
 
 BeBoardInterface::~BeBoardInterface() {}
 
 void BeBoardInterface::setBoard(uint16_t pBoardIdentifier)
 {
+    // std::cout << BOLDRED <<  "BeBoardInterface::SetBoard [first set]" << fBoardMap[pBoardIdentifier] << "\t" << fBoardMap[pBoardIdentifier]->getId() << RESET << "\n";
+
     if(fPrevBoardIdentifier != pBoardIdentifier)
     {
         BeBoardFWMap::iterator i = fBoardMap.find(pBoardIdentifier);
-
         if(i == fBoardMap.end())
             LOG(INFO) << "The Board: " << +pBoardIdentifier << "  doesn't exist";
         else
         {
             fBoardFW             = i->second;
             fPrevBoardIdentifier = pBoardIdentifier;
+            // std::cout << BOLDRED <<  "BeBoardInterface::SetBoard [first set]" << i->second << "\t" << i->second->getId() << RESET << "\n";
+            // std::cout << BOLDYELLOW << "BeBoardInterface::SetBoard [first set]" << (*fBoardMap.begin()).second << "\t" << (*fBoardMap.begin()).second->getId() << RESET << "\n";
         }
+    }
+    else
+    {
+        // std::cout << BOLDRED << "BeBoardInterface::SetBoard [already set board]" << fBoardFW << "\t" << fBoardFW->getId() << RESET "\n";
+        // std::cout << BOLDYELLOW << "BeBoardInterface::SetBoard [already set board] " << (*fBoardMap.begin()).second << "\t" << (*fBoardMap.begin()).second->getId() << RESET << "\n";
     }
 }
 
@@ -123,6 +138,7 @@ void BeBoardInterface::ConfigureBoard(const BeBoard* pBoard)
 
     setBoard(pBoard->getId());
     LOG(INFO) << GREEN << "Configuring Board: " << BOLDYELLOW << +pBoard->getId() << RESET;
+    std::cout << "BeBoardInterface::ConfigureBoard " << fBoardFW << "\t" << fBoardFW->getId() << "\n";
     fBoardFW->ConfigureBoard(pBoard);
 }
 
@@ -133,15 +149,6 @@ void BeBoardInterface::Start(BeBoard* pBoard)
     setBoard(pBoard->getId());
     fBoardFW->Start();
 }
-
-void BeBoardInterface::SendNTriggers(BeBoard* pBoard, uint16_t pNtriggers)
-{
-    std::lock_guard<std::recursive_mutex> theGuard(theMtx);
-
-    setBoard(pBoard->getId());
-    fBoardFW->SendNTriggers(pNtriggers);
-}
-
 void BeBoardInterface::Stop(BeBoard* pBoard)
 {
     std::lock_guard<std::recursive_mutex> theGuard(theMtx);

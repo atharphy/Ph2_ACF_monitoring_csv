@@ -65,7 +65,6 @@ class CicInterface : public ChipInterface
      */
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
 
-    std::pair<bool, uint16_t>         ReadChipRegItem(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem pRegItem);
     bool                              SetFePhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pLineId, int pPhaseTap);
     bool                              SetPhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel, int pPhaseTap);
     bool                              SetOptimalTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel, int pOffset = 0);
@@ -108,7 +107,7 @@ class CicInterface : public ChipInterface
     bool                              ConfigureFCMDEdge(Ph2_HwDescription::Chip* pChip, uint8_t pUseNegEdge = 1);
     bool                              GetResyncRequest(Ph2_HwDescription::Chip* pChip);
     std::pair<uint8_t, uint8_t>       GetPhyPortConfig(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pLineId);
-    //
+    // TO-DO.. clean-up
     bool                          runVerification(Ph2_HwDescription::Chip* pChip, uint8_t pValue, std::string pRegName);
     std::pair<uint16_t, uint16_t> getRetrySummary() { return std::make_pair(fReW, fReWR); }
     std::pair<int, float>         getWRattempts();
@@ -148,8 +147,6 @@ class CicInterface : public ChipInterface
     bool    fRetryI2C       = true;
     uint8_t fMaxI2CAttempts = 20;
 
-    bool                           WriteReg(Ph2_HwDescription::Chip* pCic, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true);
-    bool                           WriteRegs(Ph2_HwDescription::Chip* pCic, const std::vector<std::pair<uint8_t, uint8_t>> pRegs, bool pVerifLoop = true);
     std::map<uint8_t, std::string> fMap;
     std::map<uint8_t, uint16_t>    fReWMap;
     std::map<uint8_t, uint16_t>    fReWrMap;
