@@ -203,7 +203,8 @@ run:2S:
 
 check:IT:
   extends: .check
-  needs: [run:IT]
+  needs:
+    - run:IT
   script:
     - python ci_tools/plot_canvas.py Run000000_PixelAlive.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_PixelAlive_Chip(0)" -o plots
     - python ci_tools/plot_canvas.py Run000001_ThrEqualization.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_ThrEqualization_Chip(0)" -o plots
@@ -211,7 +212,8 @@ check:IT:
 
 check:2S:
   extends: .check
-  needs: [run:2S]
+  needs:
+    - run:2S
   script:
     - python ci_tools/plot_hist.py Hybrid.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/D_B(0)_O(0)_HybridNoiseDistribution_Hybrid(0)" -o plots
 
