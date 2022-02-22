@@ -192,7 +192,7 @@ void D19cL1ReadoutInterface::FillData()
 }
 bool D19cL1ReadoutInterface::PollReadoutData(const BeBoard* pBoard, bool pWait)
 {
-    LOG(INFO) << BOLDYELLOW << "D19cL1ReadoutInterface::PollReadoutData " << RESET;
+    LOG(DEBUG) << BOLDYELLOW << "D19cL1ReadoutInterface::PollReadoutData " << RESET;
     fData.clear();
     // here check if the trigger state machine is running
     if(fTriggerInterface->GetTriggerState() == 0) // 0, idle - 1 running

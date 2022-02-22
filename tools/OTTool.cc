@@ -6,6 +6,7 @@ using namespace Ph2_System;
 
 #include "../Utils/ContainerFactory.h"
 #include "FEConfigurationInterface.h"
+#include "L1ReadoutInterface.h"
 #include "TriggerInterface.h"
 
 OTTool::OTTool() : Tool()
@@ -112,9 +113,25 @@ void OTTool::Prepare()
     // check sparsification
     for(auto cBoard: *fDetectorContainer)
     {
-        bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
-        cBoard->setSparsification(cSparsified);
+        uint32_t cSparsified = cBoard->getSparsification();//this is set in the file parser .. so check using that 
+        LOG (INFO) << BOLDYELLOW << +cSparsified << RESET;
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", cSparsified);
+        // make sure I am in un-sparsified mode
+        LOG(INFO) << BOLDGREEN << "Setting sparsification on BeBoard#" << +cBoard->getId() <<  ((cSparsified==1)? " ON" : " OFF") << RESET;
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                fCicInterface->SetSparsification(cCic, cSparsified);
+            }
+        }
     }
+    // for(auto cBoard: *fDetectorContainer)
+    // {
+    //     bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
+    //     cBoard->setSparsification(cSparsified);
+    // }
 
     // clear map of modified registers
     // probably this should be a container per board
@@ -490,6 +507,8 @@ void OTTool::StartReadoutTh(uint8_t cBrdId)
     fBeBoardInterface->setBoard((*cBoardIter)->getId());
     auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     auto cTriggerInterface = cInterface->getTriggerInterface();
+    auto cReadoutInterface = cInterface->getL1ReadoutInterface();
+    cReadoutInterface->ResetReadout();
     cTriggerInterface->Start();
     LOG(INFO) << BOLDMAGENTA << "Started triggers on BeBoard#" << +cBrdId << RESET;
 }

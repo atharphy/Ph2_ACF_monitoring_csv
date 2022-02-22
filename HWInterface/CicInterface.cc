@@ -686,7 +686,7 @@ bool CicInterface::SetOptimalTap(Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPort
                    << " when original was " << +fPhaseTaps[pPhyPortChannel][pPhyPort] << RESET;
         cPhaseTap = int(fPhaseTaps[pPhyPortChannel][pPhyPort]);
     }
-    LOG(INFO) << BOLDYELLOW << "Setting optimal phase tap on phyPort " << +pPhyPort << " channel#" << +pPhyPortChannel << " to " << +cPhaseTap << RESET;
+    LOG(DEBUG) << BOLDYELLOW << "Setting optimal phase tap on phyPort " << +pPhyPort << " channel#" << +pPhyPortChannel << " to " << +cPhaseTap << RESET;
     return SetPhaseTap(pChip, pPhyPort, pPhyPortChannel, cPhaseTap);
 }
 bool CicInterface::SetPhaseTap(Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel, int pPhaseTap)
