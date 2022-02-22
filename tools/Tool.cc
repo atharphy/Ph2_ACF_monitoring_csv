@@ -558,8 +558,7 @@ void Tool::AddMetadata()
                         std::stringstream label;
                         label << "hybrid_" << std::to_string(cHybrid->getId()) << "_CBC3_" << std::to_string(cChip->getId());
 
-                        //uint32_t value = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadCbcIDeFuse(cChip);
-                        uint32_t value = 999;
+                        uint32_t value = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadCbcIDeFuse(cChip);
 
                         chipIds[i] = value;
                         // this is ok because we will only set one value per branch
