@@ -1058,8 +1058,12 @@ uint32_t D19cFWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     }
     else
     {
-        LOG(INFO) << BOLDRED << "Failed to poll readout-data from BeBoard" << RESET;
-        throw Exception("Failed to poll readout-data from BeBoard");
+        // if triggers are still running throw an exception 
+        if( fTriggerInterface->GetTriggerState() == 1 ) 
+        {
+            LOG(INFO) << BOLDRED << "Failed to poll readout-data from BeBoard" << RESET;
+            throw Exception("Failed to poll readout-data from BeBoard");
+        }
         return cNEvents;
     }
 
