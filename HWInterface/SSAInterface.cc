@@ -356,6 +356,30 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         bool cEnableReg = fBoardFW->SingleRegisterWrite(pSSA, cRegItem, pVerifLoop);
         return cEnableReg && cReadoutMode;
     }
+    else if(pRegName.find("DigitalSync") != std::string::npos)
+    {
+        int cStripId = 0; 
+        std::stringstream cRegName; 
+        std::sscanf(pRegName.c_str(), "DigitalSync_S%d", &cStripId);
+        cRegName << "ENFLAGS_S" << (1+cStripId);
+        // LOG (INFO) << BOLDYELLOW << "Digital injection on Strip#" << +cStripId << "\t" << cRegName.str() << RESET;
+        
+        auto cRegItem = pSSA->getRegItem("ReadoutMode");
+        cRegItem.fValue = 0x00; 
+        bool        cReadoutMode = fBoardFW->SingleRegisterWrite(pSSA, cRegItem, pVerifLoop);
+        uint8_t pAnalogueCalib  = 0;
+        uint8_t pDigitalCalib   = 1;
+        uint8_t pHitCounter     = 0;
+        uint8_t pSignalPolarity = 0;
+        uint8_t pStripEnable    = (pValue != 0x00); // 1 == enable , 0 == disable
+        uint8_t cRegValue       = (pAnalogueCalib << 4) | (pDigitalCalib << 3) | (pHitCounter << 2) | (pSignalPolarity << 1);
+        cRegItem = pSSA->getRegItem(cRegName.str());
+        cRegItem.fValue               = cRegValue | (pStripEnable << 0);
+        LOG(DEBUG) << BOLDRED << "Enable flag is 0x" << std::hex << +cRegValue << std::dec << RESET;
+        bool cEnableReg = fBoardFW->SingleRegisterWrite(pSSA, cRegItem, pVerifLoop);
+        return cEnableReg && cReadoutMode;
+
+    }
     else if(pRegName == "DigitalAsync")
     {
         // digital injection, async , enable all strips
@@ -489,6 +513,11 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         cRegItem.fValue = pValue;
         return fBoardFW->SingleRegisterWrite(pSSA, cRegItem, pVerifLoop);
     }
+    else if( fAmuxMap.find(pRegName) != fAmuxMap.end() )
+    {
+        LOG (INFO) << BOLDYELLOW << pRegName << RESET;
+        return ConfigureAmux(pSSA, pRegName);
+    }
     else if(pRegName.substr(0, pRegName.find("__")) == "AMUX")
     {
         return this->ConfigureAmux(pSSA, pRegName.substr(1, pRegName.find("__")));
@@ -523,7 +552,7 @@ bool SSAInterface::ConfigureAmux(Chip* pChip, const std::string& pRegister)
         if(cMapIterator != fAmuxMap.end())
         {
             uint16_t cValue = (1 << cMapIterator->second);
-            LOG(DEBUG) << BOLDBLUE << "Select test_Bias 0x" << std::hex << cValue << std::dec << RESET;
+            LOG(INFO) << BOLDBLUE << "Select test_Bias 0x" << std::hex << cValue << std::dec << RESET;
             uint8_t cIndex = 0;
             for(auto cReg: cRegNames)
             {
@@ -646,6 +675,7 @@ void SSAInterface::Set_threshold(Chip* pSSA, uint32_t th)
 
 bool SSAInterface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& dacName, ChipContainer& localRegValues, bool pVerifLoop)
 {
+    setBoard(pChip->getBeBoardId());
     assert(localRegValues.size() == pChip->getNumberOfChannels());
     std::string dacTemplate;
     // bool isMask = false;
@@ -671,7 +701,7 @@ bool SSAInterface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& d
 
     if(std::adjacent_find(cVals.begin(), cVals.end(), std::not_equal_to<uint16_t>()) == cVals.end())
     {
-        LOG(DEBUG) << BOLDBLUE << "All elements of " << dacName << " are equal to one  another .. will use global register" << RESET;
+        LOG(INFO) << BOLDBLUE << "All elements of " << dacName << " are equal to one  another .. will use global register" << RESET;
         if(dacName == "TrimDAC_S" or dacName == "ThresholdTrim")
         {
             bool cWrite = this->WriteChipReg(pChip, "THTRIMMING_ALL", cVals[0], false);
@@ -695,13 +725,13 @@ bool SSAInterface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& d
     bool cSuccess = true;
     std::vector<ChipRegItem> cRegItems;
     auto cRegMap = pChip->getRegMap();
+    cRegItems.clear();
     for(uint8_t iChannel = 0; iChannel < pChip->getNumberOfChannels(); ++iChannel)
     {
         std::stringstream dacName1; 
         dacName1 << dacTemplate.c_str() << 1 + iChannel;
         LOG(DEBUG) << BOLDBLUE << "Setting register " << dacName1.str() << " to " << (localRegValues.getChannel<uint16_t>(iChannel) & 0x1F) << RESET;
-        cRegItems.clear();
-
+        
         auto cIterator = cRegMap.find(dacName1.str());
         if(cIterator == cRegMap.end()) 
         {

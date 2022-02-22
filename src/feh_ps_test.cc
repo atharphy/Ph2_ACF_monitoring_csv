@@ -507,7 +507,7 @@ int main(int argc, char* argv[])
                 {
                     cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
                     cHybridTester.SSAPairSelect(cCurrentSSAPair);
-                    cBackendAlignment.SetEnabledROCs(cSSAPair);
+                    cBackendAlignment.SetEnabledROCs(cCurrentSSAPair);
                     for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
                     cHybridTester.SSATestStubOutput(cCurrentSSAPair);
                     cHybridTester.SSATestL1Output(cCurrentSSAPair);
