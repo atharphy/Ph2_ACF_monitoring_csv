@@ -12,6 +12,7 @@
 #include "tools/LatencyScan.h"
 #include "tools/LinkAlignmentOT.h"
 #include "tools/MemoryCheck2S.h"
+#include "tools/OTCMNoise.h"
 #include "tools/OTTemperature.h"
 #include "tools/PSAlignment.h"
 #include "tools/PedeNoise.h"
@@ -101,6 +102,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("linkTest", "Check data coming over link....", ArgvParser::OptionRequiresValue);
     cmd.defineOption("measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC.");
     cmd.defineOptionAlternative("measurePedeNoise", "m");
+
+    cmd.defineOption("cmNoise", "measure common mode noise");
 
     cmd.defineOption("read", "Read data from a raw file.  ", ArgvParser::OptionRequiresValue);
     cmd.defineOption("save", "Save the data to a raw file.  ", ArgvParser::NoOptionAttribute);
@@ -991,13 +994,28 @@ int main(int argc, char* argv[])
         cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
         // cPedeNoise.scanScurves();
         cPedeNoise.measureNoise();
-        // cPedeNoise.Validate();
+        cPedeNoise.Validate();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
         cPedeNoise.Reset();
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
     }
+
+    if(cmd.foundOption("cmNoise") && !cmd.foundOption("read"))
+    {
+        LOG(INFO) << "OT_MODULE_TEST:: Measuring CM Noise" << RESET;
+
+        OTCMNoise cTester;
+        cTester.Inherit(&cTool);
+        cTester.Initialize();
+        LOG(INFO) << "OT_MODULE_TEST:: Setting thresholds" << RESET;
+        cTester.SetThresholds();
+
+        LOG(INFO) << "OT_MODULE_TEST:: Taking measurements " << RESET;
+        cTester.TakeData();
+    }
+
     // inject hits and stubs using mask and compare input against output
     if(cmd.foundOption("memCheck") && !cmd.foundOption("read"))
     {
