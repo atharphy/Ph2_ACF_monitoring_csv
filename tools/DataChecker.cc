@@ -6,7 +6,9 @@
 #include "../Utils/ContainerFactory.h"
 #include "BackEndAlignment.h"
 #include "D19cDebugFWInterface.h"
+#include "L1ReadoutInterface.h"
 #include "Occupancy.h"
+#include "TriggerInterface.h"
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -627,10 +629,13 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
         // make sure data handshake is disabled
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x00);
     }
+    auto cInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cTriggerInterface   = cInterface->getTriggerInterface();
+    auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface();
     // re-load configuration
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
+    cTriggerInterface->ResetTriggerFSM();
     // also .. reset the readout
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+    cL1ReadoutInterface->ResetReadout();
 
     // configure latencies
     auto   cSetting       = fSettingsMap.find("DelayAfterInjection");
@@ -994,7 +999,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                 // LOG (INFO) << BOLDMAGENTA << "Found " << cTotalStubsFound << " when " << cTotalStubsExpected << " were expected." << RESET;
             }
             // reset readout
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+            cL1ReadoutInterface->ResetReadout();
         } // stub sel
     }     // configure latencies
 }
@@ -1072,9 +1077,13 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x00);
     }
     // re-load configuration
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
+    auto cInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cTriggerInterface   = cInterface->getTriggerInterface();
+    auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface();
+
+    cTriggerInterface->ResetTriggerFSM();
     // also .. reset the readout
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+    cL1ReadoutInterface->ResetReadout();
 
     // configure latencies
     auto   cSetting       = fSettingsMap.find("DelayAfterInjection");
@@ -1482,7 +1491,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                 LOG(INFO) << BOLDMAGENTA << cMatchCounter << " out of " << cInjectionCounter << " injections match... " << RESET;
             }
             // reset readout
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+            cL1ReadoutInterface->ResetReadout();
         } // stub sel
     }     // configure latencies
 }
@@ -2221,8 +2230,13 @@ uint32_t DataChecker::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
     // stop triggers
     fBeBoardInterface->Stop(pBoard);
     std::this_thread::sleep_for(std::chrono::microseconds(10));
+
+    auto cInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cTriggerInterface   = cInterface->getTriggerInterface();
+    auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface();
+
     // re-load configuration
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
+    cTriggerInterface->ResetTriggerFSM();
 
     cNWords    = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.readout_block.general.words_cnt");
     cNtriggers = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
@@ -2239,9 +2253,9 @@ uint32_t DataChecker::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
     std::this_thread::sleep_for(std::chrono::microseconds(10));
 
     // re-load configuration
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
+    cTriggerInterface->ResetTriggerFSM();
     // also .. reset the readout
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+    cL1ReadoutInterface->ResetReadout();
     // and just check trigger config
 
     return cNevents;
@@ -4850,6 +4864,9 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic, bool pShiftRegMode)
     for(auto cBoard: *fDetectorContainer)
     {
         BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
+        fBeBoardInterface->setBoard(cBoard->getId());
+        auto                  cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
 
         uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
         cTriggerSrc          = (cTriggerSrc == 6) ? cTriggerSrc : 6;
@@ -4911,7 +4928,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic, bool pShiftRegMode)
                         }
                         if(pShiftRegMode)
                         {
-                            auto cLines    = (static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->ScopeStubLines();
+                            auto cLines    = cDebugInterface->ScopeStubLines();
                             int  cLineIndx = 0;
                             for(auto cLine: cLines)
                             {
@@ -4924,7 +4941,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic, bool pShiftRegMode)
                         {
                             for(int cAttempt = 0; cAttempt < 100; cAttempt++)
                             {
-                                auto cLines    = (static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->ScopeStubLines();
+                                auto cLines    = cDebugInterface->ScopeStubLines();
                                 int  cLineIndx = 0;
                                 for(auto cLine: cLines)
                                 {
@@ -6554,8 +6571,12 @@ void DataChecker::StubCheckWNoise(std::vector<uint8_t> pChipIds)
         }         // hybrid
 
         // now want to see the CIC output
-        (static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 5);
-        auto cBeBoard       = static_cast<BeBoard*>(cBoard);
+        fBeBoardInterface->setBoard(cBoard->getId());
+        auto                  cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
+        cDebugInterface->StubDebug(true, 5);
+        auto cBeBoard = static_cast<BeBoard*>(cBoard);
+
         auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
         LOG(INFO) << BOLDMAGENTA << "Stub package delay set to " << +cOriginalDelay << RESET;
         int cPackageDelayStart = (cSweepPackageDelay == 0) ? cOriginalDelay : 0;

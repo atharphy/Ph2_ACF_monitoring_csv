@@ -366,9 +366,14 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
 void D19cCic2Event::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId)
 {
     std::vector<uint32_t> cHits = this->GetHits(hybridId, chipContainer->getId());
+    float                 cOcc  = 0;
     for(auto cHit: cHits)
     {
-        if(testChannelGroup->isChannelEnabled(cHit)) { chipContainer->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.; }
+        if(testChannelGroup->isChannelEnabled(cHit))
+        {
+            chipContainer->getChannelContainer<Occupancy>()->at(cHit).fOccupancy += 1.;
+            cOcc += cHit;
+        }
     }
 }
 
