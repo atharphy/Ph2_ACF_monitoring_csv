@@ -70,6 +70,10 @@ class DQMHistogramOTCMNoise : public DQMHistogramBase
     DetectorDataContainer f2DModuleHitHistograms;
     DetectorDataContainer f2DModuleHitHistogramsEven;
     DetectorDataContainer f2DModuleHitHistogramsOdd;
+    DetectorDataContainer f2DHybridHitHistograms_chip;
+    DetectorDataContainer f2DModuleHitHistograms_chip;
+    DetectorDataContainer f2DModuleHitHistogramsEven_chip;
+    DetectorDataContainer f2DModuleHitHistogramsOdd_chip;
 
     uint32_t fNevents;
     bool     f2DHistograms;
