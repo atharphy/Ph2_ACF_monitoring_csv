@@ -21,14 +21,14 @@ RD53Monitor::RD53Monitor(const Ph2_System::SystemController* theSystemController
 
 void RD53Monitor::runMonitor()
 {
-    if(fDetectorMonitorConfig.fMonitorElementList.empty()) return;
+    if(fDetectorMonitorConfig.getNumberOfMonitoredRegisters() == 0) return;
 
     for(const auto cBoard: *fTheSystemController->fDetectorContainer)
     {
-        fTheSystemController->ReadSystemMonitor(cBoard, fDetectorMonitorConfig.fMonitorElementList);
+        fTheSystemController->ReadSystemMonitor(cBoard, fDetectorMonitorConfig.fMonitorElementList.at("RD53"));
 
-        for(unsigned int i = 0; i < fDetectorMonitorConfig.fMonitorElementList.size(); i++)
-            if(fDetectorMonitorConfig.isElementToMonitor(fDetectorMonitorConfig.fMonitorElementList[i]) == true) runRegisterMonitor(fDetectorMonitorConfig.fMonitorElementList[i]);
+        for(unsigned int i = 0; i < fDetectorMonitorConfig.fMonitorElementList.at("RD53").size(); i++)
+            runRegisterMonitor(fDetectorMonitorConfig.fMonitorElementList.at("RD53").at(i));
     }
 }
 

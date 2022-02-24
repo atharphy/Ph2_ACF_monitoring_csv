@@ -4,15 +4,17 @@
 SEHMonitor::SEHMonitor(const Ph2_System::SystemController* theSystCntr, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystCntr, theDetectorMonitorConfig)
 {
     // doMonitorTemperature = fDetectorMonitorConfig.isElementToMonitor("ModuleTemperature");
-    doMonitorInputCurrent = fDetectorMonitorConfig.isElementToMonitor("I_SEH");
+    // doMonitorInputCurrent = fDetectorMonitorConfig.isElementToMonitor("I_SEH");
 }
 
 void SEHMonitor::runMonitor()
 {
-    if(doMonitorInputCurrent) runInputCurrentMonitor();
+    for(const auto& registerName : fDetectorMonitorConfig.fMonitorElementList.at("Board"  )) runInputCurrentMonitor(registerName);
+
+    // if(doMonitorInputCurrent) runInputCurrentMonitor();
 }
 
-void SEHMonitor::runInputCurrentMonitor()
+void SEHMonitor::runInputCurrentMonitor(std::string registerName)
 {
     LOG(INFO) << BOLDMAGENTA << "Running Input Current Monitor" << RESET;
 

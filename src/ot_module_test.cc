@@ -47,6 +47,42 @@ INITIALIZE_EASYLOGGINGPP
 
 #define CHIPSLAVE 4
 
+// class InterruptHandler
+// {
+//   public:
+//     InterruptHandler(Tool* theTool) {fTool = theTool;}
+//     void operator() (int signal)
+//     {
+//         fTool->Destroy();
+//         exit(EXIT_FAILURE);
+//     }
+//   private:
+//     Tool* fTool;
+// };
+
+sig_atomic_t killProcess = 0;
+sig_atomic_t runCompleted = 0;
+
+void interruptHandler(int handler)
+{
+    killProcess=1;
+}
+
+void killProcessFunction(Tool* theTool)
+{
+    while(1)
+    {
+        usleep(250000);
+        if(killProcess || runCompleted) break;
+    }
+    if(killProcess)
+    {
+        theTool->Destroy();
+        abort();
+    }
+}
+
+
 uint16_t returnRunNumber(std::string cFileName)
 {
     std::string   cLine;
@@ -211,6 +247,14 @@ int main(int argc, char* argv[])
 
     std::stringstream outp;
     Tool              cTool;
+
+    std::thread softKillThread (killProcessFunction, &cTool);
+    softKillThread.detach();
+
+    struct sigaction act;
+    act.sa_handler = interruptHandler;
+    sigaction(SIGINT, &act, NULL);
+
     if(cSaveToFile)
     {
         char cRawFileName[80];
@@ -1214,6 +1258,7 @@ int main(int argc, char* argv[])
     cTool.WriteRootFile();
     cTool.CloseResultFile();
     cTool.Destroy();
+    runCompleted = 1;
     if(!batchMode) cApp.Run();
     cGlobalTimer.stop();
     cGlobalTimer.show("Total execution time: ");

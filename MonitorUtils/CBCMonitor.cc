@@ -13,11 +13,6 @@ using namespace Ph2_HwInterface;
 
 CBCMonitor::CBCMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {
-    fDoMonitorThreshold  = fDetectorMonitorConfig.isElementToMonitor("CBCThreshold");
-    fDoMonitorLpGBT_ADC1 = fDetectorMonitorConfig.isElementToMonitor("LpGBT_ADC1");
-    fDoMonitorLpGBT_VDD  = fDetectorMonitorConfig.isElementToMonitor("LpGBT_VDD");
-    fDoMonitorLpGBT_VDDA = fDetectorMonitorConfig.isElementToMonitor("LpGBT_VDDA");
-    fDoMonitorLpGBT_TEMP = fDetectorMonitorConfig.isElementToMonitor("LpGBT_TEMP");
 
 #ifdef __USE_ROOT__
     fMonitorPlotDQM    = new MonitorDQMPlotCBC();
@@ -28,13 +23,9 @@ CBCMonitor::CBCMonitor(const Ph2_System::SystemController* theSystemController, 
 
 void CBCMonitor::runMonitor()
 {
-    if(fDoMonitorThreshold) runCBCRegisterMonitor("VCth");
-    std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
 
-    if(fDoMonitorLpGBT_ADC1) runLpGBTRegisterMonitor("ADC1");
-    if(fDoMonitorLpGBT_VDD) runLpGBTRegisterMonitor("VDD");
-    if(fDoMonitorLpGBT_VDDA) runLpGBTRegisterMonitor("VDDA");
-    if(fDoMonitorLpGBT_TEMP) runLpGBTRegisterMonitor("TEMP");
+    for(const auto& registerName : fDetectorMonitorConfig.fMonitorElementList.at("CBC"  )) runCBCRegisterMonitor  (registerName);
+    for(const auto& registerName : fDetectorMonitorConfig.fMonitorElementList.at("LpGBT")) runLpGBTRegisterMonitor(registerName);
 }
 
 void CBCMonitor::runCBCRegisterMonitor(std::string registerName)
