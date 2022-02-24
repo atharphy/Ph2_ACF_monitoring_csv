@@ -232,6 +232,7 @@ int main(int argc, char* argv[])
         auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
         cInterface->ConfigureInterfaces(cBoard);
     }
+    cTool.AddMetadata();
 
     if(cmd.foundOption("readTemperatures"))
     {
