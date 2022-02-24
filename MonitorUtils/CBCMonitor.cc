@@ -84,6 +84,7 @@ void CBCMonitor::runLpGBTRegisterMonitor(std::string registerName)
 
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
+        if(board->at(0)->flpGBT == nullptr) continue;
         for(const auto& opticalGroup: *board)
         {
             uint16_t registerValue = static_cast<D19clpGBTInterface*>(fTheSystemController->flpGBTInterface)->ReadADC(opticalGroup->flpGBT, registerName);

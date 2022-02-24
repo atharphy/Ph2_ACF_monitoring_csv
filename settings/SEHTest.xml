@@ -309,4 +309,24 @@
     <Setting name="LatencyStop">2</Setting>
     
 </Settings>
+
+<MonitoringSettings>
+<Monitoring type="2S" enable="1">
+    <MonitoringSleepTime> 500 </MonitoringSleepTime>
+    <MonitoringElements
+    LpGBT_ADC1    = "1"
+    LpGBT_TEMP    = "1"
+    />
+</Monitoring>
+</MonitoringSettings>
+<!-- <MonitoringSettings>
+<Monitoring type="2SSEH" enable="0">
+    <MonitoringSleepTime> 1000 </MonitoringSleepTime>
+    <MonitoringElements
+    I_SEH  = "1"
+    />
+</Monitoring>
+</MonitoringSettings> -->
+
+
 </HwDescription>

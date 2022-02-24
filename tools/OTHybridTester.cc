@@ -74,12 +74,32 @@ void OTHybridTester::LpGBTInjectULExternalPattern(bool pStart, uint8_t pPattern)
 
 bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
 {
+    auto cStartTime2 = std::chrono::high_resolution_clock::now(), cEndTime2 = cStartTime2;
+    auto cDuration2 = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime2 - cStartTime2).count();
+    bool                res             = true;
+    // Create TTree for leakage current
+    auto cTree = new TTree("tDebugTree", "Debug");
+    // Create variables for TTree branches
+    std::vector<double> cTimeVec;
+    std::vector<double> cPtatVec;
+    std::vector<double> cTempVec;
+    std::vector<double> cStatusVec;
+    // Create TTree Branches
+    cTree->Branch("Time", &cTimeVec);
+    cTree->Branch("PTAT", &cPtatVec);
+    cTree->Branch("Temp", &cTempVec);
+    cTree->Branch("Status", &cStatusVec);
+    do
+    {
+        cEndTime2 = std::chrono::high_resolution_clock::now();
+        cDuration2     = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime2 - cStartTime2).count();
+        cTimeVec.push_back(cDuration2);
     uint8_t  cMatch;
     uint8_t  cShift;
     uint8_t  cWrappedByte;
     uint32_t cWrappedData;
-    LOG(INFO) << BOLDGREEN << "Checking against : " << std::bitset<8>(pPattern) << RESET;
-    bool                res             = true;
+    LOG(DEBUG) << BOLDGREEN << "Checking against : " << std::bitset<8>(pPattern) << RESET;
+   
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     // #ifdef __USE_ROOT__
     //     auto cCICOutTree = new TTree("tCicOut", "CIC_Out lines going to the SEH");
@@ -96,7 +116,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
         if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
-            for(int hybridNumber = 0; hybridNumber < 2; hybridNumber++)
+            for(int hybridNumber = 0; hybridNumber < 1; hybridNumber++)
             {
                 if(pIsExternal)
                 {
@@ -104,15 +124,21 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 0);
                     std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 }
+                int cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "ADC6");
+                LOG(INFO) << BOLDBLUE << "PTAT_BPOL2V5 " << cADCValue * 1./1023. << " V"<<RESET;
+                cPtatVec.push_back(cADCValue/1000.);
+                auto cLpgbtTemp = clpGBTInterface->GetInternalTemperature(cOpticalGroup->flpGBT);
+                cTempVec.push_back(cLpgbtTemp/1000.);
+                LOG(INFO) << BOLDBLUE << "Internal temperature sensor of lpGBT reads " << cLpgbtTemp << " which converts to " << cLpgbtTemp * (1. / 1023) << RESET;
                 fBeBoardInterface->setBoard(cBoard->getId());
                 D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
                 // D19cDebugFWInterface* cDebugFWInterface = dynamic_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
                 cFWInterface->selectLink(cOpticalGroup->getId());
                 cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
-                LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
+                LOG(DEBUG) << BOLDBLUE << "Stub lines " << RESET;
                 D19cDebugFWInterface* cDebugInterface = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-                cDebugInterface->StubDebug(true, 5);
-                cDebugInterface->StubDebug(true, 5);
+                //cDebugInterface->StubDebug(true, 5);
+                //cDebugInterface->StubDebug(true, 5);
                 // enable stub debug - allows you to 'scope' the stub output
 
                 cFWInterface->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable", 0x01);
@@ -124,7 +150,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 do
                 {
                     uint32_t cCicOutOutput = cWords[cLine * 10];
-                    LOG(INFO) << BOLDBLUE << "Scoped output on Stub Line " << BOLDGREEN << +cLine << BOLDBLUE << ": " << std::bitset<32>(cCicOutOutput) << " for hybrid side " << +hybridNumber
+                    LOG(DEBUG) << BOLDBLUE << "Scoped output on Stub Line " << BOLDGREEN << +cLine << BOLDBLUE << ": " << std::bitset<32>(cCicOutOutput) << " for hybrid side " << +hybridNumber
                               << RESET;
 
                     cMatch = 32;
@@ -143,7 +169,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                         }
                         LOG(DEBUG) << BOLDBLUE << "Line " << +cLine << " Shift " << +shift << " Match " << +popcount << RESET;
                     }
-                    LOG(INFO) << BOLDBLUE << "Found for stub line " << BOLDWHITE << +cLine << BOLDBLUE << " a minimal bit difference of " << BOLDWHITE << +cMatch << BOLDBLUE << " for a bit shift of "
+                    LOG(DEBUG) << BOLDBLUE << "Found for stub line " << BOLDWHITE << +cLine << BOLDBLUE << " a minimal bit difference of " << BOLDWHITE << +cMatch << BOLDBLUE << " for a bit shift of "
                               << BOLDWHITE << +cShift << RESET;
 
                     // cLineNames.push_back(Form("stub_%d_hybrid_%d_match", int(cLine), hybridNumber));
@@ -151,10 +177,10 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     fillSummaryTree(Form("stub_%d_hybrid_%d_match", int(cLine), hybridNumber), cMatch);
                     fillSummaryTree(Form("stub_%d_hybrid_%d_shift", int(cLine), hybridNumber), cShift);
 
-                    if((cMatch == 0)) { LOG(INFO) << BOLDGREEN << "CIC Out Test passed for stub line " << +cLine << " for hybrid side " << +hybridNumber << RESET; }
+                    if((cMatch == 0)) { LOG(DEBUG) << BOLDGREEN << "CIC Out Test passed for stub line " << +cLine << " for hybrid side " << +hybridNumber << RESET; }
                     else
                     {
-                        LOG(INFO) << BOLDRED << "CIC Out Test failed for stub line " << +cLine << " for hybrid side " << +hybridNumber << RESET;
+                        LOG(DEBUG) << BOLDRED << "CIC Out Test failed for stub line " << +cLine << " for hybrid side " << +hybridNumber << RESET;
                         res = false;
                     }
 
@@ -184,7 +210,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 } while(cLine < 6);
 #endif
 
-                LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
+                LOG(DEBUG) << BOLDBLUE << "L1 data " << RESET;
 
                 auto cInitFastReset = cFWInterface->ReadReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable");
                 auto cInitBP        = cFWInterface->ReadReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable");
@@ -198,7 +224,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 // load new trigger configuration
                 cFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
                 cFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
-                LOG(INFO) << BOLDBLUE << "Started triggers ...." << RESET;
+                LOG(DEBUG) << BOLDBLUE << "Started triggers ...." << RESET;
                 // wait until you've received at least one trigger
                 auto cNTriggersRxd = cFWInterface->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
                 auto cStartTime = std::chrono::high_resolution_clock::now(), cEndTime = cStartTime;
@@ -208,6 +234,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     cDuration     = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
                     cNTriggersRxd = cFWInterface->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
                     LOG(INFO) << BOLDMAGENTA << "Trigger in counter is " << +cNTriggersRxd << " waited for " << cDuration << " us so far" << RESET;
+                    cEndTime = std::chrono::high_resolution_clock::now();
                 } while(cNTriggersRxd < 10 && cDuration < 1 * 1e3);
                 cFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
 
@@ -219,7 +246,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 cFWInterface->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", cInitBP);
                 cFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
                 uint32_t cCicOutOutputL1A = cWordsL1A[0];
-                LOG(INFO) << BOLDBLUE << "Scoped output on L1A Line: " << std::bitset<32>(cCicOutOutputL1A) << " for hybrid side " << +hybridNumber << RESET;
+                LOG(DEBUG) << BOLDBLUE << "Scoped output on L1A Line: " << std::bitset<32>(cCicOutOutputL1A) << " for hybrid side " << +hybridNumber << RESET;
 
                 cMatch = 32;
                 cShift = 0;
@@ -237,20 +264,23 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     }
                     LOG(DEBUG) << BOLDBLUE << "Line L1A Shift " << +shift << " Match " << +popcount << RESET;
                 }
-                LOG(INFO) << BOLDBLUE << "Found for L1A a minimal bit difference of " << BOLDWHITE << +cMatch << BOLDBLUE << " for a bit shift of " << BOLDWHITE << +cShift << RESET;
+                LOG(DEBUG) << BOLDBLUE << "Found for L1A a minimal bit difference of " << BOLDWHITE << +cMatch << BOLDBLUE << " for a bit shift of " << BOLDWHITE << +cShift << RESET;
                 cFWInterface->ResetReadout();
                 if((cMatch == 0))
                 {
-                    LOG(INFO) << BOLDGREEN << "CIC Out Test passed for L1A line"
+                    LOG(DEBUG) << BOLDGREEN << "CIC Out Test passed for L1A line"
                               << " for hybrid side " << +hybridNumber << RESET;
+                    cStatusVec.push_back(1);
                 }
                 else
                 {
+                    LOG(INFO) << BOLDBLUE << "Scoped output on L1A Line: " << std::bitset<32>(cCicOutOutputL1A) << " for hybrid side " << +hybridNumber << RESET;
                     LOG(INFO) << BOLDRED << "CIC Out Test failed for L1A line"
                               << " for hybrid side " << +hybridNumber << RESET;
                     res = false;
+                    cStatusVec.push_back(0);
                     // cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
-                    cDebugInterface->L1ADebug(1);
+                    //cDebugInterface->L1ADebug(1);
                 }
                 // cLineNames.push_back(Form("L1A_hybrid_%d_match", hybridNumber));
                 // cMissMatch.push_back(cMatch);
@@ -265,12 +295,49 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     cL1ATotalWrong += __builtin_popcountll(cWrappedData ^ cWord);
                     cL1ATotal += 32;
                 }
-                LOG(INFO) << "L1A total wrong bits: " << BOLDBLUE << +cL1ATotalWrong << " in a total of: " << +cL1ATotal << RESET;
+                LOG(DEBUG) << "L1A total wrong bits: " << BOLDBLUE << +cL1ATotalWrong << " in a total of: " << +cL1ATotal << RESET;
             }
         }
     }
-    // cCICOutTree->Fill();
-    // cCICOutTree->Write();
+    
+                    
+                    LOG(INFO) << BOLDMAGENTA << "Ran for " << cDuration2 << " us so far" << RESET;
+                } while(cDuration2 < 1 * 1.5e8);
+    cTree->Fill();
+    fResultFile->cd();
+    cTree->Write();
+    auto cLeakMultiGraph = new TMultiGraph();
+    cLeakMultiGraph->SetName("mgDebug");
+    cLeakMultiGraph->SetTitle("CIC_Out_6 Debug");
+    auto cleakGraph = new TGraph(cTimeVec.size(), cTimeVec.data(), cPtatVec.data());
+    cleakGraph->SetName("gPtat");
+    cleakGraph->SetTitle("PTAT");
+    cleakGraph->SetLineColor(2);
+    cleakGraph->SetFillColor(0);
+    cleakGraph->SetLineWidth(3);
+    cLeakMultiGraph->Add(cleakGraph);
+    auto cPSleakGraph = new TGraph(cTimeVec.size(), cTimeVec.data(), cTempVec.data());
+    cPSleakGraph->SetName("gTEMP");
+    cPSleakGraph->SetTitle("Int Temp lpGBT");
+    cPSleakGraph->SetLineColor(3);
+    cPSleakGraph->SetFillColor(0);
+    cPSleakGraph->SetLineWidth(3);
+    cLeakMultiGraph->Add(cPSleakGraph);
+    auto cGraph = new TGraph(cTimeVec.size(), cTimeVec.data(), cStatusVec.data());
+    cGraph->SetName("gStatus");
+    cGraph->SetTitle("Test Status");
+    cGraph->SetLineColor(4);
+    cGraph->SetFillColor(0);
+    cGraph->SetLineWidth(3);
+    cLeakMultiGraph->Add(cGraph);
+    auto cLeakCanvas = new TCanvas("cDebug", "CIC_Out_6 Debug", 1600, 900);
+    cLeakMultiGraph->Draw("AL*");
+    cLeakMultiGraph->GetXaxis()->SetTitle("Time [mus]");
+    cLeakMultiGraph->GetYaxis()->SetTitle("a. u.");
+
+    cLeakCanvas->BuildLegend();
+    cLeakMultiGraph->Write();
+    cLeakCanvas->Write();
     return res;
 }
 
@@ -348,8 +415,10 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
                 gettimeofday(&start, NULL);
                 // do stuff
                 uint8_t failureIter = 0;
-                int     tries       = 100000;
+                int     tries       = 10000;
                 for(int j = 0; j < tries; j++)
+                //int j=0;
+                //while(true)
                 {
                     // #ifdef __TCUSB__
                     // #ifdef __SEH_USB__
@@ -375,6 +444,8 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
                     {
                         LOG(DEBUG) << BOLDGREEN << "I2C Master " << +cMaster << " PASSED" << RESET;
                         failureIter = 0;
+                        //j++;
+                        //std::this_thread::sleep_for(std::chrono::milliseconds(100));
                     }
                     else
                     {
@@ -603,6 +674,30 @@ bool OTHybridTester::LpGBTTestFixedADCs()
         for(auto cOpticalGroup: *cBoard)
         {
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+#ifdef __ROH_USB__
+                    flpGBTInterface->getExternalController()->getInterface().dac_output(cDACValue);
+#elif __SEH_USB__
+                    flpGBTInterface->getExternalController()->getInterface().set_AMUX(3500, 3500);
+#endif
+            while(true)
+            {int cValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "ADC1");
+            int cAmuxValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "ADC0");
+            if (cValue<500){
+
+              LOG(INFO) << BOLDRED << "V1V25_MON measured value is " << cValue * 1./1023. << " V" << RESET;
+            }
+            else  LOG(INFO) << BOLDGREEN << "V1V25_MON measured value is " << cValue * 1./1023. << " V" << RESET;
+            
+            
+            if (cAmuxValue<500){
+
+              LOG(INFO) << BOLDRED << "AMUX_L measured value is " << cAmuxValue * 1./1023. << " V" << RESET;
+            }
+            else  LOG(INFO) << BOLDGREEN << "AMUX_L measured value is " << cAmuxValue * 1./1023. << " V" << RESET;
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            
+        }            
+
             // Configure Temperature sensor
             // clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, std::vector<std::string>{"ADC4"}, 0x1c); // current chosen according to measurement range
             do

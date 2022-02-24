@@ -243,11 +243,11 @@ void lpGBTInterface::ConfigureRxSource(Chip* pChip, const std::vector<uint8_t>& 
     for(const auto& cGroup: pGroups)
     {
         if(pSource == 0)
-            LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "NORMAL " << RESET;
+            LOG(DEBUG) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "NORMAL " << RESET;
         else if(pSource == 1)
-            LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "PRBS7 " << RESET;
+            LOG(DEBUG) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "PRBS7 " << RESET;
         else if(pSource == 4 || pSource == 5)
-            LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "Constant Pattern" << RESET;
+            LOG(DEBUG) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "Constant Pattern" << RESET;
 
         std::string cRxSourceReg;
         if(cGroup == 0 || cGroup == 1)
