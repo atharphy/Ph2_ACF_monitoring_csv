@@ -962,9 +962,10 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                                         cCic->setClockFrequency(cValueFromFile);
                                     }
                                     if(cAttribute == "clockFrequency" && cCIC1) continue;
-                                    if(cAttribute == "enableSparsification"){ 
+                                    if(cAttribute == "enableSparsification")
+                                    {
                                         pBoard->setSparsification(bool(cValueFromFile));
-                                        LOG (INFO) << BOLDYELLOW << "Board sparisfication set to " << pBoard->getSparsification() << RESET;
+                                        LOG(INFO) << BOLDYELLOW << "Board sparisfication set to " << pBoard->getSparsification() << RESET;
                                     }
 
                                     os << GREEN << "|\t|\t|\t|---- Setting " << cAttribute << " to  " << cValueFromFile << "\n" << RESET;
@@ -1620,7 +1621,7 @@ std::string FileParser::parseMonitorxml(const std::string& pFilename, DetectorMo
     {
         if(convertAnyInt(monitorElement.attribute("enable").value()) == 0) continue;
 
-        const std::string chipName     = monitorElement.attribute("device"  ).value();
+        const std::string chipName     = monitorElement.attribute("device").value();
         const std::string registerName = monitorElement.attribute("register").value();
         os << BOLDRED << "Monitoring" << RESET << " -- " << BOLDCYAN << chipName << RESET << ":" << BOLDYELLOW << "Register " << registerName << RESET << std::endl;
         theDetectorMonitorConfig.addElementToMonitor(chipName, registerName);

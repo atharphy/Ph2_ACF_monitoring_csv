@@ -9,7 +9,7 @@ SEHMonitor::SEHMonitor(const Ph2_System::SystemController* theSystCntr, Detector
 
 void SEHMonitor::runMonitor()
 {
-    for(const auto& registerName : fDetectorMonitorConfig.fMonitorElementList.at("Board"  )) runInputCurrentMonitor(registerName);
+    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("Board")) runInputCurrentMonitor(registerName);
 
     // if(doMonitorInputCurrent) runInputCurrentMonitor();
 }

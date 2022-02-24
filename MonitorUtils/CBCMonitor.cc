@@ -13,7 +13,6 @@ using namespace Ph2_HwInterface;
 
 CBCMonitor::CBCMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {
-
 #ifdef __USE_ROOT__
     fMonitorPlotDQM    = new MonitorDQMPlotCBC();
     fMonitorDQMPlotCBC = static_cast<MonitorDQMPlotCBC*>(fMonitorPlotDQM);
@@ -23,9 +22,8 @@ CBCMonitor::CBCMonitor(const Ph2_System::SystemController* theSystemController, 
 
 void CBCMonitor::runMonitor()
 {
-
-    for(const auto& registerName : fDetectorMonitorConfig.fMonitorElementList.at("CBC"  )) runCBCRegisterMonitor  (registerName);
-    for(const auto& registerName : fDetectorMonitorConfig.fMonitorElementList.at("LpGBT")) runLpGBTRegisterMonitor(registerName);
+    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("CBC")) runCBCRegisterMonitor(registerName);
+    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT")) runLpGBTRegisterMonitor(registerName);
 }
 
 void CBCMonitor::runCBCRegisterMonitor(std::string registerName)

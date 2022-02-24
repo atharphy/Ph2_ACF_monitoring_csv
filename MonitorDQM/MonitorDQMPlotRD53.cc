@@ -15,7 +15,7 @@ void MonitorDQMPlotRD53::book(TFile* theOutputFile, const DetectorContainer& the
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
     for(unsigned int i = 0; i < fDetectorMonitorConfig.fMonitorElementList.at("RD53").size(); i++)
-            bookPlots(theOutputFile, theDetectorStructure, fDetectorMonitorConfig.fMonitorElementList.at("RD53")[i]);
+        bookPlots(theOutputFile, theDetectorStructure, fDetectorMonitorConfig.fMonitorElementList.at("RD53")[i]);
 }
 
 void MonitorDQMPlotRD53::bookPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName)

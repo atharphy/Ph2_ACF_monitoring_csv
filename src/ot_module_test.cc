@@ -47,26 +47,10 @@ INITIALIZE_EASYLOGGINGPP
 
 #define CHIPSLAVE 4
 
-// class InterruptHandler
-// {
-//   public:
-//     InterruptHandler(Tool* theTool) {fTool = theTool;}
-//     void operator() (int signal)
-//     {
-//         fTool->Destroy();
-//         exit(EXIT_FAILURE);
-//     }
-//   private:
-//     Tool* fTool;
-// };
-
-sig_atomic_t killProcess = 0;
+sig_atomic_t killProcess  = 0;
 sig_atomic_t runCompleted = 0;
 
-void interruptHandler(int handler)
-{
-    killProcess=1;
-}
+void interruptHandler(int handler) { killProcess = 1; }
 
 void killProcessFunction(Tool* theTool)
 {
@@ -81,7 +65,6 @@ void killProcessFunction(Tool* theTool)
         abort();
     }
 }
-
 
 uint16_t returnRunNumber(std::string cFileName)
 {
@@ -248,7 +231,7 @@ int main(int argc, char* argv[])
     std::stringstream outp;
     Tool              cTool;
 
-    std::thread softKillThread (killProcessFunction, &cTool);
+    std::thread softKillThread(killProcessFunction, &cTool);
     softKillThread.detach();
 
     struct sigaction act;

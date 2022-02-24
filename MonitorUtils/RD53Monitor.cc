@@ -27,8 +27,7 @@ void RD53Monitor::runMonitor()
     {
         fTheSystemController->ReadSystemMonitor(cBoard, fDetectorMonitorConfig.fMonitorElementList.at("RD53"));
 
-        for(unsigned int i = 0; i < fDetectorMonitorConfig.fMonitorElementList.at("RD53").size(); i++)
-            runRegisterMonitor(fDetectorMonitorConfig.fMonitorElementList.at("RD53").at(i));
+        for(unsigned int i = 0; i < fDetectorMonitorConfig.fMonitorElementList.at("RD53").size(); i++) runRegisterMonitor(fDetectorMonitorConfig.fMonitorElementList.at("RD53").at(i));
     }
 }
 

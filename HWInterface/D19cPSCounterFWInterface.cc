@@ -68,8 +68,8 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard, FrontEndType pTyp
                     cBaseRegisterMSB = 0;
                     if(cChip->getFrontEndType() == FrontEndType::MPA)
                     {
-                        int              cRowNumber       = 1 + cChnl / 120 ;
-                        int              cPixelNumber     = 1 + cChnl % 120 ;
+                        int cRowNumber   = 1 + cChnl / 120;
+                        int cPixelNumber = 1 + cChnl % 120;
 
                         cBaseRegisterLSB = ((cRowNumber << 11) | (9 << 7) | cPixelNumber);
                         cBaseRegisterMSB = ((cRowNumber << 11) | (10 << 7) | cPixelNumber);
@@ -88,13 +88,13 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard, FrontEndType pTyp
                     // MSB
                     ChipRegItem cReg_Counters_MSB;
                     cReg_Counters_MSB.fPage    = 0x00;
-                    cReg_Counters_MSB.fAddress = cBaseRegisterMSB ;
+                    cReg_Counters_MSB.fAddress = cBaseRegisterMSB;
                     cReg_Counters_MSB.fValue   = 0x00;
                     cRegItems.push_back(cReg_Counters_MSB);
                     // LSB
                     ChipRegItem cReg_Counters_LSB;
                     cReg_Counters_LSB.fPage    = 0x00;
-                    cReg_Counters_LSB.fAddress = cBaseRegisterLSB ;
+                    cReg_Counters_LSB.fAddress = cBaseRegisterLSB;
                     cReg_Counters_LSB.fValue   = 0x00;
                     cRegItems.push_back(cReg_Counters_LSB);
                 }
@@ -105,14 +105,9 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard, FrontEndType pTyp
                 {
                     auto cMSB = (*cIter).fValue;
                     auto cLSB = (*(cIter + 1)).fValue;
-                    if(  fPSCounterData[cId].size() < 10 ) 
-                        LOG (DEBUG) << BOLDYELLOW << "\t.. Counter#" << fPSCounterData[cId].size()
-                            << " MSBs " << +cMSB
-                            << " LSBs " << +cLSB
-                            << std::hex
-                            << " : 0x" << ( (cMSB << 8) | cLSB )
-                            << std::dec
-                            << RESET;
+                    if(fPSCounterData[cId].size() < 10)
+                        LOG(DEBUG) << BOLDYELLOW << "\t.. Counter#" << fPSCounterData[cId].size() << " MSBs " << +cMSB << " LSBs " << +cLSB << std::hex << " : 0x" << ((cMSB << 8) | cLSB) << std::dec
+                                   << RESET;
                     fPSCounterData[cId].push_back((cMSB << 8) | cLSB);
                 }
             } // chip loop
@@ -342,7 +337,7 @@ bool D19cPSCounterFWInterface::WaitForNTriggers()
     // for(size_t cIndx=0; cIndx < fNEvents; cIndx++) PS_Inject();
     // PS_Close_shutter();
     // return true;
-    
+
     // // wait for trigger state machine to send all triggers
     auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
     LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData After resetting trigger FSM.. trigger source is " << cTriggerSource << RESET;

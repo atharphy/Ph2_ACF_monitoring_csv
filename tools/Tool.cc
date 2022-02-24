@@ -1477,7 +1477,7 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
         fUseReadNEvents = true;
     }
     doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
-    
+
     // if in async mode normalization is a little different ..
     // normalize by the number of triggers to accept
     // if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::PSAS)
