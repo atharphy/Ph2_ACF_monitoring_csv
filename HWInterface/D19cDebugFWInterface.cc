@@ -4,8 +4,11 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-D19cDebugFWInterface::D19cDebugFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler) : BeBoardFWInterface(puHalConfigFileName, pBoardId) {}
-D19cDebugFWInterface::D19cDebugFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler) : BeBoardFWInterface(pId, pUri, pAddressTable) {}
+D19cDebugFWInterface::D19cDebugFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : RegManager(pId, pUri, pAddressTable) {}
+D19cDebugFWInterface::D19cDebugFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : RegManager(puHalConfigFileName, pBoardId)
+{
+    LOG(INFO) << BOLDYELLOW << "D19cDebugFWInterface::D19cBackendAlignmentFWInterface Constructor" << RESET;
+}
 D19cDebugFWInterface::~D19cDebugFWInterface() {}
 
 std::string D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
@@ -14,7 +17,7 @@ std::string D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
     auto cInitFastReset = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable");
     auto cInitBP        = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable");
     // enable initial fast reset
-    this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable", 1);
+    this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable",1);
     // disable back-pressure
     this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0);
     WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
@@ -30,6 +33,7 @@ std::string D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
     auto cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
     do
     {
+        cEndTime      = std::chrono::high_resolution_clock::now();
         cDuration     = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
         cNTriggersRxd = this->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
         LOG(INFO) << BOLDMAGENTA << "Trigger in counter is " << +cNTriggersRxd << " waited for " << cDuration << " us so far" << RESET;

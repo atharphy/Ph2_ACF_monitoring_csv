@@ -1,5 +1,6 @@
 #include <cstring>
 
+#include "D19cDebugFWInterface.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
@@ -11,6 +12,7 @@
 #include "tools/LatencyScan.h"
 #include "tools/LinkAlignmentOT.h"
 #include "tools/MemoryCheck2S.h"
+#include "tools/OTCMNoise.h"
 #include "tools/OTTemperature.h"
 #include "tools/PSAlignment.h"
 #include "tools/PedeNoise.h"
@@ -100,6 +102,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("linkTest", "Check data coming over link....", ArgvParser::OptionRequiresValue);
     cmd.defineOption("measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC.");
     cmd.defineOptionAlternative("measurePedeNoise", "m");
+
+    cmd.defineOption("cmNoise", "measure common mode noise");
 
     cmd.defineOption("read", "Read data from a raw file.  ", ArgvParser::OptionRequiresValue);
     cmd.defineOption("save", "Save the data to a raw file.  ", ArgvParser::NoOptionAttribute);
@@ -221,8 +225,15 @@ int main(int argc, char* argv[])
     LOG(INFO) << outp.str();
     cTool.CreateResultDirectory(cDirectory, false, false);
     cTool.InitResultFile(cResultfile);
+    // make sure  all interfaces are configured
+    for(const auto cBoard: *cTool.fDetectorContainer)
+    {
+        cTool.fBeBoardInterface->setBoard(cBoard->getId());
+        auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+        cInterface->ConfigureInterfaces(cBoard);
+    }
 
-    if(cmd.foundOption("readMonitors"))
+    if(cmd.foundOption("readTemperatures"))
     {
         LOG(INFO) << BOLDBLUE << "Reading internal monitors from lpGBT-ADCs.." << RESET;
         auto          cGain = (cmd.foundOption("readMonitors")) ? convertAnyInt(cmd.optionValue("readMonitors").c_str()) : 0;
@@ -421,6 +432,19 @@ int main(int argc, char* argv[])
     if(!cmd.foundOption("read") && cmd.foundOption("reconfigure"))
     {
         cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
+        // just to check
+        // D19cDebugFWInterface* cDebugInterface   = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+        // for(const auto cBoard: *cTool.fDetectorContainer)
+        // {
+        //     cDebugInterface->L1ADebug();
+        //     cTool.ReadNEvents(cBoard, 10);
+        // }
+        // exit(0);
+
+        // for(const auto cBoard: *cTool.fDetectorContainer)
+        // {
+        //     cTool.ReadNEvents(cBoard, 10);
+        // }
 
         // map MPA outputs for PS module
         PSAlignment cPSAlignment;
@@ -455,6 +479,17 @@ int main(int argc, char* argv[])
         cCicAligner.Start(0);
         cCicAligner.waitForRunToBeCompleted();
         cCicAligner.dumpConfigFiles();
+
+        // quickly check ReadData
+        // for(const auto cBoard: *cTool.fDetectorContainer)
+        // {
+        //     cTool.fBeBoardInterface->Start(cBoard);
+        //     std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        //     std::vector<uint32_t> cData;
+        //     bool                cWait    = false;
+        //     cTool.ReadData(cBoard, cData, cWait);
+        //     cTool.fBeBoardInterface->Stop(cBoard);
+        // }
     }
     // reload settings on-to FE chips
     if(!cmd.foundOption("read") && cmd.foundOption("reload"))
@@ -959,13 +994,28 @@ int main(int argc, char* argv[])
         cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
         // cPedeNoise.scanScurves();
         cPedeNoise.measureNoise();
-        // cPedeNoise.Validate();
+        cPedeNoise.Validate();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
         cPedeNoise.Reset();
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
     }
+
+    if(cmd.foundOption("cmNoise") && !cmd.foundOption("read"))
+    {
+        LOG(INFO) << "OT_MODULE_TEST:: Measuring CM Noise" << RESET;
+
+        OTCMNoise cTester;
+        cTester.Inherit(&cTool);
+        cTester.Initialize();
+        LOG(INFO) << "OT_MODULE_TEST:: Setting thresholds" << RESET;
+        cTester.SetThresholds();
+
+        LOG(INFO) << "OT_MODULE_TEST:: Taking measurements " << RESET;
+        cTester.TakeData();
+    }
+
     // inject hits and stubs using mask and compare input against output
     if(cmd.foundOption("memCheck") && !cmd.foundOption("read"))
     {

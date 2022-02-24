@@ -12,6 +12,7 @@
 #include "Channel.h"
 #include "CicFEAlignment.h"
 #include "ContainerFactory.h"
+#include "L1ReadoutInterface.h"
 #include "Occupancy.h"
 #include "PSAlignment.h"
 #include "StubBackEndAlignment.h"
@@ -360,9 +361,12 @@ void Eudaq2Producer::DoStopRun()
     LOG(INFO) << BOLDBLUE << "[CMS-OT Producer] Closing shutter..." << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
+        fBeBoardInterface->setBoard(cBoard->getId());
+        auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cReadoutInterface = cInterface->getL1ReadoutInterface();
         this->fBeBoardInterface->Stop(static_cast<BeBoard*>(cBoard));
         LOG(INFO) << BOLDBLUE << "[CMS-OT Producer] Shutter closed on board " << +cBoard->getId() << RESET;
-        static_cast<D19cFWInterface*>(this->fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+        cReadoutInterface->ResetReadout();
         LOG(INFO) << BOLDBLUE << "Reset readout on D19cFWInterface" << RESET;
         // Show number of triggers received so far
         LOG(INFO) << "[CMS-OT Producer] Run Stopped, number of triggers received so far on board : " << +cBoard->getId() << " = "
@@ -413,8 +417,12 @@ void Eudaq2Producer::DoReset()
         // Just in case close the shutter
         for(auto cBoard: *fDetectorContainer)
         {
+            fBeBoardInterface->setBoard(cBoard->getId());
+            auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+            auto cReadoutInterface = cInterface->getL1ReadoutInterface();
+
             fBeBoardInterface->Stop(static_cast<BeBoard*>(cBoard));
-            static_cast<D19cFWInterface*>(this->fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+            cReadoutInterface->ResetReadout();
             LOG(INFO) << BOLDBLUE << "Reset readout on D19cFWInterface" << RESET;
             // Show number of triggers received so far
             LOG(INFO) << "[CMS-OT Producer] Run Stopped, number of triggers received so far on board : " << +cBoard->getId() << " = "

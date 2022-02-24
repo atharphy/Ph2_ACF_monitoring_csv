@@ -10,6 +10,8 @@
 #include "../Utils/Occupancy.h"
 #include "../Utils/SSAChannelGroupHandler.h"
 #include "../Utils/ThresholdAndNoise.h"
+#include "L1ReadoutInterface.h"
+#include "TriggerInterface.h"
 #include "boost/format.hpp"
 #include <math.h>
 
@@ -489,6 +491,10 @@ void PedeNoiseTime::GenericTriggers(size_t pNtriggersToSend, int pTriggerSeparat
 }
 uint32_t PedeNoiseTime::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
 {
+    fBeBoardInterface->setBoard(pBoard->getId());
+    auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cTriggerInterface = cInterface->getTriggerInterface();
+
     LOG(DEBUG) << BOLDMAGENTA << "PedeNoiseTime setting TriggerConfig " << RESET;
 
     // repeat the sequence N times
@@ -507,7 +513,7 @@ uint32_t PedeNoiseTime::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
 
     // this stops triggers and
     // re-loads the configuration
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
+    cTriggerInterface->ResetTriggerFSM();
 
     cNWords    = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.readout_block.general.words_cnt");
     cNtriggers = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
@@ -520,7 +526,7 @@ uint32_t PedeNoiseTime::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", fNInjectedTriggers * cNrepetitions);
     std::this_thread::sleep_for(std::chrono::microseconds(10));
     // re-load configuration
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
+    cTriggerInterface->ResetTriggerFSM();
     return fNInjectedTriggers * cNrepetitions;
 }
 bool PedeNoiseTime::SendGenericTriggers(size_t pNtriggersToSend, int pTriggerSeparation)
@@ -617,11 +623,14 @@ bool PedeNoiseTime::DataFromRandomTriggers(int pTriggerSeparation)
 {
     for(auto cBoard: *fDetectorContainer)
     {
+        fBeBoardInterface->setBoard(cBoard->getId());
+        auto cInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface();
         cBoard->setEventType(EventType::VR); // temp for PS tests
         // fReadoutChipInterface->setBoard(cBoard->getId());
         fBeBoardInterface->Stop(cBoard);
         // make sure readout has been reset
-        (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->ResetReadout();
+        cL1ReadoutInterface->ResetReadout();
     } // make sure triggers have been stopped on all boards
     bool cSuccess = SendGenericTriggers(fEventsPerPoint, pTriggerSeparation);
     if(!cSuccess) return cSuccess;
@@ -632,6 +641,10 @@ bool PedeNoiseTime::DataFromExternalTriggers()
     bool cSuccess = true;
     for(auto cBoard: *fDetectorContainer)
     {
+        fBeBoardInterface->setBoard(cBoard->getId());
+        auto cInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface();
+
         cBoard->setEventType(EventType::VR); // temp for PS tests
         auto& cNtriggers = fTriggerCounter.at(cBoard->getIndex())->getSummary<uint32_t>();
         fBeBoardInterface->Stop(cBoard);
@@ -639,7 +652,7 @@ bool PedeNoiseTime::DataFromExternalTriggers()
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", fEventsPerPoint);
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x00);
         // make sure readout has been reset
-        (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->ResetReadout();
+        cL1ReadoutInterface->ResetReadout();
         // start trigggers
         fBeBoardInterface->Start(cBoard);
         // check if all triggers have been received

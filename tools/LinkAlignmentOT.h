@@ -71,6 +71,7 @@ class LinkAlignmentOT : public OTTool
     DetectorDataContainer fBeBitSlip;       // one per line per data line from hybrid
     bool                  fStubDebug{false};
     bool                  fL1Debug{false};
+    uint8_t               fAllowZeroBitslip{1};
 
     bool CheckLpgbtOutputs(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, uint8_t pPattern = 0xAA);
     bool AlignLpGBTInputs(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
