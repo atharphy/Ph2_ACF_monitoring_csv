@@ -286,7 +286,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                                       cNblocks); // split 32 bit words in  blocks of 274 bits
                                     for(size_t cIndex = 0; cIndex < cFullSize; cIndex++)
                                     {
-                                        LOG(INFO) << BOLDBLUE << "\t...  chip " << +cIndex << "\t -- " << cL1Words[cIndex] << RESET;
+                                        LOG(DEBUG) << BOLDBLUE << "\t...  chip " << +cIndex << "\t -- " << cL1Words[cIndex] << RESET;
                                         fEventRawList[cFeIndex].second.push_back(std::bitset<RAW_L1_CBC>((cL1Words[cIndex]).to_string() + "0"));
                                     }
                                 }

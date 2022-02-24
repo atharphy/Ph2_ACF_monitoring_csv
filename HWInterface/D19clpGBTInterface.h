@@ -28,7 +28,7 @@ class D19clpGBTInterface : public lpGBTInterface
         // configure CPB - do this here rather than in SystemController? Not sure
         CPBconfig cCPBconfig;
         cCPBconfig.fEnable      = pUseCPB;
-        cCPBconfig.fWait_us     = 100;  // TO-DO - make configurable from xml
+        cCPBconfig.fWait_us     = 500;  // TO-DO - make configurable from xml
         cCPBconfig.fReTry       = 1;    // TO-DO - make configurable from xml
         cCPBconfig.fVerbose     = 0;    // TO-DO - make configurable from xml
         cCPBconfig.fMaxAttempts = 5000; // TO-DO - make configurable from xml
