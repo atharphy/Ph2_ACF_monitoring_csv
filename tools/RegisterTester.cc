@@ -20,26 +20,20 @@ void RegisterTester::Initialise()
     LOG(INFO) << BOLDMAGENTA << "RegisterTester::Initialise at " << fStartTime << " s from epoch." << RESET;
 
     // clear map of modified registers
-    fReadoutChipInterface->ClearModifiedRegisterMap();
-    bool cIsPS = false;
-    for(auto cBoard: *fDetectorContainer)
+     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            bool cWithLpGBT = (cOpticalGroup->flpGBT != nullptr);
             for(auto cHybrid: *cOpticalGroup)
             {
-                if(cIsPS) continue;
-
-                auto cType    = FrontEndType::SSA;
-                bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                cType         = FrontEndType::MPA;
-                bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                cIsPS         = (cWithSSA && cWithMPA) && cWithLpGBT;
+                for(auto cChip: *cHybrid)
+                {
+                    cChip->ClearModifiedRegisterMap();
+                    cChip->setRegisterTracking(1);
+                }
             }
         }
     }
-    if(cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();
 
     ContainerFactory::copyAndInitChip<Registers>(*fDetectorContainer, fRegList);
     for(auto cBoard: *fDetectorContainer)

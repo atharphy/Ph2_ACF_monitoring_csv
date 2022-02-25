@@ -114,6 +114,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
+
         for(auto cOpticalGroup: *cBoard)
         {
             for(int hybridNumber = 0; hybridNumber < 1; hybridNumber++)
@@ -132,12 +133,10 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 LOG(INFO) << BOLDBLUE << "Internal temperature sensor of lpGBT reads " << cLpgbtTemp << " which converts to " << cLpgbtTemp * (1. / 1023) << RESET;
                 fBeBoardInterface->setBoard(cBoard->getId());
                 D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-                // D19cDebugFWInterface* cDebugFWInterface = dynamic_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
                 cFWInterface->selectLink(cOpticalGroup->getId());
                 cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
                 LOG(DEBUG) << BOLDBLUE << "Stub lines " << RESET;
-                D19cDebugFWInterface* cDebugInterface = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-                //cDebugInterface->StubDebug(true, 5);
+                D19cDebugFWInterface* cDebugInterface = cFWInterface->getDebugInterface();                //cDebugInterface->StubDebug(true, 5);
                 //cDebugInterface->StubDebug(true, 5);
                 // enable stub debug - allows you to 'scope' the stub output
 
@@ -265,7 +264,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     LOG(DEBUG) << BOLDBLUE << "Line L1A Shift " << +shift << " Match " << +popcount << RESET;
                 }
                 LOG(DEBUG) << BOLDBLUE << "Found for L1A a minimal bit difference of " << BOLDWHITE << +cMatch << BOLDBLUE << " for a bit shift of " << BOLDWHITE << +cShift << RESET;
-                cFWInterface->ResetReadout();
+                //cFWInterface->ResetReadout();
                 if((cMatch == 0))
                 {
                     LOG(DEBUG) << BOLDGREEN << "CIC Out Test passed for L1A line"
@@ -280,7 +279,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     res = false;
                     cStatusVec.push_back(0);
                     // cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
-                    //cDebugInterface->L1ADebug(1);
+                   // cDebugInterface->L1ADebug(1);
                 }
                 // cLineNames.push_back(Form("L1A_hybrid_%d_match", hybridNumber));
                 // cMissMatch.push_back(cMatch);

@@ -19,6 +19,9 @@ class SEHMonitor : public DetectorMonitor
   private:
     void runInputCurrentMonitor();
     bool doMonitorInputCurrent{false};
+    #ifdef __USE_ROOT__
+    MonitorDQMPlotCBC* fMonitorDQMPlotCBC;
+#endif
 };
 
 #endif

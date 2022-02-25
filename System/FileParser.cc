@@ -184,6 +184,7 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
         {
             pBeBoardFWMap[cBeBoard->getId()] = new RD53FWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str());
         }
+        LOG(INFO) << BOLDYELLOW << "ParseHW [FileParser] " << pBeBoardFWMap[cBeBoard->getId()] << "\t" << pBeBoardFWMap[cBeBoard->getId()]->getId() << RESET;
     }
     os << BOLDCYAN << "|"
        << "       "
@@ -961,7 +962,10 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                                         cCic->setClockFrequency(cValueFromFile);
                                     }
                                     if(cAttribute == "clockFrequency" && cCIC1) continue;
-                                    if(cAttribute == "enableSparsification") pBoard->setSparsification(bool(cValueFromFile));
+                                    if(cAttribute == "enableSparsification"){ 
+                                        pBoard->setSparsification(bool(cValueFromFile));
+                                        LOG (INFO) << BOLDYELLOW << "Board sparisfication set to " << pBoard->getSparsification() << RESET;
+                                    }
 
                                     os << GREEN << "|\t|\t|\t|---- Setting " << cAttribute << " to  " << cValueFromFile << "\n" << RESET;
                                     LOG(DEBUG) << BOLDBLUE << " Global settings " << cAttribute << " [ " << *it << " ]-- set to " << cValueFromFile << RESET;

@@ -15,6 +15,7 @@
 #include "../tools/BackEndAlignment.h"
 #include "../tools/CalibrationExample.h"
 #include "../tools/Tool.h"
+#include "L1ReadoutInterface.h"
 
 #include "PedeNoise.h"
 #include "PedestalEqualization.h"
@@ -83,7 +84,9 @@ int main(int argc, char* argv[])
     while(DELAY > 19)
     {
         static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ConfigureTestPulseFSM(100, 10, DELAY - 10);
-        static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+        auto cInterface          = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+        auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface();
+        cL1ReadoutInterface->ResetReadout();
         int nGoodBest = 0;
         for(int lat = 5; lat < 6; lat++)
         {

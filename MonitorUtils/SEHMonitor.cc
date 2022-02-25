@@ -13,6 +13,11 @@ SEHMonitor::SEHMonitor(const Ph2_System::SystemController* theSystCntr, Detector
 {
     // doMonitorTemperature = fDetectorMonitorConfig.isElementToMonitor("ModuleTemperature");
     doMonitorInputCurrent = fDetectorMonitorConfig.isElementToMonitor("I_SEH");
+    #ifdef __USE_ROOT__
+    fMonitorPlotDQM    = new MonitorDQMPlotCBC();
+    fMonitorDQMPlotCBC = static_cast<MonitorDQMPlotCBC*>(fMonitorPlotDQM);
+    fMonitorDQMPlotCBC->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
+    #endif
 }
 
 void SEHMonitor::runMonitor()

@@ -78,6 +78,7 @@ void Cic::loadfRegMap(const std::string& filename)
                 fRegItem.fDefValue = strtoul(fDefValue_str.c_str(), 0, 16);
                 fRegItem.fValue    = strtoul(fValue_str.c_str(), 0, 16);
                 fRegMap[fName]     = fRegItem;
+                // LOG (INFO) << BOLDYELLOW << "CIC:" << +fRegItem.fPage << "\t" << +fRegItem.fAddress << "\t" << +fRegItem.fValue << RESET;
                 cLineCounter++;
             }
         }

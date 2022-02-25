@@ -109,17 +109,6 @@ class PSInterface : public ReadoutChipInterface
     void                          resetSsaRetrySummary() { theSSAInterface->resetRetrySummary(); };
     void                          resetSsaErrorSummary() { theSSAInterface->resetErrorSummary(); };
 
-    void UpdateModifiedRegisterMap(Ph2_HwDescription::ReadoutChip* pChip)
-    {
-        auto cModMap = (pChip->getFrontEndType() == FrontEndType::SSA) ? theSSAInterface->GetModifiedRegisterMap(pChip) : theMPAInterface->GetModifiedRegisterMap(pChip);
-        OverwriteModifiedRegisterMap(pChip, cModMap);
-    }
-    void ResetModifiedRegisterMap()
-    {
-        theSSAInterface->ClearModifiedRegisterMap();
-        theMPAInterface->ClearModifiedRegisterMap();
-    }
-
     // void                              printErrorSummary();
 };
 } // namespace Ph2_HwInterface

@@ -28,25 +28,16 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     cWithCBC = false;
     cWithSSA = false;
     cWithMPA = false;
+    std::vector<FrontEndType> cAllFrontEndTypes;
     for(auto cBoard: *fDetectorContainer)
     {
-        for(auto cOpticalGroup: *cBoard)
+        auto cFeTypes = cBoard->connectedFrontEndTypes();
+        cWithCBC      = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::CBC3) != cFeTypes.end();
+        cWithSSA      = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::SSA) != cFeTypes.end() || std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::SSA2) != cFeTypes.end();
+        cWithMPA      = std::find(cFeTypes.begin(), cFeTypes.end(), FrontEndType::MPA) != cFeTypes.end();
+        for(auto cFeType: cFeTypes)
         {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                if(!cWithCBC)
-                {
-                    cWithCBC = (std::find_if(cHybrid->begin(), cHybrid->end(), [](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::CBC3; }) != cHybrid->end());
-                }
-                if(!cWithSSA)
-                {
-                    cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::SSA; }) != cHybrid->end());
-                }
-                if(!cWithMPA)
-                {
-                    cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == FrontEndType::MPA; }) != cHybrid->end());
-                }
-            }
+            if(std::find(cAllFrontEndTypes.begin(), cAllFrontEndTypes.end(), cFeType) == cAllFrontEndTypes.end()) cAllFrontEndTypes.push_back(cFeType);
         }
     }
     if(cWithCBC) LOG(INFO) << BOLDBLUE << "PedestalEqualization with CBCs" << RESET;
@@ -54,10 +45,6 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     if(cWithMPA && !cWithSSA) LOG(INFO) << BOLDBLUE << "PedestalEqualization with MPAs" << RESET;
     if(cWithSSA && cWithMPA) LOG(INFO) << BOLDBLUE << "PedestalEqualization with SSAs+MPAs" << RESET;
 
-    // ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
-    // cWithCBC                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-    // cWithSSA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
-    // cWithMPA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
     if(cWithCBC)
     {
         CBCChannelGroupHandler theChannelGroupHandler;
@@ -68,15 +55,16 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     {
         SSAChannelGroupHandler theChannelGroupHandler;
         theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
-        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA);
-        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA2);
+        // temporary
+        setChannelGroupHandler(theChannelGroupHandler, cAllFrontEndTypes);
     }
     if(cWithMPA)
     {
         MPAChannelGroupHandler theChannelGroupHandler;
         theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
-        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA);
-        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA2);
+        setChannelGroupHandler(theChannelGroupHandler, cAllFrontEndTypes);
+        // setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA);
+        // setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA2);
     }
 
     this->fAllChan = pAllChan;
@@ -102,7 +90,6 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
         fTestPulse = 0;
     else
         fTestPulse = 1;
-        // LOG (INFO) << BLUE <<  "fTestPulse " <<fTestPulse<< RESET ;
 
 #ifdef __USE_ROOT__
     fDQMHistogramPedestalEqualization.book(fResultFile, *fDetectorContainer, fSettingsMap);
@@ -116,38 +103,34 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
         cBoardRegNap.insert(cOrigRegMap.begin(), cOrigRegMap.end());
     }
 
-    // for now.. force to use async mode here
-    bool cForcePSasync = true;
+    // event types
     fEventTypes.clear();
+    bool cForcePSasync = true;
     for(auto cBoard: *fDetectorContainer)
     {
         fEventTypes.push_back(cBoard->getEventType());
-        fBeBoardInterface->setBoard(cBoard->getId());
-        // auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-        // cInterface->SetPSCounterMode(cEnableFastCounterReadout);
-        // cInterface->SetPSPairSelect(cEnablePairSelect);
-        for(auto cOpticalGroup: *cBoard)
+        if(!cWithSSA && !cWithMPA) continue;
+        if(!cForcePSasync) continue;
+        cBoard->setEventType(EventType::PSAS);
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->InitializePSCounterFWInterface(cBoard);
+    }
+
+    // make sure register tracking is on
+    for(auto board: *fDetectorContainer)
+    {
+        for(auto opticalGroup: *board)
         {
-            for(auto cHybrid: *cOpticalGroup)
+            for(auto hybrid: *opticalGroup)
             {
-                auto cType    = FrontEndType::SSA;
-                bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                cType         = FrontEndType::MPA;
-                bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                if(!cWithSSA && !cWithMPA) continue;
-
-                if(!cForcePSasync) continue;
-
-                cBoard->setEventType(EventType::PSAS);
-                // set all SSAs + MPAs to output data in async mode
-                for(auto cROC: *cHybrid)
+                for(auto chip: *hybrid)
                 {
-                    // TBC - what about MPA here?
-                    fReadoutChipInterface->WriteChipReg(cROC, "AnalogueAsync", 1);
+                    chip->setRegisterTracking(1);
+                    chip->ClearModifiedRegisterMap();
                 }
             }
         }
     }
+
     if(fDisableStubLogic)
     {
         // ContainerFactory::copyAndInitChip<uint8_t>(*fDetectorContainer, fStubLogicCointainer);
@@ -188,7 +171,6 @@ void PedestalEqualization::Reset()
 {
     LOG(INFO) << BOLDGREEN << "Resetting registers touched  by PedestalEqualization" << RESET;
     // set everything back to original values .. like I wasn't here
-    bool cWithPS = false;
     for(auto cBoard: *fDetectorContainer)
     {
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
@@ -201,21 +183,13 @@ void PedestalEqualization::Reset()
 
         for(auto cOpticalGroup: *cBoard)
         {
-            bool cWithLpGBT = (cOpticalGroup->flpGBT != nullptr);
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto cType    = FrontEndType::SSA;
-                bool cWithSSA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                cType         = FrontEndType::MPA;
-                bool cWithMPA = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                bool cIsPS    = (cWithSSA && cWithMPA) && cWithLpGBT;
-                cWithPS       = cWithPS || cIsPS;
-                LOG(INFO) << BOLDBLUE << "PedestalEqualization::Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
                 for(auto cChip: *cHybrid)
                 {
-                    if(cIsPS) static_cast<PSInterface*>(fReadoutChipInterface)->UpdateModifiedRegisterMap(cChip);
-                    auto cModMap = fReadoutChipInterface->GetModifiedRegisterMap(cChip);
-                    LOG(INFO) << BOLDBLUE << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
+                    auto cModMap = cChip->GetModifiedRegisterMap();
+                    LOG(INFO) << BOLDYELLOW << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
+                    std::vector<std::pair<std::string, uint16_t>> cRegList;
                     for(auto cMapItem: cModMap)
                     {
                         auto cValueInMemory = cChip->getReg(cMapItem.first);
@@ -224,18 +198,17 @@ void PedestalEqualization::Reset()
                         if(cMapItem.first.find("TrimDAC") != std::string::npos) continue;
                         if(cMapItem.first.find("THTRIMMING") != std::string::npos) continue;
 
-                        LOG(INFO) << BOLDBLUE << "PedestalEqualization::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
+                        LOG(INFO) << BOLDYELLOW << "PedestalEqualization::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
                                   << cMapItem.second.fValue << RESET;
-                        fReadoutChipInterface->WriteChipReg(cChip, cMapItem.first, cMapItem.second.fValue);
+                        cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second.fValue));
                     }
+                    fReadoutChipInterface->WriteChipMultReg(cChip, cRegList, false);
+                    // don't track registers + clear mod reg map
+                    cChip->setRegisterTracking(0);
+                    cChip->ClearModifiedRegisterMap();
                 }
             }
         }
-    }
-    if(fReadoutChipInterface != nullptr)
-    {
-        fReadoutChipInterface->ClearModifiedRegisterMap();
-        if(cWithPS) static_cast<PSInterface*>(fReadoutChipInterface)->ResetModifiedRegisterMap();
     }
     resetPointers();
 
@@ -327,7 +300,7 @@ void PedestalEqualization::FindVplus()
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
                     uint16_t     tmpVthr = 0;
                     if(theChip->getFrontEndType() == FrontEndType::CBC3) tmpVthr = (theChip->getReg("VCth1") + (theChip->getReg("VCth2") << 8));
-                    if(theChip->getFrontEndType() == FrontEndType::SSA) tmpVthr = theChip->getReg("Bias_THDAC");
+                    if(theChip->getFrontEndType() == FrontEndType::SSA || theChip->getFrontEndType() == FrontEndType::SSA2) tmpVthr = theChip->getReg("Bias_THDAC");
                     if(theChip->getFrontEndType() == FrontEndType::MPA)
                     {
                         for(uint8_t cDAC = 0; cDAC < 1; cDAC++)
@@ -430,7 +403,7 @@ void PedestalEqualization::FindOffsets()
                         char charRegName[20];
 
                         if(roc->getFrontEndType() == FrontEndType::CBC3) sprintf(charRegName, "Channel%03d", channelNumber++);
-                        if(roc->getFrontEndType() == FrontEndType::SSA) sprintf(charRegName, "THTRIMMING_S%d", channelNumber++);
+                        if(roc->getFrontEndType() == FrontEndType::SSA || roc->getFrontEndType() == FrontEndType::SSA2) sprintf(charRegName, "THTRIMMING_S%d", channelNumber++);
                         if(roc->getFrontEndType() == FrontEndType::MPA) sprintf(charRegName, "TrimDAC_P%d", channelNumber++);
                         std::string cRegName = charRegName;
                         channel              = roc->getReg(cRegName);
@@ -439,7 +412,7 @@ void PedestalEqualization::FindOffsets()
                     }
 
                     if(roc->getFrontEndType() == FrontEndType::MPA) NCH = NMPACHANNELS;
-                    if(roc->getFrontEndType() == FrontEndType::SSA) NCH = NSSACHANNELS;
+                    if(roc->getFrontEndType() == FrontEndType::SSA || roc->getFrontEndType() == FrontEndType::SSA2) NCH = NSSACHANNELS;
 
                     LOG(INFO) << BOLDRED << "Mean offset on ROC" << +chip->getId() << " is : " << (cMeanOffset) / (double)NCH << " Vcth units." << RESET;
                 } // for on chip - end
