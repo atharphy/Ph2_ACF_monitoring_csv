@@ -509,7 +509,7 @@ void Tool::InitResultFile(const std::string& pFilename)
         {
             fResultFile     = TFile::Open(cFilename.c_str(), "RECREATE");
             fResultFileName = cFilename;
-            AddMetadata();
+            // AddMetadata();
         }
         catch(std::exception& e)
         {
