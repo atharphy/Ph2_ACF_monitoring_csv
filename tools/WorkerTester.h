@@ -9,40 +9,64 @@ using namespace Ph2_HwDescription;
 
 class WorkerTester : public Tool {
     public :
-        WorkerTester();
-	~WorkerTester();
+        WorkerTester(bool pNewImp, bool fVerbose) ;
+        ~WorkerTester();
 
-    void PrepareForTests();
-    void PrintFSMState();
+        void PrepareForTests();
+        void PrintFSMState();
 
-    // function for CPB command/reply 
-    void WriteCommandCPB(const std::vector<uint32_t>& pCommandVector, bool pVerbose=false);
-    std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords, bool pVerbose=false);
-    void ResetCPB();
-    // function for IC transactions 
-    bool WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerbose=false);
-    uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterValue, bool pVerbose=false);
-    bool IsICToolDone();
-    // function for I2C transactions using lpGBT I2C Masters
-    bool I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes, bool pVerbose=false);
-    uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes, bool pVerbose=false);
-    bool IsI2CToolDone();
-    // function for front-end slow control
-    bool WriteFERegister(Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerify = true, bool pVerbose=false);
-    uint8_t ReadFERegister(Chip* pChip, uint16_t pRegisterAddress, bool pVerbose=false);
-    bool IsFEToolDone();
+        //NEW
+        // function for CPB command/reply 
+        void WriteCommandCPB(const std::vector<uint32_t>& pCommandVector);
+        std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords);
+        void ResetCPB();
+        // function for IC transactions 
+        bool WriteLpGBTRegister_New(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue);
+        uint8_t ReadLpGBTRegister_New(uint8_t pLinkId, uint16_t pRegisterValue);
+        bool IsICToolDone();
+        // function for I2C transactions using lpGBT I2C Masters
+        bool I2CWrite_New(uint8_t pLinkId, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress, uint32_t pSlaveData);
+        uint8_t I2CRead_New(uint8_t pLinkId, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress);
+        bool IsI2CToolDone();
+        // function for front-end slow control
+        bool WriteFERegister_New(Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerify = true);
+        uint8_t ReadFERegister_New(Chip* pChip, uint16_t pRegisterAddress);
+        bool IsFEToolDone();
 
-    void Benchmark(int pNIterations);
+        //OLD
+        bool    WriteLpGBTRegister_Old(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue);
+        uint8_t ReadLpGBTRegister_Old(uint8_t pLinkId, uint16_t pRegisterValue);
+        // function for I2C transactions using lpGBT I2C Masters
+        bool    I2CWrite_Old(uint8_t pLinkId, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress, uint32_t pSlaveData);
+        uint8_t I2CRead_Old(uint8_t pLinkId, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress);
+        // function for front-end slow control
+        bool    WriteFERegister_Old(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerify = true);
+        uint8_t ReadFERegister_Old(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress);
 
-    bool TestICRead();
-    bool TestICWrite();
-    bool TestI2CRead();
-    bool TestI2CWrite();
-    bool TestFERead();
-    bool TestFEWrite();
+        //Generic
+        bool    WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue);
+        uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterValue);
+        // function for I2C transactions using lpGBT I2C Masters
+        bool    I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress, uint32_t pSlaveData);
+        uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress);
+        // function for front-end slow control
+        bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerify = true);
+        uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress);
 
+        bool TestICRead();
+        bool TestICWrite();
+        bool TestI2CRead();
+        bool TestI2CWrite();
+        bool TestFERead();
+        bool TestFEWrite();
+
+        void Benchmark(int pNIterations);
+
+        void MeasureIPbusTransaction(int pNIterations);
 
     private :
+        bool fNewImp = true;
+        bool fVerbose = false;
 
         void ResetI2CMasters(OpticalGroup* cOpticalGroup);
         void SetHybridClocks(OpticalGroup* cOpticalGroup);
