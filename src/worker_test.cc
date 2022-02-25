@@ -48,6 +48,15 @@ int main(int argc, char* argv[])
   cmd.defineOption("benchmark", "Benchmark FE register write using FE functions against using I2C functions", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
   cmd.defineOptionAlternative("benchmark", "bm");
 
+  cmd.defineOption("measure-ipbus", "Measure duration of single IPbus transactions", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
+  cmd.defineOptionAlternative("measure-ipbus", "mipb");
+
+  cmd.defineOption("implementation", "Functions implementation to use [new/old]", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
+  cmd.defineOptionAlternative("implementation", "imp");
+
+  cmd.defineOption("verbose", "Verbose run with debug printout");
+  cmd.defineOptionAlternative("verbose", "v");
+
   int result = cmd.parse(argc, argv);
 
   if(result != ArgvParser::NoParserError)
@@ -72,8 +81,15 @@ int main(int argc, char* argv[])
 
   std::string cResultfile = "Worker";
   cTool.InitResultFile(cResultfile);
+  
+  bool cNewImp = true;
+  if(cmd.foundOption("implementation"))
+  {
+    cNewImp = (cmd.optionValue("implementation") == "new") ? true : false;
+  }
+  bool cVerbose = cmd.foundOption("verbose");
 
-  WorkerTester cWorkerTester;
+  WorkerTester cWorkerTester(cNewImp, cVerbose);
   cWorkerTester.Inherit(&cTool);
 
   cWorkerTester.PrepareForTests();
@@ -88,6 +104,11 @@ int main(int argc, char* argv[])
   {
     int cNInterations = convertAnyInt(cmd.optionValue("benchmark").c_str());
     cWorkerTester.Benchmark(cNInterations);
+  }
+  if(cmd.foundOption("measure-ipbus")) 
+  {
+    int cNInterations = convertAnyInt(cmd.optionValue("measure-ipbus").c_str());
+    cWorkerTester.MeasureIPbusTransaction(cNInterations);
   }
 
   return 0;
