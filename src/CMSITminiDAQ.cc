@@ -724,6 +724,7 @@ int main(int argc, char** argv)
         else if((program == false) && (whichCalib != ""))
         {
             LOG(ERROR) << BOLDRED << "Option not recognized: " << BOLDYELLOW << whichCalib << RESET;
+            mySysCntr.Destroy();
             exit(EXIT_FAILURE);
         }
 

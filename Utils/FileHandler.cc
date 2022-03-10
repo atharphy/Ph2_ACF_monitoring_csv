@@ -82,14 +82,14 @@ bool FileHandler::openFile()
 
             if(fHeader.fValid == false)
             {
-                LOG(WARNING) << GREEN << "Invalid file Header provided, writing file without it ..." << RESET;
+                LOG(WARNING) << GREEN << "Invalid file header provided, writing file without it ..." << RESET;
                 fHeaderPresent = false;
             }
             else if(fHeader.fValid)
             {
                 std::vector<uint32_t> cHeaderVec = fHeader.encodeHeader();
                 fBinaryFile.write((char*)&cHeaderVec.at(0), cHeaderVec.size() * sizeof(uint32_t));
-                LOG(INFO) << GREEN << "Valid file Header provided, writing file with it ... expect " << cHeaderVec.size() * sizeof(uint32_t) << " 32-bit words" << RESET;
+                LOG(INFO) << GREEN << "Valid file header provided, writing file with it ... expect " << BOLDYELLOW << cHeaderVec.size() * sizeof(uint32_t) << RESET << GREEN << " 32-bit words" << RESET;
                 fHeaderPresent = true;
             }
         }
