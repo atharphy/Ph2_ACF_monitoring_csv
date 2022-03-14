@@ -1,5 +1,5 @@
 ## YAML script for CI of Ph2_ACF Software/Middleware
-## Author: Emery Nibigira (IPHC-Strasbourg)
+## Author: Emery Nibigira (IPHC-Strasbourg, U. of Tennessee)
 ##         emery.nibigira@cern.ch
 
 ## Updates: Lawrence Lee (U. of Tennessee)
@@ -227,7 +227,7 @@ check:2S:
 
 deploy:
   stage: deploy
-  trigger: leejr/docker_exploration #to be changed to the central repo
+  trigger: cms_tk_ph2/docker_exploration
   rules:
     - if: $CI_COMMIT_TAG
       when: always
