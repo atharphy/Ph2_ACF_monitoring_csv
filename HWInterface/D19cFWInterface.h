@@ -17,6 +17,8 @@
 #include "../Utils/Event.h"
 #include "../Utils/easylogging++.h"
 #include "BeBoardFWInterface.h"
+// #include "FEConfigurationInterface.h"
+
 #include <limits.h>
 #include <map>
 #include <mutex>
@@ -28,64 +30,19 @@
 //#include "../Utils/GenericDataVector.h"
 #include <uhal/uhal.hpp>
 
-namespace D19cFWEvtEncoder
-{
-// ################
-// # Event header #
-// ################
-const uint16_t EVT_HEADER = 0xFFFF;
-
-const uint16_t IWORD_L1_HEADER = 4;
-const uint16_t SBIT_L1_HEADER  = 28;
-const uint16_t SBIT_L1_STATUS  = 24;
-const uint16_t SBIT_HYBRID_ID  = 16;
-const uint16_t SBIT_CHIP_ID    = 12;
-
-// ################
-// # Event status #
-// ################
-const uint16_t GOOD           = 0x0000; // Event status Good
-const uint16_t EMPTY          = 0x0002; // Event status Empty event
-const uint16_t BADHEADER      = 0x0004; // Bad header
-const uint8_t  GOODL1HEADER   = 0x0A;
-const uint8_t  GOODStubHEADER = 0x05;
-const uint16_t BADL1HEADER    = 0x0006; // Bad L1 header
-const uint16_t BADSTUBHEADER  = 0x0008; // Bad Stub header
-/*const uint16_t INCOMPLETE = 0x0004; // Event status Incomplete event header
-const uint16_t L1A        = 0x0008; // Event status L1A counter mismatch
-const uint16_t FWERR      = 0x0010; // Event status Firmware error
-const uint16_t FRSIZE     = 0x0020; // Event status Invalid frame size
-const uint16_t MISSCHIP   = 0x0040; // Event status Chip data are missing*/
-const uint16_t NODECODER = 0xFFFF; // Event decoding not implemented
-
-const uint16_t CLUSTER_2S   = 14;
-const uint16_t SCLUSTER_PS  = 14;
-const uint16_t PCLUSTER_PS  = 17;
-const uint16_t SCLUSTER_MPA = 0;
-const uint16_t PCLUSTER_MPA = 0;
-const uint16_t HITS_2S      = 274;
-const uint16_t HITS_SSA     = 120;
-const uint16_t HITS_CBC     = 254;
-
-using RawFeData    = std::vector<uint32_t>;
-using RawBoardData = std::vector<RawFeData>;
-// ################
-// # Event status #
-// ################
-struct D19cFWEvt
-{
-    std::vector<uint32_t> fEventStatus;
-    RawBoardData          fBoardHitData;
-    RawBoardData          fBoardStubData;
-};
-} // namespace D19cFWEvtEncoder
-
 /*!
  * \namespace Ph2_HwInterface
  * \brief Namespace regrouping all the interfaces to the hardware
  */
 namespace Ph2_HwInterface
 {
+class L1ReadoutInterface;
+class FEConfigurationInterface;
+class TriggerInterface;
+class FastCommandInterface;
+class D19cBackendAlignmentFWInterface;
+class D19cDebugFWInterface;
+
 /*!
  * \class Cbc3Fc7FWInterface
  *
@@ -95,9 +52,13 @@ class D19cFWInterface : public BeBoardFWInterface
 {
   private:
     // std::recursive_mutex                     fMutex;
-    D19cFWEvtEncoder::D19cFWEvt              fD19cFWEvts;
-    std::vector<std::vector<uint32_t>>       fSlaveMap;
-    std::map<uint8_t, std::vector<uint32_t>> fI2CSlaveMap;
+    FEConfigurationInterface*        fFEConfigurationInterface{nullptr};
+    L1ReadoutInterface*              fL1ReadoutInterface{nullptr};
+    TriggerInterface*                fTriggerInterface{nullptr};
+    FastCommandInterface*            fFastCommandInterface{nullptr};
+    D19cBackendAlignmentFWInterface* fBackendAlignmentInterface{nullptr};
+    D19cDebugFWInterface*            fDebugInterface{nullptr};
+
     FileHandler*                             fFileHandler;
     uint32_t                                 fBroadcastCbcId;
     uint32_t                                 fNReadoutChip;
@@ -124,7 +85,7 @@ class D19cFWInterface : public BeBoardFWInterface
     // 2S or PS readout
     bool           fIs2S           = true;
     const uint32_t SINGLE_I2C_WAIT = 200; // used for 1MHz I2C
-    // I'm going to add a variable to hold the stub offset
+    // // I'm going to add a variable to hold the stub offset
     uint32_t fStubOffset = 0xFFFF;
     // event counter
     uint32_t fEventCounter = 0;
@@ -153,6 +114,15 @@ class D19cFWInterface : public BeBoardFWInterface
     D19cFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler);
     void setFileHandler(FileHandler* pHandler);
 
+    void                             printReadoutInterface() { LOG(INFO) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET; }
+    D19cBackendAlignmentFWInterface* getBackendAlignmentInterface() { return fBackendAlignmentInterface; }
+    D19cDebugFWInterface*            getDebugInterface() { return fDebugInterface; }
+    TriggerInterface*                getTriggerInterface() { return fTriggerInterface; }
+    L1ReadoutInterface*              getL1ReadoutInterface() { return fL1ReadoutInterface; }
+    FEConfigurationInterface*        getFEConfigurationInterface() { return fFEConfigurationInterface; }
+    //
+    void ConfigureInterfaces(const Ph2_HwDescription::BeBoard* pBoard);
+
     /*!
      *
      * \brief Destructor of the Cbc3Fc7FWInterface class
@@ -166,6 +136,10 @@ class D19cFWInterface : public BeBoardFWInterface
     ///////////////////////////////////////////////////////
     //      d19c Methods                                //
     /////////////////////////////////////////////////////
+
+    // initialize interfaces to handle communication with certain blocks
+    void InitializePSCounterFWInterface(const Ph2_HwDescription::BeBoard* pBoard);
+    void IniitalizeL1ReadoutInterface(const Ph2_HwDescription::BeBoard* pBoard);
 
     // uint16_t ParseEvents(const std::vector<uint32_t>& pData) override;
     /*! \brief Read a block of a given size
@@ -198,14 +172,12 @@ class D19cFWInterface : public BeBoardFWInterface
     /*!
      * \brief Detect the right FE Id to write the right registers (not working with the latest Firmware)
      */
-    void SelectFEId();
 
     void     ResetEventCounter() { fEventCounter = 0; }
     uint32_t GetEventCounter() { return fEventCounter; }
     /*!
      * \brief Status of triggers
      */
-    uint32_t GetTriggerState();
     /*!
      * \brief Start a DAQ
      */
@@ -222,18 +194,6 @@ class D19cFWInterface : public BeBoardFWInterface
      * \brief Unpause a DAQ
      */
     void Resume() override;
-
-    // send N triggers
-    void SendNTriggers(uint16_t pNtriggers) override;
-
-    void ResetTriggerFSM();
-    /*!
-     * \brief Reset Readout
-     */
-    void ResetReadout();
-
-    // print trigger config
-    void TriggerConfiguration();
 
     /*!
      * \brief DDR3 Self-test
@@ -256,32 +216,19 @@ class D19cFWInterface : public BeBoardFWInterface
     void ReadNEvents(Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = true);
     // FMCs
     void InitFMCPower();
-    // vector of 32 bit words for ROC#pIndex [hits]
-    std::vector<uint32_t> GetHitData(uint8_t pIndex) { return fD19cFWEvts.fBoardHitData[pIndex]; }
-    // vector of 32 bit words for ROC#pIndex [stubs]
-    std::vector<uint32_t> GetStubData(uint8_t pIndex) { return fD19cFWEvts.fBoardStubData[pIndex]; }
     // set stub offset
     void     SetStubOffset(uint32_t pOffset) { fStubOffset = pOffset; };
     uint32_t getStubOffset() { return fStubOffset; };
     uint8_t  getI2Cstatus() { return fI2Cstatus; }
 
   private:
-    uint8_t  fFastCommandDuration = 0;
-    uint32_t fReadoutAttempts     = 0;
-    uint16_t fWait_us             = 10000; // 10 ms
-    uint8_t  fResetMinPeriod_ms   = 100;   // was 100
+    uint32_t fReadoutAttempts = 0;
+    uint16_t fWait_us         = 10000; // 10 ms
 
     // get data from FC7
-
-    // wait for events from FC7
-    bool WaitForData(Ph2_HwDescription::BeBoard* pBoard);
     // split data per hybrid/chip for a given board
-    uint32_t CountFwEvents(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
     uint32_t computeEventSize(Ph2_HwDescription::BeBoard* pBoard);
-    // I2C command sending implementation
-    bool WriteI2C(std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pWriteRead, bool pBroadcast);
-    bool ReadI2C(uint32_t pNReplies, std::vector<uint32_t>& pReplies);
-
+    
     // binary predicate for comparing sent I2C commands with replies using std::mismatch
     static bool cmd_reply_comp(const uint32_t& cWord1, const uint32_t& cWord2);
     static bool cmd_reply_ack(const uint32_t& cWord1, const uint32_t& cWord2);
@@ -334,55 +281,17 @@ class D19cFWInterface : public BeBoardFWInterface
         return r;
     }
 
-    // method to split a vector in vectors that contain elements from even and odd indices
-    void splitVectorEvenOdd(std::vector<uint32_t> pInputVector, std::vector<uint32_t>& pEvenVector, std::vector<uint32_t>& pOddVector)
-    {
-        bool ctoggle = false;
-        std::partition_copy(pInputVector.begin(), pInputVector.end(), std::back_inserter(pEvenVector), std::back_inserter(pOddVector), [&ctoggle](int) { return ctoggle = !ctoggle; });
-    }
-
-    void getOddElements(std::vector<uint32_t> pInputVector, std::vector<uint32_t>& pOddVector)
-    {
-        bool ctoggle = true;
-        std::copy_if(pInputVector.begin(), pInputVector.end(), std::back_inserter(pOddVector), [&ctoggle](int) { return ctoggle = !ctoggle; });
-    }
-
-    void ReadErrors();
     void EnableFrontEnds(const Ph2_HwDescription::BeBoard* pBoard);
 
   public:
-    void ReconfigureTriggerFSM(std::vector<std::pair<std::string, uint32_t>> pTriggerConfig);
-    ///////////////////////////////////////////////////////
-    //      CBC Methods                                 //
-    /////////////////////////////////////////////////////
-
-    // Encode/Decode Chip values
-    /*!
-     * \brief Encode a/several word(s) readable for a Chip
-     * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
-     * \param pCbcId : Id of the Chip to work with
-     * \param pVecReq : Vector to stack the encoded words
-     */
-    // for testing, move back
-    uint32_t GetData(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData);
-    void     EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, Ph2_HwDescription::Chip* pChip, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override;
-    void     BCEncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite) override;
-    void     DecodeReg(Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t& pCbcId, uint32_t pWord, bool& pRead, bool& pFailed) override;
-
-    bool WriteChipBlockReg(std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback) override;
-    bool BCWriteChipBlockReg(std::vector<uint32_t>& pVecReg, bool pReadback) override;
-    void ReadChipBlockReg(std::vector<uint32_t>& pVecReg);
-
+    
     void ChipReSync() override;
 
     void ChipReset() override;
 
-    void ChipI2CRefresh();
+    void ChipTrigger() override;
 
-    void ChipTestPulse();
-
-    void ChipTrigger();
-    void Trigger(uint8_t pDuration = 1);
+    void ChipTestPulse() override;
 
     void ReadoutChipReset();
     // CIC BE stuff
@@ -421,8 +330,7 @@ class D19cFWInterface : public BeBoardFWInterface
     bool Measure2SOccupancy(uint32_t pNEvents, uint8_t**& pErrorCounters, uint8_t***& pChannelCounters);
     void Manage2SCountersMemory(uint8_t**& pErrorCounters, uint8_t***& pChannelCounters, bool pAllocate);
 
-    void Compose_fast_command(uint32_t duration = 0, uint32_t resync_en = 0, uint32_t l1a_en = 0, uint32_t cal_pulse_en = 0, uint32_t bc0_en = 0);
-    void SetForceStart(bool bStart) {}
+    void SetForceStart(bool bStart) override {}
 
     ///////////////////////////////////////////////////////
     //      Optical readout                                 //
@@ -468,6 +376,19 @@ class D19cFWInterface : public BeBoardFWInterface
     bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false) override;
     bool    localWriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry, uint32_t& theI2CWriteCount, uint32_t& theI2CReadMismatches);
     uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) override;
+
+    // Generic FE configuration functions
+    // single register functions
+    // Register write
+    bool SingleRegisterWrite(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerify = true) override;
+    bool MultiRegisterWrite(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem, bool pVerify = true) override;
+    // Register write + read-back
+    bool MultiRegisterWriteRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem) override;
+    bool SingleRegisterWriteRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem) override;
+    // Registe read
+    uint8_t              SingleRegisterRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem) override;
+    std::vector<uint8_t> MultiRegisterRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem) override;
+
     // fast command generic block
     void ResetFCMDBram();
     void ConfigureFCMDBram(std::vector<uint8_t> pFastCommands);

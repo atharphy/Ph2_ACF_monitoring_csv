@@ -15,6 +15,7 @@ lpGBT::lpGBT(uint8_t pBeId, uint8_t FMCId, uint8_t pOptGroupId, const std::strin
 {
     configFileName = fileName;
     phaseRxAligned = false; // @TMP@
+    setFrontEndType(FrontEndType::LpGBT);
     lpGBT::loadfRegMap(configFileName);
 }
 

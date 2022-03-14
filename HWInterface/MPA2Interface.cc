@@ -133,24 +133,7 @@ uint16_t MPA2Interface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVe
     cRegItem.fPage    = 0x00;
     cRegItem.fAddress = pRegisterAddress;
     cRegItem.fValue   = 0;
-
-    if(!lpGBTFound())
-    {
-        bool                  cFailed = false;
-        bool                  cRead;
-        std::vector<uint32_t> cVecReq;
-        fBoardFW->EncodeReg(cRegItem, pChip, cVecReq, true, false);
-        fBoardFW->ReadChipBlockReg(cVecReq);
-        uint8_t cSSAId;
-        fBoardFW->DecodeReg(cRegItem, cSSAId, cVecReq[0], cRead, cFailed);
-    }
-    else
-    {
-        // FIXME the FeId is hard coded for now, need to get the FeId info here
-        // cRegItem.fValue = flpGBTInterface->mpaRead(flpGBT, pChip->getHybridId(), pChip->getId(), pRegisterAddress);
-        cRegItem.fValue = fBoardFW->ReadFERegister(pChip, pRegisterAddress);
-    }
-    return cRegItem.fValue & 0xFF;
+    return fBoardFW->SingleRegisterRead(pChip, cRegItem); 
 }
 
 // Should work for MPA2 with control decoding
@@ -788,96 +771,32 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
 
 bool MPA2Interface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop) // unchanged from MPA1 -- to check
 {
-    bool cSuccess = false;
     setBoard(pChip->getBeBoardId());
     auto cRegItem = pChip->getRegMap().find(pRegNode)->second;
-    if(fTrackRegisters) UpdateModifiedRegMap(pChip, cRegItem.fAddress);
-    cRegItem.fValue     = pValue & 0xFF;
-    bool cCheckReadback = (pRegNode.find("_ALL") != std::string::npos) ? false : pVerifLoop;
-    cCheckReadback      = cCheckReadback && (cRegItem.fStatusReg == 0);
-    if(!lpGBTFound())
-    {
-        std::vector<uint32_t> cVec;
-        fBoardFW->EncodeReg(cRegItem, pChip, cVec, pVerifLoop, true);
-        uint8_t cWriteAttempts = 0;
-        cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
-    }
-    else
-    {
-        cSuccess = fBoardFW->WriteFERegister(pChip, cRegItem.fAddress, cRegItem.fValue, cCheckReadback);
-        if(cSuccess)
-        {
-            LOG(DEBUG) << BOLDMAGENTA << "Updating value of " << pRegNode << " in memory to " << +cRegItem.fValue << RESET;
-            pChip->setReg(pRegNode, cRegItem.fValue, cRegItem.fPrmptCfg, 1);
-        }
-    }
-    if(cSuccess && !lpGBTFound()) // check is done in lpGBTInterface for opto
-    {
-        bool cVerify = pVerifLoop && (cRegItem.fStatusReg == 0);
-        cSuccess     = (cVerify) ? (ReadChipReg(pChip, pRegNode) == pValue) : true;
-    }
-    if(cSuccess)
-    {
-        pChip->setReg(pRegNode, cRegItem.fValue, cRegItem.fPrmptCfg, 1);
-        cRegItem = pChip->getRegItem(pRegNode);
-        LOG(DEBUG) << BOLDGREEN << "\t\t... MPA2Interface::WriteChipSingleReg written " << cRegItem.fValue << " to " << pRegNode << " Status flag is " << +cRegItem.fStatusReg << RESET;
-    }
-#ifdef COUNT_FLAG
-    fRegisterCount++;
-    fTransactionCount++;
-#endif
-    return cSuccess;
+    cRegItem.fValue = pValue;
+    return fBoardFW->SingleRegisterWrite(pChip, cRegItem, pVerifLoop);
 }
 
 bool MPA2Interface::WriteChipMultReg(Chip* pMPA2, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop) // unchanged from MPA1 -- to check
 {
     // first, identify the correct BeBoardFWInterface
     setBoard(pMPA2->getBeBoardId());
-
-    std::vector<uint32_t> cVec;
-
-    // Deal with the ChipRegItems and encode them
-    ChipRegItem cRegItem;
-
-    for(const auto& cReg: pVecReq)
+    auto                     cRegMap = pMPA2->getRegMap();
+    std::vector<ChipRegItem> cRegItems;
+    for(auto cReq: pVecReq)
     {
-        if(cReg.second > 0xFF)
+        auto cIterator = cRegMap.find(cReq.first);
+        if(cIterator == cRegMap.end())
         {
-            LOG(ERROR) << "MPA register are 8 bits, impossible to write " << cReg.second << " on registed " << cReg.first;
+            LOG(ERROR) << BOLDRED << "MPAInterface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq.first << RESET;
             continue;
         }
 
-        // HACK! take out
-        this->WriteChipReg(pMPA2, cReg.first, cReg.second, pVerifLoop);
-
-#ifdef COUNT_FLAG
-        fRegisterCount++;
-#endif
+        ChipRegItem cItem = cIterator->second;
+        cItem.fValue      = cReq.second;
+        cRegItems.push_back(cItem);
     }
-
-    // write the registers, the answer will be in the same cVec
-    // the number of times the write operation has been attempted is given by cWriteAttempts
-    // uint8_t cWriteAttempts = 0 ;
-
-    // HACK! put back in
-    // bool cSuccess = fBoardFW->WriteChipBlockReg (  cVec, cWriteAttempts, pVerifLoop );
-    bool cSuccess = true;
-
-#ifdef COUNT_FLAG
-    fTransactionCount++;
-#endif
-
-    // if the transaction is successfull, update the HWDescription object
-    if(cSuccess)
-    {
-        for(const auto& cReg: pVecReq)
-        {
-            cRegItem = pMPA2->getRegItem(cReg.first);
-            pMPA2->setReg(cReg.first, cRegItem.fValue, cRegItem.fPrmptCfg, 1);
-        }
-    }
-
-    return cSuccess;
+    return fBoardFW->MultiRegisterWrite(pMPA2, cRegItems, pVerifLoop);
 }
 
 bool MPA2Interface::WriteChipAllLocalReg(ReadoutChip* pMPA2, const std::string& dacName, ChipContainer& localRegValues, bool pVerifLoop) // unchanged from MPA1 -- to check
@@ -888,7 +807,7 @@ bool MPA2Interface::WriteChipAllLocalReg(ReadoutChip* pMPA2, const std::string& 
 
     if(dacName == "TrimDAC_P" or dacName == "ThresholdTrim")
     {
-        if(pMPA2->getFrontEndType() == FrontEndType::MPA) dacTemplate = "TrimDAC_P%d";
+        if(pMPA2->getFrontEndType() == FrontEndType::MPA2) dacTemplate = "TrimDAC_P%d";
     }
 
     else
@@ -940,200 +859,76 @@ bool MPA2Interface::WriteChipAllLocalReg(ReadoutChip* pMPA2, const std::string& 
 
 bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerifLoop, uint32_t pBlockSize)
 {
-    fTrackRegisters                    = false;
-    bool              cConfigLocalRegs = true; // careful
+    // for now ..
+    bool              cConfigLocalRegs = true;
     std::stringstream cOutput;
     setBoard(pMPA2->getBeBoardId());
     pMPA2->printChipType(cOutput);
     LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pMPA2->getId() << "]" << RESET;
+    pMPA2->setRegisterTracking(0);
 
     std::vector<uint32_t> cVec;
-    ChipRegMap            cMPARegMap = pMPA2->getRegMap();
-    // for some reason this makes block write work
-    // otherwise need to configure one by one which
-    // takes forever
-    for(auto& cRegItem: cMPARegMap)
+    ChipRegMap            cRegMap = pMPA2->getRegMap();
+    // need to split between control and enable registers
+    // don't read back enable registers
+    std::vector<ChipRegItem> cCntrlRegItems;
+    std::vector<ChipRegItem> cRegItems;
+    std::vector<ChipRegItem> cLocalRegItems; 
+    cCntrlRegItems.clear();
+    for(auto cMapItem: cRegMap)
     {
-        fMap[cRegItem.second.fAddress] = cRegItem.first;
-        // update map to indicate that there are not registers that
-        // can be read back from
-        if(cRegItem.first.find("_ALL") != std::string::npos) { pMPA2->setReg(cRegItem.first, cRegItem.second.fValue, cRegItem.second.fPrmptCfg, 1); }
-    }
-    // update map
-    cMPARegMap = pMPA2->getRegMap();
-    std::vector<std::pair<uint16_t, uint16_t>> cRegs;
-    cRegs.clear();
-    std::vector<std::string> cRegsToConfig;
-    // cRegsToConfig.push_back("TrimDAC");
-    for(auto& cMapItem: fMap)
-    {
-        bool cIsLocal = (cMapItem.second.find("_P") != std::string::npos);
-        bool cSkip    = cIsLocal && !cConfigLocalRegs;
-        if(cIsLocal && cSkip) LOG(DEBUG) << BOLDCYAN << "Skipping local register " << cMapItem.second << RESET;
-        if(cSkip) continue;
-
-        if(cRegsToConfig.size() > 0 && cConfigLocalRegs)
-        {
-            // check if this is one to skip
-            bool cRegFound = false;
-            auto cIter     = cRegsToConfig.begin();
-            do
-            {
-                cRegFound = cMapItem.second.find(*cIter) != std::string::npos;
-                cIter++;
-            } while(cIter < cRegsToConfig.end() && !cRegFound);
-            cSkip = (!cRegFound);
-        }
-        if(cSkip) continue;
-        if(cIsLocal)
-            LOG(DEBUG) << BOLDCYAN << "Configuring local register " << cMapItem.second << RESET;
+        if(cMapItem.second.fControlReg)
+            cCntrlRegItems.push_back(cMapItem.second);
+        else if( (cMapItem.first.find("_P") != std::string::npos) ) 
+            cLocalRegItems.push_back(cMapItem.second); 
         else
-            LOG(DEBUG) << BOLDCYAN << "Configuring global register " << cMapItem.second << RESET;
-
-        // create a register
-        ChipRegItem&                  cItem = cMPARegMap[cMapItem.second];
-        std::pair<uint16_t, uint16_t> cReg;
-        cReg.first  = cMapItem.first;
-        cReg.second = cItem.fValue;
-        cRegs.push_back(cReg);
+            cRegItems.push_back(cMapItem.second);
     }
-    if(!cConfigLocalRegs)
-        LOG(INFO) << BOLDBLUE << "Configuring MPA#" << +pMPA2->getId() << " - write " << +cRegs.size() << " registers [skipping registers for individual pixels]" << RESET;
-    else
-        LOG(INFO) << BOLDBLUE << "Complete configuration of MPA#" << +pMPA2->getId() << " - write " << +cRegs.size() << " registers [configuring registers for individual pixels]" << RESET;
-    bool cSuccess   = this->WriteRegs(pMPA2, cRegs, pVerifLoop);
-    fTrackRegisters = true;
+    // cntrl
+    bool cSuccess = fBoardFW->MultiRegisterWrite(pMPA2, cCntrlRegItems, false);
+    if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cCntrlRegItems.size() << " control registers in" << cOutput.str() << "#" << +pMPA2->getId() << RESET;
+    // glbl
+    cSuccess = fBoardFW->MultiRegisterWrite(pMPA2, cRegItems, pVerifLoop);
+    if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cRegItems.size() << " R/W registers in" << cOutput.str() << "#" << +pMPA2->getId() << RESET;
+    // lcl 
+    if( cConfigLocalRegs )
+    {
+        cSuccess = fBoardFW->MultiRegisterWrite(pMPA2, cLocalRegItems, pVerifLoop);
+        if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cLocalRegItems.size() << " local R/W registers in" << cOutput.str() << "#" << +pMPA2->getId() << RESET;
+    }
+    pMPA2->setRegisterTracking(1);
     return cSuccess;
 }
 
 bool MPA2Interface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop)
 {
     setBoard(pChip->getBeBoardId());
-    // checking if register map is empty
-    if(fMap.size() == 0)
+    std::vector<ChipRegItem> cRegItems;
+    auto  cRegMap = pChip->getRegMap();
+    for(auto cReq: pRegs)
     {
-        ChipRegMap cRegMap = pChip->getRegMap();
-        // get register map
-        LOG(DEBUG) << BOLDMAGENTA << "Setting up MPA maps.." << RESET;
-        fMap.clear();
-        for(auto& cRegItem: cRegMap) { fMap[cRegItem.second.fAddress] = cRegItem.first; }
-    }
+        auto cIterator = find_if(cRegMap.begin(), cRegMap.end(), [&cReq](const ChipRegPair& obj) { return obj.second.fAddress == cReq.first; });
+        if(cIterator == cRegMap.end())
+        {
+            LOG(ERROR) << BOLDRED << "MPAInterface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq.first << RESET;
+            continue;
+        }
 
-    bool cSuccess = true;
-    bool cVerify  = false;
-    if(!lpGBTFound())
-    {
-        std::vector<uint32_t> cVec;
-        cVec.clear();
-        for(const auto& cReg: pRegs)
-        {
-            auto cRegItem   = pChip->getRegItem(fMap[cReg.first]);
-            cRegItem.fValue = cReg.second & 0xFF;
-            fBoardFW->EncodeReg(cRegItem, pChip, cVec, pVerifLoop, true);
-#ifdef COUNT_FLAG
-            fRegisterCount++;
-#endif
-        }
-        uint8_t cWriteAttempts = 0;
-        cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, cVerify);
-        if(cSuccess)
-        {
-            for(const auto& cReg: pRegs)
-            {
-                auto cRegItem   = pChip->getRegItem(fMap[cReg.first]);
-                cRegItem.fValue = cReg.second & 0xFF;
-                pChip->setReg(fMap[cReg.first], cRegItem.fValue, cRegItem.fPrmptCfg, cRegItem.fStatusReg);
-            }
-        }
-#ifdef COUNT_FLAG
-        fTransactionCount++;
-#endif
+        ChipRegItem cItem = cIterator->second;
+        cItem.fValue      = cReq.second;
+        cRegItems.push_back(cItem);
     }
-    else
-    {
-        int cCount = 0;
-        for(const auto& cReg: pRegs)
-        {
-            auto cRegItem   = pChip->getRegItem(fMap[cReg.first]);
-            cRegItem.fValue = cReg.second & 0xFF;
-            cVerify         = pVerifLoop && (cRegItem.fStatusReg == 0);
-            // if(cCount % 1000 == 0) LOG(INFO) << BOLDBLUE << "Writing MPA register with address 0x" << std::hex << +cReg.first << std::dec << RESET;
-            // cSuccess = flpGBTInterface->mpaWrite(flpGBT, pChip->getHybridId(), pChip->getId(), cReg.first, cReg.second, pVerifLoop);
-            if(fBoardFW->WriteFERegister(pChip, cReg.first, cReg.second, cVerify)) pChip->setReg(fMap[cReg.first], cRegItem.fValue, cRegItem.fPrmptCfg, cRegItem.fStatusReg);
-
-            if(!cSuccess) continue;
-#ifdef COUNT_FLAG
-            fRegisterCount++;
-#endif
-            cCount++;
-        }
-    }
-    return cSuccess;
+    return fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerifLoop);
 }
 
 bool MPA2Interface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop)
 {
-    // checking if register map is empty
-    if(fMap.size() == 0)
-    {
-        ChipRegMap cRegMap = pChip->getRegMap();
-        // get register map
-        LOG(INFO) << BOLDMAGENTA << "Setting up MPA maps.." << RESET;
-        fMap.clear();
-        for(auto& cRegItem: cRegMap) { fMap[cRegItem.second.fAddress] = cRegItem.first; }
-    }
-
-    bool cSuccess = false;
     setBoard(pChip->getBeBoardId());
-    ChipRegItem cRegItem;
-    cRegItem.fAddress = pRegisterAddress;
-    if(fTrackRegisters) UpdateModifiedRegMap(pChip, pRegisterAddress);
-    bool cFound = pChip->getRegMap().find(fMap[pRegisterAddress]) != pChip->getRegMap().end();
-    if(cFound)
-        cRegItem = pChip->getRegItem(fMap[pRegisterAddress]);
-    else
-        cRegItem.fValue = 0x66;
-
-    LOG(DEBUG) << BOLDBLUE << "MPA2Interface::WriteReg writing register with address 0x" << std::hex << pRegisterAddress << std::dec << " register value in map 0x" << std::hex << +cRegItem.fValue
-               << std::dec << RESET;
-    cRegItem.fValue = pRegisterValue & 0xFF;
-    // write
-    if(!lpGBTFound())
-    {
-        std::vector<uint32_t> cVec;
-        ChipRegItem           cRegItem;
-        cRegItem.fPage    = 0x00;
-        cRegItem.fAddress = pRegisterAddress;
-        cRegItem.fValue   = pRegisterValue & 0xFF;
-        fBoardFW->EncodeReg(cRegItem, pChip, cVec, pVerifLoop, true);
-        uint8_t cWriteAttempts = 0;
-        cSuccess               = fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
-        if(cSuccess) // check is done in lpGBTInterface for opto
-        {
-            bool     cVerify = pVerifLoop && (cRegItem.fStatusReg == 0);
-            uint16_t cValue  = pRegisterValue; // if not verifying .. set this to what I have written to
-            if(cVerify) cValue = ReadReg(pChip, pRegisterAddress);
-            cSuccess = (cVerify) ? (cValue == pRegisterValue) : true;
-        }
-    }
-    else
-    {
-        bool cVerify = pVerifLoop && (cRegItem.fStatusReg == 0);
-        cSuccess     = fBoardFW->WriteFERegister(pChip, pRegisterAddress, pRegisterValue, cVerify);
-    }
-
-    if(!cSuccess)
-    {
-        LOG(INFO) << BOLDRED << "Read back value from " << fMap[pRegisterAddress] << BOLDBLUE << " at I2C address " << std::hex << cRegItem.fAddress << std::dec << " not equal to write value of "
-                  << std::hex << +cRegItem.fValue << std::dec << RESET;
-    }
-    if(cSuccess && cFound)
-    {
-        LOG(DEBUG) << BOLDBLUE << "\t..MPA2Interface::WriteReg updating value in memory of register with address 0x" << std::hex << pRegisterAddress << std::dec << " to 0x" << std::hex
-                   << +cRegItem.fValue << std::dec << RESET;
-        pChip->setReg(fMap[pRegisterAddress], cRegItem.fValue, cRegItem.fPrmptCfg, cRegItem.fStatusReg);
-    }
-    return cSuccess;
+    auto  cRegMap = pChip->getRegMap();
+    auto cIterator = find_if(cRegMap.begin(), cRegMap.end(), [&pRegisterAddress](const ChipRegPair& obj) { return obj.second.fAddress == pRegisterAddress; });
+    ChipRegItem cItem = cIterator->second;
+    cItem.fValue = pRegisterValue;
+    return fBoardFW->SingleRegisterWrite(pChip, cItem , pVerifLoop);
 }
 
 void MPA2Interface::setFileHandler(FileHandler* pHandler)
@@ -1145,31 +940,19 @@ void MPA2Interface::setFileHandler(FileHandler* pHandler)
 // These are not currently used but can encode pix registers
 void MPA2Interface::Pix_write(ReadoutChip* cMPA, ChipRegItem cRegItem, uint32_t row, uint32_t pixel, uint32_t data)
 {
-    uint8_t cWriteAttempts = 0;
-
     ChipRegItem rowreg = cRegItem;
     rowreg.fAddress    = ((row & 0x0001f) << 11) | ((cRegItem.fAddress & 0x000f) << 7) | (pixel & 0xfffffff);
     rowreg.fValue      = data;
-    std::vector<uint32_t> cVecReq;
-    cVecReq.clear();
-    fBoardFW->EncodeReg(rowreg, cMPA, cVecReq, false, true);
-    fBoardFW->WriteChipBlockReg(cVecReq, cWriteAttempts, false);
+    fBoardFW->SingleRegisterWrite( cMPA, rowreg, true); 
 }
 
 uint32_t MPA2Interface::Pix_read(ReadoutChip* cMPA, ChipRegItem cRegItem, uint32_t row, uint32_t pixel)
 {
-    uint8_t  cWriteAttempts = 0;
-    uint32_t rep;
-
-    std::vector<uint32_t> cVecReq;
-    cVecReq.clear();
-    fBoardFW->EncodeReg(cRegItem, cMPA, cVecReq, false, false);
-    fBoardFW->WriteChipBlockReg(cVecReq, cWriteAttempts, false);
-    std::chrono::milliseconds cShort(1);
-
-    rep = this->ReadChipReg(cMPA, "fc7_daq_ctrl.command_processor_block.i2c.mpa_MPA_i2c_reply.data");
-
-    return rep;
+    return     fBoardFW->SingleRegisterRead( cMPA, cRegItem);
+    // what is this for!
+    // std::chrono::milliseconds cShort(1);
+    // rep = this->ReadChipReg(cMPA, "fc7_daq_ctrl.command_processor_block.i2c.mpa_MPA_i2c_reply.data");
+    // return rep;
 }
 
 // void MPA2Interface::Activate_async(Chip* pMPA2) { this->WriteChipReg(pMPA2, "ReadoutMode", 0x1); }

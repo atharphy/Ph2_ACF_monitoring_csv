@@ -1,7 +1,10 @@
 #ifndef __D19cBackendAlignmentFWInterface_H__
 #define __D19cBackendAlignmentFWInterface_H__
 
-#include "BeBoardFWInterface.h"
+#include "../Utils/Utilities.h"
+#include "../Utils/easylogging++.h"
+#include "BeBoard.h"
+#include "RegManager.h"
 #include <string>
 
 namespace Ph2_HwInterface
@@ -33,14 +36,12 @@ struct Status
     uint8_t fFSMstate               = 0;
 };
 
-class D19cBackendAlignmentFWInterface : public BeBoardFWInterface
+class D19cBackendAlignmentFWInterface : public RegManager
 {
   public:
-    D19cBackendAlignmentFWInterface(const char* puHalConfigFileName, uint32_t pBoardId);
-    D19cBackendAlignmentFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler);
+    D19cBackendAlignmentFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
+    D19cBackendAlignmentFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
 
-    D19cBackendAlignmentFWInterface(const char* pId, const char* pUri, const char* pAddressTable);
-    D19cBackendAlignmentFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler);
     ~D19cBackendAlignmentFWInterface();
 
     void              InitializeConfiguration();
@@ -58,11 +59,15 @@ class D19cBackendAlignmentFWInterface : public BeBoardFWInterface
     bool    IsLineWordAligned(AlignerObject pAlignerObject);
     bool    IsLinePhaseAligned(AlignerObject pAlignerObject);
 
+    void    setNbits(uint8_t pNbits) { fNbits = pNbits; }
+    uint8_t getNbits() { return fNbits; }
+
   private:
     AlignerObject     fAlignerObject;
     LineConfiguration fLineConfiguration;
     Status            fStatus;
     uint8_t           fVerbose{0};
+    uint8_t           fNbits{3};
 
   private:
     void    ConfigureInput();
