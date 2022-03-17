@@ -1,10 +1,10 @@
 #include "CicFEAlignment.h"
 
 // #ifdef __USE_ROOT__
+#include "../HWInterface/D19cDebugFWInterface.h"
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Occupancy.h"
-#include "../HWInterface/D19cDebugFWInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

@@ -4,8 +4,8 @@
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
-#include "../Utils/ThresholdAndNoise.h"
 #include "../Utils/Occupancy.h"
+#include "../Utils/ThresholdAndNoise.h"
 #include "boost/format.hpp"
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

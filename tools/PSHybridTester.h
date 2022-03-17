@@ -16,8 +16,8 @@
 #include "USB_a.h"
 #endif
 
-#include "../Utils/SSAChannelGroupHandler.h"
 #include "../HWInterface/DPInterface.h"
+#include "../Utils/SSAChannelGroupHandler.h"
 #define PSHYBRIDMAXV 1.32
 
 #include <map>

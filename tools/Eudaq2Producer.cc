@@ -7,11 +7,11 @@
  *
  */
 
-#include "BackEndAlignment.h"
 #include "../Utils/CBCChannelGroupHandler.h"
+#include "../Utils/ContainerFactory.h"
+#include "BackEndAlignment.h"
 #include "Channel.h"
 #include "CicFEAlignment.h"
-#include "../Utils/ContainerFactory.h"
 #include "Occupancy.h"
 #include "PSAlignment.h"
 #include "StubBackEndAlignment.h"

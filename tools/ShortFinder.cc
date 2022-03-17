@@ -2,7 +2,6 @@
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/CommonVisitors.h"
 #include "../Utils/ContainerFactory.h"
-#include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/SSAChannelGroupHandler.h"
 #include "../Utils/Visitor.h"
