@@ -674,7 +674,7 @@ int main(int argc, char** argv)
             else
             {
                 std::string fileName(binaryFile);
-                fileName.erase(0, fileName.find_last_of("/\\"));
+                fileName.erase(0, (fileName.find_last_of("/\\") == std::string::npos ? 0 : fileName.find_last_of("/\\")));
                 fileName  = fileName.erase(fileName.find(".raw") - 8, 12) + "fromBin";
                 runNumber = atof(fileName.substr(fileName.find("Run") + 3, 6).c_str());
                 ph.setValueInSettings<double>("SaveBinaryData", false);
@@ -724,6 +724,7 @@ int main(int argc, char** argv)
         else if((program == false) && (whichCalib != ""))
         {
             LOG(ERROR) << BOLDRED << "Option not recognized: " << BOLDYELLOW << whichCalib << RESET;
+            mySysCntr.Destroy();
             exit(EXIT_FAILURE);
         }
 
@@ -743,9 +744,10 @@ int main(int argc, char** argv)
         if(fileRunNumberOut.is_open() == true) fileRunNumberOut << RD53Shared::fromInt2Str(runNumber) << std::endl;
         fileRunNumberOut.close();
 
-        // #############################
-        // # Destroy System Controller #
-        // #############################
+        // ######################################################
+        // # Disable all channels and destroy System Controller #
+        // ######################################################
+        if(binaryFile == "") mySysCntr.disableAllChannels();
         mySysCntr.Destroy();
 
         LOG(INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
