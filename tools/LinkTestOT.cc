@@ -2,7 +2,7 @@
 
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
-#include "D19cDebugFWInterface.h"
+#include "../HWInterface/D19cDebugFWInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

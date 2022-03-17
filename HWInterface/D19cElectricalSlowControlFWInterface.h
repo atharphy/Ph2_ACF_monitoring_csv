@@ -23,7 +23,7 @@ class D19cElectricalSlowControlFWInterface : public BeBoardFWInterface
 
     bool WriteChipBlockReg(std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback) override;
     bool BCWriteChipBlockReg(std::vector<uint32_t>& pVecReg, bool pReadback) override;
-    void ReadChipBlockReg(std::vector<uint32_t>& pVecReg);
+    void ReadChipBlockReg(std::vector<uint32_t>& pVecReg){;}
 
     void ChipI2CRefresh();
 

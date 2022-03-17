@@ -15,9 +15,9 @@
 
 #include "Tool.h"
 
-#include "BeBoardFWInterface.h"
-#include "D19clpGBTInterface.h"
-#include "ReadoutChipInterface.h"
+#include "../HWInterface/BeBoardFWInterface.h"
+#include "../HWInterface/D19clpGBTInterface.h"
+#include "../HWInterface/ReadoutChipInterface.h"
 
 #include <map>
 

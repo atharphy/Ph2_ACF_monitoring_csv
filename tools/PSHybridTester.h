@@ -17,7 +17,7 @@
 #endif
 
 #include "../Utils/SSAChannelGroupHandler.h"
-#include "DPInterface.h"
+#include "../HWInterface/DPInterface.h"
 #define PSHYBRIDMAXV 1.32
 
 #include <map>
