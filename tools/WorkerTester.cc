@@ -4,9 +4,20 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-WorkerTester::WorkerTester(bool pNewImp, bool pVerbose) : Tool(), fNewImp(pNewImp), fVerbose(pVerbose){}
+WorkerTester::WorkerTester(bool pNewImp, bool pVerbose, uint8_t pLpGbtVers) : Tool(), fNewImp(pNewImp), fVerbose(pVerbose), fLpGbtVers(pLpGbtVers){}
 
 WorkerTester::~WorkerTester() {}
+
+void WorkerTester::SetLpGbtVersion(uint8_t pLpGbtVers)
+{
+    fBeBoardInterface->setBoard(0);
+    D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    cFWInterface->WriteReg("fc7_daq_cnfg.optical_block.lpgbt.version", pLpGbtVers);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    LOG(INFO) << YELLOW << "lpGBT version : " << +cFWInterface->ReadReg("fc7_daq_cnfg.optical_block.lpgbt.version") << RESET;
+    fLpGbtVers = pLpGbtVers;
+}
 
 void WorkerTester::PrintFSMState()
 {
@@ -348,20 +359,21 @@ bool WorkerTester::I2CWrite_Old(uint8_t pLinkId, uint8_t pMasterId, uint8_t pMas
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 8 | pSlaveAddress << 0);
     cCommandVector.push_back(pMasterConfig << 24 | pSlaveData << 0);
     WriteCommandCPB(cCommandVector);
-    std::this_thread::sleep_for(std::chrono::microseconds(50));
+    // std::this_thread::sleep_for(std::chrono::microseconds(50));
     std::vector<uint32_t> cReplyVector = ReadReplyCPB(10);
     uint8_t fI2Cstatus                         = cReplyVector[7] & 0xFF;
     size_t cIter = 0, cMaxIter = 10;
     while(fI2Cstatus != 4 && cIter < cMaxIter)
     {
         // ResetCPB();
+        LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] I2CM" << +pMasterId << " status is 0x" << std::hex << +fI2Cstatus << std::dec << RESET;
         cReplyVector.clear();
         WriteCommandCPB(cCommandVector);
         cReplyVector = ReadReplyCPB(10);
         fI2Cstatus   = cReplyVector[7] & 0xFF;
         cIter++;
     }
-    if(fI2Cstatus != 4) LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] I2CM" << +pMasterId << " status is 0x" << std::hex << +fI2Cstatus << std::dec << RESET;
+    if(fI2Cstatus != 4) LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CWrite] I2CM" << +pMasterId << " status is 0x" << std::hex << +fI2Cstatus << std::dec << RESET; 
     return (fI2Cstatus == 4);
 }
 
@@ -391,7 +403,7 @@ uint8_t WorkerTester::I2CRead_Old(uint8_t pLinkId, uint8_t pMasterId, uint8_t pM
     cFail               = cFail && (cI2CReadByteRegAddr && cIter < cMaxIter);
     while(cFail)
     {
-        if(cIter == cMaxIter - 1) LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CRead] : Received corrupted reply from command processor block ... retrying" << RESET;
+        LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CRead] : Received corrupted reply from command processor block ... retrying" << RESET;
         // ResetCPB();
         std::this_thread::sleep_for(std::chrono::microseconds(50));
         cReplyVector.clear();
@@ -403,7 +415,6 @@ uint8_t WorkerTester::I2CRead_Old(uint8_t pLinkId, uint8_t pMasterId, uint8_t pM
         cReadBackRegAddr = ((cReplyVector[6] & 0xFF) << 8 | (cReplyVector[5] & 0xFF));
         cFail            = cCheckReadByte ? (cReadBackRegAddr != cI2CReadByteRegAddr) : false;
         cFail            = cFail && (cI2CReadByteRegAddr && cIter < cMaxIter);
-        if(cIter == cMaxIter - 1) LOG(INFO) << BOLDRED << "[D19cFWInterface::I2CRead] : Corrupted CPB reply frame" << RESET;
         cIter++;
     };
     if(cIter == cMaxIter) throw std::runtime_error(std::string("[D19cFWInterface::I2CRead] : Corrupted CPB reply frame"));
@@ -719,6 +730,7 @@ void WorkerTester::PrepareForTests()
         fBeBoardInterface->setBoard(cBoard->getId());
         D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
         cFWInterface->ConfigureBoard(cBoard);
+        SetLpGbtVersion(fLpGbtVers);
         for(auto cOpticalGroup : *cBoard)
         {
             if(cOpticalGroup->flpGBT == nullptr) throw std::runtime_error("Missing lpGBT");

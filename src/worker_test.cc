@@ -27,6 +27,9 @@ int main(int argc, char* argv[])
   cmd.defineOption("file", "Hw Description File . Default value: settings/DESY_FullModule.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
   cmd.defineOptionAlternative("file", "f");
 
+  cmd.defineOption("lpgbt-version", "lpGBT version [0/1]", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
+  cmd.defineOptionAlternative("lpgbt-version", "lpgbtv");
+
   cmd.defineOption("test-ic-read", "Test lpGBT IC Read");
   cmd.defineOptionAlternative("test-ic-read", "ticr");
 
@@ -87,9 +90,14 @@ int main(int argc, char* argv[])
   {
     cNewImp = (cmd.optionValue("implementation") == "new") ? true : false;
   }
+  uint8_t cLpGbtVers = 0;
+  if(cmd.foundOption("lpgbt-version"))
+  {
+    cLpGbtVers = convertAnyInt(cmd.optionValue("lpgbt-version").c_str());
+  }
   bool cVerbose = cmd.foundOption("verbose");
 
-  WorkerTester cWorkerTester(cNewImp, cVerbose);
+  WorkerTester cWorkerTester(cNewImp, cVerbose, cLpGbtVers);
   cWorkerTester.Inherit(&cTool);
 
   cWorkerTester.PrepareForTests();

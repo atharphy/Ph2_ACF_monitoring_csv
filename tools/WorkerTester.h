@@ -9,11 +9,13 @@ using namespace Ph2_HwDescription;
 
 class WorkerTester : public Tool {
     public :
-        WorkerTester(bool pNewImp, bool fVerbose) ;
+        WorkerTester(bool pNewImp, bool pVerbose, uint8_t pLpGbtVers);
         ~WorkerTester();
 
         void PrepareForTests();
         void PrintFSMState();
+
+        void SetLpGbtVersion(uint8_t pLpGbtVers);
 
         //NEW
         // function for CPB command/reply 
@@ -67,6 +69,7 @@ class WorkerTester : public Tool {
     private :
         bool fNewImp = true;
         bool fVerbose = false;
+        uint8_t fLpGbtVers = 0;
 
         void ResetI2CMasters(OpticalGroup* cOpticalGroup);
         void SetHybridClocks(OpticalGroup* cOpticalGroup);

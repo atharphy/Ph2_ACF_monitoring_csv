@@ -221,7 +221,10 @@
                         <node id="address"                       mask="0x000000FF"/>
                         <node id="data"                          mask="0x0000FF00"/>
                     </node>
-                    <node id="mux"                               address = "0x005" mask="0x0000000F"/>
+                    <node id="lpgbt" address = "0x005">
+                        <node id="mux" mask="0x0000000F"/>
+                        <node id="version" mask="0x00000010"/>
+                    </node>
                     <node id="tx_polarity"                              address="0x006">
                         <node id="l8"                           mask="0x000000FF" description="note: default value is 1 for all"/>
                         <node id="l12"                          mask="0x0FFF0000" description="note: default value is 0 for all"/>
