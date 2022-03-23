@@ -25,6 +25,9 @@
 #define NSSACHANNELS 120
 #define NMPACHANNELS 1920
 #define NMPACOLS 16
+#define NCHIPS_OT 8
+#define HYBRID_CHANNELS_OT NCHIPS_OT* NCHANNELS
+#define TOTAL_CHANNELS_OT NCHIPS_OT* NCHANNELS * 2
 
 // Events
 
@@ -169,7 +172,10 @@ enum class FrontEndType
     OuterTracker2S,
     OuterTrackerPS,
     InnerTrackerDouble,
-    InnerTrackerQuad
+    InnerTrackerQuad,
+    HYBRID2S,
+    HYBRIDPS,
+    LpGBT
 };
 enum class SLinkDebugMode
 {

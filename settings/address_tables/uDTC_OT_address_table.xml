@@ -146,6 +146,7 @@
                 <node id="slvs_debug" address = "0x000">
                     <node id="chip_select"                     mask="0x000F0000"/>
                     <node id="hybrid_select"                   mask="0x03F00000"/>
+                    <node id="auto_l1_capture"                 mask="0x04000000"/>
                 </node>
 
                 <!-- line debug -->
