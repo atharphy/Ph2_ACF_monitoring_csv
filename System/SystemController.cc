@@ -757,7 +757,6 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             }
 
             bool     cSkipSSA3            = true; // eventually this needs to be set in the xml somewhere
-            uint16_t cRegisterPadStrength = 0x1018;
             for(uint8_t cSSAId = 0; cSSAId < 8; cSSAId++)
             {
                 if(cSkipSSA3 && cSSAId == 3) continue;
@@ -768,7 +767,8 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
                 cSSA->setOptical(cHybrid->isOptical());
                 cSSA->setMasterId(cHybrid->getMasterId());
                 LOG(INFO) << BOLDMAGENTA << "SSA " << +cSSAId << " current set to " << +cSLVSdriveSSA << "" << RESET;
-                (fBeBoardInterface->getFirmwareInterface())->WriteFERegister(cSSA, cRegisterPadStrength, cSLVSdriveSSA, false);
+                auto cRegItem = cSSA->getRegItem("SLVS_pad_current");
+                (fBeBoardInterface->getFirmwareInterface())->SingleRegisterWrite(cSSA, cRegItem, false);
             }
 
         } // hybrid
