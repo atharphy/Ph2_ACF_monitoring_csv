@@ -548,7 +548,7 @@ void Tool::AddMetadata()
     {
         LOG(WARNING) << e.what();
         LOG(WARNING) << __PRETTY_FUNCTION__ << " Username not set, using dummy name";
-        user = "Geherman"; // awaits you, at the foot of the great TTree.
+        user = "user";
     }
     t->Branch("username", &user);
 
