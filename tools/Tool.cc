@@ -539,7 +539,17 @@ void Tool::AddMetadata()
     t->SetName("metadata");
 
     // save username
-    std::string user = std::string(std::getenv("USER"));
+    std::string user;
+    try
+    {
+        user = std::string(std::getenv("USER"));
+    }
+    catch(const std::exception& e)
+    {
+        LOG(WARNING) << e.what();
+        LOG(WARNING) << __PRETTY_FUNCTION__ << " Username not set, using dummy name";
+        user = "Geherman"; // awaits you, at the foot of the great TTree.
+    }
     t->Branch("username", &user);
 
     // save chip IDs

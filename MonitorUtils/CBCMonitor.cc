@@ -22,6 +22,8 @@ CBCMonitor::CBCMonitor(const Ph2_System::SystemController* theSystemController, 
 
 void CBCMonitor::runMonitor()
 {
+    std::recursive_mutex theMutex;
+    std::lock_guard<std::recursive_mutex> theGuard(theMutex); 
     for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("CBC")) runCBCRegisterMonitor(registerName);
     for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT")) runLpGBTRegisterMonitor(registerName);
 }
@@ -57,13 +59,10 @@ void CBCMonitor::runCBCRegisterMonitor(std::string registerName)
     {
         for(auto board: theCBCRegisterContainer)
         {
-            std::cout << __PRETTY_FUNCTION__ << "board index = " << board->getIndex() << " board size = " << board->size() << std::endl;
             theCBCRegisterStreamer->streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
         }
-        std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
     }
 #endif
-    std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
 }
 
 void CBCMonitor::runLpGBTRegisterMonitor(std::string registerName)

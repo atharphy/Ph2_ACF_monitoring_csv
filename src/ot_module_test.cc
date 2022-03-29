@@ -18,6 +18,7 @@
 #include "tools/PedeNoise.h"
 #include "tools/PedeNoiseTime.h"
 #include "tools/PedestalEqualization.h"
+#include "tools/CBCPulseShape.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
 
@@ -181,6 +182,7 @@ int main(int argc, char* argv[])
     //
     cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("readMonitors", "Read internal monitors on lpGBT [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("pulseShape", "Scan the threshold and fit for signal Vcth", ArgvParser::NoOptionAttribute);
 
     int result = cmd.parse(argc, argv);
 
@@ -200,6 +202,8 @@ int main(int argc, char* argv[])
     std::string cSrcLnkTst       = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
     std::string cModuleId        = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
     std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
+    bool        cPulseShape      = (cmd.foundOption("pulseShape")) ? true : false;
+    
     uint16_t    cRunNumber       = 666;
     if(!cmd.foundOption("read"))
     {
@@ -1237,10 +1241,26 @@ int main(int argc, char* argv[])
     }
     if(!cmd.foundOption("read")) { cTool.dumpConfigFiles(); }
 
+    if(cPulseShape)
+    {
+        std::cout<<"I am in"<< std::endl;
+        Timer t;
+        t.start();
+        CBCPulseShape cCBCPulseShape;
+        cCBCPulseShape.Inherit(&cTool);
+        cCBCPulseShape.Initialise();
+        cCBCPulseShape.runCBCPulseShape();
+        cCBCPulseShape.writeObjects();
+        t.stop();
+        t.show("Time for pulseShape plot measurement");
+        t.reset();
+    }
+
     cTool.SaveResults();
     cTool.WriteRootFile();
     cTool.CloseResultFile();
     cTool.Destroy();
+    signal(SIGINT, SIG_DFL);
     runCompleted = 1;
     if(!batchMode) cApp.Run();
     cGlobalTimer.stop();
