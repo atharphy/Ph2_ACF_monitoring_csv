@@ -7,6 +7,7 @@
 #include "boost/format.hpp"
 #include "tools/BackEndAlignment.h"
 #include "tools/BeamTestCheck2S.h"
+#include "tools/CBCPulseShape.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
 #include "tools/LatencyScan.h"
@@ -18,7 +19,6 @@
 #include "tools/PedeNoise.h"
 #include "tools/PedeNoiseTime.h"
 #include "tools/PedestalEqualization.h"
-#include "tools/CBCPulseShape.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
 
@@ -203,8 +203,8 @@ int main(int argc, char* argv[])
     std::string cModuleId        = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
     std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     bool        cPulseShape      = (cmd.foundOption("pulseShape")) ? true : false;
-    
-    uint16_t    cRunNumber       = 666;
+
+    uint16_t cRunNumber = 666;
     if(!cmd.foundOption("read"))
     {
         std::ofstream cRunLog;
@@ -1243,7 +1243,7 @@ int main(int argc, char* argv[])
 
     if(cPulseShape)
     {
-        std::cout<<"I am in"<< std::endl;
+        std::cout << "I am in" << std::endl;
         Timer t;
         t.start();
         CBCPulseShape cCBCPulseShape;

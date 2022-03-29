@@ -31,7 +31,7 @@ CbcInterface::~CbcInterface() {}
 
 bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerifLoop, uint32_t pBlockSize)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex); 
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     pCbc->setRegisterTracking(0);
     std::stringstream cOutput;
     setBoard(pCbc->getBeBoardId());
@@ -275,7 +275,7 @@ std::vector<uint8_t> CbcInterface::readLUT(ReadoutChip* pCbc, uint8_t pMode)
 
 uint16_t CbcInterface::readErrorRegister(ReadoutChip* pCbc)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex); 
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     // read I2c register with error flags
     setBoard(pCbc->getBeBoardId());
     ChipRegItem cRegItem;
@@ -553,7 +553,7 @@ bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerifLoop)
 }
 bool CbcInterface::WriteChipSingleReg(Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex); 
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     // first, identify the correct BeBoardFWInterface
     setBoard(pCbc->getBeBoardId());
     auto cRegMap             = pCbc->getRegMap();
@@ -581,7 +581,7 @@ uint8_t CbcInterface::GetLastPage(Chip* pCbc)
 }
 bool CbcInterface::WriteChipMultReg(Chip* pCbc, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex); 
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     setBoard(pCbc->getBeBoardId());
     auto                     cRegMap = pCbc->getRegMap();
     std::vector<ChipRegItem> cRegItemsPg0;
@@ -670,7 +670,7 @@ bool CbcInterface::WriteChipAllLocalReg(ReadoutChip* pCbc, const std::string& da
 }
 uint8_t CbcInterface::ReadChipSingleReg(Chip* pCbc, const std::string& pRegNode)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex); 
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     setBoard(pCbc->getBeBoardId());
     ChipRegItem cRegItem = pCbc->getRegItem(pRegNode);
     ConfigurePage(pCbc, cRegItem.fPage);
