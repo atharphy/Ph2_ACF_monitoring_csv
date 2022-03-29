@@ -18,7 +18,7 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
+bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerify, uint32_t pBlockSize)
 {
     std::stringstream cOutput;
     setBoard(pChip->getBeBoardId());

@@ -53,7 +53,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // # LpGBT register access functions #
     // ###################################
     // General configuration of the lpGBT chip from register file
-    bool ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
+    bool ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerify = true, uint32_t pBlockSize = 310) override;
 
     // Sets the flag used to select which lpGBT configuration interface to use
     void SetConfigMode(bool pUseOpticalLink, bool pUseCPB, bool pToggleTC = false);
