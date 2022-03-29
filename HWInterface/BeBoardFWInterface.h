@@ -244,7 +244,7 @@ class BeBoardFWInterface : public RegManager
     // ############################
     virtual void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus)                                                               = 0;
     virtual void     ResetOptoLink()                                                                                                                           = 0;
-    virtual bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) = 0;
+    virtual bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerify = true) = 0;
     virtual uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress)                                                       = 0;
 
     // ##########################################
@@ -253,25 +253,16 @@ class BeBoardFWInterface : public RegManager
     virtual void                  ResetCPB() {}
     virtual void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) {}
     virtual std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) { return {}; }
-    // Function to read/write lpGBT registers
-    virtual bool    WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) { return true; }
-    virtual uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress) { return 0; }
-    // function for I2C transactions using lpGBT I2C Masters
-    virtual bool    I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes, uint8_t pFrequency, uint32_t& theI2CWriteCount) { return true; }
-    virtual uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes, uint8_t pFrequency, uint32_t& theI2CReadCount) { return 0; }
-    // function for front-end slow control
-    virtual bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false) { return true; }
-    virtual uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) { return 0; }
 
-    // ##########################################
+    // ###############################
     // # Configuration FE Read/Write #
-    // ##########################################
+    // ###############################
     // Register write
     virtual bool SingleRegisterWrite(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerify = true) { return true; }
     virtual bool MultiRegisterWrite(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem, bool pVerify = true) { return true; }
     // Register write + read-back
-    virtual bool MultiRegisterWriteRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem) { return true; }
     virtual bool SingleRegisterWriteRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem) { return true; }
+    virtual bool MultiRegisterWriteRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem) { return true; }
     // Register read
     virtual uint8_t              SingleRegisterRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem) { return 0; }
     virtual std::vector<uint8_t> MultiRegisterRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem)
@@ -279,6 +270,14 @@ class BeBoardFWInterface : public RegManager
         std::vector<uint8_t> cData(0);
         return cData;
     }
+
+    // #######################################
+    // # lpGBT I2C Masters Control Functions #
+    // #######################################
+    virtual bool    MultiWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress, uint32_t pSlaveData) { return true; }
+    virtual uint8_t SingleReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress) { return 0; }
+
+
 
     void ConfigureCPB(CPBconfig pConfig)
     {
