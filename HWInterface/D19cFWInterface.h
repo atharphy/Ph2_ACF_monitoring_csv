@@ -7,6 +7,7 @@
         \date                           24.03.2017
         Support :                       mail to : georg.auzinger@SPAMNOT.cern.ch
                                                   mykyta.haranko@SPAMNOT.cern.ch
+                                                  younes.otarid@SPAMNOT.cern.ch
 
 */
 
@@ -348,15 +349,11 @@ class D19cFWInterface : public BeBoardFWInterface
     uint8_t       fI2Cstatus    = 0;
     const uint8_t flpGBTAddress = 0x70;
 
-    // OT implementation of write and read
-    bool     WriteOptoLpGBTRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop);
-    uint32_t ReadOptoLpGBTRegister(const uint32_t linkNumber, const uint32_t pAddress);
-
     // Functions for standard uDTC
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override {}
-    void     ResetOptoLink() override;
-    bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override;
-    uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress) override;
+    void     ResetOptoLink() override {};
+    bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override { return true; };
+    uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress) override { return 0; };
     // ##########################################
     // # Read/Write new Command Processor Block #
     // ##########################################
@@ -366,28 +363,20 @@ class D19cFWInterface : public BeBoardFWInterface
     std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) override;
     std::vector<uint32_t> WriteCommandCPBandReadReply(const std::vector<uint32_t>& pCommandVector, uint8_t pNWords);
 
-    // function to read/write lpGBT registers
-    bool    WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override;
-    uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterValue) override;
-    // function for I2C transactions using lpGBT I2C Masters
-    bool    I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes, uint8_t pFrequency, uint32_t& pNWrites) override;
-    uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes, uint8_t pFrequency, uint32_t& pNReads) override;
-    // function for front-end slow control
-    bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false) override;
-    bool    localWriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry, uint32_t& theI2CWriteCount, uint32_t& theI2CReadMismatches);
-    uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) override;
-
     // Generic FE configuration functions
     // single register functions
     // Register write
     bool SingleRegisterWrite(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerify = true) override;
     bool MultiRegisterWrite(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem, bool pVerify = true) override;
     // Register write + read-back
-    bool MultiRegisterWriteRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem) override;
     bool SingleRegisterWriteRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem) override;
-    // Registe read
+    bool MultiRegisterWriteRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem) override;
+    // Register read
     uint8_t              SingleRegisterRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem) override;
     std::vector<uint8_t> MultiRegisterRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem) override;
+    // function for lpGBT I2C Masters Control
+    bool    MultiWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress, uint32_t pSlaveData) override;
+    uint8_t SingleReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress) override;
 
     // fast command generic block
     void ResetFCMDBram();
