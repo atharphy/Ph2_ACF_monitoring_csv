@@ -980,7 +980,7 @@ void RD53FWInterface::StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uin
     LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip mgt: " << BOLDYELLOW << mgtStatus << BOLDBLUE << " i.e.: " << BOLDYELLOW << std::bitset<20>(mgtStatus) << RESET;
 }
 
-bool RD53FWInterface::WriteOptoLinkRegister(const Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop)
+bool RD53FWInterface::WriteOptoLinkRegister(const Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerify)
 {
     // OptoChip ID
     RD53FWInterface::selectLink(pChip->getOpticalId());
@@ -995,7 +995,7 @@ bool RD53FWInterface::WriteOptoLinkRegister(const Chip* pChip, const uint32_t pA
                                {"user.ctrl_regs.lpgbt_1.ic_send_wr_cmd", 0x1},
                                {"user.ctrl_regs.lpgbt_1.ic_send_wr_cmd", 0x0}});
 
-    if(pVerifLoop == true)
+    if(pVerify == true)
     {
         uint32_t cReadBack = RD53FWInterface::ReadOptoLinkRegister(pChip, pAddress);
         if(cReadBack != pData)
