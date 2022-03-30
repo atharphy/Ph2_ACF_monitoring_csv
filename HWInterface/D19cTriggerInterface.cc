@@ -69,10 +69,8 @@ void D19cTriggerInterface::TriggerConfiguration()
     {
         fTriggerConfiguration.fTriggerRate       = ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
         fTriggerConfiguration.fNtriggersToAccept = ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
-        LOG(DEBUG) << BOLDGREEN << "Trigger source is : " << +cSource << " matches configured source " << +fTriggerConfiguration.fTriggerSource 
-            << " number of triggers to accept is " << +fTriggerConfiguration.fNtriggersToAccept 
-            << RESET;
-        
+        LOG(DEBUG) << BOLDGREEN << "Trigger source is : " << +cSource << " matches configured source " << +fTriggerConfiguration.fTriggerSource << " number of triggers to accept is "
+                   << +fTriggerConfiguration.fNtriggersToAccept << RESET;
     }
 }
 
@@ -151,7 +149,7 @@ bool D19cTriggerInterface::Start()
     LOG(DEBUG) << BOLDYELLOW << "D19cTriggerInterface::Start - trigger state is " << cTriggerState << RESET;
     // this stops triggers  + resets
     this->ResetTriggerFSM();
-    
+
     // here open the shutter for the stub counter block (for some reason self clear doesn't work, that why we have to
     // clear the register manually)
     WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x1);
@@ -293,16 +291,14 @@ bool D19cTriggerInterface::RunTriggerFSM()
     {
         std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
         auto cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-        if(cIterations % 1000 == 0 && cIterations > 0){ 
-            LOG(DEBUG) << "Trigger FSM State: " << BOLDGREEN << "Running.. : " << cNtriggers <<  " triggers received." << RESET;
-        }
+        if(cIterations % 1000 == 0 && cIterations > 0) { LOG(DEBUG) << "Trigger FSM State: " << BOLDGREEN << "Running.. : " << cNtriggers << " triggers received." << RESET; }
         cEndTime  = std::chrono::high_resolution_clock::now();
         cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
         cIterations++;
     } while(this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") && cDuration < fTimeout_us);
-    bool cFailed = (this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"));
+    bool cFailed    = (this->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"));
     auto cNtriggers = ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-    LOG (DEBUG) << BOLDYELLOW << "D19cTriggerInterface::RunTriggerFSM " << cNtriggers << " triggers received. " << cFailed << RESET;
+    LOG(DEBUG) << BOLDYELLOW << "D19cTriggerInterface::RunTriggerFSM " << cNtriggers << " triggers received. " << cFailed << RESET;
     this->Stop();
     // return true;
     return !cFailed;

@@ -17,7 +17,7 @@ std::string D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
     auto cInitFastReset = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable");
     auto cInitBP        = this->ReadReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable");
     // enable initial fast reset
-    this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable",1);
+    this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable", 1);
     // disable back-pressure
     this->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0);
     WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);

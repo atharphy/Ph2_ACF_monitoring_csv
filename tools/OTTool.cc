@@ -113,11 +113,11 @@ void OTTool::Prepare()
     // check sparsification
     for(auto cBoard: *fDetectorContainer)
     {
-        uint32_t cSparsified = cBoard->getSparsification();//this is set in the file parser .. so check using that 
-        LOG (INFO) << BOLDYELLOW << +cSparsified << RESET;
+        uint32_t cSparsified = cBoard->getSparsification(); // this is set in the file parser .. so check using that
+        LOG(INFO) << BOLDYELLOW << +cSparsified << RESET;
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", cSparsified);
         // make sure I am in un-sparsified mode
-        LOG(INFO) << BOLDGREEN << "Setting sparsification on BeBoard#" << +cBoard->getId() <<  ((cSparsified==1)? " ON" : " OFF") << RESET;
+        LOG(INFO) << BOLDGREEN << "Setting sparsification on BeBoard#" << +cBoard->getId() << ((cSparsified == 1) ? " ON" : " OFF") << RESET;
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
@@ -679,7 +679,6 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
     cEvntHeader << "Event#" << +pEvent->GetEventCount() << " -- " << +fEventCountInt << " in readout..." << RESET;
     std::stringstream cHeader;
 
-
     std::ofstream cOutFile_LT, cOutFile_RT, cOutFile_LB, cOutFile_RB;
     cOutFile_LT.open("OTTool_LT.dat", std::ios_base::app);
     cOutFile_RT.open("OTTool_RT.dat", std::ios_base::app);
@@ -693,67 +692,69 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
 
         for(auto cHybrid: *cOpticalGroup)
         {
-            auto              cL1IdCIC  = static_cast<D19cCic2Event*>(pEvent)->L1Id(cHybrid->getId(), 0);
-            auto              cL1Status = static_cast<D19cCic2Event*>(pEvent)->L1Status(cHybrid->getId());
-            auto              cBxId     = (pEvent)->BxId(cHybrid->getId());
-            auto              cStubStat = static_cast<D19cCic2Event*>(pEvent)->Status(cHybrid->getId());
-            
-            if( pEvent->GetEventCount() < 10000)
+            auto cL1IdCIC  = static_cast<D19cCic2Event*>(pEvent)->L1Id(cHybrid->getId(), 0);
+            auto cL1Status = static_cast<D19cCic2Event*>(pEvent)->L1Status(cHybrid->getId());
+            auto cBxId     = (pEvent)->BxId(cHybrid->getId());
+            auto cStubStat = static_cast<D19cCic2Event*>(pEvent)->Status(cHybrid->getId());
+
+            if(pEvent->GetEventCount() < 10000)
             {
-                std::vector<uint32_t> cHits_TopSensor(cHybrid->size()*127,0);
-                std::vector<uint32_t> cHits_BottomSensor(cHybrid->size()*127,0);
-                uint32_t cTotalNHits=0; 
-                for(auto cChip : *cHybrid ) 
+                std::vector<uint32_t> cHits_TopSensor(cHybrid->size() * 127, 0);
+                std::vector<uint32_t> cHits_BottomSensor(cHybrid->size() * 127, 0);
+                uint32_t              cTotalNHits = 0;
+                for(auto cChip: *cHybrid)
                 {
-                    uint16_t cOffset   = cChip->getId() * cChip->size()/ 2.;
-                    auto cHits = pEvent->GetHits(cHybrid->getId(), cChip->getId());
-                    for( auto cChnl=0; cChnl < (int)cChip->size(); cChnl++)
+                    uint16_t cOffset = cChip->getId() * cChip->size() / 2.;
+                    auto     cHits   = pEvent->GetHits(cHybrid->getId(), cChip->getId());
+                    for(auto cChnl = 0; cChnl < (int)cChip->size(); cChnl++)
                     {
-                        uint16_t cStripOffset = cOffset;//(cChnlIndx % 2 == 0) ? cOffset : (cNchannels*8) / 2 + cOffset;
+                        uint16_t cStripOffset = cOffset; //(cChnlIndx % 2 == 0) ? cOffset : (cNchannels*8) / 2 + cOffset;
                         uint16_t cStripId     = cStripOffset + cChnl / 2;
                         if(cHybrid->getId() % 2 == 0)
                         {
-                            cStripOffset = (cChip->size()*8) / 2 - 1;//(cChnlIndx % 2 == 0) ? (cNchannels*8) / 2 : (cNchannels*8);
+                            cStripOffset = (cChip->size() * 8) / 2 - 1; //(cChnlIndx % 2 == 0) ? (cNchannels*8) / 2 : (cNchannels*8);
                             cStripId     = cStripOffset - (cChip->getId() * cChip->size() / 2 + cChnl / 2);
                         }
-                        auto cHitFound = std::find(cHits.begin(), cHits.end(), cChnl ) != cHits.end(); 
-                        cTotalNHits += (cHitFound)? 1 : 0; 
-                        if( cChnl%2 == 0 ) cHits_BottomSensor[cStripId] = cHitFound?1:0;
-                        else cHits_TopSensor[cStripId] = cHitFound?1:0;
+                        auto cHitFound = std::find(cHits.begin(), cHits.end(), cChnl) != cHits.end();
+                        cTotalNHits += (cHitFound) ? 1 : 0;
+                        if(cChnl % 2 == 0)
+                            cHits_BottomSensor[cStripId] = cHitFound ? 1 : 0;
+                        else
+                            cHits_TopSensor[cStripId] = cHitFound ? 1 : 0;
                     }
                 }
-                //if(cTotalNHits >= 0 )
+                // if(cTotalNHits >= 0 )
                 //{
-                    std::stringstream cEventPrintout_TopSensor;
-                    std::stringstream cEventPrintout_BottomSensor; 
-                    cEventPrintout_TopSensor << cBxId << "\t";
-                    cEventPrintout_BottomSensor << cBxId << "\t";
-                    for(auto cStripId = 0 ; cStripId < cHybrid->size()*127 ; cStripId++)
+                std::stringstream cEventPrintout_TopSensor;
+                std::stringstream cEventPrintout_BottomSensor;
+                cEventPrintout_TopSensor << cBxId << "\t";
+                cEventPrintout_BottomSensor << cBxId << "\t";
+                for(auto cStripId = 0; cStripId < cHybrid->size() * 127; cStripId++)
+                {
+                    if(cStripId < cHybrid->size() * 127 - 1)
                     {
-                        if( cStripId < cHybrid->size()*127 - 1 ) 
-                        {
-                            cEventPrintout_TopSensor << cHits_TopSensor[cStripId]  <<  "\t";
-                            cEventPrintout_BottomSensor  << cHits_BottomSensor[cStripId]  <<  "\t";
-                        }
-                        else
-                        { 
-                            cEventPrintout_TopSensor << cHits_TopSensor[cStripId];
-                            cEventPrintout_BottomSensor  << cHits_BottomSensor[cStripId];
-                        }
-                    }
-                    
-                    if(cHybrid->getId()%2 == 0 ) 
-                    {
-                        cOutFile_RT << cEventPrintout_TopSensor.str() << "\n";
-                        cOutFile_RB << cEventPrintout_BottomSensor.str() << "\n";
+                        cEventPrintout_TopSensor << cHits_TopSensor[cStripId] << "\t";
+                        cEventPrintout_BottomSensor << cHits_BottomSensor[cStripId] << "\t";
                     }
                     else
                     {
-                        cOutFile_LT << cEventPrintout_TopSensor.str() << "\n";
-                        cOutFile_LB << cEventPrintout_BottomSensor.str() << "\n";
+                        cEventPrintout_TopSensor << cHits_TopSensor[cStripId];
+                        cEventPrintout_BottomSensor << cHits_BottomSensor[cStripId];
                     }
+                }
+
+                if(cHybrid->getId() % 2 == 0)
+                {
+                    cOutFile_RT << cEventPrintout_TopSensor.str() << "\n";
+                    cOutFile_RB << cEventPrintout_BottomSensor.str() << "\n";
+                }
+                else
+                {
+                    cOutFile_LT << cEventPrintout_TopSensor.str() << "\n";
+                    cOutFile_LB << cEventPrintout_BottomSensor.str() << "\n";
+                }
                 //}
-            }// checking 
+            } // checking
 
             std::stringstream cOutStubs;
             std::stringstream cOutL1;

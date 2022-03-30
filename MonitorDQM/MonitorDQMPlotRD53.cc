@@ -14,9 +14,8 @@ void MonitorDQMPlotRD53::book(TFile* theOutputFile, const DetectorContainer& the
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
-    for(unsigned int i = 0; i < fDetectorMonitorConfig.fMonitorElementList.size(); i++)
-        if(fDetectorMonitorConfig.isElementToMonitor(fDetectorMonitorConfig.fMonitorElementList[i]) == true)
-            bookPlots(theOutputFile, theDetectorStructure, fDetectorMonitorConfig.fMonitorElementList[i]);
+    for(unsigned int i = 0; i < fDetectorMonitorConfig.fMonitorElementList.at("RD53").size(); i++)
+        bookPlots(theOutputFile, theDetectorStructure, fDetectorMonitorConfig.fMonitorElementList.at("RD53")[i]);
 }
 
 void MonitorDQMPlotRD53::bookPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName)
@@ -27,7 +26,7 @@ void MonitorDQMPlotRD53::bookPlots(TFile* theOutputFile, const DetectorContainer
 
 bool MonitorDQMPlotRD53::fill(std::vector<char>& dataBuffer)
 {
-    ChipContainerStream<EmptyContainer, std::tuple<time_t, float>, CharArray> theDQMStreamer("RD533MonitorRegister");
+    ChipContainerStream<EmptyContainer, std::tuple<time_t, float>, CharArray> theDQMStreamer("RD53MonitorRegister");
 
     if(theDQMStreamer.attachBuffer(&dataBuffer))
     {

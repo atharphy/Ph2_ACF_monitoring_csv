@@ -7,6 +7,7 @@
 #include "boost/format.hpp"
 #include "tools/BackEndAlignment.h"
 #include "tools/BeamTestCheck2S.h"
+#include "tools/CBCPulseShape.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
 #include "tools/LatencyScan.h"
@@ -46,6 +47,25 @@ using namespace CommandLineProcessing;
 INITIALIZE_EASYLOGGINGPP
 
 #define CHIPSLAVE 4
+
+sig_atomic_t killProcess  = 0;
+sig_atomic_t runCompleted = 0;
+
+void interruptHandler(int handler) { killProcess = 1; }
+
+void killProcessFunction(Tool* theTool)
+{
+    while(1)
+    {
+        usleep(250000);
+        if(killProcess || runCompleted) break;
+    }
+    if(killProcess)
+    {
+        theTool->Destroy();
+        abort();
+    }
+}
 
 uint16_t returnRunNumber(std::string cFileName)
 {
@@ -162,6 +182,7 @@ int main(int argc, char* argv[])
     //
     cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("readMonitors", "Read internal monitors on lpGBT [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("pulseShape", "Scan the threshold and fit for signal Vcth", ArgvParser::NoOptionAttribute);
 
     int result = cmd.parse(argc, argv);
 
@@ -181,7 +202,9 @@ int main(int argc, char* argv[])
     std::string cSrcLnkTst       = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
     std::string cModuleId        = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
     std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
-    uint16_t    cRunNumber       = 666;
+    bool        cPulseShape      = (cmd.foundOption("pulseShape")) ? true : false;
+
+    uint16_t cRunNumber = 666;
     if(!cmd.foundOption("read"))
     {
         std::ofstream cRunLog;
@@ -211,6 +234,14 @@ int main(int argc, char* argv[])
 
     std::stringstream outp;
     Tool              cTool;
+
+    std::thread softKillThread(killProcessFunction, &cTool);
+    softKillThread.detach();
+
+    struct sigaction act;
+    act.sa_handler = interruptHandler;
+    sigaction(SIGINT, &act, NULL);
+
     if(cSaveToFile)
     {
         char cRawFileName[80];
@@ -1210,10 +1241,27 @@ int main(int argc, char* argv[])
     }
     if(!cmd.foundOption("read")) { cTool.dumpConfigFiles(); }
 
+    if(cPulseShape)
+    {
+        std::cout << "I am in" << std::endl;
+        Timer t;
+        t.start();
+        CBCPulseShape cCBCPulseShape;
+        cCBCPulseShape.Inherit(&cTool);
+        cCBCPulseShape.Initialise();
+        cCBCPulseShape.runCBCPulseShape();
+        cCBCPulseShape.writeObjects();
+        t.stop();
+        t.show("Time for pulseShape plot measurement");
+        t.reset();
+    }
+
     cTool.SaveResults();
     cTool.WriteRootFile();
     cTool.CloseResultFile();
     cTool.Destroy();
+    signal(SIGINT, SIG_DFL);
+    runCompleted = 1;
     if(!batchMode) cApp.Run();
     cGlobalTimer.stop();
     cGlobalTimer.show("Total execution time: ");
