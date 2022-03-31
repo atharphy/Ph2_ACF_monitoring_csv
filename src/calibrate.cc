@@ -159,7 +159,7 @@ int main(int argc, char* argv[])
 
         // Crashes with high event numbers, need to make as a setting
         if(cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA)
-            cPedeNoise.Validate(1, 1);
+            cPedeNoise.Validate();
         else
             cPedeNoise.Validate();
         cPedeNoise.writeObjects();

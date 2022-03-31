@@ -1965,8 +1965,9 @@ void BeamTestCheck2S::PrepareForTLU(BeBoard* pBoard)
 }
 void BeamTestCheck2S::PrepareForInternal(BeBoard* pBoard, uint8_t pLimitTriggers)
 {
-    BeBoardRegMap cRegMap      = pBoard->getBeBoardRegMap();
-    uint32_t      cTriggerFreq = cRegMap["fc7_daq_cnfg.fast_command_block.user_trigger_frequency"];
+    BeBoardRegMap cRegMap = pBoard->getBeBoardRegMap();
+    // triggers
+    uint32_t cTriggerFreq = cRegMap["fc7_daq_cnfg.fast_command_block.user_trigger_frequency"];
 
     // configure trigger
     uint8_t                                       cTriggerSource     = 3;
@@ -2004,9 +2005,10 @@ void BeamTestCheck2S::PrepareForExternal(BeBoard* pBoard)
 {
     // configure trigger
     // make sure I am accepting all triggers
-    BeBoardRegMap cRegMap         = pBoard->getBeBoardRegMap();
-    uint32_t      cStubDataDaelay = cRegMap["fc7_daq_cnfg.readout_block.global.common_stubdata_delay"];
-    uint32_t      cTriggerMult    = cRegMap["fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity"];
+    BeBoardRegMap cRegMap = pBoard->getBeBoardRegMap();
+    // trigger config
+    uint32_t cStubDataDaelay = cRegMap["fc7_daq_cnfg.readout_block.global.common_stubdata_delay"];
+    uint32_t cTriggerMult    = cRegMap["fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity"];
 
     LOG(INFO) << BOLDYELLOW << "Common stub data delay set to " << +cStubDataDaelay << RESET;
     uint8_t                                       cTriggerSource = 5;

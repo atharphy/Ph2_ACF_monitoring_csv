@@ -961,7 +961,11 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                                         cCic->setClockFrequency(cValueFromFile);
                                     }
                                     if(cAttribute == "clockFrequency" && cCIC1) continue;
-                                    if(cAttribute == "enableSparsification") pBoard->setSparsification(bool(cValueFromFile));
+                                    if(cAttribute == "enableSparsification")
+                                    {
+                                        pBoard->setSparsification(bool(cValueFromFile));
+                                        LOG(INFO) << BOLDYELLOW << "Board sparisfication set to " << pBoard->getSparsification() << RESET;
+                                    }
 
                                     os << GREEN << "|\t|\t|\t|---- Setting " << cAttribute << " to  " << cValueFromFile << "\n" << RESET;
                                     LOG(DEBUG) << BOLDBLUE << " Global settings " << cAttribute << " [ " << *it << " ]-- set to " << cValueFromFile << RESET;
@@ -1015,11 +1019,9 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             }
         }
 
-        // Finally map front-end to LpGBT
         if(pBoard->getBoardType() == BoardType::RD53 && pOpticalGroup->flpGBT != nullptr)
             this->parseHybridToLpGBT(pHybridNode, cHybrid, pOpticalGroup->flpGBT, os);
         else if(pBoard->getBoardType() != BoardType::RD53)
-            // parse global hybrids container - masks for noisy pixels/strips
             parseGlobalHybridMask(pHybridNode, cHybrid, os);
     }
 }
@@ -1612,30 +1614,17 @@ std::string FileParser::parseMonitorxml(const std::string& pFilename, DetectorMo
 
     os << std::endl;
 
-    auto const theMonitoringElements = theMonitorNode.child("MonitoringElements");
-    if(theMonitoringElements != nullptr)
+    for(pugi::xml_node monitorElement = theMonitorNode.child("MonitoringElement"); monitorElement; monitorElement = monitorElement.next_sibling())
     {
-        for(auto const& attr: theMonitoringElements.attributes())
-        {
-            uint16_t regvalue = convertAnyInt(attr.value());
-            if(regvalue == 1)
-            {
-                auto const& regname = attr.name();
-                os << BOLDRED << "Monitoring" << RESET << " -- " << BOLDCYAN << regname << RESET << ":" << BOLDYELLOW << "Yes" << RESET << std::endl;
-                theDetectorMonitorConfig.fMonitorElementList.emplace_back(regname);
-            }
-            else
-            {
-                auto const& regname = attr.name();
-                os << BOLDRED << "Monitoring" << RESET << " -- " << BOLDCYAN << regname << RESET << ":" << BOLDYELLOW << "No";
-                if(regvalue != 0) os << BOLDRED << " (invalid configuration value: " << BOLDYELLOW << regvalue << BOLDRED << " -> must be 0 or 1)";
+        if(convertAnyInt(monitorElement.attribute("enable").value()) == 0) continue;
 
-                os << RESET << std::endl;
-            }
-        }
+        const std::string chipName     = monitorElement.attribute("device").value();
+        const std::string registerName = monitorElement.attribute("register").value();
+        os << BOLDRED << "Monitoring" << RESET << " -- " << BOLDCYAN << chipName << RESET << ":" << BOLDYELLOW << "Register " << registerName << RESET << std::endl;
+        theDetectorMonitorConfig.addElementToMonitor(chipName, registerName);
     }
 
-    if(theDetectorMonitorConfig.fMonitorElementList.size() == 0) return "None";
+    if(theDetectorMonitorConfig.getNumberOfMonitoredRegisters() == 0) return "None";
     return theMonitorNode.attribute("type").value();
 }
 } // namespace Ph2_System

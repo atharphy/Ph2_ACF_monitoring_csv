@@ -1,10 +1,11 @@
 #include "CicFEAlignment.h"
 
 // #ifdef __USE_ROOT__
-#include "../HWInterface/D19cDebugFWInterface.h"
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Occupancy.h"
+#include "D19cDebugFWInterface.h"
+#include "TriggerInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -299,6 +300,8 @@ SlvsLineStatus CicFEAlignment::CheckPhyPort(const Hybrid* pHybrid, PhyPortCnfg p
     std::string    cPatternToMatch = cExpectedPattern.to_string();
     auto           cBoardId        = pHybrid->getBeBoardId();
     fBeBoardInterface->setBoard(cBoardId);
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+
     auto  cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     auto& cCic       = static_cast<const OuterTrackerHybrid*>(pHybrid)->fCic;
     // select slvs debug line in FC7
@@ -309,7 +312,7 @@ SlvsLineStatus CicFEAlignment::CheckPhyPort(const Hybrid* pHybrid, PhyPortCnfg p
     // set phase tap for this phy port input
     fCicInterface->SetPhaseTap(cCic, pPhyPortCnfg.first, pPhyPortCnfg.second, pPhase);
     // interface to retrieve debug data
-    D19cDebugFWInterface* cDebugInterface = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
 
     // read back data from stub debug
     // for now .. I need to do this twice
@@ -516,7 +519,8 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
         bool cWithCBC = false;
         // generate alignment pattern on all stub lines
         LOG(INFO) << BOLDBLUE << "Generating Patterns needed for phase alignment of CIC inputs." << RESET;
-
+        fBeBoardInterface->setBoard(cBoard->getId());
+        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
@@ -535,32 +539,34 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
         if(cWithCBC)
         {
             LOG(INFO) << BOLDBLUE << "Sending triggers to FEs to align L1 output from CBCs.." << RESET;
-            std::vector<std::pair<std::string, uint32_t>> cVecReg;
-            cVecReg.clear();
-            std::vector<std::string> cFcmdRegs{"misc.trigger_multiplicity", "user_trigger_frequency", "trigger_source", "misc.backpressure_enable", "triggers_to_accept"};
-            std::vector<uint8_t>     cFcmdRegOrigVals(0);
-            std::vector<uint16_t>    cFcmdRegVals{0, 100, 3, 0, 0};
-            for(size_t cIndx = 0; cIndx < cFcmdRegs.size(); cIndx++)
+            uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
+            // if external or async triggers are used then revert to internal here
+            bool                                          cReconfigureTrigger = (cTriggerSrc == 4 || cTriggerSrc || 5 || cTriggerSrc == 10);
+            std::vector<std::pair<std::string, uint32_t>> cRegVec;
+            if(cReconfigureTrigger)
             {
-                std::string cRegName = "fc7_daq_cnfg.fast_command_block." + cFcmdRegs[cIndx];
-                cFcmdRegOrigVals.push_back(fBeBoardInterface->ReadBoardReg(cBoard, cRegName));
-                cVecReg.push_back({cRegName, cFcmdRegVals[cIndx]});
+                uint16_t cSrc = 3;
+                if(cTriggerSrc != cSrc)
+                {
+                    LOG(INFO) << BOLDBLUE << "\t.. Changing trigger source is set to " << +cSrc << RESET;
+                    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cSrc});
+                }
+                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNTriggers});
+                cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+                fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
             }
-            cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-            fBeBoardInterface->WriteBoardMultReg(cBoard, cVecReg);
-            // send N triggers to make sure CIC receives L1 packets from CBC
-            fBeBoardInterface->SendNTriggers(cBoard, pNTriggers);
+            auto cTriggerInterface = cInterface->getTriggerInterface();
+            cTriggerInterface->SendNTriggers(pNTriggers);
 
-            // // reload original configuration
-            cVecReg.clear();
-            for(size_t cIndx = 0; cIndx < cFcmdRegOrigVals.size(); cIndx++)
+            // set trigger source back
+            if(cReconfigureTrigger)
             {
-                std::string cRegName = "fc7_daq_cnfg.fast_command_block." + cFcmdRegs[cIndx];
-                cVecReg.push_back({cRegName, cFcmdRegOrigVals[cIndx]});
+                LOG(INFO) << BOLDBLUE << "\t.. Changing trigger source back to " << +cTriggerSrc << RESET;
+                std::vector<std::pair<std::string, uint32_t>> cRegVec;
+                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cTriggerSrc});
+                cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+                fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
             }
-            cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-            fBeBoardInterface->WriteBoardMultReg(cBoard, cVecReg);
-
         } // in the CBC case you need to send triggers to get alignment data on L1 line
         // check alignment
         for(auto cOpticalGroup: *cBoard)
@@ -587,7 +593,9 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
         if(!cDebug) continue;
 
         fBeBoardInterface->setBoard(cBoard->getId());
-        D19cDebugFWInterface* cDebugInterface = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+
+        D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
