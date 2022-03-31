@@ -12,8 +12,8 @@ class SEHMonitor : public DetectorMonitor
     void runMonitor() override;
 
   private:
-    void runInputCurrentMonitor();
-    bool doMonitorInputCurrent{false};
+    void runInputCurrentMonitor(std::string registerName);
+    // bool doMonitorInputCurrent{false};
 };
 
 #endif

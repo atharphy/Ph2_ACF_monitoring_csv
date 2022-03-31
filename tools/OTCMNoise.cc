@@ -51,7 +51,7 @@ void OTCMNoise::TakeData()
     this->accept(cVisitor);
     fVcth = cVisitor.getThreshold();
     LOG(INFO) << "Checking threshold on latest CBC that was touched...: " << fVcth;
-    
+
     DetectorDataContainer theHitContainer;
     DetectorDataContainer the2DHitContainer;
     // channel, chip, hybrid, optical group, board, detector
@@ -141,9 +141,9 @@ void OTCMNoise::TakeData()
     if(f2DHistograms) fDQMHistogramOTCMNoise.fill2DHitPlots(the2DHitContainer);
 #else
     auto theHitStream = prepareOpticalGroupContainerStreamer<EmptyContainer,
-                                                           GenericDataArray<NCHANNELS + 1, uint32_t>,
-                                                           GenericDataArray<HYBRID_CHANNELS_OT + 1, uint32_t>,
-                                                           GenericDataArray<TOTAL_CHANNELS_OT + 1, uint32_t>>("CMNoise_HitStream");
+                                                             GenericDataArray<NCHANNELS + 1, uint32_t>,
+                                                             GenericDataArray<HYBRID_CHANNELS_OT + 1, uint32_t>,
+                                                             GenericDataArray<TOTAL_CHANNELS_OT + 1, uint32_t>>("CMNoise_HitStream");
     for(auto board: theHitContainer)
     {
         if(fDQMStreamerEnabled) theHitStream->streamAndSendBoard(board, fDQMStreamer);

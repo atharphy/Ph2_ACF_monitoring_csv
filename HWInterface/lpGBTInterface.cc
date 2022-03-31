@@ -21,7 +21,7 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
 {
     this->setBoard(pChip->getBeBoardId());
     auto cBoardType = fBoardFW->getBoardType();
-    auto cAddress = pChip->getRegItem(pDacName).fAddress;
+    auto cAddress   = pChip->getRegItem(pDacName).fAddress;
 
     if(pDacValue > 0xFF)
     {
@@ -35,9 +35,9 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
     }
     bool cSuccess = false;
 
-    if( cBoardType != BoardType::RD53 && pChip->isOptical() )
+    if(cBoardType != BoardType::RD53 && pChip->isOptical())
     {
-    	auto cRegisterMap = pChip->getRegMap();
+        auto cRegisterMap             = pChip->getRegMap();
         cRegisterMap[pDacName].fValue = pDacValue;
         cSuccess = fBoardFW->SingleRegisterWrite(pChip, cRegisterMap[pDacName], pVerify);
     }
@@ -61,14 +61,14 @@ uint16_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
 {
     this->setBoard(pChip->getBeBoardId());
     auto cBoardType = fBoardFW->getBoardType();
-    
+
     auto     cAddress = pChip->getRegItem(pDacName).fAddress;
     uint16_t cValue   = 0x00;
 
-    if( cBoardType != BoardType::RD53 && pChip->isOptical())
+    if(cBoardType != BoardType::RD53 && pChip->isOptical())
     {
         auto cRegisterMap = pChip->getRegMap();
-        cValue = fBoardFW->SingleRegisterRead(pChip, cRegisterMap[pDacName]);
+        cValue            = fBoardFW->SingleRegisterRead(pChip, cRegisterMap[pDacName]);
     }
     else if(pChip->isOptical())
     {

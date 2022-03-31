@@ -60,12 +60,12 @@ class D19cFWInterface : public BeBoardFWInterface
     D19cBackendAlignmentFWInterface* fBackendAlignmentInterface{nullptr};
     D19cDebugFWInterface*            fDebugInterface{nullptr};
 
-    FileHandler*                             fFileHandler;
-    uint32_t                                 fBroadcastCbcId;
-    uint32_t                                 fNReadoutChip;
-    uint32_t                                 fNHybrids;
-    uint32_t                                 fNCic;
-    uint32_t                                 fFMCId;
+    FileHandler* fFileHandler;
+    uint32_t     fBroadcastCbcId;
+    uint32_t     fNReadoutChip;
+    uint32_t     fNHybrids;
+    uint32_t     fNCic;
+    uint32_t     fFMCId;
 
     // number of chips and hybrids defined in firmware (compiled for)
     uint32_t     fFWNHybrids;
@@ -229,7 +229,7 @@ class D19cFWInterface : public BeBoardFWInterface
     // get data from FC7
     // split data per hybrid/chip for a given board
     uint32_t computeEventSize(Ph2_HwDescription::BeBoard* pBoard);
-    
+
     // binary predicate for comparing sent I2C commands with replies using std::mismatch
     static bool cmd_reply_comp(const uint32_t& cWord1, const uint32_t& cWord2);
     static bool cmd_reply_ack(const uint32_t& cWord1, const uint32_t& cWord2);
@@ -285,7 +285,6 @@ class D19cFWInterface : public BeBoardFWInterface
     void EnableFrontEnds(const Ph2_HwDescription::BeBoard* pBoard);
 
   public:
-    
     void ChipReSync() override;
 
     void ChipReset() override;

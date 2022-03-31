@@ -32,10 +32,10 @@ uint16_t MPAInterface::ReadChipReg(Chip* pMPA, const std::string& pRegNode)
         cRegItem.fPage         = 0x00;
         cRegItem.fAddress      = 0x0901 + cChannel;
         cRegItem.fValue        = 0;
-        uint8_t cRPLSB         = fBoardFW->SingleRegisterRead(pMPA, cRegItem );
+        uint8_t cRPLSB         = fBoardFW->SingleRegisterRead(pMPA, cRegItem);
         cRegItem.fPage         = 0x00;
         cRegItem.fAddress      = 0x0801 + cChannel;
-        uint8_t  cRPMSB        = fBoardFW->SingleRegisterRead(pMPA, cRegItem );
+        uint8_t  cRPMSB        = fBoardFW->SingleRegisterRead(pMPA, cRegItem);
         uint16_t cCounterValue = (cRPMSB << 8) | cRPLSB;
         LOG(DEBUG) << BOLDBLUE << "Counter MSB is 0x" << std::bitset<8>(cRPMSB) << " Counter LSB is 0x" << std::bitset<8>(cRPLSB) << " Counter value is " << std::hex << +cCounterValue << std::dec
                    << RESET;
@@ -102,7 +102,7 @@ uint16_t MPAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVer
     cRegItem.fPage    = 0x00;
     cRegItem.fAddress = pRegisterAddress;
     cRegItem.fValue   = 0;
-    return fBoardFW->SingleRegisterRead(pChip, cRegItem); 
+    return fBoardFW->SingleRegisterRead(pChip, cRegItem);
 }
 void MPAInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
 {
@@ -774,14 +774,14 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerify, uint32_t pBlockSize)
     // don't read back enable registers
     std::vector<ChipRegItem> cCntrlRegItems;
     std::vector<ChipRegItem> cRegItems;
-    std::vector<ChipRegItem> cLocalRegItems; 
+    std::vector<ChipRegItem> cLocalRegItems;
     cCntrlRegItems.clear();
     for(auto cMapItem: cRegMap)
     {
         if(cMapItem.second.fControlReg)
             cCntrlRegItems.push_back(cMapItem.second);
-        else if( (cMapItem.first.find("_P") != std::string::npos) ) 
-            cLocalRegItems.push_back(cMapItem.second); 
+        else if((cMapItem.first.find("_P") != std::string::npos))
+            cLocalRegItems.push_back(cMapItem.second);
         else
             cRegItems.push_back(cMapItem.second);
     }
@@ -791,8 +791,8 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerify, uint32_t pBlockSize)
     // glbl
     cSuccess = fBoardFW->MultiRegisterWrite(pMPA, cRegItems, pVerify);
     if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cRegItems.size() << " R/W registers in" << cOutput.str() << "#" << +pMPA->getId() << RESET;
-    // lcl 
-    if( cConfigLocalRegs )
+    // lcl
+    if(cConfigLocalRegs)
     {
         cSuccess = fBoardFW->MultiRegisterWrite(pMPA, cLocalRegItems, pVerify);
         if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cLocalRegItems.size() << " local R/W registers in" << cOutput.str() << "#" << +pMPA->getId() << RESET;
@@ -805,7 +805,7 @@ bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
 {
     setBoard(pChip->getBeBoardId());
     std::vector<ChipRegItem> cRegItems;
-    auto  cRegMap = pChip->getRegMap();
+    auto                     cRegMap = pChip->getRegMap();
     for(auto cReq: pRegs)
     {
         auto cIterator = find_if(cRegMap.begin(), cRegMap.end(), [&cReq](const ChipRegPair& obj) { return obj.second.fAddress == cReq.first; });
