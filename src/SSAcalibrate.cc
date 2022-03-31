@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
 
         // cPedeNoise.sweepSCurves (225);
         // cPedeNoise.sweepSCurves (205);
-        cPedeNoise.Validate(500);
+        cPedeNoise.Validate();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
         cPedeNoise.resetPointers();

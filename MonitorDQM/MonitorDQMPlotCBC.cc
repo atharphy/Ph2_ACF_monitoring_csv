@@ -35,17 +35,8 @@ void MonitorDQMPlotCBC::book(TFile* theOutputFile, const DetectorContainer& theD
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
     // SoC utilities only - END
 
-    fDoMonitorThreshold  = detectorMonitorConfig.isElementToMonitor("CBCThreshold");
-    fDoMonitorLpGBT_ADC1 = detectorMonitorConfig.isElementToMonitor("LpGBT_ADC1");
-    fDoMonitorLpGBT_VDD  = detectorMonitorConfig.isElementToMonitor("LpGBT_VDD");
-    fDoMonitorLpGBT_VDDA = detectorMonitorConfig.isElementToMonitor("LpGBT_VDDA");
-    fDoMonitorLpGBT_TEMP = detectorMonitorConfig.isElementToMonitor("LpGBT_TEMP");
-
-    if(fDoMonitorThreshold) bookCBCPlots(theOutputFile, theDetectorStructure, "VCth");
-    if(fDoMonitorLpGBT_ADC1) bookLpGBTPlots(theOutputFile, theDetectorStructure, "ADC1");
-    if(fDoMonitorLpGBT_VDD) bookLpGBTPlots(theOutputFile, theDetectorStructure, "VDD");
-    if(fDoMonitorLpGBT_VDDA) bookLpGBTPlots(theOutputFile, theDetectorStructure, "VDDA");
-    if(fDoMonitorLpGBT_TEMP) bookLpGBTPlots(theOutputFile, theDetectorStructure, "TEMP");
+    for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("CBC")) bookCBCPlots(theOutputFile, theDetectorStructure, registerName);
+    for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("LpGBT")) bookLpGBTPlots(theOutputFile, theDetectorStructure, registerName);
 }
 
 //========================================================================================================================

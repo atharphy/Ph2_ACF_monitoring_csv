@@ -189,11 +189,6 @@ class BeBoardFWInterface : public RegManager
     virtual void Resume() = 0;
 
     /*!
-     * \brief Resume a DAQ
-     */
-    virtual void SendNTriggers(uint16_t pNtriggers) { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
-
-    /*!
      * \brief Read data from DAQ
      * \param pBoard
      * \param pBreakTrigger : if true, enable the break trigger
@@ -268,6 +263,23 @@ class BeBoardFWInterface : public RegManager
     virtual bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false) { return true; }
     virtual uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) { return 0; }
 
+    // ###############################
+    // # Configuration FE Read/Write #
+    // ###############################
+    // Register write
+    virtual bool SingleRegisterWrite(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerify = true) { return true; }
+    virtual bool MultiRegisterWrite(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem, bool pVerify = true) { return true; }
+    // Register write + read-back
+    virtual bool MultiRegisterWriteRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem) { return true; }
+    virtual bool SingleRegisterWriteRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem) { return true; }
+    // Register read
+    virtual uint8_t              SingleRegisterRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem) { return 0; }
+    virtual std::vector<uint8_t> MultiRegisterRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem)
+    {
+        std::vector<uint8_t> cData(0);
+        return cData;
+    }
+
     void ConfigureCPB(CPBconfig pConfig)
     {
         fCPBConfig.fEnable      = pConfig.fEnable;
@@ -283,18 +295,6 @@ class BeBoardFWInterface : public RegManager
     uint32_t  numAcq{0};
     uint32_t  nbMaxAcq{0};
     CPBconfig fCPBConfig;
-    // Template to return a vector of all mismatched elements in two vectors using std::mismatch for readback value comparison
-    template <typename T, class BinaryPredicate>
-    std::vector<typename std::iterator_traits<T>::value_type> get_mismatches(T pWriteVector_begin, T pWriteVector_end, T pReadVector_begin, BinaryPredicate p)
-    {
-        std::vector<typename std::iterator_traits<T>::value_type> pMismatchedWriteVector;
-
-        for(std::pair<T, T> cPair = std::make_pair(pWriteVector_begin, pReadVector_begin); (cPair = std::mismatch(cPair.first, pWriteVector_end, cPair.second, p)).first != pWriteVector_end;
-            ++cPair.first, ++cPair.second)
-            pMismatchedWriteVector.push_back(*cPair.first);
-
-        return pMismatchedWriteVector;
-    }
 };
 
 } // namespace Ph2_HwInterface
