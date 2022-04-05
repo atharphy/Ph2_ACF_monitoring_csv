@@ -1,7 +1,7 @@
 
 #include "PSHybridTester.h"
-#include "D19cDebugFWInterface.h"
-#include "SSAChannelGroupHandler.h"
+#include "../HWInterface/D19cDebugFWInterface.h"
+#include "../Utils/SSAChannelGroupHandler.h"
 #ifdef __USE_ROOT__
 
 using namespace Ph2_HwDescription;

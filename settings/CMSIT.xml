@@ -299,16 +299,14 @@
   <MonitoringSettings>
     <Monitoring type="RD53" enable="0">
       <MonitoringSleepTime> 1000 </MonitoringSleepTime>
-      <MonitoringElements
-        VIN_ana_ShuLDO  = "0"
-        VOUT_ana_ShuLDO = "1"
-        VIN_dig_ShuLDO  = "0"
-        VOUT_dig_ShuLDO = "1"
-        ADCbandgap      = "1"
-        Iref            = "1"
-        TEMPSENS_1      = "1"
-        TEMPSENS_4      = "1"
-      />
+      <MonitoringElement device="RD53" register="VIN_ana_ShuLDO"  enable="0"/>
+      <MonitoringElement device="RD53" register="VOUT_ana_ShuLDO" enable="1"/>
+      <MonitoringElement device="RD53" register="VIN_dig_ShuLDO"  enable="0"/>
+      <MonitoringElement device="RD53" register="VOUT_dig_ShuLDO" enable="1"/>
+      <MonitoringElement device="RD53" register="ADCbandgap"      enable="1"/>
+      <MonitoringElement device="RD53" register="Iref"            enable="1"/>
+      <MonitoringElement device="RD53" register="TEMPSENS_1"      enable="1"/>
+      <MonitoringElement device="RD53" register="TEMPSENS_4"      enable="1"/>
     </Monitoring>
   </MonitoringSettings>
 

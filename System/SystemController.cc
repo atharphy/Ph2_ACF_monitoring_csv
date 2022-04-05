@@ -82,15 +82,6 @@ void SystemController::Destroy()
 
     LOG(INFO) << BOLDRED << ">>> Destroying interfaces <<<" << RESET;
 
-    // #######################################
-    // # Disable all channels before exiting #
-    // #######################################
-    if(SystemController::findValueInSettings<double>("DisableChannelsAtExit", false) == true)
-        for(const auto cBoard: *fDetectorContainer)
-            for(const auto cOpticalGroup: *cBoard)
-                for(const auto cHybrid: *cOpticalGroup)
-                    for(const auto cChip: *cHybrid) fReadoutChipInterface->MaskAllChannels(cChip, true);
-
     RD53Event::JoinDecodingThreads();
 
     delete fDetectorMonitor;
@@ -179,11 +170,8 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
-    std::cout << BOLDYELLOW << "ParseHW [pre-Board interface] " << (*fBeBoardFWMap.begin()).second << "\t" << (*fBeBoardFWMap.begin()).second->getId() << RESET << "\n";
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
-    std::cout << BOLDYELLOW << "ParseHW [post-Board interface] " << (*fBeBoardFWMap.begin()).second << "\t" << (*fBeBoardFWMap.begin()).second->getId() << RESET << "\n";
     fBeBoardInterface->setBoard(0);
-    std::cout << BOLDRED << "ParseHW [post-Board interface fBoardFW ] " << fBeBoardInterface->getFirmwareInterface() << "\t" << fBeBoardInterface->getFirmwareInterface()->getId() << RESET "\n";
 
     fChannelGroupHandlerContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitChip<std::shared_ptr<ChannelGroupHandler>>(*fDetectorContainer, *fChannelGroupHandlerContainer);
@@ -1324,7 +1312,6 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
 
 void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, std::vector<FrontEndType> cFrontEndTypes)
 {
-    LOG(INFO) << BOLDYELLOW << "SystemController::setChannelGroupHandler for a chipType " << RESET;
     auto selectChipFlavourFunction = [cFrontEndTypes](const ChipContainer* theChip) {
         return (std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), static_cast<const ReadoutChip*>(theChip)->getFrontEndType()) != cFrontEndTypes.end());
     };
@@ -1333,14 +1320,12 @@ void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGro
 
 void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, FrontEndType theFrontEndType)
 {
-    LOG(INFO) << BOLDYELLOW << "SystemController::setChannelGroupHandler for a chipType " << RESET;
     auto selectChipFlavourFunction = [theFrontEndType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == theFrontEndType); };
     setChannelGroupHandler(theChannelGroupHandler, selectChipFlavourFunction);
 }
 
 void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, std::function<bool(const ChipContainer*)> theQueryFunction)
 {
-    LOG(INFO) << BOLDYELLOW << "SystemController::setChannelGroupHandler for a queryFunction" << RESET;
     auto theChannelGroupHandlerPointer = std::make_shared<ChannelGroupHandler>(std::move(theChannelGroupHandler));
     setChannelGroupHandler(theChannelGroupHandlerPointer, theQueryFunction);
 }
@@ -1355,7 +1340,6 @@ void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandle
             for(const auto hybrid: *opticalGroup) { totalNumberOfChips += hybrid->size(); }
         }
     }
-    LOG(INFO) << BOLDYELLOW << "SystemController::setChannelGroupHandler for a queryFunction" << totalNumberOfChips << " ROCs." << RESET;
 
     uint16_t totalNumberOfQueriedChips = 0;
     fDetectorContainer->setReadoutChipQueryFunction(theQueryFunction);
@@ -1368,7 +1352,6 @@ void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandle
                 totalNumberOfQueriedChips += hybrid->size();
                 for(const auto chip: *hybrid)
                 {
-                    LOG(INFO) << BOLDYELLOW << "Creating channel group handler for Chip#" << +chip->getId() << RESET;
                     fChannelGroupHandlerContainer->getObject(board->getId())
                         ->getObject(opticalGroup->getId())
                         ->getObject(hybrid->getId())
@@ -1387,6 +1370,18 @@ void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandle
 {
     fChannelGroupHandlerContainer->getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<std::shared_ptr<ChannelGroupHandler>>() =
         theChannelGroupHandlerPointer;
+}
+
+void SystemController::disableAllChannels()
+{
+    // ###########################################
+    // # Disable channels of the entire detector #
+    // ###########################################
+    if(SystemController::findValueInSettings<double>("DisableChannelsAtExit", false) == true)
+        for(const auto cBoard: *fDetectorContainer)
+            for(const auto cOpticalGroup: *cBoard)
+                for(const auto cHybrid: *cOpticalGroup)
+                    for(const auto cChip: *cHybrid) fReadoutChipInterface->MaskAllChannels(cChip, true);
 }
 
 } // namespace Ph2_System
