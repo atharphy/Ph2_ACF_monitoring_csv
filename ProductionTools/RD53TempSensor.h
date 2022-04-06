@@ -22,9 +22,9 @@
 
 #include <cmath>
 
-#include "BeBoardFWInterface.h"
-#include "RD53FWInterface.h"
-#include "ReadoutChipInterface.h"
+#include "../HWInterface/BeBoardFWInterface.h"
+#include "../HWInterface/RD53FWInterface.h"
+#include "../HWInterface/ReadoutChipInterface.h"
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53TempSensorHistograms.h"

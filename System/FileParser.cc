@@ -184,7 +184,6 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
         {
             pBeBoardFWMap[cBeBoard->getId()] = new RD53FWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str());
         }
-        LOG(INFO) << BOLDYELLOW << "ParseHW [FileParser] " << pBeBoardFWMap[cBeBoard->getId()] << "\t" << pBeBoardFWMap[cBeBoard->getId()]->getId() << RESET;
     }
     os << BOLDCYAN << "|"
        << "       "
@@ -1020,11 +1019,9 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             }
         }
 
-        // Finally map front-end to LpGBT
         if(pBoard->getBoardType() == BoardType::RD53 && pOpticalGroup->flpGBT != nullptr)
             this->parseHybridToLpGBT(pHybridNode, cHybrid, pOpticalGroup->flpGBT, os);
         else if(pBoard->getBoardType() != BoardType::RD53)
-            // parse global hybrids container - masks for noisy pixels/strips
             parseGlobalHybridMask(pHybridNode, cHybrid, os);
     }
 }
