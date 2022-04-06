@@ -271,6 +271,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         cRegItem = pSSA->getRegItem("ReadoutMode");
         cRegItem.fValue = cRegValue;
         bool cReadoutMode       = fBoardFW->SingleRegisterWrite(pSSA, cRegItem, pVerify);
+        LOG(DEBUG) << BOLDBLUE << "Setting register ReadoutMode on SSA to 0x" << std::hex << +pValue << std::dec << RESET;
 
         cRegItem = pSSA->getRegItem("FE_Calibration");
         cRegItem.fValue = 1; 

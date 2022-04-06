@@ -263,7 +263,6 @@ bool D19cOpticalInterface::MultiWrite(Chip* pChip, std::vector<ChipRegItem>& pRe
 // for now this is just a write followed by a read
 bool D19cOpticalInterface::SingleWriteRead(Chip* pChip, ChipRegItem& pItem)
 {
-    LOG(DEBUG) << BOLDYELLOW << "D19cOpticalInterface::SingleWriteRead" << RESET;
     pChip->UpdateModifiedRegMap(pItem);
     if(pChip->getFrontEndType() == FrontEndType::LpGBT)
         return SingleWriteIC(pChip, pItem, true);
