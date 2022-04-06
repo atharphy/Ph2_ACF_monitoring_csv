@@ -233,7 +233,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
     uint32_t      cOpticalGroupId = pOpticalGroupNode.attribute("Id").as_int();
     uint32_t      cFMCId          = pOpticalGroupNode.attribute("FMCId").as_int();
     uint32_t      cBoardId        = pBoard->getId();
-    OpticalGroup* theOpticalGroup = pBoard->addOpticalGroupContainer(cBoardId, new OpticalGroup(cBoardId, cFMCId, cOpticalGroupId));
+    OpticalGroup* theOpticalGroup = pBoard->addOpticalGroupContainer(cOpticalGroupId, new OpticalGroup(cBoardId, cFMCId, cOpticalGroupId));
 
     bool cWithOptical = false;
     for(pugi::xml_node theChild: pOpticalGroupNode.children())
