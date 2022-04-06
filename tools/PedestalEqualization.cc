@@ -113,6 +113,16 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
         if(!cForcePSasync) continue;
         cBoard->setEventType(EventType::PSAS);
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->InitializePSCounterFWInterface(cBoard);
+        for(auto cOpticalGroup : *cBoard)
+        {
+            for(auto cHybrid : *cOpticalGroup)
+            {
+                for(auto cChip : *cHybrid)
+                {
+                    fReadoutChipInterface->WriteChipReg(cChip, "AnalogueAsync", 1);
+                }
+            }
+        }
     }
 
     // make sure register tracking is on
@@ -247,7 +257,7 @@ void PedestalEqualization::FindVplus()
     if(fTestPulse)
     {
         this->enableTestPulse(true);
-        setFWTestPulse();
+        // setFWTestPulse();
         for(auto cBoard: *fDetectorContainer)
         {
             if(cWithSSA or cWithMPA)
