@@ -41,7 +41,8 @@ class D19cOpticalInterface : public FEConfigurationInterface
     //lpGBT I2C Masters
     bool    MultiWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress, uint32_t pSlaveData) override;
     uint8_t SingleReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress) override;
-    bool IsI2CToolDone();
+    bool IsDoneI2C();
+    uint8_t GetTryCntrI2C();
 
     void setResetEnable(uint8_t pEnable) { fResetEn = pEnable; }
     void setWait(uint32_t pWait_us) { fWait_us = pWait_us; }
@@ -62,11 +63,13 @@ class D19cOpticalInterface : public FEConfigurationInterface
     //lpGBT
     bool SingleReadIC(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem);
     bool SingleWriteIC(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerify = true);
-    bool IsICToolDone();
+    bool IsDoneIC();
+    uint8_t GetTryCntrIC();
     //Front-End ASICs
     bool SingleWriteSlave(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerify = false);
     bool SingleReadSlave(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem);
-    bool IsFEToolDone();
+    bool IsDoneFE();
+    uint8_t GetTryCntrFE();
 
     // ############################
     // # Read/Write Optical Group #

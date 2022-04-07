@@ -80,9 +80,13 @@ bool D19cOpticalInterface::SingleReadIC(Chip* pChip, ChipRegItem& pItem)
         cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pItem.fAddress << 0);
         WriteCommandCPB(cCommandVector);
         uint8_t cWaitCounter = 10;
-        while(!IsICToolDone() && (cWaitCounter != 0)){ 
+        while(!IsDoneIC() && (cWaitCounter != 0)){ 
             cWaitCounter--;
             continue;
+        }
+        uint8_t cTryCntr = GetTryCntrIC();
+        if(cTryCntr > 0){
+            LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleReadIC : Tried " << +cTryCntr << "/100 before success" << RESET;
         }
         if(cWaitCounter == 0){
             LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleReadIC : [ERROR] IC Tool stuck" << RESET;
@@ -117,13 +121,17 @@ bool D19cOpticalInterface::SingleWriteIC(Chip* pChip, ChipRegItem& pItem, bool p
     cCommandVector.push_back(pItem.fValue << 0);
     WriteCommandCPB(cCommandVector);
     uint8_t cWaitCounter = 10;
-    while(!IsICToolDone() && (cWaitCounter != 0)){ 
+    while(!IsDoneIC() && (cWaitCounter != 0)){ 
         cWaitCounter--;
         continue; 
     }
     if(cWaitCounter == 0){
         LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWriteIC : [ERROR] IC Tool stuck" << RESET;
         return false;
+    }
+    uint8_t cTryCntr = GetTryCntrIC();
+    if(cTryCntr > 0){
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWriteIC : Tried " << +cTryCntr << "/100 before success" << RESET;
     }
     std::vector<uint32_t> cReplyVector     = ReadReplyCPB(1);
     uint8_t cErrorCode = (cReplyVector[0] & (0xFF << 8)) >> 8;
@@ -142,13 +150,21 @@ bool D19cOpticalInterface::SingleWriteIC(Chip* pChip, ChipRegItem& pItem, bool p
     return true;
 }
 
-bool D19cOpticalInterface::IsICToolDone()
+bool D19cOpticalInterface::IsDoneIC()
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     uint32_t cStatus = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
     bool cWorkerDone = (cStatus & 0xFF) == 1;
     bool cICToolDone = ((cStatus & (0xFF << 8)) >> 8) == 1;
     return cWorkerDone && cICToolDone;
+}
+
+uint8_t D19cOpticalInterface::GetTryCntrIC()
+{
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+    uint32_t cAllCntr = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters");
+    uint8_t cCntr = (cAllCntr & (0xFF << 0)) >> 0;
+    return cCntr;
 }
 
 bool D19cOpticalInterface::SingleReadSlave(Chip* pChip, ChipRegItem& pItem)
@@ -167,18 +183,22 @@ bool D19cOpticalInterface::SingleReadSlave(Chip* pChip, ChipRegItem& pItem)
     cCommandVector.push_back(pItem.fAddress << 0);
     WriteCommandCPB(cCommandVector);
     uint8_t cWaitCounter = 10;
-    while(!IsFEToolDone() && (cWaitCounter != 0)){ 
+    while(!IsDoneFE() && (cWaitCounter != 0)){ 
         cWaitCounter--;
         continue; 
     }
     if(cWaitCounter == 0){
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleReadSlave : [ERROR] IC Tool stuck" << RESET;
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleReadSlave : FE Tool stuck" << RESET;
         return false;
+    }
+    uint8_t cTryCntr = GetTryCntrFE();
+    if(cTryCntr > 0){
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleReadSlave : Tried " << +cTryCntr << "/100 before success" << RESET;
     }
     std::vector<uint32_t> cReplyVector     = ReadReplyCPB(1);
     uint8_t cErrorCode = (cReplyVector[0] & (0xFF << 8)) >> 8;
     if(cErrorCode != 0){ 
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleReadSlave : [ERROR] Error Code is " << +cErrorCode << RESET;
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleReadSlave : Error Code is " << +cErrorCode << RESET;
         return false;
     }
     pItem.fValue = (cReplyVector[0] & (0xFF << 0)) >> 0;
@@ -201,13 +221,17 @@ bool D19cOpticalInterface::SingleWriteSlave(Chip* pChip, ChipRegItem& pItem, boo
     cCommandVector.push_back(pItem.fValue << 16 | pItem.fAddress << 0);
     WriteCommandCPB(cCommandVector);
     uint8_t cWaitCounter = 10;
-    while(!IsFEToolDone() && (cWaitCounter != 0)){ 
+    while(!IsDoneFE() && (cWaitCounter != 0)){ 
         cWaitCounter--;
         continue; 
     }
     if(cWaitCounter == 0){
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWriteSlave : [ERROR] IC Tool stuck" << RESET;
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWriteSlave : FE Tool stuck" << RESET;
         return false;
+    }
+    uint8_t cTryCntr = GetTryCntrFE();
+    if(cTryCntr > 0){
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWriteSlave : Tried " << +cTryCntr << "/100 before success" << RESET;
     }
     std::vector<uint32_t> cReplyVector     = ReadReplyCPB(1);
     uint8_t cErrorCode = (cReplyVector[0] & (0xFF << 8)) >> 8;
@@ -227,13 +251,21 @@ bool D19cOpticalInterface::SingleWriteSlave(Chip* pChip, ChipRegItem& pItem, boo
     return true;
 }
 
-bool D19cOpticalInterface::IsFEToolDone()
+bool D19cOpticalInterface::IsDoneFE()
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     uint32_t cStatus = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
     bool cWorkerDone = (cStatus & 0xFF) == 1;
     bool cFEToolDone = ((cStatus & (0xFF << 24)) >> 24) == 1;
     return cWorkerDone && cFEToolDone;
+}
+
+uint8_t D19cOpticalInterface::GetTryCntrFE()
+{
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+    uint32_t cAllCntr = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters");
+    uint8_t cCntr = (cAllCntr & (0xFF << 16)) >> 16;
+    return cCntr;
 }
 
 bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem)
@@ -301,24 +333,28 @@ bool D19cOpticalInterface::MultiWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t
     cCommandVector.push_back(pSlaveData << 8 | pSlaveAddress << 0);
     WriteCommandCPB(cCommandVector);
     uint8_t cWaitCounter = 10;
-    while(!IsI2CToolDone() && (cWaitCounter != 0))
+    while(!IsDoneI2C() && (cWaitCounter != 0))
     { 
         cWaitCounter--;
         continue; 
     }
     if(cWaitCounter == 0){
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiI2CWrite : [ERROR] I2C Tool stuck" << RESET;
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiWriteI2C : I2C Tool stuck" << RESET;
         return false;
+    }
+    uint8_t cTryCntr = GetTryCntrI2C();
+    if(cTryCntr > 0){
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiWriteI2C : Tried " << +cTryCntr << "/100 before success" << RESET;
     }
     std::vector<uint32_t> cReplyVector = ReadReplyCPB(1);
     uint8_t cErrorCode = (cReplyVector[0] & (0xFF << 8)) >> 8;
     if(cErrorCode != 0){
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiI2CWrite : [ERROR] Error Code is " << +cErrorCode << RESET;
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiWriteI2C : Error Code is " << +cErrorCode << RESET;
         return false;
     }
     uint8_t cStatus = (cReplyVector[0] & (0xFF << 0)) >> 0;
     if(cStatus != 4){
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiI2CWrite : [ERROR] I2C Status is " << +cStatus << RESET;
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiWriteI2C : I2C Status is " << +cStatus << RESET;
     }
     return true;
 }
@@ -336,27 +372,29 @@ uint8_t D19cOpticalInterface::SingleReadI2C(Ph2_HwDescription::Chip* pChip, uint
     cCommandVector.push_back(pSlaveAddress << 0);
     WriteCommandCPB(cCommandVector);
     uint8_t cWaitCounter = 10;
-    while(!IsI2CToolDone() && (cWaitCounter != 0))
-    { 
+    while(!IsDoneI2C() && (cWaitCounter != 0)){ 
         cWaitCounter--;
         continue; 
     }
     if(cWaitCounter == 0){
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleI2CRead : [ERROR] I2C Tool stuck" << RESET;
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleReadI2C : I2C Tool stuck" << RESET;
         return 0;
+    }
+    uint8_t cTryCntr = GetTryCntrI2C();
+    if(cTryCntr > 0){
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleReadI2C : Tried " << +cTryCntr << "/100 before success" << RESET;
     }
     std::vector<uint32_t> cReplyVector = ReadReplyCPB(1);
     uint8_t cErrorCode = (cReplyVector[0] & (0xFF << 8)) >> 8;
-    if(cErrorCode != 0)
-    {
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleI2CRead : [ERROR] Error Code is " << +cErrorCode << RESET;
+    if(cErrorCode != 0){
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleReadI2C : Error Code is " << +cErrorCode << RESET;
         return 0;
     }
     uint8_t cReadBack = (cReplyVector[0] & (0xFF << 0)) >> 0;
     return cReadBack;
 }
 
-bool D19cOpticalInterface::IsI2CToolDone()
+bool D19cOpticalInterface::IsDoneI2C()
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     uint32_t cStatus = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
@@ -364,6 +402,16 @@ bool D19cOpticalInterface::IsI2CToolDone()
     bool cI2CToolDone = ((cStatus & (0xFF << 16)) >> 16) == 1;
     return cWorkerDone && cI2CToolDone;
 }
+
+uint8_t D19cOpticalInterface::GetTryCntrI2C()
+{
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+    uint32_t cAllCntr = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters");
+    uint8_t cCntr = (cAllCntr & (0xFF << 8)) >> 8;
+    return cCntr;
+}
+
+
 
 
 } // namespace Ph2_HwInterface
