@@ -17,17 +17,17 @@ void Physics::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings<double>("ROWstart");
-    rowStop        = this->findValueInSettings<double>("ROWstop");
-    colStart       = this->findValueInSettings<double>("COLstart");
-    colStop        = this->findValueInSettings<double>("COLstop");
-    nTRIGxEvent    = this->findValueInSettings<double>("nTRIGxEvent");
-    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
-
-    frontEnd = RD53::getMajorityFE(colStart, colStop);
-
+    rowStart        = this->findValueInSettings<double>("ROWstart");
+    rowStop         = this->findValueInSettings<double>("ROWstop");
+    colStart        = this->findValueInSettings<double>("COLstart");
+    colStop         = this->findValueInSettings<double>("COLstop");
+    nTRIGxEvent     = this->findValueInSettings<double>("nTRIGxEvent");
+    doDisplay       = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData  = this->findValueInSettings<double>("SaveBinaryData");
+    // outputBinaryDir = this->findValueInSettings<std::string>("OutputBinaryDir");
+    frontEnd        = RD53::getMajorityFE(colStart, colStop);
+    // std::cout << "AAAAAAAA " << outputBinaryDir << std::endl;
     // ################################
     // # Custom channel group handler #
     // ################################
@@ -141,6 +141,7 @@ void Physics::initializeFiles(const std::string& fileRes_, int currentRun)
 
     if((currentRun >= 0) && (saveBinaryData == true))
     {
+        // if(outputBinaryDir != "") this->fDirectoryName = outputBinaryDir;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Physics.raw", 'w');
         this->initializeWriteFileHandler();
     }
