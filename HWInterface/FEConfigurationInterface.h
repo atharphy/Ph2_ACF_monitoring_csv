@@ -3,9 +3,9 @@
 
 #include "../Utils/Utilities.h"
 #include "../Utils/easylogging++.h"
-#include "BeBoard.h"
-#include "Chip.h"
-#include "ChipRegItem.h"
+#include "../HWDescription/BeBoard.h"
+#include "../HWDescription/Chip.h"
+#include "../HWDescription/ChipRegItem.h"
 #include "RegManager.h"
 #include <string>
 

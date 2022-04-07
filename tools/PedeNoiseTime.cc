@@ -10,8 +10,8 @@
 #include "../Utils/Occupancy.h"
 #include "../Utils/SSAChannelGroupHandler.h"
 #include "../Utils/ThresholdAndNoise.h"
-#include "L1ReadoutInterface.h"
-#include "TriggerInterface.h"
+#include "../HWInterface/L1ReadoutInterface.h"
+#include "../HWInterface/TriggerInterface.h"
 #include "boost/format.hpp"
 #include <math.h>
 
