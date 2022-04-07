@@ -34,23 +34,31 @@
             </node>
 
             <node id="global"                       address="0x0000">
-                <node id="hybrid_enable"            address="0x005" mask="0x0000FFFF"/>
-                <node id="chips_enable_hyb_00"      address="0x006" mask="0x000000FF"/>
-                <node id="chips_enable_hyb_01"      address="0x006" mask="0x0000FF00"/>
-                <node id="chips_enable_hyb_02"      address="0x006" mask="0x00FF0000"/>
-                    <node id="chips_enable_hyb_03"      address="0x006" mask="0xFF000000"/>
-                    <node id="chips_enable_hyb_04"      address="0x007" mask="0x000000FF"/>
-                    <node id="chips_enable_hyb_05"      address="0x007" mask="0x0000FF00"/>
-                    <node id="chips_enable_hyb_06"      address="0x007" mask="0x00FF0000"/>
-                    <node id="chips_enable_hyb_07"      address="0x007" mask="0xFF000000"/>
-                <node id="chips_enable_hyb_08"      address="0x008" mask="0x000000FF"/>
-                <node id="chips_enable_hyb_09"      address="0x008" mask="0x0000FF00"/>
-                <node id="chips_enable_hyb_10"      address="0x008" mask="0x00FF0000"/>
-                <node id="chips_enable_hyb_11"      address="0x008" mask="0xFF000000"/>
-                <node id="chips_enable_hyb_12"      address="0x009" mask="0x000000FF"/>
-                <node id="chips_enable_hyb_13"      address="0x009" mask="0x0000FF00"/>
-                <node id="chips_enable_hyb_14"      address="0x009" mask="0x00FF0000"/>
-                <node id="chips_enable_hyb_15"      address="0x009" mask="0xFF000000"/> 
+                <node id="hybrid_enable"			address="0x005" mask="0x0000FFFF"/>
+                <node id="chips_enable_hyb_00"		address="0x006" mask="0x000000FF"/>
+                <node id="chips_enable_hyb_01"		address="0x006" mask="0x0000FF00"/>
+                <node id="chips_enable_hyb_02"		address="0x006" mask="0x00FF0000"/>
+                <node id="chips_enable_hyb_03"		address="0x006" mask="0xFF000000"/>
+                <node id="chips_enable_hyb_04"		address="0x007" mask="0x000000FF"/>
+                <node id="chips_enable_hyb_05"		address="0x007" mask="0x0000FF00"/>
+                <node id="chips_enable_hyb_06"		address="0x007" mask="0x00FF0000"/>
+                <node id="chips_enable_hyb_07"		address="0x007" mask="0xFF000000"/>
+                <node id="chips_enable_hyb_08"		address="0x008" mask="0x000000FF"/>
+                <node id="chips_enable_hyb_09"		address="0x008" mask="0x0000FF00"/>
+                <node id="chips_enable_hyb_10"		address="0x008" mask="0x00FF0000"/>
+                <node id="chips_enable_hyb_11"		address="0x008" mask="0xFF000000"/>
+                <node id="chips_enable_hyb_12"		address="0x009" mask="0x000000FF"/>
+                <node id="chips_enable_hyb_13"		address="0x009" mask="0x0000FF00"/>
+                <node id="chips_enable_hyb_14"		address="0x009" mask="0x00FF0000"/>
+                <node id="chips_enable_hyb_15"		address="0x009" mask="0xFF000000"/>	
+                <node id="chips_enable_hyb_16"		address="0x00A" mask="0x000000FF"/>	
+                <node id="chips_enable_hyb_17"		address="0x00A" mask="0x0000FF00"/>	
+                <node id="chips_enable_hyb_18"		address="0x00A" mask="0x00FF0000"/>	
+                <node id="chips_enable_hyb_19"		address="0x00A" mask="0xFF000000"/>	
+                <node id="chips_enable_hyb_20"		address="0x00B" mask="0x000000FF"/>	
+                <node id="chips_enable_hyb_21"		address="0x00B" mask="0x0000FF00"/>	
+                <node id="chips_enable_hyb_22"		address="0x00B" mask="0x00FF0000"/>	
+                <node id="chips_enable_hyb_23"		address="0x00B" mask="0xFF000000"/>	
             </node>
 
             <node id="command_processor_block"      address="0x1000">
