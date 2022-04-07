@@ -287,7 +287,7 @@
          InjLatency:    controls the latency of the injection in terms of 100ns period (up to 4095)
          nClkDelays:    controls the delay between two consecutive injections in terms of 100ns period (up to 4095)
     -->
-    <Setting name="OutputBinaryDir">    none </Setting>
+    <Setting name="OutputBinaryDir">         </Setting>
     <Setting name="SaveBinaryData">        0 </Setting>
     <Setting name="nHITxCol">              1 </Setting>
     <Setting name="InjLatency">           32 </Setting>

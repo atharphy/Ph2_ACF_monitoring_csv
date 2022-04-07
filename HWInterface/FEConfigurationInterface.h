@@ -1,11 +1,11 @@
 #ifndef _FEConfigurationInterface_H__
 #define _FEConfigurationInterface_H__
 
-#include "../Utils/Utilities.h"
-#include "../Utils/easylogging++.h"
 #include "../HWDescription/BeBoard.h"
 #include "../HWDescription/Chip.h"
 #include "../HWDescription/ChipRegItem.h"
+#include "../Utils/Utilities.h"
+#include "../Utils/easylogging++.h"
 #include "RegManager.h"
 #include <string>
 

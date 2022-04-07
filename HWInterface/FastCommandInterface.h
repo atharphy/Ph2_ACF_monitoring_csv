@@ -1,9 +1,9 @@
 #ifndef _FastCommandInterface_H__
 #define _FastCommandInterface_H__
 
+#include "../HWDescription/BeBoard.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/easylogging++.h"
-#include "../HWDescription/BeBoard.h"
 #include "RegManager.h"
 #include <string>
 

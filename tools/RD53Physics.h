@@ -65,13 +65,13 @@ class Physics : public Tool
 #endif
 
   private:
-    size_t rowStart;
-    size_t rowStop;
-    size_t colStart;
-    size_t colStop;
-    size_t nTRIGxEvent;
-    size_t errors;
-    /* std::string outputBinaryDir; */
+    size_t      rowStart;
+    size_t      rowStop;
+    size_t      colStart;
+    size_t      colStop;
+    size_t      nTRIGxEvent;
+    size_t      errors;
+    std::string outputBinaryDir;
 
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
