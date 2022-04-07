@@ -4,8 +4,8 @@
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Occupancy.h"
-#include "D19cDebugFWInterface.h"
-#include "TriggerInterface.h"
+#include "../HWInterface/D19cDebugFWInterface.h"
+#include "../HWInterface/TriggerInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

@@ -3,7 +3,7 @@
 
 #include "../Utils/Utilities.h"
 #include "../Utils/easylogging++.h"
-#include "BeBoard.h"
+#include "../HWDescription/BeBoard.h"
 #include "RegManager.h"
 #include <string>
 
