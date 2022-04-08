@@ -11,6 +11,12 @@
 
 namespace Ph2_HwInterface
 {
+struct Configuration
+{
+    uint8_t fVerify = 0;
+    uint8_t  fRetry       = 0;
+    uint16_t fMaxAttempts = 500;
+};
 
 enum class ConfigurationType
 {
@@ -71,11 +77,19 @@ class FEConfigurationInterface : public RegManager
         return;
     }
 
+    void Configure(Configuration pConfiguration)
+    {
+        fConfiguration.fRetry = pConfiguration.fRetry;
+        fConfiguration.fVerify = pConfiguration.fVerify;
+        fConfiguration.fMaxAttempts = pConfiguration.fMaxAttempts;
+    }
+
     void              setConfigurationType(ConfigurationType pType) { fType = pType; }
     ConfigurationType getConfigurationType() { return fType; }
     void              setRegisterTracking(uint8_t pTrackRegisters) { fTrackRegisters = pTrackRegisters; }
 
   protected:
+    Configuration fConfiguration;
     uint8_t           fTrackRegisters{0};
     uint8_t           fNReadoutChip{0};
     ConfigurationType fType;

@@ -9,15 +9,6 @@
 
 namespace Ph2_HwInterface
 {
-  struct CommandProcessorConfiguration
-  {
-    uint8_t  fEnable      = 0;
-    uint8_t  fReTry       = 0;
-    uint8_t  fVerbose     = 0;
-    uint32_t fWait_us     = 50;
-    uint16_t fMaxAttempts = 500;
-    uint8_t  fResetEn     = 1;
-  };
 
   class CommandProcessorInterface : public RegManager
   {

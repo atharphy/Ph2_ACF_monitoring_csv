@@ -507,16 +507,23 @@ void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
 {
     if(fFEConfigurationInterface == nullptr)
     {
+        Configuration cConfiguration;
         if(!pBoard->isOptical())
         {
             LOG(INFO) << BOLDYELLOW << "Electrical readout.. iniitialize I2C interface" << RESET;
             fFEConfigurationInterface = new D19cI2CInterface(this->getId(), this->getUri(), this->getAddressTable());
             (static_cast<D19cI2CInterface*>(fFEConfigurationInterface))->ConfigureI2CMap(pBoard);
+            cConfiguration.fRetry = 0;
+            cConfiguration.fVerify = 0;
+            cConfiguration.fMaxAttempts = 10;
         }
         else
         {
             LOG(INFO) << BOLDBLUE << "Optical readout . initializing Optical interface" << RESET;
             fFEConfigurationInterface = new D19cOpticalInterface(this->getId(), this->getUri(), this->getAddressTable());
+            cConfiguration.fRetry = 1;
+            cConfiguration.fVerify = 1;
+            cConfiguration.fMaxAttempts = 100;
         }
     }
 
