@@ -389,7 +389,6 @@ uint8_t D19cOpticalInterface::GetTryCntr(uint8_t pFunctionId)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     uint32_t cAllCntr = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters");
-    bool cFunctionDone = false;
     uint8_t cCntr = 255;
         if((pFunctionId == LpGBTSCWorker::SingleReadIC) || (pFunctionId == LpGBTSCWorker::SingleWriteIC)){
             cCntr = (cAllCntr & (0xFF << 0)) >> 0;
