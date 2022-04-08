@@ -5,20 +5,18 @@
 
 class CPBconfig;
 
-
+namespace LpGBTSCWorker {
+  const uint8_t BaseID = 16;
+  const uint8_t SingleReadIC = 2;
+  const uint8_t SingleWriteIC = 3;
+  const uint8_t SingleReadI2C = 4;
+  const uint8_t MultiWriteI2C = 5;
+  const uint8_t SingleReadFE = 6;
+  const uint8_t SingleWriteFE = 7;
+}
 
 namespace Ph2_HwInterface
 {
-
-struct LpGBTSCWorkerInfo {
-  uint8_t BaseID = 16;
-  uint8_t SingleReadIC = 2;
-  uint8_t SingleWriteIC = 3;
-  uint8_t SingleReadI2C = 4;
-  uint8_t MultiWriteI2C = 5;
-  uint8_t SingleReadFE = 6;
-  uint8_t SingleWriteFE = 7;
-};
 
 class D19cOpticalInterface : public FEConfigurationInterface
 {
@@ -39,10 +37,8 @@ class D19cOpticalInterface : public FEConfigurationInterface
     bool MultiWrite(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pRegisterItems) override;
     // Single Write/Read
     //lpGBT I2C Masters
-    bool    MultiWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress, uint32_t pSlaveData) override;
-    uint8_t SingleReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress) override;
-    bool IsDoneI2C();
-    uint8_t GetTryCntrI2C();
+    bool    MultiWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress, uint32_t pSlaveData);
+    uint8_t SingleReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress);
 
     void setResetEnable(uint8_t pEnable) { fResetEn = pEnable; }
     void setWait(uint32_t pWait_us) { fWait_us = pWait_us; }
@@ -56,20 +52,17 @@ class D19cOpticalInterface : public FEConfigurationInterface
     void                  ResetCPB();
     void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector);
     std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords);
-    LpGBTSCWorkerInfo fLpGBTSCWorkerInfo;
-
     
     // function for Write + Read to lpGBT I2C slave
     //lpGBT
     bool SingleReadIC(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem);
     bool SingleWriteIC(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerify = true);
-    bool IsDoneIC();
-    uint8_t GetTryCntrIC();
     //Front-End ASICs
     bool SingleWriteSlave(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerify = false);
     bool SingleReadSlave(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem);
-    bool IsDoneFE();
-    uint8_t GetTryCntrFE();
+    //Worker monitoring
+    bool IsDone(uint8_t pFunctionId);
+    uint8_t GetTryCntr(uint8_t pFunctionId);
 
     // ############################
     // # Read/Write Optical Group #

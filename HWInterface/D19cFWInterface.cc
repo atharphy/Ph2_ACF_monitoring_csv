@@ -1699,12 +1699,12 @@ bool D19cFWInterface::MultiRegisterWriteRead(Chip* pChip, std::vector<ChipRegIte
 
 uint8_t D19cFWInterface::SingleReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress)
 {
-    return fFEConfigurationInterface->SingleReadI2C(pChip, pMasterId, pMasterConfig, pSlaveAddress);
+    return static_cast<D19cOpticalInterface*>(fFEConfigurationInterface)->SingleReadI2C(pChip, pMasterId, pMasterConfig, pSlaveAddress);
 }
 
 bool D19cFWInterface::MultiWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress, uint32_t pSlaveData)
 {
-    return fFEConfigurationInterface->MultiWriteI2C(pChip, pMasterId, pMasterConfig, pSlaveAddress, pSlaveData);
+    return static_cast<D19cOpticalInterface*>(fFEConfigurationInterface)->MultiWriteI2C(pChip, pMasterId, pMasterConfig, pSlaveAddress, pSlaveData);
 }
 
 void D19cFWInterface::ResetFCMDBram()

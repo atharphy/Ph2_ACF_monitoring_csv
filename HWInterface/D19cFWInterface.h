@@ -18,7 +18,6 @@
 #include "../Utils/Event.h"
 #include "../Utils/easylogging++.h"
 #include "BeBoardFWInterface.h"
-// #include "FEConfigurationInterface.h"
 
 #include <limits.h>
 #include <map>
@@ -43,6 +42,7 @@ class TriggerInterface;
 class FastCommandInterface;
 class D19cBackendAlignmentFWInterface;
 class D19cDebugFWInterface;
+class D19cOpticalInterface;
 
 /*!
  * \class Cbc3Fc7FWInterface

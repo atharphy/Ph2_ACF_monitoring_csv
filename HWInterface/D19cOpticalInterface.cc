@@ -73,18 +73,18 @@ bool D19cOpticalInterface::SingleReadIC(Chip* pChip, ChipRegItem& pItem)
         }
         uint8_t cLinkId = pChip->getOpticalId();
         WriteReg("fc7_daq_cnfg.command_processor_block.link_select", cLinkId);
-        uint8_t cWorkerId = fLpGBTSCWorkerInfo.BaseID + cLinkId;
-        uint8_t cFunctionId = fLpGBTSCWorkerInfo.SingleReadIC;
+        uint8_t cWorkerId = LpGBTSCWorker::BaseID + cLinkId;
+        uint8_t cFunctionId = LpGBTSCWorker::SingleReadIC;
         std::vector<uint32_t> cCommandVector;
         cCommandVector.clear();
         cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pItem.fAddress << 0);
         WriteCommandCPB(cCommandVector);
         uint8_t cWaitCounter = 10;
-        while(!IsDoneIC() && (cWaitCounter != 0)){ 
+        while(!IsDone(cFunctionId) && (cWaitCounter != 0)){ 
             cWaitCounter--;
             continue;
         }
-        uint8_t cTryCntr = GetTryCntrIC();
+        uint8_t cTryCntr = GetTryCntr(cFunctionId);
         if(cTryCntr > 0){
             LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleReadIC : Tried " << +cTryCntr << "/100 before success" << RESET;
         }
@@ -113,15 +113,15 @@ bool D19cOpticalInterface::SingleWriteIC(Chip* pChip, ChipRegItem& pItem, bool p
     }
     uint8_t cLinkId = pChip->getOpticalId();
     WriteReg("fc7_daq_cnfg.command_processor_block.link_select", cLinkId);
-    uint8_t cWorkerId = fLpGBTSCWorkerInfo.BaseID + cLinkId;
-    uint8_t cFunctionId = fLpGBTSCWorkerInfo.SingleWriteIC;
+    uint8_t cWorkerId = LpGBTSCWorker::BaseID + cLinkId;
+    uint8_t cFunctionId = LpGBTSCWorker::SingleWriteIC;
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pItem.fAddress << 0);
     cCommandVector.push_back(pItem.fValue << 0);
     WriteCommandCPB(cCommandVector);
     uint8_t cWaitCounter = 10;
-    while(!IsDoneIC() && (cWaitCounter != 0)){ 
+    while(!IsDone(cFunctionId) && (cWaitCounter != 0)){ 
         cWaitCounter--;
         continue; 
     }
@@ -129,7 +129,7 @@ bool D19cOpticalInterface::SingleWriteIC(Chip* pChip, ChipRegItem& pItem, bool p
         LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWriteIC : [ERROR] IC Tool stuck" << RESET;
         return false;
     }
-    uint8_t cTryCntr = GetTryCntrIC();
+    uint8_t cTryCntr = GetTryCntr(cFunctionId);
     if(cTryCntr > 0){
         LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWriteIC : Tried " << +cTryCntr << "/100 before success" << RESET;
     }
@@ -150,32 +150,15 @@ bool D19cOpticalInterface::SingleWriteIC(Chip* pChip, ChipRegItem& pItem, bool p
     return true;
 }
 
-bool D19cOpticalInterface::IsDoneIC()
-{
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    uint32_t cStatus = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
-    bool cWorkerDone = (cStatus & 0xFF) == 1;
-    bool cICToolDone = ((cStatus & (0xFF << 8)) >> 8) == 1;
-    return cWorkerDone && cICToolDone;
-}
-
-uint8_t D19cOpticalInterface::GetTryCntrIC()
-{
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    uint32_t cAllCntr = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters");
-    uint8_t cCntr = (cAllCntr & (0xFF << 0)) >> 0;
-    return cCntr;
-}
-
 bool D19cOpticalInterface::SingleReadSlave(Chip* pChip, ChipRegItem& pItem)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     uint8_t cLinkId = pChip->getOpticalId();
     WriteReg("fc7_daq_cnfg.command_processor_block.link_select", cLinkId);
-    uint8_t cWorkerId = fLpGBTSCWorkerInfo.BaseID + cLinkId;
-    uint8_t cFunctionId = fLpGBTSCWorkerInfo.SingleReadFE;
+    uint8_t cWorkerId = LpGBTSCWorker::BaseID + cLinkId;
+    uint8_t cFunctionId = LpGBTSCWorker::SingleReadFE;
     uint8_t cMasterId = pChip->getMasterId();
-    uint8_t cChipCode = fChipCodeMap[pChip->getFrontEndType()];
+    uint8_t cChipCode = pChip->getChipCode();
     uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : (pChip->getId() % 8); //use modulo 8 to accomodate for how MPAs are numbered
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
@@ -183,7 +166,7 @@ bool D19cOpticalInterface::SingleReadSlave(Chip* pChip, ChipRegItem& pItem)
     cCommandVector.push_back(pItem.fAddress << 0);
     WriteCommandCPB(cCommandVector);
     uint8_t cWaitCounter = 10;
-    while(!IsDoneFE() && (cWaitCounter != 0)){ 
+    while(!IsDone(cFunctionId) && (cWaitCounter != 0)){ 
         cWaitCounter--;
         continue; 
     }
@@ -191,7 +174,7 @@ bool D19cOpticalInterface::SingleReadSlave(Chip* pChip, ChipRegItem& pItem)
         LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleReadSlave : FE Tool stuck" << RESET;
         return false;
     }
-    uint8_t cTryCntr = GetTryCntrFE();
+    uint8_t cTryCntr = GetTryCntr(cFunctionId);
     if(cTryCntr > 0){
         LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleReadSlave : Tried " << +cTryCntr << "/100 before success" << RESET;
     }
@@ -210,10 +193,10 @@ bool D19cOpticalInterface::SingleWriteSlave(Chip* pChip, ChipRegItem& pItem, boo
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     uint8_t cLinkId = pChip->getOpticalId();
     WriteReg("fc7_daq_cnfg.command_processor_block.link_select", cLinkId);
-    uint8_t cWorkerId = fLpGBTSCWorkerInfo.BaseID + cLinkId;
-    uint8_t cFunctionId = fLpGBTSCWorkerInfo.SingleWriteFE;
+    uint8_t cWorkerId = LpGBTSCWorker::BaseID + cLinkId;
+    uint8_t cFunctionId = LpGBTSCWorker::SingleWriteFE;
     uint8_t cMasterId = pChip->getMasterId();
-    uint8_t cChipCode = fChipCodeMap[pChip->getFrontEndType()];
+    uint8_t cChipCode = pChip->getChipCode();
     uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : (pChip->getId() % 8); //use modulo 8 to accomodate for how MPAs are numbered
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
@@ -221,7 +204,7 @@ bool D19cOpticalInterface::SingleWriteSlave(Chip* pChip, ChipRegItem& pItem, boo
     cCommandVector.push_back(pItem.fValue << 16 | pItem.fAddress << 0);
     WriteCommandCPB(cCommandVector);
     uint8_t cWaitCounter = 10;
-    while(!IsDoneFE() && (cWaitCounter != 0)){ 
+    while(!IsDone(cFunctionId) && (cWaitCounter != 0)){ 
         cWaitCounter--;
         continue; 
     }
@@ -229,7 +212,7 @@ bool D19cOpticalInterface::SingleWriteSlave(Chip* pChip, ChipRegItem& pItem, boo
         LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWriteSlave : FE Tool stuck" << RESET;
         return false;
     }
-    uint8_t cTryCntr = GetTryCntrFE();
+    uint8_t cTryCntr = GetTryCntr(cFunctionId);
     if(cTryCntr > 0){
         LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWriteSlave : Tried " << +cTryCntr << "/100 before success" << RESET;
     }
@@ -249,23 +232,6 @@ bool D19cOpticalInterface::SingleWriteSlave(Chip* pChip, ChipRegItem& pItem, boo
         }
     }
     return true;
-}
-
-bool D19cOpticalInterface::IsDoneFE()
-{
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    uint32_t cStatus = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
-    bool cWorkerDone = (cStatus & 0xFF) == 1;
-    bool cFEToolDone = ((cStatus & (0xFF << 24)) >> 24) == 1;
-    return cWorkerDone && cFEToolDone;
-}
-
-uint8_t D19cOpticalInterface::GetTryCntrFE()
-{
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    uint32_t cAllCntr = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters");
-    uint8_t cCntr = (cAllCntr & (0xFF << 16)) >> 16;
-    return cCntr;
 }
 
 bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem)
@@ -325,15 +291,15 @@ bool D19cOpticalInterface::MultiWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     uint8_t cLinkId = pChip->getOpticalId();
     WriteReg("fc7_daq_cnfg.command_processor_block.link_select", cLinkId);
-    uint8_t cWorkerId = fLpGBTSCWorkerInfo.BaseID + cLinkId;
-    uint8_t cFunctionId = fLpGBTSCWorkerInfo.MultiWriteI2C;
+    uint8_t cWorkerId = LpGBTSCWorker::BaseID + cLinkId;
+    uint8_t cFunctionId = LpGBTSCWorker::MultiWriteI2C;
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 14 | pMasterConfig << 6);
     cCommandVector.push_back(pSlaveData << 8 | pSlaveAddress << 0);
     WriteCommandCPB(cCommandVector);
     uint8_t cWaitCounter = 10;
-    while(!IsDoneI2C() && (cWaitCounter != 0))
+    while(!IsDone(cFunctionId) && (cWaitCounter != 0))
     { 
         cWaitCounter--;
         continue; 
@@ -342,7 +308,7 @@ bool D19cOpticalInterface::MultiWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t
         LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiWriteI2C : I2C Tool stuck" << RESET;
         return false;
     }
-    uint8_t cTryCntr = GetTryCntrI2C();
+    uint8_t cTryCntr = GetTryCntr(cFunctionId);
     if(cTryCntr > 0){
         LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiWriteI2C : Tried " << +cTryCntr << "/100 before success" << RESET;
     }
@@ -364,15 +330,15 @@ uint8_t D19cOpticalInterface::SingleReadI2C(Ph2_HwDescription::Chip* pChip, uint
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     uint8_t cLinkId = pChip->getOpticalId();
     WriteReg("fc7_daq_cnfg.command_processor_block.link_select", cLinkId);
-    uint8_t cWorkerId = fLpGBTSCWorkerInfo.BaseID + cLinkId;
-    uint8_t cFunctionId = fLpGBTSCWorkerInfo.SingleReadI2C;
+    uint8_t cWorkerId = LpGBTSCWorker::BaseID + cLinkId;
+    uint8_t cFunctionId = LpGBTSCWorker::SingleReadI2C;
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 14 | pMasterConfig << 6);
     cCommandVector.push_back(pSlaveAddress << 0);
     WriteCommandCPB(cCommandVector);
     uint8_t cWaitCounter = 10;
-    while(!IsDoneI2C() && (cWaitCounter != 0)){ 
+    while(!IsDone(cFunctionId) && (cWaitCounter != 0)){ 
         cWaitCounter--;
         continue; 
     }
@@ -380,7 +346,7 @@ uint8_t D19cOpticalInterface::SingleReadI2C(Ph2_HwDescription::Chip* pChip, uint
         LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleReadI2C : I2C Tool stuck" << RESET;
         return 0;
     }
-    uint8_t cTryCntr = GetTryCntrI2C();
+    uint8_t cTryCntr = GetTryCntr(cFunctionId);
     if(cTryCntr > 0){
         LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleReadI2C : Tried " << +cTryCntr << "/100 before success" << RESET;
     }
@@ -394,24 +360,50 @@ uint8_t D19cOpticalInterface::SingleReadI2C(Ph2_HwDescription::Chip* pChip, uint
     return cReadBack;
 }
 
-bool D19cOpticalInterface::IsDoneI2C()
+bool D19cOpticalInterface::IsDone(uint8_t pFunctionId)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     uint32_t cStatus = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
-    bool cWorkerDone = (cStatus & 0xFF) == 1;
-    bool cI2CToolDone = ((cStatus & (0xFF << 16)) >> 16) == 1;
-    return cWorkerDone && cI2CToolDone;
+    bool cWorkerDone = false;
+    bool cFunctionDone = false;
+    if((pFunctionId == LpGBTSCWorker::SingleReadIC) || (pFunctionId == LpGBTSCWorker::SingleWriteIC)){
+        cWorkerDone = (cStatus & 0xFF) == 1;
+        cFunctionDone = ((cStatus & (0xFF << 8)) >> 8) == 1;
+    }
+    else if((pFunctionId == LpGBTSCWorker::SingleReadI2C) || (pFunctionId == LpGBTSCWorker::MultiWriteI2C)){
+        cWorkerDone = (cStatus & 0xFF) == 1;
+        cFunctionDone = ((cStatus & (0xFF << 16)) >> 16) == 1;
+    }
+    else if((pFunctionId == LpGBTSCWorker::SingleReadFE) || (pFunctionId == LpGBTSCWorker::SingleWriteFE)){
+        cWorkerDone = (cStatus & 0xFF) == 1;
+        cFunctionDone = ((cStatus & (0xFF << 24)) >> 24) == 1;
+    }
+    else{
+        LOG(ERROR) << "D19cOpticalInterface::IsDone : LpGBT-SC Worker fuction doesn't exist" << RESET;
+        throw std::runtime_error("D19cOpticalInterface::IsDone failure");
+    }
+    return cWorkerDone && cFunctionDone;
 }
 
-uint8_t D19cOpticalInterface::GetTryCntrI2C()
+uint8_t D19cOpticalInterface::GetTryCntr(uint8_t pFunctionId)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     uint32_t cAllCntr = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters");
-    uint8_t cCntr = (cAllCntr & (0xFF << 8)) >> 8;
+    bool cFunctionDone = false;
+    uint8_t cCntr = 255;
+        if((pFunctionId == LpGBTSCWorker::SingleReadIC) || (pFunctionId == LpGBTSCWorker::SingleWriteIC)){
+            cCntr = (cAllCntr & (0xFF << 0)) >> 0;
+        }
+        else if((pFunctionId == LpGBTSCWorker::SingleReadI2C) || (pFunctionId == LpGBTSCWorker::MultiWriteI2C)){
+            cCntr = (cAllCntr & (0xFF << 8)) >> 8;
+        }
+        else if((pFunctionId == LpGBTSCWorker::SingleReadFE) || (pFunctionId == LpGBTSCWorker::SingleWriteFE)){
+            cCntr = (cAllCntr & (0xFF << 16)) >> 16;
+        }
+        else{
+            LOG(ERROR) << "D19cOpticalInterface::GetTryCntr : LpGBT-SC Worker fuction doesn't exist" << RESET;
+            throw std::runtime_error("D19cOpticalInterface::GetTryCntr failure");
+        }
     return cCntr;
 }
-
-
-
-
 } // namespace Ph2_HwInterface

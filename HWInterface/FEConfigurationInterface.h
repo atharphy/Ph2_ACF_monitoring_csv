@@ -36,18 +36,6 @@ class FEConfigurationInterface : public RegManager
 
   public:
 
-    virtual bool MultiWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress, uint32_t pSlaveData)
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FEConfiguration::MultiI2CWrite is absent" << RESET;
-        return false;
-    }
-
-    virtual uint8_t SingleReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress)
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FEConfiguration::SingleI2CRead is absent" << RESET;
-        return false;
-    }
-
     virtual bool MultiWrite(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pRegisterItems)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FEConfiguration::MultiWrite is absent" << RESET;
@@ -109,24 +97,6 @@ class FEConfigurationInterface : public RegManager
     uint8_t           fNReadoutChip{0};
     Config            fConfig;
     ConfigurationType fType;
-
-    std::map<FrontEndType, uint8_t> fChipCodeMap = {{FrontEndType::CBC3, 1}, 
-                                                    {FrontEndType::MPA, 2}, 
-                                                    {FrontEndType::SSA, 3},
-                                                    {FrontEndType::CIC, 4},
-                                                    {FrontEndType::CIC2, 5}};
-
-    std::map<FrontEndType, uint8_t> fChipAddressMap = {{FrontEndType::CBC3, 0x40}, 
-                                                       {FrontEndType::MPA, 0x40}, 
-                                                       {FrontEndType::SSA, 0x20},
-                                                       {FrontEndType::CIC, 0x60},
-                                                       {FrontEndType::CIC2, 0x60}};
-
-    std::map<FrontEndType, std::string> fChipTypeMap = {{FrontEndType::CBC3, "CBC3"}, 
-                                                        {FrontEndType::MPA, "MPA"}, 
-                                                        {FrontEndType::SSA, "SSA"},
-                                                        {FrontEndType::CIC, "CIC1"},
-                                                        {FrontEndType::CIC2, "CIC2"}};
 };
 } // namespace Ph2_HwInterface
 #endif
