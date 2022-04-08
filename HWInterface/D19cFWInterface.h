@@ -220,7 +220,6 @@ class D19cFWInterface : public BeBoardFWInterface
     // set stub offset
     void     SetStubOffset(uint32_t pOffset) { fStubOffset = pOffset; };
     uint32_t getStubOffset() { return fStubOffset; };
-    uint8_t  getI2Cstatus() { return fI2Cstatus; }
 
   private:
     uint32_t fReadoutAttempts = 0;
