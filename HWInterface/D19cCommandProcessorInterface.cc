@@ -80,8 +80,8 @@ namespace Ph2_HwInterface
               cCommand.push_back(pItem.fValue << 16 | pItem.fAddress << 0);
               break;
           default :
-              LOG(ERROR) << "D19cOpticalInterface::EncodeCommand : LpGBT-SC Worker fuction doesn't exist" << RESET;
-              throw std::runtime_error("D19cOpticalInterface::EncodeCommand failure");
+              LOG(ERROR) << "D19cCommandProcessorInterface::EncodeCommand : LpGBT-SC Worker fuction doesn't exist" << RESET;
+              throw std::runtime_error("D19cCommandProcessorInterface::EncodeCommand failure");
       }
       return cCommand;
   }
@@ -106,8 +106,8 @@ namespace Ph2_HwInterface
           cFunctionDone = ((cStatus & (0xFF << 24)) >> 24) == 1;
       }
       else{
-          LOG(ERROR) << "D19cOpticalInterface::IsDone : LpGBT-SC Worker fuction doesn't exist" << RESET;
-          throw std::runtime_error("D19cOpticalInterface::IsDone failure");
+          LOG(ERROR) << "D19cCommandProcessorInterface::IsDone : LpGBT-SC Worker fuction doesn't exist" << RESET;
+          throw std::runtime_error("D19cCommandProcessorInterface::IsDone failure");
       }
       return cWorkerDone && cFunctionDone;
   }
@@ -127,8 +127,8 @@ namespace Ph2_HwInterface
               cCntr = (cAllCntr & (0xFF << 16)) >> 16;
           }
           else{
-              LOG(ERROR) << "D19cOpticalInterface::GetTryCntr : LpGBT-SC Worker fuction doesn't exist" << RESET;
-              throw std::runtime_error("D19cOpticalInterface::GetTryCntr failure");
+              LOG(ERROR) << "D19cCommandProcessorInterface::GetTryCntr : LpGBT-SC Worker fuction doesn't exist" << RESET;
+              throw std::runtime_error("D19cCommandProcessorInterface::GetTryCntr failure");
           }
       return cCntr;
   }
