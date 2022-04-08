@@ -345,7 +345,6 @@ class D19cFWInterface : public BeBoardFWInterface
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    uint8_t       fI2Cstatus    = 0;
     const uint8_t flpGBTAddress = 0x70;
 
     // Functions for standard uDTC
@@ -360,7 +359,6 @@ class D19cFWInterface : public BeBoardFWInterface
     void                  ResetCPB() override;
     void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) override;
     std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) override;
-    std::vector<uint32_t> WriteCommandCPBandReadReply(const std::vector<uint32_t>& pCommandVector, uint8_t pNWords);
 
     // Generic FE configuration functions
     // single register functions
