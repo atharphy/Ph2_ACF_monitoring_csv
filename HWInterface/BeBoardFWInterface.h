@@ -274,8 +274,8 @@ class BeBoardFWInterface : public RegManager
     // #######################################
     // # lpGBT I2C Masters Control Functions #
     // #######################################
-    virtual bool    MultiWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress, uint32_t pSlaveData) { return true; }
-    virtual uint8_t SingleReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress) { return 0; }
+    virtual bool    MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress, uint32_t pSlaveData) { return true; }
+    virtual uint8_t SingleByteReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress) { return 0; }
 
 
 

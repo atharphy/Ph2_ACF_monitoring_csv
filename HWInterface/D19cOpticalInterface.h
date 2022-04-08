@@ -9,8 +9,8 @@ namespace LpGBTSCWorker {
   const uint8_t BaseID = 16;
   const uint8_t SingleReadIC = 2;
   const uint8_t SingleWriteIC = 3;
-  const uint8_t SingleReadI2C = 4;
-  const uint8_t MultiWriteI2C = 5;
+  const uint8_t SingleByteReadI2C = 4;
+  const uint8_t MultiByteWriteI2C = 5;
   const uint8_t SingleReadFE = 6;
   const uint8_t SingleWriteFE = 7;
 }
@@ -37,8 +37,8 @@ class D19cOpticalInterface : public FEConfigurationInterface
     bool MultiWrite(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pRegisterItems) override;
     // Single Write/Read
     //lpGBT I2C Masters
-    bool    MultiWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress, uint32_t pSlaveData);
-    uint8_t SingleReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress);
+    bool    MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress, uint32_t pSlaveData);
+    uint8_t SingleByteReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress);
 
     void setResetEnable(uint8_t pEnable) { fResetEn = pEnable; }
     void setWait(uint32_t pWait_us) { fWait_us = pWait_us; }
