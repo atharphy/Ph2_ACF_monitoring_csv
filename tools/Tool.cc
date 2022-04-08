@@ -488,7 +488,7 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
     }
     catch(std::exception& e)
     {
-        LOG(ERROR) << "Exceptin when trying to create Result Directory: " << e.what();
+        LOG(ERROR) << BOLDRED << "Exceptin when trying to create Result Directory: " << e.what() << RESET;
     }
 
     fDirectoryName = nDirname;
