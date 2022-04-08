@@ -247,13 +247,6 @@ class BeBoardFWInterface : public RegManager
     virtual bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerify = true) = 0;
     virtual uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress)                                                       = 0;
 
-    // ##########################################
-    // # Read/Write new Command Processor Block #
-    // ##########################################
-    virtual void                  ResetCPB() {}
-    virtual void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) {}
-    virtual std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) { return {}; }
-
     // ###############################
     // # Configuration FE Read/Write #
     // ###############################
@@ -277,23 +270,11 @@ class BeBoardFWInterface : public RegManager
     virtual bool    MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress, uint32_t pSlaveData) { return true; }
     virtual uint8_t SingleByteReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress) { return 0; }
 
-
-
-    void ConfigureCPB(CPBconfig pConfig)
-    {
-        fCPBConfig.fEnable      = pConfig.fEnable;
-        fCPBConfig.fVerbose     = pConfig.fVerbose;
-        fCPBConfig.fWait_us     = pConfig.fWait_us;
-        fCPBConfig.fReTry       = pConfig.fReTry;
-        fCPBConfig.fMaxAttempts = pConfig.fMaxAttempts;
-    }
-
   protected:
     uint32_t  fBlockSize{0};
     uint32_t  fNPackets{0};
     uint32_t  numAcq{0};
     uint32_t  nbMaxAcq{0};
-    CPBconfig fCPBConfig;
 };
 
 } // namespace Ph2_HwInterface

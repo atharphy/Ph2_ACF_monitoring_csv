@@ -351,13 +351,6 @@ class D19cFWInterface : public BeBoardFWInterface
     void     ResetOptoLink() override {};
     bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override { return true; };
     uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress) override { return 0; };
-    // ##########################################
-    // # Read/Write new Command Processor Block #
-    // ##########################################
-    // functions for new Command Processor Block
-    void                  ResetCPB() override;
-    void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) override;
-    std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) override;
 
     // Generic FE configuration functions
     // single register functions

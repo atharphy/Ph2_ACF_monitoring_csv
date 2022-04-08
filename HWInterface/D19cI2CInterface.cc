@@ -230,7 +230,7 @@ bool D19cI2CInterface::MultiWriteRead(Chip* pChip, std::vector<ChipRegItem>& pWr
                 }
             }
         }
-    } while(cAttempts < fConfig.fMaxAttempts && !cSuccess && fConfig.fReTry);
+    } while(cAttempts < 10 && !cSuccess && fRetry);
     return cSuccess;
 }
 
@@ -243,12 +243,12 @@ bool D19cI2CInterface::MultiWrite(Chip* pChip, std::vector<ChipRegItem>& pRegist
     {
         // update list of modified registers
         pChip->UpdateModifiedRegMap(cItem);
-        EncodeReg(cItem, pChip, cVec, fConfig.fVerify, true);
+        EncodeReg(cItem, pChip, cVec, false, true);
     }
 
     uint8_t cWriteAttempts = 0;
     // if the transaction is successfull, update the HWDescription object
-    return WriteChipBlockReg(cVec, cWriteAttempts, fConfig.fVerify);
+    return WriteChipBlockReg(cVec, cWriteAttempts, false);
 }
 bool D19cI2CInterface::SingleWrite(Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem)
 {

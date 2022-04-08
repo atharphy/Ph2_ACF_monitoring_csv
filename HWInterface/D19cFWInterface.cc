@@ -507,30 +507,17 @@ void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
 {
     if(fFEConfigurationInterface == nullptr)
     {
-        Config cConfig;
         if(!pBoard->isOptical())
         {
             LOG(INFO) << BOLDYELLOW << "Electrical readout.. iniitialize I2C interface" << RESET;
             fFEConfigurationInterface = new D19cI2CInterface(this->getId(), this->getUri(), this->getAddressTable());
             (static_cast<D19cI2CInterface*>(fFEConfigurationInterface))->ConfigureI2CMap(pBoard);
-            cConfig.fVerbose     = 0;
-            cConfig.fReTry       = 0;
-            cConfig.fMaxAttempts = 10;
-            cConfig.fVerify      = 0;
         }
         else
         {
             LOG(INFO) << BOLDBLUE << "Optical readout . initializing Optical interface" << RESET;
             fFEConfigurationInterface = new D19cOpticalInterface(this->getId(), this->getUri(), this->getAddressTable());
-            (static_cast<D19cOpticalInterface*>(fFEConfigurationInterface))->setResetEnable(fCPBConfig.fEnable);
-            (static_cast<D19cOpticalInterface*>(fFEConfigurationInterface))->setWait(fCPBConfig.fWait_us);
-            cConfig.fVerbose     = fCPBConfig.fVerbose;
-            cConfig.fReTry       = fCPBConfig.fReTry;
-            cConfig.fMaxAttempts = fCPBConfig.fMaxAttempts;
-            cConfig.fVerify      = 0;
-            cConfig.fReTry       = 0;
         }
-        fFEConfigurationInterface->Configure(cConfig);
     }
 
     // configure L1 readout interface
@@ -1450,22 +1437,6 @@ bool D19cFWInterface::cmd_reply_ack(const uint32_t& cWord1, const uint32_t& cWor
         return true;
     else
         return false;
-}
-
-// ##########################################
-// # Read/Write new Command Processor Block #
-// #########################################
-void D19cFWInterface::ResetCPB()
-{
-}
-
-void D19cFWInterface::WriteCommandCPB(const std::vector<uint32_t>& pCommandVector)
-{
-}
-
-std::vector<uint32_t> D19cFWInterface::ReadReplyCPB(uint8_t pNWords)
-{
-    return {}; 
 }
 
 // ##########################################
