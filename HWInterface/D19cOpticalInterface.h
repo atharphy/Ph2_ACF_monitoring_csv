@@ -55,7 +55,6 @@ class D19cOpticalInterface : public FEConfigurationInterface
     std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords);
     
     std::vector<uint32_t> EncodeCommand(uint8_t pFunctionId, Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerify = false);
-    bool ReadChipRegister(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem);
     bool WriteChipRegister(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerify = false);
     //Worker monitoring
     bool IsDone(uint8_t pFunctionId);

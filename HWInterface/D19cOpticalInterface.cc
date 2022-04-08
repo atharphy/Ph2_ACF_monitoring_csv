@@ -101,7 +101,7 @@ std::vector<uint32_t> D19cOpticalInterface::EncodeCommand(uint8_t pFunctionId, C
 }
 
 
-bool D19cOpticalInterface::ReadChipRegister(Chip* pChip, ChipRegItem& pItem)
+bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     SelectLink(pChip->getOpticalId());
@@ -167,11 +167,6 @@ bool D19cOpticalInterface::WriteChipRegister(Chip* pChip, ChipRegItem& pItem, bo
         pItem.fValue = cReadBack;
     }
     return true;
-}
-
-bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem)
-{
-    return ReadChipRegister(pChip, pItem);
 }
 
 bool D19cOpticalInterface::SingleWrite(Chip* pChip, ChipRegItem& pItem)
