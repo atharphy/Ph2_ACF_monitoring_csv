@@ -49,17 +49,14 @@ class D19cOpticalInterface : public FEConfigurationInterface
     // # Read/Write new Command Processor Block #
     // ##########################################
     // functions for new Command Processor Block
+    void SelectLink(uint8_t pLinkId);
     void                  ResetCPB();
     void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector);
     std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords);
     
-    // function for Write + Read to lpGBT I2C slave
-    //lpGBT
-    bool SingleReadIC(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem);
-    bool SingleWriteIC(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerify = true);
-    //Front-End ASICs
-    bool SingleWriteSlave(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerify = false);
-    bool SingleReadSlave(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem);
+    std::vector<uint32_t> EncodeCommand(uint8_t pFunctionId, Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerify = false);
+    bool ReadChipRegister(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem);
+    bool WriteChipRegister(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerify = false);
     //Worker monitoring
     bool IsDone(uint8_t pFunctionId);
     uint8_t GetTryCntr(uint8_t pFunctionId);

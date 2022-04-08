@@ -15,6 +15,12 @@ D19cOpticalInterface::D19cOpticalInterface(const std::string& pId, const std::st
 D19cOpticalInterface::D19cOpticalInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : FEConfigurationInterface(puHalConfigFileName, pBoardId) { fType = ConfigurationType::IC; }
 D19cOpticalInterface::~D19cOpticalInterface() {}
 
+void D19cOpticalInterface::SelectLink(uint8_t pLinkId)
+{
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+    WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
+}
+
 // ##########################################
 // # Read/Write new Command Processor Block #
 // #########################################
@@ -61,194 +67,117 @@ std::vector<uint32_t> D19cOpticalInterface::ReadReplyCPB(uint8_t pNWords)
 // # ROC Register read/write #
 // #########################################
 
-bool D19cOpticalInterface::SingleReadIC(Chip* pChip, ChipRegItem& pItem)
+std::vector<uint32_t> D19cOpticalInterface::EncodeCommand(uint8_t pFunctionId, Chip* pChip, ChipRegItem& pItem, bool pVerify)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    if(pItem.fControlReg == 0x00)
-    {
-        auto cRegMap = pChip->getRegMap();
-        auto cIterator    = find_if(cRegMap.begin(), cRegMap.end(), [&pItem](const ChipRegPair& obj) { return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage; });
-        if( cIterator != cRegMap.end() ){ 
-            LOG(DEBUG) << BOLDYELLOW << "D19cOpticalInterface::SingleReadIC to " << cIterator->first << RESET;
-        }
-        uint8_t cLinkId = pChip->getOpticalId();
-        WriteReg("fc7_daq_cnfg.command_processor_block.link_select", cLinkId);
-        uint8_t cWorkerId = LpGBTSCWorker::BaseID + cLinkId;
-        uint8_t cFunctionId = LpGBTSCWorker::SingleReadIC;
-        std::vector<uint32_t> cCommandVector;
-        cCommandVector.clear();
-        cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pItem.fAddress << 0);
-        WriteCommandCPB(cCommandVector);
-        uint8_t cWaitCounter = 10;
-        while(!IsDone(cFunctionId) && (cWaitCounter != 0)){ 
-            cWaitCounter--;
-            continue;
-        }
-        uint8_t cTryCntr = GetTryCntr(cFunctionId);
-        if(cTryCntr > 0){
-            LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleReadIC : Tried " << +cTryCntr << "/100 before success" << RESET;
-        }
-        if(cWaitCounter == 0){
-            LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleReadIC : [ERROR] IC Tool stuck" << RESET;
-            return false;
-        }
-        std::vector<uint32_t> cReplyVector     = ReadReplyCPB(1);
-        uint8_t cErrorCode = (cReplyVector[0] & (0xFF << 8)) >> 8;
-        if(cErrorCode != 0){ 
-            LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleReadIC : [ERROR] Error Code is " << +cErrorCode << RESET;
-            return false;
-        }
-        pItem.fValue = (cReplyVector[0] & (0xFF << 0)) >> 0;
+    std::vector<uint32_t> cCommandVector;
+    uint8_t cWorkerId = LpGBTSCWorker::BaseID + pChip->getOpticalId();
+    uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : (pChip->getId() % 8);
+    uint8_t cChipCode = pChip->getChipCode();
+    uint8_t cMasterId = pChip->getMasterId();
+    switch(pFunctionId){
+        case LpGBTSCWorker::SingleReadIC : 
+            cCommandVector.push_back(cWorkerId << 24 | pFunctionId << 16 | pItem.fAddress << 0);
+            break;
+        
+        case LpGBTSCWorker::SingleWriteIC : 
+            cCommandVector.push_back(cWorkerId << 24 | pFunctionId << 16 | pItem.fAddress << 0);
+            cCommandVector.push_back(pItem.fValue << 0);
+            break;
+
+        case LpGBTSCWorker::SingleReadFE :
+            cCommandVector.push_back(cWorkerId << 24 | pFunctionId << 16 | cMasterId << 6 | cChipCode << 3 | cChipId << 0);
+            cCommandVector.push_back(pItem.fAddress << 0);
+            break;
+
+        case LpGBTSCWorker::SingleWriteFE :
+            cCommandVector.push_back(cWorkerId << 24 | pFunctionId << 16 | pVerify << 8 | cMasterId << 6 | cChipCode << 3 | cChipId << 0);
+            cCommandVector.push_back(pItem.fValue << 16 | pItem.fAddress << 0);
+            break;
+        default :
+            LOG(ERROR) << "D19cOpticalInterface::EncodeCommand : LpGBT-SC Worker fuction doesn't exist" << RESET;
+            throw std::runtime_error("D19cOpticalInterface::EncodeCommand failure");
     }
-    return true;
+    return cCommandVector;
 }
 
-bool D19cOpticalInterface::SingleWriteIC(Chip* pChip, ChipRegItem& pItem, bool pVerify)
+
+bool D19cOpticalInterface::ReadChipRegister(Chip* pChip, ChipRegItem& pItem)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    auto cRegMap = pChip->getRegMap();
-    auto cIterator    = find_if(cRegMap.begin(), cRegMap.end(), [&pItem](const ChipRegPair& obj) { return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage; });
-    if( cIterator != cRegMap.end() ){ 
-        LOG(DEBUG) << BOLDYELLOW << "D19cOpticalInterface::SingleWriteIC to " << cIterator->first << RESET;
-    }
-    uint8_t cLinkId = pChip->getOpticalId();
-    WriteReg("fc7_daq_cnfg.command_processor_block.link_select", cLinkId);
-    uint8_t cWorkerId = LpGBTSCWorker::BaseID + cLinkId;
-    uint8_t cFunctionId = LpGBTSCWorker::SingleWriteIC;
-    std::vector<uint32_t> cCommandVector;
-    cCommandVector.clear();
-    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pItem.fAddress << 0);
-    cCommandVector.push_back(pItem.fValue << 0);
-    WriteCommandCPB(cCommandVector);
+    SelectLink(pChip->getOpticalId());
+    uint8_t cFunctionId = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? LpGBTSCWorker::SingleReadIC : LpGBTSCWorker::SingleReadFE;
+    auto cCommand = EncodeCommand(cFunctionId, pChip, pItem);
+    WriteCommandCPB(cCommand);
     uint8_t cWaitCounter = 10;
     while(!IsDone(cFunctionId) && (cWaitCounter != 0)){ 
         cWaitCounter--;
-        continue; 
-    }
-    if(cWaitCounter == 0){
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWriteIC : [ERROR] IC Tool stuck" << RESET;
-        return false;
+        continue;
     }
     uint8_t cTryCntr = GetTryCntr(cFunctionId);
     if(cTryCntr > 0){
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWriteIC : Tried " << +cTryCntr << "/100 before success" << RESET;
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleRead : Tried " << +cTryCntr << "/100 before success" << RESET;
     }
-    std::vector<uint32_t> cReplyVector     = ReadReplyCPB(1);
-    uint8_t cErrorCode = (cReplyVector[0] & (0xFF << 8)) >> 8;
-    if(cErrorCode != 0){ 
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWriteIC : [ERROR] Error Code is " << +cErrorCode << RESET; 
+    if(cWaitCounter == 0){
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleRead : Tool stuck" << RESET;
         return false;
     }
-    uint8_t cReadBack = (cReplyVector[0] & (0xFF << 0)) >> 0;
+    auto cReply = ReadReplyCPB(1);
+    uint8_t cErrorCode = (cReply[0] & (0xFF << 8)) >> 8;
+    if(cErrorCode != 0){ 
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleRead : Error Code is " << +cErrorCode << RESET;
+        return false;
+    }
+    pItem.fValue = (cReply[0] & (0xFF << 0)) >> 0;
+    return true;
+}
+
+bool D19cOpticalInterface::WriteChipRegister(Chip* pChip, ChipRegItem& pItem, bool pVerify)
+{
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+    SelectLink(pChip->getOpticalId());
+    uint8_t cFunctionId = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? LpGBTSCWorker::SingleWriteIC : LpGBTSCWorker::SingleWriteFE;
+    auto cCommand = EncodeCommand(cFunctionId, pChip, pItem, pVerify);
+    WriteCommandCPB(cCommand);
+    uint8_t cWaitCounter = 10;
+    while(!IsDone(cFunctionId) && (cWaitCounter != 0)){ 
+        cWaitCounter--;
+        continue;
+    }
+    uint8_t cTryCntr = GetTryCntr(cFunctionId);
+    if(cTryCntr > 0){
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite : Tried " << +cTryCntr << "/100 before success" << RESET;
+    }
+    if(cWaitCounter == 0){
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite : Tool stuck" << RESET;
+        return false;
+    }
+    auto cReply = ReadReplyCPB(1);
+    uint8_t cErrorCode = (cReply[0] & (0xFF << 8)) >> 8;
+    if(cErrorCode != 0){ 
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite : Error Code is " << +cErrorCode << RESET;
+        LOG(ERROR) << BOLDRED << "Chip code : " << +pChip->getChipCode() << " , register address 0x" << std::hex << +pItem.fAddress << RESET;
+        return false;
+    }
+    uint8_t cReadBack = (cReply[0] & (0xFF << 0)) >> 0;
     if(pVerify){
         if(cReadBack != pItem.fValue){ 
-            LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWriteIC : [ERROR] Wrong value read back" << RESET; 
+            LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite : Wrong value read back" << RESET; 
             return false;
         }
-    }
-    pItem.fValue = cReadBack;
-    return true;
-}
-
-bool D19cOpticalInterface::SingleReadSlave(Chip* pChip, ChipRegItem& pItem)
-{
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    uint8_t cLinkId = pChip->getOpticalId();
-    WriteReg("fc7_daq_cnfg.command_processor_block.link_select", cLinkId);
-    uint8_t cWorkerId = LpGBTSCWorker::BaseID + cLinkId;
-    uint8_t cFunctionId = LpGBTSCWorker::SingleReadFE;
-    uint8_t cMasterId = pChip->getMasterId();
-    uint8_t cChipCode = pChip->getChipCode();
-    uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : (pChip->getId() % 8); //use modulo 8 to accomodate for how MPAs are numbered
-    std::vector<uint32_t> cCommandVector;
-    cCommandVector.clear();
-    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | cMasterId << 6 | cChipCode << 3 | cChipId << 0);
-    cCommandVector.push_back(pItem.fAddress << 0);
-    WriteCommandCPB(cCommandVector);
-    uint8_t cWaitCounter = 10;
-    while(!IsDone(cFunctionId) && (cWaitCounter != 0)){ 
-        cWaitCounter--;
-        continue; 
-    }
-    if(cWaitCounter == 0){
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleReadSlave : FE Tool stuck" << RESET;
-        return false;
-    }
-    uint8_t cTryCntr = GetTryCntr(cFunctionId);
-    if(cTryCntr > 0){
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleReadSlave : Tried " << +cTryCntr << "/100 before success" << RESET;
-    }
-    std::vector<uint32_t> cReplyVector     = ReadReplyCPB(1);
-    uint8_t cErrorCode = (cReplyVector[0] & (0xFF << 8)) >> 8;
-    if(cErrorCode != 0){ 
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleReadSlave : Error Code is " << +cErrorCode << RESET;
-        return false;
-    }
-    pItem.fValue = (cReplyVector[0] & (0xFF << 0)) >> 0;
-    return true;
-}
-
-bool D19cOpticalInterface::SingleWriteSlave(Chip* pChip, ChipRegItem& pItem, bool pVerify)
-{
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    uint8_t cLinkId = pChip->getOpticalId();
-    WriteReg("fc7_daq_cnfg.command_processor_block.link_select", cLinkId);
-    uint8_t cWorkerId = LpGBTSCWorker::BaseID + cLinkId;
-    uint8_t cFunctionId = LpGBTSCWorker::SingleWriteFE;
-    uint8_t cMasterId = pChip->getMasterId();
-    uint8_t cChipCode = pChip->getChipCode();
-    uint8_t cChipId = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : (pChip->getId() % 8); //use modulo 8 to accomodate for how MPAs are numbered
-    std::vector<uint32_t> cCommandVector;
-    cCommandVector.clear();
-    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pVerify << 8 | cMasterId << 6 | cChipCode << 3 | cChipId << 0);
-    cCommandVector.push_back(pItem.fValue << 16 | pItem.fAddress << 0);
-    WriteCommandCPB(cCommandVector);
-    uint8_t cWaitCounter = 10;
-    while(!IsDone(cFunctionId) && (cWaitCounter != 0)){ 
-        cWaitCounter--;
-        continue; 
-    }
-    if(cWaitCounter == 0){
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWriteSlave : FE Tool stuck" << RESET;
-        return false;
-    }
-    uint8_t cTryCntr = GetTryCntr(cFunctionId);
-    if(cTryCntr > 0){
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWriteSlave : Tried " << +cTryCntr << "/100 before success" << RESET;
-    }
-    std::vector<uint32_t> cReplyVector     = ReadReplyCPB(1);
-    uint8_t cErrorCode = (cReplyVector[0] & (0xFF << 8)) >> 8;
-    uint8_t cReadBack = (cReplyVector[0] & (0xFF << 0)) >> 0;
-    if(cErrorCode != 0){ 
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWriteSlave : [ERROR] Error Code is " << +cErrorCode << RESET;
-        LOG(ERROR) << BOLDRED << "register address 0x" << std::hex << +pItem.fAddress << " , write value 0x" << std::hex << pItem.fValue << " , read value 0x" << std::hex << +cReadBack << RESET;
-        return false;
-    }
-    if(pVerify){
         pItem.fValue = cReadBack;
-        if(cReadBack != pItem.fValue){ 
-            LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWriteSlave : [ERROR] Wrong value read back" << RESET; 
-            return false;
-        }
     }
     return true;
 }
 
 bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem)
 {
-    if(pChip->getFrontEndType() == FrontEndType::LpGBT)
-        return SingleReadIC(pChip, pItem);
-    else
-        return SingleReadSlave(pChip, pItem);
+    return ReadChipRegister(pChip, pItem);
 }
 
 bool D19cOpticalInterface::SingleWrite(Chip* pChip, ChipRegItem& pItem)
 {
     pChip->UpdateModifiedRegMap(pItem);
-    if(pChip->getFrontEndType() == FrontEndType::LpGBT)
-        return SingleWriteIC(pChip, pItem, false);
-    else
-        return SingleWriteSlave(pChip, pItem, false);
+    return WriteChipRegister(pChip, pItem, false);
 }
 
 // for now this is just looping over single read
@@ -271,11 +200,7 @@ bool D19cOpticalInterface::MultiWrite(Chip* pChip, std::vector<ChipRegItem>& pRe
 bool D19cOpticalInterface::SingleWriteRead(Chip* pChip, ChipRegItem& pItem)
 {
     pChip->UpdateModifiedRegMap(pItem);
-    if(pChip->getFrontEndType() == FrontEndType::LpGBT)
-        return SingleWriteIC(pChip, pItem, true);
-    else
-        return SingleWriteSlave(pChip, pItem, true);
-
+    return WriteChipRegister(pChip, pItem, true);
 }
 
 // for now this is just a loop of WriteRead
