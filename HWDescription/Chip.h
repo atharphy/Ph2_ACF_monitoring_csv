@@ -125,8 +125,30 @@ class Chip : public FrontEndDescription
      */
     void setChipId(uint8_t pChipId) { fChipId = pChipId; }
 
+    /*!
+     * \brief Set the Chip address
+     * \param pChipAddress
+     */
     void    setChipAddress(uint16_t pChipAddress) { fChipAddress = pChipAddress; }
+
+   /*!
+     * \brief Get the Chip address
+     * \return The Chip address
+     */
     uint8_t getChipAddress() const { return fChipAddress; }
+
+    /*!
+     * \brief Set the Chip address
+     * \param pChipCode
+     */
+    void setChipCode(uint8_t pChipCode) { fChipCode = pChipCode; }
+
+    /*!
+     * \brief Get the Chip code
+     * \return The Chip code
+     */
+    uint8_t getChipCode() const { return fChipCode; }
+
 
     /*!
      * \brief Set the clock frequency
@@ -193,6 +215,7 @@ class Chip : public FrontEndDescription
     uint8_t     getRegisterTracking() { return fTrackRegisters; }
 
   protected:
+    uint8_t    fChipCode;
     uint8_t    fChipId;
     uint8_t    fChipAddress; // I2C addess of chip
     uint16_t   fMaxRegValue;

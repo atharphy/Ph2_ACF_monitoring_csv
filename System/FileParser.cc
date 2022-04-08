@@ -495,6 +495,7 @@ void FileParser::parseSSAContainer(pugi::xml_node pSSAnode, Hybrid* pHybrid, std
     cSSA->setNumberOfChannels(NSSACHANNELS);
     cSSA->setClockFrequency(320);
     cSSA->setMasterId(pHybrid->getMasterId());
+    cSSA->setChipCode(3);
 
     os << BOLDCYAN << "|"
        << "  "
@@ -638,6 +639,7 @@ void FileParser::parseSSA2Container(pugi::xml_node pSSAnode, Hybrid* pHybrid, st
     cSSA2->setOpticalId(pHybrid->getOpticalId());
     cSSA2->setNumberOfChannels(NSSACHANNELS);
     cSSA2->setClockFrequency(320);
+    cSSA2->setChipCode(3);
 }
 
 void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, ReadoutChip* pSSA)
@@ -664,6 +666,7 @@ void FileParser::parseMPAContainer(pugi::xml_node pMPANode, Hybrid* pHybrid, std
     cMPA->setNumberOfChannels(NSSACHANNELS, NMPACOLS);
     cMPA->setClockFrequency(320);
     cMPA->setMasterId(pHybrid->getMasterId());
+    cMPA->setChipCode(2);
 
     os << BOLDCYAN << "|"
        << "  "
@@ -916,6 +919,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                         cCic->setOptical(cHybrid->isOptical());
                         cCic->setOpticalId(cHybrid->getOpticalId());
                         cCic->setMasterId(cHybrid->getMasterId());
+                        cCic->setChipCode(4);
 
                         os << GREEN << "|\t|\t|\t|----FrontEndType: ";
                         if(cType == FrontEndType::CIC)
@@ -1204,6 +1208,7 @@ void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std
     cCbc->setClockFrequency(320);
     cCbc->setNumberOfChannels(254);
     cCbc->setMasterId(cHybrid->getMasterId());
+    cCbc->setChipCode(1);
 
     os << BOLDCYAN << "|"
        << "  "
