@@ -35,16 +35,6 @@ Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pier
 
 namespace Ph2_HwInterface
 {
-struct CPBconfig
-{
-    uint8_t  fEnable      = 0;
-    uint8_t  fReTry       = 0;
-    uint8_t  fVerbose     = 0;
-    uint32_t fWait_us     = 50;
-    uint16_t fMaxAttempts = 500;
-    uint8_t  fResetEn     = 1;
-};
-
 /*!
  * \class BeBoardFWInterface
  * \brief Class separating board system FW interface from uHal wrapper
@@ -107,40 +97,6 @@ class BeBoardFWInterface : public RegManager
 
     /*! \brief Run Bit Error Rate test */
     virtual double RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) = 0;
-
-    /*!
-     * \brief Encode a/several word(s) readable for a Chip
-     * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
-     * \param pChip : Chip object
-     */
-    virtual void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, Ph2_HwDescription::Chip* pChip, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-    }
-
-    /*!< Encode a/several word(s) readable for a Chip*/
-    /*!
-     * \brief Encode a/several word(s) for Broadcast write to Chips
-     * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
-     * \param pNChip : number of Chips to write to
-     * \param pVecReq : Vector to stack the encoded words
-     */
-    virtual void BCEncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pNChip, std::vector<uint32_t>& pVecReq, bool pRead = false, bool pWrite = false)
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-    }
-
-    /*!< Encode a/several word(s) readable for a Chip*/
-    /*!
-     * \brief Decode a word from a read of a register of the Chip
-     * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to read
-     * \param pChipId : Id of the Chip to work with
-     * \param pWord : variable to put the decoded word
-     */
-    virtual void DecodeReg(Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t& pChipId, uint32_t pWord, bool& pRead, bool& pFailed)
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-    }
 
     /*!
      * \brief Configure the board with its Config File
@@ -263,12 +219,6 @@ class BeBoardFWInterface : public RegManager
         std::vector<uint8_t> cData(0);
         return cData;
     }
-
-    // #######################################
-    // # lpGBT I2C Masters Control Functions #
-    // #######################################
-    virtual bool    MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress, uint32_t pSlaveData) { return true; }
-    virtual uint8_t SingleByteReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress) { return 0; }
 
   protected:
     uint32_t  fBlockSize{0};

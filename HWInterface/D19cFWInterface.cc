@@ -1633,16 +1633,6 @@ bool D19cFWInterface::MultiRegisterWriteRead(Chip* pChip, std::vector<ChipRegIte
     return false;
 }
 
-uint8_t D19cFWInterface::SingleByteReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress)
-{
-    return static_cast<D19cOpticalInterface*>(fFEConfigurationInterface)->SingleByteReadI2C(pChip, pMasterId, pMasterConfig, pSlaveAddress);
-}
-
-bool D19cFWInterface::MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress, uint32_t pSlaveData)
-{
-    return static_cast<D19cOpticalInterface*>(fFEConfigurationInterface)->MultiByteWriteI2C(pChip, pMasterId, pMasterConfig, pSlaveAddress, pSlaveData);
-}
-
 void D19cFWInterface::ResetFCMDBram()
 {
     LOG(DEBUG) << BOLDBLUE << "Resetting FCMD BRAM from sw.... started" << RESET;

@@ -94,22 +94,6 @@ class CbcInterface : public ReadoutChipInterface
     bool WriteChipMultReg(Ph2_HwDescription::Chip* pCbc, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify = true) override;
 
     /*!
-     * \brief Write same register in all Cbcs and then UpdateCbc
-     * \param pHybrid : Hybrid containing vector of Cbcs
-     * \param pRegNode : Node of the register to write
-     * \param pValue : Value to write
-     */
-    void WriteHybridBroadcastChipReg(const Ph2_HwDescription::Hybrid* pHybrid, const std::string& pRegNode, uint16_t pValue);
-
-    /*!
-     * \brief Write same register in all Cbcs and then UpdateCbc
-     * \param pHybrid : Hybrid containing vector of Cbcs
-     * \param pRegNode : Node of the register to write
-     * \param pValue : Value to write
-     */
-    void WriteBroadcastCbcMultiReg(const Ph2_HwDescription::Hybrid* pHybrid, const std::vector<std::pair<std::string, uint8_t>> pVecReg);
-
-    /*!
      * \brief Write all Local registers on Cbc and Cbc Config File (able to recognize local parameter names such as
      * ChannelOffset) \param pCbc \param pRegNode : Node of the register to write \param pValue : Value to write
      */
