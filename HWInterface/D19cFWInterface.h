@@ -43,6 +43,7 @@ class FastCommandInterface;
 class D19cBackendAlignmentFWInterface;
 class D19cDebugFWInterface;
 class D19cOpticalInterface;
+class D19cCommandProcessorInterface;
 
 /*!
  * \class Cbc3Fc7FWInterface
@@ -59,6 +60,7 @@ class D19cFWInterface : public BeBoardFWInterface
     FastCommandInterface*            fFastCommandInterface{nullptr};
     D19cBackendAlignmentFWInterface* fBackendAlignmentInterface{nullptr};
     D19cDebugFWInterface*            fDebugInterface{nullptr};
+    D19cCommandProcessorInterface*   fCommandProcessorInterface{nullptr};
 
     FileHandler* fFileHandler;
     uint32_t     fBroadcastCbcId;

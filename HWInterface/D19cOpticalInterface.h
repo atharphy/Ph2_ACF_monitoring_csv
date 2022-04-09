@@ -2,7 +2,6 @@
 #define __D19cOpticalInterface_H__
 
 #include "FEConfigurationInterface.h"
-#include "D19cCommandProcessorInterface.h"
 
 namespace Ph2_HwInterface
 {
@@ -29,7 +28,6 @@ class D19cOpticalInterface : public FEConfigurationInterface
     uint8_t SingleByteReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress);
 
   private:
-    D19cCommandProcessorInterface* fCommandProcessorInterface{nullptr};
     void SelectLink(uint8_t pLinkId);
     bool WriteChipRegister(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerify = false);
 };

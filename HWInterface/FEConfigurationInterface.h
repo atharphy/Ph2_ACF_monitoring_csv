@@ -7,6 +7,7 @@
 #include "Chip.h"
 #include "ChipRegItem.h"
 #include "RegManager.h"
+#include "D19cCommandProcessorInterface.h"
 #include <string>
 
 namespace Ph2_HwInterface
@@ -34,6 +35,8 @@ class FEConfigurationInterface : public RegManager
     ~FEConfigurationInterface();
 
   public:
+
+    void LinkCommandProcessorInterface(D19cCommandProcessorInterface* pInterface) { fCommandProcessorInterface = pInterface; }
 
     virtual bool MultiWrite(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pRegisterItems)
     {
@@ -89,6 +92,7 @@ class FEConfigurationInterface : public RegManager
     void              setRegisterTracking(uint8_t pTrackRegisters) { fTrackRegisters = pTrackRegisters; }
 
   protected:
+    D19cCommandProcessorInterface* fCommandProcessorInterface;
     Configuration fConfiguration;
     uint8_t           fTrackRegisters{0};
     uint8_t           fNReadoutChip{0};
