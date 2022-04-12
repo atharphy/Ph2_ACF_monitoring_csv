@@ -129,9 +129,9 @@ class Chip : public FrontEndDescription
      * \brief Set the Chip address
      * \param pChipAddress
      */
-    void    setChipAddress(uint16_t pChipAddress) { fChipAddress = pChipAddress; }
+    void setChipAddress(uint16_t pChipAddress) { fChipAddress = pChipAddress; }
 
-   /*!
+    /*!
      * \brief Get the Chip address
      * \return The Chip address
      */
@@ -148,7 +148,6 @@ class Chip : public FrontEndDescription
      * \return The Chip code
      */
     uint8_t getChipCode() const { return fChipCode; }
-
 
     /*!
      * \brief Set the clock frequency

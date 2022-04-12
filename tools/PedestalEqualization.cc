@@ -113,14 +113,11 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
         if(!cForcePSasync) continue;
         cBoard->setEventType(EventType::PSAS);
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->InitializePSCounterFWInterface(cBoard);
-        for(auto cOpticalGroup : *cBoard)
+        for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cHybrid : *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                for(auto cChip : *cHybrid)
-                {
-                    fReadoutChipInterface->WriteChipReg(cChip, "AnalogueAsync", 1);
-                }
+                for(auto cChip: *cHybrid) { fReadoutChipInterface->WriteChipReg(cChip, "AnalogueAsync", 1); }
             }
         }
     }

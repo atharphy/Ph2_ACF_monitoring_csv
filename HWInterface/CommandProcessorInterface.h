@@ -9,31 +9,27 @@
 
 namespace Ph2_HwInterface
 {
+class CommandProcessorInterface : public RegManager
+{
+  public: // constructors
+    CommandProcessorInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
+    CommandProcessorInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
+    virtual ~CommandProcessorInterface(){};
 
-  class CommandProcessorInterface : public RegManager
-  {
-    public: //constructors
-      CommandProcessorInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
-      CommandProcessorInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
-      virtual ~CommandProcessorInterface() {};
-    
-    public: //Virtual functions
-      virtual void                  Reset()
-      {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function CommandProcessorInterface::Reset is absent" << RESET;
-      }
+  public: // Virtual functions
+    virtual void Reset() { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function CommandProcessorInterface::Reset is absent" << RESET; }
 
-      virtual void                  WriteCommand(const std::vector<uint32_t>& pCommand)
-      {
+    virtual void WriteCommand(const std::vector<uint32_t>& pCommand)
+    {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function CommandProcessorInterface::WriteCommand is absent" << RESET;
-      }
+    }
 
-      virtual std::vector<uint32_t> ReadReply(uint8_t pNWords) 
-      { 
+    virtual std::vector<uint32_t> ReadReply(uint8_t pNWords)
+    {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function CommandProcessorInterface::ReadReply is absent" << RESET;
-        return {}; 
-      }
-  };
-}
+        return {};
+    }
+};
+} // namespace Ph2_HwInterface
 
 #endif

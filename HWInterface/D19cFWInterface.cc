@@ -14,11 +14,11 @@
 #include "../HWDescription/Hybrid.h"
 #include "../HWDescription/OuterTrackerHybrid.h"
 #include "D19cBackendAlignmentFWInterface.h"
+#include "D19cCommandProcessorInterface.h"
 #include "D19cDebugFWInterface.h"
 #include "D19cFastCommandInterface.h"
 #include "D19cI2CInterface.h"
 #include "D19cL1ReadoutInterface.h"
-#include "D19cCommandProcessorInterface.h"
 #include "D19cOpticalInterface.h"
 #include "D19cPSCounterFWInterface.h"
 #include "D19cTriggerInterface.h"
@@ -59,12 +59,13 @@ D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoar
         fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
         LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
-    if(fCommandProcessorInterface == nullptr){
+    if(fCommandProcessorInterface == nullptr)
+    {
         fCommandProcessorInterface = new D19cCommandProcessorInterface(this->getId(), this->getUri(), this->getAddressTable());
         LOG(INFO) << BOLDYELLOW << "Created D19cCommandProcessorInterface ..." << RESET;
     }
-    fFEConfigurationInterface = nullptr;
-    fL1ReadoutInterface       = nullptr;
+    fFEConfigurationInterface  = nullptr;
+    fL1ReadoutInterface        = nullptr;
     fCommandProcessorInterface = nullptr;
 }
 
@@ -99,7 +100,8 @@ D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoar
         fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
         LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
-    if(fCommandProcessorInterface == nullptr){
+    if(fCommandProcessorInterface == nullptr)
+    {
         fCommandProcessorInterface = new D19cCommandProcessorInterface(this->getId(), this->getUri(), this->getAddressTable());
         LOG(INFO) << BOLDYELLOW << "Created D19cCommandProcessorInterface ..." << RESET;
     }
@@ -136,7 +138,8 @@ D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* 
         fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
         LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
-    if(fCommandProcessorInterface == nullptr){
+    if(fCommandProcessorInterface == nullptr)
+    {
         fCommandProcessorInterface = new D19cCommandProcessorInterface(this->getId(), this->getUri(), this->getAddressTable());
         LOG(INFO) << BOLDYELLOW << "Created D19cCommandProcessorInterface ..." << RESET;
     }
@@ -175,7 +178,8 @@ D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* 
         fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
         LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
-    if(fCommandProcessorInterface == nullptr){
+    if(fCommandProcessorInterface == nullptr)
+    {
         fCommandProcessorInterface = new D19cCommandProcessorInterface(this->getId(), this->getUri(), this->getAddressTable());
         LOG(INFO) << BOLDYELLOW << "Created D19cCommandProcessorInterface ..." << RESET;
     }
@@ -520,20 +524,20 @@ void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
             LOG(INFO) << BOLDYELLOW << "Electrical readout.. iniitialize I2C interface" << RESET;
             fFEConfigurationInterface = new D19cI2CInterface(this->getId(), this->getUri(), this->getAddressTable());
             (static_cast<D19cI2CInterface*>(fFEConfigurationInterface))->ConfigureI2CMap(pBoard);
-            cConfiguration.fRetry = 0;
-            cConfiguration.fVerify = 0;
+            cConfiguration.fRetry       = 0;
+            cConfiguration.fVerify      = 0;
             cConfiguration.fMaxAttempts = 100;
         }
         else
         {
             LOG(INFO) << BOLDBLUE << "Optical readout . initializing Optical interface" << RESET;
-            fFEConfigurationInterface = new D19cOpticalInterface(this->getId(), this->getUri(), this->getAddressTable());
-            cConfiguration.fRetryIC = true;
-            cConfiguration.fMaxRetryIC = 100;
-            cConfiguration.fRetryI2C = true;
+            fFEConfigurationInterface   = new D19cOpticalInterface(this->getId(), this->getUri(), this->getAddressTable());
+            cConfiguration.fRetryIC     = true;
+            cConfiguration.fMaxRetryIC  = 100;
+            cConfiguration.fRetryI2C    = true;
             cConfiguration.fMaxRetryI2C = 100;
-            cConfiguration.fRetryFE = true;
-            cConfiguration.fMaxRetryFE = 100;
+            cConfiguration.fRetryFE     = true;
+            cConfiguration.fMaxRetryFE  = 100;
         }
         fFEConfigurationInterface->LinkCommandProcessorInterface(fCommandProcessorInterface);
         fFEConfigurationInterface->Configure(cConfiguration);

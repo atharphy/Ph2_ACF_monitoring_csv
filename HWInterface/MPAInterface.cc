@@ -278,7 +278,7 @@ bool MPAInterface::configRow(Chip* pChip, std::string cReg, int pRow, uint8_t pV
     }
 
     // if global register don't readback
-    pVerify        = (pRow == 0) ? false : pVerify;
+    pVerify           = (pRow == 0) ? false : pVerify;
     uint16_t cAddress = this->regRow(pChip, cRegAddress, pRow);
     LOG(DEBUG) << BOLDBLUE << "\t... register address 0x" << std::hex << +cAddress << std::dec << RESET;
     return MPAInterface::WriteReg(pChip, cAddress, pValue, pVerify);
@@ -673,8 +673,8 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
 bool MPAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerify)
 {
     setBoard(pChip->getBeBoardId());
-    auto cRegItem = pChip->getRegMap().find(pRegNode)->second;
-    cRegItem.fValue     = pValue & 0xFF;
+    auto cRegItem   = pChip->getRegMap().find(pRegNode)->second;
+    cRegItem.fValue = pValue & 0xFF;
     return fBoardFW->SingleRegisterWrite(pChip, cRegItem, pVerify);
 }
 
@@ -825,11 +825,11 @@ bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
 bool MPAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerify)
 {
     setBoard(pChip->getBeBoardId());
-    auto  cRegMap = pChip->getRegMap();
-    auto cIterator = find_if(cRegMap.begin(), cRegMap.end(), [&pRegisterAddress](const ChipRegPair& obj) { return obj.second.fAddress == pRegisterAddress; });
-    ChipRegItem cItem = cIterator->second;
-    cItem.fValue = pRegisterValue;
-    return fBoardFW->SingleRegisterWrite(pChip, cItem , pVerify);
+    auto        cRegMap   = pChip->getRegMap();
+    auto        cIterator = find_if(cRegMap.begin(), cRegMap.end(), [&pRegisterAddress](const ChipRegPair& obj) { return obj.second.fAddress == pRegisterAddress; });
+    ChipRegItem cItem     = cIterator->second;
+    cItem.fValue          = pRegisterValue;
+    return fBoardFW->SingleRegisterWrite(pChip, cItem, pVerify);
 }
 void MPAInterface::readAllBias(Chip* pChip)
 {

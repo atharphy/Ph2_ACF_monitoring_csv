@@ -744,7 +744,7 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, 0);
             }
 
-            bool     cSkipSSA3            = true; // eventually this needs to be set in the xml somewhere
+            bool cSkipSSA3 = true; // eventually this needs to be set in the xml somewhere
             for(uint8_t cSSAId = 0; cSSAId < 8; cSSAId++)
             {
                 if(cSkipSSA3 && cSSAId == 3) continue;

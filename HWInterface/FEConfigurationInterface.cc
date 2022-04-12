@@ -38,8 +38,8 @@ void FEConfigurationInterface::Configure(Configuration pConfiguration)
     fConfiguration.fMaxRetryFE = ReadReg("fc7_daq_cnfg.optical_block.lpgbt_sc_worker.max_fe_retry");
     LOG(DEBUG) << BOLDYELLOW << "Configuring LpGBT-SC Worker ... FE Max Retry = " << +fConfiguration.fMaxRetryFE << RESET;
     //
-    fConfiguration.fVerify = pConfiguration.fRetry;
-    fConfiguration.fVerify = pConfiguration.fVerify;
+    fConfiguration.fVerify      = pConfiguration.fRetry;
+    fConfiguration.fVerify      = pConfiguration.fVerify;
     fConfiguration.fMaxAttempts = pConfiguration.fMaxAttempts;
 }
 

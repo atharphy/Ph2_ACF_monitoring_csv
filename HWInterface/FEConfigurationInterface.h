@@ -6,25 +6,25 @@
 #include "BeBoard.h"
 #include "Chip.h"
 #include "ChipRegItem.h"
-#include "RegManager.h"
 #include "D19cCommandProcessorInterface.h"
+#include "RegManager.h"
 #include <string>
 
 namespace Ph2_HwInterface
 {
 struct Configuration
 {
-    //only used in D19cOpticalInterface
-    bool  fRetryIC = true;
-    uint8_t fMaxRetryIC = 100;
-    bool  fRetryI2C = true;
+    // only used in D19cOpticalInterface
+    bool    fRetryIC     = true;
+    uint8_t fMaxRetryIC  = 100;
+    bool    fRetryI2C    = true;
     uint8_t fMaxRetryI2C = 100;
-    bool  fRetryFE = true;
-    uint8_t fMaxRetryFE = 100;
+    bool    fRetryFE     = true;
+    uint8_t fMaxRetryFE  = 100;
 
-    //only used in D19cI2CInterface
-    bool fVerify = false;
-    bool fRetry = false;
+    // only used in D19cI2CInterface
+    bool     fVerify      = false;
+    bool     fRetry       = false;
     uint16_t fMaxAttempts = 500;
 };
 
@@ -44,7 +44,6 @@ class FEConfigurationInterface : public RegManager
     ~FEConfigurationInterface();
 
   public:
-
     void LinkCommandProcessorInterface(D19cCommandProcessorInterface* pInterface) { fCommandProcessorInterface = pInterface; }
 
     virtual bool MultiWrite(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pRegisterItems)
@@ -89,7 +88,7 @@ class FEConfigurationInterface : public RegManager
         return;
     }
 
-    void Configure(Configuration pConfiguration); 
+    void Configure(Configuration pConfiguration);
 
     void              setConfigurationType(ConfigurationType pType) { fType = pType; }
     ConfigurationType getConfigurationType() { return fType; }
@@ -97,10 +96,10 @@ class FEConfigurationInterface : public RegManager
 
   protected:
     D19cCommandProcessorInterface* fCommandProcessorInterface;
-    Configuration fConfiguration;
-    uint8_t           fTrackRegisters{0};
-    uint8_t           fNReadoutChip{0};
-    ConfigurationType fType;
+    Configuration                  fConfiguration;
+    uint8_t                        fTrackRegisters{0};
+    uint8_t                        fNReadoutChip{0};
+    ConfigurationType              fType;
 };
 } // namespace Ph2_HwInterface
 #endif
