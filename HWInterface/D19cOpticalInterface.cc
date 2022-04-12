@@ -44,7 +44,8 @@ bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem)
     }
     uint8_t cTryCntr = fCommandProcessorInterface->GetTryCntr(cFunctionId);
     if(cTryCntr > 0){
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleRead : Tried " << +cTryCntr << "/100 before success" << RESET;
+        uint8_t cMaxRetry = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? fConfiguration.fMaxRetryIC : fConfiguration.fMaxRetryFE;
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleRead : Tried " << +cTryCntr << "/" <<  +cMaxRetry << " before success" << RESET;
     }
     if(cWaitCounter == 0){
         LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleRead : Tool stuck" << RESET;
@@ -72,13 +73,14 @@ bool D19cOpticalInterface::WriteChipRegister(Chip* pChip, ChipRegItem& pItem, bo
         cWaitCounter--;
         continue;
     }
-    uint8_t cTryCntr = fCommandProcessorInterface->GetTryCntr(cFunctionId);
-    if(cTryCntr > 0){
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite : Tried " << +cTryCntr << "/100 before success" << RESET;
-    }
     if(cWaitCounter == 0){
         LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite : Tool stuck" << RESET;
         return false;
+    }
+    uint8_t cTryCntr = fCommandProcessorInterface->GetTryCntr(cFunctionId);
+    if(cTryCntr > 0){
+        uint8_t cMaxRetry = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? fConfiguration.fMaxRetryIC : fConfiguration.fMaxRetryFE;
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite : Tried " << +cTryCntr << "/" <<  +cMaxRetry << " before success" << RESET;
     }
     auto cReply = fCommandProcessorInterface->ReadReply(1);
     uint8_t cErrorCode = (cReply[0] & (0xFF << 8)) >> 8;
@@ -159,7 +161,7 @@ bool D19cOpticalInterface::MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uin
     }
     uint8_t cTryCntr = fCommandProcessorInterface->GetTryCntr(cFunctionId);
     if(cTryCntr > 0){
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiByteWriteI2C : Tried " << +cTryCntr << "/100 before success" << RESET;
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiByteWriteI2C : Tried " << +cTryCntr << "/" << +fConfiguration.fMaxRetryI2C << " before success" << RESET;
     }
     auto cReply = fCommandProcessorInterface->ReadReply(1);
     uint8_t cErrorCode = (cReply[0] & (0xFF << 8)) >> 8;
@@ -197,7 +199,7 @@ uint8_t D19cOpticalInterface::SingleByteReadI2C(Ph2_HwDescription::Chip* pChip, 
     }
     uint8_t cTryCntr = fCommandProcessorInterface->GetTryCntr(cFunctionId);
     if(cTryCntr > 0){
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleByteReadI2C : Tried " << +cTryCntr << "/100 before success" << RESET;
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleByteReadI2C : Tried " << +cTryCntr << "/" << +fConfiguration.fMaxRetryI2C << " before success" << RESET;
     }
     auto cReply = fCommandProcessorInterface->ReadReply(1);
     uint8_t cErrorCode = (cReply[0] & (0xFF << 8)) >> 8;

@@ -242,6 +242,14 @@
                         <node id="l8"                           mask="0x000000FF" description="note: default value is 1 for all"/>
                         <node id="l12"                          mask="0x0FFF0000" description="note: default value is 0 for all"/>
                     </node>
+                    <node id="lpgbt_sc_worker" address="0x007">
+                        <node id="ic_retry"         mask="0x00000001"/>
+                        <node id="i2c_retry"        mask="0x00000002"/>
+                        <node id="fe_retry"         mask="0x00000004"/>
+                        <node id="max_ic_retry"     mask="0x0000FF00"/>
+                        <node id="max_i2c_retry"    mask="0x00FF0000"/>
+                        <node id="max_fe_retry"     mask="0xFF000000"/>
+                    </node>
             </node>
             
             <node id="sync_block"            address="0xC000">

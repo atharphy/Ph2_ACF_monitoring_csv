@@ -114,22 +114,22 @@ namespace Ph2_HwInterface
   
   uint8_t D19cCommandProcessorInterface::GetTryCntr(uint8_t pFunctionId)
   {
-      std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-      uint32_t cAllCntr = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters");
-      uint8_t cCntr = 255;
-          if((pFunctionId == LpGBTSCWorker::SingleReadIC) || (pFunctionId == LpGBTSCWorker::SingleWriteIC)){
-              cCntr = (cAllCntr & (0xFF << 0)) >> 0;
-          }
-          else if((pFunctionId == LpGBTSCWorker::SingleByteReadI2C) || (pFunctionId == LpGBTSCWorker::MultiByteWriteI2C)){
-              cCntr = (cAllCntr & (0xFF << 8)) >> 8;
-          }
-          else if((pFunctionId == LpGBTSCWorker::SingleReadFE) || (pFunctionId == LpGBTSCWorker::SingleWriteFE)){
-              cCntr = (cAllCntr & (0xFF << 16)) >> 16;
-          }
-          else{
-              LOG(ERROR) << "D19cCommandProcessorInterface::GetTryCntr : LpGBT-SC Worker fuction doesn't exist" << RESET;
-              throw std::runtime_error("D19cCommandProcessorInterface::GetTryCntr failure");
-          }
-      return cCntr;
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+    uint32_t cAllCntr = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters");
+    uint8_t cCntr = 255;
+    if((pFunctionId == LpGBTSCWorker::SingleReadIC) || (pFunctionId == LpGBTSCWorker::SingleWriteIC)){
+        cCntr = (cAllCntr & (0xFF << 0)) >> 0;
+    }
+    else if((pFunctionId == LpGBTSCWorker::SingleByteReadI2C) || (pFunctionId == LpGBTSCWorker::MultiByteWriteI2C)){
+        cCntr = (cAllCntr & (0xFF << 8)) >> 8;
+    }
+    else if((pFunctionId == LpGBTSCWorker::SingleReadFE) || (pFunctionId == LpGBTSCWorker::SingleWriteFE)){
+        cCntr = (cAllCntr & (0xFF << 16)) >> 16;
+    }
+    else{
+        LOG(ERROR) << "D19cCommandProcessorInterface::GetTryCntr : LpGBT-SC Worker fuction doesn't exist" << RESET;
+        throw std::runtime_error("D19cCommandProcessorInterface::GetTryCntr failure");
+    }
+    return cCntr;
   }
 }

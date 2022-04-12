@@ -14,8 +14,17 @@ namespace Ph2_HwInterface
 {
 struct Configuration
 {
-    uint8_t fVerify = 0;
-    uint8_t  fRetry       = 0;
+    //only used in D19cOpticalInterface
+    bool  fRetryIC = true;
+    uint8_t fMaxRetryIC = 100;
+    bool  fRetryI2C = true;
+    uint8_t fMaxRetryI2C = 100;
+    bool  fRetryFE = true;
+    uint8_t fMaxRetryFE = 100;
+
+    //only used in D19cI2CInterface
+    bool fVerify = false;
+    bool fRetry = false;
     uint16_t fMaxAttempts = 500;
 };
 
@@ -80,12 +89,7 @@ class FEConfigurationInterface : public RegManager
         return;
     }
 
-    void Configure(Configuration pConfiguration)
-    {
-        fConfiguration.fRetry = pConfiguration.fRetry;
-        fConfiguration.fVerify = pConfiguration.fVerify;
-        fConfiguration.fMaxAttempts = pConfiguration.fMaxAttempts;
-    }
+    void Configure(Configuration pConfiguration); 
 
     void              setConfigurationType(ConfigurationType pType) { fType = pType; }
     ConfigurationType getConfigurationType() { return fType; }
