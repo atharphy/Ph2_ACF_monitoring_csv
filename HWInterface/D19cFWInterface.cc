@@ -491,17 +491,6 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
     return cLinksLocked;
 }
 
-void D19cFWInterface::selectLink(const uint8_t pLinkId, uint32_t cWait_ms)
-{
-    if(fOptical)
-    {
-        // LOG (INFO) << BOLDBLUE << "Selecting link mux " << +pLinkId << RESET;
-        this->WriteReg("fc7_daq_cnfg.optical_block.mux", pLinkId);
-        // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us*10));
-        this->WriteReg("fc7_daq_ctrl.optical_block.sca.reset", 0x1);
-        // std::this_thread::sleep_for (std::chrono::microseconds (fWait_us*10) );
-    }
-}
 void D19cFWInterface::InitializePSCounterFWInterface(const BeBoard* pBoard)
 {
     fL1ReadoutInterface = nullptr;

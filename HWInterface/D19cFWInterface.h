@@ -336,7 +336,6 @@ class D19cFWInterface : public BeBoardFWInterface
     ///////////////////////////////////////////////////////
     //      Optical readout                                 //
     /////////////////////////////////////////////////////
-    void selectLink(const uint8_t pLinkId = 0, uint32_t cWait_ms = 100) override;
 
     // ##############################
     // # Pseudo Random Bit Sequence #
@@ -346,9 +345,8 @@ class D19cFWInterface : public BeBoardFWInterface
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    const uint8_t flpGBTAddress = 0x70;
-
     // Functions for standard uDTC
+    void selectLink(const uint8_t pLinkId = 0, uint32_t cWait_ms = 100) override {};
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override {}
     void     ResetOptoLink() override {};
     bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override { return true; };
