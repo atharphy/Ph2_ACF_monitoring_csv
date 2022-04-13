@@ -983,7 +983,7 @@ void RD53FWInterface::StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uin
 bool RD53FWInterface::WriteOptoLinkRegister(const Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerify)
 {
     // OptoChip ID
-    RD53FWInterface::selectLink(pChip->getOpticalId());
+    RD53FWInterface::selectLink(pChip->getOpticalGroupId());
 
     // Config
     RegManager::WriteStackReg(
@@ -1012,7 +1012,7 @@ bool RD53FWInterface::WriteOptoLinkRegister(const Chip* pChip, const uint32_t pA
 uint32_t RD53FWInterface::ReadOptoLinkRegister(const Chip* pChip, const uint32_t pAddress)
 {
     // OptoChip ID
-    RD53FWInterface::selectLink(pChip->getOpticalId());
+    RD53FWInterface::selectLink(pChip->getOpticalGroupId());
 
     // Config
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", pChip->getChipAddress()}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});

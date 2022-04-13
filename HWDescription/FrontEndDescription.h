@@ -24,7 +24,7 @@ class FrontEndDescription
 {
   public:
     // 3 C'tors with different parameter sets
-    FrontEndDescription(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, bool pStatus = true, FrontEndType pType = FrontEndType::UNDEFINED);
+    FrontEndDescription(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, bool pStatus = true, FrontEndType pType = FrontEndType::UNDEFINED);
     FrontEndDescription();
 
     // Copy C'tors
@@ -37,13 +37,13 @@ class FrontEndDescription
      * \brief Get the Be ID
      * \return The Be ID
      */
-    uint8_t getBeBoardId() const { return fBeId; }
+    uint8_t getBeBoardId() const { return fBeBoardId; }
 
     /*!
      * \brief Get the Optical ID
      * \return The Optical ID
      */
-    uint8_t getOpticalId() const { return fOpticalId; }
+    uint8_t getOpticalGroupId() const { return fOpticalGroupId; }
 
     /*!
      * \brief Get the FMC ID
@@ -55,7 +55,7 @@ class FrontEndDescription
      * \brief Get the FE ID
      * \return The FE ID
      */
-    uint8_t getHybridId() const { return fFeId; }
+    uint8_t getHybridId() const { return fHybridId; }
 
     /*!
      * \brief Get the Status
@@ -65,28 +65,6 @@ class FrontEndDescription
 
     // Setter methods
 
-    /*!
-     * \brief Set the Be ID
-     * \param pBeId
-     */
-    void setBeBoardId(uint8_t pBeId) { fBeId = pBeId; }
-    /*!
-     * \brief Set the Optical ID
-     * \param pOpticalId
-     */
-    void setOpticalId(uint8_t pOpticalId) { fOpticalId = pOpticalId; }
-
-    /*!
-     * \brief Set the FMC ID
-     * \param pFMCId
-     */
-    void setFMCId(uint8_t pFMCId) { fFMCId = pFMCId; }
-
-    /*!
-     * \brief Set the FE ID
-     * \param pFeId
-     */
-    void setFeId(uint8_t pFeId) { fFeId = pFeId; }
     /*!
      * \brief Set the status
      * \param pStatus
@@ -104,13 +82,13 @@ class FrontEndDescription
 
   protected:
     // BIO Board Id that the FE is connected to
-    uint8_t fBeId;
+    uint8_t fBeBoardId;
     // Id of the FMC Slot on the BIO Board, all FEs need to know so the right FW registers can be written
     uint8_t fFMCId;
-    // Id of the FE (hybrid/hybrid, etc...)
-    uint8_t fFeId;
     // Id of the Optical group (link # , etc.. )
-    uint8_t fOpticalId;
+    uint8_t fOpticalGroupId;
+    // Id of the FE (hybrid/hybrid, etc...)
+    uint8_t fHybridId;
     // Enable reset
     uint8_t fReset{1};
 

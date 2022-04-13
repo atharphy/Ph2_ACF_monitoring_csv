@@ -57,7 +57,7 @@ std::vector<uint32_t> D19cCommandProcessorInterface::ReadReply(uint8_t pNWords)
 std::vector<uint32_t> D19cCommandProcessorInterface::EncodeCommand(uint8_t pFunctionId, Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerify)
 {
     std::vector<uint32_t> cCommand;
-    uint8_t               cWorkerId = LpGBTSCWorker::BaseID + pChip->getOpticalId();
+    uint8_t               cWorkerId = LpGBTSCWorker::BaseID + pChip->getOpticalGroupId();
     uint8_t               cChipId   = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : (pChip->getId() % 8);
     uint8_t               cChipCode = pChip->getChipCode();
     uint8_t               cMasterId = pChip->getMasterId();

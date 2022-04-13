@@ -187,7 +187,7 @@ bool WorkerTester::IsI2CToolDone()
 uint8_t WorkerTester::ReadFERegister_New(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress)
 {
     D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    uint8_t          cLinkId      = pChip->getOpticalId();
+    uint8_t          cLinkId      = pChip->getOpticalGroupId();
     cFWInterface->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", cLinkId);
     uint8_t cWorkerId   = 16 + cLinkId;
     uint8_t cFunctionId = 6;
@@ -215,7 +215,7 @@ uint8_t WorkerTester::ReadFERegister_New(Ph2_HwDescription::Chip* pChip, uint16_
 bool WorkerTester::WriteFERegister_New(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerify)
 {
     D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    uint8_t          cLinkId      = pChip->getOpticalId();
+    uint8_t          cLinkId      = pChip->getOpticalGroupId();
     cFWInterface->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", cLinkId);
     uint8_t cWorkerId   = 16 + cLinkId;
     uint8_t cFunctionId = 7;
@@ -418,7 +418,7 @@ uint8_t WorkerTester::I2CRead_Old(uint8_t pLinkId, uint8_t pMasterId, uint8_t pM
 
 bool WorkerTester::WriteFERegister_Old(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerify)
 {
-    auto    cLinkId   = pChip->getOpticalId();
+    auto    cLinkId   = pChip->getOpticalGroupId();
     uint8_t cMasterId = pChip->getMasterId();
     uint8_t cChipId   = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId();
     if(pChip->getFrontEndType() == FrontEndType::MPA) cChipId = cChipId % 8;
@@ -473,7 +473,7 @@ bool WorkerTester::WriteFERegister_Old(Ph2_HwDescription::Chip* pChip, uint16_t 
 
 uint8_t WorkerTester::ReadFERegister_Old(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress)
 {
-    auto    cLinkId   = pChip->getOpticalId();
+    auto    cLinkId   = pChip->getOpticalGroupId();
     uint8_t cMasterId = pChip->getMasterId();
     uint8_t cChipId   = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId();
     if(pChip->getFrontEndType() == FrontEndType::MPA) cChipId = cChipId % 8;
@@ -1107,7 +1107,7 @@ void WorkerTester::MeasureIPbusTransaction(int pNIterations)
 void WorkerTester::PrintI2CMasterRegisters(Ph2_HwDescription::Chip* pChip, uint8_t pMaster)
 {
     ChipRegMap cChipRegMap = pChip->getRegMap();
-    uint8_t    cLinkId     = pChip->getOpticalId();
+    uint8_t    cLinkId     = pChip->getOpticalGroupId();
     LOG(INFO) << "I2CM" << +pMaster << "Address = 0x" << std::hex << +ReadLpGBTRegister(cLinkId, cChipRegMap["I2CM" + std::to_string(pMaster) + "Address"].fAddress) << std::dec << RESET;
     LOG(INFO) << "I2CM" << +pMaster << "Data0 = 0x" << std::hex << +ReadLpGBTRegister(cLinkId, cChipRegMap["I2CM" + std::to_string(pMaster) + "Data0"].fAddress) << std::dec << RESET;
     LOG(INFO) << "I2CM" << +pMaster << "Data1 = 0x" << std::hex << +ReadLpGBTRegister(cLinkId, cChipRegMap["I2CM" + std::to_string(pMaster) + "Data1"].fAddress) << std::dec << RESET;

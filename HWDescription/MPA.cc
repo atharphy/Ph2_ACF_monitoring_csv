@@ -20,11 +20,12 @@
 
 namespace Ph2_HwDescription
 {
-// C'tors which take BeId, FMCId, FeID, MPAId
+// C'tors which take BeBoardId, FMCId, FeID, ChipId
 
-MPA::MPA(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pMPAId, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pBeId, pFMCId, pFeId, pMPAId)
+MPA::MPA(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pBeBoardId, pFMCId, pOpticalGroupId, pHybridId, pChipId)
 {
-    fChipAddress      = 0x40 + pMPAId % 8;
+    fChipCode = 2;
+    fChipAddress      = 0x40 + pChipId % 8;
     fMaxRegValue      = 255;
     fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS * NMPACOLS>>();
     fChipOriginalMask->enableAllChannels();
@@ -38,9 +39,10 @@ MPA::MPA(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pMPAId, uint8_t p
     }
 }
 
-MPA::MPA(const FrontEndDescription& pFeDesc, uint8_t pMPAId, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pFeDesc, pMPAId)
+MPA::MPA(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pFeDesc, pChipId)
 {
-    fChipAddress      = 0x40 + pMPAId % 8;
+    fChipCode = 2;
+    fChipAddress      = 0x40 + pChipId % 8;
     fMaxRegValue      = 255; // 8 bit registers in MPA
     fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS, NMPACOLS>>();
     fChipOriginalMask->enableAllChannels();

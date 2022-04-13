@@ -67,7 +67,7 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
         if(!pTrigger)
         {
             bool cAligned = true;
-            auto cSSA     = new SSA(pBoard->getId(), 0, 0, cPairId, 0, 0, "./settings/SSAFiles/SSA.txt");
+            auto cSSA     = new SSA(pBoard->getId(), 0, 0, 0, cPairId, 0, 0, "./settings/SSAFiles/SSA.txt");
             for(uint8_t cLineId = 1; cLineId < 8; cLineId++)
             {
                 cAligned = LineTuning(cSSA, cLineId, cAlignmentPattern, 8);

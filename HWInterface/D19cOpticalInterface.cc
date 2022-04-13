@@ -30,7 +30,7 @@ void D19cOpticalInterface::SelectLink(uint8_t pLinkId)
 bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    SelectLink(pChip->getOpticalId());
+    SelectLink(pChip->getOpticalGroupId());
     uint8_t cFunctionId = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? LpGBTSCWorker::SingleReadIC : LpGBTSCWorker::SingleReadFE;
     auto    cCommand    = fCommandProcessorInterface->EncodeCommand(cFunctionId, pChip, pItem);
     fCommandProcessorInterface->WriteCommand(cCommand);
@@ -65,7 +65,7 @@ bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem)
 bool D19cOpticalInterface::WriteChipRegister(Chip* pChip, ChipRegItem& pItem, bool pVerify)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    SelectLink(pChip->getOpticalId());
+    SelectLink(pChip->getOpticalGroupId());
     uint8_t cFunctionId = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? LpGBTSCWorker::SingleWriteIC : LpGBTSCWorker::SingleWriteFE;
     auto    cCommand    = fCommandProcessorInterface->EncodeCommand(cFunctionId, pChip, pItem, pVerify);
     fCommandProcessorInterface->WriteCommand(cCommand);
@@ -147,7 +147,7 @@ bool D19cOpticalInterface::MultiWriteRead(Chip* pChip, std::vector<ChipRegItem>&
 bool D19cOpticalInterface::MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress, uint32_t pSlaveData)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    uint8_t                               cLinkId = pChip->getOpticalId();
+    uint8_t                               cLinkId = pChip->getOpticalGroupId();
     WriteReg("fc7_daq_cnfg.command_processor_block.link_select", cLinkId);
     uint8_t               cWorkerId   = LpGBTSCWorker::BaseID + cLinkId;
     uint8_t               cFunctionId = LpGBTSCWorker::MultiByteWriteI2C;
@@ -184,7 +184,7 @@ bool D19cOpticalInterface::MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uin
 uint8_t D19cOpticalInterface::SingleByteReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    uint8_t                               cLinkId = pChip->getOpticalId();
+    uint8_t                               cLinkId = pChip->getOpticalGroupId();
     WriteReg("fc7_daq_cnfg.command_processor_block.link_select", cLinkId);
     uint8_t               cWorkerId   = LpGBTSCWorker::BaseID + cLinkId;
     uint8_t               cFunctionId = LpGBTSCWorker::SingleByteReadI2C;

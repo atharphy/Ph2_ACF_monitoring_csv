@@ -37,11 +37,11 @@ using CbcRegPair = std::pair<std::string, ChipRegItem>;
 class Cbc : public ReadoutChip
 {
   public:
-    // C'tors which take BeId, FMCId, FeID, CbcId
-    Cbc(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCbcId, const std::string& filename);
+    // C'tors which take BeBoardId, FMCId, FeID, CbcId
+    Cbc(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, const std::string& filename);
 
     // C'tors with object FE Description
-    Cbc(const FrontEndDescription& pFeDesc, uint8_t pCbcId, const std::string& filename);
+    Cbc(const FrontEndDescription& pFeDesc, uint8_t pChipId, const std::string& filename);
 
     /*!
      * \brief acceptor method for HwDescriptionVisitor

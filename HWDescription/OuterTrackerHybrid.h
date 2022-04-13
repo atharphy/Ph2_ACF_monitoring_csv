@@ -41,7 +41,7 @@ class OuterTrackerHybrid : public Hybrid
   public:
     // C'tors take FrontEndDescription or hierachy of connection
     OuterTrackerHybrid(const FrontEndDescription& pFeDesc, uint8_t pHybridId);
-    OuterTrackerHybrid(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pHybridId);
+    OuterTrackerHybrid(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId);
 
     // Default C'tor
     OuterTrackerHybrid();
@@ -65,9 +65,6 @@ class OuterTrackerHybrid : public Hybrid
     }
 
     Cic* fCic;
-
-  protected:
-    uint8_t fHybridId;
 };
 } // namespace Ph2_HwDescription
 
