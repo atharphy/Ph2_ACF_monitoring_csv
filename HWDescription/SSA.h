@@ -34,7 +34,7 @@ using CommentMap = std::map<int, std::string>;
 class SSA : public ReadoutChip
 { // open class def
   public:
-    // C'tors which take BeBoardId, FMCId, FeID, ChipId
+    // C'tors which take BeBoardId, FMCId, HybridId, ChipId
     SSA(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename);
     // C'tors with object FE Description
     SSA(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename);

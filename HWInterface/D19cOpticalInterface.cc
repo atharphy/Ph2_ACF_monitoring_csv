@@ -24,7 +24,7 @@ void D19cOpticalInterface::SelectLink(uint8_t pLinkId)
 }
 
 // ##########################################
-// # ROC Register read/write #
+// # Chip Register read/write #
 // #########################################
 
 bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem)

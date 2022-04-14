@@ -4,8 +4,8 @@
 #include "TMath.h"
 #include <cmath>
 
-Channel::Channel(uint8_t pBeId, uint8_t pFeId, uint8_t pOpticalGroup, uint8_t pCbcId, uint8_t pChannelId)
-    : fBeId(pBeId), fFeId(pFeId), fOpticalGroup(pOpticalGroup), fCbcId(pCbcId), fChannelId(pChannelId)
+Channel::Channel(uint8_t pBeId, uint8_t pHybridId, uint8_t pOpticalGroupId, uint8_t pCbcId, uint8_t pChannelId)
+    : fBeId(pBeId), fHybridId(pHybridId), fOpticalGroupId(pOpticalGroupId), fCbcId(pCbcId), fChannelId(pChannelId)
 {
 }
 
@@ -70,14 +70,14 @@ void Channel::initializeHist(uint16_t pValue, TString pParameter)
     TString histname;
 
     pParameter += Form("%d", pValue);
-    histname = Form("Scurve_Be%d_Fe%d_Cbc%d_Channel%d", fBeId, fFeId, fCbcId, fChannelId);
+    histname = Form("Scurve_Be%d_Fe%d_Cbc%d_Channel%d", fBeId, fHybridId, fCbcId, fChannelId);
     histname += pParameter;
 
     fScurve = dynamic_cast<TH1F*>(gROOT->FindObject(histname));
 
     if(fScurve) delete fScurve;
 
-    fScurve = new TH1F(histname, Form("Scurve_Be%d_Fe%d_Cbc%d_Channel%d", fBeId, fFeId, fCbcId, fChannelId), 1024, -0.5, 1023.5);
+    fScurve = new TH1F(histname, Form("Scurve_Be%d_Fe%d_Cbc%d_Channel%d", fBeId, fHybridId, fCbcId, fChannelId), 1024, -0.5, 1023.5);
     fScurve->GetXaxis()->SetTitle(pParameter);
     fScurve->GetYaxis()->SetTitle("Occupancy");
 
@@ -92,7 +92,7 @@ void Channel::fitHist(uint32_t pEventsperVcth, bool pHole, uint16_t pValue, TStr
     fFitted = true;
     TString fitname;
 
-    fitname = Form("Fit_Be%d_Fe%d_Cbc%d_Channel%d%s%d", fBeId, fFeId, fCbcId, fChannelId, pParameter.Data(), pValue);
+    fitname = Form("Fit_Be%d_Fe%d_Cbc%d_Channel%d%s%d", fBeId, fHybridId, fCbcId, fChannelId, pParameter.Data(), pValue);
 
     fFit = dynamic_cast<TF1*>(gROOT->FindObject(fitname));
 
@@ -180,7 +180,7 @@ void Channel::fitHist(uint32_t pEventsperVcth, bool pHole, uint16_t pValue, TStr
         pResultfile->cd();
     }
     else
-        LOG(INFO) << "Historgram Empty for Fe " << fFeId << " Chip " << fCbcId << " Channel " << fChannelId;
+        LOG(INFO) << "Historgram Empty for Hybrid " << fHybridId << " Chip " << fCbcId << " Channel " << fChannelId;
 }
 
 void Channel::differentiateHist(uint32_t pEventsperVcth, bool pHole, uint16_t pValue, TString pParameter, TFile* pResultfile)
@@ -189,13 +189,13 @@ void Channel::differentiateHist(uint32_t pEventsperVcth, bool pHole, uint16_t pV
     fFitted = false;
     TString graphname;
 
-    graphname = Form("fDerivative_Be%d_Fe%d_Cbc%d_Channel%d%s%d", fBeId, fFeId, fCbcId, fChannelId, pParameter.Data(), pValue);
+    graphname = Form("fDerivative_Be%d_Fe%d_Cbc%d_Channel%d%s%d", fBeId, fHybridId, fCbcId, fChannelId, pParameter.Data(), pValue);
 
     fDerivative = dynamic_cast<TH1F*>(gROOT->FindObject(graphname));
 
     if(fDerivative) delete fDerivative;
 
-    fDerivative = new TH1F(graphname, Form("Derivative_Scurve_Be%d_Fe%d_Cbc%d_Channel%d", fBeId, fFeId, fCbcId, fChannelId), 1024, 0, 1024);
+    fDerivative = new TH1F(graphname, Form("Derivative_Scurve_Be%d_Fe%d_Cbc%d_Channel%d", fBeId, fHybridId, fCbcId, fChannelId), 1024, 0, 1024);
     fDerivative->GetXaxis()->SetTitle(pParameter);
     fDerivative->GetYaxis()->SetTitle("Slope");
 
@@ -288,18 +288,18 @@ void Channel::differentiateHist(uint32_t pEventsperVcth, bool pHole, uint16_t pV
         pResultfile->cd();
     }
     else
-        LOG(INFO) << "Historgram Empty for Fe " << fFeId << " Chip " << fCbcId << " Channel " << fChannelId;
+        LOG(INFO) << "Historgram Empty for Hybrid " << fHybridId << " Chip " << fCbcId << " Channel " << fChannelId;
 }
 
 void Channel::resetHist() {}
 
-TestGroup::TestGroup(uint8_t pBeId, uint8_t pFeId, uint8_t pCbcId, uint8_t pGroupId) : fBeId(pBeId), fFeId(pFeId), fCbcId(pCbcId), fGroupId(pGroupId) {}
+TestGroup::TestGroup(uint8_t pBeId, uint8_t pHybridId, uint8_t pCbcId, uint8_t pGroupId) : fBeId(pBeId), fHybridId(pHybridId), fCbcId(pCbcId), fGroupId(pGroupId) {}
 
 TestGroupGraph::TestGroupGraph() { fVplusVcthGraph = nullptr; }
 
-TestGroupGraph::TestGroupGraph(uint8_t pBeId, uint8_t pFeId, uint8_t pCbcId, uint8_t pGroupId)
+TestGroupGraph::TestGroupGraph(uint8_t pBeId, uint8_t pHybridId, uint8_t pCbcId, uint8_t pGroupId)
 {
-    TString graphname = Form("VplusVcthGraph_Fe%d_Cbc%d_Group%d", pFeId, pCbcId, pGroupId);
+    TString graphname = Form("VplusVcthGraph_Fe%d_Cbc%d_Group%d", pHybridId, pCbcId, pGroupId);
     fVplusVcthGraph   = dynamic_cast<TGraphErrors*>(gROOT->FindObject(graphname));
 
     if(fVplusVcthGraph) delete fVplusVcthGraph;

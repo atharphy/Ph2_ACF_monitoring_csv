@@ -20,7 +20,7 @@
 
 namespace Ph2_HwDescription
 {
-// C'tors which take BeBoardId, FMCId, FeID, ChipId
+// C'tors which take BeBoardId, FMCId, HybridId, ChipId
 
 MPA::MPA(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pBeBoardId, pFMCId, pOpticalGroupId, pHybridId, pChipId)
 {

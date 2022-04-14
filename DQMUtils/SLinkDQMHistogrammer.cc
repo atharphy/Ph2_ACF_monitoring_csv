@@ -115,7 +115,7 @@ void SLinkDQMHistogrammer::fillHistograms(const DQMEvent* event)
             ROUHistos rou_h = irou.second;
 
             uint16_t dataKey = modId << 8 | rouId;
-            //	   uint16_t cKey_swaped = feId << 8 | rouId_swaped;
+            //	   uint16_t cKey_swaped = hybridId << 8 | rouId_swaped;
 
             nrou++;
 
@@ -360,17 +360,17 @@ void SLinkDQMHistogrammer::saveHistograms(const std::string& dqmFile, const std:
         fout->cd();
         for(auto& ifeu: mod_h.feuHMap_)
         {
-            uint8_t feId = ifeu.first;
+            uint8_t hybridId = ifeu.first;
 
             TString name = "Module_";
             name += modId;
             name += "/";
-            if(feId == 0)
+            if(hybridId == 0)
                 name += "rightHyb";
             else
                 name += "leftHyb";
 
-            std::cout << " Saving Histograms for  FeId  " << +feId << " in => " << name.Data() << std::endl;
+            std::cout << " Saving Histograms for  HybridId  " << +hybridId << " in => " << name.Data() << std::endl;
 
             fout->mkdir(name);
             fout->cd(name);
@@ -395,13 +395,13 @@ void SLinkDQMHistogrammer::saveHistograms(const std::string& dqmFile, const std:
             if(!rou_h.bookedHistos) continue;
 
             uint16_t key   = irou.first;
-            uint8_t  feId  = (key >> 8) & 0xFF;
+            uint8_t  hybridId  = (key >> 8) & 0xFF;
             uint8_t  rouId = key & 0xFF;
 
             TString name = "Module_";
             name += modId;
             name += "/";
-            if(feId == 0)
+            if(hybridId == 0)
                 name += "rightHyb";
             else
                 name += "leftHyb";

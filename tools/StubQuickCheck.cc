@@ -58,47 +58,47 @@ void StubQuickCheck::Initialise()
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
                 TString  cName = Form("h_StubBend");
                 TObject* cObj  = gROOT->FindObject(cName);
                 if(cObj) delete cObj;
-                TH1D* cBend = new TH1D(cName, Form("Stub Bend - CIC%d; Bend", (int)cFe->getId()), cBinsBend_Default.size() - 1, cBinsBend_Default.data());
-                bookHistogram(cFe, "StubBend", cBend);
+                TH1D* cBend = new TH1D(cName, Form("Stub Bend - CIC%d; Bend", (int)cHybrid->getId()), cBinsBend_Default.size() - 1, cBinsBend_Default.data());
+                bookHistogram(cHybrid, "StubBend", cBend);
 
                 cName = Form("h_StubInformation");
                 cObj  = gROOT->FindObject(cName);
                 TH2D* cStubInformation =
-                    new TH2D(cName, Form("Stub Information - CIC%d ; Stub Bend; Stub Seed", (int)cFe->getId()), cBinsBend_Default.size() - 1, cBinsBend_Default.data(), 127 * 8 / 0.5, 0, 127 * 8);
-                bookHistogram(cFe, "StubInformation", cStubInformation);
+                    new TH2D(cName, Form("Stub Information - CIC%d ; Stub Bend; Stub Seed", (int)cHybrid->getId()), cBinsBend_Default.size() - 1, cBinsBend_Default.data(), 127 * 8 / 0.5, 0, 127 * 8);
+                bookHistogram(cHybrid, "StubInformation", cStubInformation);
 
                 cName = Form("h_StubHitCorrelation");
                 cObj  = gROOT->FindObject(cName);
                 TH2D* cStubHitCorrelation =
-                    new TH2D(cName, Form("Stub & Hit correlation - CIC%d; Hit in Bottom Sensor ; Stub Seed", (int)cFe->getId()), 127 * 8, 0, 127 * 8, 127 * 8 / 0.5, 0, 127 * 8);
-                bookHistogram(cFe, "StubHitCorrelation", cStubHitCorrelation);
+                    new TH2D(cName, Form("Stub & Hit correlation - CIC%d; Hit in Bottom Sensor ; Stub Seed", (int)cHybrid->getId()), 127 * 8, 0, 127 * 8, 127 * 8 / 0.5, 0, 127 * 8);
+                bookHistogram(cHybrid, "StubHitCorrelation", cStubHitCorrelation);
 
                 // now want to loop over all other FEs
                 for(auto cOtherOpticalGroup: *cBoard)
                 {
                     if(cOpticalGroup->getId() == cOtherOpticalGroup->getId()) continue;
 
-                    for(auto cOtherFe: *cOtherOpticalGroup)
+                    for(auto cOtherHybrid: *cOtherOpticalGroup)
                     {
-                        if(cFe->getId() == cOtherFe->getId()) continue;
+                        if(cHybrid->getId() == cOtherHybrid->getId()) continue;
 
-                        cName = Form("h_BxId_Cic%d_Cic%d", cFe->getId(), cOtherFe->getId());
+                        cName = Form("h_BxId_Cic%d_Cic%d", cHybrid->getId(), cOtherHybrid->getId());
                         cObj  = gROOT->FindObject(cName);
                         if(cObj) delete cObj;
                         TString cTitle  = Form("BxId from 2 CICs [%d and %d] on links [%d and %d]; Bx Id [CIC %d]; BxId [CIC%d]",
-                                              cFe->getId(),
-                                              cOtherFe->getId(),
-                                              cFe->getOpticalGroupId(),
-                                              cOtherFe->getOpticalGroupId(),
-                                              cFe->getId(),
-                                              cOtherFe->getId());
+                                              cHybrid->getId(),
+                                              cOtherHybrid->getId(),
+                                              cHybrid->getOpticalGroupId(),
+                                              cOtherHybrid->getOpticalGroupId(),
+                                              cHybrid->getId(),
+                                              cOtherHybrid->getId());
                         TH2D*   cHist2D = new TH2D(cName, cTitle, 3565, 0, 3565, 3565, 0, 3565);
-                        bookHistogram(cFe, Form("BxId_CIC%d", cOtherFe->getId()), cHist2D);
+                        bookHistogram(cHybrid, Form("BxId_CIC%d", cOtherHybrid->getId()), cHist2D);
                     }
                 }
             }
@@ -162,14 +162,14 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
 
         for(auto cOpticalGroup: *pBoard)
         {
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                TH1D* cBendHistogram      = static_cast<TH1D*>(getHist(cFe, Form("StubBend")));
-                TH2D* cStubInformation    = static_cast<TH2D*>(getHist(cFe, Form("StubInformation")));
-                TH2D* cStubHitCorrelation = static_cast<TH2D*>(getHist(cFe, Form("StubHitCorrelation")));
+                TH1D* cBendHistogram      = static_cast<TH1D*>(getHist(cHybrid, Form("StubBend")));
+                TH2D* cStubInformation    = static_cast<TH2D*>(getHist(cHybrid, Form("StubInformation")));
+                TH2D* cStubHitCorrelation = static_cast<TH2D*>(getHist(cHybrid, Form("StubHitCorrelation")));
 
-                auto cBxId = cEvent->BxId(cFe->getId());
-                LOG(DEBUG) << BOLDBLUE << "FE" << +cFe->getId() << " BxId " << +cBxId << RESET;
+                auto cBxId = cEvent->BxId(cHybrid->getId());
+                LOG(DEBUG) << BOLDBLUE << "FE" << +cHybrid->getId() << " BxId " << +cBxId << RESET;
                 if(std::find(cBxIds.begin(), cBxIds.end(), cBxId) == cBxIds.end()) cBxIds.push_back(cBxId);
 
                 // correlation plot for BxIds
@@ -177,19 +177,19 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
                 {
                     if(cOpticalGroup->getId() == cOtherOpticalGroup->getId()) continue;
 
-                    for(auto cOtherFe: *cOtherOpticalGroup)
+                    for(auto cOtherHybrid: *cOtherOpticalGroup)
                     {
-                        if(cFe->getId() == cOtherFe->getId()) continue;
+                        if(cHybrid->getId() == cOtherHybrid->getId()) continue;
 
-                        TH2D* cBxCorrelation = static_cast<TH2D*>(getHist(cFe, Form("BxId_CIC%d", cOtherFe->getId())));
-                        cBxCorrelation->Fill(cBxId, cEvent->BxId(cOtherFe->getId()));
+                        TH2D* cBxCorrelation = static_cast<TH2D*>(getHist(cHybrid, Form("BxId_CIC%d", cOtherHybrid->getId())));
+                        cBxCorrelation->Fill(cBxId, cEvent->BxId(cOtherHybrid->getId()));
                     }
                 }
 
-                for(auto cChip: *cFe)
+                for(auto cChip: *cHybrid)
                 {
-                    auto cHits  = cEvent->GetHits(cFe->getId(), cChip->getId());
-                    auto cStubs = cEvent->StubVector(cFe->getId(), cChip->getId());
+                    auto cHits  = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+                    auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
 
                     // quick cut on exactly one hit in each layer
                     if(cHits.size() > 2) continue;
@@ -209,11 +209,11 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
                         if(cHit % 2 == 0)
                         {
                             auto cStripHit    = cChip->getId() * 127 + std::floor(cHit / 2.0);
-                            auto cHybridStrip = (cFe->getId() % 2 == 0) ? cStripHit : (8 * 127 - 1 - cStripHit);
+                            auto cHybridStrip = (cHybrid->getId() % 2 == 0) ? cStripHit : (8 * 127 - 1 - cStripHit);
                             for(auto cStub: cStubs)
                             {
                                 auto cStripSeed       = cChip->getId() * 127 + cStub.getPosition() * 0.5;
-                                auto cSeedHybridStrip = (cFe->getId() % 2 == 0) ? cStripSeed : (8 * 127 - 1 - cStripSeed);
+                                auto cSeedHybridStrip = (cHybrid->getId() % 2 == 0) ? cStripSeed : (8 * 127 - 1 - cStripSeed);
                                 cStubHitCorrelation->Fill(cHybridStrip, cSeedHybridStrip);
                             }
                             if(cStubs.size() == 0) cStubHitCorrelation->Fill(cHybridStrip, -1); // fill underflow bin if no stubs are present in the event
@@ -239,11 +239,11 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
                             auto cBendSign    = std::pow(-1, (cStub.getBend() & 0x8) >> 3);
                             auto cBendDefLUT  = (cBendSign < 0) ? cBendValue * cBendSign : cBendValue * cBendSign * 0.5;
                             auto cStrip       = cChip->getId() * 127 + cStub.getPosition() * 0.5;
-                            auto cHybridStrip = (cFe->getId() % 2 == 0) ? cStrip : (8 * 127 - 1 - cStrip);
+                            auto cHybridStrip = (cHybrid->getId() % 2 == 0) ? cStrip : (8 * 127 - 1 - cStrip);
                             // LOG(DEBUG) << BOLDGREEN << "Stub seed " << +cStub.getPosition() << " - bend code " <<
                             // std::bitset<4>(cStub.getBend()) << " -- bend value " << +cBendValue << " sign is " <<
                             // +cBendSign << " --- " << +cBendDefLUT << RESET; LOG(DEBUG) << BOLDGREEN << ">>>event " <<
-                            // +cEventCount << "\t..FE" << +cFe->getId() << "CBC" << +cChip->getId() << "\t.. MATCH
+                            // +cEventCount << "\t..FE" << +cHybrid->getId() << "CBC" << +cChip->getId() << "\t.. MATCH
                             // FOUND! Stub seed " << +cStub.getPosition() << "-- TDC phase " << +cTDC << RESET;
                             cBendHistogram->Fill(cBendDefLUT);
                             cStubInformation->Fill(cBendDefLUT, cHybridStrip);

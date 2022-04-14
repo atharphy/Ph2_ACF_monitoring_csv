@@ -60,7 +60,7 @@ struct Injection
 {
     uint8_t fRow;
     uint8_t fColumn;
-    uint8_t fFeId;
+    uint8_t fChipId;
 };
 
 const bool VERIFY_MPA = false;

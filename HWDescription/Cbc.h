@@ -37,7 +37,7 @@ using CbcRegPair = std::pair<std::string, ChipRegItem>;
 class Cbc : public ReadoutChip
 {
   public:
-    // C'tors which take BeBoardId, FMCId, FeID, CbcId
+    // C'tors which take BeBoardId, FMCId, HybridId, CbcId
     Cbc(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, const std::string& filename);
 
     // C'tors with object FE Description

@@ -52,8 +52,8 @@ class FrontEndDescription
     uint8_t getFMCId() const { return fFMCId; }
 
     /*!
-     * \brief Get the FE ID
-     * \return The FE ID
+     * \brief Get the Hybrid Id
+     * \return The Hybrid Id
      */
     uint8_t getHybridId() const { return fHybridId; }
 

@@ -800,9 +800,9 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         // assuming only one type of CIC per board ...
         for(auto cOpticalGroup: *pBoard)
         {
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                auto  cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
+                auto  cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
                 auto& cCic                = cOuterTrackerHybrid->fCic;
                 if(cCic == nullptr) continue;
                 std::vector<std::pair<std::string, uint32_t>> cVecReg;
@@ -827,7 +827,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         LOG(INFO) << BOLDBLUE << "Firmware NOT configured for a CIC" << RESET;
     }
 
-    // Enable hybrids + ROCs for readout
+    // Enable hybrids + Chips for readout
     LOG(INFO) << BOLDGREEN << "According to the Firmware status registers, it was compiled for: " << fFWNHybrids << " hybrid(s), " << fFWNChips << " " << cChipName << " chip(s) per hybrid" << RESET;
     this->EnableFrontEnds(pBoard);
 
@@ -1102,7 +1102,7 @@ uint32_t D19cFWInterface::computeEventSize(BeBoard* pBoard)
 {
     uint32_t cFrontEndTypeCode = ReadReg("fc7_daq_stat.general.info.chip_type");
     fFirmwareFrontEndType      = getFrontEndType(cFrontEndTypeCode);
-    uint32_t cNFe              = pBoard->getNFe();
+    uint32_t cNHybrid              = pBoard->getNHybrid();
     uint32_t cNChips           = 0;
 
     uint32_t cNEventSize32 = 0;
@@ -1118,8 +1118,8 @@ uint32_t D19cFWInterface::computeEventSize(BeBoard* pBoard)
     else
     {
         if(fFirmwareFrontEndType == FrontEndType::CBC3) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32_CBC3 + cNChips * D19C_EVENT_SIZE_32_CBC3;
-        if(fFirmwareFrontEndType == FrontEndType::MPA) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNFe * D19C_EVENT_HEADER2_SIZE_32 + cNChips * D19C_EVENT_SIZE_32_MPA;
-        if(fFirmwareFrontEndType == FrontEndType::SSA) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNFe * D19C_EVENT_HEADER2_SIZE_32 + cNChips * D19C_EVENT_SIZE_32_SSA;
+        if(fFirmwareFrontEndType == FrontEndType::MPA) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNHybrid * D19C_EVENT_HEADER2_SIZE_32 + cNChips * D19C_EVENT_SIZE_32_MPA;
+        if(fFirmwareFrontEndType == FrontEndType::SSA) cNEventSize32 = D19C_EVENT_HEADER1_SIZE_32 + cNHybrid * D19C_EVENT_HEADER2_SIZE_32 + cNChips * D19C_EVENT_SIZE_32_SSA;
     }
     if(ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type"))
     {

@@ -35,7 +35,7 @@ using CicRegPair = std::pair<std::string, ChipRegItem>;
 class Cic : public Chip
 {
   public:
-    // C'tors which take BeBoardId, FMCId, FeID, CicId
+    // C'tors which take BeBoardId, FMCId, HybridId, CicId
     Cic(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, const std::string& filename);
 
     // C'tors with object FE Description

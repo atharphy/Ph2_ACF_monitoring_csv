@@ -173,7 +173,7 @@ class D19cFWInterface : public BeBoardFWInterface
      */
     void ConfigureBoard(const Ph2_HwDescription::BeBoard* pBoard) override;
     /*!
-     * \brief Detect the right FE Id to write the right registers (not working with the latest Firmware)
+     * \brief Detect the right Hybrid Id to write the right registers (not working with the latest Firmware)
      */
 
     void     ResetEventCounter() { fEventCounter = 0; }

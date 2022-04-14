@@ -1149,9 +1149,9 @@ void PSHybridTester::CheckCounters(BeBoard* pBoard)
         for(auto cHybridData: *cOpticalGroupData) // for on module - begin
         {
             cNchips += cHybridData->size();
-            for(auto cROCData: *cHybridData) // for on chip - begin
+            for(auto cChipData: *cHybridData) // for on chip - begin
             {
-                ReadoutChip* cChip = static_cast<ReadoutChip*>(fDetectorContainer->at(pBoard->getIndex())->at(cOpticalGroupData->getIndex())->at(cHybridData->getIndex())->at(cROCData->getIndex()));
+                ReadoutChip* cChip = static_cast<ReadoutChip*>(fDetectorContainer->at(pBoard->getIndex())->at(cOpticalGroupData->getIndex())->at(cHybridData->getIndex())->at(cChipData->getIndex()));
                 auto         cThreshold = fReadoutChipInterface->ReadChipReg(cChip, "Threshold");
                 // set threshold a little bit lower than 90% level
                 fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);

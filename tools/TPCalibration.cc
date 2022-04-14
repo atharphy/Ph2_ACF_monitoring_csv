@@ -35,11 +35,11 @@ void TPCalibration::Init(int pStartAmp, int pEndAmp, int pStepsize)
         LOG(INFO) << "BeBoard" << cBeId << RESET;
         for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                int cFeId = cFe->getId();
-                LOG(INFO) << "  FE" << cFeId << RESET;
-                for(auto cCbc: *cFe)
+                int cHybridId = cHybrid->getId();
+                LOG(INFO) << "  FE" << cHybridId << RESET;
+                for(auto cCbc: *cHybrid)
                 {
                     int cCbcId = cCbc->getId();
                     LOG(INFO) << "  - CBC" << cCbcId << RESET;
@@ -54,11 +54,11 @@ void TPCalibration::Init(int pStartAmp, int pEndAmp, int pStepsize)
                         bookHistogram(cCbc, Form("CorrChan%d", cChannel), cChanCorr);
                     }
 
-                    TH1F* cChannelGain = new TH1F(Form("GainFe%dCbc%d", cFeId, cCbcId), Form("GainFe%dCbc%d", cFeId, cCbcId), NCHANNELS, -0.5, NCHANNELS - 0.5);
+                    TH1F* cChannelGain = new TH1F(Form("GainFe%dCbc%d", cHybridId, cCbcId), Form("GainFe%dCbc%d", cHybridId, cCbcId), NCHANNELS, -0.5, NCHANNELS - 0.5);
                     cChannelGain->GetXaxis()->SetTitle("channel");
                     cChannelGain->GetYaxis()->SetTitle("gain (Amp)");
                     bookHistogram(cCbc, "ChannelGain", cChannelGain);
-                    TH1F* cChannelElGain = new TH1F(Form("GainElectronsFe%dCbc%d", cFeId, cCbcId), Form("GainElectronsFe%dCbc%d", cFeId, cCbcId), NCHANNELS, -0.5, NCHANNELS - 0.5);
+                    TH1F* cChannelElGain = new TH1F(Form("GainElectronsFe%dCbc%d", cHybridId, cCbcId), Form("GainElectronsFe%dCbc%d", cHybridId, cCbcId), NCHANNELS, -0.5, NCHANNELS - 0.5);
                     cChannelElGain->GetXaxis()->SetTitle("channel");
                     cChannelElGain->GetYaxis()->SetTitle("gain (electrons)");
                     bookHistogram(cCbc, "ChannelElectronsGain", cChannelElGain);
@@ -93,11 +93,11 @@ void TPCalibration::FillHistograms(int pTPAmp)
         LOG(INFO) << "BeBoard" << cBeId << RESET;
         for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                int cFeId = cFe->getId();
-                LOG(INFO) << "  FE" << cFeId << RESET;
-                for(auto cCbc: *cFe)
+                int cHybridId = cHybrid->getId();
+                LOG(INFO) << "  FE" << cHybridId << RESET;
+                for(auto cCbc: *cHybrid)
                 {
                     int cCbcId = cCbc->getId();
                     LOG(INFO) << "  - CBC" << cCbcId << RESET;
@@ -128,12 +128,12 @@ void TPCalibration::FitCorrelations()
         LOG(INFO) << "BeBoard" << cBeId << RESET;
         for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                int cFeId = cFe->getId();
-                LOG(INFO) << "  FE" << cFeId << RESET;
+                int cHybridId = cHybrid->getId();
+                LOG(INFO) << "  FE" << cHybridId << RESET;
                 std::vector<float> cGainVec;
-                for(auto cCbc: *cFe)
+                for(auto cCbc: *cHybrid)
                 {
                     int   cCbcId         = cCbc->getId();
                     TH1F* cChannelGain   = dynamic_cast<TH1F*>(getHist(cCbc, "ChannelGain"));
@@ -152,14 +152,14 @@ void TPCalibration::FitCorrelations()
                     }
 
                     // Make a histogram of the Gains in Amplitudes and Electrons
-                    TString cHistName = Form("GainHistFe%dCbc%d", cFeId, cCbcId);
+                    TString cHistName = Form("GainHistFe%dCbc%d", cHybridId, cCbcId);
                     float   cBinWidth = 0.005;
                     float   cMin      = cChannelGain->GetMinimum() * 0.9;
                     float   cMax      = cChannelGain->GetMaximum() * 1.1;
                     TH1F*   cGainHist = new TH1F(cHistName, cHistName, (cMax - cMin) / cBinWidth, cMin, cMax);
                     cGainHist->GetXaxis()->SetTitle("gain (Amp/VCth)");
 
-                    cHistName         = Form("GainElectronsHistFe%dCbc%d", cFeId, cCbcId);
+                    cHistName         = Form("GainElectronsHistFe%dCbc%d", cHybridId, cCbcId);
                     TH1F* cGainElHist = new TH1F(cHistName, cHistName, (cMax - cMin) / cBinWidth, ConvertAmpToElectrons(cMin, false), ConvertAmpToElectrons(cMax, false));
                     cGainElHist->GetXaxis()->SetTitle("gain (electrons/VCth)");
 
@@ -187,15 +187,15 @@ void TPCalibration::SaveResults()
         fResultFile->mkdir(cPath);
         for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                int cFeId = cFe->getId();
-                cPath     = Form("Be%d/Fe%d", cBeId, cFeId);
+                int cHybridId = cHybrid->getId();
+                cPath     = Form("Be%d/Fe%d", cBeId, cHybridId);
                 fResultFile->mkdir(cPath);
-                for(auto cCbc: *cFe)
+                for(auto cCbc: *cHybrid)
                 {
                     int cCbcId = cCbc->getId();
-                    cPath      = Form("Be%d/Fe%d/Cbc%d", cBeId, cFeId, cCbcId);
+                    cPath      = Form("Be%d/Fe%d/Cbc%d", cBeId, cHybridId, cCbcId);
                     fResultFile->mkdir(cPath);
                     fResultFile->cd(cPath);
                     TH1F* cChannelHist = dynamic_cast<TH1F*>(getHist(cCbc, "ChannelGain"));
@@ -207,7 +207,7 @@ void TPCalibration::SaveResults()
                     TH1F* cGainElHist = dynamic_cast<TH1F*>(getHist(cCbc, "GainElectronsHist"));
                     cGainElHist->Write();
 
-                    cPath = Form("Be%d/Fe%d/Cbc%d/ChannelCorr", cBeId, cFeId, cCbcId);
+                    cPath = Form("Be%d/Fe%d/Cbc%d/ChannelCorr", cBeId, cHybridId, cCbcId);
                     fResultFile->mkdir(cPath);
                     fResultFile->cd(cPath);
                     for(int cChannel = 0; cChannel < NCHANNELS; cChannel++)
