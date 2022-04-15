@@ -94,7 +94,7 @@ class lpGBTInterface : public ChipInterface
     // #######################################
     // # Chip configuration functions #
     // #######################################
-    bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerifLoop = false) override;
+    bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerify = true) override;
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
 
     // #######################################
@@ -219,7 +219,7 @@ class lpGBTInterface : public ChipInterface
                                 uint8_t                     pInvert);
 
   protected:
-    bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
+    bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerify = true) override;
 
     // #######################################
     // # LpGBT block configuration functions #

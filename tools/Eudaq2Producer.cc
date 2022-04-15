@@ -737,7 +737,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                 {
                     uint32_t cChipId = cChip->getId();
                     // FIXME Adding this check here [sarah]
-                    // std::string cCheck = pPh2Event->DataBitString( cCbc->getFeId() , cCbc->getChipId() );
+                    // std::string cCheck = pPh2Event->DataBitString( cCbc->getHybridId() , cCbc->getChipId() );
                     // if( cCheck.empty() )
                     //	continue;
 

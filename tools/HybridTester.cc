@@ -53,18 +53,18 @@ void HybridTester::ReconfigureCBCRegisters(std::string pDirectoryName)
 
         for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                for(auto cCbc: *cFe)
+                for(auto cCbc: *cHybrid)
                 {
                     ReadoutChip* theCbc = static_cast<ReadoutChip*>(cCbc);
                     std::string  pRegFile;
                     char         buffer[120];
 
                     if(pDirectoryName.empty())
-                        sprintf(buffer, "%s/FE%dCBC%d.txt", fDirectoryName.c_str(), cFe->getId(), cCbc->getId());
+                        sprintf(buffer, "%s/FE%dCBC%d.txt", fDirectoryName.c_str(), cHybrid->getId(), cCbc->getId());
                     else
-                        sprintf(buffer, "%s/FE%dCBC%d.txt", pDirectoryName.c_str(), cFe->getId(), cCbc->getId());
+                        sprintf(buffer, "%s/FE%dCBC%d.txt", pDirectoryName.c_str(), cHybrid->getId(), cCbc->getId());
 
                     pRegFile = buffer;
                     theCbc->loadfRegMap(pRegFile);
@@ -150,17 +150,17 @@ void HybridTester::InitializeHists()
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                uint32_t cFeId     = cFe->getId();
+                uint32_t cHybridId     = cHybrid->getId();
                 uint16_t cMaxRange = 1023;
-                fType              = static_cast<OuterTrackerHybrid*>(cFe)->getFrontEndType();
+                fType              = static_cast<OuterTrackerHybrid*>(cHybrid)->getFrontEndType();
 
-                for(auto cCbc: *cFe)
+                for(auto cCbc: *cHybrid)
                 {
                     uint32_t cCbcId = cCbc->getId();
 
-                    TString  cName   = Form("SCurve_Fe%d_Cbc%d", cFeId, cCbcId);
+                    TString  cName   = Form("SCurve_Fe%d_Cbc%d", cHybridId, cCbcId);
                     TObject* cObject = static_cast<TObject*>(gROOT->FindObject(cName));
 
                     if(cObject) delete cObject;
@@ -170,7 +170,7 @@ void HybridTester::InitializeHists()
                     bookHistogram(cCbc, "Scurve", cTmpScurve);
                     fSCurveMap[cCbc] = cTmpScurve;
 
-                    cName   = Form("SCurveFit_Fe%d_Cbc%d", cFeId, cCbcId);
+                    cName   = Form("SCurveFit_Fe%d_Cbc%d", cHybridId, cCbcId);
                     cObject = static_cast<TObject*>(gROOT->FindObject(cName));
 
                     if(cObject) delete cObject;
@@ -247,9 +247,9 @@ uint32_t HybridTester::fillSCurves(BeBoard* pBoard, const Event* pEvent, uint16_
 
     for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cFe: *cOpticalGroup)
+        for(auto cHybrid: *cOpticalGroup)
         {
-            for(auto cCbc: *cFe)
+            for(auto cCbc: *cHybrid)
             {
                 // SS
                 /*TH1F* sCurveHist = static_cast<TH1F*>( getHist( cCbc, "Scurve" ) );
@@ -280,7 +280,7 @@ uint32_t HybridTester::fillSCurves(BeBoard* pBoard, const Event* pEvent, uint16_
                     //}
                     // experimental
 
-                    std::vector<uint32_t> cHits = pEvent->GetHits(cFe->getId(), cCbc->getId());
+                    std::vector<uint32_t> cHits = pEvent->GetHits(cHybrid->getId(), cCbc->getId());
                     cHitCounter += cHits.size();
 
                     for(__attribute__((unused)) auto cHit: cHits) cScurve->second->Fill(pValue);
@@ -374,9 +374,9 @@ void HybridTester::ScanThresholds()
     // normalize noise scan
     /*for ( BeBoard* pBoard : fBoardVector )
     {
-        for ( auto cFe : pBoard->fModuleVector )
+        for ( auto cHybrid : pBoard->fModuleVector )
         {
-            for ( auto cCbc : cFe->fReadoutChipVector )
+            for ( auto cCbc : cHybrid->fReadoutChipVector )
             {
                 fSCurveCanvas->cd(cCbc->getId()+1);
                 TH1F* sCurveHist = static_cast<TH1F*>( getHist( cCbc, "Scurve" ) );
@@ -606,9 +606,9 @@ void HybridTester::processSCurves(uint32_t pEventsperVcth)
 
 void HybridTester::updateSCurveCanvas(BeBoard* pBoard)
 {
-    /*for ( auto cFe : pBoard->fModuleVector )
+    /*for ( auto cHybrid : pBoard->fModuleVector )
     {
-        for ( auto cCbc : cFe->fReadoutChipVector )
+        for ( auto cCbc : cHybrid->fReadoutChipVector )
         {
             fSCurveCanvas->cd(cCbc->getId()+1);
             TH1F* sCurveHist = static_cast<TH1F*>( getHist( cCbc, "Scurve" ) );
@@ -622,9 +622,9 @@ void HybridTester::updateSCurveCanvas(BeBoard* pBoard)
 
     for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cFe: *cOpticalGroup)
+        for(auto cHybrid: *cOpticalGroup)
         {
-            for(auto cCbc: *cFe)
+            for(auto cCbc: *cHybrid)
             {
                 uint32_t cCbcId  = cCbc->getId();
                 auto     cScurve = fSCurveMap.find(cCbc);
@@ -918,9 +918,9 @@ void HybridTester::SetTestGroup(BeBoard* pBoard, uint8_t pTestGroup)
 {
     for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cFe: *cOpticalGroup)
+        for(auto cHybrid: *cOpticalGroup)
         {
-            for(auto cCbc: *cFe)
+            for(auto cCbc: *cHybrid)
             {
                 std::vector<std::pair<std::string, uint16_t>> cRegVec;
                 uint16_t                                      cRegValue = this->to_reg(0, pTestGroup);

@@ -40,8 +40,7 @@ class Hybrid
   public:
     // C'tors take FrontEndDescription or hierachy of connection
     Hybrid(const FrontEndDescription& pFeDesc, uint8_t pHybridId);
-    Hybrid(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pHybridId);
-    Hybrid(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pHybridId, uint8_t pLinkId);
+    Hybrid(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId);
 
     // Default C'tor
     Hybrid();
@@ -60,20 +59,27 @@ class Hybrid
         for(auto cChip: *this) static_cast<ReadoutChip*>(cChip)->accept(pVisitor);
     }
     /*!
-     * \brief Get the number of Chip connected to the Hybrid
-     * \return The size of the vector
+     * \brief get the number of chip connected to the hybrid
+     * \return the size of the vector
      */
     uint8_t getNChip() const { return this->size(); }
 
-    uint8_t getLinkId() const { return fLinkId; };
-    uint8_t getMasterId() const { return fMasterId; };
 
-    void setLinkId(uint8_t pLinkId) { fLinkId = pLinkId; };
+    /*!
+     * \brief Set the I2C Master Id corresponding to the Chip
+     * \param The I2C Master Id 
+     */
     void setMasterId(uint8_t pMasterId) { fMasterId = pMasterId; };
 
-  protected:
-    uint8_t fLinkId;
-    uint8_t fMasterId;
+    /*!
+     * \brief Get the I2C Master Id corresponding to the Chip
+     * \return The I2C Master Id 
+     */
+    uint8_t getMasterId() const { return fMasterId; };
+
+
+    protected:
+        uint8_t fMasterId;
 };
 } // namespace Ph2_HwDescription
 

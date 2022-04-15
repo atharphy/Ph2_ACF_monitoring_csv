@@ -94,7 +94,7 @@ void RegisterTester::CheckReadRegisters(uint8_t pPageToSelect, uint8_t pNRegiste
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            // here .. I need to send a hard reset to the ROCs
+            // here .. I need to send a hard reset to the Chips
             SendHardReset(cOpticalGroup, cOpticalGroup->at(0)->at(0));
         }
     } // board loop to save record of registers
@@ -213,7 +213,7 @@ void RegisterTester::CheckWriteRegisters(uint8_t pPageToSelect, uint8_t pNRegist
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            // here .. I need to send a hard reset to the ROCs
+            // here .. I need to send a hard reset to the Chips
             SendHardReset(cOpticalGroup, cOpticalGroup->at(0)->at(0));
             for(auto cHybrid: *cOpticalGroup)
             {
@@ -385,7 +385,7 @@ void RegisterTester::CheckPageSwitchRead(uint8_t pPageToSelect, uint8_t pNRegist
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            // here .. I need to send a hard reset to the ROCs
+            // here .. I need to send a hard reset to the Chips
             SendHardReset(cOpticalGroup, cOpticalGroup->at(0)->at(0));
         }
     } // board loop to save record of registers
@@ -493,7 +493,7 @@ void RegisterTester::CheckPageSwitchRead(uint8_t pPageToSelect, uint8_t pNRegist
                             cIndex++;
                         }
                     } // loop over registers
-                    LOG(INFO) << BOLDBLUE << "Hybrid#" << +cHybrid->getId() << " ROC#" << +cChip->getId() << " found " << +cMismatches.size() << " mismatches in " << +cNReads << " reads and "
+                    LOG(INFO) << BOLDBLUE << "Hybrid#" << +cHybrid->getId() << " Chip#" << +cChip->getId() << " found " << +cMismatches.size() << " mismatches in " << +cNReads << " reads and "
                               << +cNPageToggles << " page toggles." << RESET;
                 } // chips
             }     // hyrbids
@@ -527,7 +527,7 @@ void RegisterTester::CheckPageSwitchWrite(uint8_t pPageToSelect, uint8_t pNRegis
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            // here .. I need to send a hard reset to the ROCs
+            // here .. I need to send a hard reset to the Chips
             SendHardReset(cOpticalGroup, cOpticalGroup->at(0)->at(0));
             for(auto cHybrid: *cOpticalGroup)
             {
@@ -785,7 +785,7 @@ void RegisterTester::RegisterTest()
                         size_t           cNRegs   = 0;
                         for(auto& cItem: cExpectedLst) // loop over what I think the current values are
                         {
-                            // here .. I need to send a hard reset to the ROCs
+                            // here .. I need to send a hard reset to the Chips
                             SendHardReset(cOpticalGroup, cChip);
 
                             // reset page map control
@@ -890,7 +890,7 @@ void RegisterTester::RegisterTest()
     //             }
     //         } // board loop to save record of registers
 
-    //         // so here .. I need to send a hard reset to the ROCs
+    //         // so here .. I need to send a hard reset to the Chips
     //         for(auto cBoard: *fDetectorContainer)
     //         {
     //             auto cWithLpGBT = fReadoutChipInterface->lpGBTCheck(cBoard);
@@ -1105,9 +1105,9 @@ void RegisterTester::TestRegisters()
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                for(auto cChip: *cFe)
+                for(auto cChip: *cHybrid)
                 {
                     auto cMap = cChip->getRegMap();
 
@@ -1157,9 +1157,9 @@ void RegisterTester::ReconfigureRegisters(std::string pDirectoryName)
 
         for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                for(auto cChip: *cFe)
+                for(auto cChip: *cHybrid)
                 {
                     std::string pRegFile;
 
@@ -1168,13 +1168,13 @@ void RegisterTester::ReconfigureRegisters(std::string pDirectoryName)
                     else
                     {
                         char buffer[120];
-                        sprintf(buffer, "%s/FE%dCBC%d.txt", pDirectoryName.c_str(), cFe->getId(), cChip->getId());
+                        sprintf(buffer, "%s/FE%dCBC%d.txt", pDirectoryName.c_str(), cHybrid->getId(), cChip->getId());
                         pRegFile = buffer;
                     }
 
                     cChip->loadfRegMap(pRegFile);
                     fReadoutChipInterface->ConfigureChip(cChip);
-                    LOG(INFO) << GREEN << "\t\t Successfully (re)configured ROC" << int(cChip->getId()) << "'s regsiters from " << pRegFile << " ." << RESET;
+                    LOG(INFO) << GREEN << "\t\t Successfully (re)configured Chip" << int(cChip->getId()) << "'s regsiters from " << pRegFile << " ." << RESET;
                 }
             }
         }

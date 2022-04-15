@@ -630,7 +630,7 @@ void DQMHistogramBeamTestCheck::fillLatencyPlots(uint16_t pLatency, uint16_t pTr
                             cStripId     = cStripOffset - (chip->getId() * chip->size() / 2 + cChnlIndx / 2);
                         }
                         if(channel.fOccupancy > 0)
-                            LOG(DEBUG) << BOLDMAGENTA << "\t\t..ROC#" << +chip->getId() << " Channel " << cChnlIndx << " strip number " << cChnlIndx / 2.0 << " strip offset is " << cStripOffset
+                            LOG(DEBUG) << BOLDMAGENTA << "\t\t..Chip#" << +chip->getId() << " Channel " << cChnlIndx << " strip number " << cChnlIndx / 2.0 << " strip offset is " << cStripOffset
                                        << " global strip number " << +cStripId << " hit is in S" << +(cChnlIndx % 2 == 0) << " - have found " << channel.fOccupancy << " hits." << RESET;
 
                         cBin = cHitMap->FindBin((float)pLatency, cStripId);
@@ -850,7 +850,7 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
 
                         auto cBin = (cSensorId == 0) ? cStubMapS0->FindBin((float)cLocalX, (float)cLocalY) : cStubMapS1->FindBin((float)cLocalX, (float)cLocalY);
                         if(channel.fOccupancy > 0)
-                            LOG(DEBUG) << BOLDMAGENTA << "\t\t..ROC#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId << " Channel " << +cChnlIndx << " Row " << +cRow
+                            LOG(DEBUG) << BOLDMAGENTA << "\t\t..Chip#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId << " Channel " << +cChnlIndx << " Row " << +cRow
                                        << " Column " << +cCol << " Offset is " << cXOffset << " Local x coordinate " << +cLocalX << " Local y coordinate " << cLocalY << " bin# " << cBin << " Channel "
                                        << cChnlIndx << " offset is " << cXOffset << " - have found " << channel.fOccupancy << " hits " << RESET;
 
@@ -860,7 +860,7 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                         // if(hybrid->getId() % 2 == 0) cStripId = cOffset + (chip->size() - cChnlIndx) / cDivider;
                         // auto    cBin      = cStubMapS0->FindBin((float)cStripId, (float)cLocalY);
                         // if(channel.fOccupancy > 0)
-                        //     LOG(DEBUG) << BOLDBLUE << "\t\t..ROC#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId << " Local x coordinate " << +cStripId << " bin# "
+                        //     LOG(DEBUG) << BOLDBLUE << "\t\t..Chip#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId << " Local x coordinate " << +cStripId << " bin# "
                         //                << cBin << " Channel " << cChnlIndx << " offset is " << cStripOffset << " - have found " << channel.fOccupancy << " stubs " << RESET;
 
                         if(cSensorId == 0)
@@ -902,7 +902,7 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                         auto cBinX = (cSensorId == 0) ? cHitMapS0->GetXaxis()->FindBin(cLocalX) : cHitMapS1->GetXaxis()->FindBin(cLocalX);
                         auto cBin  = (cSensorId == 0) ? cHitMapS0->FindBin((float)cLocalX, (float)cLocalY) : cHitMapS1->FindBin((float)cLocalX, (float)cLocalY);
                         if(channel.fOccupancy > 0 && hybrid->getId() % 2 == 1)
-                            LOG(DEBUG) << BOLDMAGENTA << "\t\t..ROC#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId << " [" << cNChannels << " channels]"
+                            LOG(DEBUG) << BOLDMAGENTA << "\t\t..Chip#" << +chip->getId() << " Hybrid#" << +hybrid->getId() << " Sensor" << +cSensorId << " [" << cNChannels << " channels]"
                                        << " Row " << +cRow << " Column " << +cCol << " BinX " << cBinX << " Offset is " << cXOffset << " Local x coordinate " << +cLocalX << " Local y coordinate "
                                        << cLocalY << " bin# " << cBin << " Channel " << cChnlIndx << " offset is " << cXOffset << " - have found " << channel.fOccupancy << " hits " << RESET;
                         if(cSensorId == 0)
@@ -934,7 +934,7 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                         cLatencyTDC->SetBinError(cBin, std::sqrt((float)cNhits)); // for now
                     }
 
-                } // ROCs
+                } // Chips
             }     // hybrids
         }         // OG
     }             // board
@@ -1000,7 +1000,7 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                                         if(cLocalX != cLocalXS1)
                                             // if( chip->getId() != cOtherChip->getId()  )
                                             LOG(DEBUG) << BOLDYELLOW << " Correlation plot S0:S1 "
-                                                       << " Hybrid#" << +hybrid->getId() << "\t\t..ROC#" << +chip->getId() << "\t\t.. ROC#" << +cOtherChip->getId() << " Row [S0] " << +cRow
+                                                       << " Hybrid#" << +hybrid->getId() << "\t\t..Chip#" << +chip->getId() << "\t\t.. Chip#" << +cOtherChip->getId() << " Row [S0] " << +cRow
                                                        << " Column [S0] " << +cCol << " Row [S1] " << +cRowS1 << " Column [S1] " << +cColS1 << RESET;
                                     } // print
                                     cChnlIndxS1++;
@@ -1030,7 +1030,7 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                             // uint32_t cLinkOffset = (hybrid->getId()%2)*(cNChannels*8) ;
                             // uint32_t cLinkOffset = opticalGroup->getIndex()*(2*cNChannels*8) + (hybrid->getId()%2)*(cNChannels*8) ;
                             LOG(DEBUG) << BOLDYELLOW << " Correlation plot Stubs:HitsS1 "
-                                       << " Link#" << +opticalGroup->getId() << " Hybrid#" << +hybrid->getId() << " ROC#" << +chip->getId() << " Stub Row [S" << +cSensorId << "] " << +cRow
+                                       << " Link#" << +opticalGroup->getId() << " Hybrid#" << +hybrid->getId() << " Chip#" << +chip->getId() << " Stub Row [S" << +cSensorId << "] " << +cRow
                                        << " Local X " << cLocalX << " local offset on link is " << cLinkOffset << " link position is this " << cLinkOffset + cLocalX << " which is X-axis bin "
                                        << cLinkCorrS0->GetXaxis()->FindBin(cLinkOffset + cLocalX) << RESET;
                             // look for correlations in all other links
@@ -1058,7 +1058,7 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                                                 cLinkCorrS0->SetBinContent(cBin, cBinContent + 1);
                                                 cLinkCorrS0->SetBinError(cBin, std::sqrt(cBinContent + 1));
 
-                                                LOG(DEBUG) << BOLDYELLOW << "\t\t\t.. Link#" << +otherOGs->getId() << " Hybrid#" << +otherHybrids->getId() << " ROC#" << +otherChips->getId() << " Row "
+                                                LOG(DEBUG) << BOLDYELLOW << "\t\t\t.. Link#" << +otherOGs->getId() << " Hybrid#" << +otherHybrids->getId() << " Chip#" << +otherChips->getId() << " Row "
                                                            << +cRowOther << " Local X " << cLocalX << " local offset on link is " << cLinkOffsetOther << " link position is this "
                                                            << cLinkOffsetOther + cLocalXOther << " which is X-axis bin " << cLinkCorrS0->GetXaxis()->FindBin(cLinkOffsetOther + cLocalXOther) << RESET;
                                             }
@@ -1090,7 +1090,7 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                                         auto cBinContent = cHist->GetBinContent(cBin);
                                         cHist->SetBinContent(cBin, cBinContent + 1);
                                         cHist->SetBinError(cBin, std::sqrt(cBinContent + 1));
-                                        LOG(DEBUG) << BOLDMAGENTA << "\t\t\t\t.. ROC#" << +cOtherChip->getId() << " Hit Row [S" << +cSensorIdOther << "] " << +cRowS1 << " channel " << cChnlIndxS1
+                                        LOG(DEBUG) << BOLDMAGENTA << "\t\t\t\t.. Chip#" << +cOtherChip->getId() << " Hit Row [S" << +cSensorIdOther << "] " << +cRowS1 << " channel " << cChnlIndxS1
                                                    << " local x  " << cLocalXS1 << " bin X-axis " << cHist->GetXaxis()->FindBin(cLocalX) << " entries in histogram " << cHist->GetEntries() << RESET;
                                     } // print
                                     cChnlIndxS1++;
@@ -1115,7 +1115,7 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                                     if(channelS1.fOccupancy > 0)
                                     {
                                         auto cBin = cHist->FindBin((float)cLocalX, (float)cLocalXS1);
-                                        LOG(DEBUG) << BOLDBLUE << "\t\t\t\t.. ROC#" << +cOtherChip->getId() << " Hit Row [S" << +cSensorIdOther << "] " << +cRowS1 << " channel " << cChnlIndxS1
+                                        LOG(DEBUG) << BOLDBLUE << "\t\t\t\t.. Chip#" << +cOtherChip->getId() << " Hit Row [S" << +cSensorIdOther << "] " << +cRowS1 << " channel " << cChnlIndxS1
                                                    << " local x offset is " << cXOffsetS1 << " number of rows is " << cNRows << " local x  " << cLocalXS1 << " test " << (cNRows - cRowS1)
                                                    << " # of entries is " << cHist->GetEntries() << RESET;
                                         auto cBinContent = cHist->GetBinContent(cBin);
@@ -1129,7 +1129,7 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                         cChnlIndx++;
                     } // channels
 
-                } // ROCs
+                } // Chips
 
             } // hybrids
         }     // OG

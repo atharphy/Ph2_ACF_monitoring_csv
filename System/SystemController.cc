@@ -293,7 +293,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                         if(cFoundLpgbt) LOG(INFO) << BOLDGREEN << "\t\t\t\t\t.. Readout chip interface aware of the lpGBT connected to this board ... " << RESET;
                         if(cWithMPA && cWithSSA) static_cast<PSInterface*>(fReadoutChipInterface)->SetOptical();
                     }
-                } // creat ROC interfaces
+                } // creat Chip interfaces
 
                 LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
                 fCicInterface = new CicInterface(fBeBoardFWMap);
@@ -579,7 +579,7 @@ void SystemController::InitializeOT(BeBoard* pBoard)
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             if(cCic == NULL) continue;
 
-            LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) << " on link " << +cHybrid->getOpticalId() << " on hybrid " << +cHybrid->getId() << RESET;
+            LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) << " on link " << +cHybrid->getOpticalGroupId() << " on hybrid " << +cHybrid->getId() << RESET;
             fCicInterface->ConfigureChip(cCic);
             fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false); // make sure all FEs are disabled by default
         }
@@ -635,7 +635,7 @@ void SystemController::InitializeOT(BeBoard* pBoard)
 
 void SystemController::ConfigureOT(BeBoard* pBoard)
 {
-    // hard reset ROCs on hybrid if lpGBT is there; if no lpGBT this
+    // hard reset Chips on hybrid if lpGBT is there; if no lpGBT this
     // is already taken care of by ConfigureBoard
     for(auto cOpticalGroup: *pBoard)
     {
@@ -649,7 +649,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
 
             if(cHybrid->getReset() == 0)
             {
-                LOG(INFO) << BOLDYELLOW << "Will not send a hard-reset to ROCs on Hybrid#" << +cHybrid->getId() << RESET;
+                LOG(INFO) << BOLDYELLOW << "Will not send a hard-reset to Chips on Hybrid#" << +cHybrid->getId() << RESET;
                 continue;
             }
             // cWithLpGBT=true;
@@ -676,7 +676,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)
         {
-            for(auto cChip: *cHybrid) { fReadoutChipInterface->ConfigureChip(cChip); } // ROC config
+            for(auto cChip: *cHybrid) { fReadoutChipInterface->ConfigureChip(cChip); } // Chip config
         }                                                                              // hybrid
     }                                                                                  // OG
     LOG(INFO) << BOLDMAGENTA << "Configured OT module" << RESET;
@@ -744,19 +744,18 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, 0);
             }
 
-            bool     cSkipSSA3            = true; // eventually this needs to be set in the xml somewhere
-            uint16_t cRegisterPadStrength = 0x1018;
+            bool cSkipSSA3 = true; // eventually this needs to be set in the xml somewhere
             for(uint8_t cSSAId = 0; cSSAId < 8; cSSAId++)
             {
                 if(cSkipSSA3 && cSSAId == 3) continue;
 
-                SSA*    cSSA          = new SSA(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getId(), cSSAId, 0, 0, "./settings/SSAFiles/SSA.txt");
+                SSA*    cSSA          = new SSA(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), cSSAId, 0, 0, "./settings/SSAFiles/SSA.txt");
                 uint8_t cSLVSdriveSSA = cSSA->getReg("SLVS_pad_current");
-                cSSA->setOpticalId(cHybrid->getOpticalId());
                 cSSA->setOptical(cHybrid->isOptical());
                 cSSA->setMasterId(cHybrid->getMasterId());
                 LOG(INFO) << BOLDMAGENTA << "SSA " << +cSSAId << " current set to " << +cSLVSdriveSSA << "" << RESET;
-                (fBeBoardInterface->getFirmwareInterface())->WriteFERegister(cSSA, cRegisterPadStrength, cSLVSdriveSSA, false);
+                auto cRegItem = cSSA->getRegItem("SLVS_pad_current");
+                (fBeBoardInterface->getFirmwareInterface())->SingleRegisterWrite(cSSA, cRegItem, false);
             }
 
         } // hybrid
@@ -853,15 +852,15 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
         // configure CIC FE enable register
         // first make sure it is set to 0x00
         fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
-        // figure out which ROCs are enabled
-        std::vector<uint8_t> cFeIds(0);
+        // figure out which Chips are enabled
+        std::vector<uint8_t> cChipIds(0);
         for(auto cReadoutChip: *cHybrid)
         {
             // only consider MPAs and CBCs
             if(cReadoutChip->getFrontEndType() == FrontEndType::SSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA2) continue;
-            cFeIds.push_back(cReadoutChip->getId() % 8);
+            cChipIds.push_back(cReadoutChip->getId() % 8);
         }
-        fCicInterface->EnableFEs(cCic, cFeIds, true);
+        fCicInterface->EnableFEs(cCic, cChipIds, true);
 
         // make sure data rate is correctly configured
         // only works for CIC2
@@ -1003,7 +1002,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                         auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                         if(cCic == NULL) continue;
 
-                        LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) << " on link " << +cHybrid->getOpticalId() << " on hybrid " << +cHybrid->getId() << RESET;
+                        LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) << " on link " << +cHybrid->getOpticalGroupId() << " on hybrid " << +cHybrid->getId() << RESET;
                         fCicInterface->ConfigureChip(cCic);
                         fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false); // make sure all FEs are disabled by default
                     }
@@ -1215,9 +1214,9 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
         else
         {
             EventType fEventType = pBoard->getEventType();
-            uint32_t  fNFe       = pBoard->getNFe();
+            uint32_t  fNHybrid       = pBoard->getNHybrid();
             // uint32_t  cBlockSize = 0x0000FFFF & pData.at(0);
-            // LOG(INFO) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize * 4 << " 32 bit words to decode]" << RESET;
+            // LOG(INFO) << BOLDBLUE << "Reading events from " << +fNHybrid << " FEs connected to uDTC...[ " << +cBlockSize * 4 << " 32 bit words to decode]" << RESET;
             fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);
             // uint32_t nmpa = 0;
             uint32_t maxind = 0;
@@ -1271,15 +1270,15 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                             }
                             else if(pBoard->getFrontEndType() == FrontEndType::SSA)
                             {
-                                fEventList.push_back(new D19cSSAEvent(pBoard, maxind, fNFe, cEvent));
+                                fEventList.push_back(new D19cSSAEvent(pBoard, maxind, fNHybrid, cEvent));
                             }
                             else if(pBoard->getFrontEndType() == FrontEndType::SSA2)
                             {
-                                fEventList.push_back(new D19cSSA2Event(pBoard, maxind, fNFe, cEvent));
+                                fEventList.push_back(new D19cSSA2Event(pBoard, maxind, fNHybrid, cEvent));
                             }
                             else if(pBoard->getFrontEndType() == FrontEndType::MPA)
                             {
-                                fEventList.push_back(new D19cMPAEvent(pBoard, maxind, fNFe, cEvent));
+                                fEventList.push_back(new D19cMPAEvent(pBoard, maxind, fNHybrid, cEvent));
                                 LOG(INFO) << BOLDBLUE << "Decoding SSA data " << RESET;
                                 // auto cL1Counter0 = (cEvent[4+2] & (0xF<<16)) >> 16;
                                 // auto cL1Counter1 = (cEvent[4+8+4+2] & (0xF<<16)) >> 16;
@@ -1287,13 +1286,13 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                                 // LOG (INFO) << BOLDBLUE << "L1A counter chip1 : " << cL1Counter1 << RESET;
                                 // for(auto cWord : cEvent )
                                 //   LOG (INFO) << BOLDMAGENTA << std::bitset<32>(cWord) << RESET;
-                                fEventList.push_back(new D19cSSAEvent(pBoard, maxind + 1, fNFe, cEvent));
+                                fEventList.push_back(new D19cSSAEvent(pBoard, maxind + 1, fNHybrid, cEvent));
                             }
                             else if(pBoard->getFrontEndType() == FrontEndType::MPA)
                             {
                                 LOG(INFO) << BOLDBLUE << "Decoding MPA data " << RESET;
                                 // fEventList.push_back(new D19cCic2Event(pBoard, cEvent));
-                                fEventList.push_back(new D19cMPAEvent(pBoard, maxind + 1, fNFe, cEvent));
+                                fEventList.push_back(new D19cMPAEvent(pBoard, maxind + 1, fNHybrid, cEvent));
                             }
                             cEventIndex++;
                         }

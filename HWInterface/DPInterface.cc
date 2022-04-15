@@ -283,7 +283,7 @@ bool DPInterface::ReadL1Data(BeBoardFWInterface* pInterface)
             if(cBitCounter % 8 != 0 || cBitCounter == 0)
             {
                 cT1Cmd += (*cT1TokensIterator).c_str();
-                for(uint8_t cFeIndx = 0; cFeIndx < 8; cFeIndx++) cL1Data[cFeIndx] += (*cL1DataTokensIterator).c_str()[7 - cFeIndx];
+                for(uint8_t cHybridIndex = 0; cHybridIndex < 8; cHybridIndex++) cL1Data[cHybridIndex] += (*cL1DataTokensIterator).c_str()[7 - cHybridIndex];
             }
             else
             {
@@ -294,12 +294,12 @@ bool DPInterface::ReadL1Data(BeBoardFWInterface* pInterface)
                 cT1Cmd += (*cT1TokensIterator).c_str();
                 // push into data vector
                 std::vector<uint8_t> cDataFromMPAs(0);
-                for(uint8_t cFeIndx = 0; cFeIndx < 8; cFeIndx++)
+                for(uint8_t cHybridIndex = 0; cHybridIndex < 8; cHybridIndex++)
                 {
-                    std::bitset<8> cData(cL1Data[cFeIndx]);
+                    std::bitset<8> cData(cL1Data[cHybridIndex]);
                     cDataFromMPAs.push_back(cData.to_ulong());
-                    cL1Data[cFeIndx] = "";
-                    cL1Data[cFeIndx] += (*cL1DataTokensIterator).c_str()[7 - cFeIndx];
+                    cL1Data[cHybridIndex] = "";
+                    cL1Data[cHybridIndex] += (*cL1DataTokensIterator).c_str()[7 - cHybridIndex];
                 }
                 fInputCICL1Data.push_back(cDataFromMPAs);
             }
@@ -320,7 +320,7 @@ bool DPInterface::ReadL1Data(BeBoardFWInterface* pInterface)
 uint16_t DPInterface::LoadL1Data(BeBoardFWInterface* pInterface)
 {
     fNTriggers      = 0;
-    uint8_t cFeIndx = 0; // choose FeId 0 from verification frameword
+    uint8_t cHybridIndex = 0; // choose HybridId 0 from verification frameword
     size_t  cNBxs   = fMaxBx;
     LOG(INFO) << BOLDBLUE << "Configure CIC data player BRAM for L1 and T1 lines  for " << +cNBxs << " clock cycles." << RESET;
     // configure number of patterns to  play
@@ -339,7 +339,7 @@ uint16_t DPInterface::LoadL1Data(BeBoardFWInterface* pInterface)
         std::sprintf(cTmpBuffer, "fc7_daq_cnfg.physical_interface_block.mpa_to_cic_data_player_address_BRAM_line_%01d_%01d.line%01d_address", cBaseIndex, cBaseIndex + 1, cLine);
         std::string cRegAddr(cTmpBuffer);
         // MPA data
-        cRegs.push_back({cReg0, fInputCICL1Data[cBx - 1][cFeIndx]});
+        cRegs.push_back({cReg0, fInputCICL1Data[cBx - 1][cHybridIndex]});
         // MPA data BRAM address
         cRegs.push_back({cRegAddr, cBx});
 
@@ -347,7 +347,7 @@ uint16_t DPInterface::LoadL1Data(BeBoardFWInterface* pInterface)
         // bram only takes the fcmd code (so not the header and not the trailer)
         uint8_t cCode = (fFastCommands[cBx - 1] & (0xF << 1)) >> 1;
         LOG(DEBUG) << BOLDBLUE << "Fast command from verification framework is " << std::bitset<8>(fFastCommands[cBx - 1]) << " writing " << std::bitset<4>(cCode)
-                   << " to generic fast command data player in address  " << (cBx) << " FE0 data " << std::bitset<8>(fInputCICL1Data[cBx - 1][cFeIndx]) << RESET;
+                   << " to generic fast command data player in address  " << (cBx) << " FE0 data " << std::bitset<8>(fInputCICL1Data[cBx - 1][cHybridIndex]) << RESET;
 
         cRegs.push_back({"fc7_daq_cnfg.fast_command_block.generic_fcmd_data", cCode});
         cRegs.push_back({"fc7_daq_cnfg.fast_command_block.generic_fcmd_addr", cBx});
