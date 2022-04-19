@@ -33,6 +33,28 @@ INITIALIZE_EASYLOGGINGPP
 
 #define CHIPSLAVE 4
 
+sig_atomic_t killProcess  = 0;
+sig_atomic_t runCompleted = 0;
+
+void interruptHandler(int handler) { killProcess = 1; }
+
+void killProcessFunction(Tool* theTool)
+{
+    while(1)
+    {
+        usleep(250000);
+        if(killProcess || runCompleted) break;
+    }
+    if(killProcess)
+    {
+        theTool->SaveResults();
+        theTool->WriteRootFile();
+        theTool->CloseResultFile();
+        theTool->Destroy();
+        abort();
+    }
+}
+
 int main(int argc, char* argv[])
 {
 #if defined(__TCUSB__) && defined(__SEH_USB__) && defined(__USE_ROOT__)
@@ -176,6 +198,13 @@ int main(int argc, char* argv[])
     // Initialize and Configure Back-End (Optical) FC7
     Tool cTool;
 
+    std::thread softKillThread(killProcessFunction, &cTool);
+    softKillThread.detach();
+
+    struct sigaction act;
+    act.sa_handler = interruptHandler;
+    sigaction(SIGINT, &act, NULL);
+
     std::stringstream outp;
     LOG(INFO) << BOLDYELLOW << "Initializing FC7" << RESET;
     cTool.InitializeHw(cHWFile, outp);
@@ -282,7 +311,7 @@ int main(int argc, char* argv[])
         /* EXTERNALLY GENERATED PATTERN */
         else if(cmd.foundOption("external-pattern"))
         {
-            bool cStatus=true;
+            bool cStatus = true;
             // int counter = 0;
 
             // for(int i = 0; i < 10; i++)
@@ -291,7 +320,7 @@ int main(int argc, char* argv[])
             // }
             // LOG(INFO) << BOLDRED << "CIC Out test failed " << +counter << " times" << RESET;
             // cSEHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
-            //while(true)
+            // while(true)
             //{                        std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
             cStatus = cSEHTester.LpGBTCheckULPattern(true, cExternalPattern);
@@ -517,7 +546,7 @@ int main(int argc, char* argv[])
         cDebugInterface->L1ADebug();
     */
     // Save Result File
-    //cSEHTester.TurnOff();
+    // cSEHTester.TurnOff();
     cSEHTester.SetLoad(0, 0);
     cSEHTester.LpGBTInjectULExternalPattern(false, 170);
 
@@ -526,6 +555,7 @@ int main(int argc, char* argv[])
     cTool.CloseResultFile();
     // Destroy Tools
     cTool.Destroy();
+    runCompleted = 1;
     // cTool.Destroy();
 
     if(!batchMode) cApp.Run();

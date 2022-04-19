@@ -150,7 +150,7 @@
 
 // LpGBT convertion factors
 #define VREF_LPGBT 1.0
-#define CONVERSION_FACTOR (VREF_LPGBT / 1024.)
+#define CONVERSION_FACTOR (VREF_LPGBT / 1023.)
 
 enum class BoardType
 {

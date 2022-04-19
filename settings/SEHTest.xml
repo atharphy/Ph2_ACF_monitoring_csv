@@ -310,23 +310,28 @@
     
 </Settings>
 
-<!-- <MonitoringSettings>
-<Monitoring type="2S" enable="1">
-    <MonitoringSleepTime> 500 </MonitoringSleepTime>
-    <MonitoringElements
-    LpGBT_ADC1    = "1"
-    LpGBT_TEMP    = "1"
-    />
-</Monitoring>
-</MonitoringSettings> -->
 <MonitoringSettings>
-<Monitoring type="2SSEH" enable="1">
+<Monitoring type="2S" enable="1">
     <MonitoringSleepTime> 1000 </MonitoringSleepTime>
-    <MonitoringElements
-    I_SEH  = "1"
-    />
+    <MonitoringElement device="LpGBT" register="ADC0" enable="1"/>
+    <MonitoringElement device="LpGBT" register="ADC1" enable="1"/>
+    <MonitoringElement device="LpGBT" register="ADC2" enable="1"/>
+    <MonitoringElement device="LpGBT" register="ADC3" enable="1"/>
+    <MonitoringElement device="LpGBT" register="ADC4" enable="1"/>
+    <MonitoringElement device="LpGBT" register="ADC5" enable="1"/>
+    <MonitoringElement device="LpGBT" register="ADC6" enable="1"/>
+    <MonitoringElement device="LpGBT" register="ADC7" enable="1"/>
+    <MonitoringElement device="LpGBT" register="TEMP" enable="1"/>
+
 </Monitoring>
 </MonitoringSettings>
+<!-- <MonitoringSettings>
+<Monitoring type="2SSEH" enable="1">
+    <MonitoringSleepTime> 1000 </MonitoringSleepTime>
+    
+    <MonitoringElement device="Board" register="I_SEH" enable="1"/>
+</Monitoring>
+</MonitoringSettings> -->
 
 
 </HwDescription>
