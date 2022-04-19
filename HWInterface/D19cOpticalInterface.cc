@@ -40,16 +40,16 @@ bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem)
         cWaitCounter--;
         continue;
     }
+    if(cWaitCounter == 0)
+    {
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleRead : Tool stuck" << RESET;
+        return false;
+    }
     uint8_t cTryCntr = fCommandProcessorInterface->GetTryCntr(cFunctionId);
     if(cTryCntr > 0)
     {
         uint8_t cMaxRetry = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? fConfiguration.fMaxRetryIC : fConfiguration.fMaxRetryFE;
         LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleRead : Tried " << +cTryCntr << "/" << +cMaxRetry << " before success" << RESET;
-    }
-    if(cWaitCounter == 0)
-    {
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleRead : Tool stuck" << RESET;
-        return false;
     }
     auto    cReply     = fCommandProcessorInterface->ReadReply(1);
     uint8_t cErrorCode = (cReply[0] & (0xFF << 8)) >> 8;
