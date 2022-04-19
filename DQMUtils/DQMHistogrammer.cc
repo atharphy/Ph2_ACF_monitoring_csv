@@ -66,17 +66,17 @@ void DQMHistogrammer::bookHistos(const Ph2_HwInterface::EventDataMap& evmap)
     for(auto const& it: evmap)
     {
         uint16_t cKey  = it.first;
-        uint8_t  feId  = (cKey >> 8) & 0xFF;
+        uint8_t  hybridId  = (cKey >> 8) & 0xFF;
         uint8_t  cbcId = cKey & 0xFF;
 
-        LOG(INFO) << " fedId " << +feId << " cbcId " << +cbcId << " Columns " << nColumn_ << " nCbc " << nCbc;
+        LOG(INFO) << " fedId " << +hybridId << " cbcId " << +cbcId << " Columns " << nColumn_ << " nCbc " << nCbc;
 
         if(nColumn_ == 1 && cbcId > 1) continue;
 
         nCbc++;
         // create histogram name tags
         std::stringstream ss;
-        ss << "fed" << +feId << "cbc" << +cbcId;
+        ss << "fed" << +hybridId << "cbc" << +cbcId;
         std::string key = ss.str();
         CBCHistos   cbc_h;
         cbc_h.errBitH           = new TH1I(TString("errbit-" + key), TString("Error bit (" + key + ")"), 6, -0.5, 5.5);
@@ -226,18 +226,18 @@ void DQMHistogrammer::fillHistos(const std::vector<Event*>& event_list, int nevt
         for(auto const& it: evmap)
         {
             uint16_t cKey  = it.first;
-            uint8_t  feId  = (cKey >> 8) & 0xFF;
+            uint8_t  hybridId  = (cKey >> 8) & 0xFF;
             uint8_t  cbcId = cKey & 0xFF;
 
             ncbc++;
 
             if(ncbc > cbcHMap_.size()) continue;
 
-            uint32_t          error_cbc     = ev->Error(feId, cbcId);
-            uint32_t          pladdress_cbc = ev->PipelineAddress(feId, cbcId);
-            int               nstub_cbc     = std::stoi(ev->StubBitString(feId, cbcId), nullptr, 10);
+            uint32_t          error_cbc     = ev->Error(hybridId, cbcId);
+            uint32_t          pladdress_cbc = ev->PipelineAddress(hybridId, cbcId);
+            int               nstub_cbc     = std::stoi(ev->StubBitString(hybridId, cbcId), nullptr, 10);
             std::stringstream ss;
-            ss << "fed" << +feId << "cbc" << +cbcId;
+            ss << "fed" << +hybridId << "cbc" << +cbcId;
             std::string key_cbc = ss.str();
 
             totalStubs_ += nstub_cbc;
@@ -245,7 +245,7 @@ void DQMHistogrammer::fillHistos(const std::vector<Event*>& event_list, int nevt
             cbcErrorVal_->push_back(error_cbc);
             cbcPLAddressVal_->push_back(pladdress_cbc);
 
-            const std::vector<bool>& dataVec   = ev->DataBitVector(feId, cbcId);
+            const std::vector<bool>& dataVec   = ev->DataBitVector(hybridId, cbcId);
             uint32_t                 nhits_cbc = 0;
 
             std::vector<uint32_t> fired_channels;

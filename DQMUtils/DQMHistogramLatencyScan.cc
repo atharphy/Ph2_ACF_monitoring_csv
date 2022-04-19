@@ -267,7 +267,7 @@ void DQMHistogramLatencyScan::fillLatencyPlots(uint16_t pLatency, DetectorDataCo
                         cHitMap->SetBinContent(cBin, channel.fOccupancy);
                         cHitMap->SetBinError(cBin, channel.fOccupancyError);
                         if(channel.fOccupancy > 0)
-                            LOG(INFO) << BOLDMAGENTA << "\t\t..ROC#" << +chip->getId() << " Channel " << cChnlIndx << " strip number " << cChnlIndx / 2.0 << " global strip number " << +cStripId
+                            LOG(INFO) << BOLDMAGENTA << "\t\t..Chip#" << +chip->getId() << " Channel " << cChnlIndx << " strip number " << cChnlIndx / 2.0 << " global strip number " << +cStripId
                                       << " - have found " << channel.fOccupancy << " hits." << RESET;
                         cChnlIndx++;
                     }

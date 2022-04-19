@@ -50,7 +50,7 @@ class Chip : public FrontEndDescription
 {
   public:
     // C'tors which take Board ID, Frontend ID/Hybrid ID, FMC ID, Chip ID
-    Chip(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId, uint16_t pMaxRegValue = 255);
+    Chip(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId , uint8_t pHybridId, uint8_t pChipId, uint16_t pMaxRegValue = 255);
 
     // C'tors with object FE Description
     Chip(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue = 255);
@@ -120,13 +120,28 @@ class Chip : public FrontEndDescription
     virtual uint16_t getId() const { return fChipId; }
 
     /*!
-     * \brief Set the Chip Id
-     * \param pChipId
+     * \brief Get the Chip address
+     * \return The Chip address
      */
-    void setChipId(uint8_t pChipId) { fChipId = pChipId; }
-
-    void    setChipAddress(uint16_t pChipAddress) { fChipAddress = pChipAddress; }
     uint8_t getChipAddress() const { return fChipAddress; }
+
+    /*!
+     * \brief Get the Chip code
+     * \return The Chip code
+     */
+    uint8_t getChipCode() const { return fChipCode; }
+
+    /*!
+     * \brief Set the I2C Master Id corresponding to the Chip
+     * \param The I2C Master Id 
+     */
+    void setMasterId(uint8_t pMasterId) { fMasterId = pMasterId; };
+
+    /*!
+     * \brief Get the I2C Master Id corresponding to the Chip
+     * \return The I2C Master Id 
+     */
+    uint8_t getMasterId() const { return fMasterId; };
 
     /*!
      * \brief Set the clock frequency
@@ -179,8 +194,6 @@ class Chip : public FrontEndDescription
     uint32_t getRegWriteCount() { return fRegWrites; }
     uint32_t getRegReadCount() { return fRegReads; }
 
-    uint8_t getMasterId() const { return fMasterId; };
-    void    setMasterId(uint8_t pMasterId) { fMasterId = pMasterId; };
 
     // register maps
 
@@ -193,6 +206,7 @@ class Chip : public FrontEndDescription
     uint8_t     getRegisterTracking() { return fTrackRegisters; }
 
   protected:
+    uint8_t    fChipCode;
     uint8_t    fChipId;
     uint8_t    fChipAddress; // I2C addess of chip
     uint16_t   fMaxRegValue;

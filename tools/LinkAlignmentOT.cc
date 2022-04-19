@@ -46,7 +46,7 @@ void LinkAlignmentOT::Initialise()
     std::vector<std::string> cBrdRegsToKeep{"fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay"};
     SetBrdRegstoPerserve(cBrdRegsToKeep);
 
-    // no ROC registers to perserve
+    // no Chip registers to perserve
 
     // initialize containers that hold values found by this tool
     ContainerFactory::copyAndInitHybrid<std::vector<uint8_t>>(*fDetectorContainer, fBeSamplingDelay);
@@ -487,7 +487,7 @@ std::pair<bool, uint8_t> LinkAlignmentOT::PhaseTuneLine(const Chip* pChip, uint8
     auto cBoardId   = pChip->getBeBoardId();
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     fBeBoardInterface->setBoard((*cBoardIter)->getId());
-    LOG(DEBUG) << BOLDYELLOW << "LinkAlignmentOT::PhaseTuneLine#" << +pLineId << " for a ROC#" << +pChip->getId() << RESET;
+    LOG(DEBUG) << BOLDYELLOW << "LinkAlignmentOT::PhaseTuneLine#" << +pLineId << " for a Chip#" << +pChip->getId() << RESET;
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
 
     D19cBackendAlignmentFWInterface* cAlignerInterface = cInterface->getBackendAlignmentInterface();

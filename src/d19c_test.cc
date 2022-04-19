@@ -248,7 +248,7 @@ int main(int argc, char** argv)
             // init threshold visitior
             ThresholdVisitor cThresholdVisitor(cTool.fReadoutChipInterface, 0);
             cTool.accept(cThresholdVisitor);
-            auto cFe0 = pBoard->at(0)->at(0);
+            auto cHybrid0 = pBoard->at(0)->at(0);
 
             // hybrid mask
             uint32_t cHybridMask = (cmd.foundOption("mask")) ? convertAnyInt(cmd.optionValue("mask").c_str()) : 0xFFFFFFFF;
@@ -289,7 +289,7 @@ int main(int argc, char** argv)
                 for(uint32_t cThreshold = cThresholdMin; cThreshold < cThresholdMax; cThreshold++)
                 {
                     // set threshold
-                    for(auto cCbc: *cFe0)
+                    for(auto cCbc: *cHybrid0)
                     {
                         cThresholdVisitor.setThreshold(cThreshold);
                         static_cast<ReadoutChip*>(cCbc)->accept(cThresholdVisitor);
@@ -305,13 +305,13 @@ int main(int argc, char** argv)
                         {
                             for(auto cOpticalGroup: *pBoard)
                             {
-                                for(auto cFe: *cOpticalGroup)
+                                for(auto cHybrid: *cOpticalGroup)
                                 {
-                                    for(auto cCbc: *cFe)
+                                    for(auto cCbc: *cHybrid)
                                     {
                                         for(uint8_t ch = 0; ch < NCHANNELS; ch++)
                                         {
-                                            if(ev->DataBit(cFe->getId(), cCbc->getId(), ch)) cChannelCounters[cFe->getId()][cCbc->getId()][ch]++;
+                                            if(ev->DataBit(cHybrid->getId(), cCbc->getId(), ch)) cChannelCounters[cHybrid->getId()][cCbc->getId()][ch]++;
                                         }
                                     }
                                 }
@@ -327,11 +327,11 @@ int main(int argc, char** argv)
                     // reset the counters
                     for(auto cOpticalGroup: *pBoard)
                     {
-                        for(auto cFe: *cOpticalGroup)
+                        for(auto cHybrid: *cOpticalGroup)
                         {
-                            for(auto cCbc: *cFe)
+                            for(auto cCbc: *cHybrid)
                             {
-                                for(uint8_t ch = 0; ch < NCHANNELS; ch++) { cChannelCounters[cFe->getId()][cCbc->getId()][ch] = 0; }
+                                for(uint8_t ch = 0; ch < NCHANNELS; ch++) { cChannelCounters[cHybrid->getId()][cCbc->getId()][ch] = 0; }
                             }
                         }
                     }

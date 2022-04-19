@@ -22,7 +22,7 @@ namespace Ph2_HwInterface
 {
 // Event implementation
 
-D19cMPAEvent::D19cMPAEvent(const BeBoard* pBoard, uint32_t pNMPA, uint32_t pNFe, const std::vector<uint32_t>& list) : fEventDataVector(pNMPA * pNFe)
+D19cMPAEvent::D19cMPAEvent(const BeBoard* pBoard, uint32_t pNMPA, uint32_t pNHybrid, const std::vector<uint32_t>& list) : fEventDataVector(pNMPA * pNHybrid)
 {
     fNMPA = pNMPA;
     SetEvent(pBoard, pNMPA, list);
@@ -68,7 +68,7 @@ void D19cMPAEvent::SetEvent(const BeBoard* pBoard, uint32_t pNMPA, const std::ve
 
                 uint8_t cPLeadingMPA = ((0xF0000000 & list.at(data_offset)) >> 28);
                 uint8_t cErrorMPA    = ((0x0F000000 & list.at(data_offset)) >> 24);
-                uint8_t cFeId        = ((0x00FF0000 & list.at(data_offset)) >> 16);
+                uint8_t cHybridId        = ((0x00FF0000 & list.at(data_offset)) >> 16);
                 // uint8_t cCidMPA =         ((0x0000F000 & list.at (data_offset)) >> 16 );
                 uint16_t cL1size_32_MPA = ((0x00000FFF & list.at(data_offset))) * 4;
 
@@ -87,25 +87,25 @@ void D19cMPAEvent::SetEvent(const BeBoard* pBoard, uint32_t pNMPA, const std::ve
                 if(cSyncBit1 != 1) LOG(INFO) << BOLDRED << "Warning, sync bit 1 not 1, data frame probably misaligned!" << RESET;
                 if(cSyncBit2 != 0) LOG(INFO) << BOLDRED << "Warning, sync bit 2 not 0, data frame probably misaligned!" << RESET;
 
-                uint16_t cKey     = encodeVectorIndex(cFeId, pMPAId, fNMPA);
+                uint16_t cKey     = encodeVectorIndex(cHybridId, pMPAId, fNMPA);
                 uint32_t begin    = data_offset;
-                uint16_t cFevSize = cL1size_32_MPA + cSsize_32_MPA;
-                uint32_t end      = begin + cFevSize;
+                uint16_t cHybridvSize = cL1size_32_MPA + cSsize_32_MPA;
+                uint32_t end      = begin + cHybridvSize;
                 // std::vector<uint32_t> cMPAData (std::next (std::begin (list), begin), std::next (std::begin (list), end)
                 // );
 
                 fEventDataVector[cKey] = std::vector<uint32_t>(std::next(std::begin(list), begin), std::next(std::begin(list), end));
                 // LOG (INFO) << "Size "<<fEventDataVector[cKey].size()<< RESET;
-                data_offset += cFevSize;
+                data_offset += cHybridvSize;
             }
         }
         address_offset = data_offset; // probably needs to be fixed
     }
 }
 
-bool D19cMPAEvent::Error(uint8_t pFeId, uint8_t pMPAId, uint32_t i) const
+bool D19cMPAEvent::Error(uint8_t pHybridId, uint8_t pMPAId, uint32_t i) const
 {
-    uint32_t error = Error(pFeId, pMPAId);
+    uint32_t error = Error(pHybridId, pMPAId);
     if(i == 0)
         return ((error & 0x1) >> 0);
     else if(i == 1)
@@ -117,9 +117,9 @@ bool D19cMPAEvent::Error(uint8_t pFeId, uint8_t pMPAId, uint32_t i) const
     }
 }
 
-uint32_t D19cMPAEvent::Error(uint8_t pFeId, uint8_t pMPAId) const
+uint32_t D19cMPAEvent::Error(uint8_t pHybridId, uint8_t pMPAId) const
 {
-    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId, fNMPA));
+    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId, fNMPA));
 
     if(lvec.size() > 1)
     {
@@ -129,14 +129,14 @@ uint32_t D19cMPAEvent::Error(uint8_t pFeId, uint8_t pMPAId) const
     }
     else
     {
-        LOG(INFO) << "Event: FE " << +pFeId << " MPA " << +pMPAId << " is not found.";
+        LOG(INFO) << "Event: FE " << +pHybridId << " MPA " << +pMPAId << " is not found.";
         return 0;
     }
 }
 
-uint16_t D19cMPAEvent::GetMPAL1Counter(uint8_t pFeId, uint8_t pMPAId) const
+uint16_t D19cMPAEvent::GetMPAL1Counter(uint8_t pHybridId, uint8_t pMPAId) const
 {
-    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId, fNMPA));
+    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId, fNMPA));
 
     if(lvec.size() > 1)
     {
@@ -146,14 +146,14 @@ uint16_t D19cMPAEvent::GetMPAL1Counter(uint8_t pFeId, uint8_t pMPAId) const
     }
     else
     {
-        LOG(INFO) << "Event: FE " << +pFeId << " MPA " << +pMPAId << " is not found.";
+        LOG(INFO) << "Event: FE " << +pHybridId << " MPA " << +pMPAId << " is not found.";
         return 0;
     }
 }
 
-uint8_t D19cMPAEvent::GetMPAChipType(uint8_t pFeId, uint8_t pMPAId) const
+uint8_t D19cMPAEvent::GetMPAChipType(uint8_t pHybridId, uint8_t pMPAId) const
 {
-    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId, fNMPA));
+    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId, fNMPA));
 
     if(lvec.size() > 1)
     {
@@ -163,14 +163,14 @@ uint8_t D19cMPAEvent::GetMPAChipType(uint8_t pFeId, uint8_t pMPAId) const
     }
     else
     {
-        LOG(INFO) << "Event: FE " << +pFeId << " MPA " << +pMPAId << " is not found.";
+        LOG(INFO) << "Event: FE " << +pHybridId << " MPA " << +pMPAId << " is not found.";
         return 0;
     }
 }
 
-uint8_t D19cMPAEvent::GetMPAChipID(uint8_t pFeId, uint8_t pMPAId) const
+uint8_t D19cMPAEvent::GetMPAChipID(uint8_t pHybridId, uint8_t pMPAId) const
 {
-    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId, fNMPA));
+    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId, fNMPA));
 
     if(lvec.size() > 1)
     {
@@ -180,14 +180,14 @@ uint8_t D19cMPAEvent::GetMPAChipID(uint8_t pFeId, uint8_t pMPAId) const
     }
     else
     {
-        LOG(INFO) << "Event: FE " << +pFeId << " MPA " << +pMPAId << " is not found.";
+        LOG(INFO) << "Event: FE " << +pHybridId << " MPA " << +pMPAId << " is not found.";
         return 0;
     }
 }
 
-uint16_t D19cMPAEvent::GetMPAHybridID(uint8_t pFeId, uint8_t pMPAId) const
+uint16_t D19cMPAEvent::GetMPAHybridID(uint8_t pHybridId, uint8_t pMPAId) const
 {
-    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId, fNMPA));
+    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId, fNMPA));
 
     if(lvec.size() > 1)
     {
@@ -197,14 +197,14 @@ uint16_t D19cMPAEvent::GetMPAHybridID(uint8_t pFeId, uint8_t pMPAId) const
     }
     else
     {
-        LOG(INFO) << "Event: FE " << +pFeId << " MPA " << +pMPAId << " is not found.";
+        LOG(INFO) << "Event: FE " << +pHybridId << " MPA " << +pMPAId << " is not found.";
         return 0;
     }
 }
 
-uint8_t D19cMPAEvent::GetMPAError(uint8_t pFeId, uint8_t pMPAId) const
+uint8_t D19cMPAEvent::GetMPAError(uint8_t pHybridId, uint8_t pMPAId) const
 {
-    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId, fNMPA));
+    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId, fNMPA));
 
     if(lvec.size() > 1)
     {
@@ -214,15 +214,15 @@ uint8_t D19cMPAEvent::GetMPAError(uint8_t pFeId, uint8_t pMPAId) const
     }
     else
     {
-        LOG(INFO) << "Event: FE " << +pFeId << " MPA " << +pMPAId << " is not found.";
+        LOG(INFO) << "Event: FE " << +pHybridId << " MPA " << +pMPAId << " is not found.";
         return 0;
     }
 }
 
-uint8_t D19cMPAEvent::GetNStripClusters(uint8_t pFeId, uint8_t pMPAId) const
+uint8_t D19cMPAEvent::GetNStripClusters(uint8_t pHybridId, uint8_t pMPAId) const
 {
-    // LOG (INFO) << fEventDataVector.size()<<" "<<encodeVectorIndex(pFeId, pMPAId, fNMPA) << RESET;
-    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId, fNMPA));
+    // LOG (INFO) << fEventDataVector.size()<<" "<<encodeVectorIndex(pHybridId, pMPAId, fNMPA) << RESET;
+    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId, fNMPA));
 
     if(lvec.size() > 1)
     {
@@ -232,14 +232,14 @@ uint8_t D19cMPAEvent::GetNStripClusters(uint8_t pFeId, uint8_t pMPAId) const
     }
     else
     {
-        LOG(INFO) << "Event: FE " << +pFeId << " MPA " << +pMPAId << " is not found.";
+        LOG(INFO) << "Event: FE " << +pHybridId << " MPA " << +pMPAId << " is not found.";
         return 0;
     }
 }
 
-uint8_t D19cMPAEvent::GetNPixelClusters(uint8_t pFeId, uint8_t pMPAId) const
+uint8_t D19cMPAEvent::GetNPixelClusters(uint8_t pHybridId, uint8_t pMPAId) const
 {
-    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId, fNMPA));
+    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId, fNMPA));
     if(lvec.size() > 1)
     {
         // buf overflow and lat error
@@ -287,16 +287,16 @@ uint32_t D19cMPAEvent::GetCluster(std::vector<uint32_t> lvec, uint8_t nclus, uin
     return word;
 }
 
-std::vector<SCluster> D19cMPAEvent::GetStripClusters(uint8_t pFeId, uint8_t pMPAId) const
+std::vector<SCluster> D19cMPAEvent::GetStripClusters(uint8_t pHybridId, uint8_t pMPAId) const
 {
     std::vector<SCluster> result;
 
-    uint8_t cNstrip = GetNStripClusters(pFeId, pMPAId);
+    uint8_t cNstrip = GetNStripClusters(pHybridId, pMPAId);
     if(cNstrip == 0) return result;
 
     SCluster aSCluster;
 
-    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId, fNMPA));
+    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId, fNMPA));
 
     uint8_t cSClusterSize = D19C_SCluster_SIZE_32_MPA;
     uint8_t deltaword     = 3 * 32;
@@ -319,18 +319,18 @@ std::vector<SCluster> D19cMPAEvent::GetStripClusters(uint8_t pFeId, uint8_t pMPA
     return result;
 }
 
-std::vector<PCluster> D19cMPAEvent::GetPixelClusters(uint8_t pFeId, uint8_t pMPAId) const
+std::vector<PCluster> D19cMPAEvent::GetPixelClusters(uint8_t pHybridId, uint8_t pMPAId) const
 {
     std::vector<PCluster> result;
-    uint8_t               cNpix = GetNPixelClusters(pFeId, pMPAId);
+    uint8_t               cNpix = GetNPixelClusters(pHybridId, pMPAId);
     if(cNpix == 0) return result;
     PCluster aPCluster;
-    uint8_t  cNstrip       = GetNStripClusters(pFeId, pMPAId);
+    uint8_t  cNstrip       = GetNStripClusters(pHybridId, pMPAId);
     uint8_t  cSClusterSize = D19C_SCluster_SIZE_32_MPA;
 
     uint8_t cPClusterSize = D19C_PCluster_SIZE_32_MPA;
 
-    std::vector<uint32_t> lvec      = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId, fNMPA));
+    std::vector<uint32_t> lvec      = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId, fNMPA));
     uint8_t               deltaword = 3 * 32 + cSClusterSize * (cNstrip);
     uint8_t               npix      = 0;
 
@@ -350,44 +350,44 @@ std::vector<PCluster> D19cMPAEvent::GetPixelClusters(uint8_t pFeId, uint8_t pMPA
     return result;
 }
 
-/*uint32_t D19cMPAEvent::GetSync1( uint8_t pFeId, uint8_t pMPAId) const
+/*uint32_t D19cMPAEvent::GetSync1( uint8_t pHybridId, uint8_t pMPAId) const
 {
 
-    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId, fNMPA));
+    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId, fNMPA));
 
     return (lvec.at(31) & 0x02000000) >> 25;
 }
 
 
-uint32_t D19cMPAEvent::GetSync2( uint8_t pFeId, uint8_t pMPAId) const
+uint32_t D19cMPAEvent::GetSync2( uint8_t pHybridId, uint8_t pMPAId) const
 {
 
-    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId, fNMPA));
+    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId, fNMPA));
 
     return (lvec.at(31) & 0x01000000) >> 24;
 }*/
 
-uint32_t D19cMPAEvent::GetBX1_NStubs(uint8_t pFeId, uint8_t pMPAId) const
+uint32_t D19cMPAEvent::GetBX1_NStubs(uint8_t pHybridId, uint8_t pMPAId) const
 {
-    std::vector<uint32_t> lvec           = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId, fNMPA));
+    std::vector<uint32_t> lvec           = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId, fNMPA));
     uint16_t              cL1size_32_MPA = (0x00000FFF & lvec.at(0)) * 4;
 
     return (0x00000007 & lvec.at(cL1size_32_MPA + 1));
 }
 
-uint16_t D19cMPAEvent::GetStubDataDelay(uint8_t pFeId, uint8_t pMPAId) const
+uint16_t D19cMPAEvent::GetStubDataDelay(uint8_t pHybridId, uint8_t pMPAId) const
 {
-    std::vector<uint32_t> lvec           = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId, fNMPA));
+    std::vector<uint32_t> lvec           = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId, fNMPA));
     uint16_t              cL1size_32_MPA = (0x00000FFF & lvec.at(0)) * 4;
 
     return (0x00FFF000 & lvec.at(cL1size_32_MPA));
 }
 
-std::vector<Stub> D19cMPAEvent::StubVector(uint8_t pFeId, uint8_t pMPAId) const
+std::vector<Stub> D19cMPAEvent::StubVector(uint8_t pHybridId, uint8_t pMPAId) const
 {
     std::vector<Stub> cStubVec;
     // here creavte stubs and return the vector
-    std::vector<uint32_t> lvec           = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId, fNMPA));
+    std::vector<uint32_t> lvec           = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId, fNMPA));
     uint16_t              cL1size_32_MPA = (0x00000FFF & lvec.at(0)) * 4;
     // Apparently something needs to be done with this?
     // uint16_t  =   (lvec.at (cL1size_32_MPA) & 0x00FFF000) >> 12 ;
@@ -418,17 +418,17 @@ std::vector<Stub> D19cMPAEvent::StubVector(uint8_t pFeId, uint8_t pMPAId) const
         if(pos5 != 0) cStubVec.emplace_back(pos5, bend5, row5);
     }
     else
-        LOG(INFO) << "Event: FE " << +pFeId << " MPA " << +pMPAId << " is not found.";
+        LOG(INFO) << "Event: FE " << +pHybridId << " MPA " << +pMPAId << " is not found.";
 
     return cStubVec;
 }
 
-uint8_t D19cMPAEvent::GetNStubs(uint8_t pFeId, uint8_t pMPAId) const
+uint8_t D19cMPAEvent::GetNStubs(uint8_t pHybridId, uint8_t pMPAId) const
 {
     std::vector<Stub> cStubVec;
     // here create stubs and return the vector
     // std::cout<<"GetNStubs"<<std::endl;
-    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pFeId, pMPAId, fNMPA));
+    std::vector<uint32_t> lvec = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId, fNMPA));
     if(lvec.size() > 1)
     {
         // std::cout<<"GETEM"<<std::endl;
@@ -440,7 +440,7 @@ uint8_t D19cMPAEvent::GetNStubs(uint8_t pFeId, uint8_t pMPAId) const
     }
     else
     {
-        // LOG(INFO) << "Event: FE " << +pFeId << " MPA " << +pMPAId << " is not found.";        LOG(INFO) << "Event: FE " << +pFeId << " MPA " << +pMPAId << " is not found.";
+        // LOG(INFO) << "Event: FE " << +pHybridId << " MPA " << +pMPAId << " is not found.";        LOG(INFO) << "Event: FE " << +pHybridId << " MPA " << +pMPAId << " is not found.";
         return 0;
     }
 }
@@ -450,27 +450,27 @@ void D19cMPAEvent::print(std::ostream& os) const
     os << "MPA Event #" << std::endl;
     for(auto const& cKey: this->fEventDataMap)
     {
-        uint8_t cFeId;
+        uint8_t cHybridId;
         uint8_t cMpaId;
-        this->decodeId(cKey.first, cFeId, cMpaId);
-        os << "Hybrid " << +cFeId << ", Chip " << +cMpaId << std::endl;
-        os << "\t L1 Counter: " << GetMPAL1Counter(cFeId, cMpaId) << std::endl;
-        os << "\t Error: " << Error(cFeId, cMpaId) << std::endl;
-        os << "\t N Pixel Clusters: " << GetNPixelClusters(cFeId, cMpaId) << std::endl;
-        for(auto pcluster: GetPixelClusters(cFeId, cMpaId)) os << "\t\t Cluster Address: " << +pcluster.fAddress << ", Width: " << +pcluster.fWidth << ", ZPos: " << +pcluster.fZpos << std::endl;
-        os << "\t N Strip Clusters: " << GetNStripClusters(cFeId, cMpaId) << std::endl;
-        for(auto scluster: GetStripClusters(cFeId, cMpaId)) os << "\t\t Cluster Address: " << +scluster.fAddress << ", Width: " << +scluster.fWidth << ", MIP: " << +scluster.fMip << std::endl;
+        this->decodeId(cKey.first, cHybridId, cMpaId);
+        os << "Hybrid " << +cHybridId << ", Chip " << +cMpaId << std::endl;
+        os << "\t L1 Counter: " << GetMPAL1Counter(cHybridId, cMpaId) << std::endl;
+        os << "\t Error: " << Error(cHybridId, cMpaId) << std::endl;
+        os << "\t N Pixel Clusters: " << GetNPixelClusters(cHybridId, cMpaId) << std::endl;
+        for(auto pcluster: GetPixelClusters(cHybridId, cMpaId)) os << "\t\t Cluster Address: " << +pcluster.fAddress << ", Width: " << +pcluster.fWidth << ", ZPos: " << +pcluster.fZpos << std::endl;
+        os << "\t N Strip Clusters: " << GetNStripClusters(cHybridId, cMpaId) << std::endl;
+        for(auto scluster: GetStripClusters(cHybridId, cMpaId)) os << "\t\t Cluster Address: " << +scluster.fAddress << ", Width: " << +scluster.fWidth << ", MIP: " << +scluster.fMip << std::endl;
         os << std::endl;
     }
 }
 
-uint32_t D19cMPAEvent::GetNHits(uint8_t pFeId, uint8_t pMPAId) const { return GetNPixelClusters(pFeId, pMPAId) + GetNStripClusters(pFeId, pMPAId); }
+uint32_t D19cMPAEvent::GetNHits(uint8_t pHybridId, uint8_t pMPAId) const { return GetNPixelClusters(pHybridId, pMPAId) + GetNStripClusters(pHybridId, pMPAId); }
 
-std::string D19cMPAEvent::StubBitString(uint8_t pFeId, uint8_t pCbcId) const
+std::string D19cMPAEvent::StubBitString(uint8_t pHybridId, uint8_t pCbcId) const
 {
     std::ostringstream os;
 
-    std::vector<Stub> cStubVector = this->StubVector(pFeId, pCbcId);
+    std::vector<Stub> cStubVector = this->StubVector(pHybridId, pCbcId);
 
     for(auto cStub: cStubVector) os << std::bitset<8>(cStub.getPosition()) << " " << std::bitset<4>(cStub.getBend()) << " ";
 
@@ -479,21 +479,21 @@ std::string D19cMPAEvent::StubBitString(uint8_t pFeId, uint8_t pCbcId) const
 
 // These are unimplemented
 
-uint32_t D19cMPAEvent::PipelineAddress(uint8_t pFeId, uint8_t pMPAId) const { return 0; }
+uint32_t D19cMPAEvent::PipelineAddress(uint8_t pHybridId, uint8_t pMPAId) const { return 0; }
 
 std::string D19cMPAEvent::HexString() const { return ""; }
 
-bool D19cMPAEvent::DataBit(uint8_t pFeId, uint8_t pMPAId, uint32_t i) const { return false; }
+bool D19cMPAEvent::DataBit(uint8_t pHybridId, uint8_t pMPAId, uint32_t i) const { return false; }
 
-std::vector<uint32_t> D19cMPAEvent::GetHits(uint8_t pFeId, uint8_t pMPAId) const
+std::vector<uint32_t> D19cMPAEvent::GetHits(uint8_t pHybridId, uint8_t pMPAId) const
 {
     std::vector<uint32_t> none;
     return none;
 }
 
-std::string D19cMPAEvent::DataHexString(uint8_t pFeId, uint8_t pMPAId) const { return ""; }
+std::string D19cMPAEvent::DataHexString(uint8_t pHybridId, uint8_t pMPAId) const { return ""; }
 
-bool D19cMPAEvent::StubBit(uint8_t pFeId, uint8_t pMPAId) const { return (GetNStubs(pFeId, pMPAId) > 0); }
+bool D19cMPAEvent::StubBit(uint8_t pHybridId, uint8_t pMPAId) const { return (GetNStubs(pHybridId, pMPAId) > 0); }
 
 SLinkEvent D19cMPAEvent::GetSLinkEvent(BeBoard* pBoard) const
 {
@@ -501,23 +501,23 @@ SLinkEvent D19cMPAEvent::GetSLinkEvent(BeBoard* pBoard) const
     return none;
 }
 
-std::string D19cMPAEvent::GlibFlagString(uint8_t pFeId, uint8_t pCbcId) const { return ""; }
+std::string D19cMPAEvent::GlibFlagString(uint8_t pHybridId, uint8_t pCbcId) const { return ""; }
 
-std::string D19cMPAEvent::DataBitString(uint8_t pFeId, uint8_t pCbcId) const { return ""; }
+std::string D19cMPAEvent::DataBitString(uint8_t pHybridId, uint8_t pCbcId) const { return ""; }
 
-std::vector<bool> D19cMPAEvent::DataBitVector(uint8_t pFeId, uint8_t pCbcId) const
+std::vector<bool> D19cMPAEvent::DataBitVector(uint8_t pHybridId, uint8_t pCbcId) const
 {
     std::vector<bool> none;
     return none;
 }
 
-std::vector<Cluster> D19cMPAEvent::getClusters(uint8_t pFeId, uint8_t pCbcId) const
+std::vector<Cluster> D19cMPAEvent::getClusters(uint8_t pHybridId, uint8_t pCbcId) const
 {
     std::vector<Cluster> none;
     return none;
 }
 
-std::vector<bool> D19cMPAEvent::DataBitVector(uint8_t pFeId, uint8_t pCbcId, const std::vector<uint8_t>& channelList) const
+std::vector<bool> D19cMPAEvent::DataBitVector(uint8_t pHybridId, uint8_t pCbcId, const std::vector<uint8_t>& channelList) const
 {
     std::vector<bool> none;
     return none;

@@ -26,21 +26,21 @@ void PulseShape::Initialize()
 
         for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
                 LOG(INFO) << "Certain board()";
-                uint32_t cFeId = cFe->getId();
-                std::cerr << "cFeId = " << cFeId;
-                fType = static_cast<OuterTrackerHybrid*>(cFe)->getFrontEndType();
+                uint32_t cHybridId = cHybrid->getId();
+                std::cerr << "cHybridId = " << cHybridId;
+                fType = static_cast<OuterTrackerHybrid*>(cHybrid)->getFrontEndType();
 
-                for(auto cCbc: *cFe)
+                for(auto cCbc: *cHybrid)
                 {
                     uint16_t cMaxValue = 1023;
                     uint32_t cCbcId    = cCbc->getId();
                     std::cerr << "cCbcId = " << cCbcId;
                     fNCbc++;
                     // Create the Canvas to draw
-                    TCanvas* ctmpCanvas = new TCanvas(Form("c_online_canvas_fe%dcbc%d", cFeId, cCbcId), Form("FE%dCBC%d  Online Canvas", cFeId, cCbcId));
+                    TCanvas* ctmpCanvas = new TCanvas(Form("c_online_canvas_fe%dcbc%d", cHybridId, cCbcId), Form("FE%dCBC%d  Online Canvas", cHybridId, cCbcId));
                     ctmpCanvas->Divide(2, 1);
                     fCanvasMap[cCbc] = ctmpCanvas;
 
@@ -56,7 +56,7 @@ void PulseShape::Initialize()
                     cFrame->Draw();
                     bookHistogram(cCbc, "frame", cFrame);
                     // Create Multigraph Object for each CBC
-                    TString  cName = Form("g_cbc_pulseshape_MultiGraph_Fe%dCbc%d", cFeId, cCbcId);
+                    TString  cName = Form("g_cbc_pulseshape_MultiGraph_Fe%dCbc%d", cHybridId, cCbcId);
                     TObject* cObj  = gROOT->FindObject(cName);
 
                     if(cObj) delete cObj;
@@ -64,7 +64,7 @@ void PulseShape::Initialize()
                     TMultiGraph* cMultiGraph = new TMultiGraph();
                     cMultiGraph->SetName(cName);
                     bookHistogram(cCbc, "cbc_pulseshape", cMultiGraph);
-                    cName = Form("f_cbc_pulse_Fe%dCbc%d", cFeId, cCbcId);
+                    cName = Form("f_cbc_pulse_Fe%dCbc%d", cHybridId, cCbcId);
                     cObj  = gROOT->FindObject(cName);
 
                     if(cObj) delete cObj;
@@ -142,10 +142,10 @@ void PulseShape::ScanVcth(uint32_t pDelay, int cLow)
             BeBoard* theBoard = static_cast<BeBoard*>(pBoard);
             for(auto cOpticalGroup: *pBoard)
             {
-                for(auto cFe: *cOpticalGroup)
+                for(auto cHybrid: *cOpticalGroup)
                 {
                     cVisitor.setThreshold(cVcth);
-                    static_cast<OuterTrackerHybrid*>(cFe)->accept(cVisitor);
+                    static_cast<OuterTrackerHybrid*>(cHybrid)->accept(cVisitor);
                 }
             }
 
@@ -353,8 +353,8 @@ void PulseShape::toggleTestGroup(bool pEnable)
     /*LOG(INFO) << "Going to do a broadcast()";
     for (BeBoard* cBoard : fBoardVector)
     {
-        for (Module* cFe : cBoard->fModuleVector)
-            dynamic_cast<CbcInterface*>(fReadoutChipInterface)->WriteBroadcastCbcMultiReg (cFe, cRegVec);
+        for (Module* cHybrid : cBoard->fModuleVector)
+            dynamic_cast<CbcInterface*>(fReadoutChipInterface)->WriteBroadcastCbcMultiReg (cHybrid, cRegVec);
     }
     */
 }
@@ -391,9 +391,9 @@ uint32_t PulseShape::fillVcthHist(BeBoard* pBoard, Event* pEvent, uint32_t pVcth
     // Loop over Events from this Acquisition
     for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cFe: *cOpticalGroup)
+        for(auto cHybrid: *cOpticalGroup)
         {
-            for(auto cCbc: *cFe)
+            for(auto cCbc: *cHybrid)
             {
                 //  get histogram to fill
                 auto cChannelVector = fChannelMap.find(cCbc);
@@ -404,7 +404,7 @@ uint32_t PulseShape::fillVcthHist(BeBoard* pBoard, Event* pEvent, uint32_t pVcth
                 {
                     for(auto& cChannel: cChannelVector->second)
                     {
-                        if(pEvent->DataBit(cFe->getId(), cCbc->getId(), cChannel->fChannelId - 1))
+                        if(pEvent->DataBit(cHybrid->getId(), cCbc->getId(), cChannel->fChannelId - 1))
                         {
                             cChannel->fillHist(pVcth);
                             cHits++;
@@ -557,11 +557,11 @@ void PulseShape::setSystemTestPulse(uint8_t pTPAmplitude)
         for(auto cOpticalGroup: *cBoard)
         {
             uint32_t cOpticalGroupId = cOpticalGroup->getId();
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                uint32_t cFeId = cFe->getId();
+                uint32_t cHybridId = cHybrid->getId();
 
-                for(auto cCbc: *cFe)
+                for(auto cCbc: *cHybrid)
                 {
                     std::vector<Channel*> cChannelVector;
                     uint32_t              cCbcId      = cCbc->getId();
@@ -569,8 +569,8 @@ void PulseShape::setSystemTestPulse(uint8_t pTPAmplitude)
 
                     for(auto& cChannelId: fChannelVector)
                     {
-                        Channel* cChannel = new Channel(cBoardId, cOpticalGroupId, cFeId, cCbcId, cChannelId);
-                        TString  cName    = Form("g_cbc_pulseshape_Fe%dCbc%d_Channel%d", cFeId, cCbcId, cChannelId);
+                        Channel* cChannel = new Channel(cBoardId, cOpticalGroupId, cHybridId, cCbcId, cChannelId);
+                        TString  cName    = Form("g_cbc_pulseshape_Fe%dCbc%d_Channel%d", cHybridId, cCbcId, cChannelId);
                         cChannel->initializePulse(cName);
                         cChannelVector.push_back(cChannel);
                         cChannel->fPulse->SetMarkerColor(cMakerColor);

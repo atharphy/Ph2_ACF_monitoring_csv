@@ -57,7 +57,8 @@ else()
              LIBRARIES
              Ph2_Utils_${Ph2_ACF_Master}
              pthread
-            )
+             EXCLUDE MPA.h MPA.cc
+             )
 
     install_headers()
     install_source()

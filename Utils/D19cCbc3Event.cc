@@ -26,23 +26,23 @@ namespace Ph2_HwInterface
 D19cCbc3Event::D19cCbc3Event(const BeBoard* pBoard, const std::vector<uint32_t>& list)
 {
     fEventDataVector.clear();
-    uint8_t cNROCs = 0;
-    for(auto cHybrid: *pBoard)
+    uint8_t cNChips = 0;
+    for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cFe: *cHybrid)
+        for(auto cHybrid: *cOpticalGroup)
         {
-            auto   cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
+            auto   cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
             auto&  cCic                = cOuterTrackerHybrid->fCic;
-            size_t cNReadoutChips      = (cCic == NULL) ? cFe->fullSize() : 1;
+            size_t cNReadoutChips      = (cCic == NULL) ? cHybrid->fullSize() : 1;
             for(size_t cIndex = 0; cIndex < cNReadoutChips; cIndex++)
             {
                 std::vector<uint32_t> cEmpty(0);
                 fEventDataVector.push_back(cEmpty);
-                cNROCs += cNReadoutChips;
+                cNChips += cNReadoutChips;
             }
         } // hybrids loop
     }     // hybrid loop
-    fNCbc = cNROCs;
+    fNCbc = cNChips;
     Set(pBoard, list);
     // SetEvent (pBoard, fNCbc, list );
 }
@@ -81,18 +81,18 @@ void D19cCbc3Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
         {
             auto     cIterator = cEventIterator + LENGTH_EVENT_HEADER;
             uint32_t cStatus   = 0x00000000;
-            size_t   cRocIndex = 0;
+            size_t   cChipIndex = 0;
             for(auto cOpticalGroup: *pBoard)
             {
-                for(auto cFe: *cOpticalGroup)
+                for(auto cHybrid: *cOpticalGroup)
                 {
-                    auto   cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
+                    auto   cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
                     auto&  cCic                = cOuterTrackerHybrid->fCic;
-                    size_t cNReadoutChips      = (cCic == NULL) ? cFe->fullSize() : 1;
-                    LOG(DEBUG) << BOLDBLUE << "Number of ROCs is " << +cNReadoutChips << RESET;
+                    size_t cNReadoutChips      = (cCic == NULL) ? cHybrid->fullSize() : 1;
+                    LOG(DEBUG) << BOLDBLUE << "Number of Chips is " << +cNReadoutChips << RESET;
                     for(size_t cIndex = 0; cIndex < cNReadoutChips; cIndex++)
                     {
-                        auto cVectorIndex = encodeVectorIndex(cFe->getId(), cIndex, cNReadoutChips);
+                        auto cVectorIndex = encodeVectorIndex(cHybrid->getId(), cIndex, cNReadoutChips);
                         // L1 info
                         uint8_t  cStatusWord    = 0x00;
                         uint32_t cHitInfoHeader = *(cIterator);
@@ -119,9 +119,9 @@ void D19cCbc3Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         //    LOG (DEBUG) << BOLDBLUE << "\t\t.." << std::bitset<32>(cWord) << RESET;
                         // increment iterator
                         cIterator += cHitInfoSize + cStubInfoSize;
-                        cStatus = cStatus | (cStatusWord << (cRocIndex * 2));
-                        // increment ROC index
-                        cRocIndex++;
+                        cStatus = cStatus | (cStatusWord << (cChipIndex * 2));
+                        // increment Chip index
+                        cChipIndex++;
                     }
                 } // hybrid loop
             }     // opticalGroup loop
@@ -176,8 +176,8 @@ void D19cCbc3Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
             exit(1);
         }
 
-        uint8_t cFeId = (cL1Header & 0xFF0000) >> 16;
-        LOG(DEBUG) << BOLDBLUE << "\t.. FE Id from firmware " << +cFeId << " .. putting data in event list ... " << RESET;
+        uint8_t cHybridId = (cL1Header & 0xFF0000) >> 16;
+        LOG(DEBUG) << BOLDBLUE << "\t.. Hybrid Id from firmware " << +cHybridId << " .. putting data in event list ... " << RESET;
         uint32_t cL1DataSize = (cL1Header & 0xFFF) * 4;
         uint8_t  cCbcId      = (cL1Header >> 12) & 0xF;
         uint32_t cStubHeader = *(cIterator + cL1DataSize);
@@ -195,13 +195,13 @@ void D19cCbc3Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
         {
             // just use board to figure out how many CBCs there are
             size_t cHybridIndex = 0;
-            for(auto cFe: *pBoard->at(0))
+            for(auto cHybrid: *pBoard->at(0))
             {
-                if(cFe->getId() == cFeId) cHybridIndex = cFe->getIndex();
+                if(cHybrid->getId() == cHybridId) cHybridIndex = cHybrid->getIndex();
             }
             auto                  cReadoutChips = pBoard->at(0)->at(cHybridIndex);
             std::vector<uint32_t> cCbcData(cIterator, cIterator + cDataSize);
-            fEventDataVector[encodeVectorIndex(cFeId, cCbcId, cReadoutChips->fullSize())] = cCbcData;
+            fEventDataVector[encodeVectorIndex(cHybridId, cCbcId, cReadoutChips->fullSize())] = cCbcData;
         }
         cIterator += cL1DataSize + cStubDataSize;
     } while(cIterator < list.end() - fDummySize);
@@ -212,7 +212,7 @@ void D19cCbc3Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
     // {
     //     if (((list.at(address_offset) >> 28) & 0xF) == 0xA)
     //     {
-    //         uint8_t cFeId = (list.at(address_offset) >> 16) & 0xFF;
+    //         uint8_t cHybridId = (list.at(address_offset) >> 16) & 0xFF;
     //         uint8_t cCbcId = (list.at(address_offset) >> 12) & 0xF;
     //         uint32_t cL1ADataSize = (list.at(address_offset) >> 0) & 0xFFF;
     //         cL1ADataSize *= 4; // now in 128 bit words
@@ -225,7 +225,7 @@ void D19cCbc3Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
     //             uint32_t begin = address_offset;
     //             uint32_t end = begin + (cL1ADataSize+cStubDataSize);
     //             std::vector<uint32_t> cCbcData (std::next (std::begin (list), begin), std::next (std::begin (list),
-    //             end) ); fEventDataVector[encodeVectorIndex(cFeId, cCbcId,fNCbc)] = cCbcData;
+    //             end) ); fEventDataVector[encodeVectorIndex(cHybridId, cCbcId,fNCbc)] = cCbcData;
 
     //             // increment
     //             address_offset += (cL1ADataSize+cStubDataSize);
@@ -262,7 +262,7 @@ std::string D19cCbc3Event::HexString() const
     return "";
 }
 
-std::string D19cCbc3Event::DataHexString(uint8_t pFeId, uint8_t pCbcId) const
+std::string D19cCbc3Event::DataHexString(uint8_t pHybridId, uint8_t pCbcId) const
 {
     std::stringbuf tmp;
     std::ostream   os(&tmp);
@@ -270,9 +270,9 @@ std::string D19cCbc3Event::DataHexString(uint8_t pFeId, uint8_t pCbcId) const
     oldState.copyfmt(os);
     os << std::hex << std::setfill('0');
 
-    // get the CBC event for pFeId and pCbcId into vector<32bit> cbcData
+    // get the CBC event for pHybridId and pCbcId into vector<32bit> cbcData
     std::vector<uint32_t> cbcData;
-    GetCbcEvent(pFeId, pCbcId, cbcData);
+    GetCbcEvent(pHybridId, pCbcId, cbcData);
 
     // l1cnt
     os << std::setw(3) << ((cbcData.at(2) & 0x01FF0000) >> 16) << std::endl;
@@ -298,29 +298,29 @@ std::string D19cCbc3Event::DataHexString(uint8_t pFeId, uint8_t pCbcId) const
 }
 
 // NOT READY (what is i??????????)
-bool D19cCbc3Event::Error(uint8_t pFeId, uint8_t pCbcId, uint32_t i) const { return Bit(pFeId, pCbcId, D19C_OFFSET_ERROR_CBC3); }
+bool D19cCbc3Event::Error(uint8_t pHybridId, uint8_t pCbcId, uint32_t i) const { return Bit(pHybridId, pCbcId, D19C_OFFSET_ERROR_CBC3); }
 
-uint32_t D19cCbc3Event::Error(uint8_t pFeId, uint8_t pCbcId) const
+uint32_t D19cCbc3Event::Error(uint8_t pHybridId, uint8_t pCbcId) const
 {
     try
     {
-        const std::vector<uint32_t>& hitVector = fEventDataVector.at(encodeVectorIndex(pFeId, pCbcId, fNCbc));
+        const std::vector<uint32_t>& hitVector = fEventDataVector.at(encodeVectorIndex(pHybridId, pCbcId, fNCbc));
         uint32_t                     cError    = ((hitVector.at(2) & 0xC0000000) >> 30);
         ;
         return cError;
     }
     catch(const std::out_of_range& outOfRange)
     {
-        LOG(ERROR) << "Word 2 for FE " << +pFeId << " CBC " << +pCbcId << " is not found:";
+        LOG(ERROR) << "Word 2 for FE " << +pHybridId << " CBC " << +pCbcId << " is not found:";
         LOG(ERROR) << "Out of Range error: " << outOfRange.what();
         return 0;
     }
 }
-uint32_t D19cCbc3Event::L1Id(uint8_t pFeId, uint8_t pCbcId) const
+uint32_t D19cCbc3Event::L1Id(uint8_t pHybridId, uint8_t pCbcId) const
 {
     try
     {
-        const std::vector<uint32_t>& hitVector = fEventDataVector.at(encodeVectorIndex(pFeId, pCbcId, fNCbc));
+        const std::vector<uint32_t>& hitVector = fEventDataVector.at(encodeVectorIndex(pHybridId, pCbcId, fNCbc));
         LOG(DEBUG) << BOLDBLUE << "L1 header " << std::bitset<32>(hitVector.at(2)) << RESET;
         std::bitset<32> cWord = hitVector.at(2);
         std::bitset<9>  cL1counter(0);
@@ -329,12 +329,12 @@ uint32_t D19cCbc3Event::L1Id(uint8_t pFeId, uint8_t pCbcId) const
     }
     catch(const std::out_of_range& outOfRange)
     {
-        LOG(ERROR) << "Word 2 for FE " << +pFeId << " CBC " << +pCbcId << " is not found:";
+        LOG(ERROR) << "Word 2 for FE " << +pHybridId << " CBC " << +pCbcId << " is not found:";
         LOG(ERROR) << "Out of Range error: " << outOfRange.what();
         return 0;
     }
 }
-uint32_t D19cCbc3Event::PipelineAddress(uint8_t pFeId, uint8_t pCbcId) const
+uint32_t D19cCbc3Event::PipelineAddress(uint8_t pHybridId, uint8_t pCbcId) const
 {
     uint32_t cPipeline = 0;
     LOG(DEBUG) << "Event vector has " << +fEventDataVector.size() << " 32 bit words. Number of CBCs is " << fNCbc << RESET;
@@ -345,7 +345,7 @@ uint32_t D19cCbc3Event::PipelineAddress(uint8_t pFeId, uint8_t pCbcId) const
     }
     try
     {
-        uint8_t cIndex = encodeVectorIndex(pFeId, pCbcId, fNCbc);
+        uint8_t cIndex = encodeVectorIndex(pHybridId, pCbcId, fNCbc);
         LOG(DEBUG) << BOLDBLUE << "\t.. vector index is " << cIndex << " in a list that has " << +fEventDataVector.size() << " entries." << RESET;
         const std::vector<uint32_t>& hitVector = fEventDataVector.at(cIndex);
         if(hitVector.size() >= 2)
@@ -360,61 +360,61 @@ uint32_t D19cCbc3Event::PipelineAddress(uint8_t pFeId, uint8_t pCbcId) const
     }
     catch(const std::out_of_range& outOfRange)
     {
-        LOG(ERROR) << "Word 2 for FE " << +pFeId << " CBC " << +pCbcId << " is not found:";
+        LOG(ERROR) << "Word 2 for FE " << +pHybridId << " CBC " << +pCbcId << " is not found:";
         LOG(ERROR) << "Out of Range error: " << outOfRange.what();
     }
     return cPipeline;
 }
 
-std::string D19cCbc3Event::DataBitString(uint8_t pFeId, uint8_t pCbcId) const
+std::string D19cCbc3Event::DataBitString(uint8_t pHybridId, uint8_t pCbcId) const
 {
     std::ostringstream os;
-    for(uint32_t i = 0; i < NCHANNELS; ++i) { os << privateDataBit(pFeId, pCbcId, i); }
+    for(uint32_t i = 0; i < NCHANNELS; ++i) { os << privateDataBit(pHybridId, pCbcId, i); }
     return os.str();
 }
-std::vector<uint32_t> getL1data(uint8_t pFeId, uint8_t pCbcId)
+std::vector<uint32_t> getL1data(uint8_t pHybridId, uint8_t pCbcId)
 {
     std::vector<uint32_t> cL1data(std::ceil(274. / 32), 0);
     return cL1data;
 }
-std::vector<bool> D19cCbc3Event::DataBitVector(uint8_t pFeId, uint8_t pCbcId) const
+std::vector<bool> D19cCbc3Event::DataBitVector(uint8_t pHybridId, uint8_t pCbcId) const
 {
     std::vector<bool> blist;
 
-    for(uint32_t i = 0; i < NCHANNELS; ++i) { blist.push_back(privateDataBit(pFeId, pCbcId, i)); }
+    for(uint32_t i = 0; i < NCHANNELS; ++i) { blist.push_back(privateDataBit(pHybridId, pCbcId, i)); }
 
     return blist;
 }
 
-std::vector<bool> D19cCbc3Event::DataBitVector(uint8_t pFeId, uint8_t pCbcId, const std::vector<uint8_t>& channelList) const
+std::vector<bool> D19cCbc3Event::DataBitVector(uint8_t pHybridId, uint8_t pCbcId, const std::vector<uint8_t>& channelList) const
 {
     std::vector<bool> blist;
 
-    for(auto i: channelList) { blist.push_back(privateDataBit(pFeId, pCbcId, i)); }
+    for(auto i: channelList) { blist.push_back(privateDataBit(pHybridId, pCbcId, i)); }
 
     return blist;
 }
 
-std::string D19cCbc3Event::GlibFlagString(uint8_t pFeId, uint8_t pCbcId) const { return ""; }
+std::string D19cCbc3Event::GlibFlagString(uint8_t pHybridId, uint8_t pCbcId) const { return ""; }
 
-std::string D19cCbc3Event::StubBitString(uint8_t pFeId, uint8_t pCbcId) const
+std::string D19cCbc3Event::StubBitString(uint8_t pHybridId, uint8_t pCbcId) const
 {
     std::ostringstream os;
 
-    std::vector<Stub> cStubVector = this->StubVector(pFeId, pCbcId);
+    std::vector<Stub> cStubVector = this->StubVector(pHybridId, pCbcId);
 
     for(auto cStub: cStubVector) os << std::bitset<8>(cStub.getPosition()) << " " << std::bitset<4>(cStub.getBend()) << " ";
 
     return os.str();
 
-    // return BitString ( pFeId, pCbcId, OFFSET_CBCSTUBDATA, WIDTH_CBCSTUBDATA );
+    // return BitString ( pHybridId, pCbcId, OFFSET_CBCSTUBDATA, WIDTH_CBCSTUBDATA );
 }
 
-bool D19cCbc3Event::StubBit(uint8_t pFeId, uint8_t pCbcId) const
+bool D19cCbc3Event::StubBit(uint8_t pHybridId, uint8_t pCbcId) const
 {
     try
     {
-        uint32_t stubWord = fEventDataVector.at(encodeVectorIndex(pFeId, pCbcId, fNCbc)).at(13);
+        uint32_t stubWord = fEventDataVector.at(encodeVectorIndex(pHybridId, pCbcId, fNCbc)).at(13);
         uint8_t  pos1     = (stubWord & 0x000000FF);
         uint8_t  pos2     = (stubWord & 0x0000FF00) >> 8;
         uint8_t  pos3     = (stubWord & 0x00FF0000) >> 16;
@@ -422,15 +422,15 @@ bool D19cCbc3Event::StubBit(uint8_t pFeId, uint8_t pCbcId) const
     }
     catch(const std::out_of_range& outOfRange)
     {
-        LOG(ERROR) << "Stub bit for FE " << +pFeId << " CBC " << +pCbcId << " is not found:";
+        LOG(ERROR) << "Stub bit for FE " << +pHybridId << " CBC " << +pCbcId << " is not found:";
         LOG(ERROR) << "Out of Range error: " << outOfRange.what();
         return false;
     }
 }
 
-std::vector<Stub> D19cCbc3Event::StubVector(uint8_t pFeId, uint8_t pCbcId) const
+std::vector<Stub> D19cCbc3Event::StubVector(uint8_t pHybridId, uint8_t pCbcId) const
 {
-    auto&    cEventWords    = fEventDataVector.at(encodeVectorIndex(pFeId, pCbcId, fNCbc));
+    auto&    cEventWords    = fEventDataVector.at(encodeVectorIndex(pHybridId, pCbcId, fNCbc));
     size_t   cL1DataSize    = static_cast<size_t>(cEventWords.at(0) & 0xFFF) * 4;
     uint32_t cStubPositions = cEventWords.at(cL1DataSize + 1);
     LOG(DEBUG) << BOLDYELLOW << "Stub positions " << std::bitset<32>(cStubPositions) << RESET;
@@ -448,12 +448,12 @@ std::vector<Stub> D19cCbc3Event::StubVector(uint8_t pFeId, uint8_t pCbcId) const
     return cStubVec;
 }
 
-uint32_t D19cCbc3Event::GetNHits(uint8_t pFeId, uint8_t pCbcId) const
+uint32_t D19cCbc3Event::GetNHits(uint8_t pHybridId, uint8_t pCbcId) const
 {
     try
     {
         uint32_t                     cNHits    = 0;
-        const std::vector<uint32_t>& hitVector = fEventDataVector.at(encodeVectorIndex(pFeId, pCbcId, fNCbc));
+        const std::vector<uint32_t>& hitVector = fEventDataVector.at(encodeVectorIndex(pHybridId, pCbcId, fNCbc));
         cNHits += __builtin_popcount(hitVector.at(10) & 0xFFFFFFFC);
         cNHits += __builtin_popcount(hitVector.at(9) & 0xFFFFFFFF);
         cNHits += __builtin_popcount(hitVector.at(8) & 0xFFFFFFFF);
@@ -468,33 +468,33 @@ uint32_t D19cCbc3Event::GetNHits(uint8_t pFeId, uint8_t pCbcId) const
     }
     catch(const std::out_of_range& outOfRange)
     {
-        LOG(ERROR) << "Stub bit or bend for FE " << +pFeId << " CBC " << +pCbcId << " is not found:";
+        LOG(ERROR) << "Stub bit or bend for FE " << +pHybridId << " CBC " << +pCbcId << " is not found:";
         LOG(ERROR) << "Out of Range error: " << outOfRange.what();
         return 0;
     }
 }
 
-std::vector<uint32_t> D19cCbc3Event::GetHits(uint8_t pFeId, uint8_t pCbcId) const
+std::vector<uint32_t> D19cCbc3Event::GetHits(uint8_t pHybridId, uint8_t pCbcId) const
 {
     std::vector<uint32_t> cHits;
 
     for(uint32_t i = 0; i < NCHANNELS; ++i)
     {
-        if(privateDataBit(pFeId, pCbcId, i) == 1) cHits.push_back(i);
+        if(privateDataBit(pHybridId, pCbcId, i) == 1) cHits.push_back(i);
     }
 
     return cHits;
 }
 
-void D19cCbc3Event::printCbcHeader(std::ostream& os, uint8_t pFeId, uint8_t pCbcId) const
+void D19cCbc3Event::printCbcHeader(std::ostream& os, uint8_t pHybridId, uint8_t pCbcId) const
 {
-    if(size_t(pCbcId + fNCbc * pFeId) < fEventDataVector.size())
+    if(size_t(pCbcId + fNCbc * pHybridId) < fEventDataVector.size())
     {
         os << GREEN << "CBC Header:" << std::endl;
-        os << " FeId: " << +pFeId << " CbcId: " << +pCbcId << " DataSize: " << D19C_EVENT_SIZE_32_CBC3 << RESET << std::endl;
+        os << " HybridId: " << +pHybridId << " CbcId: " << +pCbcId << " DataSize: " << D19C_EVENT_SIZE_32_CBC3 << RESET << std::endl;
     }
     else
-        LOG(INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found.";
+        LOG(INFO) << "Event: FE " << +pHybridId << " CBC " << +pCbcId << " is not found.";
 }
 
 void D19cCbc3Event::print(std::ostream& os) const
@@ -522,39 +522,39 @@ void D19cCbc3Event::print(std::ostream& os) const
     /*for( auto cPacket : fEventDataVector )
     {
         uint32_t cL1Header = cPacket[0];
-        uint8_t cFeId = getHybridIdFromVectorIndex(vectorIndex,fNCbc);
+        uint8_t cHybridId = getHybridIdFromVectorIndex(vectorIndex,fNCbc);
         uint8_t cCbcId = getCbcIdFromVectorIndex(vectorIndex++,fNCbc);
-        os << BOLDCYAN << "FE" << +cFeId << " CBC" << +cCbcId << RESET << std::endl;
+        os << BOLDCYAN << "FE" << +cHybridId << " CBC" << +cCbcId << RESET << std::endl;
         os << BOLDCYAN << "L1 Header " << std::bitset<32>(cPacket[0]) << std::endl;
 
-        //this->printCbcHeader (os, cFeId, cCbcId);
+        //this->printCbcHeader (os, cHybridId, cCbcId);
     }*/
     for(__attribute__((unused)) auto const& hitVector: fEventDataVector)
     {
-        uint8_t cFeId  = getHybridIdFromVectorIndex(vectorIndex, fNCbc);
+        uint8_t cHybridId  = getHybridIdFromVectorIndex(vectorIndex, fNCbc);
         uint8_t cCbcId = getCbcIdFromVectorIndex(vectorIndex++, fNCbc);
-        this->printCbcHeader(os, cFeId, cCbcId);
-        os << GREEN << "FEId = " << +cFeId << " CBCId = " << +cCbcId << RESET << std::endl;
+        this->printCbcHeader(os, cHybridId, cCbcId);
+        os << GREEN << "FEId = " << +cHybridId << " CBCId = " << +cCbcId << RESET << std::endl;
 
         // here display the Cbc Header manually
-        if(fEventDataVector.size() <= encodeVectorIndex(cFeId, cCbcId, fNCbc))
+        if(fEventDataVector.size() <= encodeVectorIndex(cHybridId, cCbcId, fNCbc))
         {
-            LOG(INFO) << BOLDBLUE << "AAAH! FE" << +cFeId << " CBC" << +cCbcId << " not here!" << RESET;
+            LOG(INFO) << BOLDBLUE << "AAAH! FE" << +cHybridId << " CBC" << +cCbcId << " not here!" << RESET;
             continue;
         }
-        if(fEventDataVector.at(encodeVectorIndex(cFeId, cCbcId, fNCbc)).size() == 0) continue;
+        if(fEventDataVector.at(encodeVectorIndex(cHybridId, cCbcId, fNCbc)).size() == 0) continue;
 
-        os << YELLOW << "PipelineAddress: " << this->PipelineAddress(cFeId, cCbcId) << RESET << " L1 Counter [from CBC] " << +this->L1Id(cFeId, cCbcId) << RESET << std::endl;
-        os << RED << "Error: " << static_cast<std::bitset<2>>(this->Error(cFeId, cCbcId)) << RESET << std::endl;
+        os << YELLOW << "PipelineAddress: " << this->PipelineAddress(cHybridId, cCbcId) << RESET << " L1 Counter [from CBC] " << +this->L1Id(cHybridId, cCbcId) << RESET << std::endl;
+        os << RED << "Error: " << static_cast<std::bitset<2>>(this->Error(cHybridId, cCbcId)) << RESET << std::endl;
 
         // here print a list of stubs
         uint8_t cCounter = 1;
 
-        if(this->StubBit(cFeId, cCbcId))
+        if(this->StubBit(cHybridId, cCbcId))
         {
             os << BOLDCYAN << "List of Stubs: " << RESET << std::endl;
 
-            for(auto& cStub: this->StubVector(cFeId, cCbcId))
+            for(auto& cStub: this->StubVector(cHybridId, cCbcId))
             {
                 os << CYAN << "Stub: " << +cCounter << " Position: " << +cStub.getPosition() << " Bend: " << +cStub.getBend() << " Strip: " << cStub.getCenter() << RESET << std::endl;
                 cCounter++;
@@ -562,10 +562,10 @@ void D19cCbc3Event::print(std::ostream& os) const
         }
 
         // here list other bits in the stub stream
-        std::string data(this->DataBitString(cFeId, cCbcId));
-        os << CYAN << "Total number of hits: " << this->GetNHits(cFeId, cCbcId) << RESET << std::endl;
+        std::string data(this->DataBitString(cHybridId, cCbcId));
+        os << CYAN << "Total number of hits: " << this->GetNHits(cHybridId, cCbcId) << RESET << std::endl;
         os << BLUE << "List of hits: " << RESET << std::endl;
-        std::vector<uint32_t> cHits = this->GetHits(cFeId, cCbcId);
+        std::vector<uint32_t> cHits = this->GetHits(cHybridId, cCbcId);
 
         if(cHits.size() == 254)
             os << "All channels firing!" << std::endl;
@@ -606,17 +606,17 @@ void D19cCbc3Event::print(std::ostream& os) const
         for(int i = 0; i < LAST_LINE_WIDTH; i += 2) os << data.substr(FIRST_LINE_WIDTH + LINE_WIDTH * 7 + i, 2) << " ";
 
         os << std::endl;
-        os << BLUE << "Stubs: " << this->StubBitString(cFeId, cCbcId).c_str() << RESET << std::endl;
+        os << BLUE << "Stubs: " << this->StubBitString(cHybridId, cCbcId).c_str() << RESET << std::endl;
     }
     os << std::endl;
 }
 
-std::vector<Cluster> D19cCbc3Event::getClusters(uint8_t pFeId, uint8_t pCbcId) const
+std::vector<Cluster> D19cCbc3Event::getClusters(uint8_t pHybridId, uint8_t pCbcId) const
 {
     std::vector<Cluster> result;
 
     // Use the bool vector method (SLOW!) TODO: improve this
-    std::vector<bool> stripBits = DataBitVector(pFeId, pCbcId);
+    std::vector<bool> stripBits = DataBitVector(pHybridId, pCbcId);
 
     // Cluster finding
     Cluster aCluster;
@@ -664,7 +664,7 @@ std::vector<Cluster> D19cCbc3Event::getClusters(uint8_t pFeId, uint8_t pCbcId) c
 SLinkEvent D19cCbc3Event::GetSLinkEvent(BeBoard* pBoard) const
 {
     uint16_t          cCbcCounter = 0;
-    std::set<uint8_t> cEnabledFe;
+    std::set<uint8_t> cEnabledHybrids;
 
     // payload for the status bits
     GenericPayload cStatusPayload;
@@ -672,24 +672,24 @@ SLinkEvent D19cCbc3Event::GetSLinkEvent(BeBoard* pBoard) const
     GenericPayload cPayload;
     GenericPayload cStubPayload;
 
-    for(auto cFe: *pBoard->at(0))
+    for(auto cHybrid: *pBoard->at(0))
     {
-        uint8_t cFeId = cFe->getId();
+        uint8_t cHybridId = cHybrid->getId();
 
         // firt get the list of enabled front ends
-        if(cEnabledFe.find(cFeId) == std::end(cEnabledFe)) cEnabledFe.insert(cFeId);
+        if(cEnabledHybrids.find(cHybridId) == std::end(cEnabledHybrids)) cEnabledHybrids.insert(cHybridId);
 
         // now on to the payload
         uint16_t cCbcPresenceWord   = 0;
         int      cFirstBitFePayload = cPayload.get_current_write_position();
         int      cFirstBitFeStub    = cStubPayload.get_current_write_position();
         // stub counter per FE
-        uint8_t cFeStubCounter = 0;
+        uint8_t cHybridStubCounter = 0;
 
-        for(auto cCbc: *cFe)
+        for(auto cCbc: *cHybrid)
         {
             uint8_t                      cCbcId    = cCbc->getId();
-            const std::vector<uint32_t>& hitVector = fEventDataVector.at(encodeVectorIndex(cFeId, cCbcId, fNCbc));
+            const std::vector<uint32_t>& hitVector = fEventDataVector.at(encodeVectorIndex(cHybridId, cCbcId, fNCbc));
 
             try
             {
@@ -738,24 +738,24 @@ SLinkEvent D19cCbc3Event::GetSLinkEvent(BeBoard* pBoard) const
                 if(pos1 != 0)
                 {
                     cStubPayload.append(uint16_t((cCbcId & 0x0F) << 12 | pos1 << 4 | (bend1 & 0xF)));
-                    cFeStubCounter++;
+                    cHybridStubCounter++;
                 }
 
                 if(pos2 != 0)
                 {
                     cStubPayload.append(uint16_t((cCbcId & 0x0F) << 12 | pos2 << 4 | (bend2 & 0xF)));
-                    cFeStubCounter++;
+                    cHybridStubCounter++;
                 }
 
                 if(pos3 != 0)
                 {
                     cStubPayload.append(uint16_t((cCbcId & 0x0F) << 12 | pos3 << 4 | (bend3 & 0xF)));
-                    cFeStubCounter++;
+                    cHybridStubCounter++;
                 }
             }
             catch(const std::out_of_range& outOfRange)
             {
-                LOG(ERROR) << "Words for FE " << +cFeId << " CBC " << +cCbcId << " is not found:";
+                LOG(ERROR) << "Words for FE " << +cHybridId << " CBC " << +cCbcId << " is not found:";
                 LOG(ERROR) << "Out of Range error: " << outOfRange.what();
                 return SLinkEvent();
             }
@@ -768,15 +768,15 @@ SLinkEvent D19cCbc3Event::GetSLinkEvent(BeBoard* pBoard) const
 
         // for the stubs for this FE, I need to prepend a 5 bit counter shifted by 1 to the right (to account for the 0
         // bit)
-        cStubPayload.insert((cFeStubCounter & 0x1F) << 1, cFirstBitFeStub, 6);
+        cStubPayload.insert((cHybridStubCounter & 0x1F) << 1, cFirstBitFeStub, 6);
 
-    } // end of Fe loop
+    } // end of Hybrid loop
 
     uint32_t   cEvtCount = this->GetEventCount();
     uint16_t   cBunch    = static_cast<uint16_t>(this->GetBunch());
     uint32_t   cBeStatus = this->fBeStatus;
     SLinkEvent cEvent(EventType::VR, pBoard->getConditionDataSet()->getDebugMode(), FrontEndType::CBC3, cEvtCount, cBunch, SOURCE_ID);
-    cEvent.generateTkHeader(cBeStatus, cCbcCounter, cEnabledFe, pBoard->getConditionDataSet()->getCondDataEnabled(),
+    cEvent.generateTkHeader(cBeStatus, cCbcCounter, cEnabledHybrids, pBoard->getConditionDataSet()->getCondDataEnabled(),
                             false); // Be Status, total number CBC, condition data?, fake data?
 
     // generate a vector of uint64_t with the chip status

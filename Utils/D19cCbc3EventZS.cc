@@ -47,20 +47,20 @@ void D19cCbc3EventZS::SetEvent(const BeBoard* pBoard, uint32_t pZSEventSize, con
 
     if(header1_size != D19C_EVENT_HEADER1_SIZE_32_CBC3) LOG(ERROR) << "Misaligned data: Header1 size doesnt correspond to the one sent from firmware";
 
-    fNFe_software    = static_cast<uint8_t>(pBoard->getNFe());
-    fNFe_event       = 0;
+    fNHybrid_software    = static_cast<uint8_t>(pBoard->getNHybrid());
+    fNHybrid_event       = 0;
     fFeMask_software = 0;
     fFeMask_event    = static_cast<uint8_t>((0x00FF0000 & list.at(0)) >> 16);
 
     for(uint8_t bit = 0; bit < fMaxHybrids; bit++)
     {
-        if((fFeMask_event >> bit) & 1) fNFe_event++;
+        if((fFeMask_event >> bit) & 1) fNHybrid_event++;
     }
 
-    for(uint8_t cFe = 0; cFe < fNFe_software; cFe++)
+    for(uint8_t cHybrid = 0; cHybrid < fNHybrid_software; cHybrid++)
     {
-        uint8_t cFeId = pBoard->at(0)->at(cFe)->getId();
-        fFeMask_software |= 1 << cFeId;
+        uint8_t cHybridId = pBoard->at(0)->at(cHybrid)->getId();
+        fFeMask_software |= 1 << cHybridId;
     }
 
     fEventCount = 0x00FFFFFF & list.at(2);
@@ -77,16 +77,16 @@ void D19cCbc3EventZS::SetEvent(const BeBoard* pBoard, uint32_t pZSEventSize, con
     // now iterate through hybrids
     uint32_t address_offset = D19C_EVENT_HEADER1_SIZE_32_CBC3;
 
-    for(uint8_t cFe = 0; cFe < fNFe_software; cFe++)
+    for(uint8_t cHybrid = 0; cHybrid < fNHybrid_software; cHybrid++)
     {
-        uint8_t cFeId = pBoard->at(0)->at(cFe)->getId();
-        if(((fFeMask_software >> cFeId) & 1) && ((fFeMask_event >> cFeId) & 1))
+        uint8_t cHybridId = pBoard->at(0)->at(cHybrid)->getId();
+        if(((fFeMask_software >> cHybridId) & 1) && ((fFeMask_event >> cHybridId) & 1))
         {
             // uint8_t chip_data_mask = static_cast<uint8_t> ( ( (0xFF000000) & list.at (address_offset + 0) ) >> 24);
             // LOG(INFO) << "Chip data mask: " << std::hex << +chip_data_mask << std::dec;
 
             uint16_t fe_data_size = static_cast<uint16_t>(((0x0000FFFF) & list.at(address_offset + 0)) >> 0);
-            // LOG(INFO) << "FE Data Size: " << +fe_data_size;
+            // LOG(INFO) << "Hybrid Data Size: " << +fe_data_size;
 
             uint8_t  cChipIDPrev = 255; // to be sure that we are starting from new chip everytime
             uint32_t word_id     = address_offset;
@@ -106,7 +106,7 @@ void D19cCbc3EventZS::SetEvent(const BeBoard* pBoard, uint32_t pZSEventSize, con
                     uint32_t cChipDataSize = 1 + cNstripDataWords + 2; // 1 for header, 2 for stubs
 
                     // assign the data to the map
-                    uint16_t              cKey = encodeId(cFeId, cChipID);
+                    uint16_t              cKey = encodeId(cHybridId, cChipID);
                     std::vector<uint32_t> cCbcDataZS(std::next(std::begin(list), word_id), std::next(std::begin(list), word_id + cChipDataSize));
                     fEventDataMap[cKey] = cCbcDataZS;
                     word_id += cChipDataSize;
@@ -134,7 +134,7 @@ void D19cCbc3EventZS::SetEvent(const BeBoard* pBoard, uint32_t pZSEventSize, con
 
 std::string D19cCbc3EventZS::HexString() const { return ""; }
 
-std::string D19cCbc3EventZS::DataHexString(uint8_t pFeId, uint8_t pCbcId) const
+std::string D19cCbc3EventZS::DataHexString(uint8_t pHybridId, uint8_t pCbcId) const
 {
     std::stringbuf tmp;
     std::ostream   os(&tmp);
@@ -142,9 +142,9 @@ std::string D19cCbc3EventZS::DataHexString(uint8_t pFeId, uint8_t pCbcId) const
     oldState.copyfmt(os);
     os << std::hex << std::setfill('0');
 
-    // get the CBC event for pFeId and pCbcId into vector<32bit> cbcData
+    // get the CBC event for pHybridId and pCbcId into vector<32bit> cbcData
     std::vector<uint32_t> cbcData;
-    GetCbcEvent(pFeId, pCbcId, cbcData);
+    GetCbcEvent(pHybridId, pCbcId, cbcData);
 
     // trigdata
     os << std::endl;
@@ -156,9 +156,9 @@ std::string D19cCbc3EventZS::DataHexString(uint8_t pFeId, uint8_t pCbcId) const
     return tmp.str();
 }
 
-bool D19cCbc3EventZS::Error(uint8_t pFeId, uint8_t pCbcId, uint32_t i) const
+bool D19cCbc3EventZS::Error(uint8_t pHybridId, uint8_t pCbcId, uint32_t i) const
 {
-    uint16_t                     cKey  = encodeId(pFeId, pCbcId);
+    uint16_t                     cKey  = encodeId(pHybridId, pCbcId);
     EventDataMap::const_iterator cData = fEventDataMap.find(cKey);
 
     if(cData != std::end(fEventDataMap))
@@ -174,14 +174,14 @@ bool D19cCbc3EventZS::Error(uint8_t pFeId, uint8_t pCbcId, uint32_t i) const
     }
     else
     {
-        LOG(INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found.";
+        LOG(INFO) << "Event: Hybrid " << +pHybridId << " CBC " << +pCbcId << " is not found.";
         return true;
     }
 }
 
-uint32_t D19cCbc3EventZS::Error(uint8_t pFeId, uint8_t pCbcId) const
+uint32_t D19cCbc3EventZS::Error(uint8_t pHybridId, uint8_t pCbcId) const
 {
-    uint16_t                     cKey  = encodeId(pFeId, pCbcId);
+    uint16_t                     cKey  = encodeId(pHybridId, pCbcId);
     EventDataMap::const_iterator cData = fEventDataMap.find(cKey);
 
     if(cData != std::end(fEventDataMap))
@@ -194,14 +194,14 @@ uint32_t D19cCbc3EventZS::Error(uint8_t pFeId, uint8_t pCbcId) const
     }
     else
     {
-        LOG(INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found.";
+        LOG(INFO) << "Event: Hybrid " << +pHybridId << " CBC " << +pCbcId << " is not found.";
         return 0;
     }
 }
 
-uint32_t D19cCbc3EventZS::PipelineAddress(uint8_t pFeId, uint8_t pCbcId) const
+uint32_t D19cCbc3EventZS::PipelineAddress(uint8_t pHybridId, uint8_t pCbcId) const
 {
-    uint16_t                     cKey  = encodeId(pFeId, pCbcId);
+    uint16_t                     cKey  = encodeId(pHybridId, pCbcId);
     EventDataMap::const_iterator cData = fEventDataMap.find(cKey);
 
     if(cData != std::end(fEventDataMap))
@@ -214,14 +214,14 @@ uint32_t D19cCbc3EventZS::PipelineAddress(uint8_t pFeId, uint8_t pCbcId) const
     }
     else
     {
-        LOG(INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found.";
+        LOG(INFO) << "Event: Hybrid " << +pHybridId << " CBC " << +pCbcId << " is not found.";
         return 0;
     }
 }
 
-bool D19cCbc3EventZS::DataBit(uint8_t pFeId, uint8_t pCbcId, uint32_t i) const
+bool D19cCbc3EventZS::DataBit(uint8_t pHybridId, uint8_t pCbcId, uint32_t i) const
 {
-    uint16_t                     cKey  = encodeId(pFeId, pCbcId);
+    uint16_t                     cKey  = encodeId(pHybridId, pCbcId);
     EventDataMap::const_iterator cData = fEventDataMap.find(cKey);
 
     if(cData != std::end(fEventDataMap))
@@ -280,14 +280,14 @@ bool D19cCbc3EventZS::DataBit(uint8_t pFeId, uint8_t pCbcId, uint32_t i) const
     }
     else
     {
-        LOG(INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found.";
+        LOG(INFO) << "Event: Hybrid " << +pHybridId << " CBC " << +pCbcId << " is not found.";
         return 0;
     }
 }
 
-std::string D19cCbc3EventZS::DataBitString(uint8_t pFeId, uint8_t pCbcId) const
+std::string D19cCbc3EventZS::DataBitString(uint8_t pHybridId, uint8_t pCbcId) const
 {
-    uint16_t                     cKey  = encodeId(pFeId, pCbcId);
+    uint16_t                     cKey  = encodeId(pHybridId, pCbcId);
     EventDataMap::const_iterator cData = fEventDataMap.find(cKey);
 
     if(cData != std::end(fEventDataMap))
@@ -345,15 +345,15 @@ std::string D19cCbc3EventZS::DataBitString(uint8_t pFeId, uint8_t pCbcId) const
     }
     else
     {
-        LOG(INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found.";
+        LOG(INFO) << "Event: Hybrid " << +pHybridId << " CBC " << +pCbcId << " is not found.";
         return "";
     }
 }
 
-std::vector<bool> D19cCbc3EventZS::DataBitVector(uint8_t pFeId, uint8_t pCbcId) const
+std::vector<bool> D19cCbc3EventZS::DataBitVector(uint8_t pHybridId, uint8_t pCbcId) const
 {
     std::vector<bool>            blist;
-    uint16_t                     cKey  = encodeId(pFeId, pCbcId);
+    uint16_t                     cKey  = encodeId(pHybridId, pCbcId);
     EventDataMap::const_iterator cData = fEventDataMap.find(cKey);
 
     if(cData != std::end(fEventDataMap))
@@ -407,15 +407,15 @@ std::vector<bool> D19cCbc3EventZS::DataBitVector(uint8_t pFeId, uint8_t pCbcId) 
         delete hit_bits;
     }
     else
-        LOG(INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found.";
+        LOG(INFO) << "Event: Hybrid " << +pHybridId << " CBC " << +pCbcId << " is not found.";
 
     return blist;
 }
 
-std::vector<bool> D19cCbc3EventZS::DataBitVector(uint8_t pFeId, uint8_t pCbcId, const std::vector<uint8_t>& channelList) const
+std::vector<bool> D19cCbc3EventZS::DataBitVector(uint8_t pHybridId, uint8_t pCbcId, const std::vector<uint8_t>& channelList) const
 {
     std::vector<bool>            blist;
-    uint16_t                     cKey  = encodeId(pFeId, pCbcId);
+    uint16_t                     cKey  = encodeId(pHybridId, pCbcId);
     EventDataMap::const_iterator cData = fEventDataMap.find(cKey);
 
     if(cData != std::end(fEventDataMap))
@@ -466,37 +466,37 @@ std::vector<bool> D19cCbc3EventZS::DataBitVector(uint8_t pFeId, uint8_t pCbcId, 
         for(auto cChannel: channelList) blist.push_back(std::find(cHitsVector.begin(), cHitsVector.end(), cChannel) != cHitsVector.end());
     }
     else
-        LOG(INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found.";
+        LOG(INFO) << "Event: Hybrid " << +pHybridId << " CBC " << +pCbcId << " is not found.";
 
     return blist;
 }
 
-std::string D19cCbc3EventZS::GlibFlagString(uint8_t pFeId, uint8_t pCbcId) const { return ""; }
+std::string D19cCbc3EventZS::GlibFlagString(uint8_t pHybridId, uint8_t pCbcId) const { return ""; }
 
-std::string D19cCbc3EventZS::StubBitString(uint8_t pFeId, uint8_t pCbcId) const
+std::string D19cCbc3EventZS::StubBitString(uint8_t pHybridId, uint8_t pCbcId) const
 {
     std::ostringstream os;
 
-    std::vector<Stub> cStubVector = this->StubVector(pFeId, pCbcId);
+    std::vector<Stub> cStubVector = this->StubVector(pHybridId, pCbcId);
 
     for(auto cStub: cStubVector) os << std::bitset<8>(cStub.getPosition()) << " " << std::bitset<4>(cStub.getBend()) << " ";
 
     return os.str();
 
-    // return BitString ( pFeId, pCbcId, OFFSET_CBCSTUBDATA, WIDTH_CBCSTUBDATA );
+    // return BitString ( pHybridId, pCbcId, OFFSET_CBCSTUBDATA, WIDTH_CBCSTUBDATA );
 }
 
-bool D19cCbc3EventZS::StubBit(uint8_t pFeId, uint8_t pCbcId) const
+bool D19cCbc3EventZS::StubBit(uint8_t pHybridId, uint8_t pCbcId) const
 {
-    std::vector<Stub> cStubVector = this->StubVector(pFeId, pCbcId);
+    std::vector<Stub> cStubVector = this->StubVector(pHybridId, pCbcId);
     return !cStubVector.empty();
 }
 
-std::vector<Stub> D19cCbc3EventZS::StubVector(uint8_t pFeId, uint8_t pCbcId) const
+std::vector<Stub> D19cCbc3EventZS::StubVector(uint8_t pHybridId, uint8_t pCbcId) const
 {
     std::vector<Stub> cStubVec;
     // here create stubs and return the vector
-    uint16_t                     cKey  = encodeId(pFeId, pCbcId);
+    uint16_t                     cKey  = encodeId(pHybridId, pCbcId);
     EventDataMap::const_iterator cData = fEventDataMap.find(cKey);
 
     if(cData != std::end(fEventDataMap))
@@ -516,15 +516,15 @@ std::vector<Stub> D19cCbc3EventZS::StubVector(uint8_t pFeId, uint8_t pCbcId) con
         if(pos3 != 0) cStubVec.emplace_back(pos3, bend3);
     }
     else
-        LOG(INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found.";
+        LOG(INFO) << "Event: Hybrid " << +pHybridId << " CBC " << +pCbcId << " is not found.";
 
     return cStubVec;
 }
 
-uint32_t D19cCbc3EventZS::GetNHits(uint8_t pFeId, uint8_t pCbcId) const
+uint32_t D19cCbc3EventZS::GetNHits(uint8_t pHybridId, uint8_t pCbcId) const
 {
     uint32_t                     cNHits = 0;
-    uint16_t                     cKey   = encodeId(pFeId, pCbcId);
+    uint16_t                     cKey   = encodeId(pHybridId, pCbcId);
     EventDataMap::const_iterator cData  = fEventDataMap.find(cKey);
 
     if(cData != std::end(fEventDataMap))
@@ -570,15 +570,15 @@ uint32_t D19cCbc3EventZS::GetNHits(uint8_t pFeId, uint8_t pCbcId) const
         }
     }
     else
-        LOG(INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found.";
+        LOG(INFO) << "Event: Hybrid " << +pHybridId << " CBC " << +pCbcId << " is not found.";
 
     return cNHits;
 }
 
-std::vector<uint32_t> D19cCbc3EventZS::GetHits(uint8_t pFeId, uint8_t pCbcId) const
+std::vector<uint32_t> D19cCbc3EventZS::GetHits(uint8_t pHybridId, uint8_t pCbcId) const
 {
     std::vector<uint32_t>        cHits;
-    uint16_t                     cKey  = encodeId(pFeId, pCbcId);
+    uint16_t                     cKey  = encodeId(pHybridId, pCbcId);
     EventDataMap::const_iterator cData = fEventDataMap.find(cKey);
 
     if(cData != std::end(fEventDataMap))
@@ -624,27 +624,27 @@ std::vector<uint32_t> D19cCbc3EventZS::GetHits(uint8_t pFeId, uint8_t pCbcId) co
         }
     }
     else
-        LOG(INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found.";
+        LOG(INFO) << "Event: Hybrid " << +pHybridId << " CBC " << +pCbcId << " is not found.";
 
     return cHits;
 }
 
-void D19cCbc3EventZS::printCbcHeader(std::ostream& os, uint8_t pFeId, uint8_t pCbcId) const
+void D19cCbc3EventZS::printCbcHeader(std::ostream& os, uint8_t pHybridId, uint8_t pCbcId) const
 {
-    uint16_t                     cKey  = encodeId(pFeId, pCbcId);
+    uint16_t                     cKey  = encodeId(pHybridId, pCbcId);
     EventDataMap::const_iterator cData = fEventDataMap.find(cKey);
 
     if(cData != std::end(fEventDataMap))
     {
         uint8_t  cBeId        = 0;
-        uint8_t  cFeId        = pFeId;
+        uint8_t  cHybridId        = pHybridId;
         uint8_t  cCbcId       = pCbcId;
         uint16_t cCbcDataSize = 0xFF;
         os << GREEN << "CBC Header:" << std::endl;
-        os << "BeId: " << +cBeId << " FeId: " << +cFeId << " CbcId: " << +cCbcId << " DataSize: " << cCbcDataSize << RESET << std::endl;
+        os << "BeId: " << +cBeId << " HybridId: " << +cHybridId << " CbcId: " << +cCbcId << " DataSize: " << cCbcDataSize << RESET << std::endl;
     }
     else
-        LOG(INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found.";
+        LOG(INFO) << "Event: Hybrid " << +pHybridId << " CBC " << +pCbcId << " is not found.";
 }
 
 void D19cCbc3EventZS::print(std::ostream& os) const
@@ -669,21 +669,21 @@ void D19cCbc3EventZS::print(std::ostream& os) const
 
     for(auto const& cKey: this->fEventDataMap)
     {
-        uint8_t cFeId;
+        uint8_t cHybridId;
         uint8_t cCbcId;
-        this->decodeId(cKey.first, cFeId, cCbcId);
+        this->decodeId(cKey.first, cHybridId, cCbcId);
 
         // here display the Cbc Header manually
-        this->printCbcHeader(os, cFeId, cCbcId);
+        this->printCbcHeader(os, cHybridId, cCbcId);
 
         // here print a list of stubs
         uint8_t cCounter = 1;
 
-        if(this->StubBit(cFeId, cCbcId))
+        if(this->StubBit(cHybridId, cCbcId))
         {
             os << BOLDCYAN << "List of Stubs: " << RESET << std::endl;
 
-            for(auto& cStub: this->StubVector(cFeId, cCbcId))
+            for(auto& cStub: this->StubVector(cHybridId, cCbcId))
             {
                 os << CYAN << "Stub: " << +cCounter << " Position: " << +cStub.getPosition() << " Bend: " << +cStub.getBend() << " Strip: " << cStub.getCenter() << RESET << std::endl;
                 cCounter++;
@@ -692,13 +692,13 @@ void D19cCbc3EventZS::print(std::ostream& os) const
 
         // here list other bits in the stub stream
 
-        std::string data(this->DataBitString(cFeId, cCbcId));
-        os << GREEN << "FEId = " << +cFeId << " CBCId = " << +cCbcId << RESET << " len(data) = " << data.size() << std::endl;
-        os << YELLOW << "PipelineAddress: " << this->PipelineAddress(cFeId, cCbcId) << RESET << std::endl;
-        os << RED << "Error: " << static_cast<std::bitset<2>>(this->Error(cFeId, cCbcId)) << RESET << std::endl;
-        os << CYAN << "Total number of hits: " << this->GetNHits(cFeId, cCbcId) << RESET << std::endl;
+        std::string data(this->DataBitString(cHybridId, cCbcId));
+        os << GREEN << "HybridId = " << +cHybridId << " CBCId = " << +cCbcId << RESET << " len(data) = " << data.size() << std::endl;
+        os << YELLOW << "PipelineAddress: " << this->PipelineAddress(cHybridId, cCbcId) << RESET << std::endl;
+        os << RED << "Error: " << static_cast<std::bitset<2>>(this->Error(cHybridId, cCbcId)) << RESET << std::endl;
+        os << CYAN << "Total number of hits: " << this->GetNHits(cHybridId, cCbcId) << RESET << std::endl;
         os << BLUE << "List of hits: " << RESET << std::endl;
-        std::vector<uint32_t> cHits = this->GetHits(cFeId, cCbcId);
+        std::vector<uint32_t> cHits = this->GetHits(cHybridId, cCbcId);
 
         if(cHits.size() == 254)
             os << "All channels firing!" << std::endl;
@@ -740,16 +740,16 @@ void D19cCbc3EventZS::print(std::ostream& os) const
 
         os << std::endl;
 
-        os << BLUE << "Stubs: " << this->StubBitString(cFeId, cCbcId).c_str() << RESET << std::endl;
+        os << BLUE << "Stubs: " << this->StubBitString(cHybridId, cCbcId).c_str() << RESET << std::endl;
     }
 
     os << std::endl;
 }
 
-std::vector<Cluster> D19cCbc3EventZS::getClusters(uint8_t pFeId, uint8_t pCbcId) const
+std::vector<Cluster> D19cCbc3EventZS::getClusters(uint8_t pHybridId, uint8_t pCbcId) const
 {
     std::vector<Cluster>         cClusterVec;
-    uint16_t                     cKey  = encodeId(pFeId, pCbcId);
+    uint16_t                     cKey  = encodeId(pHybridId, pCbcId);
     EventDataMap::const_iterator cData = fEventDataMap.find(cKey);
 
     if(cData != std::end(fEventDataMap))
@@ -803,7 +803,7 @@ std::vector<Cluster> D19cCbc3EventZS::getClusters(uint8_t pFeId, uint8_t pCbcId)
         }
     }
     else
-        LOG(INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found.";
+        LOG(INFO) << "Event: Hybrid " << +pHybridId << " CBC " << +pCbcId << " is not found.";
 
     return cClusterVec;
 }
@@ -811,7 +811,7 @@ std::vector<Cluster> D19cCbc3EventZS::getClusters(uint8_t pFeId, uint8_t pCbcId)
 SLinkEvent D19cCbc3EventZS::GetSLinkEvent(BeBoard* pBoard) const
 {
     uint16_t          cCbcCounter = 0;
-    std::set<uint8_t> cEnabledFe;
+    std::set<uint8_t> cEnabledHybrids;
 
     // payload for the status bits
     GenericPayload cStatusPayload;
@@ -819,31 +819,31 @@ SLinkEvent D19cCbc3EventZS::GetSLinkEvent(BeBoard* pBoard) const
     GenericPayload cPayload;
     GenericPayload cStubPayload;
 
-    for(auto cFe: *pBoard->at(0))
+    for(auto cHybrid: *pBoard->at(0))
     {
-        uint8_t cFeId = cFe->getId();
+        uint8_t cHybridId = cHybrid->getId();
 
         // firt get the list of enabled front ends
-        if(cEnabledFe.find(cFeId) == std::end(cEnabledFe)) cEnabledFe.insert(cFeId);
+        if(cEnabledHybrids.find(cHybridId) == std::end(cEnabledHybrids)) cEnabledHybrids.insert(cHybridId);
 
         // now on to the payload
         int cFirstBitFePayload = cPayload.get_current_write_position();
         int cFirstBitFeStub    = cStubPayload.get_current_write_position();
-        // cluster counter per FE
-        uint8_t cFeCluCounter = 0;
-        // stub counter per FE
-        uint8_t cFeStubCounter = 0;
+        // cluster counter per Hybrid
+        uint8_t cHybridCluCounter = 0;
+        // stub counter per Hybrid
+        uint8_t cHybridStubCounter = 0;
 
         // in ZS mode and FULL DEBUG mode, we have one error bit per CBC and 9 bits of L1A counter per CIC
-        // the way I am going to implement this here is for each FE I put 9 bits of L1A Ctr followed by 1 Error bit per
+        // the way I am going to implement this here is for each Hybrid I put 9 bits of L1A Ctr followed by 1 Error bit per
         // CBC
         // TODO
         cStatusPayload.append(this->GetEventCount(), 9);
 
-        for(auto cCbc: *cFe)
+        for(auto cCbc: *cHybrid)
         {
             uint8_t                      cCbcId = cCbc->getId();
-            uint16_t                     cKey   = encodeId(cFeId, cCbcId);
+            uint16_t                     cKey   = encodeId(cHybridId, cCbcId);
             EventDataMap::const_iterator cData  = fEventDataMap.find(cKey);
 
             if(cData != std::end(fEventDataMap))
@@ -872,7 +872,7 @@ SLinkEvent D19cCbc3EventZS::GetSLinkEvent(BeBoard* pBoard) const
 
                             // i don't do cClusterWidth-1 here because from the fw it comes in a proper way
                             cPayload.append(uint16_t((cCbcId & 0x0F) << 11 | cClusterAddress << 3 | ((cClusterWidth)&0x07)));
-                            cFeCluCounter++;
+                            cHybridCluCounter++;
 
                             // increment got clusters
                             cGotClusters++;
@@ -886,7 +886,7 @@ SLinkEvent D19cCbc3EventZS::GetSLinkEvent(BeBoard* pBoard) const
 
                             // i don't do cClusterWidth-1 here because from the fw it comes in a proper way
                             cPayload.append(uint16_t((cCbcId & 0x0F) << 11 | cClusterAddress << 3 | ((cClusterWidth)&0x07)));
-                            cFeCluCounter++;
+                            cHybridCluCounter++;
 
                             // increment got clusters
                             cGotClusters++;
@@ -908,19 +908,19 @@ SLinkEvent D19cCbc3EventZS::GetSLinkEvent(BeBoard* pBoard) const
                 if(pos1 != 0)
                 {
                     cStubPayload.append(uint16_t((cCbcId & 0x0F) << 12 | pos1 << 4 | (bend1 & 0xF)));
-                    cFeStubCounter++;
+                    cHybridStubCounter++;
                 }
 
                 if(pos2 != 0)
                 {
                     cStubPayload.append(uint16_t((cCbcId & 0x0F) << 12 | pos2 << 4 | (bend2 & 0xF)));
-                    cFeStubCounter++;
+                    cHybridStubCounter++;
                 }
 
                 if(pos3 != 0)
                 {
                     cStubPayload.append(uint16_t((cCbcId & 0x0F) << 12 | pos3 << 4 | (bend3 & 0xF)));
-                    cFeStubCounter++;
+                    cHybridStubCounter++;
                 }
 
                 // !!! error
@@ -936,20 +936,20 @@ SLinkEvent D19cCbc3EventZS::GetSLinkEvent(BeBoard* pBoard) const
             cCbcCounter++;
         } // end of CBC loop
 
-        // for the payload for this FE, I need to prepend a status bit(6) and 6 bit Cluster counter
-        cPayload.insert((cFeCluCounter & 0x3F), cFirstBitFePayload, 7);
+        // for the payload for this Hybrid, I need to prepend a status bit(6) and 6 bit Cluster counter
+        cPayload.insert((cHybridCluCounter & 0x3F), cFirstBitFePayload, 7);
 
-        // for the stubs for this FE, I need to prepend a 5 bit counter shifted by 1 to the right (to account for the 0
+        // for the stubs for this Hybrid, I need to prepend a 5 bit counter shifted by 1 to the right (to account for the 0
         // bit)
-        cStubPayload.insert((cFeStubCounter & 0x1F) << 1, cFirstBitFeStub, 6);
+        cStubPayload.insert((cHybridStubCounter & 0x1F) << 1, cFirstBitFeStub, 6);
 
-    } // end of Fe loop
+    } // end of Hybrid loop
 
     uint32_t   cEvtCount = this->GetEventCount();
     uint16_t   cBunch    = static_cast<uint16_t>(this->GetBunch());
     uint32_t   cBeStatus = this->fBeStatus;
     SLinkEvent cEvent(EventType::ZS, pBoard->getConditionDataSet()->getDebugMode(), FrontEndType::CBC3, cEvtCount, cBunch, SOURCE_ID);
-    cEvent.generateTkHeader(cBeStatus, cCbcCounter, cEnabledFe, pBoard->getConditionDataSet()->getCondDataEnabled(),
+    cEvent.generateTkHeader(cBeStatus, cCbcCounter, cEnabledHybrids, pBoard->getConditionDataSet()->getCondDataEnabled(),
                             false); // Be Status, total number CBC, condition data?, fake data?
 
     // generate a vector of uint64_t with the chip status

@@ -37,10 +37,10 @@ class CicInterface : public ChipInterface
     /*!
      * \brief Configure the Cic with the Cic Config File
      * \param pCic: pointer to CIC object
-     * \param pVerifLoop: perform a readback check
+     * \param pVerify: perform a readback check
      * \param pBlockSize: the number of registers to be written at once, default is 310
      */
-    bool ConfigureChip(Ph2_HwDescription::Chip* pCic, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
+    bool ConfigureChip(Ph2_HwDescription::Chip* pCic, bool pVerify = true, uint32_t pBlockSize = 310) override;
     void CheckConfig(Ph2_HwDescription::Chip* pChip);
 
     /*!
@@ -49,14 +49,14 @@ class CicInterface : public ChipInterface
      * \param pRegNode : Node of the register to write
      * \param pValue : Value to write
      */
-    bool WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override;
+    bool WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerify = true) override;
 
     /*!
      * \brief Write several registers in both Chip and Chip Config File
      * \param pChip
      * \param pVecReq : Vector of pair: Node of the register to write versus value to write
      */
-    bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop = true) override;
+    bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify = true) override;
 
     /*!
      * \brief Read the designated register in the Chip

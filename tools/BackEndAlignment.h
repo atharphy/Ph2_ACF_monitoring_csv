@@ -44,7 +44,7 @@ class BackEndAlignment : public LinkAlignmentOT
     bool getStatus() const { return fSuccess; }
 
     // assign ids to align
-    void SetEnabledROCs(std::string pPairSelect);
+    void SetEnabledChips(std::string pPairSelect);
 
   protected:
     bool        fL1Debug   = false;
@@ -57,6 +57,6 @@ class BackEndAlignment : public LinkAlignmentOT
     bool fAlignStub = true;
     // Containers
     DetectorDataContainer fEnabledFEs;
-    std::vector<uint8_t>  fEnabledROCs{0};
+    std::vector<uint8_t>  fEnabledChips{0};
 };
 #endif
