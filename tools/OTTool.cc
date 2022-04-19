@@ -59,7 +59,7 @@ void OTTool::Reset()
                 for(auto cChip: *cHybrid)
                 {
                     auto& cChipRegsToPreserveThisChip = cChipRegsToPreserveThisHybrd->at(cChip->getIndex());
-                    auto& cRegsToPerserve           = cChipRegsToPreserveThisChip->getSummary<std::vector<std::string>>();
+                    auto& cRegsToPerserve             = cChipRegsToPreserveThisChip->getSummary<std::vector<std::string>>();
                     // reset registers
                     auto cModMap = cChip->GetModifiedRegisterMap();
                     LOG(INFO) << BOLDYELLOW << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
@@ -220,7 +220,7 @@ void OTTool::SetChipRegstoPerserve(FrontEndType pType, std::vector<std::string> 
                     if(cChip->getFrontEndType() != pType) continue;
 
                     auto& cChipRegsToPreserveThisChip = cChipRegsToPreserveThisHybrd->at(cChip->getIndex());
-                    auto& cRegsToPerserve           = cChipRegsToPreserveThisChip->getSummary<std::vector<std::string>>();
+                    auto& cRegsToPerserve             = cChipRegsToPreserveThisChip->getSummary<std::vector<std::string>>();
                     cRegsToPerserve.clear();
                     for(const auto& cRegName: pListOfRegs)
                     {

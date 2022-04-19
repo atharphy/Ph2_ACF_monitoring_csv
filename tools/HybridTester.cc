@@ -152,7 +152,7 @@ void HybridTester::InitializeHists()
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                uint32_t cHybridId     = cHybrid->getId();
+                uint32_t cHybridId = cHybrid->getId();
                 uint16_t cMaxRange = 1023;
                 fType              = static_cast<OuterTrackerHybrid*>(cHybrid)->getFrontEndType();
 

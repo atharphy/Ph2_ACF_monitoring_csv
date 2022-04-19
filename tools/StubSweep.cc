@@ -31,9 +31,9 @@ void StubSweep::Initialize()
     fSweepCanvas->cd();
     LOG(INFO) << "Created Canvas for Bias sweeps";
 
-    uint32_t cCbcCount = 0;
-    uint32_t cCbcIdMax = 0;
-    uint32_t cHybridCount  = 0;
+    uint32_t cCbcCount    = 0;
+    uint32_t cCbcIdMax    = 0;
+    uint32_t cHybridCount = 0;
 
     for(auto cBoard: *fDetectorContainer)
     {

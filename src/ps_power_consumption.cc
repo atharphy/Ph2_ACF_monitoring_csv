@@ -428,7 +428,7 @@ int main(int argc, char* argv[])
                     if(cOuterTrackerHybrid->size() > 0)
                     {
                         auto         cFirstChip = static_cast<ReadoutChip*>(cOuterTrackerHybrid->at(0));
-                        FrontEndType cType     = FrontEndType::CBC3;
+                        FrontEndType cType      = FrontEndType::CBC3;
                         if(cFirstChip != nullptr) cType = cFirstChip->getFrontEndType();
                         uint8_t cModeSelect = (cType != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA
                         // select CIC mode
@@ -738,7 +738,7 @@ int main(int argc, char* argv[])
                             if(cOuterTrackerHybrid->size() > 0)
                             {
                                 auto         cFirstChip = static_cast<ReadoutChip*>(cOuterTrackerHybrid->at(0));
-                                FrontEndType cType     = FrontEndType::CBC3;
+                                FrontEndType cType      = FrontEndType::CBC3;
                                 if(cFirstChip != nullptr) cType = cFirstChip->getFrontEndType();
                                 uint8_t cModeSelect = (cType != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA
                                 // select CIC mode
@@ -868,7 +868,7 @@ int main(int argc, char* argv[])
                             if(cOuterTrackerHybrid->size() > 0)
                             {
                                 auto         cFirstChip = static_cast<ReadoutChip*>(cOuterTrackerHybrid->at(0));
-                                FrontEndType cType     = FrontEndType::CBC3;
+                                FrontEndType cType      = FrontEndType::CBC3;
                                 if(cFirstChip != nullptr) cType = cFirstChip->getFrontEndType();
                                 uint8_t cModeSelect = (cType != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA
                                 // select CIC mode

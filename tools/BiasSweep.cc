@@ -171,7 +171,7 @@ void BiasSweep::MeasureMinPower(BeBoard* pBoard, ReadoutChip* pCbc)
     TTree*      cTmpTree  = static_cast<TTree*>(getHist(pCbc, "DataTree"));
     fData->fBias          = "MinimalPower";
     fData->fTimestamp     = static_cast<long int>(cTime);
-    fData->fHybridId          = pCbc->getHybridId();
+    fData->fHybridId      = pCbc->getHybridId();
     fData->fCbcId         = pCbc->getId();
     fData->fUnit[0]       = 'I';
     fData->fUnit[1]       = 0;
@@ -301,7 +301,7 @@ void BiasSweep::SweepBias(std::string pBias, ReadoutChip* pCbc)
         TTree* cTmpTree       = static_cast<TTree*>(getHist(pCbc, "DataTree"));
         fData->fBias          = pBias.c_str();
         fData->fTimestamp     = static_cast<long int>(cTime);
-        fData->fHybridId          = pCbc->getHybridId();
+        fData->fHybridId      = pCbc->getHybridId();
         fData->fCbcId         = pCbc->getId();
         fData->fUnit[0]       = (cCurrent) ? 'I' : 'V';
         fData->fUnit[1]       = 0;

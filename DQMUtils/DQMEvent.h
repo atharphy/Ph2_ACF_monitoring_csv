@@ -112,8 +112,8 @@ class DQMEvent
     static uint16_t encodeId(const uint8_t& pHybridId, const uint8_t& pCbcId) { return (pHybridId << 8 | pCbcId); }
     static void     decodeId(const uint16_t& pKey, uint8_t& pHybridId, uint8_t& pCbcId)
     {
-        pHybridId  = (pKey >> 8) & MASK_BITS_8;
-        pCbcId = pKey & MASK_BITS_8;
+        pHybridId = (pKey >> 8) & MASK_BITS_8;
+        pCbcId    = pKey & MASK_BITS_8;
     }
     // total number of Readout units conencted
     static size_t nReadout(const uint64_t& word) { return ((word >> 8) & MASK_BITS_16); }
@@ -461,12 +461,12 @@ class DQMEvent
       public:
         void set(uint64_t word)
         {
-            uint8_t hybridId    = (word >> 56) & MASK_BITS_8;
-            uint8_t xId     = (word >> 52) & MASK_BITS_4; // roID or sensorId
-            uint8_t i2cPage = (word >> 48) & MASK_BITS_4;
-            uint8_t i2cReg  = (word >> 40) & MASK_BITS_8;
-            uint8_t uid     = (word >> 32) & MASK_BITS_8;
-            size_t  value   = word & MASK_BITS_32;
+            uint8_t hybridId = (word >> 56) & MASK_BITS_8;
+            uint8_t xId      = (word >> 52) & MASK_BITS_4; // roID or sensorId
+            uint8_t i2cPage  = (word >> 48) & MASK_BITS_4;
+            uint8_t i2cReg   = (word >> 40) & MASK_BITS_8;
+            uint8_t uid      = (word >> 32) & MASK_BITS_8;
+            size_t  value    = word & MASK_BITS_32;
 
             dList_.push_back(std::make_tuple(hybridId, xId, i2cPage, i2cReg, uid, value));
         }

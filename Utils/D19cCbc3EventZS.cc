@@ -47,10 +47,10 @@ void D19cCbc3EventZS::SetEvent(const BeBoard* pBoard, uint32_t pZSEventSize, con
 
     if(header1_size != D19C_EVENT_HEADER1_SIZE_32_CBC3) LOG(ERROR) << "Misaligned data: Header1 size doesnt correspond to the one sent from firmware";
 
-    fNHybrid_software    = static_cast<uint8_t>(pBoard->getNHybrid());
-    fNHybrid_event       = 0;
-    fFeMask_software = 0;
-    fFeMask_event    = static_cast<uint8_t>((0x00FF0000 & list.at(0)) >> 16);
+    fNHybrid_software = static_cast<uint8_t>(pBoard->getNHybrid());
+    fNHybrid_event    = 0;
+    fFeMask_software  = 0;
+    fFeMask_event     = static_cast<uint8_t>((0x00FF0000 & list.at(0)) >> 16);
 
     for(uint8_t bit = 0; bit < fMaxHybrids; bit++)
     {
@@ -637,7 +637,7 @@ void D19cCbc3EventZS::printCbcHeader(std::ostream& os, uint8_t pHybridId, uint8_
     if(cData != std::end(fEventDataMap))
     {
         uint8_t  cBeId        = 0;
-        uint8_t  cHybridId        = pHybridId;
+        uint8_t  cHybridId    = pHybridId;
         uint8_t  cCbcId       = pCbcId;
         uint16_t cCbcDataSize = 0xFF;
         os << GREEN << "CBC Header:" << std::endl;

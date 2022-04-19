@@ -1058,8 +1058,8 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                                                 cLinkCorrS0->SetBinContent(cBin, cBinContent + 1);
                                                 cLinkCorrS0->SetBinError(cBin, std::sqrt(cBinContent + 1));
 
-                                                LOG(DEBUG) << BOLDYELLOW << "\t\t\t.. Link#" << +otherOGs->getId() << " Hybrid#" << +otherHybrids->getId() << " Chip#" << +otherChips->getId() << " Row "
-                                                           << +cRowOther << " Local X " << cLocalX << " local offset on link is " << cLinkOffsetOther << " link position is this "
+                                                LOG(DEBUG) << BOLDYELLOW << "\t\t\t.. Link#" << +otherOGs->getId() << " Hybrid#" << +otherHybrids->getId() << " Chip#" << +otherChips->getId()
+                                                           << " Row " << +cRowOther << " Local X " << cLocalX << " local offset on link is " << cLinkOffsetOther << " link position is this "
                                                            << cLinkOffsetOther + cLocalXOther << " which is X-axis bin " << cLinkCorrS0->GetXaxis()->FindBin(cLinkOffsetOther + cLocalXOther) << RESET;
                                             }
                                             cChnlIndxOthers++;

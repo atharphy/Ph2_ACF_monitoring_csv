@@ -132,8 +132,8 @@ class Event
 
     void decodeId(const uint16_t& pKey, uint8_t& pHybridId, uint8_t& pCbcId) const
     {
-        pHybridId  = (pKey >> 8) & 0x00FF;
-        pCbcId = pKey & 0xFF;
+        pHybridId = (pKey >> 8) & 0x00FF;
+        pCbcId    = pKey & 0xFF;
     }
 
   public:
