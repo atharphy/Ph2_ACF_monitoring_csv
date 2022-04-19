@@ -15,7 +15,10 @@ namespace Ph2_HwDescription
 ReadoutChip::ReadoutChip(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue) : Chip(pFeDesc, pChipId, pMaxRegValue), ChipContainer(pChipId), fChipOriginalMask(nullptr) {}
 
 // C'tors which take Board ID, Frontend ID/Hybrid ID, FMC ID, Chip ID
-ReadoutChip::ReadoutChip(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, uint16_t pMaxRegValue) : Chip(pBeBoardId, pFMCId, pOpticalGroupId, pHybridId, pChipId, pMaxRegValue), ChipContainer(pChipId) {}
+ReadoutChip::ReadoutChip(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, uint16_t pMaxRegValue)
+    : Chip(pBeBoardId, pFMCId, pOpticalGroupId, pHybridId, pChipId, pMaxRegValue), ChipContainer(pChipId)
+{
+}
 
 // Copy C'tor
 ReadoutChip::ReadoutChip(const ReadoutChip& chipObj) : Chip(chipObj), ChipContainer(chipObj.fChipId) {}

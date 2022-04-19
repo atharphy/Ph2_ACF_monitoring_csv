@@ -125,14 +125,14 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
             fBunch      = cFc7BxId;  // 0xFFFFFFFF & *(cEventIterator + 3);
             // LOG (INFO) << BOLDMAGENTA << "\t... EventCount is " << fEventCount << RESET;
 
-            auto     cIterator = cEventIterator + LENGTH_EVENT_HEADER;
-            uint32_t cStatus   = 0x00000000;
+            auto     cIterator  = cEventIterator + LENGTH_EVENT_HEADER;
+            uint32_t cStatus    = 0x00000000;
             size_t   cChipIndex = 0;
             for(auto cOpticalGroup: *pBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    auto   cHybridIndex            = getHybridIndex(cHybrid->getId());
+                    auto   cHybridIndex        = getHybridIndex(cHybrid->getId());
                     auto   cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
                     auto&  cCic                = cOuterTrackerHybrid->fCic;
                     size_t cNReadoutChips      = (cCic == NULL) ? cHybrid->fullSize() : 1;
@@ -164,13 +164,13 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                             if(fIsSparsified)
                             {
                                 // LOG (DEBUG) << BOLDBLUE << "sparsified data" << RESET;
-                                size_t cEOffset               = 3;
+                                size_t cEOffset                   = 3;
                                 fEventHitList[cHybridIndex].first = cL1Information;
                                 fEventHitList[cHybridIndex].second.clear();
                                 uint8_t cNStripClusters = 0;
                                 if(fIs2S)
                                 {
-                                    cNStripClusters           = (*(cIterator + 2) & (0x7F << 0)) >> 0;
+                                    cNStripClusters               = (*(cIterator + 2) & (0x7F << 0)) >> 0;
                                     fNStripClusters[cHybridIndex] = cNStripClusters;
                                     // clusters/hit data first
                                     std::vector<std::bitset<CLUSTER_WORD_SIZE>> cL1Words(cNStripClusters, 0);
@@ -304,8 +304,8 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         uint32_t                      cGoodStubInfo   = (cStubInfoHeader & (0xF << 28)) >> 28;
                         uint32_t                      cStubInfoSize   = (cStubInfoHeader & 0xFFF) * 4;
                         cStatusWord                                   = cStatusWord | (static_cast<uint8_t>(cGoodStubInfo == VALID_STUB_HEADER) << 1);
-                        // LOG(INFO) << BOLDBLUE << "\t\t.. ReadoutChip#" << +cHybrid->getIndex() << "...stub info header " << std::bitset<4>(cGoodStubInfo) << "... " << +cStubInfoSize << " words in stub
-                        // packet."
+                        // LOG(INFO) << BOLDBLUE << "\t\t.. ReadoutChip#" << +cHybrid->getIndex() << "...stub info header " << std::bitset<4>(cGoodStubInfo) << "... " << +cStubInfoSize << " words in
+                        // stub packet."
                         //            << "... status word " << std::bitset<2>(cStatusWord) << RESET;
                         if(cStatusWord == 0x03)
                         {
@@ -726,7 +726,7 @@ std::bitset<RAW_L1_CBC> D19cCic2Event::getRawL1Word(uint8_t pHybridId, uint8_t p
 {
     auto   cChipIdMapped = this->getChipIdMapped(pHybridId, pReadoutChipId);
     size_t cIndx         = 7 - cChipIdMapped;
-    size_t cHybridIndex      = getHybridIndex(pHybridId);
+    size_t cHybridIndex  = getHybridIndex(pHybridId);
     // LOG (INFO) << BOLDYELLOW << "D19cCic2Event::getRawL1Word for CIC" << +pHybridId << " CBC" << +pReadoutChipId
     //     << " --- [cHybridIndex,cIndx] == " << +cHybridIndex << "," << +cIndx << " -- raw list has " << fEventRawList.size() << " entries and "
     //     << " --- list of bit-sets has " << +fEventRawList[cHybridIndex].second.size() << " "
@@ -1315,10 +1315,10 @@ SLinkEvent D19cCic2Event::GetSLinkEvent(BeBoard* pBoard) const
         uint8_t cLinkId = cOpticalGroup->getId();
         // int cHybridWord=0;
         // int cFirstBitFePayload = cPayload.get_current_write_position();
-        uint16_t cCbcPresenceWord = 0;
-        uint8_t  cHybridStubCounter   = 0;
-        auto     cPositionStubs   = cStubString.length();
-        auto     cPositionHits    = cHitString.length();
+        uint16_t cCbcPresenceWord   = 0;
+        uint8_t  cHybridStubCounter = 0;
+        auto     cPositionStubs     = cStubString.length();
+        auto     cPositionHits      = cHitString.length();
         for(auto cHybrid: *cOpticalGroup)
         {
             uint8_t cHybridId = cHybrid->getId();
@@ -1387,8 +1387,8 @@ SLinkEvent D19cCic2Event::GetSLinkEvent(BeBoard* pBoard) const
         cHitString.insert(cPositionHits, cHybridHeader.to_string());
         // for the stub payload .. do the same
         std::bitset<6> cStubHeader(((cHybridStubCounter << 1) | 0x00) & 0x3F); // 0 for 2S , 1 for PS
-        LOG(DEBUG) << BOLDBLUE << "Hybrid " << +cLinkId << " hit header " << cHybridHeader << " - stub header  " << std::bitset<6>(cStubHeader) << " : " << +cHybridStubCounter << " stub(s) found on this link."
-                   << RESET;
+        LOG(DEBUG) << BOLDBLUE << "Hybrid " << +cLinkId << " hit header " << cHybridHeader << " - stub header  " << std::bitset<6>(cStubHeader) << " : " << +cHybridStubCounter
+                   << " stub(s) found on this link." << RESET;
         cStubString.insert(cPositionStubs, cStubHeader.to_string());
     }
     for(size_t cIndex = 0; cIndex < 1 + cHitString.length() / 64; cIndex++)

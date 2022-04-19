@@ -197,8 +197,8 @@ void D19cSSAEvent::print(std::ostream& os) const // TODO add info here as needed
     size_t vectorIndex = 0;
     for(__attribute__((unused)) auto const& hitVector: fEventDataVector)
     {
-        uint8_t cHybridId  = getHybridIdFromVectorIndex(vectorIndex, fNCbc);
-        uint8_t cSSAId = getSSAIdFromVectorIndex(vectorIndex++, fNCbc);
+        uint8_t cHybridId = getHybridIdFromVectorIndex(vectorIndex, fNCbc);
+        uint8_t cSSAId    = getSSAIdFromVectorIndex(vectorIndex++, fNCbc);
         os << GREEN << "SSA Header:" << std::endl;
         os << " HybridId: " << +cHybridId << " SSAId: " << +cSSAId << RESET << std::endl;
     }

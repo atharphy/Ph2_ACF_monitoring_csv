@@ -64,22 +64,20 @@ class Hybrid
      */
     uint8_t getNChip() const { return this->size(); }
 
-
     /*!
      * \brief Set the I2C Master Id corresponding to the Chip
-     * \param The I2C Master Id 
+     * \param The I2C Master Id
      */
     void setMasterId(uint8_t pMasterId) { fMasterId = pMasterId; };
 
     /*!
      * \brief Get the I2C Master Id corresponding to the Chip
-     * \return The I2C Master Id 
+     * \return The I2C Master Id
      */
     uint8_t getMasterId() const { return fMasterId; };
 
-
-    protected:
-        uint8_t fMasterId;
+  protected:
+    uint8_t fMasterId;
 };
 } // namespace Ph2_HwDescription
 
