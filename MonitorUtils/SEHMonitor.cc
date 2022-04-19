@@ -11,24 +11,26 @@
 
 SEHMonitor::SEHMonitor(const Ph2_System::SystemController* theSystCntr, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystCntr, theDetectorMonitorConfig)
 {
-    // doMonitorTemperature = fDetectorMonitorConfig.isElementToMonitor("ModuleTemperature");
-    doMonitorInputCurrent = fDetectorMonitorConfig.isElementToMonitor("I_SEH");
-    #ifdef __USE_ROOT__
+// doMonitorTemperature = fDetectorMonitorConfig.isElementToMonitor("ModuleTemperature");
+// doMonitorInputCurrent = fDetectorMonitorConfig.isElementToMonitor("I_SEH");
+#ifdef __USE_ROOT__
     fMonitorPlotDQM    = new MonitorDQMPlotCBC();
     fMonitorDQMPlotCBC = static_cast<MonitorDQMPlotCBC*>(fMonitorPlotDQM);
     fMonitorDQMPlotCBC->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
-    #endif
+#endif
 }
 
 void SEHMonitor::runMonitor()
 {
-    if(doMonitorInputCurrent) runInputCurrentMonitor();
+    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("Board")) runInputCurrentMonitor(registerName);
+
+    // if(doMonitorInputCurrent) runInputCurrentMonitor();
 }
 
-void SEHMonitor::runInputCurrentMonitor()
+void SEHMonitor::runInputCurrentMonitor(std::string registerName)
 {
     LOG(INFO) << BOLDMAGENTA << "Running Input Current Monitor" << RESET;
-    
+
     DetectorDataContainer theLpGBTRegisterContainer;
     ContainerFactory::copyAndInitOpticalGroup<std::tuple<time_t, uint16_t>>(*fTheSystemController->fDetectorContainer, theLpGBTRegisterContainer);
 
@@ -38,8 +40,10 @@ void SEHMonitor::runInputCurrentMonitor()
         for(const auto& opticalGroup: *board)
         {
             uint16_t registerValue = (fTheSystemController->flpGBTInterface)->ReadADC(opticalGroup->flpGBT, "ADC1");
-            LOG(INFO) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - " << "ADC1" << " = " << registerValue << RESET;
-            //theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<std::tuple<time_t, uint16_t>>() = std::make_tuple(getTimeStamp(), registerValue);
+            LOG(INFO) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - "
+                      << "ADC1"
+                      << " = " << registerValue << RESET;
+            // theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<std::tuple<time_t, uint16_t>>() = std::make_tuple(getTimeStamp(), registerValue);
         }
     }
     LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement" << RESET;

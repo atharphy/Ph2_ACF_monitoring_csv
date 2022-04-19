@@ -60,11 +60,9 @@ bool D19cOpticalInterface::SingleWrite(Chip* pChip, ChipRegItem& pItem)
 }
 bool D19cOpticalInterface::SingleWriteIC(Chip* pChip, ChipRegItem& pItem, bool pVerifLoop)
 {
-    auto cRegMap = pChip->getRegMap();
-    auto cIterator    = find_if(cRegMap.begin(), cRegMap.end(), [&pItem](const ChipRegPair& obj) { return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage; });
-    if( cIterator != cRegMap.end() ){ 
-        LOG(DEBUG) << BOLDYELLOW << "D19cOpticalInterface::SingleWriteIC to " << cIterator->first << RESET;
-    }
+    auto cRegMap   = pChip->getRegMap();
+    auto cIterator = find_if(cRegMap.begin(), cRegMap.end(), [&pItem](const ChipRegPair& obj) { return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage; });
+    if(cIterator != cRegMap.end()) { LOG(DEBUG) << BOLDYELLOW << "D19cOpticalInterface::SingleWriteIC to " << cIterator->first << RESET; }
     return WriteLpGBTRegister(pChip->getOpticalId(), pItem.fAddress, pItem.fValue, pVerifLoop);
 }
 bool D19cOpticalInterface::SingleWriteSlave(Chip* pChip, ChipRegItem& pItem)
@@ -158,11 +156,9 @@ bool D19cOpticalInterface::SingleReadIC(Chip* pChip, ChipRegItem& pItem)
     auto cLinkId = pChip->getOpticalId();
     if(pItem.fControlReg == 0x00)
     {
-        auto cRegMap = pChip->getRegMap();
-        auto cIterator    = find_if(cRegMap.begin(), cRegMap.end(), [&pItem](const ChipRegPair& obj) { return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage; });
-        if( cIterator != cRegMap.end() ){ 
-            LOG(DEBUG) << BOLDYELLOW << "D19cOpticalInterface::SingleReadIC to " << cIterator->first << RESET;
-        }
+        auto cRegMap   = pChip->getRegMap();
+        auto cIterator = find_if(cRegMap.begin(), cRegMap.end(), [&pItem](const ChipRegPair& obj) { return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage; });
+        if(cIterator != cRegMap.end()) { LOG(DEBUG) << BOLDYELLOW << "D19cOpticalInterface::SingleReadIC to " << cIterator->first << RESET; }
         auto cValue  = ReadLpGBTRegister(cLinkId, pItem.fAddress);
         pItem.fValue = cValue;
     }

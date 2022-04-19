@@ -25,7 +25,6 @@ void D19cI2CInterface::PrintStatus()
     LOG(INFO) << YELLOW << "============================" << RESET;
     LOG(INFO) << BOLDBLUE << "Current Status" << RESET;
 
-
     ReadErrors();
 
     int i2c_replies_empty = ReadReg("fc7_daq_stat.command_processor_block.i2c.reply_fifo.empty");
@@ -35,7 +34,6 @@ void D19cI2CInterface::PrintStatus()
         LOG(INFO) << "I2C Replies Available: " << BOLDGREEN << "No" << RESET;
 
     LOG(INFO) << YELLOW << "============================" << RESET;
-
 }
 void D19cI2CInterface::ConfigureI2CMap(const BeBoard* pBoard)
 {
@@ -199,10 +197,7 @@ bool D19cI2CInterface::MultiWriteRead(Chip* pChip, std::vector<ChipRegItem>& pWr
 
     // prepare vector to hold read-back values
     std::vector<ChipRegItem> cReadbackRegs;
-    for(auto cItem: pWriteRegs)
-    {
-        cReadbackRegs.push_back(cItem);
-    }
+    for(auto cItem: pWriteRegs) { cReadbackRegs.push_back(cItem); }
 
     // perform write + check read-back
     // until it works or you've tried
@@ -218,18 +213,18 @@ bool D19cI2CInterface::MultiWriteRead(Chip* pChip, std::vector<ChipRegItem>& pWr
                 // check read against write
                 for(auto cReadBackReg: cReadbackRegs)
                 {
-                    auto cIterator = find_if(pWriteRegs.begin(), pWriteRegs.end(), [&cReadBackReg](const ChipRegItem& obj) { return obj.fAddress == cReadBackReg.fAddress && obj.fPage == cReadBackReg.fPage; });
-                    if(cIterator != pWriteRegs.end()){ 
-                        if( cReadBackReg.fValue != cIterator->fValue ) 
-                        LOG (INFO) << BOLDRED << "D19cI2CInterface::MultiWriteRead" 
-                            << " mismatch in readback register " << std::hex << +cIterator->fAddress << " NO MATCH!" 
-                            << " expected " << cIterator->fValue 
-                            << " read back " << cReadBackReg.fValue 
-                            << std::dec << RESET;
+                    auto cIterator =
+                        find_if(pWriteRegs.begin(), pWriteRegs.end(), [&cReadBackReg](const ChipRegItem& obj) { return obj.fAddress == cReadBackReg.fAddress && obj.fPage == cReadBackReg.fPage; });
+                    if(cIterator != pWriteRegs.end())
+                    {
+                        if(cReadBackReg.fValue != cIterator->fValue)
+                            LOG(INFO) << BOLDRED << "D19cI2CInterface::MultiWriteRead"
+                                      << " mismatch in readback register " << std::hex << +cIterator->fAddress << " NO MATCH!"
+                                      << " expected " << cIterator->fValue << " read back " << cReadBackReg.fValue << std::dec << RESET;
                         else
-                        LOG (DEBUG) << BOLDGREEN << "D19cI2CInterface::MultiWriteRead" 
-                            << " match in readback register " << std::hex << +cIterator->fAddress << " MATCH!" << std::dec << RESET;
-                        
+                            LOG(DEBUG) << BOLDGREEN << "D19cI2CInterface::MultiWriteRead"
+                                       << " match in readback register " << std::hex << +cIterator->fAddress << " MATCH!" << std::dec << RESET;
+
                         cSuccess = (cReadBackReg.fValue == cIterator->fValue);
                     }
                 }
@@ -267,19 +262,21 @@ bool D19cI2CInterface::MultiRead(Chip* pChip, std::vector<ChipRegItem>& pRegiste
     // make sure you don't read ctrl registers
     for(auto cRegItem: pRegisterItems)
     {
-        if(cRegItem.fControlReg == 0x1){ 
-            LOG (DEBUG) << BOLDRED << "Control register MultiRead" << std::hex << +cRegItem.fAddress << std::dec << RESET;
+        if(cRegItem.fControlReg == 0x1)
+        {
+            LOG(DEBUG) << BOLDRED << "Control register MultiRead" << std::hex << +cRegItem.fAddress << std::dec << RESET;
             continue;
         }
-        else LOG (DEBUG) << BOLDGREEN << std::hex << +cRegItem.fAddress << std::dec << "\t" << +cRegItem.fControlReg << RESET;
+        else
+            LOG(DEBUG) << BOLDGREEN << std::hex << +cRegItem.fAddress << std::dec << "\t" << +cRegItem.fControlReg << RESET;
         EncodeReg(cRegItem, pChip, cVecReq, true, false);
     }
-    
-    bool   cSucess = true;
-    if( cVecReq.size() > 0 ) 
+
+    bool cSucess = true;
+    if(cVecReq.size() > 0)
     {
         ReadChipBlockReg(cVecReq);
-        size_t cIndx   = 0;
+        size_t cIndx = 0;
         for(auto& cRegItem: pRegisterItems)
         {
             uint8_t cChipId;
@@ -287,11 +284,10 @@ bool D19cI2CInterface::MultiRead(Chip* pChip, std::vector<ChipRegItem>& pRegiste
             bool    cFailed = false;
             DecodeReg(cRegItem, cChipId, cVecReq[cIndx], cRead, cFailed);
             LOG(DEBUG) << BOLDYELLOW << "D19cI2CInterface::MultiRead Reg#" << +cIndx << " at 0x" << std::hex << +cRegItem.fAddress << " set to 0x" << +cRegItem.fValue << " page " << +cRegItem.fPage
-                    << std::dec << RESET;
+                       << std::dec << RESET;
             cSucess = cSucess && !cFailed;
             cIndx++;
-     
-       }   
+        }
     }
     return cSucess;
 }
@@ -493,7 +489,6 @@ void D19cI2CInterface::BCEncodeReg(const ChipRegItem& pRegItem, uint8_t pNCbc, s
     bool pUseMask = false;
     pVecReq.push_back((2 << 28) | (pReadBack << 19) | (pUseMask << 18) | ((pRegItem.fPage) << 17) | ((!pWrite) << 16) | (pRegItem.fAddress << 8) | pRegItem.fValue);
 }
-
 
 bool D19cI2CInterface::BCWriteChipBlockReg(std::vector<uint32_t>& pVecReg, bool pReadback)
 {

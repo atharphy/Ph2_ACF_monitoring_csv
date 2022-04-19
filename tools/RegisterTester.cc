@@ -20,7 +20,7 @@ void RegisterTester::Initialise()
     LOG(INFO) << BOLDMAGENTA << "RegisterTester::Initialise at " << fStartTime << " s from epoch." << RESET;
 
     // clear map of modified registers
-     for(auto cBoard: *fDetectorContainer)
+    for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
         {

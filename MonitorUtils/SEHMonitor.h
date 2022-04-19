@@ -17,9 +17,9 @@ class SEHMonitor : public DetectorMonitor
     void runMonitor() override;
 
   private:
-    void runInputCurrentMonitor();
-    bool doMonitorInputCurrent{false};
-    #ifdef __USE_ROOT__
+    void runInputCurrentMonitor(std::string registerName);
+// bool doMonitorInputCurrent{false};
+#ifdef __USE_ROOT__
     MonitorDQMPlotCBC* fMonitorDQMPlotCBC;
 #endif
 };
