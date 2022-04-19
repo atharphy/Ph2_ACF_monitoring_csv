@@ -470,6 +470,22 @@ bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
         }
         cAttempCount++;
     } while(!cLinksLocked && cAttempCount < cMaxAttempts);
+
+    // uint32_t useless=0;
+    // this->I2CWrite(0, 1, 0x50, 0x04, 1, 2, useless);
+
+    // std::cout << __PRETTY_FUNCTION__ <<  +this->I2CRead(0, 1, 0x50, 1, 2, useless) << std::endl;
+    // this->I2CWrite(0, 1, 0x50, 0x0e08, 2, 2, useless);
+    // this->I2CWrite(0, 1, 0x50, 0x0e0C, 2, 2, useless);
+    // this->I2CWrite(0, 1, 0x50, 0x0e10, 2, 2, useless);
+    // // standard
+    // this->I2CWrite(0, 1, 0x50, 0x3005, 2, 2, useless); //nominal (0x30) bias (05)
+    // this->I2CWrite(0, 1, 0x50, 0x2006, 2, 2, useless); //nominal (0x20) modulation (06)
+    // // worst 
+    // //this->I2CWrite(0, 1, 0x50, 0x7F05, 2, 2, useless); // max bias for VTRX+ v1.2 0x7F
+    // //this->I2CWrite(0, 1, 0x50, 0x7F06, 2, 2, useless); // max modulation for VTRX+ v1.2 0x7F
+    // std::cout << __PRETTY_FUNCTION__ <<  +this->I2CRead(0, 1, 0x50, 1, 2, useless) << std::endl;
+
     return cLinksLocked;
 }
 
