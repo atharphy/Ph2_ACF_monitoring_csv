@@ -125,7 +125,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
 
         for(auto cOpticalGroup: *cBoard)
         {
-            for(int hybridNumber = 0; hybridNumber < 1; hybridNumber++)
+            for(int hybridNumber = 0; hybridNumber < 2; hybridNumber++)
             {
                 if(pIsExternal)
                 {
@@ -424,7 +424,7 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
                 gettimeofday(&start, NULL);
                 // do stuff
                 uint8_t failureIter = 0;
-                int     tries       = 10000;
+                int     tries       = 100000;
                 for(int j = 0; j < tries; j++)
                 // int j = 0;
                 // while(true)
@@ -792,6 +792,10 @@ bool OTHybridTester::LpGBTTestResetLines()
     {
         LpGBTSetGPIOLevel(cGPIOs, cLevel.second);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
+#ifdef __SEH_USB__
+        std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+        //mu-controller is too slow
+#endif
         auto cMapIterator = cResetLines.begin();
         bool cStatus      = true;
         do
