@@ -251,7 +251,7 @@ void SSASCurve::run(void)
                     {
                         uint32_t istrip = 1;
                         for(auto& channel: *cChip->getChannelContainer<std::pair<std::array<uint32_t, 2>, float>>()) // for on channel -
-                                                                                                                    // begin
+                                                                                                                     // begin
                         {
                             ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(cChip->getIndex()));
                             rms += (channel.second - mean) * (channel.second - mean);

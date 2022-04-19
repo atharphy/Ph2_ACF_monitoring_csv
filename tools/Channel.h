@@ -39,12 +39,12 @@ struct Channel
 
     // members
     // Ids
-    uint8_t fBeId;         /*!< Back End ID */
-    uint8_t fHybridId;         /*!< Front End ID */
+    uint8_t fBeId;           /*!< Back End ID */
+    uint8_t fHybridId;       /*!< Front End ID */
     uint8_t fOpticalGroupId; /*!< Optical Group ID */
-    uint8_t fCbcId;        /*!< CBC ID*/
-    uint8_t fChannelId;    /*!< Channel Number */
-    bool    fFitted;       /*!< Flag to select the algroithm*/
+    uint8_t fCbcId;          /*!< CBC ID*/
+    uint8_t fChannelId;      /*!< Channel Number */
+    bool    fFitted;         /*!< Flag to select the algroithm*/
 
     // Settings
     uint8_t fOffset; /*!<  current offset value for this channel; needs to be set manually */

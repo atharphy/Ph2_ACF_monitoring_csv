@@ -71,7 +71,7 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
     fBeBoardInterface->setBoard(pBoard->getId());
     uint8_t cPhaseAlignmentPattern = 0xAA;
     uint8_t cWordAlignmentPattern  = 0xEA;
-    auto    cFrontEndTypes               = pBoard->connectedFrontEndTypes();
+    auto    cFrontEndTypes         = pBoard->connectedFrontEndTypes();
 
     for(auto cOpticalReadout: *pBoard)
     {

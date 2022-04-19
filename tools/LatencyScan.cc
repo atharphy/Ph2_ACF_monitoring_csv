@@ -985,8 +985,8 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanStubLatency(uint8_t pStartL
 
     for(auto cHybrid: fHybridHistMap)
     {
-        TH1F*   cTmpHist           = dynamic_cast<TH1F*>(getHist(cHybrid.first, "hybrid_stub_latency"));
-        uint8_t cStubLatency       = static_cast<uint8_t>(cTmpHist->GetMaximumBin() - 1);
+        TH1F*   cTmpHist               = dynamic_cast<TH1F*>(getHist(cHybrid.first, "hybrid_stub_latency"));
+        uint8_t cStubLatency           = static_cast<uint8_t>(cTmpHist->GetMaximumBin() - 1);
         cStubLatencyMap[cHybrid.first] = cStubLatency;
 
         // BeBoardRegWriter cLatWriter ( fBeBoardInterface, "", 0 );
@@ -1064,8 +1064,8 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanLatency_root(uint16_t pStar
 
     for(auto cHybrid: fHybridHistMap)
     {
-        TH1F*   cTmpHist       = dynamic_cast<TH1F*>(getHist(cHybrid.first, "hybrid_latency"));
-        uint8_t cHitLatency    = static_cast<uint8_t>(cTmpHist->GetXaxis()->GetBinUpEdge(cTmpHist->GetMaximumBin()));
+        TH1F*   cTmpHist           = dynamic_cast<TH1F*>(getHist(cHybrid.first, "hybrid_latency"));
+        uint8_t cHitLatency        = static_cast<uint8_t>(cTmpHist->GetXaxis()->GetBinUpEdge(cTmpHist->GetMaximumBin()));
         cLatencyMap[cHybrid.first] = cHitLatency;
 
         LOG(INFO) << "Hit Latency FE " << +cHybrid.first->getId() << ": " << +cHitLatency << " clock cycles!";

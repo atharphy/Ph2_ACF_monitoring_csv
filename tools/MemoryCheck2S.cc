@@ -906,12 +906,12 @@ void MemoryCheck2S::EvaluatePedeNoise(int pNevents, int pScanRange)
                         std::vector<float> cV(cThresholds.size(), 0);
                         for(size_t cIndx = 0; cIndx < cThresholds.size(); cIndx++)
                         {
-                            auto& cDataThisBrd   = cScanData[cIndx]->at(cBoard->getIndex());
-                            auto& cDataThisOG    = cDataThisBrd->at(cOpticalGroup->getIndex());
+                            auto& cDataThisBrd    = cScanData[cIndx]->at(cBoard->getIndex());
+                            auto& cDataThisOG     = cDataThisBrd->at(cOpticalGroup->getIndex());
                             auto& cDataThisHybrid = cDataThisOG->at(cHybrid->getIndex());
-                            auto& cDataThisChip  = cDataThisHybrid->at(cChip->getIndex());
-                            cW[cIndx]            = cDataThisChip->getChannel<Occupancy>(cChnl).fOccupancy;
-                            cV[cIndx]            = cThresholds[cIndx];
+                            auto& cDataThisChip   = cDataThisHybrid->at(cChip->getIndex());
+                            cW[cIndx]             = cDataThisChip->getChannel<Occupancy>(cChnl).fOccupancy;
+                            cV[cIndx]             = cThresholds[cIndx];
                         }
                         auto cPedeNoise                                                   = evalNoise(cW, cV, true);
                         cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold = cPedeNoise.first;
@@ -960,7 +960,7 @@ void MemoryCheck2S::SetThreshold(float pSigma)
             auto& cThNoiseThisOG = cThNoiseThisBrd->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cThThisHybrid   = cThThisOG->at(cHybrid->getIndex());
+                auto& cThThisHybrid      = cThThisOG->at(cHybrid->getIndex());
                 auto& cThNoiseThisHybrid = cThNoiseThisOG->at(cHybrid->getIndex());
                 LOG(INFO) << BOLDMAGENTA << "FE#" << +cHybrid->getId() << RESET;
 
@@ -994,7 +994,7 @@ void MemoryCheck2S::SetThreshold(float pSigma)
                     //     << " - maximum value is " << cNoiseStats.fMax
                     //     << RESET;
                     float cNoise          = std::sqrt(cNoiseStats.fMean * cNoiseStats.fMean + cNoiseStats.fStdDev * cNoiseStats.fStdDev);
-                    auto& cThThisChip      = cThThisHybrid->at(cChip->getIndex());
+                    auto& cThThisChip     = cThThisHybrid->at(cChip->getIndex());
                     auto& cThresholdToSet = cThThisChip->getSummary<uint16_t>();
                     cThresholdToSet       = (uint16_t)(cPedStats.fMean + pSigma * cNoise);
                     LOG(INFO) << BOLDMAGENTA << "\t Setting threshold on CBC#" << +cChip->getId() << " to " << cThresholdToSet << " DAC units - i.e. " << std::setprecision(2) << std::fixed << cNoise
@@ -2078,7 +2078,7 @@ void MemoryCheck2S::Check()
                     auto& cThThisHybrid         = cThThisOG->at(cHybrid->getIndex());
                     auto& cThNoiseThisHybrid    = cThNoiseThisOG->at(cHybrid->getIndex());
                     auto& cMemEventsThisHybrid  = cMemEventsThisOG->at(cHybrid->getIndex());
-                    auto& cBadEventsThisHybrid = cBadEventsThisOG->at(cHybrid->getIndex());
+                    auto& cBadEventsThisHybrid  = cBadEventsThisOG->at(cHybrid->getIndex());
                     auto& cExpectedOcThisHybrid = cExpectedOcThisOG->at(cHybrid->getIndex());
                     // only 2S for now
                     for(auto cChip: *cHybrid)
@@ -2135,11 +2135,11 @@ void MemoryCheck2S::Check()
                         if(fMemEvent.fType == 3)
                         {
                             CopyEvent(fStubEvent, fMemEvent);
-                            auto& cExpectdStubsThisBoard = fExpectedStubs.at(cBoard->getIndex());
-                            auto& cExpectdStubsThisOG    = cExpectdStubsThisBoard->at(cOpticalGroup->getIndex());
+                            auto& cExpectdStubsThisBoard  = fExpectedStubs.at(cBoard->getIndex());
+                            auto& cExpectdStubsThisOG     = cExpectdStubsThisBoard->at(cOpticalGroup->getIndex());
                             auto& cExpectdStubsThisHybrid = cExpectdStubsThisOG->at(cHybrid->getIndex());
                             auto& cExpectdStubsThisChip   = cExpectdStubsThisHybrid->at(cChip->getIndex());
-                            auto& cExpectedStubs         = cExpectdStubsThisChip->getSummary<std::vector<Stub>>();
+                            auto& cExpectedStubs          = cExpectdStubsThisChip->getSummary<std::vector<Stub>>();
 //
 #ifdef __USE_ROOT__
                             TTree* cRawStubTree = static_cast<TTree*>(getHist(cHybrid, "Stub2STree"));
