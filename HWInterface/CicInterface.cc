@@ -109,7 +109,7 @@ void CicInterface::CheckConfig(Chip* pChip)
     for(const auto& cMapItem: fMap)
     {
         auto     cRegItem = pChip->getRegItem(cMapItem.second);
-        uint32_t cValue   = fBoardFW->ReadFERegister(pChip, cRegItem.fAddress);
+        uint32_t cValue   = fBoardFW->SingleRegisterRead(pChip, cRegItem);
         bool     cSuccess = this->runVerification(pChip, cValue, cMapItem.second);
         if(!cSuccess)
         {
@@ -125,7 +125,7 @@ void CicInterface::CheckConfig(Chip* pChip)
         }
     }
 }
-bool CicInterface::ConfigureChip(Chip* pCic, bool pVerifLoop, uint32_t pBlockSize)
+bool CicInterface::ConfigureChip(Chip* pCic, bool pVerify, uint32_t pBlockSize)
 {
     std::stringstream cOutput;
     setBoard(pCic->getBeBoardId());
@@ -135,22 +135,22 @@ bool CicInterface::ConfigureChip(Chip* pCic, bool pVerifLoop, uint32_t pBlockSiz
     // get register map
     std::vector<ChipRegItem> cRegItems;
     for(auto cItem: cCicRegMap) { cRegItems.push_back(cItem.second); }
-    bool cSuccess = fBoardFW->MultiRegisterWrite(pCic, cRegItems, pVerifLoop);
-    ; // fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerifLoop);
+    bool cSuccess = fBoardFW->MultiRegisterWrite(pCic, cRegItems, pVerify);
+    ; // fBoardFW->WriteChipBlockReg(cVec, cWriteAttempts, pVerify);
     if(cSuccess) LOG(INFO) << BOLDGREEN << "Succesful write to " << cRegItems.size() << " registers on CIC" << RESET;
     return cSuccess;
 }
 
-bool CicInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
+bool CicInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerify)
 {
     setBoard(pChip->getBeBoardId());
     LOG(DEBUG) << BOLDMAGENTA << "CicInterface::WriteChipReg trying to write to register 0x" << pRegNode << RESET;
     ChipRegMap cRegMap       = pChip->getRegMap();
     cRegMap[pRegNode].fValue = pValue;
-    return fBoardFW->SingleRegisterWrite(pChip, cRegMap[pRegNode], pVerifLoop);
+    return fBoardFW->SingleRegisterWrite(pChip, cRegMap[pRegNode], pVerify);
 }
 
-bool     CicInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop) { return true; }
+bool     CicInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify) { return true; }
 uint16_t CicInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
 {
     setBoard(pChip->getBeBoardId());

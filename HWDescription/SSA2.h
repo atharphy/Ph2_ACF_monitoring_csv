@@ -34,10 +34,10 @@ using CommentMap = std::map<int, std::string>;
 class SSA2 : public ReadoutChip
 { // open class def
   public:
-    // C'tors which take BeId, FMCId, FeID, SSAId
-    SSA2(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pSSAId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename);
+    // C'tors which take BeBoardId, FMCId, HybridId, ChipId
+    SSA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename);
     // C'tors with object FE Description
-    SSA2(const FrontEndDescription& pFeDesc, uint8_t pSSAId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename);
+    SSA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename);
     uint8_t      fPartnerId;
     uint8_t      getPartid() { return fPartnerId; }
     virtual void accept(HwDescriptionVisitor& pVisitor) { pVisitor.visitChip(*this); }

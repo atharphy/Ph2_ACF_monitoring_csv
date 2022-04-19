@@ -1,7 +1,7 @@
 
 #include "PSHybridTester.h"
-#include "D19cDebugFWInterface.h"
-#include "SSAChannelGroupHandler.h"
+#include "../HWInterface/D19cDebugFWInterface.h"
+#include "../Utils/SSAChannelGroupHandler.h"
 #ifdef __USE_ROOT__
 
 using namespace Ph2_HwDescription;
@@ -67,7 +67,7 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
         if(!pTrigger)
         {
             bool cAligned = true;
-            auto cSSA     = new SSA(pBoard->getId(), 0, 0, cPairId, 0, 0, "./settings/SSAFiles/SSA.txt");
+            auto cSSA     = new SSA(pBoard->getId(), 0, 0, 0, cPairId, 0, 0, "./settings/SSAFiles/SSA.txt");
             for(uint8_t cLineId = 1; cLineId < 8; cLineId++)
             {
                 cAligned = LineTuning(cSSA, cLineId, cAlignmentPattern, 8);
@@ -1149,9 +1149,9 @@ void PSHybridTester::CheckCounters(BeBoard* pBoard)
         for(auto cHybridData: *cOpticalGroupData) // for on module - begin
         {
             cNchips += cHybridData->size();
-            for(auto cROCData: *cHybridData) // for on chip - begin
+            for(auto cChipData: *cHybridData) // for on chip - begin
             {
-                ReadoutChip* cChip = static_cast<ReadoutChip*>(fDetectorContainer->at(pBoard->getIndex())->at(cOpticalGroupData->getIndex())->at(cHybridData->getIndex())->at(cROCData->getIndex()));
+                ReadoutChip* cChip = static_cast<ReadoutChip*>(fDetectorContainer->at(pBoard->getIndex())->at(cOpticalGroupData->getIndex())->at(cHybridData->getIndex())->at(cChipData->getIndex()));
                 auto         cThreshold = fReadoutChipInterface->ReadChipReg(cChip, "Threshold");
                 // set threshold a little bit lower than 90% level
                 fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);

@@ -18,6 +18,6 @@ OuterTrackerHybrid::OuterTrackerHybrid() : Hybrid(), fCic(nullptr) {}
 
 OuterTrackerHybrid::OuterTrackerHybrid(const FrontEndDescription& pFeDesc, uint8_t pHybridId) : Hybrid(pFeDesc, pHybridId), fCic(nullptr) {}
 
-OuterTrackerHybrid::OuterTrackerHybrid(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pHybridId) : Hybrid(pBeId, pFMCId, pFeId, pHybridId), fCic(nullptr) {}
+OuterTrackerHybrid::OuterTrackerHybrid(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId) : Hybrid(pBeBoardId, pFMCId, pOpticalGroupId, pHybridId), fCic(nullptr) {}
 
 } // namespace Ph2_HwDescription

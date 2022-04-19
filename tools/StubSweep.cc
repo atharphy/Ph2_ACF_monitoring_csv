@@ -33,32 +33,32 @@ void StubSweep::Initialize()
 
     uint32_t cCbcCount = 0;
     uint32_t cCbcIdMax = 0;
-    uint32_t cFeCount  = 0;
+    uint32_t cHybridCount  = 0;
 
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                uint32_t cFeId = cFe->getId();
-                cFeCount++;
-                fType = static_cast<OuterTrackerHybrid*>(cFe)->getFrontEndType();
+                uint32_t cHybridId = cHybrid->getId();
+                cHybridCount++;
+                fType = static_cast<OuterTrackerHybrid*>(cHybrid)->getFrontEndType();
 
-                for(auto cCbc: *cFe)
+                for(auto cCbc: *cHybrid)
                 {
                     uint32_t cCbcId = cCbc->getId();
                     cCbcCount++;
 
                     if(cCbcId > cCbcIdMax) cCbcIdMax = cCbcId;
 
-                    cName = Form("StubSweep_Fe%d_Cbc%d", cFe->getId(), cCbc->getId());
+                    cName = Form("StubSweep_Fe%d_Cbc%d", cHybrid->getId(), cCbc->getId());
                     cObj  = gROOT->FindObject(cName);
 
                     if(cObj) delete cObj;
 
                     // stub sweep
-                    TProfile* cStubSweepHist = new TProfile(cName, Form("Stub Sweep FE%d CBC%d ; Test Pulse Channel [1-254]; Stub Address", cFeId, cCbcId), 254, -0.5, 254.5);
+                    TProfile* cStubSweepHist = new TProfile(cName, Form("Stub Sweep FE%d CBC%d ; Test Pulse Channel [1-254]; Stub Address", cHybridId, cCbcId), 254, -0.5, 254.5);
                     cStubSweepHist->SetMarkerStyle(20);
                     cStubSweepHist->SetStats(0);
                     cStubSweepHist->SetMarkerStyle(4);
@@ -72,12 +72,12 @@ void StubSweep::Initialize()
                     bookHistogram(cCbc, "StubAddresses", cStubSweepHist);
 
                     // bend information
-                    cName = Form("StubBends_Fe%d_Cbc%d", cFe->getId(), cCbc->getId());
+                    cName = Form("StubBends_Fe%d_Cbc%d", cHybrid->getId(), cCbc->getId());
                     cObj  = gROOT->FindObject(cName);
 
                     if(cObj) delete cObj;
 
-                    TProfile* cStubBendHist = new TProfile(cName, Form("Bend Information FE%d CBC%d ; Test Pulse Channel [1-254]; Stub Bend", cFeId, cCbcId), 254, -0.5, 254.5);
+                    TProfile* cStubBendHist = new TProfile(cName, Form("Bend Information FE%d CBC%d ; Test Pulse Channel [1-254]; Stub Bend", cHybridId, cCbcId), 254, -0.5, 254.5);
                     cStubBendHist->SetMarkerStyle(20);
                     cStubBendHist->SetStats(0);
                     cStubBendHist->SetMarkerStyle(4);
@@ -121,11 +121,11 @@ void StubSweep::SweepStubs(uint32_t pNEvents)
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
         for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                uint32_t cFeId = cFe->getId();
+                uint32_t cHybridId = cHybrid->getId();
 
-                for(auto cCbc: *cFe)
+                for(auto cCbc: *cHybrid)
                 {
                     uint32_t cCbcId = cCbc->getId();
 
@@ -213,8 +213,8 @@ void StubSweep::SweepStubs(uint32_t pNEvents)
                                     outp.str("");
                                     outp << *cEvents[j];
 
-                                    cNhits                   = cEvents[j]->GetNHits(cFeId, cCbcId);
-                                    std::vector<Stub> cStubs = cEvents[j]->StubVector(cFeId, cCbcId);
+                                    cNhits                   = cEvents[j]->GetNHits(cHybridId, cCbcId);
+                                    std::vector<Stub> cStubs = cEvents[j]->StubVector(cHybridId, cCbcId);
                                     cStubPosition            = cStubs[0].getPosition();
                                     j++;
                                 } while(cNhits != cChannelPair.size() && j < cEvents.size());
@@ -297,7 +297,7 @@ void StubSweep::updateHists(std::string pHistname)
     this->HttpServerProcess();
 }
 
-uint8_t StubSweep::getStubPosition(std::vector<Event*> pEvents, uint32_t pFeId, uint32_t pCbcId, uint32_t pNEvents)
+uint8_t StubSweep::getStubPosition(std::vector<Event*> pEvents, uint32_t pHybridId, uint32_t pCbcId, uint32_t pNEvents)
 {
     uint8_t           cStubPosition(0), cCenter, cBend;
     std::stringstream outp;
@@ -305,19 +305,19 @@ uint8_t StubSweep::getStubPosition(std::vector<Event*> pEvents, uint32_t pFeId, 
 
     for(auto& cEvent: pEvents)
     {
-        uint32_t    cNhits       = cEvent->GetNHits(pFeId, pCbcId);
-        std::string cStubsString = cEvent->StubBitString(pFeId, pCbcId);
-        // std::string cHitsString = cEvent->HitsBitString( pFeId, pCbcId );
-        std::vector<uint32_t> cHits = cEvent->GetHits(pFeId, pCbcId);
+        uint32_t    cNhits       = cEvent->GetNHits(pHybridId, pCbcId);
+        std::string cStubsString = cEvent->StubBitString(pHybridId, pCbcId);
+        // std::string cHitsString = cEvent->HitsBitString( pHybridId, pCbcId );
+        std::vector<uint32_t> cHits = cEvent->GetHits(pHybridId, pCbcId);
 
         outp.str("");
         outp << BOLDGREEN << ">>> Event #" << cN++ << " [" << +cNhits << " hits].\n\t\t\t";
 
         // outp << CYAN << "Hits : " << cHitsString ;
-        if(cEvent->StubBit(pFeId, pCbcId))
+        if(cEvent->StubBit(pHybridId, pCbcId))
         {
             // only look at the first stub that comes out of the cbc
-            std::vector<Stub> cStubs = cEvent->StubVector(pFeId, pCbcId);
+            std::vector<Stub> cStubs = cEvent->StubVector(pHybridId, pCbcId);
             Stub              cStub  = cStubs[0];
             cStubPosition            = cStub.getPosition();
             cCenter                  = cStub.getCenter();

@@ -45,10 +45,10 @@ void D19cI2CInterface::ConfigureI2CMap(const BeBoard* pBoard)
         for(auto cModule: *pBoard)
         {
             if(cWithCBC3) break;
-            for(auto cFe: *cModule)
+            for(auto cHybrid: *cModule)
             {
                 if(cWithCBC3) break;
-                for(auto cChip: *cFe)
+                for(auto cChip: *cHybrid)
                 {
                     if(cWithCBC3) break;
                     cWithCBC3 = (cChip->getFrontEndType() == FrontEndType::CBC3);
@@ -59,15 +59,15 @@ void D19cI2CInterface::ConfigureI2CMap(const BeBoard* pBoard)
         for(auto cModule: *pBoard)
         {
             // default I2C map is for 8CBC3
-            for(auto cFe: *cModule)
+            for(auto cHybrid: *cModule)
             {
-                auto    cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cFe);
+                auto    cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
                 auto&   cCic                = cOuterTrackerHybrid->fCic;
                 uint8_t cNBytes;
                 std::cout << cCic << std::endl;
                 if(cCic != NULL)
                 {
-                    for(auto cChip: *cFe)
+                    for(auto cChip: *cHybrid)
                     {
                         cNBytes            = (cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::MPA) ? 2 : 1;
                         uint8_t cLastValue = 1;
@@ -89,7 +89,7 @@ void D19cI2CInterface::ConfigureI2CMap(const BeBoard* pBoard)
                 }
                 else
                 {
-                    for(auto cChip: *cFe)
+                    for(auto cChip: *cHybrid)
                     {
                         cNBytes            = (cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::MPA) ? 2 : 1;
                         uint8_t cLastValue = 1;
@@ -129,7 +129,7 @@ void D19cI2CInterface::ConfigureI2CMap(const BeBoard* pBoard)
 void D19cI2CInterface::EncodeReg(const ChipRegItem& pRegItem, Chip* pChip, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
 {
     uint8_t pCbcId       = pChip->getId();
-    uint8_t pFeId        = pChip->getHybridId();
+    uint8_t pHybridId        = pChip->getHybridId();
     auto    cMapIterator = fI2CSlaveMap.find(pCbcId);
     bool    cFound       = (cMapIterator != fI2CSlaveMap.end());
     if(cFound)
@@ -143,13 +143,13 @@ void D19cI2CInterface::EncodeReg(const ChipRegItem& pRegItem, Chip* pChip, std::
         {
             // new command consists of one word if its read command, and of two words if its write. first word is always
             // the same
-            pVecReq.push_back((0 << 28) | (0 << 27) | (pFeId << 23) | (pIndex << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0));
+            pVecReq.push_back((0 << 28) | (0 << 27) | (pHybridId << 23) | (pIndex << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0));
             // only for write commands
             if(pWrite) pVecReq.push_back((0 << 28) | (pWrite << 27) | (pRegItem.fValue << 0));
         }
         else
         {
-            pVecReq.push_back((0 << 28) | (pFeId << 24) | (pCbcId << 20) | (pReadBack << 19) | (pUseMask << 18) | ((pRegItem.fPage) << 17) | ((!pWrite) << 16) | (pRegItem.fAddress << 8) |
+            pVecReq.push_back((0 << 28) | (pHybridId << 24) | (pCbcId << 20) | (pReadBack << 19) | (pUseMask << 18) | ((pRegItem.fPage) << 17) | ((!pWrite) << 16) | (pRegItem.fAddress << 8) |
                               pRegItem.fValue);
         }
     }
@@ -162,7 +162,7 @@ void D19cI2CInterface::DecodeReg(ChipRegItem& pRegItem, uint8_t& pCbcId, uint32_
 {
     if(fI2CVersion >= 1)
     {
-        // pFeId    =  ( ( pWord & 0x07800000 ) >> 27) ;
+        // pHybridId    =  ( ( pWord & 0x07800000 ) >> 27) ;
         pCbcId            = ((pWord & 0x007c0000) >> 22);
         pFailed           = 0;
         pRegItem.fPage    = pRegItem.fPage;
@@ -173,7 +173,7 @@ void D19cI2CInterface::DecodeReg(ChipRegItem& pRegItem, uint8_t& pCbcId, uint32_
     }
     else
     {
-        // pFeId    =  ( ( pWord & 0x00f00000 ) >> 24) ;
+        // pHybridId    =  ( ( pWord & 0x00f00000 ) >> 24) ;
         pCbcId            = ((pWord & 0x00f00000) >> 20);
         pFailed           = 0;
         pRegItem.fPage    = ((pWord & 0x00020000) >> 17);
@@ -230,7 +230,7 @@ bool D19cI2CInterface::MultiWriteRead(Chip* pChip, std::vector<ChipRegItem>& pWr
                 }
             }
         }
-    } while(cAttempts < fConfig.fMaxAttempts && !cSuccess && fConfig.fReTry);
+    } while(cAttempts < fConfiguration.fMaxAttempts && !cSuccess && fConfiguration.fRetry);
     return cSuccess;
 }
 
@@ -243,12 +243,12 @@ bool D19cI2CInterface::MultiWrite(Chip* pChip, std::vector<ChipRegItem>& pRegist
     {
         // update list of modified registers
         pChip->UpdateModifiedRegMap(cItem);
-        EncodeReg(cItem, pChip, cVec, fConfig.fVerify, true);
+        EncodeReg(cItem, pChip, cVec, fConfiguration.fVerify, true);
     }
 
     uint8_t cWriteAttempts = 0;
     // if the transaction is successfull, update the HWDescription object
-    return WriteChipBlockReg(cVec, cWriteAttempts, fConfig.fVerify);
+    return WriteChipBlockReg(cVec, cWriteAttempts, fConfiguration.fVerify);
 }
 bool D19cI2CInterface::SingleWrite(Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem)
 {
@@ -323,7 +323,7 @@ bool D19cI2CInterface::WriteI2C(std::vector<uint32_t>& pVecSend, std::vector<uin
         // if read or readback for write == 1, then count
         if(fI2CVersion >= 1)
         {
-            // uint32_t cWord = (pLinkId << 29) | (0 << 28) | (0 << 27) | (pFeId << 23) | (pCbcId << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0);
+            // uint32_t cWord = (pLinkId << 29) | (0 << 28) | (0 << 27) | (pHybridId << 23) | (pCbcId << 18) | (pReadBack << 17) | ((!pWrite) << 16) | (pRegItem.fPage << 8) | (pRegItem.fAddress << 0);
             if((((word & 0x08000000) >> 27) == 0) && ((((word & 0x00010000) >> 16) == 1) or (((word & 0x00020000) >> 17) == 1)))
             {
                 if(pBroadcast)

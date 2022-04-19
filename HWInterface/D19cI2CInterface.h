@@ -58,6 +58,8 @@ class D19cI2CInterface : public FEConfigurationInterface
     // i2c version of master
     uint32_t       fI2CVersion;
     const uint32_t SINGLE_I2C_WAIT = 200; // used for 1MHz I2C
+    //#FIXME putting these here temporarily ...
+    bool fRetry = false;
 };
 } // namespace Ph2_HwInterface
 #endif

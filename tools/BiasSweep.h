@@ -55,7 +55,7 @@ class AmuxSetting
 class BiasSweepData : public TObject
 {
   public:
-    uint16_t              fFeId;
+    uint16_t              fHybridId;
     uint16_t              fCbcId;
     std::string           fBias;
     long int              fTimestamp;
@@ -65,7 +65,7 @@ class BiasSweepData : public TObject
     std::vector<uint16_t> fXValues;
     std::vector<float>    fYValues;
 
-    BiasSweepData() : fFeId(0), fCbcId(0), fBias(""), fTimestamp(0) {}
+    BiasSweepData() : fHybridId(0), fCbcId(0), fBias(""), fTimestamp(0) {}
     ~BiasSweepData() {}
 
     // ClassDef (BiasSweepData, 1); //The class title

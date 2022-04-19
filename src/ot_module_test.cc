@@ -7,6 +7,7 @@
 #include "boost/format.hpp"
 #include "tools/BackEndAlignment.h"
 #include "tools/BeamTestCheck2S.h"
+#include "tools/CBCPulseShape.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
 #include "tools/LatencyScan.h"
@@ -155,10 +156,10 @@ int main(int argc, char* argv[])
     cmd.defineOption("completeDataCheck", "Complete data check for the following CBCs", ArgvParser::OptionRequiresValue);
 
     cmd.defineOption("pageToTest", "Page to test", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("registerTestWrite", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("registerTestWriteAndToggle", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("registerTestRead", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("registerTestReadAndToggle", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("registerTestWrite", "Test I2C registers on Chips", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("registerTestWriteAndToggle", "Test I2C registers on Chips", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("registerTestRead", "Test I2C registers on Chips", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("registerTestReadAndToggle", "Test I2C registers on Chips", ArgvParser::OptionRequiresValue);
     cmd.defineOption("sortOrder", "Sort order for CBC registers  : 0 - no sort other than page; 1 - page then increasing addresss; 2 - page then decreasing addresss", ArgvParser::OptionRequiresValue);
     cmd.defineOption("bitToFlip", "Bit to flip when testing register write", ArgvParser::OptionRequiresValue);
     cmd.defineOption("testAttempts", "Number of attempts", ArgvParser::OptionRequiresValue);
@@ -181,6 +182,7 @@ int main(int argc, char* argv[])
     //
     cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("readMonitors", "Read internal monitors on lpGBT [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("pulseShape", "Scan the threshold and fit for signal Vcth", ArgvParser::NoOptionAttribute);
 
     int result = cmd.parse(argc, argv);
 
@@ -200,7 +202,9 @@ int main(int argc, char* argv[])
     std::string cSrcLnkTst       = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
     std::string cModuleId        = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
     std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
-    uint16_t    cRunNumber       = 666;
+    bool        cPulseShape      = (cmd.foundOption("pulseShape")) ? true : false;
+
+    uint16_t cRunNumber = 666;
     if(!cmd.foundOption("read"))
     {
         std::ofstream cRunLog;
@@ -1059,11 +1063,11 @@ int main(int argc, char* argv[])
         if(cmd.foundOption("completeDataCheck"))
         {
             std::string          cArgsStr    = cmd.optionValue("completeDataCheck");
-            std::vector<uint8_t> cFesToCheck = getArgs(cArgsStr);
+            std::vector<uint8_t> cChipsToCheck = getArgs(cArgsStr);
             cMemoryChecker.EvaluatePedeNoise(10); // find pedestal + noise
             cMemoryChecker.SetThreshold(-2.0);    // set threshold to 3 sigma away from pedestal
             int cTriggerGap = cTool.findValueInSettings<double>("TriggerSeparation", 500);
-            cMemoryChecker.DataCheck(cFesToCheck, cTriggerGap);
+            cMemoryChecker.DataCheck(cChipsToCheck, cTriggerGap);
         }
         cMemoryChecker.MemoryCheck2SRaw(true);  // all ones
         cMemoryChecker.MemoryCheck2SRaw(false); // all zeros
@@ -1237,10 +1241,26 @@ int main(int argc, char* argv[])
     }
     if(!cmd.foundOption("read")) { cTool.dumpConfigFiles(); }
 
+    if(cPulseShape)
+    {
+        std::cout << "I am in" << std::endl;
+        Timer t;
+        t.start();
+        CBCPulseShape cCBCPulseShape;
+        cCBCPulseShape.Inherit(&cTool);
+        cCBCPulseShape.Initialise();
+        cCBCPulseShape.runCBCPulseShape();
+        cCBCPulseShape.writeObjects();
+        t.stop();
+        t.show("Time for pulseShape plot measurement");
+        t.reset();
+    }
+
     cTool.SaveResults();
     cTool.WriteRootFile();
     cTool.CloseResultFile();
     cTool.Destroy();
+    signal(SIGINT, SIG_DFL);
     runCompleted = 1;
     if(!batchMode) cApp.Run();
     cGlobalTimer.stop();
