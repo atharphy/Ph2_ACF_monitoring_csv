@@ -63,20 +63,20 @@ void SLinkEvent::generateDAQHeader(uint32_t& pLV1Id, uint16_t& pBXId, int pSourc
     fSize += 1;
 }
 
-void SLinkEvent::generateTkHeader(uint32_t& pBeStatus, uint16_t& pNChips, std::set<uint8_t>& pEnabledFe, bool pCondData, bool pFake)
+void SLinkEvent::generateTkHeader(uint32_t& pBeStatus, uint16_t& pNChips, std::set<uint8_t>& pEnabledHybrids, bool pCondData, bool pFake)
 {
     uint64_t cWord1 = 0;
     uint64_t cWord2 = 0;
-    // version | format | event type | BeStatus | NChips | Fe Status (8)
+    // version | format | event type | BeStatus | NChips | Hybrid Status (8)
     cWord1 |= ((uint64_t)0x2 & 0xF) << 60 | ((uint64_t)fDebugMode & 0x03) << 58 | ((uint64_t)fEventType & 0x03) << 56 | (uint64_t)pCondData << 55 | (uint64_t)!pFake << 54 |
               ((uint64_t)pBeStatus & 0x3FFFFFFF) << 24 | pNChips << 8; // pFeStatus is the end of the
 
-    for(auto& cFe: pEnabledFe)
+    for(auto& cHybrid: pEnabledHybrids)
     {
-        if(cFe < 64)
-            cWord2 |= (uint64_t)1 << cFe;
+        if(cHybrid < 64)
+            cWord2 |= (uint64_t)1 << cHybrid;
         else
-            cWord1 |= (uint64_t)1 << (cFe - 64);
+            cWord1 |= (uint64_t)1 << (cHybrid - 64);
     }
 
     fData.insert(fData.begin() + 1, cWord1);
@@ -117,7 +117,7 @@ void SLinkEvent::generateConditionData(ConditionDataSet* pSet)
 
         for(auto cCondItem: pSet->fCondDataVector)
         {
-            uint64_t cWord = (((uint64_t)cCondItem.fFeId & 0xFF) << 56 | ((uint64_t)cCondItem.fCbcId & 0xF) << 52 | ((uint64_t)cCondItem.fPage & 0xF) << 48 |
+            uint64_t cWord = (((uint64_t)cCondItem.fHybridId & 0xFF) << 56 | ((uint64_t)cCondItem.fCbcId & 0xF) << 52 | ((uint64_t)cCondItem.fPage & 0xF) << 48 |
                               ((uint64_t)cCondItem.fRegister & 0xFF) << 40 | ((uint64_t)cCondItem.fUID & 0xFF) << 32 | cCondItem.fValue);
             LOG(DEBUG) << BOLDYELLOW << std::bitset<64>(cWord) << RESET;
             cVec.push_back(cWord);

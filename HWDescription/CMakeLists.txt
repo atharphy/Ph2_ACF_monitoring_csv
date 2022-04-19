@@ -7,6 +7,11 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
+    # Boost also needs to be linked
+    include_directories(${Boost_INCLUDE_DIRS})
+    link_directories(${Boost_LIBRARY_DIRS})
+    set(LIBS ${LIBS} ${Boost_ITERATOR_LIBRARY})
+
     # Find source files
     file(GLOB SOURCES *.cc)
     add_library(Ph2_Description STATIC ${SOURCES})
@@ -52,7 +57,8 @@ else()
              LIBRARIES
              Ph2_Utils_${Ph2_ACF_Master}
              pthread
-            )
+             EXCLUDE MPA.h MPA.cc
+             )
 
     install_headers()
     install_source()

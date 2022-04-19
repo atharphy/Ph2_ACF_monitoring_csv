@@ -9,6 +9,7 @@
 */
 
 #include "RD53ThrEqualizationHistograms.h"
+#include "../Utils/ChannelContainerStream.h"
 
 using namespace Ph2_HwDescription;
 
@@ -30,8 +31,11 @@ void ThrEqualizationHistograms::book(TFile* theOutputFile, DetectorContainer& th
     auto hThrEqualization = CanvasContainer<TH1F>("ThrEqualization", "ThrEqualization", nEvents + 1, 0, 1 + 1. / nEvents);
     bookImplementer(theOutputFile, theDetectorStructure, ThrEqualization, hThrEqualization, "Efficiency", "Entries");
 
-    auto hTDAC = CanvasContainer<TH1F>("TDAC", "TDAC", TDACsize, 0, TDACsize);
-    bookImplementer(theOutputFile, theDetectorStructure, TDAC, hTDAC, "TDAC", "Entries");
+    auto hTDAC1D = CanvasContainer<TH1F>("TDAC1D", "TDAC Distribution", TDACsize, 0, TDACsize);
+    bookImplementer(theOutputFile, theDetectorStructure, TDAC1D, hTDAC1D, "TDAC", "Entries");
+
+    auto hTDAC2D = CanvasContainer<TH2F>("TDAC2D", "TDAC Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+    bookImplementer(theOutputFile, theDetectorStructure, TDAC2D, hTDAC2D, "Column", "Row");
 }
 
 bool ThrEqualizationHistograms::fill(std::vector<char>& dataBuffer)
@@ -92,17 +96,25 @@ void ThrEqualizationHistograms::fillTDAC(const DetectorDataContainer& TDACContai
                 {
                     if(cChip->getChannelContainer<uint16_t>() == nullptr) continue;
 
-                    auto* hTDAC =
-                        TDAC.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+                    auto* hTDAC1D =
+                        TDAC1D.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
+
+                    auto* hTDAC2D =
+                        TDAC2D.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
 
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
-                            if(cChip->getChannel<uint16_t>(row, col) != TDACsize) hTDAC->Fill(cChip->getChannel<uint16_t>(row, col));
+                            if(cChip->getChannel<uint16_t>(row, col) != TDACsize)
+                            {
+                                hTDAC1D->Fill(cChip->getChannel<uint16_t>(row, col));
+                                hTDAC2D->SetBinContent(col + 1, row + 1, cChip->getChannel<uint16_t>(row, col));
+                            }
                 }
 }
 
 void ThrEqualizationHistograms::process()
 {
     draw<TH1F>(ThrEqualization);
-    draw<TH1F>(TDAC);
+    draw<TH1F>(TDAC1D);
+    draw<TH2F>(TDAC2D, "gcolz");
 }

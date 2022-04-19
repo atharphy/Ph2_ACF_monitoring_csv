@@ -56,7 +56,7 @@ void SSAPhysics::sendBoardData(BoardContainer* const& cBoard)
 {
     auto theOccStream = prepareChannelContainerStreamer<Occupancy>("Occ");
 
-    if(fDQMStreamerEnabled == true) { theOccStream.streamAndSendBoard(fOccContainer.at(cBoard->getIndex()), fDQMStreamer); }
+    if(fDQMStreamerEnabled == true) { theOccStream->streamAndSendBoard(fOccContainer.at(cBoard->getIndex()), fDQMStreamer); }
 }
 
 void SSAPhysics::Stop()
@@ -169,7 +169,7 @@ void SSAPhysics::fillDataContainer(BoardContainer* const& cBoard)
     // # Fill containers #
     // ###################
     const std::vector<Event*>& events = SystemController::GetEvents();
-    //Assuming all chip will have all channels enabled:
+    // Assuming all chip will have all channels enabled:
     auto allChannelGroup = getChannelGroup(-1);
 
     for(const auto& event: events) { event->fillDataContainer(fOccContainer.at(cBoard->getIndex()), allChannelGroup); }

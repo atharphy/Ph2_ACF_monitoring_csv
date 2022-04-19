@@ -15,7 +15,9 @@
 #include "../Utils/RD53Shared.h"
 #include "ChipInterface.h"
 #include "ReadoutChipInterface.h"
-
+#if defined(__TCUSB__)
+#include "TCInterface.h"
+#endif
 // ##########################
 // # LpGBT useful constants #
 // ##########################
@@ -23,17 +25,23 @@ namespace lpGBTconstants
 {
 const uint8_t PATTERN_PRBS      = 0x1; // Start PRBS pattern
 const uint8_t PATTERN_NORMAL    = 0x0; // Start normal-mode pattern
+const uint8_t PATTERN_CONST     = 0x4; // Constant pattern set by DP pattern
+const uint8_t PATTERN_CONST_INV = 0x5; // Inverted constant pattern
 const uint8_t fictitiousGroup   = 6;   // Fictitious group used when no need to speficy frontend chip
 const uint8_t fictitiousChannel = 0;   // Fictitious channel used when no need to speficy frontend chip
 const uint8_t rxPhaseTracking   = 2;   // Rx phase tracking mode [0 = no-tracking, 2 = automatic-tracking]
 } // namespace lpGBTconstants
 
-#ifdef __TCUSB__
-#include "TCInterface.h"
-#endif
-
 namespace Ph2_HwInterface
 {
+#if defined(__TCUSB__)
+#if defined(__ROH_USB__)
+using TestCardInterface = TCInterface<TC_PSROH>;
+#elif defined(__SEH_USB__)
+using TestCardInterface = TCInterface<TC_2SSEH>;
+#endif
+#endif
+
 struct lpGBTClockConfig
 {
     uint8_t fClkFreq = 4, fClkDriveStr = 1, fClkInvert = 1;
@@ -50,17 +58,31 @@ struct lpGBTClockConfig
 class lpGBTInterface : public ChipInterface
 {
   protected:
-// I think eventually this will want to change
-#ifdef __TCUSB__
-#ifdef __ROH_USB__
-    typedef TCInterface<TC_PSROH> ExternalInterface;
-#elif __SEH_USB__
-    typedef TCInterface<TC_2SSEH> ExternalInterface;
+#if defined(__TCUSB__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
+    TestCardInterface* fExternalController{nullptr};
 #endif
-    ExternalInterface fExternalInterface{};
-#endif
+
+  protected:
     const float fClockSpeed = 40e6; // 40 MHz clock for the lpGBT
                                     // std::vector<i2cConfig> fI2Cconfigs(3);
+                                    // if external interface is compiled then return the ptr to access the controller
+  public:
+#if defined(__TCUSB__)
+    void iniitalizeExternalController()
+    {
+#if defined(__ROH_USB__)
+        LOG(INFO) << BOLDYELLOW << "Initializing controller (via usb) for PS-ROH test system..." << RESET;
+        fExternalController = new TestCardInterface("ROH_USB");
+#elif defined(__SEH_USB__)
+
+        LOG(INFO) << BOLDYELLOW << "Initializing controller (via usb) for 2S-SEH test system..." << RESET;
+        fExternalController = new TestCardInterface("SEH_USB");
+#endif
+    }
+#if defined(__ROH_USB__) || defined(__SEH_USB__)
+    TestCardInterface* getExternalController() const { return fExternalController; }
+#endif
+#endif
 
   public:
     lpGBTInterface(const BeBoardFWMap& pBoardMap) : ChipInterface(pBoardMap) {}
@@ -72,7 +94,7 @@ class lpGBTInterface : public ChipInterface
     // #######################################
     // # Chip configuration functions #
     // #######################################
-    bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerifLoop = false) override;
+    bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerify = true) override;
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
 
     // #######################################
@@ -107,6 +129,12 @@ class lpGBTInterface : public ChipInterface
     // # LpGBT ADC-DAC functions #
     // ###########################
     uint16_t ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN = "VREF/2", uint8_t pGain = 0);
+    void     ConfigureInternalMonitoring(Ph2_HwDescription::Chip* pChip, uint8_t pEnable);
+    // ###########################
+    // # LpGBT retreive temperature #
+    // ###########################
+    float GetInternalTemperature(Ph2_HwDescription::Chip* pChip);
+    float ReadResistance(Ph2_HwDescription::Chip* pChip, std::string pADC, std::vector<uint8_t> pCurrents, uint8_t pGain = 0);
 
     // ####################################
     // # LpGBT eye opening monitor tester #
@@ -165,17 +193,6 @@ class lpGBTInterface : public ChipInterface
     // ###########################
     bool ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection);
 
-// #######################################
-// # functions to link to external interfaces #
-// #######################################
-#ifdef __TCUSB__
-    template <class T>
-    void LinkExternalInterface(T pInterface)
-    {
-        fExternalInterface = pInterface;
-    }
-#endif
-
     // ####################################
     // # LpGBT I2C master config #
     // ####################################
@@ -202,7 +219,7 @@ class lpGBTInterface : public ChipInterface
                                 uint8_t                     pInvert);
 
   protected:
-    bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
+    bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerify = true) override;
 
     // #######################################
     // # LpGBT block configuration functions #

@@ -5,6 +5,7 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Occupancy.h"
 #include "D19cDebugFWInterface.h"
+#include "TriggerInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -64,13 +65,17 @@ void CicFEAlignment::Initialise()
             }
         }
     }
+
+#ifdef __USE_ROOT__
+    fDQMHistogrammer.book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
 }
 
 void CicFEAlignment::writeObjects()
 {
-    this->SaveResults();
 #ifdef __USE_ROOT__
-    // fDQMHistogramHybridTest.process();
+    this->SaveResults();
+    fDQMHistogrammer.process();
     fResultFile->Flush();
 #endif
 }
@@ -166,6 +171,213 @@ bool CicFEAlignment::SetBx0Delay(uint8_t pDelay, uint8_t pStubPackageDelay)
     return true;
 }
 
+void CicFEAlignment::InputLineScan()
+{
+    // only for stubs ... for L1 line difficult to do this for 2S
+    for(uint8_t cLineId = 0; cLineId < 5; cLineId++)
+    {
+        auto cPattern = GenManPatternOutLine(cLineId);
+        ScanInputPhase(cLineId, cPattern, 0, 15);
+    }
+}
+// manually inject pattern on one of the CIC input lines from a CBC
+uint8_t CicFEAlignment::GenManPatternOutLine(uint8_t pOutLine)
+{
+    uint8_t              cPattern          = 0x8A;
+    uint8_t              cBendCode_phAlign = cPattern & 0x0F;
+    uint8_t              cBendPattern2S    = (cBendCode_phAlign << 4) | cBendCode_phAlign;
+    uint8_t              cSyncPattern2S    = cPattern;
+    std::vector<uint8_t> cStubs;
+    if(pOutLine == 0)
+    {
+        cStubs.push_back(cPattern);
+        cStubs.push_back(cPattern + 20), cStubs.push_back(cPattern + 40);
+    }
+    else if(pOutLine == 1)
+    {
+        cStubs.push_back(cPattern - 20);
+        cStubs.push_back(cPattern), cStubs.push_back(cPattern + 20);
+    }
+    else if(pOutLine == 2)
+    {
+        cStubs.push_back(cPattern - 40);
+        cStubs.push_back(cPattern - 20), cStubs.push_back(cPattern);
+    }
+    else
+    {
+        cStubs.push_back(0xA0);
+        cStubs.push_back(0xAA), cStubs.push_back(0xCA);
+    }
+
+    std::vector<uint8_t> cExpectedPatterns{cStubs[0], cStubs[1], cStubs[2], cBendPattern2S, cSyncPattern2S};
+    // make sure FE chips are sending expected pattern
+    for(auto cBoard: *fDetectorContainer)
+    {
+        // generate alignment pattern on all stub lines
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                // configure Chips to produce phase alignment patterns
+                for(auto cChip: *cHybrid)
+                {
+                    if(cChip->getFrontEndType() == FrontEndType::CBC3)
+                    {
+                        auto                 cInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
+                        std::vector<uint8_t> cBendLUT   = cInterface->readLUT(static_cast<ReadoutChip*>(cChip));
+                        auto                 cIterator  = std::find(cBendLUT.begin(), cBendLUT.end(), cBendCode_phAlign);
+                        if(cIterator != cBendLUT.end())
+                        {
+                            int              cPosition    = std::distance(cBendLUT.begin(), cIterator);
+                            double           cBend_strips = -7. + 0.5 * cPosition;
+                            std::vector<int> cBends(cStubs.size(), static_cast<int>(cBend_strips * 2));
+                            cInterface->injectStubs(static_cast<ReadoutChip*>(cChip), cStubs, cBends);
+                        }
+                    }
+                } // chip
+            }     // hybrid
+        }         // OG
+    }             // board
+
+    return cExpectedPatterns[pOutLine];
+}
+void CicFEAlignment::ScanInputPhase(uint8_t pOutLine, uint8_t pPattern, uint8_t pStartScan, uint8_t pEndScan)
+{
+    LOG(INFO) << BOLDBLUE << "Scanning input phase on CIC input line#" << +pOutLine << " - expected pattern is " << std::bitset<8>(pPattern) << RESET;
+    for(uint8_t cPhase = pStartScan; cPhase < 1 + pEndScan; cPhase++) { CheckCicInput(pOutLine, pPattern, cPhase); }
+}
+DetectorDataContainer CicFEAlignment::CheckCicInput(uint8_t pOutLine, uint8_t pPattern, uint8_t pPhase)
+{
+    DetectorDataContainer cErrorRate;
+    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, cErrorRate);
+
+    DetectorDataContainer cStubData, cLineErrors;
+    ContainerFactory::copyAndInitChip<std::string>(*fDetectorContainer, cStubData);
+    ContainerFactory::copyAndInitChip<uint32_t>(*fDetectorContainer, cLineErrors);
+    CheckOutLine(pOutLine, pPattern, pPhase, cStubData, cLineErrors);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto& cStubDataThisBrd = cStubData.at(cBoard->getIndex());
+        auto& cErrorsThisBrd   = cLineErrors.at(cBoard->getIndex());
+        auto& cErrRateThisBrd  = cErrorRate.at(cBoard->getIndex());
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto& cStubDataThisOpticalGroup   = cStubDataThisBrd->at(cOpticalGroup->getIndex());
+            auto& cLineErrorsThisOpticalGroup = cErrorsThisBrd->at(cOpticalGroup->getIndex());
+            auto& cErrRateThisOpticalGroup    = cErrRateThisBrd->at(cOpticalGroup->getIndex());
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cStubDataThisHybrid   = cStubDataThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cLineErrorsThisHybrid = cLineErrorsThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cErrRateThisHybrid    = cErrRateThisOpticalGroup->at(cHybrid->getIndex());
+                for(auto cChip: *cHybrid)
+                {
+                    auto& cStubDataThisChip   = cStubDataThisHybrid->at(cChip->getIndex());
+                    auto& cLineErrorsThisChip = cLineErrorsThisHybrid->at(cChip->getIndex());
+                    auto& cErrRateThisChip    = cErrRateThisHybrid->at(cChip->getIndex());
+                    auto& cData               = cStubDataThisChip->getSummary<std::string>();
+                    auto& cErrorCount         = cLineErrorsThisChip->getSummary<uint32_t>();
+                    auto& cErrRate            = cErrRateThisChip->getSummary<float>();
+                    cErrRate                  = (float)cErrorCount / cData.length();
+                    LOG(DEBUG) << BOLDBLUE << "Expected pattern is " << std::bitset<8>(pPattern) << RESET;
+                    LOG(DEBUG) << BOLDBLUE << "Error rate on this line is " << cErrRate << " errors/bit" << RESET;
+                    LOG(DEBUG) << BOLDBLUE << "For a sampling phase of " << +pPhase << " " << cErrorCount << " bit errors in the scoped  data : " << cData << " out of " << cData.length() << " bits."
+                               << RESET;
+                } // chip
+            }     // hybrid
+        }         // OG
+    }             // board
+
+#ifdef __USE_ROOT__
+    fDQMHistogrammer.fillManualPhaseScan(pPhase, pOutLine, cLineErrors, cStubData);
+#endif
+    return cErrorRate;
+}
+SlvsLineStatus CicFEAlignment::CheckPhyPort(const Hybrid* pHybrid, PhyPortCnfg pPhyPortCnfg, uint8_t pPhase, uint8_t pPattern)
+{
+    SlvsLineStatus cStatus;
+    std::bitset<8> cExpectedPattern(pPattern);
+    std::string    cPatternToMatch = cExpectedPattern.to_string();
+    auto           cBoardId        = pHybrid->getBeBoardId();
+    fBeBoardInterface->setBoard(cBoardId);
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+
+    auto  cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+    auto& cCic       = static_cast<const OuterTrackerHybrid*>(pHybrid)->fCic;
+    // select slvs debug line in FC7
+    fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", pHybrid->getId());
+    fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+    // select phyPort in CIC mux
+    fCicInterface->SelectMux(cCic, pPhyPortCnfg.first);
+    // set phase tap for this phy port input
+    fCicInterface->SetPhaseTap(cCic, pPhyPortCnfg.first, pPhyPortCnfg.second, pPhase);
+    // interface to retrieve debug data
+    D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
+
+    // read back data from stub debug
+    // for now .. I need to do this twice
+    // figure out why in theFW
+    cDebugInterface->StubDebug(true, 6, false);
+    auto cLines        = cDebugInterface->StubDebug(true, 6, false);
+    cStatus.second     = cLines[pPhyPortCnfg.second];
+    cStatus.first      = 0;
+    auto        cFound = cStatus.second.find(cPatternToMatch);
+    std::string cPatternReceived;
+    if(cFound != std::string::npos)
+    {
+        cPatternReceived = cStatus.second.substr(cFound, cStatus.second.length() - cFound) + cStatus.second.substr(0, cFound);
+        LOG(DEBUG) << BOLDYELLOW << "Shifted str : " << cPatternReceived << " - bit shift is " << cFound << RESET;
+    }
+    else
+        cPatternReceived = cStatus.second;
+
+    for(uint8_t cSize = 0; cSize < cPatternReceived.length(); cSize += 8)
+    {
+        auto cSubStr = cPatternReceived.substr(cSize, 8);
+        for(uint8_t cIndx = 0; cIndx < cSubStr.size(); cIndx++)
+        {
+            if(cSubStr[cIndx] != cPatternToMatch[cIndx]) cStatus.first++;
+        }
+    }
+    cStatus.second = cPatternReceived;
+    return cStatus;
+}
+void CicFEAlignment::CheckOutLine(uint8_t pOutLine, uint8_t pPattern, uint8_t pPhase, DetectorDataContainer& pLineData, DetectorDataContainer& pErrorCounter)
+{
+    // retreive data and compare
+    std::bitset<8> cExpectedPattern(pPattern);
+    std::string    cPatternToMatch = cExpectedPattern.to_string();
+    // const unsigned int cNStubLinesFromFE=5;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto& cStubDataThisBrd = pLineData.at(cBoard->getIndex());
+        auto& cErrorsThisBrd   = pErrorCounter.at(cBoard->getIndex());
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto& cStubDataThisOpticalGroup   = cStubDataThisBrd->at(cOpticalGroup->getIndex());
+            auto& cLineErrorsThisOpticalGroup = cErrorsThisBrd->at(cOpticalGroup->getIndex());
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cStubDataThisHybrid   = cStubDataThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cLineErrorsThisHybrid = cLineErrorsThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cCic                  = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+
+                for(auto cChip: *cHybrid)
+                {
+                    auto& cStubDataThisChip   = cStubDataThisHybrid->at(cChip->getIndex());
+                    auto& cLineErrorsThisChip = cLineErrorsThisHybrid->at(cChip->getIndex());
+                    auto& cData               = cStubDataThisChip->getSummary<std::string>();
+                    auto& cErrorCount         = cLineErrorsThisChip->getSummary<uint32_t>();
+
+                    auto cPhyPortCnfg   = fCicInterface->GetPhyPortConfig(cCic, cChip->getId(), pOutLine);
+                    auto cPhyPortStatus = CheckPhyPort(cHybrid, cPhyPortCnfg, pPhase, pPattern);
+                    cData               = cPhyPortStatus.second;
+                    cErrorCount         = cPhyPortStatus.first;
+                } // chip
+            }     // hybrid
+        }         // OG
+    }             // board
+}
 void CicFEAlignment::SetStaticPhaseAlignment()
 {
     LOG(INFO) << BOLDBLUE << "Setting CIC phase to static mode.." << RESET;
@@ -307,14 +519,15 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
         bool cWithCBC = false;
         // generate alignment pattern on all stub lines
         LOG(INFO) << BOLDBLUE << "Generating Patterns needed for phase alignment of CIC inputs." << RESET;
-
+        fBeBoardInterface->setBoard(cBoard->getId());
+        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 fCicInterface->SetAutomaticPhaseAlignment(cCic, true);
-                // configure ROCs to produce phase alignment patterns
+                // configure Chips to produce phase alignment patterns
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getFrontEndType() == FrontEndType::CBC3) cWithCBC = true;
@@ -342,7 +555,8 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
                 cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
                 fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
             }
-            fBeBoardInterface->SendNTriggers(cBoard, pNTriggers);
+            auto cTriggerInterface = cInterface->getTriggerInterface();
+            cTriggerInterface->SendNTriggers(pNTriggers);
 
             // set trigger source back
             if(cReconfigureTrigger)
@@ -379,7 +593,9 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
         if(!cDebug) continue;
 
         fBeBoardInterface->setBoard(cBoard->getId());
-        D19cDebugFWInterface* cDebugInterface = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+
+        D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)

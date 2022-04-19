@@ -13,15 +13,18 @@
 
 #include <memory>
 #include <string>
+#include <unistd.h>
 #include <vector>
 
 #include "../MonitorUtils/DetectorMonitorConfig.h"
 #include "../RootUtils/GraphContainer.h"
+#include "../RootUtils/RootContainerFactory.h"
 #include "../System/SystemController.h"
 #include "../Utils/Container.h"
 
+#include <TAxis.h>
 #include <TDatime.h>
-#include <unistd.h>
+#include <TGraph.h>
 
 class DetectorDataContainer;
 class DetectorContainer;
@@ -82,6 +85,30 @@ class MonitorDQMPlotBase
 
         TDatime rootTime(timeStampString);
         return rootTime.Convert();
+    }
+
+  protected:
+    void bookImplementer(TFile*                   theOutputFile,
+                         const DetectorContainer& theDetectorStructure,
+                         DetectorDataContainer&   dataContainer,
+                         GraphContainer<TGraph>&  graphContainer,
+                         const char*              XTitle = nullptr,
+                         const char*              YTitle = nullptr)
+    {
+        graphContainer.fTheGraph->GetXaxis()->SetTimeDisplay(1);
+        graphContainer.fTheGraph->GetXaxis()->SetNdivisions(503);
+        graphContainer.fTheGraph->GetXaxis()->SetTimeFormat("%Y-%m-%d %H:%M:%S");
+        graphContainer.fTheGraph->GetXaxis()->SetTimeOffset(0, "gmt");
+        if(XTitle != nullptr) graphContainer.fTheGraph->GetXaxis()->SetTitle(XTitle);
+        if(YTitle != nullptr)
+        {
+            graphContainer.setNameTitle("DQM_" + std::string{YTitle}, "DQM_" + std::string{YTitle});
+            graphContainer.fTheGraph->GetYaxis()->SetTitle(YTitle);
+        }
+        graphContainer.fTheGraph->SetMarkerStyle(20);
+        graphContainer.fTheGraph->SetMarkerSize(0.4);
+
+        RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, dataContainer, graphContainer);
     }
 };
 

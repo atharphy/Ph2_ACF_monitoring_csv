@@ -22,26 +22,40 @@
 namespace Ph2_HwDescription
 { // open namespace
 
-SSA::SSA(const FrontEndDescription& pFeDesc, uint8_t pSSAId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename) : ReadoutChip(pFeDesc, pSSAId)
+SSA::SSA(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename) : ReadoutChip(pFeDesc, pChipId)
 {
-    fChipAddress      = 0x20 + pSSAId % 8;
+    fChipCode = 3;
+    fChipAddress      = 0x20 + pChipId % 8;
     fMaxRegValue      = 255; // 8 bit registers in CBC
     fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS>>();
     fChipOriginalMask->enableAllChannels();
     fPartnerId = pPartnerId;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::SSA);
+    for(auto& cMapItem: fRegMap)
+    {
+        if(cMapItem.first.find("_ALL") == std::string::npos) continue;
+        LOG(DEBUG) << BOLDYELLOW << "Control register on SSA : " << cMapItem.first << RESET;
+        cMapItem.second.fControlReg = 1;
+    }
 }
 
-SSA::SSA(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pSSAId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename) : ReadoutChip(pBeId, pFMCId, pFeId, pSSAId)
+SSA::SSA(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename) : ReadoutChip(pBeBoardId, pFMCId, pOpticalGroupId, pHybridId, pChipId)
 {
-    fChipAddress      = 0x20 + pSSAId % 8;
+    fChipCode = 3;
+    fChipAddress      = 0x20 + pChipId % 8;
     fMaxRegValue      = 255; // 8 bit registers in CBC
     fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS>>();
     fChipOriginalMask->enableAllChannels();
     fPartnerId = pPartnerId;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::SSA);
+    for(auto& cMapItem: fRegMap)
+    {
+        if(cMapItem.first.find("_ALL") == std::string::npos) continue;
+        LOG(DEBUG) << BOLDYELLOW << "Control register on SSA : " << cMapItem.first << RESET;
+        cMapItem.second.fControlReg = 1;
+    }
 }
 
 void SSA::loadfRegMap(const std::string& filename)

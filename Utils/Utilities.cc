@@ -10,6 +10,7 @@
 */
 
 #include "../Utils/Utilities.h"
+#include <boost/math/special_functions/binomial.hpp>
 
 long getTimeTook(struct timeval& pStart, bool pMili)
 {
@@ -197,4 +198,61 @@ std::vector<uint8_t> splitToVector(const std::string& str, const char delimiter)
         v.push_back(std::stoi(substr));
     }
     return v;
+}
+
+double hitProbability(double pThreshold)
+{
+    return 0.5 - (erf(pThreshold / sqrt(2)) / 2);
+    // area above threshold under the gaussian curve.
+    // The Factors are to only treat the positive half
+    // 1-erf(x/sqrt(2)/2 + .5)
+}
+
+double binomialPdf(uint32_t n, uint32_t k, double p)
+{
+    double value = 0;
+    try
+    {
+        value = boost::math::binomial_coefficient<double>(n, k) * pow(p, k) * pow((1 - p), n - k);
+    }
+    catch(...)
+    {
+        std::cout << "binomial PDF failed with n=" << n << " k=" << k << " p=" << p << std::endl;
+    }
+    return value;
+}
+
+double hitProbabilityFunction(double* pStrips, double* pPar)
+{
+    double cNSamplingsCM = 100;
+    double cSigmaRange   = 6;
+
+    const double samplingHalfStep = cSigmaRange / static_cast<double>(cNSamplingsCM);
+    double&      threshold        = pPar[0];
+    double&      cmnFraction      = pPar[1];
+    double&      nEvents          = pPar[2];
+    double&      nActiveStrips    = pPar[3];
+
+    double result = 0;
+    double hitProb;
+    double sampleProbability, x;
+
+    int iStrips = int(ceil(pStrips[0] - 0.5));               // round to nearest integer
+    if((iStrips < 0) || (iStrips > nActiveStrips)) return 0; // only defined in range
+
+    for(uint32_t j = 0; j < cNSamplingsCM; ++j)
+    {
+        // loop over all x values
+        x = -cSigmaRange + j * 2 * samplingHalfStep;
+
+        // approximate probability at sampling point by interpolating
+        sampleProbability = hitProbability(x - samplingHalfStep);
+        sampleProbability -= hitProbability(x + samplingHalfStep);
+
+        // probability of hit taking cmn into account
+        hitProb = hitProbability(threshold + x * cmnFraction);
+        // distribution function scaled to nevents
+        result += binomialPdf(int(nActiveStrips), iStrips, hitProb) * sampleProbability * nEvents;
+    }
+    return result;
 }

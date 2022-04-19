@@ -25,10 +25,11 @@
 // #######################
 namespace RD53FWconstants
 {
-const uint8_t NLANE_HYBRID       = 4;    // Number of lanes per hybrid
-const uint8_t HEADEAR_WRTCMD     = 0xFF; // Header of chip write command sequence
-const uint8_t NBIT_FWVER         = 16;   // Number of bits for the firmware version
-const uint8_t IPBUS_FASTDURATION = 1;    // Duration of a fast command in terms of 40 MHz clk cycles
+const uint8_t  NLANE_HYBRID       = 4;     // Number of lanes per hybrid
+const uint8_t  HEADEAR_WRTCMD     = 0xFF;  // Header of chip write command sequence
+const uint8_t  NBIT_FWVER         = 16;    // Number of bits for the firmware version
+const uint8_t  IPBUS_FASTDURATION = 1;     // Duration of a fast command in terms of 40 MHz clk cycles
+const uint32_t SLOWCMD_FIFO_DEPTH = 65536; // Slow command FIFO depth 65536 (in terms of 32-bit words)
 
 constexpr float VDDD2Volt(float val) { return (0.968 + val * 0.0115); }
 constexpr float CDR2Freq(float val) { return (140 + val * 5); }
@@ -56,7 +57,6 @@ class RD53FWInterface : public BeBoardFWInterface
     void Stop() override;
     void Pause() override;
     void Resume() override;
-    void SendNTriggers(uint16_t pNtriggers) override {}
 
     double   RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) override;
     void     ReadNEvents(Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = true) override;
@@ -85,17 +85,6 @@ class RD53FWInterface : public BeBoardFWInterface
     // ####################################
     bool     CheckChipCommunication(const Ph2_HwDescription::BeBoard* pBoard);
     uint32_t ReadoutSpeed();
-    bool     DidIwriteChipReg(uint16_t optGroup_id) // @TMP@
-    {
-        RegManager::WriteReg("user.ctrl_regs.PRBS_checker.upgroup_addr", optGroup_id);
-
-        RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, 0x44, RD53Constants::PATTERN_CLOCK);
-        usleep(1000);
-        uint32_t readPattern = RegManager::ReadReg("user.stat_regs.rate_measurement_bx_counter");
-        std::cout << "AAAAA " << std::hex << readPattern << std::dec << std::endl;
-        if(readPattern == 0x5555) return true;
-        return false;
-    }
 
     // #############################################
     // # hybridId < 0 --> broadcast to all hybrids #
@@ -120,7 +109,7 @@ class RD53FWInterface : public BeBoardFWInterface
     // @TMP@
     enum class AutozeroSource : uint32_t
     {
-        IPBus = 1,
+        Software = 1,
         FastCMDFSM,
         UserDefined, // --> Related to IPbus register "autozero_freq"
         Disabled = 0
@@ -173,7 +162,7 @@ class RD53FWInterface : public BeBoardFWInterface
     {
         bool     enable             = false;
         bool     ext_clk_en         = false;
-        uint32_t ch_out_en          = 0; // chn-1 = clk. to TLU, chn-2 = ext. trigger, chn-3 = busy to TLU, chn-4 = TLU reset, chn-5 = ext. clk
+        uint32_t ch_out_en          = 0; // chn-1 = clk. to TLU, chn-2 = ext. trigger, chn-3 = busy to TLU, chn-4 = reet to TLU, chn-5 = ext. clk.
         uint32_t fiftyohm_en        = 0;
         uint32_t ch1_thr            = 0x80; // [(thr/256*(5-1)V + 1V) * 3.3V/5V]
         uint32_t ch2_thr            = 0x80;
@@ -193,7 +182,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void     StatusOptoLinkSlowControl(uint32_t& txIsReady, uint32_t& rxIsReady);
     void     ResetOptoLink() override;
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override;
-    bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override;
+    bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerify = true) override;
     uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress) override;
 
     // ####################################################
@@ -225,6 +214,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void ReadClockGenerator();
 
     FastCommandsConfig localCfgFastCmd;
+    D19cFpgaConfig*    fpgaConfig;
     size_t             ddr3Offset;
     bool               singleChip;
     uint32_t           FWinfo;

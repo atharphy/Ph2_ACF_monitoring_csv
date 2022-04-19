@@ -26,8 +26,8 @@ const RD53::FrontEnd* RD53::getMajorityFE(size_t colStart, size_t colStop)
     });
 }
 
-RD53::RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment)
-    : ReadoutChip(pBeId, pFMCId, pHybridId, pRD53Id)
+RD53::RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment)
+    : ReadoutChip(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id)
 {
     fMaxRegValue      = RD53Shared::setBits(RD53Constants::NBIT_MAXREG);
     fChipOriginalMask = std::make_shared<ChannelGroup<nRows, nCols>>();
@@ -318,14 +318,22 @@ void RD53::copyMaskFromDefault()
     }
 }
 
-void RD53::copyMaskToDefault()
+void RD53::copyMaskToDefault(const std::string& which)
+// ########################
+// # which = all          #
+// # which =  en : Enable #
+// # which =  hb : HitBus #
+// # which =  in : InjEn  #
+// # which =  td : TDAC   #
+// ########################
 {
     for(auto col = 0u; col < fPixelsMaskDefault.size(); col++)
     {
-        fPixelsMaskDefault[col].Enable = fPixelsMask[col].Enable;
-        fPixelsMaskDefault[col].HitBus = fPixelsMask[col].HitBus;
-        fPixelsMaskDefault[col].InjEn  = fPixelsMask[col].InjEn;
-        for(auto row = 0u; row < fPixelsMaskDefault[col].TDAC.size(); row++) fPixelsMaskDefault[col].TDAC[row] = fPixelsMask[col].TDAC[row];
+        if((which == "all") || (which == "en")) fPixelsMaskDefault[col].Enable = fPixelsMask[col].Enable;
+        if((which == "all") || (which == "hb")) fPixelsMaskDefault[col].HitBus = fPixelsMask[col].HitBus;
+        if((which == "all") || (which == "in")) fPixelsMaskDefault[col].InjEn = fPixelsMask[col].InjEn;
+        if((which == "all") || (which == "td"))
+            for(auto row = 0u; row < fPixelsMaskDefault[col].TDAC.size(); row++) fPixelsMaskDefault[col].TDAC[row] = fPixelsMask[col].TDAC[row];
     }
 }
 

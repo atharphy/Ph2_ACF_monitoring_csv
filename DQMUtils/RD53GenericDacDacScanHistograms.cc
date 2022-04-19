@@ -8,6 +8,7 @@
 */
 
 #include "RD53GenericDacDacScanHistograms.h"
+#include "../Utils/ChipContainerStream.h"
 
 using namespace Ph2_HwDescription;
 

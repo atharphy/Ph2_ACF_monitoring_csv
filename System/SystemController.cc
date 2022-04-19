@@ -11,9 +11,9 @@
 #include "../MonitorUtils/CBCMonitor.h"
 #include "../MonitorUtils/DetectorMonitor.h"
 #include "../MonitorUtils/RD53Monitor.h"
+#include "../MonitorUtils/SEHMonitor.h"
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
-#include "../tools/SEHMonitor.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -24,7 +24,6 @@ namespace Ph2_System
 SystemController::SystemController()
     : fBeBoardInterface(nullptr)
     , fReadoutChipInterface(nullptr)
-    , fChipInterface(nullptr)
     , flpGBTInterface(nullptr)
     , fCicInterface(nullptr)
     , fDetectorContainer(nullptr)
@@ -47,7 +46,6 @@ void SystemController::Inherit(const SystemController* pController)
 {
     fBeBoardInterface             = pController->fBeBoardInterface;
     fReadoutChipInterface         = pController->fReadoutChipInterface;
-    fChipInterface                = pController->fChipInterface;
     flpGBTInterface               = pController->flpGBTInterface;
     fBeBoardFWMap                 = pController->fBeBoardFWMap;
     fSettingsMap                  = pController->fSettingsMap;
@@ -60,6 +58,7 @@ void SystemController::Inherit(const SystemController* pController)
     fCicInterface                 = pController->fCicInterface;
     fPowerSupplyClient            = pController->fPowerSupplyClient;
     fChannelGroupHandlerContainer = pController->fChannelGroupHandlerContainer;
+
 #ifdef __TCP_SERVER__
     fTestcardClient = pController->fTestcardClient;
 #endif
@@ -83,27 +82,20 @@ void SystemController::Destroy()
 
     LOG(INFO) << BOLDRED << ">>> Destroying interfaces <<<" << RESET;
 
-    // #######################################
-    // # Disable all channels before exiting #
-    // #######################################
-    if(SystemController::findValueInSettings<double>("DisableChannelsAtExit", false) == true)
-        for(const auto cBoard: *fDetectorContainer)
-            for(const auto cOpticalGroup: *cBoard)
-                for(const auto cHybrid: *cOpticalGroup)
-                    for(const auto cChip: *cHybrid) fReadoutChipInterface->MaskAllChannels(cChip, true);
-
     RD53Event::JoinDecodingThreads();
 
     delete fDetectorMonitor;
     fDetectorMonitor = nullptr;
+
     delete fBeBoardInterface;
     fBeBoardInterface = nullptr;
+
     delete fReadoutChipInterface;
     fReadoutChipInterface = nullptr;
-    delete fChipInterface;
-    fChipInterface = nullptr;
+
     delete flpGBTInterface;
     flpGBTInterface = nullptr;
+
     delete fDetectorContainer;
     fDetectorContainer = nullptr;
 
@@ -129,6 +121,7 @@ void SystemController::Destroy()
     delete fTestcardClient;
     fTestcardClient = nullptr;
 #endif
+
     LOG(INFO) << BOLDRED << ">>> Interfaces  destroyed <<<" << RESET;
 }
 
@@ -178,6 +171,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
+    fBeBoardInterface->setBoard(0);
 
     fChannelGroupHandlerContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitChip<std::shared_ptr<ChannelGroupHandler>>(*fDetectorContainer, *fChannelGroupHandlerContainer);
@@ -208,7 +202,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     if(fDetectorContainer->size() > 0)
     {
         const BeBoard* cFirstBoard = fDetectorContainer->at(0);
-        if(cFirstBoard->getBoardType() != BoardType::RD53)
+        if(cFirstBoard->getBoardType() != BoardType::RD53 && fInitializeInterfaces == 1)
         {
             LOG(INFO) << BOLDBLUE << "Initializing HwInterfaces for OT BeBoards.." << RESET;
             if(cFirstBoard->size() > 0) // # of optical groups connected to Board0
@@ -220,9 +214,20 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 {
                     LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for lpGBT" << RESET;
                     flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap, cFirstBoard->isOptical(), cFirstBoard->ifUseCPB());
-// link to external interface
+// check link to external interface
 #ifdef __TCUSB__
-                    flpGBTInterface->LinkExternalInterface<TestCardInterface>(fTCInterface);
+#if defined(__SEH_USB__) || defined(__ROH_USB__)
+                    if(flpGBTInterface->getExternalController() != nullptr)
+                    {
+                        LOG(INFO) << BOLDBLUE << "TC interface should be initialized... type is " << flpGBTInterface->getExternalController()->getName() << RESET;
+#ifdef __ROH_USB__
+                        // check reading of ADC from PSROH TC
+                        float cOutput;
+                        flpGBTInterface->getExternalController()->getInterface().adc_get(TC_PSROH::measurement::_1V25_REF, cOutput);
+                        LOG(INFO) << BOLDBLUE << "Checking communication with test card by reading 1V25_Ref : " << cOutput << RESET;
+#endif
+                    }
+#endif
 #endif
                 }
 
@@ -288,7 +293,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                         if(cFoundLpgbt) LOG(INFO) << BOLDGREEN << "\t\t\t\t\t.. Readout chip interface aware of the lpGBT connected to this board ... " << RESET;
                         if(cWithMPA && cWithSSA) static_cast<PSInterface*>(fReadoutChipInterface)->SetOptical();
                     }
-                } // creat ROC interfaces
+                } // creat Chip interfaces
 
                 LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for CIC" << RESET;
                 fCicInterface = new CicInterface(fBeBoardFWMap);
@@ -332,49 +337,47 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         fDetectorMonitor->forkMonitor();
     }
 
-    // set module type
+    // ###################
+    // # Set module type #
+    // ###################
     for(const auto cBoard: *fDetectorContainer)
     {
         if(cBoard->getBoardType() != BoardType::D19C) continue;
 
+        auto cConnectedFeTypes = cBoard->connectedFrontEndTypes();
+        bool cMPAfound =
+            (std::find_if(cConnectedFeTypes.begin(), cConnectedFeTypes.end(), [](FrontEndType x) { return x == FrontEndType::MPA || x == FrontEndType::MPA2; }) != cConnectedFeTypes.end());
+        bool cSSAfound =
+            (std::find_if(cConnectedFeTypes.begin(), cConnectedFeTypes.end(), [](FrontEndType x) { return x == FrontEndType::SSA || x == FrontEndType::SSA2; }) != cConnectedFeTypes.end());
+        bool cCBCfound = (std::find_if(cConnectedFeTypes.begin(), cConnectedFeTypes.end(), [](FrontEndType x) { return x == FrontEndType::CBC3; }) != cConnectedFeTypes.end());
         for(auto cOpticalGroup: *cBoard)
         {
-            if(cOpticalGroup->flpGBT == nullptr) continue;
+            bool cWithLpGBT    = (cOpticalGroup->flpGBT != nullptr);
+            bool cWithPSmodule = (cMPAfound || cSSAfound) && cWithLpGBT;
+            bool cWith2Smodule = cCBCfound && cWithLpGBT;
+            bool cWithPSHybrid = (cSSAfound && !cWithLpGBT);
+            bool cWith2SHybrid = (cCBCfound && !cWithLpGBT);
 
-            bool cWithPSmodule = false;
-            bool cWith2Smodule = false;
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                auto cType     = FrontEndType::MPA;
-                auto cMPAfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                cType          = FrontEndType::SSA;
-                auto cSSAfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-                cType          = FrontEndType::CBC3;
-                auto cCBCfound = (std::find_if(cHybrid->begin(), cHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cHybrid->end());
-
-                cWith2Smodule = cWith2Smodule || cCBCfound;
-                cWithPSmodule = cWithPSmodule || cMPAfound || cSSAfound;
-            }
             if(cWithPSmodule) { cOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS); }
             else if(cWith2Smodule)
             {
                 cOpticalGroup->setFrontEndType(FrontEndType::OuterTracker2S);
             }
+            else if(cWithPSHybrid)
+            {
+                LOG(INFO) << BOLDYELLOW << "HYBRIDPS" << RESET;
+                cOpticalGroup->setFrontEndType(FrontEndType::HYBRIDPS);
+            }
+            else if(cWith2SHybrid)
+            {
+                cOpticalGroup->setFrontEndType(FrontEndType::HYBRID2S);
+            }
+            else if(cWithLpGBT && flpGBTInterface != nullptr)
+                static_cast<D19clpGBTInterface*>(flpGBTInterface)->setFrontEndType(cOpticalGroup->getFrontEndType());
             else
                 LOG(INFO) << BOLDMAGENTA << "UN-KNOWN MODULE TYPE" << RESET;
-
-            static_cast<D19clpGBTInterface*>(flpGBTInterface)->setFrontEndType(cOpticalGroup->getFrontEndType());
         }
     }
-
-// turn on the SEH here - moved from the lpGBT interface
-// I think it makes more sense to have it in the initialization step
-#ifdef __SEH_USB__
-    fTCInterface.getInterface().set_SehSupply(TC_2SSEH::sehSupplyState::sehSupply_On);
-    LOG(INFO) << BOLDRED << "Intitally switching on SEH for configuration" << RESET;
-// move this to the TC library .. I shouldn't have to wait here - you should wait for me
-// std::this_thread::sleep_for(std::chrono::milliseconds(100));
-#endif
 }
 
 void SystemController::InitializeSettings(const std::string& pFilename, std::ostream& os, bool pIsFile) { this->fParser.parseSettings(pFilename, fSettingsMap, os, pIsFile); }
@@ -388,6 +391,8 @@ void SystemController::ReadSystemMonitor(BeBoard* pBoard, const std::vector<std:
                 {
                     LOG(INFO) << GREEN << "Monitor data for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << pBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                               << +cChip->getId() << RESET << GREEN << "]" << RESET;
+                    fBeBoardInterface->ReadHybridVoltageMonitor(fReadoutChipInterface, cChip);
+                    fBeBoardInterface->ReadHybridTemperatureMonitor(fReadoutChipInterface, cChip);
                     fBeBoardInterface->ReadChipMonitor(fReadoutChipInterface, cChip, args);
                     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
                 }
@@ -428,14 +433,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
 
             if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
             {
-                // start PRBS pattern
-                for(const auto cHybrid: *cOpticalGroup)
-                    for(const auto cChip: *cHybrid) static_cast<RD53Interface*>(fReadoutChipInterface)->StartPRBSpattern(cChip);
-                // lpGBT phase align Rx
-                flpGBTInterface->PhaseAlignRx(cOpticalGroup->flpGBT, cOpticalGroup);
-                // stop PRBS pattern
-                for(const auto cHybrid: *cOpticalGroup)
-                    for(const auto cChip: *cHybrid) static_cast<RD53Interface*>(fReadoutChipInterface)->StartPRBSpattern(cChip);
+                static_cast<RD53lpGBTInterface*>(flpGBTInterface)->InternalPhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, fReadoutChipInterface);
                 LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;
             }
             else
@@ -500,12 +498,14 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
     RD53Event::ForkDecodingThreads();
 }
+
 // ######################################
 // # Configuring Outer Tracker hardware #
 // ######################################
 void SystemController::InitializeOT(BeBoard* pBoard)
 {
     LOG(INFO) << BOLDMAGENTA << "Initializing OT hardware.." << RESET;
+
     for(auto cOpticalGroup: *pBoard)
     {
         if(cOpticalGroup->flpGBT == nullptr) continue;
@@ -573,15 +573,13 @@ void SystemController::InitializeOT(BeBoard* pBoard)
     // CIC start-up
     for(auto cOpticalGroup: *pBoard)
     {
-        auto& clpGBT = cOpticalGroup->flpGBT;
-        if(clpGBT == nullptr) continue;
         // CIC configuration part .. first configure
         for(auto cHybrid: *cOpticalGroup)
         {
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             if(cCic == NULL) continue;
 
-            LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) << " on link " << +cHybrid->getOpticalId() << " on hybrid " << +cHybrid->getId() << RESET;
+            LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) << " on link " << +cHybrid->getOpticalGroupId() << " on hybrid " << +cHybrid->getId() << RESET;
             fCicInterface->ConfigureChip(cCic);
             fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false); // make sure all FEs are disabled by default
         }
@@ -609,6 +607,7 @@ void SystemController::InitializeOT(BeBoard* pBoard)
             cReSyncNeeded = cReSync;
         }
     }
+
     if(cReSyncNeeded)
     {
         LOG(INFO) << BOLDMAGENTA << "Sending a ReSync at the end of the OT-module configuration step" << RESET;
@@ -633,9 +632,10 @@ void SystemController::InitializeOT(BeBoard* pBoard)
     else
         LOG(INFO) << BOLDMAGENTA << "No ReSync needed after OT-module configuration step" << RESET;
 }
+
 void SystemController::ConfigureOT(BeBoard* pBoard)
 {
-    // hard reset ROCs on hybrid if lpGBT is there; if no lpGBT this
+    // hard reset Chips on hybrid if lpGBT is there; if no lpGBT this
     // is already taken care of by ConfigureBoard
     for(auto cOpticalGroup: *pBoard)
     {
@@ -649,7 +649,7 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
 
             if(cHybrid->getReset() == 0)
             {
-                LOG(INFO) << BOLDYELLOW << "Will not send a hard-reset to ROCs on Hybrid#" << +cHybrid->getId() << RESET;
+                LOG(INFO) << BOLDYELLOW << "Will not send a hard-reset to Chips on Hybrid#" << +cHybrid->getId() << RESET;
                 continue;
             }
             // cWithLpGBT=true;
@@ -676,11 +676,12 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)
         {
-            for(auto cChip: *cHybrid) { fReadoutChipInterface->ConfigureChip(cChip); } // ROC config
+            for(auto cChip: *cHybrid) { fReadoutChipInterface->ConfigureChip(cChip); } // Chip config
         }                                                                              // hybrid
     }                                                                                  // OG
     LOG(INFO) << BOLDMAGENTA << "Configured OT module" << RESET;
 }
+
 void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
 {
     auto cBoardId   = pOpticalGroup->getBeBoardId();
@@ -743,24 +744,24 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
                 static_cast<D19clpGBTInterface*>(flpGBTInterface)->cicReset(clpGBT, 0);
             }
 
-            bool     cSkipSSA3            = true; // eventually this needs to be set in the xml somewhere
-            uint16_t cRegisterPadStrength = 0x1018;
+            bool cSkipSSA3 = true; // eventually this needs to be set in the xml somewhere
             for(uint8_t cSSAId = 0; cSSAId < 8; cSSAId++)
             {
                 if(cSkipSSA3 && cSSAId == 3) continue;
 
-                SSA*    cSSA          = new SSA(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getId(), cSSAId, 0, 0, "./settings/SSAFiles/SSA.txt");
+                SSA*    cSSA          = new SSA(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), cSSAId, 0, 0, "./settings/SSAFiles/SSA.txt");
                 uint8_t cSLVSdriveSSA = cSSA->getReg("SLVS_pad_current");
-                cSSA->setOpticalId(cHybrid->getOpticalId());
                 cSSA->setOptical(cHybrid->isOptical());
                 cSSA->setMasterId(cHybrid->getMasterId());
                 LOG(INFO) << BOLDMAGENTA << "SSA " << +cSSAId << " current set to " << +cSLVSdriveSSA << "" << RESET;
-                (fBeBoardInterface->getFirmwareInterface())->WriteFERegister(cSSA, cRegisterPadStrength, cSLVSdriveSSA, false);
+                auto cRegItem = cSSA->getRegItem("SLVS_pad_current");
+                (fBeBoardInterface->getFirmwareInterface())->SingleRegisterWrite(cSSA, cRegItem, false);
             }
 
         } // hybrid
     }     // lpGBT part ... resets + clocks
 }
+
 void SystemController::ModuleStartUp2S(const OpticalGroup* pOpticalGroup)
 {
     auto cBoardId   = pOpticalGroup->getBeBoardId();
@@ -805,6 +806,7 @@ void SystemController::ModuleStartUp2S(const OpticalGroup* pOpticalGroup)
         }
     } // lpGBT part ... resets + clocks
 }
+
 bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStartUpSequence)
 {
     auto cBoardId    = pOpticalGroup->getBeBoardId();
@@ -850,15 +852,15 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
         // configure CIC FE enable register
         // first make sure it is set to 0x00
         fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
-        // figure out which ROCs are enabled
-        std::vector<uint8_t> cFeIds(0);
+        // figure out which Chips are enabled
+        std::vector<uint8_t> cChipIds(0);
         for(auto cReadoutChip: *cHybrid)
         {
             // only consider MPAs and CBCs
-            if(cReadoutChip->getFrontEndType() == FrontEndType::SSA) continue;
-            cFeIds.push_back(cReadoutChip->getId() % 8);
+            if(cReadoutChip->getFrontEndType() == FrontEndType::SSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA2) continue;
+            cChipIds.push_back(cReadoutChip->getId() % 8);
         }
-        fCicInterface->EnableFEs(cCic, cFeIds, true);
+        fCicInterface->EnableFEs(cCic, cChipIds, true);
 
         // make sure data rate is correctly configured
         // only works for CIC2
@@ -914,8 +916,6 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
         else
             throw std::runtime_error(std::string("FAILED to configure CIC Bx0 delay... .. STOPPING"));
 
-        // continue;
-
     } // all hybrids connected to this OG
     LOG(INFO) << BOLDGREEN << "####################################################################################" << RESET;
     return cSuccess;
@@ -933,6 +933,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
     for(const auto cBoard: *fDetectorContainer)
     {
         cBoard->printBoardType();
+        fBeBoardInterface->setBoard(0);
         fBeBoardInterface->ConfigureBoard(cBoard);
         if(cBoard->getBoardType() == BoardType::D19C)
         {
@@ -992,15 +993,16 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                 // CIC configure
                 for(auto cOpticalGroup: *cBoard)
                 {
-                    auto& clpGBT = cOpticalGroup->flpGBT;
-                    if(clpGBT == nullptr) continue;
+                    // auto& clpGBT = cOpticalGroup->flpGBT;
+                    // if(clpGBT == nullptr) continue;
                     // CIC configuration part .. first configure
+                    LOG(INFO) << BOLDYELLOW << "Configuring CIC connected to OG#" << +cOpticalGroup->getId() << RESET;
                     for(auto cHybrid: *cOpticalGroup)
                     {
                         auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                         if(cCic == NULL) continue;
 
-                        LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) << " on link " << +cHybrid->getOpticalId() << " on hybrid " << +cHybrid->getId() << RESET;
+                        LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) << " on link " << +cHybrid->getOpticalGroupId() << " on hybrid " << +cHybrid->getId() << RESET;
                         fCicInterface->ConfigureChip(cCic);
                         fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false); // make sure all FEs are disabled by default
                     }
@@ -1012,21 +1014,36 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
                     }
                 }
             }
+            if(!cBoard->isOptical() && cBoard->at(0)->flpGBT != nullptr)
+            {
+                LOG(INFO) << YELLOW << "Checking LinkLock after USB configuration of lpGBT" << RESET;
+                LOG(INFO) << BOLDMAGENTA << "Resetting lpGBT-FPGA core on BeBoard#" << +cBoard->getId() << RESET;
+                // reset lpGBT core
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
+                std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+                bool cLinkLock = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->LinkLock(cBoard);
+                if(!cLinkLock)
+                {
+                    LOG(INFO) << BOLDRED << "lpGBT link failed to LOCK!" << RESET;
+                    exit(0);
+                }
+            }
             ConfigureOT(cBoard);
 
             LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
         }
         else if(cBoard->getBoardType() == BoardType::RD53)
-        {
             ConfigureIT(cBoard);
-        }
     }
+
     if(fDetectorMonitor != nullptr)
     {
         LOG(INFO) << GREEN << "Starting monitoring thread" << RESET;
         fDetectorMonitor->startMonitoring();
     }
-    // std::cout << __LINE__ << std::endl;
 }
 
 void SystemController::initializeWriteFileHandler()
@@ -1181,7 +1198,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
     // ####################
     // # Decoding OT data #
     // ####################
-    else if(pType == BoardType::D19C)
+    else if(pType == BoardType::D19C && pBoard->getEventType() != EventType::PSAS)
     {
         bool cTLUconfig = 2;
         // bool cTLUconfig = (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(pBoard->getIndex()), "fc7_daq_cnfg.tlu_block.handshake_mode") == 2 &&
@@ -1197,9 +1214,9 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
         else
         {
             EventType fEventType = pBoard->getEventType();
-            uint32_t  fNFe       = pBoard->getNFe();
+            uint32_t  fNHybrid       = pBoard->getNHybrid();
             // uint32_t  cBlockSize = 0x0000FFFF & pData.at(0);
-            // LOG(INFO) << BOLDBLUE << "Reading events from " << +fNFe << " FEs connected to uDTC...[ " << +cBlockSize * 4 << " 32 bit words to decode]" << RESET;
+            // LOG(INFO) << BOLDBLUE << "Reading events from " << +fNHybrid << " FEs connected to uDTC...[ " << +cBlockSize * 4 << " 32 bit words to decode]" << RESET;
             fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);
             // uint32_t nmpa = 0;
             uint32_t maxind = 0;
@@ -1208,9 +1225,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                 for(auto hybrid: *opticalGroup) { maxind = std::max(maxind, uint32_t(hybrid->size())); }
             }
 
-            if(fEventType == EventType::SCAS) { fEventList.push_back(new D19SCEventAS(pBoard, pData)); }
-            if(fEventType == EventType::PSAS) { fEventList.push_back(new D19cPSEventAS(pBoard, pData)); }
-            else if(fEventType != EventType::ZS)
+            if(fEventType != EventType::ZS)
             {
                 // check data words because I'm desperate
                 // for( auto cWord : pData )
@@ -1255,15 +1270,15 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                             }
                             else if(pBoard->getFrontEndType() == FrontEndType::SSA)
                             {
-                                fEventList.push_back(new D19cSSAEvent(pBoard, maxind, fNFe, cEvent));
+                                fEventList.push_back(new D19cSSAEvent(pBoard, maxind, fNHybrid, cEvent));
                             }
                             else if(pBoard->getFrontEndType() == FrontEndType::SSA2)
                             {
-                                fEventList.push_back(new D19cSSA2Event(pBoard, maxind, fNFe, cEvent));
+                                fEventList.push_back(new D19cSSA2Event(pBoard, maxind, fNHybrid, cEvent));
                             }
                             else if(pBoard->getFrontEndType() == FrontEndType::MPA)
                             {
-                                fEventList.push_back(new D19cMPAEvent(pBoard, maxind, fNFe, cEvent));
+                                fEventList.push_back(new D19cMPAEvent(pBoard, maxind, fNHybrid, cEvent));
                                 LOG(INFO) << BOLDBLUE << "Decoding SSA data " << RESET;
                                 // auto cL1Counter0 = (cEvent[4+2] & (0xF<<16)) >> 16;
                                 // auto cL1Counter1 = (cEvent[4+8+4+2] & (0xF<<16)) >> 16;
@@ -1271,13 +1286,13 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                                 // LOG (INFO) << BOLDBLUE << "L1A counter chip1 : " << cL1Counter1 << RESET;
                                 // for(auto cWord : cEvent )
                                 //   LOG (INFO) << BOLDMAGENTA << std::bitset<32>(cWord) << RESET;
-                                fEventList.push_back(new D19cSSAEvent(pBoard, maxind + 1, fNFe, cEvent));
+                                fEventList.push_back(new D19cSSAEvent(pBoard, maxind + 1, fNHybrid, cEvent));
                             }
                             else if(pBoard->getFrontEndType() == FrontEndType::MPA)
                             {
                                 LOG(INFO) << BOLDBLUE << "Decoding MPA data " << RESET;
                                 // fEventList.push_back(new D19cCic2Event(pBoard, cEvent));
-                                fEventList.push_back(new D19cMPAEvent(pBoard, maxind + 1, fNFe, cEvent));
+                                fEventList.push_back(new D19cMPAEvent(pBoard, maxind + 1, fNHybrid, cEvent));
                             }
                             cEventIndex++;
                         }
@@ -1287,13 +1302,31 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
             }
         } // end zero check
     }
+    else if(pType == BoardType::D19C && pBoard->getEventType() == EventType::PSAS)
+    {
+        fEventList.clear();
+        fEventList.push_back(new D19cPSEventAS(pBoard, pData));
+    }
+}
+
+void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, std::vector<FrontEndType> cFrontEndTypes)
+{
+    auto selectChipFlavourFunction = [cFrontEndTypes](const ChipContainer* theChip) {
+        return (std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), static_cast<const ReadoutChip*>(theChip)->getFrontEndType()) != cFrontEndTypes.end());
+    };
+    setChannelGroupHandler(theChannelGroupHandler, selectChipFlavourFunction);
+}
+
+void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, FrontEndType theFrontEndType)
+{
+    auto selectChipFlavourFunction = [theFrontEndType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == theFrontEndType); };
+    setChannelGroupHandler(theChannelGroupHandler, selectChipFlavourFunction);
 }
 
 void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, std::function<bool(const ChipContainer*)> theQueryFunction)
 {
     auto theChannelGroupHandlerPointer = std::make_shared<ChannelGroupHandler>(std::move(theChannelGroupHandler));
     setChannelGroupHandler(theChannelGroupHandlerPointer, theQueryFunction);
-    return;
 }
 
 void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandler> theChannelGroupHandlerPointer, std::function<bool(const ChipContainer*)> theQueryFunction)
@@ -1303,13 +1336,10 @@ void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandle
     {
         for(const auto opticalGroup: *board)
         {
-            for(const auto hybrid: *opticalGroup)
-            {
-                totalNumberOfChips += hybrid->size();
-            }
+            for(const auto hybrid: *opticalGroup) { totalNumberOfChips += hybrid->size(); }
         }
     }
-    
+
     uint16_t totalNumberOfQueriedChips = 0;
     fDetectorContainer->setReadoutChipQueryFunction(theQueryFunction);
     for(const auto board: *fDetectorContainer)
@@ -1330,26 +1360,27 @@ void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandle
             }
         }
     }
+
     fDetectorContainer->resetReadoutChipQueryFunction();
-
     fSameChannelGroupForAllChannels = (totalNumberOfQueriedChips == totalNumberOfChips);
-    return;
-}
-
-void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, FrontEndType theFrontEndType)
-{
-    auto selectChipFlavourFunction = [theFrontEndType](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == theFrontEndType); };
-    setChannelGroupHandler(theChannelGroupHandler, selectChipFlavourFunction);
-    return;
 }
 
 void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandler> theChannelGroupHandlerPointer, uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId)
 {
-    fChannelGroupHandlerContainer->getObject(boardId)
-                    ->getObject(opticalGroupId)
-                    ->getObject(hybridId)
-                    ->getObject(chipId)
-                    ->getSummary<std::shared_ptr<ChannelGroupHandler>>() = theChannelGroupHandlerPointer;               
+    fChannelGroupHandlerContainer->getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<std::shared_ptr<ChannelGroupHandler>>() =
+        theChannelGroupHandlerPointer;
+}
+
+void SystemController::disableAllChannels()
+{
+    // ###########################################
+    // # Disable channels of the entire detector #
+    // ###########################################
+    if(SystemController::findValueInSettings<double>("DisableChannelsAtExit", false) == true)
+        for(const auto cBoard: *fDetectorContainer)
+            for(const auto cOpticalGroup: *cBoard)
+                for(const auto cHybrid: *cOpticalGroup)
+                    for(const auto cChip: *cHybrid) fReadoutChipInterface->MaskAllChannels(cChip, true);
 }
 
 } // namespace Ph2_System

@@ -87,8 +87,8 @@ void InjectionDelay::sendData()
 
     if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: theOccContainer) theStream.streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theInjectionDelayContainer) theInjectionDelayStream.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theOccContainer) theStream->streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theInjectionDelayContainer) theInjectionDelayStream->streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 
@@ -304,7 +304,7 @@ void InjectionDelay::scanDac(const std::string& regName, const std::vector<uint1
         PixelAlive::run();
         auto output = PixelAlive::analyze();
         output->resetNormalizationStatus();
-        output->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), 1);
+        output->normalizeAndAverageContainers(fDetectorContainer, this->getChannelGroupHandlerContainer(), 1);
 
         // ###############
         // # Save output #

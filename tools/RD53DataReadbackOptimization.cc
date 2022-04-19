@@ -74,14 +74,14 @@ void DataReadbackOptimization::sendData()
 
     if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: theTAP0scanContainer) theStreamTAP0scan.streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theTAP0Container) theStreamTAP0.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTAP0scanContainer) theStreamTAP0scan->streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTAP0Container) theStreamTAP0->streamAndSendBoard(cBoard, fDQMStreamer);
 
-        for(const auto cBoard: theTAP1scanContainer) theStreamTAP1scan.streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theTAP1Container) theStreamTAP1.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTAP1scanContainer) theStreamTAP1scan->streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTAP1Container) theStreamTAP1->streamAndSendBoard(cBoard, fDQMStreamer);
 
-        for(const auto cBoard: theTAP2scanContainer) theStreamTAP2scan.streamAndSendBoard(cBoard, fDQMStreamer);
-        for(const auto cBoard: theTAP2Container) theStreamTAP2.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTAP2scanContainer) theStreamTAP2scan->streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theTAP2Container) theStreamTAP2->streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 

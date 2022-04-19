@@ -12,17 +12,13 @@
 #ifndef OpenFinder_h__
 #define OpenFinder_h__
 
+#if defined(__TCUSB__) && defined(__USE_ROOT__) && defined(__ANTENNA__)
 #include "PSHybridTester.h"
-#ifdef __USE_ROOT__
+#include "TH2F.h"
 #include "TTree.h"
-#endif
 
-#ifdef __ANTENNA__
 #include "Antenna.h"
-#endif
-#ifdef __TCUSB__
 #include "USB_a.h"
-#endif
 
 #define ADC_SLAVE 4
 #define CLOCK_SLAVE 3
@@ -67,14 +63,12 @@ class OpenFinder : public PSHybridTester
     void FindOpens2S();
     void FindOpensPS();
     void FindOpens();
-#ifdef __USE_ROOT__
     void Print();
-#endif
     void Reset();
 
-  private:
-    void SelectAntennaPosition(const std::string& cPosition);
+    void SelectAntennaPosition(const std::string& cPosition, uint16_t potentiometer = 0);
 
+  private:
     // type aliases
     using channelVector      = std::vector<int>;
     using cbcChannelsMap     = std::map<int, channelVector>;
@@ -99,12 +93,11 @@ class OpenFinder : public PSHybridTester
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fBoardRegContainer;
 
-#ifdef __TCUSB__
-    std::map<std::string, TC_PSFE::ant_channel> fAntennaControl = {{"EvenChannels", TC_PSFE::ant_channel::_1},
-                                                                   {"OddChannels", TC_PSFE::ant_channel::_2},
+    std::map<std::string, TC_PSFE::ant_channel> fAntennaControl = {{"EvenChannels", TC_PSFE::ant_channel::_2},
+                                                                   {"OddChannels", TC_PSFE::ant_channel::_1},
                                                                    {"Enable", TC_PSFE::ant_channel::ALL},
                                                                    {"Disable", TC_PSFE::ant_channel::NONE}};
-#endif
 };
 
+#endif
 #endif

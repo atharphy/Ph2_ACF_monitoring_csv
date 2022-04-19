@@ -1,5 +1,5 @@
 #include "DetectorMonitor.h"
-#include "Utilities.h"
+#include "../Utils/Utilities.h"
 #ifdef __USE_ROOT__
 #include <TFile.h>
 #endif
@@ -15,7 +15,7 @@ DetectorMonitor::DetectorMonitor(const Ph2_System::SystemController* theSystemCo
     }
     catch(std::exception& e)
     {
-        LOG(ERROR) << "Exceptin when trying to create MonitorResults Directory: " << e.what();
+        LOG(ERROR) << "Exceptin when trying to create MonitorResults directory: " << e.what();
     }
 
     std::string monitorOutputFileName = monitorOutputDir + "/" + "MonitorDQM" + currentDateTime() + ".root";
@@ -37,6 +37,7 @@ DetectorMonitor::~DetectorMonitor()
     fOutputFile->Write();
     // fOutputFile->Close();
     // delete fOutputFile;
+    // fOutputFile = nullptr;
     delete fMonitorPlotDQM;
 #endif
 }

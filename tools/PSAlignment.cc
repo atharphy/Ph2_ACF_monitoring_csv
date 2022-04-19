@@ -2,6 +2,7 @@
 
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
+#include "L1ReadoutInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -26,10 +27,10 @@ void PSAlignment::Initialise()
         cRegsMod.push_back(cRegName.str());
     }
     cRegsMod.push_back("ReadoutMode");
-    SetROCRegstoPerserve(FrontEndType::MPA, cRegsMod);
+    SetChipRegstoPerserve(FrontEndType::MPA, cRegsMod);
     cRegsMod.clear();
     cRegsMod.push_back("ReadoutMode");
-    SetROCRegstoPerserve(FrontEndType::SSA, cRegsMod);
+    SetChipRegstoPerserve(FrontEndType::SSA, cRegsMod);
 
     // data containers to hold alignment parameters
     ContainerFactory::copyAndInitChip<std::vector<MPAInputAlignment>>(*fDetectorContainer, fAlParsContainer);
@@ -152,10 +153,10 @@ void PSAlignment::ConfigureDefaultAlignmentParameters(std::string pSetupType)
         cRegsMod.push_back(cRegName.str());
     }
     cRegsMod.push_back("ReadoutMode");
-    SetROCRegstoPerserve(FrontEndType::MPA, cRegsMod);
+    SetChipRegstoPerserve(FrontEndType::MPA, cRegsMod);
     cRegsMod.clear();
     cRegsMod.push_back("ReadoutMode");
-    SetROCRegstoPerserve(FrontEndType::SSA, cRegsMod);
+    SetChipRegstoPerserve(FrontEndType::SSA, cRegsMod);
 }
 bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
 {
@@ -967,13 +968,13 @@ bool PSAlignment::FindLatency(BeBoard* pBoard, uint8_t pChipId, std::vector<Inje
                         fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cHitLatency);
                         fReadoutChipInterface->WriteChipReg(cChip, "SelectEdgeT1", pEdgeSelT1);
                     }
-                } // ROC - only MPAs and CBCs for this test since I'm eihter in p=p mode or 2S
+                } // Chip - only MPAs and CBCs for this test since I'm eihter in p=p mode or 2S
             }     // hybrid
         }         // OG
         if(!cChipFound) continue;
 
         // send a ReSync since the latency was changed
-        LOG(INFO) << BOLDGREEN << "Checking hit Latency of " << +cHitLatency << " - offset of " << +cOffset << " - ROC#" << +pChipId << RESET;
+        LOG(INFO) << BOLDGREEN << "Checking hit Latency of " << +cHitLatency << " - offset of " << +cOffset << " - Chip#" << +pChipId << RESET;
         fBeBoardInterface->ChipReSync(pBoard);
         // look at data
         ReadNEvents(pBoard, cNevents);
@@ -1456,7 +1457,7 @@ void PSAlignment::Validate(BeBoard* pBoard, std::vector<Injection> pInjections, 
     cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
-    // find latency on all ROCs
+    // find latency on all Chips
     std::vector<uint16_t> cLatencyBins(512, 0);
     for(size_t cChipId = 0; cChipId < 8; cChipId++)
     {
@@ -1631,7 +1632,10 @@ bool PSAlignment::Align()
     for(auto cBoard: *fDetectorContainer)
     {
         fBeBoardInterface->ChipReSync(cBoard);
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+        auto cInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface();
+        cL1ReadoutInterface->ResetReadout();
+
         bool cWithMPA = false;
         bool cWithSSA = false;
         for(auto cOpticalReadout: *cBoard)
@@ -1729,10 +1733,10 @@ bool PSAlignment::Align()
             cRegsMod.push_back(cRegName.str());
         }
         cRegsMod.push_back("ReadoutMode");
-        SetROCRegstoPerserve(FrontEndType::MPA, cRegsMod);
+        SetChipRegstoPerserve(FrontEndType::MPA, cRegsMod);
         cRegsMod.clear();
         cRegsMod.push_back("ReadoutMode");
-        SetROCRegstoPerserve(FrontEndType::SSA, cRegsMod);
+        SetChipRegstoPerserve(FrontEndType::SSA, cRegsMod);
 
         // check trigger source
         // and reload

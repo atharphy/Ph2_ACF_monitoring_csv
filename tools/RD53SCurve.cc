@@ -44,6 +44,7 @@ void SCurve::ConfigureCalibration()
 
     theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup, doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol, doOnlyNGroups);
     theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
+    this->setChannelGroupHandler(theChnGroupHandler);
 
     // ##############################
     // # Initialize dac scan values #
@@ -94,13 +95,13 @@ void SCurve::sendData()
         size_t index = 0;
         for(const auto theOccContainer: detectorContainerVector)
         {
-            theOccStream.setHeaderElement(dacList[index] - offset);
-            for(const auto cBoard: *theOccContainer) theOccStream.streamAndSendBoard(cBoard, fDQMStreamer);
+            theOccStream->setHeaderElement(dacList[index] - offset);
+            for(const auto cBoard: *theOccContainer) theOccStream->streamAndSendBoard(cBoard, fDQMStreamer);
             index++;
         }
 
         if(theThresholdAndNoiseContainer != nullptr)
-            for(const auto cBoard: *theThresholdAndNoiseContainer.get()) theThrAndNoiseStream.streamAndSendBoard(cBoard, fDQMStreamer);
+            for(const auto cBoard: *theThresholdAndNoiseContainer.get()) theThrAndNoiseStream->streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
 
@@ -158,7 +159,6 @@ void SCurve::run()
     detectorContainerVector.clear();
     for(auto i = 0u; i < dacList.size(); i++) detectorContainerVector.push_back(theRecyclingBin.get(&ContainerFactory::copyAndInitStructure<OccupancyAndPh>, OccupancyAndPh()));
 
-    setChannelGroupHandler(theChnGroupHandler);
     this->SetBoardBroadcast(true);
     this->SetTestPulse(true);
     this->fMaskChannelsFromOtherGroups = true;
@@ -173,10 +173,11 @@ void SCurve::run()
                 for(const auto cChip: *cHybrid)
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
-                            if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !getChannelGroupHandlerContainer()->getObject(cBoard->getId())
-                                                                                                                     ->getObject(cOpticalGroup->getId())
-                                                                                                                     ->getObject(cHybrid->getId())
-                                                                                                                     ->getObject(cChip->getId())
+                            if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !this->getChannelGroupHandlerContainer()
+                                                                                                                     ->at(cBoard->getIndex())
+                                                                                                                     ->at(cOpticalGroup->getIndex())
+                                                                                                                     ->at(cHybrid->getIndex())
+                                                                                                                     ->at(cChip->getIndex())
                                                                                                                      ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                                                                                                      ->allChannelGroup()
                                                                                                                      ->isChannelEnabled(row, col))
@@ -242,10 +243,11 @@ void SCurve::draw(bool doSaveData)
                             fileOutID << "Iteration " << i << " --- reg = " << dacList[i] - offset << std::endl;
                             for(auto row = 0u; row < RD53::nRows; row++)
                                 for(auto col = 0u; col < RD53::nCols; col++)
-                                    if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && getChannelGroupHandlerContainer()->getObject(cBoard->getId())
-                                                                                                                           ->getObject(cOpticalGroup->getId())
-                                                                                                                           ->getObject(cHybrid->getId())
-                                                                                                                           ->getObject(cChip->getId())
+                                    if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
+                                                                                                                           ->at(cBoard->getIndex())
+                                                                                                                           ->at(cOpticalGroup->getIndex())
+                                                                                                                           ->at(cHybrid->getIndex())
+                                                                                                                           ->at(cChip->getIndex())
                                                                                                                            ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                                                                                                            ->allChannelGroup()
                                                                                                                            ->isChannelEnabled(row, col))
@@ -291,10 +293,11 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
                 {
                     for(auto row = 0u; row < RD53::nRows; row++)
                         for(auto col = 0u; col < RD53::nCols; col++)
-                            if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && getChannelGroupHandlerContainer()->getObject(cBoard->getId())
-                                                                                                                   ->getObject(cOpticalGroup->getId())
-                                                                                                                   ->getObject(cHybrid->getId())
-                                                                                                                   ->getObject(cChip->getId())
+                            if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
+                                                                                                                   ->at(cBoard->getIndex())
+                                                                                                                   ->at(cOpticalGroup->getIndex())
+                                                                                                                   ->at(cHybrid->getIndex())
+                                                                                                                   ->at(cChip->getIndex())
                                                                                                                    ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                                                                                                    ->allChannelGroup()
                                                                                                                    ->isChannelEnabled(row, col))
@@ -352,7 +355,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
                     index++;
                 }
 
-    theThresholdAndNoiseContainer->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), 1);
+    theThresholdAndNoiseContainer->normalizeAndAverageContainers(fDetectorContainer, this->getChannelGroupHandlerContainer(), 1);
 
     for(const auto cBoard: *theThresholdAndNoiseContainer)
         for(const auto cOpticalGroup: *cBoard)

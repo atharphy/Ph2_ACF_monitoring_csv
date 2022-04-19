@@ -21,6 +21,23 @@
 typedef std::vector<uint8_t> AlignmentValues;
 #endif
 
+#ifndef StubLineData
+typedef std::vector<std::string> StubLineData;
+#endif
+
+#ifndef PhyPortCnfg
+typedef std::pair<uint8_t, uint8_t> PhyPortCnfg;
+#endif
+
+#ifndef SlvsLineStatus
+typedef std::pair<uint32_t, std::string> SlvsLineStatus;
+#endif
+
+#ifdef __USE_ROOT__
+#include "../DQMUtils/DQMHistogramCicFEAlignment.h"
+#include "TH1.h"
+#endif
+
 // add break codes here
 const uint8_t FAILED_PHASE_ALIGNMENT = 1;
 const uint8_t FAILED_WORD_ALIGNMENT  = 2;
@@ -40,6 +57,14 @@ class CicFEAlignment : public OTTool
     bool CicLpGbtAlignment(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     void AlignInputs();
     void SetStaticPhaseAlignment();
+    // manual scan of CIC input phases
+    void                  InputLineScan();
+    uint8_t               GenManPatternOutLine(uint8_t pLine);
+    void                  ScanInputPhase(uint8_t pOutLine, uint8_t pPattern, uint8_t pStartScan, uint8_t pEndScan);
+    DetectorDataContainer CheckCicInput(uint8_t pOutLine, uint8_t pPattern, uint8_t pPhase);
+    void                  CheckOutLine(uint8_t pOutLine, uint8_t pPattern, uint8_t pPhase, DetectorDataContainer& pLineData, DetectorDataContainer& pErrorCounter);
+    SlvsLineStatus        CheckPhyPort(const Ph2_HwDescription::Hybrid* pHybrid, PhyPortCnfg pPhyPortCnfg, uint8_t pPhase, uint8_t pPattern);
+    // automated configuration of CIC input phase and delay
     bool PhaseAlignment(uint16_t pWait_us = 10, uint32_t pNTriggers = 500);
     bool WordAlignment(uint32_t pWait_us = 10);
     bool Bx0Alignment(uint8_t pFe = 0, uint8_t pLine = 4, uint16_t pDelay = 1, uint16_t pWait_ms = 100, int cNrials = 3);
@@ -81,6 +106,10 @@ class CicFEAlignment : public OTTool
     // different for CBC and MPA
     uint8_t fStubBxDelay2S = 8;
     uint8_t fStubBxDelayPS = 22;
+
+#ifdef __USE_ROOT__
+    DQMHistogramCicFEAlignment fDQMHistogrammer;
+#endif
 };
 
 #endif

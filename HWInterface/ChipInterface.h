@@ -24,7 +24,13 @@ class ChannelContainer;
 namespace Ph2_HwInterface
 {
 using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board connected */
-
+// #ifdef __TCUSB__
+//     #ifdef __ROH_USB__
+//         using TestCardInterface =  TCInterface<TC_PSROH>;
+//     #elif __SEH_USB__
+//         using TestCardInterface =  TCInterface<TC_2SSEH>;
+//     #endif
+// #endif
 /*!
  * \class ChipInterface
  * \brief Class representing the User Interface to the Chip on different boards
@@ -33,9 +39,16 @@ class ChipInterface
 {
   protected:
     std::recursive_mutex fMutex;
-    BeBoardFWMap         fBoardMap;            /*!< Map of Board connected */
-    BeBoardFWInterface*  fBoardFW;             /*!< Board loaded */
-    uint16_t             fPrevBoardIdentifier; /*!< Id of the previous board */
+    BeBoardFWMap         fBoardMap; /*!< Map of Board connected */
+    BeBoardFWInterface*  fBoardFW;  /*!< Board loaded */
+    // #ifdef __TCUSB__
+    //     #ifdef __ROH_USB__
+    //         TCInterface<TC_PSROH>*   fExternalController;
+    //     #elif __SEH_USB__
+    //         TCInterface<TC_2SSEH>*   fExternalController;
+    //     #endif
+    // #endif
+    uint16_t fPrevBoardIdentifier; /*!< Id of the previous board */
 
     uint16_t fRegisterCount;     /*!< Counter for the number of Registers written */
     uint16_t fTransactionCount;  /*!< Counter for the number of Transactions */
@@ -57,15 +70,15 @@ class ChipInterface
     /*!
      * \brief Destructor of the ChipInterface Class
      */
-    virtual ~ChipInterface();
+    virtual ~ChipInterface() {}
 
     /*!
      * \brief Configure the Chip with the Chip Config File
      * \param pChip: pointer to Chip object
-     * \param pVerifLoop: perform a readback check
+     * \param pVerify: perform a readback check
      * \param pBlockSize: the number of registers to be written at once, default is 310
      */
-    virtual bool ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) = 0;
+    virtual bool ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerify = true, uint32_t pBlockSize = 310) = 0;
 
     /*!
      * \brief Write the designated register in both Chip and Chip Config File
@@ -73,7 +86,7 @@ class ChipInterface
      * \param pRegNode : Node of the register to write
      * \param pValue : Value to write
      */
-    virtual bool WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) = 0;
+    virtual bool WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerify = true) = 0;
 
     virtual void WriteHybridBroadcastChipReg(const Ph2_HwDescription::Hybrid* pHybrid, const std::string& pRegNode, uint16_t data)
     {
@@ -90,7 +103,7 @@ class ChipInterface
      * \param pChip
      * \param pVecReq : Vector of pair: Node of the register to write versus value to write
      */
-    virtual bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop = true)
+    virtual bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify = true)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         return false;

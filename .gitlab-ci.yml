@@ -2,42 +2,165 @@
 ## Author: Emery Nibigira (IPHC-Strasbourg)
 ##         emery.nibigira@cern.ch
 
+## SETUP ##########
+
 ## The pipeline starts when a merge request is created
+## or when the CI config is changed
 
 workflow:
   rules:
-    - if: $CI_MERGE_REQUEST_ID
+    - if: $CI_MERGE_REQUEST_ID || $CI_PIPELINE_SOURCE == "web"
+      when: always
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+      changes: # when any file matching the below is edited, create a pipeline
+        - .gitlab/ci/*
+        - .gitlab/ci/*/*
+        - .gitlab-ci.yml
+      when: always
+      allow_failure: true
 
 image: gitlab-registry.cern.ch/cms-iphc/tk_ph2/dockerimageph2acf
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
-  
+
 stages:
-  - compile
+  - quality
+  - build
   - run
   - check
 
-build:
-  stage: compile
+## QUALITY ##########
+
+include:
+  - .gitlab/ci/code-quality.yml
+
+
+## BUILD ##########
+
+.build:
+  stage: build
+  needs: []
   before_script:
     - source ./setup.sh
   script:
     - mkdir -p build; cd build
     - cmake ..
     - make -j4
+
+# Stand-alone application, without data streaming
+build:StandAlone_woDS:
+  extends: .build
+  before_script:
+    - source ./setup.sh
+    - export CompileForHerd=false
+    - export CompileForShep=false
+    - export CompileWithEUDAQ=false
+    - export CompileWithTCUSB=false
+    - export UseTCUSBforROH=false
+    - export UseTCUSBTcpServer=false
   artifacts:
     paths:
-      - bin/feh_2s_test
+      - bin/ot_module_test
       - bin/commission
       - bin/CMSITminiDAQ
     expire_in: 1 week
 
+# Stand-alone application, with data streaming
+build:StandAlone_wDS:
+  extends: .build
+  before_script:
+    - source ./setup.sh
+    - export CompileForHerd=true
+    - export CompileForShep=true
+    - export CompileWithEUDAQ=false
+    - export CompileWithTCUSB=false
+    - export UseTCUSBforROH=false
+    - export UseTCUSBTcpServer=false
+
+# Herd application
+build:HerdApplication:
+  extends: .build
+  before_script:
+    - source ./setup.sh
+    - export CompileForHerd=true
+    - export CompileForShep=false
+    - export CompileWithEUDAQ=false
+    - export CompileWithTCUSB=false
+    - export UseTCUSBforROH=false
+    - export UseTCUSBTcpServer=false
+
+# Shep application
+build:ShepApplication:
+  extends: .build
+  before_script:
+    - source ./setup.sh
+    - export CompileForHerd=false
+    - export CompileForShep=true
+    - export CompileWithEUDAQ=false
+    - export CompileWithTCUSB=false
+    - export UseTCUSBforROH=false
+    - export UseTCUSBTcpServer=false
+
+# Compile with EUDAQ libraries
+build:StandAlone_wEUDAQ:
+  extends: .build
+  before_script:
+    - source ./setup.sh
+    - export CompileForHerd=false
+    - export CompileForShep=false
+    - export CompileWithEUDAQ=true
+    - export CompileWithTCUSB=false
+    - export UseTCUSBforROH=false
+    - export UseTCUSBTcpServer=false
+
+# Herd application with EUDAQ libraries
+build:HerdApplication_wEUDAQ:
+  extends: .build
+  before_script:
+    - source ./setup.sh
+    - export CompileForHerd=true
+    - export CompileForShep=false
+    - export CompileWithEUDAQ=true
+    - export CompileWithTCUSB=false
+    - export UseTCUSBforROH=false
+    - export UseTCUSBTcpServer=false
+
+# Compile with TC_USB library
+build:StandAlone_wTC_USB_SEH:
+  extends: .build
+  before_script:
+    - yum install -y libusb-devel libusbx-devel
+    - source ./setup.sh
+    - export CompileForHerd=false
+    - export CompileForShep=false
+    - export CompileWithEUDAQ=false
+    - export CompileWithTCUSB=true
+    - export UseTCUSBforROH=false
+    - export UseTCUSBTcpServer=true
+
+
+# Compile with TC_USB library for ROH
+build:StandAlone_wTC_USB_ROH:
+  extends: .build
+  before_script:
+    - yum install -y libusb-devel libusbx-devel
+    - source ./setup.sh
+    - export CompileForHerd=false
+    - export CompileForShep=false
+    - export CompileWithEUDAQ=false
+    - export CompileWithTCUSB=true
+    - export UseTCUSBforROH=true
+    - export UseTCUSBTcpServer=true
+
+
+## RUN ##########
+
 ## IT hybrid
 run_on_IT:
   stage: run
-  dependencies:
-    - build
+  needs:
+    - build:StandAlone_woDS
   before_script:
     - printf $USER_PASS | base64 -d | kinit $USER_NAME
     - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
@@ -53,6 +176,8 @@ run_on_IT:
     - cp ci_tools/Results/Run000000_PixelAlive.root .
     - cp ci_tools/Results/Run000001_ThrEqualization.root .
     - cp ci_tools/Results/Run000002_SCurve.root .
+    - gdb bin/ot_module_test core.* -ex where --batch > coreAnalysisRD53.log
+    - cp coreAnalysisRD53.log .
   artifacts:
     paths:
       - Run000000_PixelAlive.root
@@ -60,7 +185,38 @@ run_on_IT:
       - Run000002_SCurve.root
       - ci_tools/plot_canvas.py
       - ci_tools/CMSIT*
+      - coreAnalysisRD53.log
     expire_in: 1 week
+
+## 2S hybrid
+run_on_2S:
+  stage: run
+  needs:
+    - build:StandAlone_woDS
+  before_script:
+    - printf $USER_PASS | base64 -d | kinit $USER_NAME
+    - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
+   #- python ci_tools/status_manager.py 2s_status.txt --get_status  --delay 180 --iter 3
+  script:
+    - python ci_tools/status_manager.py 2s_status.txt --set_status 1
+    - source ./setup.sh
+    - cd ci_tools
+    - ot_module_test -f CMS2S.xml -t -m -a -b --reconfigure
+  after_script:
+    - python ci_tools/status_manager.py 2s_status.txt --set_status 0
+    - cp ci_tools/Results/*/Hybrid.root .
+    - gdb bin/ot_module_test core.* -ex where --batch > coreAnalysis2S.log
+    - cp coreAnalysis2S.log .
+  artifacts:
+    paths:
+      - Hybrid.root
+      - ci_tools/plot_hist.py
+      - coreAnalysis2S.log
+    expire_in: 1 week
+
+
+## CHECK ##########
+
 
 check_run_on_IT:
   stage: check
@@ -72,29 +228,6 @@ check_run_on_IT:
   artifacts:
     paths:
       - plots
-    expire_in: 1 week
-
-## 2S hybrid
-run_on_2S:
-  stage: run
-  dependencies:
-    - build
-  before_script:
-    - printf $USER_PASS | base64 -d | kinit $USER_NAME
-    - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
-   #- python ci_tools/status_manager.py 2s_status.txt --get_status  --delay 180 --iter 3
-  script:
-    - python ci_tools/status_manager.py 2s_status.txt --set_status 1
-    - source ./setup.sh
-    - cd ci_tools
-    - feh_2s_test -f CMS2S.xml -t -m -a --findShorts -b
-  after_script:
-    - python ci_tools/status_manager.py 2s_status.txt --set_status 0
-    - cp ci_tools/Results/*/Hybrid.root .
-  artifacts:
-    paths:
-      - Hybrid.root
-      - ci_tools/plot_hist.py
     expire_in: 1 week
 
 check_run_on_2S:

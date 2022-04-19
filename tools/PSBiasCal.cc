@@ -199,7 +199,7 @@ uint32_t PSBiasCal::CalibrateChipBias(Chip* cChip, Chip* clpGBT, uint32_t point,
     fReadoutChipInterface->WriteChipReg(cChip, DAC, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
     uint32_t off_val = static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str);
-	
+
     fReadoutChipInterface->WriteChipReg(cChip, DAC, DAC_val);
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
     uint32_t act_val = static_cast<D19clpGBTInterface*>(flpGBTInterface)->ReadADC(clpGBT, dac_str);

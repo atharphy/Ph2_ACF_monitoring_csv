@@ -37,10 +37,10 @@ class CicInterface : public ChipInterface
     /*!
      * \brief Configure the Cic with the Cic Config File
      * \param pCic: pointer to CIC object
-     * \param pVerifLoop: perform a readback check
+     * \param pVerify: perform a readback check
      * \param pBlockSize: the number of registers to be written at once, default is 310
      */
-    bool ConfigureChip(Ph2_HwDescription::Chip* pCic, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
+    bool ConfigureChip(Ph2_HwDescription::Chip* pCic, bool pVerify = true, uint32_t pBlockSize = 310) override;
     void CheckConfig(Ph2_HwDescription::Chip* pChip);
 
     /*!
@@ -49,14 +49,14 @@ class CicInterface : public ChipInterface
      * \param pRegNode : Node of the register to write
      * \param pValue : Value to write
      */
-    bool WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override;
+    bool WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerify = true) override;
 
     /*!
      * \brief Write several registers in both Chip and Chip Config File
      * \param pChip
      * \param pVecReq : Vector of pair: Node of the register to write versus value to write
      */
-    bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop = true) override;
+    bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify = true) override;
 
     /*!
      * \brief Read the designated register in the Chip
@@ -65,7 +65,8 @@ class CicInterface : public ChipInterface
      */
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
 
-    std::pair<bool, uint16_t>         ReadChipRegItem(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem pRegItem);
+    bool                              SetFePhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pLineId, int pPhaseTap);
+    bool                              SetPhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel, int pPhaseTap);
     bool                              SetOptimalTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel, int pOffset = 0);
     bool                              SetOptimalTaps(Ph2_HwDescription::Chip* pChip, int pOffset = 0);
     uint8_t                           GetOptimalTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPortChannel, uint8_t pInput);
@@ -105,7 +106,8 @@ class CicInterface : public ChipInterface
     bool                              ConfigureDriveStrength(Ph2_HwDescription::Chip* pChip, uint8_t pDriveStrength = 3);
     bool                              ConfigureFCMDEdge(Ph2_HwDescription::Chip* pChip, uint8_t pUseNegEdge = 1);
     bool                              GetResyncRequest(Ph2_HwDescription::Chip* pChip);
-    //
+    std::pair<uint8_t, uint8_t>       GetPhyPortConfig(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pLineId);
+    // TO-DO.. clean-up
     bool                          runVerification(Ph2_HwDescription::Chip* pChip, uint8_t pValue, std::string pRegName);
     std::pair<uint16_t, uint16_t> getRetrySummary() { return std::make_pair(fReW, fReWR); }
     std::pair<int, float>         getWRattempts();
@@ -145,8 +147,6 @@ class CicInterface : public ChipInterface
     bool    fRetryI2C       = true;
     uint8_t fMaxI2CAttempts = 20;
 
-    bool                           WriteReg(Ph2_HwDescription::Chip* pCic, uint8_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true);
-    bool                           WriteRegs(Ph2_HwDescription::Chip* pCic, const std::vector<std::pair<uint8_t, uint8_t>> pRegs, bool pVerifLoop = true);
     std::map<uint8_t, std::string> fMap;
     std::map<uint8_t, uint16_t>    fReWMap;
     std::map<uint8_t, uint16_t>    fReWrMap;

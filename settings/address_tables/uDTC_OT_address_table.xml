@@ -14,6 +14,7 @@
     </node>
 
     <node id="fc7_daq_cnfg" address="0x40010000" permission="rw" > 
+
             <node id="ddr3_debug"           address="0x0008000">
                 <node id="stub_enable"                  mask="0x00000001"/>
                 <node id="ps_async_counter_enable"      mask="0x00000002"/>
@@ -33,23 +34,31 @@
             </node>
 
             <node id="global"                       address="0x0000">
-                <node id="hybrid_enable"            address="0x005" mask="0x0000FFFF"/>
-                <node id="chips_enable_hyb_00"      address="0x006" mask="0x000000FF"/>
-                <node id="chips_enable_hyb_01"      address="0x006" mask="0x0000FF00"/>
-                <node id="chips_enable_hyb_02"      address="0x006" mask="0x00FF0000"/>
-                    <node id="chips_enable_hyb_03"      address="0x006" mask="0xFF000000"/>
-                    <node id="chips_enable_hyb_04"      address="0x007" mask="0x000000FF"/>
-                    <node id="chips_enable_hyb_05"      address="0x007" mask="0x0000FF00"/>
-                    <node id="chips_enable_hyb_06"      address="0x007" mask="0x00FF0000"/>
-                    <node id="chips_enable_hyb_07"      address="0x007" mask="0xFF000000"/>
-                <node id="chips_enable_hyb_08"      address="0x008" mask="0x000000FF"/>
-                <node id="chips_enable_hyb_09"      address="0x008" mask="0x0000FF00"/>
-                <node id="chips_enable_hyb_10"      address="0x008" mask="0x00FF0000"/>
-                <node id="chips_enable_hyb_11"      address="0x008" mask="0xFF000000"/>
-                <node id="chips_enable_hyb_12"      address="0x009" mask="0x000000FF"/>
-                <node id="chips_enable_hyb_13"      address="0x009" mask="0x0000FF00"/>
-                <node id="chips_enable_hyb_14"      address="0x009" mask="0x00FF0000"/>
-                <node id="chips_enable_hyb_15"      address="0x009" mask="0xFF000000"/> 
+                <node id="hybrid_enable"			address="0x005" mask="0x0000FFFF"/>
+                <node id="chips_enable_hyb_00"		address="0x006" mask="0x000000FF"/>
+                <node id="chips_enable_hyb_01"		address="0x006" mask="0x0000FF00"/>
+                <node id="chips_enable_hyb_02"		address="0x006" mask="0x00FF0000"/>
+                <node id="chips_enable_hyb_03"		address="0x006" mask="0xFF000000"/>
+                <node id="chips_enable_hyb_04"		address="0x007" mask="0x000000FF"/>
+                <node id="chips_enable_hyb_05"		address="0x007" mask="0x0000FF00"/>
+                <node id="chips_enable_hyb_06"		address="0x007" mask="0x00FF0000"/>
+                <node id="chips_enable_hyb_07"		address="0x007" mask="0xFF000000"/>
+                <node id="chips_enable_hyb_08"		address="0x008" mask="0x000000FF"/>
+                <node id="chips_enable_hyb_09"		address="0x008" mask="0x0000FF00"/>
+                <node id="chips_enable_hyb_10"		address="0x008" mask="0x00FF0000"/>
+                <node id="chips_enable_hyb_11"		address="0x008" mask="0xFF000000"/>
+                <node id="chips_enable_hyb_12"		address="0x009" mask="0x000000FF"/>
+                <node id="chips_enable_hyb_13"		address="0x009" mask="0x0000FF00"/>
+                <node id="chips_enable_hyb_14"		address="0x009" mask="0x00FF0000"/>
+                <node id="chips_enable_hyb_15"		address="0x009" mask="0xFF000000"/>	
+                <node id="chips_enable_hyb_16"		address="0x00A" mask="0x000000FF"/>	
+                <node id="chips_enable_hyb_17"		address="0x00A" mask="0x0000FF00"/>	
+                <node id="chips_enable_hyb_18"		address="0x00A" mask="0x00FF0000"/>	
+                <node id="chips_enable_hyb_19"		address="0x00A" mask="0xFF000000"/>	
+                <node id="chips_enable_hyb_20"		address="0x00B" mask="0x000000FF"/>	
+                <node id="chips_enable_hyb_21"		address="0x00B" mask="0x0000FF00"/>	
+                <node id="chips_enable_hyb_22"		address="0x00B" mask="0x00FF0000"/>	
+                <node id="chips_enable_hyb_23"		address="0x00B" mask="0xFF000000"/>	
             </node>
 
             <node id="command_processor_block"      address="0x1000">
@@ -145,6 +154,7 @@
                 <node id="slvs_debug" address = "0x000">
                     <node id="chip_select"                     mask="0x000F0000"/>
                     <node id="hybrid_select"                   mask="0x03F00000"/>
+                    <node id="auto_l1_capture"                 mask="0x04000000"/>
                 </node>
 
                 <!-- line debug -->
@@ -154,8 +164,7 @@
 
                 <!-- <node id="stubs"          address="0x000"> -->
                 <node id="stubs"          address="0x046">
-                    <!-- <node id="stub_package_delay"               mask="0x1c000000"/> -->
-                    <node id="stub_package_delay"             mask="0x00000007"/>
+                    <node id="stub_package_delay"               mask="0x00000007"/> 
                 </node>
             </node>
 
@@ -221,7 +230,10 @@
                         <node id="address"                       mask="0x000000FF"/>
                         <node id="data"                          mask="0x0000FF00"/>
                     </node>
-                    <node id="mux"                               address = "0x005" mask="0x0000000F"/>
+                    <node id="lpgbt" address = "0x005">
+                        <node id="mux" mask="0x0000000F"/>
+                        <node id="version" mask="0x00000010"/>
+                    </node>
                     <node id="tx_polarity"                              address="0x006">
                         <node id="l8"                           mask="0x000000FF" description="note: default value is 1 for all"/>
                         <node id="l12"                          mask="0x0FFF0000" description="note: default value is 0 for all"/>
@@ -229,6 +241,14 @@
                     <node id="rx_polarity"                              address="0x007">
                         <node id="l8"                           mask="0x000000FF" description="note: default value is 1 for all"/>
                         <node id="l12"                          mask="0x0FFF0000" description="note: default value is 0 for all"/>
+                    </node>
+                    <node id="lpgbt_sc_worker" address="0x007">
+                        <node id="ic_retry"         mask="0x00000001"/>
+                        <node id="i2c_retry"        mask="0x00000002"/>
+                        <node id="fe_retry"         mask="0x00000004"/>
+                        <node id="max_ic_retry"     mask="0x0000FF00"/>
+                        <node id="max_i2c_retry"    mask="0x00FF0000"/>
+                        <node id="max_fe_retry"     mask="0xFF000000"/>
                     </node>
             </node>
             
@@ -331,7 +351,7 @@
                 <node id="setup_disconnect"                 mask="0x00000002"/>
                 <node id="check_return_clock"               mask="0x00000004" description="user request to check the return clock from SSAs"/>
                 <node id="check_payload_ntriggers"          mask="0x00000ff0" description="user required number of trigger commands to test the paylaod of the return fast command from SSAs"/>
-                <node id="setup_scan"                       mask="0x00010000"/>
+                <node id="setup_scan"                  mask="0x00010000"/>
             </node>
 
             <node id="fe_data_player"              address="0x019">
@@ -352,9 +372,10 @@
             </node>
         </node>
 
-        <node id="fine_phase_tune"     address="0x3003">
+        <node id="fine_phase_tune"     address="0x003">
             <node id="control"                      address="0x000">
                 <node id="toggle_phase"             mask="0x000000FF"/>
+                <node id="phase_shift_trig_data"    mask="0x0000FF00"/>
             </node>
         </node>
 
@@ -460,10 +481,30 @@
                 </node>
                 <node id="nreplies"                     address="0x004" description="nreplies present in reply fifo"/>
             </node>
+
             <node id="worker">
-                <node id="lpgbtsc_fsm_state"    address="0x005" mask="0x000000ff"/>
+                <node id="lpgbtsc_fsm_state"    address="0x005" mask="0xffffffff"/>
+                <node id="lpgbtsc_try_counters"    address="0x006" mask="0xffffffff"/>
             </node>
-        </node>
+
+            <node id="reply_debug_block0" address="0x006">
+               <node id="word0" mask="0x000000FF"/>
+               <node id="word1" mask="0x0000FF00"/>
+               <node id="word2" mask="0x00FF0000"/>
+               <node id="word3" mask="0xFF000000"/>
+	        </node>
+           <node id="reply_debug_block1" address="0x007">
+               <node id="word4" mask="0x000000FF"/>
+               <node id="word5" mask="0x0000FF00"/>
+               <node id="word6" mask="0x00FF0000"/>
+               <node id="word7" mask="0xFF000000"/>
+	        </node>
+           <node id="reply_debug_block2" address="0x008">
+               <node id="word8" mask="0x000000FF"/>
+               <node id="word9" mask="0x0000FF00"/>
+               <node id="word10" mask="0x00FF0000"/>
+	        </node>
+        </node>        
 
         <node id="fast_command_block"           address="0x2000">
             <node id="general"                          address="0x000">

@@ -171,8 +171,10 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     uint32_t gtxClk   = RegManager::ReadReg("user.stat_regs.gtx_refclk_rate");
     LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "Input clock frequency (could be either internal or external, should be ~40 MHz): " << BOLDYELLOW << inputClk / 1000. << " MHz"
               << std::setprecision(-1) << RESET;
+    if(fabs(inputClk / 1000. - 40) > 1) LOG(ERROR) << BOLDRED << "Input clock frequency not nominal" << std::endl;
     LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "GTX receiver clock frequency (~160 MHz (~320 MHz) for electrical (optical) readout): " << BOLDYELLOW << gtxClk / 1000. << " MHz"
               << std::setprecision(-1) << RESET;
+    if(!((fabs(gtxClk / 1000. - 160) < 1) || (fabs(gtxClk / 1000. - 320) < 1))) LOG(ERROR) << BOLDRED << "GTX receiver clock frequency not nominal" << std::endl;
 
     // @TMP@
     RegManager::WriteReg("user.ctrl_regs.ctrl_cdr.cdr_addr", 0);
@@ -662,6 +664,14 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     // @TMP@
     if(RD53FWInterface::localCfgFastCmd.autozero_source == AutozeroSource::FastCMDFSM)
         RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
+    else if(RD53FWInterface::localCfgFastCmd.autozero_source == AutozeroSource::Software)
+    {
+        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
+        RD53FWInterface::WriteChipCommand(RD53Cmd::GlobalPulse(RD53Constants::BROADCAST_CHIPID, 0x6).getFrames(), -1);
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
+        RD53FWInterface::WriteChipCommand(RD53Cmd::ECR().getFrames(), -1);
+        std::this_thread::sleep_for(std::chrono::microseconds(20));
+    }
 
     do
     {
@@ -726,8 +736,7 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
     if(cfg == nullptr) cfg = &(RD53FWInterface::localCfgFastCmd);
 
     // @TMP@ : Prepare GLOBAL_PULSE_RT to acquire zero level in SYNC FE
-    if(cfg->autozero_source == AutozeroSource::FastCMDFSM)
-        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
+    if(cfg->autozero_source != AutozeroSource::Disabled) RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
 
     // ##################################
     // # Configuring fast command block #
@@ -876,11 +885,18 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
     // @TMP@
     if(enableAutozero == true)
     {
-        RD53FWInterface::localCfgFastCmd.autozero_source                   = AutozeroSource::FastCMDFSM;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en               = true;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr      = 512;
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = 128;
+        if(RD53FWInterface::localCfgFastCmd.trigger_source != TriggerSource::FastCMDFSM)
+            RD53FWInterface::localCfgFastCmd.autozero_source = AutozeroSource::Software;
+        else
+        {
+            RD53FWInterface::localCfgFastCmd.autozero_source                   = AutozeroSource::FastCMDFSM;
+            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.ecr_en               = true;
+            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr      = 512;
+            RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_autozero = 128;
+        }
     }
+    else
+        RD53FWInterface::localCfgFastCmd.autozero_source = AutozeroSource::Disabled;
 
     LOG(INFO) << GREEN << "Internal trigger frequency (if enabled): " << BOLDYELLOW << std::fixed << std::setprecision(0)
               << mainClock / ((RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr + 1) * 4 - 1 + (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject + 1) * 4 + 7 +
@@ -964,10 +980,10 @@ void RD53FWInterface::StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uin
     LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip mgt: " << BOLDYELLOW << mgtStatus << BOLDBLUE << " i.e.: " << BOLDYELLOW << std::bitset<20>(mgtStatus) << RESET;
 }
 
-bool RD53FWInterface::WriteOptoLinkRegister(const Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop)
+bool RD53FWInterface::WriteOptoLinkRegister(const Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerify)
 {
     // OptoChip ID
-    RD53FWInterface::selectLink(pChip->getOpticalId());
+    RD53FWInterface::selectLink(pChip->getOpticalGroupId());
 
     // Config
     RegManager::WriteStackReg(
@@ -979,7 +995,7 @@ bool RD53FWInterface::WriteOptoLinkRegister(const Chip* pChip, const uint32_t pA
                                {"user.ctrl_regs.lpgbt_1.ic_send_wr_cmd", 0x1},
                                {"user.ctrl_regs.lpgbt_1.ic_send_wr_cmd", 0x0}});
 
-    if(pVerifLoop == true)
+    if(pVerify == true)
     {
         uint32_t cReadBack = RD53FWInterface::ReadOptoLinkRegister(pChip, pAddress);
         if(cReadBack != pData)
@@ -996,7 +1012,7 @@ bool RD53FWInterface::WriteOptoLinkRegister(const Chip* pChip, const uint32_t pA
 uint32_t RD53FWInterface::ReadOptoLinkRegister(const Chip* pChip, const uint32_t pAddress)
 {
     // OptoChip ID
-    RD53FWInterface::selectLink(pChip->getOpticalId());
+    RD53FWInterface::selectLink(pChip->getOpticalGroupId());
 
     // Config
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", pChip->getChipAddress()}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
@@ -1270,9 +1286,10 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
 // # 320 Mbit/s   = 2 #
 // ####################
 {
-    const uint32_t nBitInClkPeriod = 32. * std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
-    const double   fps             = 1.28e9 / nBitInClkPeriod;         // Frames per second
-    const int      n_prints        = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
+    const uint32_t nBitInClkPeriod  = 32. * std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
+    const double   fps              = 1.28e9 / nBitInClkPeriod;         // Frames per second
+    const int      n_prints         = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
+    const double   scaleByAuroraClk = 37.5 / 40;                        // @CONST@
     double         frames2run;
     double         time2run;
     uint32_t       cntr_lo;
@@ -1281,7 +1298,7 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     if(given_time == true)
     {
         time2run   = frames_or_time;
-        frames2run = time2run * fps;
+        frames2run = time2run * fps * scaleByAuroraClk;
     }
     else
     {

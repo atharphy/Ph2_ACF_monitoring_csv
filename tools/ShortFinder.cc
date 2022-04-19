@@ -1,11 +1,10 @@
 #include "ShortFinder.h"
-#include "CBCChannelGroupHandler.h"
-#include "CommonVisitors.h"
-#include "ContainerFactory.h"
-#include "DataContainer.h"
-#include "Occupancy.h"
-#include "SSAChannelGroupHandler.h"
-#include "Visitor.h"
+#include "../Utils/CBCChannelGroupHandler.h"
+#include "../Utils/CommonVisitors.h"
+#include "../Utils/ContainerFactory.h"
+#include "../Utils/Occupancy.h"
+#include "../Utils/SSAChannelGroupHandler.h"
+#include "../Utils/Visitor.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -81,7 +80,7 @@ void ShortFinder::Initialise()
 {
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
     fWithCBC                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-    fWithSSA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
+    fWithSSA                       = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA || cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA2);
     LOG(INFO) << "With SSA set to " << ((fWithSSA) ? 1 : 0) << RESET;
 
     if(fWithCBC)
@@ -282,9 +281,9 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
     // make sure async mode is enabled
-    setSameDacBeBoard(pBoard, "AnalogueAsync", 1);
+    setSameDacBeBoard(static_cast<BeBoard*>(pBoard), "AnalogueAsync", 1);
     // first .. set injection amplitude to 0 and find pedestal
-    setSameDacBeBoard(pBoard, "InjectedCharge", 0);
+    setSameDacBeBoard(static_cast<BeBoard*>(pBoard), "InjectedCharge", 0);
 
     // global data container is ..
     // an occupancy container
@@ -298,7 +297,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
     DetectorDataContainer cPedestalContainer;
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, cPedestalContainer);
     float cMeanValue       = 0;
-    int   cThresholdOffset = 5;
+    int   cThresholdOffset = 8;
     int   cNchips          = 0;
     for(auto cBoardData: cPedestalContainer) // for on boards - begin
     {
@@ -307,18 +306,18 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
             for(auto cHybridData: *cOpticalGroupData) // for on hybrid - begin
             {
                 cNchips += cHybridData->size();
-                for(auto cROCData: *cHybridData) // for on chip - begin
+                for(auto cChipData: *cHybridData) // for on chip - begin
                 {
                     ReadoutChip* cChip =
-                        static_cast<ReadoutChip*>(fDetectorContainer->at(cBoardData->getIndex())->at(cOpticalGroupData->getIndex())->at(cHybridData->getIndex())->at(cROCData->getIndex()));
+                        static_cast<ReadoutChip*>(fDetectorContainer->at(cBoardData->getIndex())->at(cOpticalGroupData->getIndex())->at(cHybridData->getIndex())->at(cChipData->getIndex()));
                     auto cThreshold                  = fReadoutChipInterface->ReadChipReg(cChip, "Threshold");
-                    cROCData->getSummary<uint16_t>() = cThreshold;
+                    cChipData->getSummary<uint16_t>() = cThreshold;
                     cMeanValue += cThreshold;
                     // set threshold a little bit lower than 90% level
                     fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold + cThresholdOffset);
 
                     LOG(INFO) << GREEN << "\t..Threshold at " << std::setprecision(2) << std::fixed << 100 * cOccTarget << " percent occupancy value for BeBoard " << +cBoardData->getId()
-                              << " OpticalGroup " << +cOpticalGroupData->getId() << " Hybrid " << +cHybridData->getId() << " ROC " << +cROCData->getId() << " = " << cThreshold
+                              << " OpticalGroup " << +cOpticalGroupData->getId() << " Hybrid " << +cHybridData->getId() << " Chip " << +cChipData->getId() << " = " << cThreshold
                               << " [ setting threshold for short finding to " << +(cThreshold + cThresholdOffset) << " DAC units]" << RESET;
                 } // for on chip - end
             }     // for on hybrid - end
@@ -329,13 +328,27 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
     // now configure injection amplitude to
     // whatever will be used for short finding
     // this is in the xml
-    setSameDacBeBoard(pBoard, "InjectedCharge", fTestPulseAmplitude);
+    setSameDacBeBoard(static_cast<BeBoard*>(pBoard), "InjectedCharge", fTestPulseAmplitude);
+
+#ifdef __USE_ROOT__
+    // create TTree for shorts: shortsTree
+    auto fShortsTree = new TTree("shortsTree", "Shorted channels in the hybrid");
+    // create variables for TTree branches
+    TString              fShortsTreeParameter = -1;
+    std::vector<uint8_t> fShortsTreeValue     = {};
+    // create branches
+    fShortsTree->Branch("Chip", &fShortsTreeParameter);
+    fShortsTree->Branch("Value", &fShortsTreeValue);
+#endif
 
     // container to hold information on shorts found
     DetectorDataContainer cShortsContainer;
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, cShortsContainer);
     // going to inject in every Nth chnannel at a time
     int cInjectionPeriod = 4;
+    // std::vector< std::vector< std::vector<uint8_t> > > cAllShorts (4, cOpticalReadout->at(0)->at(0)->size(),0);
+    // std::vector< std::vector< std::vector<uint8_t> > > cAllShorts (cInjectionPeriod, std::vector< std::vector<uint8_t> >(8, std::vector<uint8_t>(0) ) );
+    std::vector<std::vector<uint8_t>> cAllShorts(8, std::vector<uint8_t>(0));
     for(int cInject = 0; cInject < cInjectionPeriod; cInject++)
     {
         LOG(INFO) << BOLDBLUE << "Looking for shorts in injection group#" << +cInject << RESET;
@@ -348,7 +361,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                 for(auto cReadoutChip: *cHybrid)
                 {
                     // add check for SSA
-                    if(cReadoutChip->getFrontEndType() != FrontEndType::SSA) continue;
+                    if(cReadoutChip->getFrontEndType() != FrontEndType::SSA && cReadoutChip->getFrontEndType() != FrontEndType::SSA2) continue;
 
                     LOG(DEBUG) << BOLDBLUE << "\t...SSA" << +cReadoutChip->getId() << RESET;
 
@@ -368,52 +381,94 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
             }     // hybrid
         }         // opticalGroup
 
-        // read back events
-        this->ReadNEvents(pBoard, fEventsPerPoint);
-        const std::vector<Event*>& cEvents = this->GetEvents();
-        // iterate over FE objects and check occupancy
-        for(auto cEvent: cEvents)
+        bool retry = true;
+
+        for(int i = 0; i < 2 && retry; i++) // 'Retry' to read events when the event returns with 0 on every channel of every chip.
         {
-            for(auto cOpticalReadout: *pBoard)
+            retry = false;
+            // read back events
+            this->ReadNEvents(pBoard, fEventsPerPoint);
+            const std::vector<Event*>& cEvents = this->GetEvents();
+            // const std::vector<Event*>& cEvents = this->GetEvents(pBoard);
+            // iterate over FE objects and check occupancy
+            for(auto cEvent: cEvents)
             {
-                for(auto cHybrid: *cOpticalReadout)
+                for(auto cOpticalReadout: *pBoard)
                 {
-                    // set AMUX on all SSAs to highZ
-                    for(auto cReadoutChip: *cHybrid)
+                    for(auto cHybrid: *cOpticalReadout)
                     {
-                        // add check for SSA
-                        if(cReadoutChip->getFrontEndType() != FrontEndType::SSA) continue;
-
-                        LOG(DEBUG) << BOLDBLUE << "\t...SSA" << +cReadoutChip->getId() << RESET;
-                        auto cHitVector = cEvent->GetHits(cHybrid->getId(), cReadoutChip->getId());
-                        // let's say .. only enable injection in even channels first
-                        std::vector<uint8_t> cShorts(0);
-                        for(uint8_t cChnl = 0; cChnl < cReadoutChip->size(); cChnl++)
+                        int cTotalCountInjectedChnls = 0;
+                        // set AMUX on all SSAs to highZ
+                        for(auto cReadoutChip: *cHybrid)
                         {
-                            bool cInjectionEnabled = (((int)(cChnl) % cInjectionPeriod) == cInject);
-                            if(!cInjectionEnabled && cHitVector[cChnl] > THRESHOLD_SHORT * fEventsPerPoint)
-                            {
-                                LOG(INFO) << BOLDRED << "\t\t\t.. Potential Short in SSA" << +cReadoutChip->getId() << " channel#" << +cChnl << " when injecting in group#" << +cInject << " ... found "
-                                          << +cHitVector[cChnl] << " counts." << RESET;
-                                cShorts.push_back(cChnl);
-                            }
-                            if(cInjectionEnabled)
-                                LOG(DEBUG) << BOLDBLUE << "\t\t..Chnl#" << +cChnl << " counts : " << +cHitVector[cChnl] << RESET;
-                            else
-                                LOG(DEBUG) << BOLDMAGENTA << "\t\t..Chnl#" << +cChnl << " counts : " << +cHitVector[cChnl] << RESET;
-                        } // chnl
-                        auto& cShortsData = cShortsContainer.at(pBoard->getIndex())->at(cOpticalReadout->getIndex())->at(cHybrid->getIndex())->at(cReadoutChip->getIndex());
-                        // first time .. set to 0
-                        if(cInject == 0) cShortsData->getSummary<uint16_t>() = 0;
-                        cShortsData->getSummary<uint16_t>() += (uint16_t)cShorts.size();
-                        LOG(DEBUG) << BOLDBLUE << "\t...SSA" << +cReadoutChip->getId() << " found " << +cShorts.size() << " potential shorts..."
-                                   << " total shorts found are " << +cShortsData->getSummary<uint16_t>() << RESET;
+                            int cChipCountInjectedChnls = 0;
+                            // add check for SSA
+                            if(cReadoutChip->getFrontEndType() != FrontEndType::SSA && cReadoutChip->getFrontEndType() != FrontEndType::SSA2) continue;
 
-                    } // chip
-                }     // hybrid
-            }         // opticalGroup
-        }             // event loop
+                            LOG(DEBUG) << BOLDBLUE << "\t...SSA" << +cReadoutChip->getId() << RESET;
+                            auto cHitVector = cEvent->GetHits(cHybrid->getId(), cReadoutChip->getId());
+                            // let's say .. only enable injection in even channels first
+                            std::vector<uint8_t> cShorts(0);
+                            for(uint8_t cChnl = 0; cChnl < cReadoutChip->size(); cChnl++)
+                            {
+                                bool cInjectionEnabled = (((int)(cChnl) % cInjectionPeriod) == cInject);
+                                if(!cInjectionEnabled && cHitVector[cChnl] > THRESHOLD_SHORT * fEventsPerPoint)
+                                {
+                                    LOG(INFO) << BOLDRED << "\t\t\t.. Potential Short in SSA" << +cReadoutChip->getId() << " channel#" << +cChnl << " when injecting in group#" << +cInject
+                                              << " ... found " << +cHitVector[cChnl] << " counts." << RESET;
+                                    cShorts.push_back(cChnl);
+                                    cAllShorts.at((int)cReadoutChip->getId()).push_back(cChnl);
+                                }
+                                if(cInjectionEnabled)
+                                {
+                                    cChipCountInjectedChnls += cHitVector[cChnl];
+                                    cTotalCountInjectedChnls += cHitVector[cChnl];
+                                    LOG(INFO) << BOLDBLUE << "\t\t..Chnl#" << +cChnl << " counts : " << +cHitVector[cChnl] << RESET;
+                                    if(cHitVector[cChnl] == 0) LOG(INFO) << BOLDBLUE << "\t\t..Chnl#" << +cChnl << " counts : " << +cHitVector[cChnl] << RESET;
+                                }
+                                else if(cHitVector[cChnl] != 0)
+                                    LOG(DEBUG) << BOLDMAGENTA << "\t\t..Chnl#" << +cChnl << " counts : " << +cHitVector[cChnl] << RESET;
+                                else
+                                    LOG(DEBUG) << BOLDGREEN << "\t\t..Chnl#" << +cChnl << " counts : " << +cHitVector[cChnl] << RESET;
+                            } // chnl
+                            auto& cShortsData = cShortsContainer.at(pBoard->getIndex())->at(cOpticalReadout->getIndex())->at(cHybrid->getIndex())->at(cReadoutChip->getIndex());
+                            // first time .. set to 0
+                            if(cInject == 0) cShortsData->getSummary<uint16_t>() = 0;
+                            cShortsData->getSummary<uint16_t>() += (uint16_t)cShorts.size();
+                            LOG(DEBUG) << BOLDBLUE << "\t...SSA" << +cReadoutChip->getId() << " found " << +cShorts.size() << " potential shorts..."
+                                       << " total shorts found are " << +cShortsData->getSummary<uint16_t>() << RESET;
+                        } // chip
+
+                        if(cTotalCountInjectedChnls == 0)
+                        {
+                            LOG(INFO) << BOLDRED << "All injected channels on all chips have 0 hits." << RESET;
+#ifdef __USE_ROOT__
+                            fillSummaryTree("Empty readout (ShortFinder procedure)", 0.0);
+#endif
+                            retry = true;
+                        }
+
+                    } // hybrid
+                }     // module
+            }         // event loop
+        }             // retry loop
     }
+
+    // std::vector<uint8_t> cShorts(0)
+    // for(int i = 0; i < 8; i++){
+    //     for(int cInject = 0 < cInject < cInjectionPeriod; cInject++){
+    //         cAllShorts.at(cInject).at((int)cReadoutChip->getId()) = cShorts;
+    //     }
+    // }
+#ifdef __USE_ROOT__
+    for(auto cReadoutChip: *pBoard->at(0)->at(0))
+    {
+        fShortsTreeParameter.Clear();
+        fShortsTreeParameter = "Chip_" + std::to_string(cReadoutChip->getId());
+        fShortsTreeValue     = cAllShorts.at(cReadoutChip->getId());
+        fShortsTree->Fill();
+    }
+#endif
 
     // print summary
     for(auto cOpticalReadout: *pBoard)
@@ -424,7 +479,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
             for(auto cReadoutChip: *cHybrid)
             {
                 // add check for SSA
-                if(cReadoutChip->getFrontEndType() != FrontEndType::SSA) continue;
+                if(cReadoutChip->getFrontEndType() != FrontEndType::SSA && cReadoutChip->getFrontEndType() != FrontEndType::SSA2) continue;
 
                 auto& cShortsData = cShortsContainer.at(pBoard->getIndex())->at(cOpticalReadout->getIndex())->at(cHybrid->getIndex())->at(cReadoutChip->getIndex());
                 if(cShortsData->getSummary<uint16_t>() == 0)
@@ -433,6 +488,10 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                 else
                     LOG(INFO) << BOLDRED << "SSA" << +cReadoutChip->getId() << " found " << +cShortsData->getSummary<uint16_t>() << " shorts in total when injecting in every " << +cInjectionPeriod
                               << "th channel " << RESET;
+#ifdef __USE_ROOT__
+                std::string param = Form("Shorts_%d", cReadoutChip->getId());
+                fillSummaryTree(param, (double_t)cShortsData->getSummary<uint16_t>());
+#endif
             } // chip
         }     // hybrid
     }         // opticalGroup
@@ -440,10 +499,10 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
 void ShortFinder::FindShorts2S(BeBoard* pBoard)
 {
     // configure test pulse on chip
-    setSameDacBeBoard(pBoard, "TestPulsePotNodeSel", 0xFF - fTestPulseAmplitude);
-    setSameDacBeBoard(pBoard, "TestPulseDelay", 0);
+    setSameDacBeBoard(static_cast<BeBoard*>(pBoard), "TestPulsePotNodeSel", 0xFF - fTestPulseAmplitude);
+    setSameDacBeBoard(static_cast<BeBoard*>(pBoard), "TestPulseDelay", 0);
     uint16_t cDelay = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse") - 1;
-    setSameDacBeBoard(pBoard, "TriggerLatency", cDelay);
+    setSameDacBeBoard(static_cast<BeBoard*>(pBoard), "TriggerLatency", cDelay);
     fBeBoardInterface->ChipReSync(pBoard); // NEED THIS! ??
     LOG(INFO) << BOLDBLUE << "L1A latency set to " << +cDelay << RESET;
 

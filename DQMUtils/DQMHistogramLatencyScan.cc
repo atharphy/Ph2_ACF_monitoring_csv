@@ -14,6 +14,7 @@
 #include "../Utils/ContainerStream.h"
 #include "../Utils/EmptyContainer.h"
 #include "../Utils/GenericDataArray.h"
+#include "../Utils/HybridContainerStream.h"
 #include "../Utils/Occupancy.h"
 #include "../Utils/ThresholdAndNoise.h"
 #include "../Utils/Utilities.h"
@@ -94,7 +95,7 @@ bool DQMHistogramLatencyScan::fill(std::vector<char>& dataBuffer)
     if(theLatencyStream.attachBuffer(&dataBuffer))
     {
         std::cout << "Matched Latency Stream!!!!!\n";
-        theLatencyStream.decodeHybridData(fDetectorData);
+        theLatencyStream.decodeData(fDetectorData);
         fillLatencyPlots(fDetectorData);
         fDetectorData.cleanDataStored();
         return true;
@@ -103,7 +104,7 @@ bool DQMHistogramLatencyScan::fill(std::vector<char>& dataBuffer)
     if(theTriggerTDCStream.attachBuffer(&dataBuffer))
     {
         std::cout << "Matched TriggerTDC!!!!!\n";
-        theTriggerTDCStream.decodeHybridData(fDetectorData);
+        theTriggerTDCStream.decodeData(fDetectorData);
         fillTriggerTDCPlots(fDetectorData);
         fDetectorData.cleanDataStored();
         return true;
@@ -112,7 +113,7 @@ bool DQMHistogramLatencyScan::fill(std::vector<char>& dataBuffer)
     if(theTriggerTDCStream.attachBuffer(&dataBuffer))
     {
         std::cout << "Matched Stub Latency!!!!!\n";
-        theStubStream.decodeHybridData(fDetectorData);
+        theStubStream.decodeData(fDetectorData);
         fillStubLatencyPlots(fDetectorData);
         fDetectorData.cleanDataStored();
         return true;
@@ -121,7 +122,7 @@ bool DQMHistogramLatencyScan::fill(std::vector<char>& dataBuffer)
     if(the2DStream.attachBuffer(&dataBuffer))
     {
         std::cout << "Matched 2D Latency!!!!!\n";
-        the2DStream.decodeHybridData(fDetectorData);
+        the2DStream.decodeData(fDetectorData);
         fill2DLatencyPlots(fDetectorData);
         fDetectorData.cleanDataStored();
         return true;
@@ -266,7 +267,7 @@ void DQMHistogramLatencyScan::fillLatencyPlots(uint16_t pLatency, DetectorDataCo
                         cHitMap->SetBinContent(cBin, channel.fOccupancy);
                         cHitMap->SetBinError(cBin, channel.fOccupancyError);
                         if(channel.fOccupancy > 0)
-                            LOG(INFO) << BOLDMAGENTA << "\t\t..ROC#" << +chip->getId() << " Channel " << cChnlIndx << " strip number " << cChnlIndx / 2.0 << " global strip number " << +cStripId
+                            LOG(INFO) << BOLDMAGENTA << "\t\t..Chip#" << +chip->getId() << " Channel " << cChnlIndx << " strip number " << cChnlIndx / 2.0 << " global strip number " << +cStripId
                                       << " - have found " << channel.fOccupancy << " hits." << RESET;
                         cChnlIndx++;
                     }

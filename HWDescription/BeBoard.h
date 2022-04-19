@@ -77,7 +77,7 @@ class BeBoard : public BoardContainer
      * \brief Get the number of hybrid connected to the BeBoard
      * \return The size of the vector
      */
-    uint8_t getNFe() const
+    uint8_t getNHybrid() const
     {
         uint16_t nFe = 0;
         for(auto opticalGroup: *this) nFe += opticalGroup->size();
@@ -160,7 +160,8 @@ class BeBoard : public BoardContainer
     void    setReset(uint8_t pReset) { fReset = pReset; }
     uint8_t getReset() const { return fReset; }
 
-    int dummyValue_ = 1989;
+    std::vector<FrontEndType> connectedFrontEndTypes() const;
+    int                       dummyValue_ = 1989;
 
   protected:
     BoardType    fBoardType;

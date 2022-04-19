@@ -29,20 +29,18 @@ class SSAInterface : public ReadoutChipInterface
     ~SSAInterface();
     // FIXME temporary fix to use 1/2 PS skeleton
     // void     LinkLpGBT(Ph2_HwInterface::D19clpGBTInterface* pLpGBTInterface, Ph2_HwDescription::lpGBT* pLpGBT);
-    bool     ConfigureChip(Ph2_HwDescription::Chip* pSSA, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
-    bool     setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop = true) override;
-    bool     enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = true) override;
-    bool     setInjectionAmplitude(Ph2_HwDescription::ReadoutChip* pChip, uint8_t injectionAmplitude, bool pVerifLoop = true) override;
-    bool     maskChannelGroup(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop = true) override;
-    bool     maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop = true) override;
-    bool     ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pSSA, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
-    bool     MaskAllChannels(Ph2_HwDescription::ReadoutChip* pSSA, bool mask, bool pVerifLoop = true) override;
-    bool     WriteChipReg(Ph2_HwDescription::Chip* pSSA, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override;
-    bool     WriteChipMultReg(Ph2_HwDescription::Chip* pSSA, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop = true) override;
-    bool     WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pSSA, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = true) override;
+    bool     ConfigureChip(Ph2_HwDescription::Chip* pSSA, bool pVerify = true, uint32_t pBlockSize = 310) override;
+    bool     setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify = true) override;
+    bool     enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerify = true) override;
+    bool     setInjectionAmplitude(Ph2_HwDescription::ReadoutChip* pChip, uint8_t injectionAmplitude, bool pVerify = true) override;
+    bool     maskChannelGroup(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify = true) override;
+    bool     maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerify = true) override;
+    bool     ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pSSA, bool pVerify = true, uint32_t pBlockSize = 310) override;
+    bool     MaskAllChannels(Ph2_HwDescription::ReadoutChip* pSSA, bool mask, bool pVerify = true) override;
+    bool     WriteChipReg(Ph2_HwDescription::Chip* pSSA, const std::string& pRegNode, uint16_t pValue, bool pVerify = true) override;
+    bool     WriteChipMultReg(Ph2_HwDescription::Chip* pSSA, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify = true) override;
+    bool     WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pSSA, const std::string& dacName, ChipContainer& pValue, bool pVerify = true) override;
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pSSA, const std::string& pRegNode) override;
-    void     ReadASEvent(Ph2_HwDescription::ReadoutChip* pSSA, std::vector<uint32_t>& pData, std::pair<uint32_t, uint32_t> pSRange = std::pair<uint32_t, uint32_t>({0, 0}));
-    void     Send_pulses(Ph2_HwDescription::ReadoutChip* pSSA, uint32_t n_pulse);
 
     // std::pair<uint16_t,uint16_t>      getReadBackErrorSummary(){ return std::make_pair(fReadBackErrors, fRegisterWrites); }
     // std::pair<uint16_t,uint16_t>      getWriteErrorSummary(){ return std::make_pair(fWriteErrors, fRegisterWrites); }
@@ -83,8 +81,6 @@ class SSAInterface : public ReadoutChipInterface
     bool    fRetryI2C       = false;
     uint8_t fMaxI2CAttempts = 20;
 
-    // D19clpGBTInterface*             flpGBTInterface = nullptr;
-    // Ph2_HwDescription::lpGBT*       flpGBT          = nullptr;
     std::map<uint16_t, std::string> fMap;
     // re-try counters
     std::map<uint8_t, uint16_t> fReWMap;
@@ -104,10 +100,6 @@ class SSAInterface : public ReadoutChipInterface
     void Set_threshold(Ph2_HwDescription::Chip* pSSA, uint32_t th);
 
     uint8_t                        ReadChipId(Ph2_HwDescription::Chip* pSSA);
-    bool                           WriteReg(Ph2_HwDescription::Chip* pSSA, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop = true);
-    bool                           WriteRegs(Ph2_HwDescription::Chip* pSSA, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop = true);
-    uint16_t                       ReadReg(Ph2_HwDescription::Chip* pSSA, uint16_t pRegisterAddress, bool pVerifLoop = true);
-    bool                           WriteChipSingleReg(Ph2_HwDescription::Chip* pSSA, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true);
     bool                           ConfigureAmux(Ph2_HwDescription::Chip* pSSA, const std::string& pRegister);
     std::map<std::string, uint8_t> fAmuxMap = {{"BoosterFeedback", 0},
                                                {"PreampBias", 1},

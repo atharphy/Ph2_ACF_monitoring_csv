@@ -13,12 +13,6 @@ using namespace Ph2_HwInterface;
 
 CBCMonitor::CBCMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {
-    fDoMonitorThreshold  = fDetectorMonitorConfig.isElementToMonitor("CBCThreshold");
-    fDoMonitorLpGBT_ADC1 = fDetectorMonitorConfig.isElementToMonitor("LpGBT_ADC1");
-    fDoMonitorLpGBT_VDD  = fDetectorMonitorConfig.isElementToMonitor("LpGBT_VDD");
-    fDoMonitorLpGBT_VDDA = fDetectorMonitorConfig.isElementToMonitor("LpGBT_VDDA");
-    fDoMonitorLpGBT_TEMP = fDetectorMonitorConfig.isElementToMonitor("LpGBT_TEMP");
-
 #ifdef __USE_ROOT__
     fMonitorPlotDQM    = new MonitorDQMPlotCBC();
     fMonitorDQMPlotCBC = static_cast<MonitorDQMPlotCBC*>(fMonitorPlotDQM);
@@ -28,11 +22,10 @@ CBCMonitor::CBCMonitor(const Ph2_System::SystemController* theSystemController, 
 
 void CBCMonitor::runMonitor()
 {
-    if(fDoMonitorThreshold) runCBCRegisterMonitor("VCth");
-    if(fDoMonitorLpGBT_ADC1) runLpGBTRegisterMonitor("ADC1");
-    if(fDoMonitorLpGBT_VDD) runLpGBTRegisterMonitor("VDD");
-    if(fDoMonitorLpGBT_VDDA) runLpGBTRegisterMonitor("VDDA");
-    if(fDoMonitorLpGBT_TEMP) runLpGBTRegisterMonitor("TEMP");
+    std::recursive_mutex                  theMutex;
+    std::lock_guard<std::recursive_mutex> theGuard(theMutex);
+    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("CBC")) runCBCRegisterMonitor(registerName);
+    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT")) runLpGBTRegisterMonitor(registerName);
 }
 
 void CBCMonitor::runCBCRegisterMonitor(std::string registerName)
@@ -60,11 +53,11 @@ void CBCMonitor::runCBCRegisterMonitor(std::string registerName)
 #ifdef __USE_ROOT__
     fMonitorDQMPlotCBC->fillCBCRegisterPlots(theCBCRegisterContainer, registerName);
 #else
-    auto theCBCRegisterStreamer = prepareOpticalGroupContainerStreamer<EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, EmptyContainer, CharArray>("CBCRegister");
-    theCBCRegisterStreamer.setHeaderElement(CharArray(registerName));
+    auto theCBCRegisterStreamer = prepareBoardContainerStreamer<EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, EmptyContainer, EmptyContainer, CharArray>("CBCRegister");
+    theCBCRegisterStreamer->setHeaderElement(CharArray(registerName));
     if(fTheSystemController->fDQMStreamerEnabled)
     {
-        for(auto board: theCBCRegisterContainer) theCBCRegisterStreamer.streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
+        for(auto board: theCBCRegisterContainer) { theCBCRegisterStreamer->streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer); }
     }
 #endif
 }
@@ -87,11 +80,11 @@ void CBCMonitor::runLpGBTRegisterMonitor(std::string registerName)
 #ifdef __USE_ROOT__
     fMonitorDQMPlotCBC->fillLpGBTRegisterPlots(theLpGBTRegisterContainer, registerName);
 #else
-    auto theLpGBTRegisterStreamer = prepareOpticalGroupContainerStreamer<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, uint16_t>, CharArray>("LpGBTRegister");
-    theLpGBTRegisterStreamer.setHeaderElement(CharArray(registerName));
+    auto theLpGBTRegisterStreamer = prepareBoardContainerStreamer<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, CharArray>("LpGBTRegister");
+    theLpGBTRegisterStreamer->setHeaderElement(CharArray(registerName));
     if(fTheSystemController->fDQMStreamerEnabled)
     {
-        for(auto board: theLpGBTRegisterContainer) theLpGBTRegisterStreamer.streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
+        for(auto board: theLpGBTRegisterContainer) theLpGBTRegisterStreamer->streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
     }
 #endif
 }

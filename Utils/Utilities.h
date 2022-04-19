@@ -23,6 +23,7 @@
 #include <limits>
 #include <math.h>
 #include <memory>
+#include <numeric>
 #include <sstream>
 #include <stdint.h>
 #include <string>
@@ -105,6 +106,11 @@ void getRunNumber(const std::string& pPath, int& pRunNumber, bool pIncrement = t
 // split int string list into int vector
 std::vector<uint8_t> splitToVector(const std::string& str, const char delimiter);
 
+// CM Noise fitting functions
+double hitProbability(double pThreshold);
+double binomialPdf(uint32_t n, uint32_t k, double p);
+double hitProbabilityFunction(double* pStrips, double* pPar);
+
 template <typename T>
 void addNoDuplicate(std::vector<T>& vector, const std::vector<T>& vector2add)
 {
@@ -121,10 +127,42 @@ uint8_t reverseBits(uint8_t cValue)
     std::string        cSelect = cBitset.to_string();
     std::reverse(cSelect.begin(), cSelect.end());
     std::bitset<NBITS> cReverseBiset(cSelect);
-    std::cout << std::bitset<8>(cValue) << " reversed " << std::bitset<NBITS>(cReverseBiset) << "\n";
+    // std::cout << std::bitset<8>(cValue) << " reversed " << std::bitset<NBITS>(cReverseBiset) << "\n";
     // cValue = (cValue & 0xF0) >> 4 | (cValue & 0x0F) << 4;
     // cValue = (cValue & 0xCC) >> 2 | (cValue & 0x33) << 2;
     // cValue = (cValue & 0xAA) >> 1 | (cValue & 0x55) << 1;
     return cReverseBiset.to_ulong();
 }
+
+// credit to A.Rossi
+template <typename T>
+T getLeastSquareSlope(std::vector<T>& x, const std::vector<T>& y)
+{
+    std::vector<float> cCross(x.size(), 0.);
+    std::transform(x.begin(), x.end(), y.begin(), cCross.begin(), std::multiplies<float>{}); // sum(xy)
+    auto               cSumCross = std::accumulate(cCross.begin(), cCross.end(), 0.);
+    std::vector<float> cSq(x.size(), 0.);
+    std::transform(x.begin(), x.end(), x.begin(), cSq.begin(), std::multiplies<float>{}); // sum(x2)
+    auto cSumSq = std::accumulate(cSq.begin(), cSq.end(), 0.);
+    auto cSumX  = std::accumulate(x.begin(), x.end(), 0.);
+    auto cSumY  = std::accumulate(y.begin(), y.end(), 0.);
+
+    float cLSQN = cCross.size() * cSumCross - cSumX * cSumY;
+    float cLSQD = cSq.size() * cSumSq - cSumX * cSumX;
+    return static_cast<T>(cLSQN / cLSQD);
+}
+
+// Template to return a vector of all mismatched elements in two vectors using std::mismatch for readback value comparison
+template <typename T, class BinaryPredicate>
+std::vector<typename std::iterator_traits<T>::value_type> get_mismatches(T pWriteVector_begin, T pWriteVector_end, T pReadVector_begin, BinaryPredicate p)
+{
+    std::vector<typename std::iterator_traits<T>::value_type> pMismatchedWriteVector;
+
+    for(std::pair<T, T> cPair = std::make_pair(pWriteVector_begin, pReadVector_begin); (cPair = std::mismatch(cPair.first, pWriteVector_end, cPair.second, p)).first != pWriteVector_end;
+        ++cPair.first, ++cPair.second)
+        pMismatchedWriteVector.push_back(*cPair.first);
+
+    return pMismatchedWriteVector;
+}
+
 #endif

@@ -1,8 +1,8 @@
 #include "LinkTestOT.h"
 
+#include "../HWInterface/D19cDebugFWInterface.h"
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
-#include "D19cDebugFWInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -34,7 +34,8 @@ bool LinkTestOT::TestL1ALine(BeBoard* pBoard, bool pAlign, size_t pAttempts)
     // now ... configure CIC to produce idle pattern
     // on L1 line
     fBeBoardInterface->setBoard(pBoard->getId());
-    D19cDebugFWInterface* cDebugInterface = static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto                  cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
     // make sure that we are in sparsified mode
     bool cSparsified = pBoard->getSparsification();
     pBoard->setSparsification(true);

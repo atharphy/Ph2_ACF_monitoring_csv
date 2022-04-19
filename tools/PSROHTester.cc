@@ -1,33 +1,42 @@
+
+#if defined(__TCUSB__) && defined(__ROH_USB__) && defined(__USE_ROOT__)
 #include "PSROHTester.h"
 
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <sstream>
-#include <string>
-
-#include "boost/format.hpp"
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/split.hpp>
-
-using namespace Ph2_HwDescription;
-using namespace Ph2_HwInterface;
-using namespace Ph2_System;
-
 // initialize the static member
-#ifdef __USE_ROOT__
 PSROHTester::PSROHTester() : OTHybridTester() {}
 
 PSROHTester::~PSROHTester() {}
 
 void PSROHTester::Initialise()
 {
-    // reset I2C
-    // fc7_daq_ctrl
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
-        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.fe_for_ps_roh.i2c_slave_reset", 0x01);
+        if(flpGBTInterface == nullptr) continue;
+        D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+        for(auto cOpticalGroup: *cBoard)
+        {
+            if(cOpticalGroup->flpGBT == nullptr) continue;
+            clpGBTInterface->ConfigurePSROH(cOpticalGroup->flpGBT);
+            //
+            uint8_t          cChipRate = clpGBTInterface->GetChipRate(cOpticalGroup->flpGBT);
+            lpGBTClockConfig cClkCnfg;
+            cClkCnfg.fClkFreq         = (cChipRate == 5) ? 4 : 5;
+            cClkCnfg.fClkDriveStr     = 7;
+            cClkCnfg.fClkPreEmphWidth = 0;
+            cClkCnfg.fClkPreEmphMode  = 0; // 3;
+            cClkCnfg.fClkPreEmphStr   = 0; // 7;
+
+            cClkCnfg.fClkInvert = 1;
+            LOG(INFO) << BOLDBLUE << "Enabling SSA clocks" << RESET;
+            clpGBTInterface->hybridClock(cOpticalGroup->flpGBT, cClkCnfg, 0);
+            clpGBTInterface->hybridClock(cOpticalGroup->flpGBT, cClkCnfg, 1);
+
+            // enable clock to CIC
+            cClkCnfg.fClkInvert = 0;
+            LOG(INFO) << BOLDBLUE << "Enabling CIC clocks" << RESET;
+            clpGBTInterface->cicClock(cOpticalGroup->flpGBT, cClkCnfg, 0);
+            clpGBTInterface->cicClock(cOpticalGroup->flpGBT, cClkCnfg, 1);
+        }
     }
 }
 
@@ -687,27 +696,6 @@ void PSROHTester::CheckHybridOutputs(std::vector<std::string> pInputs, std::vect
         if(cBoard->at(0)->flpGBT != nullptr) continue;
         this->CheckHybridOutputs(cBoard, pInputs, pCounters);
     }
-}
-
-bool PSROHTester::TestResetLines(uint8_t pLevel)
-{
-    bool cValid = true;
-#ifdef __ROH_USB__
-    float cMeasurement = 0;
-    auto  cMapIterator = fResetLines.begin();
-    do
-    {
-        fTCInterface.getInterface().adc_get(cMapIterator->second, cMeasurement);
-        float cDifference_mV = std::fabs((pLevel * 1200) - cMeasurement);
-        cValid               = cValid && (cDifference_mV <= 100);
-        if(cDifference_mV > 100)
-            LOG(INFO) << BOLDRED << "Mismatch in GPIO connected to " << cMapIterator->first << RESET;
-        else
-            LOG(INFO) << BOLDGREEN << "Match in GPIO connected to " << cMapIterator->first << RESET;
-        cMapIterator++;
-    } while(cMapIterator != fResetLines.end());
-#endif
-    return cValid;
 }
 
 void PSROHTester::Start(int currentRun)

@@ -3,15 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "../HWDescription/BeBoard.h"
-#include "../HWDescription/Chip.h"
-#include "../HWDescription/Definition.h"
-#include "../HWDescription/Hybrid.h"
-#include "../HWInterface/BeBoardInterface.h"
-#include "../HWInterface/ChipInterface.h"
 #include "../System/SystemController.h"
-#include "../Utils/ConsoleColor.h"
-#include "../Utils/Utilities.h"
 #include "../Utils/argvparser.h"
 #include "FC7FpgaControlFWInterface.h"
 
@@ -44,7 +36,7 @@ void verifyImageName(const std::string& strImage, const std::vector<std::string>
         if(strImage.compare("1") != 0 && strImage.compare("2") != 0)
         {
             LOG(ERROR) << "Error, invalid image name, should be 1 (golden) or 2 (user)";
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
     else
@@ -63,7 +55,7 @@ void verifyImageName(const std::string& strImage, const std::vector<std::string>
         if(!bFound)
         {
             LOG(ERROR) << "Error, this image name: " << strImage << " is not available on SD card";
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
 }
@@ -74,7 +66,7 @@ int main(int argc, char* argv[])
     if(baseDirChar_p == nullptr)
     {
         LOG(ERROR) << "Error, the environment variable PH2ACF_BASE_DIR is not initialized (hint: source setup.sh)";
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     el::Configurations conf(std::string(baseDirChar_p) + "/settings/logger.conf");
@@ -116,17 +108,18 @@ int main(int argc, char* argv[])
     if(result != ArgvParser::NoParserError)
     {
         LOG(INFO) << cmd.parseErrorDescription(result);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     std::string        cHWFile = (cmd.foundOption("config")) ? cmd.optionValue("config") : "settings/HWDescription_2CBC.xml";
     std::ostringstream cStr;
+    cSystemController.setInterfaceInitialization(0);
     cSystemController.InitializeHw(cHWFile, cStr);
     BeBoard* pBoard = cSystemController.fDetectorContainer->at((cmd.foundOption("board")) ? convertAnyInt(cmd.optionValue("board").c_str()) : 0);
     cSystemController.fBeBoardInterface->setBoard(pBoard->getId());
-    FC7FpgaControlFWInterface* cInterface = static_cast<FC7FpgaControlFWInterface*>(cSystemController.fBeBoardInterface->getFirmwareInterface());
+    auto cInterface = FC7FpgaControlFWInterface(cSystemController.fBeBoardInterface->getFirmwareInterface());
 
-    std::vector<std::string> lstNames = cInterface->getFpgaConfigList(); // cSystemController.fBeBoardInterface->getFpgaConfigList(pBoard);
+    std::vector<std::string> lstNames = cInterface.getFpgaConfigList();
     std::string              cFWFile;
     std::string              strImage("1");
 
@@ -136,7 +129,7 @@ int main(int argc, char* argv[])
 
         for(auto& name: lstNames) LOG(INFO) << " - " << name;
 
-        exit(0);
+        exit(EXIT_SUCCESS);
     }
     else if(cmd.foundOption("file"))
     {
@@ -145,28 +138,27 @@ int main(int argc, char* argv[])
         if(lstNames.size() == 0 && cFWFile.find(".mcs") == std::string::npos)
         {
             LOG(ERROR) << "Error, the specified file is not a .mcs file";
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         else if(lstNames.size() > 0 && cFWFile.compare(cFWFile.length() - 4, 4, ".bit") && cFWFile.compare(cFWFile.length() - 4, 4, ".bin"))
         {
             LOG(ERROR) << "Error, the specified file is neither a .bit nor a .bin file";
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
     else if(cmd.foundOption("delete") && !lstNames.empty())
     {
         strImage = cmd.optionValue("delete");
         verifyImageName(strImage, lstNames);
-        cInterface->DeleteFpgaConfig(strImage);
-        // cSystemController.fBeBoardInterface->DeleteFpgaConfig(pBoard, strImage);
+        cInterface.DeleteFpgaConfig(strImage);
         LOG(INFO) << "Firmware image: " << strImage << " deleted from SD card";
-        exit(0);
+        exit(EXIT_SUCCESS);
     }
     else if(!cmd.foundOption("image"))
     {
         cFWFile = "";
         LOG(ERROR) << "Error, no FW image specified";
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     if(cmd.foundOption("image"))
@@ -184,25 +176,22 @@ int main(int argc, char* argv[])
 
     if(!cmd.foundOption("file") && !cmd.foundOption("download"))
     {
-        cInterface->JumpToFpgaConfig(strImage);
-        // cSystemController.fBeBoardInterface->JumpToFpgaConfig(pBoard, strImage);
-        exit(0);
+        cInterface.JumpToFpgaConfig(strImage);
+        exit(EXIT_SUCCESS);
     }
 
     bool cDone = 0;
 
-    if(cmd.foundOption("download")) cInterface->DownloadFpgaConfig(strImage, cmd.optionValue("download"));
-    // cSystemController.fBeBoardInterface->DownloadFpgaConfig(pBoard, strImage, cmd.optionValue("download"));
+    if(cmd.foundOption("download"))
+        cInterface.DownloadFpgaConfig(strImage, cmd.optionValue("download"));
     else
-        cInterface->FlashProm(strImage, cFWFile.c_str());
-    // cSystemController.fBeBoardInterface->FlashProm(pBoard, strImage, cFWFile.c_str());
+        cInterface.FlashProm(strImage, cFWFile.c_str());
 
     uint32_t progress;
 
     while(cDone == 0)
     {
-        progress = cInterface->GetConfiguringFpga()->getProgressValue();
-        // progress = cSystemController.fBeBoardInterface->GetConfiguringFpga(pBoard)->getProgressValue();
+        progress = cInterface.GetConfiguringFpga()->getProgressValue();
 
         if(progress == 100)
         {
@@ -211,8 +200,7 @@ int main(int argc, char* argv[])
         }
         else
         {
-            LOG(INFO) << progress << "%  " << cInterface->GetConfiguringFpga()->getProgressString() << "                 \r" << std::flush;
-            // LOG(INFO) << progress << "%  " << cSystemController.fBeBoardInterface->GetConfiguringFpga(pBoard)->getProgressString() << "                 \r" << std::flush;
+            LOG(INFO) << progress << "%  " << cInterface.GetConfiguringFpga()->getProgressString() << "                 \r" << std::flush;
             sleep(1);
         }
     }

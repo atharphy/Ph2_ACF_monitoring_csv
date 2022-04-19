@@ -12,13 +12,13 @@ logs/*
 *.raw
 Results/
 Results/**
+ResultsGUI/*
 MonitorResults/**
 RunNumbers.dat
 *.log
 core.*
 Results
 tags
-# just for G. Auzingers sanity
 Calibrations
 .run_number.txt
 settings/connections_186.xml
@@ -28,3 +28,11 @@ consoledump.log
 src/test.cc
 build/
 rundir*
+ReadRootFile.py
+core.*
+FEH_PS*/
+*.cc
+*.bin
+.vscode/*
+*.py
+*.txt

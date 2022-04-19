@@ -72,7 +72,7 @@ void ThrAdjustment::sendData()
     auto theThrStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>();
 
     if(fDQMStreamerEnabled == true)
-        for(const auto cBoard: theThrContainer) theThrStream.streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theThrContainer) theThrStream->streamAndSendBoard(cBoard, fDQMStreamer);
 }
 
 void ThrAdjustment::Stop()
@@ -270,7 +270,7 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, 
         PixelAlive::run();
         auto output = PixelAlive::analyze();
         output->resetNormalizationStatus();
-        output->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), 1);
+        output->normalizeAndAverageContainers(fDetectorContainer, this->getChannelGroupHandlerContainer(), 1);
 
         // ##############################################
         // # Send periodic data to monitor the progress #

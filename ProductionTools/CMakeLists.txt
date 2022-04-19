@@ -94,14 +94,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{HttpFlag}")
         endif()
     endif()
-    
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_DQMUtils Ph2_Tools NetworkUtils)
 
-    # Build eudaq producer
-    if (USE_EUDAQ)
-        set(LIBS ${LIBS} ${EUDAQ_LIB})
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{EuDaqFlag}")
-    endif(USE_EUDAQ)
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_DQMUtils Ph2_Tools NetworkUtils)
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/ProductionTools *.cc)
 

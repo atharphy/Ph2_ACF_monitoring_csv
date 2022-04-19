@@ -73,6 +73,11 @@
               MONITOR_CONFIG_ADC     =    "5"
               MONITOR_CONFIG_BG      =   "12"
 
+              SER_SEL_OUT_0          = "0b01"
+              SER_SEL_OUT_1          = "0b01"
+              SER_SEL_OUT_2          = "0b01"
+              SER_SEL_OUT_3          = "0b01"
+
               ADC_OFFSET_VOLT        =   "63"
               ADC_MAXIMUM_VOLT       =  "839"
               TEMPSENS_IDEAL_FACTOR  = "1225"
@@ -156,7 +161,7 @@
 
         <Register name="ext_tlu_reg1">
           <Register name="dio5_ch1_thr"> 128 </Register>
-          <Register name="dio5_ch2_thr"> 128 </Register>
+          <Register name="dio5_ch2_thr">  40 </Register>
         </Register>
 
         <Register name="ext_tlu_reg2">
@@ -174,6 +179,11 @@
 
         <Register name="fast_cmd_reg_3">
           <Register name="triggers_to_accept"> 10 </Register>
+        </Register>
+
+        <Register name="fast_cmd_reg_7">
+          <Register name="autozero_freq"> 1000 </Register>
+          <!-- In units of 10MHz clk cyles -->
         </Register>
 
       </Register>
@@ -289,16 +299,14 @@
   <MonitoringSettings>
     <Monitoring type="RD53" enable="0">
       <MonitoringSleepTime> 1000 </MonitoringSleepTime>
-      <MonitoringElements
-        VIN_ana_ShuLDO  = "0"
-        VOUT_ana_ShuLDO = "1"
-        VIN_dig_ShuLDO  = "0"
-        VOUT_dig_ShuLDO = "1"
-        ADCbandgap      = "1"
-        Iref            = "1"
-        TEMPSENS_1      = "1"
-        TEMPSENS_4      = "1"
-      />
+      <MonitoringElement device="RD53" register="VIN_ana_ShuLDO"  enable="0"/>
+      <MonitoringElement device="RD53" register="VOUT_ana_ShuLDO" enable="1"/>
+      <MonitoringElement device="RD53" register="VIN_dig_ShuLDO"  enable="0"/>
+      <MonitoringElement device="RD53" register="VOUT_dig_ShuLDO" enable="1"/>
+      <MonitoringElement device="RD53" register="ADCbandgap"      enable="1"/>
+      <MonitoringElement device="RD53" register="Iref"            enable="1"/>
+      <MonitoringElement device="RD53" register="TEMPSENS_1"      enable="1"/>
+      <MonitoringElement device="RD53" register="TEMPSENS_4"      enable="1"/>
     </Monitoring>
   </MonitoringSettings>
 

@@ -6,7 +6,9 @@
 #include "../Utils/ContainerFactory.h"
 #include "BackEndAlignment.h"
 #include "D19cDebugFWInterface.h"
+#include "L1ReadoutInterface.h"
 #include "Occupancy.h"
+#include "TriggerInterface.h"
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
@@ -627,10 +629,13 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
         // make sure data handshake is disabled
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x00);
     }
+    auto cInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cTriggerInterface   = cInterface->getTriggerInterface();
+    auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface();
     // re-load configuration
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
+    cTriggerInterface->ResetTriggerFSM();
     // also .. reset the readout
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+    cL1ReadoutInterface->ResetReadout();
 
     // configure latencies
     auto   cSetting       = fSettingsMap.find("DelayAfterInjection");
@@ -719,8 +724,8 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
         {
             LOG(INFO) << BOLDMAGENTA << "L1 Latency offset is " << +cLatencyOffset << "\t...Stub Latency offset is " << +cStubOffset << RESET;
             // configure latencies
-            DetectorDataContainer cLatencyPerFE;
-            ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, cLatencyPerFE);
+            DetectorDataContainer cLatencyPerChip;
+            ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, cLatencyPerChip);
             DetectorDataContainer cStubLatencyPerBoard;
             ContainerFactory::copyAndInitBoard<uint16_t>(*fDetectorContainer, cStubLatencyPerBoard);
             DetectorDataContainer cPackageDelayPerBoard;
@@ -730,7 +735,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
             {
                 uint16_t cDelay        = cCalPulseDelay;
                 int      cReTimeValue  = -1;
-                auto&    cFeLatency    = cLatencyPerFE.at(cBoard->getIndex());
+                auto&    cChipLatency    = cLatencyPerChip.at(cBoard->getIndex());
                 auto&    cBrdLatency   = cStubLatencyPerBoard.at(cBoard->getIndex());
                 auto&    cBrdDelay     = cPackageDelayPerBoard.at(cBoard->getIndex());
                 auto&    cPackageDelay = cBrdDelay->getSummary<uint16_t>();
@@ -738,25 +743,25 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                 auto cInitStubOffset   = cBoard->getStubOffset();
                 for(auto cOpticalReadout: *cBoard)
                 {
-                    auto& cFeLatencyOG = cFeLatency->at(cOpticalReadout->getIndex());
+                    auto& cChipLatencyOG = cChipLatency->at(cOpticalReadout->getIndex());
                     for(auto cHybrid: *cOpticalReadout)
                     {
-                        auto& cFeLatencyHybrid = cFeLatencyOG->at(cHybrid->getIndex());
+                        auto& cChipLatencyHybrid = cChipLatencyOG->at(cHybrid->getIndex());
                         for(auto cChip: *cHybrid) // for each chip (makes sense)
                         {
-                            auto& cFeLatencyChip = cFeLatencyHybrid->at(cChip->getIndex());
-                            auto& cFeLatencySmry = cFeLatencyChip->getSummary<uint16_t>();
+                            auto& cChipLatencyChip = cChipLatencyHybrid->at(cChip->getIndex());
+                            auto& cChipLatencySmry = cChipLatencyChip->getSummary<uint16_t>();
                             if(cChip->getFrontEndType() != FrontEndType::SSA)
                             {
-                                cFeLatencySmry = (cDelay) + cLatencyOffset;
+                                cChipLatencySmry = (cDelay) + cLatencyOffset;
                                 if(cChip->getFrontEndType() == FrontEndType::MPA && cReTimeValue < 0) { cReTimeValue = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix"); }
                             }
                             else // SSA needs an additional clock cycle of delay
                             {
-                                cFeLatencySmry = (cDelay) + (cLatencyOffset - 1);
+                                cChipLatencySmry = (cDelay) + (cLatencyOffset - 1);
                             }
-                            if(cDistributeInj) cFeLatencySmry = cFeLatencySmry + cChip->getId();
-                            fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cFeLatencySmry);
+                            if(cDistributeInj) cChipLatencySmry = cChipLatencySmry + cChip->getId();
+                            fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cChipLatencySmry);
                         } // chip
                     }     // hybrid
                 }         // module
@@ -901,7 +906,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                 auto& cBrdDelay     = cPackageDelayPerBoard.at(cBoard->getIndex());
                 auto& cPackageDelay = cBrdDelay->getSummary<uint16_t>();
                 //
-                // auto&                 cFeLatency = cLatencyPerFE.at(cBoard->getIndex());
+                // auto&                 cChipLatency = cLatencyPerChip.at(cBoard->getIndex());
                 std::vector<uint32_t> cData(0);
                 uint32_t              cNevents = ReadData(cBoard, cData, false);
                 DecodeData(cBoard, cData, cNevents, fBeBoardInterface->getBoardType(cBoard));
@@ -994,7 +999,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                 // LOG (INFO) << BOLDMAGENTA << "Found " << cTotalStubsFound << " when " << cTotalStubsExpected << " were expected." << RESET;
             }
             // reset readout
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+            cL1ReadoutInterface->ResetReadout();
         } // stub sel
     }     // configure latencies
 }
@@ -1072,9 +1077,13 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x00);
     }
     // re-load configuration
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
+    auto cInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cTriggerInterface   = cInterface->getTriggerInterface();
+    auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface();
+
+    cTriggerInterface->ResetTriggerFSM();
     // also .. reset the readout
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+    cL1ReadoutInterface->ResetReadout();
 
     // configure latencies
     auto   cSetting       = fSettingsMap.find("DelayAfterInjection");
@@ -1163,8 +1172,8 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
         {
             LOG(INFO) << BOLDMAGENTA << "L1 Latency offset is " << +cLatencyOffset << "\t...Stub Latency offset is " << +cStubOffset << RESET;
             // configure latencies
-            DetectorDataContainer cLatencyPerFE;
-            ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, cLatencyPerFE);
+            DetectorDataContainer cLatencyPerChip;
+            ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, cLatencyPerChip);
             DetectorDataContainer cStubLatencyPerBoard;
             ContainerFactory::copyAndInitBoard<uint16_t>(*fDetectorContainer, cStubLatencyPerBoard);
             DetectorDataContainer cPackageDelayPerBoard;
@@ -1174,7 +1183,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
             {
                 uint16_t cDelay        = cCalPulseDelay;
                 int      cReTimeValue  = -1;
-                auto&    cFeLatency    = cLatencyPerFE.at(cBoard->getIndex());
+                auto&    cChipLatency    = cLatencyPerChip.at(cBoard->getIndex());
                 auto&    cBrdLatency   = cStubLatencyPerBoard.at(cBoard->getIndex());
                 auto&    cBrdDelay     = cPackageDelayPerBoard.at(cBoard->getIndex());
                 auto&    cPackageDelay = cBrdDelay->getSummary<uint16_t>();
@@ -1182,25 +1191,25 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                 auto cInitStubOffset   = cBoard->getStubOffset();
                 for(auto cOpticalReadout: *cBoard)
                 {
-                    auto& cFeLatencyOG = cFeLatency->at(cOpticalReadout->getIndex());
+                    auto& cChipLatencyOG = cChipLatency->at(cOpticalReadout->getIndex());
                     for(auto cHybrid: *cOpticalReadout)
                     {
-                        auto& cFeLatencyHybrid = cFeLatencyOG->at(cHybrid->getIndex());
+                        auto& cChipLatencyHybrid = cChipLatencyOG->at(cHybrid->getIndex());
                         for(auto cChip: *cHybrid) // for each chip (makes sense)
                         {
-                            auto& cFeLatencyChip = cFeLatencyHybrid->at(cChip->getIndex());
-                            auto& cFeLatencySmry = cFeLatencyChip->getSummary<uint16_t>();
+                            auto& cChipLatencyChip = cChipLatencyHybrid->at(cChip->getIndex());
+                            auto& cChipLatencySmry = cChipLatencyChip->getSummary<uint16_t>();
                             if(cChip->getFrontEndType() != FrontEndType::SSA)
                             {
-                                cFeLatencySmry = (cDelay) + cLatencyOffset;
+                                cChipLatencySmry = (cDelay) + cLatencyOffset;
                                 if(cChip->getFrontEndType() == FrontEndType::MPA && cReTimeValue < 0) { cReTimeValue = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix"); }
                             }
                             else // SSA needs an additional clock cycle of delay
                             {
-                                cFeLatencySmry = (cDelay) + (cLatencyOffset - 1);
+                                cChipLatencySmry = (cDelay) + (cLatencyOffset - 1);
                             }
-                            if(cDistributeInj) cFeLatencySmry = cFeLatencySmry + cChip->getId();
-                            fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cFeLatencySmry);
+                            if(cDistributeInj) cChipLatencySmry = cChipLatencySmry + cChip->getId();
+                            fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cChipLatencySmry);
                         } // chip
                     }     // hybrid
                 }         // module
@@ -1356,7 +1365,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                 auto& cBrdDelay     = cPackageDelayPerBoard.at(cBoard->getIndex());
                 auto& cPackageDelay = cBrdDelay->getSummary<uint16_t>();
                 //
-                // auto&                 cFeLatency = cLatencyPerFE.at(cBoard->getIndex());
+                // auto&                 cChipLatency = cLatencyPerChip.at(cBoard->getIndex());
                 std::vector<uint32_t> cData(0);
                 uint32_t              cNevents = ReadData(cBoard, cData, false);
                 DecodeData(cBoard, cData, cNevents, fBeBoardInterface->getBoardType(cBoard));
@@ -1482,7 +1491,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                 LOG(INFO) << BOLDMAGENTA << cMatchCounter << " out of " << cInjectionCounter << " injections match... " << RESET;
             }
             // reset readout
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+            cL1ReadoutInterface->ResetReadout();
         } // stub sel
     }     // configure latencies
 }
@@ -2185,7 +2194,7 @@ void DataChecker::CheckPSData(BeBoard* pBoard, std::vector<Injection> pInjection
 #endif
                     cEventMatchesL1    = cEventMatchesL1 && cMatchedPCluster;
                     cEventMatchesStubs = cEventMatchesStubs && cMatchedStubs;
-                } // ROCs
+                } // Chips
             }     // hybrids or CICs
         }         // optical group loop
         cNMatchedEvents += (cEventMatchesL1 && cEventMatchesStubs) ? 1 : 0;
@@ -2221,8 +2230,13 @@ uint32_t DataChecker::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
     // stop triggers
     fBeBoardInterface->Stop(pBoard);
     std::this_thread::sleep_for(std::chrono::microseconds(10));
+
+    auto cInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cTriggerInterface   = cInterface->getTriggerInterface();
+    auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface();
+
     // re-load configuration
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
+    cTriggerInterface->ResetTriggerFSM();
 
     cNWords    = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.readout_block.general.words_cnt");
     cNtriggers = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
@@ -2239,9 +2253,9 @@ uint32_t DataChecker::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
     std::this_thread::sleep_for(std::chrono::microseconds(10));
 
     // re-load configuration
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
+    cTriggerInterface->ResetTriggerFSM();
     // also .. reset the readout
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+    cL1ReadoutInterface->ResetReadout();
     // and just check trigger config
 
     return cNevents;
@@ -2937,7 +2951,7 @@ void DataChecker::PSTriggerTest()
                     for(auto cInjection: cInjections)
                     {
                         // // I've messed up rows and cols earlier
-                        cInjection.fFeId = cChip->getId();
+                        cInjection.fChipId = cChip->getId();
                         // LOG (DEBUG) << BOLDMAGENTA << "Adding injection in FE#" << +cChip->getId()
                         //     << " strip " << +cInjection.fRow
                         //     << " pixel column " << +cInjection.fColumn
@@ -2983,43 +2997,43 @@ void DataChecker::PSTriggerTest()
         // for(int cStubSel = 0; cStubSel < cMaxStubSel; cStubSel++)
         {
             // configure latencies
-            DetectorDataContainer cLatencyPerFE;
-            ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, cLatencyPerFE);
+            DetectorDataContainer cLatencyPerChip;
+            ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, cLatencyPerChip);
             DetectorDataContainer cStubLatencyPerBoard;
             ContainerFactory::copyAndInitBoard<uint16_t>(*fDetectorContainer, cStubLatencyPerBoard);
             for(auto cBoard: *fDetectorContainer)
             {
                 uint16_t cDelay       = cCalPulseDelay;
                 int      cReTimeValue = -1;
-                auto&    cFeLatency   = cLatencyPerFE.at(cBoard->getIndex());
+                auto&    cChipLatency   = cLatencyPerChip.at(cBoard->getIndex());
                 auto&    cBrdLatency  = cStubLatencyPerBoard.at(cBoard->getIndex());
                 for(auto cOpticalReadout: *cBoard)
                 {
-                    auto& cFeLatencyOG = cFeLatency->at(cOpticalReadout->getIndex());
+                    auto& cChipLatencyOG = cChipLatency->at(cOpticalReadout->getIndex());
                     for(auto cHybrid: *cOpticalReadout)
                     {
-                        auto& cFeLatencyHybrid = cFeLatencyOG->at(cHybrid->getIndex());
+                        auto& cChipLatencyHybrid = cChipLatencyOG->at(cHybrid->getIndex());
                         for(auto cChip: *cHybrid) // for each chip (makes sense)
                         {
-                            auto& cFeLatencyChip = cFeLatencyHybrid->at(cChip->getIndex());
-                            auto& cFeLatencySmry = cFeLatencyChip->getSummary<uint16_t>();
+                            auto& cChipLatencyChip = cChipLatencyHybrid->at(cChip->getIndex());
+                            auto& cChipLatencySmry = cChipLatencyChip->getSummary<uint16_t>();
                             if(cChip->getFrontEndType() != FrontEndType::SSA)
                             {
                                 // uint16_t cLatency = cDelay + cLatencyOffset ;
-                                cFeLatencySmry = cDelay + cLatencyOffset;
+                                cChipLatencySmry = cDelay + cLatencyOffset;
                                 if(cChip->getFrontEndType() == FrontEndType::MPA && cReTimeValue < 0) { cReTimeValue = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix"); }
                             }
                             else // SSA needs an additional clock cycle of delay
                             {
                                 // uint16_t cLatency = cDelay + (cLatencyOffset-1) ;
-                                cFeLatencySmry = cDelay + (cLatencyOffset - 1);
+                                cChipLatencySmry = cDelay + (cLatencyOffset - 1);
                             }
-                            if(cDistributeInj) cFeLatencySmry = cFeLatencySmry + cChip->getId();
-                            fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cFeLatencySmry);
+                            if(cDistributeInj) cChipLatencySmry = cChipLatencySmry + cChip->getId();
+                            fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cChipLatencySmry);
                             std::string cType = (cChip->getFrontEndType() != FrontEndType::SSA) ? "MPA" : "SSA";
                             // LOG (DEBUG) << BOLDBLUE << "Setting L1 latency in " << cType << "#"
                             //     << +cChip->getId()
-                            //     << " to " << +cFeLatencySmry
+                            //     << " to " << +cChipLatencySmry
                             //     << RESET;
                         } // chip
                     }     // hybrid
@@ -3107,7 +3121,7 @@ void DataChecker::PSTriggerTest()
                 //                 //     //     Injection cInjection;
                 //                 //     //     cInjection.fRow =  cSCluster.fAddress;// - cBend ;
                 //                 //     //     cInjection.fColumn = 0;
-                //                 //     //     cInjection.fFeId = cChip->getId();
+                //                 //     //     cInjection.fChipId = cChip->getId();
                 //                 //     //     LOG (INFO) << BOLDRED << "\t\t.. found S-cluster in SSA#" << +cChip->getId()
                 //                 //     //         << " strip " << +cInjection.fRow
                 //                 //     //         << " in readout."
@@ -3118,7 +3132,7 @@ void DataChecker::PSTriggerTest()
                 //                 //     //     Injection cInjection;
                 //                 //     //     cInjection.fRow =  cPCluster.fAddress;
                 //                 //     //     cInjection.fColumn = cPCluster.fZpos;
-                //                 //     //     cInjection.fFeId = cChip->getId();
+                //                 //     //     cInjection.fChipId = cChip->getId();
                 //                 //     //     LOG (DEBUG) << BOLDRED << "\t\t.. found P-cluster in MPA#" << +cChip->getId()
                 //                 //     //         << " strip " << +cInjection.fRow
                 //                 //     //         << " pixel column is " << +cInjection.fColumn
@@ -3168,14 +3182,14 @@ void DataChecker::PSTriggerTest()
             ContainerFactory::copyAndInitHybrid<std::vector<uint16_t>>(*fDetectorContainer, cL1StatusCic);
             ContainerFactory::copyAndInitHybrid<std::vector<uint16_t>>(*fDetectorContainer, cL1IdsCIC);
 
-            DetectorDataContainer cStubsPerFE;
-            ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, cStubsPerFE);
-            DetectorDataContainer cHitsPerFE;
-            ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, cHitsPerFE);
-            DetectorDataContainer cClustersPerFE;
-            ContainerFactory::copyAndInitChip<std::vector<Injection>>(*fDetectorContainer, cClustersPerFE);
-            DetectorDataContainer cStbsPerFE;
-            ContainerFactory::copyAndInitChip<std::vector<Stub>>(*fDetectorContainer, cStbsPerFE);
+            DetectorDataContainer cStubsPerChip;
+            ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, cStubsPerChip);
+            DetectorDataContainer cHitsPerChip;
+            ContainerFactory::copyAndInitChip<std::vector<float>>(*fDetectorContainer, cHitsPerChip);
+            DetectorDataContainer cClustersPerChip;
+            ContainerFactory::copyAndInitChip<std::vector<Injection>>(*fDetectorContainer, cClustersPerChip);
+            DetectorDataContainer cStbsPerChip;
+            ContainerFactory::copyAndInitChip<std::vector<Stub>>(*fDetectorContainer, cStbsPerChip);
             DetectorDataContainer cL1Cntr;
             ContainerFactory::copyAndInitChip<std::vector<uint16_t>>(*fDetectorContainer, cL1Cntr);
 
@@ -3185,11 +3199,11 @@ void DataChecker::PSTriggerTest()
                 auto& cBxIds        = cBxIdsInReadout.at(cBoard->getIndex());
                 auto& cL1Status     = cL1StatusCic.at(cBoard->getIndex());
                 auto& cL1Ids        = cL1IdsCIC.at(cBoard->getIndex());
-                auto& cFeStubs      = cStubsPerFE.at(cBoard->getIndex());
-                auto& cFeHits       = cHitsPerFE.at(cBoard->getIndex());
-                auto& cFeClstrs     = cClustersPerFE.at(cBoard->getIndex());
-                auto& cFeStbs       = cStbsPerFE.at(cBoard->getIndex());
-                auto& cFeL1Cntrs    = cL1Cntr.at(cBoard->getIndex());
+                auto& cChipStubs      = cStubsPerChip.at(cBoard->getIndex());
+                auto& cChipHits       = cHitsPerChip.at(cBoard->getIndex());
+                auto& cChipClusters     = cClustersPerChip.at(cBoard->getIndex());
+                auto& cChipStbs       = cStbsPerChip.at(cBoard->getIndex());
+                auto& cChipL1Counters    = cL1Cntr.at(cBoard->getIndex());
                 for(auto cEvent: cNewEvents)
                 {
                     // skip the last event since I know its
@@ -3203,11 +3217,11 @@ void DataChecker::PSTriggerTest()
                         auto& cL1IdsOG        = cL1Ids->at(cOpticalGroup->getIndex());
                         auto& cReadoutStubsOG = cReadoutStubs->at(cOpticalGroup->getIndex());
                         auto& cBxIdsOG        = cBxIds->at(cOpticalGroup->getIndex());
-                        auto& cFeStubsOG      = cFeStubs->at(cOpticalGroup->getIndex());
-                        auto& cFeHitsOG       = cFeHits->at(cOpticalGroup->getIndex());
-                        auto& cFeClustersOG   = cFeClstrs->at(cOpticalGroup->getIndex());
-                        auto& cFeStbsOG       = cFeStbs->at(cOpticalGroup->getIndex());
-                        auto& cFeL1CntrsOG    = cFeL1Cntrs->at(cOpticalGroup->getIndex());
+                        auto& cChipStubsOG      = cChipStubs->at(cOpticalGroup->getIndex());
+                        auto& cChipHitsOG       = cChipHits->at(cOpticalGroup->getIndex());
+                        auto& cChipClustersOG   = cChipClusters->at(cOpticalGroup->getIndex());
+                        auto& cChipStbsOG       = cChipStbs->at(cOpticalGroup->getIndex());
+                        auto& cChipL1CountersOG    = cChipL1Counters->at(cOpticalGroup->getIndex());
                         for(auto cHybrid: *cOpticalGroup)
                         {
                             //
@@ -3223,8 +3237,8 @@ void DataChecker::PSTriggerTest()
                             auto& cBxIdsHybrid = cBxIdsOG->at(cHybrid->getIndex());
                             auto& cBxIdsSmry   = cBxIdsHybrid->getSummary<std::vector<float>>();
                             //
-                            auto& cFeClustersHybrid = cFeClustersOG->at(cHybrid->getIndex());
-                            auto& cFeStbsHybrid     = cFeStbsOG->at(cHybrid->getIndex());
+                            auto& cChipClustersHybrid = cChipClustersOG->at(cHybrid->getIndex());
+                            auto& cChipStbsHybrid     = cChipStbsOG->at(cHybrid->getIndex());
                             // clear vector if
                             // this is the first event
                             if(cEvent->GetEventCount() == 0)
@@ -3236,9 +3250,9 @@ void DataChecker::PSTriggerTest()
                             }
 
                             size_t cNstubsInReadout = 0;
-                            auto&  cFeStubsHybrid   = cFeStubsOG->at(cHybrid->getIndex());
-                            auto&  cFeHitsHybrid    = cFeHitsOG->at(cHybrid->getIndex());
-                            auto&  cFeL1CntrsHybrid = cFeL1CntrsOG->at(cHybrid->getIndex());
+                            auto&  cChipStubsHybrid   = cChipStubsOG->at(cHybrid->getIndex());
+                            auto&  cChipHitsHybrid    = cChipHitsOG->at(cHybrid->getIndex());
+                            auto&  cChipL1CountersHybrid = cChipL1CountersOG->at(cHybrid->getIndex());
 
                             auto cL1Id = cEvent->L1Id(cHybrid->getId(), 0);
                             for(auto cChip: *cHybrid)
@@ -3247,22 +3261,22 @@ void DataChecker::PSTriggerTest()
 
                                 // auto cMPAL1Error = fReadoutChipInterface->ReadChipReg(cChip, "ErrorL1");
                                 // auto cErrorBit = (static_cast<D19cCic2Event*>(cEvent))->Error(cHybrid->getId(), cChip->getId());
-                                auto& cFeStubsChip    = cFeStubsHybrid->at(cChip->getIndex());
-                                auto& cFeStubsSmry    = cFeStubsChip->getSummary<std::vector<float>>();
-                                auto& cFeHitsChip     = cFeHitsHybrid->at(cChip->getIndex());
-                                auto& cFeHitsSmry     = cFeHitsChip->getSummary<std::vector<float>>();
-                                auto& cFeClustersChip = cFeClustersHybrid->at(cChip->getIndex());
-                                auto& cFeClusterSmry  = cFeClustersChip->getSummary<std::vector<Injection>>();
-                                auto& cFeStbsChip     = cFeStbsHybrid->at(cChip->getIndex());
-                                auto& cFeStbsSmry     = cFeStbsChip->getSummary<std::vector<Stub>>();
-                                auto& cFeL1CntrChip   = cFeL1CntrsHybrid->at(cChip->getIndex());
-                                auto& cFeL1CntrSmry   = cFeL1CntrChip->getSummary<std::vector<uint16_t>>();
+                                auto& cChipStubsChip    = cChipStubsHybrid->at(cChip->getIndex());
+                                auto& cChipStubsSmry    = cChipStubsChip->getSummary<std::vector<float>>();
+                                auto& cChipHitsChip     = cChipHitsHybrid->at(cChip->getIndex());
+                                auto& cChipHitsSmry     = cChipHitsChip->getSummary<std::vector<float>>();
+                                auto& cChipClustersChip = cChipClustersHybrid->at(cChip->getIndex());
+                                auto& cChipClusterSmry  = cChipClustersChip->getSummary<std::vector<Injection>>();
+                                auto& cChipStbsChip     = cChipStbsHybrid->at(cChip->getIndex());
+                                auto& cChipStbsSmry     = cChipStbsChip->getSummary<std::vector<Stub>>();
+                                auto& cChipL1CounterChip   = cChipL1CountersHybrid->at(cChip->getIndex());
+                                auto& cChipL1CounterSmry   = cChipL1CounterChip->getSummary<std::vector<uint16_t>>();
                                 if(cEvent->GetEventCount() == 0)
                                 {
-                                    cFeHitsSmry.clear();
-                                    cFeClusterSmry.clear();
-                                    cFeStbsSmry.clear();
-                                    cFeL1CntrSmry.clear();
+                                    cChipHitsSmry.clear();
+                                    cChipClusterSmry.clear();
+                                    cChipStbsSmry.clear();
+                                    cChipL1CounterSmry.clear();
                                 }
 
                                 std::string cClstrType, cChipType;
@@ -3277,42 +3291,42 @@ void DataChecker::PSTriggerTest()
                                         Injection cInjection;
                                         cInjection.fRow    = cSCluster.fAddress; // - cBend ;
                                         cInjection.fColumn = 0;
-                                        cInjection.fFeId   = cChip->getId();
-                                        cFeL1CntrSmry.push_back(cL1Id);
-                                        cFeClusterSmry.push_back(cInjection);
+                                        cInjection.fChipId   = cChip->getId();
+                                        cChipL1CounterSmry.push_back(cL1Id);
+                                        cChipClusterSmry.push_back(cInjection);
                                         // LOG (DEBUG) << BOLDMAGENTA << "\t\t.. found S-cluster in SSA#" << +cChip->getId()
                                         //     << " strip " << +cInjection.fRow
                                         //     << " in readout."
                                         //     << RESET ;
                                     }
-                                    cFeHitsSmry.push_back(cSClusters.size());
+                                    cChipHitsSmry.push_back(cSClusters.size());
                                 }
                                 else
                                 {
                                     cChipType  = "MPA";
                                     cClstrType = "pixel-clusters";
 
-                                    if(cEvent->GetEventCount() == 0) cFeStubsSmry.clear();
+                                    if(cEvent->GetEventCount() == 0) cChipStubsSmry.clear();
                                     auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
-                                    cFeStbsSmry.insert(cFeStbsSmry.end(), std::make_move_iterator(cStubs.begin()), std::make_move_iterator(cStubs.end()));
-                                    cFeStubsSmry.push_back(cStubs.size());
-                                    cStubsThisFE    = cFeStubsSmry[cFeStubsSmry.size() - 1];
+                                    cChipStbsSmry.insert(cChipStbsSmry.end(), std::make_move_iterator(cStubs.begin()), std::make_move_iterator(cStubs.end()));
+                                    cChipStubsSmry.push_back(cStubs.size());
+                                    cStubsThisFE    = cChipStubsSmry[cChipStubsSmry.size() - 1];
                                     auto cPClusters = (static_cast<D19cCic2Event*>(cEvent))->GetPixelClusters(cHybrid->getId(), cChip->getId());
                                     for(auto cPCluster: cPClusters)
                                     {
                                         Injection cInjection;
                                         cInjection.fRow    = cPCluster.fAddress;
                                         cInjection.fColumn = cPCluster.fZpos;
-                                        cInjection.fFeId   = cChip->getId();
+                                        cInjection.fChipId   = cChip->getId();
                                         // LOG (DEBUG) << BOLDMAGENTA << "\t\t.. found P-cluster in MPA#" << +cChip->getId()
                                         //     << " strip " << +cInjection.fRow
                                         //     << " pixel column is " << +cInjection.fColumn
                                         //     << " in readout."
                                         //     << RESET ;
-                                        cFeClusterSmry.push_back(cInjection);
-                                        cFeL1CntrSmry.push_back(cL1Id);
+                                        cChipClusterSmry.push_back(cInjection);
+                                        cChipL1CounterSmry.push_back(cL1Id);
                                     }
-                                    cFeHitsSmry.push_back(cPClusters.size());
+                                    cChipHitsSmry.push_back(cPClusters.size());
                                 }
                                 cNstubsInReadout += cStubsThisFE;
 
@@ -3323,10 +3337,10 @@ void DataChecker::PSTriggerTest()
                                 //     << "\t\t L1Id is " << +cL1Id
                                 //     << "\t... found " << +cStubsThisFE
                                 //     << " stubs in this event, and "
-                                //     << +cFeHitsSmry[ cFeHitsSmry.size() - 1 ]
+                                //     << +cChipHitsSmry[ cChipHitsSmry.size() - 1 ]
                                 //     << " " << cClstrType
                                 //     << RESET;
-                            } // ROCs
+                            } // Chips
                             // log of number of stubs
                             // in the readout
                             LOG(DEBUG) << BOLDMAGENTA << "\t.. In total have " << +cNstubsInReadout << " stubs in the readout." << RESET;
@@ -3355,13 +3369,13 @@ void DataChecker::PSTriggerTest()
                 auto& cCicInjc           = cCicInjections.at(cBoard->getIndex());
                 auto& cL1Status          = cL1StatusCic.at(cBoard->getIndex());
                 auto& cBxReadout         = cBxIdsInReadout.at(cBoard->getIndex());
-                auto& cFeStubs           = cStubsPerFE.at(cBoard->getIndex());
-                auto& cFeLatency         = cLatencyPerFE.at(cBoard->getIndex());
-                auto& cFeHits            = cHitsPerFE.at(cBoard->getIndex());
-                auto& cFeClusters        = cClustersPerFE.at(cBoard->getIndex());
-                auto& cFeStbs            = cStbsPerFE.at(cBoard->getIndex());
+                auto& cChipStubs           = cStubsPerChip.at(cBoard->getIndex());
+                auto& cChipLatency         = cLatencyPerChip.at(cBoard->getIndex());
+                auto& cChipHits            = cHitsPerChip.at(cBoard->getIndex());
+                auto& cChipClusters        = cClustersPerChip.at(cBoard->getIndex());
+                auto& cChipStbs            = cStbsPerChip.at(cBoard->getIndex());
                 auto& cL1Ids             = cL1IdsCIC.at(cBoard->getIndex());
-                auto& cFeL1Cntrs         = cL1Cntr.at(cBoard->getIndex());
+                auto& cChipL1Counters         = cL1Cntr.at(cBoard->getIndex());
                 for(auto cOpticalGroup: *cBoard)
                 {
                     auto& cL1IdsOG             = cL1Ids->at(cOpticalGroup->getIndex());
@@ -3369,28 +3383,28 @@ void DataChecker::PSTriggerTest()
                     auto& cCicInjcOG           = cCicInjc->at(cOpticalGroup->getIndex());
                     auto& cReadoutStubsOG      = cReadoutStubs->at(cOpticalGroup->getIndex());
                     auto& cBxOG                = cBxReadout->at(cOpticalGroup->getIndex());
-                    auto& cFeStubsOG           = cFeStubs->at(cOpticalGroup->getIndex());
-                    auto& cFeLatencyOG         = cFeLatency->at(cOpticalGroup->getIndex());
-                    auto& cFeHitsOG            = cFeHits->at(cOpticalGroup->getIndex());
-                    auto& cFeClustersOG        = cFeClusters->at(cOpticalGroup->getIndex());
-                    auto& cFeStbsOG            = cFeStbs->at(cOpticalGroup->getIndex());
+                    auto& cChipStubsOG           = cChipStubs->at(cOpticalGroup->getIndex());
+                    auto& cChipLatencyOG         = cChipLatency->at(cOpticalGroup->getIndex());
+                    auto& cChipHitsOG            = cChipHits->at(cOpticalGroup->getIndex());
+                    auto& cChipClustersOG        = cChipClusters->at(cOpticalGroup->getIndex());
+                    auto& cChipStbsOG            = cChipStbs->at(cOpticalGroup->getIndex());
                     auto& cL1StatusOG          = cL1Status->at(cOpticalGroup->getIndex());
-                    auto& cFeL1CntrsOG         = cFeL1Cntrs->at(cOpticalGroup->getIndex());
+                    auto& cChipL1CountersOG         = cChipL1Counters->at(cOpticalGroup->getIndex());
                     for(auto cHybrid: *cOpticalGroup)
                     {
                         auto& cL1IdsHybrid            = cL1IdsOG->at(cHybrid->getIndex());
                         auto& cL1IdsSmry              = cL1IdsHybrid->getSummary<std::vector<uint16_t>>();
-                        auto& cFeL1CntrsHybrid        = cFeL1CntrsOG->at(cHybrid->getIndex());
-                        auto& cFeLatencyHybrid        = cFeLatencyOG->at(cHybrid->getIndex());
-                        auto& cFeHitsHybrid           = cFeHitsOG->at(cHybrid->getIndex());
-                        auto& cFeClustersHybrid       = cFeClustersOG->at(cHybrid->getIndex());
+                        auto& cChipL1CountersHybrid        = cChipL1CountersOG->at(cHybrid->getIndex());
+                        auto& cChipLatencyHybrid        = cChipLatencyOG->at(cHybrid->getIndex());
+                        auto& cChipHitsHybrid           = cChipHitsOG->at(cHybrid->getIndex());
+                        auto& cChipClustersHybrid       = cChipClustersOG->at(cHybrid->getIndex());
                         auto& cClusterInjectionHybrid = cClusterInjectionsOG->at(cHybrid->getIndex());
-                        auto& cFeStubsHybrid          = cFeStubsOG->at(cHybrid->getIndex());
+                        auto& cChipStubsHybrid          = cChipStubsOG->at(cHybrid->getIndex());
                         auto& cReadoutStubsHybrid     = cReadoutStubsOG->at(cHybrid->getIndex());
                         auto& cReadoutStubsSmry       = cReadoutStubsHybrid->getSummary<std::vector<float>>();
                         auto& cCicInjHybrid           = cCicInjcOG->at(cHybrid->getIndex());
                         auto& cCicInjSummary          = cCicInjHybrid->getSummary<uint32_t>();
-                        auto& cFeStbsHybrid           = cFeStbsOG->at(cHybrid->getIndex());
+                        auto& cChipStbsHybrid           = cChipStbsOG->at(cHybrid->getIndex());
                         auto& cCicL1Status            = cL1StatusOG->at(cHybrid->getIndex());
                         auto& cCicL1Stat              = cCicL1Status->getSummary<std::vector<uint16_t>>();
                         // counter clusters
@@ -3529,27 +3543,27 @@ void DataChecker::PSTriggerTest()
                             if(std::find(cIds.begin(), cIds.end(), cChip->getId()) == cIds.end()) continue;
 
                             // stubs per FE chip
-                            auto&  cFeStbsChip = cFeStbsHybrid->at(cChip->getIndex());
-                            auto&  cFeStbsSmry = cFeStbsChip->getSummary<std::vector<Stub>>();
-                            size_t cNstubsTtl  = cFeStbsSmry.size();
+                            auto&  cChipStbsChip = cChipStbsHybrid->at(cChip->getIndex());
+                            auto&  cChipStbsSmry = cChipStbsChip->getSummary<std::vector<Stub>>();
+                            size_t cNstubsTtl  = cChipStbsSmry.size();
                             LOG(DEBUG) << "In total have " << +cNstubsTtl << " stubs." << RESET;
 
                             // N stubs per FE chip
-                            auto& cFeStubsChip = cFeStubsHybrid->at(cChip->getIndex());
-                            auto& cFeStubsSmry = cFeStubsChip->getSummary<std::vector<float>>();
-                            float cTotalNstubs = std::accumulate(cFeStubsSmry.begin(), cFeStubsSmry.end(), 0.);
+                            auto& cChipStubsChip = cChipStubsHybrid->at(cChip->getIndex());
+                            auto& cChipStubsSmry = cChipStubsChip->getSummary<std::vector<float>>();
+                            float cTotalNstubs = std::accumulate(cChipStubsSmry.begin(), cChipStubsSmry.end(), 0.);
 
                             // Latencies per FE chip
-                            auto& cFeLatencyChip = cFeLatencyHybrid->at(cChip->getIndex());
-                            auto& cFeLatencySmry = cFeLatencyChip->getSummary<uint16_t>();
+                            auto& cChipLatencyChip = cChipLatencyHybrid->at(cChip->getIndex());
+                            auto& cChipLatencySmry = cChipLatencyChip->getSummary<uint16_t>();
                             // N clusters per FE chip
-                            auto& cFeHitsChip = cFeHitsHybrid->at(cChip->getIndex());
-                            auto& cFeHitsSmry = cFeHitsChip->getSummary<std::vector<float>>();
-                            // float cTotalNHits = std::accumulate( cFeHitsSmry.begin(), cFeHitsSmry.end() , 0.);
-                            auto cNHitsStats = getStats(cFeHitsSmry);
+                            auto& cChipHitsChip = cChipHitsHybrid->at(cChip->getIndex());
+                            auto& cChipHitsSmry = cChipHitsChip->getSummary<std::vector<float>>();
+                            // float cTotalNHits = std::accumulate( cChipHitsSmry.begin(), cChipHitsSmry.end() , 0.);
+                            auto cNHitsStats = getStats(cChipHitsSmry);
                             // Clusters per FE chip
-                            auto&       cFeClusterChip = cFeClustersHybrid->at(cChip->getIndex());
-                            auto&       cFeClusterSmry = cFeClusterChip->getSummary<std::vector<Injection>>();
+                            auto&       cChipClusterChip = cChipClustersHybrid->at(cChip->getIndex());
+                            auto&       cChipClusterSmry = cChipClusterChip->getSummary<std::vector<Injection>>();
                             std::string cType          = (cChip->getFrontEndType() == FrontEndType::SSA) ? "SSA" : "MPA";
                             std::string cClusterType   = (cChip->getFrontEndType() == FrontEndType::SSA) ? "S-cluster" : "P-cluster";
                             int         cChipOffset    = (cChip->getFrontEndType() == FrontEndType::SSA) ? 0 : 8;
@@ -3567,7 +3581,7 @@ void DataChecker::PSTriggerTest()
                                 auto& cInjSmry     = cInjSmryChip->getSummary<std::vector<Injection>>();
                                 for(auto cClusterInj: cInjSmry)
                                 {
-                                    if(cClusterInj.fFeId != cChip->getId()) continue;
+                                    if(cClusterInj.fChipId != cChip->getId()) continue;
                                     int cBendOffset  = (cChip->getFrontEndType() == FrontEndType::SSA) ? cBend : 0;
                                     int cExpectedCol = cClusterInj.fColumn;
                                     int cExpectedRow = cClusterInj.fRow + cBendOffset;
@@ -3603,7 +3617,7 @@ void DataChecker::PSTriggerTest()
 
                             // check match for all the clusters
                             // readout
-                            auto& cL1SmryChip = cFeL1CntrsHybrid->at(cChip->getIndex());
+                            auto& cL1SmryChip = cChipL1CountersHybrid->at(cChip->getIndex());
                             auto& cL1s        = cL1SmryChip->getSummary<std::vector<uint16_t>>();
                             for(size_t cIndx = 0; cIndx < cClusterInjectionHybrid->size(); cIndx++)
                             {
@@ -3612,7 +3626,7 @@ void DataChecker::PSTriggerTest()
                                 size_t cInjCounter  = 0;
                                 for(auto cClusterInj: cInjSmry)
                                 {
-                                    if(cClusterInj.fFeId != cChip->getId()) continue;
+                                    if(cClusterInj.fChipId != cChip->getId()) continue;
 
                                     int      cBendOffset    = (cChip->getFrontEndType() == FrontEndType::SSA) ? cBend : 0;
                                     int      cExpectedPxl   = cClusterInj.fColumn;
@@ -3622,10 +3636,10 @@ void DataChecker::PSTriggerTest()
                                     size_t                cCntr = 0;
                                     std::vector<uint16_t> cMatchedL1Ids(0);
                                     auto                  cMatchL1MapIter = cMatchedMapL1.find(cPixelId);
-                                    for(auto cFeCluster: cFeClusterSmry)
+                                    for(auto cChipCluster: cChipClusterSmry)
                                     {
-                                        bool cStripMatch = (cExpectedStrip == cFeCluster.fRow);
-                                        bool cPixelMatch = (cChip->getFrontEndType() == FrontEndType::SSA) ? true : (cExpectedPxl == cFeCluster.fColumn);
+                                        bool cStripMatch = (cExpectedStrip == cChipCluster.fRow);
+                                        bool cPixelMatch = (cChip->getFrontEndType() == FrontEndType::SSA) ? true : (cExpectedPxl == cChipCluster.fColumn);
                                         bool cMatchFound = cStripMatch && cPixelMatch;
                                         if(cMatchFound) cMatchedL1Ids.push_back(cL1s[cCntr]);
                                         cMatchedMapCic.find(cL1s[cCntr])->second += (cMatchFound) ? 1 : 0;
@@ -3707,7 +3721,7 @@ void DataChecker::PSTriggerTest()
                                 // hit latencies
                                 std::string cHistName   = (cChip->getFrontEndType() == FrontEndType::SSA) ? "StripHitLatency" : "PixelHitLatency";
                                 TH2D*       cHitLatency = static_cast<TProfile2D*>(getHist(cHybrid, cHistName));
-                                cHitLatency->Fill(cFeLatencySmry, cChip->getId(), cNmatches);
+                                cHitLatency->Fill(cChipLatencySmry, cChip->getId(), cNmatches);
                                 // cluster counter
                                 TProfile2D* cClusterHist = static_cast<TProfile2D*>(getHist(cHybrid, "ClusterCounter"));
                                 cClusterHist->Fill(cNClusters, cChipOffset + cChip->getId(), (cMatch) ? 1 : 0);
@@ -3766,7 +3780,7 @@ void DataChecker::PSTriggerTest()
                             TProfile2D* cStubCounterId  = static_cast<TProfile2D*>(getHist(cHybrid, "StubCounterIds"));
                             TProfile2D* cStubCounter    = static_cast<TProfile2D*>(getHist(cChip, "StubCounter"));
                             TH2D*       cStubCounter2   = static_cast<TH2D*>(getHist(cChip, "StubCounter2"));
-                            for(auto cNstub: cFeStubsSmry)
+                            for(auto cNstub: cChipStubsSmry)
                             {
                                 cStubCounter->Fill(cCicInjSummary, cClusterInjSmry.size(), cNstub / cClusterInjSmry.size());
                                 cStubCounter2->Fill(cClusterInjSmry.size(), cNstub);
@@ -4307,7 +4321,7 @@ void DataChecker::PSNominal()
                                                    << " address " << +cStubAddress << " row " << +cRow << RESET;
                                     cNMatchedStubs += (cMatch) ? 1 : 0;
                                 }
-                            } // ROCs
+                            } // Chips
                         }     // hybrids or CICs
                     }         // optical group loop
                 }             // event loop
@@ -4473,7 +4487,7 @@ void DataChecker::PSNominal()
                             //
 #endif
 
-                        } // ROCs
+                        } // Chips
                     }     // hybrids or CICs
                 }         // optical group loop
             }
@@ -4619,7 +4633,7 @@ void DataChecker::PSNominal()
             //                         << +cCicInjSummary
             //                         << RESET;
             //                 }
-            //             } // ROCs
+            //             } // Chips
             //         } // hybrids or CICs
             //     } // optical group loop
             // }
@@ -4850,6 +4864,9 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic, bool pShiftRegMode)
     for(auto cBoard: *fDetectorContainer)
     {
         BeBoard* cBeBoard = static_cast<BeBoard*>(cBoard);
+        fBeBoardInterface->setBoard(cBoard->getId());
+        auto                  cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
 
         uint16_t cTriggerSrc = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
         cTriggerSrc          = (cTriggerSrc == 6) ? cTriggerSrc : 6;
@@ -4911,7 +4928,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic, bool pShiftRegMode)
                         }
                         if(pShiftRegMode)
                         {
-                            auto cLines    = (static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->ScopeStubLines();
+                            auto cLines    = cDebugInterface->ScopeStubLines();
                             int  cLineIndx = 0;
                             for(auto cLine: cLines)
                             {
@@ -4924,7 +4941,7 @@ void DataChecker::DigitalInjectionTest(bool pBypassCic, bool pShiftRegMode)
                         {
                             for(int cAttempt = 0; cAttempt < 100; cAttempt++)
                             {
-                                auto cLines    = (static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->ScopeStubLines();
+                                auto cLines    = cDebugInterface->ScopeStubLines();
                                 int  cLineIndx = 0;
                                 for(auto cLine: cLines)
                                 {
@@ -5172,7 +5189,7 @@ void DataChecker::ReadNeventsTest()
                             auto cPipelineAddress = cEvent->PipelineAddress(cHybrid->getId(), cChip->getId());
                             auto cL1Id            = cEvent->L1Id(cHybrid->getId(), cChip->getId());
                             auto cBxId            = cEvent->BxId(cHybrid->getId());
-                            LOG(DEBUG) << BOLDBLUE << "\t...ROC" << +cChip->getId() << " on hybrid " << +cHybrid->getId() << " L1Id is " << +cL1Id << " BxId is " << +cBxId << " found "
+                            LOG(DEBUG) << BOLDBLUE << "\t...Chip" << +cChip->getId() << " on hybrid " << +cHybrid->getId() << " L1Id is " << +cL1Id << " BxId is " << +cBxId << " found "
                                        << +cHits.size() << " hits at pipeline address " << +cPipelineAddress << " , also found " << +cStubs.size() << " stubs in the event" << RESET;
                             for(auto cHit: cHits) LOG(INFO) << BOLDGREEN << "\t\t... hit in channel#" << +cHit << RESET;
                         }
@@ -5246,7 +5263,7 @@ void DataChecker::ReadNeventsTest()
                             auto cPipelineAddress = cEvent->PipelineAddress(cHybrid->getId(), cChip->getId());
                             auto cL1Id            = cEvent->L1Id(cHybrid->getId(), cChip->getId());
                             auto cBxId            = cEvent->BxId(cHybrid->getId());
-                            LOG(INFO) << BOLDYELLOW << "\t...ROC" << +cChip->getId() << " on hybrid " << +cHybrid->getId() << " L1Id is " << +cL1Id << " BxId is " << +cBxId << " found "
+                            LOG(INFO) << BOLDYELLOW << "\t...Chip" << +cChip->getId() << " on hybrid " << +cHybrid->getId() << " L1Id is " << +cL1Id << " BxId is " << +cBxId << " found "
                                       << +cHits.size() << " hits at pipeline address " << +cPipelineAddress << " , also found " << +cStubs.size() << " stubs in the event" << RESET;
                             for(auto cHit: cHits) LOG(INFO) << BOLDGREEN << "\t\t... hit in channel#" << +cHit << RESET;
                         }
@@ -5319,7 +5336,7 @@ void DataChecker::ReadNeventsTest()
     //                         auto cHits            = cEvent->GetHits(cHybrid->getId(), cChip->getId());
     //                         auto cPipelineAddress = cEvent->PipelineAddress(cHybrid->getId(), cChip->getId());
     //                         auto cL1Id            = cEvent->L1Id(cHybrid->getId(), cChip->getId());
-    //                         LOG(INFO) << BOLDGREEN << "ROC#" << +cChip->getId() << " L1Id is " << +cL1Id << " found " << +cHits.size() << " hits at pipeline address " << +cPipelineAddress
+    //                         LOG(INFO) << BOLDGREEN << "Chip#" << +cChip->getId() << " L1Id is " << +cL1Id << " found " << +cHits.size() << " hits at pipeline address " << +cPipelineAddress
     //                                   << " , also found " << +cStubs.size() << " stubs in the event" << RESET;
     //                         for(auto cHit: cHits) LOG(INFO) << BOLDGREEN << "\t\t... hit in channel#" << +cHit << RESET;
     //                     }
@@ -5420,7 +5437,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cHybrid)->getLinkId());
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cHybrid)->getOpticalGroupId());
                 // configure CBCs
                 for(auto cChip: *cHybrid)
                 {
@@ -6047,7 +6064,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                 auto& cThresholdsThisHybrid = cThresholdsThisOpticalGroup->at(cHybrid->getIndex());
                 auto& cLogicThisHybrid      = cLogicThisOpticalGroup->at(cHybrid->getIndex());
                 auto& cHIPsThisHybrid       = cHIPsThisOpticalGroup->at(cHybrid->getIndex());
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cHybrid)->getLinkId());
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cHybrid)->getOpticalGroupId());
                 for(auto cChip: *cHybrid)
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
@@ -6331,7 +6348,7 @@ void DataChecker::DataCheck(std::vector<uint8_t> pChipIds, uint8_t pSeed, int pB
                 auto& cThresholdsThisHybrid = cThresholdsThisOpticalGroup->at(cOpticalGroup->getIndex());
                 auto& cLogicThisHybrid      = cLogicThisOpticalGroup->at(cOpticalGroup->getIndex());
                 auto& cHIPsThisHybrid       = cHIPsThisOpticalGroup->at(cOpticalGroup->getIndex());
-                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cHybrid)->getLinkId());
+                static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->selectLink(static_cast<OuterTrackerHybrid*>(cHybrid)->getOpticalGroupId());
                 for(auto cChip: *cHybrid)
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(cChip);
@@ -6554,8 +6571,12 @@ void DataChecker::StubCheckWNoise(std::vector<uint8_t> pChipIds)
         }         // hybrid
 
         // now want to see the CIC output
-        (static_cast<D19cDebugFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->StubDebug(true, 5);
-        auto cBeBoard       = static_cast<BeBoard*>(cBoard);
+        fBeBoardInterface->setBoard(cBoard->getId());
+        auto                  cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
+        cDebugInterface->StubDebug(true, 5);
+        auto cBeBoard = static_cast<BeBoard*>(cBoard);
+
         auto cOriginalDelay = fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
         LOG(INFO) << BOLDMAGENTA << "Stub package delay set to " << +cOriginalDelay << RESET;
         int cPackageDelayStart = (cSweepPackageDelay == 0) ? cOriginalDelay : 0;
@@ -6602,10 +6623,10 @@ void DataChecker::StubCheckWNoise(std::vector<uint8_t> pChipIds)
                                 auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
                                 auto cHits  = cEvent->GetHits(cHybrid->getId(), cChip->getId());
                                 if(cStubs.size() > 0)
-                                    LOG(INFO) << BOLDGREEN << "ROC#" << +cChip->getId() << " Found " << +cStubs.size() << " stubs in the readout."
+                                    LOG(INFO) << BOLDGREEN << "Chip#" << +cChip->getId() << " Found " << +cStubs.size() << " stubs in the readout."
                                               << " and " << +cHits.size() << " hits." << RESET;
                                 else
-                                    LOG(INFO) << BOLDRED << "ROC#" << +cChip->getId() << " Found " << +cStubs.size() << " stubs in the readout."
+                                    LOG(INFO) << BOLDRED << "Chip#" << +cChip->getId() << " Found " << +cStubs.size() << " stubs in the readout."
                                               << " and " << +cHits.size() << " hits." << RESET;
                             }
                         }

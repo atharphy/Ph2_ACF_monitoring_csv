@@ -1,8 +1,5 @@
 #include "Tool.h"
 #include <numeric>
-#ifdef __USE_ROOT__
-#include "TH1.h"
-#endif
 
 #include "../HWDescription/Chip.h"
 #include "../Utils/ChannelGroupHandler.h"
@@ -210,7 +207,7 @@ void Tool::SoftDestroy()
 }
 
 #ifdef __USE_ROOT__
-TString  Tool::fSummaryTreeParameter = ""; // Is this ok here?
+TString  Tool::fSummaryTreeParameter = "";
 Double_t Tool::fSummaryTreeValue     = 0.0;
 
 /*!
@@ -231,13 +228,27 @@ void Tool::bookSummaryTree() // MINE
  * \param cParameter : Name of the measurement to be stored
  * \param cValue: Value of the measurement to be stored
  */
-void Tool::fillSummaryTree(TString cParameter, Double_t cValue) // MINE
+void Tool::fillSummaryTree(std::string cParameter, Double_t cValue) // MINE
 {
+    // TString currentDirectory = getDirectoryName();
+    // const char* currentDirectory = gDirectory->GetPath();
     fResultFile->cd();
     fSummaryTreeParameter.Clear();
-    fSummaryTreeParameter = cParameter;
+    TString cParameter_TString(cParameter);
+    fSummaryTreeParameter = cParameter_TString;
     fSummaryTreeValue     = cValue;
     if(fSummaryTree) fSummaryTree->Fill();
+    // fResultFile->cd(currentDirectory);
+}
+
+Double_t Tool::getSummaryParameter(std::string cParameter)
+{
+    for(int i = 0; i < fSummaryTree->GetEntries(); i++)
+    {
+        fSummaryTree->GetEntry(i);
+        if(fSummaryTreeParameter == cParameter) return fSummaryTreeValue;
+    }
+    return -1.0;
 }
 
 void Tool::bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObject)
@@ -420,8 +431,6 @@ void Tool::SaveResults()
         TString  cDirName = Form("FE%d", cHybrid.first->getId());
         TObject* cObj     = gROOT->FindObject(cDirName);
 
-        // if ( cObj ) delete cObj;
-
         if(!cObj) fResultFile->mkdir(cDirName);
 
         fResultFile->cd(cDirName);
@@ -443,8 +452,6 @@ void Tool::SaveResults()
         TString  cDirName = Form("Hybrid%d%s%d", static_cast<ReadoutChip*>(cChip.first)->getHybridId(), cDescr.c_str(), cChip.first->getId());
         TObject* cObj     = gROOT->FindObject(cDirName);
 
-        // if ( cObj ) delete cObj;
-
         if(!cObj) fResultFile->mkdir(cDirName);
 
         fResultFile->cd(cDirName);
@@ -462,14 +469,9 @@ void Tool::SaveResults()
         cCanvas.second->SaveAs(cPdfName.c_str());
     }
     // Save summary TTree
+    fResultFile->cd();
     if(fSummaryTree != nullptr) fSummaryTree->Write(); // Seems to be needed with ROOT6, seems to break with ROOT5...
-
 #endif
-
-    // fResultFile->Write();
-    // fResultFile->Close();
-
-    LOG(INFO) << "Results saved!";
 }
 
 void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool pDate, const std::string& whichCalib)
@@ -507,6 +509,7 @@ void Tool::InitResultFile(const std::string& pFilename)
         {
             fResultFile     = TFile::Open(cFilename.c_str(), "RECREATE");
             fResultFileName = cFilename;
+            // AddMetadata();
         }
         catch(std::exception& e)
         {
@@ -528,6 +531,62 @@ void Tool::CloseResultFile()
     }
 }
 
+// add username, chip IDs to a metadata tree
+void Tool::AddMetadata()
+{
+    fResultFile->cd();
+    TTree* t = new TTree();
+    t->SetName("metadata");
+
+    // save username
+    std::string user;
+    try
+    {
+        user = std::string(std::getenv("USER"));
+    }
+    catch(const std::exception& e)
+    {
+        LOG(WARNING) << e.what();
+        LOG(WARNING) << __PRETTY_FUNCTION__ << " Username not set, using dummy name";
+        user = "user";
+    }
+    t->Branch("username", &user);
+
+    // save chip IDs
+    int chipIds[20];
+    int i = 0;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    if(cChip->getFrontEndType() == FrontEndType::CBC3)
+                    {
+                        std::stringstream label;
+                        label << "hybrid_" << std::to_string(cHybrid->getId()) << "_CBC3_" << std::to_string(cChip->getId());
+
+                        uint32_t value = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadCbcIDeFuse(cChip);
+
+                        chipIds[i] = value;
+                        // this is ok because we will only set one value per branch
+                        t->Branch(label.str().c_str(), &chipIds[i]);
+
+                        i++;
+                    }
+                }
+            }
+        }
+    }
+
+    t->Fill();
+
+    t->Write();
+    fResultFile->Write();
+}
+
 void Tool::StartHttpServer(const int pPort, bool pReadonly)
 {
 #ifdef __HTTP__
@@ -544,7 +603,6 @@ void Tool::StartHttpServer(const int pPort, bool pReadonly)
     {
         fHttpServer = new THttpServer(Form("http:%d", pPort));
         fHttpServer->SetReadOnly(pReadonly);
-        // fHttpServer->SetTimer ( pRefreshTime, kTRUE );
         fHttpServer->SetTimer(0, kTRUE);
         fHttpServer->SetJSROOT("https://root.cern.ch/js/latest/");
 
@@ -684,7 +742,7 @@ void Tool::setSystemTestPulse(uint8_t pTPAmplitude, uint8_t pTestGroup, bool pTP
 void Tool::enableTestPulse(bool enableTP)
 {
     fTestPulse = enableTP;
-
+    if(enableTP) setFWTestPulse();
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -695,8 +753,6 @@ void Tool::enableTestPulse(bool enableTP)
             }
         }
     }
-
-    return;
 }
 
 void Tool::selectGroupTestPulse(Chip* cChip, uint8_t pTestGroup)
@@ -718,8 +774,6 @@ void Tool::selectGroupTestPulse(Chip* cChip, uint8_t pTestGroup)
         break;
     }
     }
-
-    return;
 }
 
 void Tool::setFWTestPulse()
@@ -732,8 +786,7 @@ void Tool::setFWTestPulse()
         case BoardType::D19C:
         {
             EventType cEventType = cBoard->getEventType();
-            // bool      cAsync     = (cEventType == EventType::SSAAS || cEventType == EventType::MPAAS || cEventType == EventType::PSAS);
-            bool cAsync = (cEventType == EventType::SCAS);
+            bool      cAsync     = (cEventType == EventType::PSAS);
             if(!cAsync)
             {
                 cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
@@ -743,7 +796,6 @@ void Tool::setFWTestPulse()
             {
                 LOG(INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 10" << RESET;
                 cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
-                // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
                 cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
             }
             break;
@@ -876,7 +928,8 @@ uint16_t Tool::getMaxNumberOfGroups()
             {
                 for(const auto chip: *hybrid)
                 {
-                    uint16_t numberOfGroups = getChannelGroupHandlerContainer()->getObject(board->getId())
+                    uint16_t numberOfGroups = getChannelGroupHandlerContainer()
+                                                  ->getObject(board->getId())
                                                   ->getObject(opticalGroup->getId())
                                                   ->getObject(hybrid->getId())
                                                   ->getObject(chip->getId())
@@ -943,21 +996,17 @@ void Tool::scanDac(const std::string&                  dacName,
 {
     for(unsigned int boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++)
     { scanBeBoardDac(boardIndex, dacName, dacList, numberOfEvents, detectorContainerVector, numberOfEventsPerBurst); }
-
-    return;
 }
 
 // bit wise scan
 void Tool::bitWiseScan(const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst)
 {
     for(unsigned int boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++) { bitWiseScanBeBoard(boardIndex, dacName, numberOfEvents, targetOccupancy, numberOfEventsPerBurst); }
-    return;
 }
 
 // bit wise scan per BeBoard
 void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst)
 {
-    // int minDAC = 0x0;
     DetectorDataContainer* outputDataContainer = fDetectorDataContainer;
     ReadoutChip*           cChip               = fDetectorContainer->at(boardIndex)->at(0)->at(0)->at(0); // assumption: one BeBoard has only one type of chip;
     bool                   localDAC            = cChip->isDACLocal(dacName);
@@ -1002,6 +1051,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
 
     fDetectorDataContainer = currentStepOccupancyContainer;
     LOG(INFO) << BOLDBLUE << "\t\t... measuring occupancy...." << RESET;
+    // TODO -> SEGFAULT!!!!!!!
     measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
 
     occupanyDirectlyProportionalToDAC =
@@ -1070,15 +1120,15 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
             for(auto cOpticalGroup: *(fDetectorContainer->at(boardIndex)))
             {
                 auto& cDataContainerThisOG = cDataContainerThisBrd->at(cOpticalGroup->getIndex());
-                for(auto cFe: *cOpticalGroup)
+                for(auto cHybrid: *cOpticalGroup)
                 {
-                    auto& cDataContainerThisFE = cDataContainerThisOG->at(cFe->getIndex());
-                    for(auto cROC: *cFe)
+                    auto& cDataContainerThisFE = cDataContainerThisOG->at(cHybrid->getIndex());
+                    for(auto cChip: *cHybrid)
                     {
-                        auto&                cDataContainerThisROC = cDataContainerThisFE->at(cROC->getIndex());
-                        auto&                cSummary              = cDataContainerThisROC->getSummary<Occupancy, Occupancy>();
+                        auto&                cDataContainerThisChip = cDataContainerThisFE->at(cChip->getIndex());
+                        auto&                cSummary              = cDataContainerThisChip->getSummary<Occupancy, Occupancy>();
                         ChannelGroupHandler* cHandler;
-                        if(cROC->getFrontEndType() == FrontEndType::MPA)
+                        if(cChip->getFrontEndType() == FrontEndType::MPA)
                             cHandler = new MPAChannelGroupHandler();
                         else
                             cHandler = new SSAChannelGroupHandler();
@@ -1086,7 +1136,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                                    << RESET;
                         float  cGlobalOcc = 0;
                         size_t cNenabled  = 0;
-                        for(uint16_t cChnl = 0; cChnl < cDataContainerThisROC->size(); cChnl++)
+                        for(uint16_t cChnl = 0; cChnl < cDataContainerThisChip->size(); cChnl++)
                         {
                             uint32_t cRow = cChnl % cHandler->allChannelGroup()->getNumberOfRows();
                             uint32_t cCol;
@@ -1096,11 +1146,11 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                                 cCol = cChnl / cHandler->allChannelGroup()->getNumberOfRows();
                             if(cHandler->allChannelGroup()->isChannelEnabled(cRow, cCol))
                             {
-                                cDataContainerThisROC->getChannel<Occupancy>(cRow, cCol).fOccupancy /= fNReadbackEvents;
-                                cGlobalOcc += cDataContainerThisROC->getChannel<Occupancy>(cRow, cCol).fOccupancy;
+                                cDataContainerThisChip->getChannel<Occupancy>(cRow, cCol).fOccupancy /= fNReadbackEvents;
+                                cGlobalOcc += cDataContainerThisChip->getChannel<Occupancy>(cRow, cCol).fOccupancy;
                                 cNenabled++;
                                 if(cChnl < 10 || cChnl > 15 * 120 + 110)
-                                    LOG(DEBUG) << BOLDBLUE << cChnl << " [ " << cRow << " , " << cCol << " ] " << cDataContainerThisROC->getChannel<Occupancy>(cRow, cCol).fOccupancy << RESET;
+                                    LOG(DEBUG) << BOLDBLUE << cChnl << " [ " << cRow << " , " << cCol << " ] " << cDataContainerThisChip->getChannel<Occupancy>(cRow, cCol).fOccupancy << RESET;
                             }
                         }
                         cGlobalOcc /= cNenabled;
@@ -1157,7 +1207,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                     else
                     {
                         auto& cCurrentDAC = currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
-                        cOut << "Occupancy ROC#" << +cChip->getId() << "\t[ global] "
+                        cOut << "Occupancy Chip#" << +cChip->getId() << "\t[ global] "
                              << currentStepOccupancyContainer->at(boardIndex)
                                     ->at(cOpticalGroup->getIndex())
                                     ->at(cHybrid->getIndex())
@@ -1188,7 +1238,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                                                   .fOccupancy;
                         }
                     }
-                    LOG(DEBUG) << BOLDBLUE << cOut.str() << RESET;
+                    LOG(DEBUG) << BOLDYELLOW << cOut.str() << RESET;
                 }
             }
         }
@@ -1213,8 +1263,6 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
 void Tool::setDacAndMeasureData(const std::string& dacName, const uint16_t dacValue, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
 {
     for(uint16_t boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++) { setDacAndMeasureBeBoardData(boardIndex, dacName, dacValue, numberOfEvents, numberOfEventsPerBurst); }
-
-    return;
 }
 
 // set dac and measure occupancy per BeBoard
@@ -1222,7 +1270,6 @@ void Tool::setDacAndMeasureBeBoardData(uint16_t boardIndex, const std::string& d
 {
     setSameDacBeBoard(fDetectorContainer->at(boardIndex), dacName, dacValue);
     measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
-    return;
 }
 
 // measure occupancy
@@ -1239,11 +1286,11 @@ class ScanBase
 
     virtual void operator()() = 0;
     void         setGroupHandlerContainer(const DetectorDataContainer* theChannelHandlerContainer, bool isSameChannelGroupForAllChannels)
-    { 
-        fChannelHandlerContainer = theChannelHandlerContainer; 
+    {
+        fChannelHandlerContainer        = theChannelHandlerContainer;
         fSameChannelGroupForAllChannels = isSameChannelGroupForAllChannels;
     }
-    void         setGroup(int groupNumber) { fGroupNumber = groupNumber; }
+    void setGroup(int groupNumber) { fGroupNumber = groupNumber; }
     // void         setGroup(const ChannelGroupBase* cTestChannelGroup) { fTestChannelGroup = cTestChannelGroup; }
     void setBoardId(uint16_t boardIndex) { fBoardIndex = boardIndex; }
     void setNumberOfEvents(uint32_t numberOfEvents) { fNumberOfEvents = numberOfEvents; }
@@ -1261,20 +1308,24 @@ class ScanBase
     uint               fGroupNumber;
     Tool*              fTool;
     DetectorContainer* fDetectorContainer;
-    bool fSameChannelGroupForAllChannels;
+    bool               fSameChannelGroupForAllChannels;
 
-    inline const std::shared_ptr<ChannelGroupBase>
-    getChannelGroup(int groupNumber, uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId)
+    inline const std::shared_ptr<ChannelGroupBase> getChannelGroup(int groupNumber, uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId)
     {
-        return fChannelHandlerContainer->getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getTestGroup(groupNumber);
+        return fChannelHandlerContainer->getObject(boardId)
+            ->getObject(opticalGroupId)
+            ->getObject(hybridId)
+            ->getObject(chipId)
+            ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+            ->getTestGroup(groupNumber);
     }
 
-    inline const std::shared_ptr<ChannelGroupBase>
-    getChannelGroup(int groupNumber)
+    inline const std::shared_ptr<ChannelGroupBase> getChannelGroup(int groupNumber)
     {
+        // LOG (INFO) << BOLDYELLOW << "Get channel group ScanBase group#" << groupNumber << RESET;
+
         return fChannelHandlerContainer->at(0)->at(0)->at(0)->at(0)->getSummary<std::shared_ptr<ChannelGroupHandler>>()->getTestGroup(groupNumber);
     }
-
 };
 
 void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase* groupScan)
@@ -1284,7 +1335,6 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
     groupScan->setDetectorContainer(fDetectorContainer);
     groupScan->setNumberOfEventsPerBurst(numberOfEventsPerBurst);
     groupScan->setGroupHandlerContainer(getChannelGroupHandlerContainer(), fSameChannelGroupForAllChannels);
-
     if(!fAllChan)
     {
         uint16_t maxNumberOfGroups = getMaxNumberOfGroups();
@@ -1298,7 +1348,8 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
                     {
                         for(auto cChip: *cHybrid)
                         {
-                            if(groupNumber > getChannelGroupHandlerContainer()->getObject(fDetectorContainer->getObject(boardIndex)->getId())
+                            if(groupNumber > getChannelGroupHandlerContainer()
+                                                 ->getObject(fDetectorContainer->getObject(boardIndex)->getId())
                                                  ->getObject(cOpticalGroup->getId())
                                                  ->getObject(cHybrid->getId())
                                                  ->getObject(cChip->getId())
@@ -1306,7 +1357,8 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
                                                  ->getNumberOfGroups())
                                 continue;
                             fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip,
-                                                                                     getChannelGroupHandlerContainer()->getObject(fDetectorContainer->at(boardIndex)->getId())
+                                                                                     getChannelGroupHandlerContainer()
+                                                                                         ->getObject(fDetectorContainer->at(boardIndex)->getId())
                                                                                          ->getObject(cOpticalGroup->getId())
                                                                                          ->getObject(cHybrid->getId())
                                                                                          ->getObject(cChip->getId())
@@ -1386,25 +1438,31 @@ class MeasureBeBoardDataPerGroup : public ScanBase
             // Loop over Events from this Acquisition
             const std::vector<Event*>& events = fTool->GetEvents();
             fTool->setNReadbackEvents(events.size());
-            
-            //Assuming all chip will have all channels enabled:
+            // Assuming all chip will have all channels enabled:
             if(fSameChannelGroupForAllChannels)
             {
+                // LOG (INFO) << BOLDYELLOW << "MeasureBeBoardDataPerGroup fSameChannelGroupForAllChannels read-back " << events.size() << " event." << RESET;
                 auto channelGroup = this->getChannelGroup(fGroupNumber);
-                for(auto& event: events) event->fillDataContainer(fDetectorDataContainer->at(fBoardIndex), channelGroup);
+                if(channelGroup == nullptr)
+                    LOG(ERROR) << BOLDRED << "Channel group does not exist..." << RESET;
+                else
+                {
+                    for(auto& event: events) event->fillDataContainer(fDetectorDataContainer->at(fBoardIndex), channelGroup);
+                }
             }
             else
             {
-                for(auto cOpticalGroup : *fDetectorDataContainer->at(fBoardIndex))
+                LOG(INFO) << BOLDYELLOW << "MeasureBeBoardDataPerGroup !fSameChannelGroupForAllChannels read-back " << events.size() << RESET;
+                for(auto cOpticalGroup: *fDetectorDataContainer->at(fBoardIndex))
                 {
-                    for(const auto cHybrid : *cOpticalGroup)
+                    for(const auto cHybrid: *cOpticalGroup)
                     {
-                        for(const auto cChip : *cHybrid)
+                        for(const auto cChip: *cHybrid)
                         {
                             auto channelGroup = this->getChannelGroup(fGroupNumber, fDetectorDataContainer->at(fBoardIndex)->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId());
                             for(auto& event: events) event->fillChipDataContainer(cChip, channelGroup, cHybrid->getId());
                         }
-                    }                    
+                    }
                 }
             }
             --burstNumbers;
@@ -1423,18 +1481,22 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     theScan.setDataContainer(fDetectorDataContainer);
     // make sure async mode uses ReadNEvents
     bool cUseReadNEvents = fUseReadNEvents;
-    if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::SSAAS || fDetectorContainer->at(boardIndex)->getEventType() == EventType::MPAAS ||
-       fDetectorContainer->at(boardIndex)->getEventType() == EventType::PSAS)
-    { fUseReadNEvents = true; }
+    if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::PSAS)
+    {
+        this->setSameGlobalDac("AnalogueAsync", 1);
+        fUseReadNEvents = true;
+    }
     doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
+
     // if in async mode normalization is a little different ..
     // normalize by the number of triggers to accept
-    if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::SSAAS || fDetectorContainer->at(boardIndex)->getEventType() == EventType::MPAAS ||
-       fDetectorContainer->at(boardIndex)->getEventType() == EventType::PSAS)
-    {
-        numberOfEvents   = fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_stat.fast_command_block.trigger_in_counter");
-        fNReadbackEvents = numberOfEvents;
-    }
+    // if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::PSAS)
+    // {
+    //     numberOfEvents = fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_stat.fast_command_block.trigger_in_counter");
+    //     // LOG (INFO) << BOLDYELLOW << "Tool::measureBeBoardData number of events with PSAS " << numberOfEvents << RESET;
+    //     fNReadbackEvents = numberOfEvents;
+    // }
+
     if(fDetectorContainer->at(boardIndex)->getBoardType() == BoardType::D19C)
     { numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1); }
     if(!fUseReadNEvents) numberOfEvents = fNReadbackEvents;
@@ -1499,8 +1561,6 @@ void Tool::scanBeBoardDac(uint16_t                             boardIndex,
     if(fDetectorContainer->at(boardIndex)->getBoardType() == BoardType::D19C)
     { numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1); }
     for(auto container: detectorContainerVector) container->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), numberOfEvents);
-
-    return;
 }
 
 #else
@@ -1524,8 +1584,6 @@ void Tool::scanBeBoardDac(uint16_t                             boardIndex,
         setDacAndMeasureBeBoardData(boardIndex, dacName, dacList[dacIt], numberOfEvents, numberOfEventsPerBurst);
         this->sendData();
     }
-
-    return;
 }
 #endif
 
@@ -1543,7 +1601,6 @@ void Tool::setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string& dacNam
             }
         }
     }
-    return;
 }
 
 // set local dac per BeBoard
@@ -1601,12 +1658,11 @@ void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string& dacName, c
             }
         }
     }
-    return;
 }
 
 void Tool::setSameDacBeBoard(BeBoard* pBoard, const std::string& dacName, const uint16_t dacValue)
 {
-    // Assumption: 1 BeBoard has only 1 chip flavor:
+    // Assumption: 1 BeBoard has only 1 chip flavor
     if(static_cast<ReadoutChip*>(pBoard->at(0)->at(0)->at(0))->isDACLocal(dacName)) { setSameLocalDacBeBoard(pBoard, dacName, dacValue); }
     else
     {
@@ -1617,8 +1673,6 @@ void Tool::setSameDacBeBoard(BeBoard* pBoard, const std::string& dacName, const 
 void Tool::setSameDac(const std::string& dacName, const uint16_t dacValue)
 {
     for(auto cBoard: *fDetectorContainer) { setSameDacBeBoard(static_cast<BeBoard*>(cBoard), dacName, dacValue); }
-
-    return;
 }
 
 std::string Tool::getCalibrationName(void)
@@ -1627,10 +1681,12 @@ std::string Tool::getCalibrationName(void)
     std::string className     = abi::__cxa_demangle(typeid(*this).name(), 0, 0, &status);
     std::string emptyTemplate = "<> ";
     size_t      found         = className.find(emptyTemplate);
+
     while(found != std::string::npos)
     {
         className.erase(found, emptyTemplate.length());
         found = className.find(emptyTemplate);
     }
+
     return className;
 }

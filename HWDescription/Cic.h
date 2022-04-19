@@ -35,11 +35,11 @@ using CicRegPair = std::pair<std::string, ChipRegItem>;
 class Cic : public Chip
 {
   public:
-    // C'tors which take BeId, FMCId, FeID, CicId
-    Cic(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCicId, const std::string& filename);
+    // C'tors which take BeBoardId, FMCId, HybridId, CicId
+    Cic(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, const std::string& filename);
 
     // C'tors with object FE Description
-    Cic(const FrontEndDescription& pFeDesc, uint8_t pCicId, const std::string& filename);
+    Cic(const FrontEndDescription& pFeDesc, uint8_t pChipId, const std::string& filename);
 
     /*!
      * \brief acceptor method for HwDescriptionVisitor
@@ -67,7 +67,7 @@ class Cic : public Chip
     uint8_t getEdgeSelect() { return fEdgeSel; }
 
   protected:
-    uint8_t fDriveStrength{3}; // drive strength 1-5
+    uint8_t fDriveStrength{5}; // drive strength 1-5
     uint8_t fEdgeSel{0};       // 0 - positive edge, 1 - negative edge
 };
 } // namespace Ph2_HwDescription

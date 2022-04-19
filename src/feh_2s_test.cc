@@ -81,6 +81,7 @@ std::vector<uint8_t> getArgs(std::string pArgsStr)
 
 int main(int argc, char* argv[])
 {
+#if defined(__TCUSB__) && defined(__USE_ROOT__) & defined(__ANTENNA__)
     // configure the logger
     el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
@@ -146,7 +147,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("completeDataCheck", "Complete data check for the following CBCs", ArgvParser::OptionRequiresValue);
     cmd.defineOption("cyclePower", "Cycle Power", ArgvParser::NoOptionAttribute);
     cmd.defineOption("powerState", "Get State of power supply", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("registerTest", "Test I2C registers on ROCs", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("registerTest", "Test I2C registers on Chips", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkL1Timing", "Check L1 timing for hybrid# [please provide hybrid number]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("linkTest", "Check data quality on L1/stub data", ArgvParser::NoOptionAttribute);
 
@@ -552,7 +553,8 @@ int main(int argc, char* argv[])
 
         for(auto cHybridId: cHybridIds)
         {
-            auto cDebugInterface = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+            auto cInterface      = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+            auto cDebugInterface = cInterface->getDebugInterface();
             for(const auto cBoard: *cTool.fDetectorContainer)
             {
                 cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybridId);
@@ -587,12 +589,12 @@ int main(int argc, char* argv[])
         //         for(auto cHybrid: *cOpticalGroup)
         //         {
         //             // set all SSAs + MPAs to output data in async mode
-        //             for(auto cROC: *cHybrid)
+        //             for(auto cChip: *cHybrid)
         //             {
         //                 // TBC - what about MPA here?
-        //                 if( cROC->getFrontEndType() == FrontEndType::SSA || cROC->getFrontEndType() == FrontEndType::SSA2 )
+        //                 if( cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2 )
         //                 {
-        //                     cTool.fReadoutChipInterface->WriteChipReg(cROC, "AnalogueSync", 1);
+        //                     cTool.fReadoutChipInterface->WriteChipReg(cChip, "AnalogueSync", 1);
         //                 }
         //             }
         //         }
@@ -675,11 +677,11 @@ int main(int argc, char* argv[])
         if(cmd.foundOption("completeDataCheck"))
         {
             std::string          cArgsStr    = cmd.optionValue("completeDataCheck");
-            std::vector<uint8_t> cFesToCheck = getArgs(cArgsStr);
+            std::vector<uint8_t> cChipsToCheck = getArgs(cArgsStr);
             cMemoryChecker.EvaluatePedeNoise(100); // find pedestal + noise
             cMemoryChecker.SetThreshold(-2.0);     // set threshold to 3 sigma away from pedestal
             int cTriggerGap = cTool.findValueInSettings<double>("TriggerSeparation", 500);
-            cMemoryChecker.DataCheck(cFesToCheck, cTriggerGap);
+            cMemoryChecker.DataCheck(cChipsToCheck, cTriggerGap);
         }
         cMemoryChecker.MemoryCheck2SRaw(true);  // all ones
         cMemoryChecker.MemoryCheck2SRaw(false); // all zeros
@@ -741,7 +743,7 @@ int main(int argc, char* argv[])
         cOfp.potentiometer = 0x265;
         // antenna group
         auto cSetting     = cTool.fSettingsMap.find("AntennaGroup");
-        cOfp.antennaGroup = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : (0);
+        cOfp.antennaGroup = (cSetting != std::end(cTool.fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : (0);
 
         // antenna delay
         if(cAntennaDelay > 0)
@@ -749,7 +751,7 @@ int main(int argc, char* argv[])
         else
         {
             auto cSetting     = cTool.fSettingsMap.find("AntennaDelay");
-            cOfp.antennaDelay = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : (200);
+            cOfp.antennaDelay = (cSetting != std::end(cTool.fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : (200);
         }
 
         // scan range for latency
@@ -758,7 +760,7 @@ int main(int argc, char* argv[])
         else
         {
             auto cSetting     = cTool.fSettingsMap.find("ScanRange");
-            cOfp.latencyRange = (cSetting != std::end(cTool.fSettingsMap)) ? cSetting->second : (10);
+            cOfp.latencyRange = (cSetting != std::end(cTool.fSettingsMap)) ? boost::any_cast<double>(cSetting->second) : (10);
         }
 
         OpenFinder cOpenFinder;
@@ -832,6 +834,7 @@ int main(int argc, char* argv[])
         cPowerLog << "\n";
     }
     cPowerLog.close();
+#endif
 #endif
 
     return 0;

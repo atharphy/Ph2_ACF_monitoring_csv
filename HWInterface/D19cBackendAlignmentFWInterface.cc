@@ -4,9 +4,10 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-D19cBackendAlignmentFWInterface::D19cBackendAlignmentFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler) : BeBoardFWInterface(puHalConfigFileName, pBoardId) {}
-D19cBackendAlignmentFWInterface::D19cBackendAlignmentFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler) : BeBoardFWInterface(pId, pUri, pAddressTable)
+D19cBackendAlignmentFWInterface::D19cBackendAlignmentFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : RegManager(pId, pUri, pAddressTable) {}
+D19cBackendAlignmentFWInterface::D19cBackendAlignmentFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : RegManager(puHalConfigFileName, pBoardId)
 {
+    LOG(INFO) << BOLDYELLOW << "D19cBackendAlignmentFWInterface::D19cBackendAlignmentFWInterface Constructor" << RESET;
 }
 D19cBackendAlignmentFWInterface::~D19cBackendAlignmentFWInterface() {}
 
@@ -15,30 +16,39 @@ void D19cBackendAlignmentFWInterface::ParseResult(uint32_t pReply)
     fAlignerObject.fType = (pReply >> 24) & 0xF;
     if(fAlignerObject.fType == 0)
     {
-        // bit slip of 3 bits
-        fLineConfiguration.fMode    = (pReply & 0x00003000) >> 12;
-        fLineConfiguration.fDelay   = (pReply & 0x000000F8) >> 3;
-        fLineConfiguration.fBitslip = (pReply & 0x00000007) >> 0;
-
-        // fMode    = (pReply & (0x3)) >> 13;
-        // fDelay   = (pReply & (0x1F)) >> 4;
-        // fBitslip = (pReply & (0xF<<0)) >> 0;
+        if(fNbits == 3) // bit slip of 3 bits
+        {
+            fLineConfiguration.fMode    = (pReply & 0x00003000) >> 12;
+            fLineConfiguration.fDelay   = (pReply & 0x000000F8) >> 3;
+            fLineConfiguration.fBitslip = (pReply & 0x00000007) >> 0;
+        }
+        else // bit slip of 4 bits electrical
+        {
+            fLineConfiguration.fMode    = (pReply & (0x3)) >> 13;
+            fLineConfiguration.fDelay   = (pReply & (0x1F)) >> 4;
+            fLineConfiguration.fBitslip = (pReply & (0xF << 0)) >> 0;
+        }
     }
     else if(fAlignerObject.fType == 1)
     {
-        // // bit slip of 4 bits
-        // fDelay                  = (pReply & (0x1F<<19)) >> 19;
-        // fBitslip                = (pReply & (0xF<<15)) >> 15;
-        // fDone                   = (pReply & (0x1<<14)) >> 14;
-        // fWordAlignmentFSMstate  = (pReply & (0xF<<7)) >> 7;
-        // fPhaseAlignmentFSMstate = (pReply & (0xF<<0)) >> 0;
-
+        // bit slip of 4 bits electrical
+        if(fNbits == 3) // bit slip of 3 bits
+        {
+            fLineConfiguration.fDelay       = (pReply & 0x00F80000) >> 19;
+            fLineConfiguration.fBitslip     = (pReply & 0x00070000) >> 16;
+            fStatus.fDone                   = (pReply & 0x00008000) >> 15;
+            fStatus.fWordAlignmentFSMstate  = (pReply & 0x00000F00) >> 8;
+            fStatus.fPhaseAlignmentFSMstate = (pReply & 0x0000000F) >> 0;
+        }
+        else
+        {
+            fLineConfiguration.fDelay       = (pReply & (0x1F << 19)) >> 19;
+            fLineConfiguration.fBitslip     = (pReply & (0xF << 15)) >> 15;
+            fStatus.fDone                   = (pReply & (0x1 << 14)) >> 14;
+            fStatus.fWordAlignmentFSMstate  = (pReply & (0xF << 7)) >> 7;
+            fStatus.fPhaseAlignmentFSMstate = (pReply & (0xF << 0)) >> 0;
+        }
         // bit slip of 3 bits
-        fLineConfiguration.fDelay       = (pReply & 0x00F80000) >> 19;
-        fLineConfiguration.fBitslip     = (pReply & 0x00070000) >> 16;
-        fStatus.fDone                   = (pReply & 0x00008000) >> 15;
-        fStatus.fWordAlignmentFSMstate  = (pReply & 0x00000F00) >> 8;
-        fStatus.fPhaseAlignmentFSMstate = (pReply & 0x0000000F) >> 0;
     }
 }
 uint8_t D19cBackendAlignmentFWInterface::ParseStatus()
@@ -187,19 +197,24 @@ void D19cBackendAlignmentFWInterface::SetLineMode(AlignerObject pAlignerObject, 
     // command
     ConfigureCommandType(2);
     // set defaults - bit slip of 3 bits
-    uint32_t mode_raw           = (fLineConfiguration.fMode & 0x3) << 12;
-    uint32_t l1a_en_raw         = (fLineConfiguration.fMode == 0) ? ((fLineConfiguration.fEnableL1 & 0x1) << 11) : 0;
-    uint32_t master_line_id_raw = (fLineConfiguration.fMode == 1) ? ((fLineConfiguration.fMasterLine & 0xF) << 8) : 0;
-    uint32_t delay_raw          = (fLineConfiguration.fMode == 2) ? ((fLineConfiguration.fDelay & 0x1F) << 3) : 0;
-    uint32_t bitslip_raw        = (fLineConfiguration.fMode == 2) ? ((fLineConfiguration.fBitslip & 0x7) << 0) : 0;
+    uint32_t mode_raw, l1a_en_raw, master_line_id_raw, delay_raw, bitslip_raw;
 
-    // set defaults - bit slip of 4 bits..
-    // uint32_t mode_raw           = (pMode & 0x3) << 13 ;
-    // uint32_t l1a_en_raw         = (pMode == 0) ? ((pEnableL1 & 0x1) << 11) : 0;
-    // uint32_t master_line_id_raw = (pMode == 1) ? ((pMasterLine & 0xF) << 8) : 0;
-    // uint32_t delay_raw          = (pMode == 2) ? ((pDelay & 0x1F) << 4) : 0;
-    // uint32_t bitslip_raw        = (pMode == 2) ? ((pBitSlip & 0xF) << 0) : 0;
-
+    if(fNbits == 3)
+    {
+        mode_raw           = (fLineConfiguration.fMode & 0x3) << 12;
+        l1a_en_raw         = (fLineConfiguration.fMode == 0) ? ((fLineConfiguration.fEnableL1 & 0x1) << 11) : 0;
+        master_line_id_raw = (fLineConfiguration.fMode == 1) ? ((fLineConfiguration.fMasterLine & 0xF) << 8) : 0;
+        delay_raw          = (fLineConfiguration.fMode == 2) ? ((fLineConfiguration.fDelay & 0x1F) << 3) : 0;
+        bitslip_raw        = (fLineConfiguration.fMode == 2) ? ((fLineConfiguration.fBitslip & 0x7) << 0) : 0;
+    }
+    else
+    {
+        mode_raw           = (fLineConfiguration.fMode & 0x3) << 13;
+        l1a_en_raw         = (fLineConfiguration.fMode == 0) ? ((fLineConfiguration.fEnableL1 & 0x1) << 11) : 0;
+        master_line_id_raw = (fLineConfiguration.fMode == 1) ? ((fLineConfiguration.fMasterLine & 0xF) << 8) : 0;
+        delay_raw          = (fLineConfiguration.fMode == 2) ? ((fLineConfiguration.fDelay & 0x1F) << 4) : 0;
+        bitslip_raw        = (fLineConfiguration.fMode == 2) ? ((fLineConfiguration.fBitslip & 0xF) << 0) : 0;
+    }
     // form command
     uint32_t command_final = fAlignerObject.fCommand + mode_raw + l1a_en_raw + master_line_id_raw + delay_raw + bitslip_raw;
     if(fVerbose == 1)
