@@ -42,7 +42,10 @@ bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem)
     }
     if(cWaitCounter == 0)
     {
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleRead : Tool stuck" << RESET;
+	uint16_t cState = fCommandProcessorInterface->GetStateFSM(cFunctionId);
+	uint8_t cWorkerState = (cState & 0xFF);
+  	uint8_t cFunctionState = (cState & (0xFF << 8)) >> 8;
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleRead : Tool stuck - Worker state = " << +cWorkerState << " - Function State = " << +cFunctionState << RESET;
         return false;
     }
     uint8_t cTryCntr = fCommandProcessorInterface->GetTryCntr(cFunctionId);
@@ -77,7 +80,10 @@ bool D19cOpticalInterface::WriteChipRegister(Chip* pChip, ChipRegItem& pItem, bo
     }
     if(cWaitCounter == 0)
     {
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite : Tool stuck" << RESET;
+	uint16_t cState = fCommandProcessorInterface->GetStateFSM(cFunctionId);
+	uint8_t cWorkerState = (cState & 0xFF);
+  	uint8_t cFunctionState = (cState & (0xFF << 8)) >> 8;
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite : Tool stuck - Worker state = " << +cWorkerState << " - Function State = " << +cFunctionState << RESET;
         return false;
     }
     uint8_t cTryCntr = fCommandProcessorInterface->GetTryCntr(cFunctionId);
@@ -164,7 +170,10 @@ bool D19cOpticalInterface::MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uin
     }
     if(cWaitCounter == 0)
     {
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiByteWriteI2C : I2C Tool stuck" << RESET;
+	uint16_t cState = fCommandProcessorInterface->GetStateFSM(cFunctionId);
+	uint8_t cWorkerState = (cState & 0xFF);
+  	uint8_t cFunctionState = (cState & (0xFF << 8)) >> 8;
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiByteWriteI2C : Tool stuck - Worker state = " << +cWorkerState << " - Function State = " << +cFunctionState << RESET;
         return false;
     }
     uint8_t cTryCntr = fCommandProcessorInterface->GetTryCntr(cFunctionId);
@@ -201,7 +210,10 @@ uint8_t D19cOpticalInterface::SingleByteReadI2C(Ph2_HwDescription::Chip* pChip, 
     }
     if(cWaitCounter == 0)
     {
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleByteReadI2C : I2C Tool stuck" << RESET;
+	uint16_t cState = fCommandProcessorInterface->GetStateFSM(cFunctionId);
+	uint8_t cWorkerState = (cState & 0xFF);
+  	uint8_t cFunctionState = (cState & (0xFF << 8)) >> 8;
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleByteReadI2C : Tool stuck - Worker state = " << +cWorkerState << " - Function State = " << +cFunctionState << RESET;
         return 0;
     }
     uint8_t cTryCntr = fCommandProcessorInterface->GetTryCntr(cFunctionId);
