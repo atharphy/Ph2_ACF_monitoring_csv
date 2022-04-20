@@ -22,7 +22,7 @@ class D19cI2CInterface : public FEConfigurationInterface
     bool SingleWrite(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem) override;
     bool SingleRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem) override;
 
-    void PrintStatus() override; 
+    void PrintStatus() override;
 
     void ChipI2CRefresh();
     void ConfigureI2CMap(const Ph2_HwDescription::BeBoard* pBoard);
@@ -35,9 +35,9 @@ class D19cI2CInterface : public FEConfigurationInterface
     bool WriteChipBlockReg(std::vector<uint32_t>& pVecReg, uint8_t& pWriteAttempts, bool pReadback);
     void ReadChipBlockReg(std::vector<uint32_t>& pVecReg);
 
-    // blcok read for CBCs 
+    // blcok read for CBCs
     void BCEncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite);
-    bool BCWriteChipBlockReg(std::vector<uint32_t>& pVecReg, bool pReadback) ;
+    bool BCWriteChipBlockReg(std::vector<uint32_t>& pVecReg, bool pReadback);
 
     // write and read I2C
     bool        WriteI2C(std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pReadback, bool pBroadcast);
@@ -58,6 +58,8 @@ class D19cI2CInterface : public FEConfigurationInterface
     // i2c version of master
     uint32_t       fI2CVersion;
     const uint32_t SINGLE_I2C_WAIT = 200; // used for 1MHz I2C
+    //#FIXME putting these here temporarily ...
+    bool fRetry = false;
 };
 } // namespace Ph2_HwInterface
 #endif

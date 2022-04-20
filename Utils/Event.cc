@@ -51,11 +51,11 @@ void Event::fillDataContainer(BoardDataContainer* boardContainer, const std::sha
     }
 }
 
-void Event::GetCbcEvent(const uint8_t& pFeId, const uint8_t& pCbcId, std::vector<uint32_t>& cbcData) const
+void Event::GetCbcEvent(const uint8_t& pHybridId, const uint8_t& pCbcId, std::vector<uint32_t>& cbcData) const
 {
     cbcData.clear();
 
-    uint16_t                     cKey  = encodeId(pFeId, pCbcId);
+    uint16_t                     cKey  = encodeId(pHybridId, pCbcId);
     EventDataMap::const_iterator cData = fEventDataMap.find(cKey);
 
     if(cData != std::end(fEventDataMap))
@@ -64,14 +64,14 @@ void Event::GetCbcEvent(const uint8_t& pFeId, const uint8_t& pCbcId, std::vector
         cbcData.assign(cData->second.begin(), cData->second.end());
     }
     else
-        LOG(INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found.";
+        LOG(INFO) << "Event: FE " << +pHybridId << " CBC " << +pCbcId << " is not found.";
 }
 
-void Event::GetCbcEvent(const uint8_t& pFeId, const uint8_t& pCbcId, std::vector<uint8_t>& cbcData) const
+void Event::GetCbcEvent(const uint8_t& pHybridId, const uint8_t& pCbcId, std::vector<uint8_t>& cbcData) const
 {
     cbcData.clear();
 
-    uint16_t                     cKey  = encodeId(pFeId, pCbcId);
+    uint16_t                     cKey  = encodeId(pHybridId, pCbcId);
     EventDataMap::const_iterator cData = fEventDataMap.find(cKey);
 
     if(cData != std::end(fEventDataMap))
@@ -85,15 +85,15 @@ void Event::GetCbcEvent(const uint8_t& pFeId, const uint8_t& pCbcId, std::vector
         }
     }
     else
-        LOG(INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found.";
+        LOG(INFO) << "Event: FE " << +pHybridId << " CBC " << +pCbcId << " is not found.";
 }
 
-bool Event::Bit(uint8_t pFeId, uint8_t pCbcId, uint32_t pPosition) const
+bool Event::Bit(uint8_t pHybridId, uint8_t pCbcId, uint32_t pPosition) const
 {
     uint32_t cWordP = pPosition / 32;
     uint32_t cBitP  = pPosition % 32;
 
-    uint16_t                     cKey  = encodeId(pFeId, pCbcId);
+    uint16_t                     cKey  = encodeId(pHybridId, pCbcId);
     EventDataMap::const_iterator cData = fEventDataMap.find(cKey);
 
     if(cData != std::end(fEventDataMap))
@@ -104,14 +104,14 @@ bool Event::Bit(uint8_t pFeId, uint8_t pCbcId, uint32_t pPosition) const
     }
     else
     {
-        LOG(INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found.";
+        LOG(INFO) << "Event: FE " << +pHybridId << " CBC " << +pCbcId << " is not found.";
         return false;
     }
 }
 
-std::string Event::BitString(uint8_t pFeId, uint8_t pCbcId, uint32_t pOffset, uint32_t pWidth) const
+std::string Event::BitString(uint8_t pHybridId, uint8_t pCbcId, uint32_t pOffset, uint32_t pWidth) const
 {
-    uint16_t                     cKey  = encodeId(pFeId, pCbcId);
+    uint16_t                     cKey  = encodeId(pHybridId, pCbcId);
     EventDataMap::const_iterator cData = fEventDataMap.find(cKey);
 
     if(cData != std::end(fEventDataMap))
@@ -134,15 +134,15 @@ std::string Event::BitString(uint8_t pFeId, uint8_t pCbcId, uint32_t pOffset, ui
     }
     else
     {
-        LOG(INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found.";
+        LOG(INFO) << "Event: FE " << +pHybridId << " CBC " << +pCbcId << " is not found.";
         return "";
     }
 }
 
-std::vector<bool> Event::BitVector(uint8_t pFeId, uint8_t pCbcId, uint32_t pOffset, uint32_t pWidth) const
+std::vector<bool> Event::BitVector(uint8_t pHybridId, uint8_t pCbcId, uint32_t pOffset, uint32_t pWidth) const
 {
     std::vector<bool>            blist;
-    uint16_t                     cKey  = encodeId(pFeId, pCbcId);
+    uint16_t                     cKey  = encodeId(pHybridId, pCbcId);
     EventDataMap::const_iterator cData = fEventDataMap.find(cKey);
 
     if(cData != std::end(fEventDataMap))
@@ -161,7 +161,7 @@ std::vector<bool> Event::BitVector(uint8_t pFeId, uint8_t pCbcId, uint32_t pOffs
         }
     }
     else
-        LOG(INFO) << "Event: FE " << +pFeId << " CBC " << +pCbcId << " is not found.";
+        LOG(INFO) << "Event: FE " << +pHybridId << " CBC " << +pCbcId << " is not found.";
 
     return blist;
 }

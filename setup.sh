@@ -59,7 +59,7 @@ export EUDAQDIR=$EXTERNAL_TOOLS_BASE_DIR/eudaq
 export POWERSUPPLYDIR=$EXTERNAL_TOOLS_BASE_DIR/power_supply
 
 # These are git references for the dependencies that are included via CMake ExternalProjects
-export PH2_TCUSB_REF=e28b79c090b35d9fc686b5d56a4ebab0c36a1a22
+export PH2_TCUSB_REF=9c39f0f4082f8db6a6788baf3567f55631b53f16
 export EUDAQ_REF=ac59b87fca12806d775e95df2d253c3bf96420ee
 
 ###########

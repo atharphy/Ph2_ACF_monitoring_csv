@@ -87,7 +87,7 @@ struct SLinkEventConditionData
         for(auto& cWord: fConditionData)
         {
             CondDataItem cDataItem;
-            cDataItem.fFeId     = ((uint64_t)cWord & ((uint64_t)0xFF << 56)) >> 56;
+            cDataItem.fHybridId     = ((uint64_t)cWord & ((uint64_t)0xFF << 56)) >> 56;
             cDataItem.fCbcId    = ((uint64_t)cWord & ((uint64_t)0xF << 52)) >> 52;
             cDataItem.fPage     = ((uint64_t)cWord & ((uint64_t)0xF << 48)) >> 48;
             cDataItem.fRegister = ((uint64_t)cWord & ((uint64_t)0xFF << 40)) >> 40;

@@ -17,11 +17,11 @@ namespace Ph2_HwInterface
 // ################################################
 // # LpGBT chip register write and read functions #
 // ################################################
-bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerifLoop)
+bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerify)
 {
     this->setBoard(pChip->getBeBoardId());
     auto cBoardType = fBoardFW->getBoardType();
-    auto cAddress = pChip->getRegItem(pDacName).fAddress;
+    auto cAddress   = pChip->getRegItem(pDacName).fAddress;
 
     if(pDacValue > 0xFF)
     {
@@ -35,19 +35,20 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
     }
     bool cSuccess = false;
 
-    if( cBoardType != BoardType::RD53 && pChip->isOptical() )
+    if(cBoardType != BoardType::RD53 && pChip->isOptical())
     {
-    	auto cRegisterMap = pChip->getRegMap();
+        auto cRegisterMap             = pChip->getRegMap();
         cRegisterMap[pDacName].fValue = pDacValue;
-        cSuccess = fBoardFW->SingleRegisterWrite(pChip, cRegisterMap[pDacName], pVerifLoop);
+        cSuccess                      = fBoardFW->SingleRegisterWrite(pChip, cRegisterMap[pDacName], pVerify);
     }
-    else if(pChip->isOptical()) cSuccess = fBoardFW->WriteOptoLinkRegister(pChip, cAddress, pDacValue, pVerifLoop);
+    else if(pChip->isOptical())
+        cSuccess = fBoardFW->WriteOptoLinkRegister(pChip, cAddress, pDacValue, pVerify);
     // TO-DO .. figure out what to do if piGBT is used
     else
     {
 #if defined(__TCUSB__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
         cSuccess = (fExternalController->getInterface().write_i2c(cAddress, static_cast<char>(pDacValue)) == pDacValue);
-        // cSuccess = (!pVerifLoop) ? cSuccess : (ReadChipReg(pChip, pDacName) == pDacValue);
+        // cSuccess = (!pVerify) ? cSuccess : (ReadChipReg(pChip, pDacName) == pDacValue);
 #endif
     }
 
@@ -61,14 +62,14 @@ uint16_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
 {
     this->setBoard(pChip->getBeBoardId());
     auto cBoardType = fBoardFW->getBoardType();
-    
+
     auto     cAddress = pChip->getRegItem(pDacName).fAddress;
     uint16_t cValue   = 0x00;
 
-    if( cBoardType != BoardType::RD53 && pChip->isOptical())
+    if(cBoardType != BoardType::RD53 && pChip->isOptical())
     {
         auto cRegisterMap = pChip->getRegMap();
-        cValue = fBoardFW->SingleRegisterRead(pChip, cRegisterMap[pDacName]);
+        cValue            = fBoardFW->SingleRegisterRead(pChip, cRegisterMap[pDacName]);
     }
     else if(pChip->isOptical())
     {
@@ -85,7 +86,7 @@ uint16_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
     return cValue;
 }
 
-bool lpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerifLoop)
+bool lpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerify)
 {
     bool writeGood = true;
     for(const auto& cReg: pRegVec) writeGood = WriteChipReg(pChip, cReg.first, cReg.second);

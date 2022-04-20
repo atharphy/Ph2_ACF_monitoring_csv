@@ -401,7 +401,7 @@ int main(int argc, char* argv[])
                 static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetCIC(clpGBT);
             }
 
-        } // enable ROCs
+        } // enable Chips
 
         for(auto cOpticalGroup: *cBoard)
         {
@@ -427,9 +427,9 @@ int main(int argc, char* argv[])
                     bool cSuccess = true;
                     if(cOuterTrackerHybrid->size() > 0)
                     {
-                        auto         cFirstROC = static_cast<ReadoutChip*>(cOuterTrackerHybrid->at(0));
+                        auto         cFirstChip = static_cast<ReadoutChip*>(cOuterTrackerHybrid->at(0));
                         FrontEndType cType     = FrontEndType::CBC3;
-                        if(cFirstROC != nullptr) cType = cFirstROC->getFrontEndType();
+                        if(cFirstChip != nullptr) cType = cFirstChip->getFrontEndType();
                         uint8_t cModeSelect = (cType != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA
                         // select CIC mode
                         cSuccess = cTool.fCicInterface->SelectMode(cCic, cModeSelect);
@@ -458,7 +458,7 @@ int main(int argc, char* argv[])
                     cTool.fBeBoardInterface->ChipReSync(cBoard);
                     if(cSuccess)
                         LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(cOuterTrackerHybrid->getId() % 2) << " connected to link "
-                                  << +cOuterTrackerHybrid->getOpticalId() << RESET;
+                                  << +cOuterTrackerHybrid->getOpticalGroupId() << RESET;
                 }
             }
 
@@ -471,7 +471,7 @@ int main(int argc, char* argv[])
                     {
                         LOG(INFO) << BOLDBLUE << "Configuring readout chip [chip id " << +cReadoutChip->getId() << " ]" << RESET;
                         if(cReadoutChip->getFrontEndType() == FrontEndType::SSA) { cTool.fReadoutChipInterface->ConfigureChip(cReadoutChip); } // SSAs
-                    }                                                                                                                          // ROCs
+                    }                                                                                                                          // Chips
                 }                                                                                                                              // OG
             }                                                                                                                                  // configure SSA
         }
@@ -623,7 +623,7 @@ int main(int argc, char* argv[])
                                     cTool.fReadoutChipInterface->ConfigureChip(cReadoutChip);
                                     pIds.push_back(cChip->getId());
                                 } // SSAs
-                            }     // ROCs
+                            }     // Chips
                             // release MPA reset
                             static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->mpaReset(clpGBT, false, cSide);
 
@@ -650,7 +650,7 @@ int main(int argc, char* argv[])
                                                 LOG(INFO) << BOLDBLUE << "Configuring MPA#" << +cReadoutChip->getId() << RESET;
                                                 cTool.fReadoutChipInterface->ConfigureChip(cReadoutChip);
                                             } // MPAs
-                                        }     // ROCs
+                                        }     // Chips
                                     }         // MPAs
                                 }
                             }
@@ -671,7 +671,7 @@ int main(int argc, char* argv[])
                                         cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current", 0x7);
                                     }
                                 }
-                            } // ROCs
+                            } // Chips
 
                             // // release resets
                             // static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->cicReset(clpGBT, false,cSide);
@@ -715,7 +715,7 @@ int main(int argc, char* argv[])
                                     LOG(INFO) << BOLDBLUE << "Configuring MPA [chip id " << +cChip->getId() << " ]" << RESET;
 
                                 cTool.fReadoutChipInterface->ConfigureChip(cChip);
-                            } // ROCs
+                            } // Chips
 
                             // disable clock from SSA
                             if(!cmd.foundOption("enableSSAclock"))
@@ -737,9 +737,9 @@ int main(int argc, char* argv[])
                             bool cSuccess = true;
                             if(cOuterTrackerHybrid->size() > 0)
                             {
-                                auto         cFirstROC = static_cast<ReadoutChip*>(cOuterTrackerHybrid->at(0));
+                                auto         cFirstChip = static_cast<ReadoutChip*>(cOuterTrackerHybrid->at(0));
                                 FrontEndType cType     = FrontEndType::CBC3;
-                                if(cFirstROC != nullptr) cType = cFirstROC->getFrontEndType();
+                                if(cFirstChip != nullptr) cType = cFirstChip->getFrontEndType();
                                 uint8_t cModeSelect = (cType != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA
                                 // select CIC mode
                                 cSuccess = cTool.fCicInterface->SelectMode(cCic, cModeSelect);
@@ -768,7 +768,7 @@ int main(int argc, char* argv[])
                             cTool.fBeBoardInterface->ChipReSync(cBoard);
                             if(cSuccess)
                                 LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(cOuterTrackerHybrid->getId() % 2) << " connected to link "
-                                          << +cOuterTrackerHybrid->getOpticalId() << RESET;
+                                          << +cOuterTrackerHybrid->getOpticalGroupId() << RESET;
                         } // OG
                     }     // inter
                     else if(cHybrifCnfg == 2)
@@ -802,7 +802,7 @@ int main(int argc, char* argv[])
                             for(auto cChip: *cHybrid)
                             {
                                 if(cChip->getFrontEndType() == FrontEndType::SSA) { pIds.push_back(cChip->getId()); } // SSAs
-                            }                                                                                         // ROCs
+                            }                                                                                         // Chips
 
                             // reset MPA
                             // reset chips
@@ -817,7 +817,7 @@ int main(int argc, char* argv[])
                                     LOG(INFO) << BOLDBLUE << "Configuring SSA [chip id " << +cChip->getId() << " ]" << RESET;
                                     cTool.fReadoutChipInterface->ConfigureChip(cChip);
                                 }
-                            } // ROCs
+                            } // Chips
 
                             // provide clock to one MPA at a time
                             for(auto cId: pIds)
@@ -838,7 +838,7 @@ int main(int argc, char* argv[])
                                             cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current", 0x0);
                                         }
                                     }
-                                } // ROCs
+                                } // Chips
 
                                 // then .. configure that MPA
                                 for(auto cReadoutChip: *cHybrid)
@@ -851,7 +851,7 @@ int main(int argc, char* argv[])
                                             cTool.fReadoutChipInterface->ConfigureChip(cReadoutChip);
                                         }
                                     } // MPAs
-                                }     // ROCs
+                                }     // Chips
                             }
 
                             static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->resetCIC(clpGBT, cSide);
@@ -867,9 +867,9 @@ int main(int argc, char* argv[])
                             bool cSuccess = true;
                             if(cOuterTrackerHybrid->size() > 0)
                             {
-                                auto         cFirstROC = static_cast<ReadoutChip*>(cOuterTrackerHybrid->at(0));
+                                auto         cFirstChip = static_cast<ReadoutChip*>(cOuterTrackerHybrid->at(0));
                                 FrontEndType cType     = FrontEndType::CBC3;
-                                if(cFirstROC != nullptr) cType = cFirstROC->getFrontEndType();
+                                if(cFirstChip != nullptr) cType = cFirstChip->getFrontEndType();
                                 uint8_t cModeSelect = (cType != FrontEndType::CBC3); // 0 --> CBC , 1 --> MPA
                                 // select CIC mode
                                 cSuccess = cTool.fCicInterface->SelectMode(cCic, cModeSelect);
@@ -900,7 +900,7 @@ int main(int argc, char* argv[])
                                 cTool.fBeBoardInterface->ChipReSync(cBoard);
                                 if(cSuccess)
                                     LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " performed start-up sequence on CIC" << +(cOuterTrackerHybrid->getId() % 2) << " connected to link "
-                                              << +cOuterTrackerHybrid->getOpticalId() << RESET;
+                                              << +cOuterTrackerHybrid->getOpticalGroupId() << RESET;
                             } // prepare CIC
                         }     // OG
                     }         // inter2
@@ -946,7 +946,7 @@ int main(int argc, char* argv[])
                                         (cTool.fReadoutChipInterface)->WriteChipReg(cReadoutChip, "SLVS_pad_current", 0x0);
                                     }
                                 }
-                            } // ROCs
+                            } // Chips
 
                             // now .. reset MPAs on this hybrid
                             LOG(INFO) << BOLDBLUE << "Resetting MPA before configuration.." << RESET;
@@ -991,7 +991,7 @@ int main(int argc, char* argv[])
                                         cTool.fReadoutChipInterface->WriteChipReg(cReadoutChip, "SLVS_pad_current", 0x0);
                                     }
                                 }
-                            } // ROCs
+                            } // Chips
                         }
                     }
                 } // OG
@@ -1018,7 +1018,7 @@ int main(int argc, char* argv[])
                 //             LOG(INFO) << BOLDBLUE << "Configuring SSA [chip id " << +cChip->getId() << " ]" << RESET;
                 //             cTool.fReadoutChipInterface->ConfigureChip(cChip);
                 //         }
-                //     }//ROCs
+                //     }//Chips
                 // }
                 if(cmd.foundOption("registerTest"))
                 {

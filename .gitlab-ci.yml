@@ -162,6 +162,8 @@ run:IT:
     - cp ci_tools/Results/Run000000_PixelAlive.root .
     - cp ci_tools/Results/Run000001_ThrEqualization.root .
     - cp ci_tools/Results/Run000002_SCurve.root .
+    - gdb bin/ot_module_test core.* -ex where --batch > coreAnalysisRD53.log
+    - cp coreAnalysisRD53.log .
   artifacts:
     paths:
       - Run000000_PixelAlive.root
@@ -169,6 +171,7 @@ run:IT:
       - Run000002_SCurve.root
       - ci_tools/plot_canvas.py
       - ci_tools/CMSIT*
+      - coreAnalysisRD53.log
     expire_in: 1 week
 
 ## 2S hybrid
@@ -182,10 +185,13 @@ run:2S:
   after_script:
     - python ci_tools/status_manager.py 2s_status.txt --set_status 0
     - cp ci_tools/Results/*/Hybrid.root .
+    - gdb bin/ot_module_test core.* -ex where --batch > coreAnalysis2S.log
+    - cp coreAnalysis2S.log .
   artifacts:
     paths:
       - Hybrid.root
       - ci_tools/plot_hist.py
+      - coreAnalysis2S.log
     expire_in: 1 week
 
 

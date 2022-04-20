@@ -1,11 +1,10 @@
 #include "ShortFinder.h"
-#include "CBCChannelGroupHandler.h"
-#include "CommonVisitors.h"
-#include "ContainerFactory.h"
-#include "DataContainer.h"
-#include "Occupancy.h"
-#include "SSAChannelGroupHandler.h"
-#include "Visitor.h"
+#include "../Utils/CBCChannelGroupHandler.h"
+#include "../Utils/CommonVisitors.h"
+#include "../Utils/ContainerFactory.h"
+#include "../Utils/Occupancy.h"
+#include "../Utils/SSAChannelGroupHandler.h"
+#include "../Utils/Visitor.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -307,18 +306,18 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
             for(auto cHybridData: *cOpticalGroupData) // for on hybrid - begin
             {
                 cNchips += cHybridData->size();
-                for(auto cROCData: *cHybridData) // for on chip - begin
+                for(auto cChipData: *cHybridData) // for on chip - begin
                 {
                     ReadoutChip* cChip =
-                        static_cast<ReadoutChip*>(fDetectorContainer->at(cBoardData->getIndex())->at(cOpticalGroupData->getIndex())->at(cHybridData->getIndex())->at(cROCData->getIndex()));
+                        static_cast<ReadoutChip*>(fDetectorContainer->at(cBoardData->getIndex())->at(cOpticalGroupData->getIndex())->at(cHybridData->getIndex())->at(cChipData->getIndex()));
                     auto cThreshold                  = fReadoutChipInterface->ReadChipReg(cChip, "Threshold");
-                    cROCData->getSummary<uint16_t>() = cThreshold;
+                    cChipData->getSummary<uint16_t>() = cThreshold;
                     cMeanValue += cThreshold;
                     // set threshold a little bit lower than 90% level
                     fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold + cThresholdOffset);
 
                     LOG(INFO) << GREEN << "\t..Threshold at " << std::setprecision(2) << std::fixed << 100 * cOccTarget << " percent occupancy value for BeBoard " << +cBoardData->getId()
-                              << " OpticalGroup " << +cOpticalGroupData->getId() << " Hybrid " << +cHybridData->getId() << " ROC " << +cROCData->getId() << " = " << cThreshold
+                              << " OpticalGroup " << +cOpticalGroupData->getId() << " Hybrid " << +cHybridData->getId() << " Chip " << +cChipData->getId() << " = " << cThreshold
                               << " [ setting threshold for short finding to " << +(cThreshold + cThresholdOffset) << " DAC units]" << RESET;
                 } // for on chip - end
             }     // for on hybrid - end

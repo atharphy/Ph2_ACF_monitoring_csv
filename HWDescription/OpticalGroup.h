@@ -35,7 +35,7 @@ class OpticalGroup
   public:
     // C'tors take FrontEndDescription or hierachy of connection
     OpticalGroup(const FrontEndDescription& pFeDesc, uint8_t pOpticalGroupId);
-    OpticalGroup(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId);
+    OpticalGroup(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId);
 
     // Default C'tor
     OpticalGroup();

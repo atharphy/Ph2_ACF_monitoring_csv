@@ -33,11 +33,11 @@ const uint8_t INVALID            = 3;
 
 namespace Ph2_HwInterface
 {
-using FeData    = std::pair<std::pair<uint16_t, uint16_t>, std::vector<uint32_t>>;
-using RawFeData = std::pair<std::pair<uint16_t, uint16_t>, std::vector<std::bitset<RAW_L1_CBC>>>;
+using HybridData    = std::pair<std::pair<uint16_t, uint16_t>, std::vector<uint32_t>>;
+using RawHybridData = std::pair<std::pair<uint16_t, uint16_t>, std::vector<std::bitset<RAW_L1_CBC>>>;
 
-using EventList    = std::vector<FeData>;
-using RawEventList = std::vector<RawFeData>;
+using EventList    = std::vector<HybridData>;
+using RawEventList = std::vector<RawHybridData>;
 /*!
  * \class CicEvent
  * \brief Event container to manipulate event flux from the Cbc2
@@ -100,148 +100,148 @@ class D19cCic2Event : public Event
     std::string HexString() const override;
     /*!
      * \brief Function to get bit string in hexadecimal format for CBC data
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return Data Bit string in Hex
      */
-    std::string DataHexString(uint8_t pFeId, uint8_t pCbcId) const override;
+    std::string DataHexString(uint8_t pHybridId, uint8_t pCbcId) const override;
 
     /*!
      * \brief Function to get Error bit
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \param i : Error bit number i
      * \return Error bit
      */
-    bool Error(uint8_t pFeId, uint8_t pCbcId, uint32_t i) const override;
+    bool Error(uint8_t pHybridId, uint8_t pCbcId, uint32_t i) const override;
     /*!
      * \brief Function to get all Error bits
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return Error bit
      */
-    uint32_t Error(uint8_t pFeId, uint8_t pCbcId) const override;
+    uint32_t Error(uint8_t pHybridId, uint8_t pCbcId) const override;
     /*!
      * \brief Function to get pipeline address
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return Pipeline address
      */
-    uint32_t PipelineAddress(uint8_t pFeId, uint8_t pCbcId) const override;
+    uint32_t PipelineAddress(uint8_t pHybridId, uint8_t pCbcId) const override;
     /*!
      * \brief Function to get a CBC pixel bit data
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \param i : pixel bit data number i
      * \return Data Bit
      */
-    bool DataBit(uint8_t pFeId, uint8_t pCbcId, uint32_t i) const override;
+    bool DataBit(uint8_t pHybridId, uint8_t pCbcId, uint32_t i) const override;
     /*!
      * \brief Function to get bit string of CBC data
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return Data Bit string
      */
-    std::string DataBitString(uint8_t pFeId, uint8_t pCbcId) const override;
+    std::string DataBitString(uint8_t pHybridId, uint8_t pCbcId) const override;
     /*!
      * \brief Function to get bit vector of CBC data
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return Data Bit vector
      */
-    std::vector<bool> DataBitVector(uint8_t pFeId, uint8_t pCbcId) const override;
-    std::vector<bool> DataBitVector(uint8_t pFeId, uint8_t pCbcId, const std::vector<uint8_t>& channelList) const override;
+    std::vector<bool> DataBitVector(uint8_t pHybridId, uint8_t pCbcId) const override;
+    std::vector<bool> DataBitVector(uint8_t pHybridId, uint8_t pCbcId, const std::vector<uint8_t>& channelList) const override;
     /*!
      * \brief Function to get GLIB flag string
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return Glib flag string
      */
-    std::string GlibFlagString(uint8_t pFeId, uint8_t pCbcId) const override;
+    std::string GlibFlagString(uint8_t pHybridId, uint8_t pCbcId) const override;
     /*!
      * \brief Function to get Stub bit
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return stub bit?
      */
-    std::string StubBitString(uint8_t pFeId, uint8_t pCbcId) const override;
+    std::string StubBitString(uint8_t pHybridId, uint8_t pCbcId) const override;
     /*!
      * \brief Function to get Stub bit
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return stub bit?
      */
-    bool StubBit(uint8_t pFeId, uint8_t pCbcId) const override;
+    bool StubBit(uint8_t pHybridId, uint8_t pCbcId) const override;
     /*!
      * \brief Get a vector of Stubs - will be empty for Cbc2
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      */
-    std::vector<Stub> StubVector(uint8_t pFeId, uint8_t pCbcId) const override;
+    std::vector<Stub> StubVector(uint8_t pHybridId, uint8_t pCbcId) const override;
     /*!
      * \brief Function to count the Hits in this event
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return number of hits
      */
-    uint32_t GetNHits(uint8_t pFeId, uint8_t pCbcId) const override;
+    uint32_t GetNHits(uint8_t pHybridId, uint8_t pCbcId) const override;
     /*!
      * \brief Function to get a sparsified hit vector
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return vector with hit channels
      */
-    std::vector<uint32_t> GetHits(uint8_t pFeId, uint8_t pCbcId) const override;
-    std::vector<Cluster>  clusterize(uint8_t pFeId) const;
+    std::vector<uint32_t> GetHits(uint8_t pHybridId, uint8_t pCbcId) const override;
+    std::vector<Cluster>  clusterize(uint8_t pHybridId) const;
 
-    std::vector<Cluster>  getClusters(uint8_t pFeId, uint8_t pCbcId) const override;
-    uint8_t               GetNStripClusters(uint8_t pFeId) const;
-    uint8_t               GetNPixelClusters(uint8_t pFeId) const;
-    std::vector<SCluster> GetStripClusters(uint8_t pFeId, uint8_t pMPAId) const;
-    std::vector<PCluster> GetPixelClusters(uint8_t pFeId, uint8_t pMPAId) const;
+    std::vector<Cluster>  getClusters(uint8_t pHybridId, uint8_t pCbcId) const override;
+    uint8_t               GetNStripClusters(uint8_t pHybridId) const;
+    uint8_t               GetNPixelClusters(uint8_t pHybridId) const;
+    std::vector<SCluster> GetStripClusters(uint8_t pHybridId, uint8_t pMPAId) const;
+    std::vector<PCluster> GetPixelClusters(uint8_t pHybridId, uint8_t pMPAId) const;
 
     void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) override;
 
     void     print(std::ostream& out) const override;
-    uint16_t L1Status(uint8_t pFeId) const;
-    uint32_t L1Id(uint8_t pFeId, uint8_t pReadoutChipId) const;
-    uint32_t BxId(uint8_t pFeId) const override;
-    uint16_t Status(uint8_t pFeId) const;
+    uint16_t L1Status(uint8_t pHybridId) const;
+    uint32_t L1Id(uint8_t pHybridId, uint8_t pReadoutChipId) const;
+    uint32_t BxId(uint8_t pHybridId) const override;
+    uint16_t Status(uint8_t pHybridId) const;
 
-    std::bitset<NMPACHANNELS> decodePClusters(uint8_t pFeId, uint8_t pReadoutChipId) const;
-    std::bitset<NSSACHANNELS> decodeSClusters(uint8_t pFeId, uint8_t pReadoutChipId) const;
-    std::bitset<NCHANNELS>    decodeClusters(uint8_t pFeId, uint8_t pReadoutChipId) const;
-    std::bitset<RAW_L1_CBC>   getRawL1Word(uint8_t pFeId, uint8_t pReadoutChipId) const;
-    size_t                    getFeIndex(const uint8_t pFeId) const
+    std::bitset<NMPACHANNELS> decodePClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const;
+    std::bitset<NSSACHANNELS> decodeSClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const;
+    std::bitset<NCHANNELS>    decodeClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const;
+    std::bitset<RAW_L1_CBC>   getRawL1Word(uint8_t pHybridId, uint8_t pReadoutChipId) const;
+    size_t                    getHybridIndex(const uint8_t pHybridId) const
     {
         // first find feIndex
-        auto cFeIterator = std::find(fFeIds.begin(), fFeIds.end(), pFeId);
-        if(cFeIterator != fFeIds.end()) { return std::distance(fFeIds.begin(), cFeIterator); }
+        auto cHybridIterator = std::find(fHybridIds.begin(), fHybridIds.end(), pHybridId);
+        if(cHybridIterator != fHybridIds.end()) { return std::distance(fHybridIds.begin(), cHybridIterator); }
         else
-            throw std::runtime_error(std::string("FeId not found in D19cCIC2Event .. check xml!"));
+            throw std::runtime_error(std::string("HybridId not found in D19cCIC2Event .. check xml!"));
     }
-    size_t getROCIndex(const uint8_t pFeIndex, const uint8_t pROCId) const
+    size_t getChipIndex(const uint8_t pHybridIndex, const uint8_t pChipId) const
     {
         // first find feIndex
-        auto cROCIterator = std::find(fROCIds[pFeIndex].begin(), fROCIds[pFeIndex].end(), pROCId);
-        if(cROCIterator != fROCIds[pFeIndex].end()) { return std::distance(fROCIds[pFeIndex].begin(), cROCIterator); }
+        auto cChipIterator = std::find(fChipIds[pHybridIndex].begin(), fChipIds[pHybridIndex].end(), pChipId);
+        if(cChipIterator != fChipIds[pHybridIndex].end()) { return std::distance(fChipIds[pHybridIndex].begin(), cChipIterator); }
         else
-            throw std::runtime_error(std::string("ROCId not found in D19cCIC2Event .. check xml!"));
+            throw std::runtime_error(std::string("ChipId not found in D19cCIC2Event .. check xml!"));
     }
 
     void set8CBC3(bool pIs8CBC3) { fIs8CBC3 = pIs8CBC3; }
 
   private:
     // figure out how to switch between various hybrid types here
-    std::vector<uint8_t> fFeMapping2S{0, 1, 2, 3, 7, 6, 5, 4};   // Index Hybrid FE Id , Value CIC FE Id
-    std::vector<uint8_t> fFeMapping8BC3{3, 2, 1, 0, 4, 5, 6, 7}; // Index CIC FE Id , Value Hybrid FE Id - double check this!
-    std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5};  //  Index Hybrid FE Id , Value CIC FE Id
-    std::vector<uint8_t> fFeMappingPSL{1, 0, 4, 5, 6, 7, 3, 2};  // Index hybrid FE Id , Value CIC FE Id
+    std::vector<uint8_t> fFeMapping2S{0, 1, 2, 3, 7, 6, 5, 4};   // Index Hybrid Hybrid Id , Value CIC Hybrid Id
+    std::vector<uint8_t> fFeMapping8BC3{3, 2, 1, 0, 4, 5, 6, 7}; // Index CIC Hybrid Id , Value Hybrid Hybrid Id - double check this!
+    std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5};  //  Index Hybrid Hybrid Id , Value CIC Hybrid Id
+    std::vector<uint8_t> fFeMappingPSL{1, 0, 4, 5, 6, 7, 3, 2};  // Index hybrid Hybrid Id , Value CIC Hybrid Id
 
     std::vector<uint8_t>              fFeMapping; //{3, 2, 1, 0, 4, 5, 6, 7}; // FE --> FE CIC
-    std::vector<uint8_t>              fFeIds;
-    std::vector<uint8_t>              fFeIdsCic;
-    std::vector<std::vector<uint8_t>> fROCIds;
+    std::vector<uint8_t>              fHybridIds;
+    std::vector<uint8_t>              fHybridIdsCic;
+    std::vector<std::vector<uint8_t>> fChipIds;
     std::vector<uint8_t>              fNStripClusters;
     std::vector<uint8_t>              fNPxlClusters;
 
@@ -255,23 +255,23 @@ class D19cCic2Event : public Event
     // mapped id
     // takes chip id on the hybrid
     // returns chip id in the CIC
-    uint8_t getChipIdMapped(uint8_t pFeId, uint8_t pReadoutChipId) const
+    uint8_t getChipIdMapped(uint8_t pHybridId, uint8_t pReadoutChipId) const
     {
         pReadoutChipId = pReadoutChipId % 8;
         // assign front-end mapping
-        std::vector<uint8_t> cFeMapping = (fIs2S) ? fFeMapping2S : fFeMappingPSR;
-        if(!fIs2S) cFeMapping = (pFeId % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
-        if(fIs8CBC3 && fIs2S) cFeMapping = fFeMapping8BC3;
+        std::vector<uint8_t> cHybridMapping = (fIs2S) ? fFeMapping2S : fFeMappingPSR;
+        if(!fIs2S) cHybridMapping = (pHybridId % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
+        if(fIs8CBC3 && fIs2S) cHybridMapping = fFeMapping8BC3;
 
         // if( fIs2S && cHybridIds.size() == 0 ) return 0;
         // else if( fIs2S ) return (cHybridIds.size() - 1) - std::distance(cHybridIds.begin(), std::find(cHybridIds.begin(), cHybridIds.end(), pReadoutChipId));
         // else  return std::distance(cHybridIds.begin(), std::find(cHybridIds.begin(), cHybridIds.end(), pReadoutChipId));
         // if(fIs2S)
         // {
-        //     return (7 - std::distance(cFeMapping.begin(), std::find(cFeMapping.begin(), cFeMapping.end(), pReadoutChipId)));
+        //     return (7 - std::distance(cHybridMapping.begin(), std::find(cHybridMapping.begin(), cHybridMapping.end(), pReadoutChipId)));
         // }
         // else
-        return cFeMapping[pReadoutChipId]; // std::distance(cFeMapping.begin(), std::find(cFeMapping.begin(), cFeMapping.end(), pReadoutChipId));
+        return cHybridMapping[pReadoutChipId]; // std::distance(cHybridMapping.begin(), std::find(cHybridMapping.begin(), cHybridMapping.end(), pReadoutChipId));
     }
 
     std::vector<Cluster> formClusters(std::vector<uint32_t> pHits, int pSensorId) const
@@ -300,20 +300,20 @@ class D19cCic2Event : public Event
         }
         return cClusters;
     }
-    std::bitset<NCHANNELS> hitsFromClusters(uint8_t pFeId, uint8_t pReadoutChipId);
+    std::bitset<NCHANNELS> hitsFromClusters(uint8_t pHybridId, uint8_t pReadoutChipId);
 
     // templated decoding function
     // split stream of data
     template <std::size_t N>
-    std::bitset<N> decodeCicClusters(uint8_t pFeId, uint8_t pReadoutChipId)
+    std::bitset<N> decodeCicClusters(uint8_t pHybridId, uint8_t pReadoutChipId)
     {
-        auto&          cClusterWords = fEventHitList[getFeIndex(pFeId)].second;
+        auto&          cClusterWords = fEventHitList[getHybridIndex(pHybridId)].second;
         std::bitset<N> cBitSet(0);
         // size_t                 cClusterId = 0;
         // for( auto cCluster : cClusterWords )
         // {
         // uint8_t cChipId = (cCluster & ((0x7) << (0+4+3+7))) >> (0+4+3+7);
-        // auto  cChipIdMapped = this->getChipIdMapped(pFeId, pReadoutChipId);
+        // auto  cChipIdMapped = this->getChipIdMapped(pHybridId, pReadoutChipId);
         // if(cChipId == cChipIdMapped)
         // {
         //     //figure out if it is an S or a P cluster
@@ -343,7 +343,7 @@ class D19cCic2Event : public Event
     }
 
     // L1 Id from chip
-    void       printL1Header(std::ostream& os, uint8_t pFeId, uint8_t pCbcId) const;
+    void       printL1Header(std::ostream& os, uint8_t pHybridId, uint8_t pCbcId) const;
     SLinkEvent GetSLinkEvent(Ph2_HwDescription::BeBoard* pBoard) const override;
 };
 } // namespace Ph2_HwInterface

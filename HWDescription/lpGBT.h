@@ -22,7 +22,7 @@ namespace Ph2_HwDescription
 class lpGBT : public Chip
 {
   public:
-    lpGBT(uint8_t pBeId, uint8_t FMCId, uint8_t pOptGroupId, const std::string& fileName);
+    lpGBT(uint8_t pBeBoardId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChipId, const std::string& fileName);
 
     void    loadfRegMap(const std::string& fileName) override;
     void    saveRegMap(const std::string& fileName) override;

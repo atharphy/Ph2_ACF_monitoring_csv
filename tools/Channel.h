@@ -34,14 +34,14 @@
  */
 struct Channel
 {
-    Channel(uint8_t pBeId, uint8_t pFeId, uint8_t pOpticalGroup, uint8_t pCbcId, uint8_t pChannelId);
+    Channel(uint8_t pBeId, uint8_t pHybridId, uint8_t pOpticalGroupId, uint8_t pCbcId, uint8_t pChannelId);
     ~Channel();
 
     // members
     // Ids
     uint8_t fBeId;         /*!< Back End ID */
-    uint8_t fFeId;         /*!< Front End ID */
-    uint8_t fOpticalGroup; /*!< Optical Group ID */
+    uint8_t fHybridId;         /*!< Front End ID */
+    uint8_t fOpticalGroupId; /*!< Optical Group ID */
     uint8_t fCbcId;        /*!< CBC ID*/
     uint8_t fChannelId;    /*!< Channel Number */
     bool    fFitted;       /*!< Flag to select the algroithm*/
@@ -126,10 +126,10 @@ struct Channel
 
 struct TestGroup
 {
-    TestGroup(uint8_t pBeId, uint8_t pFeId, uint8_t pCbcId, uint8_t pGroupId);
+    TestGroup(uint8_t pBeId, uint8_t pHybridId, uint8_t pCbcId, uint8_t pGroupId);
 
     uint8_t fBeId;
-    uint8_t fFeId;
+    uint8_t fHybridId;
     uint8_t fCbcId;
     uint8_t fGroupId;
 };
@@ -137,7 +137,7 @@ struct TestGroup
 struct TestGroupGraph
 {
     TestGroupGraph();
-    TestGroupGraph(uint8_t pBeId, uint8_t pFeId, uint8_t pCbcId, uint8_t pGroupId);
+    TestGroupGraph(uint8_t pBeId, uint8_t pHybridId, uint8_t pCbcId, uint8_t pGroupId);
     void          FillVplusVcthGraph(uint8_t& pVplus, double pPedestal, double pNoise);
     TGraphErrors* fVplusVcthGraph;
 };
@@ -148,7 +148,7 @@ struct TestGroupComparer
     {
         if(g1.fBeId == g2.fBeId)
         {
-            if(g1.fFeId == g2.fFeId)
+            if(g1.fHybridId == g2.fHybridId)
             {
                 if(g1.fCbcId == g2.fCbcId)
                     return g1.fGroupId < g2.fGroupId;
@@ -156,7 +156,7 @@ struct TestGroupComparer
                     return g1.fCbcId < g2.fCbcId;
             }
             else
-                return g1.fFeId < g2.fFeId;
+                return g1.fHybridId < g2.fHybridId;
         }
         else
             return g1.fBeId < g2.fBeId;
