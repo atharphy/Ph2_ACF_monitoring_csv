@@ -794,7 +794,7 @@ bool OTHybridTester::LpGBTTestResetLines()
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
 #ifdef __SEH_USB__
         std::this_thread::sleep_for(std::chrono::milliseconds(10000));
-        //mu-controller is too slow
+        // mu-controller is too slow
 #endif
         auto cMapIterator = cResetLines.begin();
         bool cStatus      = true;

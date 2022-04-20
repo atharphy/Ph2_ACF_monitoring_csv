@@ -86,6 +86,29 @@ std::vector<uint32_t> D19cCommandProcessorInterface::EncodeCommand(uint8_t pFunc
     return cCommand;
 }
 
+uint16_t D19cCommandProcessorInterface::GetStateFSM(uint8_t pFunctionId)
+{
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+    uint32_t                              cStatus        = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
+    uint16_t                              cWorkerState   = cStatus & 0xFF;
+    uint16_t                              cFunctionState = 0;
+    if((pFunctionId == LpGBTSCWorker::SingleReadIC) || (pFunctionId == LpGBTSCWorker::SingleWriteIC)) { cFunctionState = (cStatus & (0xFF << 8)) >> 8; }
+    else if((pFunctionId == LpGBTSCWorker::SingleByteReadI2C) || (pFunctionId == LpGBTSCWorker::MultiByteWriteI2C))
+    {
+        cFunctionState = (cStatus & (0xFF << 16)) >> 16;
+    }
+    else if((pFunctionId == LpGBTSCWorker::SingleReadFE) || (pFunctionId == LpGBTSCWorker::SingleWriteFE))
+    {
+        cFunctionState = (cStatus & (0xFF << 24)) >> 24;
+    }
+    else
+    {
+        LOG(ERROR) << "D19cCommandProcessorInterface::GetStateFSM : LpGBT-SC Worker fuction doesn't exist" << RESET;
+        throw std::runtime_error("D19cCommandProcessorInterface::GetStateFSM failure");
+    }
+    return ((cFunctionState << 8) | (cWorkerState << 0));
+}
+
 bool D19cCommandProcessorInterface::IsDone(uint8_t pFunctionId)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);

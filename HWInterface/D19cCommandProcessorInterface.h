@@ -31,6 +31,7 @@ class D19cCommandProcessorInterface : public CommandProcessorInterface
     std::vector<uint32_t> EncodeCommand(uint8_t pFunctionId, Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerify = false);
     bool                  IsDone(uint8_t pFunctionId);
     uint8_t               GetTryCntr(uint8_t pFunctionId);
+    uint16_t              GetStateFSM(uint8_t pFunctionId);
 };
 } // namespace Ph2_HwInterface
 #endif
