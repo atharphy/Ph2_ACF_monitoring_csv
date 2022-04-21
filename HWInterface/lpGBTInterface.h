@@ -193,19 +193,6 @@ class lpGBTInterface : public ChipInterface
     // ###########################
     bool ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection);
 
-    // ####################################
-    // # LpGBT I2C master config #
-    // ####################################
-    // void SetI2Cconfig(i2cConfig pConfig){
-    //     fI2Cconfigs[pConfig.fMasterId].fMasterId = pConfig.fMasterId;
-    //     fI2Cconfigs[pConfig.fMasterId].fI2CFrequency = pConfig.fI2CFrequency;
-    //     fI2Cconfigs[pConfig.fMasterId].fSCLmode = pConfig.fSCLmode;
-    //     fI2Cconfigs[pConfig.fMasterId].fRetry = pConfig.fRetry;
-    // }
-    // i2cConfig GetI2Cconfig(uint8_t pMasterId){
-    //     return fI2Cconfigs[pMasterId];
-    // }
-
     void    PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     uint8_t AutoPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
     void    ConfigureRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
@@ -298,25 +285,48 @@ class lpGBTInterface : public ChipInterface
                                                    {"TEMP", 14},
                                                    {"VREF/2", 15}};
 
-    std::map<uint8_t, std::string> fPUSMStatusMap = {{0, "ARESET"},
-                                                     {1, "RESET"},
-                                                     {2, "WAIT_VDD_STABLE"},
-                                                     {3, "WAIT_VDD_HIGHER_THAN_0V90"},
-                                                     {4, "FUSE_SAMPLING"},
-                                                     {5, "UPDATE_FROM_FUSES"},
-                                                     {6, "WAIT_FOR_PLL_CONFIG"},
-                                                     {7, "WAIT_POWER_GOOD"},
-                                                     {8, "RESETOUT"},
-                                                     {9, "I2C_TRANS"},
-                                                     {10, "RESET_PLL"},
-                                                     {11, "WAIT_PLL_LOCK"},
-                                                     {12, "INIT_SCRAM"},
-                                                     {13, "PAUSE_FOR_DLL_CONFIG"},
-                                                     {14, "RESET_DLLS"},
-                                                     {15, "WAIT_DLL_LOCK"},
-                                                     {16, "RESET_LOGIC_USING_DLL"},
-                                                     {17, "WAIT_CHNS_LOCKED"},
-                                                     {18, "READY"}};
+    //Power Up State Machine maps for both lpGBT-v0 and lpGBT-v1
+    //map read as : map[lpgbt_version][state_id] = state_description
+    std::map<uint8_t, std::map<uint8_t, std::string>> fPUSMStatusMap = {{0, {{0, "ARESET"},
+                                                                             {1, "RESET"},
+                                                                             {2, "WAIT_VDD_STABLE"},
+                                                                             {3, "WAIT_VDD_HIGHER_THAN_0V90"},
+                                                                             {4, "FUSE_SAMPLING"},
+                                                                             {5, "UPDATE_FROM_FUSES"},
+                                                                             {6, "WAIT_FOR_PLL_CONFIG"},
+                                                                             {7, "WAIT_POWER_GOOD"},
+                                                                             {8, "RESETOUT"},
+                                                                             {9, "I2C_TRANS"},
+                                                                             {10, "RESET_PLL"},
+                                                                             {11, "WAIT_PLL_LOCK"},
+                                                                             {12, "INIT_SCRAM"},
+                                                                             {13, "PAUSE_FOR_DLL_CONFIG"},
+                                                                             {14, "RESET_DLLS"},
+                                                                             {15, "WAIT_DLL_LOCK"},
+                                                                             {16, "RESET_LOGIC_USING_DLL"},
+                                                                             {17, "WAIT_CHNS_LOCKED"},
+                                                                             {18, "READY"}}},
+                                                                        {1, {{0, "ARESET"},
+                                                                             {1, "RESET"},
+                                                                             {2, "WAIT_VDD_STABLE"},
+                                                                             {3, "WAIT_VDD_HIGHER_THAN_0V90"},
+                                                                             {4, "STATE_COPY_FUSES"},
+                                                                             {5, "STATE_CALCULATE_CHECKSUM"},
+                                                                             {6, "COPY_ROM"},
+                                                                             {7, "PAUSE_FOR_PLL_CONFIG"},
+                                                                             {8, "WAIT_POWER_GOOD"},
+                                                                             {9, "RESET_PLL"},
+                                                                             {10, "WAIT_PLL_LOCK"},
+                                                                             {11, "INIT_SCRAM"},
+                                                                             {12, "RESETOUT"},
+                                                                             {13, "I2C_TRANS"},
+                                                                             {14, "PAUSE_FOR_DLL_CONFIG"},
+                                                                             {15, "RESET_DLLS"},
+                                                                             {16, "WAIT_DLL_LOCK"},
+                                                                             {17, "RESET_LOGIC_USING_DLL"},
+                                                                             {18, "WAIT_CHNS_LOCKED"},
+                                                                             {19, "READY"}}}};
+                                                                
 
     std::map<std::string, uint8_t> revertedPUSMStatusMap;
     std::map<uint8_t, double>      fBERTMeasTimeMap = {{0, RD53Shared::setBits(5) + 1},

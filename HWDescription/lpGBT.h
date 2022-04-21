@@ -28,6 +28,9 @@ class lpGBT : public Chip
     void    saveRegMap(const std::string& fileName) override;
     uint8_t getNumberOfBits(const std::string& dacName) override { return 0; }
 
+    void setVersion(uint8_t pVersion) { fVersion = pVersion; }
+    uint8_t getVersion() { return fVersion; }
+
     void setPhaseRxAligned(const bool done) { phaseRxAligned = done; };
     bool getPhaseRxAligned() { return phaseRxAligned; };
 
@@ -70,6 +73,7 @@ class lpGBT : public Chip
     uint32_t getReadCount(uint8_t pMasterId) { return fI2CReads[pMasterId]; }
 
   private:
+    uint8_t fVersion;
     bool                 phaseRxAligned; // @TMP@
     std::string          configFileName;
     std::vector<uint8_t> fClocks, fRxGroups, fRxChannels, fTxGroups, fTxChannels;

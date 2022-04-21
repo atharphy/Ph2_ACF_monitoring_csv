@@ -7,7 +7,7 @@
     <OpticalGroup Id="0" FMCId="0" reset="1">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="./settings/lpGBTFiles/" />
-        <lpGBT Id="0" configfile="CMSOT_lpGBT.txt">
+        <lpGBT Id="0" version="0" configfile="lpGBT0.txt">
           <Settings
           />
         </lpGBT>

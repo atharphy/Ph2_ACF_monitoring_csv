@@ -23,13 +23,23 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     std::stringstream cOutput;
     setBoard(pChip->getBeBoardId());
     pChip->printChipType(cOutput);
-    LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pChip->getId() << "]" << RESET;
-
-    // Configure High Speed Link Tx Rx Polarity
-    // do this before doing anything else
-    ConfigureHighSpeedPolarity(pChip, 1, 0);
-    bool cReconfigure = true; // if using I2C interface maybe I want to confiugre?
-    if(cReconfigure)          // by de
+    uint8_t cChipVersion = static_cast<lpGBT*>(pChip)->getVersion();
+    LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pChip->getId() << "] , Version[" << +cChipVersion << "]" << RESET;
+    PrintChipMode(pChip);
+    //Waiting for at least PauseForDllConfig state before configuring chip. If state beyond, then I can still configure
+    uint16_t cIter = 0, cMaxIter = 200;
+    for(auto& ele: fPUSMStatusMap[cChipVersion]) revertedPUSMStatusMap[ele.second] = ele.first;
+    uint8_t cPUSMState = 0; 
+    do
+    {
+        cPUSMState = GetPUSMStatus(pChip);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        cIter++;
+    } while((cPUSMState <= revertedPUSMStatusMap["PAUSE_FOR_DLL_CONFIG"]) && (cIter < cMaxIter));
+    if(cIter == cMaxIter){ throw std::runtime_error(std::string("lpGBT Power-Up State Machine Stuck at state" + fPUSMStatusMap[cChipVersion][cPUSMState])); }
+    //Configuring chip
+    bool cReconfigure = true;
+    if(cReconfigure)  
     {
         ChipRegMap                                    clpGBTRegMap = pChip->getRegMap();
         std::vector<std::pair<std::string, uint16_t>> cRegVec;
@@ -43,23 +53,22 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
             LOG(DEBUG) << BOLDBLUE << "\tWriting 0x" << std::hex << +cReg.second << std::dec << " to " << cReg.first << RESET;
             WriteChipReg(pChip, cReg.first, cReg.second);
         }
-        SetPUSMDone(pChip, true, true);
     }
-    uint16_t cIter = 0, cMaxIter = 200;
+    //Setting PUSM Done bits 
+    SetPUSMDone(pChip, true, true);
+    //Checking if lpGBT reaches Ready state
     bool     cReady = false;
+    cIter = 0, cMaxIter = 200;
     while(!cReady && cIter < cMaxIter)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         cReady = IsPUSMDone(pChip);
         cIter++;
     }
-    if(cReady)
-    {
-        LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
-        ResetI2C(pChip, {0, 1, 2});
-    }
-    if(!cReady) throw std::runtime_error(std::string("lpGBT Power-Up State Machine NOT DONE"));
-    // PrintChipMode(pChip);
+    if(cReady){ LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET; }
+    else{ throw std::runtime_error(std::string("lpGBT Power-Up State Machine NOT DONE")); }
+    //Reset I2C Masters
+    ResetI2C(pChip, {0, 1, 2});
     return cReady;
 } //
 

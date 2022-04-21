@@ -34,7 +34,7 @@ bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem)
     uint8_t cFunctionId = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? LpGBTSCWorker::SingleReadIC : LpGBTSCWorker::SingleReadFE;
     auto    cCommand    = fCommandProcessorInterface->EncodeCommand(cFunctionId, pChip, pItem);
     fCommandProcessorInterface->WriteCommand(cCommand);
-    uint8_t cWaitCounter = 10;
+    uint8_t cWaitCounter = 100;
     while(!fCommandProcessorInterface->IsDone(cFunctionId) && (cWaitCounter != 0))
     {
         cWaitCounter--;
@@ -72,7 +72,7 @@ bool D19cOpticalInterface::WriteChipRegister(Chip* pChip, ChipRegItem& pItem, bo
     uint8_t cFunctionId = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? LpGBTSCWorker::SingleWriteIC : LpGBTSCWorker::SingleWriteFE;
     auto    cCommand    = fCommandProcessorInterface->EncodeCommand(cFunctionId, pChip, pItem, pVerify);
     fCommandProcessorInterface->WriteCommand(cCommand);
-    uint8_t cWaitCounter = 10;
+    uint8_t cWaitCounter = 100;
     while(!fCommandProcessorInterface->IsDone(cFunctionId) && (cWaitCounter != 0))
     {
         cWaitCounter--;
@@ -162,7 +162,7 @@ bool D19cOpticalInterface::MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uin
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 14 | pMasterConfig << 6);
     cCommandVector.push_back(pSlaveData << 8 | pSlaveAddress << 0);
     fCommandProcessorInterface->WriteCommand(cCommandVector);
-    uint8_t cWaitCounter = 10;
+    uint8_t cWaitCounter = 100;
     while(!fCommandProcessorInterface->IsDone(cFunctionId) && (cWaitCounter != 0))
     {
         cWaitCounter--;
@@ -202,7 +202,7 @@ uint8_t D19cOpticalInterface::SingleByteReadI2C(Ph2_HwDescription::Chip* pChip, 
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 14 | pMasterConfig << 6);
     cCommandVector.push_back(pSlaveAddress << 0);
     fCommandProcessorInterface->WriteCommand(cCommandVector);
-    uint8_t cWaitCounter = 10;
+    uint8_t cWaitCounter = 100;
     while(!fCommandProcessorInterface->IsDone(cFunctionId) && (cWaitCounter != 0))
     {
         cWaitCounter--;
