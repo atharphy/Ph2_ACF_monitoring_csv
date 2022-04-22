@@ -190,7 +190,7 @@ void TPCalibration::SaveResults()
             for(auto cHybrid: *cOpticalGroup)
             {
                 int cHybridId = cHybrid->getId();
-                cPath     = Form("Be%d/Fe%d", cBeId, cHybridId);
+                cPath         = Form("Be%d/Fe%d", cBeId, cHybridId);
                 fResultFile->mkdir(cPath);
                 for(auto cCbc: *cHybrid)
                 {

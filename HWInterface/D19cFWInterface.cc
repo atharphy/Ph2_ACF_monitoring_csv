@@ -1102,7 +1102,7 @@ uint32_t D19cFWInterface::computeEventSize(BeBoard* pBoard)
 {
     uint32_t cFrontEndTypeCode = ReadReg("fc7_daq_stat.general.info.chip_type");
     fFirmwareFrontEndType      = getFrontEndType(cFrontEndTypeCode);
-    uint32_t cNHybrid              = pBoard->getNHybrid();
+    uint32_t cNHybrid          = pBoard->getNHybrid();
     uint32_t cNChips           = 0;
 
     uint32_t cNEventSize32 = 0;

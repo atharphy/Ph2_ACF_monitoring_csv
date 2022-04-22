@@ -50,7 +50,7 @@ class Chip : public FrontEndDescription
 {
   public:
     // C'tors which take Board ID, Frontend ID/Hybrid ID, FMC ID, Chip ID
-    Chip(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId , uint8_t pHybridId, uint8_t pChipId, uint16_t pMaxRegValue = 255);
+    Chip(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, uint16_t pMaxRegValue = 255);
 
     // C'tors with object FE Description
     Chip(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue = 255);
@@ -133,13 +133,13 @@ class Chip : public FrontEndDescription
 
     /*!
      * \brief Set the I2C Master Id corresponding to the Chip
-     * \param The I2C Master Id 
+     * \param The I2C Master Id
      */
     void setMasterId(uint8_t pMasterId) { fMasterId = pMasterId; };
 
     /*!
      * \brief Get the I2C Master Id corresponding to the Chip
-     * \return The I2C Master Id 
+     * \return The I2C Master Id
      */
     uint8_t getMasterId() const { return fMasterId; };
 
@@ -193,7 +193,6 @@ class Chip : public FrontEndDescription
     uint32_t getRBMismatchCount() { return fI2CReadMismatches; }
     uint32_t getRegWriteCount() { return fRegWrites; }
     uint32_t getRegReadCount() { return fRegReads; }
-
 
     // register maps
 

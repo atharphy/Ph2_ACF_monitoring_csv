@@ -129,7 +129,7 @@ void D19cI2CInterface::ConfigureI2CMap(const BeBoard* pBoard)
 void D19cI2CInterface::EncodeReg(const ChipRegItem& pRegItem, Chip* pChip, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
 {
     uint8_t pCbcId       = pChip->getId();
-    uint8_t pHybridId        = pChip->getHybridId();
+    uint8_t pHybridId    = pChip->getHybridId();
     auto    cMapIterator = fI2CSlaveMap.find(pCbcId);
     bool    cFound       = (cMapIterator != fI2CSlaveMap.end());
     if(cFound)

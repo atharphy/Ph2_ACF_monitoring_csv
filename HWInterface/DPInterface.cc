@@ -319,9 +319,9 @@ bool DPInterface::ReadL1Data(BeBoardFWInterface* pInterface)
 }
 uint16_t DPInterface::LoadL1Data(BeBoardFWInterface* pInterface)
 {
-    fNTriggers      = 0;
+    fNTriggers           = 0;
     uint8_t cHybridIndex = 0; // choose HybridId 0 from verification frameword
-    size_t  cNBxs   = fMaxBx;
+    size_t  cNBxs        = fMaxBx;
     LOG(INFO) << BOLDBLUE << "Configure CIC data player BRAM for L1 and T1 lines  for " << +cNBxs << " clock cycles." << RESET;
     // configure number of patterns to  play
     pInterface->WriteReg("fc7_daq_cnfg.fast_command_block.generic_fcmd_series.number_of_cmds_to_play", cNBxs);

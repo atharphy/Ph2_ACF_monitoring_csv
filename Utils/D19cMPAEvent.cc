@@ -68,7 +68,7 @@ void D19cMPAEvent::SetEvent(const BeBoard* pBoard, uint32_t pNMPA, const std::ve
 
                 uint8_t cPLeadingMPA = ((0xF0000000 & list.at(data_offset)) >> 28);
                 uint8_t cErrorMPA    = ((0x0F000000 & list.at(data_offset)) >> 24);
-                uint8_t cHybridId        = ((0x00FF0000 & list.at(data_offset)) >> 16);
+                uint8_t cHybridId    = ((0x00FF0000 & list.at(data_offset)) >> 16);
                 // uint8_t cCidMPA =         ((0x0000F000 & list.at (data_offset)) >> 16 );
                 uint16_t cL1size_32_MPA = ((0x00000FFF & list.at(data_offset))) * 4;
 
@@ -87,10 +87,10 @@ void D19cMPAEvent::SetEvent(const BeBoard* pBoard, uint32_t pNMPA, const std::ve
                 if(cSyncBit1 != 1) LOG(INFO) << BOLDRED << "Warning, sync bit 1 not 1, data frame probably misaligned!" << RESET;
                 if(cSyncBit2 != 0) LOG(INFO) << BOLDRED << "Warning, sync bit 2 not 0, data frame probably misaligned!" << RESET;
 
-                uint16_t cKey     = encodeVectorIndex(cHybridId, pMPAId, fNMPA);
-                uint32_t begin    = data_offset;
+                uint16_t cKey         = encodeVectorIndex(cHybridId, pMPAId, fNMPA);
+                uint32_t begin        = data_offset;
                 uint16_t cHybridvSize = cL1size_32_MPA + cSsize_32_MPA;
-                uint32_t end      = begin + cHybridvSize;
+                uint32_t end          = begin + cHybridvSize;
                 // std::vector<uint32_t> cMPAData (std::next (std::begin (list), begin), std::next (std::begin (list), end)
                 // );
 
