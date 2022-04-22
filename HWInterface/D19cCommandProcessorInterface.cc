@@ -28,6 +28,12 @@ void D19cCommandProcessorInterface::Reset()
     ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", 10);
 }
 
+void D19cCommandProcessorInterface::SelectLink(uint8_t pLinkId)
+{
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+    WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
+}
+
 void D19cCommandProcessorInterface::WriteCommand(const std::vector<uint32_t>& pCommand)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);

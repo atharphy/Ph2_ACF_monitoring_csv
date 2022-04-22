@@ -16,13 +16,6 @@ D19cOpticalInterface::D19cOpticalInterface(const std::string& pId, const std::st
 D19cOpticalInterface::D19cOpticalInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : FEConfigurationInterface(puHalConfigFileName, pBoardId) { fType = ConfigurationType::IC; }
 
 D19cOpticalInterface::~D19cOpticalInterface() {}
-
-void D19cOpticalInterface::SelectLink(uint8_t pLinkId)
-{
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
-}
-
 // ##########################################
 // # Chip Register read/write #
 // #########################################
@@ -30,7 +23,7 @@ void D19cOpticalInterface::SelectLink(uint8_t pLinkId)
 bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    SelectLink(pChip->getOpticalGroupId());
+    fCommandProcessorInterface->SelectLink(pChip->getOpticalGroupId());
     uint8_t cFunctionId = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? LpGBTSCWorker::SingleReadIC : LpGBTSCWorker::SingleReadFE;
     auto    cCommand    = fCommandProcessorInterface->EncodeCommand(cFunctionId, pChip, pItem);
     fCommandProcessorInterface->WriteCommand(cCommand);
@@ -68,7 +61,7 @@ bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem)
 bool D19cOpticalInterface::WriteChipRegister(Chip* pChip, ChipRegItem& pItem, bool pVerify)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    SelectLink(pChip->getOpticalGroupId());
+    fCommandProcessorInterface->SelectLink(pChip->getOpticalGroupId());
     uint8_t cFunctionId = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? LpGBTSCWorker::SingleWriteIC : LpGBTSCWorker::SingleWriteFE;
     auto    cCommand    = fCommandProcessorInterface->EncodeCommand(cFunctionId, pChip, pItem, pVerify);
     fCommandProcessorInterface->WriteCommand(cCommand);
