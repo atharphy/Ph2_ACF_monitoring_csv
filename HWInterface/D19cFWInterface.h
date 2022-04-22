@@ -40,14 +40,13 @@ class L1ReadoutInterface;
 class FEConfigurationInterface;
 class TriggerInterface;
 class FastCommandInterface;
+class LinkInterface;
 class D19cBackendAlignmentFWInterface;
 class D19cDebugFWInterface;
 class D19cOpticalInterface;
 class D19cCommandProcessorInterface;
 
-/*!
- * \class Cbc3Fc7FWInterface
- *
+/*
  * \brief init/config of the Fc7 and its Chip's
  */
 class D19cFWInterface : public BeBoardFWInterface
@@ -58,9 +57,11 @@ class D19cFWInterface : public BeBoardFWInterface
     L1ReadoutInterface*              fL1ReadoutInterface{nullptr};
     TriggerInterface*                fTriggerInterface{nullptr};
     FastCommandInterface*            fFastCommandInterface{nullptr};
+    LinkInterface*                   fLinkInterface{nullptr};
     D19cBackendAlignmentFWInterface* fBackendAlignmentInterface{nullptr};
     D19cDebugFWInterface*            fDebugInterface{nullptr};
     D19cCommandProcessorInterface*   fCommandProcessorInterface{nullptr};
+    
 
     FileHandler* fFileHandler;
     uint32_t     fBroadcastCbcId;
@@ -123,6 +124,7 @@ class D19cFWInterface : public BeBoardFWInterface
     TriggerInterface*                getTriggerInterface() { return fTriggerInterface; }
     L1ReadoutInterface*              getL1ReadoutInterface() { return fL1ReadoutInterface; }
     FEConfigurationInterface*        getFEConfigurationInterface() { return fFEConfigurationInterface; }
+    LinkInterface*                   getLinkInterface(){ return fLinkInterface; }
     //
     void ConfigureInterfaces(const Ph2_HwDescription::BeBoard* pBoard);
 
@@ -313,11 +315,6 @@ class D19cFWInterface : public BeBoardFWInterface
     // consecutive triggers FSM
     void ConfigureAntennaFSM(uint16_t pNtriggers = 1, uint16_t pTriggerRate = 1, uint16_t pL1Delay = 100);
 
-    // Optical readout specific functions - d19c [temporary]
-    void ResetLink(uint8_t pLinkId);
-    bool GetLinkStatus(uint8_t pLinkId);
-
-    bool LinkLock(const Ph2_HwDescription::BeBoard* pBoard);
     void setRxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fRxPolarity.insert({pLinkId, pPolarity}); };
     void setTxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fTxPolarity.insert({pLinkId, pPolarity}); };
 
