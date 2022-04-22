@@ -515,10 +515,10 @@ bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerify)
         cMask.fBitShift      = 7;
         cMask.fNbits         = 1;
         uint8_t cDefaultPage = pCbc->getRegBits("FeCtrl&TrgLat2", cMask);
-        LOG(INFO) << BOLDYELLOW << "Default page on CBC" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " is " << +cDefaultPage << " register value is 0x" << std::hex << +cValue
+        LOG(DEBUG) << BOLDYELLOW << "Default page on CBC" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " is " << +cDefaultPage << " register value is 0x" << std::hex << +cValue
                   << std::dec << RESET;
         fPageMap.insert(std::make_pair(cAddress, cDefaultPage));
-        LOG(INFO) << BOLDYELLOW << "Page was not explicitly selected on CBC#" << +pCbc->getId() << " setting to default value." << RESET;
+        LOG(DEBUG) << BOLDYELLOW << "Page was not explicitly selected on CBC#" << +pCbc->getId() << " setting to default value." << RESET;
         cSuccess = fBoardFW->SingleRegisterWrite(pCbc, cCbcRegMap[cRegName], pVerify);
     }
     if(!cSuccess)
@@ -542,7 +542,7 @@ bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerify)
     // switch page
     ChipRegItem cPageReg = pCbc->getRegItem("FeCtrl&TrgLat2");
     cPageReg.fValue      = (cPageReg.fValue & 0x7F) | (pPage << 7);
-    LOG(INFO) << BOLDBLUE << "Switching page on CBC#" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " from page " << +cPage << " to page " << +pPage << "\t...Current page is " << cPage
+    LOG(DEBUG) << BOLDBLUE << "Switching page on CBC#" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " from page " << +cPage << " to page " << +pPage << "\t...Current page is " << cPage
               << " want to write to page " << +pPage << " need to update page register on the CBC" << RESET;
     // update page in map
     cIter->second = pPage;

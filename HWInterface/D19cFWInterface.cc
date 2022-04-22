@@ -21,6 +21,7 @@
 #include "D19cL1ReadoutInterface.h"
 #include "D19cOpticalInterface.h"
 #include "D19cPSCounterFWInterface.h"
+#include "D19cLinkInterface.h"
 #include "D19cTriggerInterface.h"
 #include <algorithm>
 #include <chrono>
@@ -419,82 +420,6 @@ void D19cFWInterface::powerAllFMCs(bool pEnable)
     this->WriteReg("sysreg.fmc_pwr.l12_pwr_en", (int)pEnable);
     this->WriteReg("sysreg.fmc_pwr.l8_pwr_en", (int)pEnable);
 }
-void D19cFWInterface::ResetLink(uint8_t pLinkId)
-{
-    LOG(INFO) << BOLDBLUE << "Resetting Link#" << +pLinkId << RESET;
-    // reset here for good measure
-    uint32_t cCommand = (0x0 << 22) | ((pLinkId & 0x3f) << 26);
-    this->WriteReg("fc7_daq_ctrl.optical_block.general", cCommand);
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    // get link status
-    cCommand = (0x1 << 22) | ((pLinkId & 0x3f) << 26);
-    this->WriteReg("fc7_daq_ctrl.optical_block.general", cCommand);
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-}
-bool D19cFWInterface::GetLinkStatus(uint8_t pLinkId)
-{
-    bool cGBTxLocked = true;
-    // read back status register
-    LOG(INFO) << BOLDBLUE << "GBT Link Status..." << RESET;
-    uint32_t cLinkStatus = this->ReadReg("fc7_daq_stat.optical_block");
-    LOG(INFO) << BOLDBLUE << "GBT Link" << +pLinkId << " status " << std::bitset<32>(cLinkStatus) << RESET;
-    std::vector<std::string> cStates = {"GBT TX Ready", "MGT Ready", "GBT RX Ready"};
-    uint8_t                  cIndex  = 1;
-    for(auto cState: cStates)
-    {
-        uint8_t cStatus = (cLinkStatus >> (3 - cIndex)) & 0x1;
-        cGBTxLocked &= (cStatus == 1);
-        if(cStatus == 1)
-            LOG(INFO) << BOLDBLUE << "\t... " << cState << BOLDGREEN << "\t : LOCKED" << RESET;
-        else
-            LOG(INFO) << BOLDBLUE << "\t... " << cState << BOLDRED << "\t : FAILED" << RESET;
-        cIndex++;
-    }
-    return cGBTxLocked;
-}
-
-bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
-{
-    // std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    // check links are up
-    std::vector<std::string> cStates      = {"GBT TX Ready", "MGT Ready", "GBT RX Ready"};
-    bool                     cLinksLocked = true;
-    uint8_t                  cMaxAttempts = 3;
-    uint8_t                  cAttempCount = 0;
-    do
-    {
-        cLinksLocked = true;
-        for(auto cOpticalReadout: *pBoard)
-        {
-            uint8_t cLinkId = cOpticalReadout->getId();
-            if(cOpticalReadout->getReset() == 1)
-                ResetLink(cLinkId);
-            else
-                LOG(INFO) << BOLDYELLOW << "\t... will not reset Link#" << cOpticalReadout->getId() << " on BeBoard#" << +pBoard->getId() << RESET;
-
-            bool cLocked = GetLinkStatus(cLinkId);
-            cLinksLocked = cLinksLocked && cLocked;
-        }
-        if(cLinksLocked)
-        {
-            LOG(INFO) << BOLDGREEN << "All links locked." << RESET;
-            LOG(INFO) << BOLDGREEN << "Set fLinkLockStatus true." << RESET;
-            break;
-        }
-        else
-        {
-            LOG(DEBUG) << BOLDRED << "Resetting lpGBT link .. no lock" << RESET;
-            // reset lpGBT core
-            this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
-            this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
-        }
-        cAttempCount++;
-    } while(!cLinksLocked && cAttempCount < cMaxAttempts);
-    return cLinksLocked;
-}
-
 void D19cFWInterface::InitializePSCounterFWInterface(const BeBoard* pBoard)
 {
     fL1ReadoutInterface = nullptr;
@@ -516,6 +441,11 @@ void D19cFWInterface::IniitalizeL1ReadoutInterface(const BeBoard* pBoard)
 }
 void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
 {
+    if(fLinkInterface == nullptr)
+    {
+        LOG(INFO) << BOLDBLUE << "Optical readout . initializing link control interface" << RESET;
+        fLinkInterface = new D19cLinkInterface(this->getId(), this->getUri(), this->getAddressTable());
+    }
     if(fFEConfigurationInterface == nullptr)
     {
         Configuration cConfiguration;
@@ -530,7 +460,7 @@ void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
         }
         else
         {
-            LOG(INFO) << BOLDBLUE << "Optical readout . initializing Optical interface" << RESET;
+            LOG(INFO) << BOLDBLUE << "Optical readout . initializing Optical interface for FE configuration" << RESET;
             fFEConfigurationInterface   = new D19cOpticalInterface(this->getId(), this->getUri(), this->getAddressTable());
             cConfiguration.fRetryIC     = true;
             cConfiguration.fMaxRetryIC  = 100;
@@ -748,31 +678,21 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     if(pBoard->isOptical() && cWithlpGBT)
     {
         bool cSkip = (pBoard->getLinkReset() == 0);
-        if(!cSkip)
-        {
+        if(!cSkip){ 
             LOG(INFO) << BOLDMAGENTA << "Resetting lpGBT-FPGA core on BeBoard#" << +pBoard->getId() << RESET;
-            // reset lpGBT core
-            this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
-            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-            this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-            bool clpGBTlock = LinkLock(pBoard);
-            if(!clpGBTlock)
-            {
-                LOG(INFO) << BOLDRED << "lpGBT link failed to LOCK!" << RESET;
-                exit(0);
-            }
+            fLinkInterface->GeneralLinkReset(pBoard);
         }
         else
         {
             LOG(INFO) << BOLDMAGENTA << "Skipping lpGBT link reset.." << RESET;
-            bool cLinksLocked = true;
             for(auto cOpticalReadout: *pBoard)
             {
                 uint8_t cLinkId = cOpticalReadout->getId();
-                bool    cLocked = GetLinkStatus(cLinkId);
-                cLinksLocked    = cLinksLocked && cLocked;
+                if( !fLinkInterface->GetLinkStatus(cLinkId) )
+                {
+                    LOG(ERROR) << BOLDRED << "Link#" << +cLinkId << " not locked" RESET;
+                    throw Exception("Link not locked...");
+                }
             }
         }
     }
