@@ -671,9 +671,8 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     auto  cADCsMapIterator = cADCsMap.begin();
     int   cADCValue;
     int   cBinCount         = 1;
-    float cConversionFactor = (1. / 1023.);
-
-    fillSummaryTree("ADC conversion factor", cConversionFactor);
+    
+    fillSummaryTree("ADC conversion factor", CONVERSION_FACTOR);
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr)
