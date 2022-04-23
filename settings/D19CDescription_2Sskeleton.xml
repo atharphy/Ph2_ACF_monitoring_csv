@@ -66,6 +66,17 @@
     <!-- 3 = 3 = internal oscillator (default), 1 = fmc_l8_clk1, 2 = fmc_l8_clk0, 0 = COAX_IN -->
     <Register name="clock_source_u8">3</Register> 
     <Register name="fc7_daq_cnfg">
+	<Register name="optical_block">
+                <Register name="rx_polarity">
+                        <Register name="l8"> 0 </Register>
+                        <Register name="l12"> 0 </Register>
+                </Register>
+                <Register name="tx_polarity">
+                        <Register name="l8"> 0 </Register>
+                        <Register name="l12"> 0 </Register>
+                </Register>
+        </Register>
+
 	   <!-- Sync block control -->
         <Register name="sync_block">
             <Register name="enable"          >0</Register>
