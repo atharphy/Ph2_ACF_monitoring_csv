@@ -25,8 +25,11 @@
         <ConditionData type="TDC" FeId="0xFF"/>
     </SLink>
 
-    <!--CONFIG-->
-    <Register name="clock_source">3</Register> <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
+    <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
+    <Register name="clock_source_u7">3</Register> 
+    <!-- 3 = 3 = internal oscillator (default), 1 = fmc_l8_clk1, 2 = fmc_l8_clk0, 0 = COAX_IN -->
+    <Register name="clock_source_u8">3</Register> 
+ 
     <Register name="fc7_daq_cnfg">
 	<Register name="optical_block">
 		<Register name="rx_polarity"> 

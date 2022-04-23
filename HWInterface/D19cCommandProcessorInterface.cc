@@ -122,21 +122,18 @@ bool D19cCommandProcessorInterface::IsDone(uint8_t pFunctionId)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     uint32_t                              cStatus       = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
-    bool                                  cWorkerDone   = false;
+    bool                                  cWorkerDone   = (cStatus & 0xFF) == 1;
     bool                                  cFunctionDone = false;
     if((pFunctionId == LpGBTSCWorker::SingleReadIC) || (pFunctionId == LpGBTSCWorker::SingleWriteIC))
     {
-        cWorkerDone   = (cStatus & 0xFF) == 1;
         cFunctionDone = ((cStatus & (0xFF << 8)) >> 8) == 1;
     }
     else if((pFunctionId == LpGBTSCWorker::SingleByteReadI2C) || (pFunctionId == LpGBTSCWorker::MultiByteWriteI2C))
     {
-        cWorkerDone   = (cStatus & 0xFF) == 1;
         cFunctionDone = ((cStatus & (0xFF << 16)) >> 16) == 1;
     }
     else if((pFunctionId == LpGBTSCWorker::SingleReadFE) || (pFunctionId == LpGBTSCWorker::SingleWriteFE))
     {
-        cWorkerDone   = (cStatus & 0xFF) == 1;
         cFunctionDone = ((cStatus & (0xFF << 24)) >> 24) == 1;
     }
     else

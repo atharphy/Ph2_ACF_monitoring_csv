@@ -441,7 +441,7 @@ void D19cFWInterface::IniitalizeL1ReadoutInterface(const BeBoard* pBoard)
 }
 void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
 {
-    if(fLinkInterface == nullptr)
+    if(fLinkInterface == nullptr && pBoard->isOptical())
     {
         LOG(INFO) << BOLDBLUE << "Optical readout . initializing link control interface" << RESET;
         fLinkInterface = new D19cLinkInterface(this->getId(), this->getUri(), this->getAddressTable());
@@ -485,6 +485,8 @@ void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
 }
 void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
 {
+    ConfigureInterfaces(pBoard);
+
     // unique link Ids
     std::vector<uint8_t> cLinkIds(0);
     for(auto cOpticalReadout: *pBoard)
@@ -680,10 +682,11 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         bool cSkip = (pBoard->getLinkReset() == 0);
 	uint8_t cLpGbtVersion = static_cast<lpGBT*>(pBoard->at(0)->flpGBT)->getVersion();
 	this->WriteReg("fc7_daq_cnfg.optical_block.lpgbt.version", cLpGbtVersion);
-	LOG(INFO) << BOLDYELLOW << "Setting firmware lpGBT version to = " << +this->ReadReg("fc7_daq_cnfg.optical_block.lpgbt.version") << RESET;
+	LOG(INFO) << BOLDYELLOW << "Setting firmware lpGBT version to lpGBT-v" << +this->WriteReg("fc7_daq_cnfg.optical_block.lpgbt.version") << RESET;
         if(!cSkip)
         {
             LOG(INFO) << BOLDMAGENTA << "Resetting lpGBT-FPGA core on BeBoard#" << +pBoard->getId() << RESET;
+	    fCommandProcessorInterface->Reset();
             fLinkInterface->GeneralLinkReset(pBoard);
         }
         else
@@ -701,7 +704,6 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         }
     }
 
-    ConfigureInterfaces(pBoard);
 
     // resetting hard
     if(fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2)
