@@ -144,7 +144,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 cFWInterface->selectLink(cOpticalGroup->getId());
                 cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
                 LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
-                D19cDebugFWInterface* cDebugInterface = cFWInterface->getDebugInterface(); // cDebugInterface->StubDebug(true, 5);
+                //D19cDebugFWInterface* cDebugInterface = cFWInterface->getDebugInterface(); // cDebugInterface->StubDebug(true, 5);
                 // cDebugInterface->StubDebug(true, 5);
                 // enable stub debug - allows you to 'scope' the stub output
 
@@ -627,7 +627,8 @@ bool OTHybridTester::LpGBTTestFixedADCs()
         {
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
 #ifdef __ROH_USB__
-            flpGBTInterface->getExternalController()->getInterface().dac_output(cDACValue);
+	    //FIXME why is this here and what is cDACValue
+            //flpGBTInterface->getExternalController()->getInterface().dac_output(cDACValue);
 #elif __SEH_USB__
             flpGBTInterface->getExternalController()->getInterface().set_AMUX(3500, 3500);
 #endif
