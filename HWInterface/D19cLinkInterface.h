@@ -13,10 +13,10 @@ class D19cLinkInterface : public LinkInterface
     ~D19cLinkInterface();
 
   public:
-    uint32_t fWait_ms = 100; 
-    void ResetLinks() override;
-    bool GetLinkStatus(uint8_t pLinkId=0) override;
-    void GeneralLinkReset(const Ph2_HwDescription::BeBoard* pBoard) override;
+    uint32_t fWait_ms = 100;
+    void     ResetLinks() override;
+    bool     GetLinkStatus(uint8_t pLinkId = 0) override;
+    void     GeneralLinkReset(const Ph2_HwDescription::BeBoard* pBoard) override;
 
   private:
 };

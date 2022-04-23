@@ -22,15 +22,15 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
     this->setBoard(pChip->getBeBoardId());
     auto cBoardType = fBoardFW->getBoardType();
     auto cAddress   = pChip->getRegItem(pDacName).fAddress;
-    //setting highest write address possible (lpGBT version dependent)
+    // setting highest write address possible (lpGBT version dependent)
     uint16_t cMaxWriteAddress = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 0x13c : 0x14f;
-    //checking that written value isn't more than 8 bits
+    // checking that written value isn't more than 8 bits
     if(pDacValue > 0xFF)
     {
         LOG(ERROR) << BOLDRED << "LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pDacValue << BOLDRED << " to address " << BOLDYELLOW << cAddress << RESET;
         return false;
     }
-    //checking that register address isn't higher than highest write address
+    // checking that register address isn't higher than highest write address
     if(cAddress > cMaxWriteAddress)
     {
         LOG(ERROR) << "LpGBT read-write registers end at 0x13C ... impossible to write to address " << BOLDYELLOW << cAddress << RESET;
@@ -565,10 +565,7 @@ void lpGBTInterface::PhaseAlignRx(Chip* pChip, const OpticalGroup* pOpticalGroup
 // # LpGBT Block Status functions #
 // ################################
 
-bool lpGBTInterface::IsPUSMDone(Chip* pChip)
-{ 
-    return lpGBTInterface::GetPUSMStatus(pChip) == revertedPUSMStatusMap["READY"]; 
-}
+bool lpGBTInterface::IsPUSMDone(Chip* pChip) { return lpGBTInterface::GetPUSMStatus(pChip) == revertedPUSMStatusMap["READY"]; }
 
 void lpGBTInterface::PrintChipMode(Chip* pChip)
 {

@@ -61,7 +61,6 @@ class D19cFWInterface : public BeBoardFWInterface
     D19cBackendAlignmentFWInterface* fBackendAlignmentInterface{nullptr};
     D19cDebugFWInterface*            fDebugInterface{nullptr};
     D19cCommandProcessorInterface*   fCommandProcessorInterface{nullptr};
-    
 
     FileHandler* fFileHandler;
     uint32_t     fBroadcastCbcId;
@@ -124,7 +123,7 @@ class D19cFWInterface : public BeBoardFWInterface
     TriggerInterface*                getTriggerInterface() { return fTriggerInterface; }
     L1ReadoutInterface*              getL1ReadoutInterface() { return fL1ReadoutInterface; }
     FEConfigurationInterface*        getFEConfigurationInterface() { return fFEConfigurationInterface; }
-    LinkInterface*                   getLinkInterface(){ return fLinkInterface; }
+    LinkInterface*                   getLinkInterface() { return fLinkInterface; }
     //
     void ConfigureInterfaces(const Ph2_HwDescription::BeBoard* pBoard);
 

@@ -399,13 +399,13 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
             {
                 bool                 cMasterSuccess = true;
                 std::vector<uint8_t> cI2CStatusVect;
-                struct timeval stop, start;
+                struct timeval       stop, start;
                 gettimeofday(&start, NULL);
                 // do stuff
-                uint8_t failureIter = 0;
-                int     tries       = 10000;
-                uint8_t cFrequency = (cMaster == 1) ? 2 : 3;
-		uint8_t cSlaveAddress = 0x60;
+                uint8_t failureIter   = 0;
+                int     tries         = 10000;
+                uint8_t cFrequency    = (cMaster == 1) ? 2 : 3;
+                uint8_t cSlaveAddress = 0x60;
                 for(int j = 0; j < tries; j++)
                 // int j = 0;
                 // while(true)
@@ -611,10 +611,10 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     auto cADCHistogram = new TH2I("hADCHistogram", "Fixed ADC Histogram", cADCsMap.size(), 0, cADCsMap.size(), 1024, 0, 1024);
     cADCHistogram->GetZaxis()->SetTitle("Number of entries");
 
-    auto  cADCsMapIterator = cADCsMap.begin();
-    int   cADCValue;
-    int   cBinCount         = 1;
-    
+    auto cADCsMapIterator = cADCsMap.begin();
+    int  cADCValue;
+    int  cBinCount = 1;
+
     fillSummaryTree("ADC conversion factor", CONVERSION_FACTOR);
     for(auto cBoard: *fDetectorContainer)
     {
@@ -880,9 +880,9 @@ bool OTHybridTester::LpGBTGetLinkLock()
         fBeBoardInterface->setBoard(cBoard->getId());
         for(auto cOpticalGroup: *cBoard)
         {
-            D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+            D19cFWInterface*   cFWInterface   = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
             D19cLinkInterface* cLinkInterface = static_cast<D19cLinkInterface*>(cFWInterface->getLinkInterface());
-            cStatus = cLinkInterface->GetLinkStatus(cOpticalGroup->getId());
+            cStatus                           = cLinkInterface->GetLinkStatus(cOpticalGroup->getId());
         }
     }
     return cStatus;

@@ -58,7 +58,7 @@ class OuterTrackerHybrid : public Hybrid
         if(fCic != nullptr)
         {
             LOG(ERROR) << "Error, Cic for this hybrid was already initialized - aborting";
-            std::runtime_error(std::string("OuterTrackerHybrid::addCic : Error, Cic for this hybrid was already initialized - aborting"));        
+            std::runtime_error(std::string("OuterTrackerHybrid::addCic : Error, Cic for this hybrid was already initialized - aborting"));
         }
         fCic = pCic;
         pCic = nullptr;

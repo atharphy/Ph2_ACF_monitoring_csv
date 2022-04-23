@@ -95,13 +95,10 @@ std::vector<uint32_t> D19cCommandProcessorInterface::EncodeCommand(uint8_t pFunc
 uint16_t D19cCommandProcessorInterface::GetStateFSM(uint8_t pFunctionId)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    uint32_t                              cStatus       = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
-    uint16_t cWorkerState   = cStatus & 0xFF;
-    uint16_t cFunctionState = 0;
-    if((pFunctionId == LpGBTSCWorker::SingleReadIC) || (pFunctionId == LpGBTSCWorker::SingleWriteIC))
-    {
-        cFunctionState = (cStatus & (0xFF << 8)) >> 8;
-    }
+    uint32_t                              cStatus        = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
+    uint16_t                              cWorkerState   = cStatus & 0xFF;
+    uint16_t                              cFunctionState = 0;
+    if((pFunctionId == LpGBTSCWorker::SingleReadIC) || (pFunctionId == LpGBTSCWorker::SingleWriteIC)) { cFunctionState = (cStatus & (0xFF << 8)) >> 8; }
     else if((pFunctionId == LpGBTSCWorker::SingleByteReadI2C) || (pFunctionId == LpGBTSCWorker::MultiByteWriteI2C))
     {
         cFunctionState = (cStatus & (0xFF << 16)) >> 16;
@@ -124,10 +121,7 @@ bool D19cCommandProcessorInterface::IsDone(uint8_t pFunctionId)
     uint32_t                              cStatus       = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
     bool                                  cWorkerDone   = (cStatus & 0xFF) == 1;
     bool                                  cFunctionDone = false;
-    if((pFunctionId == LpGBTSCWorker::SingleReadIC) || (pFunctionId == LpGBTSCWorker::SingleWriteIC))
-    {
-        cFunctionDone = ((cStatus & (0xFF << 8)) >> 8) == 1;
-    }
+    if((pFunctionId == LpGBTSCWorker::SingleReadIC) || (pFunctionId == LpGBTSCWorker::SingleWriteIC)) { cFunctionDone = ((cStatus & (0xFF << 8)) >> 8) == 1; }
     else if((pFunctionId == LpGBTSCWorker::SingleByteReadI2C) || (pFunctionId == LpGBTSCWorker::MultiByteWriteI2C))
     {
         cFunctionDone = ((cStatus & (0xFF << 16)) >> 16) == 1;

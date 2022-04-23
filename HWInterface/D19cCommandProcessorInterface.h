@@ -32,7 +32,7 @@ class D19cCommandProcessorInterface : public CommandProcessorInterface
     bool                  IsDone(uint8_t pFunctionId);
     uint8_t               GetTryCntr(uint8_t pFunctionId);
     uint16_t              GetStateFSM(uint8_t pFunctionId);
-    void SelectLink(uint8_t pLinkId);
+    void                  SelectLink(uint8_t pLinkId);
 };
 } // namespace Ph2_HwInterface
 #endif

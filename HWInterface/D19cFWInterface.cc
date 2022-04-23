@@ -19,9 +19,9 @@
 #include "D19cFastCommandInterface.h"
 #include "D19cI2CInterface.h"
 #include "D19cL1ReadoutInterface.h"
+#include "D19cLinkInterface.h"
 #include "D19cOpticalInterface.h"
 #include "D19cPSCounterFWInterface.h"
-#include "D19cLinkInterface.h"
 #include "D19cTriggerInterface.h"
 #include <algorithm>
 #include <chrono>
@@ -679,14 +679,14 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     // if optical readout .. then configure links
     if(pBoard->isOptical() && cWithlpGBT)
     {
-        bool cSkip = (pBoard->getLinkReset() == 0);
-	uint8_t cLpGbtVersion = static_cast<lpGBT*>(pBoard->at(0)->flpGBT)->getVersion();
-	this->WriteReg("fc7_daq_cnfg.optical_block.lpgbt.version", cLpGbtVersion);
-	LOG(INFO) << BOLDYELLOW << "Setting firmware lpGBT version to lpGBT-v" << +this->ReadReg("fc7_daq_cnfg.optical_block.lpgbt.version") << RESET;
+        bool    cSkip         = (pBoard->getLinkReset() == 0);
+        uint8_t cLpGbtVersion = static_cast<lpGBT*>(pBoard->at(0)->flpGBT)->getVersion();
+        this->WriteReg("fc7_daq_cnfg.optical_block.lpgbt.version", cLpGbtVersion);
+        LOG(INFO) << BOLDYELLOW << "Setting firmware lpGBT version to lpGBT-v" << +this->ReadReg("fc7_daq_cnfg.optical_block.lpgbt.version") << RESET;
         if(!cSkip)
         {
             LOG(INFO) << BOLDMAGENTA << "Resetting lpGBT-FPGA core on BeBoard#" << +pBoard->getId() << RESET;
-	    fCommandProcessorInterface->Reset();
+            fCommandProcessorInterface->Reset();
             fLinkInterface->GeneralLinkReset(pBoard);
         }
         else
@@ -695,7 +695,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
             for(auto cOpticalReadout: *pBoard)
             {
                 uint8_t cLinkId = cOpticalReadout->getId();
-                if( !fLinkInterface->GetLinkStatus(cLinkId) )
+                if(!fLinkInterface->GetLinkStatus(cLinkId))
                 {
                     LOG(ERROR) << BOLDRED << "Link#" << +cLinkId << " not locked" RESET;
                     throw Exception("Link not locked...");
@@ -703,7 +703,6 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
             }
         }
     }
-
 
     // resetting hard
     if(fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2)

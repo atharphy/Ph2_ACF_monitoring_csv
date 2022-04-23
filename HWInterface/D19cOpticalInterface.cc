@@ -35,9 +35,9 @@ bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem)
     }
     if(cWaitCounter == 0)
     {
-        uint16_t cState = fCommandProcessorInterface->GetStateFSM(cFunctionId);
-        uint8_t cWorkerState = (cState & 0xFF);
-        uint8_t cFunctionState = (cState & (0xFF << 8)) >> 8;
+        uint16_t cState         = fCommandProcessorInterface->GetStateFSM(cFunctionId);
+        uint8_t  cWorkerState   = (cState & 0xFF);
+        uint8_t  cFunctionState = (cState & (0xFF << 8)) >> 8;
         LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleRead : Tool stuck - Worker state = " << +cWorkerState << " - Function State = " << +cFunctionState << RESET;
         return false;
     }
@@ -73,9 +73,9 @@ bool D19cOpticalInterface::WriteChipRegister(Chip* pChip, ChipRegItem& pItem, bo
     }
     if(cWaitCounter == 0)
     {
-        uint16_t cState = fCommandProcessorInterface->GetStateFSM(cFunctionId);
-        uint8_t cWorkerState = (cState & 0xFF);
-        uint8_t cFunctionState = (cState & (0xFF << 8)) >> 8;
+        uint16_t cState         = fCommandProcessorInterface->GetStateFSM(cFunctionId);
+        uint8_t  cWorkerState   = (cState & 0xFF);
+        uint8_t  cFunctionState = (cState & (0xFF << 8)) >> 8;
         LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite : Tool stuck - Worker state = " << +cWorkerState << " - Function State = " << +cFunctionState << RESET;
         return false;
     }
@@ -146,7 +146,7 @@ bool D19cOpticalInterface::MultiWriteRead(Chip* pChip, std::vector<ChipRegItem>&
 bool D19cOpticalInterface::MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress, uint32_t pSlaveData)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    uint8_t cLinkId = pChip->getOpticalGroupId();
+    uint8_t                               cLinkId = pChip->getOpticalGroupId();
     fCommandProcessorInterface->SelectLink(cLinkId);
     uint8_t               cWorkerId   = LpGBTSCWorker::BaseID + cLinkId;
     uint8_t               cFunctionId = LpGBTSCWorker::MultiByteWriteI2C;
@@ -163,9 +163,9 @@ bool D19cOpticalInterface::MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uin
     }
     if(cWaitCounter == 0)
     {
-        uint16_t cState = fCommandProcessorInterface->GetStateFSM(cFunctionId);
-        uint8_t cWorkerState = (cState & 0xFF);
-        uint8_t cFunctionState = (cState & (0xFF << 8)) >> 8;
+        uint16_t cState         = fCommandProcessorInterface->GetStateFSM(cFunctionId);
+        uint8_t  cWorkerState   = (cState & 0xFF);
+        uint8_t  cFunctionState = (cState & (0xFF << 8)) >> 8;
         LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiByteWriteI2C : Tool stuck - Worker state = " << +cWorkerState << " - Function State = " << +cFunctionState << RESET;
         return false;
     }
@@ -186,7 +186,7 @@ bool D19cOpticalInterface::MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uin
 uint8_t D19cOpticalInterface::SingleByteReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    uint8_t cLinkId = pChip->getOpticalGroupId();
+    uint8_t                               cLinkId = pChip->getOpticalGroupId();
     fCommandProcessorInterface->SelectLink(cLinkId);
     uint8_t               cWorkerId   = LpGBTSCWorker::BaseID + cLinkId;
     uint8_t               cFunctionId = LpGBTSCWorker::SingleByteReadI2C;
@@ -203,9 +203,9 @@ uint8_t D19cOpticalInterface::SingleByteReadI2C(Ph2_HwDescription::Chip* pChip, 
     }
     if(cWaitCounter == 0)
     {
-        uint16_t cState = fCommandProcessorInterface->GetStateFSM(cFunctionId);
-        uint8_t cWorkerState = (cState & 0xFF);
-        uint8_t cFunctionState = (cState & (0xFF << 8)) >> 8;
+        uint16_t cState         = fCommandProcessorInterface->GetStateFSM(cFunctionId);
+        uint8_t  cWorkerState   = (cState & 0xFF);
+        uint8_t  cFunctionState = (cState & (0xFF << 8)) >> 8;
         LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleByteReadI2C : Tool stuck - Worker state = " << +cWorkerState << " - Function State = " << +cFunctionState << RESET;
         return 0;
     }
