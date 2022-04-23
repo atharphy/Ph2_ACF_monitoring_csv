@@ -682,7 +682,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         bool cSkip = (pBoard->getLinkReset() == 0);
 	uint8_t cLpGbtVersion = static_cast<lpGBT*>(pBoard->at(0)->flpGBT)->getVersion();
 	this->WriteReg("fc7_daq_cnfg.optical_block.lpgbt.version", cLpGbtVersion);
-	LOG(INFO) << BOLDYELLOW << "Setting firmware lpGBT version to lpGBT-v" << +this->WriteReg("fc7_daq_cnfg.optical_block.lpgbt.version") << RESET;
+	LOG(INFO) << BOLDYELLOW << "Setting firmware lpGBT version to lpGBT-v" << +this->ReadReg("fc7_daq_cnfg.optical_block.lpgbt.version") << RESET;
         if(!cSkip)
         {
             LOG(INFO) << BOLDMAGENTA << "Resetting lpGBT-FPGA core on BeBoard#" << +pBoard->getId() << RESET;
