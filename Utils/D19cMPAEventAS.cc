@@ -57,13 +57,13 @@ void D19cMPAEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDa
 {
     LOG(INFO) << BOLDBLUE << "Setting event for Async MPA " << RESET;
     auto    cDataIterator = pData.begin();
-    uint8_t cHybridIndex      = 0;
+    uint8_t cHybridIndex  = 0;
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)
         {
             auto&   cHybridCounterData = fCounterData[cHybridIndex];
-            uint8_t cChipIndex          = 0;
+            uint8_t cChipIndex         = 0;
             // loop over chips
             for(auto cChip: *cHybrid)
             {
@@ -139,17 +139,17 @@ void D19cMPAEventAS::SetEvent(const BeBoard* pBoard, uint32_t pNMPA, const std::
 
 uint32_t D19cMPAEventAS::GetNHits(uint8_t pHybridId, uint8_t pSSAId) const
 {
-    uint8_t cHybridIndex   = getHybridIndex(pHybridId);
-    uint8_t cChipIndex  = getChipIndex(pHybridId, pSSAId);
-    auto&   cHitVecotr = fCounterData.at(cHybridIndex).at(cChipIndex);
+    uint8_t cHybridIndex = getHybridIndex(pHybridId);
+    uint8_t cChipIndex   = getChipIndex(pHybridId, pSSAId);
+    auto&   cHitVecotr   = fCounterData.at(cHybridIndex).at(cChipIndex);
     return std::accumulate(cHitVecotr.begin(), cHitVecotr.end(), 0);
     // const std::vector<uint32_t> &hitVector = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId,fNMPA));
     // return std::accumulate(hitVector.begin()+1, hitVector.end(), 0);
 }
 std::vector<uint32_t> D19cMPAEventAS::GetHits(uint8_t pHybridId, uint8_t pSSAId) const
 {
-    uint8_t cHybridIndex  = getHybridIndex(pHybridId);
-    uint8_t cChipIndex = getChipIndex(pHybridId, pSSAId);
+    uint8_t cHybridIndex = getHybridIndex(pHybridId);
+    uint8_t cChipIndex   = getChipIndex(pHybridId, pSSAId);
     return fCounterData.at(cHybridIndex).at(cChipIndex);
     // const std::vector<uint32_t> &hitVector = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId,fNMPA));
     // LOG (INFO) << BOLDBLUE << hitVector[0] << RESET;

@@ -394,9 +394,9 @@ void SLinkDQMHistogrammer::saveHistograms(const std::string& dqmFile, const std:
             ROUHistos rou_h = irou.second;
             if(!rou_h.bookedHistos) continue;
 
-            uint16_t key   = irou.first;
-            uint8_t  hybridId  = (key >> 8) & 0xFF;
-            uint8_t  rouId = key & 0xFF;
+            uint16_t key      = irou.first;
+            uint8_t  hybridId = (key >> 8) & 0xFF;
+            uint8_t  rouId    = key & 0xFF;
 
             TString name = "Module_";
             name += modId;

@@ -69,6 +69,12 @@ void CBCMonitor::runLpGBTRegisterMonitor(std::string registerName)
 
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
+        if(board->at(0)->flpGBT == nullptr)
+        {
+            for(const auto& opticalGroup: *board)
+                theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<std::tuple<time_t, uint16_t>>() = std::make_tuple(getTimeStamp(), -1);
+            continue;
+        }
         for(const auto& opticalGroup: *board)
         {
             uint16_t registerValue = static_cast<D19clpGBTInterface*>(fTheSystemController->flpGBTInterface)->ReadADC(opticalGroup->flpGBT, registerName);

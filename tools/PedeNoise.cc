@@ -64,9 +64,10 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     for(auto cBoard: *fDetectorContainer)
     {
         auto cFrontEndTypes = cBoard->connectedFrontEndTypes();
-        cWithCBC      = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::CBC3) != cFrontEndTypes.end();
-        cWithSSA      = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA) != cFrontEndTypes.end() || std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end();
-        cWithMPA      = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA) != cFrontEndTypes.end();
+        cWithCBC            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::CBC3) != cFrontEndTypes.end();
+        cWithSSA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA) != cFrontEndTypes.end() ||
+                   std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end();
+        cWithMPA = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA) != cFrontEndTypes.end();
         for(auto cFrontEndType: cFrontEndTypes)
         {
             if(std::find(cAllFrontEndTypes.begin(), cAllFrontEndTypes.end(), cFrontEndType) == cAllFrontEndTypes.end()) cAllFrontEndTypes.push_back(cFrontEndType);
@@ -260,8 +261,8 @@ void PedeNoise::reloadStubLogic()
                     if(cChip->getFrontEndType() == FrontEndType::CBC3)
                     {
                         LOG(INFO) << BOLDBLUE << "Chip Type = CBC3 - re-enabling stub logic to original value!" << RESET;
-                        cRegVec.push_back(
-                            {"Pipe&StubInpSel&Ptwidth", fStubLogicValue->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()});
+                        cRegVec.push_back({"Pipe&StubInpSel&Ptwidth",
+                                           fStubLogicValue->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()});
                         cRegVec.push_back(
                             {"HIP&TestMode", fHIPCountValue->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()});
                         fReadoutChipInterface->WriteChipMultReg(cChip, cRegVec);
@@ -517,18 +518,18 @@ void PedeNoise::scanScurves()
                 auto& cStatusThisHybrid = cStatusThisOG->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
-                    auto  cThreshold                   = fReadoutChipInterface->ReadChipReg(cChip, "Threshold");
+                    auto  cThreshold                    = fReadoutChipInterface->ReadChipReg(cChip, "Threshold");
                     auto& cCntThisChip                  = cCntThisHybrid->at(cChip->getIndex());
-                    auto& cSummary                     = cCntThisChip->getSummary<std::pair<int, int>>();
-                    cSummary.first                     = (cChip->getFrontEndType() == FrontEndType::CBC3) ? 0 : cMaxOccupancy;
-                    cSummary.second                    = 0;
+                    auto& cSummary                      = cCntThisChip->getSummary<std::pair<int, int>>();
+                    cSummary.first                      = (cChip->getFrontEndType() == FrontEndType::CBC3) ? 0 : cMaxOccupancy;
+                    cSummary.second                     = 0;
                     auto& cThThisChip                   = cThThisHybrid->at(cChip->getIndex());
                     cThThisChip->getSummary<uint16_t>() = cThreshold;
                     auto& cSignThisChip                 = cSignThisHybrid->at(cChip->getIndex());
                     cSignThisChip->getSummary<int>()    = cInitialSign;
                     auto& cStatusThisChip               = cStatusThisHybrid->at(cChip->getIndex());
-                    auto& cStatusSmry                  = cStatusThisChip->getSummary<uint8_t>();
-                    cStatusSmry                        = 0;
+                    auto& cStatusSmry                   = cStatusThisChip->getSummary<uint8_t>();
+                    cStatusSmry                         = 0;
                     LOG(DEBUG) << BOLDYELLOW << "Initialising containers for Chip" << +cChip->getId() << " - current threshold is " << cThThisChip->getSummary<uint16_t>() << " current limit is "
                                << cSummary.first << " current break count is " << cSummary.second << RESET;
 
@@ -564,13 +565,13 @@ void PedeNoise::scanScurves()
                     for(auto cChip: *cHybrid)
                     {
                         auto& cCntThisChip    = cCntThisHybrid->at(cChip->getIndex());
-                        auto& cCntSummary    = cCntThisChip->getSummary<std::pair<int, int>>();
+                        auto& cCntSummary     = cCntThisChip->getSummary<std::pair<int, int>>();
                         auto& cSignThisChip   = cSignThisHybrid->at(cChip->getIndex())->getSummary<int>();
                         auto& cStatusThisChip = cStatusThisHybrid->at(cChip->getIndex())->getSummary<uint8_t>();
 
                         auto&    cThThisChip = cThThisHybrid->at(cChip->getIndex())->getSummary<uint16_t>();
-                        uint16_t cMaxValue  = (cChip->getFrontEndType() == FrontEndType::CBC3) ? (1 << 10) : (1 << 8);
-                        cMaxValue           = cMaxValue - 1;
+                        uint16_t cMaxValue   = (cChip->getFrontEndType() == FrontEndType::CBC3) ? (1 << 10) : (1 << 8);
+                        cMaxValue            = cMaxValue - 1;
 
                         // switch sign and reset count once break count has been reached
                         bool cEndReached = (cStatusThisChip == 1) ? true : false;
@@ -586,7 +587,7 @@ void PedeNoise::scanScurves()
                             }
                             else
                             {
-                                cSignThisChip       = -1 * cSignThisChip;
+                                cSignThisChip      = -1 * cSignThisChip;
                                 cCntSummary.second = 0;
                                 cCntSummary.first  = (cCntSummary.first == 1) ? 1 - cCntSummary.first : 0;
                             }
@@ -639,7 +640,7 @@ void PedeNoise::scanScurves()
                         for(auto cChip: *cHybrid)
                         {
                             auto&                cDataContainerThisChip = cDataContainerThisHybrid->at(cChip->getIndex());
-                            auto&                cSummary              = cDataContainerThisChip->getSummary<Occupancy, Occupancy>();
+                            auto&                cSummary               = cDataContainerThisChip->getSummary<Occupancy, Occupancy>();
                             ChannelGroupHandler* cHandler;
                             if(cChip->getFrontEndType() == FrontEndType::MPA)
                                 cHandler = new MPAChannelGroupHandler();
@@ -702,7 +703,7 @@ void PedeNoise::scanScurves()
                     for(auto cChip: *cHybrid)
                     {
                         // update counters
-                        auto& cCntThisChip  = cCntThisHybrid->at(cChip->getIndex());
+                        auto& cCntThisChip = cCntThisHybrid->at(cChip->getIndex());
                         auto& cCntSummary  = cCntThisChip->getSummary<std::pair<int, int>>();
                         auto& cOccThisChip = cChip->getSummary<Occupancy, Occupancy>().fOccupancy;
                         auto  cDifference  = std::fabs(std::min(cMaxOccupancy, cOccThisChip) - cCntSummary.first);

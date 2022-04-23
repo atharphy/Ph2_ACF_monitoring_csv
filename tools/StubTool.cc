@@ -71,7 +71,7 @@ void StubTool::scanStubs()
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                uint32_t         cHybridId      = cHybrid->getId();
+                uint32_t         cHybridId  = cHybrid->getId();
                 HybridContainer& cCbcVector = *cHybrid;
                 const uint8_t    nCBC       = cCbcVector.size();
                 for(uint8_t iCBC = 0; iCBC < nCBC; iCBC++) { configureTestPulse(static_cast<ReadoutChip*>(static_cast<ReadoutChip*>(cCbcVector.at(iCBC))), 1); }
@@ -245,7 +245,7 @@ void StubTool::scanStubs_wNoise()
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                uint32_t         cHybridId      = cHybrid->getId();
+                uint32_t         cHybridId  = cHybrid->getId();
                 HybridContainer& cCbcVector = *cHybrid;
                 const uint8_t    nCBC       = cCbcVector.size();
                 // Uncoment for Bend uncoding 2
@@ -518,7 +518,7 @@ void StubTool::scanStubs_swap()
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                uint32_t         cHybridId      = cHybrid->getId();
+                uint32_t         cHybridId  = cHybrid->getId();
                 HybridContainer& cCbcVector = *cHybrid;
                 const uint8_t    nCBC       = cCbcVector.size();
                 // Uncoment for Bend uncoding 2
@@ -801,7 +801,7 @@ void StubTool::scanStubs_clusterWidth(unsigned int teststrip)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                uint32_t         cHybridId            = cHybrid->getId();
+                uint32_t         cHybridId        = cHybrid->getId();
                 HybridContainer& cCbcVector       = *cHybrid;
                 const uint8_t    nCBC             = cCbcVector.size();
                 std::string      stubscanname_cw  = "StubsSCAN_ClusterWidth";
@@ -954,7 +954,7 @@ void StubTool::scanStubs_ptWidth()
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                uint32_t         cHybridId      = cHybrid->getId();
+                uint32_t         cHybridId  = cHybrid->getId();
                 HybridContainer& cCbcVector = *cHybrid;
                 const uint8_t    nCBC       = cCbcVector.size();
                 // Uncoment for Bend uncoding 2
@@ -1247,7 +1247,7 @@ void StubTool::scanStubs_SoF(unsigned int teststrip)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                uint32_t         cHybridId            = cHybrid->getId();
+                uint32_t         cHybridId        = cHybrid->getId();
                 HybridContainer& cCbcVector       = *cHybrid;
                 const uint8_t    nCBC             = cCbcVector.size();
                 std::string      stubscanname_sof = "StubsSCAN_SoF";

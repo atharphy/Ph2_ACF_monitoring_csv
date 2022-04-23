@@ -65,9 +65,9 @@ void DQMHistogrammer::bookHistos(const Ph2_HwInterface::EventDataMap& evmap)
 
     for(auto const& it: evmap)
     {
-        uint16_t cKey  = it.first;
-        uint8_t  hybridId  = (cKey >> 8) & 0xFF;
-        uint8_t  cbcId = cKey & 0xFF;
+        uint16_t cKey     = it.first;
+        uint8_t  hybridId = (cKey >> 8) & 0xFF;
+        uint8_t  cbcId    = cKey & 0xFF;
 
         LOG(INFO) << " fedId " << +hybridId << " cbcId " << +cbcId << " Columns " << nColumn_ << " nCbc " << nCbc;
 
@@ -225,9 +225,9 @@ void DQMHistogrammer::fillHistos(const std::vector<Event*>& event_list, int nevt
 
         for(auto const& it: evmap)
         {
-            uint16_t cKey  = it.first;
-            uint8_t  hybridId  = (cKey >> 8) & 0xFF;
-            uint8_t  cbcId = cKey & 0xFF;
+            uint16_t cKey     = it.first;
+            uint8_t  hybridId = (cKey >> 8) & 0xFF;
+            uint8_t  cbcId    = cKey & 0xFF;
 
             ncbc++;
 

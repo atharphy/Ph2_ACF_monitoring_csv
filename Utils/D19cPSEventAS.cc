@@ -54,8 +54,8 @@ D19cPSEventAS::D19cPSEventAS(const BeBoard* pBoard, const std::vector<uint32_t>&
 void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pData)
 {
     LOG(DEBUG) << BOLDBLUE << "Setting event for Async PS counters " << RESET;
-    auto                      cDataIterator = pData.begin();
-    auto                      cFrontEndTypes      = pBoard->connectedFrontEndTypes();
+    auto                      cDataIterator  = pData.begin();
+    auto                      cFrontEndTypes = pBoard->connectedFrontEndTypes();
     std::vector<FrontEndType> cValidTypes{FrontEndType::MPA, FrontEndType::SSA, FrontEndType::SSA2};
     for(auto cValidType: cValidTypes)
     {
@@ -90,8 +90,8 @@ void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
 // required by event but not sure if makes sense for AS
 void D19cPSEventAS::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId)
 {
-    uint8_t cHybridIndex  = getHybridIndex(hybridId);
-    uint8_t cChipIndex = getChipIndex(cHybridIndex, chipContainer->getId());
+    uint8_t cHybridIndex = getHybridIndex(hybridId);
+    uint8_t cChipIndex   = getChipIndex(cHybridIndex, chipContainer->getId());
     LOG(DEBUG) << BOLDYELLOW << "HybridIndex " << +cHybridIndex << " ChipIndex " << +cChipIndex << " -- " << fCounterData.at(cHybridIndex).at(cChipIndex).size() << RESET;
     std::vector<uint32_t> cHits = GetHits(hybridId, chipContainer->getId());
     LOG(DEBUG) << BOLDYELLOW << "HybridIndex " << +cHybridIndex << " ChipIndex " << +cChipIndex << " -- " << cHits.size() << RESET;
@@ -143,17 +143,17 @@ void D19cPSEventAS::SetEvent(const BeBoard* pBoard, uint32_t pNMPA, const std::v
 
 uint32_t D19cPSEventAS::GetNHits(uint8_t pHybridId, uint8_t pSSAId) const
 {
-    uint8_t cHybridIndex   = getHybridIndex(pHybridId);
-    uint8_t cChipIndex  = getChipIndex(cHybridIndex, pSSAId);
-    auto&   cHitVecotr = fCounterData.at(cHybridIndex).at(cChipIndex);
+    uint8_t cHybridIndex = getHybridIndex(pHybridId);
+    uint8_t cChipIndex   = getChipIndex(cHybridIndex, pSSAId);
+    auto&   cHitVecotr   = fCounterData.at(cHybridIndex).at(cChipIndex);
     return std::accumulate(cHitVecotr.begin(), cHitVecotr.end(), 0);
     // const std::vector<uint32_t> &hitVector = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId,fNMPA));
     // return std::accumulate(hitVector.begin()+1, hitVector.end(), 0);
 }
 std::vector<uint32_t> D19cPSEventAS::GetHits(uint8_t pHybridId, uint8_t pSSAId) const
 {
-    uint8_t cHybridIndex  = getHybridIndex(pHybridId);
-    uint8_t cChipIndex = getChipIndex(cHybridIndex, pSSAId);
+    uint8_t cHybridIndex = getHybridIndex(pHybridId);
+    uint8_t cChipIndex   = getChipIndex(cHybridIndex, pSSAId);
     return fCounterData.at(cHybridIndex).at(cChipIndex);
     // const std::vector<uint32_t> &hitVector = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId,fNMPA));
     // LOG (INFO) << BOLDBLUE << hitVector[0] << RESET;

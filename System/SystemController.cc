@@ -1204,7 +1204,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
         else
         {
             EventType fEventType = pBoard->getEventType();
-            uint32_t  fNHybrid       = pBoard->getNHybrid();
+            uint32_t  fNHybrid   = pBoard->getNHybrid();
             // uint32_t  cBlockSize = 0x0000FFFF & pData.at(0);
             // LOG(INFO) << BOLDBLUE << "Reading events from " << +fNHybrid << " FEs connected to uDTC...[ " << +cBlockSize * 4 << " 32 bit words to decode]" << RESET;
             fEventSize = static_cast<uint32_t>((pData.size()) / pNevents);

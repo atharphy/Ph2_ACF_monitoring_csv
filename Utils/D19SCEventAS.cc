@@ -54,13 +54,13 @@ void D19SCEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pData
 {
     LOG(DEBUG) << BOLDBLUE << "Setting event for Async SSA " << RESET;
     auto    cDataIterator = pData.begin();
-    uint8_t cHybridIndex      = 0;
+    uint8_t cHybridIndex  = 0;
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)
         {
             auto&   cHybridCounterData = fCounterData[cHybridIndex];
-            uint8_t cChipIndex          = 0;
+            uint8_t cChipIndex         = 0;
             // loop over chips
             for(auto cChip: *cHybrid)
             {
@@ -119,15 +119,15 @@ void D19SCEventAS::SetEvent(const BeBoard* pBoard, uint32_t pNSSA, const std::ve
 
 uint32_t D19SCEventAS::GetNHits(uint8_t pHybridId, uint8_t pSSAId) const
 {
-    uint8_t cHybridIndex   = getHybridIndex(pHybridId);
-    uint8_t cChipIndex  = getChipIndex(pHybridId, pSSAId);
-    auto&   cHitVecotr = fCounterData.at(cHybridIndex).at(cChipIndex);
+    uint8_t cHybridIndex = getHybridIndex(pHybridId);
+    uint8_t cChipIndex   = getChipIndex(pHybridId, pSSAId);
+    auto&   cHitVecotr   = fCounterData.at(cHybridIndex).at(cChipIndex);
     return std::accumulate(cHitVecotr.begin(), cHitVecotr.end(), 0);
 }
 std::vector<uint32_t> D19SCEventAS::GetHits(uint8_t pHybridId, uint8_t pSSAId) const
 {
-    uint8_t cHybridIndex  = getHybridIndex(pHybridId);
-    uint8_t cChipIndex = getChipIndex(pHybridId, pSSAId);
+    uint8_t cHybridIndex = getHybridIndex(pHybridId);
+    uint8_t cChipIndex   = getChipIndex(pHybridId, pSSAId);
     return fCounterData.at(cHybridIndex).at(cChipIndex);
 }
 
