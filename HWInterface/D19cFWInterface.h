@@ -44,7 +44,7 @@ class LinkInterface;
 class D19cBackendAlignmentFWInterface;
 class D19cDebugFWInterface;
 class D19cOpticalInterface;
-class D19cCommandProcessorInterface;
+class D19clpGBTSlowControlWorkerInterface;
 
 /*
  * \brief init/config of the Fc7 and its Chip's
@@ -60,7 +60,7 @@ class D19cFWInterface : public BeBoardFWInterface
     LinkInterface*                   fLinkInterface{nullptr};
     D19cBackendAlignmentFWInterface* fBackendAlignmentInterface{nullptr};
     D19cDebugFWInterface*            fDebugInterface{nullptr};
-    D19cCommandProcessorInterface*   fCommandProcessorInterface{nullptr};
+    D19clpGBTSlowControlWorkerInterface*   flpGBTSlowControlWorkerInterface{nullptr};
 
     FileHandler* fFileHandler;
     uint32_t     fBroadcastCbcId;
@@ -124,6 +124,7 @@ class D19cFWInterface : public BeBoardFWInterface
     L1ReadoutInterface*              getL1ReadoutInterface() { return fL1ReadoutInterface; }
     FEConfigurationInterface*        getFEConfigurationInterface() { return fFEConfigurationInterface; }
     LinkInterface*                   getLinkInterface() { return fLinkInterface; }
+    D19clpGBTSlowControlWorkerInterface* getlpGBTSlowControlInterface() { return flpGBTSlowControlWorkerInterface; }
     //
     void ConfigureInterfaces(const Ph2_HwDescription::BeBoard* pBoard);
 
