@@ -14,7 +14,6 @@
 #include "../HWDescription/Hybrid.h"
 #include "../HWDescription/OuterTrackerHybrid.h"
 #include "D19cBackendAlignmentFWInterface.h"
-#include "D19clpGBTSlowControlWorkerInterface.h"
 #include "D19cDebugFWInterface.h"
 #include "D19cFastCommandInterface.h"
 #include "D19cI2CInterface.h"
@@ -23,6 +22,7 @@
 #include "D19cOpticalInterface.h"
 #include "D19cPSCounterFWInterface.h"
 #include "D19cTriggerInterface.h"
+#include "D19clpGBTSlowControlWorkerInterface.h"
 #include <algorithm>
 #include <chrono>
 #include <time.h>
@@ -65,8 +65,8 @@ D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoar
         flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this->getId(), this->getUri(), this->getAddressTable());
         LOG(INFO) << BOLDYELLOW << "Created D19clpGBTSlowControlWorkerInterface ..." << RESET;
     }
-    fFEConfigurationInterface  = nullptr;
-    fL1ReadoutInterface        = nullptr;
+    fFEConfigurationInterface = nullptr;
+    fL1ReadoutInterface       = nullptr;
 }
 
 D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler)

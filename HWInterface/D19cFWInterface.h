@@ -53,14 +53,14 @@ class D19cFWInterface : public BeBoardFWInterface
 {
   private:
     // std::recursive_mutex                     fMutex;
-    FEConfigurationInterface*        fFEConfigurationInterface{nullptr};
-    L1ReadoutInterface*              fL1ReadoutInterface{nullptr};
-    TriggerInterface*                fTriggerInterface{nullptr};
-    FastCommandInterface*            fFastCommandInterface{nullptr};
-    LinkInterface*                   fLinkInterface{nullptr};
-    D19cBackendAlignmentFWInterface* fBackendAlignmentInterface{nullptr};
-    D19cDebugFWInterface*            fDebugInterface{nullptr};
-    D19clpGBTSlowControlWorkerInterface*   flpGBTSlowControlWorkerInterface{nullptr};
+    FEConfigurationInterface*            fFEConfigurationInterface{nullptr};
+    L1ReadoutInterface*                  fL1ReadoutInterface{nullptr};
+    TriggerInterface*                    fTriggerInterface{nullptr};
+    FastCommandInterface*                fFastCommandInterface{nullptr};
+    LinkInterface*                       fLinkInterface{nullptr};
+    D19cBackendAlignmentFWInterface*     fBackendAlignmentInterface{nullptr};
+    D19cDebugFWInterface*                fDebugInterface{nullptr};
+    D19clpGBTSlowControlWorkerInterface* flpGBTSlowControlWorkerInterface{nullptr};
 
     FileHandler* fFileHandler;
     uint32_t     fBroadcastCbcId;
@@ -117,13 +117,13 @@ class D19cFWInterface : public BeBoardFWInterface
     D19cFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler);
     void setFileHandler(FileHandler* pHandler);
 
-    void                             printReadoutInterface() { LOG(INFO) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET; }
-    D19cBackendAlignmentFWInterface* getBackendAlignmentInterface() { return fBackendAlignmentInterface; }
-    D19cDebugFWInterface*            getDebugInterface() { return fDebugInterface; }
-    TriggerInterface*                getTriggerInterface() { return fTriggerInterface; }
-    L1ReadoutInterface*              getL1ReadoutInterface() { return fL1ReadoutInterface; }
-    FEConfigurationInterface*        getFEConfigurationInterface() { return fFEConfigurationInterface; }
-    LinkInterface*                   getLinkInterface() { return fLinkInterface; }
+    void                                 printReadoutInterface() { LOG(INFO) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET; }
+    D19cBackendAlignmentFWInterface*     getBackendAlignmentInterface() { return fBackendAlignmentInterface; }
+    D19cDebugFWInterface*                getDebugInterface() { return fDebugInterface; }
+    TriggerInterface*                    getTriggerInterface() { return fTriggerInterface; }
+    L1ReadoutInterface*                  getL1ReadoutInterface() { return fL1ReadoutInterface; }
+    FEConfigurationInterface*            getFEConfigurationInterface() { return fFEConfigurationInterface; }
+    LinkInterface*                       getLinkInterface() { return fLinkInterface; }
     D19clpGBTSlowControlWorkerInterface* getlpGBTSlowControlInterface() { return flpGBTSlowControlWorkerInterface; }
     //
     void ConfigureInterfaces(const Ph2_HwDescription::BeBoard* pBoard);

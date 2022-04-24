@@ -2,7 +2,8 @@
 
 namespace Ph2_HwInterface
 {
-D19clpGBTSlowControlWorkerInterface::D19clpGBTSlowControlWorkerInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : D19cCommandProcessorInterface(pId, pUri, pAddressTable)
+D19clpGBTSlowControlWorkerInterface::D19clpGBTSlowControlWorkerInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable)
+    : D19cCommandProcessorInterface(pId, pUri, pAddressTable)
 {
     LOG(INFO) << BOLDYELLOW << "D19clpGBTSlowControlWorkerInterface::D19clpGBTSlowControlWorkerInterface Constructor" << RESET;
 }
@@ -133,4 +134,4 @@ uint8_t D19clpGBTSlowControlWorkerInterface::GetTryCntr(uint8_t pFunctionId)
     return cCntr;
 }
 
-}
+} // namespace Ph2_HwInterface

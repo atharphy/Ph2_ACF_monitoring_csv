@@ -43,7 +43,6 @@ class FEConfigurationInterface : public RegManager
     ~FEConfigurationInterface();
 
   public:
-
     virtual bool MultiWrite(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pRegisterItems)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FEConfiguration::MultiWrite is absent" << RESET;
@@ -93,10 +92,10 @@ class FEConfigurationInterface : public RegManager
     void              setRegisterTracking(uint8_t pTrackRegisters) { fTrackRegisters = pTrackRegisters; }
 
   protected:
-    Configuration                  fConfiguration;
-    uint8_t                        fTrackRegisters{0};
-    uint8_t                        fNReadoutChip{0};
-    ConfigurationType              fType;
+    Configuration     fConfiguration;
+    uint8_t           fTrackRegisters{0};
+    uint8_t           fNReadoutChip{0};
+    ConfigurationType fType;
 };
 } // namespace Ph2_HwInterface
 #endif
