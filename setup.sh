@@ -136,4 +136,14 @@ fi
 
 alias formatAll="find ${PH2ACF_BASE_DIR} -iname *.h -o -iname *.cc | xargs ${clang_command} -i"
 
+if [[ $1 == "ci" ]]; then
+    export CompileForHerd=false
+    export CompileForShep=false
+    export CompileWithEUDAQ=false
+    export CompileWithTCUSB=false
+    export UseTCUSBforROH=false
+    export UseTCUSBTcpServer=false
+fi
+
+
 echo "=== DONE ==="
