@@ -75,7 +75,7 @@ void OTTool::Reset()
 
                         auto cValueInMemory = cChip->getReg(cMapItem.first);
                         LOG(DEBUG) << BOLDYELLOW << fMyName << "::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
-                                  << cMapItem.second.fValue << RESET;
+                                   << cMapItem.second.fValue << RESET;
 
                         cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second.fValue));
                     }

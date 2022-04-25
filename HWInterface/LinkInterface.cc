@@ -11,5 +11,4 @@ LinkInterface::LinkInterface(const std::string& puHalConfigFileName, uint32_t pB
 }
 LinkInterface::~LinkInterface() {}
 
-
 } // namespace Ph2_HwInterface

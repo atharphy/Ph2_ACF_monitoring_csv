@@ -144,7 +144,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 cFWInterface->selectLink(cOpticalGroup->getId());
                 cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
                 LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
-                D19cDebugFWInterface* cDebugInterface = cFWInterface->getDebugInterface(); // cDebugInterface->StubDebug(true, 5);
+                // D19cDebugFWInterface* cDebugInterface = cFWInterface->getDebugInterface(); // cDebugInterface->StubDebug(true, 5);
                 // cDebugInterface->StubDebug(true, 5);
                 // enable stub debug - allows you to 'scope' the stub output
 
@@ -397,58 +397,23 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
             std::this_thread::sleep_for(std::chrono::milliseconds(30));
             for(const auto cMaster: pMasters)
             {
-                uint8_t cFrequency = (cMaster == 1) ? 2 : 3;
-                // #ifdef __TCUSB__
-                // #ifdef __SEH_USB__
-                //     flpGBTInterface->getExternalController()->getInterface().set_load2(true, false, 0);
-                //     flpGBTInterface->getExternalController()->getInterface().set_load1(true, false, 0);
-                //     std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-                //     flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().I_P1V2_R, cSetRightLoad);
-                //     flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().I_P1V2_L, cSetLeftLoad);
-
-                // #endif
-                // #endif
                 bool                 cMasterSuccess = true;
                 std::vector<uint8_t> cI2CStatusVect;
-                // std::vector<int>     cTryVect;
-                // std::vector<float>   cSetRightLoadVect;
-                // std::vector<float>   cSetLeftLoadVect;
-
-                uint8_t cSlaveAddress = 0x60;
-                // LOG(INFO) << BOLDBLUE << "Don't care about following first I2C transaction" << RESET;
-                // uint8_t cSuccess  = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x09, 1);
-                // uint8_t i2cstatus = clpGBTInterface->GetI2CStatus(cOpticalGroup->flpGBT, cMaster);
-                // LOG(INFO) << GREEN << "I2C Master " << +cMaster << " -- Status : " << fI2CStatusMap[i2cstatus] << RESET;
-                // LOG(INFO) << BOLDBLUE << "--------" << RESET;
-                struct timeval stop, start;
+                struct timeval       stop, start;
                 gettimeofday(&start, NULL);
                 // do stuff
-                uint8_t failureIter = 0;
-                int     tries       = 10000;
+                uint8_t failureIter   = 0;
+                int     tries         = 10000;
+                uint8_t cFrequency    = (cMaster == 1) ? 2 : 3;
+                uint8_t cSlaveAddress = 0x60;
                 for(int j = 0; j < tries; j++)
                 // int j = 0;
                 // while(true)
                 {
-                    // #ifdef __TCUSB__
-                    // #ifdef __SEH_USB__
-                    //                     if(j == tries / 2)
-                    //                     {
-                    //                         flpGBTInterface->getExternalController()->getInterface().set_load2(true, false, 1500);
-                    //                         flpGBTInterface->getExternalController()->getInterface().set_load1(true, false, 1500);
-                    //                         std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-                    //                         flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().I_P1V2_R, cSetRightLoad);
-                    //                         flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().I_P1V2_L, cSetLeftLoad);
-                    //                     }
-                    // #endif
-                    // #endif
-                    // cSuccess = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x0901, 2);
-
-                    // uint8_t cSuccess  = clpGBTInterface->WriteI2C(cOpticalGroup->flpGBT, cMaster, cSlaveAddress, 0x09, 1);
                     uint8_t i2cstatus = 4; // clpGBTInterface->GetI2CStatus(cOpticalGroup->flpGBT, cMaster);
                     uint8_t cNbyte = 1, cSlaveData = 0x9;
-                    uint8_t cMasterConfig = (cNbyte << 2) | (0 << cFrequency);
+                    uint8_t cMasterConfig = (cNbyte << 2) | (cFrequency << 0);
                     bool    cSuccess      = cOpticalInterface->MultiByteWriteI2C(clpGBT, cMaster, cMasterConfig, cSlaveAddress, cSlaveData);
-
                     if(cSuccess)
                     {
                         LOG(DEBUG) << BOLDGREEN << "I2C Master " << +cMaster << " PASSED" << RESET;
@@ -470,10 +435,6 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
                             break;
                         }
                     }
-
-                    // cTryVect.push_back(j);
-                    // cSetRightLoadVect.push_back(cSetRightLoad);
-                    // cSetLeftLoadVect.push_back(cSetLeftLoad);
                     cI2CStatusVect.push_back(i2cstatus);
                     cMasterSuccess &= cSuccess;
                 }
@@ -485,35 +446,17 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
                 fillSummaryTree(Form("i2cmaster%i", cMaster), cMasterSuccess);
                 gettimeofday(&stop, NULL);
                 LOG(INFO) << BOLDBLUE << "Duration " << (stop.tv_sec - start.tv_sec) * 1000000 + stop.tv_usec - start.tv_usec << RESET;
-                // printf("took %lu us\n", (stop.tv_sec - start.tv_sec) * 1000000 + stop.tv_usec - start.tv_usec);
                 cTestSuccess &= cMasterSuccess;
                 cI2CStatusVectVect.push_back(cI2CStatusVect);
-                // cTryVectVect.push_back(cTryVect);
-                // cSetRightLoadVectVect.push_back(cSetRightLoadVect);
-                // cSetLeftLoadVectVect.push_back(cSetLeftLoadVect);
             }
         }
-        // cI2CTree->Branch(Form("I2C_Master_%i_status", cMaster), &cI2CStatusVect);
-        // cI2CTree->Branch("I2C_Master_%i_transaction", &cTryVect);
     }
-    // #ifdef __TCUSB__
-    // #ifdef __SEH_USB__
-    //     flpGBTInterface->getExternalController()->getInterface().set_load2(true, false, 1000);
-    //     flpGBTInterface->getExternalController()->getInterface().set_load1(true, false, 1000);
-    //     std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-    //     flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().I_P1V2_R, cSetRightLoad);
-    //     flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().I_P1V2_L, cSetLeftLoad);
 
-    // #endif
-    // #endif
     int index = 0;
     for(const auto cMaster: pMasters)
     {
         auto cI2CTree = new TTree(Form("tI2CMaster%i", cMaster), Form("I2C Master %i Test Tree", cMaster));
         cI2CTree->Branch("I2C_Master_status", &cI2CStatusVectVect[index]);
-        // cI2CTree->Branch("I2C_Master_transaction", &cTryVectVect[index]);
-        // cI2CTree->Branch("I2C_Master_rightLoad", &cSetRightLoadVectVect[index]);
-        // cI2CTree->Branch("I2C_Master_leftLoad", &cSetLeftLoadVectVect[index]);
         cI2CTree->Fill();
         fResultFile->cd();
         cI2CTree->Write();
@@ -668,10 +611,10 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     auto cADCHistogram = new TH2I("hADCHistogram", "Fixed ADC Histogram", cADCsMap.size(), 0, cADCsMap.size(), 1024, 0, 1024);
     cADCHistogram->GetZaxis()->SetTitle("Number of entries");
 
-    auto  cADCsMapIterator = cADCsMap.begin();
-    int   cADCValue;
-    int   cBinCount         = 1;
-    
+    auto cADCsMapIterator = cADCsMap.begin();
+    int  cADCValue;
+    int  cBinCount = 1;
+
     fillSummaryTree("ADC conversion factor", CONVERSION_FACTOR);
     for(auto cBoard: *fDetectorContainer)
     {
@@ -684,7 +627,8 @@ bool OTHybridTester::LpGBTTestFixedADCs()
         {
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
 #ifdef __ROH_USB__
-            flpGBTInterface->getExternalController()->getInterface().dac_output(cDACValue);
+            // FIXME why is this here and what is cDACValue
+            // flpGBTInterface->getExternalController()->getInterface().dac_output(cDACValue);
 #elif __SEH_USB__
             flpGBTInterface->getExternalController()->getInterface().set_AMUX(3500, 3500);
 #endif
@@ -893,7 +837,7 @@ bool OTHybridTester::LpGBTTestVTRx()
             clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "I2CM1Config", 8);
             // I2CWrite(cLinkID, cMaster, cSlaveAddress, 0x09, 1, cTheI2CWriteCount);
             uint8_t cMasterId = 1, cSlaveAddress = 0x50, cSlaveData = 0x15, cNbyte = 1, cFrequency = 2;
-            uint8_t cMasterConfig = (cNbyte << 2) | (0 << cFrequency);
+            uint8_t cMasterConfig = (cNbyte << 2) | (cFrequency << 0);
             cRecent               = cOpticalInterface->MultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, cSlaveData);
             for(int i = 0; i < 5 && !(cRecent); i++) { cRecent = cOpticalInterface->MultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, cSlaveData); }
             cResult                                              = cOpticalInterface->SingleByteReadI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress);
@@ -937,9 +881,9 @@ bool OTHybridTester::LpGBTGetLinkLock()
         fBeBoardInterface->setBoard(cBoard->getId());
         for(auto cOpticalGroup: *cBoard)
         {
-            D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-
-            cStatus = cFWInterface->GetLinkStatus(cOpticalGroup->getId());
+            D19cFWInterface*   cFWInterface   = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+            D19cLinkInterface* cLinkInterface = static_cast<D19cLinkInterface*>(cFWInterface->getLinkInterface());
+            cStatus                           = cLinkInterface->GetLinkStatus(cOpticalGroup->getId());
         }
     }
     return cStatus;

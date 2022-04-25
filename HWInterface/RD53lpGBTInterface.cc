@@ -80,7 +80,8 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     // #####################
     // # Make reverted map #
     // #####################
-    for(auto& ele: fPUSMStatusMap) revertedPUSMStatusMap[ele.second] = ele.first;
+    uint8_t cChipVersion = static_cast<lpGBT*>(pChip)->getVersion();
+    for(auto& ele: fPUSMStatusMap[cChipVersion]) revertedPUSMStatusMap[ele.second] = ele.first;
 
     // #########################
     // # Configure PLL and DLL #
@@ -105,10 +106,10 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
 
     if(PUSMStatus != revertedPUSMStatusMap["READY"])
     {
-        LOG(ERROR) << BOLDRED << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[PUSMStatus] << RESET;
+        LOG(ERROR) << BOLDRED << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[cChipVersion][PUSMStatus] << RESET;
         return false;
     }
-    LOG(INFO) << GREEN << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[PUSMStatus] << RESET;
+    LOG(INFO) << GREEN << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[cChipVersion][PUSMStatus] << RESET;
 
     // ######################
     // # Configure Up links #
