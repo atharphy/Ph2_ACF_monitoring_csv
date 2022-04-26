@@ -133,8 +133,6 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
         cBoardRegNap.insert(cOrigRegMap.begin(), cOrigRegMap.end());
     }
 
-    // for now.. force to use async mode here
-    bool cForcePSasync = true;
     // make sure register tracking is on
     for(auto board: *fDetectorContainer)
     {
@@ -151,6 +149,8 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
         }
     }
 
+    // for now.. force to use async mode here
+    bool cForcePSasync = true;
     // event types
     fEventTypes.clear();
     for(auto cBoard: *fDetectorContainer)
@@ -160,6 +160,13 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
         if(!cForcePSasync) continue;
         cBoard->setEventType(EventType::PSAS);
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->InitializePSCounterFWInterface(cBoard);
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid) { fReadoutChipInterface->WriteChipReg(cChip, "AnalogueAsync", 1); }
+            }
+        }
     }
 #ifdef __USE_ROOT__
     fDQMHistogramPedeNoise.book(fResultFile, *fDetectorContainer, fSettingsMap);
@@ -444,9 +451,7 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
     this->bitWiseScan("Threshold", fEventsPerPoint, 0.56, fNEventsPerBurst);
     if(forceAllChannels) this->SetTestAllChannels(originalAllChannelFlag);
 
-    float    cMean = 0.;
-    uint32_t nCbc  = 0;
-
+    uint8_t cNStripChips = 0, cNPixelChips = 0;
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -456,19 +461,34 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
                 for(auto cChip: *cHybrid)
                 {
                     uint16_t tmpVthr = 0;
-                    if(cChip->getFrontEndType() == FrontEndType::CBC3) tmpVthr = (static_cast<ReadoutChip*>(cChip)->getReg("VCth1") + (static_cast<ReadoutChip*>(cChip)->getReg("VCth2") << 8));
-                    if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) tmpVthr = static_cast<ReadoutChip*>(cChip)->getReg("Bias_THDAC");
-                    if(cChip->getFrontEndType() == FrontEndType::MPA) tmpVthr = static_cast<ReadoutChip*>(cChip)->getReg("ThDAC0");
-
-                    cMean += tmpVthr;
-                    ++nCbc;
+                    if(cChip->getFrontEndType() == FrontEndType::CBC3)
+                    {
+                        tmpVthr = (static_cast<ReadoutChip*>(cChip)->getReg("VCth1") + (static_cast<ReadoutChip*>(cChip)->getReg("VCth2") << 8));
+                        fMeanStrips += tmpVthr;
+                        cNStripChips++;
+                    }
+                    if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) 
+                    {
+                        tmpVthr = static_cast<ReadoutChip*>(cChip)->getReg("Bias_THDAC");
+                        fMeanStrips += tmpVthr;
+                        cNStripChips++;
+                    }
+                    if(cChip->getFrontEndType() == FrontEndType::MPA) 
+                    {
+                        tmpVthr = static_cast<ReadoutChip*>(cChip)->getReg("ThDAC0");
+                        fMeanPixels += tmpVthr;
+                        cNPixelChips++;
+                    }
                 }
             }
         }
     }
-    cMean /= nCbc;
-    LOG(INFO) << BOLDBLUE << "Found Pedestals to be around " << BOLDRED << cMean << RESET;
+    fMeanStrips = (cNStripChips > 0) ? fMeanStrips/cNStripChips : 0xFF/2;
+    fMeanPixels = (cNPixelChips > 0) ? fMeanPixels/cNPixelChips : 0xFF/2;
+    if(cWithCBC || cWithSSA) LOG(INFO) << BOLDBLUE << "Found Pedestals on Strip ASICs to be around " << fMeanStrips << RESET;
+    else LOG(INFO) << BOLDBLUE << "Found Pedestals on Pixel ASICs to be around " << fMeanPixels << RESET;
     setNormalization(cNormalizationOrig);
+    float    cMean = (cWithCBC || cWithSSA) ? fMeanStrips : fMeanPixels;
     return cMean;
 }
 void PedeNoise::scanScurves()
@@ -741,8 +761,7 @@ void PedeNoise::measureSCurves(uint16_t pStartValue)
     uint16_t cValue         = pStartValue;
     uint16_t cMaxValue      = (1 << 10) - 1;
     // uint16_t cMinValue      = 0;
-    if(cWithSSA) cMaxValue = (1 << 8) - 1;
-    if(cWithMPA) cMaxValue = (1 << 8) - 1;
+    if(cWithSSA || cWithMPA) cMaxValue = (1 << 8) - 1;
     float              cFirstLimit = (cWithCBC) ? 0 : 1;
     std::vector<int>   cSigns{-1, 1};
     std::vector<float> cLimits{cFirstLimit, 1 - cFirstLimit};

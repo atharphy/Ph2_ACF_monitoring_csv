@@ -65,8 +65,8 @@ class PedeNoise : public Tool
     uint16_t fMinThreshold{0};
     uint16_t fMaxThreshold{1023};
     float    fLimit{0.005};
-    float    fMean_Strps{0};
-    float    fMean_Pxls{0};
+    float    fMeanStrips{0};
+    float    fMeanPixels{0};
     uint32_t fNEventsToValidate{0};
     float    fMaskingThreshold{0};
     bool     fMaskNoisyChannels{0};

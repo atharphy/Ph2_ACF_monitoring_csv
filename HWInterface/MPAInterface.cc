@@ -875,12 +875,11 @@ bool MPAInterface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerify
     // uint32_t enwrite=1;
     // if(inject) enwrite=17;
 
-    return this->WriteChipReg(pChip, "AnalogueAsync", 1);
-    /*
+    // return this->WriteChipReg(pChip, "AnalogueAsync", 1);
     uint32_t enwrite = 0x17;
     if(inject) enwrite = 0x53;
     this->WriteChipReg(pChip, "ENFLAGS_ALL", enwrite);
-    return true;*/
+    return true;
 }
 
 } // namespace Ph2_HwInterface
