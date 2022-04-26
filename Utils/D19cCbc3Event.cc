@@ -79,8 +79,8 @@ void D19cCbc3Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
         // retrieve chunck of data vector belonging to this event
         if(cHeader == 0xFFFF)
         {
-            auto     cIterator = cEventIterator + LENGTH_EVENT_HEADER;
-            uint32_t cStatus   = 0x00000000;
+            auto     cIterator  = cEventIterator + LENGTH_EVENT_HEADER;
+            uint32_t cStatus    = 0x00000000;
             size_t   cChipIndex = 0;
             for(auto cOpticalGroup: *pBoard)
             {
@@ -531,8 +531,8 @@ void D19cCbc3Event::print(std::ostream& os) const
     }*/
     for(__attribute__((unused)) auto const& hitVector: fEventDataVector)
     {
-        uint8_t cHybridId  = getHybridIdFromVectorIndex(vectorIndex, fNCbc);
-        uint8_t cCbcId = getCbcIdFromVectorIndex(vectorIndex++, fNCbc);
+        uint8_t cHybridId = getHybridIdFromVectorIndex(vectorIndex, fNCbc);
+        uint8_t cCbcId    = getCbcIdFromVectorIndex(vectorIndex++, fNCbc);
         this->printCbcHeader(os, cHybridId, cCbcId);
         os << GREEN << "FEId = " << +cHybridId << " CBCId = " << +cCbcId << RESET << std::endl;
 

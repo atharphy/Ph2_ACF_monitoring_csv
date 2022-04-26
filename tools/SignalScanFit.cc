@@ -23,10 +23,10 @@ void SignalScanFit::Initialize()
 
                 // Make a canvas for the live plot
                 uint32_t cHybridId = cHybrid->getId();
-                fNCbc          = 0; // cHybrid->getNChip();
+                fNCbc              = 0; // cHybrid->getNChip();
                 for(auto cCbc: *cHybrid) { fNCbc = (cCbc->getId() >= fNCbc) ? (cCbc->getId() + 1) : fNCbc; }
                 TCanvas* ctmpCanvas = new TCanvas(Form("c_online_canvas_fe%d", cHybridId), Form("FE%d  Online Canvas", cHybridId));
-                fCanvasMap[cHybrid]     = ctmpCanvas;
+                fCanvasMap[cHybrid] = ctmpCanvas;
 
                 // Histograms
                 TString  cName = Form("h_hybrid_thresholdScan_Fe%d", cHybridId);
@@ -64,13 +64,19 @@ void SignalScanFit::Initialize()
                 bookHistogram(cHybrid, "hybrid_signal", cSignalHist);
 
                 // 2D-plot with cluster width on the x-axis, Vcth on y-axis, counts of certain clustersize on z-axis.
-                TH2D* cVCthClusterSizeHist = new TH2D(
-                    Form("h_hybrid_clusterSize_per_Vcth_Fe%d", cHybridId), "Cluster size vs Vcth ; Cluster size [strips] ; Threshold [Vcth] ; # clusters", 15, -0.5, 14.5, fVCthNbins, fVCthMin, fVCthMax);
+                TH2D* cVCthClusterSizeHist = new TH2D(Form("h_hybrid_clusterSize_per_Vcth_Fe%d", cHybridId),
+                                                      "Cluster size vs Vcth ; Cluster size [strips] ; Threshold [Vcth] ; # clusters",
+                                                      15,
+                                                      -0.5,
+                                                      14.5,
+                                                      fVCthNbins,
+                                                      fVCthMin,
+                                                      fVCthMax);
                 bookHistogram(cHybrid, "vcth_ClusterSize", cVCthClusterSizeHist);
 
                 // 1D-plot with the number of triggers per VCth
-                TProfile* cNumberOfTriggers =
-                    new TProfile(Form("h_hybrid_totalNumberOfTriggers_Fe%d", cHybridId), Form("Total number of triggers received ; Threshold [Vcth] ; Number of triggers"), fVCthNbins, fVCthMin, fVCthMax);
+                TProfile* cNumberOfTriggers = new TProfile(
+                    Form("h_hybrid_totalNumberOfTriggers_Fe%d", cHybridId), Form("Total number of triggers received ; Threshold [Vcth] ; Number of triggers"), fVCthNbins, fVCthMin, fVCthMax);
                 bookHistogram(cHybrid, "number_of_triggers", cNumberOfTriggers);
 
                 // 1D-plot with the timeout value per VCth

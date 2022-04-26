@@ -1061,7 +1061,7 @@ int main(int argc, char* argv[])
         // find pedestal and set threshold
         if(cmd.foundOption("completeDataCheck"))
         {
-            std::string          cArgsStr    = cmd.optionValue("completeDataCheck");
+            std::string          cArgsStr      = cmd.optionValue("completeDataCheck");
             std::vector<uint8_t> cChipsToCheck = getArgs(cArgsStr);
             cMemoryChecker.EvaluatePedeNoise(10); // find pedestal + noise
             cMemoryChecker.SetThreshold(-2.0);    // set threshold to 3 sigma away from pedestal

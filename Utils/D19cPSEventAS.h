@@ -5,8 +5,8 @@
 #include "Event.h"
 
 namespace Ph2_HwInterface
-{                                                      // Begin namespace
-using ChipCounterData    = std::vector<uint32_t>;       // one per chip
+{                                                       // Begin namespace
+using ChipCounterData   = std::vector<uint32_t>;        // one per chip
 using HybridCounterData = std::vector<ChipCounterData>; // vector per hybrid
 using CounterData       = std::vector<HybridCounterData>;
 

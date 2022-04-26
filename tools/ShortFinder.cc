@@ -310,7 +310,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                 {
                     ReadoutChip* cChip =
                         static_cast<ReadoutChip*>(fDetectorContainer->at(cBoardData->getIndex())->at(cOpticalGroupData->getIndex())->at(cHybridData->getIndex())->at(cChipData->getIndex()));
-                    auto cThreshold                  = fReadoutChipInterface->ReadChipReg(cChip, "Threshold");
+                    auto cThreshold                   = fReadoutChipInterface->ReadChipReg(cChip, "Threshold");
                     cChipData->getSummary<uint16_t>() = cThreshold;
                     cMeanValue += cThreshold;
                     // set threshold a little bit lower than 90% level

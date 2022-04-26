@@ -1126,7 +1126,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                     for(auto cChip: *cHybrid)
                     {
                         auto&                cDataContainerThisChip = cDataContainerThisFE->at(cChip->getIndex());
-                        auto&                cSummary              = cDataContainerThisChip->getSummary<Occupancy, Occupancy>();
+                        auto&                cSummary               = cDataContainerThisChip->getSummary<Occupancy, Occupancy>();
                         ChannelGroupHandler* cHandler;
                         if(cChip->getFrontEndType() == FrontEndType::MPA)
                             cHandler = new MPAChannelGroupHandler();

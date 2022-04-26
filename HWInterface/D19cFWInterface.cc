@@ -14,14 +14,15 @@
 #include "../HWDescription/Hybrid.h"
 #include "../HWDescription/OuterTrackerHybrid.h"
 #include "D19cBackendAlignmentFWInterface.h"
-#include "D19cCommandProcessorInterface.h"
 #include "D19cDebugFWInterface.h"
 #include "D19cFastCommandInterface.h"
 #include "D19cI2CInterface.h"
 #include "D19cL1ReadoutInterface.h"
+#include "D19cLinkInterface.h"
 #include "D19cOpticalInterface.h"
 #include "D19cPSCounterFWInterface.h"
 #include "D19cTriggerInterface.h"
+#include "D19clpGBTSlowControlWorkerInterface.h"
 #include <algorithm>
 #include <chrono>
 #include <time.h>
@@ -59,14 +60,13 @@ D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoar
         fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
         LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
-    if(fCommandProcessorInterface == nullptr)
+    if(flpGBTSlowControlWorkerInterface == nullptr)
     {
-        fCommandProcessorInterface = new D19cCommandProcessorInterface(this->getId(), this->getUri(), this->getAddressTable());
-        LOG(INFO) << BOLDYELLOW << "Created D19cCommandProcessorInterface ..." << RESET;
+        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        LOG(INFO) << BOLDYELLOW << "Created D19clpGBTSlowControlWorkerInterface ..." << RESET;
     }
-    fFEConfigurationInterface  = nullptr;
-    fL1ReadoutInterface        = nullptr;
-    fCommandProcessorInterface = nullptr;
+    fFEConfigurationInterface = nullptr;
+    fL1ReadoutInterface       = nullptr;
 }
 
 D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler)
@@ -100,10 +100,10 @@ D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoar
         fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
         LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
-    if(fCommandProcessorInterface == nullptr)
+    if(flpGBTSlowControlWorkerInterface == nullptr)
     {
-        fCommandProcessorInterface = new D19cCommandProcessorInterface(this->getId(), this->getUri(), this->getAddressTable());
-        LOG(INFO) << BOLDYELLOW << "Created D19cCommandProcessorInterface ..." << RESET;
+        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        LOG(INFO) << BOLDYELLOW << "Created D19clpGBTSlowControlWorkerInterface ..." << RESET;
     }
     fFEConfigurationInterface = nullptr;
     fL1ReadoutInterface       = nullptr;
@@ -138,10 +138,10 @@ D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* 
         fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
         LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
-    if(fCommandProcessorInterface == nullptr)
+    if(flpGBTSlowControlWorkerInterface == nullptr)
     {
-        fCommandProcessorInterface = new D19cCommandProcessorInterface(this->getId(), this->getUri(), this->getAddressTable());
-        LOG(INFO) << BOLDYELLOW << "Created D19cCommandProcessorInterface ..." << RESET;
+        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        LOG(INFO) << BOLDYELLOW << "Created D19clpGBTSlowControlWorkerInterface ..." << RESET;
     }
     fFEConfigurationInterface = nullptr;
     fL1ReadoutInterface       = nullptr;
@@ -178,10 +178,10 @@ D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* 
         fDebugInterface = new D19cDebugFWInterface(this->getId(), this->getUri(), this->getAddressTable());
         LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
     }
-    if(fCommandProcessorInterface == nullptr)
+    if(flpGBTSlowControlWorkerInterface == nullptr)
     {
-        fCommandProcessorInterface = new D19cCommandProcessorInterface(this->getId(), this->getUri(), this->getAddressTable());
-        LOG(INFO) << BOLDYELLOW << "Created D19cCommandProcessorInterface ..." << RESET;
+        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this->getId(), this->getUri(), this->getAddressTable());
+        LOG(INFO) << BOLDYELLOW << "Created D19clpGBTSlowControlWorkerInterface ..." << RESET;
     }
     fFEConfigurationInterface = nullptr;
     fL1ReadoutInterface       = nullptr;
@@ -419,98 +419,6 @@ void D19cFWInterface::powerAllFMCs(bool pEnable)
     this->WriteReg("sysreg.fmc_pwr.l12_pwr_en", (int)pEnable);
     this->WriteReg("sysreg.fmc_pwr.l8_pwr_en", (int)pEnable);
 }
-void D19cFWInterface::ResetLink(uint8_t pLinkId)
-{
-    LOG(INFO) << BOLDBLUE << "Resetting Link#" << +pLinkId << RESET;
-    // reset here for good measure
-    uint32_t cCommand = (0x0 << 22) | ((pLinkId & 0x3f) << 26);
-    this->WriteReg("fc7_daq_ctrl.optical_block.general", cCommand);
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    // get link status
-    cCommand = (0x1 << 22) | ((pLinkId & 0x3f) << 26);
-    this->WriteReg("fc7_daq_ctrl.optical_block.general", cCommand);
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-}
-bool D19cFWInterface::GetLinkStatus(uint8_t pLinkId)
-{
-    bool cGBTxLocked = true;
-    // read back status register
-    LOG(INFO) << BOLDBLUE << "GBT Link Status..." << RESET;
-    uint32_t cLinkStatus = this->ReadReg("fc7_daq_stat.optical_block");
-    LOG(INFO) << BOLDBLUE << "GBT Link" << +pLinkId << " status " << std::bitset<32>(cLinkStatus) << RESET;
-    std::vector<std::string> cStates = {"GBT TX Ready", "MGT Ready", "GBT RX Ready"};
-    uint8_t                  cIndex  = 1;
-    for(auto cState: cStates)
-    {
-        uint8_t cStatus = (cLinkStatus >> (3 - cIndex)) & 0x1;
-        cGBTxLocked &= (cStatus == 1);
-        if(cStatus == 1)
-            LOG(INFO) << BOLDBLUE << "\t... " << cState << BOLDGREEN << "\t : LOCKED" << RESET;
-        else
-            LOG(INFO) << BOLDBLUE << "\t... " << cState << BOLDRED << "\t : FAILED" << RESET;
-        cIndex++;
-    }
-    return cGBTxLocked;
-}
-
-bool D19cFWInterface::LinkLock(const BeBoard* pBoard)
-{
-    // std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    // check links are up
-    std::vector<std::string> cStates      = {"GBT TX Ready", "MGT Ready", "GBT RX Ready"};
-    bool                     cLinksLocked = true;
-    uint8_t                  cMaxAttempts = 3;
-    uint8_t                  cAttempCount = 0;
-    do
-    {
-        cLinksLocked = true;
-        for(auto cOpticalReadout: *pBoard)
-        {
-            uint8_t cLinkId = cOpticalReadout->getId();
-            if(cOpticalReadout->getReset() == 1)
-                ResetLink(cLinkId);
-            else
-                LOG(INFO) << BOLDYELLOW << "\t... will not reset Link#" << cOpticalReadout->getId() << " on BeBoard#" << +pBoard->getId() << RESET;
-
-            bool cLocked = GetLinkStatus(cLinkId);
-            cLinksLocked = cLinksLocked && cLocked;
-        }
-        if(cLinksLocked)
-        {
-            LOG(INFO) << BOLDGREEN << "All links locked." << RESET;
-            LOG(INFO) << BOLDGREEN << "Set fLinkLockStatus true." << RESET;
-            break;
-        }
-        else
-        {
-            LOG(DEBUG) << BOLDRED << "Resetting lpGBT link .. no lock" << RESET;
-            // reset lpGBT core
-            this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
-            this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
-        }
-        cAttempCount++;
-    } while(!cLinksLocked && cAttempCount < cMaxAttempts);
-
-    // uint32_t useless=0;
-    // this->I2CWrite(0, 1, 0x50, 0x04, 1, 2, useless);
-
-    // std::cout << __PRETTY_FUNCTION__ <<  +this->I2CRead(0, 1, 0x50, 1, 2, useless) << std::endl;
-    // this->I2CWrite(0, 1, 0x50, 0x0e08, 2, 2, useless);
-    // this->I2CWrite(0, 1, 0x50, 0x0e0C, 2, 2, useless);
-    // this->I2CWrite(0, 1, 0x50, 0x0e10, 2, 2, useless);
-    // // standard
-    // this->I2CWrite(0, 1, 0x50, 0x3005, 2, 2, useless); //nominal (0x30) bias (05)
-    // this->I2CWrite(0, 1, 0x50, 0x2006, 2, 2, useless); //nominal (0x20) modulation (06)
-    // // worst 
-    // //this->I2CWrite(0, 1, 0x50, 0x7F05, 2, 2, useless); // max bias for VTRX+ v1.2 0x7F
-    // //this->I2CWrite(0, 1, 0x50, 0x7F06, 2, 2, useless); // max modulation for VTRX+ v1.2 0x7F
-    // std::cout << __PRETTY_FUNCTION__ <<  +this->I2CRead(0, 1, 0x50, 1, 2, useless) << std::endl;
-
-    return cLinksLocked;
-}
-
 void D19cFWInterface::InitializePSCounterFWInterface(const BeBoard* pBoard)
 {
     fL1ReadoutInterface = nullptr;
@@ -532,12 +440,17 @@ void D19cFWInterface::IniitalizeL1ReadoutInterface(const BeBoard* pBoard)
 }
 void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
 {
+    if(fLinkInterface == nullptr && pBoard->isOptical())
+    {
+        LOG(INFO) << BOLDBLUE << "Optical readout . initializing link control interface" << RESET;
+        fLinkInterface = new D19cLinkInterface(this->getId(), this->getUri(), this->getAddressTable());
+    }
     if(fFEConfigurationInterface == nullptr)
     {
         Configuration cConfiguration;
         if(!pBoard->isOptical())
         {
-            LOG(INFO) << BOLDYELLOW << "Electrical readout.. iniitialize I2C interface" << RESET;
+            LOG(INFO) << BOLDYELLOW << "Electrical readout.. initialize I2C interface" << RESET;
             fFEConfigurationInterface = new D19cI2CInterface(this->getId(), this->getUri(), this->getAddressTable());
             (static_cast<D19cI2CInterface*>(fFEConfigurationInterface))->ConfigureI2CMap(pBoard);
             cConfiguration.fRetry       = 0;
@@ -546,7 +459,7 @@ void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
         }
         else
         {
-            LOG(INFO) << BOLDBLUE << "Optical readout . initializing Optical interface" << RESET;
+            LOG(INFO) << BOLDBLUE << "Optical readout . initializing Optical interface for FE configuration" << RESET;
             fFEConfigurationInterface   = new D19cOpticalInterface(this->getId(), this->getUri(), this->getAddressTable());
             cConfiguration.fRetryIC     = true;
             cConfiguration.fMaxRetryIC  = 100;
@@ -554,8 +467,8 @@ void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
             cConfiguration.fMaxRetryI2C = 100;
             cConfiguration.fRetryFE     = true;
             cConfiguration.fMaxRetryFE  = 100;
+            static_cast<D19cOpticalInterface*>(fFEConfigurationInterface)->LinkLpGBTSlowControlWorkerInterface(flpGBTSlowControlWorkerInterface);
         }
-        fFEConfigurationInterface->LinkCommandProcessorInterface(fCommandProcessorInterface);
         fFEConfigurationInterface->Configure(cConfiguration);
     }
 
@@ -571,6 +484,8 @@ void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
 }
 void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
 {
+    ConfigureInterfaces(pBoard);
+
     // unique link Ids
     std::vector<uint8_t> cLinkIds(0);
     for(auto cOpticalReadout: *pBoard)
@@ -763,37 +678,30 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     // if optical readout .. then configure links
     if(pBoard->isOptical() && cWithlpGBT)
     {
-        bool cSkip = (pBoard->getLinkReset() == 0);
+        bool    cSkip         = (pBoard->getLinkReset() == 0);
+        uint8_t cLpGbtVersion = static_cast<lpGBT*>(pBoard->at(0)->flpGBT)->getVersion();
+        this->WriteReg("fc7_daq_cnfg.optical_block.lpgbt.version", cLpGbtVersion);
+        LOG(INFO) << BOLDYELLOW << "Setting firmware lpGBT version to lpGBT-v" << +this->ReadReg("fc7_daq_cnfg.optical_block.lpgbt.version") << RESET;
         if(!cSkip)
         {
             LOG(INFO) << BOLDMAGENTA << "Resetting lpGBT-FPGA core on BeBoard#" << +pBoard->getId() << RESET;
-            // reset lpGBT core
-            this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x1);
-            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-            this->WriteReg("fc7_daq_ctrl.optical_block.general", 0x0);
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-            bool clpGBTlock = LinkLock(pBoard);
-            if(!clpGBTlock)
-            {
-                LOG(INFO) << BOLDRED << "lpGBT link failed to LOCK!" << RESET;
-                exit(0);
-            }
+            flpGBTSlowControlWorkerInterface->Reset();
+            fLinkInterface->GeneralLinkReset(pBoard);
         }
         else
         {
             LOG(INFO) << BOLDMAGENTA << "Skipping lpGBT link reset.." << RESET;
-            bool cLinksLocked = true;
             for(auto cOpticalReadout: *pBoard)
             {
                 uint8_t cLinkId = cOpticalReadout->getId();
-                bool    cLocked = GetLinkStatus(cLinkId);
-                cLinksLocked    = cLinksLocked && cLocked;
+                if(!fLinkInterface->GetLinkStatus(cLinkId))
+                {
+                    LOG(ERROR) << BOLDRED << "Link#" << +cLinkId << " not locked" RESET;
+                    throw Exception("Link not locked...");
+                }
             }
         }
     }
-
-    ConfigureInterfaces(pBoard);
 
     // resetting hard
     if(fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2)
@@ -1118,7 +1026,7 @@ uint32_t D19cFWInterface::computeEventSize(BeBoard* pBoard)
 {
     uint32_t cFrontEndTypeCode = ReadReg("fc7_daq_stat.general.info.chip_type");
     fFirmwareFrontEndType      = getFrontEndType(cFrontEndTypeCode);
-    uint32_t cNHybrid              = pBoard->getNHybrid();
+    uint32_t cNHybrid          = pBoard->getNHybrid();
     uint32_t cNChips           = 0;
 
     uint32_t cNEventSize32 = 0;

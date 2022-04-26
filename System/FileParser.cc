@@ -261,8 +261,10 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
         {
             std::string fileName = cFilePath + expandEnvironmentVariables(theChild.attribute("configfile").value());
             os << BOLDBLUE << "|\t|----" << theChild.name() << " --> File: " << BOLDYELLOW << fileName << RESET << std::endl;
-            uint8_t cChipId = theChild.attribute("Id").as_int();
-            lpGBT* thelpGBT = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, cChipId, fileName);
+            uint8_t cChipId      = theChild.attribute("Id").as_int();
+            uint8_t cChipVersion = theChild.attribute("version").as_int();
+            lpGBT*  thelpGBT     = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, cChipId, fileName);
+            thelpGBT->setVersion(cChipVersion);
             thelpGBT->setOptical(pBoard->isOptical());
             theOpticalGroup->addlpGBT(thelpGBT);
 
@@ -389,41 +391,41 @@ void FileParser::parseSLink(pugi::xml_node pSLinkNode, BeBoard* pBoard, std::ost
         {
             if(cNode != nullptr)
             {
-                uint8_t     cUID     = 0;
-                uint8_t     cHybridId    = 0;
-                uint8_t     cCbcId   = 0;
-                uint8_t     cPage    = 0;
-                uint8_t     cAddress = 0;
-                uint32_t    cValue   = 0;
+                uint8_t     cUID      = 0;
+                uint8_t     cHybridId = 0;
+                uint8_t     cCbcId    = 0;
+                uint8_t     cPage     = 0;
+                uint8_t     cAddress  = 0;
+                uint32_t    cValue    = 0;
                 std::string cRegName;
 
                 std::string cTypeString = cNode.attribute("type").value();
 
                 if(cTypeString == "HV")
                 {
-                    cUID   = 5;
-                    cHybridId  = convertAnyInt(cNode.attribute("Id").value());
-                    cCbcId = convertAnyInt(cNode.attribute("Sensor").value());
-                    cValue = convertAnyInt(cNode.first_child().value());
+                    cUID      = 5;
+                    cHybridId = convertAnyInt(cNode.attribute("Id").value());
+                    cCbcId    = convertAnyInt(cNode.attribute("Sensor").value());
+                    cValue    = convertAnyInt(cNode.first_child().value());
                 }
                 else if(cTypeString == "TDC")
                 {
-                    cUID  = 3;
+                    cUID      = 3;
                     cHybridId = 0xFF;
                 }
                 else if(cTypeString == "User")
                 {
-                    cUID   = convertAnyInt(cNode.attribute("UID").value());
-                    cHybridId  = convertAnyInt(cNode.attribute("Id").value());
-                    cCbcId = convertAnyInt(cNode.attribute("CbcId").value());
-                    cValue = convertAnyInt(cNode.first_child().value());
+                    cUID      = convertAnyInt(cNode.attribute("UID").value());
+                    cHybridId = convertAnyInt(cNode.attribute("Id").value());
+                    cCbcId    = convertAnyInt(cNode.attribute("CbcId").value());
+                    cValue    = convertAnyInt(cNode.first_child().value());
                 }
                 else if(cTypeString == "I2C")
                 {
-                    cUID     = 1;
-                    cRegName = cNode.attribute("Register").value();
-                    cHybridId    = convertAnyInt(cNode.attribute("Id").value());
-                    cCbcId   = convertAnyInt(cNode.attribute("CbcId").value());
+                    cUID      = 1;
+                    cRegName  = cNode.attribute("Register").value();
+                    cHybridId = convertAnyInt(cNode.attribute("Id").value());
+                    cCbcId    = convertAnyInt(cNode.attribute("CbcId").value());
 
                     for(auto cOpticalGroup: *pBoard)
                         for(auto cHybrid: *cOpticalGroup)
@@ -453,9 +455,9 @@ void FileParser::parseSLink(pugi::xml_node pSLinkNode, BeBoard* pBoard, std::ost
                    << "|"
                    << "       "
                    << "|"
-                   << "----" << cNode.name() << ": Type " << RED << cTypeString << " " << cRegName << BLUE << ", UID " << RED << +cUID << BLUE << ", HybridId " << RED << +cHybridId << BLUE << ", CbcId "
-                   << RED << +cCbcId << std::hex << BLUE << ", Page " << RED << +cPage << BLUE << ", Address " << RED << +cAddress << BLUE << ", Value " << std::dec << MAGENTA << cValue << RESET
-                   << std::endl;
+                   << "----" << cNode.name() << ": Type " << RED << cTypeString << " " << cRegName << BLUE << ", UID " << RED << +cUID << BLUE << ", HybridId " << RED << +cHybridId << BLUE
+                   << ", CbcId " << RED << +cCbcId << std::hex << BLUE << ", Page " << RED << +cPage << BLUE << ", Address " << RED << +cAddress << BLUE << ", Value " << std::dec << MAGENTA << cValue
+                   << RESET << std::endl;
             }
         }
     }
@@ -536,8 +538,8 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
                 uint8_t cMode = static_cast<uint8_t>(convertAnyInt(cHitLogicNode.attribute("stripMode").value()));
                 cChip->setReg("SAMPLINGMODE_ALL", cMode);
-                os << BOLDCYAN << "|\t|\t|----Applying global SSA hit logic settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode << std::dec
-                   << RESET << std::endl;
+                os << BOLDCYAN << "|\t|\t|----Applying global SSA hit logic settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode
+                   << std::dec << RESET << std::endl;
             }
         }
 
@@ -566,8 +568,8 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 int cLatency = convertAnyInt(cLatencyNode.attribute("stripLatency").value());
                 cChip->setReg("L1-Latency_LSB", cLatency & 0xFF);
                 cChip->setReg("L1-Latency_MSB", (cLatency >> 8) & 0xFF);
-                os << BOLDCYAN << "|\t|\t|----Applying global SSA latency settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency << std::dec
-                   << GREEN << " MSB is 0x" << std::hex << ((cLatency >> 8) & 0xFF) << std::dec << GREEN << " LSB is 0x" << std::hex << (cLatency & 0xFF) << std::dec << RESET << std::endl;
+                os << BOLDCYAN << "|\t|\t|----Applying global SSA latency settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency
+                   << std::dec << GREEN << " MSB is 0x" << std::hex << ((cLatency >> 8) & 0xFF) << std::dec << GREEN << " LSB is 0x" << std::hex << (cLatency & 0xFF) << std::dec << RESET << std::endl;
             }
         }
 
@@ -693,8 +695,8 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                     cRegName << "ThDAC" << +cIndx;
                     cChip->setReg(cRegName.str(), cThresholdPxls);
                 }
-                os << BOLDCYAN << "|\t|\t|----Applying global threshold MPA Settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Threshold: Pxls 0x" << std::hex << +cThresholdPxls
-                   << std::dec << RESET << std::endl;
+                os << BOLDCYAN << "|\t|\t|----Applying global threshold MPA Settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Threshold: Pxls 0x" << std::hex
+                   << +cThresholdPxls << std::dec << RESET << std::endl;
             }
         }
 
@@ -724,8 +726,8 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
                 uint8_t cMode = static_cast<uint8_t>(convertAnyInt(cHitLogicNode.attribute("pixelMode").value()));
                 cChip->setReg("ModeSel_ALL", cMode);
-                os << BOLDCYAN << "|\t|\t|----Applying global MPA hit logic settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode << std::dec
-                   << RESET << std::endl;
+                os << BOLDCYAN << "|\t|\t|----Applying global MPA hit logic settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode
+                   << std::dec << RESET << std::endl;
             }
         }
 
@@ -760,8 +762,8 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                 int cLatency = convertAnyInt(cLatencyNode.attribute("pixelLatency").value());
                 cChip->setReg("L1Offset_1_ALL", cLatency & 0xFF);
                 cChip->setReg("L1Offset_2_ALL", (cLatency >> 8) & 0xFF);
-                os << BOLDCYAN << "|\t|\t|----Applying global MPA latency settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency << std::dec
-                   << GREEN << " MSB is 0x" << std::hex << ((cLatency >> 8) & 0xFF) << std::dec << GREEN << " LSB is 0x" << std::hex << (cLatency & 0xFF) << std::dec << RESET << std::endl;
+                os << BOLDCYAN << "|\t|\t|----Applying global MPA latency settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Latency is  0x" << std::hex << +cLatency
+                   << std::dec << GREEN << " MSB is 0x" << std::hex << ((cLatency >> 8) & 0xFF) << std::dec << GREEN << " LSB is 0x" << std::hex << (cLatency & 0xFF) << std::dec << RESET << std::endl;
             }
         }
 
@@ -826,8 +828,8 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
         Hybrid* cHybrid;
         if(pBoard->getBoardType() == BoardType::RD53)
         {
-            cHybrid = pOpticalGroup->addHybridContainer(
-                pHybridNode.attribute("Id").as_int(), new Hybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pOpticalGroup->getOpticalGroupId(), pHybridNode.attribute("Id").as_int()));
+            cHybrid = pOpticalGroup->addHybridContainer(pHybridNode.attribute("Id").as_int(),
+                                                        new Hybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pOpticalGroup->getOpticalGroupId(), pHybridNode.attribute("Id").as_int()));
 
             uint8_t cHybridReset = convertAnyInt(pHybridNode.attribute("reset").value());
             cHybrid->setReset(cHybridReset);
@@ -1076,7 +1078,7 @@ void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybr
                     while(std::getline(cPrim, ctoken, ','))
                     {
                         auto    cChipId   = cChipIds[cIndx];
-                        uint8_t cItem   = convertAnyInt(ctoken.c_str());
+                        uint8_t cItem     = convertAnyInt(ctoken.c_str());
                         auto    cChipType = cMapOfTypes[cChipId];
                         os << GREEN << "|\n|\t|\t|\t|\t|" << +cChipId << "\t|\t|\t|\t|\t|----- " << +cItem;
                         cMapOfMaks[cChipId].push_back(cItem + (cChipType == FrontEndType::CBC3 ? 0 : 1));
@@ -1515,7 +1517,8 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
        << cFileName << BOLDBLUE << ", RxGroup: " << BOLDYELLOW << +cRxGroup << BOLDBLUE << ", RxChannel: " << BOLDYELLOW << +cRxChannel << BOLDBLUE << ", TxGroup: " << BOLDYELLOW << +cTxGroup
        << BOLDBLUE << ", TxChannel: " << BOLDYELLOW << +cTxChannel << BOLDBLUE << ", Comment: " << BOLDYELLOW << cfgComment << RESET << std::endl;
 
-    ReadoutChip* theChip = cHybrid->addChipContainer(chipId, new RD53(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, cFileName, cfgComment));
+    ReadoutChip* theChip =
+        cHybrid->addChipContainer(chipId, new RD53(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, cFileName, cfgComment));
     theChip->setNumberOfChannels(RD53::nRows, RD53::nCols);
 
     this->parseRD53Settings(theChipNode, theChip, os);

@@ -14,7 +14,7 @@ void SignalScan::Initialize()
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                uint32_t cHybridId      = cHybrid->getId();
+                uint32_t cHybridId  = cHybrid->getId();
                 fNCbc               = cHybrid->size();
                 TCanvas* ctmpCanvas = new TCanvas(Form("c_online_canvas_fe%d", cHybridId), Form("FE%d  Online Canvas", cHybridId));
                 // ctmpCanvas->Divide( 2, 2 );
