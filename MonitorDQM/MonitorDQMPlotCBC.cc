@@ -166,7 +166,6 @@ void MonitorDQMPlotCBC::fillLpGBTRegisterPlots(DetectorDataContainer& theThresho
 
     for(auto board: theThresholdContainer) // for on boards - begin
     {
-        // if(board->at(0)->flpGBT == nullptr) continue;
         size_t boardIndex = board->getIndex();
         for(auto opticalGroup: *board) // for on opticalGroup - begin
         {

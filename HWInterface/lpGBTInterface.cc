@@ -22,13 +22,16 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
     this->setBoard(pChip->getBeBoardId());
     auto cBoardType = fBoardFW->getBoardType();
     auto cAddress   = pChip->getRegItem(pDacName).fAddress;
-
+    // setting highest write address possible (lpGBT version dependent)
+    uint16_t cMaxWriteAddress = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 0x13c : 0x14f;
+    // checking that written value isn't more than 8 bits
     if(pDacValue > 0xFF)
     {
         LOG(ERROR) << BOLDRED << "LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pDacValue << BOLDRED << " to address " << BOLDYELLOW << cAddress << RESET;
         return false;
     }
-    if(cAddress > 0x13C)
+    // checking that register address isn't higher than highest write address
+    if(cAddress > cMaxWriteAddress)
     {
         LOG(ERROR) << "LpGBT read-write registers end at 0x13C ... impossible to write to address " << BOLDYELLOW << cAddress << RESET;
         return false;
@@ -260,11 +263,11 @@ void lpGBTInterface::ConfigureRxSource(Chip* pChip, const std::vector<uint8_t>& 
     for(const auto& cGroup: pGroups)
     {
         if(pSource == 0)
-            LOG(DEBUG) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "NORMAL " << RESET;
+            LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "NORMAL " << RESET;
         else if(pSource == 1)
-            LOG(DEBUG) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "PRBS7 " << RESET;
+            LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "PRBS7 " << RESET;
         else if(pSource == 4 || pSource == 5)
-            LOG(DEBUG) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "Constant Pattern" << RESET;
+            LOG(INFO) << GREEN << "Configuring Rx group " << BOLDYELLOW << +cGroup << RESET << GREEN << " source to " << BOLDYELLOW << "Constant Pattern" << RESET;
 
         std::string cRxSourceReg;
         if(cGroup == 0 || cGroup == 1)
@@ -562,11 +565,12 @@ void lpGBTInterface::PhaseAlignRx(Chip* pChip, const OpticalGroup* pOpticalGroup
 // # LpGBT Block Status functions #
 // ################################
 
-bool lpGBTInterface::IsPUSMDone(Chip* pChip) { return lpGBTInterface::GetPUSMStatus(pChip) == 18; }
+bool lpGBTInterface::IsPUSMDone(Chip* pChip) { return lpGBTInterface::GetPUSMStatus(pChip) == revertedPUSMStatusMap["READY"]; }
 
 void lpGBTInterface::PrintChipMode(Chip* pChip)
 {
-    switch((ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 4)
+    uint8_t cChipMode = (ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 4;
+    switch(cChipMode)
     {
     case 0:
         LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "5 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN

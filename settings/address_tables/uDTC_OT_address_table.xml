@@ -242,7 +242,7 @@
                         <node id="l8"                           mask="0x000000FF" description="note: default value is 1 for all"/>
                         <node id="l12"                          mask="0x0FFF0000" description="note: default value is 0 for all"/>
                     </node>
-                    <node id="lpgbt_sc_worker" address="0x007">
+                    <node id="lpgbt_sc_worker" address="0x008">
                         <node id="ic_retry"         mask="0x00000001"/>
                         <node id="i2c_retry"        mask="0x00000002"/>
                         <node id="fe_retry"         mask="0x00000004"/>
@@ -485,6 +485,10 @@
             <node id="worker">
                 <node id="lpgbtsc_fsm_state"    address="0x005" mask="0xffffffff"/>
                 <node id="lpgbtsc_try_counters"    address="0x006" mask="0xffffffff"/>
+		<node id="lpgbt_version"    address="0x007">
+                        <node id="from_ic" mask="0x00000001"/>
+                        <node id="from_worker" mask="0x00000002"/>
+                </node>
             </node>
 
             <node id="reply_debug_block0" address="0x006">
