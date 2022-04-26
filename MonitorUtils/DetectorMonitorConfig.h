@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 struct DetectorMonitorConfig
 {
