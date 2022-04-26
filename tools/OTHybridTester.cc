@@ -397,14 +397,14 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
             std::this_thread::sleep_for(std::chrono::milliseconds(30));
             for(const auto cMaster: pMasters)
             {
-                //clpGBTInterface->ResetI2C(cOpticalGroup->flpGBT, {0, 1, 2});
+                // clpGBTInterface->ResetI2C(cOpticalGroup->flpGBT, {0, 1, 2});
                 bool                 cMasterSuccess = true;
                 std::vector<uint8_t> cI2CStatusVect;
                 struct timeval       stop, start;
                 gettimeofday(&start, NULL);
                 // do stuff
-                uint8_t failureIter = 0;
-                int     tries       = 100000;
+                uint8_t failureIter   = 0;
+                int     tries         = 100000;
                 uint8_t cFrequency    = (cMaster == 1) ? 2 : 3;
                 uint8_t cSlaveAddress = 0x60;
                 for(int j = 0; j < tries; j++)
