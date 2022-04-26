@@ -668,12 +668,10 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     auto cADCHistogram = new TH2I("hADCHistogram", "Fixed ADC Histogram", cADCsMap.size(), 0, cADCsMap.size(), 1024, 0, 1024);
     cADCHistogram->GetZaxis()->SetTitle("Number of entries");
 
-    auto  cADCsMapIterator = cADCsMap.begin();
-    int   cADCValue;
-    int   cBinCount         = 1;
-    float cConversionFactor = (1. / 1023.);
-
-    fillSummaryTree("ADC conversion factor", cConversionFactor);
+    auto cADCsMapIterator = cADCsMap.begin();
+    int  cADCValue;
+    int  cBinCount = 1;
+    fillSummaryTree("ADC conversion factor", CONVERSION_FACTOR);
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr)

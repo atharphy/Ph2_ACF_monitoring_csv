@@ -6,22 +6,24 @@
 #ifdef __USE_ROOT__
 #include "MonitorDQM/MonitorDQMPlotCBC.h"
 #endif
-#include "../MonitorUtils/DetectorMonitor.h"
-
 class SEHMonitor : public DetectorMonitor
 {
   public:
-    SEHMonitor(const Ph2_System::SystemController* theSystCntr, DetectorMonitorConfig theDetectorMonitorConfig);
+    SEHMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig);
 
   protected:
     void runMonitor() override;
 
   private:
     void runInputCurrentMonitor(std::string registerName);
+    void runLpGBTRegisterMonitor(std::string registerName);
+    void runPowerSupplyMonitor(std::string registerName);
 // bool doMonitorInputCurrent{false};
 #ifdef __USE_ROOT__
-    MonitorDQMPlotCBC* fMonitorDQMPlotCBC;
+    MonitorDQMPlotCBC* fMonitorDQMPlotSEH;
 #endif
+
+    std::string getVariableValue(std::string variable, std::string buffer);
 };
 
 #endif

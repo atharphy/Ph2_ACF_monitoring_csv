@@ -10,14 +10,15 @@ struct DetectorMonitorConfig
 {
     DetectorMonitorConfig()
     {
-        fMonitorElementList["Board"] = {};
-        fMonitorElementList["LpGBT"] = {};
-        fMonitorElementList["CIC"]   = {};
-        fMonitorElementList["MPA"]   = {};
-        fMonitorElementList["SSA"]   = {};
-        fMonitorElementList["CBC"]   = {};
-        fMonitorElementList["RD53"]  = {};
-        fMonitorElementList["CROC"]  = {};
+        fMonitorElementList["Board"]       = {};
+        fMonitorElementList["LpGBT"]       = {};
+        fMonitorElementList["CIC"]         = {};
+        fMonitorElementList["MPA"]         = {};
+        fMonitorElementList["SSA"]         = {};
+        fMonitorElementList["CBC"]         = {};
+        fMonitorElementList["RD53"]        = {};
+        fMonitorElementList["CROC"]        = {};
+        fMonitorElementList["PowerSupply"] = {};
     }
     int fSleepTimeMs;
 

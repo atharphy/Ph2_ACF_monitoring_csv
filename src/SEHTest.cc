@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
     // efficiency
     cmd.defineOption("eff", "Measure the DC/DC efficiency");
     // Test VTRx+ registers
-    cmd.defineOption("powersupply", "Use remote control of the 10V power supply in order to ramp up the voltage", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("powersupply", "Use remote control of the 10V power supply in order to ramp up the voltage", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("powersupply", "ps");
     // Bias voltage leakage current
     cmd.defineOption("leak", "Measure the Bias voltage leakage current ", ArgvParser::OptionRequiresValue);
@@ -150,6 +150,10 @@ int main(int argc, char* argv[])
     // Naming
     cmd.defineOption("output", "Result File directory", ArgvParser::OptionRequiresValue);
     cmd.defineOption("hybridId", "Hybrid ID", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("LVPowerSupplyId", "External low voltage (SEH input voltage) power supply ID", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("LVChannelId", "External low voltage (SEH input voltage) channel ID", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("HVPowerSupplyId", "External high voltage (sensor bias voltage) power supply ID", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("HVChannelId", "External high voltage (sensor bias voltage) channel ID", ArgvParser::OptionRequiresValue);
 
     int result = cmd.parse(argc, argv);
     if(result != ArgvParser::NoParserError)
@@ -159,7 +163,6 @@ int main(int argc, char* argv[])
     }
 
     std::string       cHWFile               = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/D19CDescription_ROH_OFC7.xml";
-    std::string       cPowerSupply          = (cmd.foundOption("powersupply")) ? cmd.optionValue("powersupply") : "";
     bool              batchMode             = (cmd.foundOption("batch")) ? true : false;
     const std::string cSSAPair              = (cmd.foundOption("ssapair")) ? cmd.optionValue("ssapair") : "";
     std::string       cDirectory            = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
@@ -184,6 +187,10 @@ int main(int argc, char* argv[])
     uint16_t    cLeftLoad              = (cmd.foundOption("leftLoad")) ? convertAnyInt(cmd.optionValue("leftLoad").c_str()) : 0;
     uint16_t    cRightLoad             = (cmd.foundOption("rightLoad")) ? convertAnyInt(cmd.optionValue("rightLoad").c_str()) : 0;
     uint16_t    cExtLeakVoltage        = (cmd.foundOption("ext-leak")) ? convertAnyInt(cmd.optionValue("ext-leak").c_str()) : 0;
+    std::string cLVPowerSupplyId       = (cmd.foundOption("LVPowerSupplyId")) ? cmd.optionValue("LVPowerSupplyId") : "MyRohdeSchwarz";
+    std::string cLVChannelId           = (cmd.foundOption("LVChannelId")) ? cmd.optionValue("LVChannelId") : "LV_Module3";
+    std::string cHVPowerSupplyId       = (cmd.foundOption("HVPowerSupplyId")) ? cmd.optionValue("HVPowerSupplyId") : "MyIsegSHR4220";
+    std::string cHVChannelId           = (cmd.foundOption("HVChannelId")) ? cmd.optionValue("HVChannelId") : "HV_Module1";
     cDirectory += Form("2S_SEH_%s", cHybridId.c_str());
 
     TApplication cApp("Root Application", &argc, argv);
@@ -219,7 +226,18 @@ int main(int argc, char* argv[])
     LOG(INFO) << BOLDYELLOW << "Configuring FC7" << RESET;
     SEHTester cSEHTester;
     cSEHTester.Inherit(&cTool);
-    cSEHTester.TurnOn(cRightLoad, cLeftLoad);
+
+    if(cmd.foundOption("powersupply"))
+    {
+        LOG(INFO) << BOLDYELLOW << "Switching on SEH using remote power supply control" << RESET;
+        cSEHTester.TurnOn(cRightLoad, cLeftLoad);
+        cSEHTester.RampPowerSupply(cLVPowerSupplyId, cLVChannelId);
+    }
+    else
+    {
+        LOG(INFO) << BOLDYELLOW << "Switching on SEH without remote power supply control" << RESET;
+        cSEHTester.TurnOn(cRightLoad, cLeftLoad);
+    }
 
     // establishes an optical link and configures the lpgbt over the optical cable
     uint8_t cExternalPattern = (cmd.foundOption("external-pattern")) ? convertAnyInt(cmd.optionValue("external-pattern").c_str()) : 0;
@@ -239,17 +257,6 @@ int main(int argc, char* argv[])
     // Initialize BackEnd & Control LpGBT Tester
     // cSEHTester.exampleFit();
     // cSEHTester.DCDCOutputEvaluation();
-    if(cmd.foundOption("powersupply"))
-    {
-        LOG(INFO) << BOLDYELLOW << "Switching on SEH using remote power supply control" << RESET;
-        cSEHTester.TurnOn();
-        cSEHTester.RampPowerSupply("MyRohdeSchwarz", "LV_Module3");
-    }
-    else
-    {
-        LOG(INFO) << BOLDYELLOW << "Switching on SEH without remote power supply control" << RESET;
-        // cSEHTester.TurnOn();
-    }
 
     // cSEHTester.TestCardVoltages();
     if(cmd.foundOption("test-parameter"))
@@ -460,13 +467,13 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("ext-leak"))
     {
         LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply" << RESET;
-        cSEHTester.ExternalTestLeakageCurrent(cExtLeakVoltage, 150, "MyIsegSHR4220", "HV_Module1");
+        cSEHTester.ExternalTestLeakageCurrent(cExtLeakVoltage, 150, cHVPowerSupplyId, cHVChannelId);
     }
 
     if(cmd.foundOption("ext-bias"))
     {
         LOG(INFO) << BOLDBLUE << "Measuring bias voltage on sensor side with external power supply" << RESET;
-        cSEHTester.ExternalTestBiasVoltage("MyIsegSHR4220", "HV_Module1");
+        cSEHTester.ExternalTestBiasVoltage(cHVPowerSupplyId, cHVChannelId);
     }
 
     if(cmd.foundOption("eye-monitor")) { cSEHTester.LpGBTRunEyeOpeningMonitor(7); }
