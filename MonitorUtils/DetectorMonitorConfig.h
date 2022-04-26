@@ -3,9 +3,9 @@
 
 #include <algorithm>
 #include <map>
+#include <stdexcept>
 #include <string>
 #include <vector>
-#include <stdexcept>
 
 struct DetectorMonitorConfig
 {
