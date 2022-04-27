@@ -27,7 +27,7 @@ bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem)
     uint8_t cFunctionId = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? LpGBTSlowControlWorker::SINGLE_READ_IC : LpGBTSlowControlWorker::SINGLE_READ_FE;
     auto    cCommand    = flpGBTSlowControlWorkerInterface->EncodeCommand(cFunctionId, pChip, pItem);
     flpGBTSlowControlWorkerInterface->WriteCommand(cCommand);
-    uint8_t cWaitCounter = 100;
+    int cWaitCounter = 1000;
     while(!flpGBTSlowControlWorkerInterface->IsDone(cFunctionId) && (cWaitCounter != 0))
     {
         cWaitCounter--;
@@ -68,7 +68,7 @@ bool D19cOpticalInterface::WriteChipRegister(Chip* pChip, ChipRegItem& pItem, bo
     uint8_t cFunctionId = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? LpGBTSlowControlWorker::SINGLE_WRITE_IC : LpGBTSlowControlWorker::SINGLE_WRITE_FE;
     auto    cCommand    = flpGBTSlowControlWorkerInterface->EncodeCommand(cFunctionId, pChip, pItem, pVerify);
     flpGBTSlowControlWorkerInterface->WriteCommand(cCommand);
-    uint8_t cWaitCounter = 100;
+    int cWaitCounter = 1000;
     while(!flpGBTSlowControlWorkerInterface->IsDone(cFunctionId) && (cWaitCounter != 0))
     {
         cWaitCounter--;
@@ -161,7 +161,7 @@ bool D19cOpticalInterface::MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uin
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 14 | pMasterConfig << 6);
     cCommandVector.push_back(pSlaveData << 8 | pSlaveAddress << 0);
     flpGBTSlowControlWorkerInterface->WriteCommand(cCommandVector);
-    uint8_t cWaitCounter = 100;
+    int cWaitCounter = 1000;
     while(!flpGBTSlowControlWorkerInterface->IsDone(cFunctionId) && (cWaitCounter != 0))
     {
         cWaitCounter--;
@@ -187,7 +187,11 @@ bool D19cOpticalInterface::MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uin
         return false;
     }
     uint8_t cStatus = (cReply[0] & (0xFF << 0)) >> 0;
-    if(cStatus != 4) { LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiByteWriteI2C : I2C Status is " << +cStatus << RESET; }
+    if(cStatus != 4) 
+    { 
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiByteWriteI2C : I2C Status is " << +cStatus << RESET;
+ 	    return false;
+    }
     return true;
 }
 
@@ -203,7 +207,7 @@ uint8_t D19cOpticalInterface::SingleByteReadI2C(Ph2_HwDescription::Chip* pChip, 
     cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | pMasterId << 14 | pMasterConfig << 6);
     cCommandVector.push_back(pSlaveAddress << 0);
     flpGBTSlowControlWorkerInterface->WriteCommand(cCommandVector);
-    uint8_t cWaitCounter = 100;
+    int cWaitCounter = 1000;
     while(!flpGBTSlowControlWorkerInterface->IsDone(cFunctionId) && (cWaitCounter != 0))
     {
         cWaitCounter--;
@@ -231,5 +235,4 @@ uint8_t D19cOpticalInterface::SingleByteReadI2C(Ph2_HwDescription::Chip* pChip, 
     uint8_t cReadBack = (cReply[0] & (0xFF << 0)) >> 0;
     return cReadBack;
 }
-
 } // namespace Ph2_HwInterface
