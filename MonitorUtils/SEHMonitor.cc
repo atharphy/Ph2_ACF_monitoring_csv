@@ -15,11 +15,31 @@ using namespace Ph2_System;
 
 SEHMonitor::SEHMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {
+    // Add a new TCP Client to avoid conflicts in parallel process
+    LOG(INFO) << BOLDYELLOW << "Trying to connect to the Power Supply Server..." << RESET;
+    fPowerSupplyClient = new TCPClient("127.0.0.1", 7000);
+    if(!fPowerSupplyClient->connect(1))
+    {
+        LOG(INFO) << BOLDYELLOW << "Cannot connect to the Power Supply Server, power supplies will need to be controlled manually" << RESET;
+        delete fPowerSupplyClient;
+        fPowerSupplyClient = nullptr;
+    }
+    else
+    {
+        LOG(INFO) << BOLDYELLOW << "Connected to the Power Supply Server!" << RESET;
+    }
+
 #ifdef __USE_ROOT__
     fMonitorPlotDQM    = new MonitorDQMPlotCBC();
     fMonitorDQMPlotSEH = static_cast<MonitorDQMPlotCBC*>(fMonitorPlotDQM);
     fMonitorDQMPlotSEH->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
 #endif
+}
+// Maybe not ideal here (but needed to avoid memory leak)?? Could be moved to ~DetectorMonitor() if fPowerSupplyClient is also used for other devices?
+SEHMonitor::~SEHMonitor()
+{
+    delete fPowerSupplyClient;
+    fPowerSupplyClient = nullptr;
 }
 
 void SEHMonitor::runMonitor()
@@ -67,13 +87,13 @@ void SEHMonitor::runLpGBTRegisterMonitor(std::string registerName)
 void SEHMonitor::runPowerSupplyMonitor(std::string registerName)
 {
     // LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement " << registerName<< RESET;
-    std::string buffer = fTheSystemController->fPowerSupplyClient->sendAndReceivePacket("GetStatus");
+    std::string buffer = fPowerSupplyClient->sendAndReceivePacket("GetStatus");
     LOG(INFO) << BOLDMAGENTA << buffer << RESET;
-    while(!(buffer.find("TimeStamp") != std::string::npos))
-    {
-        buffer = fTheSystemController->fPowerSupplyClient->sendAndReceivePacket("GetStatus");
-        LOG(INFO) << BOLDMAGENTA << buffer << RESET;
-    }
+    // while(!(buffer.find("TimeStamp") != std::string::npos))
+    // {
+    //     buffer = fPowerSupplyClient->sendAndReceivePacket("GetStatus");
+    //     LOG(INFO) << BOLDMAGENTA << buffer << RESET;
+    // }
     float cValue = std::stof(getVariableValue(registerName, buffer));
     LOG(INFO) << BOLDMAGENTA << cValue << " " << registerName << RESET;
     if((registerName.find("HV") != std::string::npos) & (registerName.find("Current") != std::string::npos)) { cValue *= 1e9; }

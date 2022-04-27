@@ -1,5 +1,6 @@
 #ifndef SEH_MONITOR_H
 #define SEH_MONITOR_H
+#include "../NetworkUtils/TCPClient.h"
 #include "../Utils/EmptyContainer.h"
 #include "../Utils/OpticalGroupContainerStream.h"
 #include "DetectorMonitor.h"
@@ -10,6 +11,8 @@ class SEHMonitor : public DetectorMonitor
 {
   public:
     SEHMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig);
+    virtual ~SEHMonitor();
+    TCPClient* fPowerSupplyClient{nullptr};
 
   protected:
     void runMonitor() override;
