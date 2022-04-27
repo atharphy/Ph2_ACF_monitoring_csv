@@ -290,6 +290,34 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     fillSummaryTree("BiasDone", 1);
 }
+
+void SEHTester::SetupExternalTestLeakageCurrent(uint16_t pHvSet, std::string powerSupplyId, std::string channelId)
+{
+#ifdef __TCP_SERVER__
+    fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:1,hvmonx7Relay:0,hvmonx8Relay:0,HVDAC_setvalue:" + std::to_string(0) + ",");
+#else
+    flpGBTInterface->getExternalController()->getInterface().set_HV(true, false, false, 0);
+#endif
+    std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(-1 * static_cast<float>(pHvSet)) + ",";
+    fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+    setVoltageMessage = "TurnOn,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
+    fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+}
+
+void SEHTester::EndExternalTestLeakageCurrent(std::string powerSupplyId, std::string channelId)
+{
+#ifdef __TCP_SERVER__
+    fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:1,hvmonx7Relay:0,hvmonx8Relay:0,HVDAC_setvalue:" + std::to_string(0) + ",");
+#else
+    flpGBTInterface->getExternalController()->getInterface().set_HV(true, false, false, 0);
+#endif
+    std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(-1 * static_cast<float>(0)) + ",";
+    fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+    setVoltageMessage = "TurnOff,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
+    fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+    fillSummaryTree("ExternalLeakDone", 1);
+}
+
 void SEHTester::ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTime, std::string powerSupplyId, std::string channelId)
 {
     // time_t startTime;
@@ -437,6 +465,8 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
 #else
     flpGBTInterface->getExternalController()->getInterface().set_HV(false, true, true, 0);
 #endif
+    std::this_thread::sleep_for(std::chrono::milliseconds(15000));
+
     std::vector<float> cHvSetValVect;
     std::vector<float> cVHVJ7ValVect;
     std::vector<float> cVHVJ8ValVect;
@@ -451,6 +481,7 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
     setVoltageMessage = "TurnOn,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+    std::this_thread::sleep_for(std::chrono::milliseconds(15000));
     for(int cHvSet = 0; cHvSet <= 1000; cHvSet += 100)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));

@@ -19,6 +19,7 @@ struct DetectorMonitorConfig
         fMonitorElementList["RD53"]        = {};
         fMonitorElementList["CROC"]        = {};
         fMonitorElementList["PowerSupply"] = {};
+        fMonitorElementList["TestCard"]    = {};
     }
     int fSleepTimeMs;
 

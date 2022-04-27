@@ -154,7 +154,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("LVChannelId", "External low voltage (SEH input voltage) channel ID", ArgvParser::OptionRequiresValue);
     cmd.defineOption("HVPowerSupplyId", "External high voltage (sensor bias voltage) power supply ID", ArgvParser::OptionRequiresValue);
     cmd.defineOption("HVChannelId", "External high voltage (sensor bias voltage) channel ID", ArgvParser::OptionRequiresValue);
-
+    cmd.defineOption("parallelHV", "Runs the HV leak test in parallel", ArgvParser::NoOptionAttribute);
     int result = cmd.parse(argc, argv);
     if(result != ArgvParser::NoParserError)
     {
@@ -229,7 +229,7 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("powersupply"))
     {
-        LOG(INFO) << BOLDYELLOW << "Switching on SEH using remote power supply control" << RESET;
+        LOG(INFO) << BOLDYELLOW << "Switching on SEH using remote power supply control and perform I-V scan" << RESET;
         cSEHTester.TurnOn(cRightLoad, cLeftLoad);
         cSEHTester.RampPowerSupply(cLVPowerSupplyId, cLVChannelId);
     }
@@ -237,6 +237,19 @@ int main(int argc, char* argv[])
     {
         LOG(INFO) << BOLDYELLOW << "Switching on SEH without remote power supply control" << RESET;
         cSEHTester.TurnOn(cRightLoad, cLeftLoad);
+    }
+    if(cmd.foundOption("ext-leak") & cmd.foundOption("parallelHV"))
+    {
+        if(cmd.foundOption("parallelHV"))
+        {
+            LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply in parallel" << RESET;
+            cSEHTester.SetupExternalTestLeakageCurrent(cExtLeakVoltage, cHVPowerSupplyId, cHVChannelId);
+        }
+        else
+        {
+            LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply" << RESET;
+            cSEHTester.ExternalTestLeakageCurrent(cExtLeakVoltage, 150, cHVPowerSupplyId, cHVChannelId);
+        }
     }
 
     // establishes an optical link and configures the lpgbt over the optical cable
@@ -464,12 +477,6 @@ int main(int argc, char* argv[])
         cSEHTester.TestBiasVoltage(cBiasVoltage);
     }
 
-    if(cmd.foundOption("ext-leak"))
-    {
-        LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply" << RESET;
-        cSEHTester.ExternalTestLeakageCurrent(cExtLeakVoltage, 150, cHVPowerSupplyId, cHVChannelId);
-    }
-
     if(cmd.foundOption("ext-bias"))
     {
         LOG(INFO) << BOLDBLUE << "Measuring bias voltage on sensor side with external power supply" << RESET;
@@ -554,6 +561,12 @@ int main(int argc, char* argv[])
     */
     // Save Result File
     // cSEHTester.TurnOff();
+
+    if(cmd.foundOption("ext-leak") & cmd.foundOption("parallelHV"))
+    {
+        LOG(INFO) << BOLDBLUE << "Ending leakage current with external power supply in parallel" << RESET;
+        cSEHTester.EndExternalTestLeakageCurrent(cHVPowerSupplyId, cHVChannelId);
+    }
     cSEHTester.SetLoad(0, 0);
     cSEHTester.LpGBTInjectULExternalPattern(false, 170);
 

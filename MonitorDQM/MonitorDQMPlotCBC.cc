@@ -38,6 +38,7 @@ void MonitorDQMPlotCBC::book(TFile* theOutputFile, const DetectorContainer& theD
     for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("CBC")) bookCBCPlots(theOutputFile, theDetectorStructure, registerName);
     for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("LpGBT")) bookLpGBTPlots(theOutputFile, theDetectorStructure, registerName);
     for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("PowerSupply")) bookPowerSupplyPlots(theOutputFile, theDetectorStructure, registerName);
+    for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("TestCard")) bookTestCardPlots(theOutputFile, theDetectorStructure, registerName);
 }
 
 //========================================================================================================================
@@ -103,6 +104,27 @@ void MonitorDQMPlotCBC::bookPowerSupplyPlots(TFile* theOutputFile, const Detecto
     // create Histograms for all the chips, they will be automatically accosiated to the output file, no need to save
     // them, change the name for every chip or set their directory
     RootContainerFactory::bookDetectorHistograms<GraphContainer<TGraph>>(theOutputFile, theDetectorStructure, fPowerSupplyMonitorPlotMap[registerName], theTGraphPedestalContainer);
+}
+//========================================================================================================================
+void MonitorDQMPlotCBC::bookTestCardPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName)
+{
+    std::cout << __PRETTY_FUNCTION__ << "Booking plot for TestCard = " << registerName << std::endl;
+    // creating the histograms for all the chips:
+    // create the GraphContainer<TGraph> as you would create a TGraph (it implements some feature needed to avoid memory
+    // leaks in copying histograms like the move constructor)
+    GraphContainer<TGraph> theTGraphPedestalContainer(0);
+    theTGraphPedestalContainer.setNameTitle("TestCard_DQM_" + registerName, "TestCard_DQM_" + registerName);
+    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeDisplay(1);
+    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetNdivisions(503);
+    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeFormat("%Y-%m-%d %H:%M");
+    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeOffset(0, "gmt");
+    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTitle("time");
+    theTGraphPedestalContainer.fTheGraph->GetYaxis()->SetTitle((registerName).c_str());
+    theTGraphPedestalContainer.fTheGraph->SetMarkerStyle(20);
+    theTGraphPedestalContainer.fTheGraph->SetMarkerSize(0.4);
+    // create Histograms for all the chips, they will be automatically accosiated to the output file, no need to save
+    // them, change the name for every chip or set their directory
+    RootContainerFactory::bookDetectorHistograms<GraphContainer<TGraph>>(theOutputFile, theDetectorStructure, fTestCardMonitorPlotMap[registerName], theTGraphPedestalContainer);
 }
 
 //========================================================================================================================
@@ -197,6 +219,23 @@ void MonitorDQMPlotCBC::fillPowerSupplyPlots(DetectorDataContainer& theThreshold
     PowerSupplyDQMPlot->SetPoint(PowerSupplyDQMPlot->GetN(),
                                  getTimeStampForRoot(std::get<0>(theThresholdContainer.getSummary<std::tuple<time_t, float>>())),
                                  std::get<1>(theThresholdContainer.getSummary<std::tuple<time_t, float>>()));
+}
+
+//========================================================================================================================
+void MonitorDQMPlotCBC::fillTestCardPlots(DetectorDataContainer& theThresholdContainer, const std::string& registerName)
+{
+    if(fTestCardMonitorPlotMap.find(registerName) == fTestCardMonitorPlotMap.end())
+    {
+        LOG(ERROR) << BOLDRED << "No plots for TestCard " << registerName << RESET;
+        LOG(ERROR) << BOLDRED << "Check that DQM and Monitor register names matches" << RESET;
+        std::string errorMessage = "No plots for TestCard " + registerName + " - Check that DQM and Monitor register names matches";
+        throw std::runtime_error(errorMessage);
+    }
+
+    TGraph* TestCardDQMPlot = fTestCardMonitorPlotMap[registerName].getSummary<GraphContainer<TGraph>>().fTheGraph;
+    TestCardDQMPlot->SetPoint(TestCardDQMPlot->GetN(),
+                              getTimeStampForRoot(std::get<0>(theThresholdContainer.getSummary<std::tuple<time_t, float>>())),
+                              std::get<1>(theThresholdContainer.getSummary<std::tuple<time_t, float>>()));
 }
 
 //========================================================================================================================

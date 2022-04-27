@@ -18,6 +18,7 @@ class SEHMonitor : public DetectorMonitor
     void runInputCurrentMonitor(std::string registerName);
     void runLpGBTRegisterMonitor(std::string registerName);
     void runPowerSupplyMonitor(std::string registerName);
+    void runTestCardMonitor(std::string registerName);
 // bool doMonitorInputCurrent{false};
 #ifdef __USE_ROOT__
     MonitorDQMPlotCBC* fMonitorDQMPlotSEH;

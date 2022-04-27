@@ -28,6 +28,7 @@ void SEHMonitor::runMonitor()
     std::lock_guard<std::recursive_mutex> theGuard(theMutex);
     for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT")) runLpGBTRegisterMonitor(registerName);
     for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("PowerSupply")) runPowerSupplyMonitor(registerName);
+    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("TestCard")) runTestCardMonitor(registerName);
 }
 
 void SEHMonitor::runLpGBTRegisterMonitor(std::string registerName)
@@ -67,9 +68,15 @@ void SEHMonitor::runPowerSupplyMonitor(std::string registerName)
 {
     // LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement " << registerName<< RESET;
     std::string buffer = fTheSystemController->fPowerSupplyClient->sendAndReceivePacket("GetStatus");
-    float       cValue = std::stof(getVariableValue(registerName, buffer));
+    LOG(INFO) << BOLDMAGENTA << buffer << RESET;
+    while(!(buffer.find("TimeStamp") != std::string::npos))
+    {
+        buffer = fTheSystemController->fPowerSupplyClient->sendAndReceivePacket("GetStatus");
+        LOG(INFO) << BOLDMAGENTA << buffer << RESET;
+    }
+    float cValue = std::stof(getVariableValue(registerName, buffer));
     LOG(INFO) << BOLDMAGENTA << cValue << " " << registerName << RESET;
-
+    if((registerName.find("HV") != std::string::npos) & (registerName.find("Current") != std::string::npos)) { cValue *= 1e9; }
     DetectorDataContainer thePowerSupplyContainer;
     ContainerFactory::copyAndInitDetector<std::tuple<time_t, float>>(*fTheSystemController->fDetectorContainer, thePowerSupplyContainer);
     thePowerSupplyContainer.getSummary<std::tuple<time_t, float>>() = std::make_tuple(getTimeStamp(), cValue);
@@ -82,6 +89,29 @@ void SEHMonitor::runPowerSupplyMonitor(std::string registerName)
     if(fTheSystemController->fDQMStreamerEnabled)
     {
         for(auto board: thePowerSupplyContainer) thePowerSupplyStreamer->streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
+    }
+#endif
+}
+
+void SEHMonitor::runTestCardMonitor(std::string registerName)
+{
+    LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement " << registerName << RESET;
+    float cValue = 0;
+    fTheSystemController->flpGBTInterface->getExternalController()->getInterface().read_hvmon(fTheSystemController->flpGBTInterface->getExternalController()->getInterface().HV_meas, cValue);
+    LOG(INFO) << BOLDMAGENTA << cValue << " " << registerName << RESET;
+
+    DetectorDataContainer theTestCardContainer;
+    ContainerFactory::copyAndInitDetector<std::tuple<time_t, float>>(*fTheSystemController->fDetectorContainer, theTestCardContainer);
+    theTestCardContainer.getSummary<std::tuple<time_t, float>>() = std::make_tuple(getTimeStamp(), cValue);
+
+#ifdef __USE_ROOT__
+    fMonitorDQMPlotSEH->fillTestCardPlots(theTestCardContainer, registerName);
+#else
+    auto theTestCardStreamer = prepareBoardContainerStreamer<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, float>, EmptyContainer, CharArray>("TestCard");
+    thePowerSupplyStreamer->setHeaderElement(CharArray(registerName));
+    if(fTheSystemController->fDQMStreamerEnabled)
+    {
+        for(auto board: theTestCardContainer) theTestCardStreamer->streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
     }
 #endif
 }
