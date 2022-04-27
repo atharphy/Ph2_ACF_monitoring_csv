@@ -125,7 +125,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
 
         for(auto cOpticalGroup: *cBoard)
         {
-            for(int hybridNumber = 0; hybridNumber < 1; hybridNumber++)
+            for(int hybridNumber = 0; hybridNumber < 2; hybridNumber++)
             {
                 if(pIsExternal)
                 {
@@ -397,13 +397,14 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
             std::this_thread::sleep_for(std::chrono::milliseconds(30));
             for(const auto cMaster: pMasters)
             {
+                // clpGBTInterface->ResetI2C(cOpticalGroup->flpGBT, {0, 1, 2});
                 bool                 cMasterSuccess = true;
                 std::vector<uint8_t> cI2CStatusVect;
                 struct timeval       stop, start;
                 gettimeofday(&start, NULL);
                 // do stuff
                 uint8_t failureIter   = 0;
-                int     tries         = 10000;
+                int     tries         = 100000;
                 uint8_t cFrequency    = (cMaster == 1) ? 2 : 3;
                 uint8_t cSlaveAddress = 0x60;
                 for(int j = 0; j < tries; j++)
@@ -445,7 +446,7 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
                 }
                 fillSummaryTree(Form("i2cmaster%i", cMaster), cMasterSuccess);
                 gettimeofday(&stop, NULL);
-                LOG(INFO) << BOLDBLUE << "Duration " << (stop.tv_sec - start.tv_sec) * 1000000 + stop.tv_usec - start.tv_usec << RESET;
+                LOG(INFO) << BOLDBLUE << "Duration " << std::to_string((stop.tv_sec - start.tv_sec) * 1000000 + stop.tv_usec - start.tv_usec) << RESET;
                 cTestSuccess &= cMasterSuccess;
                 cI2CStatusVectVect.push_back(cI2CStatusVect);
             }
@@ -614,7 +615,6 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     auto cADCsMapIterator = cADCsMap.begin();
     int  cADCValue;
     int  cBinCount = 1;
-
     fillSummaryTree("ADC conversion factor", CONVERSION_FACTOR);
     for(auto cBoard: *fDetectorContainer)
     {
@@ -735,6 +735,10 @@ bool OTHybridTester::LpGBTTestResetLines()
     {
         LpGBTSetGPIOLevel(cGPIOs, cLevel.second);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
+#ifdef __SEH_USB__
+        std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+        // mu-controller is too slow
+#endif
         auto cMapIterator = cResetLines.begin();
         bool cStatus      = true;
         do

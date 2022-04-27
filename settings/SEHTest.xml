@@ -11,7 +11,7 @@
     <OpticalGroup Id="0" FMCId="0" reset="1">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-        <lpGBT Id="0" configfile="CMSOT_lpGBT_manual.txt">
+        <lpGBT Id="0" version="0" configfile="lpGBT0.txt">
           <Settings
           />
         </lpGBT>
@@ -26,8 +26,21 @@
     </SLink>
 
     <!--CONFIG-->
-    <Register name="clock_source">0</Register> <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
+    <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
+    <Register name="clock_source_u7">0</Register> 
+    <!-- 3 = 3 = internal oscillator (default), 1 = fmc_l8_clk1, 2 = fmc_l8_clk0, 0 = COAX_IN -->
+    <Register name="clock_source_u8">3</Register> 
     <Register name="fc7_daq_cnfg">
+    <Register name="optical_block">
+		<Register name="rx_polarity"> 
+        		<Register name="l8"> 0 </Register> <!-- lpGBT-v0 = 0 , lpGBT-v1 = 1 -->
+        		<Register name="l12"> 0 </Register> <!-- lpGBT-v0 = 0 , lpGBT-v1 = 1 -->
+		</Register>
+		<Register name="tx_polarity"> 
+        		<Register name="l8"> 0 </Register>
+        		<Register name="l12"> 0 </Register>
+		</Register>
+	</Register>
         <!-- Clock control -->
         <Register name="clock">
             <Register name="ext_clk_en"> 0 </Register>
@@ -311,18 +324,22 @@
 </Settings>
 
 <MonitoringSettings>
-<Monitoring type="2S" enable="1">
+<Monitoring type="2SSEH" enable="1">
     <MonitoringSleepTime> 1000 </MonitoringSleepTime>
-    <MonitoringElement device="LpGBT" register="ADC0" enable="1"/>
-    <MonitoringElement device="LpGBT" register="ADC1" enable="1"/>
-    <MonitoringElement device="LpGBT" register="ADC2" enable="1"/>
-    <MonitoringElement device="LpGBT" register="ADC3" enable="1"/>
-    <MonitoringElement device="LpGBT" register="ADC4" enable="1"/>
-    <MonitoringElement device="LpGBT" register="ADC5" enable="1"/>
-    <MonitoringElement device="LpGBT" register="ADC6" enable="1"/>
-    <MonitoringElement device="LpGBT" register="ADC7" enable="1"/>
-    <MonitoringElement device="LpGBT" register="TEMP" enable="1"/>
-
+    <MonitoringElement device="LpGBT" register="ADC0" enable="0"/>
+    <MonitoringElement device="LpGBT" register="ADC1" enable="0"/>
+    <MonitoringElement device="LpGBT" register="ADC2" enable="0"/>
+    <MonitoringElement device="LpGBT" register="ADC3" enable="0"/>
+    <MonitoringElement device="LpGBT" register="ADC4" enable="0"/>
+    <MonitoringElement device="LpGBT" register="ADC5" enable="0"/>
+    <MonitoringElement device="LpGBT" register="ADC6" enable="0"/>
+    <MonitoringElement device="LpGBT" register="ADC7" enable="0"/>
+    <MonitoringElement device="LpGBT" register="TEMP" enable="0"/>
+    <MonitoringElement device="PowerSupply" register="MyRohdeSchwarz_LV_Module3_Voltage" enable="0"/>
+    <MonitoringElement device="PowerSupply" register="MyRohdeSchwarz_LV_Module3_Current" enable="0"/>
+    <MonitoringElement device="PowerSupply" register="IsegSHR4220_HV_Module1_Voltage" enable="1"/>
+    <MonitoringElement device="PowerSupply" register="IsegSHR4220_HV_Module1_Current" enable="1"/>
+    <MonitoringElement device="TestCard" register="HV_meas" enable="1"/>
 </Monitoring>
 </MonitoringSettings>
 <!-- <MonitoringSettings>

@@ -9,22 +9,136 @@
 #include "TFile.h"
 #endif
 
-SEHMonitor::SEHMonitor(const Ph2_System::SystemController* theSystCntr, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystCntr, theDetectorMonitorConfig)
+using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
+using namespace Ph2_System;
+
+SEHMonitor::SEHMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {
-// doMonitorTemperature = fDetectorMonitorConfig.isElementToMonitor("ModuleTemperature");
-// doMonitorInputCurrent = fDetectorMonitorConfig.isElementToMonitor("I_SEH");
+    // Add a new TCP Client to avoid conflicts in parallel process
+    LOG(INFO) << BOLDYELLOW << "Trying to connect to the Power Supply Server..." << RESET;
+    fPowerSupplyClient = new TCPClient("127.0.0.1", 7000);
+    if(!fPowerSupplyClient->connect(1))
+    {
+        LOG(INFO) << BOLDYELLOW << "Cannot connect to the Power Supply Server, power supplies will need to be controlled manually" << RESET;
+        delete fPowerSupplyClient;
+        fPowerSupplyClient = nullptr;
+    }
+    else
+    {
+        LOG(INFO) << BOLDYELLOW << "Connected to the Power Supply Server!" << RESET;
+    }
+
 #ifdef __USE_ROOT__
     fMonitorPlotDQM    = new MonitorDQMPlotCBC();
-    fMonitorDQMPlotCBC = static_cast<MonitorDQMPlotCBC*>(fMonitorPlotDQM);
-    fMonitorDQMPlotCBC->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
+    fMonitorDQMPlotSEH = static_cast<MonitorDQMPlotCBC*>(fMonitorPlotDQM);
+    fMonitorDQMPlotSEH->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
 #endif
+}
+// Maybe not ideal here (but needed to avoid memory leak)?? Could be moved to ~DetectorMonitor() if fPowerSupplyClient is also used for other devices?
+SEHMonitor::~SEHMonitor()
+{
+    delete fPowerSupplyClient;
+    fPowerSupplyClient = nullptr;
 }
 
 void SEHMonitor::runMonitor()
 {
-    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("Board")) runInputCurrentMonitor(registerName);
+    std::recursive_mutex                  theMutex;
+    std::lock_guard<std::recursive_mutex> theGuard(theMutex);
+    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT")) runLpGBTRegisterMonitor(registerName);
+    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("PowerSupply")) runPowerSupplyMonitor(registerName);
+    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("TestCard")) runTestCardMonitor(registerName);
+}
 
-    // if(doMonitorInputCurrent) runInputCurrentMonitor();
+void SEHMonitor::runLpGBTRegisterMonitor(std::string registerName)
+{
+    DetectorDataContainer theLpGBTRegisterContainer;
+    ContainerFactory::copyAndInitOpticalGroup<std::tuple<time_t, uint16_t>>(*fTheSystemController->fDetectorContainer, theLpGBTRegisterContainer);
+
+    for(const auto& board: *fTheSystemController->fDetectorContainer)
+    {
+        if(board->at(0)->flpGBT == nullptr)
+        {
+            for(const auto& opticalGroup: *board)
+                theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<std::tuple<time_t, uint16_t>>() = std::make_tuple(getTimeStamp(), -1);
+            continue;
+        }
+        for(const auto& opticalGroup: *board)
+        {
+            uint16_t registerValue = static_cast<D19clpGBTInterface*>(fTheSystemController->flpGBTInterface)->ReadADC(opticalGroup->flpGBT, registerName);
+            LOG(DEBUG) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - " << registerName << " = " << registerValue << RESET;
+            theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<std::tuple<time_t, uint16_t>>() = std::make_tuple(getTimeStamp(), registerValue);
+        }
+    }
+
+#ifdef __USE_ROOT__
+    fMonitorDQMPlotSEH->fillLpGBTRegisterPlots(theLpGBTRegisterContainer, registerName);
+#else
+    auto theLpGBTRegisterStreamer = prepareBoardContainerStreamer<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, CharArray>("LpGBTRegister");
+    theLpGBTRegisterStreamer->setHeaderElement(CharArray(registerName));
+    if(fTheSystemController->fDQMStreamerEnabled)
+    {
+        for(auto board: theLpGBTRegisterContainer) theLpGBTRegisterStreamer->streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
+    }
+#endif
+}
+
+void SEHMonitor::runPowerSupplyMonitor(std::string registerName)
+{
+    // LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement " << registerName<< RESET;
+    std::string buffer = fPowerSupplyClient->sendAndReceivePacket("GetStatus");
+    LOG(INFO) << BOLDMAGENTA << buffer << RESET;
+    // while(!(buffer.find("TimeStamp") != std::string::npos))
+    // {
+    //     buffer = fPowerSupplyClient->sendAndReceivePacket("GetStatus");
+    //     LOG(INFO) << BOLDMAGENTA << buffer << RESET;
+    // }
+    float cValue = std::stof(getVariableValue(registerName, buffer));
+    LOG(INFO) << BOLDMAGENTA << cValue << " " << registerName << RESET;
+    if((registerName.find("HV") != std::string::npos) & (registerName.find("Current") != std::string::npos)) { cValue *= 1e9; }
+    DetectorDataContainer thePowerSupplyContainer;
+    ContainerFactory::copyAndInitDetector<std::tuple<time_t, float>>(*fTheSystemController->fDetectorContainer, thePowerSupplyContainer);
+    thePowerSupplyContainer.getSummary<std::tuple<time_t, float>>() = std::make_tuple(getTimeStamp(), cValue);
+
+#ifdef __USE_ROOT__
+    fMonitorDQMPlotSEH->fillPowerSupplyPlots(thePowerSupplyContainer, registerName);
+#else
+    auto thePowerSupplyStreamer = prepareBoardContainerStreamer<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, float>, EmptyContainer, CharArray>("PowerSupply");
+    thePowerSupplyStreamer->setHeaderElement(CharArray(registerName));
+    if(fTheSystemController->fDQMStreamerEnabled)
+    {
+        for(auto board: thePowerSupplyContainer) thePowerSupplyStreamer->streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
+    }
+#endif
+}
+
+void SEHMonitor::runTestCardMonitor(std::string registerName)
+{
+    LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement " << registerName << RESET;
+    float cValue = 0;
+#if defined(__TCUSB__) && defined(__SEH_USB__) && defined(__USE_ROOT__)
+#ifdef __TCP_SERVER__
+    fTheSystemController->fTestcardClient->sendAndReceivePacket("read_hvmon:HV_meas");
+#else
+    fTheSystemController->flpGBTInterface->getExternalController()->getInterface().read_hvmon(fTheSystemController->flpGBTInterface->getExternalController()->getInterface().HV_meas, cValue);
+#endif
+    LOG(INFO) << BOLDMAGENTA << cValue << " " << registerName << RESET;
+#endif
+    DetectorDataContainer theTestCardContainer;
+    ContainerFactory::copyAndInitDetector<std::tuple<time_t, float>>(*fTheSystemController->fDetectorContainer, theTestCardContainer);
+    theTestCardContainer.getSummary<std::tuple<time_t, float>>() = std::make_tuple(getTimeStamp(), cValue);
+
+#ifdef __USE_ROOT__
+    fMonitorDQMPlotSEH->fillTestCardPlots(theTestCardContainer, registerName);
+#else
+    auto theTestCardStreamer = prepareBoardContainerStreamer<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, float>, EmptyContainer, CharArray>("TestCard");
+    thePowerSupplyStreamer->setHeaderElement(CharArray(registerName));
+    if(fTheSystemController->fDQMStreamerEnabled)
+    {
+        for(auto board: theTestCardContainer) theTestCardStreamer->streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
+    }
+#endif
 }
 
 void SEHMonitor::runInputCurrentMonitor(std::string registerName)
@@ -47,15 +161,12 @@ void SEHMonitor::runInputCurrentMonitor(std::string registerName)
         }
     }
     LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement" << RESET;
+}
 
-    // for(const auto& board: *theSystCntr.fDetectorContainer)
-    // {
-    //     for(const auto& opticalGroup: *board)
-    //     {
-
-    // for(const auto& hybrid: *opticalGroup)
-    // {
-    // uint16_t cbcOrMpa = theSystCntr.fCicInterface->ReadChipReg(static_cast<const Ph2_HwDescription::OuterTrackerHybrid*>(hybrid)->fCic, "CBCMPA_SEL"); // just to read something
-    //     LOG(INFO) << BOLDMAGENTA << "Hybrid " << hybrid->getId() << " - CBCMPA_SEL = " << cbcOrMpa << RESET;
-    // }
+std::string SEHMonitor::getVariableValue(std::string variable, std::string buffer)
+{
+    size_t begin = buffer.find(variable) + variable.size() + 1;
+    size_t end   = buffer.find(',', begin);
+    if(end == std::string::npos) end = buffer.size();
+    return buffer.substr(begin, end - begin);
 }
