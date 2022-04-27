@@ -133,7 +133,7 @@ void SEHMonitor::runTestCardMonitor(std::string registerName)
     fMonitorDQMPlotSEH->fillTestCardPlots(theTestCardContainer, registerName);
 #else
     auto theTestCardStreamer = prepareBoardContainerStreamer<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, float>, EmptyContainer, CharArray>("TestCard");
-    thePowerSupplyStreamer->setHeaderElement(CharArray(registerName));
+    theTestCardStreamer->setHeaderElement(CharArray(registerName));
     if(fTheSystemController->fDQMStreamerEnabled)
     {
         for(auto board: theTestCardContainer) theTestCardStreamer->streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
