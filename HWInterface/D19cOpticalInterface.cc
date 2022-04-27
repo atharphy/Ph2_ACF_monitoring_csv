@@ -187,10 +187,10 @@ bool D19cOpticalInterface::MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uin
         return false;
     }
     uint8_t cStatus = (cReply[0] & (0xFF << 0)) >> 0;
-    if(cStatus != 4) 
-    { 
+    if(cStatus != 4)
+    {
         LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiByteWriteI2C : I2C Status is " << +cStatus << RESET;
- 	    return false;
+        return false;
     }
     return true;
 }

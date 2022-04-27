@@ -467,13 +467,13 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
                         fMeanStrips += tmpVthr;
                         cNStripChips++;
                     }
-                    if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) 
+                    if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                     {
                         tmpVthr = static_cast<ReadoutChip*>(cChip)->getReg("Bias_THDAC");
                         fMeanStrips += tmpVthr;
                         cNStripChips++;
                     }
-                    if(cChip->getFrontEndType() == FrontEndType::MPA) 
+                    if(cChip->getFrontEndType() == FrontEndType::MPA)
                     {
                         tmpVthr = static_cast<ReadoutChip*>(cChip)->getReg("ThDAC0");
                         fMeanPixels += tmpVthr;
@@ -483,12 +483,14 @@ uint16_t PedeNoise::findPedestal(bool forceAllChannels)
             }
         }
     }
-    fMeanStrips = (cNStripChips > 0) ? fMeanStrips/cNStripChips : 0xFF/2;
-    fMeanPixels = (cNPixelChips > 0) ? fMeanPixels/cNPixelChips : 0xFF/2;
-    if(cWithCBC || cWithSSA) LOG(INFO) << BOLDBLUE << "Found Pedestals on Strip ASICs to be around " << fMeanStrips << RESET;
-    else LOG(INFO) << BOLDBLUE << "Found Pedestals on Pixel ASICs to be around " << fMeanPixels << RESET;
+    fMeanStrips = (cNStripChips > 0) ? fMeanStrips / cNStripChips : 0xFF / 2;
+    fMeanPixels = (cNPixelChips > 0) ? fMeanPixels / cNPixelChips : 0xFF / 2;
+    if(cWithCBC || cWithSSA)
+        LOG(INFO) << BOLDBLUE << "Found Pedestals on Strip ASICs to be around " << fMeanStrips << RESET;
+    else
+        LOG(INFO) << BOLDBLUE << "Found Pedestals on Pixel ASICs to be around " << fMeanPixels << RESET;
     setNormalization(cNormalizationOrig);
-    float    cMean = (cWithCBC || cWithSSA) ? fMeanStrips : fMeanPixels;
+    float cMean = (cWithCBC || cWithSSA) ? fMeanStrips : fMeanPixels;
     return cMean;
 }
 void PedeNoise::scanScurves()
