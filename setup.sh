@@ -12,24 +12,6 @@ export CACTUSBIN=$CACTUSROOT/bin
 export CACTUSLIB=$CACTUSROOT/lib
 export CACTUSINCLUDE=$CACTUSROOT/include
 
-#########
-# BOOST #
-#########
-export KERNELRELEASE=$(uname -r)
-if [[ $KERNELRELEASE == *"el6"* ]]; then
-    export BOOST_LIB=/opt/cactus/lib
-    export BOOST_INCLUDE=/opt/cactus/include
-elif [[ $KERNELRELEASE == *"el8"* ]]; then
-    export BOOST_LIB=/opt/cactus/lib
-    export BOOST_INCLUDE=/opt/cactus/include
-elif [[ $KERNELRELEASE == "5."*"-generic" ]]; then
-    export BOOST_INCLUDE=/usr/include
-    export BOOST_LIB=/usr/lib/x86_64-linux-gnu
-else
-    export BOOST_INCLUDE=/usr/include
-    export BOOST_LIB=/usr/lib64
-fi
-
 ########
 # ROOT #
 ########

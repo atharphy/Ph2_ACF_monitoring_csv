@@ -196,7 +196,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif(ZMQ_FOUND)
 
     # Boost
-    find_package(Boost 1.53 REQUIRED system filesystem serialization iostreams program_options)
+    # To use a local installtion of BOOST
+    #set(BOOST_ROOT "" CACHE PATH "Boost library path")
+    #set(Boost_NO_SYSTEM_PATHS on CACHE BOOL "Do not search system for Boost")
+    find_package(Boost 1.53 REQUIRED COMPONENTS system filesystem serialization iostreams program_options)
 
     message("--     ${BoldCyan}#### Done ####${Reset}")
 
