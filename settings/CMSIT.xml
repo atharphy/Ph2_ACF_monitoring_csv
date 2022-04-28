@@ -48,7 +48,7 @@
               PRECOMP_DIFF           =  "512"
               COMP_DIFF              = "1023"
               VFF_DIFF               =   "40"
-              VTH1_DIFF              =  "700"
+              VTH1_DIFF              =  "400"
               VTH2_DIFF              =  "100"
               LCC_DIFF               =   "20"
               CONF_FE_DIFF           =    "0"
