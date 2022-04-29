@@ -24,7 +24,7 @@ Chip::Chip(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxReg
 
 // C'tors which take Board ID, Frontend ID/Hybrid ID, FMC ID, Chip ID
 Chip::Chip(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, uint16_t pMaxRegValue)
-    : FrontEndDescription(pBeBoardId, pOpticalGroupId, pFMCId, pHybridId), fChipId(pChipId), fMaxRegValue(pMaxRegValue)
+    : FrontEndDescription(pBeBoardId, pFMCId, pOpticalGroupId, pHybridId), fChipId(pChipId), fMaxRegValue(pMaxRegValue)
 {
 }
 
