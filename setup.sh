@@ -24,39 +24,38 @@ if ! command -v root &> /dev/null; then
   return 1
 fi
 
-#######
-# ZMQ #
-#######
-export ZMQ_HEADER_PATH=/usr/include/zmq.hpp
-
 ####################
 # External Plugins #
 ####################
 export EXTERNAL_TOOLS_BASE_DIR=${PH2ACF_BASE_DIR%/*}
-# if in the docker container I want to do this .. need to figure out how to make sure that this is set-up correctly
 export AMC13DIR=$CACTUSINCLUDE/amc13
-export ANTENNADIR=$EXTERNAL_TOOLS_BASE_DIR/CMSPh2_AntennaDriver
-export USBINSTDIR=$EXTERNAL_TOOLS_BASE_DIR/Ph2_USBInstDriver
-export EUDAQDIR=$EXTERNAL_TOOLS_BASE_DIR/eudaq
 export POWERSUPPLYDIR=$EXTERNAL_TOOLS_BASE_DIR/power_supply
 
 # These are git references for the dependencies that are included via CMake ExternalProjects
 export PH2_TCUSB_REF=e28b79c090b35d9fc686b5d56a4ebab0c36a1a22
 export EUDAQ_REF=ac59b87fca12806d775e95df2d253c3bf96420ee
 
+#######
+# ZMQ #
+#######
+export ZMQ_HEADER_PATH=/usr/include/zmq.hpp
+
 ###########
 # ANTENNA #
 ###########
+export ANTENNADIR=$EXTERNAL_TOOLS_BASE_DIR/CMSPh2_AntennaDriver
 export ANTENNALIB=$ANTENNADIR/lib
 
 ###########
 # HMP4040 #
 ###########
+export USBINSTDIR=$EXTERNAL_TOOLS_BASE_DIR/Ph2_USBInstDriver
 export USBINSTLIB=$USBINSTDIR/lib
 
 ##########
 # EUDAQ #
 ##########
+if [[ -z ${EUDAQDIR} ]]; then export EUDAQDIR=$EXTERNAL_TOOLS_BASE_DIR/eudaq; fi
 export EUDAQLIB=$EUDAQDIR/lib
 
 ##########
@@ -84,6 +83,9 @@ export EuDaqFlag='-D__EUDAQ__'
 #####################
 # Compilation flags #
 #####################
+
+# C++ standard
+export STDCXX="-std=c++1z"
 
 # Stand-alone application, without data streaming
 export CompileForHerd=false
