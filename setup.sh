@@ -85,7 +85,7 @@ export EuDaqFlag='-D__EUDAQ__'
 #####################
 
 # C++ standard
-export STDCXX="-std=c++1z"
+export STDCXX="-std=c++1y"
 
 # Stand-alone application, without data streaming
 export CompileForHerd=false
