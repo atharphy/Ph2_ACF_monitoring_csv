@@ -15,6 +15,11 @@ include_directories(${PROJECT_SOURCE_DIR}/SystemController)
 include_directories(${PROJECT_SOURCE_DIR}/RootUtils)
 include_directories(${PROJECT_SOURCE_DIR}/Utils)
 
+# Boost also needs to be linked
+include_directories(${Boost_INCLUDE_DIRS})
+link_directories(${Boost_LIBRARY_DIRS})
+set(LIBS ${LIBS} ${Boost_ITERATOR_LIBRARY})
+
 # Find root and link against it
 if(${ROOT_FOUND})
     include_directories(${ROOT_INCLUDE_DIRS})

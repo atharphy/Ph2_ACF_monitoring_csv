@@ -4,10 +4,10 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
+#include "../HWInterface/FEConfigurationInterface.h"
+#include "../HWInterface/L1ReadoutInterface.h"
+#include "../HWInterface/TriggerInterface.h"
 #include "../Utils/ContainerFactory.h"
-#include "FEConfigurationInterface.h"
-#include "L1ReadoutInterface.h"
-#include "TriggerInterface.h"
 
 OTTool::OTTool() : Tool()
 {

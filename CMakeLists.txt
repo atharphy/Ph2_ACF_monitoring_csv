@@ -97,7 +97,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_9_NOERROR_FLAGS}")
       endif()
     endif ()
-    set (CMAKE_CXX_FLAGS "-g -std=c++1y -gdwarf-4 -O3 -fopenmp -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-missing-field-initializers -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor ${GCC_NOERROR_FLAGS} -pthread -Wcpp -fPIC ${CMAKE_CXX_FLAGS} -DELPP_THREAD_SAFE")
+#-std=c++1z
+    set (CMAKE_CXX_FLAGS "-g $ENV{STDCXX} -gdwarf-4 -O3 -fopenmp -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-missing-field-initializers -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor ${GCC_NOERROR_FLAGS} -pthread -Wcpp -fPIC ${CMAKE_CXX_FLAGS} -DELPP_THREAD_SAFE")
     if(NoDataShipping)
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
     endif()
@@ -125,13 +126,13 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif()
 
     # AMC13
-    find_package(CACTUS)      #========================================================
+    find_package(CACTUS)
     if(${CACTUS_AMC13_FOUND})
         message(STATUS "    Enabling AMC13 component")
     endif(${CACTUS_AMC13_FOUND})
 
     # Antenna
-    find_package(PH2_ANTENNA) #========================================================
+    find_package(PH2_ANTENNA)
     if(PH2_ANTENNA_FOUND)
         message(STATUS "    Building the Antenna components")
     endif(PH2_ANTENNA_FOUND)
@@ -170,7 +171,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     if ($ENV{CompileWithEUDAQ}) # Asked for EUDAQ
         message(STATUS "Building with EUDAQ")
         set(USE_EUDAQ ON)
-        if(NOT (DEFINED ENV{EUDAQDIR} AND EXISTS ENV{EUDAQDIR} ) )
+        if(NOT DEFINED ENV{EUDAQDIR})
             message(WARNING "    Couldn't find EUDAQ. Obtaining from gitlab ref $ENV{EUDAQ_REF}")
             ExternalProject_Add( ext_eudaq
                     GIT_REPOSITORY https://gitlab.cern.ch/cms_tk_ph2/eudaq.git
@@ -178,7 +179,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
                     PREFIX ${EXTERNAL_INSTALL_LOCATION}
                 )
             set(ENV{EUDAQDIR} ${EXTERNAL_INSTALL_LOCATION}/src/ext_eudaq/ )
-        endif(NOT (DEFINED ENV{EUDAQDIR} AND EXISTS ENV{EUDAQDIR} ) )
+        endif(NOT DEFINED ENV{EUDAQDIR})
 
         include_directories($ENV{EUDAQDIR}/include)
         set(EUDAQ_LIB -L$ENV{EUDAQDIR}/lib eudaq_core)
@@ -188,7 +189,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif($ENV{CompileWithEUDAQ})
 
     # ZeroMQ
-    find_package(ZMQ)         #========================================================
+    find_package(ZMQ)
     if(ZMQ_FOUND)
         find_package(PH2_USBINSTLIB)
         if(PH2_USBINSTLIB_FOUND)
@@ -196,7 +197,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif(ZMQ_FOUND)
 
     # Boost
-    find_package(Boost 1.53 REQUIRED system filesystem serialization iostreams program_options)
+    # To use a local installtion of BOOST
+    #set(BOOST_ROOT "" CACHE PATH "Boost library path")
+    #set(Boost_NO_SYSTEM_PATHS on CACHE BOOL "Do not search system for Boost")
+    find_package(Boost 1.53 REQUIRED COMPONENTS system filesystem serialization iostreams program_options)
 
     message("--     ${BoldCyan}#### Done ####${Reset}")
 
@@ -264,13 +268,13 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     endif(${CACTUS_AMC13_FOUND})
 
     # Antenna
-    find_package(PH2_ANTENNA) #========================================================
+    find_package(PH2_ANTENNA)
     if(PH2_ANTENNA_FOUND)
         message(STATUS "    Building the Antenna components")
     endif(PH2_ANTENNA_FOUND)
 
     # ZeroMQ
-    find_package(ZMQ)         #========================================================
+    find_package(ZMQ)
     if(ZMQ_FOUND)
         find_package(PH2_USBINSTLIB)
         if(PH2_USBINSTLIB_FOUND)

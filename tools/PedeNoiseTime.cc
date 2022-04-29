@@ -1,6 +1,8 @@
 #include "PedeNoiseTime.h"
 #include "../HWDescription/Cbc.h"
 #include "../HWDescription/SSA.h"
+#include "../HWInterface/L1ReadoutInterface.h"
+#include "../HWInterface/TriggerInterface.h"
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
@@ -10,8 +12,6 @@
 #include "../Utils/Occupancy.h"
 #include "../Utils/SSAChannelGroupHandler.h"
 #include "../Utils/ThresholdAndNoise.h"
-#include "L1ReadoutInterface.h"
-#include "TriggerInterface.h"
 #include "boost/format.hpp"
 #include <math.h>
 
