@@ -155,7 +155,7 @@ void SSASCurve::run(void)
                             }
                             unsigned int channelNumber = 0;
                             channelNumber++;
-                        } // ROC
+                        } // Chip
                     }     // hybrid
                 }         // opticalGroup
 
@@ -173,14 +173,14 @@ void SSASCurve::run(void)
                 {
                     for(auto hybrid: *opticalGroup) // for on hybrid - begin
                     {
-                        for(auto cROC: *hybrid) // for on chip - begin
+                        for(auto cChip: *hybrid) // for on chip - begin
                         {
                             for(auto cEvent: cEvents)
                             {
-                                auto         hits          = cEvent->GetHits(hybrid->getId(), cROC->getId());
+                                auto         hits          = cEvent->GetHits(hybrid->getId(), cChip->getId());
                                 unsigned int channelNumber = 0;
                                 unsigned int curh          = 0;
-                                for(auto& channel: *cROC->getChannelContainer<std::pair<std::array<uint32_t, 2>, float>>())
+                                for(auto& channel: *cChip->getChannelContainer<std::pair<std::array<uint32_t, 2>, float>>())
                                 {
                                     Nstrip += 1.0;
                                     curh = hits[channelNumber];
@@ -210,7 +210,7 @@ void SSASCurve::run(void)
                                     channelNumber++;
                                 } // chnl
                             }     // events
-                        }         // ROC
+                        }         // Chip
                     }             // hybrid
                 }                 // opticalGroup
 #ifdef __USE_ROOT__
@@ -232,7 +232,7 @@ void SSASCurve::run(void)
                             mean += channel.second;
                             Nmeans += 1.0;
                         } // chn;
-                    }     // ROC
+                    }     // Chip
                 }         // hybrid
             }             // opticalGroup
 
@@ -247,13 +247,13 @@ void SSASCurve::run(void)
             {
                 for(auto hybrid: *opticalGroup) // for on hybrid - begin
                 {
-                    for(auto cROC: *hybrid) // for on chip - begin
+                    for(auto cChip: *hybrid) // for on chip - begin
                     {
                         uint32_t istrip = 1;
-                        for(auto& channel: *cROC->getChannelContainer<std::pair<std::array<uint32_t, 2>, float>>()) // for on channel -
-                                                                                                                    // begin
+                        for(auto& channel: *cChip->getChannelContainer<std::pair<std::array<uint32_t, 2>, float>>()) // for on channel -
+                                                                                                                     // begin
                         {
-                            ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(cROC->getIndex()));
+                            ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(cChip->getIndex()));
                             rms += (channel.second - mean) * (channel.second - mean);
 
                             int32_t cr      = fReadoutChipInterface->ReadChipReg(theChip, prestr + std::to_string(istrip));
@@ -271,7 +271,7 @@ void SSASCurve::run(void)
                             fReadoutChipInterface->WriteChipReg(theChip, prestr + std::to_string(istrip), THtowrite);
                             istrip += 1;
                         } // chnl
-                    }     // ROC
+                    }     // Chip
                 }         // hybrid
             }             // mdule
             // prev = cur;

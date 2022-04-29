@@ -794,8 +794,8 @@ void Tool::setFWTestPulse()
             }
             else
             {
-                LOG(INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 12" << RESET;
-                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 12});
+                LOG(INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 10" << RESET;
+                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
                 cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
             }
             break;
@@ -1120,15 +1120,15 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
             for(auto cOpticalGroup: *(fDetectorContainer->at(boardIndex)))
             {
                 auto& cDataContainerThisOG = cDataContainerThisBrd->at(cOpticalGroup->getIndex());
-                for(auto cFe: *cOpticalGroup)
+                for(auto cHybrid: *cOpticalGroup)
                 {
-                    auto& cDataContainerThisFE = cDataContainerThisOG->at(cFe->getIndex());
-                    for(auto cROC: *cFe)
+                    auto& cDataContainerThisFE = cDataContainerThisOG->at(cHybrid->getIndex());
+                    for(auto cChip: *cHybrid)
                     {
-                        auto&                cDataContainerThisROC = cDataContainerThisFE->at(cROC->getIndex());
-                        auto&                cSummary              = cDataContainerThisROC->getSummary<Occupancy, Occupancy>();
+                        auto&                cDataContainerThisChip = cDataContainerThisFE->at(cChip->getIndex());
+                        auto&                cSummary               = cDataContainerThisChip->getSummary<Occupancy, Occupancy>();
                         ChannelGroupHandler* cHandler;
-                        if(cROC->getFrontEndType() == FrontEndType::MPA)
+                        if(cChip->getFrontEndType() == FrontEndType::MPA)
                             cHandler = new MPAChannelGroupHandler();
                         else
                             cHandler = new SSAChannelGroupHandler();
@@ -1136,7 +1136,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                                    << RESET;
                         float  cGlobalOcc = 0;
                         size_t cNenabled  = 0;
-                        for(uint16_t cChnl = 0; cChnl < cDataContainerThisROC->size(); cChnl++)
+                        for(uint16_t cChnl = 0; cChnl < cDataContainerThisChip->size(); cChnl++)
                         {
                             uint32_t cRow = cChnl % cHandler->allChannelGroup()->getNumberOfRows();
                             uint32_t cCol;
@@ -1146,11 +1146,11 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                                 cCol = cChnl / cHandler->allChannelGroup()->getNumberOfRows();
                             if(cHandler->allChannelGroup()->isChannelEnabled(cRow, cCol))
                             {
-                                cDataContainerThisROC->getChannel<Occupancy>(cRow, cCol).fOccupancy /= fNReadbackEvents;
-                                cGlobalOcc += cDataContainerThisROC->getChannel<Occupancy>(cRow, cCol).fOccupancy;
+                                cDataContainerThisChip->getChannel<Occupancy>(cRow, cCol).fOccupancy /= fNReadbackEvents;
+                                cGlobalOcc += cDataContainerThisChip->getChannel<Occupancy>(cRow, cCol).fOccupancy;
                                 cNenabled++;
                                 if(cChnl < 10 || cChnl > 15 * 120 + 110)
-                                    LOG(DEBUG) << BOLDBLUE << cChnl << " [ " << cRow << " , " << cCol << " ] " << cDataContainerThisROC->getChannel<Occupancy>(cRow, cCol).fOccupancy << RESET;
+                                    LOG(DEBUG) << BOLDBLUE << cChnl << " [ " << cRow << " , " << cCol << " ] " << cDataContainerThisChip->getChannel<Occupancy>(cRow, cCol).fOccupancy << RESET;
                             }
                         }
                         cGlobalOcc /= cNenabled;
@@ -1207,7 +1207,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                     else
                     {
                         auto& cCurrentDAC = currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
-                        cOut << "Occupancy ROC#" << +cChip->getId() << "\t[ global] "
+                        cOut << "Occupancy Chip#" << +cChip->getId() << "\t[ global] "
                              << currentStepOccupancyContainer->at(boardIndex)
                                     ->at(cOpticalGroup->getIndex())
                                     ->at(cHybrid->getIndex())

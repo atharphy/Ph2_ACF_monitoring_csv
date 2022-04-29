@@ -407,7 +407,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                         fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cLatency - 1);
                     else
                         fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cLatency);
-                } // ROC - only MPAs and CBCs for this test since I'm eihter in p=p mode or 2S
+                } // Chip - only MPAs and CBCs for this test since I'm eihter in p=p mode or 2S
             }     // hybrid
         }         // OG
 
@@ -449,7 +449,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                             cNHitsPerHybrid += cNHitsThisFE;
                             cNHits += cNHitsThisFE;
                             // if( cNHitsThisFE > 0 )
-                            LOG(DEBUG) << BOLDBLUE << "\t.. ROC" << +cChip->getId() << " found " << +cNHitsThisFE << " hits .." << RESET;
+                            LOG(DEBUG) << BOLDBLUE << "\t.. Chip" << +cChip->getId() << " found " << +cNHitsThisFE << " hits .." << RESET;
                         }
                         LOG(DEBUG) << BOLDMAGENTA << "Trigger#" << +cTriggerId << " in a burst of " << (1 + cMult) << " found " << +cNHitsPerHybrid << " hits in Hybrid#" << +cHybrid->getId() << RESET;
                     }
@@ -510,7 +510,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                             auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
                             cNstubsThisHybrd += cStubs.size();
                             cNStubsFound += cStubs.size();
-                        } // ROCs
+                        } // Chips
                         if(cNstubsThisHybrd > 0)
                             LOG(INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " found " << +cNstubsThisHybrd << " stubs in CIC#" << +cHybrid->getId() << " BxId is " << +cBx << RESET;
                     } // hybrids
@@ -557,7 +557,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                                 LOG(INFO) << BOLDGREEN << "Event#" << +cEvent->GetEventCount() << " ... found " << cHits.size() << " hits in FE#" << +cChip->getId() << " and " << +cStubs.size()
                                           << " stubs." << RESET;
                             }
-                        } // ROCs
+                        } // Chips
                     }     // hybrids
                 }         // OGs
             }             // events

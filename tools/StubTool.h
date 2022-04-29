@@ -39,7 +39,7 @@ class StubTool : public Tool
 
     void maskChannel(Ph2_HwDescription::Chip* pCbc, uint8_t iChan, bool mask = true);
 
-    uint16_t encodeId(uint8_t pFeId, uint8_t pCbcId);
+    uint16_t encodeId(uint8_t pHybridId, uint8_t pCbcId);
 
     // from the settings map
     bool     fHoleMode;

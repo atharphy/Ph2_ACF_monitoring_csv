@@ -147,7 +147,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("completeDataCheck", "Complete data check for the following CBCs", ArgvParser::OptionRequiresValue);
     cmd.defineOption("cyclePower", "Cycle Power", ArgvParser::NoOptionAttribute);
     cmd.defineOption("powerState", "Get State of power supply", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("registerTest", "Test I2C registers on ROCs", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("registerTest", "Test I2C registers on Chips", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkL1Timing", "Check L1 timing for hybrid# [please provide hybrid number]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("linkTest", "Check data quality on L1/stub data", ArgvParser::NoOptionAttribute);
 
@@ -589,12 +589,12 @@ int main(int argc, char* argv[])
         //         for(auto cHybrid: *cOpticalGroup)
         //         {
         //             // set all SSAs + MPAs to output data in async mode
-        //             for(auto cROC: *cHybrid)
+        //             for(auto cChip: *cHybrid)
         //             {
         //                 // TBC - what about MPA here?
-        //                 if( cROC->getFrontEndType() == FrontEndType::SSA || cROC->getFrontEndType() == FrontEndType::SSA2 )
+        //                 if( cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2 )
         //                 {
-        //                     cTool.fReadoutChipInterface->WriteChipReg(cROC, "AnalogueSync", 1);
+        //                     cTool.fReadoutChipInterface->WriteChipReg(cChip, "AnalogueSync", 1);
         //                 }
         //             }
         //         }
@@ -676,12 +676,12 @@ int main(int argc, char* argv[])
         // find pedestal and set threshold
         if(cmd.foundOption("completeDataCheck"))
         {
-            std::string          cArgsStr    = cmd.optionValue("completeDataCheck");
-            std::vector<uint8_t> cFesToCheck = getArgs(cArgsStr);
+            std::string          cArgsStr      = cmd.optionValue("completeDataCheck");
+            std::vector<uint8_t> cChipsToCheck = getArgs(cArgsStr);
             cMemoryChecker.EvaluatePedeNoise(100); // find pedestal + noise
             cMemoryChecker.SetThreshold(-2.0);     // set threshold to 3 sigma away from pedestal
             int cTriggerGap = cTool.findValueInSettings<double>("TriggerSeparation", 500);
-            cMemoryChecker.DataCheck(cFesToCheck, cTriggerGap);
+            cMemoryChecker.DataCheck(cChipsToCheck, cTriggerGap);
         }
         cMemoryChecker.MemoryCheck2SRaw(true);  // all ones
         cMemoryChecker.MemoryCheck2SRaw(false); // all zeros

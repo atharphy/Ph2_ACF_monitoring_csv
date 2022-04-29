@@ -109,11 +109,11 @@ class DQMEvent
         for(std::vector<bool>::const_iterator it = v.begin() + ishift; it != v.begin() + ishift + len; ++it, ++i) retval.push_back((*it));
         return retval;
     }
-    static uint16_t encodeId(const uint8_t& pFeId, const uint8_t& pCbcId) { return (pFeId << 8 | pCbcId); }
-    static void     decodeId(const uint16_t& pKey, uint8_t& pFeId, uint8_t& pCbcId)
+    static uint16_t encodeId(const uint8_t& pHybridId, const uint8_t& pCbcId) { return (pHybridId << 8 | pCbcId); }
+    static void     decodeId(const uint16_t& pKey, uint8_t& pHybridId, uint8_t& pCbcId)
     {
-        pFeId  = (pKey >> 8) & MASK_BITS_8;
-        pCbcId = pKey & MASK_BITS_8;
+        pHybridId = (pKey >> 8) & MASK_BITS_8;
+        pCbcId    = pKey & MASK_BITS_8;
     }
     // total number of Readout units conencted
     static size_t nReadout(const uint64_t& word) { return ((word >> 8) & MASK_BITS_16); }
@@ -333,9 +333,9 @@ class DQMEvent
             // throws an out_of_range exception if the key cKey is not found in the container (map)
             return readoutDataMap_.at(cKey).first;
         }
-        const ReadoutStatus& readoutStatus(uint8_t feId, uint8_t readoutId) const
+        const ReadoutStatus& readoutStatus(uint8_t hybridId, uint8_t readoutId) const
         {
-            uint16_t cKey = encodeId(feId, readoutId);
+            uint16_t cKey = encodeId(hybridId, readoutId);
             return readoutStatus(cKey);
         }
         // Get Readout Channel data
@@ -344,9 +344,9 @@ class DQMEvent
             // throws an out_of_range exception if the key cKey is not found in the container (map)
             return readoutDataMap_.at(cKey).second;
         }
-        const std::vector<bool>& channelData(uint8_t feId, uint8_t readoutId) const
+        const std::vector<bool>& channelData(uint8_t hybridId, uint8_t readoutId) const
         {
-            uint16_t cKey = encodeId(feId, readoutId);
+            uint16_t cKey = encodeId(hybridId, readoutId);
             return channelData(cKey);
         }
         // Overall Readout data
@@ -355,9 +355,9 @@ class DQMEvent
             // throws an out_of_range exception if the key cKey is not found in the container (map)
             return readoutDataMap_.at(cKey);
         }
-        const std::pair<ReadoutStatus, std::vector<bool>>& readoutData(uint8_t feId, uint8_t readoutId) const
+        const std::pair<ReadoutStatus, std::vector<bool>>& readoutData(uint8_t hybridId, uint8_t readoutId) const
         {
-            uint16_t cKey = encodeId(feId, readoutId);
+            uint16_t cKey = encodeId(hybridId, readoutId);
             return readoutData(cKey);
         }
         size_t nwords() const { return nwords_; }
@@ -367,9 +367,9 @@ class DQMEvent
             for(std::map<uint16_t, std::pair<ReadoutStatus, std::vector<bool>>>::const_iterator it = readoutDataMap_.begin(); it != readoutDataMap_.end(); ++it)
             {
                 uint16_t cKey = it->first;
-                uint8_t  feId, readoutId;
-                decodeId(cKey, feId, readoutId);
-                os << "== feId: <" << +feId << ">, readoutId: <" << +readoutId << ">" << std::endl;
+                uint8_t  hybridId, readoutId;
+                decodeId(cKey, hybridId, readoutId);
+                os << "== hybridId: <" << +hybridId << ">, readoutId: <" << +readoutId << ">" << std::endl;
                 const ReadoutStatus& rs = it->second.first;
                 rs.print(true, os);
 
@@ -433,22 +433,22 @@ class DQMEvent
             os << "[StubData]" << std::endl;
             for(const auto& v: dMap_)
             {
-                os << "feId: <" << +v.first << ">" << std::endl;
+                os << "hybridId: <" << +v.first << ">" << std::endl;
                 const std::vector<StubInfo>& stubList = v.second;
                 for(size_t i = 0; i < stubList.size(); ++i) stubList.at(i).print((i == 0 ? true : false));
             }
         }
         const std::map<uint8_t, std::vector<StubInfo>>& getMap() const { return dMap_; }
-        const std::vector<StubInfo>&                    stubs(uint8_t feId) const
+        const std::vector<StubInfo>&                    stubs(uint8_t hybridId) const
         {
-            // throws an out_of_range exception if the key feId is not found in the container (map)
-            return dMap_.at(feId);
+            // throws an out_of_range exception if the key hybridId is not found in the container (map)
+            return dMap_.at(hybridId);
         }
-        const StubInfo& stub(uint8_t feId, size_t stub_index) const
+        const StubInfo& stub(uint8_t hybridId, size_t stub_index) const
         {
-            // throws an out_of_range exception if either the key feId is not found in the container (map)
+            // throws an out_of_range exception if either the key hybridId is not found in the container (map)
             // or stub_index is out-of-range in the vector
-            return dMap_.at(feId).at(stub_index);
+            return dMap_.at(hybridId).at(stub_index);
         }
         size_t nwords() const { return nwords_; }
 
@@ -461,20 +461,20 @@ class DQMEvent
       public:
         void set(uint64_t word)
         {
-            uint8_t feId    = (word >> 56) & MASK_BITS_8;
-            uint8_t xId     = (word >> 52) & MASK_BITS_4; // roID or sensorId
-            uint8_t i2cPage = (word >> 48) & MASK_BITS_4;
-            uint8_t i2cReg  = (word >> 40) & MASK_BITS_8;
-            uint8_t uid     = (word >> 32) & MASK_BITS_8;
-            size_t  value   = word & MASK_BITS_32;
+            uint8_t hybridId = (word >> 56) & MASK_BITS_8;
+            uint8_t xId      = (word >> 52) & MASK_BITS_4; // roID or sensorId
+            uint8_t i2cPage  = (word >> 48) & MASK_BITS_4;
+            uint8_t i2cReg   = (word >> 40) & MASK_BITS_8;
+            uint8_t uid      = (word >> 32) & MASK_BITS_8;
+            size_t  value    = word & MASK_BITS_32;
 
-            dList_.push_back(std::make_tuple(feId, xId, i2cPage, i2cReg, uid, value));
+            dList_.push_back(std::make_tuple(hybridId, xId, i2cPage, i2cReg, uid, value));
         }
         void print(std::ostream& os = std::cout) const
         {
             os << "[ConditionData]" << std::endl;
             os << " for UID=1 x=Readout, UID=5 x=Sensor" << std::endl;
-            os << " index  feID   xID i2cPage  i2cReg   UID       value" << std::endl;
+            os << " index  hybridId   xID i2cPage  i2cReg   UID       value" << std::endl;
             for(size_t i = 0; i < dList_.size(); ++i)
             {
                 const auto& t = dList_[i];
@@ -491,7 +491,7 @@ class DQMEvent
         }
 
       private:
-        // <feId, readout/sensor-Id, i2cPage, i2cRegister, UID, value>
+        // <hybridId, readout/sensor-Id, i2cPage, i2cRegister, UID, value>
         std::vector<std::tuple<uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, size_t>> dList_;
     };
 

@@ -1,6 +1,9 @@
 ## YAML script for CI of Ph2_ACF Software/Middleware
-## Author: Emery Nibigira (IPHC-Strasbourg)
+## Author: Emery Nibigira (IPHC-Strasbourg, U. of Tennessee)
 ##         emery.nibigira@cern.ch
+
+## Updates: Lawrence Lee (U. of Tennessee)
+##          lawrence.lee.jr@cern.ch
 
 ## SETUP ##########
 
@@ -19,7 +22,9 @@ workflow:
       when: always
       allow_failure: true
 
-image: gitlab-registry.cern.ch/cms-iphc/tk_ph2/dockerimageph2acf
+image:
+  name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_c7:latest
+  entrypoint: ["/bin/sh","-c"]
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
@@ -29,6 +34,7 @@ stages:
   - build
   - run
   - check
+  - deploy
 
 ## QUALITY ##########
 
@@ -41,102 +47,74 @@ include:
 .build:
   stage: build
   needs: []
+  image:
+    name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_c7:latest
+    entrypoint: ["/bin/sh","-c"]
   before_script:
-    - source ./setup.sh
+    - source ./setup.sh ci
   script:
     - mkdir -p build; cd build
     - cmake ..
     - make -j4
+  artifacts:
+    paths:
+      - $CI_PROJECT_DIR/
+    expire_in: 1 week
 
 # Stand-alone application, without data streaming
 build:StandAlone_woDS:
   extends: .build
-  before_script:
-    - source ./setup.sh
-    - export CompileForHerd=false
-    - export CompileForShep=false
-    - export CompileWithEUDAQ=false
-    - export CompileWithTCUSB=false
-    - export UseTCUSBforROH=false
-    - export UseTCUSBTcpServer=false
-  artifacts:
-    paths:
-      - bin/ot_module_test
-      - bin/commission
-      - bin/CMSITminiDAQ
-    expire_in: 1 week
+  # artifacts:
+  #   paths:
+  #     - bin/ot_module_test
+  #     - bin/commission
+  #     - bin/CMSITminiDAQ
+  #   expire_in: 1 week
 
 # Stand-alone application, with data streaming
 build:StandAlone_wDS:
   extends: .build
   before_script:
-    - source ./setup.sh
+    - source ./setup.sh ci
     - export CompileForHerd=true
     - export CompileForShep=true
-    - export CompileWithEUDAQ=false
-    - export CompileWithTCUSB=false
-    - export UseTCUSBforROH=false
-    - export UseTCUSBTcpServer=false
 
 # Herd application
 build:HerdApplication:
   extends: .build
   before_script:
-    - source ./setup.sh
+    - source ./setup.sh ci
     - export CompileForHerd=true
-    - export CompileForShep=false
-    - export CompileWithEUDAQ=false
-    - export CompileWithTCUSB=false
-    - export UseTCUSBforROH=false
-    - export UseTCUSBTcpServer=false
 
 # Shep application
 build:ShepApplication:
   extends: .build
   before_script:
-    - source ./setup.sh
-    - export CompileForHerd=false
+    - source ./setup.sh ci
     - export CompileForShep=true
-    - export CompileWithEUDAQ=false
-    - export CompileWithTCUSB=false
-    - export UseTCUSBforROH=false
-    - export UseTCUSBTcpServer=false
 
 # Compile with EUDAQ libraries
 build:StandAlone_wEUDAQ:
   extends: .build
   before_script:
-    - source ./setup.sh
-    - export CompileForHerd=false
-    - export CompileForShep=false
+    - source ./setup.sh ci
     - export CompileWithEUDAQ=true
-    - export CompileWithTCUSB=false
-    - export UseTCUSBforROH=false
-    - export UseTCUSBTcpServer=false
 
 # Herd application with EUDAQ libraries
 build:HerdApplication_wEUDAQ:
   extends: .build
   before_script:
-    - source ./setup.sh
+    - source ./setup.sh ci
     - export CompileForHerd=true
-    - export CompileForShep=false
     - export CompileWithEUDAQ=true
-    - export CompileWithTCUSB=false
-    - export UseTCUSBforROH=false
-    - export UseTCUSBTcpServer=false
 
 # Compile with TC_USB library
 build:StandAlone_wTC_USB_SEH:
   extends: .build
   before_script:
     - yum install -y libusb-devel libusbx-devel
-    - source ./setup.sh
-    - export CompileForHerd=false
-    - export CompileForShep=false
-    - export CompileWithEUDAQ=false
+    - source ./setup.sh ci
     - export CompileWithTCUSB=true
-    - export UseTCUSBforROH=false
     - export UseTCUSBTcpServer=true
 
 
@@ -145,27 +123,35 @@ build:StandAlone_wTC_USB_ROH:
   extends: .build
   before_script:
     - yum install -y libusb-devel libusbx-devel
-    - source ./setup.sh
-    - export CompileForHerd=false
-    - export CompileForShep=false
-    - export CompileWithEUDAQ=false
+    - source ./setup.sh ci
     - export CompileWithTCUSB=true
     - export UseTCUSBforROH=true
     - export UseTCUSBTcpServer=true
 
 
+
 ## RUN ##########
 
-## IT hybrid
-run_on_IT:
+.run:
   stage: run
   needs:
     - build:StandAlone_woDS
   before_script:
     - printf $USER_PASS | base64 -d | kinit $USER_NAME
     - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+      when: always
+      allow_failure: false
+    - when: manual
+      allow_failure: true
+
+
+## IT hybrid
+run:IT:
+  extends: .run
   script:
-    - source ./setup.sh
+    - source ./setup.sh ci
     - cd ci_tools
     - cp CMSIT_RD53.txt CMSIT_RD53_default.txt
     - CMSITminiDAQ -f CMSIT.xml -r
@@ -189,17 +175,11 @@ run_on_IT:
     expire_in: 1 week
 
 ## 2S hybrid
-run_on_2S:
-  stage: run
-  needs:
-    - build:StandAlone_woDS
-  before_script:
-    - printf $USER_PASS | base64 -d | kinit $USER_NAME
-    - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
-   #- python ci_tools/status_manager.py 2s_status.txt --get_status  --delay 180 --iter 3
+run:2S:
+  extends: .run
   script:
     - python ci_tools/status_manager.py 2s_status.txt --set_status 1
-    - source ./setup.sh
+    - source ./setup.sh ci
     - cd ci_tools
     - ot_module_test -f CMS2S.xml -t -m -a -b --reconfigure
   after_script:
@@ -215,27 +195,56 @@ run_on_2S:
     expire_in: 1 week
 
 
+
+
 ## CHECK ##########
 
-
-check_run_on_IT:
+.check:
   stage: check
-  needs: [run_on_IT]
-  script:
-    - python ci_tools/plot_canvas.py Run000000_PixelAlive.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_PixelAlive_Chip(0)" -o plots
-    - python ci_tools/plot_canvas.py Run000001_ThrEqualization.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_ThrEqualization_Chip(0)" -o plots
-    - python ci_tools/plot_canvas.py Run000002_SCurve.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_SCurves_Chip(0)" -o plots
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+      when: always
+      allow_failure: false
+    - when: manual
+      allow_failure: true
   artifacts:
     paths:
       - plots
     expire_in: 1 week
 
-check_run_on_2S:
-  stage: check
-  needs: [run_on_2S]
+check:IT:
+  extends: .check
+  needs:
+    - run:IT
   script:
-    - python ci_tools/plot_hist.py Hybrid.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/D_B(0)_O(0)_HybridNoiseDistribution_Hybrid(0)" -o plots
-  artifacts:
-    paths:
-      - plots
-    expire_in: 1 week
+    - python3 ci_tools/plot_canvas.py Run000000_PixelAlive.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_PixelAlive_Chip(0)" -o plots
+    - python3 ci_tools/plot_canvas.py Run000001_ThrEqualization.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_ThrEqualization_Chip(0)" -o plots
+    - python3 ci_tools/plot_canvas.py Run000002_SCurve.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/Chip_0/D_B(0)_O(0)_H(0)_SCurves_Chip(0)" -o plots
+
+check:2S:
+  extends: .check
+  needs:
+    - run:2S
+  script:
+    - python3 ci_tools/plot_hist.py Hybrid.root "Detector/Board_0/OpticalGroup_0/Hybrid_0/D_B(0)_O(0)_HybridNoiseDistribution_Hybrid(0)" -o plots
+
+
+## DEPLOY ##########
+
+deploy:
+  stage: deploy
+  trigger: cms_tk_ph2/docker_exploration
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: always
+      variables:
+        IMAGE_TAG: ph2_acf_$CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH == "Dev"
+      when: always
+      variables:
+        IMAGE_TAG: nightly-dev
+    - if: $DEBUG
+      when: always
+      variables:
+        IMAGE_TAG: upstream-test
+    - when: never

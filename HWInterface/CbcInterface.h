@@ -44,39 +44,39 @@ class CbcInterface : public ReadoutChipInterface
     /*!
      * \brief Configure the Chip with the Chip Config File
      * \param pCbc: pointer to CBC object
-     * \param pVerifLoop: perform a readback check
+     * \param pVerify: perform a readback check
      * \param pBlockSize: the number of registers to be written at once, default is 310
      */
-    bool ConfigurePage(Ph2_HwDescription::Chip* pCbc, uint8_t pPage, bool pVerifLoop = true);
-    bool ConfigureChip(Ph2_HwDescription::Chip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
+    bool ConfigurePage(Ph2_HwDescription::Chip* pCbc, uint8_t pPage, bool pVerify = true);
+    bool ConfigureChip(Ph2_HwDescription::Chip* pCbc, bool pVerify = true, uint32_t pBlockSize = 310) override;
 
     void producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
     void produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;
 
-    bool setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop = true) override;
+    bool setInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify = true) override;
 
-    bool enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject = true, bool pVerifLoop = true) override;
+    bool enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject = true, bool pVerify = true) override;
 
-    bool setInjectionAmplitude(Ph2_HwDescription::ReadoutChip* pChip, uint8_t injectionAmplitude, bool pVerifLoop = true) override;
+    bool setInjectionAmplitude(Ph2_HwDescription::ReadoutChip* pChip, uint8_t injectionAmplitude, bool pVerify = true) override;
 
-    bool maskChannelGroup(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop = true) override;
+    bool maskChannelGroup(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify = true) override;
 
-    bool maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop = true) override;
+    bool maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerify = true) override;
 
     /*!
      * \brief Reapply the stored mask for the CBC, use it after group masking is applied
      * \param pCbc: pointer to CBC object
      */
-    bool ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pCbc, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
+    bool ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pCbc, bool pVerify = true, uint32_t pBlockSize = 310) override;
 
     /*!
      * \brief Mask all channels of the chip
      * \param pCbc: pointer to Chip object
      * \param mask: if true mask, if false unmask
-     * \param pVerifLoop: perform a readback check
+     * \param pVerify: perform a readback check
      * \param pBlockSize: the number of registers to be written at once, default is 310
      */
-    bool MaskAllChannels(Ph2_HwDescription::ReadoutChip* pCbc, bool mask, bool pVerifLoop = true) override;
+    bool MaskAllChannels(Ph2_HwDescription::ReadoutChip* pCbc, bool mask, bool pVerify = true) override;
 
     /*!
      * \brief Write the designated register in both Chip and Chip Config File
@@ -84,36 +84,20 @@ class CbcInterface : public ReadoutChipInterface
      * \param pRegNode : Node of the register to write
      * \param pValue : Value to write
      */
-    bool WriteChipReg(Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override;
+    bool WriteChipReg(Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerify = true) override;
 
     /*!
      * \brief Write several registers in both Chip and Chip Config File
      * \param pCbc
      * \param pVecReq : Vector of pair: Node of the register to write versus value to write
      */
-    bool WriteChipMultReg(Ph2_HwDescription::Chip* pCbc, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop = true) override;
-
-    /*!
-     * \brief Write same register in all Cbcs and then UpdateCbc
-     * \param pHybrid : Hybrid containing vector of Cbcs
-     * \param pRegNode : Node of the register to write
-     * \param pValue : Value to write
-     */
-    void WriteHybridBroadcastChipReg(const Ph2_HwDescription::Hybrid* pHybrid, const std::string& pRegNode, uint16_t pValue);
-
-    /*!
-     * \brief Write same register in all Cbcs and then UpdateCbc
-     * \param pHybrid : Hybrid containing vector of Cbcs
-     * \param pRegNode : Node of the register to write
-     * \param pValue : Value to write
-     */
-    void WriteBroadcastCbcMultiReg(const Ph2_HwDescription::Hybrid* pHybrid, const std::vector<std::pair<std::string, uint8_t>> pVecReg);
+    bool WriteChipMultReg(Ph2_HwDescription::Chip* pCbc, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify = true) override;
 
     /*!
      * \brief Write all Local registers on Cbc and Cbc Config File (able to recognize local parameter names such as
      * ChannelOffset) \param pCbc \param pRegNode : Node of the register to write \param pValue : Value to write
      */
-    bool WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pCbc, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = true) override;
+    bool WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pCbc, const std::string& dacName, ChipContainer& pValue, bool pVerify = true) override;
 
     /*!
      * \brief Read the designated register in the Chip
@@ -127,8 +111,8 @@ class CbcInterface : public ReadoutChipInterface
     std::vector<uint8_t> stubInjectionPattern(uint8_t pStubAddress, int pStubBend,
                                               bool pLayerSwap); // address + bend in units of half strips
     std::vector<uint8_t> stubInjectionPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pStubAddress, int pStubBend);
-    bool                 selectLogicMode(Ph2_HwDescription::ReadoutChip* pCbc, std::string pModeSelect, bool pForHits, bool pForStubs, bool pVerifLoop = true);
-    bool                 enableHipSuppression(Ph2_HwDescription::ReadoutChip* pCbc, bool pForHits, bool pForStubs, uint8_t pClocks, bool pVerifLoop = true);
+    bool                 selectLogicMode(Ph2_HwDescription::ReadoutChip* pCbc, std::string pModeSelect, bool pForHits, bool pForStubs, bool pVerify = true);
+    bool                 enableHipSuppression(Ph2_HwDescription::ReadoutChip* pCbc, bool pForHits, bool pForStubs, uint8_t pClocks, bool pVerify = true);
     bool                 injectStubs(Ph2_HwDescription::ReadoutChip* pCbc,
                                      std::vector<uint8_t>            pStubAddresses,
                                      std::vector<int>                pStubBends,
@@ -164,7 +148,7 @@ class CbcInterface : public ReadoutChipInterface
      * \param pRegNode : Node of the register to write
      * \param pValue : Value to write
      */
-    bool    WriteChipSingleReg(Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true);
+    bool    WriteChipSingleReg(Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerify = true);
     uint8_t ReadChipSingleReg(Ph2_HwDescription::Chip* pCbc, const std::string& pRegNode);
 
     std::map<uint8_t, std::string> fChannelMaskMapCBC3 = {

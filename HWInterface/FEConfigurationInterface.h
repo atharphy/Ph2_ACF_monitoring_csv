@@ -11,12 +11,20 @@
 
 namespace Ph2_HwInterface
 {
-struct Config
+struct Configuration
 {
-    uint8_t  fReTry       = 0;
-    uint8_t  fVerbose     = 0;
-    uint16_t fMaxAttempts = 5000;
-    uint8_t  fVerify      = 0;
+    // only used in D19cOpticalInterface
+    bool    fRetryIC     = true;
+    uint8_t fMaxRetryIC  = 100;
+    bool    fRetryI2C    = true;
+    uint8_t fMaxRetryI2C = 100;
+    bool    fRetryFE     = true;
+    uint8_t fMaxRetryFE  = 100;
+
+    // only used in D19cI2CInterface
+    bool     fVerify      = false;
+    bool     fRetry       = false;
+    uint16_t fMaxAttempts = 500;
 };
 
 enum class ConfigurationType
@@ -40,6 +48,7 @@ class FEConfigurationInterface : public RegManager
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FEConfiguration::MultiWrite is absent" << RESET;
         return false;
     }
+
     virtual bool MultiRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pRegisterItems)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FEConfiguration::MultiRead is absent" << RESET;
@@ -51,6 +60,7 @@ class FEConfigurationInterface : public RegManager
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FEConfiguration::SingleWrite is absent" << RESET;
         return false;
     }
+
     virtual bool MultiWriteRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FEConfiguration::MultiWriteRead is absent" << RESET;
@@ -62,35 +72,29 @@ class FEConfigurationInterface : public RegManager
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FEConfiguration::SingleWrite is absent" << RESET;
         return false;
     }
+
     virtual bool SingleRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function FEConfiguration::SingleRead is absent" << RESET;
         return 0;
     }
+
     virtual void PrintStatus()
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function TriggerInterface::PrintStatus is absent" << RESET;
         return;
     }
 
-    void Configure(Config pConfig)
-    {
-        fConfig.fVerbose     = pConfig.fVerbose;
-        fConfig.fReTry       = pConfig.fReTry;
-        fConfig.fMaxAttempts = pConfig.fMaxAttempts;
-        fConfig.fVerify      = pConfig.fVerify;
-    }
-    void setVerify(uint8_t pVerify) { fConfig.fVerify = pVerify; }
-    void setRetry(uint8_t pReTry) { fConfig.fReTry = pReTry; }
+    void Configure(Configuration pConfiguration);
 
     void              setConfigurationType(ConfigurationType pType) { fType = pType; }
     ConfigurationType getConfigurationType() { return fType; }
     void              setRegisterTracking(uint8_t pTrackRegisters) { fTrackRegisters = pTrackRegisters; }
 
   protected:
+    Configuration     fConfiguration;
     uint8_t           fTrackRegisters{0};
     uint8_t           fNReadoutChip{0};
-    Config            fConfig;
     ConfigurationType fType;
 };
 } // namespace Ph2_HwInterface

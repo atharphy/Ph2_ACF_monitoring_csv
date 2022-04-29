@@ -17,18 +17,21 @@ namespace Ph2_HwInterface
 // ################################################
 // # LpGBT chip register write and read functions #
 // ################################################
-bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerifLoop)
+bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerify)
 {
     this->setBoard(pChip->getBeBoardId());
     auto cBoardType = fBoardFW->getBoardType();
     auto cAddress   = pChip->getRegItem(pDacName).fAddress;
-
+    // setting highest write address possible (lpGBT version dependent)
+    uint16_t cMaxWriteAddress = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 0x13c : 0x14f;
+    // checking that written value isn't more than 8 bits
     if(pDacValue > 0xFF)
     {
         LOG(ERROR) << BOLDRED << "LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pDacValue << BOLDRED << " to address " << BOLDYELLOW << cAddress << RESET;
         return false;
     }
-    if(cAddress > 0x13C)
+    // checking that register address isn't higher than highest write address
+    if(cAddress > cMaxWriteAddress)
     {
         LOG(ERROR) << "LpGBT read-write registers end at 0x13C ... impossible to write to address " << BOLDYELLOW << cAddress << RESET;
         return false;
@@ -39,16 +42,16 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
     {
         auto cRegisterMap             = pChip->getRegMap();
         cRegisterMap[pDacName].fValue = pDacValue;
-        cSuccess                      = fBoardFW->SingleRegisterWrite(pChip, cRegisterMap[pDacName], pVerifLoop);
+        cSuccess                      = fBoardFW->SingleRegisterWrite(pChip, cRegisterMap[pDacName], pVerify);
     }
     else if(pChip->isOptical())
-        cSuccess = fBoardFW->WriteOptoLinkRegister(pChip, cAddress, pDacValue, pVerifLoop);
+        cSuccess = fBoardFW->WriteOptoLinkRegister(pChip, cAddress, pDacValue, pVerify);
     // TO-DO .. figure out what to do if piGBT is used
     else
     {
 #if defined(__TCUSB__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
         cSuccess = (fExternalController->getInterface().write_i2c(cAddress, static_cast<char>(pDacValue)) == pDacValue);
-        // cSuccess = (!pVerifLoop) ? cSuccess : (ReadChipReg(pChip, pDacName) == pDacValue);
+        // cSuccess = (!pVerify) ? cSuccess : (ReadChipReg(pChip, pDacName) == pDacValue);
 #endif
     }
 
@@ -86,7 +89,7 @@ uint16_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
     return cValue;
 }
 
-bool lpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerifLoop)
+bool lpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerify)
 {
     bool writeGood = true;
     for(const auto& cReg: pRegVec) writeGood = WriteChipReg(pChip, cReg.first, cReg.second);
@@ -562,11 +565,12 @@ void lpGBTInterface::PhaseAlignRx(Chip* pChip, const OpticalGroup* pOpticalGroup
 // # LpGBT Block Status functions #
 // ################################
 
-bool lpGBTInterface::IsPUSMDone(Chip* pChip) { return lpGBTInterface::GetPUSMStatus(pChip) == 18; }
+bool lpGBTInterface::IsPUSMDone(Chip* pChip) { return lpGBTInterface::GetPUSMStatus(pChip) == revertedPUSMStatusMap["READY"]; }
 
 void lpGBTInterface::PrintChipMode(Chip* pChip)
 {
-    switch((ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 4)
+    uint8_t cChipMode = (ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 4;
+    switch(cChipMode)
     {
     case 0:
         LOG(INFO) << GREEN << "LpGBT chip info: Tx Data Rate = " << BOLDYELLOW << "5 Gbit/s" << RESET << GREEN << "; TxEncoding = " << BOLDYELLOW << "FEC5" << RESET << GREEN

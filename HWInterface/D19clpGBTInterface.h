@@ -25,16 +25,6 @@ class D19clpGBTInterface : public lpGBTInterface
 #endif
         // configure during constructor now when configuring chip
         SetConfigMode(pUseOpticalLink, pUseCPB);
-        // configure CPB - do this here rather than in SystemController? Not sure
-        CPBconfig cCPBconfig;
-        cCPBconfig.fEnable      = pUseCPB;
-        cCPBconfig.fWait_us     = 500;  // TO-DO - make configurable from xml
-        cCPBconfig.fReTry       = 1;    // TO-DO - make configurable from xml
-        cCPBconfig.fVerbose     = 0;    // TO-DO - make configurable from xml
-        cCPBconfig.fMaxAttempts = 5000; // TO-DO - make configurable from xml
-        cCPBconfig.fResetEn     = 1;    // TO-DO - make configurable from xml
-        // configure FW for all boards
-        for(auto cBoardMap: pBoardMap) { (cBoardMap.second)->ConfigureCPB(cCPBconfig); }
     }
     ~D19clpGBTInterface()
     {
@@ -53,7 +43,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // # LpGBT register access functions #
     // ###################################
     // General configuration of the lpGBT chip from register file
-    bool ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
+    bool ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerify = true, uint32_t pBlockSize = 310) override;
 
     // Sets the flag used to select which lpGBT configuration interface to use
     void SetConfigMode(bool pUseOpticalLink, bool pUseCPB, bool pToggleTC = false);

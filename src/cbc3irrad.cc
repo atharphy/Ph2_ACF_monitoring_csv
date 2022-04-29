@@ -248,9 +248,9 @@ int main(int argc, char* argv[])
             for(auto cBoard: *cBiasSweep.fDetectorContainer)
             {
                 for(auto cOpticalGroup: *cBoard)
-                    for(auto cFe: *cOpticalGroup)
+                    for(auto cHybrid: *cOpticalGroup)
                     {
-                        for(auto cCbc: *cFe)
+                        for(auto cCbc: *cHybrid)
                         {
                             for(auto cBias: cBiases)
                             {

@@ -11,7 +11,7 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-D19SCEventAS::D19SCEventAS(const BeBoard* pBoard, uint32_t pNSSA, uint32_t pNFe, const std::vector<uint32_t>& list) : fEventDataVector(pNSSA * pNFe)
+D19SCEventAS::D19SCEventAS(const BeBoard* pBoard, uint32_t pNSSA, uint32_t pNHybrid, const std::vector<uint32_t>& list) : fEventDataVector(pNSSA * pNHybrid)
 {
     fNSSA = pNSSA;
     SetEvent(pBoard, pNSSA, list);
@@ -20,32 +20,32 @@ D19SCEventAS::D19SCEventAS(const BeBoard* pBoard, const std::vector<uint32_t>& l
 {
     fEventDataVector.clear();
     fNSSA = 0;
-    fFeIds.clear();
-    fROCIds.clear();
+    fHybridIds.clear();
+    fChipIds.clear();
     fCounterData.clear();
     // assuming that FEIds aren't shared between links
     for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cFe: *cOpticalGroup)
+        for(auto cHybrid: *cOpticalGroup)
         {
-            fFeIds.push_back(cFe->getId());
-            fNSSA += cFe->size();
+            fHybridIds.push_back(cHybrid->getId());
+            fNSSA += cHybrid->size();
             HybridCounterData cHybridCounterData;
             cHybridCounterData.clear();
-            std::vector<uint8_t> cROCIds(0);
-            cROCIds.clear();
-            for(auto cChip: *cFe)
+            std::vector<uint8_t> cChipIds(0);
+            cChipIds.clear();
+            for(auto cChip: *cHybrid)
             {
                 if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
-                    RocCounterData cRocData;
-                    cRocData.clear();
-                    cHybridCounterData.push_back(cRocData);
-                    cROCIds.push_back(cChip->getId());
+                    ChipCounterData cChipData;
+                    cChipData.clear();
+                    cHybridCounterData.push_back(cChipData);
+                    cChipIds.push_back(cChip->getId());
                 }
             } // chip
             fCounterData.push_back(cHybridCounterData);
-            fROCIds.push_back(cROCIds);
+            fChipIds.push_back(cChipIds);
         } // hybrids
     }     // opticalGroup
     this->Set(pBoard, list);
@@ -54,19 +54,19 @@ void D19SCEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pData
 {
     LOG(DEBUG) << BOLDBLUE << "Setting event for Async SSA " << RESET;
     auto    cDataIterator = pData.begin();
-    uint8_t cFeIndex      = 0;
+    uint8_t cHybridIndex  = 0;
     for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cFe: *cOpticalGroup)
+        for(auto cHybrid: *cOpticalGroup)
         {
-            auto&   cHybridCounterData = fCounterData[cFeIndex];
-            uint8_t cRocIndex          = 0;
+            auto&   cHybridCounterData = fCounterData[cHybridIndex];
+            uint8_t cChipIndex         = 0;
             // loop over chips
-            for(auto cChip: *cFe)
+            for(auto cChip: *cHybrid)
             {
                 if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
-                    auto& cChipCounterData = cHybridCounterData[cRocIndex];
+                    auto& cChipCounterData = cHybridCounterData[cChipIndex];
                     for(uint8_t cChnl = 0; cChnl < cChip->size(); cChnl++)
                     {
                         if(cChnl % 2 != 0)
@@ -74,14 +74,14 @@ void D19SCEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pData
                             auto cWord = *(cDataIterator);
                             cChipCounterData.push_back((cWord & 0xFFFF));
                             cChipCounterData.push_back((cWord & (0xFFFF << 16)) >> 16);
-                            LOG(DEBUG) << BOLDBLUE << "ROC#" << +cRocIndex << " .. hits: " << +(cWord & 0xFFFF) << " , " << +((cWord & (0xFFFF << 16)) >> 16) << RESET;
+                            LOG(DEBUG) << BOLDBLUE << "Chip#" << +cChipIndex << " .. hits: " << +(cWord & 0xFFFF) << " , " << +((cWord & (0xFFFF << 16)) >> 16) << RESET;
                             cDataIterator++;
                         } //
                     }     // chnl loop
-                    cRocIndex++;
+                    cChipIndex++;
                 } //[if SSA]
             }     // chips
-            cFeIndex++;
+            cHybridIndex++;
         } // hybrids
     }     // opticalGroup
 }
@@ -117,18 +117,18 @@ void D19SCEventAS::SetEvent(const BeBoard* pBoard, uint32_t pNSSA, const std::ve
     }
 }
 
-uint32_t D19SCEventAS::GetNHits(uint8_t pFeId, uint8_t pSSAId) const
+uint32_t D19SCEventAS::GetNHits(uint8_t pHybridId, uint8_t pSSAId) const
 {
-    uint8_t cFeIndex   = getFeIndex(pFeId);
-    uint8_t cRocIndex  = getROCIndex(pFeId, pSSAId);
-    auto&   cHitVecotr = fCounterData.at(cFeIndex).at(cRocIndex);
+    uint8_t cHybridIndex = getHybridIndex(pHybridId);
+    uint8_t cChipIndex   = getChipIndex(pHybridId, pSSAId);
+    auto&   cHitVecotr   = fCounterData.at(cHybridIndex).at(cChipIndex);
     return std::accumulate(cHitVecotr.begin(), cHitVecotr.end(), 0);
 }
-std::vector<uint32_t> D19SCEventAS::GetHits(uint8_t pFeId, uint8_t pSSAId) const
+std::vector<uint32_t> D19SCEventAS::GetHits(uint8_t pHybridId, uint8_t pSSAId) const
 {
-    uint8_t cFeIndex  = getFeIndex(pFeId);
-    uint8_t cRocIndex = getROCIndex(pFeId, pSSAId);
-    return fCounterData.at(cFeIndex).at(cRocIndex);
+    uint8_t cHybridIndex = getHybridIndex(pHybridId);
+    uint8_t cChipIndex   = getChipIndex(pHybridId, pSSAId);
+    return fCounterData.at(cHybridIndex).at(cChipIndex);
 }
 
 } // namespace Ph2_HwInterface

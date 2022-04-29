@@ -32,7 +32,7 @@ export AMC13DIR=$CACTUSINCLUDE/amc13
 export POWERSUPPLYDIR=$EXTERNAL_TOOLS_BASE_DIR/power_supply
 
 # These are git references for the dependencies that are included via CMake ExternalProjects
-export PH2_TCUSB_REF=e28b79c090b35d9fc686b5d56a4ebab0c36a1a22
+export PH2_TCUSB_REF=9c39f0f4082f8db6a6788baf3567f55631b53f16
 export EUDAQ_REF=ac59b87fca12806d775e95df2d253c3bf96420ee
 
 #######
@@ -119,5 +119,15 @@ else
 fi
 
 alias formatAll="find ${PH2ACF_BASE_DIR} -iname *.h -o -iname *.cc | xargs ${clang_command} -i"
+
+if [[ $1 == "ci" ]]; then
+    export CompileForHerd=false
+    export CompileForShep=false
+    export CompileWithEUDAQ=false
+    export CompileWithTCUSB=false
+    export UseTCUSBforROH=false
+    export UseTCUSBTcpServer=false
+fi
+
 
 echo "=== DONE ==="
