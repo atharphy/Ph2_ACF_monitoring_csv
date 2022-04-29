@@ -48,17 +48,17 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard, FrontEndType pTyp
 {
     for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cFe: *cOpticalGroup)
+        for(auto cHybrid: *cOpticalGroup)
         {
-            for(auto cChip: *cFe)
+            for(auto cChip: *cHybrid)
             {
                 std::stringstream cChipType;
                 cChip->printChipType(cChipType);
 
                 if(cChip->getFrontEndType() != pType) continue;
-                LOG(DEBUG) << BOLDBLUE << "Directly reading back counters from ROC#" << +cChip->getId() << RESET;
+                LOG(DEBUG) << BOLDBLUE << "Directly reading back counters from Chip#" << +cChip->getId() << RESET;
                 std::vector<ChipRegItem> cRegItems;
-                auto                     cId       = Compose_Id(pBoard, cOpticalGroup, cFe, cChip);
+                auto                     cId       = Compose_Id(pBoard, cOpticalGroup, cHybrid, cChip);
                 auto                     cIterator = fPSCounterData.find(cId);
                 if(cIterator != fPSCounterData.end()) cIterator->second.clear();
                 for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
@@ -201,9 +201,9 @@ void D19cPSCounterFWInterface::ReadPSSCCountersFast(BeBoard* pBoard, std::vector
     pData.clear();
     for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cFe: *cOpticalGroup)
+        for(auto cHybrid: *cOpticalGroup)
         {
-            for(auto cChip: *cFe)
+            for(auto cChip: *cHybrid)
             {
                 uint8_t cPairId = (cChip->getId() % 2 == 0) ? 1 : 0;
                 uint8_t cChipId = (fPairSelect) ? cPairId : cChip->getId();
@@ -282,14 +282,14 @@ void D19cPSCounterFWInterface::ReadPSSCCountersFast(BeBoard* pBoard, std::vector
 void D19cPSCounterFWInterface::GetCounterData(const BeBoard* pBoard)
 {
     LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::GetCounterData" << RESET;
-    auto cFeTypes = pBoard->connectedFrontEndTypes();
-    LOG(DEBUG) << BOLDYELLOW << cFeTypes.size() << " different types of ROCs connected to BeBoard#" << +pBoard->getId() << RESET;
+    auto cFrontEndTypes = pBoard->connectedFrontEndTypes();
+    LOG(DEBUG) << BOLDYELLOW << cFrontEndTypes.size() << " different types of Chips connected to BeBoard#" << +pBoard->getId() << RESET;
     if(fPSCounterFast == 0) // readout over registers
     {
         std::vector<FrontEndType> cValidTypes{FrontEndType::MPA, FrontEndType::SSA, FrontEndType::SSA2};
         for(auto cValidType: cValidTypes)
         {
-            if(std::find(cFeTypes.begin(), cFeTypes.end(), cValidType) == cFeTypes.end()) continue;
+            if(std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), cValidType) == cFrontEndTypes.end()) continue;
             SlowRead(pBoard, cValidType);
         }
     }
@@ -434,7 +434,7 @@ bool D19cPSCounterFWInterface::CheckStartPattern()
                 std::vector<uint32_t>                        cStubs(0);
                 std::vector<std::pair<std::string, uint8_t>> cStubFlds;
                 cStubFlds.push_back(std::make_pair("Offset", 3));
-                cStubFlds.push_back(std::make_pair("FeId", 3));
+                cStubFlds.push_back(std::make_pair("HybridId", 3));
                 cStubFlds.push_back(std::make_pair("Stub", 15));
                 size_t cSizeAvailable = cStubPkt.length() - cShft;
                 if(cSizeAvailable < (3 + 3 + 15) * cNstubs) continue;

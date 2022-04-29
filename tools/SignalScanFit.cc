@@ -15,27 +15,27 @@ void SignalScanFit::Initialize()
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
                 fVCthNbins = int((1024 / double(fSignalScanStep)) + 1);
                 fVCthMax   = double((fVCthNbins * fSignalScanStep) - (double(fSignalScanStep) / 2.)); //"center" de bins
                 fVCthMin   = 0. - (double(fSignalScanStep) / 2.);
 
                 // Make a canvas for the live plot
-                uint32_t cFeId = cFe->getId();
-                fNCbc          = 0; // cFe->getNChip();
-                for(auto cCbc: *cFe) { fNCbc = (cCbc->getId() >= fNCbc) ? (cCbc->getId() + 1) : fNCbc; }
-                TCanvas* ctmpCanvas = new TCanvas(Form("c_online_canvas_fe%d", cFeId), Form("FE%d  Online Canvas", cFeId));
-                fCanvasMap[cFe]     = ctmpCanvas;
+                uint32_t cHybridId = cHybrid->getId();
+                fNCbc              = 0; // cHybrid->getNChip();
+                for(auto cCbc: *cHybrid) { fNCbc = (cCbc->getId() >= fNCbc) ? (cCbc->getId() + 1) : fNCbc; }
+                TCanvas* ctmpCanvas = new TCanvas(Form("c_online_canvas_fe%d", cHybridId), Form("FE%d  Online Canvas", cHybridId));
+                fCanvasMap[cHybrid] = ctmpCanvas;
 
                 // Histograms
-                TString  cName = Form("h_hybrid_thresholdScan_Fe%d", cFeId);
+                TString  cName = Form("h_hybrid_thresholdScan_Fe%d", cHybridId);
                 TObject* cObj  = gROOT->FindObject(cName);
 
                 if(cObj) delete cObj;
 
                 // 2D-plot with all the channels on the x-axis, Vcth on the y-axis and #clusters on the z-axis.
-                cName             = Form("h_hybrid_thresholdScan_SingleStripClusters_S0_Fe%d", cFeId);
+                cName             = Form("h_hybrid_thresholdScan_SingleStripClusters_S0_Fe%d", cHybridId);
                 TH2D* cSignalEven = new TH2D(cName,
                                              "Signal threshold vs channel [half strips] ; Even Sensor Strip [half "
                                              "strips] ; Threshold; # of Hits",
@@ -45,9 +45,9 @@ void SignalScanFit::Initialize()
                                              fVCthNbins,
                                              fVCthMin,
                                              fVCthMax);
-                bookHistogram(cFe, "SingleStripClusters_S0", cSignalEven);
+                bookHistogram(cHybrid, "SingleStripClusters_S0", cSignalEven);
 
-                cName            = Form("h_hybrid_thresholdScan_SingleStripClusters_S1_Fe%d", cFeId);
+                cName            = Form("h_hybrid_thresholdScan_SingleStripClusters_S1_Fe%d", cHybridId);
                 TH2D* cSignalOdd = new TH2D(cName,
                                             "Signal threshold vs channel [half strips] ; Odd Sensor Strip [half strips] ; Threshold; # of Hits",
                                             fNCbc * NCHANNELS,
@@ -56,36 +56,42 @@ void SignalScanFit::Initialize()
                                             fVCthNbins,
                                             fVCthMin,
                                             fVCthMax);
-                bookHistogram(cFe, "SingleStripClusters_S1", cSignalOdd);
+                bookHistogram(cHybrid, "SingleStripClusters_S1", cSignalOdd);
 
                 // 2D-plot with all the channels on the x-axis, Vcth on the y-axis and #clusters on the z-axis.
-                cName             = Form("h_hybrid_thresholdScan_Fe%d", cFeId);
+                cName             = Form("h_hybrid_thresholdScan_Fe%d", cHybridId);
                 TH2D* cSignalHist = new TH2D(cName, "Signal threshold vs channel ; Channel # ; Threshold; # of Hits", fNCbc * NCHANNELS, -0.5, fNCbc * NCHANNELS - 0.5, fVCthNbins, fVCthMin, fVCthMax);
-                bookHistogram(cFe, "hybrid_signal", cSignalHist);
+                bookHistogram(cHybrid, "hybrid_signal", cSignalHist);
 
                 // 2D-plot with cluster width on the x-axis, Vcth on y-axis, counts of certain clustersize on z-axis.
-                TH2D* cVCthClusterSizeHist = new TH2D(
-                    Form("h_hybrid_clusterSize_per_Vcth_Fe%d", cFeId), "Cluster size vs Vcth ; Cluster size [strips] ; Threshold [Vcth] ; # clusters", 15, -0.5, 14.5, fVCthNbins, fVCthMin, fVCthMax);
-                bookHistogram(cFe, "vcth_ClusterSize", cVCthClusterSizeHist);
+                TH2D* cVCthClusterSizeHist = new TH2D(Form("h_hybrid_clusterSize_per_Vcth_Fe%d", cHybridId),
+                                                      "Cluster size vs Vcth ; Cluster size [strips] ; Threshold [Vcth] ; # clusters",
+                                                      15,
+                                                      -0.5,
+                                                      14.5,
+                                                      fVCthNbins,
+                                                      fVCthMin,
+                                                      fVCthMax);
+                bookHistogram(cHybrid, "vcth_ClusterSize", cVCthClusterSizeHist);
 
                 // 1D-plot with the number of triggers per VCth
-                TProfile* cNumberOfTriggers =
-                    new TProfile(Form("h_hybrid_totalNumberOfTriggers_Fe%d", cFeId), Form("Total number of triggers received ; Threshold [Vcth] ; Number of triggers"), fVCthNbins, fVCthMin, fVCthMax);
-                bookHistogram(cFe, "number_of_triggers", cNumberOfTriggers);
+                TProfile* cNumberOfTriggers = new TProfile(
+                    Form("h_hybrid_totalNumberOfTriggers_Fe%d", cHybridId), Form("Total number of triggers received ; Threshold [Vcth] ; Number of triggers"), fVCthNbins, fVCthMin, fVCthMax);
+                bookHistogram(cHybrid, "number_of_triggers", cNumberOfTriggers);
 
                 // 1D-plot with the timeout value per VCth
-                TH1D* cNclocks = new TH1D(Form("h_hybrid_nClocks_Fe%d", cFeId),
+                TH1D* cNclocks = new TH1D(Form("h_hybrid_nClocks_Fe%d", cHybridId),
                                           Form("Number of clock cycles spent at each Vcth value ; Threshold [Vcth] ; "
                                                "Number of clocks to wait"),
                                           fVCthNbins,
                                           fVCthMin,
                                           fVCthMax);
-                bookHistogram(cFe, "number_of_clocks", cNclocks);
+                bookHistogram(cHybrid, "number_of_clocks", cNclocks);
 
                 uint32_t cCbcCount = 0;
                 uint32_t cCbcIdMax = 0;
 
-                for(auto cCbc: *cFe)
+                for(auto cCbc: *cHybrid)
                 {
                     uint32_t cCbcId = cCbc->getId();
                     cCbcCount++;
@@ -96,34 +102,34 @@ void SignalScanFit::Initialize()
                     TH1D*   cHist;
                     TH2D*   cHist2D;
 
-                    cHistname = Form("Fe%dCBC%d_Hits_even", cFeId, cCbcId);
+                    cHistname = Form("Fe%dCBC%d_Hits_even", cHybridId, cCbcId);
                     cHist     = new TH1D(cHistname, Form("%s ; Threshold [Vcth] ; Number of hits", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax);
                     bookHistogram(cCbc, "Cbc_Hits_even", cHist);
 
-                    cHistname = Form("Fe%dCBC%d_Hits_odd", cFeId, cCbcId);
+                    cHistname = Form("Fe%dCBC%d_Hits_odd", cHybridId, cCbcId);
                     cHist     = new TH1D(cHistname, Form("%s ; Threshold [Vcth] ; Number of hits", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax);
                     bookHistogram(cCbc, "Cbc_Hits_odd", cHist);
 
-                    cHistname = Form("Fe%dCBC%d_Clusters2D_even", cFeId, cCbcId);
+                    cHistname = Form("Fe%dCBC%d_Clusters2D_even", cHybridId, cCbcId);
                     cHist2D   = new TH2D(cHistname, Form("%s ; Threshold [Vcth] ; Cluster Size [strips];Number of clusters", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax, 20, 0 - 0.5, 20 - 0.5);
                     bookHistogram(cCbc, "Cbc_Clusters2D_even", cHist2D);
 
-                    cHistname = Form("Fe%dCBC%d_Clusters_even", cFeId, cCbcId);
+                    cHistname = Form("Fe%dCBC%d_Clusters_even", cHybridId, cCbcId);
                     cHist     = new TH1D(cHistname, Form("%s ; Threshold [Vcth] ; Number of clusters", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax);
                     bookHistogram(cCbc, "Cbc_Clusters_even", cHist);
 
-                    cHistname = Form("Fe%dCBC%d_Clusters_odd", cFeId, cCbcId);
+                    cHistname = Form("Fe%dCBC%d_Clusters_odd", cHybridId, cCbcId);
                     cHist     = new TH1D(cHistname, Form("%s ; Threshold [Vcth] ; Number of clusters", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax);
                     bookHistogram(cCbc, "Cbc_Clusters_odd", cHist);
 
-                    cHistname = Form("Fe%dCBC%d_Clusters2D_odd", cFeId, cCbcId);
+                    cHistname = Form("Fe%dCBC%d_Clusters2D_odd", cHybridId, cCbcId);
                     cHist2D   = new TH2D(cHistname, Form("%s ; Threshold [Vcth] ; Cluster Size [strips];Number of clusters", cHistname.Data()), fVCthNbins, fVCthMin, fVCthMax, 20, 0 - 0.5, 20 - 0.5);
                     bookHistogram(cCbc, "Cbc_Clusters2D_odd", cHist2D);
 
-                    cHistname = Form("Fe%dCBC%d_ClusterSize_even", cFeId, cCbcId);
+                    cHistname = Form("Fe%dCBC%d_ClusterSize_even", cHybridId, cCbcId);
                     bookHistogram(cCbc, "Cbc_ClusterSize_even", cHist);
 
-                    cHistname = Form("Fe%dCBC%d_ClusterSize_odd", cFeId, cCbcId);
+                    cHistname = Form("Fe%dCBC%d_ClusterSize_odd", cHybridId, cCbcId);
                     bookHistogram(cCbc, "Cbc_ClusterSize_odd", cHist);
                 }
             }
@@ -208,20 +214,20 @@ void SignalScanFit::ScanSignal(int pSignalScanLength)
                 //    continue;
                 for(auto cOpticalGroup: *pBoard)
                 {
-                    for(auto cFe: *cOpticalGroup)
+                    for(auto cHybrid: *cOpticalGroup)
                     {
-                        TH1D*     cClocksHist   = static_cast<TH1D*>(getHist(cFe, "number_of_clocks"));
-                        TH2D*     cClustersS0   = static_cast<TH2D*>(getHist(cFe, "SingleStripClusters_S0"));
-                        TH2D*     cClustersS1   = static_cast<TH2D*>(getHist(cFe, "SingleStripClusters_S1"));
-                        TH2D*     cSignalHist   = static_cast<TH2D*>(getHist(cFe, "hybrid_signal"));
-                        TH2D*     cVcthClusters = static_cast<TH2D*>(getHist(cFe, "vcth_ClusterSize"));
-                        TProfile* cEventsHist   = static_cast<TProfile*>(getHist(cFe, "number_of_triggers"));
+                        TH1D*     cClocksHist   = static_cast<TH1D*>(getHist(cHybrid, "number_of_clocks"));
+                        TH2D*     cClustersS0   = static_cast<TH2D*>(getHist(cHybrid, "SingleStripClusters_S0"));
+                        TH2D*     cClustersS1   = static_cast<TH2D*>(getHist(cHybrid, "SingleStripClusters_S1"));
+                        TH2D*     cSignalHist   = static_cast<TH2D*>(getHist(cHybrid, "hybrid_signal"));
+                        TH2D*     cVcthClusters = static_cast<TH2D*>(getHist(cHybrid, "vcth_ClusterSize"));
+                        TProfile* cEventsHist   = static_cast<TProfile*>(getHist(cHybrid, "number_of_triggers"));
                         if(cEventCounter == 0)
                         {
                             cClocksHist->Fill(cVCth, cTimeout);
                             cEventsHist->Fill(cVCth, cTotalEvents);
                         }
-                        for(auto cCbc: *cFe)
+                        for(auto cCbc: *cHybrid)
                         {
                             TH1D*                 cHitsEvenHist       = dynamic_cast<TH1D*>(getHist(cCbc, "Cbc_Hits_even"));
                             TH1D*                 cHitsOddHist        = dynamic_cast<TH1D*>(getHist(cCbc, "Cbc_Hits_odd"));
@@ -231,7 +237,7 @@ void SignalScanFit::ScanSignal(int pSignalScanLength)
                             TProfile*             cClusterSizeOdd     = static_cast<TProfile*>(getHist(cCbc, "Cbc_ClusterSize_odd"));
                             TH2D*                 cClusters2DEvenHist = dynamic_cast<TH2D*>(getHist(cCbc, "Cbc_Clusters2D_even"));
                             TH2D*                 cClusters2DOddHist  = dynamic_cast<TH2D*>(getHist(cCbc, "Cbc_Clusters2D_odd"));
-                            std::vector<uint32_t> cHits               = cEvent->GetHits(cFe->getId(), cCbc->getId());
+                            std::vector<uint32_t> cHits               = cEvent->GetHits(cHybrid->getId(), cCbc->getId());
                             LOG(DEBUG) << BOLDBLUE << "Found " << +cHits.size() << " hits in CBC" << +cCbc->getId() << RESET;
                             for(auto cId: cHits)
                             {
@@ -246,7 +252,7 @@ void SignalScanFit::ScanSignal(int pSignalScanLength)
                                 cEventHits++;
                             } // end for cId
                             // Fill the cluster histos, use the middleware clustering
-                            std::vector<Cluster> cClusters = cEvent->getClusters(cFe->getId(), cCbc->getId());
+                            std::vector<Cluster> cClusters = cEvent->getClusters(cHybrid->getId(), cCbc->getId());
                             cEventClusters += cClusters.size();
                             // Now fill the ClusterWidth per VCth plots:
                             for(auto& cCluster: cClusters)
@@ -360,9 +366,9 @@ void SignalScanFit::parseSettings()
 
 // void SignalScanFit::processCurves ( BeBoard *pBoard, std::string pHistName )
 //{
-//    for ( auto cFe : pBoard->fHybridVector )
+//    for ( auto cHybrid : pBoard->fHybridVector )
 //    {
-//        for ( auto cCbc : cFe->fReadoutChipVector )
+//        for ( auto cCbc : cHybrid->fReadoutChipVector )
 //        {
 //            // This one is not used yet?
 //            TProfile* cProf = dynamic_cast<TProfile*> ( getHist ( cCbc, pHistName) );

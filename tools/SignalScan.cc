@@ -12,23 +12,23 @@ void SignalScan::Initialize()
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                uint32_t cFeId      = cFe->getId();
-                fNCbc               = cFe->size();
-                TCanvas* ctmpCanvas = new TCanvas(Form("c_online_canvas_fe%d", cFeId), Form("FE%d  Online Canvas", cFeId));
+                uint32_t cHybridId  = cHybrid->getId();
+                fNCbc               = cHybrid->size();
+                TCanvas* ctmpCanvas = new TCanvas(Form("c_online_canvas_fe%d", cHybridId), Form("FE%d  Online Canvas", cHybridId));
                 // ctmpCanvas->Divide( 2, 2 );
-                fCanvasMap[cFe] = ctmpCanvas;
+                fCanvasMap[cHybrid] = ctmpCanvas;
 
                 // 1D Hist forlatency scan
-                TString  cName = Form("h_hybrid_thresholdScan_Fe%d", cFeId);
+                TString  cName = Form("h_hybrid_thresholdScan_Fe%d", cHybridId);
                 TObject* cObj  = gROOT->FindObject(cName);
 
                 if(cObj) delete cObj;
 
                 TH2F* cSignalHist =
-                    new TH2F(cName, Form("Signal threshold vs channel FE%d; Channel # ; Threshold; # of Hits", cFeId), fNCbc * NCHANNELS, -0.5, fNCbc * NCHANNELS - 0.5, 255, -.5, 255 - .5);
-                bookHistogram(cFe, "hybrid_signal", cSignalHist);
+                    new TH2F(cName, Form("Signal threshold vs channel FE%d; Channel # ; Threshold; # of Hits", cHybridId), fNCbc * NCHANNELS, -0.5, fNCbc * NCHANNELS - 0.5, 255, -.5, 255 - .5);
+                bookHistogram(cHybrid, "hybrid_signal", cSignalHist);
             }
         }
     }
@@ -57,13 +57,13 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
         fBeBoardInterface->Pause(theBoard);
         for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                for(auto cCbc: *cFe)
+                for(auto cCbc: *cHybrid)
                 {
                     uint32_t cCbcId = cCbc->getId();
 
-                    TString cHistName   = Form("Fe%dCbc%d_SignalScan", +cFe->getId(), +cCbcId);
+                    TString cHistName   = Form("Fe%dCbc%d_SignalScan", +cHybrid->getId(), +cCbcId);
                     TH2D*   cSignalScan = (TH2D*)(gROOT->FindObject(cHistName));
                     if(!cSignalScan)
                     {
@@ -73,7 +73,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
                         bookHistogram(cCbc, cHistName.Data(), cSignalScan);
                     }
 
-                    cHistName           = Form("Fe%dCbc%d_ClusterWidth_SignalScan", +cFe->getId(), +cCbcId);
+                    cHistName           = Form("Fe%dCbc%d_ClusterWidth_SignalScan", +cHybrid->getId(), +cCbcId);
                     TH2D* cClusterWidth = (TH2D*)(gROOT->FindObject(cHistName));
                     if(!cClusterWidth)
                     {
@@ -82,7 +82,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
                         cClusterWidth->GetYaxis()->SetTitle("Vcth");
                         bookHistogram(cCbc, cHistName.Data(), cClusterWidth);
                     }
-                    cHistName       = Form("Fe%dCbc%d_Clusters_SignalScan", +cFe->getId(), +cCbcId);
+                    cHistName       = Form("Fe%dCbc%d_Clusters_SignalScan", +cHybrid->getId(), +cCbcId);
                     TH1D* cClusters = (TH1D*)(gROOT->FindObject(cHistName));
                     if(!cClusters)
                     {
@@ -91,7 +91,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
                         bookHistogram(cCbc, cHistName.Data(), cClusters);
                     }
 
-                    cHistName   = Form("Fe%dCbc%d_Time_SignalScan", +cFe->getId(), +cCbcId);
+                    cHistName   = Form("Fe%dCbc%d_Time_SignalScan", +cHybrid->getId(), +cCbcId);
                     TH1D* cTime = (TH1D*)(gROOT->FindObject(cHistName));
                     if(!cTime)
                     {
@@ -134,18 +134,18 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
                         cTotalEventCounter += events.size();
                         for(auto& cEvent: events)
                         {
-                            for(auto cCbc: *cFe)
+                            for(auto cCbc: *cHybrid)
                             {
                                 TString cHistName;
-                                cHistName            = Form("Fe%dCbc%d_Clusters_SignalScan", +cFe->getId(), +cCbc->getId());
+                                cHistName            = Form("Fe%dCbc%d_Clusters_SignalScan", +cHybrid->getId(), +cCbc->getId());
                                 TH1D* cClustersHisto = (TH1D*)(gROOT->FindObject(cHistName));
 
-                                cHistName           = Form("Fe%dCbc%d_ClusterWidth_SignalScan", +cFe->getId(), +cCbc->getId());
+                                cHistName           = Form("Fe%dCbc%d_ClusterWidth_SignalScan", +cHybrid->getId(), +cCbc->getId());
                                 TH2D* cClusterWidth = (TH2D*)(gROOT->FindObject(cHistName));
-                                // cHistName = Form("Fe%dCbc%d_ClusterOccupancy" , +cFe->getId() , +cCbc->getId() );
+                                // cHistName = Form("Fe%dCbc%d_ClusterOccupancy" , +cHybrid->getId() , +cCbc->getId() );
                                 // TH2F* cClustersHisto = ( TH2F* ) ( gROOT->FindObject ( cHistName ) );
 
-                                const std::vector<Cluster>& cClusters = cEvent->getClusters(cFe->getId(), cCbc->getId());
+                                const std::vector<Cluster>& cClusters = cEvent->getClusters(cHybrid->getId(), cCbc->getId());
                                 cClustersHisto->Fill(cVcth, cClusters.size());
                                 for(auto& cCluster: cClusters)
                                 {
@@ -154,12 +154,12 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
                                     if(cCluster.fClusterWidth <= 2) { cClusterCounter++; }
                                 }
 
-                                cHistName         = Form("Fe%dCbc%d_SignalScan", +cFe->getId(), +cCbc->getId());
+                                cHistName         = Form("Fe%dCbc%d_SignalScan", +cHybrid->getId(), +cCbc->getId());
                                 TH2D* cSignalScan = dynamic_cast<TH2D*>(getHist(cCbc, cHistName.Data()));
 
                                 for(int cChan = 0; cChan < NCHANNELS; cChan++)
                                 {
-                                    int cHits = cEvent->DataBit(cFe->getId(), cCbc->getId(), cChan);
+                                    int cHits = cEvent->DataBit(cHybrid->getId(), cCbc->getId(), cChan);
                                     cSignalScan->Fill(cChan, cVcth, cHits);
                                     cHitCounter += cHits;
                                     cTotalHitCounter += cHits;
@@ -177,9 +177,9 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
                     } while(cContinue);
 
                     double cTimeElapsed = t.getCurrentTime();
-                    for(auto cCbc: *cFe)
+                    for(auto cCbc: *cHybrid)
                     {
-                        TString cHistName = Form("Fe%dCbc%d_Time_SignalScan", +cFe->getId(), +cCbc->getId());
+                        TString cHistName = Form("Fe%dCbc%d_Time_SignalScan", +cHybrid->getId(), +cCbc->getId());
                         TH1D*   cTime     = (TH1D*)(gROOT->FindObject(cHistName));
                         cTime->Fill(cVcth, cTimeElapsed);
                     }
@@ -187,9 +187,9 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
                     t.stop();
 
                     // calculate efficiency and assoc. error for each channel
-                    for(auto cCbc: *cFe)
+                    for(auto cCbc: *cHybrid)
                     {
-                        TString cHistName   = Form("Fe%dCbc%d_SignalScan", +cFe->getId(), +cCbc->getId());
+                        TString cHistName   = Form("Fe%dCbc%d_SignalScan", +cHybrid->getId(), +cCbc->getId());
                         TH2D*   cSignalScan = dynamic_cast<TH2D*>(getHist(cCbc, cHistName.Data()));
                         int     cBinY       = cSignalScan->GetYaxis()->FindBin(cVcth);
 
@@ -269,16 +269,16 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
 //                 // Loop over Events from this Acquisition
 //                 for ( auto& cEvent : events )
 //                 {
-//                     for ( auto cFe : pBoard->fHybridVector )
+//                     for ( auto cHybrid : pBoard->fHybridVector )
 //                     {
-//                         TH2F* cSignalHist = static_cast<TH2F*> (getHist ( cFe, "hybrid_signal") );
+//                         TH2F* cSignalHist = static_cast<TH2F*> (getHist ( cHybrid, "hybrid_signal") );
 //                         int cEventHits = 0;
 //                         int cEventClusters = 0;
 
 //                         std::string cDataString;
 //                         std::string cClusterDataString;
 
-//                         for ( auto cCbc : cFe->fReadoutChipVector )
+//                         for ( auto cCbc : cHybrid->fReadoutChipVector )
 //                         {
 //                             //now loop the channels for this particular event and increment a counter
 //                             for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )

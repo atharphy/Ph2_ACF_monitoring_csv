@@ -138,7 +138,7 @@ class RD53 : public ReadoutChip
     static const FrontEnd*    frontEnds[];
     static const FrontEnd*    getMajorityFE(size_t colStart, size_t colStop);
 
-    RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
+    RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
     RD53(const RD53& chipObj);
 
     void     loadfRegMap(const std::string& fileName) override;

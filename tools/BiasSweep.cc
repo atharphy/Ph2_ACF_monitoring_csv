@@ -133,7 +133,7 @@ void BiasSweep::Initialize()
                     // cTmpTree->Branch (Form ("BiasSweepData_Fe%d_Cbc%d", cHybrid->getId(), cCbc->getId() ),
                     // "BiasSweepData", &fData);
                     cTmpTree->Branch("Bias", &fData->fBias);
-                    cTmpTree->Branch("Fe", &fData->fFeId, "Fe/s");
+                    cTmpTree->Branch("Fe", &fData->fHybridId, "Fe/s");
                     cTmpTree->Branch("Chip", &fData->fCbcId, "Chip/s");
                     cTmpTree->Branch("Time", &fData->fTimestamp, "Time/l");
                     cTmpTree->Branch("Unit", &fData->fUnit, "Unit/C");
@@ -144,7 +144,7 @@ void BiasSweep::Initialize()
 
                     this->bookHistogram(cCbc, "DataTree", cTmpTree);
 
-                    LOG(INFO) << "TTree for BiasSweep data for Fe " << +cHybrid->getId() << " Chip " << +cCbc->getId() << " created!";
+                    LOG(INFO) << "TTree for BiasSweep data for Hybrid " << +cHybrid->getId() << " Chip " << +cCbc->getId() << " created!";
                 }
             }
         }
@@ -171,7 +171,7 @@ void BiasSweep::MeasureMinPower(BeBoard* pBoard, ReadoutChip* pCbc)
     TTree*      cTmpTree  = static_cast<TTree*>(getHist(pCbc, "DataTree"));
     fData->fBias          = "MinimalPower";
     fData->fTimestamp     = static_cast<long int>(cTime);
-    fData->fFeId          = pCbc->getHybridId();
+    fData->fHybridId      = pCbc->getHybridId();
     fData->fCbcId         = pCbc->getId();
     fData->fUnit[0]       = 'I';
     fData->fUnit[1]       = 0;
@@ -301,7 +301,7 @@ void BiasSweep::SweepBias(std::string pBias, ReadoutChip* pCbc)
         TTree* cTmpTree       = static_cast<TTree*>(getHist(pCbc, "DataTree"));
         fData->fBias          = pBias.c_str();
         fData->fTimestamp     = static_cast<long int>(cTime);
-        fData->fFeId          = pCbc->getHybridId();
+        fData->fHybridId      = pCbc->getHybridId();
         fData->fCbcId         = pCbc->getId();
         fData->fUnit[0]       = (cCurrent) ? 'I' : 'V';
         fData->fUnit[1]       = 0;

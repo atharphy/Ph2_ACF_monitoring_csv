@@ -41,7 +41,7 @@ class OuterTrackerHybrid : public Hybrid
   public:
     // C'tors take FrontEndDescription or hierachy of connection
     OuterTrackerHybrid(const FrontEndDescription& pFeDesc, uint8_t pHybridId);
-    OuterTrackerHybrid(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pHybridId);
+    OuterTrackerHybrid(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId);
 
     // Default C'tor
     OuterTrackerHybrid();
@@ -58,16 +58,13 @@ class OuterTrackerHybrid : public Hybrid
         if(fCic != nullptr)
         {
             LOG(ERROR) << "Error, Cic for this hybrid was already initialized - aborting";
-            exit(1);
+            std::runtime_error(std::string("OuterTrackerHybrid::addCic : Error, Cic for this hybrid was already initialized - aborting"));
         }
         fCic = pCic;
         pCic = nullptr;
     }
 
     Cic* fCic;
-
-  protected:
-    uint8_t fHybridId;
 };
 } // namespace Ph2_HwDescription
 

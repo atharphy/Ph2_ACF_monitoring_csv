@@ -218,7 +218,7 @@ uint8_t CicFEAlignment::GenManPatternOutLine(uint8_t pOutLine)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                // configure ROCs to produce phase alignment patterns
+                // configure Chips to produce phase alignment patterns
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getFrontEndType() == FrontEndType::CBC3)
@@ -527,7 +527,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
             {
                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 fCicInterface->SetAutomaticPhaseAlignment(cCic, true);
-                // configure ROCs to produce phase alignment patterns
+                // configure Chips to produce phase alignment patterns
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getFrontEndType() == FrontEndType::CBC3) cWithCBC = true;

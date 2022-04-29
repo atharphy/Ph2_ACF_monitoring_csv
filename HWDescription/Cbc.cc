@@ -23,9 +23,10 @@ namespace Ph2_HwDescription
 {
 // C'tors with object FE Description
 
-Cbc::Cbc(const FrontEndDescription& pFeDesc, uint8_t pCbcId, const std::string& filename) : ReadoutChip(pFeDesc, pCbcId)
+Cbc::Cbc(const FrontEndDescription& pFeDesc, uint8_t pChipId, const std::string& filename) : ReadoutChip(pFeDesc, pChipId)
 {
-    fChipAddress      = 0x41 + pCbcId % 8;
+    fChipCode         = 1;
+    fChipAddress      = 0x41 + pChipId % 8;
     fMaxRegValue      = 255; // 8 bit registers in CBC
     fChipOriginalMask = std::make_shared<ChannelGroup<NCHANNELS, 1>>();
     fChipOriginalMask->enableAllChannels();
@@ -33,10 +34,12 @@ Cbc::Cbc(const FrontEndDescription& pFeDesc, uint8_t pCbcId, const std::string& 
     setFrontEndType(FrontEndType::CBC3);
 }
 
-// C'tors which take BeId, FMCId, FeID, CbcId
-Cbc::Cbc(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pCbcId, const std::string& filename) : ReadoutChip(pBeId, pFMCId, pFeId, pCbcId)
+// C'tors which take BeBoardId, FMCId, HybridId, CbcId
+Cbc::Cbc(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, const std::string& filename)
+    : ReadoutChip(pBeBoardId, pFMCId, pOpticalGroupId, pHybridId, pChipId)
 {
-    fChipAddress      = 0x41 + pCbcId % 8;
+    fChipCode         = 1;
+    fChipAddress      = 0x41 + pChipId % 8;
     fMaxRegValue      = 255; // 8 bit registers in CBC
     fChipOriginalMask = std::make_shared<ChannelGroup<NCHANNELS, 1>>();
     fChipOriginalMask->enableAllChannels();

@@ -32,7 +32,7 @@ class SLinkEvent
     ~SLinkEvent() { fData.clear(); }
 
     void generateDAQHeader(uint32_t& pLV1Id, uint16_t& pBXId, int pSourceId);
-    void generateTkHeader(uint32_t& pBeStatus, uint16_t& pNChips, std::set<uint8_t>& pEnabledFe, bool pCondData = false, bool pFake = false);
+    void generateTkHeader(uint32_t& pBeStatus, uint16_t& pNChips, std::set<uint8_t>& pEnabledHybrids, bool pCondData = false, bool pFake = false);
     // the following 4 are dumb methods in that they just insert a vector of 64 bit words
     void generateStatus(std::vector<uint64_t> pStatusVec);
     void generatePayload(std::vector<uint64_t> pPayloadVec);

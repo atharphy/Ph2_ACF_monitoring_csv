@@ -148,7 +148,7 @@
 #define MAX_NUMBER_OF_STUB_CLUSTERS_PS 5
 #define MAX_NUMBER_OF_STUB_CLUSTERS_2S 3
 
-// LpGBT convertion factors
+// LpGBT conversion factors
 #define VREF_LPGBT 1.0
 #define CONVERSION_FACTOR (VREF_LPGBT / 1024.)
 

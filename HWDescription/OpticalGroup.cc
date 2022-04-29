@@ -16,6 +16,6 @@ OpticalGroup::OpticalGroup() : FrontEndDescription(), OpticalGroupContainer(0) {
 
 OpticalGroup::OpticalGroup(const FrontEndDescription& pFeDesc, uint8_t pOpticalGroupId) : FrontEndDescription(pFeDesc), OpticalGroupContainer(pOpticalGroupId) {}
 
-OpticalGroup::OpticalGroup(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId) : FrontEndDescription(pBeId, pFMCId, 0), OpticalGroupContainer(pOpticalGroupId) {}
+OpticalGroup::OpticalGroup(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId) : FrontEndDescription(pBeBoardId, pFMCId, pOpticalGroupId, 0), OpticalGroupContainer(pOpticalGroupId) {}
 
 } // namespace Ph2_HwDescription

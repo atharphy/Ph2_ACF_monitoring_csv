@@ -7,6 +7,7 @@
         \date                           24.03.2017
         Support :                       mail to : georg.auzinger@SPAMNOT.cern.ch
                                                   mykyta.haranko@SPAMNOT.cern.ch
+                                                  younes.otarid@SPAMNOT.cern.ch
 
 */
 
@@ -17,7 +18,6 @@
 #include "../Utils/Event.h"
 #include "../Utils/easylogging++.h"
 #include "BeBoardFWInterface.h"
-// #include "FEConfigurationInterface.h"
 
 #include <limits.h>
 #include <map>
@@ -40,24 +40,27 @@ class L1ReadoutInterface;
 class FEConfigurationInterface;
 class TriggerInterface;
 class FastCommandInterface;
+class LinkInterface;
 class D19cBackendAlignmentFWInterface;
 class D19cDebugFWInterface;
+class D19cOpticalInterface;
+class D19clpGBTSlowControlWorkerInterface;
 
-/*!
- * \class Cbc3Fc7FWInterface
- *
+/*
  * \brief init/config of the Fc7 and its Chip's
  */
 class D19cFWInterface : public BeBoardFWInterface
 {
   private:
     // std::recursive_mutex                     fMutex;
-    FEConfigurationInterface*        fFEConfigurationInterface{nullptr};
-    L1ReadoutInterface*              fL1ReadoutInterface{nullptr};
-    TriggerInterface*                fTriggerInterface{nullptr};
-    FastCommandInterface*            fFastCommandInterface{nullptr};
-    D19cBackendAlignmentFWInterface* fBackendAlignmentInterface{nullptr};
-    D19cDebugFWInterface*            fDebugInterface{nullptr};
+    FEConfigurationInterface*            fFEConfigurationInterface{nullptr};
+    L1ReadoutInterface*                  fL1ReadoutInterface{nullptr};
+    TriggerInterface*                    fTriggerInterface{nullptr};
+    FastCommandInterface*                fFastCommandInterface{nullptr};
+    LinkInterface*                       fLinkInterface{nullptr};
+    D19cBackendAlignmentFWInterface*     fBackendAlignmentInterface{nullptr};
+    D19cDebugFWInterface*                fDebugInterface{nullptr};
+    D19clpGBTSlowControlWorkerInterface* flpGBTSlowControlWorkerInterface{nullptr};
 
     FileHandler* fFileHandler;
     uint32_t     fBroadcastCbcId;
@@ -114,12 +117,14 @@ class D19cFWInterface : public BeBoardFWInterface
     D19cFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler);
     void setFileHandler(FileHandler* pHandler);
 
-    void                             printReadoutInterface() { LOG(INFO) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET; }
-    D19cBackendAlignmentFWInterface* getBackendAlignmentInterface() { return fBackendAlignmentInterface; }
-    D19cDebugFWInterface*            getDebugInterface() { return fDebugInterface; }
-    TriggerInterface*                getTriggerInterface() { return fTriggerInterface; }
-    L1ReadoutInterface*              getL1ReadoutInterface() { return fL1ReadoutInterface; }
-    FEConfigurationInterface*        getFEConfigurationInterface() { return fFEConfigurationInterface; }
+    void                                 printReadoutInterface() { LOG(INFO) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET; }
+    D19cBackendAlignmentFWInterface*     getBackendAlignmentInterface() { return fBackendAlignmentInterface; }
+    D19cDebugFWInterface*                getDebugInterface() { return fDebugInterface; }
+    TriggerInterface*                    getTriggerInterface() { return fTriggerInterface; }
+    L1ReadoutInterface*                  getL1ReadoutInterface() { return fL1ReadoutInterface; }
+    FEConfigurationInterface*            getFEConfigurationInterface() { return fFEConfigurationInterface; }
+    LinkInterface*                       getLinkInterface() { return fLinkInterface; }
+    D19clpGBTSlowControlWorkerInterface* getlpGBTSlowControlInterface() { return flpGBTSlowControlWorkerInterface; }
     //
     void ConfigureInterfaces(const Ph2_HwDescription::BeBoard* pBoard);
 
@@ -170,7 +175,7 @@ class D19cFWInterface : public BeBoardFWInterface
      */
     void ConfigureBoard(const Ph2_HwDescription::BeBoard* pBoard) override;
     /*!
-     * \brief Detect the right FE Id to write the right registers (not working with the latest Firmware)
+     * \brief Detect the right Hybrid Id to write the right registers (not working with the latest Firmware)
      */
 
     void     ResetEventCounter() { fEventCounter = 0; }
@@ -219,7 +224,6 @@ class D19cFWInterface : public BeBoardFWInterface
     // set stub offset
     void     SetStubOffset(uint32_t pOffset) { fStubOffset = pOffset; };
     uint32_t getStubOffset() { return fStubOffset; };
-    uint8_t  getI2Cstatus() { return fI2Cstatus; }
 
   private:
     uint32_t fReadoutAttempts = 0;
@@ -311,11 +315,6 @@ class D19cFWInterface : public BeBoardFWInterface
     // consecutive triggers FSM
     void ConfigureAntennaFSM(uint16_t pNtriggers = 1, uint16_t pTriggerRate = 1, uint16_t pL1Delay = 100);
 
-    // Optical readout specific functions - d19c [temporary]
-    void ResetLink(uint8_t pLinkId);
-    bool GetLinkStatus(uint8_t pLinkId);
-
-    bool LinkLock(const Ph2_HwDescription::BeBoard* pBoard);
     void setRxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fRxPolarity.insert({pLinkId, pPolarity}); };
     void setTxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fTxPolarity.insert({pLinkId, pPolarity}); };
 
@@ -334,7 +333,6 @@ class D19cFWInterface : public BeBoardFWInterface
     ///////////////////////////////////////////////////////
     //      Optical readout                                 //
     /////////////////////////////////////////////////////
-    void selectLink(const uint8_t pLinkId = 0, uint32_t cWait_ms = 100) override;
 
     // ##############################
     // # Pseudo Random Bit Sequence #
@@ -344,37 +342,12 @@ class D19cFWInterface : public BeBoardFWInterface
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    uint8_t       fI2Cstatus    = 0;
-    const uint8_t flpGBTAddress = 0x70;
-
-    // OT implementation of write and read
-    bool     WriteOptoLpGBTRegister(const uint32_t linkNumber, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop);
-    uint32_t ReadOptoLpGBTRegister(const uint32_t linkNumber, const uint32_t pAddress);
-
     // Functions for standard uDTC
+    void     selectLink(const uint8_t pLinkId = 0, uint32_t cWait_ms = 100) override{};
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override {}
-    void     ResetOptoLink() override;
-    bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override;
-    uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress) override;
-    // ##########################################
-    // # Read/Write new Command Processor Block #
-    // ##########################################
-    // functions for new Command Processor Block
-    void                  ResetCPB() override;
-    void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) override;
-    std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) override;
-    std::vector<uint32_t> WriteCommandCPBandReadReply(const std::vector<uint32_t>& pCommandVector, uint8_t pNWords);
-
-    // function to read/write lpGBT registers
-    bool    WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) override;
-    uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterValue) override;
-    // function for I2C transactions using lpGBT I2C Masters
-    bool    I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes, uint8_t pFrequency, uint32_t& pNWrites) override;
-    uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes, uint8_t pFrequency, uint32_t& pNReads) override;
-    // function for front-end slow control
-    bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false) override;
-    bool    localWriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry, uint32_t& theI2CWriteCount, uint32_t& theI2CReadMismatches);
-    uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) override;
+    void     ResetOptoLink() override{};
+    bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override { return true; };
+    uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress) override { return 0; };
 
     // Generic FE configuration functions
     // single register functions
@@ -382,9 +355,9 @@ class D19cFWInterface : public BeBoardFWInterface
     bool SingleRegisterWrite(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerify = true) override;
     bool MultiRegisterWrite(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem, bool pVerify = true) override;
     // Register write + read-back
-    bool MultiRegisterWriteRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem) override;
     bool SingleRegisterWriteRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem) override;
-    // Registe read
+    bool MultiRegisterWriteRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem) override;
+    // Register read
     uint8_t              SingleRegisterRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem) override;
     std::vector<uint8_t> MultiRegisterRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem) override;
 

@@ -28,13 +28,13 @@ void OTCMNoise::SetThresholds()
     {
         for(auto cOpticalGroup: *pBoard)
         {
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
                 LOG(INFO) << BOLDGREEN << "Setting Manual Vcth to " << fManualVcth << RESET;
                 if(fManualVcth != 0)
                 {
                     cVisitor.setThreshold(fManualVcth);
-                    static_cast<OuterTrackerHybrid*>(cFe)->accept(cVisitor);
+                    static_cast<OuterTrackerHybrid*>(cHybrid)->accept(cVisitor);
                 }
                 else
                 {
