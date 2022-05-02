@@ -4,21 +4,16 @@
 #include "../Utils/DataContainer.h"
 #include "../Utils/EmptyContainer.h"
 #include "../Utils/Occupancy.h"
+#include <algorithm>
 #include <numeric>
 
 using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-D19cPSEventAS::D19cPSEventAS(const BeBoard* pBoard, uint32_t pNMPA, uint32_t pNHybrid, const std::vector<uint32_t>& list) : fEventDataVector(pNMPA * pNHybrid)
-{
-    fNMPA = pNMPA;
-    SetEvent(pBoard, pNMPA, list);
-}
 D19cPSEventAS::D19cPSEventAS(const BeBoard* pBoard, const std::vector<uint32_t>& list)
 {
     fEventDataVector.clear();
-    fNSSA = 0;
     fHybridIds.clear();
     fChipIds.clear();
     fCounterData.clear();
@@ -28,7 +23,6 @@ D19cPSEventAS::D19cPSEventAS(const BeBoard* pBoard, const std::vector<uint32_t>&
         for(auto cHybrid: *cOpticalGroup)
         {
             fHybridIds.push_back(cHybrid->getId());
-            fNSSA += cHybrid->fullSize();
             HybridCounterData cHybridCounterData;
             cHybridCounterData.clear();
             std::vector<uint8_t> cChipIds(0);
@@ -44,11 +38,6 @@ D19cPSEventAS::D19cPSEventAS(const BeBoard* pBoard, const std::vector<uint32_t>&
             fChipIds.push_back(cChipIds);
         } // hybrids
     }     // opticalGroup
-    // // first check if there are also SSAs here
-    // // if there are then data will come SSAs then MPAs
-    // // because of the order of the configuration
-    // // so reverse the list
-    // std::reverse(list.begin(),list.end());
     this->Set(pBoard, list);
 }
 void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pData)
@@ -56,36 +45,28 @@ void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
     LOG(DEBUG) << BOLDBLUE << "Setting event for Async PS counters " << RESET;
     auto                      cDataIterator  = pData.begin();
     auto                      cFrontEndTypes = pBoard->connectedFrontEndTypes();
-    std::vector<FrontEndType> cValidTypes{FrontEndType::MPA, FrontEndType::SSA, FrontEndType::SSA2};
-    for(auto cValidType: cValidTypes)
+    for(auto cOpticalGroup: *pBoard)
     {
-        if(std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), cValidType) == cFrontEndTypes.end()) continue;
-
-        for(auto cOpticalGroup: *pBoard)
+        for(auto cHybrid: *cOpticalGroup)
         {
-            for(auto cHybrid: *cOpticalGroup)
+            uint8_t cHybridIndex = getHybridIndex(cHybrid->getId());
+            for(auto cChip: *cHybrid)
             {
-                uint8_t cHybridIndex = getHybridIndex(cHybrid->getId());
-                for(auto cChip: *cHybrid)
+                uint8_t cChipIndex = getChipIndex(cHybridIndex, cChip->getId());
+                fCounterData[cHybridIndex][cChipIndex].clear();
+                for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl += 2)
                 {
-                    if(cChip->getFrontEndType() != cValidType) continue;
-
-                    uint8_t cChipIndex = getChipIndex(cHybridIndex, cChip->getId());
-                    fCounterData[cHybridIndex][cChipIndex].clear();
-                    for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl += 2)
+                    // each 32-bit word hold information from two counters
+                    for(int cOffset = 0; cOffset < 2; cOffset++)
                     {
-                        // each 32-bit word hold information from two counters
-                        for(int cOffset = 0; cOffset < 2; cOffset++)
-                        {
-                            if(cChnl < 10) LOG(DEBUG) << BOLDYELLOW << "Chnl#" << cChnl + cOffset << "\t" << ((*cDataIterator & (0x7FFF << 15 * cOffset)) >> 15 * cOffset) << RESET;
-                            fCounterData[cHybridIndex][cChipIndex].push_back((*cDataIterator & (0x7FFF << 15 * cOffset)) >> 15 * cOffset);
-                        }
-                        cDataIterator++;
-                    } // channels
-                }     // chips
-            }         // hybrids
-        }             // optical groups
-    }                 // valid types.. MPA then SSA
+                        if(cChnl < 10) LOG(DEBUG) << BOLDYELLOW << "Chnl#" << cChnl + cOffset << "\t" << ((*cDataIterator & (0x7FFF << 15 * cOffset)) >> 15 * cOffset) << RESET;
+                        fCounterData[cHybridIndex][cChipIndex].push_back((*cDataIterator & (0x7FFF << 15 * cOffset)) >> 15 * cOffset);
+                    }
+                    cDataIterator++;
+                } // channels
+            }     // chips
+        }         // hybrids
+    }             // optical groups
 }
 // required by event but not sure if makes sense for AS
 void D19cPSEventAS::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId)
@@ -141,19 +122,19 @@ void D19cPSEventAS::SetEvent(const BeBoard* pBoard, uint32_t pNMPA, const std::v
     }
 }
 
-uint32_t D19cPSEventAS::GetNHits(uint8_t pHybridId, uint8_t pSSAId) const
+uint32_t D19cPSEventAS::GetNHits(uint8_t pHybridId, uint8_t pChipId) const
 {
     uint8_t cHybridIndex = getHybridIndex(pHybridId);
-    uint8_t cChipIndex   = getChipIndex(cHybridIndex, pSSAId);
-    auto&   cHitVecotr   = fCounterData.at(cHybridIndex).at(cChipIndex);
-    return std::accumulate(cHitVecotr.begin(), cHitVecotr.end(), 0);
+    uint8_t cChipIndex   = getChipIndex(cHybridIndex, pChipId);
+    auto&   cHitVector   = fCounterData.at(cHybridIndex).at(cChipIndex);
+    return std::accumulate(cHitVector.begin(), cHitVector.end(), 0);
     // const std::vector<uint32_t> &hitVector = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId,fNMPA));
     // return std::accumulate(hitVector.begin()+1, hitVector.end(), 0);
 }
-std::vector<uint32_t> D19cPSEventAS::GetHits(uint8_t pHybridId, uint8_t pSSAId) const
+std::vector<uint32_t> D19cPSEventAS::GetHits(uint8_t pHybridId, uint8_t pChipId) const
 {
     uint8_t cHybridIndex = getHybridIndex(pHybridId);
-    uint8_t cChipIndex   = getChipIndex(cHybridIndex, pSSAId);
+    uint8_t cChipIndex   = getChipIndex(cHybridIndex, pChipId);
     return fCounterData.at(cHybridIndex).at(cChipIndex);
     // const std::vector<uint32_t> &hitVector = fEventDataVector.at(encodeVectorIndex(pHybridId, pMPAId,fNMPA));
     // LOG (INFO) << BOLDBLUE << hitVector[0] << RESET;

@@ -1008,9 +1008,9 @@ void Tool::bitWiseScan(const std::string& dacName, uint32_t numberOfEvents, cons
 void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst)
 {
     DetectorDataContainer* outputDataContainer = fDetectorDataContainer;
-    ReadoutChip*           cChip               = fDetectorContainer->at(boardIndex)->at(0)->at(0)->at(0); // assumption: one BeBoard has only one type of chip;
-    bool                   localDAC            = cChip->isDACLocal(dacName);
-    uint8_t                numberOfBits        = cChip->getNumberOfBits(dacName);
+    ReadoutChip*           cReadoutChip        = fDetectorContainer->at(boardIndex)->at(0)->at(0)->at(0); // assumption: one BeBoard has only one type of chip;
+    bool                   localDAC            = cReadoutChip->isDACLocal(dacName);
+    uint8_t                numberOfBits        = cReadoutChip->getNumberOfBits(dacName);
     LOG(INFO) << BOLDBLUE << "Number of bits in this DAC is " << +numberOfBits << RESET;
     bool                   occupanyDirectlyProportionalToDAC;
     DetectorDataContainer* previousStepOccupancyContainer = new DetectorDataContainer();
