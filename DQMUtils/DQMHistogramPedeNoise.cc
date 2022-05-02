@@ -525,10 +525,12 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t pStripTh, uint16_t pPixelTh
                     uint16_t channelNumber = 0;
                     for(auto channel: *chip->getChannelContainer<Occupancy>())
                     {
-                        auto cType = fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getFrontEndType();
-                        uint16_t cTh = 0;
-                        if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA) cTh = pStripTh;
-                        else if(cType == FrontEndType::MPA) cTh = pPixelTh;
+                        auto     cType = fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getFrontEndType();
+                        uint16_t cTh   = 0;
+                        if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA)
+                            cTh = pStripTh;
+                        else if(cType == FrontEndType::MPA)
+                            cTh = pPixelTh;
                         float tmpOccupancy      = channel.fOccupancy;
                         float tmpOccupancyError = channel.fOccupancyError;
                         chipSCurve->SetBinContent(channelNumber + 1, cTh + 1, tmpOccupancy);

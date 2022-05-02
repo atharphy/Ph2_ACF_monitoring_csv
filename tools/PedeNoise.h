@@ -48,13 +48,13 @@ class PedeNoise : public Tool
     void Reset();
 
   protected:
-    void     measureSCurves(uint16_t pStripStartValue = 0, uint16_t pPixelStartValue = 0);
-    void     findPedestal(bool forceAllChannels = false);
-    void     extractPedeNoise();
-    void     disableStubLogic();
-    void     reloadStubLogic();
-    void     cleanContainerVector();
-    void     initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
+    void measureSCurves(uint16_t pStripStartValue = 0, uint16_t pPixelStartValue = 0);
+    void findPedestal(bool forceAllChannels = false);
+    void extractPedeNoise();
+    void disableStubLogic();
+    void reloadStubLogic();
+    void cleanContainerVector();
+    void initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
 
     uint8_t  fPulseAmplitude{0};
     uint32_t fEventsPerPoint{0};

@@ -217,7 +217,7 @@ void PedestalEqualization::Reset()
                         if(cMapItem.first.find("THTRIMMING") != std::string::npos) continue;
 
                         LOG(DEBUG) << BOLDYELLOW << "PedestalEqualization::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
-                                  << cMapItem.second.fValue << RESET;
+                                   << cMapItem.second.fValue << RESET;
                         cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second.fValue));
                     }
                     fReadoutChipInterface->WriteChipMultReg(cChip, cRegList, false);
@@ -316,21 +316,22 @@ void PedestalEqualization::FindVplus()
                 {
                     ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
                     uint16_t     tmpVthr = 0;
-                    if(theChip->getFrontEndType() == FrontEndType::CBC3) tmpVthr = (theChip->getReg("VCth1") + (theChip->getReg("VCth2") << 8));
-                    if(theChip->getFrontEndType() == FrontEndType::SSA || theChip->getFrontEndType() == FrontEndType::SSA2) tmpVthr = theChip->getReg("Bias_THDAC");
-                    if(theChip->getFrontEndType() == FrontEndType::MPA) tmpVthr = theChip->getReg("ThDAC0");
+                    auto         cType   = theChip->getFrontEndType();
+                    if(cType == FrontEndType::CBC3) tmpVthr = (theChip->getReg("VCth1") + (theChip->getReg("VCth2") << 8));
+                    if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2) tmpVthr = theChip->getReg("Bias_THDAC");
+                    if(cType == FrontEndType::MPA) tmpVthr = theChip->getReg("ThDAC0");
                     chip->getSummary<uint16_t>() = tmpVthr;
                     LOG(INFO) << GREEN << "VCth value for BeBoard " << +board->getId() << " OpticalGroup " << +opticalGroup->getId() << " Hybrid " << +hybrid->getId() << " Chip " << +chip->getId()
                               << " = " << tmpVthr << RESET;
                     uint32_t ENCHAN  = theChip->getChipOriginalMask()->getNumberOfEnabledChannels();
                     uint32_t TOTCHAN = chip->size();
                     // LOG(INFO) << GREEN << "NCHANNELS " << ENCHAN << " TOTCHAN " << TOTCHAN << RESET;
-                    if(theChip->getFrontEndType() == FrontEndType::SSA || theChip->getFrontEndType() == FrontEndType::CBC3)
+                    if(cType == FrontEndType::SSA || cType == FrontEndType::CBC3)
                     {
                         cNStripChips += float(ENCHAN) / float(TOTCHAN);
                         cMeanStripsValue += tmpVthr * (float(ENCHAN) / float(TOTCHAN));
                     }
-                    else if(theChip->getFrontEndType() == FrontEndType::MPA)
+                    else if(cType == FrontEndType::MPA)
                     {
                         cNPixelChips += float(ENCHAN) / float(TOTCHAN);
                         cMeanPixelsValue += tmpVthr * (float(ENCHAN) / float(TOTCHAN));
@@ -365,9 +366,9 @@ void PedestalEqualization::FindVplus()
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::CBC3)
-                        { fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fStripTargetVcth); }
-                        else if(cChip->getFrontEndType() == FrontEndType::MPA)
+                        auto cType = cChip->getFrontEndType();
+                        if(cType == FrontEndType::SSA || cType == FrontEndType::CBC3) { fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fStripTargetVcth); }
+                        else if(cType == FrontEndType::MPA)
                         {
                             fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fPixelTargetVcth);
                         }
@@ -384,7 +385,7 @@ void PedestalEqualization::FindOffsets()
 {
     // figure  out if you should normalize or not
     uint8_t cNormalizationOrig = getNormalization();
-    uint8_t cNormalize  = 1;
+    uint8_t cNormalize         = 1;
     LOG(INFO) << BOLDBLUE << "normalization will be set to " << +cNormalize << RESET;
     setNormalization(cNormalize);
 
@@ -405,9 +406,9 @@ void PedestalEqualization::FindOffsets()
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::CBC3)
-                        { fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fStripTargetVcth); }
-                        else if(cChip->getFrontEndType() == FrontEndType::MPA)
+                        auto cType = cChip->getFrontEndType();
+                        if(cType == FrontEndType::SSA || cType == FrontEndType::CBC3) { fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fStripTargetVcth); }
+                        else if(cType == FrontEndType::MPA)
                         {
                             fReadoutChipInterface->WriteChipReg(cChip, "Threshold", fPixelTargetVcth);
                         }
@@ -448,21 +449,20 @@ void PedestalEqualization::FindOffsets()
                     unsigned int channelNumber = 1;
                     int          cMeanOffset   = 0;
                     ReadoutChip* roc           = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
+                    auto cType = roc->getFrontEndType();
                     for(auto& channel: *chip->getChannelContainer<uint8_t>()) // for on channel - begin
                     {
                         char charRegName[20];
-
-                        if(roc->getFrontEndType() == FrontEndType::CBC3) sprintf(charRegName, "Channel%03d", channelNumber++);
-                        if(roc->getFrontEndType() == FrontEndType::SSA || roc->getFrontEndType() == FrontEndType::SSA2) sprintf(charRegName, "THTRIMMING_S%d", channelNumber++);
-                        if(roc->getFrontEndType() == FrontEndType::MPA) sprintf(charRegName, "TrimDAC_P%d", channelNumber++);
+                        if(cType == FrontEndType::CBC3) sprintf(charRegName, "Channel%03d", channelNumber++);
+                        if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2) sprintf(charRegName, "THTRIMMING_S%d", channelNumber++);
+                        if(cType == FrontEndType::MPA) sprintf(charRegName, "TrimDAC_P%d", channelNumber++);
                         std::string cRegName = charRegName;
                         channel              = roc->getReg(cRegName);
                         LOG(DEBUG) << BOLDGREEN << "Offset set to " << +channel << RESET;
                         cMeanOffset += channel;
                     }
-
-                    if(roc->getFrontEndType() == FrontEndType::MPA) NCH = NMPACHANNELS;
-                    if(roc->getFrontEndType() == FrontEndType::SSA || roc->getFrontEndType() == FrontEndType::SSA2) NCH = NSSACHANNELS;
+                    if(cType == FrontEndType::MPA) NCH = NMPACHANNELS;
+                    if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2) NCH = NSSACHANNELS;
 
                     LOG(INFO) << BOLDRED << "Mean offset on Chip" << +chip->getId() << " is : " << (cMeanOffset) / (double)NCH << " Vcth units." << RESET;
                 } // for on chip - end

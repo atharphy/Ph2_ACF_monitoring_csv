@@ -43,8 +43,8 @@ D19cPSEventAS::D19cPSEventAS(const BeBoard* pBoard, const std::vector<uint32_t>&
 void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pData)
 {
     LOG(DEBUG) << BOLDBLUE << "Setting event for Async PS counters " << RESET;
-    auto                      cDataIterator  = pData.begin();
-    auto                      cFrontEndTypes = pBoard->connectedFrontEndTypes();
+    auto cDataIterator  = pData.begin();
+    auto cFrontEndTypes = pBoard->connectedFrontEndTypes();
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)

@@ -221,7 +221,7 @@ void PedeNoise::Reset()
                         if(cMapItem.first.find("Bias_THDAC") != std::string::npos) continue;
 
                         LOG(DEBUG) << BOLDYELLOW << "PedestalEqualization::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
-                                  << cMapItem.second.fValue << RESET;
+                                   << cMapItem.second.fValue << RESET;
                         cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second.fValue));
                     }
                     fReadoutChipInterface->WriteChipMultReg(cChip, cRegList, false);
@@ -327,9 +327,9 @@ void PedeNoise::sweepSCurves()
     }
 
     uint16_t cStripStartValue = 0, cPixelStartValue = 0;
-    if(!fUseFixRange) 
-    { 
-        this->findPedestal(forceAllChannels); 
+    if(!fUseFixRange)
+    {
+        this->findPedestal(forceAllChannels);
         cStripStartValue = fMeanStrips;
         cPixelStartValue = fMeanPixels;
     }
@@ -405,12 +405,15 @@ void PedeNoise::Validate()
 
                 for(auto cChip: *cHybrid)
                 {
-                    auto cType = cChip->getFrontEndType();
+                    auto           cType = cChip->getFrontEndType();
                     RegisterVector cRegVec;
                     uint32_t       NCH = NCHANNELS;
-                    if(cType == FrontEndType::CBC3) NCH = NCHANNELS;
-                    else if(cType == FrontEndType::SSA) NCH = NSSACHANNELS;
-                    else if(cType == FrontEndType::MPA) NCH = NMPACHANNELS;
+                    if(cType == FrontEndType::CBC3)
+                        NCH = NCHANNELS;
+                    else if(cType == FrontEndType::SSA)
+                        NCH = NSSACHANNELS;
+                    else if(cType == FrontEndType::MPA)
+                        NCH = NMPACHANNELS;
                     //
                     for(uint32_t iChan = 0; iChan < NCH; iChan++)
                     {
@@ -523,8 +526,8 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
     float    cMaxOccupancy  = 1.0;
     float    cLimit         = cChannels / (100.);
     int      cMinBreakCount = 10;
-    uint16_t cStripValue         = pStripStartValue;
-    uint16_t cPixelValue         = pPixelStartValue;
+    uint16_t cStripValue    = pStripStartValue;
+    uint16_t cPixelValue    = pPixelStartValue;
     uint16_t cMaxValue      = (1 << 10) - 1;
     if(fWithSSA || fWithMPA) cMaxValue = (1 << 8) - 1;
     float              cFirstLimit = (fWithCBC) ? 0 : 1;
@@ -541,50 +544,52 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
         {
             DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
             fDetectorDataContainer                       = theOccupancyContainer;
-            fSCurvePixelOccupancyMap[cPixelValue] = theOccupancyContainer;
-            fSCurveStripOccupancyMap[cStripValue] = theOccupancyContainer;
+            fSCurvePixelOccupancyMap[cPixelValue]        = theOccupancyContainer;
+            fSCurveStripOccupancyMap[cStripValue]        = theOccupancyContainer;
 
-            for(auto cBoard : *fDetectorContainer)
+            for(auto cBoard: *fDetectorContainer)
             {
-                for(auto cOpticalGroup : *cBoard)
+                for(auto cOpticalGroup: *cBoard)
                 {
-                    for(auto cHybrid : *cOpticalGroup)
+                    for(auto cHybrid: *cOpticalGroup)
                     {
-                        for(auto cChip : *cHybrid)
+                        for(auto cChip: *cHybrid)
                         {
                             auto cType = cChip->getFrontEndType();
-                            if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA) fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cStripValue);
-                            else if(cType == FrontEndType::MPA) fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cPixelValue);
+                            if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA)
+                                fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cStripValue);
+                            else if(cType == FrontEndType::MPA)
+                                fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cPixelValue);
                         }
                     }
                 }
             }
             this->measureData(fEventsPerPoint, fNEventsPerBurst);
 
-            //Retrieve occupancy for strip and pixel chips
+            // Retrieve occupancy for strip and pixel chips
             theOccupancyContainer->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), fEventsPerPoint);
-            float cStripGlobalOccupancy = 0, cPixelGlobalOccupancy = 0;
+            float   cStripGlobalOccupancy = 0, cPixelGlobalOccupancy = 0;
             uint8_t cNStripChips = 0, cNPixelChips = 0;
-            for(auto cBoard : *fDetectorContainer)
+            for(auto cBoard: *fDetectorContainer)
             {
                 auto cBoardIdx = cBoard->getIndex();
-                for(auto cOpticalGroup : *cBoard)
+                for(auto cOpticalGroup: *cBoard)
                 {
                     auto cOpticalGroupIdx = cOpticalGroup->getIndex();
-                    for(auto cHybrid : *cOpticalGroup)
+                    for(auto cHybrid: *cOpticalGroup)
                     {
                         auto cHybridIdx = cHybrid->getIndex();
-                        for(auto cChip : *cHybrid)
+                        for(auto cChip: *cHybrid)
                         {
-                            auto cChipIdx = cChip->getIndex();
-                            auto cType = cChip->getFrontEndType();
+                            auto cChipIdx       = cChip->getIndex();
+                            auto cType          = cChip->getFrontEndType();
                             auto cChipOccupancy = theOccupancyContainer->at(cBoardIdx)->at(cOpticalGroupIdx)->at(cHybridIdx)->at(cChipIdx)->getSummary<Occupancy, Occupancy>().fOccupancy;
                             if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA)
                             {
                                 cNStripChips++;
                                 cStripGlobalOccupancy += cChipOccupancy;
                             }
-                            else if(cType == FrontEndType::MPA) 
+                            else if(cType == FrontEndType::MPA)
                             {
                                 cNPixelChips++;
                                 cPixelGlobalOccupancy += cChipOccupancy;
@@ -615,15 +620,15 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
 
             if(fWithCBC || fWithSSA)
             {
-                LOG(INFO) << BOLDMAGENTA << "Strip Threshold =  " << +cStripValue << " -- Occupancy = " << std::setprecision(2) << std::fixed << +cStripGlobalOccupancy << " -- Distance from target = "
-                      << cStripDistanceFromTarget * 100 << "\t..Incrementing limit found counter "
-                      << " -- current value is " << +cStripLimitCounter << RESET;
+                LOG(INFO) << BOLDMAGENTA << "Strip Threshold =  " << +cStripValue << " -- Occupancy = " << std::setprecision(2) << std::fixed << +cStripGlobalOccupancy
+                          << " -- Distance from target = " << cStripDistanceFromTarget * 100 << "\t..Incrementing limit found counter "
+                          << " -- current value is " << +cStripLimitCounter << RESET;
             }
             if(fWithMPA)
             {
-                LOG(INFO) << BOLDMAGENTA << "Pixel Threshold =  " << +cPixelValue << " -- Occupancy = " << std::setprecision(2) << std::fixed << +cPixelGlobalOccupancy << " -- Distance from target = "
-                      << cPixelDistanceFromTarget * 100 << "\t..Incrementing limit found counter "
-                      << " -- current value is " << +cPixelLimitCounter << RESET;
+                LOG(INFO) << BOLDMAGENTA << "Pixel Threshold =  " << +cPixelValue << " -- Occupancy = " << std::setprecision(2) << std::fixed << +cPixelGlobalOccupancy
+                          << " -- Distance from target = " << cPixelDistanceFromTarget * 100 << "\t..Incrementing limit found counter "
+                          << " -- current value is " << +cPixelLimitCounter << RESET;
             }
 
             if(cStripDistanceFromTarget <= cLimit || cStripFirstLim) // || globalOccupancy>1.0)
@@ -641,21 +646,21 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
             if(!cPixelLimitFound) cPixelValue += cSign;
             if(!fUseFixRange)
             {
-                if(!fWithMPA && (fWithSSA || fWithCBC)) 
+                if(!fWithMPA && (fWithSSA || fWithCBC))
                 {
                     cStripLimitFound = (cStripValue == 0 || cStripValue >= cMaxValue) || (cStripLimitCounter >= cMinBreakCount);
-                    cLimitFound = cStripLimitFound;
+                    cLimitFound      = cStripLimitFound;
                 }
-                else if(fWithMPA && !fWithSSA) 
+                else if(fWithMPA && !fWithSSA)
                 {
                     cPixelLimitFound = (cPixelValue == 0 || cPixelValue >= cMaxValue) || (cPixelLimitCounter >= cMinBreakCount);
-                    cLimitFound = cPixelLimitFound;
+                    cLimitFound      = cPixelLimitFound;
                 }
-                else if (fWithSSA && fWithMPA)
+                else if(fWithSSA && fWithMPA)
                 {
                     cStripLimitFound = (cStripValue == 0 || cStripValue >= cMaxValue) || (cStripLimitCounter >= cMinBreakCount);
                     cPixelLimitFound = (cPixelValue == 0 || cPixelValue >= cMaxValue) || (cPixelLimitCounter >= cMinBreakCount);
-                    cLimitFound = cStripLimitFound && cPixelLimitFound;
+                    cLimitFound      = cStripLimitFound && cPixelLimitFound;
                 }
                 if(cLimitFound) { LOG(INFO) << BOLDYELLOW << "Switching sign during auto scan .." << RESET; }
             }
@@ -664,9 +669,12 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
                 cStripLimitFound = (cSign < 0) ? (cStripValue == cLowerLimitTh) : (cStripValue == cUpperLimitTh);
                 cPixelLimitFound = (cSign < 0) ? (cPixelValue == cLowerLimitTh) : (cPixelValue == cUpperLimitTh);
 
-                if(!fWithMPA && (fWithSSA || fWithCBC)) cLimitFound = cStripLimitFound;
-                else if(fWithMPA && !fWithSSA) cLimitFound = cPixelLimitFound;
-                else if (fWithSSA && fWithMPA) cLimitFound = cStripLimitFound && cPixelLimitFound;
+                if(!fWithMPA && (fWithSSA || fWithCBC))
+                    cLimitFound = cStripLimitFound;
+                else if(fWithMPA && !fWithSSA)
+                    cLimitFound = cPixelLimitFound;
+                else if(fWithSSA && fWithMPA)
+                    cLimitFound = cStripLimitFound && cPixelLimitFound;
 
                 if(cLimitFound) { LOG(INFO) << BOLDYELLOW << "Switching sign because threshold limit was reached .." << RESET; }
             }
@@ -682,10 +690,12 @@ void PedeNoise::extractPedeNoise()
 {
     fThresholdAndNoiseContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *fThresholdAndNoiseContainer);
-    uint16_t                                                     counter          = 0;
+    uint16_t                                                     counter               = 0;
     std::map<uint16_t, DetectorDataContainer*>::reverse_iterator previousStripIterator = fSCurveStripOccupancyMap.rend();
     std::map<uint16_t, DetectorDataContainer*>::reverse_iterator previousPixelIterator = fSCurvePixelOccupancyMap.rend();
-    for(std::map<uint16_t, DetectorDataContainer*>::reverse_iterator mStripIt = fSCurveStripOccupancyMap.rbegin(), mPixelIt = fSCurvePixelOccupancyMap.rbegin(); mStripIt != fSCurveStripOccupancyMap.rend(), mPixelIt != fSCurvePixelOccupancyMap.rend() ; ++mStripIt, ++mPixelIt)
+    for(std::map<uint16_t, DetectorDataContainer*>::reverse_iterator mStripIt = fSCurveStripOccupancyMap.rbegin(), mPixelIt = fSCurvePixelOccupancyMap.rbegin();
+        mStripIt != fSCurveStripOccupancyMap.rend(), mPixelIt != fSCurvePixelOccupancyMap.rend();
+        ++mStripIt, ++mPixelIt)
     {
         if(fWithCBC || (!fWithMPA && fWithSSA))
         {
@@ -715,7 +725,6 @@ void PedeNoise::extractPedeNoise()
             }
             if(fSCurvePixelOccupancyMap.size() - 1 == counter) break;
         }
-        
 
         for(auto board: *fDetectorContainer)
         {
@@ -725,7 +734,6 @@ void PedeNoise::extractPedeNoise()
                 {
                     for(auto chip: *hybrid)
                     {
-
                         for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
                         {
                             if(!getChannelGroupHandlerContainer()
@@ -739,16 +747,16 @@ void PedeNoise::extractPedeNoise()
                                 continue;
 
                             float currentOccupancy = 0, previousOccupancy = 0, binCenter = 0;
-                            auto cType = chip->getFrontEndType();
+                            auto  cType = chip->getFrontEndType();
                             if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA)
                             {
                                 previousOccupancy = (previousStripIterator)
-                                                          ->second->at(board->getIndex())
-                                                          ->at(opticalGroup->getIndex())
-                                                          ->at(hybrid->getIndex())
-                                                          ->at(chip->getIndex())
-                                                          ->getChannel<Occupancy>(iChannel)
-                                                          .fOccupancy;
+                                                        ->second->at(board->getIndex())
+                                                        ->at(opticalGroup->getIndex())
+                                                        ->at(hybrid->getIndex())
+                                                        ->at(chip->getIndex())
+                                                        ->getChannel<Occupancy>(iChannel)
+                                                        .fOccupancy;
                                 currentOccupancy =
                                     mStripIt->second->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
                                 binCenter = (mStripIt->first + (previousStripIterator)->first) / 2.;
@@ -756,12 +764,12 @@ void PedeNoise::extractPedeNoise()
                             else if(cType == FrontEndType::MPA)
                             {
                                 previousOccupancy = (previousPixelIterator)
-                                                          ->second->at(board->getIndex())
-                                                          ->at(opticalGroup->getIndex())
-                                                          ->at(hybrid->getIndex())
-                                                          ->at(chip->getIndex())
-                                                          ->getChannel<Occupancy>(iChannel)
-                                                          .fOccupancy;
+                                                        ->second->at(board->getIndex())
+                                                        ->at(opticalGroup->getIndex())
+                                                        ->at(hybrid->getIndex())
+                                                        ->at(chip->getIndex())
+                                                        ->getChannel<Occupancy>(iChannel)
+                                                        .fOccupancy;
                                 currentOccupancy =
                                     mPixelIt->second->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
                                 binCenter = (mPixelIt->first + (previousPixelIterator)->first) / 2.;

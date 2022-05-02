@@ -284,9 +284,7 @@ void D19cPSCounterFWInterface::GetCounterData(const BeBoard* pBoard)
     auto cFrontEndTypes = pBoard->connectedFrontEndTypes();
     LOG(DEBUG) << BOLDYELLOW << cFrontEndTypes.size() << " different types of Chips connected to BeBoard#" << +pBoard->getId() << RESET;
     if(fPSCounterFast == 0) // readout over registers
-    {
-	SlowRead(pBoard); 
-    }
+    { SlowRead(pBoard); }
     else // readout over fast interface
     {
     }

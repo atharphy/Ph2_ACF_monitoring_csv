@@ -73,8 +73,7 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     void fillSCurvePlots(DetectorDataContainer& fThresholds, DetectorDataContainer& fSCurveOccupancy);
 
   private:
-
-    DetectorContainer     *fDetectorContainer;
+    DetectorContainer*    fDetectorContainer;
     void                  fitSCurves();
     uint32_t              NCH = 0;
     DetectorDataContainer fThresholdAndNoiseContainer;
