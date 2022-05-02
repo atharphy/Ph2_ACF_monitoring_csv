@@ -1452,7 +1452,7 @@ class MeasureBeBoardDataPerGroup : public ScanBase
             }
             else
             {
-                LOG(INFO) << BOLDYELLOW << "MeasureBeBoardDataPerGroup !fSameChannelGroupForAllChannels read-back " << events.size() << RESET;
+                LOG(DEBUG) << BOLDYELLOW << "MeasureBeBoardDataPerGroup !fSameChannelGroupForAllChannels read-back " << events.size() << RESET;
                 for(auto cOpticalGroup: *fDetectorDataContainer->at(fBoardIndex))
                 {
                     for(const auto cHybrid: *cOpticalGroup)

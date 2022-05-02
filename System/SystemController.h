@@ -54,6 +54,7 @@
 #include <string.h>
 #include <unordered_map>
 #include <vector>
+#include <utility>
 
 // librariries for communicating with Hybrid Test Cards
 #ifdef __TCUSB__

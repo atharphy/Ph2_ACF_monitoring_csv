@@ -17,7 +17,6 @@
 #include "tools/OTTemperature.h"
 #include "tools/PSAlignment.h"
 #include "tools/PedeNoise.h"
-#include "tools/PedeNoiseTime.h"
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
@@ -1024,7 +1023,6 @@ int main(int argc, char* argv[])
         PedeNoise cPedeNoise;
         cPedeNoise.Inherit(&cTool);
         cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
-        // cPedeNoise.scanScurves();
         cPedeNoise.measureNoise();
         cPedeNoise.Validate();
         cPedeNoise.writeObjects();
