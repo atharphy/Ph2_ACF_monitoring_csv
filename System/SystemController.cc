@@ -339,6 +339,16 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     }
 
     // ###################
+    // # make sure  all interfaces are configured
+    // ###################
+    for(const auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->getBoardType() == BoardType::RD53) continue;
+        fBeBoardInterface->setBoard(cBoard->getId());
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureInterfaces(cBoard);
+    }
+    
+    // ###################
     // # Set module type #
     // ###################
     for(const auto cBoard: *fDetectorContainer)
