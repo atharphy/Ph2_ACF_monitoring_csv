@@ -6,6 +6,7 @@
 #include "DetectorMonitor.h"
 #ifdef __USE_ROOT__
 #include "MonitorDQM/MonitorDQMPlotCBC.h"
+#include "MonitorDQM/MonitorDQMPlotSEH.h"
 #endif
 class SEHMonitor : public DetectorMonitor
 {
@@ -24,7 +25,8 @@ class SEHMonitor : public DetectorMonitor
     void runTestCardMonitor(std::string registerName);
 // bool doMonitorInputCurrent{false};
 #ifdef __USE_ROOT__
-    MonitorDQMPlotCBC* fMonitorDQMPlotSEH;
+    MonitorDQMPlotSEH* fMonitorDQMPlotSEH;
+    MonitorDQMPlotCBC* fMonitorDQMPlotCBC;
 #endif
 
     std::string getVariableValue(std::string variable, std::string buffer);
