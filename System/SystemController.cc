@@ -347,7 +347,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         fBeBoardInterface->setBoard(cBoard->getId());
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureInterfaces(cBoard);
     }
-    
+
     // ###################
     // # Set module type #
     // ###################

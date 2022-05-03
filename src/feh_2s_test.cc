@@ -13,7 +13,6 @@
 #include "tools/MemoryCheck2S.h"
 #include "tools/OpenFinder.h"
 #include "tools/PedeNoise.h"
-#include "tools/PedeNoiseTime.h"
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
 #include "tools/ShortFinder.h"
@@ -636,25 +635,6 @@ int main(int argc, char* argv[])
         // auto myFunction = [](const ChipContainer *theChip){return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA);};
         // cTool.fDetectorContainer->setReadoutChipQueryFunction(myFunction);
         cPedeNoise.Initialise(true, true); // canvases etc. for fast calibration
-        cPedeNoise.measureNoise();
-        cPedeNoise.writeObjects();
-        cPedeNoise.dumpConfigFiles();
-        // cTool.fDetectorContainer->resetReadoutChipQueryFunction();
-        t.stop();
-        t.show("Time to Scan Pedestals and Noise");
-    }
-    if(cmd.foundOption("scanNoiseTime"))
-    {
-        t.start();
-        // if this is true, I need to create an object of type PedeNoise from the members of Calibration
-        // tool provides an Inherit(Tool* pTool) for this purpose
-        PedeNoiseTime cPedeNoise;
-        cPedeNoise.Inherit(&cTool);
-        // second parameter disables stub logic on CBC3
-        // auto myFunction = [](const ChipContainer *theChip){return (theChip->getId()==0);};
-        // auto myFunction = [](const ChipContainer *theChip){return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA);};
-        // cTool.fDetectorContainer->setReadoutChipQueryFunction(myFunction);
-        cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
         cPedeNoise.measureNoise();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();

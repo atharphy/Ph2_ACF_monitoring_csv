@@ -64,7 +64,7 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
     void     GetCounterData(const Ph2_HwDescription::BeBoard* pBoard);
 
     // function read-back counters
-    void SlowRead(const Ph2_HwDescription::BeBoard* pBoard, FrontEndType pType);
+    void SlowRead(const Ph2_HwDescription::BeBoard* pBoard);
     void ReadPSSCCountersFast(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, uint8_t pRawMode = 0);
     bool ReadPSCountersFast(uint8_t pRawMode, size_t pChipId, size_t pHybridId);
 
