@@ -30,9 +30,12 @@ SEHMonitor::SEHMonitor(const Ph2_System::SystemController* theSystemController, 
     }
 
 #ifdef __USE_ROOT__
-    fMonitorPlotDQM    = new MonitorDQMPlotCBC();
-    fMonitorDQMPlotSEH = static_cast<MonitorDQMPlotCBC*>(fMonitorPlotDQM);
+    fMonitorPlotDQMSEH = new MonitorDQMPlotSEH();
+    fMonitorDQMPlotSEH = static_cast<MonitorDQMPlotSEH*>(fMonitorPlotDQMSEH);
     fMonitorDQMPlotSEH->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
+    fMonitorPlotDQM    = new MonitorDQMPlotCBC();
+    fMonitorDQMPlotCBC = static_cast<MonitorDQMPlotCBC*>(fMonitorPlotDQM);
+    fMonitorDQMPlotCBC->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
 #endif
 }
 // Maybe not ideal here (but needed to avoid memory leak)?? Could be moved to ~DetectorMonitor() if fPowerSupplyClient is also used for other devices?
@@ -73,7 +76,7 @@ void SEHMonitor::runLpGBTRegisterMonitor(std::string registerName)
     }
 
 #ifdef __USE_ROOT__
-    fMonitorDQMPlotSEH->fillLpGBTRegisterPlots(theLpGBTRegisterContainer, registerName);
+    fMonitorDQMPlotCBC->fillLpGBTRegisterPlots(theLpGBTRegisterContainer, registerName);
 #else
     auto theLpGBTRegisterStreamer = prepareBoardContainerStreamer<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, uint16_t>, EmptyContainer, CharArray>("LpGBTRegister");
     theLpGBTRegisterStreamer->setHeaderElement(CharArray(registerName));

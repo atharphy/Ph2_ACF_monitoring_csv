@@ -39,6 +39,7 @@ DetectorMonitor::~DetectorMonitor()
     // delete fOutputFile;
     // fOutputFile = nullptr;
     delete fMonitorPlotDQM;
+    delete fMonitorPlotDQMSEH;
 #endif
 }
 

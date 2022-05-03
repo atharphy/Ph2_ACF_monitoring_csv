@@ -1,13 +1,13 @@
 /*!
-        \file                MonitorDQMPlotCBC.h
-        \brief               DQM class for DQM example -> use it as a templare
+        \file                MonitorDQMPlotSEH.h
+        \brief               DQM class for DQM example -> use it as a template
         \author              Fabio Ravera
         \date                25/7/19
         Support :            mail to : fabio.ravera@cern.ch
 */
 
-#ifndef __MonitorDQMPlotCBC_H__
-#define __MonitorDQMPlotCBC_H__
+#ifndef __MonitorDQMPlotSEH_H__
+#define __MonitorDQMPlotSEH_H__
 #include "../MonitorDQM/MonitorDQMPlotBase.h"
 #include "../Utils/Container.h"
 #include "../Utils/DataContainer.h"
@@ -15,21 +15,21 @@
 class TFile;
 
 /*!
- * \class MonitorDQMPlotCBC
+ * \class MonitorDQMPlotSEH
  * \brief Class for DQMExample monitoring Plots
  */
-class MonitorDQMPlotCBC : public MonitorDQMPlotBase
+class MonitorDQMPlotSEH : public MonitorDQMPlotBase
 {
   public:
     /*!
      * constructor
      */
-    MonitorDQMPlotCBC();
+    MonitorDQMPlotSEH();
 
     /*!
      * destructor
      */
-    ~MonitorDQMPlotCBC();
+    ~MonitorDQMPlotSEH();
 
     /*!
      * \brief Book Plots
@@ -61,15 +61,17 @@ class MonitorDQMPlotCBC : public MonitorDQMPlotBase
      * \param theCBCRegisterContainer : Container with the hits you want to plot
      * \param timeStamp : timeStamp
      */
-    void fillCBCRegisterPlots(DetectorDataContainer& theCBCRegisterContainer, const std::string& registerName);
-    void fillLpGBTRegisterPlots(DetectorDataContainer& theCBCRegisterContainer, const std::string& registerName);
+    // void fillLpGBTRegisterPlots(DetectorDataContainer& theCBCRegisterContainer, const std::string& registerName);
+    void fillPowerSupplyPlots(DetectorDataContainer& theCBCRegisterContainer, const std::string& registerName);
+    void fillTestCardPlots(DetectorDataContainer& theCBCRegisterContainer, const std::string& registerName);
 
   private:
-    std::map<std::string, DetectorDataContainer> fCBCRegisterMonitorPlotMap;
     std::map<std::string, DetectorDataContainer> fLpGBTRegisterMonitorPlotMap;
+    std::map<std::string, DetectorDataContainer> fPowerSupplyMonitorPlotMap;
+    std::map<std::string, DetectorDataContainer> fTestCardMonitorPlotMap;
     DetectorDataContainer                        fDetectorData;
-
-    void bookCBCPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
-    void bookLpGBTPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
+    // void bookLpGBTPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
+    void bookPowerSupplyPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
+    void bookTestCardPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
 };
 #endif
