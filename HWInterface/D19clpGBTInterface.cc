@@ -128,6 +128,7 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     }
     // Rx configuration and Phase Align
     // Configure Rx Groups
+    // WriteChipReg(pChip, "EPRXDllConfig", , false);
     std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5, 6}, cRxChannels = {0, 2};
     uint8_t              cRxDataRate = 2, cRxTrackMode = 0; // manual mode by default
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
@@ -161,9 +162,37 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
         this->cicReset(pChip, true, cSide);
     }
 #if defined(__TCUSB__)
-    ContinuousPhaseAlignRx(pChip, cRxGroups, cRxChannels);
-    // InternalPhaseAlignRx(pChip, cRxGroups, cRxChannels);
-    // DpPhaseAlignRx(pChip, cRxGroups, cRxChannels);
+    // // ContinuousPhaseAlignRx(pChip, cRxGroups, cRxChannels);
+    std::vector<uint8_t> cOptimalTaps = {};
+    std::vector<uint8_t> cEportGroups = {4, 4, 5, 5, 6, 0};
+    std::vector<uint8_t> cEportChnls  = {0, 2, 0, 2, 0, 0};
+
+    AutoPhaseAlignRx(pChip, cEportGroups, cEportChnls);
+    // find mode
+    for(size_t cIndx = 0; cIndx < cEportGroups.size(); cIndx++) { cOptimalTaps.push_back(GetPhaseTap(pChip, cEportGroups[cIndx], cEportChnls[cIndx])); }
+    std::vector<uint8_t> cTapsHist(15, 0);
+    for(auto cItem: cOptimalTaps) cTapsHist[cItem]++;
+    // return cTapsHist;
+    auto cTapMode = std::max_element(cTapsHist.begin(), cTapsHist.end()) - cTapsHist.begin();
+    LOG(INFO) << BOLDGREEN << "Applying Phase " << cTapMode << RESET;
+    if(cTapMode != 15)
+        for(size_t cIndx = 0; cIndx < cEportGroups.size(); cIndx++) { ConfigureRxPhase(pChip, cEportGroups[cIndx], cEportChnls[cIndx], cTapMode); }
+
+    cEportGroups = {0, 1, 1, 2, 2, 3};
+    cEportChnls  = {2, 0, 2, 0, 2, 2};
+    cOptimalTaps = {};
+
+    AutoPhaseAlignRx(pChip, cEportGroups, cEportChnls);
+    // find mode
+    for(size_t cIndx = 0; cIndx < cEportGroups.size(); cIndx++) { cOptimalTaps.push_back(GetPhaseTap(pChip, cEportGroups[cIndx], cEportChnls[cIndx])); }
+    std::vector<uint8_t> cTapsHistHybrid2(15, 0);
+    for(auto cItem: cOptimalTaps) cTapsHistHybrid2[cItem]++;
+    // return cTapsHist;
+    cTapMode = std::max_element(cTapsHistHybrid2.begin(), cTapsHistHybrid2.end()) - cTapsHistHybrid2.begin();
+    LOG(INFO) << BOLDGREEN << "Applying Phase " << cTapMode << RESET;
+    if(cTapMode != 15)
+        for(size_t cIndx = 0; cIndx < cEportGroups.size(); cIndx++) { ConfigureRxPhase(pChip, cEportGroups[cIndx], cEportChnls[cIndx], cTapMode); }
+
     ConfigureCurrentDAC(pChip, std::vector<std::string>{"ADC4"}, 0x1c); // current chosen according to measurement range
 #endif
 

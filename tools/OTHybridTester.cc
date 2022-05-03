@@ -109,6 +109,12 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
     LOG(INFO) << BOLDBLUE << "Checking against : " << std::bitset<8>(pPattern) << RESET;
 
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+    // for(auto cBoard: *fDetectorContainer)
+    // {
+    //     if(cBoard->at(0)->flpGBT == nullptr) continue;
+
+    //     for(auto cOpticalGroup: *cBoard) { clpGBTInterface->PhaseAlignRx(cOpticalGroup->flpGBT,cOpticalGroup); }
+    // }
     // #ifdef __USE_ROOT__
     //     auto cCICOutTree = new TTree("tCicOut", "CIC_Out lines going to the SEH");
 
@@ -118,7 +124,21 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
     //     cCICOutTree->Branch("LineName", &cLineNames);
     //     cCICOutTree->Branch("MissMatch", &cMissMatch);
     // #endif
+    // for(int iter = 0; iter < 16; iter++)
+    // {
+    // LOG(INFO) << BOLDRED << "iter " << +iter << RESET;
 
+    // for(auto cBoard: *fDetectorContainer)
+    // {
+    //     if(cBoard->at(0)->flpGBT == nullptr) continue;
+
+    //     for(auto cOpticalGroup: *cBoard) {
+    //         for(int group=0; group<7;group++){
+    //             clpGBTInterface->ConfigureRxPhase(cOpticalGroup->flpGBT, group, 0,iter);
+    //             clpGBTInterface->ConfigureRxPhase(cOpticalGroup->flpGBT, group, 2,iter);
+    //         }
+    //     }
+    // }
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
@@ -133,29 +153,46 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 0);
                     std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 }
-                /* int cADCValue = 0; // clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "ADC6");
-                LOG(INFO) << BOLDBLUE << "PTAT_BPOL2V5 " << cADCValue * 1. / 1023. << " V" << RESET;
-                cPtatVec.push_back(cADCValue / 1000.);
-                auto cLpgbtTemp = 0; // clpGBTInterface->GetInternalTemperature(cOpticalGroup->flpGBT);
-                cTempVec.push_back(cLpgbtTemp / 1000.);
-                LOG(INFO) << BOLDBLUE << "Internal temperature sensor of lpGBT reads " << cLpgbtTemp << " which converts to " << cLpgbtTemp * (1. / 1023) << RESET; */
-                fBeBoardInterface->setBoard(cBoard->getId());
                 D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-                cFWInterface->selectLink(cOpticalGroup->getId());
-                cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
-                LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
-                // D19cDebugFWInterface* cDebugInterface = cFWInterface->getDebugInterface(); // cDebugInterface->StubDebug(true, 5);
-                // cDebugInterface->StubDebug(true, 5);
-                // enable stub debug - allows you to 'scope' the stub output
-
-                cFWInterface->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable", 0x01);
-                cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
-                cFWInterface->ChipTestPulse();
-                auto                     cWords = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
-                std::vector<std::string> cLines(0);
-                size_t                   cLine = 0;
+                size_t           cLine        = 0;
                 do
                 {
+                    //     for(int iter = 0; iter < 16; iter++)
+                    //     {
+                    /* int cADCValue = 0; // clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "ADC6");
+                    LOG(INFO) << BOLDBLUE << "PTAT_BPOL2V5 " << cADCValue * 1. / 1023. << " V" << RESET;
+                    cPtatVec.push_back(cADCValue / 1000.);
+                    auto cLpgbtTemp = 0; // clpGBTInterface->GetInternalTemperature(cOpticalGroup->flpGBT);
+                    cTempVec.push_back(cLpgbtTemp / 1000.);
+                    LOG(INFO) << BOLDBLUE << "Internal temperature sensor of lpGBT reads " << cLpgbtTemp << " which converts to " << cLpgbtTemp * (1. / 1023) << RESET; */
+                    fBeBoardInterface->setBoard(cBoard->getId());
+                    cFWInterface->selectLink(cOpticalGroup->getId());
+                    cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
+                    LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
+                    // D19cDebugFWInterface* cDebugInterface = cFWInterface->getDebugInterface(); // cDebugInterface->StubDebug(true, 5);
+                    // cDebugInterface->StubDebug(true, 5);
+                    // enable stub debug - allows you to 'scope' the stub output
+
+                    cFWInterface->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable", 0x01);
+                    cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
+                    cFWInterface->ChipTestPulse();
+                    auto                     cWords = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
+                    std::vector<std::string> cLines(0);
+
+                    // LOG(INFO) << BOLDRED << "iter " << +iter << RESET;
+                    // for(auto cBoard: *fDetectorContainer)
+                    // {
+                    //     if(cBoard->at(0)->flpGBT == nullptr) continue;
+
+                    //     for(auto cOpticalGroup: *cBoard)
+                    //     {
+                    //         for(int group = 0; group < 7; group++)
+                    //         {
+                    //             clpGBTInterface->ConfigureRxPhase(cOpticalGroup->flpGBT, group, 0, iter);
+                    //             clpGBTInterface->ConfigureRxPhase(cOpticalGroup->flpGBT, group, 2, iter);
+                    //         }
+                    //     }
+                    // }
                     uint32_t cCicOutOutput = cWords[cLine * 10];
                     LOG(INFO) << BOLDBLUE << "Scoped output on Stub Line " << BOLDGREEN << +cLine << BOLDBLUE << ": " << std::bitset<32>(cCicOutOutput) << " for hybrid side " << +hybridNumber
                               << RESET;
@@ -210,6 +247,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     LOG(INFO) << BOLDBLUE << "Line " << +cLine << " : " << cOutput_wSpace << RESET;
                     cLines.push_back(cOutput); */
                     // cStrLength = cOutput.length();
+                    //}
                     cLine++;
 #ifdef __SEH_USB__
                 } while(cLine < 5); // making sure missing stub line pair is skipped in 2S case
@@ -306,7 +344,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
             }
         }
     }
-
+    //}
     /*
     LOG(INFO) << BOLDMAGENTA << "Ran for " << cDuration2 << " us so far" << RESET;
     } while(cDuration2 < 1 * 1.5e8);

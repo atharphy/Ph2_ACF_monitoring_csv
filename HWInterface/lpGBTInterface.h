@@ -204,7 +204,8 @@ class lpGBTInterface : public ChipInterface
                                 uint8_t                     pPreEmphStr,
                                 uint8_t                     pPreEmphWidth,
                                 uint8_t                     pInvert);
-
+    void    SetPhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
+    uint8_t GetPhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel); // To-Do: change to a map
   protected:
     bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerify = true) override;
 
@@ -350,6 +351,22 @@ class lpGBTInterface : public ChipInterface
     std::map<uint8_t, std::string> fEOMStatusMap = {{0, "smIdle"}, {1, "smResetCounters"}, {2, "smCount"}, {3, "smEndOfCount"}};
 
     std::map<uint8_t, std::string> fI2CStatusMap = {{4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
+    std::map<std::string, uint8_t> fPhaseTapMap  = {
+        {"Group0Channel0", 0},
+        {"Group0Channel2", 0},
+        {"Group1Channel0", 0},
+        {"Group1Channel2", 0},
+        {"Group2Channel0", 0},
+        {"Group2Channel2", 0},
+        {"Group3Channel0", 0},
+        {"Group3Channel2", 0},
+        {"Group4Channel0", 0},
+        {"Group4Channel2", 0},
+        {"Group5Channel0", 0},
+        {"Group5Channel2", 0},
+        {"Group6Channel0", 0},
+        {"Group6Channel2", 0},
+    };
 };
 
 } // namespace Ph2_HwInterface
