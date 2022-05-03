@@ -484,8 +484,6 @@ void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
 }
 void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
 {
-    ConfigureInterfaces(pBoard);
-
     // unique link Ids
     std::vector<uint8_t> cLinkIds(0);
     for(auto cOpticalReadout: *pBoard)
