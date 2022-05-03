@@ -4,12 +4,12 @@
 #include "../NetworkUtils/TCPServer.h"
 #include "../System/SystemController.h"
 #include "../tools/Tool.h"
+#include "../miniDAQ/MiddlewareStateMachine.h"
 
 #include <string>
 
 #define PORT_BASE 5000     // The server listening port base
 #define DQM_PORT_BASE 6000 // The DQM server listening port base
-
 class MiddlewareController : public TCPServer
 {
   public:
@@ -36,6 +36,7 @@ class MiddlewareController : public TCPServer
   private:
     Tool*    theSystemController_;
     uint16_t theDQMPortnumber_;
+    MiddlewareStateMachine fMiddlewareStateMachine;
 };
 
 #endif

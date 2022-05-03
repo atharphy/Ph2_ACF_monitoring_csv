@@ -27,7 +27,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS " ")
 
-    cmake_minimum_required(VERSION 2.8)
+    cmake_minimum_required(VERSION 3.0)
     project(Ph2_ACF)
 
 # Set the output directory
@@ -214,10 +214,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         add_subdirectory(System)
     endif()
 
-    if(CompileForHerd)
-        add_subdirectory(miniDAQ)
-    endif()
-
     if(CompileForShep OR NoDataShipping)
         add_subdirectory(DQMUtils)
         add_subdirectory(RootUtils)
@@ -235,6 +231,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     add_subdirectory(Utils)
     add_subdirectory(NetworkUtils)
     add_subdirectory(MonitorUtils)
+    add_subdirectory(MessageUtils)
+    add_subdirectory(miniDAQ)
 
     message("--     ${BoldRed}#### Don't forget to set the path and ld_library_path by sourcing setup.sh before running ###${Reset}")
 

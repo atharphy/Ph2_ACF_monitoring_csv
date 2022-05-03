@@ -239,7 +239,7 @@ The following procedure will install (in order):
 
 ```bash
 # Libraries needed by Ph2_ACF
-sudo yum install -y boost-devel pugixml-devel
+sudo yum install -y boost-devel pugixml-devel json-devel
 
 # uHAL libraries (cactus)
 sudo curl https://ipbus.web.cern.ch/doc/user/html/_downloads/ipbus-sw.centos8.x86_64.repo \
@@ -279,8 +279,7 @@ sudo yum install -y git-extras
 
 2. On CC7 you also need to install boost v1.53 headers (default on this system) and pugixml as they don't ship with uHAL any more:
 
-        $> sudo yum install boost-devel
-        $> sudo yum install pugixml-devel
+        $> sudo yum install boost-devel pugixml-devel json-devel
 
 2. Install uHAL. SW tested with uHAL version up to 2.7.1
 

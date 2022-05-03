@@ -45,7 +45,10 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
     LOG(INFO) << __PRETTY_FUNCTION__ << " Message received from OTSDAQ: " << buffer << RESET;
 
     if(buffer == "Initialize") // Changing the status changes the mode in threadMain (BBC) function
-    { return "InitializeDone"; }
+    { 
+        Message theMessage = fMiddlewareStateMachine.initialize();
+        return "InitializeDone";
+    }
     else if(buffer.substr(0, 5) == "Start") // Changing the status changes the mode in threadMain (BBC) function
     {
         currentRun_ = getVariableValue("RunNumber", buffer);
