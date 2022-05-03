@@ -147,7 +147,7 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
 bool DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 {
     HybridContainerStream<Occupancy, Occupancy, Occupancy> theOccupancy("PedeNoise");
-    ChannelContainerStream<Occupancy, uint16_t>            theSCurve("PedeNoiseSCurve");
+    ChannelContainerStream<Occupancy, uint16_t, uint16_t>  theSCurve("PedeNoiseSCurve");
     ChannelContainerStream<ThresholdAndNoise>              theThresholdAndNoiseStream("PedeNoise");
 
     if(theOccupancy.attachBuffer(&dataBuffer))
@@ -163,8 +163,7 @@ bool DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
     {
         std::cout << "Matched PedeNoise SCurve!!!!!\n";
         theSCurve.decodeChipData(fDetectorData);
-        //#FIXME need to adapt the function for both strips and pixels
-        fillSCurvePlots(theSCurve.getHeaderElement(), theSCurve.getHeaderElement(), fDetectorData);
+        fillSCurvePlots(theSCurve.getHeaderElement<0>(), theSCurve.getHeaderElement<1>(), fDetectorData);
 
         fDetectorData.cleanDataStored();
         return true;

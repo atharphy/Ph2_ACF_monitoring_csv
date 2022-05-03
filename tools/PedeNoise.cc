@@ -605,9 +605,9 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
 #else
             if(fPlotSCurves)
             {
-                auto theSCurveStreamer = prepareChannelContainerStreamer<Occupancy, uint16_t>("SCurve");
-                //#FIXME need to adapt the function for both strips and pixels
-                theSCurveStreamer->setHeaderElement(cStripValue);
+                auto theSCurveStreamer = prepareChannelContainerStreamer<Occupancy, uint16_t, uint16_t>("SCurve");
+                theSCurveStreamer->setHeaderElement<0>(cStripValue);
+                theSCurveStreamer->setHeaderElement<1>(cPixelValue);
                 for(auto board: *theOccupancyContainer)
                 {
                     if(fDQMStreamerEnabled) theSCurveStreamer->streamAndSendBoard(board, fDQMStreamer);

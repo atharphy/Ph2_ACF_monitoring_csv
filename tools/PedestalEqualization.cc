@@ -449,7 +449,7 @@ void PedestalEqualization::FindOffsets()
                     unsigned int channelNumber = 1;
                     int          cMeanOffset   = 0;
                     ReadoutChip* roc           = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
-                    auto cType = roc->getFrontEndType();
+                    auto         cType         = roc->getFrontEndType();
                     for(auto& channel: *chip->getChannelContainer<uint8_t>()) // for on channel - begin
                     {
                         char charRegName[20];

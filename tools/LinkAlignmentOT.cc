@@ -28,9 +28,9 @@ bool LinkAlignmentOT::Align()
             AlignLpGBTInputs(cOpticalGroup);
             WordAlignBEdata(cOpticalGroup);
         }
-	//check that word alignment of L1 data worked
-    	LOG(INFO) << BOLDYELLOW << "LinkAlignmentOT::Align ... trying to readout L1 data.. " << RESET;
-	ReadNEvents(cBoard, 10);
+        // check that word alignment of L1 data worked
+        LOG(INFO) << BOLDYELLOW << "LinkAlignmentOT::Align ... trying to readout L1 data.. " << RESET;
+        ReadNEvents(cBoard, 10);
     } // align BE
 
     AlignStubPackage();
