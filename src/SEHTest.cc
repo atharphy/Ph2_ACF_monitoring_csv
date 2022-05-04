@@ -353,7 +353,7 @@ int main(int argc, char* argv[])
             else
             {
                 LOG(INFO) << BOLDRED << "CIC_Out test failed." << RESET;
-                //throw std::runtime_error(std::string("CIC_Out test failed."));
+                // throw std::runtime_error(std::string("CIC_Out test failed."));
             }
         }
     }
@@ -561,7 +561,7 @@ int main(int argc, char* argv[])
         cDebugInterface->L1ADebug();
     */
     // Save Result File
-    //cSEHTester.TurnOff();
+    // cSEHTester.TurnOff();
 
     if(cmd.foundOption("ext-leak") & cmd.foundOption("parallelHV"))
     {
