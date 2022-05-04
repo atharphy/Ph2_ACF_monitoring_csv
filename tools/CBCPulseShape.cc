@@ -76,14 +76,15 @@ void CBCPulseShape::runCBCPulseShape(void)
         setSameDac("TestPulseDelay", delayDAC);
         setSameDac("TriggerLatency", latencyDAC);
 
-        measureSCurves(findPedestal());
+        findPedestal();
+        measureSCurves(fMeanStrips, fMeanPixels);
         extractPedeNoise();
 
 #ifdef __USE_ROOT__
         LOG(INFO) << BOLDGREEN << "Plotting delay for " << +delay << RESET;
         fCBCHistogramPulseShape.fillCBCPulseShapePlots(delay, *fThresholdAndNoiseContainer);
         if(fPlotPulseShapeSCurves)
-            for(auto& scurveOccupancy: fSCurveOccupancyMap) { fCBCHistogramPulseShape.fillSCurvePlots(scurveOccupancy.first, latencyDAC, delayDAC, *scurveOccupancy.second); }
+            for(auto& scurveOccupancy: fSCurveStripOccupancyMap) { fCBCHistogramPulseShape.fillSCurvePlots(scurveOccupancy.first, latencyDAC, delayDAC, *scurveOccupancy.second); }
 #else
         if(fDQMStreamerEnabled)
         {
@@ -92,7 +93,7 @@ void CBCPulseShape::runCBCPulseShape(void)
 
             for(auto board: *fThresholdAndNoiseContainer) { theThresholdAndNoiseStream->streamAndSendBoard(board, fDQMStreamer); }
 
-            for(auto& scurveOccupancy: fSCurveOccupancyMap)
+            for(auto& scurveOccupancy: fSCurveStripOccupancyMap)
             {
                 auto theScurveOccupancyStream = prepareChannelContainerStreamer<Occupancy, uint16_t, uint16_t, uint16_t>("SCurve");
                 theScurveOccupancyStream->setHeaderElement<0>(scurveOccupancy.first);
@@ -103,7 +104,7 @@ void CBCPulseShape::runCBCPulseShape(void)
         }
 #endif
         fThresholdAndNoiseContainer->reset();
-        cleanContainerMap();
+        cleanContainerVector();
     }
 
     reloadStubLogic();

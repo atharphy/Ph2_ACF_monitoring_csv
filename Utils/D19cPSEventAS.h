@@ -14,7 +14,6 @@ using EventDataVector = std::vector<std::vector<uint32_t>>;
 class D19cPSEventAS : public Event
 {
   public:
-    D19cPSEventAS(const Ph2_HwDescription::BeBoard* pBoard, uint32_t pNMPA, uint32_t pNHybrid, const std::vector<uint32_t>& list);
     D19cPSEventAS(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list);
     ~D19cPSEventAS() {}
 

@@ -44,7 +44,7 @@ uint32_t D19cPSCounterFWInterface::Compose_Id(const BeBoard* pBoard, const Optic
 }
 
 // method to read counter from regiseter
-void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard, FrontEndType pType)
+void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard)
 {
     for(auto cOpticalGroup: *pBoard)
     {
@@ -55,7 +55,6 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard, FrontEndType pTyp
                 std::stringstream cChipType;
                 cChip->printChipType(cChipType);
 
-                if(cChip->getFrontEndType() != pType) continue;
                 LOG(DEBUG) << BOLDBLUE << "Directly reading back counters from Chip#" << +cChip->getId() << RESET;
                 std::vector<ChipRegItem> cRegItems;
                 auto                     cId       = Compose_Id(pBoard, cOpticalGroup, cHybrid, cChip);
@@ -99,7 +98,7 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard, FrontEndType pTyp
                     cRegItems.push_back(cReg_Counters_LSB);
                 }
                 if(!fFEConfigurationInterface->MultiRead(cChip, cRegItems)) continue;
-                LOG(DEBUG) << BOLDYELLOW << "Read-back " << cRegItems.size() << " counters from " << cChipType.str() << "#" << +cChip->getId() << RESET;
+                LOG(DEBUG) << BOLDYELLOW << "Read-back " << cRegItems.size() << " counters from " << cChipType.str() << "#" << +cChip->getId() << "#" << +cId << RESET;
                 // fill counter information
                 for(auto cIter = cRegItems.begin(); cIter < cRegItems.end(); cIter += 2)
                 {
@@ -285,14 +284,7 @@ void D19cPSCounterFWInterface::GetCounterData(const BeBoard* pBoard)
     auto cFrontEndTypes = pBoard->connectedFrontEndTypes();
     LOG(DEBUG) << BOLDYELLOW << cFrontEndTypes.size() << " different types of Chips connected to BeBoard#" << +pBoard->getId() << RESET;
     if(fPSCounterFast == 0) // readout over registers
-    {
-        std::vector<FrontEndType> cValidTypes{FrontEndType::MPA, FrontEndType::SSA, FrontEndType::SSA2};
-        for(auto cValidType: cValidTypes)
-        {
-            if(std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), cValidType) == cFrontEndTypes.end()) continue;
-            SlowRead(pBoard, cValidType);
-        }
-    }
+    { SlowRead(pBoard); }
     else // readout over fast interface
     {
     }

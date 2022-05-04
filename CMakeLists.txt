@@ -67,7 +67,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set(NoDataShipping false)
     endif()
 
-    MESSAGE(STATUS "")
     MESSAGE(STATUS "    ${BoldYellow}COMPILATION FLAGS:${Reset}")
     MESSAGE(STATUS "    CompileForShep = ${BoldRed}${CompileForShep}${Reset}")
     MESSAGE(STATUS "    CompileForHerd = ${BoldRed}${CompileForHerd}${Reset}")
@@ -202,7 +201,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     #set(Boost_NO_SYSTEM_PATHS on CACHE BOOL "Do not search system for Boost")
     find_package(Boost 1.53 REQUIRED COMPONENTS system filesystem serialization iostreams program_options)
 
-    message("--     ${BoldCyan}#### Done ####${Reset}")
+    message("--     ${BoldCyan}#### End ####${Reset}")
 
     # All the subdirs
     if(${CACTUS_AMC13_FOUND})
