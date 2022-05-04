@@ -499,8 +499,6 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
 
         cSuccess = cSuccess && (cUniquePhases[cIndxBstPhase] != 15);
         if(cUniquePhases[cIndxBstPhase] != 15)
-        {
-            cOptimalTaps.push_back(cUniquePhases[cIndxBstPhase]);
             LOG(INFO) << BOLDGREEN << "Group#" << +cGroup << " Channel#" << +cChannel << "...\t\t..Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] << RESET;
             SetPhaseTap(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
         }

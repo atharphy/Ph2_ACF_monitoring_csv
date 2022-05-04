@@ -28,6 +28,9 @@ bool LinkAlignmentOT::Align()
             AlignLpGBTInputs(cOpticalGroup);
             WordAlignBEdata(cOpticalGroup);
         }
+        // check that word alignment of L1 data worked
+        LOG(INFO) << BOLDYELLOW << "LinkAlignmentOT::Align ... trying to readout L1 data.. " << RESET;
+        ReadNEvents(cBoard, 10);
     } // align BE
 
     AlignStubPackage();
@@ -385,8 +388,6 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
         cIndx++;
     }
     LOG(INFO) << BOLDYELLOW << "Reached end of WordAlignBEData" << RESET;
-    LOG(INFO) << BOLDYELLOW << "LinkAlignmentOT::WordAlignBEdata ... trying to readout L1 data.. " << RESET;
-    ReadNEvents(*cBoardIter, 10);
     return cAligned;
 }
 
