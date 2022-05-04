@@ -28,6 +28,7 @@
 #include "../tools/Physics2S.h"
 #include "../tools/StubBackEndAlignment.h"
 
+using namespace MessageUtils;
 
 MiddlewareStateMachine::MiddlewareStateMachine(){}
 
@@ -36,18 +37,18 @@ MiddlewareStateMachine::~MiddlewareStateMachine()
     delete fTheTool;
 }
 
-Message MiddlewareStateMachine::initialize()
+Message MiddlewareStateMachine::initialize(MessageUtils::Message)
 {
     Message theMessage;
-    theMessage.setMessage<std::string>("InitializeDone");
+    theMessage.set_data("InitializeDone");
     return theMessage;
 }
 
-Message MiddlewareStateMachine::configure(const ConfigurationMessage& configurationMessage)
+Message MiddlewareStateMachine::configure(const MessageUtils::ConfigurationMessage& configurationMessage)
 {
     Message theMessage;
 
-    std::string calibrationName = configurationMessage.getCalibrationName();
+    std::string calibrationName = configurationMessage.calibration_name();
 
     if(calibrationName == "calibration")
         fTheTool = new CombinedCalibration<LinkAlignmentOT, CicFEAlignment, PedestalEqualization>;
@@ -102,7 +103,7 @@ Message MiddlewareStateMachine::configure(const ConfigurationMessage& configurat
     LOG(INFO) << BOLDBLUE << "Tool created" << RESET;
     try
     {
-        std::string calibrationFile = configurationMessage.getCalibrationFile();
+        std::string calibrationFile = configurationMessage.configuration_file();
         fTheTool->Configure(calibrationFile, true);
     }
     catch(const std::exception& e)
@@ -110,22 +111,37 @@ Message MiddlewareStateMachine::configure(const ConfigurationMessage& configurat
         std::cerr << e.what() << '\n';
         delete fTheTool;
         std::string errorString = std::string("Error: ") + e.what();
-        theMessage.setError(errorString);
+        theMessage.set_error(errorString);
         return theMessage;
     }
     
-    theMessage.setMessage<std::string>("ConfigureDone");
+    theMessage.set_data("ConfigureDone");
 
-    return Message();
+    return theMessage;
 }
 
-Message MiddlewareStateMachine::start(){return Message();}
+Message MiddlewareStateMachine::start(Message startMessage){
+    // int runNumber = startMessage.runNumber();
+    Message output;
+    // try
+    // {
+    //     /* code */
+    //     fTheTool->Start(runNumber);
+    // }
+    // catch(const std::exception& e)
+    // {
+    //     std::cerr << e.what() << '\n';
+    //     output.error = e.what();
+    // }
+    
+    return output;
+}
 
-Message MiddlewareStateMachine::stop(){return Message();}
+Message MiddlewareStateMachine::stop(MessageUtils::Message){return Message();}
 
-Message MiddlewareStateMachine::halt(){return Message();}
+Message MiddlewareStateMachine::halt(MessageUtils::Message){return Message();}
 
-Message MiddlewareStateMachine::pause(){return Message();}
+Message MiddlewareStateMachine::pause(MessageUtils::Message){return Message();}
 
-Message MiddlewareStateMachine::resume(){return Message();}
+Message MiddlewareStateMachine::resume(MessageUtils::Message){return Message();}
 

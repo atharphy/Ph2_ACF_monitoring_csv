@@ -29,6 +29,8 @@
 #include "../tools/Physics2S.h"
 #include "../tools/StubBackEndAlignment.h"
 
+using namespace MessageUtils;
+
 //========================================================================================================================
 MiddlewareController::MiddlewareController(uint16_t portShift) : TCPServer(PORT_BASE + portShift, 1)
 {
@@ -46,7 +48,8 @@ std::string MiddlewareController::interpretMessage(const std::string& buffer)
 
     if(buffer == "Initialize") // Changing the status changes the mode in threadMain (BBC) function
     { 
-        Message theMessage = fMiddlewareStateMachine.initialize();
+        Message inputMessage;
+        Message theMessage = fMiddlewareStateMachine.initialize(inputMessage);
         return "InitializeDone";
     }
     else if(buffer.substr(0, 5) == "Start") // Changing the status changes the mode in threadMain (BBC) function

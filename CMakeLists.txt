@@ -231,7 +231,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     add_subdirectory(Utils)
     add_subdirectory(NetworkUtils)
     add_subdirectory(MonitorUtils)
-    add_subdirectory(MessageUtils)
+    add_subdirectory(MessageUtils/cpp)
     add_subdirectory(miniDAQ)
 
     message("--     ${BoldRed}#### Don't forget to set the path and ld_library_path by sourcing setup.sh before running ###${Reset}")

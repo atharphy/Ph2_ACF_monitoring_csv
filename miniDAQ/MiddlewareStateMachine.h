@@ -1,8 +1,7 @@
 #ifndef __MIDDLEWARE_STATE_MACHINE__
 #define __MIDDLEWARE_STATE_MACHINE__
 
-#include "../MessageUtils/Message.h"
-#include "../MessageUtils/ConfigurationMessage.h"
+#include "../MessageUtils/cpp/Message.pb.h"
 
 class Tool;
 
@@ -13,13 +12,13 @@ class MiddlewareStateMachine
     virtual ~MiddlewareStateMachine();
 
     // State machine commands
-    Message initialize();
-    Message configure(const ConfigurationMessage& configurationMessage);
-    Message start();
-    Message stop();
-    Message halt();
-    Message pause();
-    Message resume();
+    MessageUtils::Message initialize(MessageUtils::Message);
+    MessageUtils::Message configure(const MessageUtils::ConfigurationMessage& configurationMessage);
+    MessageUtils::Message start(MessageUtils::Message);
+    MessageUtils::Message stop(MessageUtils::Message);
+    MessageUtils::Message halt(MessageUtils::Message);
+    MessageUtils::Message pause(MessageUtils::Message);
+    MessageUtils::Message resume(MessageUtils::Message);
 
     Tool* fTheTool;
 
