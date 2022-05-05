@@ -292,10 +292,13 @@ sudo yum install -y git-extras
         $> sudo yum install root-net-http root-net-httpsniff  root-graf3d-gl root-physics root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
 
 
-5. Install CMAKE > 2.8:
+5. Install CMAKE3 > 3.0:
 
-        $> sudo yum install cmake
+        $> sudo yum install cmake3
 
+6. Install protobuf:
+        Follow instructions from
+        https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
 
 ### Setup on SLC6
 
