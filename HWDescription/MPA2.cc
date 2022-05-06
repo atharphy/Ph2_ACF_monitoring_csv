@@ -21,26 +21,39 @@
 
 namespace Ph2_HwDescription
 {
-// C'tors which take BeId, FMCId, FeID, MPA2Id
+// C'tors which take BeBoardId, FMCId, HybridId, ChipId
 
-MPA2::MPA2(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pMPAId, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pBeId, pFMCId, pFeId, pMPAId)
+MPA2::MPA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, uint8_t pPartnerId, const std::string& filename)
+    : ReadoutChip(pBeBoardId, pFMCId, pOpticalGroupId, pHybridId, pChipId)
 {
+    fChipCode         = 2;
     fMaxRegValue      = 255;
     fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS * NMPACOLS>>();
     fChipOriginalMask->enableAllChannels();
     fPartnerId = pPartnerId;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::MPA);
+    for(auto& cMapItem: fRegMap)
+    {
+        if(cMapItem.first.find("_ALL") == std::string::npos) continue;
+        cMapItem.second.fControlReg = 1;
+    }
 }
 
-MPA2::MPA2(const FrontEndDescription& pFeDesc, uint8_t pMPAId, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pFeDesc, pMPAId)
+MPA2::MPA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pFeDesc, pChipId)
 {
+    fChipCode         = 2;
     fMaxRegValue      = 255; // 8 bit registers in MPA
     fChipOriginalMask = std::make_shared<ChannelGroup<NSSACHANNELS, NMPACOLS>>();
     fChipOriginalMask->enableAllChannels();
     fPartnerId = pPartnerId;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::MPA);
+    for(auto& cMapItem: fRegMap)
+    {
+        if(cMapItem.first.find("_ALL") == std::string::npos) continue;
+        cMapItem.second.fControlReg = 1;
+    }
 }
 
 void MPA2::loadfRegMap(const std::string& filename)

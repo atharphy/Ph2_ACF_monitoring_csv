@@ -306,6 +306,10 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     add_subdirectory(miniDAQ)
     add_subdirectory(MonitorUtils)
 
+    cet_set_compiler_flags(
+        EXTRA_FLAGS -DELPP_THREAD_SAFE
+    )
+
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: Compilation of the middleware package done.")

@@ -16,7 +16,6 @@
 #include "../Utils/RD53Shared.h"
 #include "../Utils/easylogging++.h"
 #include "BeBoardFWInterface.h"
-/* #include "D19cFpgaConfig.h" */
 #include "RD53lpGBTInterface.h"
 
 #include <uhal/uhal.hpp>
@@ -26,10 +25,11 @@
 // #######################
 namespace RD53FWconstants
 {
-const uint8_t NLANE_HYBRID       = 4;    // Number of lanes per hybrid
-const uint8_t HEADEAR_WRTCMD     = 0xFF; // Header of chip write command sequence
-const uint8_t NBIT_FWVER         = 16;   // Number of bits for the firmware version
-const uint8_t IPBUS_FASTDURATION = 1;    // Duration of a fast command in terms of 40 MHz clk cycles
+const uint8_t  NLANE_HYBRID       = 4;     // Number of lanes per hybrid
+const uint8_t  HEADEAR_WRTCMD     = 0xFF;  // Header of chip write command sequence
+const uint8_t  NBIT_FWVER         = 16;    // Number of bits for the firmware version
+const uint8_t  IPBUS_FASTDURATION = 1;     // Duration of a fast command in terms of 40 MHz clk cycles
+const uint32_t SLOWCMD_FIFO_DEPTH = 65536; // Slow command FIFO depth 65536 (in terms of 32-bit words)
 
 constexpr float VDDD2Volt(float val) { return (0.968 + val * 0.0115); }
 constexpr float CDR2Freq(float val) { return (140 + val * 5); }
@@ -182,7 +182,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void     StatusOptoLinkSlowControl(uint32_t& txIsReady, uint32_t& rxIsReady);
     void     ResetOptoLink() override;
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override;
-    bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override;
+    bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerify = true) override;
     uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress) override;
 
     // ####################################################

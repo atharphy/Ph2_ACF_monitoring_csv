@@ -23,16 +23,20 @@ namespace Ph2_HwDescription
 Chip::Chip(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint16_t pMaxRegValue) : FrontEndDescription(pFeDesc), fChipId(pChipId), fMaxRegValue(pMaxRegValue) {}
 
 // C'tors which take Board ID, Frontend ID/Hybrid ID, FMC ID, Chip ID
-Chip::Chip(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pChipId, uint16_t pMaxRegValue) : FrontEndDescription(pBeId, pFMCId, pFeId), fChipId(pChipId), fMaxRegValue(pMaxRegValue) {}
+Chip::Chip(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, uint16_t pMaxRegValue)
+    : FrontEndDescription(pBeBoardId, pFMCId, pOpticalGroupId, pHybridId), fChipId(pChipId), fMaxRegValue(pMaxRegValue)
+{
+}
 
 // Copy C'tor
-Chip::Chip(const Chip& chipObj) : FrontEndDescription(chipObj), fChipId(chipObj.fChipId), fRegMap(chipObj.fRegMap), fCommentMap(chipObj.fCommentMap) {}
+Chip::Chip(const Chip& chipObj) : FrontEndDescription(chipObj), fChipId(chipObj.fChipId), fRegMap(chipObj.fRegMap), fModifiedRegs(chipObj.fModifiedRegs), fCommentMap(chipObj.fCommentMap) {}
 
 // D'Tor
 Chip::~Chip()
 {
     fRegMap.clear();
     fCommentMap.clear();
+    fModifiedRegs.clear();
 }
 
 ChipRegItem Chip::getRegItem(const std::string& pReg)
@@ -75,6 +79,72 @@ void Chip::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, u
     }
 }
 
+void Chip::UpdateModifiedRegMap(ChipRegItem pItem)
+{
+    if(fTrackRegisters == 0) return;
+
+    std::stringstream cOutput;
+    this->printChipType(cOutput);
+    auto cIterator = find_if(fRegMap.begin(), fRegMap.end(), [&pItem](const ChipRegPair& obj) { return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage; });
+    if(cIterator != fRegMap.end()) // is register in the original map
+    {
+        auto cName    = cIterator->first;
+        auto cRegItem = cIterator->second;
+        // only add the first time
+        cIterator = fModifiedRegs.find(cName);
+        if(cIterator == fModifiedRegs.end())
+        {
+            // auto cSize              = fModifiedRegs.size();
+            fModifiedRegs[cName] = cRegItem;
+            // LOG (INFO) << BOLDYELLOW << "ModMap for " << cOutput.str() << " contained " << cSize << " items.... will add " << cName << "\t Original Value " << fModifiedRegs[cName].fValue << RESET;
+        }
+    }
+}
+void Chip::UpdateModifiedRegMap(const std::string& pRegName)
+{
+    if(fTrackRegisters == 0) return;
+
+    std::stringstream cOutput;
+    this->printChipType(cOutput);
+
+    auto cIterator = find_if(fRegMap.begin(), fRegMap.end(), [&pRegName](const ChipRegPair& obj) { return obj.first == pRegName; });
+    if(cIterator != fRegMap.end())
+    {
+        auto cName    = cIterator->first;
+        auto cRegItem = cIterator->second;
+        // only add the first time
+        cIterator = fModifiedRegs.find(cName);
+        if(cIterator == fModifiedRegs.end())
+        {
+            // auto cSize              = fModifiedRegs.size();
+            fModifiedRegs[cName] = cRegItem;
+            // LOG (INFO) << BOLDYELLOW << "ModMap for " << cOutput.str() << " contained " << cSize << " items.... will add " << cName << "\t Original Value " << fModifiedRegs[cName].fValue << RESET;
+        }
+    }
+}
+void Chip::UpdateModifiedRegMap(uint16_t pRegisterAddress, uint8_t pPage)
+{
+    if(fTrackRegisters == 0) return;
+
+    std::stringstream cOutput;
+    this->printChipType(cOutput);
+
+    auto cIterator = find_if(fRegMap.begin(), fRegMap.end(), [&pRegisterAddress, &pPage](const ChipRegPair& obj) { return obj.second.fAddress == pRegisterAddress && obj.second.fPage == pPage; });
+    if(cIterator != fRegMap.end())
+    {
+        auto cName    = cIterator->first;
+        auto cRegItem = cIterator->second;
+        // only add the first time
+        cIterator = fModifiedRegs.find(cName);
+        if(cIterator == fModifiedRegs.end())
+        {
+            // auto cSize              = fModifiedRegs.size();
+            fModifiedRegs[cName] = cRegItem;
+            // LOG (INFO) << BOLDYELLOW << "ModMap for " << cOutput.str() << " contained " << cSize << " items.... will add " << cName << "\t Original Value " << fModifiedRegs[cName].fValue << RESET;
+        }
+    }
+}
+
 bool ChipComparer::operator()(const Chip& chip1, const Chip& chip2) const
 {
     if(chip1.getBeBoardId() != chip2.getBeBoardId())
@@ -94,4 +164,5 @@ bool RegItemComparer::operator()(const ChipRegPair& pRegItem1, const ChipRegPair
     else
         return pRegItem1.second.fAddress < pRegItem2.second.fAddress;
 }
+
 } // namespace Ph2_HwDescription

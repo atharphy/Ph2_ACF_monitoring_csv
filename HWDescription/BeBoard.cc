@@ -63,13 +63,13 @@ void BeBoard::updateCondData(uint32_t& pTDCVal)
                 {
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        if(cCondItem.fFeId != cHybrid->getId()) continue;
+                        if(cCondItem.fHybridId != cHybrid->getId()) continue;
 
                         for(auto cCbc: *cHybrid)
                         {
                             if(cCondItem.fCbcId != cCbc->getId())
                                 continue;
-                            else if(cHybrid->getId() == cCondItem.fFeId && cCbc->getId() == cCondItem.fCbcId)
+                            else if(cHybrid->getId() == cCondItem.fHybridId && cCbc->getId() == cCondItem.fCbcId)
                             {
                                 ChipRegItem cRegItem = static_cast<ReadoutChip*>(cCbc)->getRegItem(cCondItem.fRegName);
                                 cCondItem.fValue     = cRegItem.fValue;
@@ -118,4 +118,20 @@ void BeBoard::loadConfigFile(const std::string& filename)
     }
 }
 
+std::vector<FrontEndType> BeBoard::connectedFrontEndTypes() const
+{
+    std::vector<FrontEndType> cFrontEndTypes;
+    for(auto cOpticalGroup: *this)
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            for(auto cChip: *cHybrid)
+            {
+                auto cIter = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), cChip->getFrontEndType());
+                if(cIter == cFrontEndTypes.end()) cFrontEndTypes.push_back(cChip->getFrontEndType());
+            } // chips
+        }     // hybrids
+    }         // opticalGroup
+    return cFrontEndTypes;
+}
 } // namespace Ph2_HwDescription

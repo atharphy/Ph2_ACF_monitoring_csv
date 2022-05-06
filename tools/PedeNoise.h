@@ -36,9 +36,8 @@ class PedeNoise : public Tool
 
     void Initialise(bool pAllChan = false, bool pDisableStubLogic = true);
     void measureNoise(); // method based on the one below that actually analyzes the scurves and extracts the noise
-    void scanScurves();
     void sweepSCurves(); // actual methods to measure SCurves
-    void Validate(uint32_t pNoiseStripThreshold = 1, uint32_t pMultiple = 100);
+    void Validate();
     void writeObjects();
 
     void Running() override;
@@ -49,13 +48,13 @@ class PedeNoise : public Tool
     void Reset();
 
   protected:
-    void     measureSCurves(uint16_t pStartValue = 0);
-    uint16_t findPedestal(bool forceAllChannels = false);
-    void     extractPedeNoise();
-    void     disableStubLogic();
-    void     reloadStubLogic();
-    void     cleanContainerMap();
-    void     initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
+    void measureSCurves(uint16_t pStripStartValue = 0, uint16_t pPixelStartValue = 0);
+    void findPedestal(bool forceAllChannels = false);
+    void extractPedeNoise();
+    void disableStubLogic();
+    void reloadStubLogic();
+    void cleanContainerVector();
+    void initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
 
     uint8_t  fPulseAmplitude{0};
     uint32_t fEventsPerPoint{0};
@@ -65,11 +64,14 @@ class PedeNoise : public Tool
     uint16_t fMinThreshold{0};
     uint16_t fMaxThreshold{1023};
     float    fLimit{0.005};
-    float    fMean_Strps{0};
-    float    fMean_Pxls{0};
+    float    fMeanStrips{0};
+    float    fMeanPixels{0};
+    uint32_t fNEventsToValidate{0};
+    float    fMaskingThreshold{0};
+    bool     fMaskNoisyChannels{0};
 
     DetectorDataContainer*                     fThresholdAndNoiseContainer;
-    std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
+    std::map<uint16_t, DetectorDataContainer*> fSCurveStripOccupancyMap, fSCurvePixelOccupancyMap;
 
   private:
     // to hold the original register values
@@ -78,9 +80,9 @@ class PedeNoise : public Tool
     DetectorDataContainer* fHIPCountValue;
     DetectorDataContainer  fBoardRegContainer;
 
-    bool cWithCBC = true;
-    bool cWithSSA = false;
-    bool cWithMPA = false;
+    bool fWithCBC = true;
+    bool fWithSSA = false;
+    bool fWithMPA = false;
 
     // Settings
     bool fPlotSCurves{false};
@@ -90,7 +92,7 @@ class PedeNoise : public Tool
     void producePedeNoisePlots();
 
     // for validation
-    void setThresholdtoNSigma(BoardContainer* board, uint32_t pNSigma);
+    void setThresholdtoNSigma(BoardContainer* board, float pNSigma);
 
     // helpers for SCurve measurement
 

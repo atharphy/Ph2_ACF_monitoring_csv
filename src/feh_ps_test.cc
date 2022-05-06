@@ -320,12 +320,14 @@ int main(int argc, char* argv[])
         cPedeNoise.measureNoise();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
+        cPedeNoise.Reset();
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
         if(cGui) { gui::message("Noise measured"); }
 
         // cOpenFinder.SelectAntennaPosition("Disable", 512);
     }
+
     // cHybridTester.SetTrim("GAINTRIMMING",7);
     // // equalize thresholds on readout chips
     if(cmd.foundOption("tuneOffsets"))
@@ -340,6 +342,7 @@ int main(int argc, char* argv[])
         t.start();
         // now create a PedestalEqualization object
         PedestalEqualization cPedestalEqualization;
+
         cPedestalEqualization.Inherit(&cHybridTester);
         cPedestalEqualization.Initialise(true, true);
         cPedestalEqualization.FindVplus();
@@ -347,6 +350,7 @@ int main(int argc, char* argv[])
         cHybridTester.ReadSSABias("CalLevel");
 
         cPedestalEqualization.FindOffsets();
+        cPedestalEqualization.Reset();
         cPedestalEqualization.writeObjects();
         cPedestalEqualization.dumpConfigFiles();
         cPedestalEqualization.resetPointers();
@@ -357,7 +361,6 @@ int main(int argc, char* argv[])
             gui::progress(3 / 10.0);
         }
     }
-
     // cHybridTester.CalibrateGainTrim();
 
     // measure noise on FE chips
@@ -378,6 +381,7 @@ int main(int argc, char* argv[])
         cPedeNoise.measureNoise();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
+        cPedeNoise.Reset();
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
         if(cGui) { gui::message("Noise measured"); }
@@ -485,15 +489,12 @@ int main(int argc, char* argv[])
         // configure SSA to output something on stub lines
         if(!cSSAPair.empty())
         {
-            BackEndAlignment cBackendAlignment;
-            cBackendAlignment.Inherit(&cHybridTester);
-
             LOG(INFO) << BOLDRED << "SSAOutput POGO debug" << RESET;
             // configure SSA to output something on stub lines
             if(cSSAPair != "ALL")
             {
                 cHybridTester.SSAPairSelect(cSSAPair);
-                cBackendAlignment.SetEnabledROCs(cSSAPair);
+                cBackendAlignment.SetEnabledChips(cSSAPair);
                 for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
                 cHybridTester.SSATestStubOutput(cSSAPair);
                 cHybridTester.SSATestL1Output(cSSAPair);
@@ -506,20 +507,21 @@ int main(int argc, char* argv[])
                 {
                     cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
                     cHybridTester.SSAPairSelect(cCurrentSSAPair);
-                    cBackendAlignment.SetEnabledROCs(cSSAPair);
+                    cBackendAlignment.SetEnabledChips(cCurrentSSAPair);
                     for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
-                    cHybridTester.SSATestStubOutput(cCurrentSSAPair);
-                    cHybridTester.SSATestL1Output(cCurrentSSAPair);
-                }
-
-                for(int i = 0; i < 7; i++)
-                {
-                    cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
-                    cHybridTester.SSAPairSelect(cCurrentSSAPair);
-                    cBackendAlignment.SetEnabledROCs(cCurrentSSAPair);
-                    for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
+                    // cHybridTester.SSATestStubOutput(cCurrentSSAPair);
+                    // cHybridTester.SSATestL1Output(cCurrentSSAPair);
                     cHybridTester.SSATestLateralCommunication(cCurrentSSAPair);
                 }
+
+                // for(int i = 0; i < 7; i++)
+                // {
+                //     cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
+                //     cHybridTester.SSAPairSelect(cCurrentSSAPair);
+                //     cBackendAlignment.SetEnabledChips(cCurrentSSAPair);
+                //     for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
+                //     cHybridTester.SSATestLateralCommunication(cCurrentSSAPair);
+                // }
             }
         }
         // configure SSA to output something on L1 lines

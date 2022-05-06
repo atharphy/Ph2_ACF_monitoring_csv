@@ -1,20 +1,22 @@
 #include <cstring>
 
+#include "D19cDebugFWInterface.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
 #include "boost/format.hpp"
 #include "tools/BackEndAlignment.h"
 #include "tools/BeamTestCheck2S.h"
+#include "tools/CBCPulseShape.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
 #include "tools/LatencyScan.h"
 #include "tools/LinkAlignmentOT.h"
 #include "tools/MemoryCheck2S.h"
+#include "tools/OTCMNoise.h"
 #include "tools/OTTemperature.h"
 #include "tools/PSAlignment.h"
 #include "tools/PedeNoise.h"
-#include "tools/PedeNoiseTime.h"
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
@@ -44,6 +46,25 @@ using namespace CommandLineProcessing;
 INITIALIZE_EASYLOGGINGPP
 
 #define CHIPSLAVE 4
+
+sig_atomic_t killProcess  = 0;
+sig_atomic_t runCompleted = 0;
+
+void interruptHandler(int handler) { killProcess = 1; }
+
+void killProcessFunction(Tool* theTool)
+{
+    while(1)
+    {
+        usleep(250000);
+        if(killProcess || runCompleted) break;
+    }
+    if(killProcess)
+    {
+        theTool->Destroy();
+        abort();
+    }
+}
 
 uint16_t returnRunNumber(std::string cFileName)
 {
@@ -101,6 +122,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC.");
     cmd.defineOptionAlternative("measurePedeNoise", "m");
 
+    cmd.defineOption("cmNoise", "measure common mode noise");
+
     cmd.defineOption("read", "Read data from a raw file.  ", ArgvParser::OptionRequiresValue);
     cmd.defineOption("save", "Save the data to a raw file.  ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("skipAlignment", "Skip the back-end alignment step ", ArgvParser::OptionRequiresValue);
@@ -132,10 +155,10 @@ int main(int argc, char* argv[])
     cmd.defineOption("completeDataCheck", "Complete data check for the following CBCs", ArgvParser::OptionRequiresValue);
 
     cmd.defineOption("pageToTest", "Page to test", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("registerTestWrite", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("registerTestWriteAndToggle", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("registerTestRead", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("registerTestReadAndToggle", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("registerTestWrite", "Test I2C registers on Chips", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("registerTestWriteAndToggle", "Test I2C registers on Chips", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("registerTestRead", "Test I2C registers on Chips", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("registerTestReadAndToggle", "Test I2C registers on Chips", ArgvParser::OptionRequiresValue);
     cmd.defineOption("sortOrder", "Sort order for CBC registers  : 0 - no sort other than page; 1 - page then increasing addresss; 2 - page then decreasing addresss", ArgvParser::OptionRequiresValue);
     cmd.defineOption("bitToFlip", "Bit to flip when testing register write", ArgvParser::OptionRequiresValue);
     cmd.defineOption("testAttempts", "Number of attempts", ArgvParser::OptionRequiresValue);
@@ -158,6 +181,7 @@ int main(int argc, char* argv[])
     //
     cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("readMonitors", "Read internal monitors on lpGBT [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("pulseShape", "Scan the threshold and fit for signal Vcth", ArgvParser::NoOptionAttribute);
 
     int result = cmd.parse(argc, argv);
 
@@ -177,7 +201,9 @@ int main(int argc, char* argv[])
     std::string cSrcLnkTst       = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
     std::string cModuleId        = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
     std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
-    uint16_t    cRunNumber       = 666;
+    bool        cPulseShape      = (cmd.foundOption("pulseShape")) ? true : false;
+
+    uint16_t cRunNumber = 666;
     if(!cmd.foundOption("read"))
     {
         std::ofstream cRunLog;
@@ -207,6 +233,14 @@ int main(int argc, char* argv[])
 
     std::stringstream outp;
     Tool              cTool;
+
+    std::thread softKillThread(killProcessFunction, &cTool);
+    softKillThread.detach();
+
+    struct sigaction act;
+    act.sa_handler = interruptHandler;
+    sigaction(SIGINT, &act, NULL);
+
     if(cSaveToFile)
     {
         char cRawFileName[80];
@@ -221,8 +255,9 @@ int main(int argc, char* argv[])
     LOG(INFO) << outp.str();
     cTool.CreateResultDirectory(cDirectory, false, false);
     cTool.InitResultFile(cResultfile);
+    cTool.AddMetadata();
 
-    if(cmd.foundOption("readMonitors"))
+    if(cmd.foundOption("readTemperatures"))
     {
         LOG(INFO) << BOLDBLUE << "Reading internal monitors from lpGBT-ADCs.." << RESET;
         auto          cGain = (cmd.foundOption("readMonitors")) ? convertAnyInt(cmd.optionValue("readMonitors").c_str()) : 0;
@@ -421,6 +456,19 @@ int main(int argc, char* argv[])
     if(!cmd.foundOption("read") && cmd.foundOption("reconfigure"))
     {
         cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
+        // just to check
+        // D19cDebugFWInterface* cDebugInterface   = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
+        // for(const auto cBoard: *cTool.fDetectorContainer)
+        // {
+        //     cDebugInterface->L1ADebug();
+        //     cTool.ReadNEvents(cBoard, 10);
+        // }
+        // exit(0);
+
+        // for(const auto cBoard: *cTool.fDetectorContainer)
+        // {
+        //     cTool.ReadNEvents(cBoard, 10);
+        // }
 
         // map MPA outputs for PS module
         PSAlignment cPSAlignment;
@@ -455,6 +503,17 @@ int main(int argc, char* argv[])
         cCicAligner.Start(0);
         cCicAligner.waitForRunToBeCompleted();
         cCicAligner.dumpConfigFiles();
+
+        // quickly check ReadData
+        // for(const auto cBoard: *cTool.fDetectorContainer)
+        // {
+        //     cTool.fBeBoardInterface->Start(cBoard);
+        //     std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        //     std::vector<uint32_t> cData;
+        //     bool                cWait    = false;
+        //     cTool.ReadData(cBoard, cData, cWait);
+        //     cTool.fBeBoardInterface->Stop(cBoard);
+        // }
     }
     // reload settings on-to FE chips
     if(!cmd.foundOption("read") && cmd.foundOption("reload"))
@@ -957,15 +1016,29 @@ int main(int argc, char* argv[])
         PedeNoise cPedeNoise;
         cPedeNoise.Inherit(&cTool);
         cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
-        // cPedeNoise.scanScurves();
         cPedeNoise.measureNoise();
-        // cPedeNoise.Validate();
+        cPedeNoise.Validate();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
         cPedeNoise.Reset();
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
     }
+
+    if(cmd.foundOption("cmNoise") && !cmd.foundOption("read"))
+    {
+        LOG(INFO) << "OT_MODULE_TEST:: Measuring CM Noise" << RESET;
+
+        OTCMNoise cTester;
+        cTester.Inherit(&cTool);
+        cTester.Initialize();
+        LOG(INFO) << "OT_MODULE_TEST:: Setting thresholds" << RESET;
+        cTester.SetThresholds();
+
+        LOG(INFO) << "OT_MODULE_TEST:: Taking measurements " << RESET;
+        cTester.TakeData();
+    }
+
     // inject hits and stubs using mask and compare input against output
     if(cmd.foundOption("memCheck") && !cmd.foundOption("read"))
     {
@@ -980,12 +1053,12 @@ int main(int argc, char* argv[])
         // find pedestal and set threshold
         if(cmd.foundOption("completeDataCheck"))
         {
-            std::string          cArgsStr    = cmd.optionValue("completeDataCheck");
-            std::vector<uint8_t> cFesToCheck = getArgs(cArgsStr);
+            std::string          cArgsStr      = cmd.optionValue("completeDataCheck");
+            std::vector<uint8_t> cChipsToCheck = getArgs(cArgsStr);
             cMemoryChecker.EvaluatePedeNoise(10); // find pedestal + noise
             cMemoryChecker.SetThreshold(-2.0);    // set threshold to 3 sigma away from pedestal
             int cTriggerGap = cTool.findValueInSettings<double>("TriggerSeparation", 500);
-            cMemoryChecker.DataCheck(cFesToCheck, cTriggerGap);
+            cMemoryChecker.DataCheck(cChipsToCheck, cTriggerGap);
         }
         cMemoryChecker.MemoryCheck2SRaw(true);  // all ones
         cMemoryChecker.MemoryCheck2SRaw(false); // all zeros
@@ -1159,10 +1232,27 @@ int main(int argc, char* argv[])
     }
     if(!cmd.foundOption("read")) { cTool.dumpConfigFiles(); }
 
+    if(cPulseShape)
+    {
+        std::cout << "I am in" << std::endl;
+        Timer t;
+        t.start();
+        CBCPulseShape cCBCPulseShape;
+        cCBCPulseShape.Inherit(&cTool);
+        cCBCPulseShape.Initialise();
+        cCBCPulseShape.runCBCPulseShape();
+        cCBCPulseShape.writeObjects();
+        t.stop();
+        t.show("Time for pulseShape plot measurement");
+        t.reset();
+    }
+
     cTool.SaveResults();
     cTool.WriteRootFile();
     cTool.CloseResultFile();
     cTool.Destroy();
+    signal(SIGINT, SIG_DFL);
+    runCompleted = 1;
     if(!batchMode) cApp.Run();
     cGlobalTimer.stop();
     cGlobalTimer.show("Total execution time: ");

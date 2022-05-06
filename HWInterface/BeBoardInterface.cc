@@ -22,9 +22,8 @@ void BeBoardInterface::setBoard(uint16_t pBoardIdentifier)
     if(fPrevBoardIdentifier != pBoardIdentifier)
     {
         BeBoardFWMap::iterator i = fBoardMap.find(pBoardIdentifier);
-
         if(i == fBoardMap.end())
-            LOG(INFO) << "The Board: " << +pBoardIdentifier << "  doesn't exist";
+            LOG(ERROR) << BOLDRED << "The Board: " << +pBoardIdentifier << "  doesn't exist" << RESET;
         else
         {
             fBoardFW             = i->second;
@@ -122,7 +121,6 @@ void BeBoardInterface::ConfigureBoard(const BeBoard* pBoard)
     std::lock_guard<std::recursive_mutex> theGuard(theMtx);
 
     setBoard(pBoard->getId());
-    LOG(INFO) << GREEN << "Configuring Board: " << BOLDYELLOW << +pBoard->getId() << RESET;
     fBoardFW->ConfigureBoard(pBoard);
 }
 
@@ -133,15 +131,6 @@ void BeBoardInterface::Start(BeBoard* pBoard)
     setBoard(pBoard->getId());
     fBoardFW->Start();
 }
-
-void BeBoardInterface::SendNTriggers(BeBoard* pBoard, uint16_t pNtriggers)
-{
-    std::lock_guard<std::recursive_mutex> theGuard(theMtx);
-
-    setBoard(pBoard->getId());
-    fBoardFW->SendNTriggers(pNtriggers);
-}
-
 void BeBoardInterface::Stop(BeBoard* pBoard)
 {
     std::lock_guard<std::recursive_mutex> theGuard(theMtx);

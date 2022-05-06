@@ -35,16 +35,6 @@ Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pier
 
 namespace Ph2_HwInterface
 {
-struct CPBconfig
-{
-    uint8_t  fEnable      = 0;
-    uint8_t  fReTry       = 0;
-    uint8_t  fVerbose     = 0;
-    uint32_t fWait_us     = 50;
-    uint16_t fMaxAttempts = 500;
-    uint8_t  fResetEn     = 1;
-};
-
 /*!
  * \class BeBoardFWInterface
  * \brief Class separating board system FW interface from uHal wrapper
@@ -109,40 +99,6 @@ class BeBoardFWInterface : public RegManager
     virtual double RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) = 0;
 
     /*!
-     * \brief Encode a/several word(s) readable for a Chip
-     * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
-     * \param pChip : Chip object
-     */
-    virtual void EncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, Ph2_HwDescription::Chip* pChip, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-    }
-
-    /*!< Encode a/several word(s) readable for a Chip*/
-    /*!
-     * \brief Encode a/several word(s) for Broadcast write to Chips
-     * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to write
-     * \param pNChip : number of Chips to write to
-     * \param pVecReq : Vector to stack the encoded words
-     */
-    virtual void BCEncodeReg(const Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t pNChip, std::vector<uint32_t>& pVecReq, bool pRead = false, bool pWrite = false)
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-    }
-
-    /*!< Encode a/several word(s) readable for a Chip*/
-    /*!
-     * \brief Decode a word from a read of a register of the Chip
-     * \param pRegItem : RegItem containing infos (name, adress, value...) about the register to read
-     * \param pChipId : Id of the Chip to work with
-     * \param pWord : variable to put the decoded word
-     */
-    virtual void DecodeReg(Ph2_HwDescription::ChipRegItem& pRegItem, uint8_t& pChipId, uint32_t pWord, bool& pRead, bool& pFailed)
-    {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-    }
-
-    /*!
      * \brief Configure the board with its Config File
      * \param pBoard
      */
@@ -187,11 +143,6 @@ class BeBoardFWInterface : public RegManager
      * \brief Resume a DAQ
      */
     virtual void Resume() = 0;
-
-    /*!
-     * \brief Resume a DAQ
-     */
-    virtual void SendNTriggers(uint16_t pNtriggers) { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
 
     /*!
      * \brief Read data from DAQ
@@ -247,54 +198,33 @@ class BeBoardFWInterface : public RegManager
     // ############################
     // # Read/Write Optical Group #
     // ############################
-    virtual void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus)                                                               = 0;
-    virtual void     ResetOptoLink()                                                                                                                           = 0;
-    virtual bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) = 0;
-    virtual uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress)                                                       = 0;
+    virtual void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus)                                                           = 0;
+    virtual void     ResetOptoLink()                                                                                                                       = 0;
+    virtual bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerify = true) = 0;
+    virtual uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress)                                                   = 0;
 
-    // ##########################################
-    // # Read/Write new Command Processor Block #
-    // ##########################################
-    virtual void                  ResetCPB() {}
-    virtual void                  WriteCommandCPB(const std::vector<uint32_t>& pCommandVector) {}
-    virtual std::vector<uint32_t> ReadReplyCPB(uint8_t pNWords) { return {}; }
-    // Function to read/write lpGBT registers
-    virtual bool    WriteLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pVerifLoop = true) { return true; }
-    virtual uint8_t ReadLpGBTRegister(uint8_t pLinkId, uint16_t pRegisterAddress) { return 0; }
-    // function for I2C transactions using lpGBT I2C Masters
-    virtual bool    I2CWrite(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint32_t pSlaveData, uint8_t pNBytes, uint8_t pFrequency, uint32_t& theI2CWriteCount) { return true; }
-    virtual uint8_t I2CRead(uint8_t pLinkId, uint8_t pMasterId, uint8_t pSlaveAddress, uint8_t pNBytes, uint8_t pFrequency, uint32_t& theI2CReadCount) { return 0; }
-    // function for front-end slow control
-    virtual bool    WriteFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress, uint8_t pRegisterValue, bool pRetry = false) { return true; }
-    virtual uint8_t ReadFERegister(Ph2_HwDescription::Chip* pChip, uint16_t pRegisterAddress) { return 0; }
-
-    void ConfigureCPB(CPBconfig pConfig)
+    // ###############################
+    // # Configuration FE Read/Write #
+    // ###############################
+    // Register write
+    virtual bool SingleRegisterWrite(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerify = true) { return true; }
+    virtual bool MultiRegisterWrite(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem, bool pVerify = true) { return true; }
+    // Register write + read-back
+    virtual bool SingleRegisterWriteRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem) { return true; }
+    virtual bool MultiRegisterWriteRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem) { return true; }
+    // Register read
+    virtual uint8_t              SingleRegisterRead(Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem) { return 0; }
+    virtual std::vector<uint8_t> MultiRegisterRead(Ph2_HwDescription::Chip* pChip, std::vector<Ph2_HwDescription::ChipRegItem>& pItem)
     {
-        fCPBConfig.fEnable      = pConfig.fEnable;
-        fCPBConfig.fVerbose     = pConfig.fVerbose;
-        fCPBConfig.fWait_us     = pConfig.fWait_us;
-        fCPBConfig.fReTry       = pConfig.fReTry;
-        fCPBConfig.fMaxAttempts = pConfig.fMaxAttempts;
+        std::vector<uint8_t> cData(0);
+        return cData;
     }
 
   protected:
-    uint32_t  fBlockSize{0};
-    uint32_t  fNPackets{0};
-    uint32_t  numAcq{0};
-    uint32_t  nbMaxAcq{0};
-    CPBconfig fCPBConfig;
-    // Template to return a vector of all mismatched elements in two vectors using std::mismatch for readback value comparison
-    template <typename T, class BinaryPredicate>
-    std::vector<typename std::iterator_traits<T>::value_type> get_mismatches(T pWriteVector_begin, T pWriteVector_end, T pReadVector_begin, BinaryPredicate p)
-    {
-        std::vector<typename std::iterator_traits<T>::value_type> pMismatchedWriteVector;
-
-        for(std::pair<T, T> cPair = std::make_pair(pWriteVector_begin, pReadVector_begin); (cPair = std::mismatch(cPair.first, pWriteVector_end, cPair.second, p)).first != pWriteVector_end;
-            ++cPair.first, ++cPair.second)
-            pMismatchedWriteVector.push_back(*cPair.first);
-
-        return pMismatchedWriteVector;
-    }
+    uint32_t fBlockSize{0};
+    uint32_t fNPackets{0};
+    uint32_t numAcq{0};
+    uint32_t nbMaxAcq{0};
 };
 
 } // namespace Ph2_HwInterface

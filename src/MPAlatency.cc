@@ -112,9 +112,9 @@ int main(int argc, char* argv[])
 
     for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cFe: *cOpticalGroup)
+        for(auto cHybrid: *cOpticalGroup)
         {
-            for(auto cChip: *cFe)
+            for(auto cChip: *cHybrid)
             {
                 if(cChip->getFrontEndType() == FrontEndType::MPA)
                 {
@@ -147,9 +147,9 @@ int main(int argc, char* argv[])
 
     for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cFe: *cOpticalGroup)
+        for(auto cHybrid: *cOpticalGroup)
         {
-            for(auto cChip: *cFe)
+            for(auto cChip: *cHybrid)
             {
                 if(cChip->getFrontEndType() == FrontEndType::MPA) { static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "ENFLAGS_ALL", 0); }
                 if(cChip->getFrontEndType() == FrontEndType::SSA)
@@ -170,13 +170,13 @@ int main(int argc, char* argv[])
 
     for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cFe: *cOpticalGroup)
+        for(auto cHybrid: *cOpticalGroup)
         {
-            for(auto cChip: *cFe)
+            for(auto cChip: *cHybrid)
             {
                 if(cChip->getFrontEndType() == FrontEndType::MPA)
                 {
-                    uint8_t hitlmpa = hitlatmpa[cFe];
+                    uint8_t hitlmpa = hitlatmpa[cHybrid];
                     LOG(INFO) << BOLDRED << "Hit max " << +hitlmpa << RESET;
                     static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "L1Offset_1_ALL", (0x00FF & hitlmpa) >> 0);
                     static_cast<MPAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "L1Offset_2_ALL", (0x0100 & hitlmpa) >> 8);
@@ -184,7 +184,7 @@ int main(int argc, char* argv[])
 
                 if(cChip->getFrontEndType() == FrontEndType::SSA)
                 {
-                    uint8_t hitlssa = hitlatssa[cFe];
+                    uint8_t hitlssa = hitlatssa[cHybrid];
                     LOG(INFO) << BOLDRED << "Hit max " << +hitlssa << RESET;
                     static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "L1-Latency_LSB", (0x00FF & hitlssa) >> 0);
                     static_cast<SSAInterface*>(cTool.fReadoutChipInterface)->WriteChipReg(cChip, "L1-Latency_MSB", (0x0100 & hitlssa) >> 8);
@@ -199,9 +199,9 @@ int main(int argc, char* argv[])
         bool found = false;
         for(auto cOpticalGroup: *pBoard)
         {
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                for(auto cChip: *cFe)
+                for(auto cChip: *cHybrid)
                 {
                     if(cChip->getFrontEndType() == FrontEndType::MPA)
                     {
@@ -228,13 +228,13 @@ int main(int argc, char* argv[])
 
         for(auto cOpticalGroup: *pBoard)
         {
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                if(stublat[cFe] != 0)
+                if(stublat[cHybrid] != 0)
                 {
                     found = true;
-                    LOG(INFO) << BOLDRED << "Stub max " << unsigned(stublat[cFe]) << " RetimePix " << irt << RESET;
-                    cTool.fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", stublat[cFe]);
+                    LOG(INFO) << BOLDRED << "Stub max " << unsigned(stublat[cHybrid]) << " RetimePix " << irt << RESET;
+                    cTool.fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", stublat[cHybrid]);
                 }
             }
         }

@@ -56,7 +56,7 @@ class StubSweep : public Tool
     // method to mask all channels on the CBC
     void maskAllChannels(Ph2_HwDescription::Chip* pCbc);
     // method to return the position of the first stub in a CBC event
-    uint8_t getStubPosition(std::vector<Ph2_HwInterface::Event*> pEvents, uint32_t pFeId, uint32_t pCbcId, uint32_t pNEvents);
+    uint8_t getStubPosition(std::vector<Ph2_HwInterface::Event*> pEvents, uint32_t pHybridId, uint32_t pCbcId, uint32_t pNEvents);
 
     /*!
      * \brief return mask for a given channel

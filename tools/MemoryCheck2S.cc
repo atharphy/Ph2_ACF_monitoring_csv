@@ -5,7 +5,9 @@
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ThresholdAndNoise.h"
+#include "L1ReadoutInterface.h"
 #include "Occupancy.h"
+#include "TriggerInterface.h"
 #include "boost/format.hpp"
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -90,9 +92,9 @@ void MemoryCheck2S::Reconfigure()
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        // reconfigure ROC registers
+        // reconfigure Chip registers
         // only those that I've touched
-        LOG(INFO) << BOLDMAGENTA << "\t... [MemoryCheck2S] Resetting ROC regs back to their original values" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\t... [MemoryCheck2S] Resetting Chip regs back to their original values" << RESET;
         auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
@@ -136,7 +138,7 @@ void MemoryCheck2S::Reconfigure()
 
         // // reconfigure masks
         auto& cMasksThisBrd = fChipMasks.at(cBoard->getIndex());
-        LOG(INFO) << BOLDMAGENTA << "\t... [MemoryCheck2S] Resetting ROC masks back to their original values" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\t... [MemoryCheck2S] Resetting Chip masks back to their original values" << RESET;
         for(auto cOpticalGroup: *cBoard)
         {
             auto& cMasksThisOG = cMasksThisBrd->at(cOpticalGroup->getIndex());
@@ -508,7 +510,9 @@ uint32_t MemoryCheck2S::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
 
     // this stops triggers and
     // re-loads the configuration
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
+    auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cTriggerInterface = cInterface->getTriggerInterface();
+    cTriggerInterface->ResetTriggerFSM();
 
     cNWords    = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.readout_block.general.words_cnt");
     cNtriggers = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
@@ -525,7 +529,7 @@ uint32_t MemoryCheck2S::GenericTriggerConfig(BeBoard* pBoard, int cNrepetitions)
     std::this_thread::sleep_for(std::chrono::microseconds(10));
 
     // re-load configuration
-    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetTriggerFSM();
+    cTriggerInterface->ResetTriggerFSM();
 
     return cNevents;
 }
@@ -833,15 +837,15 @@ void MemoryCheck2S::EvaluatePedeNoise(int pNevents, int pScanRange)
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cFe->getId() << RESET;
-                for(auto cROC: *cFe)
+                LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cHybrid->getId() << RESET;
+                for(auto cChip: *cHybrid)
                 {
-                    if(cROC->getFrontEndType() != FrontEndType::CBC3) continue;
+                    if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
-                    auto cThreshold = fReadoutChipInterface->ReadChipReg(cROC, "Threshold");
-                    LOG(INFO) << BOLDMAGENTA << "\t... CBC#" << +cROC->getId() << " threshold after bit-wise scan is " << cThreshold << " DAC units" << RESET;
+                    auto cThreshold = fReadoutChipInterface->ReadChipReg(cChip, "Threshold");
+                    LOG(INFO) << BOLDMAGENTA << "\t... CBC#" << +cChip->getId() << " threshold after bit-wise scan is " << cThreshold << " DAC units" << RESET;
                     cPedestals.push_back(cThreshold);
                 }
             }
@@ -885,35 +889,35 @@ void MemoryCheck2S::EvaluatePedeNoise(int pNevents, int pScanRange)
         for(auto cOpticalGroup: *cBoard)
         {
             auto& cThNoiseThisOG = cThNoiseThisBrd->at(cOpticalGroup->getIndex());
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cThNoiseThisFE = cThNoiseThisOG->at(cFe->getIndex());
-                for(auto cROC: *cFe)
+                auto& cThNoiseThisHybrid = cThNoiseThisOG->at(cHybrid->getIndex());
+                for(auto cChip: *cHybrid)
                 {
-                    if(cROC->getFrontEndType() != FrontEndType::CBC3) continue;
+                    if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
-                    auto&              cThNoiseThisChip = cThNoiseThisFE->at(cROC->getIndex());
-                    std::vector<float> cPedestalsThisROC(0);
-                    std::vector<float> cNoiseThisROC(0);
-                    for(size_t cChnl = 0; cChnl < cROC->size(); cChnl++)
+                    auto&              cThNoiseThisChip = cThNoiseThisHybrid->at(cChip->getIndex());
+                    std::vector<float> cPedestalsThisChip(0);
+                    std::vector<float> cNoiseThisChip(0);
+                    for(size_t cChnl = 0; cChnl < cChip->size(); cChnl++)
                     {
                         // S-curve for this channel
                         std::vector<float> cW(cThresholds.size(), 0);
                         std::vector<float> cV(cThresholds.size(), 0);
                         for(size_t cIndx = 0; cIndx < cThresholds.size(); cIndx++)
                         {
-                            auto& cDataThisBrd   = cScanData[cIndx]->at(cBoard->getIndex());
-                            auto& cDataThisOG    = cDataThisBrd->at(cOpticalGroup->getIndex());
-                            auto& cDataThisHybrd = cDataThisOG->at(cFe->getIndex());
-                            auto& cDataThisChip  = cDataThisHybrd->at(cROC->getIndex());
-                            cW[cIndx]            = cDataThisChip->getChannel<Occupancy>(cChnl).fOccupancy;
-                            cV[cIndx]            = cThresholds[cIndx];
+                            auto& cDataThisBrd    = cScanData[cIndx]->at(cBoard->getIndex());
+                            auto& cDataThisOG     = cDataThisBrd->at(cOpticalGroup->getIndex());
+                            auto& cDataThisHybrid = cDataThisOG->at(cHybrid->getIndex());
+                            auto& cDataThisChip   = cDataThisHybrid->at(cChip->getIndex());
+                            cW[cIndx]             = cDataThisChip->getChannel<Occupancy>(cChnl).fOccupancy;
+                            cV[cIndx]             = cThresholds[cIndx];
                         }
                         auto cPedeNoise                                                   = evalNoise(cW, cV, true);
                         cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold = cPedeNoise.first;
                         cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise     = cPedeNoise.second;
-                        cPedestalsThisROC.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold);
-                        cNoiseThisROC.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise);
+                        cPedestalsThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold);
+                        cNoiseThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise);
                         // if( cChnl%25 == 0 )
                         //     LOG (INFO) << BOLDMAGENTA << "\t\t... channel#" << +cChnl
                         //         << " pedestal is " << cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold
@@ -954,26 +958,26 @@ void MemoryCheck2S::SetThreshold(float pSigma)
         {
             auto& cThThisOG      = cThThisBoard->at(cOpticalGroup->getIndex());
             auto& cThNoiseThisOG = cThNoiseThisBrd->at(cOpticalGroup->getIndex());
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cThThisHybrd   = cThThisOG->at(cFe->getIndex());
-                auto& cThNoiseThisFE = cThNoiseThisOG->at(cFe->getIndex());
-                LOG(INFO) << BOLDMAGENTA << "FE#" << +cFe->getId() << RESET;
+                auto& cThThisHybrid      = cThThisOG->at(cHybrid->getIndex());
+                auto& cThNoiseThisHybrid = cThNoiseThisOG->at(cHybrid->getIndex());
+                LOG(INFO) << BOLDMAGENTA << "FE#" << +cHybrid->getId() << RESET;
 
-                for(auto cROC: *cFe)
+                for(auto cChip: *cHybrid)
                 {
-                    if(cROC->getFrontEndType() != FrontEndType::CBC3) continue;
+                    if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
-                    // LOG (INFO) << BOLDMAGENTA << "\t... CBC#" << +cROC->getId() << RESET;
-                    auto&              cThNoiseThisChip = cThNoiseThisFE->at(cROC->getIndex());
-                    std::vector<float> cPedestalsThisROC(0);
-                    std::vector<float> cNoiseThisROC(0);
-                    for(size_t cChnl = 0; cChnl < cROC->size(); cChnl++)
+                    // LOG (INFO) << BOLDMAGENTA << "\t... CBC#" << +cChip->getId() << RESET;
+                    auto&              cThNoiseThisChip = cThNoiseThisHybrid->at(cChip->getIndex());
+                    std::vector<float> cPedestalsThisChip(0);
+                    std::vector<float> cNoiseThisChip(0);
+                    for(size_t cChnl = 0; cChnl < cChip->size(); cChnl++)
                     {
-                        cPedestalsThisROC.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold);
-                        cNoiseThisROC.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise);
+                        cPedestalsThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fThreshold);
+                        cNoiseThisChip.push_back(cThNoiseThisChip->getChannel<ThresholdAndNoise>(cChnl).fNoise);
                     } // chnl loop
-                    auto cPedStats = SummarizeStats<float>(cPedestalsThisROC);
+                    auto cPedStats = SummarizeStats<float>(cPedestalsThisChip);
                     // LOG (INFO) << BOLDMAGENTA << "\t\t... Mean pedestal on this chip is "
                     //     << std::setprecision(2) << std::fixed
                     //     << cPedStats.fMean
@@ -981,7 +985,7 @@ void MemoryCheck2S::SetThreshold(float pSigma)
                     //     << " - minimum value is " << cPedStats.fMin
                     //     << " - maximum value is " << cPedStats.fMax
                     //     << RESET;
-                    auto cNoiseStats = SummarizeStats<float>(cNoiseThisROC);
+                    auto cNoiseStats = SummarizeStats<float>(cNoiseThisChip);
                     // LOG (INFO) << BOLDMAGENTA << "\t\t... Mean noise on this chip is "
                     //     << std::setprecision(2) << std::fixed
                     //     << cNoiseStats.fMean
@@ -990,13 +994,13 @@ void MemoryCheck2S::SetThreshold(float pSigma)
                     //     << " - maximum value is " << cNoiseStats.fMax
                     //     << RESET;
                     float cNoise          = std::sqrt(cNoiseStats.fMean * cNoiseStats.fMean + cNoiseStats.fStdDev * cNoiseStats.fStdDev);
-                    auto& cThThisROC      = cThThisHybrd->at(cROC->getIndex());
-                    auto& cThresholdToSet = cThThisROC->getSummary<uint16_t>();
+                    auto& cThThisChip     = cThThisHybrid->at(cChip->getIndex());
+                    auto& cThresholdToSet = cThThisChip->getSummary<uint16_t>();
                     cThresholdToSet       = (uint16_t)(cPedStats.fMean + pSigma * cNoise);
-                    LOG(INFO) << BOLDMAGENTA << "\t Setting threshold on CBC#" << +cROC->getId() << " to " << cThresholdToSet << " DAC units - i.e. " << std::setprecision(2) << std::fixed << cNoise
+                    LOG(INFO) << BOLDMAGENTA << "\t Setting threshold on CBC#" << +cChip->getId() << " to " << cThresholdToSet << " DAC units - i.e. " << std::setprecision(2) << std::fixed << cNoise
                               << " DAC units away from the pedestal" << RESET;
-                    fReadoutChipInterface->WriteChipReg(cROC, "Threshold", cThresholdToSet);
-                } // ROC
+                    fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThresholdToSet);
+                } // Chip
             }     // hybrid
         }         // OG
     }             // board
@@ -1195,7 +1199,9 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
         // const auto cStartTime = std::chrono::system_clock::now();
         // send enough triggers
         // to cover full pipeline N times
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+        auto cInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface();
+        cL1ReadoutInterface->ResetReadout();
         fExpectedPipelineAddress.clear();
         fTriggeredBxs.clear();
         fTriggerNumberInBurst.clear();
@@ -1382,7 +1388,9 @@ void MemoryCheck2S::MemoryCheck2SRaw(bool pAllOnes)
 
         // send enough triggers
         // to cover full pipeline N times
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+        auto cInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface();
+        cL1ReadoutInterface->ResetReadout();
         fExpectedPipelineAddress.clear();
         fTotalEventsExpected = 0;
         fTriggeredBxs.clear();
@@ -1519,7 +1527,9 @@ void MemoryCheck2S::MemoryCheck2SSparse()
             fBeBoardInterface->ChipReSync(cBoard);
         } // Board  - configure threshold and latency
 
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ResetReadout();
+        auto cInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface();
+        cL1ReadoutInterface->ResetReadout();
         // clear vector holding expected pipeline addresses
         fExpectedPipelineAddress.clear();
         fTotalEventsExpected = 0;
@@ -2065,21 +2075,21 @@ void MemoryCheck2S::Check()
                 auto& cExpectedOcThisOG = cExpectedOcThisBrd->at(cOpticalGroup->getIndex());
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    auto& cThThisHybrd         = cThThisOG->at(cHybrid->getIndex());
-                    auto& cThNoiseThisHybrd    = cThNoiseThisOG->at(cHybrid->getIndex());
-                    auto& cMemEventsThisHybrd  = cMemEventsThisOG->at(cHybrid->getIndex());
-                    auto& cBadEventsThisHybrid = cBadEventsThisOG->at(cHybrid->getIndex());
-                    auto& cExpectedOcThisHybrd = cExpectedOcThisOG->at(cHybrid->getIndex());
+                    auto& cThThisHybrid         = cThThisOG->at(cHybrid->getIndex());
+                    auto& cThNoiseThisHybrid    = cThNoiseThisOG->at(cHybrid->getIndex());
+                    auto& cMemEventsThisHybrid  = cMemEventsThisOG->at(cHybrid->getIndex());
+                    auto& cBadEventsThisHybrid  = cBadEventsThisOG->at(cHybrid->getIndex());
+                    auto& cExpectedOcThisHybrid = cExpectedOcThisOG->at(cHybrid->getIndex());
                     // only 2S for now
                     for(auto cChip: *cHybrid)
                     {
                         if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
-                        auto& cThThisChip   = cThThisHybrd->at(cChip->getIndex());
+                        auto& cThThisChip   = cThThisHybrid->at(cChip->getIndex());
                         auto& cThresholdSet = cThThisChip->getSummary<uint16_t>();
 
-                        auto& cThNoiseThisChip   = cThNoiseThisHybrd->at(cChip->getIndex());
-                        auto& cMemEventsThisChip = cMemEventsThisHybrd->at(cChip->getIndex());
+                        auto& cThNoiseThisChip   = cThNoiseThisHybrid->at(cChip->getIndex());
+                        auto& cMemEventsThisChip = cMemEventsThisHybrid->at(cChip->getIndex());
                         auto& cMemEventsSummary  = cMemEventsThisChip->getSummary<MemEvents>();
 
                         auto& cBadEventsThisChip = cBadEventsThisHybrid->at(cChip->getIndex());
@@ -2087,7 +2097,7 @@ void MemoryCheck2S::Check()
 
                         if(cEvntCnt == 0) cMemEventsSummary.clear();
 
-                        auto& cExpectedOcThisChip = cExpectedOcThisHybrd->at(cChip->getIndex());
+                        auto& cExpectedOcThisChip = cExpectedOcThisHybrid->at(cChip->getIndex());
                         //
                         auto cStubs           = cEvent->StubVector(cHybrid->getId(), cChip->getId());
                         auto cHits            = cEvent->GetHits(cHybrid->getId(), cChip->getId());
@@ -2125,11 +2135,11 @@ void MemoryCheck2S::Check()
                         if(fMemEvent.fType == 3)
                         {
                             CopyEvent(fStubEvent, fMemEvent);
-                            auto& cExpectdStubsThisBoard = fExpectedStubs.at(cBoard->getIndex());
-                            auto& cExpectdStubsThisOG    = cExpectdStubsThisBoard->at(cOpticalGroup->getIndex());
-                            auto& cExpectdStubsThisHybrd = cExpectdStubsThisOG->at(cHybrid->getIndex());
-                            auto& cExpectdStubsThisROC   = cExpectdStubsThisHybrd->at(cChip->getIndex());
-                            auto& cExpectedStubs         = cExpectdStubsThisROC->getSummary<std::vector<Stub>>();
+                            auto& cExpectdStubsThisBoard  = fExpectedStubs.at(cBoard->getIndex());
+                            auto& cExpectdStubsThisOG     = cExpectdStubsThisBoard->at(cOpticalGroup->getIndex());
+                            auto& cExpectdStubsThisHybrid = cExpectdStubsThisOG->at(cHybrid->getIndex());
+                            auto& cExpectdStubsThisChip   = cExpectdStubsThisHybrid->at(cChip->getIndex());
+                            auto& cExpectedStubs          = cExpectdStubsThisChip->getSummary<std::vector<Stub>>();
 //
 #ifdef __USE_ROOT__
                             TTree* cRawStubTree = static_cast<TTree*>(getHist(cHybrid, "Stub2STree"));

@@ -65,12 +65,6 @@ class MonitorDQMPlotCBC : public MonitorDQMPlotBase
     void fillLpGBTRegisterPlots(DetectorDataContainer& theCBCRegisterContainer, const std::string& registerName);
 
   private:
-    bool fDoMonitorThreshold{false};
-    bool fDoMonitorLpGBT_ADC1{false};
-    bool fDoMonitorLpGBT_VDD{false};
-    bool fDoMonitorLpGBT_VDDA{false};
-    bool fDoMonitorLpGBT_TEMP{false};
-
     std::map<std::string, DetectorDataContainer> fCBCRegisterMonitorPlotMap;
     std::map<std::string, DetectorDataContainer> fLpGBTRegisterMonitorPlotMap;
     DetectorDataContainer                        fDetectorData;
