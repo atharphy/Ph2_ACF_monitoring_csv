@@ -140,7 +140,7 @@ void DQMInterface::configure(std::string const& calibrationName, std::string con
 }
 
 //========================================================================================================================
-void DQMInterface::startProcessingData(std::string const& runNumber)
+void DQMInterface::startProcessingData(int runNumber)
 {
     fRunning       = true;
     fRunningFuture = std::async(std::launch::async, &DQMInterface::running, this);

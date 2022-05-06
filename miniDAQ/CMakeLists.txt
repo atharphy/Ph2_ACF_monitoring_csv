@@ -93,8 +93,8 @@ add_library(Ph2_miniDAQ STATIC ${SOURCES})
 ###############
 
 # RunController
-add_executable(RunController RunController.cc MiddlewareController.cc)
-target_link_libraries(RunController ${LIBS} Ph2_Tools Ph2_miniDAQ MessageUtils)
+add_executable(RunController RunController.cc MiddlewareController.cc MiddlewareStateMachine.cc)
+target_link_libraries(RunController ${LIBS} Ph2_Tools Ph2_System Ph2_miniDAQ MessageUtils)
 
 MESSAGE(STATUS " ")
 MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/miniDAQ/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")

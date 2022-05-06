@@ -8,6 +8,7 @@
     # Includes
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/Utils)
+    include_directories(${PROJECT_SOURCE_DIR}/MessageUtils/cpp)
     include_directories(${PROJECT_SOURCE_DIR})
     include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
     include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
@@ -24,7 +25,7 @@
 
     # Add the library
     add_library(Ph2_Utils STATIC ${SOURCES} ${HEADERS})
-    set(LIBS ${LIBS} pugixml boost_thread boost_date_time boost_iostreams boost_filesystem rt)
+    set(LIBS ${LIBS} pugixml boost_thread boost_date_time boost_iostreams boost_filesystem rt MessageUtils)
     TARGET_LINK_LIBRARIES(Ph2_Utils ${LIBS})
 
     # Boost also needs to be linked

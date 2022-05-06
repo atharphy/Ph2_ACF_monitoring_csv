@@ -37,18 +37,19 @@ MiddlewareStateMachine::~MiddlewareStateMachine()
     delete fTheTool;
 }
 
-Message MiddlewareStateMachine::initialize(MessageUtils::Message)
+ReplyMessage MiddlewareStateMachine::initialize()
 {
-    Message theMessage;
-    theMessage.set_data("InitializeDone");
-    return theMessage;
+    ReplyMessage theReplyMessage;
+    theReplyMessage.mutable_reply_type()->set_type(ReplyType::SUCCESS);
+    return theReplyMessage;
 }
 
-Message MiddlewareStateMachine::configure(const MessageUtils::ConfigurationMessage& configurationMessage)
+ReplyMessage MiddlewareStateMachine::configure(const MessageUtils::ConfigurationInfo& configurationInfo)
 {
-    Message theMessage;
+    ReplyMessage theReplyMessage;
+    theReplyMessage.mutable_reply_type()->set_type(ReplyType::SUCCESS);
 
-    std::string calibrationName = configurationMessage.calibration_name();
+    std::string calibrationName = configurationInfo.calibration_name();
 
     if(calibrationName == "calibration")
         fTheTool = new CombinedCalibration<LinkAlignmentOT, CicFEAlignment, PedestalEqualization>;
@@ -103,7 +104,7 @@ Message MiddlewareStateMachine::configure(const MessageUtils::ConfigurationMessa
     LOG(INFO) << BOLDBLUE << "Tool created" << RESET;
     try
     {
-        std::string calibrationFile = configurationMessage.configuration_file();
+        std::string calibrationFile = configurationInfo.configuration_file();
         fTheTool->Configure(calibrationFile, true);
     }
     catch(const std::exception& e)
@@ -111,37 +112,139 @@ Message MiddlewareStateMachine::configure(const MessageUtils::ConfigurationMessa
         std::cerr << e.what() << '\n';
         delete fTheTool;
         std::string errorString = std::string("Error: ") + e.what();
-        theMessage.set_error(errorString);
-        return theMessage;
+        theReplyMessage.mutable_reply_type()->set_type(ReplyType::ERROR);
+        return theReplyMessage;
     }
     
-    theMessage.set_data("ConfigureDone");
-
-    return theMessage;
+    return theReplyMessage;
 }
 
-Message MiddlewareStateMachine::start(Message startMessage){
-    // int runNumber = startMessage.runNumber();
-    Message output;
-    // try
-    // {
-    //     /* code */
-    //     fTheTool->Start(runNumber);
-    // }
-    // catch(const std::exception& e)
-    // {
-    //     std::cerr << e.what() << '\n';
-    //     output.error = e.what();
-    // }
+ReplyMessage MiddlewareStateMachine::start(const StartInfo& startInfo){
+    currentRun_ = startInfo.run_number();
+    ReplyMessage theReplyMessage;
+    theReplyMessage.mutable_reply_type()->set_type(ReplyType::SUCCESS);
+    try
+    {
+        fTheTool->Start(currentRun_);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        theReplyMessage.mutable_reply_type()->set_type(ReplyType::ERROR);
+    }
     
-    return output;
+    return theReplyMessage;
 }
 
-Message MiddlewareStateMachine::stop(MessageUtils::Message){return Message();}
+ReplyMessage MiddlewareStateMachine::stop()
+{
+    ReplyMessage theReplyMessage;
+    theReplyMessage.mutable_reply_type()->set_type(ReplyType::SUCCESS);
 
-Message MiddlewareStateMachine::halt(MessageUtils::Message){return Message();}
+    try
+    {
+        fTheTool->Stop();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        theReplyMessage.mutable_reply_type()->set_type(ReplyType::ERROR);
+    }
+    
+    LOG(INFO) << "Run " << currentRun_ << " stopped" << RESET;
+    return theReplyMessage;
+}
 
-Message MiddlewareStateMachine::pause(MessageUtils::Message){return Message();}
+ReplyMessage MiddlewareStateMachine::halt()
+{
+    ReplyMessage theReplyMessage;
+    theReplyMessage.mutable_reply_type()->set_type(ReplyType::SUCCESS);
 
-Message MiddlewareStateMachine::resume(MessageUtils::Message){return Message();}
+    try
+    {
+        fTheTool->Stop();
+        fTheTool->Destroy();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        theReplyMessage.mutable_reply_type()->set_type(ReplyType::ERROR);
+    }
+    
+    LOG(INFO) << "Halted!" << RESET;
+    return theReplyMessage;
+}
 
+ReplyMessage MiddlewareStateMachine::pause()
+{
+    ReplyMessage theReplyMessage;
+    theReplyMessage.mutable_reply_type()->set_type(ReplyType::SUCCESS);
+
+    try
+    {
+        fTheTool->Pause();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        theReplyMessage.mutable_reply_type()->set_type(ReplyType::ERROR);
+    }
+    
+    LOG(INFO) << "Paused!" << RESET;
+    return theReplyMessage;
+}
+
+ReplyMessage MiddlewareStateMachine::resume()
+{
+    ReplyMessage theReplyMessage;
+    theReplyMessage.mutable_reply_type()->set_type(ReplyType::SUCCESS);
+
+    try
+    {
+        fTheTool->Resume();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        theReplyMessage.mutable_reply_type()->set_type(ReplyType::ERROR);
+    }
+    
+    LOG(INFO) << "Resumed!" << RESET;
+    return theReplyMessage;
+}
+
+ReplyMessage MiddlewareStateMachine::abort()
+{
+    ReplyMessage theReplyMessage;
+    theReplyMessage.mutable_reply_type()->set_type(ReplyType::SUCCESS);
+
+    try
+    {
+        fTheTool->Destroy();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        theReplyMessage.mutable_reply_type()->set_type(ReplyType::ERROR);
+    }
+    
+    LOG(INFO) << "Aborted!" << RESET;
+    return theReplyMessage;
+}
+
+
+ReplyMessage MiddlewareStateMachine::status()
+{
+    ReplyMessage theReplyMessage;
+
+    try
+    {
+        theReplyMessage.mutable_reply_type()->set_type(fTheTool->GetRunningStatus() ? ReplyType::SUCCESS : ReplyType::RUNNING);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        theReplyMessage.mutable_reply_type()->set_type(ReplyType::ERROR);
+    }
+    return theReplyMessage;
+}

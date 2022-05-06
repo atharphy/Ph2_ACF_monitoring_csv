@@ -14,14 +14,14 @@ class MiddlewareInterface : public TCPClient
     void        halt(void);
     void        pause(void);
     void        resume(void);
-    void        start(std::string runNumber);
+    void        start(int runNumber);
     void        stop(void);
     std::string status(void);
 
   protected:
-    std::string currentRun_ = "0";
-    bool        running_    = false;
-    bool        paused_     = false;
+    // std::string currentRun_ = "0";
+    // bool        running_    = false;
+    // bool        paused_     = false;
 
   private:
     std::string sendCommand(const std::string& command);

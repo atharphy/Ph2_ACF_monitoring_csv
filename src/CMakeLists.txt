@@ -24,8 +24,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     link_directories(${UHAL_GRAMMARS_LIB_PREFIX})
     link_directories(${PROJECT_SOURCE_DIR/lib})
 
+    find_package(Protobuf REQUIRED)
+
     # Initial set of libraries
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_Tools Ph2_RootUtils Ph2_DQMUtils Ph2_MonitorDQM Ph2_MonitorUtils Ph2_ProductionTools NetworkUtils MessageUtils)
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_Tools Ph2_RootUtils Ph2_DQMUtils Ph2_MonitorDQM Ph2_MonitorUtils Ph2_ProductionTools NetworkUtils MessageUtils ${Protobuf_LIBRARIES})
 
     # Check for ZMQ installed
     if(ZMQ_FOUND)

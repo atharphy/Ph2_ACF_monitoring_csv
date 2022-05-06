@@ -272,7 +272,7 @@ int main(int argc, char* argv[])
                 case CONFIGURED:
                 {
                     std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Start!!!" << std::endl;
-                    std::string runNumber = "5";
+                    int runNumber = 5;
                     std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
                     theDQMInterface.startProcessingData(runNumber);
                     std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
