@@ -282,9 +282,9 @@ int main(int argc, char** argv)
                 {
                     LOG(INFO) << BOLDBLUE << "Supervisor sending start" << RESET;
 
-                    theDQMInterface.startProcessingData(RD53Shared::fromInt2Str(runNumber));
+                    theDQMInterface.startProcessingData(runNumber);
                     theMonitorDQMInterface.startProcessingData();
-                    theMiddlewareInterface.start(RD53Shared::fromInt2Str(runNumber));
+                    theMiddlewareInterface.start(runNumber);
 
                     stateMachineStatus = RUNNING;
                     break;

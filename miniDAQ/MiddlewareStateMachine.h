@@ -1,8 +1,7 @@
 #ifndef __MIDDLEWARE_STATE_MACHINE__
 #define __MIDDLEWARE_STATE_MACHINE__
 
-#include "../MessageUtils/cpp/ReplyMessage.pb.h"
-#include "../MessageUtils/cpp/QueryMessage.pb.h"
+#include <string>
 
 class Tool;
 
@@ -10,24 +9,26 @@ class MiddlewareStateMachine
 {
   public:
     MiddlewareStateMachine();
-    virtual ~MiddlewareStateMachine();
+    ~MiddlewareStateMachine();
 
+    enum Status {RUNNING, DONE};
     // State machine commands
-    MessageUtils::ReplyMessage initialize();
-    MessageUtils::ReplyMessage configure(const MessageUtils::ConfigurationInfo& configurationInfo);
-    MessageUtils::ReplyMessage start(const MessageUtils::StartInfo& startInfo);
-    MessageUtils::ReplyMessage stop();
-    MessageUtils::ReplyMessage halt();
-    MessageUtils::ReplyMessage pause();
-    MessageUtils::ReplyMessage resume();
-    MessageUtils::ReplyMessage abort();
+    void initialize();
+    void configure (const std::string& calibrationName, const std::string& configurationFile);
+    void start     (int runNumber);
+    void stop      ();
+    void halt      ();
+    void pause     ();
+    void resume    ();
+    void abort     ();
 
-    MessageUtils::ReplyMessage status();
+    Status status();
 
     Tool* fTheTool;
 
   private:
     int currentRun_;
+
 
 };
 

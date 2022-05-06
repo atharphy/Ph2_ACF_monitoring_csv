@@ -46,79 +46,82 @@ MiddlewareController::~MiddlewareController(void) { LOG(INFO) << __PRETTY_FUNCTI
 std::string MiddlewareController::interpretMessage(const std::string& buffer)
 {
     LOG(INFO) << __PRETTY_FUNCTION__ << " Message received from OTSDAQ: " << buffer << RESET;
-    ReplyMessage theReplyMessage;
 
     QueryMessage theInputQuery;
     theInputQuery.ParseFromString(buffer);
     theInputQuery.PrintDebugString();
 
+    std::string replyString;
+
     switch (theInputQuery.query_type().type()) 
     {
         case QueryType::INITIALIZE:
         {
-            theReplyMessage = fMiddlewareStateMachine.initialize();
+            replyString = fMiddlewareMessageHandler.initialize(buffer);
             break;
         }
         case QueryType::CONFIGURE:
         {
             ConfigurationMessage theConfigurationMessage;
             theConfigurationMessage.ParseFromString(buffer);
-            theReplyMessage = fMiddlewareStateMachine.configure(theConfigurationMessage.data());
+            replyString = fMiddlewareMessageHandler.configure(buffer);
             break;
         }
         case QueryType::START:
         {
             StartMessage theStartQuery;
             theStartQuery.ParseFromString(buffer);
-            theReplyMessage = fMiddlewareStateMachine.start(theStartQuery.data());
+            replyString = fMiddlewareMessageHandler.start(buffer);
             break;
         }
         case QueryType::STOP:
         {
-            theReplyMessage = fMiddlewareStateMachine.stop();
+            replyString = fMiddlewareMessageHandler.stop(buffer);
             break;
         }
         case QueryType::HALT:
         {
-            theReplyMessage = fMiddlewareStateMachine.halt();
+            replyString = fMiddlewareMessageHandler.halt(buffer);
             break;
         }
         case QueryType::PAUSE:
         {
-            theReplyMessage = fMiddlewareStateMachine.pause();
+            replyString = fMiddlewareMessageHandler.pause(buffer);
             break;
         }
         case QueryType::RESUME:
         {
-            theReplyMessage = fMiddlewareStateMachine.resume();
+            replyString = fMiddlewareMessageHandler.resume(buffer);
             break;
         }
         case QueryType::ABORT:
         {
-            theReplyMessage = fMiddlewareStateMachine.abort();
+            replyString = fMiddlewareMessageHandler.abort(buffer);
             break;
         }
         case QueryType::ERROR:
         {
+            ReplyMessage theReplyMessage;
             theReplyMessage.mutable_reply_type()->set_type(ReplyType::ERROR);
             theReplyMessage.set_message("Received an Error message from the client");
+            theReplyMessage.SerializeToString(&replyString);
             break;
         }
         case QueryType::STATUS:
         {
-            theReplyMessage = fMiddlewareStateMachine.status();
+            replyString = fMiddlewareMessageHandler.status(buffer);
             break;
         }
         default:
         {
+            ReplyMessage theReplyMessage;
             theReplyMessage.mutable_reply_type()->set_type(ReplyType::ERROR);
             theReplyMessage.set_message("Can't recognize message");
+            theReplyMessage.SerializeToString(&replyString);
             break;
         }
     }
 
-    std::string replyString;
-    theReplyMessage.SerializeToString(&replyString);
     return replyString;
 
 }

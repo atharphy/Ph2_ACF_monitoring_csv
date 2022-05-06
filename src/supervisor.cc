@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
     if(result != ArgvParser::NoParserError)
     {
         LOG(INFO) << cmd.parseErrorDescription(result);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     // now query the parsing results
@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
         // The return value is -1
         execv((binDir + "RunController").c_str(), argv);
         LOG(ERROR) << "Can't run RunController, error occured";
-        exit(0);
+        exit(EXIT_FAILURE);
     }
     // usleep(10000000);
     //	std::cout << "forking dqm" << std::endl;

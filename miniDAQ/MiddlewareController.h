@@ -4,7 +4,7 @@
 #include "../NetworkUtils/TCPServer.h"
 #include "../System/SystemController.h"
 #include "../tools/Tool.h"
-#include "../miniDAQ/MiddlewareStateMachine.h"
+#include "../miniDAQ/MiddlewareMessageHandler.h"
 
 #include <string>
 
@@ -20,7 +20,7 @@ class MiddlewareController : public TCPServer
     std::string interpretMessage(const std::string& buffer) override;
 
   private:
-    MiddlewareStateMachine fMiddlewareStateMachine;
+    MiddlewareMessageHandler fMiddlewareMessageHandler;
 };
 
 #endif
