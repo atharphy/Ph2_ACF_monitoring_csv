@@ -887,7 +887,7 @@ void LatencyScan::writeObjects()
 
 // State machine control functions
 
-void LatencyScan::ConfigureCalibration() { CreateResultDirectory("Results/Run_Latency"); }
+void LatencyScan::ConfigureCalibration() {}
 
 void LatencyScan::Running()
 {

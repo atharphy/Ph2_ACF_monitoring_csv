@@ -44,7 +44,6 @@ struct CombinedCalibration : public Tool
     void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000) override
     {
         Tool::Configure(cHWFile, enableStream, DQMportNumber);
-        Tool::CreateResultDirectory("Results", false, false);
     }
 
     bool GetRunningStatus() override { return runningCompleted; }
@@ -53,7 +52,8 @@ struct CombinedCalibration : public Tool
     {
         Tool::dumpConfigFiles();
         Tool::SaveResults();
-        /* Tool::Destroy(); */
+        Tool::WriteRootFile();
+        Tool::CloseResultFile();
     }
 
   private:

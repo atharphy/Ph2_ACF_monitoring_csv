@@ -61,11 +61,6 @@ void SCurve::ConfigureCalibration()
     // # Initialize progress #
     // #######################
     RD53RunProgress::total() += SCurve::getNumberIterations();
-
-    // ############################################################
-    // # Create directory for: raw data, config files, histograms #
-    // ############################################################
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "SCurve");
 }
 
 void SCurve::Running()

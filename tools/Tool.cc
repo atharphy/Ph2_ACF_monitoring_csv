@@ -90,6 +90,11 @@ void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNum
 
 void Tool::Start(int runNumber)
 {
+    std::string resultDirectory = "Results/OT_ModuleTest_ModuleOT_Run" + std::to_string(runNumber);
+    CreateResultDirectory(resultDirectory, false, false);
+    #ifdef __USE_ROOT__
+    InitResultFile("Hybrid");
+    #endif
     fKeepRunning   = true;
     fRunNumber     = runNumber;
     fRunningFuture = std::async(std::launch::async, &Tool::Running, this);
@@ -406,12 +411,14 @@ TObject* Tool::getHist(BoardContainer* pBeBoard, std::string pName)
             return cHisto->second;
     }
 }
+#endif
 
 void Tool::WriteRootFile()
 {
+    #ifdef __USE_ROOT__
     if((fResultFile != nullptr) && (fResultFile->IsOpen() == true)) fResultFile->Write();
+    #endif
 }
-#endif
 
 void Tool::SaveResults()
 {
@@ -469,7 +476,8 @@ void Tool::SaveResults()
         cCanvas.second->SaveAs(cPdfName.c_str());
     }
     // Save summary TTree
-    fResultFile->cd();
+    // fResultFile->cd();
+    if((fResultFile != nullptr) && (fResultFile->IsOpen() == true)) fResultFile->cd();
     if(fSummaryTree != nullptr) fSummaryTree->Write(); // Seems to be needed with ROOT6, seems to break with ROOT5...
 #endif
 }
@@ -519,9 +527,11 @@ void Tool::InitResultFile(const std::string& pFilename)
     else
         LOG(INFO) << RED << "ERROR: " << RESET << "No Result Directory initialized - not saving results!";
 }
+#endif
 
 void Tool::CloseResultFile()
 {
+    #ifdef __USE_ROOT__
     if(fResultFile != nullptr)
     {
         LOG(INFO) << GREEN << "Closing result file" << RESET;
@@ -529,8 +539,10 @@ void Tool::CloseResultFile()
         delete fResultFile;
         fResultFile = nullptr;
     }
+    #endif
 }
 
+ #ifdef __USE_ROOT__
 // add username, chip IDs to a metadata tree
 void Tool::AddMetadata()
 {

@@ -98,9 +98,9 @@ class Tool : public Ph2_System::SystemController
     TObject* getHist(ChipContainer* pChip, std::string pName);
     TObject* getHist(HybridContainer* pHybrid, std::string pName);
     TObject* getHist(BoardContainer* pBeBoard, std::string pName);
+#endif
 
     void WriteRootFile();
-#endif
 
     virtual void sendData(){};
     virtual void ConfigureCalibration(){};
@@ -113,6 +113,7 @@ class Tool : public Ph2_System::SystemController
 
     void waitForRunToBeCompleted();
     void SaveResults();
+    void CloseResultFile();
 
     /*!
      * \brief Create a result directory at the specified path + ChargeMode + Timestamp
@@ -127,7 +128,6 @@ class Tool : public Ph2_System::SystemController
  */
 #ifdef __USE_ROOT__
     void InitResultFile(const std::string& pFilename);
-    void CloseResultFile();
     void AddMetadata();
     void StartHttpServer(const int pPort = 8080, bool pReadonly = true);
     void HttpServerProcess();

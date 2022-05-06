@@ -22,11 +22,6 @@ void VoltageTuning::ConfigureCalibration()
     targetAna    = this->findValueInSettings<double>("VDDATrimTarget", 1.2);
     toleranceDig = this->findValueInSettings<double>("VDDDTrimTolerance", 0.02);
     toleranceAna = this->findValueInSettings<double>("VDDATrimTolerance", 0.02);
-
-    // ############################################################
-    // # Create directory for: raw data, config files, histograms #
-    // ############################################################
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "VoltageTuning");
 }
 
 void VoltageTuning::Running()

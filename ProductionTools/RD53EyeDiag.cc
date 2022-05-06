@@ -42,11 +42,6 @@ void EyeDiag::ConfigureCalibration()
         if(std::next(it) != observables.end()) observablesstring << "|";
     }
     fPowerSupplyClient->sendAndReceivePacket(std::string("Scope:main:setEOM=") + observablesstring.str());
-
-    // ############################################################
-    // # Create directory for: raw data, config files, histograms #
-    // ############################################################
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false);
 }
 
 void EyeDiag::Running()

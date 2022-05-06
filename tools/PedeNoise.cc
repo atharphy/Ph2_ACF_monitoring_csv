@@ -1041,7 +1041,7 @@ void PedeNoise::writeObjects()
 #endif
 }
 
-void PedeNoise::ConfigureCalibration() { CreateResultDirectory("Results/Run_PedeNoise"); }
+void PedeNoise::ConfigureCalibration() {}
 
 void PedeNoise::Running()
 {

@@ -26,11 +26,6 @@ void DataTransmissionTest::ConfigureCalibration()
     given_time     = this->findValueInSettings<double>("byTime");
     frames_or_time = this->findValueInSettings<double>("framesORtime");
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
-
-    // ############################################################
-    // # Create directory for: raw data, config files, histograms #
-    // ############################################################
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "DataTransmissionTest");
 }
 
 void DataTransmissionTest::Running()

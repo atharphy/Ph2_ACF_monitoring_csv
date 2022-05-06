@@ -68,11 +68,6 @@ void PixelAlive::ConfigureCalibration()
     // # Initialize progress #
     // #######################
     RD53RunProgress::total() += PixelAlive::getNumberIterations();
-
-    // ############################################################
-    // # Create directory for: raw data, config files, histograms #
-    // ############################################################
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "PixelAlive");
 }
 
 void PixelAlive::Running()
