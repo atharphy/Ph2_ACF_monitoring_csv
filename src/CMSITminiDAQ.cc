@@ -31,6 +31,7 @@
 #include "../tools/RD53ThrEqualizationSC.h"
 #include "../tools/RD53ThrMinimization.h"
 #include "../tools/RD53VoltageTuning.h"
+#include "../miniDAQ/CombinedCalibrationFactory.h"
 
 #include <chrono>
 #include <sys/wait.h>
@@ -269,7 +270,9 @@ int main(int argc, char** argv)
                     LOG(INFO) << BOLDBLUE << "Supervisor sending configure" << RESET;
 
                     LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
-                    theMiddlewareInterface.configure(cmd.optionValue("calib"), cmd.optionValue("file"));
+                    CombinedCalibrationFactory theCombinedCalibrationFactory;
+
+                    theMiddlewareInterface.configure(theCombinedCalibrationFactory.getCalibrationEnum(cmd.optionValue("calib")), cmd.optionValue("file"));
                     theDQMInterface.configure(cmd.optionValue("calib"), cmd.optionValue("file"));
                     theMonitorDQMInterface.configure(cmd.optionValue("file"));
                     LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;

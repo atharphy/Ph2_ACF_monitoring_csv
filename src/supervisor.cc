@@ -8,6 +8,8 @@
 #include "../MonitorDQM/MonitorDQMInterface.h"
 #include "../Utils/MiddlewareInterface.h"
 #include "../Utils/argvparser.h"
+#include "../miniDAQ/CombinedCalibrationFactory.h"
+
 
 #include <cstring>
 #include <errno.h>
@@ -102,7 +104,11 @@ int main(int argc, char* argv[])
     cmd.defineOption("file", "Hw Description File", ArgvParser::OptionRequiresValue | ArgvParser::OptionRequired);
     cmd.defineOptionAlternative("file", "f");
 
-    cmd.defineOption("calibration", "Calibration to run", ArgvParser::OptionRequiresValue | ArgvParser::OptionRequired);
+    std::string calibrationHelpMessage = "Calibration to run. List of available calibrations:\n";
+    CombinedCalibrationFactory theCombinedCalibrationFactory;
+    for(const auto& calibration : theCombinedCalibrationFactory.getAvailableCalibrations()) calibrationHelpMessage += (calibration + "\n");
+
+    cmd.defineOption("calibration", calibrationHelpMessage, ArgvParser::OptionRequiresValue | ArgvParser::OptionRequired);
     cmd.defineOptionAlternative("calibration", "c");
 
     cmd.defineOption("output", "Output Directory. Default value: Results", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
@@ -263,7 +269,8 @@ int main(int argc, char* argv[])
                     std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Configure!!!" << std::endl;
                     std::string calibrationName   = cmd.optionValue("calibration");
                     std::string configurationFile = cmd.optionValue("file");
-                    theMiddlewareInterface.configure(calibrationName, configurationFile);
+                    const MessageUtils::ConfigurationInfo::CalibrationNameEnum &calibrationEnum = theCombinedCalibrationFactory.getCalibrationEnum(calibrationName);
+                    theMiddlewareInterface.configure(calibrationEnum, configurationFile);
                     theDQMInterface.configure(calibrationName, configurationFile);
                     theMonitorDQMInterface.configure(configurationFile);
                     stateMachineStatus = CONFIGURED;

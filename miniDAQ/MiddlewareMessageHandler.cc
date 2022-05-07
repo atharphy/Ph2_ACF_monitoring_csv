@@ -1,4 +1,5 @@
 #include "../miniDAQ/MiddlewareMessageHandler.h"
+#include "../miniDAQ/CombinedCalibrationFactory.h"
 
 using namespace MessageUtils;
 
@@ -19,7 +20,9 @@ std::string MiddlewareMessageHandler::configure(const std::string& message)
 
     ConfigurationMessage theConfigureMessage;
     theConfigureMessage.ParseFromString(message);
-    const std::string calibrationName = theConfigureMessage.data().calibration_name();
+
+    CombinedCalibrationFactory theCombinedCalibrationFactory;
+    const std::string calibrationName = theCombinedCalibrationFactory.getCalibrationName(theConfigureMessage.data().calibration_name());
     const std::string configurationFile = theConfigureMessage.data().configuration_file();
 
     ReplyMessage theReplyMessage = tryCatchWrapper(__PRETTY_FUNCTION__, &MiddlewareStateMachine::configure, calibrationName, configurationFile);
