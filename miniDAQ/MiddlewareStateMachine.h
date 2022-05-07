@@ -2,6 +2,8 @@
 #define __MIDDLEWARE_STATE_MACHINE__
 
 #include <string>
+#include <map>
+#include <typeinfo>
 
 class Tool;
 
@@ -29,6 +31,7 @@ class MiddlewareStateMachine
   private:
     int currentRun_;
 
+    std::map<std::string, std::type_info> fClassesInfo;
 
 };
 

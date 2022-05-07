@@ -1,3 +1,6 @@
+#ifndef __COMBINED_CALIBRATION__
+#define __COMBINED_CALIBRATION__
+
 #include "../tools/Tool.h"
 #include <iostream>
 
@@ -80,3 +83,5 @@ struct CombinedCalibration : public Tool
     Tool*                current_tool;
     std::tuple<Tools...> tools;
 };
+
+#endif
