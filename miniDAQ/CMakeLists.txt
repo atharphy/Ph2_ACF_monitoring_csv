@@ -5,6 +5,10 @@ MESSAGE(STATUS "    ${BoldYellow}===============================================
 MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/miniDAQ/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
 MESSAGE(STATUS " ")
 
+set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ version selection")
+set(CMAKE_CXX_STANDARD_REQUIRED ON)  # optional, ensure standard is supported
+set(CMAKE_CXX_EXTENSIONS OFF)  # optional, keep compiler extensions off
+
 # Includes
 include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
 include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
@@ -17,6 +21,8 @@ include_directories(${PROJECT_SOURCE_DIR}/Utils)
 include_directories(${PROJECT_SOURCE_DIR}/System)
 include_directories(${PROJECT_SOURCE_DIR}/tools)
 include_directories(${PROJECT_SOURCE_DIR}/NetworkUtils)
+include_directories($ENV{PYBIND11INCLUDE})
+include_directories($ENV{PYTHONINCLUDE})
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -87,6 +93,9 @@ set(LIBS ${LIBS} ${Boost_IOSTREAMS_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_S
 file(GLOB SOURCES *.cc)
 add_library(Ph2_miniDAQ STATIC ${SOURCES})
 
+add_subdirectory($ENV{PYBIND11} subproject/pybind11)
+pybind11_add_module(Ph2_ACF_PythonInterface PythonMiddlewareMessageHandler.cc)
+target_link_libraries(Ph2_ACF_PythonInterface PUBLIC ${LIBS} Ph2_Tools Ph2_System Ph2_miniDAQ MessageUtils)
 
 ###############
 # EXECUTABLES #

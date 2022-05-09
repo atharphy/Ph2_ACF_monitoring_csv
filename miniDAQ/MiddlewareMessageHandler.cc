@@ -96,4 +96,3 @@ ReplyMessage MiddlewareMessageHandler::catchFunction(ReplyMessage inputReplayMes
     inputReplayMessage.set_message(outputMessage);
     return inputReplayMessage;
 }
-
