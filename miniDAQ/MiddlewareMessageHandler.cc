@@ -90,7 +90,7 @@ std::string MiddlewareMessageHandler::status(const std::string& message)
 ReplyMessage MiddlewareMessageHandler::catchFunction(ReplyMessage& inputReplayMessage, const std::exception& theException, const std::string& currentFunction)
 {
     std::string theExceptionMessage = theException.what();
-    std::string outputMessage = "Exception thrown during SM step " + currentFunction + " - catched exception message: crashed because it sucks :)" + theExceptionMessage;
+    std::string outputMessage = "Exception thrown during SM step " + currentFunction + " - catched exception message: " + theExceptionMessage;
     inputReplayMessage.mutable_reply_type()->set_type(ReplyType::ERROR);
     inputReplayMessage.set_message(outputMessage.c_str());
     return inputReplayMessage;
