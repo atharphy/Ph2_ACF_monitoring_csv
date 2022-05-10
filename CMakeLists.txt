@@ -82,6 +82,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow -Wno-error=unused-function -Wno-error=pedantic")
     set (GCC_9_NOERROR_FLAGS "-Wno-error=deprecated-copy -Wno-error=int-in-bool-context -Wno-error=unused-variable")
 
+    set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ version selection")
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)  # optional, ensure standard is supported
+    set(CMAKE_CXX_EXTENSIONS OFF)  # optional, keep compiler extensions off
+
     if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
       EXECUTE_PROCESS( COMMAND gcc -dumpversion OUTPUT_VARIABLE GCC_VERSION )
       if(NOT (GCC_VERSION VERSION_LESS 6))
@@ -97,7 +101,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_9_NOERROR_FLAGS}")
       endif()
     endif ()
-    set (CMAKE_CXX_FLAGS "-g -std=c++14 -gdwarf-4 -O3 -fopenmp -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-missing-field-initializers -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor ${GCC_NOERROR_FLAGS} -pthread -Wcpp -fPIC ${CMAKE_CXX_FLAGS} -DELPP_THREAD_SAFE")
+    set (CMAKE_CXX_FLAGS "-g -gdwarf-4 -O3 -fopenmp -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-missing-field-initializers -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor ${GCC_NOERROR_FLAGS} -pthread -Wcpp -fPIC ${CMAKE_CXX_FLAGS} -DELPP_THREAD_SAFE")
     if(NoDataShipping)
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
     endif()
@@ -233,6 +237,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     add_subdirectory(MonitorUtils)
     add_subdirectory(MessageUtils/cpp)
     add_subdirectory(miniDAQ)
+    add_subdirectory(pythonUtils)
 
     message("--     ${BoldRed}#### Don't forget to set the path and ld_library_path by sourcing setup.sh before running ###${Reset}")
 

@@ -22,6 +22,8 @@ class MiddlewareMessageHandler
     std::string abort     (const std::string& message);
     std::string status    (const std::string& message);
 
+    void print() {std::cout<<__PRETTY_FUNCTION__<<std::endl;}
+
     template<typename T>
     static std::string serializeMessage(T theMessage);
 

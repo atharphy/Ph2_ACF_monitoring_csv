@@ -26,7 +26,7 @@ class MiddlewareStateMachine
 
     Status status();
 
-    Tool* fTheTool;
+    Tool* fTheTool {nullptr};
 
   private:
     int currentRun_;

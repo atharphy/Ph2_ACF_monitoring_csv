@@ -29,8 +29,8 @@ std::string MiddlewareMessageHandler::configure(const std::string& message)
     return serializeMessage(theReplyMessage);
 }
 
-std::string MiddlewareMessageHandler::start(const std::string& message){
-
+std::string MiddlewareMessageHandler::start(const std::string& message)
+{
     StartMessage theStartMessage;
     theStartMessage.ParseFromString(message);
     int runNumber = theStartMessage.data().run_number();

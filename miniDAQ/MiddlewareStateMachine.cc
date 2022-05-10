@@ -10,10 +10,12 @@ MiddlewareStateMachine::MiddlewareStateMachine()
 MiddlewareStateMachine::~MiddlewareStateMachine()
 {
     delete fTheTool;
+    fTheTool = nullptr;
 }
 
 void MiddlewareStateMachine::initialize()
 {
+    LOG(INFO) << "Initialized" << RESET;
 }
 
 void MiddlewareStateMachine::configure(const std::string& calibrationName, const std::string& configurationFile)
