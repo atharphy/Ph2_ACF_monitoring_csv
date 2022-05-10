@@ -54,11 +54,20 @@ void Eudaq2Producer::DoInitialise()
     fPathToHWFile = cEudaqIni->Get("HWFile", "./settings/DESY_FullModule.xml");
     LOG(INFO) << BOLDYELLOW << "Loading settings from file : " << fPathToHWFile << RESET;
 
+
+    auto cRunNumber = GetRunNumber();
+    std::string cDirectory = Form("Results/EudaqProducer_Run%d", cRunNumber);
+
     std::stringstream outp;
     // Outer Tracker hardware configuration
     this->InitializeHw(fPathToHWFile);
     this->InitializeSettings(fPathToHWFile, outp);
     LOG(INFO) << outp.str();
+    this->CreateResultDirectory(cDirectory, false, false);
+    this->InitResultFile("Module");
+    this->AddMetadata();
+
+
 
     // check if PS module it is
     for(auto cBoard: *fDetectorContainer)
@@ -107,15 +116,6 @@ void Eudaq2Producer::DoInitialise()
         cCicAligner.waitForRunToBeCompleted();
         cCicAligner.dumpConfigFiles();
 
-        // time align stubs with L1 data in the BE
-        if(!cSkipAlignment)
-        {
-            StubBackEndAlignment cStubBackEndAligner;
-            cStubBackEndAligner.Inherit(this);
-            cStubBackEndAligner.Start(0);
-            cStubBackEndAligner.waitForRunToBeCompleted();
-        }
-
         // now align data between SSA-MPA
         if(fIsPS && !cSkipAlignment)
         {
@@ -148,6 +148,7 @@ void Eudaq2Producer::DoConfigure()
 
     // Check if Handshake mode is enabled and get trigger multiplicity value
     fHandshakeEnabled = (this->fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.readout_block.global.data_handshake_enable") > 0);
+    LOG(INFO) << "Data handshake enable : " << +fHandshakeEnabled << RESET;
     this->fBeBoardInterface->WriteBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", std::stoi(cEudaqConf->Get("TriggerMultiplicity", "0")));
     fTriggerMultiplicity = this->fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     LOG(INFO) << "Trigger Multiplicity : " << +fTriggerMultiplicity << RESET;
@@ -164,6 +165,7 @@ void Eudaq2Producer::DoConfigure()
     for(auto cBoard: *fDetectorContainer)
     {
         UpdateFromRegMap(cBoard);
+    	this->fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.packet_nbr", 999);
 
         // send a Resync to this board
         this->fBeBoardInterface->ChipReSync(cBoard);

@@ -79,7 +79,7 @@ void OTTool::Reset()
 
                         cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second.fValue));
                     }
-                    fReadoutChipInterface->WriteChipMultReg(cChip, cRegList);
+                    fReadoutChipInterface->WriteChipMultReg(cChip, cRegList, false);
 
                     // then clear modified register map
                     // and also disable register tracking for this chip
@@ -154,7 +154,7 @@ void OTTool::Prepare()
                 {
                     cChip->setRegisterTracking(1);
                     cChip->ClearModifiedRegisterMap();
-                    LOG(DEBUG) << BOLDYELLOW << fMyName << "::Prepare Chip#" << +cChip->getId() << " register tracking set to " << +cChip->getRegisterTracking() << RESET;
+                    LOG(INFO) << BOLDYELLOW << fMyName << "::Prepare Chip#" << +cChip->getId() << " register tracking set to " << +cChip->getRegisterTracking() << RESET;
                 } // chips
             }     // hybrids
         }         // optical groups
@@ -1003,7 +1003,11 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
     cBoardRegs.push_back("fc7_daq_cnfg.tlu_block.tlu_enabled");
     cBoardRegs.push_back("fc7_daq_cnfg.tlu_block.handshake_mode");
     BeBoardRegMap cRegMap = pBoard->getBeBoardRegMap();
-    for(auto cReg: cBoardRegs) { fBeBoardInterface->WriteBoardReg(pBoard, cReg, cRegMap[cReg]); }
+    for(auto cReg: cBoardRegs) 
+    { 
+      LOG(INFO) << BOLDBLUE << "Setting " << cReg << " to " << +cRegMap[cReg] << RESET;
+      fBeBoardInterface->WriteBoardReg(pBoard, cReg, cRegMap[cReg]); 
+    }
 
     // set thresholds
     for(auto cOpticalGroup: *pBoard)
@@ -1015,8 +1019,10 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                 uint32_t cThreshold = 0;
                 if(cChip->getFrontEndType() == FrontEndType::CBC3) cThreshold = (cChip->getReg("VCth1") + (cChip->getReg("VCth2") << 8));
                 if(cChip->getFrontEndType() == FrontEndType::SSA) cThreshold = cChip->getReg("Bias_THDAC");
-                if(cChip->getFrontEndType() == FrontEndType::MPA)
+                if(cChip->getFrontEndType() == FrontEndType::MPA) cThreshold = cChip->getReg("ThDAC0");
+/*
                 {
+
                     for(uint8_t cDAC = 0; cDAC < 1; cDAC++)
                     {
                         std::stringstream cRegName;
@@ -1024,6 +1030,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                         cThreshold = cChip->getReg(cRegName.str());
                     }
                 }
+*/
                 LOG(INFO) << BOLDMAGENTA << "Setting threshold on Chip#" << +cChip->getId() << " to 0x" << std::hex << +cThreshold << std::dec << RESET;
                 fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
             }
