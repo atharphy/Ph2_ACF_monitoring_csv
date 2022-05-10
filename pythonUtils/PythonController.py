@@ -1,29 +1,22 @@
 import sys
 import os
+import Ph2_ACF_StateMachine
+import argparse
 
 sys.path.insert(1, os.getenv('PH2ACF_BASE_DIR'))
-
 import lib.Ph2_ACF_PythonInterface as Ph2_ACF
-import MessageUtils.python.QueryMessage_pb2 as query
 
-Ph2_ACF_controller = Ph2_ACF.MiddlewareMessageHandler()
-Ph2_ACF_controller.print()
+###########OPTIONS
+parser = argparse.ArgumentParser(description='Command line parser of skim options')
+parser.add_argument('-f', dest='configuration_file', help='xml configuration file', required = True)
+parser.add_argument('-c', dest='calibration_name'  , help='calibration name'      , required = True)
 
+args = parser.parse_args()
+configuration_file = args.configuration_file
+calibration_name   = args.calibration_name
 
-initializeMessage = query.QueryMessage()
-initializeMessage.query_type.type = query.QueryType.INITIALIZE
+Ph2_ACF.configureLogger(os.getenv('PH2ACF_BASE_DIR') + "/settings/logger.conf")
 
-stringMessage = initializeMessage.SerializeToString()
+theStateMachine = Ph2_ACF_StateMachine.StateMachine(configuration_file, calibration_name)
 
-output = Ph2_ACF_controller.initialize(stringMessage)
-
-configureMessage = query.ConfigurationMessage()
-
-configureMessage.query_type.type = query.QueryType.CONFIGURE
-configureMessage.data.calibration_name = query.ConfigurationInfo.CALIBRATIONANDPEDENOISE
-configureMessage.data.configuration_file = os.getenv('PH2ACF_BASE_DIR') + "/settings/D19CDescription_2Sskeleton.xml"
-
-print(configureMessage)
-
-stringMessage = initializeMessage.SerializeToString()
-output = Ph2_ACF_controller.configure(stringMessage)
+theStateMachine.runCalibration()

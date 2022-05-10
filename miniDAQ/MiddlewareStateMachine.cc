@@ -16,6 +16,7 @@ MiddlewareStateMachine::~MiddlewareStateMachine()
 void MiddlewareStateMachine::initialize()
 {
     LOG(INFO) << "Initialized" << RESET;
+    return;
 }
 
 void MiddlewareStateMachine::configure(const std::string& calibrationName, const std::string& configurationFile)
@@ -24,6 +25,8 @@ void MiddlewareStateMachine::configure(const std::string& calibrationName, const
     fTheTool = theCombinedCalibrationFactory.CreateCombinedCalibration(calibrationName);
 
     LOG(INFO) << BOLDBLUE << "Tool created" << RESET;
+
+    LOG(INFO) << "Configuration file: " << configurationFile << RESET;
 
     fTheTool->Configure(configurationFile, true);
     

@@ -17,7 +17,6 @@ std::string MiddlewareMessageHandler::initialize(const std::string& message)
 
 std::string MiddlewareMessageHandler::configure(const std::string& message)
 {
-
     ConfigurationMessage theConfigureMessage;
     theConfigureMessage.ParseFromString(message);
 
