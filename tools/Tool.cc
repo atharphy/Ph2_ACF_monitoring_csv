@@ -75,7 +75,26 @@ Tool::Tool(const Tool& pTool) { this->Inherit(&pTool); }
 
 Tool::~Tool() {}
 
-bool Tool::GetRunningStatus() { return (fRunningFuture.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready); }
+bool Tool::GetRunningStatus()
+{
+    std::future_status runningStatus = fRunningFuture.wait_for(std::chrono::milliseconds(500u));
+    if (runningStatus == std::future_status::ready || runningStatus == std::future_status::deferred)
+    {
+        try
+        {
+            if(fRunningFuture.valid())
+            {
+                fRunningFuture.get();
+            }
+        }
+        catch(const std::exception& e)
+        {
+            throw std::runtime_error(e.what());
+        }
+        return true;
+    }
+    else return false;
+}
 
 void Tool::waitForRunToBeCompleted()
 {

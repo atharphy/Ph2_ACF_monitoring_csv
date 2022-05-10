@@ -44,7 +44,7 @@ class MiddlewareMessageHandler
         return theReplyMessage;
     }
 
-    MessageUtils::ReplyMessage catchFunction(MessageUtils::ReplyMessage inputReplayMessage, const std::exception& theException, const std::string& currentFunction);
+    MessageUtils::ReplyMessage catchFunction(MessageUtils::ReplyMessage& inputReplayMessage, const std::exception& theException, const std::string& currentFunction);
 
 
 };

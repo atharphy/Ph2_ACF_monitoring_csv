@@ -19,4 +19,5 @@ Ph2_ACF.configureLogger(os.getenv('PH2ACF_BASE_DIR') + "/settings/logger.conf")
 
 theStateMachine = Ph2_ACF_StateMachine.StateMachine(configuration_file, calibration_name)
 
-theStateMachine.runCalibration()
+calibrationResult = theStateMachine.runCalibration()
+print("Calibration result: " + calibrationResult)

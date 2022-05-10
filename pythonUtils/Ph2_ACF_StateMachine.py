@@ -14,13 +14,8 @@ class StateMachine(object):
     def __init__(self, configuration_file, calibration_name):
         self.configuration_file_ = configuration_file;
         self.calibration_name_ = calibration_name;
-        initializeMessage = Query.QueryMessage()
-        initializeMessage.query_type.type = Query.QueryType.INITIALIZE
-        stringMessage = initializeMessage.SerializeToString()
-        replyBuffer = Ph2_ACF_controller.initialize(stringMessage)
-        self.status_ = "HALTED"
-        if self.parseReply(replyBuffer) != Reply.ReplyType.SUCCESS:
-            self.status_ = "ERROR"
+        self.status_ = "INITIAL"
+        self.calibrationResult = "SUCCESS"
 
     def switch(self, status):
         default = "Incorrect state"
@@ -29,13 +24,21 @@ class StateMachine(object):
     def parseReply(self, replyBuffer):
         theReply = Reply.ReplyMessage()
         theReply.ParseFromString(replyBuffer.encode())
-        print(theReply)
         if(theReply.reply_type.type == Reply.ReplyType.ERROR):
             print(theReply.message)
         return theReply.reply_type.type
 
+    def state_INITIAL(self):
+        initializeMessage = Query.QueryMessage()
+        initializeMessage.query_type.type = Query.QueryType.INITIALIZE
+        stringMessage = initializeMessage.SerializeToString()
+        replyBuffer = Ph2_ACF_controller.initialize(stringMessage)
+        if self.parseReply(replyBuffer) != Reply.ReplyType.SUCCESS:
+            self.status_ = "ERROR"
+            return
+        self.status_ = "HALTED"
+
     def state_HALTED(self):
-        print("State: HALTED")
         configureMessage = Query.ConfigurationMessage()
         configureMessage.query_type.type = Query.QueryType.CONFIGURE
         configureMessage.data.calibration_name = Query.ConfigurationInfo.CALIBRATIONANDPEDENOISE
@@ -46,10 +49,8 @@ class StateMachine(object):
             self.status_ = "ERROR"
             return
         self.status_ = "CONFIGURED"
-        print(self.status_)
 
     def state_CONFIGURED(self):
-        print("State: CONFIGURED")
         startMessage = Query.StartMessage()
         startMessage.query_type.type = Query.QueryType.START
         startMessage.data.run_number = 999
@@ -59,10 +60,8 @@ class StateMachine(object):
             self.status_ = "ERROR"
             return
         self.status_ = "RUNNING"
-        print(self.status_)
 
     def state_RUNNING(self):
-        print("State: RUNNING")
         while True:
             statusMessage = Query.QueryMessage()
             statusMessage.query_type.type = Query.QueryType.STATUS
@@ -84,24 +83,22 @@ class StateMachine(object):
         self.status_ = "STOPPED"
         if self.parseReply(replyBuffer) != Reply.ReplyType.SUCCESS:
             self.status_ = "ERROR"
-        print(self.status_)
 
     def state_STOPPED(self):
-        print("State: STOPPED")
         haltMessage = Query.QueryMessage()
         haltMessage.query_type.type = Query.QueryType.HALT
         stringMessage = haltMessage.SerializeToString()
         replyBuffer = Ph2_ACF_controller.halt(stringMessage)
         self.status_ = "DONE"
-        print(self.status_)
 
     def state_ERROR(self):
-        print("State: ERROR")
         print("An error occurred")
         self.status_ = "DONE"
-        print(self.status_)
+        self.calibrationResult = "FAILED"
 
     def runCalibration(self):
         while(self.status_ != "DONE"):
             self.switch(self.status_)
-        print(self.status_)
+        return self.calibrationResult
+        
+

@@ -39,17 +39,13 @@ struct CombinedCalibration : public Tool
 
     void Running()
     {
-        runningCompleted = false;
         start_impl(std::make_index_sequence<size>());
-        runningCompleted = true;
     }
 
     void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000) override
     {
         Tool::Configure(cHWFile, enableStream, DQMportNumber);
     }
-
-    bool GetRunningStatus() override { return runningCompleted; }
 
     void Stop() override
     {
@@ -60,7 +56,6 @@ struct CombinedCalibration : public Tool
     }
 
   private:
-    bool runningCompleted;
     template <size_t... Is>
     void start_impl(std::index_sequence<Is...>)
     {
