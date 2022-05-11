@@ -276,7 +276,9 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
                 for(const pugi::xml_attribute& attr: theChild.attributes())
                 {
                     os << BOLDBLUE << "|\t|\t|---- " << attr.name() << ": " << BOLDYELLOW << attr.value() << "\n" << RESET;
-                    if(std::string(attr.name()) == "RxHSLPolarity")
+                    if(std::string(attr.name()) == "ChipAddress")
+                        thelpGBT->setChipAddress(convertAnyInt(theChild.attribute("ChipAddress").value()));
+                    else if(std::string(attr.name()) == "RxHSLPolarity")
                         thelpGBT->setRxHSLPolarity(theChild.attribute("RxHSLPolarity").as_int());
                     else if(std::string(attr.name()) == "TxHSLPolarity")
                         thelpGBT->setTxHSLPolarity(theChild.attribute("TxHSLPolarity").as_int());
