@@ -23,8 +23,8 @@
                 <!-- (0) level, (1) edge, (2) OR, (3) XOR  -->
                 <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns -->
                 <!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
-                <Latencies       stripLatency="120" pixelLatency="120"/>
-                <Thresholds      stripThreshold="15000" pixelThreshold="15000"/> 
+                <Latencies       stripLatency="117" pixelLatency="117"/>
+                <Thresholds      stripThreshold="15000" pixelThreshold="10000"/> 
                 <StubLogic       mode="0" window="16"/>
                 <HitLogic        stripMode="1" pixelMode="1"/>
                 <HipLogic        stripCut="7" pixelCut="7"/>
@@ -64,8 +64,8 @@
                 <!-- (0) level, (1) edge, (2) OR, (3) XOR  -->
                 <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns -->
                 <!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
-                <Latencies       stripLatency="120" pixelLatency="120"/>
-                <Thresholds      stripThreshold="15000" pixelThreshold="15000"/> 
+                <Latencies       stripLatency="117" pixelLatency="117"/>
+                <Thresholds      stripThreshold="15000" pixelThreshold="10000"/> 
                 <StubLogic       mode="0" window="16"/>
                 <HitLogic        stripMode="1" pixelMode="1"/>
                 <HipLogic        stripCut="7" pixelCut="7"/>
@@ -189,13 +189,13 @@
         <Register name="readout_block">
             <Register name="packet_nbr"> 999 </Register>
             <Register name="global">
-                    <Register name="data_handshake_enable"> 1 </Register>
+                    <Register name="data_handshake_enable"> 0 </Register>
                     <Register name="int_trig_enable"> 0 </Register>
                     <Register name="int_trig_rate"> 0 </Register>
                     <Register name="trigger_type"> 0 </Register>
                     <Register name="data_type"> 0 </Register>
                     <!--this is what is commonly known as stub latency-->
-                    <Register name="common_stubdata_delay"> 41 </Register>
+                    <Register name="common_stubdata_delay"> 39 </Register>
             </Register>
             <Register name="timeout"> 0 </Register>
         </Register>
