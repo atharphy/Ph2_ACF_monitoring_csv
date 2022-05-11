@@ -57,6 +57,12 @@ class L1ReadoutInterface : public RegManager
         return false;
     }
 
+    virtual bool CheckBuffers()
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function L1ReadoutInterface::CheckBuffers is absent" << RESET;
+        return false;
+    }
+
     std::vector<uint32_t> getData() { return fData; }
     void                  clearData() { fData.clear(); }
     // function to link FEConfigurationInterface
