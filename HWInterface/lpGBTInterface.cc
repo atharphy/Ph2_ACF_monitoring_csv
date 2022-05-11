@@ -20,8 +20,8 @@ namespace Ph2_HwInterface
 bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerify)
 {
     this->setBoard(pChip->getBeBoardId());
-    auto cBoardType = fBoardFW->getBoardType();
-    auto cAddress   = pChip->getRegItem(pDacName).fAddress;
+    auto     cBoardType       = fBoardFW->getBoardType();
+    auto     cAddress         = pChip->getRegItem(pDacName).fAddress;
     uint16_t cMaxWriteAddress = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 0x13C : 0x14F; // Setting highest write address possible (lpGBT version dependent)
 
     // Checking that written value isn't more than 8 bits
