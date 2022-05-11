@@ -998,7 +998,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
 {
     // important registers for beBoard
     std::vector<std::string> cBoardRegs{
-        "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", "fc7_daq_cnfg.fast_command_block.trigger_source","fc7_daq_cnfg.readout_block.global.data_handshake_enable"};
+        "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", "fc7_daq_cnfg.fast_command_block.trigger_source"};
     cBoardRegs.push_back("fc7_daq_cnfg.tlu_block.trigger_id_delay");
     cBoardRegs.push_back("fc7_daq_cnfg.tlu_block.tlu_enabled");
     cBoardRegs.push_back("fc7_daq_cnfg.tlu_block.handshake_mode");
