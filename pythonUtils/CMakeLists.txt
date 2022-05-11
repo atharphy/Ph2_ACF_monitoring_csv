@@ -2,15 +2,15 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
 MESSAGE(STATUS " ")
 MESSAGE(STATUS "    ${BoldYellow}========================================================================================================${Reset}")
-MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/miniDAQ/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
+MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/pythonUtils/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
 MESSAGE(STATUS " ")
 
 # Includes
 include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
 include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
 include_directories(${UHAL_LOG_INCLUDE_PREFIX})
-include_directories(${PROJECT_SOURCE_DIR}/miniDAQ)
 include_directories(${PROJECT_SOURCE_DIR}/MessageUtils/cpp)
+include_directories(${PROJECT_SOURCE_DIR}/miniDAQ)
 include_directories(${PROJECT_SOURCE_DIR}/Utils)
 include_directories($ENV{PYBIND11INCLUDE})
 include_directories($ENV{PYTHONINCLUDE})
@@ -90,7 +90,7 @@ target_link_libraries(Ph2_ACF_PythonInterface PUBLIC ${LIBS} Ph2_Tools Ph2_Syste
 ###############
 
 MESSAGE(STATUS " ")
-MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/miniDAQ/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
+MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/pythonUtils/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
 MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
 MESSAGE(STATUS " ")
 
@@ -125,12 +125,6 @@ else() # ------------------------------- Compilation in the otsdaq environment -
               cactus_uhal_uhal
               cactus_uhal_log
               cactus_uhal_grammars
-              Ph2_Interface_${Ph2_ACF_Master}
-              Ph2_System_${Ph2_ACF_Master}
-              Ph2_Utils_${Ph2_ACF_Master}
-              NetworkUtils_${Ph2_ACF_Master}
-              Ph2_Tools_${Ph2_ACF_Master}
-              Ph2_MonitorUtils_${Ph2_ACF_Master}
 
 #Ph2_DQMUtils_${Ph2_ACF_Master }
 #$ENV{XDAQ_LIB } / libxdaq.so

@@ -1,4 +1,6 @@
 #!/bin/bash
+source scl_source enable devtoolset-8
+
 ###########
 # Ph2_ACF #
 ###########
@@ -12,6 +14,7 @@ export CACTUSBIN=$CACTUSROOT/bin
 export CACTUSLIB=$CACTUSROOT/lib
 export CACTUSINCLUDE=$CACTUSROOT/include
 alias cmake="cmake3"
+alias PythonController.py="python pythonUtils/PythonController.py"
 
 #########
 # BOOST #
