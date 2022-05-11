@@ -7,7 +7,7 @@ export PH2ACF_BASE_DIR=$(pwd)
 ##########
 # CACTUS #
 ##########
-export CACTUSROOT=/opt/cactus_Ph2_ACF
+export CACTUSROOT=/opt/cactus
 export CACTUSBIN=$CACTUSROOT/bin
 export CACTUSLIB=$CACTUSROOT/lib
 export CACTUSINCLUDE=$CACTUSROOT/include
@@ -52,10 +52,9 @@ export ANTENNALIB=$ANTENNADIR/lib
 export USBINSTDIR=$EXTERNAL_TOOLS_BASE_DIR/Ph2_USBInstDriver
 export USBINSTLIB=$USBINSTDIR/lib
 
-##########
+#########
 # EUDAQ #
-##########
-if [[ -z ${EUDAQDIR} ]]; then export EUDAQDIR=$EXTERNAL_TOOLS_BASE_DIR/eudaq; fi
+#########
 export EUDAQLIB=$EUDAQDIR/lib
 
 ##########
