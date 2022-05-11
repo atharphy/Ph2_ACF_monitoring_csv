@@ -118,8 +118,7 @@ void Eudaq2Producer::DoInitialise()
 
         // now align data between SSA-MPA
         if(fIsPS && !cSkipAlignment)
-        {
-            cPSAlignment.dumpConfigFiles();
+        { cPSAlignment.dumpConfigFiles();
             cPSAlignment.Align();
         }
 
@@ -148,7 +147,6 @@ void Eudaq2Producer::DoConfigure()
 
     // Check if Handshake mode is enabled and get trigger multiplicity value
     fHandshakeEnabled = (this->fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.readout_block.global.data_handshake_enable") > 0);
-    LOG(INFO) << "Data handshake enable : " << +fHandshakeEnabled << RESET;
     this->fBeBoardInterface->WriteBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", std::stoi(cEudaqConf->Get("TriggerMultiplicity", "0")));
     fTriggerMultiplicity = this->fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     LOG(INFO) << "Trigger Multiplicity : " << +fTriggerMultiplicity << RESET;
@@ -164,8 +162,9 @@ void Eudaq2Producer::DoConfigure()
     }
     for(auto cBoard: *fDetectorContainer)
     {
-        UpdateFromRegMap(cBoard);
     	this->fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.packet_nbr", 999);
+    	this->fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.data_handshake_enable", 1);
+        UpdateFromRegMap(cBoard);
 
         // send a Resync to this board
         this->fBeBoardInterface->ChipReSync(cBoard);
@@ -875,8 +874,8 @@ bool Eudaq2Producer::EventsPending()
 {
     if(fConfigured)
     {
-        if(fHandshakeEnabled)
-        {
+        //if(fHandshakeEnabled)
+        //{
             for(auto cBoard: *fDetectorContainer)
             {
                 BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
@@ -885,9 +884,9 @@ bool Eudaq2Producer::EventsPending()
                     if(this->fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.readout_req") > 0) { return true; } // end of if ReadBoardReg
                 }                                                                                                                            // end of if BoardType
             }                                                                                                                                // end of cBoard loop
-        }                                                                                                                                    // end of if fHandshakeEnabled
-        else
-            return true;
+        //}                                                                                                                                    // end of if fHandshakeEnabled
+        //else
+            //return true;
     }
     return false;
 }

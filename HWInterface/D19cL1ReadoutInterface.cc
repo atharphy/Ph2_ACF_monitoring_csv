@@ -39,7 +39,11 @@ bool D19cL1ReadoutInterface::ResetReadout()
 void D19cL1ReadoutInterface::CountFwEvents()
 {
     fNReadoutEvents = 0;
-    if(fData.size() == 0) return;
+    if(fData.size() == 0) 
+    {
+      LOG(ERROR) << BOLDRED << "D19cL1ReadoutInterface::CountFwEvens fData empty" << RESET;
+      return;
+    }
 
     std::vector<uint32_t> cValidData(0);
     cValidData.clear();
@@ -210,8 +214,10 @@ bool D19cL1ReadoutInterface::PollReadoutData(const BeBoard* pBoard, bool pWait)
 
     if(cSuccess)
     {
+        while(CheckReadoutReq() == false) continue;
         FillData();
         CountFwEvents();
+        ResetReadout();
 	LOG(DEBUG) << BOLDYELLOW << "D19cL1ReadoutInterface::PollReadoutData " << fData.size() << " valid 32 bit words .. which are " << +fNReadoutEvents << " events." << RESET;
     }
     return cSuccess;
