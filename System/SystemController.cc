@@ -338,9 +338,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         fDetectorMonitor->forkMonitor();
     }
 
-    // ###################
-    // # make sure  all interfaces are configured
-    // ###################
+    // ############################################
+    // # Make sure  all interfaces are configured #
+    // ############################################
     for(const auto cBoard: *fDetectorContainer)
     {
         if(cBoard->getBoardType() == BoardType::RD53) continue;
