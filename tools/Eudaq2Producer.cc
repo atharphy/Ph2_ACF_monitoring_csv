@@ -145,8 +145,10 @@ void Eudaq2Producer::DoConfigure()
     fThresholdCBC      = std::stoi(cEudaqConf->Get("ThresholdCBC", "550"));
     fRelativeThreshold = std::stoi(cEudaqConf->Get("RelativeThreshold", "0")); // 0 will correspond to a threshold at the pedestal
 
+    fHandshakeEnabled = (cEudaqConf->Get("DataHandshakeEnable", "false") == "true") ? true : false;
+    uint8_t cTLUTriggerIdDelay      = std::stoi(cEudaqConf->Get("TLUTriggerIdDelay", "2"));
+
     // Check if Handshake mode is enabled and get trigger multiplicity value
-    fHandshakeEnabled = (this->fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.readout_block.global.data_handshake_enable") > 0);
     this->fBeBoardInterface->WriteBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", std::stoi(cEudaqConf->Get("TriggerMultiplicity", "0")));
     fTriggerMultiplicity = this->fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     LOG(INFO) << "Trigger Multiplicity : " << +fTriggerMultiplicity << RESET;
@@ -162,9 +164,12 @@ void Eudaq2Producer::DoConfigure()
     }
     for(auto cBoard: *fDetectorContainer)
     {
-    	this->fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.packet_nbr", 999);
-    	this->fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.data_handshake_enable", 1);
         UpdateFromRegMap(cBoard);
+    	this->fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.packet_nbr", 999);
+    	this->fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.data_handshake_enable", fHandshakeEnabled);
+    	this->fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.tlu_block.trigger_id_delay", cTLUTriggerIdDelay);
+        LOG(INFO) << "Board : " << +cBoard->getId() << " -- Data Handshake : " << +fHandshakeEnabled << RESET;
+        LOG(INFO) << "Board : " << +cBoard->getId() << " -- TLU Trigger Id Delay : " << +cTLUTriggerIdDelay << RESET;
 
         // send a Resync to this board
         this->fBeBoardInterface->ChipReSync(cBoard);
@@ -335,7 +340,13 @@ void Eudaq2Producer::DoStartRun()
     LOG(INFO) << BOLDBLUE << "[CMS-OT Producer] Opening shutter ..." << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
-        // Start() also does CBC fast reset and readout reset
+        fBeBoardInterface->setBoard(cBoard->getId());
+        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        cInterface->ResetEventCounter();
+
+	auto cReadoutInterface = cInterface->getL1ReadoutInterface();
+	cReadoutInterface->ResetReadout();
+        
         this->fBeBoardInterface->Start(static_cast<BeBoard*>(cBoard));
         LOG(INFO) << BOLDBLUE << "[CMS-OT Producer] Shutter opened on board " << +cBoard->getId() << RESET;
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -506,10 +517,14 @@ void Eudaq2Producer::ReadoutLoop()
         else
         {
             // Check if any data is pending
-            if(!EventsPending()) { continue; }
+            //if(!EventsPending()) { continue; }
             LOG(INFO) << MAGENTA << "Running on normal mode" << RESET;
             for(auto cBoard: *fDetectorContainer)
             {
+                fBeBoardInterface->setBoard(cBoard->getId());
+                auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+	        auto cReadoutInterface = cInterface->getL1ReadoutInterface();
+ 
                 BeBoard*              cTheBoard = static_cast<BeBoard*>(cBoard);
                 std::vector<uint32_t> cRawData(0);
                 // Get data
@@ -521,6 +536,8 @@ void Eudaq2Producer::ReadoutLoop()
                     std::this_thread::sleep_for(std::chrono::microseconds(100));
                     continue;
                 }
+	        //cReadoutInterface->ResetReadout();
+
                 // Check and fill phase 2 raw data
                 fPh2FileHandler->setData(cRawData);
 
