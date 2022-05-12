@@ -126,6 +126,11 @@ class Chip : public FrontEndDescription
     uint8_t getChipAddress() const { return fChipAddress; }
 
     /*!
+     * \brief Set the Chip address
+     */
+    void setChipAddress(uint16_t pChipAddress) { fChipAddress = pChipAddress; }
+
+    /*!
      * \brief Get the Chip code
      * \return The Chip code
      */

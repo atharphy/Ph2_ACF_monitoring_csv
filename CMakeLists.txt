@@ -67,7 +67,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         set(NoDataShipping false)
     endif()
 
-    MESSAGE(STATUS "")
     MESSAGE(STATUS "    ${BoldYellow}COMPILATION FLAGS:${Reset}")
     MESSAGE(STATUS "    CompileForShep = ${BoldRed}${CompileForShep}${Reset}")
     MESSAGE(STATUS "    CompileForHerd = ${BoldRed}${CompileForHerd}${Reset}")
@@ -129,13 +128,13 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif()
 
     # AMC13
-    find_package(CACTUS)      #========================================================
+    find_package(CACTUS)
     if(${CACTUS_AMC13_FOUND})
         message(STATUS "    Enabling AMC13 component")
     endif(${CACTUS_AMC13_FOUND})
 
     # Antenna
-    find_package(PH2_ANTENNA) #========================================================
+    find_package(PH2_ANTENNA)
     if(PH2_ANTENNA_FOUND)
         message(STATUS "    Building the Antenna components")
     endif(PH2_ANTENNA_FOUND)
@@ -174,7 +173,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     if ($ENV{CompileWithEUDAQ}) # Asked for EUDAQ
         message(STATUS "Building with EUDAQ")
         set(USE_EUDAQ ON)
-        if(NOT (DEFINED ENV{EUDAQDIR} AND EXISTS ENV{EUDAQDIR} ) )
+        if(NOT DEFINED ENV{EUDAQDIR})
             message(WARNING "    Couldn't find EUDAQ. Obtaining from gitlab ref $ENV{EUDAQ_REF}")
             ExternalProject_Add( ext_eudaq
                     GIT_REPOSITORY https://gitlab.cern.ch/cms_tk_ph2/eudaq.git
@@ -182,7 +181,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
                     PREFIX ${EXTERNAL_INSTALL_LOCATION}
                 )
             set(ENV{EUDAQDIR} ${EXTERNAL_INSTALL_LOCATION}/src/ext_eudaq/ )
-        endif(NOT (DEFINED ENV{EUDAQDIR} AND EXISTS ENV{EUDAQDIR} ) )
+        endif(NOT DEFINED ENV{EUDAQDIR})
 
         include_directories($ENV{EUDAQDIR}/include)
         set(EUDAQ_LIB -L$ENV{EUDAQDIR}/lib eudaq_core)
@@ -192,7 +191,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif($ENV{CompileWithEUDAQ})
 
     # ZeroMQ
-    find_package(ZMQ)         #========================================================
+    find_package(ZMQ)
     if(ZMQ_FOUND)
         find_package(PH2_USBINSTLIB)
         if(PH2_USBINSTLIB_FOUND)
@@ -200,9 +199,12 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     endif(ZMQ_FOUND)
 
     # Boost
-    find_package(Boost 1.53 REQUIRED system filesystem serialization iostreams program_options)
+    # To use a local installtion of BOOST
+    #set(BOOST_ROOT "" CACHE PATH "Boost library path")
+    #set(Boost_NO_SYSTEM_PATHS on CACHE BOOL "Do not search system for Boost")
+    find_package(Boost 1.53 REQUIRED COMPONENTS system filesystem serialization iostreams program_options)
 
-    message("--     ${BoldCyan}#### Done ####${Reset}")
+    message("--     ${BoldCyan}#### End ####${Reset}")
 
     # All the subdirs
     if(${CACTUS_AMC13_FOUND})
@@ -267,13 +269,13 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     endif(${CACTUS_AMC13_FOUND})
 
     # Antenna
-    find_package(PH2_ANTENNA) #========================================================
+    find_package(PH2_ANTENNA)
     if(PH2_ANTENNA_FOUND)
         message(STATUS "    Building the Antenna components")
     endif(PH2_ANTENNA_FOUND)
 
     # ZeroMQ
-    find_package(ZMQ)         #========================================================
+    find_package(ZMQ)
     if(ZMQ_FOUND)
         find_package(PH2_USBINSTLIB)
         if(PH2_USBINSTLIB_FOUND)

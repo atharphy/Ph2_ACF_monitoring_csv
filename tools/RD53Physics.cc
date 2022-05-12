@@ -17,16 +17,16 @@ void Physics::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings<double>("ROWstart");
-    rowStop        = this->findValueInSettings<double>("ROWstop");
-    colStart       = this->findValueInSettings<double>("COLstart");
-    colStop        = this->findValueInSettings<double>("COLstop");
-    nTRIGxEvent    = this->findValueInSettings<double>("nTRIGxEvent");
-    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
-
-    frontEnd = RD53::getMajorityFE(colStart, colStop);
+    rowStart        = this->findValueInSettings<double>("ROWstart");
+    rowStop         = this->findValueInSettings<double>("ROWstop");
+    colStart        = this->findValueInSettings<double>("COLstart");
+    colStop         = this->findValueInSettings<double>("COLstop");
+    nTRIGxEvent     = this->findValueInSettings<double>("nTRIGxEvent");
+    doDisplay       = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData  = this->findValueInSettings<double>("SaveBinaryData");
+    outputBinaryDir = this->findValueInSettings<std::string>("OutputBinaryDir", "");
+    frontEnd        = RD53::getMajorityFE(colStart, colStop);
 
     // ################################
     // # Custom channel group handler #
@@ -58,6 +58,7 @@ void Physics::Running()
 
     if(saveBinaryData == true)
     {
+        if(outputBinaryDir != "") this->fDirectoryName = outputBinaryDir;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Physics.raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -338,7 +339,7 @@ void Physics::saveChipRegisters(int currentRun)
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
                     if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-                    std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
+                    std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + this->fDirectoryName);
                     system(command.c_str());
                     LOG(INFO) << BOLDBLUE << "\t--> Physics saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId()
                               << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
