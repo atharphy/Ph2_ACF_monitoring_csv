@@ -12,24 +12,6 @@ export CACTUSBIN=$CACTUSROOT/bin
 export CACTUSLIB=$CACTUSROOT/lib
 export CACTUSINCLUDE=$CACTUSROOT/include
 
-#########
-# BOOST #
-#########
-export KERNELRELEASE=$(uname -r)
-if [[ $KERNELRELEASE == *"el6"* ]]; then
-    export BOOST_LIB=/opt/cactus/lib
-    export BOOST_INCLUDE=/opt/cactus/include
-elif [[ $KERNELRELEASE == *"el8"* ]]; then
-    export BOOST_LIB=/opt/cactus/lib
-    export BOOST_INCLUDE=/opt/cactus/include
-elif [[ $KERNELRELEASE == "5."*"-generic" ]]; then
-    export BOOST_INCLUDE=/usr/include
-    export BOOST_LIB=/usr/lib/x86_64-linux-gnu
-else
-    export BOOST_INCLUDE=/usr/include
-    export BOOST_LIB=/usr/lib64
-fi
-
 ########
 # ROOT #
 ########
@@ -42,39 +24,37 @@ if ! command -v root &> /dev/null; then
   return 1
 fi
 
-#######
-# ZMQ #
-#######
-export ZMQ_HEADER_PATH=/usr/include/zmq.hpp
-
 ####################
 # External Plugins #
 ####################
 export EXTERNAL_TOOLS_BASE_DIR=${PH2ACF_BASE_DIR%/*}
-# if in the docker container I want to do this .. need to figure out how to make sure that this is set-up correctly
 export AMC13DIR=$CACTUSINCLUDE/amc13
-export ANTENNADIR=$EXTERNAL_TOOLS_BASE_DIR/CMSPh2_AntennaDriver
-export USBINSTDIR=$EXTERNAL_TOOLS_BASE_DIR/Ph2_USBInstDriver
-export EUDAQDIR=$EXTERNAL_TOOLS_BASE_DIR/eudaq
 export POWERSUPPLYDIR=$EXTERNAL_TOOLS_BASE_DIR/power_supply
 
 # These are git references for the dependencies that are included via CMake ExternalProjects
 export PH2_TCUSB_REF=9c39f0f4082f8db6a6788baf3567f55631b53f16
 export EUDAQ_REF=ac59b87fca12806d775e95df2d253c3bf96420ee
 
+#######
+# ZMQ #
+#######
+export ZMQ_HEADER_PATH=/usr/include/zmq.hpp
+
 ###########
 # ANTENNA #
 ###########
+export ANTENNADIR=$EXTERNAL_TOOLS_BASE_DIR/CMSPh2_AntennaDriver
 export ANTENNALIB=$ANTENNADIR/lib
 
 ###########
 # HMP4040 #
 ###########
+export USBINSTDIR=$EXTERNAL_TOOLS_BASE_DIR/Ph2_USBInstDriver
 export USBINSTLIB=$USBINSTDIR/lib
 
-##########
+#########
 # EUDAQ #
-##########
+#########
 export EUDAQLIB=$EUDAQDIR/lib
 
 ##########
@@ -102,6 +82,9 @@ export EuDaqFlag='-D__EUDAQ__'
 #####################
 # Compilation flags #
 #####################
+
+# C++ standard
+export STDCXX="-std=c++1y"
 
 # Stand-alone application, without data streaming
 export CompileForHerd=false

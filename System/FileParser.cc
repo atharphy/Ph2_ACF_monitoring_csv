@@ -276,7 +276,9 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
                 for(const pugi::xml_attribute& attr: theChild.attributes())
                 {
                     os << BOLDBLUE << "|\t|\t|---- " << attr.name() << ": " << BOLDYELLOW << attr.value() << "\n" << RESET;
-                    if(std::string(attr.name()) == "RxHSLPolarity")
+                    if(std::string(attr.name()) == "ChipAddress")
+                        thelpGBT->setChipAddress(convertAnyInt(theChild.attribute("ChipAddress").value()));
+                    else if(std::string(attr.name()) == "RxHSLPolarity")
                         thelpGBT->setRxHSLPolarity(theChild.attribute("RxHSLPolarity").as_int());
                     else if(std::string(attr.name()) == "TxHSLPolarity")
                         thelpGBT->setTxHSLPolarity(theChild.attribute("TxHSLPolarity").as_int());
@@ -1441,7 +1443,8 @@ void FileParser::parseSettingsxml(const std::string& pFilename, SettingsMap& pSe
 
         for(pugi::xml_node nSetting = nSettings.child("Setting"); nSetting; nSetting = nSetting.next_sibling())
         {
-            if((strcmp(nSetting.attribute("name").value(), "RegNameDAC1") == 0) || (strcmp(nSetting.attribute("name").value(), "RegNameDAC2") == 0))
+            if((strcmp(nSetting.attribute("name").value(), "RegNameDAC1") == 0) || (strcmp(nSetting.attribute("name").value(), "RegNameDAC2") == 0) ||
+               (strcmp(nSetting.attribute("name").value(), "OutputBinaryDir") == 0))
             {
                 std::string value(nSetting.first_child().value());
                 value.erase(std::remove(value.begin(), value.end(), ' '), value.end());
