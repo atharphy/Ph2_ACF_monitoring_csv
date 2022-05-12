@@ -140,6 +140,17 @@ void RD53eudaqProducer::MySendEvent(eudaq::EventSP theEvent)
 
 void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_HwInterface::RD53Event>& RD53EvtList)
 {
+    // #######################################################################################################################
+    // # EUDAQ event parameters                                                                                              #
+    // #######################################################################################################################
+    // # - EventN:   is computed in the software                                                                             #
+    // # - TriggerN: are typically assigned by the TLU to the event data, and TriggerN is used to build events               #
+    // # Running ./euCliCollector                                                                                            #
+    // # If we build events online with EventIDSyncDataCollector data collector then the building is done with EventN        #
+    // # If we build events online with DirectSaveDataCOllector data collector then the building is done with TriggerN       #
+    // # If we analyze with Corryvreckan, we unpack all events and subevents and look at either their timestamps or TriggerN #
+    // #######################################################################################################################
+
     if(RD53EvtList.size() != 0)
     {
         size_t it = 0;
