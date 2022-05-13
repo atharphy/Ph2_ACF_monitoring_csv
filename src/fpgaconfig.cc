@@ -5,7 +5,7 @@
 
 #include "../System/SystemController.h"
 #include "../Utils/argvparser.h"
-#include "FC7FpgaControlFWInterface.h"
+#include "D19cFpgaConfig.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
     cSystemController.InitializeHw(cHWFile, cStr);
     BeBoard* pBoard = cSystemController.fDetectorContainer->at((cmd.foundOption("board")) ? convertAnyInt(cmd.optionValue("board").c_str()) : 0);
     cSystemController.fBeBoardInterface->setBoard(pBoard->getId());
-    auto cInterface = FC7FpgaControlFWInterface(cSystemController.fBeBoardInterface->getFirmwareInterface());
+    auto cInterface = D19cFpgaConfig(cSystemController.fBeBoardInterface->getFirmwareInterface());
 
     std::vector<std::string> lstNames = cInterface.getFpgaConfigList();
     std::string              cFWFile;
@@ -150,7 +150,7 @@ int main(int argc, char* argv[])
     {
         strImage = cmd.optionValue("delete");
         verifyImageName(strImage, lstNames);
-        cInterface.DeleteFpgaConfig(strImage);
+        cInterface.deleteFpgaConfig(strImage);
         LOG(INFO) << "Firmware image: " << strImage << " deleted from SD card";
         exit(EXIT_SUCCESS);
     }
@@ -176,22 +176,22 @@ int main(int argc, char* argv[])
 
     if(!cmd.foundOption("file") && !cmd.foundOption("download"))
     {
-        cInterface.JumpToFpgaConfig(strImage);
+        cInterface.jumpToFpgaConfig(strImage);
         exit(EXIT_SUCCESS);
     }
 
     bool cDone = 0;
 
     if(cmd.foundOption("download"))
-        cInterface.DownloadFpgaConfig(strImage, cmd.optionValue("download"));
+        cInterface.downloadFpgaConfig(strImage, cmd.optionValue("download"));
     else
-        cInterface.FlashProm(strImage, cFWFile.c_str());
+        cInterface.flashProm(strImage, cFWFile.c_str());
 
     uint32_t progress;
 
     while(cDone == 0)
     {
-        progress = cInterface.GetConfiguringFpga()->getProgressValue();
+        progress = cInterface.getProgressValue();
 
         if(progress == 100)
         {
@@ -200,7 +200,7 @@ int main(int argc, char* argv[])
         }
         else
         {
-            LOG(INFO) << progress << "%  " << cInterface.GetConfiguringFpga()->getProgressString() << "                 \r" << std::flush;
+            LOG(INFO) << progress << "%  " << cInterface.getProgressString() << "                 \r" << std::flush;
             sleep(1);
         }
     }

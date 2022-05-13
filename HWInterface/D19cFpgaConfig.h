@@ -9,10 +9,17 @@
 #ifndef _D19CFPGACONFIG_H_
 #define _D19CFPGACONFIG_H_
 
-#include "../HWDescription/BeBoard.h"
 #include "../HWInterface/FpgaConfig.h"
-#include "Firmware.h"
-#include "MmcPipeInterface.h"
+#include <vector>
+
+namespace Ph2_HwInterface
+{
+    class RegManager;
+}
+namespace fc7
+{
+    class MmcPipeInterface;
+}
 
 namespace Ph2_HwInterface
 {
@@ -26,30 +33,30 @@ class D19cFpgaConfig : public FpgaConfig
     fc7::MmcPipeInterface* lNode;
 
   public:
-    D19cFpgaConfig(BeBoardFWInterface* pbbi);
+    D19cFpgaConfig(Ph2_HwInterface::RegManager* pbbi);
     ~D19cFpgaConfig();
     /*! \brief Launch the firmware upload in a separate thread
      * \param strConfig FPGA configuration name
      * \param pstrFile absolute path to the .bit or .bin file
      */
-    void runUpload(const std::string& strConfig, const char* pstrFile);
+    void flashProm(const std::string& strConfig, const std::string& pstrFile);
     /*! \brief Launch the firmware download in a separate thread
      * \param strConfig FPGA configuration name
      * \param pstrFile absolute path to the .bin file
      */
-    void runDownload(const std::string& strConfig, const char* pstrFile);
+    void downloadFpgaConfig(const std::string& strConfig, const std::string& pstrFile);
     /*! \brief Jump to an FPGA configuration
      * \param strConfig FPGA configuration name
      */
-    void jumpToImage(const std::string& strImage);
+    void jumpToFpgaConfig(const std::string& strImage);
 
     void downloadImage(const std::string& strImage, const std::string& strDestFile);
     /*! \brief Get the list of available FPGA configuration (or firmware images)*/
-    std::vector<std::string> getFirmwareImageNames();
+    std::vector<std::string> getFpgaConfigList();
     /*! \brief Delete one Fpga configuration (or firmware image)*/
-    void deleteFirmwareImage(const std::string& strId);
+    void deleteFpgaConfig(const std::string& strId);
     /*! \brief Board hard reset */
-    void resetBoard();
+    void rebootBoard();
 
   private:
     /// Sets the read mode as asynchronous.
@@ -63,7 +70,9 @@ class D19cFpgaConfig : public FpgaConfig
     /*! \brief Main uploading loop
      * \param pstrFile Absolute path the .bit configuration file
      */
-    void dumpFromFileIntoSD(const std::string& strImage, const char* pstrFile);
+    void dumpFromFileIntoSD(const std::string& strImage, const std::string& pstrFile);
+
+    void checkIfUploading();
 };
 } // namespace Ph2_HwInterface
 #endif

@@ -214,7 +214,6 @@ class RD53FWInterface : public BeBoardFWInterface
     void ReadClockGenerator();
 
     FastCommandsConfig localCfgFastCmd;
-    D19cFpgaConfig*    fpgaConfig;
     size_t             ddr3Offset;
     bool               singleChip;
     uint32_t           FWinfo;

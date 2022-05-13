@@ -19,21 +19,23 @@
 */
 
 #include "D19cFpgaConfig.h"
-#include "BeBoardFWInterface.h"
-#include <boost/format.hpp>
-#include <boost/thread.hpp>
+#include "Firmware.h"
+#include "MmcPipeInterface.h"
+#include "RegManager.h"
+// #include <boost/format.hpp>
+#include <thread>
 #include <fstream>
-#include <sys/stat.h>
-#include <time.h>
+// #include <sys/stat.h>
+// #include <time.h>
 
 using namespace std;
-using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
 
 #define SECURE_MODE_PASSWORD "RuleBritannia"
 
 namespace Ph2_HwInterface
 {
-D19cFpgaConfig::D19cFpgaConfig(BeBoardFWInterface* pbbi) : FpgaConfig(pbbi), lNode(nullptr)
+D19cFpgaConfig::D19cFpgaConfig(RegManager* pbbi) : FpgaConfig(pbbi), lNode(nullptr)
 {
     // Quick fix for IT - OT incompatibilities
     try
@@ -48,15 +50,18 @@ D19cFpgaConfig::D19cFpgaConfig(BeBoardFWInterface* pbbi) : FpgaConfig(pbbi), lNo
 
 D19cFpgaConfig::~D19cFpgaConfig() { delete lNode; }
 
-void D19cFpgaConfig::runUpload(const std::string& strImage, const char* szFile)
+void D19cFpgaConfig::flashProm(const std::string& strImage, const std::string& szFile)
 {
+    checkIfUploading();
     numUploadingFpga = 1;
     progressValue    = 0;
     progressString   = "Starting upload";
-    boost::thread(&D19cFpgaConfig::dumpFromFileIntoSD, this, strImage, szFile);
+    auto myThread = thread(&D19cFpgaConfig::dumpFromFileIntoSD, this, strImage, szFile);
+    myThread.join();
+
 }
 
-void D19cFpgaConfig::dumpFromFileIntoSD(const std::string& strImage, const char* pstrFile)
+void D19cFpgaConfig::dumpFromFileIntoSD(const std::string& strImage, const std::string& pstrFile)
 {
     if(string(pstrFile).compare(string(pstrFile).length() - 4, 4, ".bit") == 0)
     {
@@ -73,10 +78,15 @@ void D19cFpgaConfig::dumpFromFileIntoSD(const std::string& strImage, const char*
     lNode->RebootFPGA(strImage, SECURE_MODE_PASSWORD);
 }
 
-void D19cFpgaConfig::jumpToImage(const std::string& strImage) { lNode->RebootFPGA(strImage, SECURE_MODE_PASSWORD); }
+void D19cFpgaConfig::jumpToFpgaConfig(const std::string& strImage) 
+{ 
+    checkIfUploading();
+    lNode->RebootFPGA(strImage, SECURE_MODE_PASSWORD);
+}
 
-void D19cFpgaConfig::runDownload(const std::string& strImage, const char* szFile)
+void D19cFpgaConfig::downloadFpgaConfig(const std::string& strImage, const std::string&  szFile)
 {
+    checkIfUploading();
     vector<string> lstNames = lNode->ListFilesOnSD();
 
     for(size_t iName = 0; iName < lstNames.size(); iName++)
@@ -88,7 +98,8 @@ void D19cFpgaConfig::runDownload(const std::string& strImage, const char* szFile
 
     progressValue  = 0;
     progressString = "Downloading configuration";
-    boost::thread(&D19cFpgaConfig::downloadImage, this, strImage, szFile);
+    auto myThread = thread(&D19cFpgaConfig::downloadImage, this, strImage, szFile);
+    myThread.join();
 }
 
 void D19cFpgaConfig::downloadImage(const std::string& strImage, const std::string& strDestFile)
@@ -126,9 +137,26 @@ void D19cFpgaConfig::downloadImage(const std::string& strImage, const std::strin
     progressValue = 100;
 }
 
-std::vector<std::string> D19cFpgaConfig::getFirmwareImageNames() { return lNode->ListFilesOnSD(); }
+std::vector<std::string> D19cFpgaConfig::getFpgaConfigList() 
+{ 
+    checkIfUploading();
+    return lNode->ListFilesOnSD();
+}
 
-void D19cFpgaConfig::deleteFirmwareImage(const std::string& strId) { lNode->DeleteFromSD(strId, SECURE_MODE_PASSWORD); }
+void D19cFpgaConfig::deleteFpgaConfig(const std::string& strId) 
+{ 
+    checkIfUploading();
+    lNode->DeleteFromSD(strId, SECURE_MODE_PASSWORD);
+}
 
-void D19cFpgaConfig::resetBoard() { lNode->BoardHardReset(SECURE_MODE_PASSWORD); }
+void D19cFpgaConfig::rebootBoard()
+{
+    lNode->BoardHardReset(SECURE_MODE_PASSWORD);
+}
+
+void D19cFpgaConfig::checkIfUploading()
+{
+    if(getUploadingFpga() > 0) throw std::runtime_error("This board is uploading an FPGA configuration");
+}
+
 } // namespace Ph2_HwInterface

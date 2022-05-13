@@ -23,7 +23,6 @@ Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pier
 #include "../Utils/FileHandler.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/easylogging++.h"
-#include "D19cFpgaConfig.h"
 #include "RegManager.h"
 
 #include <uhal/uhal.hpp>
