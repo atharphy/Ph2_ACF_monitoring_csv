@@ -83,7 +83,7 @@ int main(int argc, char** argv)
 
     SystemController  mySysCntr;
     std::stringstream outp;
-    mySysCntr.InitializeHw(configFile, outp, true, false);
+    mySysCntr.InitializeHw(configFile, outp, false);
     mySysCntr.InitializeSettings(configFile, outp);
 
     // ##################

@@ -44,6 +44,17 @@ RegManager::RegManager(const std::string& pId, const std::string& pUri, const st
     }
 }
 
+RegManager::RegManager(RegManager&& theRegManager)
+: fUHalConfigFileName (std::move(theRegManager.fUHalConfigFileName))
+, fStackReg (std::move(theRegManager.fStackReg))
+, fUri (std::move(theRegManager.fUri))
+, fAddressTable (std::move(theRegManager.fAddressTable))
+, fId (std::move(theRegManager.fId))
+{
+    fBoard = theRegManager.fBoard;
+    theRegManager.fBoard = nullptr;
+}
+
 RegManager::~RegManager() { delete fBoard; }
 
 bool RegManager::WriteReg(const std::string& pRegNode, const uint32_t& pVal)

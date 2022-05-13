@@ -86,8 +86,8 @@ void DQMInterface::configure(std::string const& calibrationName, std::string con
     std::stringstream                                        out;
     Ph2_System::SettingsMap                                  pSettingsMap;
 
-    fParser.parseHW(configurationFilePath, fBeBoardFWMap, &fDetectorStructure, out, true);
-    fParser.parseSettings(configurationFilePath, pSettingsMap, out, true);
+    fParser.parseHW(configurationFilePath, fBeBoardFWMap, &fDetectorStructure, out);
+    fParser.parseSettings(configurationFilePath, pSettingsMap, out);
 
     if(calibrationName == "pedenoise")
         fDQMHistogrammerVector.push_back(new DQMHistogramPedeNoise());

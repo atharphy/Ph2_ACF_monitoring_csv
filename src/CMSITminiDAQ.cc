@@ -334,7 +334,7 @@ int main(int argc, char** argv)
 
             std::stringstream outp;
             mySysCntr.InitializeSettings(configFile, outp);
-            mySysCntr.InitializeHw(configFile, outp, true, false);
+            mySysCntr.InitializeHw(configFile, outp, false);
             if(reset == true)
             {
                 if(mySysCntr.fDetectorContainer->at(0)->at(0)->flpGBT == nullptr)

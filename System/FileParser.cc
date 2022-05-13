@@ -13,49 +13,13 @@ using namespace Ph2_HwInterface;
 
 namespace Ph2_System
 {
-void FileParser::parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile)
-{
-    if(pIsFile && pFilename.find(".xml") != std::string::npos) { parseHWxml(pFilename, pBeBoardFWMap, pDetectorContainer, os, pIsFile); }
-    else if(!pIsFile)
-    {
-        parseHWxml(pFilename, pBeBoardFWMap, pDetectorContainer, os, pIsFile);
-    }
-    else
-    {
-        LOG(ERROR) << BOLDRED << "Could not parse settings file " << pFilename << " - it is not .xml" << RESET;
-    }
-}
-
-void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile)
-{
-    if((pIsFile && pFilename.find(".xml") != std::string::npos) || (!pIsFile))
-        parseSettingsxml(pFilename, pSettingsMap, os, pIsFile);
-    else
-        LOG(ERROR) << BOLDRED << "Could not parse settings file " << pFilename << " - it is not .xml" << RESET;
-}
-
-void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile)
+    
+void FileParser::parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os)
 {
     int i, j;
 
     pugi::xml_document     doc;
-    pugi::xml_parse_result result;
-
-    if(pIsFile)
-        result = doc.load_file(pFilename.c_str());
-    else
-        result = doc.load_string(pFilename.c_str());
-
-    if(!result)
-    {
-        os << BOLDRED << "ERROR :\n Unable to open the file : " << RESET << pFilename << std::endl;
-        os << BOLDRED << "Error description : " << RED << result.description() << RESET << std::endl;
-
-        if(!pIsFile) os << "Error offset: " << result.offset << " (error at [..." << (pFilename.c_str() + result.offset) << "]\n" << std::endl;
-
-        throw Exception("Unable to parse XML source!");
-        return;
-    }
+    openHWconfig(pFilename, doc);
 
     os << RESET << "\n\n";
 
@@ -89,6 +53,21 @@ void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoard
     for(i = 0; i < 80; i++) os << "*";
 
     os << std::endl;
+}
+
+void FileParser::openHWconfig(const std::string& pFilename, pugi::xml_document& doc)
+{
+   
+    pugi::xml_parse_result result = doc.load_file(pFilename.c_str());
+    if(!result) //try if it is not a a file, but a string containing the full xml
+        result = doc.load_string(pFilename.c_str());
+
+    if(!result)
+    {
+        LOG(ERROR) << BOLDRED << "ERROR :\n Unable to open the file : " << RESET << pFilename << std::endl;
+        LOG(ERROR) << BOLDRED << "Error description : " << RED << result.description() << RESET << std::endl;
+        throw Exception("Unable to parse XML source!");
+    }
 }
 
 void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os)
@@ -1417,25 +1396,10 @@ void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, st
     }
 }
 
-void FileParser::parseSettingsxml(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile)
+void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os)
 {
-    pugi::xml_document     doc;
-    pugi::xml_parse_result result;
-
-    if(pIsFile == true)
-        result = doc.load_file(pFilename.c_str());
-    else
-        result = doc.load_string(pFilename.c_str());
-
-    if(result == false)
-    {
-        os << BOLDRED << "ERROR : Unable to open the file " << RESET << pFilename << std::endl;
-        os << BOLDRED << "Error description: " << RED << result.description() << RESET << std::endl;
-
-        if(pIsFile == false) os << "Error offset: " << result.offset << " (error at [..." << (pFilename.c_str() + result.offset) << "]" << std::endl;
-
-        throw Exception("Unable to parse XML source!");
-    }
+    pugi::xml_document doc;
+    openHWconfig(pFilename, doc);
 
     for(pugi::xml_node nSettings = doc.child("HwDescription").child("Settings"); nSettings == doc.child("HwDescription").child("Settings"); nSettings = nSettings.next_sibling())
     {
@@ -1563,37 +1527,10 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
 }
 // ########################
 
-std::string FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os, bool pIsFile)
-{
-    if(pIsFile && pFilename.find(".xml") != std::string::npos)
-        return parseMonitorxml(pFilename, theDetectorMonitorConfig, os, pIsFile);
-    else if(!pIsFile)
-        return parseMonitorxml(pFilename, theDetectorMonitorConfig, os, pIsFile);
-    else
-        LOG(ERROR) << BOLDRED << "Could not parse monitor file " << pFilename << " - it is not .xml" << RESET;
-    return "None";
-}
-
-std::string FileParser::parseMonitorxml(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os, bool pIsFile)
+std::string FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os)
 {
     pugi::xml_document     doc;
-    pugi::xml_parse_result result;
-
-    if(pIsFile == true)
-        result = doc.load_file(pFilename.c_str());
-    else
-        result = doc.load_string(pFilename.c_str());
-
-    if(result == false)
-    {
-        os << BOLDRED << "ERROR : Unable to open the file " << RESET << pFilename << std::endl;
-        os << BOLDRED << "Error description: " << RED << result.description() << RESET << std::endl;
-
-        if(pIsFile == false) os << "Error offset: " << result.offset << " (error at [..." << (pFilename.c_str() + result.offset) << "]" << std::endl;
-
-        throw Exception("Unable to parse XML source!");
-        return "None";
-    }
+    openHWconfig(pFilename, doc);
 
     if(!bool(doc.child("HwDescription").child("MonitoringSettings")))
     {
