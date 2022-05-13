@@ -1,13 +1,13 @@
 /*!
-   \file        D19cFpgaConfig.h
+   \file        FC7FpgaConfig.h
    \brief       FPGA configuration by uploading the firware in MCS file format into a GLIB board
    \version             1.0
    \author      Christian Bonnin
    \date        02/03/2015
    Support :        mail to : christian.bonnin@iphc.cnrs.fr
 */
-#ifndef _D19CFPGACONFIG_H_
-#define _D19CFPGACONFIG_H_
+#ifndef _FC7FpgaConfig_H_
+#define _FC7FpgaConfig_H_
 
 #include "../HWInterface/FpgaConfig.h"
 #include <vector>
@@ -27,14 +27,14 @@ namespace Ph2_HwInterface
  * \brief Upload MCS files into Flash EPROM as FPGA configuration
  * @author cbonnin
  */
-class D19cFpgaConfig : public FpgaConfig
+class FC7FpgaConfig : public FpgaConfig
 {
   private:
     fc7::MmcPipeInterface* lNode;
 
   public:
-    D19cFpgaConfig(Ph2_HwInterface::RegManager* pbbi);
-    ~D19cFpgaConfig();
+    FC7FpgaConfig(Ph2_HwInterface::RegManager* pbbi);
+    ~FC7FpgaConfig();
     /*! \brief Launch the firmware upload in a separate thread
      * \param strConfig FPGA configuration name
      * \param pstrFile absolute path to the .bit or .bin file

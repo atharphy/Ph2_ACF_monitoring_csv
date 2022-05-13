@@ -10,7 +10,7 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-   FileName :       D19cFpgaConfig.cc
+   FileName :       FC7FpgaConfig.cc
    Content :        FPGA configuration
    Programmer :     Christian Bonnin
    Version :
@@ -18,7 +18,7 @@
    Support :        mail to : christian.bonnin@iphc.cnrs.fr
 */
 
-#include "D19cFpgaConfig.h"
+#include "FC7FpgaConfig.h"
 #include "Firmware.h"
 #include "MmcPipeInterface.h"
 #include "RegManager.h"
@@ -35,7 +35,7 @@ using namespace Ph2_HwInterface;
 
 namespace Ph2_HwInterface
 {
-D19cFpgaConfig::D19cFpgaConfig(RegManager* pbbi) : FpgaConfig(pbbi), lNode(nullptr)
+FC7FpgaConfig::FC7FpgaConfig(RegManager* pbbi) : FpgaConfig(pbbi), lNode(nullptr)
 {
     // Quick fix for IT - OT incompatibilities
     try
@@ -48,20 +48,20 @@ D19cFpgaConfig::D19cFpgaConfig(RegManager* pbbi) : FpgaConfig(pbbi), lNode(nullp
     }
 }
 
-D19cFpgaConfig::~D19cFpgaConfig() { delete lNode; }
+FC7FpgaConfig::~FC7FpgaConfig() { delete lNode; }
 
-void D19cFpgaConfig::flashProm(const std::string& strImage, const std::string& szFile)
+void FC7FpgaConfig::flashProm(const std::string& strImage, const std::string& szFile)
 {
     checkIfUploading();
     numUploadingFpga = 1;
     progressValue    = 0;
     progressString   = "Starting upload";
-    auto myThread = thread(&D19cFpgaConfig::dumpFromFileIntoSD, this, strImage, szFile);
+    auto myThread = thread(&FC7FpgaConfig::dumpFromFileIntoSD, this, strImage, szFile);
     myThread.join();
 
 }
 
-void D19cFpgaConfig::dumpFromFileIntoSD(const std::string& strImage, const std::string& pstrFile)
+void FC7FpgaConfig::dumpFromFileIntoSD(const std::string& strImage, const std::string& pstrFile)
 {
     if(string(pstrFile).compare(string(pstrFile).length() - 4, 4, ".bit") == 0)
     {
@@ -78,13 +78,13 @@ void D19cFpgaConfig::dumpFromFileIntoSD(const std::string& strImage, const std::
     lNode->RebootFPGA(strImage, SECURE_MODE_PASSWORD);
 }
 
-void D19cFpgaConfig::jumpToFpgaConfig(const std::string& strImage) 
+void FC7FpgaConfig::jumpToFpgaConfig(const std::string& strImage) 
 { 
     checkIfUploading();
     lNode->RebootFPGA(strImage, SECURE_MODE_PASSWORD);
 }
 
-void D19cFpgaConfig::downloadFpgaConfig(const std::string& strImage, const std::string&  szFile)
+void FC7FpgaConfig::downloadFpgaConfig(const std::string& strImage, const std::string&  szFile)
 {
     checkIfUploading();
     vector<string> lstNames = lNode->ListFilesOnSD();
@@ -98,11 +98,11 @@ void D19cFpgaConfig::downloadFpgaConfig(const std::string& strImage, const std::
 
     progressValue  = 0;
     progressString = "Downloading configuration";
-    auto myThread = thread(&D19cFpgaConfig::downloadImage, this, strImage, szFile);
+    auto myThread = thread(&FC7FpgaConfig::downloadImage, this, strImage, szFile);
     myThread.join();
 }
 
-void D19cFpgaConfig::downloadImage(const std::string& strImage, const std::string& strDestFile)
+void FC7FpgaConfig::downloadImage(const std::string& strImage, const std::string& strDestFile)
 {
     fc7::Firmware bitStream1 = lNode->FileFromSD(strImage, &progressValue, 0);
     progressString           = "Checking download";
@@ -137,24 +137,24 @@ void D19cFpgaConfig::downloadImage(const std::string& strImage, const std::strin
     progressValue = 100;
 }
 
-std::vector<std::string> D19cFpgaConfig::getFpgaConfigList() 
+std::vector<std::string> FC7FpgaConfig::getFpgaConfigList() 
 { 
     checkIfUploading();
     return lNode->ListFilesOnSD();
 }
 
-void D19cFpgaConfig::deleteFpgaConfig(const std::string& strId) 
+void FC7FpgaConfig::deleteFpgaConfig(const std::string& strId) 
 { 
     checkIfUploading();
     lNode->DeleteFromSD(strId, SECURE_MODE_PASSWORD);
 }
 
-void D19cFpgaConfig::rebootBoard()
+void FC7FpgaConfig::rebootBoard()
 {
     lNode->BoardHardReset(SECURE_MODE_PASSWORD);
 }
 
-void D19cFpgaConfig::checkIfUploading()
+void FC7FpgaConfig::checkIfUploading()
 {
     if(getUploadingFpga() > 0) throw std::runtime_error("This board is uploading an FPGA configuration");
 }
