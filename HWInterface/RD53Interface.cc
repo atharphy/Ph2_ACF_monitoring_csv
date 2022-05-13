@@ -433,7 +433,7 @@ void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
                 }
             }
 
-            if((commandList.size() * 2 + RD53::nRows + 1) > RD53FWconstants::SLOWCMD_FIFO_DEPTH)
+            if((commandList.size() * 2 + RD53::nRows + 1) > (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO))
             {
                 static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
                 commandList.clear();
@@ -462,7 +462,7 @@ void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
                 }
             }
 
-            if((commandList.size() + RD53::nRows + 1) * 2 > RD53FWconstants::SLOWCMD_FIFO_DEPTH)
+            if((commandList.size() + RD53::nRows + 1) * 2 > (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO))
             {
                 static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
                 commandList.clear();

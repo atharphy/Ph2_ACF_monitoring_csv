@@ -649,6 +649,7 @@ uint32_t RD53FWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     // #############
     std::vector<uint32_t> values = ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory, ddr3Offset);
     ddr3Offset += nWordsInMemory;
+    ddr3Offset %= (1 << RD53FWconstants::NBIT_DATA_FIFO) - 1;
     pData.insert(pData.end(), values.begin(), values.end());
 
     if((this->fSaveToFile == true) && (pData.size() != 0)) this->fFileHandler->setData(pData);

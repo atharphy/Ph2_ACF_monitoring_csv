@@ -25,11 +25,12 @@
 // #######################
 namespace RD53FWconstants
 {
-const uint8_t  NLANE_HYBRID       = 4;     // Number of lanes per hybrid
-const uint8_t  HEADEAR_WRTCMD     = 0xFF;  // Header of chip write command sequence
-const uint8_t  NBIT_FWVER         = 16;    // Number of bits for the firmware version
-const uint8_t  IPBUS_FASTDURATION = 1;     // Duration of a fast command in terms of 40 MHz clk cycles
-const uint32_t SLOWCMD_FIFO_DEPTH = 65536; // Slow command FIFO depth 65536 (in terms of 32-bit words)
+const uint8_t  NLANE_HYBRID       = 4;    // Number of lanes per hybrid
+const uint8_t  HEADEAR_WRTCMD     = 0xFF; // Header of chip write command sequence
+const uint8_t  NBIT_FWVER         = 16;   // Number of bits for the firmware version
+const uint8_t  IPBUS_FASTDURATION = 1;    // Duration of a fast command in terms of 40 MHz clk cycles
+const uint32_t NBIT_SLOWCMD_FIFO  = 16;   // Slow command FIFO depth 65.536, i.e. 16 bits (in terms of 32-bit words)
+const uint32_t NBIT_DATA_FIFO     = 27;   // Data FIFO depth 134.217.728, i.e. 27 bits (in terms of 32-bit words)
 
 constexpr float VDDD2Volt(float val) { return (0.968 + val * 0.0115); }
 constexpr float CDR2Freq(float val) { return (140 + val * 5); }
