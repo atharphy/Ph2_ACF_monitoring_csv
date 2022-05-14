@@ -170,7 +170,7 @@ void Eudaq2Producer::DoConfigure()
     	this->fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.tlu_block.trigger_id_delay", cTLUTriggerIdDelay);
         LOG(INFO) << "Board : " << +cBoard->getId() << " -- Data Handshake : " << +fHandshakeEnabled << RESET;
         LOG(INFO) << "Board : " << +cBoard->getId() << " -- TLU Trigger Id Delay : " << +cTLUTriggerIdDelay << RESET;
-
+	
         // send a Resync to this board
         this->fBeBoardInterface->ChipReSync(cBoard);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -517,7 +517,6 @@ void Eudaq2Producer::ReadoutLoop()
         else
         {
             // Check if any data is pending
-            //if(!EventsPending()) { continue; }
             LOG(INFO) << MAGENTA << "Running on normal mode" << RESET;
             for(auto cBoard: *fDetectorContainer)
             {
@@ -891,19 +890,14 @@ bool Eudaq2Producer::EventsPending()
 {
     if(fConfigured)
     {
-        //if(fHandshakeEnabled)
-        //{
-            for(auto cBoard: *fDetectorContainer)
+        for(auto cBoard: *fDetectorContainer)
+        {
+            BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
+            if(theBoard->getBoardType() == BoardType::D19C)
             {
-                BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
-                if(theBoard->getBoardType() == BoardType::D19C)
-                {
-                    if(this->fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.readout_req") > 0) { return true; } // end of if ReadBoardReg
-                }                                                                                                                            // end of if BoardType
-            }                                                                                                                                // end of cBoard loop
-        //}                                                                                                                                    // end of if fHandshakeEnabled
-        //else
-            //return true;
+                if(this->fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.readout_req") > 0) { return true; } // end of if ReadBoardReg
+            }                                                                                                                            // end of if BoardType
+        }                                                                                                                                // end of cBoard loop
     }
     return false;
 }
