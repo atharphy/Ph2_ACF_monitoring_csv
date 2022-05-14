@@ -20,15 +20,15 @@
                 <!-- in electrons, file parser will take care of conversion to DAC units for each chip type --> 
                 <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  -->
                 <!-- Window in half pixels  -->
-                <!-- (0) level, (1) edge, (2) OR, (3) XOR  -->
+                <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
                 <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns -->
                 <!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
-                <Latencies       stripLatency="117" pixelLatency="117"/>
-                <Thresholds      stripThreshold="15000" pixelThreshold="10000"/> 
+                <Latencies       stripLatency="118" pixelLatency="118"/>
+                <Thresholds      stripThreshold="10000" pixelThreshold="10000"/> 
                 <StubLogic       mode="0" window="16"/>
                 <HitLogic        stripMode="1" pixelMode="1"/>
                 <HipLogic        stripCut="7" pixelCut="7"/>
-                <SamplingDelay   stripCoarse="0" stripFine="0" pixelCoarse="2" pixelFine="0"/>
+                <SamplingDelay   stripCoarse="0" stripFine="0" pixelCoarse="0" pixelFine="0"/>
                 <InjectedCharge  stripCharge="0" pixelCharge="0"/> 
                 <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/>
             </Global>
@@ -61,15 +61,15 @@
                 <!-- in electrons, file parser will take care of conversion to DAC units for each chip type --> 
                 <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  -->
                 <!-- Window in half pixels  -->
-                <!-- (0) level, (1) edge, (2) OR, (3) XOR  -->
+                <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
                 <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns -->
                 <!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
-                <Latencies       stripLatency="117" pixelLatency="117"/>
-                <Thresholds      stripThreshold="15000" pixelThreshold="10000"/> 
+                <Latencies       stripLatency="118" pixelLatency="118"/>
+                <Thresholds      stripThreshold="10000" pixelThreshold="10000"/> 
                 <StubLogic       mode="0" window="16"/>
                 <HitLogic        stripMode="1" pixelMode="1"/>
                 <HipLogic        stripCut="7" pixelCut="7"/>
-                <SamplingDelay   stripCoarse="0" stripFine="0" pixelCoarse="2" pixelFine="0"/>
+                <SamplingDelay   stripCoarse="0" stripFine="0" pixelCoarse="0" pixelFine="0"/>
                 <InjectedCharge  stripCharge="0" pixelCharge="0"/> 
                 <MaskedStrips SSAId="4" Rows="59,60" />
                 <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/>
@@ -182,7 +182,7 @@
             <Register name = "clock_enable"> 1 </Register>
         </Register>
         <Register name="stubs">
-            <Register name = "stub_package_delay"> 7 </Register>
+            <Register name = "stub_package_delay"> 2 </Register>
         </Register>
     </Register>
     <!-- Readout Block -->
@@ -195,7 +195,7 @@
                     <Register name="trigger_type"> 0 </Register>
                     <Register name="data_type"> 0 </Register>
                     <!--this is what is commonly known as stub latency-->
-                    <Register name="common_stubdata_delay"> 39 </Register>
+                    <Register name="common_stubdata_delay"> 40 </Register>
             </Register>
             <Register name="timeout"> 0 </Register>
         </Register>
