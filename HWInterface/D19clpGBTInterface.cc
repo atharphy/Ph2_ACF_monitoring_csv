@@ -134,7 +134,7 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
     // Configure Rx Channels
     // module/skeleton
-    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 9;
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 5;
     for(const auto& cGroup: cRxGroups)
     {
         for(const auto cChannel: cRxChannels)
@@ -166,7 +166,7 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     std::vector<uint8_t> cOptimalTaps = {};
     std::vector<uint8_t> cEportGroups = {4, 4, 5, 5, 6, 0};
     std::vector<uint8_t> cEportChnls  = {0, 2, 0, 2, 0, 0};
-
+    //for(size_t cIndx = 0; cIndx < cEportGroups.size(); cIndx++) { ConfigureRxPhase(pChip, cEportGroups[cIndx], cEportChnls[cIndx], 5); }
     AutoPhaseAlignRx(pChip, cEportGroups, cEportChnls);
     // find mode
     for(size_t cIndx = 0; cIndx < cEportGroups.size(); cIndx++) { cOptimalTaps.push_back(GetPhaseTap(pChip, cEportGroups[cIndx], cEportChnls[cIndx])); }
@@ -180,6 +180,8 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
 
     cEportGroups = {0, 1, 1, 2, 2, 3};
     cEportChnls  = {2, 0, 2, 0, 2, 2};
+    //for(size_t cIndx = 0; cIndx < cEportGroups.size(); cIndx++) { ConfigureRxPhase(pChip, cEportGroups[cIndx], cEportChnls[cIndx], 5); }
+
     cOptimalTaps = {};
 
     AutoPhaseAlignRx(pChip, cEportGroups, cEportChnls);
