@@ -1707,7 +1707,8 @@ void BeamTestCheck::ScanStubLatency(uint8_t pContinousReadout)
     if(!cAlignmentRun)
     {
         auto     cSetting   = fSettingsMap.find("StubAlignmentScanStart");
-        uint32_t cScanStart = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 100;
+        //uint32_t cScanStart = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 100;
+        uint32_t cScanStart = 89;
         cOffset             = cScanStart;
     }
     else
@@ -1947,8 +1948,8 @@ void BeamTestCheck::PrepareForTLU(BeBoard* pBoard)
     // enable DIO5
     cRegVec.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x0});
     cRegVec.push_back({"fc7_daq_cnfg.dio5_block.dio5_en", 0x1});
-    cRegVec.push_back({"fc7_daq_cnfg.dio5_block.ch2.threshold", 0});
-    cRegVec.push_back({"fc7_daq_cnfg.dio5_block.ch2.term_enable", 1});
+    //cRegVec.push_back({"fc7_daq_cnfg.dio5_block.ch2.threshold", 0});
+    //cRegVec.push_back({"fc7_daq_cnfg.dio5_block.ch2.term_enable", 1});
     cRegVec.push_back({"fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubDataDaelay});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 1);

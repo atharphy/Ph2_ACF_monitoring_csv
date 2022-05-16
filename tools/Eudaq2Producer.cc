@@ -54,11 +54,20 @@ void Eudaq2Producer::DoInitialise()
     fPathToHWFile = cEudaqIni->Get("HWFile", "./settings/DESY_FullModule.xml");
     LOG(INFO) << BOLDYELLOW << "Loading settings from file : " << fPathToHWFile << RESET;
 
+
+    auto cRunNumber = GetRunNumber();
+    std::string cDirectory = Form("Results/EudaqProducer_Run%d", cRunNumber);
+
     std::stringstream outp;
     // Outer Tracker hardware configuration
     this->InitializeHw(fPathToHWFile);
     this->InitializeSettings(fPathToHWFile, outp);
     LOG(INFO) << outp.str();
+    this->CreateResultDirectory(cDirectory, false, false);
+    this->InitResultFile("Module");
+    this->AddMetadata();
+
+
 
     // check if PS module it is
     for(auto cBoard: *fDetectorContainer)
@@ -107,19 +116,9 @@ void Eudaq2Producer::DoInitialise()
         cCicAligner.waitForRunToBeCompleted();
         cCicAligner.dumpConfigFiles();
 
-        // time align stubs with L1 data in the BE
-        if(!cSkipAlignment)
-        {
-            StubBackEndAlignment cStubBackEndAligner;
-            cStubBackEndAligner.Inherit(this);
-            cStubBackEndAligner.Start(0);
-            cStubBackEndAligner.waitForRunToBeCompleted();
-        }
-
         // now align data between SSA-MPA
         if(fIsPS && !cSkipAlignment)
-        {
-            cPSAlignment.dumpConfigFiles();
+        { cPSAlignment.dumpConfigFiles();
             cPSAlignment.Align();
         }
 
@@ -146,8 +145,10 @@ void Eudaq2Producer::DoConfigure()
     fThresholdCBC      = std::stoi(cEudaqConf->Get("ThresholdCBC", "550"));
     fRelativeThreshold = std::stoi(cEudaqConf->Get("RelativeThreshold", "0")); // 0 will correspond to a threshold at the pedestal
 
+    fHandshakeEnabled = (cEudaqConf->Get("DataHandshakeEnable", "false") == "true") ? true : false;
+    uint8_t cTLUTriggerIdDelay      = std::stoi(cEudaqConf->Get("TLUTriggerIdDelay", "2"));
+
     // Check if Handshake mode is enabled and get trigger multiplicity value
-    fHandshakeEnabled = (this->fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.readout_block.global.data_handshake_enable") > 0);
     this->fBeBoardInterface->WriteBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", std::stoi(cEudaqConf->Get("TriggerMultiplicity", "0")));
     fTriggerMultiplicity = this->fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(0), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     LOG(INFO) << "Trigger Multiplicity : " << +fTriggerMultiplicity << RESET;
@@ -164,7 +165,12 @@ void Eudaq2Producer::DoConfigure()
     for(auto cBoard: *fDetectorContainer)
     {
         UpdateFromRegMap(cBoard);
-
+    	this->fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.packet_nbr", 999);
+    	this->fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.data_handshake_enable", fHandshakeEnabled);
+    	this->fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.tlu_block.trigger_id_delay", cTLUTriggerIdDelay);
+        LOG(INFO) << "Board : " << +cBoard->getId() << " -- Data Handshake : " << +fHandshakeEnabled << RESET;
+        LOG(INFO) << "Board : " << +cBoard->getId() << " -- TLU Trigger Id Delay : " << +cTLUTriggerIdDelay << RESET;
+	
         // send a Resync to this board
         this->fBeBoardInterface->ChipReSync(cBoard);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -334,7 +340,13 @@ void Eudaq2Producer::DoStartRun()
     LOG(INFO) << BOLDBLUE << "[CMS-OT Producer] Opening shutter ..." << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
-        // Start() also does CBC fast reset and readout reset
+        fBeBoardInterface->setBoard(cBoard->getId());
+        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        cInterface->ResetEventCounter();
+
+	auto cReadoutInterface = cInterface->getL1ReadoutInterface();
+	cReadoutInterface->ResetReadout();
+        
         this->fBeBoardInterface->Start(static_cast<BeBoard*>(cBoard));
         LOG(INFO) << BOLDBLUE << "[CMS-OT Producer] Shutter opened on board " << +cBoard->getId() << RESET;
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -505,10 +517,13 @@ void Eudaq2Producer::ReadoutLoop()
         else
         {
             // Check if any data is pending
-            if(!EventsPending()) { continue; }
             LOG(INFO) << MAGENTA << "Running on normal mode" << RESET;
             for(auto cBoard: *fDetectorContainer)
             {
+                fBeBoardInterface->setBoard(cBoard->getId());
+                auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+	        auto cReadoutInterface = cInterface->getL1ReadoutInterface();
+ 
                 BeBoard*              cTheBoard = static_cast<BeBoard*>(cBoard);
                 std::vector<uint32_t> cRawData(0);
                 // Get data
@@ -520,6 +535,8 @@ void Eudaq2Producer::ReadoutLoop()
                     std::this_thread::sleep_for(std::chrono::microseconds(100));
                     continue;
                 }
+	        //cReadoutInterface->ResetReadout();
+
                 // Check and fill phase 2 raw data
                 fPh2FileHandler->setData(cRawData);
 
@@ -873,19 +890,14 @@ bool Eudaq2Producer::EventsPending()
 {
     if(fConfigured)
     {
-        if(fHandshakeEnabled)
+        for(auto cBoard: *fDetectorContainer)
         {
-            for(auto cBoard: *fDetectorContainer)
+            BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
+            if(theBoard->getBoardType() == BoardType::D19C)
             {
-                BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
-                if(theBoard->getBoardType() == BoardType::D19C)
-                {
-                    if(this->fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.readout_req") > 0) { return true; } // end of if ReadBoardReg
-                }                                                                                                                            // end of if BoardType
-            }                                                                                                                                // end of cBoard loop
-        }                                                                                                                                    // end of if fHandshakeEnabled
-        else
-            return true;
+                if(this->fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.readout_req") > 0) { return true; } // end of if ReadBoardReg
+            }                                                                                                                            // end of if BoardType
+        }                                                                                                                                // end of cBoard loop
     }
     return false;
 }

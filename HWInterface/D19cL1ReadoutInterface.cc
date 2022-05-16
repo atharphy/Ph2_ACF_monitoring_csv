@@ -130,8 +130,8 @@ bool D19cL1ReadoutInterface::WaitForNTriggers()
 
     // wait for trigger state machine to send all triggers
     auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
-    LOG(DEBUG) << BOLDYELLOW << "D19cL1ReadoutInterface::WaitForNTriggers After resetting trigger FSM.. trigger source is " << cTriggerSource << RESET;
-    LOG(DEBUG) << BOLDYELLOW << "D19cL1ReadoutInterface::WaitForNTriggers Running Trigger FSM ..." << RESET;
+    LOG(INFO) << BOLDYELLOW << "D19cL1ReadoutInterface::WaitForNTriggers After resetting trigger FSM.. trigger source is " << cTriggerSource << RESET;
+    LOG(INFO) << BOLDYELLOW << "D19cL1ReadoutInterface::WaitForNTriggers Running Trigger FSM ..." << RESET;
     bool cSuccess = fTriggerInterface->RunTriggerFSM();
     if(!cSuccess) LOG(ERROR) << BOLDRED << "D19cL1ReadoutInterface timed-out while waiting for trigger FSM...[ReadoutAttempt#" << fReadoutAttempt << "]" << RESET;
     return cSuccess;
@@ -158,6 +158,19 @@ bool D19cL1ReadoutInterface::CheckReadoutReq()
         LOG(DEBUG) << BOLDGREEN << "ReadoutReq fullfilled.... " << RESET;
     return (cReadoutReq == 1);
 }
+
+bool D19cL1ReadoutInterface::CheckBuffers()
+{
+    // read all the words
+    if(ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type"))
+    {
+      // readout_req high when buffer is almost full
+      uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+      return (cReadoutReq == 1); // DD3 almost full ? check this!!
+    }
+    return false;
+}
+    
 bool D19cL1ReadoutInterface::CheckForWordsInReadout()
 {
     uint32_t cIterations = 0;
@@ -212,7 +225,7 @@ bool D19cL1ReadoutInterface::PollReadoutData(const BeBoard* pBoard, bool pWait)
     {
         FillData();
         CountFwEvents();
-        LOG(INFO) << BOLDYELLOW << "D19cL1ReadoutInterface::PollReadoutData " << fData.size() << " valid 32 bit words .. which are " << +fNReadoutEvents << " events." << RESET;
+	LOG(DEBUG) << BOLDYELLOW << "D19cL1ReadoutInterface::PollReadoutData " << fData.size() << " valid 32 bit words .. which are " << +fNReadoutEvents << " events." << RESET;
     }
     return cSuccess;
 }
@@ -226,10 +239,9 @@ bool D19cL1ReadoutInterface::ReadEvents(const BeBoard* pBoard)
         // clear internal data vector
         fData.clear();
         // configure readout
-        fHandshake                  = 1;
         auto cOriginalHandshakeMode = ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
         auto cOriginalPackNbr       = ReadReg("fc7_daq_cnfg.readout_block.packet_nbr");
-        WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", fHandshake);
+        WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", cOriginalHandshakeMode);
         auto cHandshake = ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
         // write number of triggers to accept
         // in the handshake mode offset is cleared after each handshake
@@ -238,6 +250,13 @@ bool D19cL1ReadoutInterface::ReadEvents(const BeBoard* pBoard)
         fTriggerInterface->SetNTriggersToAccept(fNEvents);
         WriteReg("fc7_daq_cnfg.readout_block.packet_nbr", fNEvents - 1);
         LOG(DEBUG) << BOLDYELLOW << "D19cL1ReadoutInterface::ReadEvents asking for " << fNEvents << " events handshake mode is currently " << cHandshake << RESET;
+
+    	LOG(INFO) << "trigger source : " << +ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source") << RESET;
+	LOG(INFO) << "data handshake : " << +ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << RESET;
+	LOG(INFO) << "dio5 enabled : " << +ReadReg("fc7_daq_cnfg.dio5_block.dio5_en") << RESET;
+	LOG(INFO) << "tlu enabled : " << +ReadReg("fc7_daq_cnfg.tlu_block.tlu_enabled") << RESET;
+	LOG(INFO) << "tlu handshake mode : " << +ReadReg("fc7_daq_cnfg.tlu_block.handshake_mode") << RESET;
+
         // reset readout
         ResetReadout();
         cSuccess = WaitForNTriggers();
