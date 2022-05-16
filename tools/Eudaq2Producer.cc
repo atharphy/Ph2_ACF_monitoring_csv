@@ -54,17 +54,17 @@ void Eudaq2Producer::DoInitialise()
     fPathToHWFile = cEudaqIni->Get("HWFile", "./settings/DESY_FullModule.xml");
     LOG(INFO) << BOLDYELLOW << "Loading settings from file : " << fPathToHWFile << RESET;
 
-    //auto        cRunNumber = GetRunNumber();
-    //std::string cDirectory = Form("Results/EudaqProducer_Run%d", cRunNumber);
+    // auto        cRunNumber = GetRunNumber();
+    // std::string cDirectory = Form("Results/EudaqProducer_Run%d", cRunNumber);
 
     std::stringstream outp;
     // Outer Tracker hardware configuration
     this->InitializeHw(fPathToHWFile);
     this->InitializeSettings(fPathToHWFile, outp);
     LOG(INFO) << outp.str();
-    //this->CreateResultDirectory(cDirectory, false, false);
-    //this->InitResultFile("Module");
-    //this->AddMetadata();
+    // this->CreateResultDirectory(cDirectory, false, false);
+    // this->InitResultFile("Module");
+    // this->AddMetadata();
 
     // check if PS module it is
     for(auto cBoard: *fDetectorContainer)
