@@ -239,13 +239,13 @@ void OTTool::ReadDataFromFile(std::string pRawFileName)
     this->addFileHandler(pRawFileName, 'r');
     std::vector<uint32_t> cData;
     this->readFile(cData);
-    LOG(INFO) << BOLDBLUE << "BeamTestCheck2S::ReadDataFromFile Read back " << +cData.size() << " 32-bit words from the .raw file : " << pRawFileName << RESET;
+    LOG(INFO) << BOLDBLUE << "BeamTestCheck::ReadDataFromFile Read back " << +cData.size() << " 32-bit words from the .raw file : " << pRawFileName << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
         size_t cNevents = fNevents;
         DecodeData(cBoard, cData, cNevents, fBeBoardInterface->getBoardType(cBoard));
         // const std::vector<Event*>& cEvents = GetEvents ();
-        LOG(INFO) << BOLDBLUE << "BeamTestCheck2S::ReadDataFromFile decoded back " << +cNevents << " events from the .raw file [BeBoard#" << +cBoard->getId() << "]" << RESET;
+        LOG(INFO) << BOLDBLUE << "BeamTestCheck::ReadDataFromFile decoded back " << +cNevents << " events from the .raw file [BeBoard#" << +cBoard->getId() << "]" << RESET;
         if(fPrintConfig.fVerbose) PrintData(cBoard);
     }
 }
@@ -294,7 +294,7 @@ void OTTool::WaitForTriggers(BeBoard* pBoard)
         auto cTriggerCounter = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
         cTriggerCounters.push_back(cTriggerCounter);
         if(cCounter % 200 == 0 && cCounter > 0)
-        { LOG(INFO) << BOLDMAGENTA << "BeamTestCheck2S continuousReadout loop ... " << +cTriggerCounters[cTriggerCounters.size() - 1] << " triggers received" << RESET; }
+        { LOG(INFO) << BOLDMAGENTA << "BeamTestCheck continuousReadout loop ... " << +cTriggerCounters[cTriggerCounters.size() - 1] << " triggers received" << RESET; }
         cCounter++;
         cBreak = (cTriggerCounter >= fNevents);
     } while(!cBreak);
@@ -546,7 +546,7 @@ void OTTool::ContinousReadout(BeBoard* pBoard)
         if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
         cTriggerCounters.push_back(cTriggerCounter);
         if(cCounter % 200 == 0 && cCounter > 0)
-        { LOG(INFO) << BOLDMAGENTA << "BeamTestCheck2S continuousReadout loop ... " << +cTriggerCounters[cTriggerCounters.size() - 1] << " triggers received" << RESET; }
+        { LOG(INFO) << BOLDMAGENTA << "BeamTestCheck continuousReadout loop ... " << +cTriggerCounters[cTriggerCounters.size() - 1] << " triggers received" << RESET; }
         cCounter++;
         cBreak = (fEventCounter >= fNevents);
     } while(!cBreak);
