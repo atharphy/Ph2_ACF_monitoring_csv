@@ -19,6 +19,11 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/System)
     include_directories(${PROJECT_SOURCE_DIR})
 
+    # Boost also needs to be linked
+    include_directories(${Boost_INCLUDE_DIRS})
+    link_directories(${Boost_LIBRARY_DIRS})
+    set(LIBS ${LIBS} ${Boost_ITERATOR_LIBRARY})
+
     # Library dirs
     link_directories(${UHAL_UHAL_LIB_PREFIX})
     link_directories(${UHAL_LOG_LIB_PREFIX})
