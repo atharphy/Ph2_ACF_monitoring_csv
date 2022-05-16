@@ -33,7 +33,7 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoardId)
+D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId)
     : BeBoardFWInterface(puHalConfigFileName, pBoardId), fBroadcastCbcId(0), fNReadoutChip(0), fNHybrids(0), fNCic(0), fFMCId(1)
 {
     fResetAttempts = 0;
@@ -69,7 +69,7 @@ D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoar
     fL1ReadoutInterface       = nullptr;
 }
 
-D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler)
+D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler)
     : BeBoardFWInterface(puHalConfigFileName, pBoardId), fFileHandler(pFileHandler), fBroadcastCbcId(0), fNReadoutChip(0), fNHybrids(0), fNCic(0), fFMCId(1)
 {
     if(fFileHandler == nullptr)
@@ -109,7 +109,7 @@ D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoar
     fL1ReadoutInterface       = nullptr;
 }
 
-D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* pAddressTable)
+D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable)
     : BeBoardFWInterface(pId, pUri, pAddressTable), fFileHandler(nullptr), fBroadcastCbcId(0), fNReadoutChip(0), fNHybrids(0), fNCic(0), fFMCId(1)
 {
     LOG(INFO) << BOLDYELLOW << "D19cFWInterface Constructor" << RESET;
@@ -147,7 +147,7 @@ D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* 
     fL1ReadoutInterface       = nullptr;
 }
 
-D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler)
+D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, FileHandler* pFileHandler)
     : BeBoardFWInterface(pId, pUri, pAddressTable), fFileHandler(pFileHandler), fBroadcastCbcId(0), fNReadoutChip(0), fNHybrids(0), fNCic(0), fFMCId(1)
 {
     if(fFileHandler == nullptr)

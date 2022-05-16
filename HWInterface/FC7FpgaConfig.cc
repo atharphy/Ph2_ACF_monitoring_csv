@@ -22,11 +22,7 @@
 #include "Firmware.h"
 #include "MmcPipeInterface.h"
 #include "RegManager.h"
-// #include <boost/format.hpp>
-#include <thread>
 #include <fstream>
-// #include <sys/stat.h>
-// #include <time.h>
 
 using namespace std;
 using namespace Ph2_HwInterface;
@@ -52,13 +48,16 @@ FC7FpgaConfig::~FC7FpgaConfig() { delete lNode; }
 
 void FC7FpgaConfig::flashProm(const std::string& strImage, const std::string& szFile)
 {
+    if(szFile.compare(szFile.length() - 4, 4, ".bit") && szFile.compare(szFile.length() - 4, 4, ".bin"))
+    {
+        std::string errorMessage = "Error, the specified file is neither a .bit nor a .bin file";
+        throw std::runtime_error(errorMessage);
+    }
     checkIfUploading();
     numUploadingFpga = 1;
     progressValue    = 0;
     progressString   = "Starting upload";
-    auto myThread = thread(&FC7FpgaConfig::dumpFromFileIntoSD, this, strImage, szFile);
-    myThread.join();
-
+    dumpFromFileIntoSD(strImage, szFile);
 }
 
 void FC7FpgaConfig::dumpFromFileIntoSD(const std::string& strImage, const std::string& pstrFile)
@@ -81,12 +80,14 @@ void FC7FpgaConfig::dumpFromFileIntoSD(const std::string& strImage, const std::s
 void FC7FpgaConfig::jumpToFpgaConfig(const std::string& strImage) 
 { 
     checkIfUploading();
+    verifyImageName(strImage);
     lNode->RebootFPGA(strImage, SECURE_MODE_PASSWORD);
 }
 
 void FC7FpgaConfig::downloadFpgaConfig(const std::string& strImage, const std::string&  szFile)
 {
     checkIfUploading();
+    verifyImageName(strImage);
     vector<string> lstNames = lNode->ListFilesOnSD();
 
     for(size_t iName = 0; iName < lstNames.size(); iName++)
@@ -98,8 +99,7 @@ void FC7FpgaConfig::downloadFpgaConfig(const std::string& strImage, const std::s
 
     progressValue  = 0;
     progressString = "Downloading configuration";
-    auto myThread = thread(&FC7FpgaConfig::downloadImage, this, strImage, szFile);
-    myThread.join();
+    downloadImage(strImage, szFile);
 }
 
 void FC7FpgaConfig::downloadImage(const std::string& strImage, const std::string& strDestFile)
@@ -146,6 +146,7 @@ std::vector<std::string> FC7FpgaConfig::getFpgaConfigList()
 void FC7FpgaConfig::deleteFpgaConfig(const std::string& strId) 
 { 
     checkIfUploading();
+    verifyImageName(strId);
     lNode->DeleteFromSD(strId, SECURE_MODE_PASSWORD);
 }
 
@@ -158,5 +159,41 @@ void FC7FpgaConfig::checkIfUploading()
 {
     if(getUploadingFpga() > 0) throw std::runtime_error("This board is uploading an FPGA configuration");
 }
+
+
+void FC7FpgaConfig::verifyImageName(const std::string& firmwareName)
+{
+    std::vector<std::string> firmwareList = getFpgaConfigList();
+    if(firmwareList.empty())
+    {
+        if(firmwareName.compare("1") != 0 && firmwareName.compare("2") != 0)
+        {
+            std::string errorMessage = "Error, invalid image name, should be 1 (golden) or 2 (user)";
+            LOG(ERROR) << errorMessage;
+            throw std::runtime_error(errorMessage);
+        }
+    }
+    else
+    {
+        bool bFound = false;
+
+        for(size_t iName = 0; iName < firmwareList.size(); iName++)
+        {
+            if(!firmwareName.compare(firmwareList[iName]))
+            {
+                bFound = true;
+                break;
+            }
+        }
+
+        if(!bFound)
+        {
+            std::string errorMessage = "Error, this image name: " + firmwareName + " is not available on SD card";
+            LOG(ERROR) << errorMessage;
+            throw std::runtime_error(errorMessage);
+        }
+    }
+}
+
 
 } // namespace Ph2_HwInterface

@@ -40,7 +40,7 @@ namespace Ph2_HwInterface
 class RD53FWInterface : public BeBoardFWInterface
 {
   public:
-    RD53FWInterface(const char* pId, const char* pUri, const char* pAddressTable);
+    RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
     ~RD53FWInterface() { delete fFileHandler; }
 
     // #############################

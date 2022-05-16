@@ -35,6 +35,11 @@
  * \namespace Ph2_System
  * \brief Namespace regrouping the framework wrapper
  */
+
+namespace Ph2_HwInterface
+{
+    class RegManager;
+}
 namespace Ph2_System
 {
 using BeBoardVec   = std::vector<Ph2_HwDescription::BeBoard*>;                 /*!< Vector of Board pointers */
@@ -56,7 +61,7 @@ class FileParser
     std::string parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os);
     void        disableInterfaces() { fEnableInterfaces = false; }
     void        openHWconfig(const std::string& pFilename, pugi::xml_document& doc);
-    // std::vector<RegManager> getRegManagerList();
+    std::map<uint16_t, Ph2_HwInterface::RegManager> getRegManagerList(const std::string& pFilename);
 
   protected:
     /*!

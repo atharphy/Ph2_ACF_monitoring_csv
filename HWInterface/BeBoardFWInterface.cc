@@ -16,7 +16,7 @@ BeBoardFWInterface::BeBoardFWInterface(const std::string& puHalConfigFileName, u
 
 BeBoardFWInterface::BeBoardFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : RegManager(pId, pUri, pAddressTable), fSaveToFile(false), fFileHandler(nullptr) {}
 
-BeBoardFWInterface::BeBoardFWInterface(RegManager&& theRegManager) : RegManager(std::move(theRegManager)), fSaveToFile(false), fFileHandler(nullptr) {}
+// BeBoardFWInterface::BeBoardFWInterface(RegManager&& theRegManager) : RegManager(std::move(theRegManager)), fSaveToFile(false), fFileHandler(nullptr) {}
 
 std::string BeBoardFWInterface::readBoardType()
 {

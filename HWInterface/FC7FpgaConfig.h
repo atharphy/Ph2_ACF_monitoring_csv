@@ -71,6 +71,7 @@ class FC7FpgaConfig : public FpgaConfig
      * \param pstrFile Absolute path the .bit configuration file
      */
     void dumpFromFileIntoSD(const std::string& strImage, const std::string& pstrFile);
+    void verifyImageName(const std::string& strImage);
 
     void checkIfUploading();
 };

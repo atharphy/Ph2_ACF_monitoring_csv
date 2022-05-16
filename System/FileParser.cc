@@ -32,8 +32,6 @@ void FileParser::parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWM
     for(i = 0; i < 80; i++) os << "*";
     os << "\n";
 
-    const std::string strUhalConfig = expandEnvironmentVariables(doc.child("HwDescription").child("Connections").attribute("name").value());
-
     // ##################################
     // # Iterate over the BeBoard Nodes #
     // ##################################
@@ -57,7 +55,6 @@ void FileParser::parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWM
 
 void FileParser::openHWconfig(const std::string& pFilename, pugi::xml_document& doc)
 {
-   
     pugi::xml_parse_result result = doc.load_file(pFilename.c_str());
     if(!result) //try if it is not a a file, but a string containing the full xml
         result = doc.load_string(pFilename.c_str());
@@ -69,6 +66,26 @@ void FileParser::openHWconfig(const std::string& pFilename, pugi::xml_document& 
         throw Exception("Unable to parse XML source!");
     }
 }
+
+std::map<uint16_t, RegManager> FileParser::getRegManagerList(const std::string& pFilename)
+{
+    pugi::xml_document     doc;
+    openHWconfig(pFilename, doc);
+    
+    std::map<uint16_t, Ph2_HwInterface::RegManager> theRegManagerMap;
+    for(pugi::xml_node cBeBoardNode = doc.child("HwDescription").child("BeBoard"); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling())
+    {
+        if(static_cast<std::string>(cBeBoardNode.name()) != "BeBoard") continue;
+        pugi::xml_node cBeBoardConnectionNode = cBeBoardNode.child("connection");
+
+        std::string cId           = cBeBoardConnectionNode.attribute("id").value();
+        std::string cUri          = cBeBoardConnectionNode.attribute("uri").value();
+        std::string cAddressTable = expandEnvironmentVariables(cBeBoardConnectionNode.attribute("address_table").value());
+        theRegManagerMap.insert(std::pair<uint16_t, Ph2_HwInterface::RegManager>(cBeBoardNode.attribute("Id").as_int(), std::move(RegManager(cId, cUri, cAddressTable))));
+    }
+    return theRegManagerMap;
+}
+
 
 void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os)
 {
@@ -158,10 +175,10 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
 
     if(fEnableInterfaces)
     {
-        if(cBeBoard->getBoardType() == BoardType::D19C) { pBeBoardFWMap[cBeBoard->getId()] = new D19cFWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str()); }
+        if(cBeBoard->getBoardType() == BoardType::D19C) { pBeBoardFWMap[cBeBoard->getId()] = new D19cFWInterface(cId, cUri, cAddressTable); }
         else if(cBeBoard->getBoardType() == BoardType::RD53)
         {
-            pBeBoardFWMap[cBeBoard->getId()] = new RD53FWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str());
+            pBeBoardFWMap[cBeBoard->getId()] = new RD53FWInterface(cId, cUri, cAddressTable);
         }
     }
     os << BOLDCYAN << "|"

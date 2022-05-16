@@ -60,7 +60,7 @@ class BeBoardFWInterface : public RegManager
      * \param puHalConfigFileName : path of the uHal Config File*/
     BeBoardFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
     BeBoardFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
-    BeBoardFWInterface(RegManager&& theRegManager);
+    // BeBoardFWInterface(RegManager&& theRegManager);
     
     /*!
      * \brief set a FileHandler Object and enable saving to file!

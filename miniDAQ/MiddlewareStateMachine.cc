@@ -1,7 +1,11 @@
 #include "../miniDAQ/MiddlewareStateMachine.h"
 #include "../miniDAQ/CombinedCalibrationFactory.h"
 #include "../tools/Tool.h"
+#include "../System/FileParser.h"
+#include "../HWInterface/FC7FpgaConfig.h"
 
+using namespace Ph2_System;
+using namespace Ph2_HwInterface;
 
 MiddlewareStateMachine::MiddlewareStateMachine()
 {
@@ -87,3 +91,55 @@ MiddlewareStateMachine::Status MiddlewareStateMachine::status()
 {
     return fTheTool->GetRunningStatus() ? Status::DONE : Status::RUNNING;
 }
+
+FC7FpgaConfig MiddlewareStateMachine::getFpgaConfig(const std::string& configurationFile, uint16_t boardId)
+{
+    FileParser theFileParser;
+    std::map<uint16_t, RegManager> theRegManagerList = theFileParser.getRegManagerList(configurationFile);
+
+    try
+    {
+        return FC7FpgaConfig(&theRegManagerList.at(boardId));
+    }
+    catch(const std::exception& e)
+    {
+        std::string errorMessage = "Board with id " + std::to_string(boardId) + " does not exist in file " + configurationFile;
+        throw std::runtime_error(errorMessage);
+    }
+}
+
+std::vector<std::string> MiddlewareStateMachine::getFirmwareList(const std::string& configurationFile, uint16_t boardId)
+{
+    FC7FpgaConfig theFC7FpgaConfig = getFpgaConfig(configurationFile, boardId);
+    return theFC7FpgaConfig.getFpgaConfigList();
+}
+
+void MiddlewareStateMachine::deleteFirmwareFromSDcard(const std::string& configurationFile, const std::string& firmwareName, uint16_t boardId)
+{
+    FC7FpgaConfig theFC7FpgaConfig = getFpgaConfig(configurationFile, boardId);
+    theFC7FpgaConfig.deleteFpgaConfig(firmwareName);
+    LOG(INFO) << "Firmware image: " << firmwareName << " deleted from SD card";
+}
+
+void MiddlewareStateMachine::loadFirmwareInFPGA(const std::string& configurationFile, const std::string& firmwareName, uint16_t boardId)
+{
+    FC7FpgaConfig theFC7FpgaConfig = getFpgaConfig(configurationFile, boardId);
+    theFC7FpgaConfig.jumpToFpgaConfig(firmwareName);
+    LOG(INFO) << "Firmware image: " << firmwareName << " loaded on FPGA";
+}
+
+void MiddlewareStateMachine::uploadFirmwareOnSDcard(const std::string& configurationFile, const std::string& firmwareName, const std::string& firmwareFile, uint16_t boardId)
+{
+    FC7FpgaConfig theFC7FpgaConfig = getFpgaConfig(configurationFile, boardId);
+    theFC7FpgaConfig.flashProm(firmwareName, firmwareFile);
+}
+
+void MiddlewareStateMachine::downloadFirmwareFromSDcard(const std::string& configurationFile, const std::string& firmwareName, const std::string& firmwareFile, uint16_t boardId)
+{
+    FC7FpgaConfig theFC7FpgaConfig = getFpgaConfig(configurationFile, boardId);
+    theFC7FpgaConfig.downloadFpgaConfig(firmwareName, firmwareFile);
+}
+
+
+
+

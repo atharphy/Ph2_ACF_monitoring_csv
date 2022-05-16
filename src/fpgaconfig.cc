@@ -3,11 +3,10 @@
 #include <string>
 #include <vector>
 
-#include "../System/SystemController.h"
 #include "../Utils/argvparser.h"
-#include "FC7FpgaConfig.h"
+#include "../System/FileParser.h"
+#include "../HWInterface/FC7FpgaConfig.h"
 
-using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
@@ -72,7 +71,6 @@ int main(int argc, char* argv[])
     el::Configurations conf(std::string(baseDirChar_p) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
 
-    SystemController cSystemController;
     ArgvParser       cmd;
 
     cmd.setIntroductoryDescription("CMS Ph2_ACF  Data acquisition test and Data dump");
@@ -111,15 +109,24 @@ int main(int argc, char* argv[])
         exit(EXIT_FAILURE);
     }
 
-    std::string        cHWFile = (cmd.foundOption("config")) ? cmd.optionValue("config") : "settings/HWDescription_2CBC.xml";
-    std::ostringstream cStr;
-    cSystemController.setInterfaceInitialization(0);
-    cSystemController.InitializeHw(cHWFile, cStr);
-    BeBoard* pBoard = cSystemController.fDetectorContainer->at((cmd.foundOption("board")) ? convertAnyInt(cmd.optionValue("board").c_str()) : 0);
-    cSystemController.fBeBoardInterface->setBoard(pBoard->getId());
-    auto cInterface = FC7FpgaConfig(cSystemController.fBeBoardInterface->getFirmwareInterface());
+    std::string cHWFile = (cmd.foundOption("config")) ? cmd.optionValue("config") : "settings/HWDescription_2CBC.xml";
+    FileParser theFileParser;
+    std::map<uint16_t, RegManager> theRegManagerList = theFileParser.getRegManagerList(cHWFile);
+    uint16_t boardId = (cmd.foundOption("board")) ? convertAnyInt(cmd.optionValue("board").c_str()) : 0;
 
-    std::vector<std::string> lstNames = cInterface.getFpgaConfigList();
+    FC7FpgaConfig* theFC7FpgaConfig = nullptr;
+    try
+    {
+        theFC7FpgaConfig = new FC7FpgaConfig(&theRegManagerList.at(boardId));
+    }
+    catch(const std::exception& e)
+    {
+        LOG(ERROR) << "Board with id " << boardId << " does not exist in file " << cHWFile << '\n';
+
+        exit(EXIT_FAILURE);
+    }
+
+    std::vector<std::string> lstNames = theFC7FpgaConfig->getFpgaConfigList();
     std::string              cFWFile;
     std::string              strImage("1");
 
@@ -150,7 +157,7 @@ int main(int argc, char* argv[])
     {
         strImage = cmd.optionValue("delete");
         verifyImageName(strImage, lstNames);
-        cInterface.deleteFpgaConfig(strImage);
+        theFC7FpgaConfig->deleteFpgaConfig(strImage);
         LOG(INFO) << "Firmware image: " << strImage << " deleted from SD card";
         exit(EXIT_SUCCESS);
     }
@@ -176,22 +183,22 @@ int main(int argc, char* argv[])
 
     if(!cmd.foundOption("file") && !cmd.foundOption("download"))
     {
-        cInterface.jumpToFpgaConfig(strImage);
+        theFC7FpgaConfig->jumpToFpgaConfig(strImage);
         exit(EXIT_SUCCESS);
     }
 
     bool cDone = 0;
 
     if(cmd.foundOption("download"))
-        cInterface.downloadFpgaConfig(strImage, cmd.optionValue("download"));
+        theFC7FpgaConfig->downloadFpgaConfig(strImage, cmd.optionValue("download"));
     else
-        cInterface.flashProm(strImage, cFWFile.c_str());
+        theFC7FpgaConfig->flashProm(strImage, cFWFile.c_str());
 
     uint32_t progress;
 
     while(cDone == 0)
     {
-        progress = cInterface.getProgressValue();
+        progress = theFC7FpgaConfig->getProgressValue();
 
         if(progress == 100)
         {
@@ -200,8 +207,10 @@ int main(int argc, char* argv[])
         }
         else
         {
-            LOG(INFO) << progress << "%  " << cInterface.getProgressString() << "                 \r" << std::flush;
+            LOG(INFO) << progress << "%  " << theFC7FpgaConfig->getProgressString() << "                 \r" << std::flush;
             sleep(1);
         }
     }
+
+    delete theFC7FpgaConfig;
 }

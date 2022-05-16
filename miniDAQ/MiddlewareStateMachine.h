@@ -2,9 +2,15 @@
 #define __MIDDLEWARE_STATE_MACHINE__
 
 #include <string>
+#include <vector>
 #include <map>
 #include <typeinfo>
 
+namespace Ph2_HwInterface
+{
+    class FC7FpgaConfig;
+
+}
 class Tool;
 
 class MiddlewareStateMachine
@@ -23,14 +29,20 @@ class MiddlewareStateMachine
     void pause     ();
     void resume    ();
     void abort     ();
-
     Status status();
+
+    // FPGAconfig commands
+    std::vector<std::string> getFirmwareList(const std::string& configurationFile, uint16_t boardId = 0);
+    void deleteFirmwareFromSDcard(const std::string& configurationFile, const std::string& firmwareName, uint16_t boardId = 0);
+    void loadFirmwareInFPGA(const std::string& configurationFile, const std::string& firmwareName, uint16_t boardId = 0);
+    void uploadFirmwareOnSDcard(const std::string& configurationFile, const std::string& firmwareName, const std::string& firmwareFile, uint16_t boardId = 0);
+    void downloadFirmwareFromSDcard(const std::string& configurationFile, const std::string& firmwareName, const std::string& firmwareFile, uint16_t boardId = 0);
 
     Tool* fTheTool {nullptr};
 
   private:
+    Ph2_HwInterface::FC7FpgaConfig getFpgaConfig(const std::string& configurationFile, uint16_t boardId);
     int currentRun_;
-
     std::map<std::string, std::type_info> fClassesInfo;
 
 };
