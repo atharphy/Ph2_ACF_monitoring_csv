@@ -54,17 +54,17 @@ void Eudaq2Producer::DoInitialise()
     fPathToHWFile = cEudaqIni->Get("HWFile", "./settings/DESY_FullModule.xml");
     LOG(INFO) << BOLDYELLOW << "Loading settings from file : " << fPathToHWFile << RESET;
 
-    auto        cRunNumber = GetRunNumber();
-    std::string cDirectory = Form("Results/EudaqProducer_Run%d", cRunNumber);
+    //auto        cRunNumber = GetRunNumber();
+    //std::string cDirectory = Form("Results/EudaqProducer_Run%d", cRunNumber);
 
     std::stringstream outp;
     // Outer Tracker hardware configuration
     this->InitializeHw(fPathToHWFile);
     this->InitializeSettings(fPathToHWFile, outp);
     LOG(INFO) << outp.str();
-    this->CreateResultDirectory(cDirectory, false, false);
-    this->InitResultFile("Module");
-    this->AddMetadata();
+    //this->CreateResultDirectory(cDirectory, false, false);
+    //this->InitResultFile("Module");
+    //this->AddMetadata();
 
     // check if PS module it is
     for(auto cBoard: *fDetectorContainer)
@@ -519,9 +519,6 @@ void Eudaq2Producer::ReadoutLoop()
             for(auto cBoard: *fDetectorContainer)
             {
                 fBeBoardInterface->setBoard(cBoard->getId());
-                auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-                auto cReadoutInterface = cInterface->getL1ReadoutInterface();
-
                 BeBoard*              cTheBoard = static_cast<BeBoard*>(cBoard);
                 std::vector<uint32_t> cRawData(0);
                 // Get data
@@ -533,7 +530,6 @@ void Eudaq2Producer::ReadoutLoop()
                     std::this_thread::sleep_for(std::chrono::microseconds(100));
                     continue;
                 }
-                // cReadoutInterface->ResetReadout();
 
                 // Check and fill phase 2 raw data
                 fPh2FileHandler->setData(cRawData);
