@@ -4,60 +4,14 @@
 #include <vector>
 
 #include "../Utils/argvparser.h"
-#include "../System/FileParser.h"
-#include "../HWInterface/FC7FpgaConfig.h"
-
-using namespace Ph2_HwInterface;
-using namespace Ph2_System;
+#include "../Utils/easylogging++.h"
+#include "../Utils/ConsoleColor.h"
+#include "../Utils/Utilities.h"
+#include "../miniDAQ/MiddlewareStateMachine.h"
 
 using namespace CommandLineProcessing;
 
 INITIALIZE_EASYLOGGINGPP
-
-class AcqVisitor : public HwInterfaceVisitor
-{
-    int cN;
-
-  public:
-    AcqVisitor() { cN = 0; }
-    virtual void visit(const Ph2_HwInterface::Event& pEvent)
-    {
-        cN++;
-        LOG(INFO) << ">>> Event #" << cN;
-        LOG(INFO) << pEvent;
-    }
-};
-
-void verifyImageName(const std::string& strImage, const std::vector<std::string>& lstNames)
-{
-    if(lstNames.empty())
-    {
-        if(strImage.compare("1") != 0 && strImage.compare("2") != 0)
-        {
-            LOG(ERROR) << "Error, invalid image name, should be 1 (golden) or 2 (user)";
-            exit(EXIT_FAILURE);
-        }
-    }
-    else
-    {
-        bool bFound = false;
-
-        for(size_t iName = 0; iName < lstNames.size(); iName++)
-        {
-            if(!strImage.compare(lstNames[iName]))
-            {
-                bFound = true;
-                break;
-            }
-        }
-
-        if(!bFound)
-        {
-            LOG(ERROR) << "Error, this image name: " << strImage << " is not available on SD card";
-            exit(EXIT_FAILURE);
-        }
-    }
-}
 
 int main(int argc, char* argv[])
 {
@@ -109,108 +63,67 @@ int main(int argc, char* argv[])
         exit(EXIT_FAILURE);
     }
 
-    std::string cHWFile = (cmd.foundOption("config")) ? cmd.optionValue("config") : "settings/HWDescription_2CBC.xml";
-    FileParser theFileParser;
-    std::map<uint16_t, RegManager> theRegManagerList = theFileParser.getRegManagerList(cHWFile);
+    std::string configurationFile = (cmd.foundOption("config")) ? cmd.optionValue("config") : "settings/HWDescription_2CBC.xml";
     uint16_t boardId = (cmd.foundOption("board")) ? convertAnyInt(cmd.optionValue("board").c_str()) : 0;
 
-    FC7FpgaConfig* theFC7FpgaConfig = nullptr;
-    try
-    {
-        theFC7FpgaConfig = new FC7FpgaConfig(&theRegManagerList.at(boardId));
-    }
-    catch(const std::exception& e)
-    {
-        LOG(ERROR) << "Board with id " << boardId << " does not exist in file " << cHWFile << '\n';
+    MiddlewareStateMachine theMiddlewareStateMachine;
 
-        exit(EXIT_FAILURE);
-    }
-
-    std::vector<std::string> lstNames = theFC7FpgaConfig->getFpgaConfigList();
     std::string              cFWFile;
-    std::string              strImage("1");
+    if(cmd.foundOption("file")) cFWFile = cmd.optionValue("file");
+    // std::string              strImage("1");
 
     if(cmd.foundOption("list"))
     {
-        LOG(INFO) << lstNames.size() << " firmware images on SD card:";
-
-        for(auto& name: lstNames) LOG(INFO) << " - " << name;
-
+        std::vector<std::string> firmwareList = theMiddlewareStateMachine.getFirmwareList(configurationFile, boardId);
+        LOG(INFO) << firmwareList.size() << " firmware images on SD card:";
+        for(auto& name: firmwareList) LOG(INFO) << " - " << name;
         exit(EXIT_SUCCESS);
     }
-    else if(cmd.foundOption("file"))
+    
+    if(cmd.foundOption("delete"))
     {
-        cFWFile = cmd.optionValue("file");
-
-        if(lstNames.size() == 0 && cFWFile.find(".mcs") == std::string::npos)
-        {
-            LOG(ERROR) << "Error, the specified file is not a .mcs file";
-            exit(EXIT_FAILURE);
-        }
-        else if(lstNames.size() > 0 && cFWFile.compare(cFWFile.length() - 4, 4, ".bit") && cFWFile.compare(cFWFile.length() - 4, 4, ".bin"))
-        {
-            LOG(ERROR) << "Error, the specified file is neither a .bit nor a .bin file";
-            exit(EXIT_FAILURE);
-        }
-    }
-    else if(cmd.foundOption("delete") && !lstNames.empty())
-    {
-        strImage = cmd.optionValue("delete");
-        verifyImageName(strImage, lstNames);
-        theFC7FpgaConfig->deleteFpgaConfig(strImage);
-        LOG(INFO) << "Firmware image: " << strImage << " deleted from SD card";
+        std::string firmwareName = cmd.optionValue("delete");
+        LOG(INFO) << BOLDBLUE << "Deleting " << firmwareName << " from SD card..." << RESET;
+        theMiddlewareStateMachine.deleteFirmwareFromSDcard(configurationFile, firmwareName, boardId);
+        LOG(INFO) << BOLDBLUE << ">>> Done <<<" << RESET;
         exit(EXIT_SUCCESS);
-    }
-    else if(!cmd.foundOption("image"))
-    {
-        cFWFile = "";
-        LOG(ERROR) << "Error, no FW image specified";
-        exit(EXIT_FAILURE);
     }
 
     if(cmd.foundOption("image"))
     {
-        strImage = cmd.optionValue("image");
-
-        if(!cmd.foundOption("file"))
+        std::string firmwareName = cmd.optionValue("image");
+        if(cmd.foundOption("file") && !cmd.foundOption("download"))
         {
-            verifyImageName(strImage, lstNames);
+            std::string inputFileName =  cmd.optionValue("file");
+            LOG(INFO) << BOLDBLUE << "Uploading " << inputFileName << " on SD card with name " << firmwareName << "..." << RESET;
+            theMiddlewareStateMachine.uploadFirmwareOnSDcard(configurationFile, firmwareName, inputFileName, boardId);
             LOG(INFO) << BOLDBLUE << ">>> Done <<<" << RESET;
+            exit(EXIT_SUCCESS);
         }
-    }
-    else if(!lstNames.empty())
-        strImage = "GoldenImage.bin";
-
-    if(!cmd.foundOption("file") && !cmd.foundOption("download"))
-    {
-        theFC7FpgaConfig->jumpToFpgaConfig(strImage);
-        exit(EXIT_SUCCESS);
-    }
-
-    bool cDone = 0;
-
-    if(cmd.foundOption("download"))
-        theFC7FpgaConfig->downloadFpgaConfig(strImage, cmd.optionValue("download"));
-    else
-        theFC7FpgaConfig->flashProm(strImage, cFWFile.c_str());
-
-    uint32_t progress;
-
-    while(cDone == 0)
-    {
-        progress = theFC7FpgaConfig->getProgressValue();
-
-        if(progress == 100)
+        else if(cmd.foundOption("download") && !cmd.foundOption("file"))
         {
-            cDone = 1;
-            LOG(INFO) << BOLDBLUE << ">>> 100% Done <<<" << RESET;
+            std::string outputFileName =  cmd.optionValue("download");
+            LOG(INFO) << BOLDBLUE << "Downloading " << firmwareName << " on SD card into " << outputFileName << "..." << RESET;
+            theMiddlewareStateMachine.downloadFirmwareFromSDcard(configurationFile, firmwareName, outputFileName, boardId);
+            LOG(INFO) << BOLDBLUE << ">>> Done <<<" << RESET;
+            exit(EXIT_SUCCESS);
+        }
+        else if(!cmd.foundOption("file") && !cmd.foundOption("download"))
+        {
+            LOG(INFO) << BOLDBLUE << "Loading " << firmwareName << " into the FPGA..." << RESET;
+            theMiddlewareStateMachine.loadFirmwareInFPGA(configurationFile, firmwareName, boardId);
+            LOG(INFO) << BOLDBLUE << ">>> Done <<<" << RESET;
         }
         else
         {
-            LOG(INFO) << progress << "%  " << theFC7FpgaConfig->getProgressString() << "                 \r" << std::flush;
-            sleep(1);
+            LOG(ERROR) << BOLDRED << "Error: -f and -o options cannot be specified at the same time" << RESET;
+            exit(EXIT_FAILURE);
         }
     }
+    else
+    {
+        LOG(ERROR) << "Error, no FW image specified";
+        exit(EXIT_FAILURE);
+    }
 
-    delete theFC7FpgaConfig;
 }

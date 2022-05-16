@@ -31,18 +31,26 @@ using namespace Ph2_HwInterface;
 
 namespace Ph2_HwInterface
 {
-FC7FpgaConfig::FC7FpgaConfig(RegManager* pbbi) : FpgaConfig(pbbi), lNode(nullptr)
+FC7FpgaConfig::FC7FpgaConfig(RegManager&& pbbi) : FpgaConfig(std::move(pbbi)), lNode(nullptr)
 {
     // Quick fix for IT - OT incompatibilities
     try
     {
-        lNode = new fc7::MmcPipeInterface(dynamic_cast<const fc7::MmcPipeInterface&>(fwManager->getUhalNode("system.buf_cta")));
+        lNode = new fc7::MmcPipeInterface(dynamic_cast<const fc7::MmcPipeInterface&>(fwManager.getUhalNode("system.buf_cta")));
     }
     catch(const std::exception& lExc)
     {
-        lNode = new fc7::MmcPipeInterface(dynamic_cast<const fc7::MmcPipeInterface&>(fwManager->getUhalNode("buf_cta")));
+        lNode = new fc7::MmcPipeInterface(dynamic_cast<const fc7::MmcPipeInterface&>(fwManager.getUhalNode("buf_cta")));
     }
 }
+
+FC7FpgaConfig::FC7FpgaConfig(FC7FpgaConfig&& theFC7FpgaConfig)
+: FpgaConfig(std::move(theFC7FpgaConfig))
+{
+    lNode = theFC7FpgaConfig.lNode;
+    theFC7FpgaConfig.lNode = nullptr;
+}
+
 
 FC7FpgaConfig::~FC7FpgaConfig() { delete lNode; }
 

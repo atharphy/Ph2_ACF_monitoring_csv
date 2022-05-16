@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <typeinfo>
 
 namespace Ph2_HwInterface
 {

@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
     cSystemController.InitializeHw(cHWFile, cStr);
     BeBoard* pBoard = cSystemController.fDetectorContainer->at((cmd.foundOption("board")) ? convertAnyInt(cmd.optionValue("board").c_str()) : 0);
     cSystemController.fBeBoardInterface->setBoard(pBoard->getId());
-    auto cInterface = FC7FpgaConfig(cSystemController.fBeBoardInterface->getFirmwareInterface());
+    auto cInterface = FC7FpgaConfig(std::move(*static_cast<RegManager*>(cSystemController.fBeBoardInterface->getFirmwareInterface())));
 
     // std::vector<std::string> lstNames = cInterface->getFpgaConfigList(); // cSystemController.fBeBoardInterface->getFpgaConfigList(pBoard);
 

@@ -19,7 +19,6 @@
 */
 
 #include "FpgaConfig.h"
-#include "RegManager.h"
 // #include <boost/format.hpp>
 // #include <boost/thread.hpp>
 // #include <fstream>
@@ -31,9 +30,9 @@
 
 namespace Ph2_HwInterface
 {
-FpgaConfig::FpgaConfig(RegManager* pbbfi)
+FpgaConfig::FpgaConfig(RegManager&& pbbfi)
+: fwManager(std::move(pbbfi))
 {
-    fwManager        = pbbfi;
     numUploadingFpga = 0;
     progressValue    = 0;
     progressString   = "";

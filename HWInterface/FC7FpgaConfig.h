@@ -33,8 +33,11 @@ class FC7FpgaConfig : public FpgaConfig
     fc7::MmcPipeInterface* lNode;
 
   public:
-    FC7FpgaConfig(Ph2_HwInterface::RegManager* pbbi);
+    FC7FpgaConfig(Ph2_HwInterface::RegManager&& pbbi);
     ~FC7FpgaConfig();
+    FC7FpgaConfig(const FC7FpgaConfig&) = delete;
+    FC7FpgaConfig(FC7FpgaConfig&& theFC7FpgaConfig);
+
     /*! \brief Launch the firmware upload in a separate thread
      * \param strConfig FPGA configuration name
      * \param pstrFile absolute path to the .bit or .bin file

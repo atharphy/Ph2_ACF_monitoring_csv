@@ -11,10 +11,10 @@
 #define _FPGACONFIG_H_
 
 #include <string>
+#include "RegManager.h"
 
 namespace Ph2_HwInterface
 {
-class RegManager;
 /*!
  * \brief Upload MCS files into Flash EPROM as FPGA configuration
  * @author cbonnin
@@ -25,8 +25,12 @@ class FpgaConfig
     /*! \brief Constructor from a RegManager
      * \param pbbi Reference to the RegManager
      */
-    FpgaConfig(RegManager* pbbi);
+    FpgaConfig(RegManager&& pbbi);
     virtual ~FpgaConfig(){};
+
+    FpgaConfig(const FpgaConfig& theFpgaConfig) = delete;
+    FpgaConfig(FpgaConfig&& theFpgaConfig) = default;
+
     /*! \brief Launch the firmware download in a separate thread
      * \param strConfig FPGA configuration number or name
      * \param pstrFile absolute path to the configuration file
@@ -44,7 +48,7 @@ class FpgaConfig
   protected:
     uint32_t     progressValue, numUploadingFpga;
     std::string  progressString;
-    RegManager*  fwManager;
+    RegManager   fwManager;
 };
 } // namespace Ph2_HwInterface
 #endif
