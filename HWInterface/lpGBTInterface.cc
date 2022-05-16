@@ -20,17 +20,18 @@ namespace Ph2_HwInterface
 bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerify)
 {
     this->setBoard(pChip->getBeBoardId());
-    auto cBoardType = fBoardFW->getBoardType();
-    auto cAddress   = pChip->getRegItem(pDacName).fAddress;
-    // setting highest write address possible (lpGBT version dependent)
-    uint16_t cMaxWriteAddress = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 0x13c : 0x14f;
-    // checking that written value isn't more than 8 bits
+    auto     cBoardType       = fBoardFW->getBoardType();
+    auto     cAddress         = pChip->getRegItem(pDacName).fAddress;
+    uint16_t cMaxWriteAddress = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 0x13C : 0x14F; // Setting highest write address possible (lpGBT version dependent)
+
+    // Checking that written value isn't more than 8 bits
     if(pDacValue > 0xFF)
     {
         LOG(ERROR) << BOLDRED << "LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pDacValue << BOLDRED << " to address " << BOLDYELLOW << cAddress << RESET;
         return false;
     }
-    // checking that register address isn't higher than highest write address
+
+    // Checking that register address isn't higher than highest write address
     if(cAddress > cMaxWriteAddress)
     {
         LOG(ERROR) << "LpGBT read-write registers end at 0x13C ... impossible to write to address " << BOLDYELLOW << cAddress << RESET;
@@ -424,7 +425,7 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
         uint8_t cChannel = pChannels[cIndx];
 
         cFreq         = 2;
-        uint8_t cMode = 1; // initial training mode
+        uint8_t cMode = 1; // Initial training mode
         lpGBTInterface::ConfigureRxGroups(pChip, {cGroup}, {cChannel}, cFreq, cMode);
         std::string cTrainRxReg;
         if(cGroup == 0 || cGroup == 1)
@@ -443,19 +444,14 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
         for(size_t cAttempt = 0; cAttempt < cMaxAttempts; cAttempt++)
         {
             ResetRxDll(pChip, {cGroup});
-            // this->WriteChipReg(pChip, "RST1", 0x7F);
-            // std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            // this->WriteChipReg(pChip, "RST1", 0x00);
 
-            // enable training
+            // Enable training
             uint8_t cTrainingShift = cChannel + 4 * (cGroup % 2);
-            // 1-0 transition to assert training?
-            // maybe do this a few times
             WriteChipReg(pChip, cTrainRxReg, (0x1 << cTrainingShift));
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(std::chrono::lpGBTconstants::SUPERDEEPSLEEP);
             WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            // check for lock
+            std::this_thread::sleep_for(std::chrono::lpGBTconstants::SUPERDEEPSLEEP);
+            // Check for lock
             std::string cRXLockedReg = "EPRX" + std::to_string(cGroup) + "Locked";
             uint8_t     cLockShift   = cChannel + 4;
             auto        cLock        = 0;
@@ -465,12 +461,14 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
             uint8_t     cIter        = 0;
             do
             {
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
                 cLock     = (ReadChipReg(pChip, cRXLockedReg) & (1 << cLockShift)) >> cLockShift;
                 cContinue = cLock == 0;
                 cIter++;
             } while(cContinue && cIter < cMaxIters);
             if(cLock) cAligned[cIndx] += 1;
+            WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
+            std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
             cCurrPhase = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
             LOG(INFO) << BOLDGREEN << "\t\t..Attempt# " << +cAttempt << "\t... RxPhase found  is... " << +cCurrPhase << RESET;
             cPhases.push_back(cCurrPhase);
@@ -478,8 +476,7 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
         }
 
         cSuccess = cSuccess && (cAligned[cIndx] == cMaxAttempts);
-        // for now we just choose the first
-        // what I want is the mode
+
         std::sort(cUniquePhases.begin(), cUniquePhases.end());
         cUniquePhases.erase(unique(cUniquePhases.begin(), cUniquePhases.end()), cUniquePhases.end());
         std::vector<uint8_t> cCount(0);
@@ -489,7 +486,6 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
         {
             uint8_t cCountThisPhase = 0;
             for(auto cThisPhase: cPhases) { cCountThisPhase += (cThisPhase == cUniquePhases[cIndx2]); }
-            // LOG (INFO) << BOLDGREEN << "\t..Phase of " << +cUniquePhases[cIndx2] << " appears " << +cCountThisPhase << " times." << RESET;
             if(cCountThisPhase >= cCntBstPhase)
             {
                 cCntBstPhase  = cCountThisPhase;
@@ -512,10 +508,10 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
         ConfigureRxPhase(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
     }
 
-    // find mode
+    // Find mode
     std::vector<uint8_t> cTapsHist(15, 0);
     for(auto cItem: cOptimalTaps) cTapsHist[cItem]++;
-    // return cTapsHist;
+    // Return cTapsHist;
     auto cTapMode = std::max_element(cTapsHist.begin(), cTapsHist.end()) - cTapsHist.begin();
     LOG(INFO) << BOLDMAGENTA << "Most frequent optimal tap is " << +cTapMode << RESET;
     uint8_t cMode = 0; // 2, continuous phase tracking : 0, fixed phase
@@ -819,24 +815,27 @@ void lpGBTInterface::ConfigureCurrentDAC(Chip* pChip, const std::vector<std::str
         WriteChipReg(pChip, "CURDACCHN", cCURDACCHN);
     }
 }
+
 void lpGBTInterface::ConfigureInternalMonitoring(Chip* pChip, uint8_t pEnable)
 {
     WriteChipReg(pChip, "ADCMon", (pEnable == 1) ? 0x1F : 0x00);
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 }
+
 float lpGBTInterface::GetInternalTemperature(Chip* pChip)
 {
     auto cVal = ReadChipReg(pChip, "ADCMon");
-    // enable reset on temperature sensor
+    // Enable reset on temperature sensor
     WriteChipReg(pChip, "ADCMon", (1 << 4 | cVal));
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-    // disable reset on temperature sensor
+    // Disable reset on temperature sensor
     WriteChipReg(pChip, "ADCMon", (0 << 4 | cVal));
 
     std::vector<float> cMeasurements(0);
     for(uint8_t cIndx = 0; cIndx < 10; cIndx++) { cMeasurements.push_back(ReadADC(pChip, "TEMP", "VREF/2", 0)); }
     return std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
 }
+
 float lpGBTInterface::ReadResistance(Chip* pChip, std::string pADC, std::vector<uint8_t> pCurrents, uint8_t pGain)
 {
     std::vector<float> cTempVoltageReadings;
@@ -887,8 +886,6 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
 
     // Enable Internal VREF
     WriteChipReg(pChip, "VREFCNTR", 1 << 7 | 0x00);
-
-    // std::this_thread::sleep_for(std::chrono::milliseconds(10));
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     // Start ADC conversion
@@ -921,16 +918,16 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
 
 bool lpGBTInterface::IsReadADCDone(Chip* pChip) { return (((ReadChipReg(pChip, "ADCStatusH") & 0x40) >> 6) == 1); }
 
-// ###########################
+// ########################
 // # LpGBT Vref functions #
-// ###########################
+// ########################
 
 bool lpGBTInterface::ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection)
 {
     uint8_t cVal     = pEnable << 7 | (pCorrection & 0x3F);
     bool    cSuccess = WriteChipReg(pChip, "VREFCNTR", cVal);
     LOG(DEBUG) << BOLDBLUE << "VREFCNTR : 0x" << std::hex << +cVal << std::dec << RESET;
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
     return cSuccess;
 }
 

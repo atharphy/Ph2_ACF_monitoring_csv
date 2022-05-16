@@ -18,6 +18,7 @@
 #if defined(__TCUSB__)
 #include "TCInterface.h"
 #endif
+
 // ##########################
 // # LpGBT useful constants #
 // ##########################
@@ -30,6 +31,7 @@ const uint8_t PATTERN_CONST_INV = 0x5; // Inverted constant pattern
 const uint8_t fictitiousGroup   = 6;   // Fictitious group used when no need to speficy frontend chip
 const uint8_t fictitiousChannel = 0;   // Fictitious channel used when no need to speficy frontend chip
 const uint8_t rxPhaseTracking   = 2;   // Rx phase tracking mode [0 = no-tracking, 2 = automatic-tracking]
+const uint8_t SUPERDEEPSLEEP    = 10;  // [milliseconds]
 } // namespace lpGBTconstants
 
 namespace Ph2_HwInterface
@@ -47,13 +49,6 @@ struct lpGBTClockConfig
     uint8_t fClkFreq = 4, fClkDriveStr = 1, fClkInvert = 1;
     uint8_t fClkPreEmphWidth = 0, fClkPreEmphMode = 0, fClkPreEmphStr = 0;
 };
-// struct i2cConfig
-// {
-//     uint8_t fMasterId=0;
-//     uint8_t fI2CFrequency=3;
-//     uint8_t fSCLmode=0;
-//     uint8_t fRetry=0;
-// };
 
 class lpGBTInterface : public ChipInterface
 {
@@ -91,9 +86,9 @@ class lpGBTInterface : public ChipInterface
     void StartPRBSpattern(Ph2_HwDescription::Chip* pChip);
     void StopPRBSpattern(Ph2_HwDescription::Chip* pChip);
 
-    // #######################################
+    // ################################
     // # Chip configuration functions #
-    // #######################################
+    // ################################
     bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerify = true) override;
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
 
@@ -155,14 +150,14 @@ class lpGBTInterface : public ChipInterface
     double RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed);
     double BERtestCL(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double bits_or_time, float pConfidenceLevel);
 
-    // ##############
-    // # LpGBT Manual phase alignment of Rx ports
-    // #############
+    // ############################################
+    // # LpGBT Manual phase alignment of Rx ports #
+    // ############################################
     void ManualPhaseAlignRx(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel);
 
-    // ##############################################
-    // # LpGBT Reset  functions (Slow Control) #
-    // ##############################################
+    // ########################################
+    // # LpGBT Reset functions (Slow Control) #
+    // ########################################
     void ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pMasters);
 
     // ##############################################
