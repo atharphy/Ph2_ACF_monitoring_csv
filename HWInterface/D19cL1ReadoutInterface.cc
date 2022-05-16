@@ -164,13 +164,13 @@ bool D19cL1ReadoutInterface::CheckBuffers()
     // read all the words
     if(ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type"))
     {
-      // readout_req high when buffer is almost full
-      uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-      return (cReadoutReq == 1); // DD3 almost full ? check this!!
+        // readout_req high when buffer is almost full
+        uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+        return (cReadoutReq == 1); // DD3 almost full ? check this!!
     }
     return false;
 }
-    
+
 bool D19cL1ReadoutInterface::CheckForWordsInReadout()
 {
     uint32_t cIterations = 0;
@@ -225,7 +225,7 @@ bool D19cL1ReadoutInterface::PollReadoutData(const BeBoard* pBoard, bool pWait)
     {
         FillData();
         CountFwEvents();
-	LOG(DEBUG) << BOLDYELLOW << "D19cL1ReadoutInterface::PollReadoutData " << fData.size() << " valid 32 bit words .. which are " << +fNReadoutEvents << " events." << RESET;
+        LOG(DEBUG) << BOLDYELLOW << "D19cL1ReadoutInterface::PollReadoutData " << fData.size() << " valid 32 bit words .. which are " << +fNReadoutEvents << " events." << RESET;
     }
     return cSuccess;
 }

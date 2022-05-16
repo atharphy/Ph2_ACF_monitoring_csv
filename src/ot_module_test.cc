@@ -1196,7 +1196,7 @@ int main(int argc, char* argv[])
         cGoodRuns << cRunNumber << "\n";
         cGoodRuns.close();
 
-        uint8_t         cDisableFEs = (cmd.foundOption("DataMonitor")) ? convertAnyInt(cmd.optionValue("DataMonitor").c_str()) : 0;
+        uint8_t       cDisableFEs = (cmd.foundOption("DataMonitor")) ? convertAnyInt(cmd.optionValue("DataMonitor").c_str()) : 0;
         BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
@@ -1216,7 +1216,7 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("read"))
     {
-        std::string     cRawFileName = cmd.foundOption("read") ? cmd.optionValue("read") : "";
+        std::string   cRawFileName = cmd.foundOption("read") ? cmd.optionValue("read") : "";
         BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.SetReadoutMode(1);
         cBeamTestCheck.Inherit(&cTool);

@@ -1003,10 +1003,10 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
     cBoardRegs.push_back("fc7_daq_cnfg.tlu_block.tlu_enabled");
     cBoardRegs.push_back("fc7_daq_cnfg.tlu_block.handshake_mode");
     BeBoardRegMap cRegMap = pBoard->getBeBoardRegMap();
-    for(auto cReg: cBoardRegs) 
-    { 
-      LOG(INFO) << BOLDBLUE << "Setting " << cReg << " to " << +cRegMap[cReg] << RESET;
-      fBeBoardInterface->WriteBoardReg(pBoard, cReg, cRegMap[cReg]); 
+    for(auto cReg: cBoardRegs)
+    {
+        LOG(INFO) << BOLDBLUE << "Setting " << cReg << " to " << +cRegMap[cReg] << RESET;
+        fBeBoardInterface->WriteBoardReg(pBoard, cReg, cRegMap[cReg]);
     }
 
     // set thresholds
