@@ -448,9 +448,9 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
             // Enable training
             uint8_t cTrainingShift = cChannel + 4 * (cGroup % 2);
             WriteChipReg(pChip, cTrainRxReg, (0x1 << cTrainingShift));
-            std::this_thread::sleep_for(std::chrono::lpGBTconstants::SUPERDEEPSLEEP);
+            std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
             WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
-            std::this_thread::sleep_for(std::chrono::lpGBTconstants::SUPERDEEPSLEEP);
+            std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
             // Check for lock
             std::string cRXLockedReg = "EPRX" + std::to_string(cGroup) + "Locked";
             uint8_t     cLockShift   = cChannel + 4;
