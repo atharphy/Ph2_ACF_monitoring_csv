@@ -100,5 +100,6 @@ class StateMachine(object):
         while(self.status_ != "DONE"):
             self.switch(self.status_)
         return self.calibrationResult
+
         
 

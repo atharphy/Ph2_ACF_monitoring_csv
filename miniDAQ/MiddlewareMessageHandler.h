@@ -22,12 +22,15 @@ class MiddlewareMessageHandler
     std::string abort     (const std::string& message);
     std::string status    (const std::string& message);
 
+    // FPGAconfig commands
+    std::string firmwareAction(const std::string& message);
+
     template<typename T>
     static std::string serializeMessage(T theMessage);
 
   private:
     MiddlewareStateMachine fMiddlewareStateMachine;
-
+    
     template<typename... Args>
     MessageUtils::ReplyMessage tryCatchWrapper(std::string currentStep, void(MiddlewareStateMachine::*F)(Args...), typename std::remove_reference<Args>::type&... arguments)
     {
@@ -44,7 +47,7 @@ class MiddlewareMessageHandler
         return theReplyMessage;
     }
 
-    MessageUtils::ReplyMessage catchFunction(MessageUtils::ReplyMessage& inputReplayMessage, const std::exception& theException, const std::string& currentFunction);
+    void catchFunction(MessageUtils::ReplyMessage& inputReplayMessage, const std::exception& theException, const std::string& currentFunction);
 
 
 };

@@ -87,11 +87,88 @@ std::string MiddlewareMessageHandler::status(const std::string& message)
 }
 
 
-ReplyMessage MiddlewareMessageHandler::catchFunction(ReplyMessage& inputReplayMessage, const std::exception& theException, const std::string& currentFunction)
+void MiddlewareMessageHandler::catchFunction(ReplyMessage& inputReplayMessage, const std::exception& theException, const std::string& currentFunction)
 {
     std::string theExceptionMessage = theException.what();
     std::string outputMessage = "Exception thrown during SM step " + currentFunction + " - catched exception message: " + theExceptionMessage;
     inputReplayMessage.mutable_reply_type()->set_type(ReplyType::ERROR);
     inputReplayMessage.set_message(outputMessage.c_str());
-    return inputReplayMessage;
+}
+
+std::string MiddlewareMessageHandler::firmwareAction(const std::string& message)
+{
+    ReplyMessage theReplyMessage;
+    FirmwareQueryMessage theFirmwareMessage;
+    theFirmwareMessage.ParseFromString(message);
+    const std::string& configurationFile = theFirmwareMessage.configuration_file();
+    uint32_t boardIdRaw = theFirmwareMessage.board_id();
+    if(boardIdRaw > 0xFFFF)
+    {
+        std::runtime_error theError("Board Id has to be contained in 16 bits");
+        catchFunction(theReplyMessage, theError, "firmwareAction");
+        return serializeMessage(theReplyMessage);
+    }
+    uint16_t boardId = boardIdRaw;
+
+    switch (theFirmwareMessage.action())
+    {
+        case FirmwareQueryMessage::LIST:
+        {
+            try
+            {
+                FirmwareReplyMessage theFirmwareListReply;
+                std::vector<std::string> firmwareList = fMiddlewareStateMachine.getFirmwareList(configurationFile, boardId);
+                theFirmwareListReply.mutable_reply_type()->set_type(ReplyType::SUCCESS);
+
+                for(const auto& firmware : firmwareList) theFirmwareListReply.add_firmware_name(firmware);
+
+                return serializeMessage(theFirmwareListReply);
+            }
+            catch(const std::exception& theException)
+            {
+                catchFunction(theReplyMessage, theException, "firmwareAction -> list firmwares");
+            }
+            break;
+        }
+        
+        case FirmwareQueryMessage::LOAD:
+        {
+            const std::string& firmwareName = theFirmwareMessage.firmware_name();
+            theReplyMessage = tryCatchWrapper("firmwareAction -> load firmware", &MiddlewareStateMachine::loadFirmwareInFPGA, configurationFile, firmwareName, boardId);
+            break;
+        }
+
+        case FirmwareQueryMessage::UPLOAD:
+        {
+            const std::string& firmwareName = theFirmwareMessage.firmware_name();
+            const std::string& fileName     = theFirmwareMessage.file_name();
+            theReplyMessage = tryCatchWrapper("firmwareAction -> upload firmware", &MiddlewareStateMachine::uploadFirmwareOnSDcard, configurationFile, firmwareName, fileName, boardId);
+            break;
+        }
+
+        case FirmwareQueryMessage::DOWNLOAD:
+        {
+            const std::string& firmwareName = theFirmwareMessage.firmware_name();
+            const std::string& fileName     = theFirmwareMessage.file_name();
+            theReplyMessage = tryCatchWrapper("firmwareAction -> download firmware", &MiddlewareStateMachine::downloadFirmwareFromSDcard, configurationFile, firmwareName, fileName, boardId);
+            break;
+        }
+
+        case FirmwareQueryMessage::DELETE:
+        {
+            const std::string& firmwareName = theFirmwareMessage.firmware_name();
+            theReplyMessage = tryCatchWrapper("firmwareAction -> delete firmware", &MiddlewareStateMachine::deleteFirmwareFromSDcard, configurationFile, firmwareName, boardId);
+            break;
+        }
+
+        default:
+        {
+            std::runtime_error theError("MiddlewareMessageHandler::firmwareAction not able to identity action");
+            catchFunction(theReplyMessage, theError, "firmwareAction");
+            break;
+        }
+    }
+
+    return serializeMessage(theReplyMessage);
+
 }

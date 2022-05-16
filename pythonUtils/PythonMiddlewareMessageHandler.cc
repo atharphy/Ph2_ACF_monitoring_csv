@@ -22,15 +22,20 @@ PYBIND11_MODULE(Ph2_ACF_PythonInterface, handle)
 
     pybind11::class_<MiddlewareMessageHandler>(handle, "MiddlewareMessageHandler")
     .def(pybind11::init<>())
-    .def("initialize", &MiddlewareMessageHandler::initialize)
-    .def("configure" , &MiddlewareMessageHandler::configure )
-    .def("start"     , &MiddlewareMessageHandler::start     )
-    .def("stop"      , &MiddlewareMessageHandler::stop      )
-    .def("halt"      , &MiddlewareMessageHandler::halt      )
-    .def("pause"     , &MiddlewareMessageHandler::pause     )
-    .def("resume"    , &MiddlewareMessageHandler::resume    )
-    .def("abort"     , &MiddlewareMessageHandler::abort     )
-    .def("status"    , &MiddlewareMessageHandler::status    );
+    .def("initialize"    , &MiddlewareMessageHandler::initialize    )
+    .def("configure"     , &MiddlewareMessageHandler::configure     )
+    .def("start"         , &MiddlewareMessageHandler::start         )
+    .def("stop"          , &MiddlewareMessageHandler::stop          )
+    .def("halt"          , &MiddlewareMessageHandler::halt          )
+    .def("pause"         , &MiddlewareMessageHandler::pause         )
+    .def("resume"        , &MiddlewareMessageHandler::resume        )
+    .def("abort"         , &MiddlewareMessageHandler::abort         )
+    .def("status"        , &MiddlewareMessageHandler::status        )
+    .def("firmwareAction", &MiddlewareMessageHandler::firmwareAction);
+
+
+    std::string firmwareAction(const std::string& message);
+
 
     handle.def("configureLogger", &configureLogger);
 }
