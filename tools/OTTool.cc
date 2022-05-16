@@ -79,7 +79,7 @@ void OTTool::Reset()
 
                         cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second.fValue));
                     }
-                    fReadoutChipInterface->WriteChipMultReg(cChip, cRegList, false);
+                    fReadoutChipInterface->WriteChipMultReg(cChip, cRegList);
 
                     // then clear modified register map
                     // and also disable register tracking for this chip
@@ -154,7 +154,7 @@ void OTTool::Prepare()
                 {
                     cChip->setRegisterTracking(1);
                     cChip->ClearModifiedRegisterMap();
-                    LOG(INFO) << BOLDYELLOW << fMyName << "::Prepare Chip#" << +cChip->getId() << " register tracking set to " << +cChip->getRegisterTracking() << RESET;
+                    LOG(DEBUG) << BOLDYELLOW << fMyName << "::Prepare Chip#" << +cChip->getId() << " register tracking set to " << +cChip->getRegisterTracking() << RESET;
                 } // chips
             }     // hybrids
         }         // optical groups
@@ -1020,17 +1020,6 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                 if(cChip->getFrontEndType() == FrontEndType::CBC3) cThreshold = (cChip->getReg("VCth1") + (cChip->getReg("VCth2") << 8));
                 if(cChip->getFrontEndType() == FrontEndType::SSA) cThreshold = cChip->getReg("Bias_THDAC");
                 if(cChip->getFrontEndType() == FrontEndType::MPA) cThreshold = cChip->getReg("ThDAC0");
-/*
-                {
-
-                    for(uint8_t cDAC = 0; cDAC < 1; cDAC++)
-                    {
-                        std::stringstream cRegName;
-                        cRegName << "ThDAC" << +cDAC;
-                        cThreshold = cChip->getReg(cRegName.str());
-                    }
-                }
-*/
                 LOG(INFO) << BOLDMAGENTA << "Setting threshold on Chip#" << +cChip->getId() << " to 0x" << std::hex << +cThreshold << std::dec << RESET;
                 fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
             }

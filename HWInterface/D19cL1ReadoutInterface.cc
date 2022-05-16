@@ -130,8 +130,8 @@ bool D19cL1ReadoutInterface::WaitForNTriggers()
 
     // wait for trigger state machine to send all triggers
     auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
-    LOG(INFO) << BOLDYELLOW << "D19cL1ReadoutInterface::WaitForNTriggers After resetting trigger FSM.. trigger source is " << cTriggerSource << RESET;
-    LOG(INFO) << BOLDYELLOW << "D19cL1ReadoutInterface::WaitForNTriggers Running Trigger FSM ..." << RESET;
+    LOG(DEBUG) << BOLDYELLOW << "D19cL1ReadoutInterface::WaitForNTriggers After resetting trigger FSM.. trigger source is " << cTriggerSource << RESET;
+    LOG(DEBUG) << BOLDYELLOW << "D19cL1ReadoutInterface::WaitForNTriggers Running Trigger FSM ..." << RESET;
     bool cSuccess = fTriggerInterface->RunTriggerFSM();
     if(!cSuccess) LOG(ERROR) << BOLDRED << "D19cL1ReadoutInterface timed-out while waiting for trigger FSM...[ReadoutAttempt#" << fReadoutAttempt << "]" << RESET;
     return cSuccess;
@@ -250,12 +250,6 @@ bool D19cL1ReadoutInterface::ReadEvents(const BeBoard* pBoard)
         fTriggerInterface->SetNTriggersToAccept(fNEvents);
         WriteReg("fc7_daq_cnfg.readout_block.packet_nbr", fNEvents - 1);
         LOG(DEBUG) << BOLDYELLOW << "D19cL1ReadoutInterface::ReadEvents asking for " << fNEvents << " events handshake mode is currently " << cHandshake << RESET;
-
-    	LOG(INFO) << "trigger source : " << +ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source") << RESET;
-	LOG(INFO) << "data handshake : " << +ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << RESET;
-	LOG(INFO) << "dio5 enabled : " << +ReadReg("fc7_daq_cnfg.dio5_block.dio5_en") << RESET;
-	LOG(INFO) << "tlu enabled : " << +ReadReg("fc7_daq_cnfg.tlu_block.tlu_enabled") << RESET;
-	LOG(INFO) << "tlu handshake mode : " << +ReadReg("fc7_daq_cnfg.tlu_block.handshake_mode") << RESET;
 
         // reset readout
         ResetReadout();
