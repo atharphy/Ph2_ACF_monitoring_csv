@@ -239,9 +239,10 @@ bool D19cL1ReadoutInterface::ReadEvents(const BeBoard* pBoard)
         // clear internal data vector
         fData.clear();
         // configure readout
+        fHandshake                  = 1;
         auto cOriginalHandshakeMode = ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
         auto cOriginalPackNbr       = ReadReg("fc7_daq_cnfg.readout_block.packet_nbr");
-        WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", cOriginalHandshakeMode);
+        WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", fHandshake);
         auto cHandshake = ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
         // write number of triggers to accept
         // in the handshake mode offset is cleared after each handshake
