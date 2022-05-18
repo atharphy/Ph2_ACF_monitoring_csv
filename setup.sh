@@ -15,6 +15,7 @@ export CACTUSLIB=$CACTUSROOT/lib
 export CACTUSINCLUDE=$CACTUSROOT/include
 alias cmake="cmake3"
 alias PythonController.py="python pythonUtils/PythonController.py"
+alias fpgaconfig.py="python pythonUtils/fpgaconfig.py"
 
 ########
 # ROOT #

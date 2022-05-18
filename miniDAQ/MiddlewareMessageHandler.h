@@ -4,7 +4,8 @@
 #include "../MessageUtils/cpp/ReplyMessage.pb.h"
 #include "../MessageUtils/cpp/QueryMessage.pb.h"
 #include "MiddlewareStateMachine.h"
-
+#include <fstream>
+#include <iostream>
 class MiddlewareMessageHandler
 {
   public:
@@ -26,7 +27,7 @@ class MiddlewareMessageHandler
     std::string firmwareAction(const std::string& message);
 
     template<typename T>
-    static std::string serializeMessage(T theMessage);
+    static std::string serializeMessage(const T& theMessage);
 
   private:
     MiddlewareStateMachine fMiddlewareStateMachine;
@@ -54,7 +55,7 @@ class MiddlewareMessageHandler
 
 
 template<typename T>
-std::string MiddlewareMessageHandler::serializeMessage(T theMessage)
+std::string MiddlewareMessageHandler::serializeMessage(const T& theMessage)
 {
     std::string stringMessage;
     theMessage.SerializeToString(&stringMessage);

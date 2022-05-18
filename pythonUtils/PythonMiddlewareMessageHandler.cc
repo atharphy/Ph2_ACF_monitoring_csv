@@ -16,26 +16,33 @@ void configureLogger(std::string loggerConfigFile)
     el::Loggers::reconfigureAllLoggers(conf);
 }
 
+
+auto stringConverter(std::string (MiddlewareMessageHandler::*function)(const std::string&))
+{
+    return [function] (MiddlewareMessageHandler& theMiddlewareMessageHandler, const std::string& theMessage) -> pybind11::bytes 
+    {
+        return (theMiddlewareMessageHandler.*function)(theMessage);
+    };
+}
+
 PYBIND11_MODULE(Ph2_ACF_PythonInterface, handle)
 {
+
+
     handle.doc() = "Handle for MiddlewareMessageHandler";
 
     pybind11::class_<MiddlewareMessageHandler>(handle, "MiddlewareMessageHandler")
     .def(pybind11::init<>())
-    .def("initialize"    , &MiddlewareMessageHandler::initialize    )
-    .def("configure"     , &MiddlewareMessageHandler::configure     )
-    .def("start"         , &MiddlewareMessageHandler::start         )
-    .def("stop"          , &MiddlewareMessageHandler::stop          )
-    .def("halt"          , &MiddlewareMessageHandler::halt          )
-    .def("pause"         , &MiddlewareMessageHandler::pause         )
-    .def("resume"        , &MiddlewareMessageHandler::resume        )
-    .def("abort"         , &MiddlewareMessageHandler::abort         )
-    .def("status"        , &MiddlewareMessageHandler::status        )
-    .def("firmwareAction", &MiddlewareMessageHandler::firmwareAction);
-
-
-    std::string firmwareAction(const std::string& message);
-
+    .def("initialize"    , stringConverter(&MiddlewareMessageHandler::initialize    ))
+    .def("configure"     , stringConverter(&MiddlewareMessageHandler::configure     ))
+    .def("start"         , stringConverter(&MiddlewareMessageHandler::start         ))
+    .def("stop"          , stringConverter(&MiddlewareMessageHandler::stop          ))
+    .def("halt"          , stringConverter(&MiddlewareMessageHandler::halt          ))
+    .def("pause"         , stringConverter(&MiddlewareMessageHandler::pause         ))
+    .def("resume"        , stringConverter(&MiddlewareMessageHandler::resume        ))
+    .def("abort"         , stringConverter(&MiddlewareMessageHandler::abort         ))
+    .def("status"        , stringConverter(&MiddlewareMessageHandler::status        ))
+    .def("firmwareAction", stringConverter(&MiddlewareMessageHandler::firmwareAction));
 
     handle.def("configureLogger", &configureLogger);
 }

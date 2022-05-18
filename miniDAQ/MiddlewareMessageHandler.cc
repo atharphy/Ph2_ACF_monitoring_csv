@@ -11,7 +11,7 @@ MiddlewareMessageHandler::~MiddlewareMessageHandler()
 
 std::string MiddlewareMessageHandler::initialize(const std::string& message)
 {
-    ReplyMessage theReplyMessage = tryCatchWrapper("initialize", &MiddlewareStateMachine::initialize);
+    ReplyMessage theReplyMessage = tryCatchWrapper(__PRETTY_FUNCTION__, &MiddlewareStateMachine::initialize);
     return serializeMessage(theReplyMessage);
 }
 
@@ -24,7 +24,7 @@ std::string MiddlewareMessageHandler::configure(const std::string& message)
     const std::string calibrationName = theCombinedCalibrationFactory.getCalibrationName(theConfigureMessage.data().calibration_name());
     const std::string configurationFile = theConfigureMessage.data().configuration_file();
 
-    ReplyMessage theReplyMessage = tryCatchWrapper("configure", &MiddlewareStateMachine::configure, calibrationName, configurationFile);
+    ReplyMessage theReplyMessage = tryCatchWrapper(__PRETTY_FUNCTION__, &MiddlewareStateMachine::configure, calibrationName, configurationFile);
     return serializeMessage(theReplyMessage);
 }
 
@@ -34,37 +34,37 @@ std::string MiddlewareMessageHandler::start(const std::string& message)
     theStartMessage.ParseFromString(message);
     int runNumber = theStartMessage.data().run_number();
 
-    ReplyMessage theReplyMessage = tryCatchWrapper("start", &MiddlewareStateMachine::start, runNumber);
+    ReplyMessage theReplyMessage = tryCatchWrapper(__PRETTY_FUNCTION__, &MiddlewareStateMachine::start, runNumber);
     return serializeMessage(theReplyMessage);
 }
 
 std::string MiddlewareMessageHandler::stop(const std::string& message)
 {
-    ReplyMessage theReplyMessage = tryCatchWrapper("stop", &MiddlewareStateMachine::stop);
+    ReplyMessage theReplyMessage = tryCatchWrapper(__PRETTY_FUNCTION__, &MiddlewareStateMachine::stop);
     return serializeMessage(theReplyMessage);
 }
 
 std::string MiddlewareMessageHandler::halt(const std::string& message)
 {
-    ReplyMessage theReplyMessage = tryCatchWrapper("halt", &MiddlewareStateMachine::halt);
+    ReplyMessage theReplyMessage = tryCatchWrapper(__PRETTY_FUNCTION__, &MiddlewareStateMachine::halt);
     return serializeMessage(theReplyMessage);
 }
 
 std::string MiddlewareMessageHandler::pause(const std::string& message)
 {
-    ReplyMessage theReplyMessage = tryCatchWrapper("pause", &MiddlewareStateMachine::pause);
+    ReplyMessage theReplyMessage = tryCatchWrapper(__PRETTY_FUNCTION__, &MiddlewareStateMachine::pause);
     return serializeMessage(theReplyMessage);
 }
 
 std::string MiddlewareMessageHandler::resume(const std::string& message)
 {
-    ReplyMessage theReplyMessage = tryCatchWrapper("resume", &MiddlewareStateMachine::resume);
+    ReplyMessage theReplyMessage = tryCatchWrapper(__PRETTY_FUNCTION__, &MiddlewareStateMachine::resume);
     return serializeMessage(theReplyMessage);
 }
 
 std::string MiddlewareMessageHandler::abort(const std::string& message)
 {
-    ReplyMessage theReplyMessage = tryCatchWrapper("abort", &MiddlewareStateMachine::abort);
+    ReplyMessage theReplyMessage = tryCatchWrapper(__PRETTY_FUNCTION__, &MiddlewareStateMachine::abort);
     return serializeMessage(theReplyMessage);
 }
 
@@ -81,7 +81,7 @@ std::string MiddlewareMessageHandler::status(const std::string& message)
     }
     catch(const std::exception& theException)
     {
-        catchFunction(theReplyMessage, theException, "status");
+        catchFunction(theReplyMessage, theException, __PRETTY_FUNCTION__);
     }
     return serializeMessage(theReplyMessage);
 }
@@ -105,7 +105,7 @@ std::string MiddlewareMessageHandler::firmwareAction(const std::string& message)
     if(boardIdRaw > 0xFFFF)
     {
         std::runtime_error theError("Board Id has to be contained in 16 bits");
-        catchFunction(theReplyMessage, theError, "firmwareAction");
+        catchFunction(theReplyMessage, theError, __PRETTY_FUNCTION__);
         return serializeMessage(theReplyMessage);
     }
     uint16_t boardId = boardIdRaw;
@@ -126,7 +126,7 @@ std::string MiddlewareMessageHandler::firmwareAction(const std::string& message)
             }
             catch(const std::exception& theException)
             {
-                catchFunction(theReplyMessage, theException, "firmwareAction -> list firmwares");
+                catchFunction(theReplyMessage, theException, __PRETTY_FUNCTION__);
             }
             break;
         }
@@ -134,7 +134,7 @@ std::string MiddlewareMessageHandler::firmwareAction(const std::string& message)
         case FirmwareQueryMessage::LOAD:
         {
             const std::string& firmwareName = theFirmwareMessage.firmware_name();
-            theReplyMessage = tryCatchWrapper("firmwareAction -> load firmware", &MiddlewareStateMachine::loadFirmwareInFPGA, configurationFile, firmwareName, boardId);
+            theReplyMessage = tryCatchWrapper(__PRETTY_FUNCTION__, &MiddlewareStateMachine::loadFirmwareInFPGA, configurationFile, firmwareName, boardId);
             break;
         }
 
@@ -142,7 +142,7 @@ std::string MiddlewareMessageHandler::firmwareAction(const std::string& message)
         {
             const std::string& firmwareName = theFirmwareMessage.firmware_name();
             const std::string& fileName     = theFirmwareMessage.file_name();
-            theReplyMessage = tryCatchWrapper("firmwareAction -> upload firmware", &MiddlewareStateMachine::uploadFirmwareOnSDcard, configurationFile, firmwareName, fileName, boardId);
+            theReplyMessage = tryCatchWrapper(__PRETTY_FUNCTION__, &MiddlewareStateMachine::uploadFirmwareOnSDcard, configurationFile, firmwareName, fileName, boardId);
             break;
         }
 
@@ -150,21 +150,21 @@ std::string MiddlewareMessageHandler::firmwareAction(const std::string& message)
         {
             const std::string& firmwareName = theFirmwareMessage.firmware_name();
             const std::string& fileName     = theFirmwareMessage.file_name();
-            theReplyMessage = tryCatchWrapper("firmwareAction -> download firmware", &MiddlewareStateMachine::downloadFirmwareFromSDcard, configurationFile, firmwareName, fileName, boardId);
+            theReplyMessage = tryCatchWrapper(__PRETTY_FUNCTION__, &MiddlewareStateMachine::downloadFirmwareFromSDcard, configurationFile, firmwareName, fileName, boardId);
             break;
         }
 
         case FirmwareQueryMessage::DELETE:
         {
             const std::string& firmwareName = theFirmwareMessage.firmware_name();
-            theReplyMessage = tryCatchWrapper("firmwareAction -> delete firmware", &MiddlewareStateMachine::deleteFirmwareFromSDcard, configurationFile, firmwareName, boardId);
+            theReplyMessage = tryCatchWrapper(__PRETTY_FUNCTION__, &MiddlewareStateMachine::deleteFirmwareFromSDcard, configurationFile, firmwareName, boardId);
             break;
         }
 
         default:
         {
             std::runtime_error theError("MiddlewareMessageHandler::firmwareAction not able to identity action");
-            catchFunction(theReplyMessage, theError, "firmwareAction");
+            catchFunction(theReplyMessage, theError, __PRETTY_FUNCTION__);
             break;
         }
     }
