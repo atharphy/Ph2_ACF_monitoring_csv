@@ -126,23 +126,48 @@ class StateMachine(object):
     def getErrorMessage(self):
         return self.errorMessage_
 
-    def listFirmware(self, configurationFile, boardId = 0):
+    def queryFirmware(self, action, configurationFile, boardId, firmwareName = "", fileName = ""):
         firmwareListQuery = Query.FirmwareQueryMessage()
         firmwareListQuery.query_type.type = Query.QueryType.FPGA;
-        firmwareListQuery.action = Query.FirmwareQueryMessage.LIST;
         firmwareListQuery.configuration_file = configurationFile;
         firmwareListQuery.board_id = boardId;
+        if action == "LIST": firmwareListQuery.action = Query.FirmwareQueryMessage.LIST;
+        if action == "LOAD": firmwareListQuery.action = Query.FirmwareQueryMessage.LOAD;
+        if action == "UPLOAD": firmwareListQuery.action = Query.FirmwareQueryMessage.UPLOAD;
+        if action == "DOWNLOAD": firmwareListQuery.action = Query.FirmwareQueryMessage.DOWNLOAD;
+        if action == "DELETE": firmwareListQuery.action = Query.FirmwareQueryMessage.DELETE;
+        if action != "LIST":
+            firmwareListQuery.firmware_name = firmwareName;
+        if action == "UPLOAD" or action == "DOWNLOAD":
+            firmwareListQuery.file_name = fileName;
         stringMessage = firmwareListQuery.SerializeToString()
-        self.parseReply(Ph2_ACF_controller.firmwareAction(stringMessage))
         replyBuffer = Ph2_ACF_controller.firmwareAction(stringMessage)
         if self.parseReply(replyBuffer) != Reply.ReplyType.SUCCESS:
             self.calibrationResult_ = "FAILED"
-            return
+            return "FAILED"
+        else:
+            return replyBuffer
+
+    def listFirmware(self, configurationFile, boardId):
+        replyBuffer = self.queryFirmware("LIST", configurationFile, boardId)
+        if replyBuffer == "FAILED": return
         theFirmwareReply = Reply.FirmwareReplyMessage()
         theFirmwareReply.ParseFromString(replyBuffer)
         listOfFirmwares = []
         for firmware in theFirmwareReply.firmware_name:
             listOfFirmwares.append(firmware)
         return listOfFirmwares
+
+    def loadFirmware(self, configurationFile, firmwareName, boardId):
+        self.queryFirmware("LOAD", configurationFile, boardId, firmwareName)
+
+    def uploadFirmware(self, configurationFile, firmwareName, fileName, boardId):
+        self.queryFirmware("UPLOAD", configurationFile, boardId, firmwareName, fileName)
+
+    def downloadFirmware(self, configurationFile, firmwareName, fileName, boardId):
+        self.queryFirmware("DOWNLOAD", configurationFile, boardId, firmwareName, fileName)
+
+    def deleteFirmware(self, configurationFile, firmwareName, boardId):
+        self.queryFirmware("DELETE", configurationFile, boardId, firmwareName)
 
 
