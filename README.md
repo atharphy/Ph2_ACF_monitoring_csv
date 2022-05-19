@@ -259,17 +259,21 @@ sudo yum install -y git-extras
 ```
 
 Install devtoolset 10
+
         $> sudo yum install -y centos-release-scl-rh
         $> sudo yum install -y devtoolset-10
 
 Install python3
+
         $> sudo yum install -y python3
 
 Install protobuf:
+
         Follow instructions from
         https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
 
 Install pybind11 (if installed in the same directoory when you plan to install the Ph2_ACF, the setup.sh will point to the correct location)
+
         $> wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
         $> tar zxvf v2.9.2.tar.gz
         $> cd pybind11-2.9.2
@@ -295,6 +299,7 @@ Install pybind11 (if installed in the same directoory when you plan to install t
 ### Setup on CC7 (scroll down for instructions on setting up on SLC6)
 
 1. Install devtoolset 10
+
         $> sudo yum install -y centos-release-scl-rh
         $> sudo yum install -y devtoolset-10
 
@@ -318,13 +323,16 @@ Install pybind11 (if installed in the same directoory when you plan to install t
         $> sudo yum install -y cmake3
 
 6. Install python3
+
         $> sudo yum install -y python3
 
 7. Install protobuf:
+
         Follow instructions from
         https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
 
 8. Install pybind11 (if installed in the same directoory when you plan to install the Ph2_ACF, the setup.sh will point to the correct location)
+
         $> wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
         $> tar zxvf v2.9.2.tar.gz
         $> cd pybind11-2.9.2
