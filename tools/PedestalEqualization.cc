@@ -92,7 +92,6 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     fTargetOffset                = findValueInSettings<double>("PedestalEqualizationTargetOffset", cDefTargetOffset);
     // uint8_t cEnableFastCounterReadout = (uint8_t)findValueInSettings<double>("EnableFastCounterReadout", 0);
     // uint8_t cEnablePairSelect         = (uint8_t)findValueInSettings<double>("EnablePairSelect", 0);
-    if(fWithSSA or fWithMPA) fTargetOffset = 0xF;
 
     LOG(INFO) << BOLDBLUE << "PedestalEqualization::Initialise Occupancy at pedestal is " << fOccupancyAtPedestal << " target offset is " << +fTargetOffset << RESET;
     this->SetSkipMaskedChannels(fSkipMaskedChannels);
@@ -183,7 +182,7 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     LOG(INFO) << "	Nevents = " << fEventsPerPoint;
     LOG(INFO) << "	TestPulseAmplitude = " << int(fTestPulseAmplitude);
     LOG(INFO) << "  Target Vcth determined algorithmically for Chip";
-    LOG(INFO) << "  Target Offset fixed to half range (0x80) for Chip";
+    LOG(INFO) << "  Target Offset = 0x" << std::hex << +fTargetOffset;
 }
 void PedestalEqualization::Reset()
 {
@@ -304,7 +303,7 @@ void PedestalEqualization::FindVplus()
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theVcthContainer);
 
     float   cMeanStripsValue = 0., cMeanPixelsValue = 0.;
-    uint8_t cNStripChips = 0, cNPixelChips = 0;
+    float cNStripChips = 0., cNPixelChips = 0.;
     for(auto board: theVcthContainer) // for on boards - begin
     {
         for(auto opticalGroup: *board) // for on opticalGroup - begin
@@ -325,11 +324,12 @@ void PedestalEqualization::FindVplus()
                               << " = " << tmpVthr << RESET;
                     uint32_t ENCHAN  = theChip->getChipOriginalMask()->getNumberOfEnabledChannels();
                     uint32_t TOTCHAN = chip->size();
-                    // LOG(INFO) << GREEN << "NCHANNELS " << ENCHAN << " TOTCHAN " << TOTCHAN << RESET;
+                    LOG(DEBUG) << GREEN << "NCHANNELS " << ENCHAN << " TOTCHAN " << TOTCHAN << RESET;
                     if(cType == FrontEndType::SSA || cType == FrontEndType::CBC3)
                     {
                         cNStripChips += float(ENCHAN) / float(TOTCHAN);
                         cMeanStripsValue += tmpVthr * (float(ENCHAN) / float(TOTCHAN));
+                        LOG(DEBUG) << "MeanStripsValue : " << +cMeanStripsValue << " -- NStripChips : " << +cNStripChips << RESET;
                     }
                     else if(cType == FrontEndType::MPA)
                     {
