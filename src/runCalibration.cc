@@ -1,11 +1,11 @@
 #include <cstring>
 
+#include "../Utils/easylogging++.h"
+#include "../miniDAQ/MiddlewareStateMachine.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
 #include "boost/format.hpp"
-#include "../miniDAQ/MiddlewareStateMachine.h"
-#include "../Utils/easylogging++.h"
 
 #include "TApplication.h"
 #include "TROOT.h"
@@ -56,10 +56,8 @@ int returnRunNumber(std::string cFileName)
     return cRunNumber;
 }
 
-
 int main(int argc, char* argv[])
 {
-
     MiddlewareStateMachine theMiddlewareStateMachine;
 
     if(std::getenv("PH2ACF_BASE_DIR") == nullptr)
@@ -88,7 +86,7 @@ int main(int argc, char* argv[])
     cmd.defineOptionAlternative("file", "f");
 
     std::string calibrationHelpMessage = "Calibration to run. List of available calibrations:\n";
-    for(const auto& calibration : theMiddlewareStateMachine.getCombinedCalibrationFactory().getAvailableCalibrations()) calibrationHelpMessage += (calibration + "\n");
+    for(const auto& calibration: theMiddlewareStateMachine.getCombinedCalibrationFactory().getAvailableCalibrations()) calibrationHelpMessage += (calibration + "\n");
 
     cmd.defineOption("calibration", calibrationHelpMessage, ArgvParser::OptionRequiresValue | ArgvParser::OptionRequired);
     cmd.defineOptionAlternative("calibration", "c");
@@ -108,13 +106,13 @@ int main(int argc, char* argv[])
     }
 
     // now query the parsing results
-    std::string configurationFile    = cmd.optionValue("file");
-    std::string cDirectory = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
+    std::string configurationFile = cmd.optionValue("file");
+    std::string cDirectory        = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     cDirectory += cmd.optionValue("calibration");
 
     bool batchMode = (cmd.foundOption("batch")) ? true : false;
 
-    Timer       cGlobalTimer;
+    Timer cGlobalTimer;
     cGlobalTimer.start();
 
     std::thread softKillThread(killProcessFunction, &theMiddlewareStateMachine);
@@ -132,7 +130,7 @@ int main(int argc, char* argv[])
         RUNNING,
         STOPPED
     };
-    int                 stateMachineStatus = INITIAL;
+    int stateMachineStatus = INITIAL;
 
     theMiddlewareStateMachine.initialize();
 
@@ -153,46 +151,43 @@ int main(int argc, char* argv[])
     {
         switch(stateMachineStatus)
         {
-            case HALTED:
+        case HALTED:
+        {
+            std::string calibrationName   = cmd.optionValue("calibration");
+            std::string configurationFile = cmd.optionValue("file");
+            theMiddlewareStateMachine.configure(calibrationName, configurationFile);
+            stateMachineStatus = CONFIGURED;
+            break;
+        }
+        case CONFIGURED:
+        {
+            int runNumber = returnRunNumber("RunNumbers.dat");
+            theMiddlewareStateMachine.start(runNumber);
+            stateMachineStatus = RUNNING;
+            break;
+        }
+        case RUNNING:
+        {
+            if(cmd.optionValue("calibration") != "psphysics" && cmd.optionValue("calibration") != "2sphysics")
             {
-                std::string calibrationName   = cmd.optionValue("calibration");
-                std::string configurationFile = cmd.optionValue("file");
-                theMiddlewareStateMachine.configure(calibrationName, configurationFile);
-                stateMachineStatus = CONFIGURED;
-                break;
+                while(theMiddlewareStateMachine.status() == MiddlewareStateMachine::Status::RUNNING) { usleep(5e5); }
             }
-            case CONFIGURED:
-            {
-                int runNumber = returnRunNumber("RunNumbers.dat");
-                theMiddlewareStateMachine.start(runNumber);
-                stateMachineStatus = RUNNING;
-                break;
-            }
-            case RUNNING:
-            {
-                if(cmd.optionValue("calibration") != "psphysics" && cmd.optionValue("calibration") != "2sphysics")
-                {
-                    while(theMiddlewareStateMachine.status() == MiddlewareStateMachine::Status::RUNNING)
-                    {
-                        usleep(5e5);
-                    }
-                }
-                else
-                    usleep(20e6);
-                std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Stop!!!" << std::endl;
-                theMiddlewareStateMachine.stop();
-                stateMachineStatus = STOPPED;
-                break;
-            }
-            case STOPPED:
-            {
-                theMiddlewareStateMachine.halt();
-                done = true;
-                break;
-            }
+            else
+                usleep(20e6);
+            std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Stop!!!" << std::endl;
+            theMiddlewareStateMachine.stop();
+            stateMachineStatus = STOPPED;
+            break;
+        }
+        case STOPPED:
+        {
+            theMiddlewareStateMachine.halt();
+            done = true;
+            break;
+        }
         }
     }
-   
+
     signal(SIGINT, SIG_DFL);
     runCompleted = 1;
 

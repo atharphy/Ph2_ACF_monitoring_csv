@@ -13,12 +13,11 @@ using namespace Ph2_HwInterface;
 
 namespace Ph2_System
 {
-    
 void FileParser::parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os)
 {
     int i, j;
 
-    pugi::xml_document     doc;
+    pugi::xml_document doc;
     openHWconfig(pFilename, doc);
 
     os << RESET << "\n\n";
@@ -56,7 +55,7 @@ void FileParser::parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWM
 void FileParser::openHWconfig(const std::string& pFilename, pugi::xml_document& doc)
 {
     pugi::xml_parse_result result = doc.load_file(pFilename.c_str());
-    if(!result) //try if it is not a a file, but a string containing the full xml
+    if(!result) // try if it is not a a file, but a string containing the full xml
         result = doc.load_string(pFilename.c_str());
 
     if(!result)
@@ -69,9 +68,9 @@ void FileParser::openHWconfig(const std::string& pFilename, pugi::xml_document& 
 
 std::map<uint16_t, RegManager> FileParser::getRegManagerList(const std::string& pFilename)
 {
-    pugi::xml_document     doc;
+    pugi::xml_document doc;
     openHWconfig(pFilename, doc);
-    
+
     std::map<uint16_t, Ph2_HwInterface::RegManager> theRegManagerMap;
     for(pugi::xml_node cBeBoardNode = doc.child("HwDescription").child("BeBoard"); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling())
     {
@@ -85,7 +84,6 @@ std::map<uint16_t, RegManager> FileParser::getRegManagerList(const std::string& 
     }
     return theRegManagerMap;
 }
-
 
 void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os)
 {
@@ -1546,7 +1544,7 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
 
 std::string FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os)
 {
-    pugi::xml_document     doc;
+    pugi::xml_document doc;
     openHWconfig(pFilename, doc);
 
     if(!bool(doc.child("HwDescription").child("MonitoringSettings")))

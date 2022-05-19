@@ -10,7 +10,6 @@
 #include "../Utils/argvparser.h"
 #include "../miniDAQ/CombinedCalibrationFactory.h"
 
-
 #include <cstring>
 #include <errno.h>
 #include <signal.h>
@@ -104,9 +103,9 @@ int main(int argc, char* argv[])
     cmd.defineOption("file", "Hw Description File", ArgvParser::OptionRequiresValue | ArgvParser::OptionRequired);
     cmd.defineOptionAlternative("file", "f");
 
-    std::string calibrationHelpMessage = "Calibration to run. List of available calibrations:\n";
+    std::string                calibrationHelpMessage = "Calibration to run. List of available calibrations:\n";
     CombinedCalibrationFactory theCombinedCalibrationFactory;
-    for(const auto& calibration : theCombinedCalibrationFactory.getAvailableCalibrations()) calibrationHelpMessage += (calibration + "\n");
+    for(const auto& calibration: theCombinedCalibrationFactory.getAvailableCalibrations()) calibrationHelpMessage += (calibration + "\n");
 
     cmd.defineOption("calibration", calibrationHelpMessage, ArgvParser::OptionRequiresValue | ArgvParser::OptionRequired);
     cmd.defineOptionAlternative("calibration", "c");
@@ -267,9 +266,9 @@ int main(int argc, char* argv[])
                 case HALTED:
                 {
                     std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Configure!!!" << std::endl;
-                    std::string calibrationName   = cmd.optionValue("calibration");
-                    std::string configurationFile = cmd.optionValue("file");
-                    const MessageUtils::CalibrationList::CalibrationNameEnum &calibrationEnum = theCombinedCalibrationFactory.getCalibrationEnum(calibrationName);
+                    std::string                                               calibrationName   = cmd.optionValue("calibration");
+                    std::string                                               configurationFile = cmd.optionValue("file");
+                    const MessageUtils::CalibrationList::CalibrationNameEnum& calibrationEnum   = theCombinedCalibrationFactory.getCalibrationEnum(calibrationName);
                     theMiddlewareInterface.configure(calibrationEnum, configurationFile);
                     theDQMInterface.configure(calibrationName, configurationFile);
                     theMonitorDQMInterface.configure(configurationFile);

@@ -30,8 +30,7 @@
 
 namespace Ph2_HwInterface
 {
-FpgaConfig::FpgaConfig(RegManager&& pbbfi)
-: fwManager(std::move(pbbfi))
+FpgaConfig::FpgaConfig(RegManager&& pbbfi) : fwManager(std::move(pbbfi))
 {
     numUploadingFpga = 0;
     progressValue    = 0;

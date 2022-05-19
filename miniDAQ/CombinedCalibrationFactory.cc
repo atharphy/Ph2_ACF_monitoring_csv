@@ -1,6 +1,5 @@
 #include "../miniDAQ/CombinedCalibrationFactory.h"
 
-#include "../tools/Tool.h"
 #include "../tools/CBCPulseShape.h"
 #include "../tools/CalibrationExample.h"
 #include "../tools/CombinedCalibration.h"
@@ -33,12 +32,12 @@ using namespace MessageUtils;
 CombinedCalibrationFactory::CombinedCalibrationFactory()
 {
     // OT calibrations
-    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization>("calibration",CalibrationList::CALIBRATION);
-    Register<LinkAlignmentOT, CicFEAlignment, PedeNoise>("pedenoise",CalibrationList::PEDENOISE);
-    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise>("calibrationandpedenoise",CalibrationList::CALIBRATIONANDPEDENOISE);
-    Register<LinkAlignmentOT, CicFEAlignment, CalibrationExample>("calibrationexample",CalibrationList::CALIBRATIONEXAMPLE);
-    Register<LinkAlignmentOT, CicFEAlignment, CBCPulseShape>("cbcPulseShape",CalibrationList::CBCPULSESHAPE);
-    Register<LinkAlignmentOT, CicFEAlignment, LatencyScan>("OTLatency",CalibrationList::OTLATENCY);
+    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization>("calibration", CalibrationList::CALIBRATION);
+    Register<LinkAlignmentOT, CicFEAlignment, PedeNoise>("pedenoise", CalibrationList::PEDENOISE);
+    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise>("calibrationandpedenoise", CalibrationList::CALIBRATIONANDPEDENOISE);
+    Register<LinkAlignmentOT, CicFEAlignment, CalibrationExample>("calibrationexample", CalibrationList::CALIBRATIONEXAMPLE);
+    Register<LinkAlignmentOT, CicFEAlignment, CBCPulseShape>("cbcPulseShape", CalibrationList::CBCPULSESHAPE);
+    Register<LinkAlignmentOT, CicFEAlignment, LatencyScan>("OTLatency", CalibrationList::OTLATENCY);
 
     // IT calibrations
     Register<PixelAlive>("pixelalive", CalibrationList::PIXELALIVE);
@@ -56,19 +55,17 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<PSPhysics>("psphysics", CalibrationList::PSPHYSICS);
     Register<Physics2S>("2sphysics", CalibrationList::PHYSICS2S);
     Register<DataTransmissionTest>("datatrtest", CalibrationList::DATATRTEST);
-
 }
 
 CombinedCalibrationFactory::~CombinedCalibrationFactory()
 {
-    for(auto& element : fCalibrationMap)
+    for(auto& element: fCalibrationMap)
     {
         delete element.second;
         element.second = nullptr;
     }
     fCalibrationMap.clear();
 }
-
 
 Tool* CombinedCalibrationFactory::CreateCombinedCalibration(const std::string& calibrationTag) const
 {
@@ -89,9 +86,6 @@ std::vector<std::string> CombinedCalibrationFactory::getAvailableCalibrations() 
 {
     std::vector<std::string> listOfCalibrations;
 
-    for(const auto& element : fCalibrationMap)
-    {
-        listOfCalibrations.emplace_back(element.first);
-    }
+    for(const auto& element: fCalibrationMap) { listOfCalibrations.emplace_back(element.first); }
     return listOfCalibrations;
 }

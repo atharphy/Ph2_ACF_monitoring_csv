@@ -1,8 +1,8 @@
 #ifndef _MiddlewareInterface_h_
 #define _MiddlewareInterface_h_
 
-#include "../NetworkUtils/TCPClient.h"
 #include "../MessageUtils/cpp/QueryMessage.pb.h"
+#include "../NetworkUtils/TCPClient.h"
 #include <string>
 
 class MiddlewareInterface : public TCPClient

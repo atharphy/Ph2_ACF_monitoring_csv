@@ -38,7 +38,7 @@
 
 namespace Ph2_HwInterface
 {
-    class RegManager;
+class RegManager;
 }
 namespace Ph2_System
 {
@@ -56,11 +56,11 @@ class FileParser
     FileParser() {}
     ~FileParser() {}
 
-    void        parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os);
-    void        parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os);
-    std::string parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os);
-    void        disableInterfaces() { fEnableInterfaces = false; }
-    void        openHWconfig(const std::string& pFilename, pugi::xml_document& doc);
+    void                                            parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os);
+    void                                            parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os);
+    std::string                                     parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os);
+    void                                            disableInterfaces() { fEnableInterfaces = false; }
+    void                                            openHWconfig(const std::string& pFilename, pugi::xml_document& doc);
     std::map<uint16_t, Ph2_HwInterface::RegManager> getRegManagerList(const std::string& pFilename);
 
   protected:

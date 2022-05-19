@@ -3,8 +3,8 @@
 
 #include "../NetworkUtils/TCPServer.h"
 #include "../System/SystemController.h"
-#include "../tools/Tool.h"
 #include "../miniDAQ/MiddlewareMessageHandler.h"
+#include "../tools/Tool.h"
 
 #include <string>
 

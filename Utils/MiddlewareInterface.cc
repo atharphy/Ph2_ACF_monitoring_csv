@@ -1,6 +1,6 @@
 #include "../Utils/MiddlewareInterface.h"
-#include <iostream>
 #include "../MessageUtils/cpp/ReplyMessage.pb.h"
+#include <iostream>
 
 using namespace MessageUtils;
 
@@ -99,27 +99,25 @@ std::string MiddlewareInterface::status()
     theStatus.ParseFromString(readBuffer);
 
     std::string status;
-    switch (theStatus.reply_type().type())
+    switch(theStatus.reply_type().type())
     {
-        case ReplyType::RUNNING :
-        {
-            status = "Running";
-            break;
-        }
-        case ReplyType::SUCCESS :
-        {
-            status = "Done";
-            break;
-        }
-        case ReplyType::ERROR :
-        {
-            status = "Error";
-            break;
-        }
-        
-        default:
-            status = "Unknown";
-            break;
+    case ReplyType::RUNNING:
+    {
+        status = "Running";
+        break;
+    }
+    case ReplyType::SUCCESS:
+    {
+        status = "Done";
+        break;
+    }
+    case ReplyType::ERROR:
+    {
+        status = "Error";
+        break;
+    }
+
+    default: status = "Unknown"; break;
     }
 
     std::cout << __PRETTY_FUNCTION__ << "Status: " << status << std::endl;

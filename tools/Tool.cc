@@ -78,14 +78,11 @@ Tool::~Tool() {}
 bool Tool::GetRunningStatus()
 {
     std::future_status runningStatus = fRunningFuture.wait_for(std::chrono::milliseconds(500u));
-    if (runningStatus == std::future_status::ready || runningStatus == std::future_status::deferred)
+    if(runningStatus == std::future_status::ready || runningStatus == std::future_status::deferred)
     {
         try
         {
-            if(fRunningFuture.valid())
-            {
-                fRunningFuture.get();
-            }
+            if(fRunningFuture.valid()) { fRunningFuture.get(); }
         }
         catch(const std::exception& e)
         {
@@ -93,7 +90,8 @@ bool Tool::GetRunningStatus()
         }
         return true;
     }
-    else return false;
+    else
+        return false;
 }
 
 void Tool::waitForRunToBeCompleted()
@@ -111,9 +109,9 @@ void Tool::Start(int runNumber)
 {
     std::string resultDirectory = "Results/OT_ModuleTest_ModuleOT_Run" + std::to_string(runNumber);
     CreateResultDirectory(resultDirectory, false, false);
-    #ifdef __USE_ROOT__
+#ifdef __USE_ROOT__
     InitResultFile("Hybrid");
-    #endif
+#endif
     fKeepRunning   = true;
     fRunNumber     = runNumber;
     fRunningFuture = std::async(std::launch::async, &Tool::Running, this);
@@ -434,9 +432,9 @@ TObject* Tool::getHist(BoardContainer* pBeBoard, std::string pName)
 
 void Tool::WriteRootFile()
 {
-    #ifdef __USE_ROOT__
+#ifdef __USE_ROOT__
     if((fResultFile != nullptr) && (fResultFile->IsOpen() == true)) fResultFile->Write();
-    #endif
+#endif
 }
 
 void Tool::SaveResults()
@@ -550,7 +548,7 @@ void Tool::InitResultFile(const std::string& pFilename)
 
 void Tool::CloseResultFile()
 {
-    #ifdef __USE_ROOT__
+#ifdef __USE_ROOT__
     if(fResultFile != nullptr)
     {
         LOG(INFO) << GREEN << "Closing result file" << RESET;
@@ -558,10 +556,10 @@ void Tool::CloseResultFile()
         delete fResultFile;
         fResultFile = nullptr;
     }
-    #endif
+#endif
 }
 
- #ifdef __USE_ROOT__
+#ifdef __USE_ROOT__
 // add username, chip IDs to a metadata tree
 void Tool::AddMetadata()
 {

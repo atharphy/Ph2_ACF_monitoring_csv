@@ -3,10 +3,10 @@
 #include <string>
 #include <vector>
 
-#include "../Utils/argvparser.h"
-#include "../Utils/easylogging++.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/Utilities.h"
+#include "../Utils/argvparser.h"
+#include "../Utils/easylogging++.h"
 #include "../miniDAQ/MiddlewareStateMachine.h"
 
 using namespace CommandLineProcessing;
@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     el::Configurations conf(std::string(baseDirChar_p) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
 
-    ArgvParser       cmd;
+    ArgvParser cmd;
 
     cmd.setIntroductoryDescription("CMS Ph2_ACF  Data acquisition test and Data dump");
 
@@ -64,11 +64,11 @@ int main(int argc, char* argv[])
     }
 
     std::string configurationFile = (cmd.foundOption("config")) ? cmd.optionValue("config") : "settings/HWDescription_2CBC.xml";
-    uint16_t boardId = (cmd.foundOption("board")) ? convertAnyInt(cmd.optionValue("board").c_str()) : 0;
+    uint16_t    boardId           = (cmd.foundOption("board")) ? convertAnyInt(cmd.optionValue("board").c_str()) : 0;
 
     MiddlewareStateMachine theMiddlewareStateMachine;
 
-    std::string              cFWFile;
+    std::string cFWFile;
     if(cmd.foundOption("file")) cFWFile = cmd.optionValue("file");
     // std::string              strImage("1");
 
@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
         for(auto& name: firmwareList) LOG(INFO) << " - " << name;
         exit(EXIT_SUCCESS);
     }
-    
+
     if(cmd.foundOption("delete"))
     {
         std::string firmwareName = cmd.optionValue("delete");
@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
         std::string firmwareName = cmd.optionValue("image");
         if(cmd.foundOption("file") && !cmd.foundOption("download"))
         {
-            std::string inputFileName =  cmd.optionValue("file");
+            std::string inputFileName = cmd.optionValue("file");
             LOG(INFO) << BOLDBLUE << "Uploading " << inputFileName << " on SD card with name " << firmwareName << "..." << RESET;
             theMiddlewareStateMachine.uploadFirmwareOnSDcard(configurationFile, firmwareName, inputFileName, boardId);
             LOG(INFO) << BOLDBLUE << ">>> Done <<<" << RESET;
@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
         }
         else if(cmd.foundOption("download") && !cmd.foundOption("file"))
         {
-            std::string outputFileName =  cmd.optionValue("download");
+            std::string outputFileName = cmd.optionValue("download");
             LOG(INFO) << BOLDBLUE << "Downloading " << firmwareName << " on SD card into " << outputFileName << "..." << RESET;
             theMiddlewareStateMachine.downloadFirmwareFromSDcard(configurationFile, firmwareName, outputFileName, boardId);
             LOG(INFO) << BOLDBLUE << ">>> Done <<<" << RESET;
@@ -125,5 +125,4 @@ int main(int argc, char* argv[])
         LOG(ERROR) << "Error, no FW image specified";
         exit(EXIT_FAILURE);
     }
-
 }

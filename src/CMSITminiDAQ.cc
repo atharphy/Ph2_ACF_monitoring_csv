@@ -14,6 +14,7 @@
 #include "../Utils/RD53Shared.h"
 #include "../Utils/argvparser.h"
 
+#include "../miniDAQ/CombinedCalibrationFactory.h"
 #include "../tools/RD53BERtest.h"
 #include "../tools/RD53ClockDelay.h"
 #include "../tools/RD53DataReadbackOptimization.h"
@@ -31,7 +32,6 @@
 #include "../tools/RD53ThrEqualizationSC.h"
 #include "../tools/RD53ThrMinimization.h"
 #include "../tools/RD53VoltageTuning.h"
-#include "../miniDAQ/CombinedCalibrationFactory.h"
 
 #include <chrono>
 #include <sys/wait.h>

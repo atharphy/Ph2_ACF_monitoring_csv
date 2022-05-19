@@ -10,8 +10,8 @@
 #ifndef _FPGACONFIG_H_
 #define _FPGACONFIG_H_
 
-#include <string>
 #include "RegManager.h"
+#include <string>
 
 namespace Ph2_HwInterface
 {
@@ -29,7 +29,7 @@ class FpgaConfig
     virtual ~FpgaConfig(){};
 
     FpgaConfig(const FpgaConfig& theFpgaConfig) = delete;
-    FpgaConfig(FpgaConfig&& theFpgaConfig) = default;
+    FpgaConfig(FpgaConfig&& theFpgaConfig)      = default;
 
     /*! \brief Launch the firmware download in a separate thread
      * \param strConfig FPGA configuration number or name
@@ -46,9 +46,9 @@ class FpgaConfig
     const std::string& getProgressString() const { return progressString; }
 
   protected:
-    uint32_t     progressValue, numUploadingFpga;
-    std::string  progressString;
-    RegManager   fwManager;
+    uint32_t    progressValue, numUploadingFpga;
+    std::string progressString;
+    RegManager  fwManager;
 };
 } // namespace Ph2_HwInterface
 #endif

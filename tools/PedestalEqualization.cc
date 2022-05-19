@@ -302,7 +302,7 @@ void PedestalEqualization::FindVplus()
     DetectorDataContainer theVcthContainer;
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theVcthContainer);
 
-    float   cMeanStripsValue = 0., cMeanPixelsValue = 0.;
+    float cMeanStripsValue = 0., cMeanPixelsValue = 0.;
     float cNStripChips = 0., cNPixelChips = 0.;
     for(auto board: theVcthContainer) // for on boards - begin
     {

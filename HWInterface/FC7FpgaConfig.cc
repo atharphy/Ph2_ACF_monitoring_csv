@@ -44,13 +44,11 @@ FC7FpgaConfig::FC7FpgaConfig(RegManager&& pbbi) : FpgaConfig(std::move(pbbi)), l
     }
 }
 
-FC7FpgaConfig::FC7FpgaConfig(FC7FpgaConfig&& theFC7FpgaConfig)
-: FpgaConfig(std::move(theFC7FpgaConfig))
+FC7FpgaConfig::FC7FpgaConfig(FC7FpgaConfig&& theFC7FpgaConfig) : FpgaConfig(std::move(theFC7FpgaConfig))
 {
-    lNode = theFC7FpgaConfig.lNode;
+    lNode                  = theFC7FpgaConfig.lNode;
     theFC7FpgaConfig.lNode = nullptr;
 }
-
 
 FC7FpgaConfig::~FC7FpgaConfig() { delete lNode; }
 
@@ -85,14 +83,14 @@ void FC7FpgaConfig::dumpFromFileIntoSD(const std::string& strImage, const std::s
     lNode->RebootFPGA(strImage, SECURE_MODE_PASSWORD);
 }
 
-void FC7FpgaConfig::jumpToFpgaConfig(const std::string& strImage) 
-{ 
+void FC7FpgaConfig::jumpToFpgaConfig(const std::string& strImage)
+{
     checkIfUploading();
     verifyImageName(strImage);
     lNode->RebootFPGA(strImage, SECURE_MODE_PASSWORD);
 }
 
-void FC7FpgaConfig::downloadFpgaConfig(const std::string& strImage, const std::string&  szFile)
+void FC7FpgaConfig::downloadFpgaConfig(const std::string& strImage, const std::string& szFile)
 {
     checkIfUploading();
     verifyImageName(strImage);
@@ -145,29 +143,25 @@ void FC7FpgaConfig::downloadImage(const std::string& strImage, const std::string
     progressValue = 100;
 }
 
-std::vector<std::string> FC7FpgaConfig::getFpgaConfigList() 
-{ 
+std::vector<std::string> FC7FpgaConfig::getFpgaConfigList()
+{
     checkIfUploading();
     return lNode->ListFilesOnSD();
 }
 
-void FC7FpgaConfig::deleteFpgaConfig(const std::string& strId) 
-{ 
+void FC7FpgaConfig::deleteFpgaConfig(const std::string& strId)
+{
     checkIfUploading();
     verifyImageName(strId);
     lNode->DeleteFromSD(strId, SECURE_MODE_PASSWORD);
 }
 
-void FC7FpgaConfig::rebootBoard()
-{
-    lNode->BoardHardReset(SECURE_MODE_PASSWORD);
-}
+void FC7FpgaConfig::rebootBoard() { lNode->BoardHardReset(SECURE_MODE_PASSWORD); }
 
 void FC7FpgaConfig::checkIfUploading()
 {
     if(getUploadingFpga() > 0) throw std::runtime_error("This board is uploading an FPGA configuration");
 }
-
 
 void FC7FpgaConfig::verifyImageName(const std::string& firmwareName)
 {
@@ -202,6 +196,5 @@ void FC7FpgaConfig::verifyImageName(const std::string& firmwareName)
         }
     }
 }
-
 
 } // namespace Ph2_HwInterface

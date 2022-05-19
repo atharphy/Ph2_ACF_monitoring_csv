@@ -235,7 +235,7 @@ float TPCalibration::ConvertAmpToElectrons(float pTPAmp, bool pOffset = true)
 
 // State machine control functions
 
-void TPCalibration::ConfigureCalibration(){}
+void TPCalibration::ConfigureCalibration() {}
 
 void TPCalibration::Running() {}
 

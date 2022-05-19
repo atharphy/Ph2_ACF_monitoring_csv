@@ -61,7 +61,7 @@ class BeBoardFWInterface : public RegManager
     BeBoardFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
     BeBoardFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
     // BeBoardFWInterface(RegManager&& theRegManager);
-    
+
     /*!
      * \brief set a FileHandler Object and enable saving to file!
      * \param pFileHandler : pointer to file handler for saving Raw Data*/

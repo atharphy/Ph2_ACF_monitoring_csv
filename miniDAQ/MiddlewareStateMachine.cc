@@ -1,14 +1,12 @@
 #include "../miniDAQ/MiddlewareStateMachine.h"
-#include "../tools/Tool.h"
-#include "../System/FileParser.h"
 #include "../HWInterface/FC7FpgaConfig.h"
+#include "../System/FileParser.h"
+#include "../tools/Tool.h"
 
 using namespace Ph2_System;
 using namespace Ph2_HwInterface;
 
-MiddlewareStateMachine::MiddlewareStateMachine()
-{
-}
+MiddlewareStateMachine::MiddlewareStateMachine() {}
 
 MiddlewareStateMachine::~MiddlewareStateMachine()
 {
@@ -31,7 +29,7 @@ void MiddlewareStateMachine::configure(const std::string& calibrationName, const
     LOG(INFO) << "Configuration file: " << configurationFile << RESET;
 
     fTheTool->Configure(configurationFile, true);
-    
+
     LOG(INFO) << "Configured" << RESET;
 
     return;
@@ -62,7 +60,7 @@ void MiddlewareStateMachine::halt()
     {
         LOG(WARNING) << "Could not stop the run, going to call Destroy anyway" << RESET;
     }
-    
+
     fTheTool->Destroy();
     LOG(INFO) << "Halted" << RESET;
 }
@@ -85,14 +83,11 @@ void MiddlewareStateMachine::abort()
     LOG(INFO) << "Aborted" << RESET;
 }
 
-MiddlewareStateMachine::Status MiddlewareStateMachine::status()
-{
-    return fTheTool->GetRunningStatus() ? Status::DONE : Status::RUNNING;
-}
+MiddlewareStateMachine::Status MiddlewareStateMachine::status() { return fTheTool->GetRunningStatus() ? Status::DONE : Status::RUNNING; }
 
 FC7FpgaConfig MiddlewareStateMachine::getFpgaConfig(const std::string& configurationFile, uint16_t boardId)
 {
-    FileParser theFileParser;
+    FileParser                     theFileParser;
     std::map<uint16_t, RegManager> theRegManagerList = theFileParser.getRegManagerList(configurationFile);
 
     try
@@ -137,7 +132,3 @@ void MiddlewareStateMachine::downloadFirmwareFromSDcard(const std::string& confi
     FC7FpgaConfig theFC7FpgaConfig = getFpgaConfig(configurationFile, boardId);
     theFC7FpgaConfig.downloadFpgaConfig(firmwareName, firmwareFile);
 }
-
-
-
-

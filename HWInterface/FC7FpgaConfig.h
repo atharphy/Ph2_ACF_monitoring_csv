@@ -14,11 +14,11 @@
 
 namespace Ph2_HwInterface
 {
-    class RegManager;
+class RegManager;
 }
 namespace fc7
 {
-    class MmcPipeInterface;
+class MmcPipeInterface;
 }
 
 namespace Ph2_HwInterface
