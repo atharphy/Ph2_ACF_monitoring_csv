@@ -33,29 +33,29 @@ using namespace MessageUtils;
 CombinedCalibrationFactory::CombinedCalibrationFactory()
 {
     // OT calibrations
-    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization>("calibration",ConfigurationInfo::CALIBRATION);
-    Register<LinkAlignmentOT, CicFEAlignment, PedeNoise>("pedenoise",ConfigurationInfo::PEDENOISE);
-    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise>("calibrationandpedenoise",ConfigurationInfo::CALIBRATIONANDPEDENOISE);
-    Register<LinkAlignmentOT, CicFEAlignment, CalibrationExample>("calibrationexample",ConfigurationInfo::CALIBRATIONEXAMPLE);
-    Register<LinkAlignmentOT, CicFEAlignment, CBCPulseShape>("cbcPulseShape",ConfigurationInfo::CBCPULSESHAPE);
-    Register<LinkAlignmentOT, CicFEAlignment, LatencyScan>("OTLatency",ConfigurationInfo::OTLATENCY);
+    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization>("calibration",CalibrationList::CALIBRATION);
+    Register<LinkAlignmentOT, CicFEAlignment, PedeNoise>("pedenoise",CalibrationList::PEDENOISE);
+    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise>("calibrationandpedenoise",CalibrationList::CALIBRATIONANDPEDENOISE);
+    Register<LinkAlignmentOT, CicFEAlignment, CalibrationExample>("calibrationexample",CalibrationList::CALIBRATIONEXAMPLE);
+    Register<LinkAlignmentOT, CicFEAlignment, CBCPulseShape>("cbcPulseShape",CalibrationList::CBCPULSESHAPE);
+    Register<LinkAlignmentOT, CicFEAlignment, LatencyScan>("OTLatency",CalibrationList::OTLATENCY);
 
     // IT calibrations
-    Register<PixelAlive>("pixelalive", ConfigurationInfo::PIXELALIVE);
-    Register<PixelAlive>("noise", ConfigurationInfo::NOISE);
-    Register<SCurve>("scurve", ConfigurationInfo::SCURVE);
-    Register<Gain>("gain", ConfigurationInfo::GAIN);
-    Register<GainOptimization>("gainopt", ConfigurationInfo::GAINOPT);
-    Register<ThrEqualization>("threqu", ConfigurationInfo::THREQU);
-    Register<ThrMinimization>("thrmin", ConfigurationInfo::THRMIN);
-    Register<ThrAdjustment>("thradj", ConfigurationInfo::THRADJ);
-    Register<Latency>("latency", ConfigurationInfo::LATENCY);
-    Register<InjectionDelay>("injdelay", ConfigurationInfo::INJDELAY);
-    Register<ClockDelay>("clockdelay", ConfigurationInfo::CLOCKDELAY);
-    Register<Physics>("physics", ConfigurationInfo::PHYSICS);
-    Register<PSPhysics>("psphysics", ConfigurationInfo::PSPHYSICS);
-    Register<Physics2S>("2sphysics", ConfigurationInfo::PHYSICS2S);
-    Register<DataTransmissionTest>("datatrtest", ConfigurationInfo::DATATRTEST);
+    Register<PixelAlive>("pixelalive", CalibrationList::PIXELALIVE);
+    Register<PixelAlive>("noise", CalibrationList::NOISE);
+    Register<SCurve>("scurve", CalibrationList::SCURVE);
+    Register<Gain>("gain", CalibrationList::GAIN);
+    Register<GainOptimization>("gainopt", CalibrationList::GAINOPT);
+    Register<ThrEqualization>("threqu", CalibrationList::THREQU);
+    Register<ThrMinimization>("thrmin", CalibrationList::THRMIN);
+    Register<ThrAdjustment>("thradj", CalibrationList::THRADJ);
+    Register<Latency>("latency", CalibrationList::LATENCY);
+    Register<InjectionDelay>("injdelay", CalibrationList::INJDELAY);
+    Register<ClockDelay>("clockdelay", CalibrationList::CLOCKDELAY);
+    Register<Physics>("physics", CalibrationList::PHYSICS);
+    Register<PSPhysics>("psphysics", CalibrationList::PSPHYSICS);
+    Register<Physics2S>("2sphysics", CalibrationList::PHYSICS2S);
+    Register<DataTransmissionTest>("datatrtest", CalibrationList::DATATRTEST);
 
 }
 

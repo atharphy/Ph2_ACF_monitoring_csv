@@ -26,11 +26,15 @@ class MiddlewareMessageHandler
     // FPGAconfig commands
     std::string firmwareAction(const std::string& message);
 
+    // Calibration list command
+    std::string calibrationList(const std::string& message);
+
     template<typename T>
     static std::string serializeMessage(const T& theMessage);
 
   private:
     MiddlewareStateMachine fMiddlewareStateMachine;
+    const std::map<MessageUtils::CalibrationList::CalibrationNameEnum, std::string> getAvailableCalibrationMap() const {return fMiddlewareStateMachine.getCombinedCalibrationFactory().getAvailableCalibrationMap();}
     
     template<typename... Args>
     MessageUtils::ReplyMessage tryCatchWrapper(std::string currentStep, void(MiddlewareStateMachine::*F)(Args...), typename std::remove_reference<Args>::type&... arguments)

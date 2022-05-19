@@ -269,7 +269,7 @@ int main(int argc, char* argv[])
                     std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Configure!!!" << std::endl;
                     std::string calibrationName   = cmd.optionValue("calibration");
                     std::string configurationFile = cmd.optionValue("file");
-                    const MessageUtils::ConfigurationInfo::CalibrationNameEnum &calibrationEnum = theCombinedCalibrationFactory.getCalibrationEnum(calibrationName);
+                    const MessageUtils::CalibrationList::CalibrationNameEnum &calibrationEnum = theCombinedCalibrationFactory.getCalibrationEnum(calibrationName);
                     theMiddlewareInterface.configure(calibrationEnum, configurationFile);
                     theDQMInterface.configure(calibrationName, configurationFile);
                     theMonitorDQMInterface.configure(configurationFile);

@@ -1,5 +1,6 @@
 #include "../miniDAQ/MiddlewareMessageHandler.h"
 #include "../miniDAQ/CombinedCalibrationFactory.h"
+#include "../MessageUtils/cpp/Common.pb.h"
 
 using namespace MessageUtils;
 
@@ -20,8 +21,7 @@ std::string MiddlewareMessageHandler::configure(const std::string& message)
     ConfigurationMessage theConfigureMessage;
     theConfigureMessage.ParseFromString(message);
 
-    CombinedCalibrationFactory theCombinedCalibrationFactory;
-    const std::string calibrationName = theCombinedCalibrationFactory.getCalibrationName(theConfigureMessage.data().calibration_name());
+    const std::string calibrationName = getAvailableCalibrationMap().at(theConfigureMessage.data().calibration().calibration_name());
     const std::string configurationFile = theConfigureMessage.data().configuration_file();
 
     ReplyMessage theReplyMessage = tryCatchWrapper(__PRETTY_FUNCTION__, &MiddlewareStateMachine::configure, calibrationName, configurationFile);
@@ -171,4 +171,21 @@ std::string MiddlewareMessageHandler::firmwareAction(const std::string& message)
 
     return serializeMessage(theReplyMessage);
 
+}
+
+std::string MiddlewareMessageHandler::calibrationList(const std::string& message)
+{
+    const std::map<CalibrationList::CalibrationNameEnum, std::string> calibrationMap = getAvailableCalibrationMap();
+
+    CalibrationListReplyMessage theCalibrationList;
+    theCalibrationList.mutable_reply_type()->set_type(ReplyType::SUCCESS);
+
+    for(const auto& theCalibrationPair : calibrationMap)
+    {
+        auto* theCalibrationAndName = theCalibrationList.add_calibration();
+        theCalibrationAndName->mutable_calibration_tag()->set_calibration_name(theCalibrationPair.first);
+        theCalibrationAndName->set_calibration_name(theCalibrationPair.second);
+    }
+
+    return serializeMessage(theCalibrationList);
 }

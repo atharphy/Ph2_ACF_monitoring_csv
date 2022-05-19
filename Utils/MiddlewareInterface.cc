@@ -42,11 +42,11 @@ void MiddlewareInterface::initialize(void)
 }
 
 //========================================================================================================================
-void MiddlewareInterface::configure(MessageUtils::ConfigurationInfo::CalibrationNameEnum theCalibrationEnum, std::string const& configurationFilePath)
+void MiddlewareInterface::configure(MessageUtils::CalibrationList::CalibrationNameEnum theCalibrationEnum, std::string const& configurationFilePath)
 {
     ConfigurationMessage theQuery;
     theQuery.mutable_query_type()->set_type(QueryType::CONFIGURE);
-    theQuery.mutable_data()->set_calibration_name(theCalibrationEnum);
+    theQuery.mutable_data()->mutable_calibration()->set_calibration_name(theCalibrationEnum);
     theQuery.mutable_data()->set_configuration_file(configurationFilePath);
     std::string theCommandString;
     theQuery.SerializeToString(&theCommandString);

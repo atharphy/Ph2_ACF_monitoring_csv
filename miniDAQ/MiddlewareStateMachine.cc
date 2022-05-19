@@ -1,5 +1,4 @@
 #include "../miniDAQ/MiddlewareStateMachine.h"
-#include "../miniDAQ/CombinedCalibrationFactory.h"
 #include "../tools/Tool.h"
 #include "../System/FileParser.h"
 #include "../HWInterface/FC7FpgaConfig.h"
@@ -25,8 +24,7 @@ void MiddlewareStateMachine::initialize()
 
 void MiddlewareStateMachine::configure(const std::string& calibrationName, const std::string& configurationFile)
 {
-    CombinedCalibrationFactory theCombinedCalibrationFactory;
-    fTheTool = theCombinedCalibrationFactory.CreateCombinedCalibration(calibrationName);
+    fTheTool = fCombinedCalibrationFactory.CreateCombinedCalibration(calibrationName);
 
     LOG(INFO) << BOLDBLUE << "Tool created" << RESET;
 

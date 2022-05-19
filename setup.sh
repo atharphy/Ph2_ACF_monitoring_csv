@@ -129,7 +129,7 @@ else
   clang_command="/opt/rh/llvm-toolset-7.0/root/usr/bin/clang-format"
 fi
 
-alias formatAll="find ${PH2ACF_BASE_DIR} -iname *.h -o -iname *.cc | xargs ${clang_command} -i"
+alias formatAll="find ${PH2ACF_BASE_DIR} -path ${PH2ACF_BASE_DIR}/MessageUtils -prune -o -iname *.h -o -iname *.cc | xargs ${clang_command} -i"
 
 if [[ $1 == "ci" ]]; then
     export CompileForHerd=false

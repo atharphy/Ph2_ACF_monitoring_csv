@@ -36,7 +36,7 @@ class CombinedCalibrationFactory
     ~CombinedCalibrationFactory();
 
     template<typename... Args>
-    void Register(const std::string& calibrationTag, MessageUtils::ConfigurationInfo::CalibrationNameEnum theCalibrationEnum)
+    void Register(const std::string& calibrationTag, MessageUtils::CalibrationList::CalibrationNameEnum theCalibrationEnum)
     {
         if (fCalibrationMap.count(calibrationTag))
         {
@@ -54,15 +54,16 @@ class CombinedCalibrationFactory
     }
 
     Tool* CreateCombinedCalibration(const std::string& calibrationTag) const;
-    
+
     std::vector<std::string> getAvailableCalibrations() const;
-    const std::string& getCalibrationName(MessageUtils::ConfigurationInfo::CalibrationNameEnum theCalibrationEnum) const {return fCalibrationNameToString.at(theCalibrationEnum);}
-    const MessageUtils::ConfigurationInfo::CalibrationNameEnum& getCalibrationEnum(std::string theCalibrationName) const {return fStringToCalibrationName.at(theCalibrationName);}
+    std::map<MessageUtils::CalibrationList::CalibrationNameEnum, std::string> getAvailableCalibrationMap() const {return fCalibrationNameToString;}
+    const std::string& getCalibrationName(MessageUtils::CalibrationList::CalibrationNameEnum theCalibrationEnum) const {return fCalibrationNameToString.at(theCalibrationEnum);}
+    const MessageUtils::CalibrationList::CalibrationNameEnum& getCalibrationEnum(std::string theCalibrationName) const {return fStringToCalibrationName.at(theCalibrationName);}
 
   private:
     std::map<std::string, BaseCreator*> fCalibrationMap;
-    std::map<MessageUtils::ConfigurationInfo::CalibrationNameEnum, std::string> fCalibrationNameToString;
-    std::map<std::string, MessageUtils::ConfigurationInfo::CalibrationNameEnum> fStringToCalibrationName;
+    std::map<MessageUtils::CalibrationList::CalibrationNameEnum, std::string> fCalibrationNameToString;
+    std::map<std::string, MessageUtils::CalibrationList::CalibrationNameEnum> fStringToCalibrationName;
 
 };
 

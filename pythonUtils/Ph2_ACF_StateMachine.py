@@ -3,10 +3,12 @@ import os
 import time
 
 sys.path.insert(1, os.getenv('PH2ACF_BASE_DIR'))
+sys.path.insert(1, os.getenv('PH2ACF_BASE_DIR') + "/MessageUtils/python/")
 
 import lib.Ph2_ACF_PythonInterface as Ph2_ACF
-import MessageUtils.python.QueryMessage_pb2 as Query
-import MessageUtils.python.ReplyMessage_pb2 as Reply
+import Common_pb2 as Common
+import QueryMessage_pb2 as Query
+import ReplyMessage_pb2 as Reply
 
 Ph2_ACF_controller = Ph2_ACF.MiddlewareMessageHandler()
 
@@ -14,15 +16,20 @@ class StateMachine(object):
     def __init__(self):
         self.configurationFile_ = ""
         self.calibrationName_ = ""
+        self.runNumber_ = 0;
         self.status_ = "INITIAL"
         self.calibrationResult_ = "SUCCESS"
         self.errorMessage_ = ""
+        self.mapOfCalibrations_ = {}
 
     def setConfigurationFile(self, configurationFile):
         self.configurationFile_ = configurationFile
 
     def setCalibrationName(self, calibrationName):
         self.calibrationName_ = calibrationName
+
+    def setRunNumber(self, runNumber):
+        self.runNumber_ = runNumber
 
     def resetStatus(self):
         self.calibrationResult_ = "SUCCESS"
@@ -36,7 +43,7 @@ class StateMachine(object):
         theReply = Reply.ReplyMessage()
         theReply.ParseFromString(replyBuffer)
         if(theReply.reply_type.type == Reply.ReplyType.ERROR):
-            self.errorMessage_ = theReply.message;
+            self.errorMessage_ = theReply.message
         return theReply.reply_type.type
 
     def state_INITIAL(self):
@@ -51,10 +58,12 @@ class StateMachine(object):
         self.status_ = "HALTED"
 
     def state_HALTED(self):
+        if not self.mapOfCalibrations_:
+            self.queryCalibrationList()
         self.resetStatus()
         configureMessage = Query.ConfigurationMessage()
         configureMessage.query_type.type = Query.QueryType.CONFIGURE
-        configureMessage.data.calibration_name = Query.ConfigurationInfo.CALIBRATIONANDPEDENOISE
+        configureMessage.data.calibration.calibration_name = self.mapOfCalibrations_[self.calibrationName_]
         configureMessage.data.configuration_file = self.configurationFile_
         stringMessage = configureMessage.SerializeToString()
         replyBuffer = Ph2_ACF_controller.configure(stringMessage)
@@ -67,7 +76,7 @@ class StateMachine(object):
         self.resetStatus()
         startMessage = Query.StartMessage()
         startMessage.query_type.type = Query.QueryType.START
-        startMessage.data.run_number = 999
+        startMessage.data.run_number = self.runNumber_
         stringMessage = startMessage.SerializeToString()
         replyBuffer = Ph2_ACF_controller.start(stringMessage)
         if self.parseReply(replyBuffer) != Reply.ReplyType.SUCCESS:
@@ -128,18 +137,18 @@ class StateMachine(object):
 
     def queryFirmware(self, action, configurationFile, boardId, firmwareName = "", fileName = ""):
         firmwareListQuery = Query.FirmwareQueryMessage()
-        firmwareListQuery.query_type.type = Query.QueryType.FPGA;
-        firmwareListQuery.configuration_file = configurationFile;
-        firmwareListQuery.board_id = boardId;
-        if action == "LIST": firmwareListQuery.action = Query.FirmwareQueryMessage.LIST;
-        if action == "LOAD": firmwareListQuery.action = Query.FirmwareQueryMessage.LOAD;
-        if action == "UPLOAD": firmwareListQuery.action = Query.FirmwareQueryMessage.UPLOAD;
-        if action == "DOWNLOAD": firmwareListQuery.action = Query.FirmwareQueryMessage.DOWNLOAD;
-        if action == "DELETE": firmwareListQuery.action = Query.FirmwareQueryMessage.DELETE;
+        firmwareListQuery.query_type.type = Query.QueryType.FPGA
+        firmwareListQuery.configuration_file = configurationFile
+        firmwareListQuery.board_id = boardId
+        if action == "LIST": firmwareListQuery.action = Query.FirmwareQueryMessage.LIST
+        if action == "LOAD": firmwareListQuery.action = Query.FirmwareQueryMessage.LOAD
+        if action == "UPLOAD": firmwareListQuery.action = Query.FirmwareQueryMessage.UPLOAD
+        if action == "DOWNLOAD": firmwareListQuery.action = Query.FirmwareQueryMessage.DOWNLOAD
+        if action == "DELETE": firmwareListQuery.action = Query.FirmwareQueryMessage.DELETE
         if action != "LIST":
-            firmwareListQuery.firmware_name = firmwareName;
+            firmwareListQuery.firmware_name = firmwareName
         if action == "UPLOAD" or action == "DOWNLOAD":
-            firmwareListQuery.file_name = fileName;
+            firmwareListQuery.file_name = fileName
         stringMessage = firmwareListQuery.SerializeToString()
         replyBuffer = Ph2_ACF_controller.firmwareAction(stringMessage)
         if self.parseReply(replyBuffer) != Reply.ReplyType.SUCCESS:
@@ -170,4 +179,25 @@ class StateMachine(object):
     def deleteFirmware(self, configurationFile, firmwareName, boardId):
         self.queryFirmware("DELETE", configurationFile, boardId, firmwareName)
 
+    def queryCalibrationList(self):
+        print(Common.CalibrationList.CALIBRATIONANDPEDENOISE)
+        print(Common.CalibrationList)
+        calibrationListQuery = Query.QueryMessage()
+        calibrationListQuery.query_type.type = Query.QueryType.CALIBRATION
+        stringMessage = calibrationListQuery.SerializeToString()
+        replyBuffer = Ph2_ACF_controller.calibrationList(stringMessage)
+        if self.parseReply(replyBuffer) != Reply.ReplyType.SUCCESS:
+            self.calibrationResult_ = "FAILED"
+            return "FAILED"
+        theCalibrationListReply = Reply.CalibrationListReplyMessage()
+        theCalibrationListReply.ParseFromString(replyBuffer)
+        for calibration in theCalibrationListReply.calibration:
+            self.mapOfCalibrations_[calibration.calibration_name] = calibration.calibration_tag.calibration_name
 
+    def getCalibrationList(self):
+        if not self.mapOfCalibrations_:
+            self.queryCalibrationList()
+        listOfCalibrations = []
+        for key in self.mapOfCalibrations_:
+            listOfCalibrations.append(key)
+        return listOfCalibrations

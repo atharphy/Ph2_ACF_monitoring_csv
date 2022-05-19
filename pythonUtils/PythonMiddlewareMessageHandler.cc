@@ -33,16 +33,17 @@ PYBIND11_MODULE(Ph2_ACF_PythonInterface, handle)
 
     pybind11::class_<MiddlewareMessageHandler>(handle, "MiddlewareMessageHandler")
     .def(pybind11::init<>())
-    .def("initialize"    , stringConverter(&MiddlewareMessageHandler::initialize    ))
-    .def("configure"     , stringConverter(&MiddlewareMessageHandler::configure     ))
-    .def("start"         , stringConverter(&MiddlewareMessageHandler::start         ))
-    .def("stop"          , stringConverter(&MiddlewareMessageHandler::stop          ))
-    .def("halt"          , stringConverter(&MiddlewareMessageHandler::halt          ))
-    .def("pause"         , stringConverter(&MiddlewareMessageHandler::pause         ))
-    .def("resume"        , stringConverter(&MiddlewareMessageHandler::resume        ))
-    .def("abort"         , stringConverter(&MiddlewareMessageHandler::abort         ))
-    .def("status"        , stringConverter(&MiddlewareMessageHandler::status        ))
-    .def("firmwareAction", stringConverter(&MiddlewareMessageHandler::firmwareAction));
+    .def("initialize"     , stringConverter(&MiddlewareMessageHandler::initialize     ))
+    .def("configure"      , stringConverter(&MiddlewareMessageHandler::configure      ))
+    .def("start"          , stringConverter(&MiddlewareMessageHandler::start          ))
+    .def("stop"           , stringConverter(&MiddlewareMessageHandler::stop           ))
+    .def("halt"           , stringConverter(&MiddlewareMessageHandler::halt           ))
+    .def("pause"          , stringConverter(&MiddlewareMessageHandler::pause          ))
+    .def("resume"         , stringConverter(&MiddlewareMessageHandler::resume         ))
+    .def("abort"          , stringConverter(&MiddlewareMessageHandler::abort          ))
+    .def("status"         , stringConverter(&MiddlewareMessageHandler::status         ))
+    .def("calibrationList", stringConverter(&MiddlewareMessageHandler::calibrationList))
+    .def("firmwareAction" , stringConverter(&MiddlewareMessageHandler::firmwareAction ));
 
     handle.def("configureLogger", &configureLogger);
 }

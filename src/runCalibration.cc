@@ -5,7 +5,6 @@
 #include "Utils/argvparser.h"
 #include "boost/format.hpp"
 #include "../miniDAQ/MiddlewareStateMachine.h"
-#include "../miniDAQ/CombinedCalibrationFactory.h"
 #include "../Utils/easylogging++.h"
 
 #include "TApplication.h"
@@ -61,6 +60,8 @@ int returnRunNumber(std::string cFileName)
 int main(int argc, char* argv[])
 {
 
+    MiddlewareStateMachine theMiddlewareStateMachine;
+
     if(std::getenv("PH2ACF_BASE_DIR") == nullptr)
     {
         std::cout << "You must source setup.sh or export the PH2ACF_BASE_DIR environmental variable. Exiting..." << std::endl;
@@ -87,8 +88,7 @@ int main(int argc, char* argv[])
     cmd.defineOptionAlternative("file", "f");
 
     std::string calibrationHelpMessage = "Calibration to run. List of available calibrations:\n";
-    CombinedCalibrationFactory theCombinedCalibrationFactory;
-    for(const auto& calibration : theCombinedCalibrationFactory.getAvailableCalibrations()) calibrationHelpMessage += (calibration + "\n");
+    for(const auto& calibration : theMiddlewareStateMachine.getCombinedCalibrationFactory().getAvailableCalibrations()) calibrationHelpMessage += (calibration + "\n");
 
     cmd.defineOption("calibration", calibrationHelpMessage, ArgvParser::OptionRequiresValue | ArgvParser::OptionRequired);
     cmd.defineOptionAlternative("calibration", "c");
@@ -116,8 +116,6 @@ int main(int argc, char* argv[])
 
     Timer       cGlobalTimer;
     cGlobalTimer.start();
-
-    MiddlewareStateMachine theMiddlewareStateMachine;
 
     std::thread softKillThread(killProcessFunction, &theMiddlewareStateMachine);
     softKillThread.detach();

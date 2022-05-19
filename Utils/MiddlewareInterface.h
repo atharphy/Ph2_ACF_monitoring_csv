@@ -11,7 +11,7 @@ class MiddlewareInterface : public TCPClient
     MiddlewareInterface(std::string serverIP, int serverPort);
     virtual ~MiddlewareInterface(void);
     void        initialize(void);
-    void        configure(MessageUtils::ConfigurationInfo::CalibrationNameEnum theCalibrationEnum, std::string const& configurationFilePath);
+    void        configure(MessageUtils::CalibrationList::CalibrationNameEnum theCalibrationEnum, std::string const& configurationFilePath);
     void        halt(void);
     void        pause(void);
     void        resume(void);

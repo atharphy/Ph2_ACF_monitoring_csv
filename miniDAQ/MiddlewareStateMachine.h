@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include "../miniDAQ/CombinedCalibrationFactory.h"
 
 namespace Ph2_HwInterface
 {
@@ -39,10 +40,13 @@ class MiddlewareStateMachine
 
     Tool* fTheTool {nullptr};
 
+    const CombinedCalibrationFactory& getCombinedCalibrationFactory() const {return fCombinedCalibrationFactory;}
+
   private:
     Ph2_HwInterface::FC7FpgaConfig getFpgaConfig(const std::string& configurationFile, uint16_t boardId);
     int currentRun_;
     std::map<std::string, std::type_info> fClassesInfo;
+    CombinedCalibrationFactory fCombinedCalibrationFactory;
 
 };
 
