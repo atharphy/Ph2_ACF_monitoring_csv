@@ -253,10 +253,32 @@ sudo yum install -y root root-net-http root-net-httpsniff root-graf3d-gl root-ph
   root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
 
 # Build tools and some nice git extras
-sudo yum install -y cmake
+sudo yum install -y cmake3
 sudo yum install -y clang-tools-extra
 sudo yum install -y git-extras
 ```
+
+Install devtoolset 10
+        $> sudo yum install -y centos-release-scl-rh
+        $> sudo yum install -y devtoolset-10
+
+Install python3
+        $> sudo yum install -y python3
+
+Install protobuf:
+        Follow instructions from
+        https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
+
+Install pybind11 (if installed in the same directoory when you plan to install the Ph2_ACF, the setup.sh will point to the correct location)
+        $> wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
+        $> tar zxvf v2.9.2.tar.gz
+        $> cd pybind11-2.9.2
+        $> mkdir build
+        $> cd build
+        $> cmake3 ..
+        $> make check -j <number_of_cores>
+
+
 
 ### clang-format (required to submit merge requests!!!)
 
@@ -264,7 +286,6 @@ sudo yum install -y git-extras
 
         $> yum install centos-release-scl
         $> yum install llvm-toolset-7.0
-        $> scl enable devtoolset-7 bash
 
 2. if you already sourced the environment, you should be able to run the command to format the Ph2_ACF (to be done before each merge request!!!):
 
@@ -273,13 +294,13 @@ sudo yum install -y git-extras
 
 ### Setup on CC7 (scroll down for instructions on setting up on SLC6)
 
-1. Check which version of gcc is installed on your CC7, it should be > 4.8 (could be the default on CC7):
-
-        $> gcc --version
+1. Install devtoolset 10
+        $> sudo yum install -y centos-release-scl-rh
+        $> sudo yum install -y devtoolset-10
 
 2. On CC7 you also need to install boost v1.53 headers (default on this system) and pugixml as they don't ship with uHAL any more:
 
-        $> sudo yum install boost-devel pugixml-devel json-devel
+        $> sudo yum install -y boost-devel pugixml-devel json-devel
 
 2. Install uHAL. SW tested with uHAL version up to 2.7.1
 
@@ -288,17 +309,30 @@ sudo yum install -y git-extras
 
 3. Install CERN ROOT
 
-        $> sudo yum install root
-        $> sudo yum install root-net-http root-net-httpsniff  root-graf3d-gl root-physics root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
+        $> sudo yum install -y root
+        $> sudo yum install -y root-net-http root-net-httpsniff  root-graf3d-gl root-physics root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
 
 
 5. Install CMAKE3 > 3.0:
 
-        $> sudo yum install cmake3
+        $> sudo yum install -y cmake3
 
-6. Install protobuf:
+6. Install python3
+        $> sudo yum install -y python3
+
+7. Install protobuf:
         Follow instructions from
         https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
+
+8. Install pybind11 (if installed in the same directoory when you plan to install the Ph2_ACF, the setup.sh will point to the correct location)
+        $> wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
+        $> tar zxvf v2.9.2.tar.gz
+        $> cd pybind11-2.9.2
+        $> mkdir build
+        $> cd build
+        $> cmake3 ..
+        $> make check -j <number_of_cores>
+
 
 ### Setup on SLC6
 

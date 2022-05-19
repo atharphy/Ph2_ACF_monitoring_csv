@@ -1,5 +1,5 @@
 #!/bin/bash
-source scl_source enable devtoolset-8
+source scl_source enable devtoolset-10
 
 ###########
 # Ph2_ACF #
@@ -94,9 +94,6 @@ export EuDaqFlag='-D__EUDAQ__'
 #####################
 # Compilation flags #
 #####################
-
-# C++ standard
-export STDCXX="-std=c++1y"
 
 # Stand-alone application, without data streaming
 export CompileForHerd=false
