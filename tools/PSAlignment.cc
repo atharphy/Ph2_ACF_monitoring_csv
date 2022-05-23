@@ -1,8 +1,8 @@
 #include "PSAlignment.h"
 
+#include "../HWInterface/L1ReadoutInterface.h"
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
-#include "L1ReadoutInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

@@ -4,10 +4,10 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
+#include "../HWInterface/FEConfigurationInterface.h"
+#include "../HWInterface/L1ReadoutInterface.h"
+#include "../HWInterface/TriggerInterface.h"
 #include "../Utils/ContainerFactory.h"
-#include "FEConfigurationInterface.h"
-#include "L1ReadoutInterface.h"
-#include "TriggerInterface.h"
 
 OTTool::OTTool() : Tool()
 {
@@ -239,13 +239,13 @@ void OTTool::ReadDataFromFile(std::string pRawFileName)
     this->addFileHandler(pRawFileName, 'r');
     std::vector<uint32_t> cData;
     this->readFile(cData);
-    LOG(INFO) << BOLDBLUE << "BeamTestCheck2S::ReadDataFromFile Read back " << +cData.size() << " 32-bit words from the .raw file : " << pRawFileName << RESET;
+    LOG(INFO) << BOLDBLUE << "BeamTestCheck::ReadDataFromFile Read back " << +cData.size() << " 32-bit words from the .raw file : " << pRawFileName << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
         size_t cNevents = fNevents;
         DecodeData(cBoard, cData, cNevents, fBeBoardInterface->getBoardType(cBoard));
         // const std::vector<Event*>& cEvents = GetEvents ();
-        LOG(INFO) << BOLDBLUE << "BeamTestCheck2S::ReadDataFromFile decoded back " << +cNevents << " events from the .raw file [BeBoard#" << +cBoard->getId() << "]" << RESET;
+        LOG(INFO) << BOLDBLUE << "BeamTestCheck::ReadDataFromFile decoded back " << +cNevents << " events from the .raw file [BeBoard#" << +cBoard->getId() << "]" << RESET;
         if(fPrintConfig.fVerbose) PrintData(cBoard);
     }
 }
@@ -294,7 +294,7 @@ void OTTool::WaitForTriggers(BeBoard* pBoard)
         auto cTriggerCounter = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
         cTriggerCounters.push_back(cTriggerCounter);
         if(cCounter % 200 == 0 && cCounter > 0)
-        { LOG(INFO) << BOLDMAGENTA << "BeamTestCheck2S continuousReadout loop ... " << +cTriggerCounters[cTriggerCounters.size() - 1] << " triggers received" << RESET; }
+        { LOG(INFO) << BOLDMAGENTA << "BeamTestCheck continuousReadout loop ... " << +cTriggerCounters[cTriggerCounters.size() - 1] << " triggers received" << RESET; }
         cCounter++;
         cBreak = (cTriggerCounter >= fNevents);
     } while(!cBreak);
@@ -546,7 +546,7 @@ void OTTool::ContinousReadout(BeBoard* pBoard)
         if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
         cTriggerCounters.push_back(cTriggerCounter);
         if(cCounter % 200 == 0 && cCounter > 0)
-        { LOG(INFO) << BOLDMAGENTA << "BeamTestCheck2S continuousReadout loop ... " << +cTriggerCounters[cTriggerCounters.size() - 1] << " triggers received" << RESET; }
+        { LOG(INFO) << BOLDMAGENTA << "BeamTestCheck continuousReadout loop ... " << +cTriggerCounters[cTriggerCounters.size() - 1] << " triggers received" << RESET; }
         cCounter++;
         cBreak = (fEventCounter >= fNevents);
     } while(!cBreak);
@@ -1003,7 +1003,11 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
     cBoardRegs.push_back("fc7_daq_cnfg.tlu_block.tlu_enabled");
     cBoardRegs.push_back("fc7_daq_cnfg.tlu_block.handshake_mode");
     BeBoardRegMap cRegMap = pBoard->getBeBoardRegMap();
-    for(auto cReg: cBoardRegs) { fBeBoardInterface->WriteBoardReg(pBoard, cReg, cRegMap[cReg]); }
+    for(auto cReg: cBoardRegs)
+    {
+        LOG(INFO) << BOLDBLUE << "Setting " << cReg << " to " << +cRegMap[cReg] << RESET;
+        fBeBoardInterface->WriteBoardReg(pBoard, cReg, cRegMap[cReg]);
+    }
 
     // set thresholds
     for(auto cOpticalGroup: *pBoard)
@@ -1015,15 +1019,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                 uint32_t cThreshold = 0;
                 if(cChip->getFrontEndType() == FrontEndType::CBC3) cThreshold = (cChip->getReg("VCth1") + (cChip->getReg("VCth2") << 8));
                 if(cChip->getFrontEndType() == FrontEndType::SSA) cThreshold = cChip->getReg("Bias_THDAC");
-                if(cChip->getFrontEndType() == FrontEndType::MPA)
-                {
-                    for(uint8_t cDAC = 0; cDAC < 1; cDAC++)
-                    {
-                        std::stringstream cRegName;
-                        cRegName << "ThDAC" << +cDAC;
-                        cThreshold = cChip->getReg(cRegName.str());
-                    }
-                }
+                if(cChip->getFrontEndType() == FrontEndType::MPA) cThreshold = cChip->getReg("ThDAC0");
                 LOG(INFO) << BOLDMAGENTA << "Setting threshold on Chip#" << +cChip->getId() << " to 0x" << std::hex << +cThreshold << std::dec << RESET;
                 fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
             }

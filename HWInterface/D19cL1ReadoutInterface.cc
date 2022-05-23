@@ -158,6 +158,19 @@ bool D19cL1ReadoutInterface::CheckReadoutReq()
         LOG(DEBUG) << BOLDGREEN << "ReadoutReq fullfilled.... " << RESET;
     return (cReadoutReq == 1);
 }
+
+bool D19cL1ReadoutInterface::CheckBuffers()
+{
+    // read all the words
+    if(ReadReg("fc7_daq_stat.ddr3_block.is_ddr3_type"))
+    {
+        // readout_req high when buffer is almost full
+        uint32_t cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
+        return (cReadoutReq == 1); // DD3 almost full ? check this!!
+    }
+    return false;
+}
+
 bool D19cL1ReadoutInterface::CheckForWordsInReadout()
 {
     uint32_t cIterations = 0;
@@ -212,7 +225,7 @@ bool D19cL1ReadoutInterface::PollReadoutData(const BeBoard* pBoard, bool pWait)
     {
         FillData();
         CountFwEvents();
-        LOG(INFO) << BOLDYELLOW << "D19cL1ReadoutInterface::PollReadoutData " << fData.size() << " valid 32 bit words .. which are " << +fNReadoutEvents << " events." << RESET;
+        LOG(DEBUG) << BOLDYELLOW << "D19cL1ReadoutInterface::PollReadoutData " << fData.size() << " valid 32 bit words .. which are " << +fNReadoutEvents << " events." << RESET;
     }
     return cSuccess;
 }
@@ -238,6 +251,7 @@ bool D19cL1ReadoutInterface::ReadEvents(const BeBoard* pBoard)
         fTriggerInterface->SetNTriggersToAccept(fNEvents);
         WriteReg("fc7_daq_cnfg.readout_block.packet_nbr", fNEvents - 1);
         LOG(DEBUG) << BOLDYELLOW << "D19cL1ReadoutInterface::ReadEvents asking for " << fNEvents << " events handshake mode is currently " << cHandshake << RESET;
+
         // reset readout
         ResetReadout();
         cSuccess = WaitForNTriggers();

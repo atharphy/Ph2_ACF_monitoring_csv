@@ -54,9 +54,9 @@
             list(REMOVE_ITEM HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/UsbUtilities.h)
     endif(ZMQ_FOUND)
 
-    ####################################
-    ## EXECUTABLES
-    ####################################
+    ################
+    ## EXECUTABLES #
+    ################
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/Utils *.cc)
 
