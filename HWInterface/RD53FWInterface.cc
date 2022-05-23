@@ -647,10 +647,25 @@ uint32_t RD53FWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     // #############
     // # Read DDR3 #
     // #############
-    std::vector<uint32_t> values = ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory, ddr3Offset);
+    std::vector<uint32_t> theData;
+    auto                  FIFOsize = (1 << RD53FWconstants::NBIT_DATA_FIFO);
+
+    if(nWordsInMemory > (FIFOsize - ddr3Offset))
+    {
+        auto firstBlock(ReadBlockRegOffset("ddr3.fc7_daq_ddr3", FIFOsize - ddr3Offset, ddr3Offset));
+        theData.insert(theData.end(), std::make_move_iterator(firstBlock.begin()), std::make_move_iterator(firstBlock.end()));
+        auto secondBlock(ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory - (FIFOsize - ddr3Offset), 0));
+        theData.insert(theData.end(), std::make_move_iterator(secondBlock.begin()), std::make_move_iterator(secondBlock.end()));
+    }
+    else
+    {
+        auto block(ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory, ddr3Offset));
+        theData.insert(theData.end(), std::make_move_iterator(block.begin()), std::make_move_iterator(block.end()));
+    }
+
     ddr3Offset += nWordsInMemory;
-    ddr3Offset %= (1 << RD53FWconstants::NBIT_DATA_FIFO) - 1;
-    pData.insert(pData.end(), values.begin(), values.end());
+    ddr3Offset %= FIFOsize;
+    pData.insert(pData.end(), std::make_move_iterator(theData.begin()), std::make_move_iterator(theData.end()));
 
     if((this->fSaveToFile == true) && (pData.size() != 0)) this->fFileHandler->setData(pData);
     return pData.size();
