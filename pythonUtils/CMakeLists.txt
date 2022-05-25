@@ -5,8 +5,6 @@ MESSAGE(STATUS "    ${BoldYellow}===============================================
 MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/pythonUtils/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
 MESSAGE(STATUS " ")
 
-set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
-
 # pybind11
 if (NOT DEFINED ENV{PYBIND11}) # No external PYBIND11
     message(STATUS "    No pybind11 found. Installing.")
