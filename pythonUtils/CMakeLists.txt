@@ -5,6 +5,22 @@ MESSAGE(STATUS "    ${BoldYellow}===============================================
 MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/pythonUtils/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
 MESSAGE(STATUS " ")
 
+
+
+# pybind11
+# if (NOT DEFINED ENV{PYBIND11}) # No external PYBIND11
+    message(STATUS "No pybind11 found. Installing.")
+    message(STATUS "Obtaining from github ref $ENV{PYBIND11_REF}")
+    ExternalProject_Add( ext_pybind
+            GIT_REPOSITORY https://github.com/pybind/pybind11.git
+            GIT_TAG $ENV{PYBIND11_REF}
+            PREFIX ${EXTERNAL_INSTALL_LOCATION}
+        )
+    set(ENV{PYBIND11} ${EXTERNAL_INSTALL_LOCATION}/src/ext_pybind/ )
+    set(ENV{PYBIND11INCLUDE} $ENV{PYBIND11}/include/ )
+# endif(NOT DEFINED ENV{PYBIND11})
+
+
 # Includes
 include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
 include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
