@@ -1,5 +1,5 @@
 #!/bin/bash
-source scl_source enable devtoolset-10
+source scl_source enable devtoolset-10 || true # This might cause a nonzero exit code in the CI for some reason, so let's ignore it
 
 ###########
 # Ph2_ACF #
