@@ -75,8 +75,8 @@ class RD53FWInterface : public BeBoardFWInterface
                                     const Ph2_HwDescription::BeBoard* pBoard                = nullptr,
                                     ReadoutChipInterface*             pReadoutChipInterface = nullptr,
                                     const bool                        doReset               = false);
-    void     ResetBoard();
     uint32_t ReadArbitraryRegister(const std::string& regName);
+    void     ResetBoard();
 
     // ####################################
     // # Check AURORA lock on data stream #

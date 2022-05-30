@@ -164,6 +164,13 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     uint32_t txIsReady, rxIsReady;
     RD53FWInterface::StatusOptoLinkSlowControl(txIsReady, rxIsReady);
 
+    // ###################################
+    // # Set and check RD53 AURORA speed #
+    // ###################################
+    RegManager::WriteStackReg({{"user.ctrl_regs.gtx_drp.aurora_speed", RD53FWconstants::AURORA_SPEED}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 1}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 0}});
+    uint32_t auroraSpeed = RD53FWInterface::ReadoutSpeed();
+    LOG(INFO) << BOLDBLUE << "\t--> Aurora speed: " << BOLDYELLOW << (auroraSpeed == 0 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
+
     // ###########################
     // # Print clock measurement #
     // ###########################
@@ -379,13 +386,6 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
     uint32_t channel_up;
 
     LOG(INFO) << GREEN << "Checking status communication RD53 --> FW" << RESET;
-
-    // ###################################
-    // # Set and check RD53 AURORA speed #
-    // ###################################
-    RegManager::WriteStackReg({{"user.ctrl_regs.gtx_drp.aurora_speed", RD53FWconstants::AURORA_SPEED}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 1}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 0}});
-    uint32_t auroraSpeed = RD53FWInterface::ReadoutSpeed();
-    LOG(INFO) << BOLDBLUE << "\t--> Aurora speed: " << BOLDYELLOW << (auroraSpeed == 0 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
 
     // ########################################
     // # Check communication with the chip(s) #
