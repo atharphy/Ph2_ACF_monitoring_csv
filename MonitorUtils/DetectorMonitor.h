@@ -35,6 +35,7 @@ class DetectorMonitor
 #ifdef __USE_ROOT__
     TFile*              fOutputFile;
     MonitorDQMPlotBase* fMonitorPlotDQM;
+    MonitorDQMPlotBase* fMonitorPlotDQMSEH;
 #endif
     time_t      getTimeStamp();
     std::string getMonitorName();

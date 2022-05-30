@@ -86,6 +86,9 @@ class SEHTester : public OTHybridTester
     int  exampleFit();
     void readTestParameters(std::string file);
     void DCDCOutputEvaluation();
+    void SetupExternalTestLeakageCurrent(uint16_t pHvSet, std::string powerSupplyId, std::string channelId);
+    void EndExternalTestLeakageCurrent(std::string powerSupplyId, std::string channelId);
+
     // bool TestFixedADCs();
     // bool ToyTestFixedADCs();
 
