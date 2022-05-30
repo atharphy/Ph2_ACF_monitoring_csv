@@ -169,7 +169,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ###################################
     RegManager::WriteStackReg({{"user.ctrl_regs.gtx_drp.aurora_speed", RD53FWconstants::AURORA_SPEED}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 1}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 0}});
     uint32_t auroraSpeed = RD53FWInterface::ReadoutSpeed();
-    LOG(INFO) << BOLDBLUE << "\t--> Aurora speed: " << BOLDYELLOW << (auroraSpeed == 0 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
+    LOG(INFO) << GREEN << "Aurora speed set to: " << BOLDYELLOW << (auroraSpeed == 0 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
 
     // ###########################
     // # Print clock measurement #
