@@ -53,7 +53,7 @@ class D19clpGBTInterface : public lpGBTInterface
     void        Configure2SSEH(Ph2_HwDescription::Chip* pChip);
     std::string getVariableValue(std::string variable, std::string buffer);
     void        ContinuousPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
-
+    void        InitialPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
     // 0 [RHS], 1 [LHS]
     // active reset functions
     void cicReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0)
