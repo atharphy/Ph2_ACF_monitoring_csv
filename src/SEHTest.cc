@@ -240,23 +240,14 @@ int main(int argc, char* argv[])
     }
     if(cmd.foundOption("ext-leak") & cmd.foundOption("parallelHV"))
     {
-        if(cmd.foundOption("parallelHV"))
-        {
-            LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply in parallel" << RESET;
-            cSEHTester.SetupExternalTestLeakageCurrent(cExtLeakVoltage, cHVPowerSupplyId, cHVChannelId);
-        }
-        else
-        {
-            LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply" << RESET;
-            cSEHTester.ExternalTestLeakageCurrent(cExtLeakVoltage, 150, cHVPowerSupplyId, cHVChannelId);
-        }
+        LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply in parallel" << RESET;
+        cSEHTester.SetupExternalTestLeakageCurrent(cExtLeakVoltage, cHVPowerSupplyId, cHVChannelId);
     }
 
     // establishes an optical link and configures the lpgbt over the optical cable
     uint8_t cExternalPattern = (cmd.foundOption("external-pattern")) ? convertAnyInt(cmd.optionValue("external-pattern").c_str()) : 0;
     cSEHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
     cTool.ConfigureHw();
-    cSEHTester.Initialise();
     if(!cSEHTester.LpGBTGetLinkLock())
     {
         cSEHTester.TurnOff();
@@ -267,6 +258,8 @@ int main(int argc, char* argv[])
         cTool.ConfigureHw();
     }
     if(!cSEHTester.LpGBTGetLinkLock()) { return -1; }
+    cSEHTester.Initialise();
+
     // Initialize BackEnd & Control LpGBT Tester
     // cSEHTester.exampleFit();
     // cSEHTester.DCDCOutputEvaluation();
@@ -431,7 +424,7 @@ int main(int argc, char* argv[])
 #endif
     }
     int cFmcdCounter = 0;
-    int cFcmdTries   = 100;
+    int cFcmdTries   = 1000;
     if(cmd.foundOption("scope-fcmd"))
     {
         // align lines in the back-end
@@ -440,6 +433,8 @@ int main(int argc, char* argv[])
         {
             LOG(INFO) << BOLDBLUE << "FCMD pattern test" << RESET;
             cSEHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
+            // std::this_thread::sleep_for(std::chrono::milliseconds(30000));
+
             for(int i = 0; i < cFcmdTries; i++)
             {
                 if(!cSEHTester.LpGBTFastCommandChecker(cFCMDPattern)) cFmcdCounter += 1;
@@ -476,6 +471,12 @@ int main(int argc, char* argv[])
     {
         LOG(INFO) << BOLDBLUE << "Measuring bias voltage on sensor side" << RESET;
         cSEHTester.TestBiasVoltage(cBiasVoltage);
+    }
+
+    if(cmd.foundOption("ext-leak") & !cmd.foundOption("parallelHV"))
+    {
+        LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply" << RESET;
+        cSEHTester.ExternalTestLeakageCurrent(cExtLeakVoltage, 150, cHVPowerSupplyId, cHVChannelId);
     }
 
     if(cmd.foundOption("ext-bias"))

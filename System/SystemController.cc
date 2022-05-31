@@ -946,6 +946,21 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
         cBoard->printBoardType();
         fBeBoardInterface->setBoard(0);
         fBeBoardInterface->ConfigureBoard(cBoard);
+#ifdef __TCUSB__
+        // In the test system a run time error is undesired
+        for(auto cOpticalReadout: *cBoard)
+        {
+            if(cBoard->at(0)->flpGBT != nullptr)
+            {
+                LOG(INFO) << YELLOW << "Checking LinkLock after USB configuration of lpGBT" << RESET;
+                auto    cLinkInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->getLinkInterface();
+                uint8_t cLinkId        = cOpticalReadout->getId();
+
+                if(!cLinkInterface->GetLinkStatus(cLinkId)) { return; }
+            }
+        }
+
+#endif
         if(cBoard->getBoardType() == BoardType::D19C)
         {
             // set board sparisificatio

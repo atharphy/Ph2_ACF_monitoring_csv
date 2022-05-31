@@ -143,7 +143,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
         D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-        //cFWInterface->WriteReg("fc7_daq_cnfg.global.hybrid_enable", 0xFFFF);
+        // cFWInterface->WriteReg("fc7_daq_cnfg.global.hybrid_enable", 0xFFFF);
 
         for(auto cOpticalGroup: *cBoard)
         {
@@ -155,7 +155,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 0);
                     std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 }
-                size_t           cLine        = 0;
+                size_t cLine = 0;
                 do
                 {
                     //     for(int iter = 0; iter < 16; iter++)
@@ -168,20 +168,20 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     LOG(INFO) << BOLDBLUE << "Internal temperature sensor of lpGBT reads " << cLpgbtTemp << " which converts to " << cLpgbtTemp * (1. / 1023) << RESET; */
                     fBeBoardInterface->setBoard(cBoard->getId());
                     cFWInterface->selectLink(cOpticalGroup->getId());
-                    uint8_t cHybridId = 2*cOpticalGroup->getId() + hybridNumber;
-                    //char name[50];
-                    //std::sprintf(name, "fc7_daq_cnfg.global.chips_enable_hyb_%02d", cHybridId);
-                    //cFWInterface->WriteReg(name, 0xFF);
-                    //std::this_thread::sleep_for(std::chrono::milliseconds(500));
-                    cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber+2*( cOpticalGroup->getId() ));
-                    //cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+                    uint8_t cHybridId = 2 * cOpticalGroup->getId() + hybridNumber;
+                    // char name[50];
+                    // std::sprintf(name, "fc7_daq_cnfg.global.chips_enable_hyb_%02d", cHybridId);
+                    // cFWInterface->WriteReg(name, 0xFF);
+                    // std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                    cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber + 2 * (cOpticalGroup->getId()));
+                    // cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
                     LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
                     // D19cDebugFWInterface* cDebugInterface = cFWInterface->getDebugInterface(); // cDebugInterface->StubDebug(true, 5);
                     // cDebugInterface->StubDebug(true, 5);
                     // enable stub debug - allows you to 'scope' the stub output
 
                     cFWInterface->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable", 0x01);
-                    //cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
+                    // cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
                     cFWInterface->ChipTestPulse();
                     auto                     cWords = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
                     std::vector<std::string> cLines(0);
