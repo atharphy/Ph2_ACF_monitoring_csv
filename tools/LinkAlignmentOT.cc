@@ -714,6 +714,8 @@ bool LinkAlignmentOT::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
         cVecReg.push_back({cRegName, cFcmdRegVals[cIndx]});
     }
     cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    cVecReg.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
+    cVecReg.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1});
     fBeBoardInterface->WriteBoardMultReg(*cBoardIter, cVecReg);
 
     auto& cBeBitSlip   = fBeBitSlip.at((*cBoardIter)->getIndex());

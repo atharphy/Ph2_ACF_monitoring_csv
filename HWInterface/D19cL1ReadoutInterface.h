@@ -59,6 +59,7 @@ class D19cL1ReadoutInterface : public L1ReadoutInterface
     bool ReadEvents(const Ph2_HwDescription::BeBoard* pBoard) override;
     bool PollReadoutData(const Ph2_HwDescription::BeBoard* pBoard, bool pWait = false) override;
     bool ResetReadout() override;
+    bool CheckBuffers() override;
 
     void SetWait(uint32_t pWait_us) { fWait_us = pWait_us; }
 

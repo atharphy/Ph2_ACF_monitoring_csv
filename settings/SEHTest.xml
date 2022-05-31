@@ -11,8 +11,8 @@
     <OpticalGroup Id="0" FMCId="0" reset="1">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-        <lpGBT Id="0" version="1" configfile="lpGBT1.txt">
-        <!-- <lpGBT Id="0" version="0" configfile="lpGBT0.txt"> -->
+        <!-- <lpGBT Id="0" version="1" configfile="lpGBT1.txt"> -->
+        <lpGBT Id="0" version="0" configfile="lpGBT0.txt">
           <Settings
           />
         </lpGBT>
@@ -27,19 +27,19 @@
     </SLink>
 
     <!--CONFIG-->
-    <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
+    <!-- 15 - default (internal oscillator), 0 - AMC13 -->
     <Register name="clock_source_u7">0</Register> 
-    <!-- 3 = 3 = internal oscillator (default), 1 = fmc_l8_clk1, 2 = fmc_l8_clk0, 0 = COAX_IN -->
+    <!-- 3 = internal oscillator (default), 1 = fmc_l8_clk1, 2 = fmc_l8_clk0, 0 = COAX_IN -->
     <Register name="clock_source_u8">3</Register> 
     <Register name="fc7_daq_cnfg">
     <Register name="optical_block">
 		<Register name="rx_polarity"> 
 
-        		 <Register name="l8"> 1 </Register>  
-        		 <Register name="l12"> 1 </Register>  
+        		 <!-- <Register name="l8"> 1 </Register>  
+        		 <Register name="l12"> 1 </Register>   -->
                 <!-- lpGBT-v0 = 0 , lpGBT-v1 = 1 -->
-        		<!-- <Register name="l8"> 0 </Register> 
-        		<Register name="l12"> 0 </Register>  -->
+        		<Register name="l8"> 0 </Register> 
+        		<Register name="l12"> 0 </Register> 
 		</Register>
 		<Register name="tx_polarity"> 
         		<Register name="l8"> 0 </Register>
@@ -153,7 +153,10 @@
     </OpticalGroup>
 
     <!--CONFIG-->
-    <Register name="clock_source">0</Register> <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
+    <!-- 15 - default (internal oscillator), 0 - AMC13 -->
+    <Register name="clock_source_u7">15</Register> 
+    <!-- 3 = internal oscillator (default), 1 = fmc_l8_clk1, 2 = fmc_l8_clk0, 0 = COAX_IN -->
+    <Register name="clock_source_u8">3</Register>
     <Register name="fc7_daq_cnfg">
     <!-- Clock control -->
     <Register name="clock">

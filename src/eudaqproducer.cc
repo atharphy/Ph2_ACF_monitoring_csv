@@ -52,7 +52,7 @@ int main(int argc, char** argv)
     try
     {
         LOG(INFO) << "Trying to connect to RunControl";
-        // cProducer.Connect();
+        cProducer.Connect();
     }
     catch(...)
     {
@@ -61,7 +61,7 @@ int main(int argc, char** argv)
     }
     LOG(INFO) << "Connected";
 
-    // while(cProducer.IsConnected()) { std::this_thread::sleep_for(std::chrono::seconds(1)); }
+    while(cProducer.IsConnected()) { std::this_thread::sleep_for(std::chrono::seconds(1)); }
 
     // as well damn if u want, cdz
     // cProducer.Destroy();
