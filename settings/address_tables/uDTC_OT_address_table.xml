@@ -4,9 +4,8 @@
 <node id="FPGA1" address="0x00000000" >
     <!-- FC7 system register address table -->
         <node id="sysreg" address="0x00000000" module="file://fc7_system_address_table.xml"/>
-        <node id="clock_source"     address="0x00000004" mask="0x00030000" description="Clock source switch, values: 3 = internal oscillator (default), 2 = backplane, 0 = AMC13"/>
         <node id="coax_select"      address="0x00000004" mask="0x00000800" description="Coax select, values : 1 = ( select internal oscillator) , 0 = select coax input"/>
-        <node id="clock_source_u7"  address="0x00000004" mask="0x00030000" description="Clock source switch, values: 3 = from clock_source_u8 (default), 2 = backplane, 0 = AMC13"/>
+        <node id="clock_source_u7"  address="0x00000004" mask="0x0003c000" description="Clock source switch, values (input to fabric-clk and input to cdce-ref-clk): 15 = both from clock_source_u8 (default), 12 = clock_source_u8/AMC13, 3 = AMC13/clock_source_u8, 0 = both from AMC13"/>
         <node id="clock_source_u8"  address="0x00000004" mask="0x00300000" description="Clock source switch, values: 3 = internal oscillator (default), 2 = fmc_l8_clk1, 1 = fmc_l8_clk0, 0 = COAX_IN"/>
     <!-- GLIB user logic registers -->
     <!-- firmware configurations -->
