@@ -5,7 +5,7 @@
 #include "Utils/argvparser.h"
 #include "boost/format.hpp"
 #include "tools/BackEndAlignment.h"
-#include "tools/BeamTestCheck2S.h"
+#include "tools/BeamTestCheck.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
 #include "tools/LatencyScan.h"
@@ -1132,7 +1132,7 @@ int main(int argc, char* argv[])
         cCng.fVerbose    = 1;
         cCng.fPrintEvery = 1;
 
-        BeamTestCheck2S cBeamTestCheck;
+        BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         cBeamTestCheck.ConfigureScans(cScanL1, cScanStubs);
@@ -1149,7 +1149,7 @@ int main(int argc, char* argv[])
         cGoodRuns << cRunNumber << "\n";
         cGoodRuns.close();
 
-        BeamTestCheck2S cBeamTestCheck;
+        BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         cBeamTestCheck.ConfigureScans(cScanL1, cScanStubs);
@@ -1166,7 +1166,7 @@ int main(int argc, char* argv[])
         cGoodRuns << cRunNumber << "\n";
         cGoodRuns.close();
 
-        BeamTestCheck2S cBeamTestCheck;
+        BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         cBeamTestCheck.ConfigureScans(cScanL1, cScanStubs);
@@ -1186,7 +1186,7 @@ int main(int argc, char* argv[])
         cGoodRuns << cRunNumber << "\n";
         cGoodRuns.close();
 
-        BeamTestCheck2S cBeamTestCheck;
+        BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         cBeamTestCheck.ConfigureScans(cScanL1, cScanStubs);
@@ -1202,8 +1202,8 @@ int main(int argc, char* argv[])
         cGoodRuns << cRunNumber << "\n";
         cGoodRuns.close();
 
-        uint8_t         cDisableFEs = (cmd.foundOption("DataMonitor")) ? convertAnyInt(cmd.optionValue("DataMonitor").c_str()) : 0;
-        BeamTestCheck2S cBeamTestCheck;
+        uint8_t       cDisableFEs = (cmd.foundOption("DataMonitor")) ? convertAnyInt(cmd.optionValue("DataMonitor").c_str()) : 0;
+        BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         if(cDisableFEs == 1) cBeamTestCheck.DisableAllFEs();
@@ -1222,8 +1222,8 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("read"))
     {
-        std::string     cRawFileName = cmd.foundOption("read") ? cmd.optionValue("read") : "";
-        BeamTestCheck2S cBeamTestCheck;
+        std::string   cRawFileName = cmd.foundOption("read") ? cmd.optionValue("read") : "";
+        BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.SetReadoutMode(1);
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
