@@ -64,11 +64,6 @@ void MonitorDQMPlotCBC::bookCBCPlots(TFile* theOutputFile, const DetectorContain
 void MonitorDQMPlotCBC::bookLpGBTPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName)
 {
     std::cout << __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
-    std::cout << __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
-    std::cout << __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
-    std::cout << __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
-    std::cout << __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
-    std::cout << __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
     // creating the histograms for all the chips:
     // create the GraphContainer<TGraph> as you would create a TGraph (it implements some feature needed to avoid memory
     // leaks in copying histograms like the move constructor)
