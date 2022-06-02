@@ -306,25 +306,25 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
                 LOG(INFO) << BOLDRED << "Could not word align-BE data for BeBoard#" << +cBoardId << " Link#" << +pOpticalGroup->getId() << " stub line " << +(cLineId - 1) << RESET;
                 throw std::runtime_error(std::string("Could not word align-BE data in LinkAlignmentOT..."));
             }
-            // check if I allow a bit-slip of 0
-            if(cThisBeBitSlip[cLineId] == 0)
-            {
-                size_t cMaxAttempts = 10;
-                size_t cIter        = 0;
-                do
-                {
-                    cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
-                    cAlignerInterface->GetLineStatus(cAlignerObjct);
-                    cAligned                = cAlignerInterface->IsLineWordAligned(cAlignerObjct);
-                    cThisBeBitSlip[cLineId] = cAlignerInterface->GetLineConfiguration().fBitslip;
-                    cIter++;
-                } while(cIter < cMaxAttempts && cThisBeBitSlip[cLineId] == 0);
-                if(cThisBeBitSlip[cLineId] == 0)
-                {
-                    LOG(INFO) << BOLDRED << "Bitslip of 0 found for BE-stub data for BeBoard#" << +cBoardId << " Link#" << +pOpticalGroup->getId() << " stub line " << +(cLineId - 1) << RESET;
-                    throw std::runtime_error(std::string("Bitslip of 0 for word-aligned BE data in LinkAlignmentOT..."));
-                }
-            }
+            // #FIXME Sarah ??? check if I allow a bit-slip of 0
+            // if(cThisBeBitSlip[cLineId] == 0)
+            // {
+            //     size_t cMaxAttempts = 10;
+            //     size_t cIter        = 0;
+            //     do
+            //     {
+            //         cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
+            //         cAlignerInterface->GetLineStatus(cAlignerObjct);
+            //         cAligned                = cAlignerInterface->IsLineWordAligned(cAlignerObjct);
+            //         cThisBeBitSlip[cLineId] = cAlignerInterface->GetLineConfiguration().fBitslip;
+            //         cIter++;
+            //     } while(cIter < cMaxAttempts && cThisBeBitSlip[cLineId] == 0);
+            //     if(cThisBeBitSlip[cLineId] == 0)
+            //     {
+            //         LOG(INFO) << BOLDRED << "Bitslip of 0 found for BE-stub data for BeBoard#" << +cBoardId << " Link#" << +pOpticalGroup->getId() << " stub line " << +(cLineId - 1) << RESET;
+            //         throw std::runtime_error(std::string("Bitslip of 0 for word-aligned BE data in LinkAlignmentOT..."));
+            //     }
+            // }
         }
     }
     // check for 0 bit slips
