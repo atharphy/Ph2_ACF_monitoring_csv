@@ -59,6 +59,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     }
     fDisableStubLogic = pDisableStubLogic;
 
+
     fWithCBC = false;
     fWithSSA = false;
     fWithMPA = false;
@@ -69,7 +70,8 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
         fWithCBC            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::CBC3) != cFrontEndTypes.end();
         fWithSSA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA) != cFrontEndTypes.end() ||
                    std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end();
-        fWithMPA = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA) != cFrontEndTypes.end();
+        fWithMPA = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA) != cFrontEndTypes.end() ||
+                   std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA2) != cFrontEndTypes.end();
         for(auto cFrontEndType: cFrontEndTypes)
         {
             if(std::find(cAllFrontEndTypes.begin(), cAllFrontEndTypes.end(), cFrontEndType) == cAllFrontEndTypes.end()) cAllFrontEndTypes.push_back(cFrontEndType);
@@ -80,37 +82,26 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     if(fWithMPA && !fWithSSA) LOG(INFO) << BOLDBLUE << "PedeNoise with MPAs" << RESET;
     if(fWithSSA && fWithMPA) LOG(INFO) << BOLDBLUE << "PedeNoise with SSAs+MPAs" << RESET;
 
-    if(fWithCBC)
+    for(auto cFrontEndType : cAllFrontEndTypes)
     {
-        CBCChannelGroupHandler theChannelGroupHandler;
-        theChannelGroupHandler.setChannelGroupParameters(16, 2); // 16*2*8
-        setChannelGroupHandler(theChannelGroupHandler);
-    }
-    if(fWithSSA && !fWithMPA)
-    {
-        SSAChannelGroupHandler theChannelGroupHandler;
-        theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
-        // temporary
-        setChannelGroupHandler(theChannelGroupHandler, cAllFrontEndTypes);
-    }
-    if(!fWithSSA && fWithMPA)
-    {
-        MPAChannelGroupHandler theChannelGroupHandler;
-        theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
-        setChannelGroupHandler(theChannelGroupHandler, cAllFrontEndTypes);
-        // setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA);
-        // setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA2);
-    }
-    if(fWithSSA && fWithMPA)
-    {
-        // SSAs
-        SSAChannelGroupHandler theSSAChannelGroupHandler;
-        theSSAChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
-        setChannelGroupHandler(theSSAChannelGroupHandler, FrontEndType::SSA);
-        // Now MPAs
-        MPAChannelGroupHandler theMPAChannelGroupHandler;
-        theMPAChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
-        setChannelGroupHandler(theMPAChannelGroupHandler, FrontEndType::MPA);
+        if(cFrontEndType == FrontEndType::CBC3)
+        {
+            CBCChannelGroupHandler theChannelGroupHandler;
+            theChannelGroupHandler.setChannelGroupParameters(16, 2); // 16*2*8
+            setChannelGroupHandler(theChannelGroupHandler);
+        }
+        else if(cFrontEndType == FrontEndType::SSA || cFrontEndType == FrontEndType::SSA2)
+        {
+            SSAChannelGroupHandler theChannelGroupHandler;
+            theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+            setChannelGroupHandler(theChannelGroupHandler, cFrontEndType);
+        }
+        else if(cFrontEndType == FrontEndType::MPA || cFrontEndType == FrontEndType::MPA2)
+        {
+            MPAChannelGroupHandler theChannelGroupHandler;
+            theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
+            setChannelGroupHandler(theChannelGroupHandler, cFrontEndType);
+        }
     }
 
     initializeRecycleBin();
@@ -410,9 +401,9 @@ void PedeNoise::Validate()
                     uint32_t       NCH = NCHANNELS;
                     if(cType == FrontEndType::CBC3)
                         NCH = NCHANNELS;
-                    else if(cType == FrontEndType::SSA)
+                    else if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
                         NCH = NSSACHANNELS;
-                    else if(cType == FrontEndType::MPA)
+                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
                         NCH = NMPACHANNELS;
                     //
                     for(uint32_t iChan = 0; iChan < NCH; iChan++)
@@ -429,14 +420,14 @@ void PedeNoise::Validate()
                                 std::string cRegName = "Channel" + (boost::format("%|03|") % (iChan + 1)).str();
                                 cRegVec.push_back({cRegName, 0xFF});
                             }
-                            if(cChip->getFrontEndType() == FrontEndType::SSA)
+                            if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 // char cRegName[17];
                                 // sprintf(cRegName, "THTRIMMING_S%03d", iChan + 1);
                                 std::string cRegName = "THTRIMMING_S" + (boost::format("%|03|") % (iChan + 1)).str();
                                 cRegVec.push_back({cRegName, 0x1F});
                             }
-                            if((cChip->getFrontEndType() == FrontEndType::MPA))
+                            if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
                             {
                                 // char cRegName[12];
                                 // sprintf(cRegName, "TrimDAC_P%04d", iChan + 1);
@@ -498,7 +489,7 @@ void PedeNoise::findPedestal(bool forceAllChannels)
                         fMeanStrips += tmpVthr;
                         cNStripChips++;
                     }
-                    if(cChip->getFrontEndType() == FrontEndType::MPA)
+                    if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
                     {
                         tmpVthr = static_cast<ReadoutChip*>(cChip)->getReg("ThDAC0");
                         fMeanPixels += tmpVthr;
@@ -556,9 +547,9 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
                         for(auto cChip: *cHybrid)
                         {
                             auto cType = cChip->getFrontEndType();
-                            if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA)
+                            if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
                                 fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cStripValue);
-                            else if(cType == FrontEndType::MPA)
+                            else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
                                 fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cPixelValue);
                         }
                     }
@@ -584,12 +575,12 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
                             auto cChipIdx       = cChip->getIndex();
                             auto cType          = cChip->getFrontEndType();
                             auto cChipOccupancy = theOccupancyContainer->at(cBoardIdx)->at(cOpticalGroupIdx)->at(cHybridIdx)->at(cChipIdx)->getSummary<Occupancy, Occupancy>().fOccupancy;
-                            if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA)
+                            if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
                             {
                                 cNStripChips++;
                                 cStripGlobalOccupancy += cChipOccupancy;
                             }
-                            else if(cType == FrontEndType::MPA)
+                            else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
                             {
                                 cNPixelChips++;
                                 cPixelGlobalOccupancy += cChipOccupancy;
@@ -748,7 +739,7 @@ void PedeNoise::extractPedeNoise()
 
                             float currentOccupancy = 0, previousOccupancy = 0, binCenter = 0;
                             auto  cType = chip->getFrontEndType();
-                            if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA)
+                            if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
                             {
                                 previousOccupancy = (previousStripIterator)
                                                         ->second->at(board->getIndex())
@@ -761,7 +752,7 @@ void PedeNoise::extractPedeNoise()
                                     mStripIt->second->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
                                 binCenter = (mStripIt->first + (previousStripIterator)->first) / 2.;
                             }
-                            else if(cType == FrontEndType::MPA)
+                            else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
                             {
                                 previousOccupancy = (previousPixelIterator)
                                                         ->second->at(board->getIndex())

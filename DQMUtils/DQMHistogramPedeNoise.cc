@@ -526,9 +526,9 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t pStripTh, uint16_t pPixelTh
                     {
                         auto     cType = fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getFrontEndType();
                         uint16_t cTh   = 0;
-                        if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA)
+                        if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
                             cTh = pStripTh;
-                        else if(cType == FrontEndType::MPA)
+                        else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
                             cTh = pPixelTh;
                         float tmpOccupancy      = channel.fOccupancy;
                         float tmpOccupancyError = channel.fOccupancyError;

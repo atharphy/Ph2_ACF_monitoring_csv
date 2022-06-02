@@ -91,7 +91,7 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
         }
     } // configure PA pattern on all SLVS lines
 
-    uint8_t cFirstLine = (std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA) != cFrontEndTypes.end()) ? 1 : 0;
+    uint8_t cFirstLine = (std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA) != cFrontEndTypes.end() || std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end()) ? 1 : 0;
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)

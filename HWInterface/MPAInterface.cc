@@ -708,7 +708,7 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
 
     if(dacName == "TrimDAC_P" or dacName == "ThresholdTrim")
     {
-        if(pMPA->getFrontEndType() == FrontEndType::MPA) dacTemplate = "TrimDAC_P%d";
+        dacTemplate = "TrimDAC_P%d";
     }
 
     else
