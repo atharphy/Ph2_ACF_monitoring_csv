@@ -449,6 +449,8 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
             uint8_t cTrainingShift = cChannel + 4 * (cGroup % 2);
             WriteChipReg(pChip, cTrainRxReg, (0x1 << cTrainingShift));
             std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
+            WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
+            std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
             // Check for lock
             std::string cRXLockedReg = "EPRX" + std::to_string(cGroup) + "Locked";
             uint8_t     cLockShift   = cChannel + 4;
@@ -468,6 +470,7 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
             WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
             std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
             cCurrPhase = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
+            LOG(INFO) << BOLDGREEN << "\t\t..Attempt# " << +cAttempt << "\t... RxPhase found  is... " << +cCurrPhase << RESET;
             cPhases.push_back(cCurrPhase);
             cUniquePhases.push_back(cCurrPhase);
         }
@@ -492,11 +495,16 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
 
         cSuccess = cSuccess && (cUniquePhases[cIndxBstPhase] != 15);
         if(cUniquePhases[cIndxBstPhase] != 15)
+        {
             LOG(INFO) << BOLDGREEN << "Group#" << +cGroup << " Channel#" << +cChannel << "...\t\t..Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] << RESET;
+            SetPhaseTap(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
+        }
         else
-            LOG(ERROR) << BOLDRED << "\t\t..Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] << RESET;
-        cOptimalTaps.push_back(cUniquePhases[cIndxBstPhase]);
-
+        {
+            LOG(INFO) << BOLDRED << "Group#" << +cGroup << " Channel#" << +cChannel << "\t\t..Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] << RESET;
+            ConfigureRxPhase(pChip, cGroup, cChannel, 0);
+            SetPhaseTap(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
+        }
         ConfigureRxPhase(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
     }
 
@@ -508,8 +516,31 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
     LOG(INFO) << BOLDMAGENTA << "Most frequent optimal tap is " << +cTapMode << RESET;
     uint8_t cMode = 0; // 2, continuous phase tracking : 0, fixed phase
     lpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, 2, cMode);
-    for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++) { ConfigureRxPhase(pChip, pGroups[cIndx], pChannels[cIndx], cOptimalTaps[cIndx]); }
+    // if(cTapMode!=15) for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++) { ConfigureRxPhase(pChip, pGroups[cIndx], pChannels[cIndx], cOptimalTaps[cIndx]); }
     return (cSuccess) ? cTapMode : 15;
+}
+
+uint8_t lpGBTInterface::GetPhaseTap(Chip* pChip, uint8_t pGroup, uint8_t pChannel)
+{
+    std::string cKey = "Group" + std::to_string(pGroup) + "Channel" + std::to_string(pChannel);
+    auto        cIt  = fPhaseTapMap.find(cKey);
+    if(cIt != fPhaseTapMap.end()) { return cIt->second; }
+    else
+    {
+        throw std::runtime_error(std::string("Unused Channel or Group!"));
+        return 15;
+    }
+}
+
+void lpGBTInterface::SetPhaseTap(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase)
+{
+    std::string cKey = "Group" + std::to_string(pGroup) + "Channel" + std::to_string(pChannel);
+    auto        cIt  = fPhaseTapMap.find(cKey);
+    if(cIt != fPhaseTapMap.end()) { cIt->second = pPhase; }
+    else
+    {
+        throw std::runtime_error(std::string("Unused Channel or Group!"));
+    }
 }
 
 void lpGBTInterface::PhaseAlignRx(Chip* pChip, const OpticalGroup* pOpticalGroup)
@@ -551,6 +582,7 @@ void lpGBTInterface::PhaseAlignRx(Chip* pChip, const OpticalGroup* pOpticalGroup
     }
     // Set back Rx groups to fixed phase
     lpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], lpGBTconstants::rxPhaseTracking);
+    // If still used: check 2S config
 }
 // ################################
 // # LpGBT Block Status functions #

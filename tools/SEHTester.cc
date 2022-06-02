@@ -84,11 +84,14 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
     float cVolts = 0;
     float I_SEH;
     float U_SEH;
-    while(cVolts < 10.01)
+    float cVoltages[] = {0.,   0.5,  1.,  1.5, 2., 2.5, 3.,  3.6, 3.8, 4.0, 4.2, 4.4, 4.6, 4.8, 5.,  6.,  7., 8.,  9.,  10., 10.1, 10.2, 10.3,
+                         10.4, 10.5, 10., 9.,  8., 7.,  6.8, 6.6, 6.4, 6.2, 6.0, 5,   4.8, 4.6, 4.4, 4.2, 4., 3.8, 3.6, 3.0, 2.0,  1.0,  0.};
+    for(auto& voltage: cVoltages)
+    // while(cVolts < 10.01)
     {
-        std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(cVolts) + ",";
+        std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(voltage) + ",";
         fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
-        std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1200));
 
 #ifdef __TCP_SERVER__
         I_SEH = this->getMeasurement("read_supply:I_SEH");
@@ -117,6 +120,8 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
     cUinIinGraph->GetYaxis()->SetTitle("Iin [A]");
 
     cUinIinCanvas->Write();
+    std::string setVoltageMessage2 = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(10.5) + ",";
+    fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage2);
 }
 
 int SEHTester::exampleFit()
@@ -285,6 +290,34 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     fillSummaryTree("BiasDone", 1);
 }
+
+void SEHTester::SetupExternalTestLeakageCurrent(uint16_t pHvSet, std::string powerSupplyId, std::string channelId)
+{
+#ifdef __TCP_SERVER__
+    fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:1,hvmonx7Relay:0,hvmonx8Relay:0,HVDAC_setvalue:" + std::to_string(0) + ",");
+#else
+    flpGBTInterface->getExternalController()->getInterface().set_HV(true, false, false, 0);
+#endif
+    std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(-1 * static_cast<float>(pHvSet)) + ",";
+    fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+    setVoltageMessage = "TurnOn,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
+    fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+}
+
+void SEHTester::EndExternalTestLeakageCurrent(std::string powerSupplyId, std::string channelId)
+{
+#ifdef __TCP_SERVER__
+    fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:1,hvmonx7Relay:0,hvmonx8Relay:0,HVDAC_setvalue:" + std::to_string(0) + ",");
+#else
+    flpGBTInterface->getExternalController()->getInterface().set_HV(true, false, false, 0);
+#endif
+    std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(-1 * static_cast<float>(0)) + ",";
+    fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+    setVoltageMessage = "TurnOff,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
+    fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+    fillSummaryTree("ExternalLeakDone", 1);
+}
+
 void SEHTester::ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTime, std::string powerSupplyId, std::string channelId)
 {
     // time_t startTime;
@@ -432,6 +465,8 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
 #else
     flpGBTInterface->getExternalController()->getInterface().set_HV(false, true, true, 0);
 #endif
+    std::this_thread::sleep_for(std::chrono::milliseconds(15000));
+
     std::vector<float> cHvSetValVect;
     std::vector<float> cVHVJ7ValVect;
     std::vector<float> cVHVJ8ValVect;
@@ -446,6 +481,7 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
     setVoltageMessage = "TurnOn,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
+    std::this_thread::sleep_for(std::chrono::milliseconds(15000));
     for(int cHvSet = 0; cHvSet <= 1000; cHvSet += 100)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -549,27 +585,27 @@ void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
     // check if the critical temperature of -35C has been reached
     flpGBTInterface->getExternalController()->getInterface().read_temperature(flpGBTInterface->getExternalController()->getInterface().Temp1, T);
     fillSummaryTree("StartTemperature", T);
-    if(T < -35.0)
-    {
-        // if so add additional load to the lpGBT side of the hybrid to
-        // ensure larger currents and stop the negative over-current prottection
-        // of the bPOL
-        // 0x090 correcponds to 91mA a translates to 7mA of current draw
-        // before turning on the service hybrid
-        uint32_t cLeftLoadValue = pLeftLoadValue;
-        if(pLeftLoadValue < 0x090) { cLeftLoadValue = 0x090; }
-        flpGBTInterface->getExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
-        flpGBTInterface->getExternalController()->getInterface().set_load2(true, false, cLeftLoadValue); // 1 step = 635uA 0xfff = 2.6A
-        // waiting 7 seconds before turnin on the hybrid ensures propper
-        // discharge of the side and lets the current rise so that the negative
-        // over-current protection does not activate
-        std::this_thread::sleep_for(std::chrono::milliseconds(7000));
-    }
-    else
-    {
-        flpGBTInterface->getExternalController()->getInterface().set_load2(true, false, pLeftLoadValue);
-        flpGBTInterface->getExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
-    }
+    // if(T < -35.0)
+    // {
+    //     // if so add additional load to the lpGBT side of the hybrid to
+    //     // ensure larger currents and stop the negative over-current prottection
+    //     // of the bPOL
+    //     // 0x090 correcponds to 91mA a translates to 7mA of current draw
+    //     // before turning on the service hybrid
+    //     uint32_t cLeftLoadValue = pLeftLoadValue;
+    //     if(pLeftLoadValue < 0x090) { cLeftLoadValue = 0x090; }
+    //     flpGBTInterface->getExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
+    //     flpGBTInterface->getExternalController()->getInterface().set_load2(true, false, cLeftLoadValue); // 1 step = 635uA 0xfff = 2.6A
+    //     // waiting 7 seconds before turnin on the hybrid ensures propper
+    //     // discharge of the side and lets the current rise so that the negative
+    //     // over-current protection does not activate
+    //     std::this_thread::sleep_for(std::chrono::milliseconds(7000));
+    // }
+    // else
+    // {
+    flpGBTInterface->getExternalController()->getInterface().set_load2(true, false, pLeftLoadValue);
+    flpGBTInterface->getExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
+    //}
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("TurnOn");
 #else
@@ -601,14 +637,14 @@ void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
     flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().P2V5_VTRx_MON, U_P2V5);
     fillSummaryTree("TurnOnLoadRight", I_P1V2_R);
     fillSummaryTree("TurnOnLoadLeft", I_P1V2_L);
-    if(T < -35.0)
-    {
-        // wait 4 seconds
-        std::this_thread::sleep_for(std::chrono::milliseconds(4000));
-        // to prevent indroducing a systematic current draw at -35C we turn
-        // the load off
-        flpGBTInterface->getExternalController()->getInterface().set_load2(false, false, pLeftLoadValue); // 1 step = 635uA 0xfff = 2.6A
-    }
+    // if(T < -35.0)
+    // {
+    //     // wait 4 seconds
+    //     std::this_thread::sleep_for(std::chrono::milliseconds(4000));
+    //     // to prevent indroducing a systematic current draw at -35C we turn
+    //     // the load off
+    //     flpGBTInterface->getExternalController()->getInterface().set_load2(false, false, pLeftLoadValue); // 1 step = 635uA 0xfff = 2.6A
+    // }
 #endif
 }
 void SEHTester::TurnOff()
