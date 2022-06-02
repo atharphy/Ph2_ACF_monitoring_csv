@@ -678,10 +678,13 @@ bool LinkAlignmentOT::LineTuning(const Chip* pChip, uint8_t pLineId, uint8_t pAl
 
         cAttempts++;
     } while(!cSuccess && cAttempts < 10);
-    if(cSuccess && pLineId == 1 && (pChip->getFrontEndType() == FrontEndType::CBC3 || pChip->getFrontEndType() == FrontEndType::SSA || pChip->getFrontEndType() == FrontEndType::SSA2 || pChip->getFrontEndType() == FrontEndType::MPA || pChip->getFrontEndType() == FrontEndType::MPA2))
+    if(cSuccess && pLineId == 1 &&
+       (pChip->getFrontEndType() == FrontEndType::CBC3 || pChip->getFrontEndType() == FrontEndType::SSA || pChip->getFrontEndType() == FrontEndType::SSA2 ||
+        pChip->getFrontEndType() == FrontEndType::MPA || pChip->getFrontEndType() == FrontEndType::MPA2))
     {
         LOG(INFO) << BOLDBLUE << "Forcing L1A line to match alignment result for first stub line." << RESET;
-        uint8_t cBitslip = cWordAlignmentStatus.second + (uint8_t)(pChip->getFrontEndType() == FrontEndType::SSA || pChip->getFrontEndType() == FrontEndType::SSA2 || pChip->getFrontEndType() == FrontEndType::MPA || pChip->getFrontEndType() == FrontEndType::MPA2);
+        uint8_t cBitslip = cWordAlignmentStatus.second + (uint8_t)(pChip->getFrontEndType() == FrontEndType::SSA || pChip->getFrontEndType() == FrontEndType::SSA2 ||
+                                                                   pChip->getFrontEndType() == FrontEndType::MPA || pChip->getFrontEndType() == FrontEndType::MPA2);
         ManuallyConfigureLine(pChip, pLineId, cPhaseAlignmentStatus.second, cBitslip);
     }
     return cSuccess;

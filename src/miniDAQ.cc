@@ -246,7 +246,8 @@ int main(int argc, char* argv[])
                     if(cReadoutChip->getFrontEndType() == FrontEndType::SSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA2) continue;
                     if(cTriggerLatency != 0) continue;
                     cTriggerLatency = cTool.fReadoutChipInterface->ReadChipReg(cReadoutChip, "TriggerLatency");
-                    if(cReadoutChip->getFrontEndType() == FrontEndType::MPA || cReadoutChip->getFrontEndType() == FrontEndType::MPA2) cReTimePix = cTool.fReadoutChipInterface->ReadChipReg(cReadoutChip, "RetimePix");
+                    if(cReadoutChip->getFrontEndType() == FrontEndType::MPA || cReadoutChip->getFrontEndType() == FrontEndType::MPA2)
+                        cReTimePix = cTool.fReadoutChipInterface->ReadChipReg(cReadoutChip, "RetimePix");
                 }
             }
         }

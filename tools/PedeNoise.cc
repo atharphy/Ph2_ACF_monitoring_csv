@@ -59,7 +59,6 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     }
     fDisableStubLogic = pDisableStubLogic;
 
-
     fWithCBC = false;
     fWithSSA = false;
     fWithMPA = false;
@@ -82,7 +81,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     if(fWithMPA && !fWithSSA) LOG(INFO) << BOLDBLUE << "PedeNoise with MPAs" << RESET;
     if(fWithSSA && fWithMPA) LOG(INFO) << BOLDBLUE << "PedeNoise with SSAs+MPAs" << RESET;
 
-    for(auto cFrontEndType : cAllFrontEndTypes)
+    for(auto cFrontEndType: cAllFrontEndTypes)
     {
         if(cFrontEndType == FrontEndType::CBC3)
         {

@@ -706,10 +706,7 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
     assert(localRegValues.size() == pMPA->getNumberOfChannels());
     std::string dacTemplate;
 
-    if(dacName == "TrimDAC_P" or dacName == "ThresholdTrim")
-    {
-        dacTemplate = "TrimDAC_P%d";
-    }
+    if(dacName == "TrimDAC_P" or dacName == "ThresholdTrim") { dacTemplate = "TrimDAC_P%d"; }
 
     else
         LOG(ERROR) << "Error, DAC " << dacName << " is not a Local DAC";

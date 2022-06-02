@@ -164,9 +164,9 @@ void OTTool::Prepare()
     for(auto cBoard: *fDetectorContainer)
     {
         auto cConnectedFEs = cBoard->connectedFrontEndTypes();
-        fWithSSA           = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return (x == FrontEndType::SSA || x == FrontEndType::SSA2); }) != cConnectedFEs.end()) ? 1 : 0;
-        fWithMPA           = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return (x == FrontEndType::MPA || x == FrontEndType::MPA2); }) != cConnectedFEs.end()) ? 1 : 0;
-        fWithCBC           = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return x == FrontEndType::CBC3; }) != cConnectedFEs.end()) ? 1 : 0;
+        fWithSSA = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return (x == FrontEndType::SSA || x == FrontEndType::SSA2); }) != cConnectedFEs.end()) ? 1 : 0;
+        fWithMPA = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return (x == FrontEndType::MPA || x == FrontEndType::MPA2); }) != cConnectedFEs.end()) ? 1 : 0;
+        fWithCBC = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return x == FrontEndType::CBC3; }) != cConnectedFEs.end()) ? 1 : 0;
         for(auto cOpticalGroup: *cBoard)
         {
             fWithLpGBT = (cOpticalGroup->flpGBT != nullptr) ? 1 : 0;
@@ -1095,7 +1095,8 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
             for(auto cChip: *cHybrid)
             {
                 uint16_t cLatency = 0;
-                if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2) { cLatency = cChip->getReg("L1Offset_2_ALL") << 8 | cChip->getReg("L1Offset_1_ALL"); }
+                if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                { cLatency = cChip->getReg("L1Offset_2_ALL") << 8 | cChip->getReg("L1Offset_1_ALL"); }
                 else if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
                     cLatency = cChip->getReg("L1-Latency_MSB") << 8 | cChip->getReg("L1-Latency_LSB");
