@@ -470,7 +470,7 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
             WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
             std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
             cCurrPhase = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
-            LOG(INFO) << BOLDGREEN << "\t\t..Attempt# " << +cAttempt << "\t... RxPhase found  is... " << +cCurrPhase << RESET;
+            LOG(DEBUG) << BOLDGREEN << "\t\t..Attempt# " << +cAttempt << "\t... RxPhase found  is... " << +cCurrPhase << RESET;
             cPhases.push_back(cCurrPhase);
             cUniquePhases.push_back(cCurrPhase);
         }
@@ -494,17 +494,15 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
         }
 
         cSuccess = cSuccess && (cUniquePhases[cIndxBstPhase] != 15);
+
         if(cUniquePhases[cIndxBstPhase] != 15)
         {
             LOG(INFO) << BOLDGREEN << "Group#" << +cGroup << " Channel#" << +cChannel << "...\t\t..Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] << RESET;
             SetPhaseTap(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
         }
         else
-        {
-            LOG(INFO) << BOLDRED << "Group#" << +cGroup << " Channel#" << +cChannel << "\t\t..Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] << RESET;
-            ConfigureRxPhase(pChip, cGroup, cChannel, 0);
-            SetPhaseTap(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
-        }
+            LOG(ERROR) << BOLDRED << "\t\t..Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] << RESET;
+        cOptimalTaps.push_back(cUniquePhases[cIndxBstPhase]);
         ConfigureRxPhase(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
     }
 
