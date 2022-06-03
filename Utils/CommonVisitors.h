@@ -259,7 +259,7 @@ struct ThresholdVisitor : public HwDescriptionVisitor
             else
                 LOG(ERROR) << "Unknown option " << fOption;
         }
-        else if(pCbc.getFrontEndType() == FrontEndType::SSA)
+        else if(pCbc.getFrontEndType() == FrontEndType::SSA || pCbc.getFrontEndType() == FrontEndType::SSA2)
         {
             if(fOption == 'w')
             {
@@ -363,7 +363,7 @@ struct LatencyVisitor : public HwDescriptionVisitor
             }
         }
 
-        else if(pCbc.getFrontEndType() == FrontEndType::SSA)
+        else if(pCbc.getFrontEndType() == FrontEndType::SSA || pCbc.getFrontEndType() == FrontEndType::SSA2)
         {
             if(fOption == 'w')
             {
