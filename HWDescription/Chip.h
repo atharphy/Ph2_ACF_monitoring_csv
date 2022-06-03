@@ -162,7 +162,9 @@ class Chip : public FrontEndDescription
     void            printChipType(std::ostream& os) const
     {
         if(fType == FrontEndType::SSA) os << "FrontEndType\t--> SSA";
+        if(fType == FrontEndType::SSA2) os << "FrontEndType\t--> SSA2";
         if(fType == FrontEndType::MPA) os << "FrontEndType\t--> MPA";
+        if(fType == FrontEndType::MPA2) os << "FrontEndType\t--> MPA2";
         if(fType == FrontEndType::CBC3) os << "FrontEndType\t--> CB3";
         if(fType == FrontEndType::CIC) os << "FrontEndType\t--> CIC";
         if(fType == FrontEndType::CIC2) os << "FrontEndType\t--> CIC2";

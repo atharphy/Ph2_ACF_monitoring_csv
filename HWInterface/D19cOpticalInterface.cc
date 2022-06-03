@@ -35,13 +35,7 @@ bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem)
     }
     if(cWaitCounter == 0)
     {
-        uint16_t    cState           = flpGBTSlowControlWorkerInterface->GetStateFSM(cFunctionId);
-        uint8_t     cWorkerState     = (cState & 0xFF);
-        uint8_t     cFunctionState   = (cState & (0xFF << 8)) >> 8;
-        std::string cWorkerStateDesc = LpGBTSlowControlWorker::WORKER_FSM_STATE_MAP.at(cWorkerState);
-        std::string cFunctionStateDesc =
-            (pChip->getFrontEndType() == FrontEndType::LpGBT) ? LpGBTSlowControlWorker::IC_FSM_STATE_MAP.at(cFunctionState) : LpGBTSlowControlWorker::FE_FSM_STATE_MAP.at(cFunctionState);
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite : Tool stuck - Worker state = " << cWorkerStateDesc << " - Function State = " << cFunctionStateDesc << RESET;
+        flpGBTSlowControlWorkerInterface->PrintStateFSM();
         return false;
     }
     uint8_t cTryCntr = flpGBTSlowControlWorkerInterface->GetTryCntr(cFunctionId);
@@ -52,9 +46,14 @@ bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem)
     }
     auto    cReply     = flpGBTSlowControlWorkerInterface->ReadReply(1);
     uint8_t cErrorCode = (cReply[0] & (0xFF << 8)) >> 8;
+    uint8_t cStatusI2C = (cReply[0] & (0xFF << 0)) >> 0;
     if(cErrorCode != 0)
     {
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleRead : Error Code is " << +cErrorCode << RESET;
+        if(pChip->getFrontEndType() == FrontEndType::LpGBT)
+            LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleRead -- Error Code : " << +cErrorCode << RESET;
+        else
+            LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleRead -- Error Code : " << +cErrorCode << " -- I2C Status : " << +cStatusI2C << RESET;
+        LOG(ERROR) << BOLDRED << "Chip code : " << +pChip->getChipCode() << " -- Chip Id : " << +pChip->getId() << " -- Register address 0x" << std::hex << +pItem.fAddress << RESET;
         return false;
     }
     pItem.fValue = (cReply[0] & (0xFF << 0)) >> 0;
@@ -76,13 +75,7 @@ bool D19cOpticalInterface::WriteChipRegister(Chip* pChip, ChipRegItem& pItem, bo
     }
     if(cWaitCounter == 0)
     {
-        uint16_t    cState           = flpGBTSlowControlWorkerInterface->GetStateFSM(cFunctionId);
-        uint8_t     cWorkerState     = (cState & 0xFF);
-        uint8_t     cFunctionState   = (cState & (0xFF << 8)) >> 8;
-        std::string cWorkerStateDesc = LpGBTSlowControlWorker::WORKER_FSM_STATE_MAP.at(cWorkerState);
-        std::string cFunctionStateDesc =
-            (pChip->getFrontEndType() == FrontEndType::LpGBT) ? LpGBTSlowControlWorker::IC_FSM_STATE_MAP.at(cFunctionState) : LpGBTSlowControlWorker::FE_FSM_STATE_MAP.at(cFunctionState);
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite : Tool stuck - Worker state = " << cWorkerStateDesc << " - Function State = " << cFunctionStateDesc << RESET;
+        flpGBTSlowControlWorkerInterface->PrintStateFSM();
         return false;
     }
     uint8_t cTryCntr = flpGBTSlowControlWorkerInterface->GetTryCntr(cFunctionId);
@@ -93,10 +86,14 @@ bool D19cOpticalInterface::WriteChipRegister(Chip* pChip, ChipRegItem& pItem, bo
     }
     auto    cReply     = flpGBTSlowControlWorkerInterface->ReadReply(1);
     uint8_t cErrorCode = (cReply[0] & (0xFF << 8)) >> 8;
+    uint8_t cStatusI2C = (cReply[0] & (0xFF << 0)) >> 0;
     if(cErrorCode != 0)
     {
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite : Error Code is " << +cErrorCode << RESET;
-        LOG(ERROR) << BOLDRED << "Chip code : " << +pChip->getChipCode() << " , register address 0x" << std::hex << +pItem.fAddress << RESET;
+        if(pChip->getFrontEndType() == FrontEndType::LpGBT)
+            LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite -- Error Code : " << +cErrorCode << RESET;
+        else
+            LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite -- Error Code : " << +cErrorCode << " -- I2C Status : " << +cStatusI2C << RESET;
+        LOG(ERROR) << BOLDRED << "Chip code : " << +pChip->getChipCode() << " -- Chip Id : " << +pChip->getId() << " -- Register address 0x" << std::hex << +pItem.fAddress << RESET;
         return false;
     }
     uint8_t cReadBack = (cReply[0] & (0xFF << 0)) >> 0;
@@ -169,27 +166,17 @@ bool D19cOpticalInterface::MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uin
     }
     if(cWaitCounter == 0)
     {
-        uint16_t    cState             = flpGBTSlowControlWorkerInterface->GetStateFSM(cFunctionId);
-        uint8_t     cWorkerState       = (cState & 0xFF);
-        uint8_t     cFunctionState     = (cState & (0xFF << 8)) >> 8;
-        std::string cWorkerStateDesc   = LpGBTSlowControlWorker::WORKER_FSM_STATE_MAP.at(cWorkerState);
-        std::string cFunctionStateDesc = LpGBTSlowControlWorker::I2C_FSM_STATE_MAP.at(cFunctionState);
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleByteReadI2C : Tool stuck - Worker state = " << cWorkerStateDesc << " - Function State = " << cFunctionStateDesc << RESET;
+        flpGBTSlowControlWorkerInterface->PrintStateFSM();
         return false;
     }
     uint8_t cTryCntr = flpGBTSlowControlWorkerInterface->GetTryCntr(cFunctionId);
     if(cTryCntr > 0) { LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiByteWriteI2C : Tried " << +cTryCntr << "/" << +fConfiguration.fMaxRetryI2C << " before success" << RESET; }
     auto    cReply     = flpGBTSlowControlWorkerInterface->ReadReply(1);
     uint8_t cErrorCode = (cReply[0] & (0xFF << 8)) >> 8;
+    uint8_t cStatusI2C = (cReply[0] & (0xFF << 0)) >> 0;
     if(cErrorCode != 0)
     {
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiByteWriteI2C : Error Code is " << +cErrorCode << RESET;
-        return false;
-    }
-    uint8_t cStatus = (cReply[0] & (0xFF << 0)) >> 0;
-    if(cStatus != 4)
-    {
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiByteWriteI2C : I2C Status is " << +cStatus << RESET;
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiByteWriteI2C -- Error Code : " << +cErrorCode << " -- I2C Status : " << +cStatusI2C << RESET;
         return false;
     }
     return true;
@@ -215,21 +202,17 @@ uint8_t D19cOpticalInterface::SingleByteReadI2C(Ph2_HwDescription::Chip* pChip, 
     }
     if(cWaitCounter == 0)
     {
-        uint16_t    cState             = flpGBTSlowControlWorkerInterface->GetStateFSM(cFunctionId);
-        uint8_t     cWorkerState       = (cState & 0xFF);
-        uint8_t     cFunctionState     = (cState & (0xFF << 8)) >> 8;
-        std::string cWorkerStateDesc   = LpGBTSlowControlWorker::WORKER_FSM_STATE_MAP.at(cWorkerState);
-        std::string cFunctionStateDesc = LpGBTSlowControlWorker::I2C_FSM_STATE_MAP.at(cFunctionState);
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleByteReadI2C : Tool stuck - Worker state = " << cWorkerStateDesc << " - Function State = " << cFunctionStateDesc << RESET;
-        return 0;
+        flpGBTSlowControlWorkerInterface->PrintStateFSM();
+        return false;
     }
     uint8_t cTryCntr = flpGBTSlowControlWorkerInterface->GetTryCntr(cFunctionId);
     if(cTryCntr > 0) { LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleByteReadI2C : Tried " << +cTryCntr << "/" << +fConfiguration.fMaxRetryI2C << " before success" << RESET; }
     auto    cReply     = flpGBTSlowControlWorkerInterface->ReadReply(1);
     uint8_t cErrorCode = (cReply[0] & (0xFF << 8)) >> 8;
+    uint8_t cStatusI2C = (cReply[0] & (0xFF << 0)) >> 0;
     if(cErrorCode != 0)
     {
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleByteReadI2C : Error Code is " << +cErrorCode << RESET;
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleByteReadI2C -- Error Code : " << +cErrorCode << " -- I2C Status : " << +cStatusI2C << RESET;
         return 0;
     }
     uint8_t cReadBack = (cReply[0] & (0xFF << 0)) >> 0;
