@@ -43,14 +43,14 @@ void PSROHTester::Initialise()
 void PSROHTester::MeasureInputIV(const std::string& cTestStep)
 {
     auto cTestCardInterface = flpGBTInterface->getExternalController()->getInterface();
-    for(auto cBoard : *fDetectorContainer)
+    for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
-        for(auto& cMeas : fInputIVMap)
+        for(auto& cMeas: fInputIVMap)
         {
             float cVal;
             cTestCardInterface.adc_get(cMeas.second, cVal);
-            LOG(INFO) << BOLDYELLOW << "Measuring " << cMeas.first << " to be at " << +(cVal/1000) << " [SI] during phase " << cTestStep << RESET;
+            LOG(INFO) << BOLDYELLOW << "Measuring " << cMeas.first << " to be at " << +(cVal / 1000) << " [SI] during phase " << cTestStep << RESET;
         }
     }
 }

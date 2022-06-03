@@ -13,8 +13,14 @@ const uint8_t MULTI_BYTE_WRITE_I2C = 5;
 const uint8_t SINGLE_READ_FE       = 6;
 const uint8_t SINGLE_WRITE_FE      = 7;
 
-const std::map<int, std::string>
-                                 WORKER_FSM_STATE_MAP{{0, "UNDEFINED"}, {1, "IDLE"}, {2, "GET_COMMAND_PAYLOAD0"}, {3, "GET_FUNCTION_ARG0"}, {4, "GET_COMMAND_PAYLOAD1"}, {5, "GET_FUNCTION_ARG1"}, {6, "START_FUNCTION"}, {7, "FORWARD_REPLY"}};
+const std::map<int, std::string> WORKER_FSM_STATE_MAP{{0, "UNDEFINED"},
+                                                      {1, "IDLE"},
+                                                      {2, "GET_COMMAND_PAYLOAD0"},
+                                                      {3, "GET_FUNCTION_ARG0"},
+                                                      {4, "GET_COMMAND_PAYLOAD1"},
+                                                      {5, "GET_FUNCTION_ARG1"},
+                                                      {6, "START_FUNCTION"},
+                                                      {7, "FORWARD_REPLY"}};
 
 const std::map<int, std::string> IC_FSM_STATE_MAP{{0, "UNDEFINED"},
                                                   {1, "IDLE"},
@@ -74,7 +80,7 @@ class D19clpGBTSlowControlWorkerInterface : public D19cCommandProcessorInterface
     std::vector<uint32_t> EncodeCommand(uint8_t pFunctionId, Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerify = false);
     bool                  IsDone(uint8_t pFunctionId);
     uint8_t               GetTryCntr(uint8_t pFunctionId);
-    void              PrintStateFSM();
+    void                  PrintStateFSM();
     void                  SelectLink(uint8_t pLinkId);
 };
 } // namespace Ph2_HwInterface

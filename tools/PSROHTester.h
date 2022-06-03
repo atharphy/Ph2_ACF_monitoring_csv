@@ -93,7 +93,7 @@ class PSROHTester : public OTHybridTester
         {{"cic_in_6", 0}, {"cic_in_5", 1}, {"cic_in_4", 2}, {"cic_in_3", 3}, {"cic_in_2", 4}, {"cic_in_1", 5}, {"cic_in_0", 6}, {"r_i2c_sda_i", 7}, {"l_i2c_sda_i", 8}, {"na", 9}};
 
     std::map<std::string, TC_PSROH::measurement> fInputIVMap = {{"_3V3", TC_PSROH::measurement::_3V3},
-							        {"_2V55", TC_PSROH::measurement::_2V55},
+                                                                {"_2V55", TC_PSROH::measurement::_2V55},
                                                                 {"_1V25", TC_PSROH::measurement::_1V25},
                                                                 {"_1V25_REF", TC_PSROH::measurement::_1V25_REF},
                                                                 {"_625mV_REF", TC_PSROH::measurement::_625mV_REF},

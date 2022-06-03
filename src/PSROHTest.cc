@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
     std::string cConvertUserFileName  = (cmd.foundOption("convert-userfile")) ? cmd.optionValue("convert-userfile") : "fcmd_file.txt";
     std::string cRefBRAMAddr          = (cmd.foundOption("read-ref-bram")) ? cmd.optionValue("read-ref-bram") : "0";
     std::string cCheckBRAMAddr        = (cmd.foundOption("read-check-bram")) ? cmd.optionValue("read-check-bram") : "0";
-    bool cMeasureInputIV = cmd.foundOption("measure-input-iv");
+    bool        cMeasureInputIV       = cmd.foundOption("measure-input-iv");
 
     cDirectory += Form("PS_ROH_%s", cHybridId.c_str());
 
@@ -168,7 +168,7 @@ int main(int argc, char* argv[])
     cTool.CreateResultDirectory(cDirectory);
     cTool.InitResultFile(cResultfile);
 
-    //Initilaise PSROH tester
+    // Initilaise PSROH tester
     PSROHTester cPSROHTester;
     cPSROHTester.Inherit(&cTool);
 
@@ -179,7 +179,7 @@ int main(int argc, char* argv[])
     LOG(INFO) << BOLDYELLOW << "Configuring FC7" << RESET;
     cTool.ConfigureHw();
 
-    //Initialise tester
+    // Initialise tester
     cPSROHTester.Initialise();
 
     if(cMeasureInputIV) cPSROHTester.MeasureInputIV("AFTER_CONFIG");
@@ -258,10 +258,10 @@ int main(int argc, char* argv[])
     /********************/
     /* TEST EYE OPENING */
     /********************/
-    if(cmd.foundOption("test-eom")) 
-    { 
-      uint8_t cEQAttenuation = cmd.foundOption("eq-attenuation") ? convertAnyInt(cmd.optionValue("eq-attenuation").c_str()) : 0;
-      cPSROHTester.LpGBTRunEyeOpeningMonitor(7, cEQAttenuation); 
+    if(cmd.foundOption("test-eom"))
+    {
+        uint8_t cEQAttenuation = cmd.foundOption("eq-attenuation") ? convertAnyInt(cmd.optionValue("eq-attenuation").c_str()) : 0;
+        cPSROHTester.LpGBTRunEyeOpeningMonitor(7, cEQAttenuation);
     }
 
     /***********************/
