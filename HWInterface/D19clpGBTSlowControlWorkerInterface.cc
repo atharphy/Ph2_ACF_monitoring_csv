@@ -66,27 +66,20 @@ std::vector<uint32_t> D19clpGBTSlowControlWorkerInterface::EncodeCommand(uint8_t
     return cCommand;
 }
 
-uint16_t D19clpGBTSlowControlWorkerInterface::GetStateFSM(uint8_t pFunctionId)
+void D19clpGBTSlowControlWorkerInterface::PrintStateFSM()
 {
+
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    uint32_t                              cStatus        = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
-    uint16_t                              cWorkerState   = cStatus & 0xFF;
-    uint16_t                              cFunctionState = 0;
-    if((pFunctionId == LpGBTSlowControlWorker::SINGLE_READ_IC) || (pFunctionId == LpGBTSlowControlWorker::SINGLE_WRITE_IC)) { cFunctionState = (cStatus & (0xFF << 8)) >> 8; }
-    else if((pFunctionId == LpGBTSlowControlWorker::SINGLE_BYTE_READ_I2C) || (pFunctionId == LpGBTSlowControlWorker::MULTI_BYTE_WRITE_I2C))
-    {
-        cFunctionState = (cStatus & (0xFF << 16)) >> 16;
-    }
-    else if((pFunctionId == LpGBTSlowControlWorker::SINGLE_READ_FE) || (pFunctionId == LpGBTSlowControlWorker::SINGLE_WRITE_FE))
-    {
-        cFunctionState = (cStatus & (0xFF << 24)) >> 24;
-    }
-    else
-    {
-        LOG(ERROR) << "D19clpGBTSlowControlWorkerInterface::GetStateFSM : LpGBT-SC Worker fuction doesn't exist" << RESET;
-        throw std::runtime_error("D19clpGBTSlowControlWorkerInterface::GetStateFSM failure");
-    }
-    return ((cFunctionState << 8) | (cWorkerState << 0));
+    uint32_t cState = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
+    uint8_t     cWorkerState     = (cState & 0xFF);
+    uint8_t     cFunctionStateIC   = (cState & (0xFF << 8)) >> 8;
+    uint8_t     cFunctionStateI2C   = (cState & (0xFF << 16)) >> 16;
+    uint8_t     cFunctionStateFE   = (cState & (0xFF << 24)) >> 24;
+    std::string cWorkerStateDesc = LpGBTSlowControlWorker::WORKER_FSM_STATE_MAP.at(cWorkerState);
+    std::string cFunctionStateDescIC = LpGBTSlowControlWorker::IC_FSM_STATE_MAP.at(cFunctionStateIC);
+    std::string cFunctionStateDescI2C = LpGBTSlowControlWorker::I2C_FSM_STATE_MAP.at(cFunctionStateI2C);
+    std::string cFunctionStateDescFE = LpGBTSlowControlWorker::FE_FSM_STATE_MAP.at(cFunctionStateFE);
+    LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite : Tool stuck - Worker state = " << cWorkerStateDesc << " - Function State IC = " << cFunctionStateDescIC << " - Function State I2C = " << cFunctionStateDescI2C << " - Function State FE = " << cFunctionStateDescFE << RESET;
 }
 
 bool D19clpGBTSlowControlWorkerInterface::IsDone(uint8_t pFunctionId)

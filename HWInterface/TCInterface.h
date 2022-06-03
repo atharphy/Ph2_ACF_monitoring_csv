@@ -27,13 +27,11 @@ class TCInterface
     TCInterface() { fPtr = new T(); }
     TCInterface(const std::string pName)
     {
-        std::cout << "Constructor TCInterface<" << pName << "> with string\n";
         fPtr  = new T();
         fName = pName;
     }
     ~TCInterface()
     {
-        std::cout << "Destructor TCInterface<" << fName << ">\n";
         if(fPtr != nullptr)
         {
             delete fPtr;
