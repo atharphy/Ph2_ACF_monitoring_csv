@@ -52,9 +52,14 @@ bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem)
     }
     auto    cReply     = flpGBTSlowControlWorkerInterface->ReadReply(1);
     uint8_t cErrorCode = (cReply[0] & (0xFF << 8)) >> 8;
+    uint8_t cStatusI2C = (cReply[0] & (0xFF << 0)) >> 0;
     if(cErrorCode != 0)
     {
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleRead : Error Code is " << +cErrorCode << RESET;
+        if(pChip->getFrontEndType() == FrontEndType::LpGBT)
+            LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleRead -- Error Code : " << +cErrorCode << RESET;
+        else
+            LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleRead -- Error Code : " << +cErrorCode << " -- I2C Status : " << +cStatusI2C << RESET;
+        LOG(ERROR) << BOLDRED << "Chip code : " << +pChip->getChipCode() << " -- Chip Id : " << +pChip->getId() << " -- Register address 0x" << std::hex << +pItem.fAddress << RESET;
         return false;
     }
     pItem.fValue = (cReply[0] & (0xFF << 0)) >> 0;
@@ -93,10 +98,14 @@ bool D19cOpticalInterface::WriteChipRegister(Chip* pChip, ChipRegItem& pItem, bo
     }
     auto    cReply     = flpGBTSlowControlWorkerInterface->ReadReply(1);
     uint8_t cErrorCode = (cReply[0] & (0xFF << 8)) >> 8;
+    uint8_t cStatusI2C = (cReply[0] & (0xFF << 0)) >> 0;
     if(cErrorCode != 0)
     {
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite : Error Code is " << +cErrorCode << RESET;
-        LOG(ERROR) << BOLDRED << "Chip code : " << +pChip->getChipCode() << " , register address 0x" << std::hex << +pItem.fAddress << RESET;
+        if(pChip->getFrontEndType() == FrontEndType::LpGBT)
+            LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite -- Error Code : " << +cErrorCode << RESET;
+        else
+            LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite -- Error Code : " << +cErrorCode << " -- I2C Status : " << +cStatusI2C << RESET;
+        LOG(ERROR) << BOLDRED << "Chip code : " << +pChip->getChipCode() << " -- Chip Id : " << +pChip->getId() << " -- Register address 0x" << std::hex << +pItem.fAddress << RESET;
         return false;
     }
     uint8_t cReadBack = (cReply[0] & (0xFF << 0)) >> 0;
@@ -181,15 +190,10 @@ bool D19cOpticalInterface::MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uin
     if(cTryCntr > 0) { LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiByteWriteI2C : Tried " << +cTryCntr << "/" << +fConfiguration.fMaxRetryI2C << " before success" << RESET; }
     auto    cReply     = flpGBTSlowControlWorkerInterface->ReadReply(1);
     uint8_t cErrorCode = (cReply[0] & (0xFF << 8)) >> 8;
+    uint8_t cStatusI2C = (cReply[0] & (0xFF << 0)) >> 0;
     if(cErrorCode != 0)
     {
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiByteWriteI2C : Error Code is " << +cErrorCode << RESET;
-        return false;
-    }
-    uint8_t cStatus = (cReply[0] & (0xFF << 0)) >> 0;
-    if(cStatus != 4)
-    {
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiByteWriteI2C : I2C Status is " << +cStatus << RESET;
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiByteWriteI2C -- Error Code : " << +cErrorCode << " -- I2C Status : " << +cStatusI2C << RESET;
         return false;
     }
     return true;
@@ -227,9 +231,10 @@ uint8_t D19cOpticalInterface::SingleByteReadI2C(Ph2_HwDescription::Chip* pChip, 
     if(cTryCntr > 0) { LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleByteReadI2C : Tried " << +cTryCntr << "/" << +fConfiguration.fMaxRetryI2C << " before success" << RESET; }
     auto    cReply     = flpGBTSlowControlWorkerInterface->ReadReply(1);
     uint8_t cErrorCode = (cReply[0] & (0xFF << 8)) >> 8;
+    uint8_t cStatusI2C = (cReply[0] & (0xFF << 0)) >> 0;
     if(cErrorCode != 0)
     {
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleByteReadI2C : Error Code is " << +cErrorCode << RESET;
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleByteReadI2C -- Error Code : " << +cErrorCode << " -- I2C Status : " << +cStatusI2C << RESET;
         return 0;
     }
     uint8_t cReadBack = (cReply[0] & (0xFF << 0)) >> 0;
