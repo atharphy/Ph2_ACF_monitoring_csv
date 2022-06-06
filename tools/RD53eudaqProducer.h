@@ -23,8 +23,8 @@ namespace EUDAQ
 const std::string EVENT    = "CMSIT";
 const int         WAIT     = 1000; // [ms]
 const int         NBITSTLU = 15;
-T const std::string FILERUNNUMBER("./RunNumber.txt");
-constexpr char      EUDAQproducerNAME[] = "RD53eudaqProducer";
+const std::string FILERUNNUMBER("./RunNumber.txt");
+constexpr char    EUDAQproducerNAME[] = "RD53eudaqProducer";
 } // namespace EUDAQ
 
 class RD53eudaqProducer : public eudaq::Producer
