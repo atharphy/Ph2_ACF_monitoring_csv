@@ -13,9 +13,17 @@ const uint8_t MULTI_BYTE_WRITE_I2C = 5;
 const uint8_t SINGLE_READ_FE       = 6;
 const uint8_t SINGLE_WRITE_FE      = 7;
 
-const std::map<int, std::string>
-                                 WORKER_FSM_STATE_MAP{{1, "IDLE"}, {2, "GET_COMMAND_PAYLOAD0"}, {3, "GET_FUNCTION_ARG0"}, {4, "GET_COMMAND_PAYLOAD1"}, {5, "GET_FUNCTION_ARG1"}, {6, "START_FUNCTION"}, {7, "FORWARD_REPLY"}};
-const std::map<int, std::string> IC_FSM_STATE_MAP{{1, "IDLE"},
+const std::map<int, std::string> WORKER_FSM_STATE_MAP{{0, "UNDEFINED"},
+                                                      {1, "IDLE"},
+                                                      {2, "GET_COMMAND_PAYLOAD0"},
+                                                      {3, "GET_FUNCTION_ARG0"},
+                                                      {4, "GET_COMMAND_PAYLOAD1"},
+                                                      {5, "GET_FUNCTION_ARG1"},
+                                                      {6, "START_FUNCTION"},
+                                                      {7, "FORWARD_REPLY"}};
+
+const std::map<int, std::string> IC_FSM_STATE_MAP{{0, "UNDEFINED"},
+                                                  {1, "IDLE"},
                                                   {2, "SEND_RD_RQ"},
                                                   {3, "FINALIZE_RD"},
                                                   {4, "LOAD_WR_DATA"},
@@ -26,7 +34,9 @@ const std::map<int, std::string> IC_FSM_STATE_MAP{{1, "IDLE"},
                                                   {9, "GET_REPLY_FRAME"},
                                                   {10, "VERIFY_REPLY_FRAME"},
                                                   {11, "GET_REPLY_DATA"}};
-const std::map<int, std::string> I2C_FSM_STATE_MAP{{1, "IDLE"},
+
+const std::map<int, std::string> I2C_FSM_STATE_MAP{{0, "UNDEFINED"},
+                                                   {1, "IDLE"},
                                                    {2, "WRITE_I2C_CONF_DATA"},
                                                    {3, "WRITE_I2C_CONF_CMD"},
                                                    {4, "WRITE_I2C_SLAVE_ADDR"},
@@ -45,7 +55,9 @@ const std::map<int, std::string> I2C_FSM_STATE_MAP{{1, "IDLE"},
                                                    {17, "CHECK_I2C_STAT"},
                                                    {18, "WAIT_IC_WR_DONE"},
                                                    {19, "WAIT_IC_RD_DONE"}};
-const std::map<int, std::string> FE_FSM_STATE_MAP{{1, "IDLE"},
+
+const std::map<int, std::string> FE_FSM_STATE_MAP{{0, "UNDEFINED"},
+                                                  {1, "IDLE"},
                                                   {2, "SEND_FE_RD_REQ"},
                                                   {3, "GET_FE_RD_VALUE"},
                                                   {4, "FORWARD_FE_RD_RESULT"},
@@ -68,7 +80,7 @@ class D19clpGBTSlowControlWorkerInterface : public D19cCommandProcessorInterface
     std::vector<uint32_t> EncodeCommand(uint8_t pFunctionId, Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerify = false);
     bool                  IsDone(uint8_t pFunctionId);
     uint8_t               GetTryCntr(uint8_t pFunctionId);
-    uint16_t              GetStateFSM(uint8_t pFunctionId);
+    void                  PrintStateFSM();
     void                  SelectLink(uint8_t pLinkId);
 };
 } // namespace Ph2_HwInterface

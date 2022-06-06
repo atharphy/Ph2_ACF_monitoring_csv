@@ -32,7 +32,7 @@ MPA2::MPA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t 
     fChipOriginalMask->enableAllChannels();
     fPartnerId = pPartnerId;
     loadfRegMap(filename);
-    setFrontEndType(FrontEndType::MPA);
+    setFrontEndType(FrontEndType::MPA2);
     for(auto& cMapItem: fRegMap)
     {
         if(cMapItem.first.find("_ALL") == std::string::npos) continue;
@@ -48,7 +48,7 @@ MPA2::MPA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartner
     fChipOriginalMask->enableAllChannels();
     fPartnerId = pPartnerId;
     loadfRegMap(filename);
-    setFrontEndType(FrontEndType::MPA);
+    setFrontEndType(FrontEndType::MPA2);
     for(auto& cMapItem: fRegMap)
     {
         if(cMapItem.first.find("_ALL") == std::string::npos) continue;

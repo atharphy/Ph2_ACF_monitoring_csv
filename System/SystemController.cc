@@ -67,18 +67,6 @@ void SystemController::Inherit(const SystemController* pController)
 
 void SystemController::Destroy()
 {
-    for(const auto cBoard: *fDetectorContainer)
-        if(cBoard->getBoardType() == BoardType::RD53)
-        {
-            try
-            {
-                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->PrintErrorsLVDS(); // @TMP@
-            }
-            catch(...)
-            {
-            }
-        }
-
     this->closeFileHandler();
 
     LOG(INFO) << BOLDRED << ">>> Destroying interfaces <<<" << RESET;
@@ -357,9 +345,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
         auto cConnectedFeTypes = cBoard->connectedFrontEndTypes();
         bool cMPAfound =
-            (std::find_if(cConnectedFeTypes.begin(), cConnectedFeTypes.end(), [](FrontEndType x) { return x == FrontEndType::MPA || x == FrontEndType::MPA2; }) != cConnectedFeTypes.end());
+            (std::find_if(cConnectedFeTypes.begin(), cConnectedFeTypes.end(), [](FrontEndType x) { return (x == FrontEndType::MPA || x == FrontEndType::MPA2); }) != cConnectedFeTypes.end());
         bool cSSAfound =
-            (std::find_if(cConnectedFeTypes.begin(), cConnectedFeTypes.end(), [](FrontEndType x) { return x == FrontEndType::SSA || x == FrontEndType::SSA2; }) != cConnectedFeTypes.end());
+            (std::find_if(cConnectedFeTypes.begin(), cConnectedFeTypes.end(), [](FrontEndType x) { return (x == FrontEndType::SSA || x == FrontEndType::SSA2); }) != cConnectedFeTypes.end());
         bool cCBCfound = (std::find_if(cConnectedFeTypes.begin(), cConnectedFeTypes.end(), [](FrontEndType x) { return x == FrontEndType::CBC3; }) != cConnectedFeTypes.end());
         for(auto cOpticalGroup: *cBoard)
         {
@@ -503,9 +491,6 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
         }
     }
     LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
-
-    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[pBoard->getId()])->PrintFrequencyLVDS(); // @TMP@
-
     LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
     RD53Event::ForkDecodingThreads();
 }

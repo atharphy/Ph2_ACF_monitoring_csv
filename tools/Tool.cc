@@ -446,7 +446,9 @@ void Tool::SaveResults()
         auto        cType  = static_cast<ReadoutChip*>(cChip.first)->getFrontEndType();
         if(cType == FrontEndType::CBC3) cDescr = "CBC";
         if(cType == FrontEndType::SSA) cDescr = "SSA";
+        if(cType == FrontEndType::SSA2) cDescr = "SSA2";
         if(cType == FrontEndType::MPA) cDescr = "MPA";
+        if(cType == FrontEndType::MPA2) cDescr = "MPA2";
 
         // Fabio: CBC specific -> to be moved out from Tool
         TString  cDirName = Form("Hybrid%d%s%d", static_cast<ReadoutChip*>(cChip.first)->getHybridId(), cDescr.c_str(), cChip.first->getId());
@@ -672,7 +674,7 @@ void Tool::dumpConfigFiles()
                         std::string cFilename = fDirectoryName + "/BE" + std::to_string(board->getId()) + "_OG" + std::to_string(opticalGroup->getId()) + "_FE" + std::to_string(hybrid->getId()) +
                                                 "_Chip" + std::to_string(chip->getId());
                         LOG(DEBUG) << BOLDBLUE << "Dumping readout chip configuration to " << cFilename << RESET;
-                        if(chip->getFrontEndType() == FrontEndType::SSA) cFilename += "SSA";
+                        if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2) cFilename += "SSA";
                         cFilename += ".txt";
                         chip->saveRegMap(cFilename.data());
                     }
