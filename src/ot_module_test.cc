@@ -6,7 +6,7 @@
 #include "Utils/argvparser.h"
 #include "boost/format.hpp"
 #include "tools/BackEndAlignment.h"
-#include "tools/BeamTestCheck2S.h"
+#include "tools/BeamTestCheck.h"
 #include "tools/CBCPulseShape.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
@@ -760,8 +760,9 @@ int main(int argc, char* argv[])
                         {
                             // and that readout mode is set
                             // make sure L1 latency is configured
-                            if(cChip->getFrontEndType() == FrontEndType::MPA) { (static_cast<PSInterface*>(cTool.fReadoutChipInterface))->digiInjection(cChip, cInjections, 0x01); }
-                            if(cChip->getFrontEndType() == FrontEndType::SSA)
+                            if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                            { (static_cast<PSInterface*>(cTool.fReadoutChipInterface))->digiInjection(cChip, cInjections, 0x01); }
+                            if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                                 cTool.fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
@@ -832,7 +833,7 @@ int main(int argc, char* argv[])
                     {
                         for(auto chip: *hybrid)
                         {
-                            if(chip->getFrontEndType() == FrontEndType::MPA)
+                            if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
                             {
                                 for(auto cPxl: cPxls)
                                 {
@@ -844,7 +845,7 @@ int main(int argc, char* argv[])
                                     cTool.fReadoutChipInterface->WriteChipReg(chip, cRegNameTrim.str(), 0x0);
                                 }
                             }
-                            if(chip->getFrontEndType() == FrontEndType::SSA)
+                            if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 for(auto sStrp: cStrps)
                                 {
@@ -863,12 +864,12 @@ int main(int argc, char* argv[])
                     {
                         for(auto chip: *hybrid)
                         {
-                            if(chip->getFrontEndType() == FrontEndType::SSA)
+                            if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "SAMPLINGMODE_ALL", cSamplingSSA);
                             }
-                            if(chip->getFrontEndType() == FrontEndType::MPA)
+                            if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "ModeSel_ALL", cSamplingMPA);
@@ -896,12 +897,12 @@ int main(int argc, char* argv[])
                     {
                         for(auto chip: *hybrid)
                         {
-                            if(chip->getFrontEndType() == FrontEndType::SSA)
+                            if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "SAMPLINGMODE_ALL", cSamplingSSA);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth);
                             }
-                            if(chip->getFrontEndType() == FrontEndType::MPA)
+                            if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "ModeSel_ALL", cSamplingMPA);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);
@@ -1126,7 +1127,7 @@ int main(int argc, char* argv[])
         cCng.fVerbose    = 1;
         cCng.fPrintEvery = 1;
 
-        BeamTestCheck2S cBeamTestCheck;
+        BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         cBeamTestCheck.ConfigureScans(cScanL1, cScanStubs);
@@ -1143,7 +1144,7 @@ int main(int argc, char* argv[])
         cGoodRuns << cRunNumber << "\n";
         cGoodRuns.close();
 
-        BeamTestCheck2S cBeamTestCheck;
+        BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         cBeamTestCheck.ConfigureScans(cScanL1, cScanStubs);
@@ -1160,7 +1161,7 @@ int main(int argc, char* argv[])
         cGoodRuns << cRunNumber << "\n";
         cGoodRuns.close();
 
-        BeamTestCheck2S cBeamTestCheck;
+        BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         cBeamTestCheck.ConfigureScans(cScanL1, cScanStubs);
@@ -1180,7 +1181,7 @@ int main(int argc, char* argv[])
         cGoodRuns << cRunNumber << "\n";
         cGoodRuns.close();
 
-        BeamTestCheck2S cBeamTestCheck;
+        BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         cBeamTestCheck.ConfigureScans(cScanL1, cScanStubs);
@@ -1196,8 +1197,8 @@ int main(int argc, char* argv[])
         cGoodRuns << cRunNumber << "\n";
         cGoodRuns.close();
 
-        uint8_t         cDisableFEs = (cmd.foundOption("DataMonitor")) ? convertAnyInt(cmd.optionValue("DataMonitor").c_str()) : 0;
-        BeamTestCheck2S cBeamTestCheck;
+        uint8_t       cDisableFEs = (cmd.foundOption("DataMonitor")) ? convertAnyInt(cmd.optionValue("DataMonitor").c_str()) : 0;
+        BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         if(cDisableFEs == 1) cBeamTestCheck.DisableAllFEs();
@@ -1216,8 +1217,8 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("read"))
     {
-        std::string     cRawFileName = cmd.foundOption("read") ? cmd.optionValue("read") : "";
-        BeamTestCheck2S cBeamTestCheck;
+        std::string   cRawFileName = cmd.foundOption("read") ? cmd.optionValue("read") : "";
+        BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.SetReadoutMode(1);
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();

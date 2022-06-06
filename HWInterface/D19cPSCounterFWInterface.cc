@@ -38,7 +38,7 @@ void D19cPSCounterFWInterface::PS_Send_pulses(uint32_t pNtriggers, bool manual)
 // compose id for counter data
 uint32_t D19cPSCounterFWInterface::Compose_Id(const BeBoard* pBoard, const OpticalGroup* pGroup, const Hybrid* pHybrid, const Chip* pChip)
 {
-    uint8_t  cType = (pChip->getFrontEndType() == FrontEndType::MPA) ? 1 : 0;
+    uint8_t  cType = (pChip->getFrontEndType() == FrontEndType::MPA || pChip->getFrontEndType() == FrontEndType::MPA2) ? 1 : 0;
     uint32_t cId   = (pBoard->getId() << (3 + 6 + 4 + 1 + 4)) | (pGroup->getId() << (3 + 6 + 4 + 1)) | (pHybrid->getId() << (3 + 6 + 1)) | (pChip->getId() << (3 + 1)) | cType;
     return cId;
 }
@@ -65,7 +65,7 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard)
                     uint32_t cBaseRegisterLSB, cBaseRegisterMSB;
                     cBaseRegisterLSB = 0;
                     cBaseRegisterMSB = 0;
-                    if(cChip->getFrontEndType() == FrontEndType::MPA)
+                    if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
                     {
                         int cRowNumber   = 1 + cChnl / 120;
                         int cPixelNumber = 1 + cChnl % 120;
@@ -229,7 +229,7 @@ void D19cPSCounterFWInterface::ReadPSSCCountersFast(BeBoard* pBoard, std::vector
                         uint32_t cycle = 0;
                         // MPA will output 16*120 + 120 counters
                         // SSA witll output 120 counters
-                        size_t                cNCounters = (cChip->getFrontEndType() == FrontEndType::MPA) ? 2040 : cChip->size();
+                        size_t                cNCounters = (cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2) ? 2040 : cChip->size();
                         std::vector<uint16_t> count(cNCounters, 0);
                         for(int i = 0; i < 20000; i++)
                         {

@@ -1,4 +1,4 @@
-#include "BeamTestCheck2S.h"
+#include "BeamTestCheck.h"
 
 #include "../HWDescription/Cbc.h"
 #include "../Utils/CBCChannelGroupHandler.h"
@@ -10,15 +10,15 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-BeamTestCheck2S::BeamTestCheck2S() : OTTool() {}
+BeamTestCheck::BeamTestCheck() : OTTool() {}
 
-BeamTestCheck2S::~BeamTestCheck2S() {}
+BeamTestCheck::~BeamTestCheck() {}
 
 // Initialization function
-void BeamTestCheck2S::Initialise()
+void BeamTestCheck::Initialise()
 {
     Prepare();
-    SetName("BeamTestCheck2S");
+    SetName("BeamTestCheck");
     LOG(INFO) << BOLDYELLOW << "Number of events is " << fNevents << RESET;
     if(fReadoutMode == 0)
     {
@@ -112,14 +112,14 @@ void BeamTestCheck2S::Initialise()
 }
 
 // State machine control functions
-void BeamTestCheck2S::Running()
+void BeamTestCheck::Running()
 {
     Initialise();
     fSuccess = true;
     Reset();
 }
 
-void BeamTestCheck2S::DisableAllFEs()
+void BeamTestCheck::DisableAllFEs()
 {
     // disable all FEs
     for(auto cBoard: *fDetectorContainer)
@@ -136,7 +136,7 @@ void BeamTestCheck2S::DisableAllFEs()
     }
 }
 //
-void BeamTestCheck2S::CheckWithTP(uint8_t pContinousReadout)
+void BeamTestCheck::CheckWithTP(uint8_t pContinousReadout)
 {
     for(auto cBoard: *fDetectorContainer)
     {
@@ -159,7 +159,7 @@ void BeamTestCheck2S::CheckWithTP(uint8_t pContinousReadout)
 
     // for(auto cBoard: *fDetectorContainer) { PrintData(cBoard); }
 }
-void BeamTestCheck2S::ValidateTP()
+void BeamTestCheck::ValidateTP()
 {
     for(auto cBoard: *fDetectorContainer)
     {
@@ -170,8 +170,8 @@ void BeamTestCheck2S::ValidateTP()
     // validate
     Validate();
 }
-void BeamTestCheck2S::ValidateRaw() { Validate(); }
-void BeamTestCheck2S::Validate()
+void BeamTestCheck::ValidateRaw() { Validate(); }
+void BeamTestCheck::Validate()
 {
     // validate
     // read events
@@ -196,7 +196,7 @@ void BeamTestCheck2S::Validate()
     // #endif
 }
 //
-void BeamTestCheck2S::CheckWithInternal(uint8_t pContinousReadout)
+void BeamTestCheck::CheckWithInternal(uint8_t pContinousReadout)
 {
     for(auto cBoard: *fDetectorContainer)
     {
@@ -219,7 +219,7 @@ void BeamTestCheck2S::CheckWithInternal(uint8_t pContinousReadout)
 
     for(auto cBoard: *fDetectorContainer) { PrintData(cBoard); }
 }
-void BeamTestCheck2S::CheckWithTLU(uint8_t pContinousReadout)
+void BeamTestCheck::CheckWithTLU(uint8_t pContinousReadout)
 {
     LOG(INFO) << BOLDBLUE << "Checking with external triggers - will readout " << fNevents << RESET;
 
@@ -242,7 +242,7 @@ void BeamTestCheck2S::CheckWithTLU(uint8_t pContinousReadout)
     // validate
     Validate();
 }
-void BeamTestCheck2S::CheckWithExternal(uint8_t pContinousReadout)
+void BeamTestCheck::CheckWithExternal(uint8_t pContinousReadout)
 {
     LOG(INFO) << BOLDBLUE << "Checking with external triggers - will readout " << fNevents << RESET;
 
@@ -304,7 +304,7 @@ void BeamTestCheck2S::CheckWithExternal(uint8_t pContinousReadout)
     //     fDQMHistogrammer.fillTriggerTDCPlots(fTDCContainer);
     // #endif
 }
-void BeamTestCheck2S::ValidateExternal()
+void BeamTestCheck::ValidateExternal()
 {
     for(auto cBoard: *fDetectorContainer)
     {
@@ -314,7 +314,7 @@ void BeamTestCheck2S::ValidateExternal()
     // validate
     Validate();
 }
-void BeamTestCheck2S::ValidateTLU()
+void BeamTestCheck::ValidateTLU()
 {
     for(auto cBoard: *fDetectorContainer)
     {
@@ -324,7 +324,7 @@ void BeamTestCheck2S::ValidateTLU()
     // validate
     Validate();
 }
-void BeamTestCheck2S::UpdateClusterContainers(BeBoard* pBoard, const std::vector<Event*> pEvents, size_t pIndx)
+void BeamTestCheck::UpdateClusterContainers(BeBoard* pBoard, const std::vector<Event*> pEvents, size_t pIndx)
 {
     // not sure if I can just retrieve the events..
     // this->ReadNEvents(pBoard, this->findValueInSettings("Nevents"));
@@ -424,7 +424,7 @@ void BeamTestCheck2S::UpdateClusterContainers(BeBoard* pBoard, const std::vector
         }     // hybrid vector
     }         // optical group vector
 }
-void BeamTestCheck2S::ScanThreshold(BeBoard* pBoard)
+void BeamTestCheck::ScanThreshold(BeBoard* pBoard)
 {
     bool cSparsified = pBoard->getSparsification();
     // make sure I am in un-sparsified mode
@@ -551,7 +551,7 @@ void BeamTestCheck2S::ScanThreshold(BeBoard* pBoard)
         }
     }
 }
-void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout)
+void BeamTestCheck::ScanL1Latency(uint8_t pContinousReadout)
 {
     bool cValidate = false;
     LOG(INFO) << "Scanning Latency ... ContinousReadout set to " << +pContinousReadout << RESET;
@@ -721,7 +721,7 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout)
                         std::vector<uint8_t> cSSAIds(0);
                         for(auto cChip: *cHybrid)
                         {
-                            if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType ::CBC3)
+                            if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2 || cChip->getFrontEndType() == FrontEndType ::CBC3)
                                 cIndices.push_back(cChip->getIndex());
                             else
                                 cSSAIds.push_back(cChip->getId());
@@ -729,7 +729,7 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout)
 
                         for(auto cChip: *cHybrid)
                         {
-                            if(cChip->getFrontEndType() == FrontEndType::CBC3 || cChip->getFrontEndType() == FrontEndType::MPA)
+                            if(cChip->getFrontEndType() == FrontEndType::CBC3 || cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
                             {
                                 auto& cHitsS0 = cHitContainerS0->at(cChip->getIndex())->getSummary<uint32_t>();
                                 auto& cCoHits = cCoHitCointainer->at(cChip->getIndex())->getSummary<uint32_t>();
@@ -743,7 +743,7 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout)
                                     ->at(cHybrid->getIndex())
                                     ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cLatStep * (1 + cTriggerMult) - cTriggerId] += cCoHits;
                             }
-                            if(cChip->getFrontEndType() == FrontEndType::CBC3 || cChip->getFrontEndType() == FrontEndType::SSA)
+                            if(cChip->getFrontEndType() == FrontEndType::CBC3 || cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 uint8_t cS1Index  = cChip->getIndex();
                                 bool    cUpdateS1 = (cChip->getFrontEndType() == FrontEndType::CBC3) ? true : (std::find(cSSAIds.begin(), cSSAIds.end(), cChip->getId() % 8) != cSSAIds.end());
@@ -852,7 +852,7 @@ void BeamTestCheck2S::ScanL1Latency(uint8_t pContinousReadout)
         }
     }
 }
-void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId, uint8_t pFillCorrelations, uint8_t pPrint)
+void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, uint8_t pFillCorrelations, uint8_t pPrint)
 {
     // layer swaps [S0/S1] are stub seeds
     // read back from chips
@@ -866,7 +866,7 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
             {
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                    if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                     auto& cLyrSwap = cLyrSwp.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint8_t>();
                     // 0 -- bottom sensor seed; 1 -- top sensor seed
@@ -906,7 +906,7 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
             {
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                    if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                     auto& cLUT = cBendLUT.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::vector<uint8_t>>();
                     cLUT.clear();
@@ -1038,7 +1038,7 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                     std::vector<uint8_t> cSSAIds(0);
                     for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType ::CBC3)
+                        if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2 || cChip->getFrontEndType() == FrontEndType ::CBC3)
                             cIndices.push_back(cChip->getIndex());
                         else
                             cSSAIds.push_back(cChip->getId());
@@ -1063,12 +1063,12 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                     auto& cStbsSmry = fStubSubSet.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<std::vector<std::vector<uint32_t>>>();
                     for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                        if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                         auto  cStubs   = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
                         auto& cLyrSwap = cLyrSwp.at(cBrdIndx)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint8_t>();
                         // if its a CBC .. look for events with exactly 2 clusters
-                        if(cChip->getFrontEndType() == FrontEndType::MPA)
+                        if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
                         {
                             auto cStripClusters = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(cHybrid->getId(), cChip->getId());
                             auto cPxlClusters   = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(cHybrid->getId(), cChip->getId());
@@ -1186,7 +1186,7 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                             // if(pPrint)
 
                             uint16_t cMaxRows     = (cChip->getFrontEndType() == FrontEndType::CBC3) ? cChip->size() : NSSACHANNELS;
-                            uint16_t cMaxCols     = (cChip->getFrontEndType() == FrontEndType::MPA) ? NMPACOLS : 1;
+                            uint16_t cMaxCols     = (cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2) ? NMPACOLS : 1;
                             bool     cValidCoords = (cRow < cMaxRows && cCol < cMaxCols);
 
                             if(!cValidCoords)
@@ -1229,7 +1229,7 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                             // uint16_t cMaxRows  = (cChip->getFrontEndType() == FrontEndType::CBC3) ? cChip->size() : 0;
                             // if(cChip->getFrontEndType() == FrontEndType::MPA) cMaxRows = NSSACHANNELS;
                             uint16_t cMaxCols = 1;
-                            if(cChip->getFrontEndType() == FrontEndType::MPA && cSensorID == 0) cMaxCols = NMPACOLS;
+                            if((cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2) && cSensorID == 0) cMaxCols = NMPACOLS;
 
                             if(cChip->getFrontEndType() != FrontEndType::CBC3)
                             {
@@ -1411,12 +1411,12 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
                                   << " Stubs   : " << cStubContainer->at(cChip->getIndex())->getSummary<uint32_t>() << " stubs."
                                   << " Hits S0 : " << cHitContainerS0->at(cChip->getIndex())->getSummary<uint32_t>() << " hits."
                                   << " Hits S1 : " << cHitContainerS1->at(cChip->getIndex())->getSummary<uint32_t>() << " hits." << RESET;
-                    else if(cChip->getFrontEndType() == FrontEndType::MPA && cHitContainerS0->at(cChip->getIndex())->getSummary<uint32_t>() > 0)
+                    else if((cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2) && cHitContainerS0->at(cChip->getIndex())->getSummary<uint32_t>() > 0)
                         LOG(INFO) << BOLDMAGENTA << "Counting step... Trigger#" << +pTriggerId << " Hybrid#" << +cHybrid->getId() << " Chip#" << +(cChip->getId())
                                   << " Stubs   : " << cStubContainer->at(cChip->getIndex())->getSummary<uint32_t>() << " stubs."
                                   << " Hits S0 : " << cHitContainerS0->at(cChip->getIndex())->getSummary<uint32_t>() << " hits."
                                   << " and found " << cCoHitCointainer->at(cChip->getIndex())->getSummary<uint32_t>() << " hits in the same row as S1 " << RESET;
-                    else if(cChip->getFrontEndType() == FrontEndType::SSA && cHitContainerS1->at(cChip->getIndex())->getSummary<uint32_t>() > 0)
+                    else if((cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) && cHitContainerS1->at(cChip->getIndex())->getSummary<uint32_t>() > 0)
                     {
                         LOG(INFO) << BOLDGREEN << "Counting step... Trigger#" << +pTriggerId << " Hybrid#" << +cHybrid->getId() << " Chip#" << +(cChip->getId())
                                   << " Hits S1 : " << cHitContainerS1->at(cChip->getIndex())->getSummary<uint32_t>() << " hits." << RESET;
@@ -1426,7 +1426,7 @@ void BeamTestCheck2S::Count(const std::vector<Event*> pEvents, size_t pTriggerId
         }
     }
 }
-void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
+void BeamTestCheck::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
 {
     // bool cUseReadNevents = false;
     LOG(INFO) << "Scanning Latency ... ContinousReadout set to " << +pContinousReadout << RESET;
@@ -1623,7 +1623,7 @@ void BeamTestCheck2S::ScanLatency(BeBoard* pBoard, uint8_t pContinousReadout)
 
     LOG(INFO) << BOLDYELLOW << "Optimal latency found to be : " << fOptimalLatency << " 40 MHz clock cycles [L1 data]" << RESET;
 }
-void BeamTestCheck2S::ScanStubLatency(uint8_t pContinousReadout)
+void BeamTestCheck::ScanStubLatency(uint8_t pContinousReadout)
 {
     // bool cUseReadNevents = false;
     LOG(INFO) << "Scanning Stub Latency ... ContinousReadout set to " << +pContinousReadout << RESET;
@@ -1645,7 +1645,7 @@ void BeamTestCheck2S::ScanStubLatency(uint8_t pContinousReadout)
             {
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                    if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                     auto cLat = fReadoutChipInterface->ReadChipReg(cChip, "TriggerLatency");
                     if(cLat > 0) cLatencyBins[cLat]++;
@@ -1788,7 +1788,7 @@ void BeamTestCheck2S::ScanStubLatency(uint8_t pContinousReadout)
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cLat);
     }
 }
-void BeamTestCheck2S::PrepareForExternalTP(BeBoard* pBoard)
+void BeamTestCheck::PrepareForExternalTP(BeBoard* pBoard)
 {
     // configure trigger
     uint8_t                                       cTriggerSource = 13;
@@ -1861,7 +1861,7 @@ void BeamTestCheck2S::PrepareForExternalTP(BeBoard* pBoard)
     // inject PS
     if(!cWith2S) InjectPattern(pBoard, fInjections, -1);
 }
-void BeamTestCheck2S::PrepareForTP(BeBoard* pBoard)
+void BeamTestCheck::PrepareForTP(BeBoard* pBoard)
 {
     // configure trigger
     uint8_t                  cTriggerSource   = 6;
@@ -1922,7 +1922,7 @@ void BeamTestCheck2S::PrepareForTP(BeBoard* pBoard)
     // inject PS
     if(!cWith2S) InjectPattern(pBoard, fInjections, -1);
 }
-void BeamTestCheck2S::PrepareForTLU(BeBoard* pBoard)
+void BeamTestCheck::PrepareForTLU(BeBoard* pBoard)
 {
     BeBoardRegMap cRegMap         = pBoard->getBeBoardRegMap();
     uint32_t      cTriggerMult    = cRegMap["fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity"];
@@ -1963,7 +1963,7 @@ void BeamTestCheck2S::PrepareForTLU(BeBoard* pBoard)
     fBeBoardInterface->ChipReSync(pBoard);
     UpdateFromRegMap(pBoard);
 }
-void BeamTestCheck2S::PrepareForInternal(BeBoard* pBoard, uint8_t pLimitTriggers)
+void BeamTestCheck::PrepareForInternal(BeBoard* pBoard, uint8_t pLimitTriggers)
 {
     BeBoardRegMap cRegMap = pBoard->getBeBoardRegMap();
     // triggers
@@ -1999,9 +1999,9 @@ void BeamTestCheck2S::PrepareForInternal(BeBoard* pBoard, uint8_t pLimitTriggers
 
     LOG(INFO) << BOLDYELLOW << "Handshake Mode " << +cHandshakeMode << RESET;
 }
-void BeamTestCheck2S::ProcessEvents(BeBoard* pBoard) { PrintData(pBoard); }
+void BeamTestCheck::ProcessEvents(BeBoard* pBoard) { PrintData(pBoard); }
 
-void BeamTestCheck2S::PrepareForExternal(BeBoard* pBoard)
+void BeamTestCheck::PrepareForExternal(BeBoard* pBoard)
 {
     // configure trigger
     // make sure I am accepting all triggers
@@ -2039,13 +2039,13 @@ void BeamTestCheck2S::PrepareForExternal(BeBoard* pBoard)
     fBeBoardInterface->ChipReSync(pBoard);
     UpdateFromRegMap(pBoard);
 }
-void BeamTestCheck2S::Stop() {}
+void BeamTestCheck::Stop() {}
 
-void BeamTestCheck2S::Pause() {}
+void BeamTestCheck::Pause() {}
 
-void BeamTestCheck2S::Resume() {}
+void BeamTestCheck::Resume() {}
 
-void BeamTestCheck2S::writeObjects()
+void BeamTestCheck::writeObjects()
 {
 #ifdef __USE_ROOT__
     this->SaveResults();
