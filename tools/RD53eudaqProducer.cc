@@ -36,9 +36,9 @@ void RD53eudaqProducer::DoStartRun()
             for(auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid) static_cast<Ph2_HwInterface::RD53Interface*>(RD53sysCntrPhys.fReadoutChipInterface)->ConfigureChip(cChip);
 
-    theRunNumber     = GetRunNumber();
-    swTrigCnt        = 0;
-    previousTLUTigId = 0;
+    theRunNumber      = GetRunNumber();
+    swTrigCnt         = 0;
+    previousTLUTrigId = 0;
 
     // #####################
     // # Send a BORE event #
@@ -161,6 +161,10 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
             auto                      eudaqEvent = static_cast<eudaq::RawEvent*>(ev.get());
             auto                      tluTrigId  = RD53EvtList[it].tlu_trigger_id;
             CMSITEventData::EventData theEvent{std::time(nullptr), eudaqProducer->nTRIGxEvent, RD53EvtList[it].l1a_counter, RD53EvtList[it].tdc, RD53EvtList[it].bx_counter, tluTrigId, {}};
+
+            // ######################################################
+            // # Choose between internal vs TLU event counter @TMP@ #
+            // ######################################################
             // ev->SetTriggerN(eudaqProducer->swTrigCnt++); // Use internal counter
             // Use TLU counter
             if(tluTrigId < eudaqProducer->previousTLUTrigId)
