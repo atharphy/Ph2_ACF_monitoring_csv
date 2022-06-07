@@ -1,5 +1,5 @@
 #!/bin/bash
-source scl_source enable devtoolset-10
+source scl_source enable devtoolset-10 || true # This might cause a nonzero exit code in the CI for some reason, so let's ignore it
 
 ###########
 # Ph2_ACF #
@@ -39,6 +39,7 @@ export POWERSUPPLYDIR=$EXTERNAL_TOOLS_BASE_DIR/power_supply
 # These are git references for the dependencies that are included via CMake ExternalProjects
 export PH2_TCUSB_REF=9c39f0f4082f8db6a6788baf3567f55631b53f16
 export EUDAQ_REF=ac59b87fca12806d775e95df2d253c3bf96420ee
+export PYBIND11_REF=v2.9.2
 
 #######
 # ZMQ #
@@ -65,8 +66,8 @@ export EUDAQLIB=$EUDAQDIR/lib
 ##########
 # Pybind11 #
 ##########
-export PYBIND11=$PH2ACF_BASE_DIR/../pybind11-2.9.2/
-export PYBIND11INCLUDE=$PYBIND11/include
+# export PYBIND11=$PH2ACF_BASE_DIR/../pybind11-2.9.2/
+# export PYBIND11INCLUDE=$PYBIND11/include
 export PYTHONINCLUDE=/usr/include/python3.6m/
 
 ##########

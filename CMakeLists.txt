@@ -17,6 +17,8 @@ set(BoldCyan    "${Esc}[1;36m")
 set(BoldWhite   "${Esc}[1;37m")
 
 include(ExternalProject)
+include(FetchContent)
+
 set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
 
 if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
