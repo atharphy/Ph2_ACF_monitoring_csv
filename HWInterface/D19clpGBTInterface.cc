@@ -110,7 +110,9 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
 {
     uint8_t cChipRate = GetChipRate(pChip);
     LOG(INFO) << BOLDGREEN << "Applying 2S-SEH lpGBT configuration for " << +cChipRate << "G module." << RESET;
-
+    //Forcing driver attenuation to be 1
+    uint8_t cEQAttenuation = 3;
+    WriteChipReg(pChip, "EQConfig", cEQAttenuation << 3);
     // Clocks - by default all are off
     std::vector<uint8_t> cClocks  = {fClock_RHS_Hybrid, fClock_LHS_Hybrid}; // Reduced number of clocks and only 320 MHz
     uint8_t              cClkFreq = 0, cClkDriveStr = 7, cClkInvert = 1;
@@ -199,6 +201,9 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
 {
     uint8_t cChipRate = GetChipRate(pChip);
     LOG(INFO) << BOLDGREEN << "Applying PS-ROH-" << +cChipRate << "G lpGBT configuration" << RESET;
+    //Forcing driver attenuation to be 1
+    uint8_t cEQAttenuation = 3;
+    WriteChipReg(pChip, "EQConfig", cEQAttenuation << 3);
     // Clocks
     std::vector<uint8_t> cClocks = {fClock_LHS_Hybrid, fClock_LHS_CIC, fClock_RHS_Hybrid, fClock_RHS_CIC};
     // clock frequency set to 0 to disable it at first and only later configure what is needed
