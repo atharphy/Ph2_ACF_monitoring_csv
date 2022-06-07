@@ -225,13 +225,13 @@ int main(int argc, char* argv[])
         else if(cmd.foundOption("test-external-pattern"))
         {
             uint8_t cExternalPattern = (cmd.foundOption("test-external-pattern")) ? convertAnyInt(cmd.optionValue("test-external-pattern").c_str()) : 0;
-            //cPSROHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
+            // cPSROHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
             bool cStatus = cPSROHTester.LpGBTCheckULPattern(true, cExternalPattern);
 #ifdef __USE_ROOT__
             cTool.fillSummaryTree("status_CicOutTest", (cStatus) ? 1 : 0);
 #endif
             cPSROHTester.LpGBTInjectULExternalPattern(false, cExternalPattern);
-	    if(cStatus) { LOG(INFO) << BOLDGREEN << "CIC_Out test passed." << RESET; }
+            if(cStatus) { LOG(INFO) << BOLDGREEN << "CIC_Out test passed." << RESET; }
             else
             {
                 LOG(INFO) << BOLDRED << "CIC_Out test failed." << RESET;
@@ -341,7 +341,7 @@ int main(int argc, char* argv[])
         }
 #ifdef __USE_ROOT__
         cTool.fillSummaryTree("status_clocktest", (cStatus) ? 1 : 0);
-#endif    
+#endif
     }
 
     /*********************/
@@ -351,8 +351,8 @@ int main(int argc, char* argv[])
     {
         if(cmd.foundOption("fcmd-pattern"))
         {
-    	    int cFmcdCounter = 0, cFcmdTries = 100;
-    	    uint8_t     cFCMDPattern           = (cmd.foundOption("fcmd-pattern")) ? convertAnyInt(cmd.optionValue("fcmd-pattern").c_str()) : 0;
+            int     cFmcdCounter = 0, cFcmdTries = 100;
+            uint8_t cFCMDPattern = (cmd.foundOption("fcmd-pattern")) ? convertAnyInt(cmd.optionValue("fcmd-pattern").c_str()) : 0;
             LOG(INFO) << BOLDBLUE << "FCMD pattern test" << RESET;
             cPSROHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
             for(int i = 0; i < cFcmdTries; i++)
@@ -369,7 +369,6 @@ int main(int argc, char* argv[])
         {
             cPSROHTester.FastCommandScope();
         }
-
     }
 
     if(cDebug)
