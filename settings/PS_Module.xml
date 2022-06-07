@@ -70,7 +70,7 @@
                 <SamplingDelay   stripCoarse="1" stripFine="0" pixelCoarse="2" pixelFine="0"/>
                 <InjectedCharge  stripCharge="0" pixelCharge="0"/> 
                 <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
-                <MaskedStrips SSAId="4" Rows="58,59" />
+                <!--<MaskedStrips SSAId="4" Rows="58,59" />-->
             </Global>
             
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
