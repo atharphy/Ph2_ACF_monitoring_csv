@@ -31,6 +31,27 @@ using namespace std;
 INITIALIZE_EASYLOGGINGPP
 
 #define CHIPSLAVE 4
+sig_atomic_t killProcess  = 0;
+sig_atomic_t runCompleted = 0;
+
+void interruptHandler(int handler) { killProcess = 1; }
+
+void killProcessFunction(Tool* theTool)
+{
+    while(1)
+    {
+        usleep(250000);
+        if(killProcess || runCompleted) break;
+    }
+    if(killProcess)
+    {
+        theTool->SaveResults();
+        theTool->WriteRootFile();
+        theTool->CloseResultFile();
+        theTool->Destroy();
+        abort();
+    }
+}
 
 int main(int argc, char* argv[])
 {
@@ -167,6 +188,7 @@ int main(int argc, char* argv[])
     outp.str("");
     cTool.CreateResultDirectory(cDirectory);
     cTool.InitResultFile(cResultfile);
+    cTool.bookSummaryTree();
 
     // Initilaise PSROH tester
     PSROHTester cPSROHTester;
@@ -177,6 +199,8 @@ int main(int argc, char* argv[])
 
     // Initialize BackEnd & Control LpGBT Tester
     LOG(INFO) << BOLDYELLOW << "Configuring FC7" << RESET;
+    if(cMeasureInputIV) cPSROHTester.MeasureInputIV("BEFORE_CONFIG");
+    LOG(INFO) << BOLDMAGENTA << " ------------------------------------------- " << RESET;
     cTool.ConfigureHw();
 
     // Initialise tester
@@ -201,9 +225,17 @@ int main(int argc, char* argv[])
         else if(cmd.foundOption("test-external-pattern"))
         {
             uint8_t cExternalPattern = (cmd.foundOption("test-external-pattern")) ? convertAnyInt(cmd.optionValue("test-external-pattern").c_str()) : 0;
-            cPSROHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
-            cPSROHTester.LpGBTCheckULPattern(true, cExternalPattern);
+            //cPSROHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
+            bool cStatus = cPSROHTester.LpGBTCheckULPattern(true, cExternalPattern);
+#ifdef __USE_ROOT__
+            cTool.fillSummaryTree("status_CicOutTest", (cStatus) ? 1 : 0);
+#endif
             cPSROHTester.LpGBTInjectULExternalPattern(false, cExternalPattern);
+	    if(cStatus) { LOG(INFO) << BOLDGREEN << "CIC_Out test passed." << RESET; }
+            else
+            {
+                LOG(INFO) << BOLDRED << "CIC_Out test failed." << RESET;
+            }
         }
     }
     /****************************/
@@ -212,11 +244,23 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("test-reset"))
     {
         bool cStatus = cPSROHTester.LpGBTTestResetLines();
-        cPSROHTester.LpGBTTestGPILines();
-        if(cStatus)
-            LOG(INFO) << BOLDBLUE << "Reset test passed." << RESET;
+#ifdef __USE_ROOT__
+        cTool.fillSummaryTree("status_ResetTest", (cStatus) ? 1 : 0);
+#endif
+        if(cStatus) { LOG(INFO) << BOLDGREEN << "Reset test passed." << RESET; }
         else
+        {
             LOG(INFO) << BOLDRED << "Reset test failed." << RESET;
+        }
+        cStatus = cPSROHTester.LpGBTTestGPILines();
+#ifdef __USE_ROOT__
+        cTool.fillSummaryTree("status_PowerGoodTest", (cStatus) ? 1 : 0);
+#endif
+        if(cStatus) { LOG(INFO) << BOLDGREEN << "Power Good test passed." << RESET; }
+        else
+        {
+            LOG(INFO) << BOLDRED << "Power Good test failed." << RESET;
+        }
     }
 
     // Test VTRx+ slow control
@@ -224,7 +268,9 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("test-vtrx"))
     {
         bool cStatus = cPSROHTester.LpGBTTestVTRx();
-
+#ifdef __USE_ROOT__
+        cTool.fillSummaryTree("status_vtrxplusslowcontrol", (cStatus) ? 1 : 0);
+#endif
         if(cStatus)
             LOG(INFO) << BOLDBLUE << "VTRx+ slow control test passed." << RESET;
         else
@@ -238,10 +284,15 @@ int main(int argc, char* argv[])
     {
         std::vector<uint8_t> cMasters = {0, 2};
         bool                 cStatus  = cPSROHTester.LpGBTTestI2CMaster(cMasters);
+#ifdef __USE_ROOT__
+        cTool.fillSummaryTree("status_i2cmasters", (cStatus) ? 1 : 0);
+#endif
         if(cStatus)
             LOG(INFO) << BOLDBLUE << "I2C test " << BOLDGREEN << " passed" << RESET;
         else
+        {
             LOG(INFO) << BOLDBLUE << "I2C test " << BOLDRED << " failed" << RESET;
+        }
     }
 
     /**********************************/
@@ -281,7 +332,16 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("test-clock"))
     {
         LOG(INFO) << BOLDBLUE << "Clock test" << RESET;
-        cPSROHTester.LpGBTCheckClocks();
+        bool cStatus = cPSROHTester.LpGBTCheckClocks();
+        if(cStatus)
+            LOG(INFO) << BOLDBLUE << "Clock test " << BOLDGREEN << " passed" << RESET;
+        else
+        {
+            LOG(INFO) << BOLDBLUE << "Clock test " << BOLDRED << " failed" << RESET;
+        }
+#ifdef __USE_ROOT__
+        cTool.fillSummaryTree("status_clocktest", (cStatus) ? 1 : 0);
+#endif    
     }
 
     /*********************/
@@ -291,14 +351,25 @@ int main(int argc, char* argv[])
     {
         if(cmd.foundOption("fcmd-pattern"))
         {
-            uint8_t cFCMDPattern = (cmd.foundOption("fcmd-pattern")) ? convertAnyInt(cmd.optionValue("fcmd-pattern").c_str()) : 0;
+    	    int cFmcdCounter = 0, cFcmdTries = 100;
+    	    uint8_t     cFCMDPattern           = (cmd.foundOption("fcmd-pattern")) ? convertAnyInt(cmd.optionValue("fcmd-pattern").c_str()) : 0;
+            LOG(INFO) << BOLDBLUE << "FCMD pattern test" << RESET;
             cPSROHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
-            cPSROHTester.LpGBTFastCommandChecker(cFCMDPattern);
+            for(int i = 0; i < cFcmdTries; i++)
+            {
+                if(!cPSROHTester.LpGBTFastCommandChecker(cFCMDPattern)) cFmcdCounter += 1;
+            }
+            LOG(INFO) << BOLDRED << "FCMD pattern test failed " << +cFmcdCounter << " times" << RESET;
+#ifdef __USE_ROOT__
+            cTool.fillSummaryTree("fcmd_tries", cFcmdTries);
+            cTool.fillSummaryTree("fcmd_failures", cFmcdCounter);
+#endif
         }
         else
         {
             cPSROHTester.FastCommandScope();
         }
+
     }
 
     if(cDebug)
@@ -363,7 +434,7 @@ int main(int argc, char* argv[])
     cTool.CloseResultFile();
     // Destroy Tools
     cTool.Destroy();
-    cTool.Destroy();
+    runCompleted = 1;
 
     if(!batchMode) cApp.Run();
 #endif
