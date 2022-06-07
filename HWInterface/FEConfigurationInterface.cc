@@ -13,7 +13,7 @@ FEConfigurationInterface::~FEConfigurationInterface() {}
 
 void FEConfigurationInterface::Configure(Configuration pConfiguration)
 {
-    fConfiguration.fRetry      = pConfiguration.fRetry;
+    fConfiguration.fRetry       = pConfiguration.fRetry;
     fConfiguration.fVerify      = pConfiguration.fVerify;
     fConfiguration.fMaxAttempts = pConfiguration.fMaxAttempts;
 }
