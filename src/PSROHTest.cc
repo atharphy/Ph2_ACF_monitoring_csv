@@ -311,7 +311,7 @@ int main(int argc, char* argv[])
     /********************/
     if(cmd.foundOption("test-eom"))
     {
-        uint8_t cEQAttenuation = cmd.foundOption("eq-attenuation") ? convertAnyInt(cmd.optionValue("eq-attenuation").c_str()) : 0;
+        uint8_t cEQAttenuation = cmd.foundOption("eq-attenuation") ? convertAnyInt(cmd.optionValue("eq-attenuation").c_str()) : 3;
         cPSROHTester.LpGBTRunEyeOpeningMonitor(7, cEQAttenuation);
     }
 
