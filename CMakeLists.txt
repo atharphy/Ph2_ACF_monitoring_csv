@@ -234,6 +234,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     if(NoDataShipping)
         add_subdirectory(RootWeb)
+        add_subdirectory(pythonUtils)
     endif()
 
     add_subdirectory(Utils)
@@ -241,7 +242,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     add_subdirectory(MonitorUtils)
     add_subdirectory(MessageUtils/cpp)
     add_subdirectory(miniDAQ)
-    add_subdirectory(pythonUtils)
 
     message("--     ${BoldRed}#### Don't forget to set the path and ld_library_path by sourcing setup.sh before running ###${Reset}")
 
