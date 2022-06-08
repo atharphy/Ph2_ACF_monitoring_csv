@@ -125,11 +125,12 @@ class lpGBTInterface : public ChipInterface
     // ###########################
     uint16_t ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN = "VREF/2", uint8_t pGain = 0);
     void     ConfigureInternalMonitoring(Ph2_HwDescription::Chip* pChip, uint8_t pEnable);
-    // ###########################
+
+    // ##############################
     // # LpGBT retreive temperature #
-    // ###########################
+    // ##############################
     float GetInternalTemperature(Ph2_HwDescription::Chip* pChip);
-    float ReadResistance(Ph2_HwDescription::Chip* pChip, std::string pADC, std::vector<uint8_t> pCurrents, uint8_t pGain = 0);
+    float ReadResistance(Ph2_HwDescription::Chip* pChip, const std::string& pADC, const std::vector<uint8_t>& pCurrents, uint8_t pGain = 0);
 
     // ####################################
     // # LpGBT eye opening monitor tester #
@@ -176,16 +177,15 @@ class lpGBTInterface : public ChipInterface
     void ConfigureCurrentDAC(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& pCurrentDACChannels, uint8_t pCurrentDACOutput);
     bool IsReadADCDone(Ph2_HwDescription::Chip* pChip);
 
-    // #######################################
-    // # LpGBT retreive configuration  #
-    // #######################################
-
+    // ################################
+    // # LpGBT retreive configuration #
+    // ################################
     uint16_t GetRxDataRate(Ph2_HwDescription::Chip* pChip, uint8_t pGroup);
     uint8_t  GetChipRate(Ph2_HwDescription::Chip* pChip);
 
-    // ###########################
+    // #######################
     // # LpGBT Vref function #
-    // ###########################
+    // #######################
     bool ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection);
 
     void    PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const Ph2_HwDescription::OpticalGroup* pOpticalGroup);

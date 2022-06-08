@@ -836,7 +836,7 @@ float lpGBTInterface::GetInternalTemperature(Chip* pChip)
     return std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
 }
 
-float lpGBTInterface::ReadResistance(Chip* pChip, std::string pADC, std::vector<uint8_t> pCurrents, uint8_t pGain)
+float lpGBTInterface::ReadResistance(Chip* pChip, const std::string& pADC, const std::vector<uint8_t>& pCurrents, uint8_t pGain)
 {
     std::vector<float> cTempVoltageReadings;
     std::vector<float> cTempCurrentValues;
@@ -1067,7 +1067,7 @@ double lpGBTInterface::BERtestCL(Chip* pChip, uint8_t pGroup, uint8_t pChannel, 
     if(lpGBTInterface::IsBERTEmptyData(pChip) == true)
     {
         lpGBTInterface::StartBERT(pChip, false); // Stop
-        throw Exception("[lpGBTInterface::RunBERtest] All zeros at input");
+        throw Exception("[lpGBTInterface::BERtestCL] All zeros at input");
     }
 
     // ########
