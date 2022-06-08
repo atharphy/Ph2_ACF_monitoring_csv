@@ -335,12 +335,6 @@ Install pybind11 (if installed in the same directoory when you plan to install t
 
         $> wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
         $> tar zxvf v2.9.2.tar.gz
-        $> cd pybind11-2.9.2
-        $> mkdir build
-        $> cd build
-        $> cmake3 ..
-        $> make check -j <number_of_cores>
-
 
 ### Setup on SLC6
 
