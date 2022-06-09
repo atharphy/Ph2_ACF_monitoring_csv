@@ -63,6 +63,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     set(CompileForShep "$ENV{CompileForShep}")
     set(CompileForHerd "$ENV{CompileForHerd}")
+    set(CompileMinExecutable "$ENV{CompileMinExecutable}")
     if ((NOT CompileForShep) AND (NOT CompileForHerd))
         set(NoDataShipping true)
     else()

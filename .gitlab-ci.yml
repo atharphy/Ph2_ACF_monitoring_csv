@@ -52,6 +52,7 @@ include:
     entrypoint: ["/bin/sh","-c"]
   before_script:
     - source ./setup.sh ci
+    - export CompileMinExecutable=true
   script:
     - mkdir -p build; cd build
     - cmake ..
@@ -75,7 +76,6 @@ build:StandAlone_woDS:
 build:StandAlone_wDS:
   extends: .build
   before_script:
-    - source ./setup.sh ci
     - export CompileForHerd=true
     - export CompileForShep=true
 
@@ -83,28 +83,24 @@ build:StandAlone_wDS:
 build:HerdApplication:
   extends: .build
   before_script:
-    - source ./setup.sh ci
     - export CompileForHerd=true
 
 # Shep application
 build:ShepApplication:
   extends: .build
   before_script:
-    - source ./setup.sh ci
     - export CompileForShep=true
 
 # Compile with EUDAQ libraries
 build:StandAlone_wEUDAQ:
   extends: .build
   before_script:
-    - source ./setup.sh ci
     - export CompileWithEUDAQ=true
 
 # Herd application with EUDAQ libraries
 build:HerdApplication_wEUDAQ:
   extends: .build
   before_script:
-    - source ./setup.sh ci
     - export CompileForHerd=true
     - export CompileWithEUDAQ=true
 
@@ -113,7 +109,6 @@ build:StandAlone_wTC_USB_SEH:
   extends: .build
   before_script:
     - yum install -y libusb-devel libusbx-devel
-    - source ./setup.sh ci
     - export CompileWithTCUSB=true
     - export UseTCUSBTcpServer=true
 
@@ -123,7 +118,6 @@ build:StandAlone_wTC_USB_ROH:
   extends: .build
   before_script:
     - yum install -y libusb-devel libusbx-devel
-    - source ./setup.sh ci
     - export CompileWithTCUSB=true
     - export UseTCUSBforROH=true
     - export UseTCUSBTcpServer=true

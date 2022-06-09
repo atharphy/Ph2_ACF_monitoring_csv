@@ -120,6 +120,9 @@ export CompileWithTCUSB=false
 export UseTCUSBforROH=false
 export UseTCUSBTcpServer=false
 
+# Compile minimal executable to avoid too space for CI
+export CompileMinExecutable=false
+
 # Clang-format command
 if command -v clang-format &> /dev/null; then
  clang_command="clang-format"
