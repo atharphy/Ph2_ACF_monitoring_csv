@@ -70,6 +70,7 @@ void VoltageTuning::localConfigure(const std::string& fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[VoltageTuning::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     VoltageTuning::ConfigureCalibration();
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "VoltageTuning");
     VoltageTuning::initializeFiles(fileRes_, currentRun);
 }
 

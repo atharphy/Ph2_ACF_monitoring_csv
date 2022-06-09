@@ -128,6 +128,7 @@ void Physics::localConfigure(const std::string& fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[Physics::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     Physics::ConfigureCalibration();
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "Physics");
     Physics::initializeFiles(fileRes_, currentRun);
 }
 

@@ -128,6 +128,7 @@ void PixelAlive::localConfigure(const std::string& fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[PixelAlive::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     PixelAlive::ConfigureCalibration();
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "PixelAlive");
     PixelAlive::initializeFiles(fileRes_, currentRun);
 }
 

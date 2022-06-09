@@ -74,6 +74,7 @@ void DataTransmissionTest::localConfigure(const std::string& fileRes_, int curre
         LOG(INFO) << GREEN << "[DataTransmissionTest::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     DataTransmissionTest::ConfigureCalibration();
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "DataTransmissionTest");
     DataTransmissionTest::initializeFiles(fileRes_, currentRun);
 }
 

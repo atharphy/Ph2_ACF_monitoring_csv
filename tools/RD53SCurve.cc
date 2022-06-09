@@ -124,6 +124,7 @@ void SCurve::localConfigure(const std::string& fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[SCurve::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     SCurve::ConfigureCalibration();
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "SCurve");
     SCurve::initializeFiles(fileRes_, currentRun);
 }
 
