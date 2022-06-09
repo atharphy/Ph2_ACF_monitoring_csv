@@ -139,6 +139,7 @@ if [[ $1 == "ci" ]]; then
     export CompileWithTCUSB=false
     export UseTCUSBforROH=false
     export UseTCUSBTcpServer=false
+    export CompileMinExecutable=true
 fi
 
 
