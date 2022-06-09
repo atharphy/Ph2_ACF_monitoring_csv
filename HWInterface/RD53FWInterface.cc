@@ -164,6 +164,13 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     uint32_t txIsReady, rxIsReady;
     RD53FWInterface::StatusOptoLinkSlowControl(txIsReady, rxIsReady);
 
+    // ###################################
+    // # Set and check RD53 AURORA speed #
+    // ###################################
+    RegManager::WriteStackReg({{"user.ctrl_regs.gtx_drp.aurora_speed", RD53FWconstants::AURORA_SPEED}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 1}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 0}});
+    uint32_t auroraSpeed = RD53FWInterface::ReadoutSpeed();
+    LOG(INFO) << GREEN << "Aurora speed set to: " << BOLDYELLOW << (auroraSpeed == 0 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
+
     // ###########################
     // # Print clock measurement #
     // ###########################
@@ -175,14 +182,6 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "GTX receiver clock frequency (~160 MHz (~320 MHz) for electrical (optical) readout): " << BOLDYELLOW << gtxClk / 1000. << " MHz"
               << std::setprecision(-1) << RESET;
     if(!((fabs(gtxClk / 1000. - 160) < 1) || (fabs(gtxClk / 1000. - 320) < 1))) LOG(ERROR) << BOLDRED << "GTX receiver clock frequency not nominal" << std::endl;
-
-    // @TMP@
-    RegManager::WriteReg("user.ctrl_regs.ctrl_cdr.cdr_addr", 0);
-    uint32_t extCMDclk = RegManager::ReadReg("user.stat_regs.cdr_freq_mon");
-    RegManager::WriteReg("user.ctrl_regs.ctrl_cdr.cdr_addr", 1);
-    uint32_t extSERclk = RegManager::ReadReg("user.stat_regs.cdr_freq_mon");
-    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "External CMD clock frequency: " << BOLDYELLOW << extCMDclk / 1000. << " MHz" << std::setprecision(-1) << RESET;
-    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "External Serializer clock frequency: " << BOLDYELLOW << extSERclk / 1000. << " MHz" << std::setprecision(-1) << RESET;
 }
 
 void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
@@ -306,9 +305,9 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(Re
     // #####################
     // # Read the register #
     // #####################
-    if(RegManager::ReadReg("user.stat_regs.Register_Rdback.fifo_full") == true) LOG(ERROR) << BOLDRED << "Read-command FIFO full" << RESET;
+    if(RegManager::ReadReg("user.stat_regs.readout1.register_fifo_full") == true) LOG(ERROR) << BOLDRED << "Read-command FIFO full" << RESET;
 
-    while(RegManager::ReadReg("user.stat_regs.Register_Rdback.fifo_empty") == false)
+    while(RegManager::ReadReg("user.stat_regs.readout1.register_fifo_empty") == false)
     {
         uint32_t readBackData = RegManager::ReadReg("user.stat_regs.Register_Rdback_fifo");
 
@@ -387,12 +386,6 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
     uint32_t channel_up;
 
     LOG(INFO) << GREEN << "Checking status communication RD53 --> FW" << RESET;
-
-    // ###############################
-    // # Check RD53 AURORA registers #
-    // ###############################
-    uint32_t auroraSpeed = RD53FWInterface::ReadoutSpeed();
-    LOG(INFO) << BOLDBLUE << "\t--> Aurora speed: " << BOLDYELLOW << (auroraSpeed == 0 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
 
     // ########################################
     // # Check communication with the chip(s) #
@@ -647,9 +640,25 @@ uint32_t RD53FWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     // #############
     // # Read DDR3 #
     // #############
-    std::vector<uint32_t> values = ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory, ddr3Offset);
+    std::vector<uint32_t> theData;
+    auto                  FIFOsize = (1 << RD53FWconstants::NBIT_DATA_FIFO);
+
+    if(nWordsInMemory > (FIFOsize - ddr3Offset))
+    {
+        auto firstBlock(ReadBlockRegOffset("ddr3.fc7_daq_ddr3", FIFOsize - ddr3Offset, ddr3Offset));
+        theData.insert(theData.end(), std::make_move_iterator(firstBlock.begin()), std::make_move_iterator(firstBlock.end()));
+        auto secondBlock(ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory - (FIFOsize - ddr3Offset), 0));
+        theData.insert(theData.end(), std::make_move_iterator(secondBlock.begin()), std::make_move_iterator(secondBlock.end()));
+    }
+    else
+    {
+        auto block(ReadBlockRegOffset("ddr3.fc7_daq_ddr3", nWordsInMemory, ddr3Offset));
+        theData.insert(theData.end(), std::make_move_iterator(block.begin()), std::make_move_iterator(block.end()));
+    }
+
     ddr3Offset += nWordsInMemory;
-    pData.insert(pData.end(), values.begin(), values.end());
+    ddr3Offset %= FIFOsize;
+    pData.insert(pData.end(), std::make_move_iterator(theData.begin()), std::make_move_iterator(theData.end()));
 
     if((this->fSaveToFile == true) && (pData.size() != 0)) this->fFileHandler->setData(pData);
     return pData.size();
@@ -661,6 +670,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     int  nAttempts = 0;
 
     RD53FWInterface::WriteArbitraryRegister("user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept", RD53FWInterface::localCfgFastCmd.n_triggers = pNEvents);
+
     // @TMP@
     if(RD53FWInterface::localCfgFastCmd.autozero_source == AutozeroSource::FastCMDFSM)
         RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
@@ -916,9 +926,9 @@ void RD53FWInterface::ConfigureDIO5(const DIO5Config* cfg)
 {
     const uint8_t fiftyOhmEnable = 0x12; // @CONST@
 
-    if(RegManager::ReadReg("user.stat_regs.fast_cmd.dio5_not_ready") == true) LOG(ERROR) << BOLDRED << "DIO5 not ready" << RESET;
+    if(RegManager::ReadReg("user.stat_regs.global_reg.dio5_not_ready") == true) LOG(ERROR) << BOLDRED << "DIO5 not ready" << RESET;
 
-    if(RegManager::ReadReg("user.stat_regs.fast_cmd.dio5_error") == true) LOG(ERROR) << BOLDRED << "DIO5 is in error" << RESET;
+    if(RegManager::ReadReg("user.stat_regs.global_reg.dio5_error") == true) LOG(ERROR) << BOLDRED << "DIO5 is in error" << RESET;
 
     RegManager::WriteStackReg({{"user.ctrl_regs.ext_tlu_reg1.dio5_en", (uint32_t)cfg->enable},
                                {"user.ctrl_regs.ext_tlu_reg1.dio5_ch_out_en", (uint32_t)cfg->ch_out_en},
@@ -1025,32 +1035,6 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(const Chip* pChip, const uint32_t
     uint32_t cRead = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_fifo_dout");
 
     return cRead;
-}
-
-void RD53FWInterface::PrintFrequencyLVDS()
-{
-    uint32_t LVDS = RegManager::ReadReg("user.stat_regs.gp_lvds_freq_mon");
-    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "LVDS frequency: " << BOLDYELLOW << LVDS / 1000. << " MHz" << std::setprecision(-1) << RESET;
-}
-
-void RD53FWInterface::PrintErrorsLVDS()
-{
-    uint32_t LVDSctrl  = RegManager::ReadReg("user.ctrl_regs.reg_gp_lvds.gp_lvds_ctrl");
-    uint32_t LVDSerror = RegManager::ReadReg("user.stat_regs.global_reg.error_gp_lvds");
-    if(LVDSctrl == 1)
-    {
-        if(LVDSerror == 0)
-            LOG(INFO) << GREEN << "No errors in CMD data" << RESET;
-        else
-            LOG(WARNING) << RED << "Some errors CMD data: " << BOLDYELLOW << LVDSerror << RESET;
-    }
-    else if(LVDSctrl == 7)
-    {
-        if(LVDSerror == 0)
-            LOG(INFO) << GREEN << "LVDS pattern GOOD" << RESET;
-        else
-            LOG(WARNING) << RED << "LVDS pattern WRONG" << RESET;
-    }
 }
 
 void RD53FWInterface::selectLink(const uint8_t pLinkId, uint32_t pWait_ms) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.active_link", pLinkId); }

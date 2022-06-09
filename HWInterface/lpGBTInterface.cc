@@ -52,7 +52,6 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
     {
 #if defined(__TCUSB__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
         cSuccess = (fExternalController->getInterface().write_i2c(cAddress, static_cast<char>(pDacValue)) == pDacValue);
-        // cSuccess = (!pVerify) ? cSuccess : (ReadChipReg(pChip, pDacName) == pDacValue);
 #endif
     }
 
@@ -836,7 +835,7 @@ float lpGBTInterface::GetInternalTemperature(Chip* pChip)
     return std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
 }
 
-float lpGBTInterface::ReadResistance(Chip* pChip, std::string pADC, std::vector<uint8_t> pCurrents, uint8_t pGain)
+float lpGBTInterface::ReadResistance(Chip* pChip, const std::string& pADC, const std::vector<uint8_t>& pCurrents, uint8_t pGain)
 {
     std::vector<float> cTempVoltageReadings;
     std::vector<float> cTempCurrentValues;
@@ -859,10 +858,10 @@ float lpGBTInterface::ReadResistance(Chip* pChip, std::string pADC, std::vector<
             float cMean = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
             cTempCurrentValues.push_back(cCurrent);
             cTempVoltageReadings.push_back(cMean);
-            LOG(DEBUG) << "Current of " << cCurrent << " mean voltage reading is " << cMean << " ADC units." << RESET;
+            LOG(DEBUG) << "Current of " << cCurrent << " mean voltage reading is " << cMean << " ADC units" << RESET;
         }
         else
-            LOG(DEBUG) << BOLDBLUE << "\t\t Current DAC " << +cCurrentDAC << " no valid ADC readings.." << RESET;
+            LOG(DEBUG) << BOLDBLUE << "\t\t Current DAC " << +cCurrentDAC << " no valid ADC readings" << RESET;
     }
     ConfigureCurrentDAC(pChip, {pADC}, 0x00);
     float cLSQResistance = (cTempVoltageReadings.size() != 0) ? getLeastSquareSlope<float>(cTempCurrentValues, cTempVoltageReadings) : -1;
@@ -1067,7 +1066,7 @@ double lpGBTInterface::BERtestCL(Chip* pChip, uint8_t pGroup, uint8_t pChannel, 
     if(lpGBTInterface::IsBERTEmptyData(pChip) == true)
     {
         lpGBTInterface::StartBERT(pChip, false); // Stop
-        throw Exception("[lpGBTInterface::RunBERtest] All zeros at input");
+        throw Exception("[lpGBTInterface::BERtestCL] All zeros at input");
     }
 
     // ########

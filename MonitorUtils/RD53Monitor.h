@@ -26,7 +26,8 @@ class RD53Monitor : public DetectorMonitor
   private:
     void runMonitor() override;
 
-    void runRegisterMonitor(const std::string& registerName);
+    void runRD53RegisterMonitor(const std::string& registerName);
+    void runLpGBTRegisterMonitor(const std::string& registerName);
     void sendData(DetectorDataContainer& theRegisterContainer, const std::string& registerName);
 
 #ifdef __USE_ROOT__
