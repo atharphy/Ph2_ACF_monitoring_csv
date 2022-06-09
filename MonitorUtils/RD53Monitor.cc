@@ -76,12 +76,13 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
             float registerValue;
             try
             {
-                if(registerName.find("ADC") != std::string::npos)
-                    registerValue = fTheSystemController->flpGBTInterface->ReadADC(cOpticalGroup->flpGBT, registerName);
-                else if(registerName.find("TEMP") != std::string::npos)
-                    registerValue = fTheSystemController->flpGBTInterface->GetInternalTemperature(cOpticalGroup->flpGBT);
-                else if(registerName.find("RES") != std::string::npos)
-                    registerValue = fTheSystemController->flpGBTInterface->ReadResistance(cOpticalGroup->flpGBT, registerName, {1, 2, 4, 8, 16, 32, 64, 128});
+                if(fTheSystemController->flpGBTInterface->fADCInputMap.find(registerName) != fTheSystemController->flpGBTInterface->fADCInputMap.end())
+                {
+                    if(registerName.find("TEMP") != std::string::npos)
+                        registerValue = fTheSystemController->flpGBTInterface->GetInternalTemperature(cOpticalGroup->flpGBT);
+                    else
+                        registerValue = fTheSystemController->flpGBTInterface->ReadADC(cOpticalGroup->flpGBT, registerName);
+                }
                 else
                     registerValue = fTheSystemController->flpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, registerName);
 

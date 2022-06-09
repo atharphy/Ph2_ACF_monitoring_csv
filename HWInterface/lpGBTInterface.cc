@@ -52,7 +52,6 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
     {
 #if defined(__TCUSB__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
         cSuccess = (fExternalController->getInterface().write_i2c(cAddress, static_cast<char>(pDacValue)) == pDacValue);
-        // cSuccess = (!pVerify) ? cSuccess : (ReadChipReg(pChip, pDacName) == pDacValue);
 #endif
     }
 
@@ -859,10 +858,10 @@ float lpGBTInterface::ReadResistance(Chip* pChip, const std::string& pADC, const
             float cMean = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
             cTempCurrentValues.push_back(cCurrent);
             cTempVoltageReadings.push_back(cMean);
-            LOG(DEBUG) << "Current of " << cCurrent << " mean voltage reading is " << cMean << " ADC units." << RESET;
+            LOG(DEBUG) << "Current of " << cCurrent << " mean voltage reading is " << cMean << " ADC units" << RESET;
         }
         else
-            LOG(DEBUG) << BOLDBLUE << "\t\t Current DAC " << +cCurrentDAC << " no valid ADC readings.." << RESET;
+            LOG(DEBUG) << BOLDBLUE << "\t\t Current DAC " << +cCurrentDAC << " no valid ADC readings" << RESET;
     }
     ConfigureCurrentDAC(pChip, {pADC}, 0x00);
     float cLSQResistance = (cTempVoltageReadings.size() != 0) ? getLeastSquareSlope<float>(cTempCurrentValues, cTempVoltageReadings) : -1;

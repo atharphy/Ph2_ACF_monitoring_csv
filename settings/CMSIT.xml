@@ -309,6 +309,10 @@
       <MonitoringElement device="RD53" register="Iref"            enable="1"/>
       <MonitoringElement device="RD53" register="TEMPSENS_1"      enable="1"/>
       <MonitoringElement device="RD53" register="TEMPSENS_4"      enable="1"/>
+
+      <MonitoringElement device="LpGBT" register="TEMP"            enable="1"/>
+      <MonitoringElement device="LpGBT" register="VDD"             enable="1"/>
+      <MonitoringElement device="LpGBT" register="PUSMStatus"      enable="1"/>
     </Monitoring>
   </MonitoringSettings>
 
