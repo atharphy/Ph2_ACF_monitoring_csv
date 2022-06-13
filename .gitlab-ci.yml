@@ -85,6 +85,7 @@ build:HerdApplication:
   before_script:
     - source ./setup.sh ci
     - export CompileForHerd=true
+    - yum remove -y root #final home will not have ROOT. Should test build without it.
 
 # Shep application
 build:ShepApplication:
