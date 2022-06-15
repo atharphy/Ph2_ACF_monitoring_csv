@@ -230,6 +230,16 @@ int main(int argc, char* argv[])
     {
         cHybridTester.SelectCIC(true);
 
+        // align back-end
+        BackEndAlignment cBackEndAligner;
+        cBackEndAligner.Inherit(&cHybridTester);
+        cBackEndAligner.Start(0);
+        cBackEndAligner.waitForRunToBeCompleted();
+        // reset all chip and board registers
+        // to what they were before this tool was called
+        cBackEndAligner.Reset();
+
+
         bool    cAligned = false;
         double  cAlignedDouble;
         uint8_t cPhaseAlignmentPattern = 0xAA;
@@ -262,6 +272,7 @@ int main(int argc, char* argv[])
             // align CIC inputs
             CicFEAlignment cCicAligner;
             cCicAligner.Inherit(&cHybridTester);
+            cCicAligner.Initialise();
 
             LOG(INFO) << "Phase alignment MPA" << RESET;
             cAligned       = cCicAligner.PhaseAlignment(100);
@@ -280,9 +291,16 @@ int main(int argc, char* argv[])
             // }
             if(cAligned) break;
         }
+        
+        // align back-end
+        // cBackEndAligner.Start(0);
+        // cBackEndAligner.waitForRunToBeCompleted();
+        // // reset all chip and board registers
+        // // to what they were before this tool was called
+        // cBackEndAligner.Reset();
 
         // and then re-align back-end just because
-        cHybridTester.AlignCICout(cPhaseAlignmentPattern);
+        // cHybridTester.AlignCICout(cPhaseAlignmentPattern);
 
         cDPInterfacer.Stop(cInterface);
         cDPInterfacer.CheckNPatterns(cInterface);
