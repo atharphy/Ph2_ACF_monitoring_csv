@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
     // cHybridTester.CheckHybridCurrents();
     // check voltage on PS FEH
     // cHybridTester.CheckHybridVoltages();
-    if(cSSAPair.empty()) { cHybridTester.RunHybridETest(); }
+    cHybridTester.RunHybridETest();
     LOG(INFO) << outp.str() << RESET;
     // select CIC readout
     // cHybridTester.SelectCIC(true);
@@ -193,7 +193,7 @@ int main(int argc, char* argv[])
     // cHybridTester.ReadSSABias("MonitorVoltageBias");
     // cHybridTester.ReadSSABias("MonitorCurrentBias");
 
-    if(cSSAPair.empty()) { cHybridTester.CalibrateSSABias(); }
+    // if(cSSAPair.empty()) { cHybridTester.CalibrateSSABias(); }
 
     if(cGui)
     {
@@ -314,45 +314,45 @@ int main(int argc, char* argv[])
         // cDataChecker.resetPointers();
     }
 
-#if defined(__ANTENNA__)
-    OpenFinder cOpenFinder;
-    cOpenFinder.Inherit(&cHybridTester);
-    std::string antennaValue = (cmd.foundOption("antennaValue")) ? cmd.optionValue("antennaValue") : "512";
-    cOpenFinder.SelectAntennaPosition("Disable", 512);
-    // cOpenFinder.SelectAntennaPosition("Enable", 550 );
-    if(cmd.foundOption("antennaValue"))
-    {
-        cOpenFinder.SelectAntennaPosition("Enable", std::stoi(antennaValue));
-        LOG(INFO) << "Setting antenna" << RESET;
-    }
-#endif
+// #if defined(__ANTENNA__)
+    // OpenFinder cOpenFinder;
+    // cOpenFinder.Inherit(&cHybridTester);
+    // std::string antennaValue = (cmd.foundOption("antennaValue")) ? cmd.optionValue("antennaValue") : "512";
+    // cOpenFinder.SelectAntennaPosition("Disable", 512);
+    // // cOpenFinder.SelectAntennaPosition("Enable", 550 );
+    // if(cmd.foundOption("antennaValue"))
+    // {
+    //     cOpenFinder.SelectAntennaPosition("EvenChannels", std::stoi(antennaValue));
+    //     LOG(INFO) << "Setting antenna" << RESET;
+    // }
+// #endif
 
     // measure noise on FE chips before calibration
-    if(cmd.foundOption("measurePedeNoise") && cmd.foundOption("antennaValue"))
-    {
-        if(cGui)
-        {
-            gui::status("Measuring noise on front-end chips before calibration");
-            gui::message("");
-            gui::progress(3.5 / 10.0);
-        }
-        t.start();
-        // if this is true, I need to create an object of type PedeNoise from the members of Calibration
-        // tool provides an Inherit(Tool* pTool) for this purpose
-        PedeNoise cPedeNoise;
-        cPedeNoise.Inherit(&cHybridTester);
-        // second parameter disables stub logic on CBC3
-        cPedeNoise.Initialise(true, true); // canvases etc. for fast calibration
-        cPedeNoise.measureNoise();
-        cPedeNoise.writeObjects();
-        cPedeNoise.dumpConfigFiles();
-        cPedeNoise.Reset();
-        t.stop();
-        t.show("Time to Scan Pedestals and Noise");
-        if(cGui) { gui::message("Noise measured"); }
+    // if(cmd.foundOption("measurePedeNoise") && cmd.foundOption("antennaValue"))
+    // {
+    //     if(cGui)
+    //     {
+    //         gui::status("Measuring noise on front-end chips before calibration");
+    //         gui::message("");
+    //         gui::progress(3.5 / 10.0);
+    //     }
+    //     t.start();
+    //     // if this is true, I need to create an object of type PedeNoise from the members of Calibration
+    //     // tool provides an Inherit(Tool* pTool) for this purpose
+    //     PedeNoise cPedeNoise;
+    //     cPedeNoise.Inherit(&cHybridTester);
+    //     // second parameter disables stub logic on CBC3
+    //     cPedeNoise.Initialise(true, true); // canvases etc. for fast calibration
+    //     cPedeNoise.measureNoise();
+    //     cPedeNoise.writeObjects();
+    //     cPedeNoise.dumpConfigFiles();
+    //     cPedeNoise.Reset();
+    //     t.stop();
+    //     t.show("Time to Scan Pedestals and Noise");
+    //     if(cGui) { gui::message("Noise measured"); }
 
-        // cOpenFinder.SelectAntennaPosition("Disable", 512);
-    }
+    //     // cOpenFinder.SelectAntennaPosition("Disable", 512);
+    // }
 
     // cHybridTester.SetTrim("GAINTRIMMING",7);
     // // equalize thresholds on readout chips
@@ -520,15 +520,16 @@ int main(int argc, char* argv[])
                 cHybridTester.SSAPairSelect(cSSAPair);
                 cBackendAlignment.SetEnabledROCs(cSSAPair);
                 for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
-                // cHybridTester.SSATestStubOutput(cSSAPair);
-                // cHybridTester.SSATestL1Output(cSSAPair);
+                cHybridTester.SSATestStubOutput(cSSAPair);
+                cHybridTester.SSATestL1Output(cSSAPair);
                 cHybridTester.SSATestLateralCommunication(cSSAPair);
             }
             else
             {
                 std::string cCurrentSSAPair;
                 for(int i = 0; i < 7; i += 2)
-                {
+                {                    
+                    LOG(INFO) << "Starting SSA outputs test" << RESET;
                     cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
                     cHybridTester.SSAPairSelect(cCurrentSSAPair);
                     cBackendAlignment.SetEnabledROCs(cCurrentSSAPair);
@@ -539,6 +540,7 @@ int main(int argc, char* argv[])
 
                 for(int i = 0; i < 7; i++)
                 {
+                    LOG(INFO) << "Starting inter-SSA communication test" << RESET;
                     cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
                     cHybridTester.SSAPairSelect(cCurrentSSAPair);
                     cBackendAlignment.SetEnabledROCs(cCurrentSSAPair);
