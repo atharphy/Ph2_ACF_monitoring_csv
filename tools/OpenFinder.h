@@ -12,7 +12,6 @@
 #ifndef OpenFinder_h__
 #define OpenFinder_h__
 
-
 #if defined(__ANTENNA__)
 #include "Antenna.h"
 #endif

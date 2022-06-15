@@ -573,7 +573,7 @@ void PSHybridTester::SSATestL1Output(BeBoard* pBoard, const std::string& cSSAPai
     this->SSAPairSelect(pBoard, cSSAPairSel);
     // now cycle through chips one at a time ..
     std::vector<bool> cLinesInPairOK = {false, false};
-    bool cWithSSA2 = false;
+    bool              cWithSSA2      = false;
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
@@ -808,7 +808,8 @@ void PSHybridTester::SSATestLateralCommunication(Ph2_HwDescription::BeBoard* pBo
                                     cRegisterValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, "LateralRX_sampling");
                                     LOG(INFO) << "LateralRX_sampling was " << std::bitset<8>(cRegisterValue).to_string() << RESET;
                                     // cRegisterValue = (cRegisterValue & 0x8F) | (cLateralPhase << 4);
-                                    LOG(INFO) << "LateralRX_sampling (Right rx) set to " << std::bitset<3>(cLateralPhase).to_string() << "(" << +cLateralPhase  << ")"<< " on chip " << +cReadoutChip->getId() << RESET;
+                                    LOG(INFO) << "LateralRX_sampling (Right rx) set to " << std::bitset<3>(cLateralPhase).to_string() << "(" << +cLateralPhase << ")"
+                                              << " on chip " << +cReadoutChip->getId() << RESET;
                                     fReadoutChipInterface->WriteChipReg(cReadoutChip, "LateralRX_R_PhaseData", cLateralPhase, false); // Set right receiver of adjacent SSA
                                 }
                                 else
@@ -875,8 +876,8 @@ void PSHybridTester::SSATestLateralCommunication(Ph2_HwDescription::BeBoard* pBo
             //         cInjectionSuccesful = true;
             //         for (uint8_t strip=0; strip < cStripsL1Packet.length() ; strip++)
             //         {
-            //             LOG(DEBUG) << "Starting at 0: strip #" << +strip << "should be " << +( cInjectedStrip == strip ) << ", " << "is " << +(uint8_t)(cStripsL1Packet[cStripsL1Packet.length() - strip - 1]-'0') << RESET;
-            //             cInjectionSuccesful &=  (uint8_t)( cInjectedStrip == strip ) == (uint8_t)(cStripsL1Packet[cStripsL1Packet.length() - strip - 1]-'0');
+            //             LOG(DEBUG) << "Starting at 0: strip #" << +strip << "should be " << +( cInjectedStrip == strip ) << ", " << "is " << +(uint8_t)(cStripsL1Packet[cStripsL1Packet.length() -
+            //             strip - 1]-'0') << RESET; cInjectionSuccesful &=  (uint8_t)( cInjectedStrip == strip ) == (uint8_t)(cStripsL1Packet[cStripsL1Packet.length() - strip - 1]-'0');
             //         }
             //         if(!cInjectionSuccesful)
             //         {
@@ -897,7 +898,8 @@ void PSHybridTester::SSATestLateralCommunication(Ph2_HwDescription::BeBoard* pBo
             // }
 
             // Option 2: by checking that the centroid is present on the stub lines of the injected chip. To do if the check in the L1 line failed (because the line is bad)
-            if (!cInjectionSuccesful){
+            if(!cInjectionSuccesful)
+            {
                 LOG(INFO) << "cInjectedStrip " << +cInjectedStrip << RESET;
                 cInjectedSSACentroid = std::bitset<8>(cInjectedStrip * 2 + 9).to_string();
                 LOG(INFO) << "Centroid that should be generated on the injected SSA: " << cInjectedSSACentroid << RESET;
@@ -911,7 +913,7 @@ void PSHybridTester::SSATestLateralCommunication(Ph2_HwDescription::BeBoard* pBo
                 }
             }
             LOG(INFO) << "Injected chip is SSA#" << +cInjectedSSAId << " (chip " << +(1 - cInjectedSSAId % 2) << " in StubDebug). Adjacent chip is SSA#" << cAdjacentSSAId << " (chip "
-                    << +(1 - cAdjacentSSAId % 2) << " in StubDebug)." << RESET;
+                      << +(1 - cAdjacentSSAId % 2) << " in StubDebug)." << RESET;
             int cAdjacentSSAStripNumber;
             if(cPairId == 1)
                 cAdjacentSSAStripNumber = 119 + cInjectedStrip + 1;
@@ -1010,7 +1012,7 @@ std::vector<double> PSHybridTester::DecodeSSACentroids(std::vector<std::string> 
 std::vector<std::string> PSHybridTester::DecodeSSAL1Packet(int pSSAType, std::string pL1Data)
 {
     std::vector<std::string> cDecodedL1Packet;
-    if(pSSAType == 1) //SSA1 L1 packet: Header [2 bits] + L1 counter [4 bits] + BX counter [9 bits] + Strips [120 bits] + MIP flags [24 bits]
+    if(pSSAType == 1) // SSA1 L1 packet: Header [2 bits] + L1 counter [4 bits] + BX counter [9 bits] + Strips [120 bits] + MIP flags [24 bits]
     {
         cDecodedL1Packet.push_back(pL1Data.substr(0, 2));                //[0] Header
         cDecodedL1Packet.push_back(pL1Data.substr(2, 4));                //[1] L1 Counter
@@ -1018,7 +1020,7 @@ std::vector<std::string> PSHybridTester::DecodeSSAL1Packet(int pSSAType, std::st
         cDecodedL1Packet.push_back(pL1Data.substr(2 + 4 + 9, 120));      //[3] Strips
         cDecodedL1Packet.push_back(pL1Data.substr(2 + 4 + 9 + 120, 24)); //[4] MIP Flags
     }
-    else if(pSSAType == 2) //SSA2 L1 packet: Header [2 bits] + L1 counter [9 bits] + BX counter [9 bits] + MIP flags [24 bits] + Strips [120 bits]
+    else if(pSSAType == 2) // SSA2 L1 packet: Header [2 bits] + L1 counter [9 bits] + BX counter [9 bits] + MIP flags [24 bits] + Strips [120 bits]
     {
         cDecodedL1Packet.push_back(pL1Data.substr(0, 2));                //[0] Header
         cDecodedL1Packet.push_back(pL1Data.substr(2, 9));                //[1] L1 Counter

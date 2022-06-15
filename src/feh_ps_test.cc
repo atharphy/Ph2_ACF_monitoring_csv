@@ -239,13 +239,11 @@ int main(int argc, char* argv[])
         // to what they were before this tool was called
         cBackEndAligner.Reset();
 
-
         bool    cAligned = false;
         double  cAlignedDouble;
         uint8_t cPhaseAlignmentPattern = 0xAA;
         for(int i = 0; i < 3; i++)
         {
-
             for(int i = 0; i < 10; i++)
             {
                 // Check if data player is running
@@ -258,9 +256,9 @@ int main(int argc, char* argv[])
                 // Configure and Start DataPlayer to send phase alignment pattern
                 cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                cDPInterfacer.Start(cInterface,0);
+                cDPInterfacer.Start(cInterface, 0);
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                if(cDPInterfacer.IsRunning(cInterface,0))
+                if(cDPInterfacer.IsRunning(cInterface, 0))
                 {
                     LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
                     break;
@@ -291,7 +289,7 @@ int main(int argc, char* argv[])
             // }
             if(cAligned) break;
         }
-        
+
         // align back-end
         // cBackEndAligner.Start(0);
         // cBackEndAligner.waitForRunToBeCompleted();
@@ -314,7 +312,7 @@ int main(int argc, char* argv[])
         // cDataChecker.resetPointers();
     }
 
-// #if defined(__ANTENNA__)
+    // #if defined(__ANTENNA__)
     // OpenFinder cOpenFinder;
     // cOpenFinder.Inherit(&cHybridTester);
     // std::string antennaValue = (cmd.foundOption("antennaValue")) ? cmd.optionValue("antennaValue") : "512";
@@ -325,7 +323,7 @@ int main(int argc, char* argv[])
     //     cOpenFinder.SelectAntennaPosition("EvenChannels", std::stoi(antennaValue));
     //     LOG(INFO) << "Setting antenna" << RESET;
     // }
-// #endif
+    // #endif
 
     // measure noise on FE chips before calibration
     // if(cmd.foundOption("measurePedeNoise") && cmd.foundOption("antennaValue"))
@@ -528,7 +526,7 @@ int main(int argc, char* argv[])
             {
                 std::string cCurrentSSAPair;
                 for(int i = 0; i < 7; i += 2)
-                {                    
+                {
                     LOG(INFO) << "Starting SSA outputs test" << RESET;
                     cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
                     cHybridTester.SSAPairSelect(cCurrentSSAPair);

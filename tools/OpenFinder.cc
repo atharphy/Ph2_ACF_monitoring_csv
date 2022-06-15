@@ -1,4 +1,4 @@
-#if defined(__TCUSB__) && defined(__USE_ROOT__) && defined(__ANTENNA__)
+#if defined(__TCUSB__) && defined(__USE_ROOT__)
 #include "OpenFinder.h"
 #include "CBCChannelGroupHandler.h"
 #include "ContainerFactory.h"
@@ -341,7 +341,7 @@ void OpenFinder::Print()
 
 void OpenFinder::FindOpens2S()
 {
-    #if defined(__ANTENNA__)
+#if defined(__ANTENNA__)
     // The main antenna object is needed here
     // Antenna cAntenna;
     // Antenna cAntenna = Antenna(fParameters.UsbId.c_str());
@@ -397,7 +397,7 @@ void OpenFinder::FindOpens2S()
         // de-select all channels
         cAntenna.TurnOnAnalogSwitchChannel(9);
     }
-    #endif
+#endif
 }
 void OpenFinder::SelectAntennaPosition(const std::string& cPosition, uint16_t potentiometer)
 {
@@ -492,11 +492,9 @@ void OpenFinder::FindOpensPS()
 
                         if(cPedeMean != -1.0)
                         {
-                            if(cPedeMean <= cPedeStdDev*2)
+                            if(cPedeMean <= cPedeStdDev * 2) { cThreshold = (uint16_t)(cPedeMean); }
+                            else
                             {
-                                cThreshold = (uint16_t)(cPedeMean);
-                            }
-                            else{
                                 if((cPedeMean + 3 * cPedeStdDev) <= 255) { cThreshold = (uint16_t)(cPedeMean + 3 * cPedeStdDev); }
                             }
                             LOG(INFO) << BOLDBLUE << "Threshold  " << cThreshold << RESET;
@@ -714,7 +712,7 @@ void OpenFinder::FindOpensPS()
                                         {
                                             antennaPullupHighEnd = antennaPullup - 1;
                                         }
-                                        if (nTries > 50) //Check if we want to keep this
+                                        if(nTries > 50) // Check if we want to keep this
                                         {
                                             LOG(INFO) << BOLDRED << "Could not find a valid antenna value for " << chn << " channels of chip " << +cChip->getId() << "!!" << RESET;
                                             break;
@@ -850,7 +848,7 @@ void OpenFinder::FindOpensPS()
                                             LOG(INFO) << BOLDBLUE << "Chip " << +cChip->getId() << " strip " << +iChannel << " detected " << +cHitVector[iChannel] << " hits when at most "
                                                       << +fParameters.nTriggers << " were expected." << RESET;
                                         }
-                                        else if(cHitVector[iChannel] <= (1.0 - THRESHOLD_OPEN*2.5) * fParameters.nTriggers)
+                                        else if(cHitVector[iChannel] <= (1.0 - THRESHOLD_OPEN * 2.5) * fParameters.nTriggers)
                                             LOG(INFO) << BOLDYELLOW << "Chip " << +cChip->getId() << " strip " << +iChannel << " detected " << +cHitVector[iChannel] << " hits when at most "
                                                       << +fParameters.nTriggers << " were expected." << RESET;
                                         else

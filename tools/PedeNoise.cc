@@ -985,7 +985,7 @@ void PedeNoise::producePedeNoisePlots()
 #ifdef __USE_ROOT__
     fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(*fThresholdAndNoiseContainer);
 
-    LOG(INFO) << "ProducingPedePlotsROOT" << RESET; //Can this stay...?
+    LOG(INFO) << "ProducingPedePlotsROOT" << RESET; // Can this stay...?
     // Storing noise and pedestal average and RMS values on the summaryTree. Probably not the best way.
     for(auto board: *fThresholdAndNoiseContainer)
     {

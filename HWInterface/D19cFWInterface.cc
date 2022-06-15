@@ -217,10 +217,8 @@ uint32_t D19cFWInterface::getBoardInfo()
     uint32_t fmc2_card_type = ReadReg("fc7_daq_stat.general.info.fmc2_card_type");
 
     int firmware_timestamp = ReadReg("fc7_daq_stat.general.firmware_timestamp");
-    LOG(INFO) << "Compiled on: " << BOLDGREEN << ((firmware_timestamp >> 27) & 0x1F) << "." << ((firmware_timestamp
-    >> 23) & 0xF) << "." << ((firmware_timestamp >> 17) & 0x3F) << " " << ((firmware_timestamp >> 12) & 0x1F) << ":"
-    << ((firmware_timestamp >> 6) & 0x3F) << ":" << ((firmware_timestamp >> 0) & 0x3F) << " (dd.mm.yy hh:mm:ss)" <<
-    RESET;
+    LOG(INFO) << "Compiled on: " << BOLDGREEN << ((firmware_timestamp >> 27) & 0x1F) << "." << ((firmware_timestamp >> 23) & 0xF) << "." << ((firmware_timestamp >> 17) & 0x3F) << " "
+              << ((firmware_timestamp >> 12) & 0x1F) << ":" << ((firmware_timestamp >> 6) & 0x3F) << ":" << ((firmware_timestamp >> 0) & 0x3F) << " (dd.mm.yy hh:mm:ss)" << RESET;
 
     if(implementation == 0)
         LOG(INFO) << "Implementation: " << BOLDGREEN << "Optical" << RESET;
@@ -237,7 +235,7 @@ uint32_t D19cFWInterface::getBoardInfo()
     LOG(INFO) << "Chip Type: " << BOLDGREEN << getChipName(chip_code) << RESET;
     LOG(INFO) << "Number of Hybrids: " << BOLDGREEN << num_hybrids << RESET;
     LOG(INFO) << "Number of Chips per Hybrid: " << BOLDGREEN << num_chips << RESET;
-     
+
     uint32_t cVersionWord = 0;
     return cVersionWord;
 }
@@ -772,7 +770,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     }
 
     ConfigureInterfaces(pBoard);
-    
+
     // resetting hard
     if(fFirmwareFrontEndType == FrontEndType::CIC || fFirmwareFrontEndType == FrontEndType::CIC2)
     {
@@ -1145,9 +1143,6 @@ bool D19cFWInterface::WriteBlockReg(const std::string& pRegNode, const std::vect
 /////////////////////////////////////////////////////
 // TODO: check what to do with fFMCid and if I need it!
 // this is clearly for addressing individual CBCs, have to see how to deal with broadcast commands
-
-
-
 
 void D19cFWInterface::ReadoutChipReset()
 {
@@ -1824,7 +1819,7 @@ std::vector<uint8_t> D19cFWInterface::MultiRegisterRead(Chip* pChip, std::vector
 }
 uint8_t D19cFWInterface::SingleRegisterRead(Chip* pChip, ChipRegItem& pItem)
 {
-    if(pItem.fControlReg == 1 ) return 0;
+    if(pItem.fControlReg == 1) return 0;
 
     std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
     uint8_t                               cValue = 0;
@@ -1852,7 +1847,7 @@ uint8_t D19cFWInterface::SingleRegisterRead(Chip* pChip, ChipRegItem& pItem)
 bool D19cFWInterface::SingleRegisterWrite(Chip* pChip, ChipRegItem& pItem, bool pVerify)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
-    if(pVerify && pItem.fControlReg == 0 ) return SingleRegisterWriteRead(pChip, pItem);
+    if(pVerify && pItem.fControlReg == 0) return SingleRegisterWriteRead(pChip, pItem);
 
     auto cRegisterMap = pChip->getRegMap();
     auto cIterator    = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&pItem](const ChipRegPair& obj) { return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage; });
@@ -1877,9 +1872,9 @@ bool D19cFWInterface::SingleRegisterWrite(Chip* pChip, ChipRegItem& pItem, bool 
 }
 bool D19cFWInterface::SingleRegisterWriteRead(Chip* pChip, ChipRegItem& pItem)
 {
-    if(pItem.fControlReg == 1 )
+    if(pItem.fControlReg == 1)
     {
-        LOG (INFO) << BOLDYELLOW << "D19cFWInterface::SingleRegisterWriteRead Control register..." << RESET;
+        LOG(INFO) << BOLDYELLOW << "D19cFWInterface::SingleRegisterWriteRead Control register..." << RESET;
         return false;
     }
     std::lock_guard<std::recursive_mutex> theGuard(fMutex); // Fabio:: I  do not like this lock
