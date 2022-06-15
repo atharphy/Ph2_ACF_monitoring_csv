@@ -260,8 +260,8 @@ sudo yum install -y git-extras
 
 Install devtoolset 10
 
-        $> sudo yum install -y centos-release-scl-rh
-        $> sudo yum install -y devtoolset-10
+        $> sudo yum makecache --refresh
+        $> sudo yum -y install gcc-toolset-10-gcc
 
 Install python3
 
@@ -335,54 +335,6 @@ Install pybind11 (if installed in the same directoory when you plan to install t
 
         $> wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
         $> tar zxvf v2.9.2.tar.gz
-
-### Setup on SLC6
-
-1. Install a gcc compiler version > 4.8 - on scientific linux you can obtain this by installing devtoolset-2 or devtoolset-2.1:
-
-        $> sudo wget -O /etc/yum.repos.d/slc6-devtoolset.repo http://linuxsoft.cern.ch/cern/devtoolset/slc6-devtoolset.repo
-        $> sudo yum install devtoolset-2
-        $> . /opt/rh/devtoolset-2/enable   # add this to your .bashrc
-        $> sudo ln -s /opt/rh/devtoolset-2/root/usr/bin/* /usr/local/bin/
-        $> hash -r
-
-    This should give you a more recent gcc (e.g. gcc 4.8.2)
-
-        $> gcc --version
-
-    Alternatively you can use a gcc version > 4.8 from AFS
-
-2. Install uHAL. The uHAL version should be 2.5 or lower. Version 2.6 does not work with the middleware at the moment! 
-
-    First create a new ipbus repo for yum:
-
-        $> sudo cat > /etc/yum.repos.d/ipbus-sw.repo << EOF
-        $> [ipbus-sw-base]
-        $> name=IPbus software repository
-        $> baseurl=http://www.cern.ch/ipbus/sw/release/2.5/centos7_x86_64/base/RPMS
-        $> enabled=1
-        $> gpgcheck=0
-
-        $> [ipbus-sw-updates]
-        $> name=IPbus software repository updates
-        $> baseurl=http://www.cern.ch/ipbus/sw/release/2.5/centos7_x86_64/updates/RPMS
-        $> enabled=1
-        $> gpgcheck=0
-
-    Then install uHAL as follows:
-
-        $> sudo yum clean all
-        $> sudo yum groupinstall uhal
-
-3. Install CERN ROOT version 5.34.32 [Instructions](http://root.cern.ch/drupal/content/installing-root-source) - make sure to use "fixed location installation" when building yourself. If root is installed on a CERN computer of virtual machine you can use:
-       
-        $> sudo yum install root
-        $> sudo yum install root-net-http root-graf3d-gl root-physics root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
-
-4. Install CMAKE > 2.8. On SLC6 the default is cmake 2.8
-
-        $> sudo yum install cmake
-
 
 ### The Ph2_ACF software
 

@@ -1,5 +1,13 @@
 #!/bin/bash
-source scl_source enable devtoolset-10 || true # This might cause a nonzero exit code in the CI for some reason, so let's ignore it
+majorRelease=$(cat /etc/centos-release | tr -dc '0-9.'|cut -d \. -f1)
+
+if [[ $majorRelease == "7" ]]; then
+  source scl_source enable devtoolset-10 || true # This might cause a nonzero exit code in the CI for some reason, so let's ignore it
+elif [[ $majorRelease == "8" ]]; then
+  source scl_source enable gcc-toolset-10
+else
+  echo OS Release not supported
+fi
 
 ###########
 # Ph2_ACF #
