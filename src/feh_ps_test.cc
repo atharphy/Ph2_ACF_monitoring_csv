@@ -235,21 +235,29 @@ int main(int argc, char* argv[])
         uint8_t cPhaseAlignmentPattern = 0xAA;
         for(int i = 0; i < 3; i++)
         {
-            // Check if data player is running
-            if(cDPInterfacer.IsRunning(cInterface))
-            {
-                LOG(INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
-                cDPInterfacer.Stop(cInterface);
-            }
 
-            // Configure and Start DataPlayer
-            // to send phase alignment pattern
-            cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
-            cDPInterfacer.Start(cInterface);
-            // cDPInterfacer.StartSyncPlaying(cInterface);
-            if(cDPInterfacer.IsRunning(cInterface)) { LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET; }
-            else
-                LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
+            for(int i = 0; i < 10; i++)
+            {
+                // Check if data player is running
+                if(cDPInterfacer.IsRunning(cInterface))
+                {
+                    LOG(INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
+                    cDPInterfacer.Stop(cInterface);
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                // Configure and Start DataPlayer to send phase alignment pattern
+                cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                cDPInterfacer.Start(cInterface,0);
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                if(cDPInterfacer.IsRunning(cInterface,0))
+                {
+                    LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
+                    break;
+                }
+                else
+                    LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
+            }
 
             // align CIC inputs
             CicFEAlignment cCicAligner;
