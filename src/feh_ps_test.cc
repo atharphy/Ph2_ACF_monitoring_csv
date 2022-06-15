@@ -396,34 +396,14 @@ int main(int argc, char* argv[])
     }
 
     if(cmd.foundOption("checkCountersRead")) { cHybridTester.CheckCounters(); }
-    if(cmd.foundOption("findShorts"))
-    {
-        if(cGui)
-        {
-            gui::status("Running short finding procedure...");
-            gui::message("");
-            gui::progress(5 / 10.0);
-        }
-        ShortFinder cShortFinder;
-        cShortFinder.Inherit(&cHybridTester);
-        cShortFinder.Initialise();
-        cShortFinder.FindShorts();
 
-        if(cGui)
-        {
-            gui::message("Short finding done");
-            gui::progress(5.5 / 10.0);
-        }
-    }
-
-#if defined(__ANTENNA__)
     if(cmd.foundOption("findOpens"))
     {
         if(cGui)
         {
             gui::status("Running open finding procedure...");
             gui::message("");
-            gui::progress(6 / 10.0);
+            gui::progress(5 / 10.0);
         }
 
         OpenFinder cOpenFinder;
@@ -433,11 +413,29 @@ int main(int argc, char* argv[])
         if(cGui)
         {
             gui::message("Open finding done");
+            gui::progress(6 / 10.0);
+        }
+    }
+
+    if(cmd.foundOption("findShorts"))
+    {
+        if(cGui)
+        {
+            gui::status("Running short finding procedure...");
+            gui::message("");
+            gui::progress(6.5 / 10.0);
+        }
+        ShortFinder cShortFinder;
+        cShortFinder.Inherit(&cHybridTester);
+        cShortFinder.Initialise();
+        cShortFinder.FindShorts();
+
+        if(cGui)
+        {
+            gui::message("Short finding done");
             gui::progress(7 / 10.0);
         }
     }
-#endif
-
     // test MPA outputs
     // test MPA outputs
     if(cmd.foundOption("mpaTest"))
