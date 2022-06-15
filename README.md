@@ -269,19 +269,13 @@ Install python3
 
 Install protobuf:
 
-        Follow instructions from
+        Follow instructions to install protobuf from (Just install section is needed)
         https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
 
 Install pybind11 (if installed in the same directoory when you plan to install the Ph2_ACF, the setup.sh will point to the correct location)
 
         $> wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
         $> tar zxvf v2.9.2.tar.gz
-        $> cd pybind11-2.9.2
-        $> mkdir build
-        $> cd build
-        $> cmake3 ..
-        $> make check -j <number_of_cores>
-
 
 
 ### clang-format (required to submit merge requests!!!)
