@@ -653,8 +653,10 @@ void OpenFinder::FindOpensPS()
                                 antennaPullupHighEnd = this->findValueInSettings<double>("AntennaPotentiometerHighEnd");
 
                                 // BINARY SEARCH
+                                uint8_t nTries = 0;
                                 while(!antenna_set)
                                 {
+                                    nTries++;
                                     if(antennaPullupHighEnd < antennaPullupLowEnd)
                                     {
                                         LOG(INFO) << BOLDRED << "Could not find a valid antenna value for " << chn << " channels of chip " << +cChip->getId() << "!!" << RESET;
@@ -711,6 +713,11 @@ void OpenFinder::FindOpensPS()
                                         else if(occupancy_avg > 0.99)
                                         {
                                             antennaPullupHighEnd = antennaPullup - 1;
+                                        }
+                                        if (nTries > 50) //Check if we want to keep this
+                                        {
+                                            LOG(INFO) << BOLDRED << "Could not find a valid antenna value for " << chn << " channels of chip " << +cChip->getId() << "!!" << RESET;
+                                            break;
                                         }
                                     }
                                 }
