@@ -341,6 +341,7 @@ void OpenFinder::Print()
 
 void OpenFinder::FindOpens2S()
 {
+    #if defined(__ANTENNA__)
     // The main antenna object is needed here
     // Antenna cAntenna;
     // Antenna cAntenna = Antenna(fParameters.UsbId.c_str());
@@ -396,10 +397,12 @@ void OpenFinder::FindOpens2S()
         // de-select all channels
         cAntenna.TurnOnAnalogSwitchChannel(9);
     }
+    #endif
 }
 void OpenFinder::SelectAntennaPosition(const std::string& cPosition, uint16_t potentiometer)
 {
     if(potentiometer != 0) fParameters.potentiometer = potentiometer;
+#if defined(__TCUSB__)
     auto cMapIterator = fAntennaControl.find(cPosition);
     if(cMapIterator != fAntennaControl.end())
     {
@@ -416,10 +419,12 @@ void OpenFinder::SelectAntennaPosition(const std::string& cPosition, uint16_t po
         LOG(INFO) << BOLDBLUE << "Antenna Pull-up Measurement : " << measurement << " mV." << RESET;
         if(cPosition == "Disable") ReadAntennaVoltage();
     }
+#endif
 }
 
 void OpenFinder::FindOpensPS()
 {
+#if defined(__TCUSB__)
     float   measurement;
     TC_PSFE cTC_PSFE;
     cTC_PSFE.adc_get(TC_PSFE::measurement::_3V3, measurement);
@@ -487,13 +492,24 @@ void OpenFinder::FindOpensPS()
 
                         if(cPedeMean != -1.0)
                         {
-                            if((cPedeMean + 3 * cPedeStdDev) <= 255) { cThreshold = (uint16_t)(cPedeMean + 3 * cPedeStdDev); }
+                            if(cPedeMean <= cPedeStdDev*2)
+                            {
+                                cThreshold = (uint16_t)(cPedeMean);
+                            }
+                            else{
+                                if((cPedeMean + 3 * cPedeStdDev) <= 255) { cThreshold = (uint16_t)(cPedeMean + 3 * cPedeStdDev); }
+                            }
                             LOG(INFO) << BOLDBLUE << "Threshold  " << cThreshold << RESET;
-                            ;
+                        }
+                        else
+                        {
+                            cThreshold = fReadoutChipInterface->ReadChipReg(cChip, "Threshold");
                         }
                         // cThreshold = 12;
                         std::string tmpParameter = "thresholdForOpens_" + std::to_string(cChip->getId());
+#if defined(__USE_ROOT__)
                         fillSummaryTree(tmpParameter, cThreshold);
+#endif
 
                         // std::string cHistName  = Form("AntennaOccupancy_Even_%d", cChip->getId());
                         // if ( gROOT->FindObject(cHistName.c_str()) != nullptr )
@@ -679,7 +695,7 @@ void OpenFinder::FindOpensPS()
                                         LOG(INFO) << "Occupancy on " << chn << " channels of chip " << +cChip->getId() << " for antenna value " << fParameters.potentiometer << ": " << BOLDBLUE
                                                   << occupancy_avg << RESET;
 
-                                        if(occupancy_avg >= 0.95 && occupancy_avg <= 0.99)
+                                        if(occupancy_avg >= 0.90 && occupancy_avg <= 0.99)
                                         {
                                             antenna_set = true;
                                             LOG(INFO) << BOLDGREEN << "Antenna value for " << chn << " channels of chip " << +cChip->getId() << " set to " << antennaPullup << RESET;
@@ -688,7 +704,7 @@ void OpenFinder::FindOpensPS()
                                             else
                                                 finalAntennaOdd[cChip->getIndex()] = antennaPullup;
                                         }
-                                        else if(occupancy_avg < 0.95)
+                                        else if(occupancy_avg < 0.90)
                                         {
                                             antennaPullupLowEnd = antennaPullup + 1;
                                         }
@@ -708,12 +724,14 @@ void OpenFinder::FindOpensPS()
 
     LOG(INFO) << BOLDBLUE << "Antenna values set, running to open finder." << RESET;
 
+#if defined(__USE_ROOT__)
     fResultFile->cd();
     TString               fOpensTreeParameter = "";
     std::vector<uint16_t> fOpensTreeValue     = {};
     TTree*                fOpensTree          = new TTree("opensTree", "Opens in hybrid");
     fOpensTree->Branch("Chip", &fOpensTreeParameter);
     fOpensTree->Branch("Value", &fOpensTreeValue);
+#endif
 
     bool        cOpensFound = false;
     std::string Channels    = "";
@@ -825,7 +843,7 @@ void OpenFinder::FindOpensPS()
                                             LOG(INFO) << BOLDBLUE << "Chip " << +cChip->getId() << " strip " << +iChannel << " detected " << +cHitVector[iChannel] << " hits when at most "
                                                       << +fParameters.nTriggers << " were expected." << RESET;
                                         }
-                                        else if(cHitVector[iChannel] <= (1.0 - THRESHOLD_OPEN) * fParameters.nTriggers)
+                                        else if(cHitVector[iChannel] <= (1.0 - THRESHOLD_OPEN*2.5) * fParameters.nTriggers)
                                             LOG(INFO) << BOLDYELLOW << "Chip " << +cChip->getId() << " strip " << +iChannel << " detected " << +cHitVector[iChannel] << " hits when at most "
                                                       << +fParameters.nTriggers << " were expected." << RESET;
                                         else
@@ -838,6 +856,7 @@ void OpenFinder::FindOpensPS()
 
                                 tmpParameter = "";
                                 tmpParameter = "opens_" + std::to_string(cChip->getId()) + "_" + Channels;
+#if defined(__USE_ROOT__)
                                 fillSummaryTree(tmpParameter, opens.size());
                                 if(true)
                                 {
@@ -847,6 +866,7 @@ void OpenFinder::FindOpensPS()
                                     fOpensTreeValue     = opens;
                                     fOpensTree->Fill();
                                 }
+#endif
                             }
 
                             if(!cOpensFound)
@@ -864,6 +884,7 @@ void OpenFinder::FindOpensPS()
             }
         }
     }
+#endif
 }
 void OpenFinder::FindOpens() {}
 #endif
