@@ -294,7 +294,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
 
     // find pedestal
     float cOccTarget = 0.5;
-    this->bitWiseScan("Threshold", fEventsPerPoint, cOccTarget);
+    // this->bitWiseScan("Threshold", fEventsPerPoint, cOccTarget);
     DetectorDataContainer cPedestalContainer;
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, cPedestalContainer);
     float cMeanValue       = 0;
