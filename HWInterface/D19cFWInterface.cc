@@ -461,15 +461,14 @@ void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
         {
             LOG(INFO) << BOLDBLUE << "Optical readout . initializing Optical interface for FE configuration" << RESET;
             fFEConfigurationInterface   = new D19cOpticalInterface(this->getId(), this->getUri(), this->getAddressTable());
-            cConfiguration.fRetryIC     = true;
-            cConfiguration.fMaxRetryIC  = 100;
-            cConfiguration.fRetryI2C    = true;
-            cConfiguration.fMaxRetryI2C = 100;
-            cConfiguration.fRetryFE     = true;
-            cConfiguration.fMaxRetryFE  = 100;
+            cConfiguration.fRetryIC     = ReadReg("fc7_daq_cnfg.optical_block.lpgbt_sc_worker.ic_retry");
+            cConfiguration.fMaxRetryIC  = ReadReg("fc7_daq_cnfg.optical_block.lpgbt_sc_worker.max_ic_retry");
+            cConfiguration.fRetryI2C    = ReadReg("fc7_daq_cnfg.optical_block.lpgbt_sc_worker.i2c_retry");
+            cConfiguration.fMaxRetryI2C = ReadReg("fc7_daq_cnfg.optical_block.lpgbt_sc_worker.max_i2c_retry");
+            cConfiguration.fRetryFE     = ReadReg("fc7_daq_cnfg.optical_block.lpgbt_sc_worker.fe_retry");
+            cConfiguration.fMaxRetryFE  = ReadReg("fc7_daq_cnfg.optical_block.lpgbt_sc_worker.max_fe_retry");
             static_cast<D19cOpticalInterface*>(fFEConfigurationInterface)->LinkLpGBTSlowControlWorkerInterface(flpGBTSlowControlWorkerInterface);
         }
-        fFEConfigurationInterface->Configure(cConfiguration);
     }
 
     // configure L1 readout interface
