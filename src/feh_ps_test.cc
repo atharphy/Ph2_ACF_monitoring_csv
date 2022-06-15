@@ -496,8 +496,8 @@ int main(int argc, char* argv[])
                 cHybridTester.SSAPairSelect(cSSAPair);
                 cBackendAlignment.SetEnabledROCs(cSSAPair);
                 for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
-                cHybridTester.SSATestStubOutput(cSSAPair);
-                cHybridTester.SSATestL1Output(cSSAPair);
+                // cHybridTester.SSATestStubOutput(cSSAPair);
+                // cHybridTester.SSATestL1Output(cSSAPair);
                 cHybridTester.SSATestLateralCommunication(cSSAPair);
             }
             else

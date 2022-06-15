@@ -573,7 +573,7 @@ void PSHybridTester::SSATestL1Output(BeBoard* pBoard, const std::string& cSSAPai
     this->SSAPairSelect(pBoard, cSSAPairSel);
     // now cycle through chips one at a time ..
     std::vector<bool> cLinesInPairOK = {false, false};
-    bool              cWithSSA2      = false;
+    bool cWithSSA2 = false;
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
@@ -730,7 +730,7 @@ void PSHybridTester::SSATestLateralCommunication(Ph2_HwDescription::BeBoard* pBo
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
     uint8_t cLatency = 100;
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", cLatency});
-    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse", cLatency});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse", 2});
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset", 50});
     uint8_t cLatencyOffset = 2;
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0});
@@ -738,7 +738,7 @@ void PSHybridTester::SSATestLateralCommunication(Ph2_HwDescription::BeBoard* pBo
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
     fBeBoardInterface->Start(pBoard);
-    // fBeBoardInterface->Stop(pBoard);
+    fBeBoardInterface->Stop(pBoard);
     for(uint8_t cPairId = 0; cPairId < 2; cPairId++)
     {
         int         cInjectedSSAId       = (int)(pSSAPairSel[cPairId] - '0');
