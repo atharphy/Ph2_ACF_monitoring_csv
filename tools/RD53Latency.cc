@@ -103,6 +103,7 @@ void Latency::localConfigure(const std::string& fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[Latency::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     Latency::ConfigureCalibration();
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "Latency");
     Latency::initializeFiles(fileRes_, currentRun);
 }
 
