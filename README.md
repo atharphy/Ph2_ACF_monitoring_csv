@@ -330,6 +330,21 @@ Install pybind11 (if installed in the same directoory when you plan to install t
         $> wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
         $> tar zxvf v2.9.2.tar.gz
 
+### Run in docker container
+    Docker container are provided to facilitate users and developers in setting up the framework.
+
+    All docker containers can be found here:
+    https://gitlab.cern.ch/cms_tk_ph2/docker_exploration/container_registry
+
+    Do run using one of the container, use the command:
+    $> docker run --rm -ti -v $PWD:$PWD -w $PWD <image>
+
+    Suggested emages are:
+    For users (comes with Ph2_ACF of Dev branch installed): `gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_udaq_c7:latest`
+    For developers (no Ph2_ACF, just environment and libraries): `gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_user_c7:latest`
+
+    Specific tags can be pulled substituting `latest` with `ph2_acf_<Ph2_ACF tag>` (i.e. `ph2_acf_v4-05`)
+
 ### The Ph2_ACF software
 
 Follow these instructions to install and compile the libraries:
