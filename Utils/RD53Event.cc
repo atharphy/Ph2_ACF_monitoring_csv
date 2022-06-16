@@ -380,6 +380,8 @@ void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53
 
 void RD53Event::ForkDecodingThreads()
 {
+    if(RD53Event::decodingThreads.size() != 0) RD53Event::JoinDecodingThreads();
+
     RD53Event::keepDecodersRunning = true;
 
     RD53Event::decodingThreads.clear();
