@@ -14,6 +14,8 @@ using namespace Ph2_HwInterface;
 
 void GainOptimization::ConfigureCalibration()
 {
+    auto firstChip = RD53::getFirstChip(fDetectorContainer);
+
     // ##############################
     // # Initialize sub-calibration #
     // ##############################
@@ -39,7 +41,7 @@ void GainOptimization::ConfigureCalibration()
     doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
 
-    frontEnd = static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getMajorityFE(colStart, colStop);
+    frontEnd = firstChip.getMajorityFE(colStart, colStop);
     colStart = std::max(colStart, frontEnd->colStart);
     colStop  = std::min(colStop, frontEnd->colStop);
     LOG(INFO) << GREEN << "GainOptimization will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << RESET << BOLDYELLOW << colStart << ", " << colStop
@@ -194,6 +196,8 @@ void GainOptimization::fillHisto()
 
 void GainOptimization::bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue)
 {
+    auto firstChip = RD53::getFirstChip(fDetectorConainer);
+
     std::vector<uint16_t> chipCommandList;
     std::vector<uint32_t> hybridCommandList;
 
@@ -283,8 +287,8 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, const float
                         float  avg    = 0;
                         float  stdDev = 0;
                         size_t cnt    = 0;
-                        for(auto row = 0u; row < RD53::nRows; row++)
-                            for(auto col = 0u; col < RD53::nCols; col++)
+                        for(auto row = 0u; row < firstChip.getNRows(); row++)
+                            for(auto col = 0u; col < firstChip.getNCols(); col++)
                                 if(cChip->getChannel<GainFit>(row, col).fChi2 > 0)
                                 {
                                     float ToTatTarget = Gain::gainFunction({cChip->getChannel<GainFit>(row, col).fIntercept, cChip->getChannel<GainFit>(row, col).fSlope}, target);

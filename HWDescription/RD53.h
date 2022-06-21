@@ -10,12 +10,12 @@
 #ifndef RD53_H
 #define RD53_H
 
+#include "../Utils/ChannelGroupHanlder.h"
 #include "../Utils/ConsoleColor.h"
+#include "../Utils/Container.h"
 #include "../Utils/RD53Shared.h"
 #include "../Utils/bit_packing.h"
 #include "../Utils/easylogging++.h"
-#include "../Utils/ChannelGroupHanlder.h"
-#include "../Utils/Container.h"
 
 #include "ReadoutChip.h"
 
@@ -104,12 +104,7 @@ namespace Ph2_HwDescription
 {
 struct perColumnPixelData
 {
-perColumnPixelData(size_t size)
-  : Enable(size)
-  , HitBus(size)
-  , InjEn(size)
-    , TDAC(size)
- {}
+    perColumnPixelData(size_t size) : Enable(size), HitBus(size), InjEn(size), TDAC(size) {}
 
     std::vector<uint8_t> Enable;
     std::vector<uint8_t> HitBus;
@@ -133,13 +128,12 @@ class RD53 : public ReadoutChip
         size_t      colStop;
     };
 
+    static RD53& getFirstChip(DetectorContainer& theDetContainer) { return *satic_cast<RD53*>(theDetContainer->at(0)->at(0)->at(0)->at(0)); };
 
-    static RD53& getFirstChip (DetectorContainer& theDetContainer) { return *satic_cast<RD53*>(theDetContainer->at(0)->at(0)->at(0)->at(0)); };
-
-    virtual std::unique_ptr<ChannelGroupBase> getChannelGroup() const = 0;
-    virtual size_t getNRows() const = 0;
-    virtual size_t getNCols() const = 0;
-    virtual const FrontEnd* getMajorityFE(size_t colStart, size_t colStop) const = 0;
+    virtual size_t                            getNRows() const                                     = 0;
+    virtual size_t                            getNCols() const                                     = 0;
+    virtual std::unique_ptr<ChannelGroupBase> getChannelGroup() const                              = 0;
+    virtual const FrontEnd*                   getMajorityFE(size_t colStart, size_t colStop) const = 0;
 
     RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
     RD53(const RD53& chipObj);

@@ -19,8 +19,9 @@ void ClockDelayHistograms::book(TFile* theOutputFile, DetectorContainer& theDete
     // #######################
     // # Retrieve parameters #
     // #######################
-    startValue = 0;
-    stopValue  = RD53Shared::NLATENCYBINS * (RD53Shared::setBits(static_cast<RD53*>(theDetectorStructure.at(0)->at(0)->at(0)->at(0))->getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY")) + 1) - 1;
+    auto firstChip = RD53::getFirstChip(theDetectorStructure);
+    startValue     = 0;
+    stopValue      = RD53Shared::NLATENCYBINS * (RD53Shared::setBits(firstChip.getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY")) + 1) - 1;
 
     auto hClockDelay = CanvasContainer<TH1F>("ClockDelay", "Clock Delay", stopValue - startValue + 1, startValue, stopValue + 1);
     bookImplementer(theOutputFile, theDetectorStructure, ClockDelay, hClockDelay, "Clock Delay (1.5625 ns)", "Entries");

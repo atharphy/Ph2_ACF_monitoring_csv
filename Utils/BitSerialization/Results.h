@@ -4,20 +4,24 @@
 #include "Errors.h"
 #include <optional>
 
-namespace BitSerialization {
-    
-struct ResultBase {};
+namespace BitSerialization
+{
+struct ResultBase
+{
+};
 
-template <class T, class Error=VoidError>
-class ParseResult : public ResultBase {
+template <class T, class Error = VoidError>
+class ParseResult : public ResultBase
+{
     static_assert(!std::is_base_of_v<ResultBase, T>);
 
-    struct _Data {
-        T value;
+    struct _Data
+    {
+        T      value;
         size_t size;
     };
 
-public:
+  public:
     using value_type = T;
     using error_type = Error;
 
@@ -26,60 +30,46 @@ public:
     // ParseResult(const ParseResult&) = default;
 
     // ParseResult(ParseResult&&) = default;
-    
-    ParseResult(T&& value, size_t size) 
-      : _storage(_Data{std::move(value), size})
-    {}
 
-    ParseResult(const T& value, size_t size) 
-      : _storage(_Data{value, size})
-    {}
+    ParseResult(T&& value, size_t size) : _storage(_Data{std::move(value), size}) {}
 
-    ParseResult(Error&& error) 
-      : _storage(std::move(error))
-    {}
+    ParseResult(const T& value, size_t size) : _storage(_Data{value, size}) {}
 
-    operator bool() const {
-        return !std::holds_alternative<Error>(_storage);
-    }
+    ParseResult(Error&& error) : _storage(std::move(error)) {}
 
-    T& value() { return std::get<_Data>(_storage).value; }
+    operator bool() const { return !std::holds_alternative<Error>(_storage); }
+
+    T&       value() { return std::get<_Data>(_storage).value; }
     const T& value() const { return std::get<_Data>(_storage).value; }
 
-    size_t& size() { return std::get<_Data>(_storage).size; }
+    size_t&       size() { return std::get<_Data>(_storage).size; }
     const size_t& size() const { return std::get<_Data>(_storage).size; }
 
-    Error& error() { return std::get<Error>(_storage); }
+    Error&       error() { return std::get<Error>(_storage); }
     const Error& error() const { return std::get<Error>(_storage); }
 
-private:
+  private:
     std::variant<_Data, Error> _storage;
 };
 
-
-
-template <class Error=VoidError>
-struct SerializeResult {
+template <class Error = VoidError>
+struct SerializeResult
+{
     using error_type = Error;
 
     SerializeResult() {}
 
-    SerializeResult(Error&& error)
-      : _storage(std::move(error))
-    {}
+    SerializeResult(Error&& error) : _storage(std::move(error)) {}
 
-    operator bool() const {
-        return !bool(_storage);
-    }
+    operator bool() const { return !bool(_storage); }
 
-    Error& error() { return _storage.value(); }
+    Error&       error() { return _storage.value(); }
     const Error& error() const { return _storage.value(); }
 
-private:
+  private:
     std::optional<Error> _storage;
 };
 
-
-}
+} // namespace BitSerialization
 
 #endif

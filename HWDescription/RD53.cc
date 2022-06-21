@@ -49,10 +49,10 @@ void RD53::loadfRegMap(const std::string& fileName)
 
                 if(line.find("COL") != std::string::npos)
                 {
-		  std::fill(pixData.Enable.begin(),pixData.Enable.begin(),0);
-		  std::fill(pixData.HitBus.begin(), pixData.HitBus.end(), 0);
-		  std::fill(pixData.InjEn.begin(), pixData.InjEn.end(),0);
-		  std::fill(pixData.TDAC.begin(), pixData.TDAC.end(), 0);
+                    std::fill(pixData.Enable.begin(), pixData.Enable.begin(), 0);
+                    std::fill(pixData.HitBus.begin(), pixData.HitBus.end(), 0);
+                    std::fill(pixData.InjEn.begin(), pixData.InjEn.end(), 0);
+                    std::fill(pixData.TDAC.begin(), pixData.TDAC.end(), 0);
                 }
                 else if(line.find("ENABLE") != std::string::npos)
                 {
@@ -379,7 +379,7 @@ void RD53::resetTDAC()
 
 uint8_t RD53::getTDAC(unsigned int row, unsigned int col) { return fPixelsMask[col].TDAC[row]; }
 
-  uint32_t RD53::getNumberOfChannels() const { return RD53::getNRows() * RD53::getNCols(); }
+uint32_t RD53::getNumberOfChannels() const { return RD53::getNRows() * RD53::getNCols(); }
 
 bool RD53::isDACLocal(const std::string& regName)
 {

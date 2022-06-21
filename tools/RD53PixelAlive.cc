@@ -37,7 +37,8 @@ void PixelAlive::ConfigureCalibration()
     // ################################
     // # Custom channel group handler #
     // ################################
-    auto customChannelGroup = fDetectorContainer->at(0)->at(0)->at(0)->at(0)->getChannelGroup();
+    auto firstChip          = RD53::getFirstChip(fDetectorContainer);
+    auto customChannelGroup = firstChip.getChannelGroup();
     customChannelGroup->disableAllChannels();
 
     for(auto row = rowStart; row <= rowStop; row++)
@@ -52,8 +53,8 @@ void PixelAlive::ConfigureCalibration()
     // # Set injection type #
     // ######################
     size_t inj = 0;
-    if(injType == INJtype::Digital) inj = 1 << static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY");
-    size_t maxDelay = RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"));
+    if(injType == INJtype::Digital) inj = 1 << firstChip.getNumberOfBits("INJECTION_SELECT_DELAY");
+    size_t maxDelay = RD53Shared::setBits(firstChip.getNumberOfBits("INJECTION_SELECT_DELAY"));
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
@@ -196,6 +197,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
 {
     const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+    auto         firstChip = RD53::getFirstChip(fDetectorConainer);
 
     theBCIDContainer.reset();
     theTrgIDContainer.reset();
@@ -229,8 +231,8 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
 
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
 
-                    for(auto row = 0u; row < RD53::nRows; row++)
-                        for(auto col = 0u; col < RD53::nCols; col++)
+                    for(auto row = 0u; row < firstChip.getNRows(); row++)
+                        for(auto col = 0u; col < firstChip.getNCols(); col++)
                             if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
                                                                                                                    ->at(cBoard->getIndex())
                                                                                                                    ->at(cOpticalGroup->getIndex())

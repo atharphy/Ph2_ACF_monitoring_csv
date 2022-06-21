@@ -31,7 +31,8 @@ void ThrEqualizationSC::ConfigureCalibration()
     doDisplay    = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip = this->findValueInSettings<double>("UpdateChipCfg");
 
-    frontEnd = RD53::getMajorityFE(SCurve::colStart, SCurve::colStop);
+    auto firstChip = RD53::getFirstChip(fDetectorContainer);
+    frontEnd       = firstChip.getMajorityFE(PixelAlive::colStart, PixelAlive::colStop);
     if(frontEnd == &RD53::SYNC)
     {
         LOG(ERROR) << BOLDRED << "ThrEqualizationSC cannot be used on the Synchronous FE, please change the selected columns" << RESET;
@@ -45,7 +46,7 @@ void ThrEqualizationSC::ConfigureCalibration()
     // ########################
     // # Custom channel group #
     // ########################
-    auto customChannelGroup = fDetectorContainer->at(0)->at(0)->at(0)->at(0)->getChannelGroup();
+    auto customChannelGroup = firstChip.getChannelGroup();
     customChannelGroup->disableAllChannels();
 
     for(auto row = SCurve::rowStart; row <= SCurve::rowStop; row++)
@@ -139,6 +140,8 @@ void ThrEqualizationSC::initializeFiles(const std::string& fileRes_, int current
 
 void ThrEqualizationSC::run()
 {
+    auto firstChip = RD53::getFirstChip(fDetectorConainer);
+
     // #########################
     // # Find global threshold #
     // #########################
@@ -173,8 +176,8 @@ void ThrEqualizationSC::run()
                                                        ->at(cChip->getIndex())
                                                        ->getSummary<std::shared_ptr<ChannelGroupHandler>>();
                     auto cTestChannelGroup = theChannelGroupHandler->getTestGroup(cGroupNumber);
-                    for(auto row = 0u; row < RD53::nRows; row++)
-                        for(auto col = 0u; col < RD53::nCols; col++)
+                    for(auto row = 0u; row < firstChip.getNRows(); row++)
+                        for(auto col = 0u; col < firstChip.getNCols(); col++)
                             if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !cTestChannelGroup->isChannelEnabled(row, col))
                                 theTDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) = TDACsize;
                 }
@@ -215,6 +218,7 @@ void ThrEqualizationSC::analyze()
 {
     const float  maxTDACdistance = 2; // @CONST@
     const size_t TDACcenter      = RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2;
+    auto         firstChip       = RD53::getFirstChip(fDetectorConainer);
 
     for(const auto cBoard: *fDetectorContainer)
     {
@@ -234,8 +238,8 @@ void ThrEqualizationSC::analyze()
                     float avgTDAC = 0;
                     int   counter = 0;
 
-                    for(auto row = 0u; row < RD53::nRows; row++)
-                        for(auto col = 0u; col < RD53::nCols; col++)
+                    for(auto row = 0u; row < firstChip.getNRows(); row++)
+                        for(auto col = 0u; col < firstChip.getNCols(); col++)
                             if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !cTestChannelGroup->isChannelEnabled(row, col))
                             // if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row, col))
                             {
@@ -270,6 +274,8 @@ void ThrEqualizationSC::fillHisto()
 
 void ThrEqualizationSC::bitWiseScanLocal(const std::string& regName, std::shared_ptr<DetectorDataContainer> target)
 {
+    auto firstChip = RD53::getFirstChip(fDetectorConainer);
+
     float    tmp;
     uint16_t init;
     uint16_t numberOfBits = floor(log2(frontEnd->nTDACvalues) + 1);
@@ -332,8 +338,8 @@ void ThrEqualizationSC::bitWiseScanLocal(const std::string& regName, std::shared
                     {
                         float theTarget = target->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<ThresholdAndNoise>().fThreshold;
 
-                        for(auto row = 0u; row < RD53::nRows; row++)
-                            for(auto col = 0u; col < RD53::nCols; col++)
+                        for(auto row = 0u; row < firstChip.getNRows(); row++)
+                            for(auto col = 0u; col < firstChip.getNCols(); col++)
                             {
                                 // #######################
                                 // # Build discriminator #

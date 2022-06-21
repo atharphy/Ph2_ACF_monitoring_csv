@@ -17,7 +17,8 @@ void GainOptimizationHistograms::book(TFile* theOutputFile, DetectorContainer& t
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
-    const uint16_t rangeKrumCurr = RD53Shared::setBits(static_cast<RD53*>(theDetectorStructure.at(0)->at(0)->at(0)->at(0))->getNumberOfBits("KRUM_CURR_LIN")) + 1;
+    auto           firstChip     = RD53::getFirstChip(theDetectorStructure);
+    const uint16_t rangeKrumCurr = RD53Shared::setBits(firstChip.getNumberOfBits("KRUM_CURR_LIN")) + 1;
 
     auto hKrumCurr = CanvasContainer<TH1F>("KrumCurr", "KrumCurr", rangeKrumCurr, 0, rangeKrumCurr);
     bookImplementer(theOutputFile, theDetectorStructure, KrumCurr, hKrumCurr, "Krummenacher Current", "Entries");

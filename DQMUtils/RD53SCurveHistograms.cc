@@ -17,6 +17,10 @@ void SCurveHistograms::book(TFile* theOutputFile, DetectorContainer& theDetector
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
+    auto firstChip = RD53::getFirstChip(theDetectorStructure);
+    nRows          = firstChip.getNRows();
+    nCols          = firstChip.getNCols();
+
     // #######################
     // # Retrieve parameters #
     // #######################
@@ -29,13 +33,13 @@ void SCurveHistograms::book(TFile* theOutputFile, DetectorContainer& theDetector
     auto hOcc2D = CanvasContainer<TH2F>("SCurves", "SCurves", nSteps, startValue - offset, stopValue - offset, 2 * nEvents + 1, 0, 2 + 1. / nEvents);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, "#DeltaVCal", "Efficiency");
 
-    auto hOcc3D = CanvasContainer<TH3F>("SCurveMap", "SCurve Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows, nSteps, startValue - offset, stopValue - offset);
+    auto hOcc3D = CanvasContainer<TH3F>("SCurveMap", "SCurve Map", nCols, 0, nCols, nRows, 0, nRows, nSteps, startValue - offset, stopValue - offset);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy3D, hOcc3D, "Column", "Row", "#DeltaVCal");
 
-    auto hErrorReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+    auto hErrorReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ErrorReadOut2D, hErrorReadOut2D, "Columns", "Rows");
 
-    auto hErrorFit2D = CanvasContainer<TH2F>("FitErrors", "Fit Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+    auto hErrorFit2D = CanvasContainer<TH2F>("FitErrors", "Fit Errors", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ErrorFit2D, hErrorFit2D, "Columns", "Rows");
 
     auto hThreshold1D = CanvasContainer<TH1F>("Threshold1D", "Threshold Distribution", 1000, startValue - offset, stopValue - offset);
@@ -44,13 +48,13 @@ void SCurveHistograms::book(TFile* theOutputFile, DetectorContainer& theDetector
     auto hNoise1D = CanvasContainer<TH1F>("Noise1D", "Noise Distribution", 100, 0, 50);
     bookImplementer(theOutputFile, theDetectorStructure, Noise1D, hNoise1D, "Noise (#DeltaVCal)", "Entries");
 
-    auto hThreshold2D = CanvasContainer<TH2F>("Threshold2D", "Threshold Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+    auto hThreshold2D = CanvasContainer<TH2F>("Threshold2D", "Threshold Map", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, Threshold2D, hThreshold2D, "Column", "Row");
 
-    auto hNoise2D = CanvasContainer<TH2F>("Noise2D", "Noise Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+    auto hNoise2D = CanvasContainer<TH2F>("Noise2D", "Noise Map", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, Noise2D, hNoise2D, "Column", "Row");
 
-    auto hToT2D = CanvasContainer<TH2F>("ToT2D", "Integrated ToT Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+    auto hToT2D = CanvasContainer<TH2F>("ToT2D", "Integrated ToT Map", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ToT2D, hToT2D, "Columns", "Rows");
 }
 
@@ -107,8 +111,8 @@ void SCurveHistograms::fillOccupancy(const DetectorDataContainer& OccupancyConta
                     auto* ToT2DHist =
                         ToT2D.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
 
-                    for(auto row = 0u; row < RD53::nRows; row++)
-                        for(auto col = 0u; col < RD53::nCols; col++)
+                    for(auto row = 0u; row < nRows; row++)
+                        for(auto col = 0u; col < nCols; col++)
                         {
                             if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != RD53Shared::ISDISABLED)
                             {
@@ -167,8 +171,8 @@ void SCurveHistograms::fillThrAndNoise(const DetectorDataContainer& ThrAndNoiseC
                                                ->getSummary<CanvasContainer<TH2F>>()
                                                .fTheHistogram;
 
-                    for(auto row = 0u; row < RD53::nRows; row++)
-                        for(auto col = 0u; col < RD53::nCols; col++)
+                    for(auto row = 0u; row < nRows; row++)
+                        for(auto col = 0u; col < nCols; col++)
                             if(cChip->getChannel<ThresholdAndNoise>(row, col).fNoise == RD53Shared::FITERROR)
                                 ErrorFit2DHist->Fill(col + 1, row + 1);
                             else if(cChip->getChannel<ThresholdAndNoise>(row, col).fNoise != 0)

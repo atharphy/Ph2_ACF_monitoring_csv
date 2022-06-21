@@ -14,6 +14,9 @@ using namespace Ph2_HwInterface;
 
 void SCurve::ConfigureCalibration()
 {
+    auto firstChip = RD53::getFirstChip(fDetectorContainer);
+
+
     // #######################
     // # Retrieve parameters #
     // #######################
@@ -36,7 +39,7 @@ void SCurve::ConfigureCalibration()
     // ########################
     // # Custom channel group #
     // ########################
-    auto customChannelGroup = fDetectorContainer->at(0)->at(0)->at(0)->at(0)->getChannelGroup();
+    auto customChannelGroup = firstChip.getChannelGroup();
     customChannelGroup->disableAllChannels();
 
     for(auto row = rowStart; row <= rowStop; row++)
@@ -150,6 +153,8 @@ void SCurve::initializeFiles(const std::string& fileRes_, int currentRun)
 
 void SCurve::run()
 {
+    auto firstChip = RD53::getFirstChip(fDetectorConainer);
+
     // ##########################
     // # Set new VCAL_MED value #
     // ##########################
@@ -171,8 +176,8 @@ void SCurve::run()
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
-                    for(auto row = 0u; row < RD53::nRows; row++)
-                        for(auto col = 0u; col < RD53::nCols; col++)
+                    for(auto row = 0u; row < firstChip.getNRows(); row++)
+                        for(auto col = 0u; col < firstChip.getNCols(); col++)
                             if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !this->getChannelGroupHandlerContainer()
                                                                                                                      ->at(cBoard->getIndex())
                                                                                                                      ->at(cOpticalGroup->getIndex())
@@ -224,6 +229,8 @@ void SCurve::draw(bool doSaveData)
     // #####################
     if(saveBinaryData == true)
     {
+        auto firstChip = RD53::getFirstChip(fDetectorConainer);
+
         for(const auto cBoard: *fDetectorContainer)
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
@@ -241,8 +248,8 @@ void SCurve::draw(bool doSaveData)
                         for(auto i = 0u; i < dacList.size(); i++)
                         {
                             fileOutID << "Iteration " << i << " --- reg = " << dacList[i] - offset << std::endl;
-                            for(auto row = 0u; row < RD53::nRows; row++)
-                                for(auto col = 0u; col < RD53::nCols; col++)
+                            for(auto row = 0u; row < firstChip.getNRows(); row++)
+                                for(auto col = 0u; col < firstChip.getNCols(); col++)
                                     if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
                                                                                                                            ->at(cBoard->getIndex())
                                                                                                                            ->at(cOpticalGroup->getIndex())
@@ -285,14 +292,16 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
     DetectorDataContainer theMaxThresholdContainer;
     ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, theMaxThresholdContainer, mean = 0);
 
+    auto firstChip = RD53::getFirstChip(fDetectorConainer);
+
     size_t index = 0;
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    for(auto row = 0u; row < RD53::nRows; row++)
-                        for(auto col = 0u; col < RD53::nCols; col++)
+                    for(auto row = 0u; row < firstChip.getNRows(); row++)
+                        for(auto col = 0u; col < firstChip.getNCols(); col++)
                             if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
                                                                                                                    ->at(cBoard->getIndex())
                                                                                                                    ->at(cOpticalGroup->getIndex())

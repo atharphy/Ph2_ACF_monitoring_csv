@@ -64,6 +64,9 @@ class GainHistograms : public DQMHistogramBase
     size_t startValue;
     size_t stopValue;
     size_t offset;
+
+    size_t nRows;
+    size_t nCols;
 };
 
 #endif

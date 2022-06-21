@@ -14,7 +14,7 @@ namespace RD53Cmd
 {
 std::array<uint8_t, nFields> GlobalPulse::serializeFields() const
 {
-  std::array<uint8_t, nFields>  fields;
+    std::array<uint8_t, nFields> fields;
 
     fields[0] = packAndEncode<4, 1>(chip_id, 0);
     fields[1] = packAndEncode<4, 1>(data, 0);
@@ -24,7 +24,7 @@ std::array<uint8_t, nFields> GlobalPulse::serializeFields() const
 
 std::array<uint8_t, nFields> Cal::serializeFields() const
 {
-  std::array<uint8_t, nFields>  fields;
+    std::array<uint8_t, nFields> fields;
 
     fields[0] = packAndEncode<4, 1>(chip_id, cal_edge_mode);
     fields[1] = packAndEncode<3, 2>(cal_edge_delay, cal_edge_width >> 4);
@@ -34,7 +34,7 @@ std::array<uint8_t, nFields> Cal::serializeFields() const
 
 std::array<uint8_t, nFields> WrReg::serializeFields() const
 {
-  std::array<uint8_t, nFields>  fields;
+    std::array<uint8_t, nFields> fields;
 
     fields[0] = packAndEncode<4, 1>(chip_id, 0);
     fields[1] = packAndEncode<5>(address >> 4);
@@ -48,7 +48,7 @@ std::array<uint8_t, nFields> WrReg::serializeFields() const
 
 std::array<uint8_t, nFields> WrRegLong::serializeFields() const
 {
-  std::array<uint8_t, nFields>  fields;
+    std::array<uint8_t, nFields> fields;
 
     fields[0] = packAndEncode<4, 1>(chip_id, 1);
     fields[1] = packAndEncode<5>(address >> 4);
@@ -65,7 +65,7 @@ std::array<uint8_t, nFields> WrRegLong::serializeFields() const
 
 std::array<uint8_t, nFields> RdReg::serializeFields() const
 {
-  std::array<uint8_t, nFields>  fields;
+    std::array<uint8_t, nFields> fields;
 
     fields[0] = packAndEncode<4, 1>(chip_id, 0);
     fields[1] = packAndEncode<5>(address >> 4);

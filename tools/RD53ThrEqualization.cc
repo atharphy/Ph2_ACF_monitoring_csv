@@ -32,7 +32,8 @@ void ThrEqualization::ConfigureCalibration()
     doDisplay    = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip = this->findValueInSettings<double>("UpdateChipCfg");
 
-    frontEnd = RD53::getMajorityFE(PixelAlive::colStart, PixelAlive::colStop);
+    auto firstChip = RD53::getFirstChip(fDetectorContainer);
+    frontEnd       = firstChip.getMajorityFE(PixelAlive::colStart, PixelAlive::colStop);
     if(frontEnd == &RD53::SYNC)
     {
         LOG(ERROR) << BOLDRED << "ThrEqualization cannot be used on the Synchronous FE, please change the selected columns" << RESET;
@@ -46,7 +47,7 @@ void ThrEqualization::ConfigureCalibration()
     // ########################
     // # Custom channel group #
     // ########################
-    auto customChannelGroup = fDetectorContainer->at(0)->at(0)->at(0)->at(0)->getChannelGroup();
+    auto customChannelGroup = firstChip.getChannelGroup();
     customChannelGroup->disableAllChannels();
 
     for(auto row = PixelAlive::rowStart; row <= PixelAlive::rowStop; row++)
@@ -142,6 +143,8 @@ void ThrEqualization::initializeFiles(const std::string& fileRes_, int currentRu
 
 void ThrEqualization::run()
 {
+    auto firstChip = RD53::getFirstChip(fDetectorConainer);
+
     // #########################
     // # Find global threshold #
     // #########################
@@ -166,8 +169,8 @@ void ThrEqualization::run()
                     this->fReadoutChipInterface->ReadChipAllLocalReg(
                         static_cast<RD53*>(cChip), "PIX_PORTAL", *theTDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
 
-                    for(auto row = 0u; row < RD53::nRows; row++)
-                        for(auto col = 0u; col < RD53::nCols; col++)
+                    for(auto row = 0u; row < firstChip.getNRows(); row++)
+                        for(auto col = 0u; col < firstChip.getNCols(); col++)
                             if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !this->getChannelGroupHandlerContainer()
                                                                                                                      ->at(cBoard->getIndex())
                                                                                                                      ->at(cOpticalGroup->getIndex())
@@ -222,6 +225,7 @@ void ThrEqualization::analyze()
 {
     const float  maxTDACdistance = 2; // @CONST@
     const size_t TDACcenter      = RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2;
+    auto         firstChip       = RD53::getFirstChip(fDetectorConainer);
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
@@ -234,8 +238,8 @@ void ThrEqualization::analyze()
                     int   counterMinBin = 0;
                     int   counterMaxBin = 0;
 
-                    for(auto row = 0u; row < RD53::nRows; row++)
-                        for(auto col = 0u; col < RD53::nCols; col++)
+                    for(auto row = 0u; row < firstChip.getNRows(); row++)
+                        for(auto col = 0u; col < firstChip.getNCols(); col++)
                             if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
                                                                                                                    ->at(cBoard->getIndex())
                                                                                                                    ->at(cOpticalGroup->getIndex())
@@ -453,6 +457,8 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, const float&
 
 void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst)
 {
+    auto firstChip = RD53::getFirstChip(fDetectorConainer);
+
     float    tmp;
     uint16_t init;
     uint16_t numberOfBits = floor(log2(frontEnd->nTDACvalues) + 1);
@@ -511,8 +517,8 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
-                        for(auto row = 0u; row < RD53::nRows; row++)
-                            for(auto col = 0u; col < RD53::nCols; col++)
+                        for(auto row = 0u; row < firstChip.getNRows(); row++)
+                            for(auto col = 0u; col < firstChip.getNCols(); col++)
                             {
                                 // #######################
                                 // # Build discriminator #

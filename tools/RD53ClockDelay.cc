@@ -14,6 +14,8 @@ using namespace Ph2_HwInterface;
 
 void ClockDelay::ConfigureCalibration()
 {
+    auto firstChip = RD53::getFirstChip(fDetectorContainer);
+
     // ##############################
     // # Initialize sub-calibration #
     // ##############################
@@ -28,7 +30,7 @@ void ClockDelay::ConfigureCalibration()
     colStart       = this->findValueInSettings<double>("COLstart");
     colStop        = this->findValueInSettings<double>("COLstop");
     startValue     = 0;
-    stopValue      = RD53Shared::NLATENCYBINS * (RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY")) + 1) - 1;
+    stopValue      = RD53Shared::NLATENCYBINS * (RD53Shared::setBits(firstChip.getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY")) + 1) - 1;
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
@@ -49,8 +51,8 @@ void ClockDelay::ConfigureCalibration()
     // ##################
     // # Register masks #
     // ##################
-    maxClkDelay = RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY"));
-    maxCmdDelay = RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("CLK_DATA_DELAY_CMD_DELAY"));
+    maxClkDelay = RD53Shared::setBits(firstChip.getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY"));
+    maxCmdDelay = RD53Shared::setBits(firstChip.getNumberOfBits("CLK_DATA_DELAY_CMD_DELAY"));
 
     // #######################
     // # Initialize progress #

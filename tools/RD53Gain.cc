@@ -40,7 +40,7 @@ void Gain::ConfigureCalibration()
     // ########################
     // # Custom channel group #
     // ########################
-    auto customChannelGroup = fDetectorContainer->at(0)->at(0)->at(0)->at(0)->getChannelGroup();
+    auto customChannelGroup = firstChip.getChannelGroup();
     customChannelGroup->disableAllChannels();
 
     for(auto row = rowStart; row <= rowStop; row++)
@@ -154,6 +154,8 @@ void Gain::initializeFiles(const std::string& fileRes_, int currentRun)
 
 void Gain::run()
 {
+    auto firstChip = RD53::getFirstChip(fDetectorConainer);
+
     // ##########################
     // # Set new VCAL_MED value #
     // ##########################
@@ -175,8 +177,8 @@ void Gain::run()
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
-                    for(auto row = 0u; row < RD53::nRows; row++)
-                        for(auto col = 0u; col < RD53::nCols; col++)
+                    for(auto row = 0u; row < firstChip.getNRows(); row++)
+                        for(auto col = 0u; col < firstChip.getNCols(); col++)
                             if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !this->getChannelGroupHandlerContainer()
                                                                                                                      ->at(cBoard->getIndex())
                                                                                                                      ->at(cOpticalGroup->getIndex())
@@ -228,6 +230,8 @@ void Gain::draw(bool doSaveData)
     // #####################
     if(saveBinaryData == true)
     {
+        auto firstChip = RD53::getFirstChip(fDetectorConainer);
+
         for(const auto cBoard: *fDetectorContainer)
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
@@ -245,8 +249,8 @@ void Gain::draw(bool doSaveData)
                         for(auto i = 0u; i < dacList.size(); i++)
                         {
                             fileOutID << "Iteration " << i << " --- reg = " << dacList[i] - offset << std::endl;
-                            for(auto row = 0u; row < RD53::nRows; row++)
-                                for(auto col = 0u; col < RD53::nCols; col++)
+                            for(auto row = 0u; row < firstChip.getNRows(); row++)
+                                for(auto col = 0u; col < firstChip.getNCols(); col++)
                                     if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
                                                                                                                            ->at(cBoard->getIndex())
                                                                                                                            ->at(cOpticalGroup->getIndex())
@@ -294,14 +298,16 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
     theGainContainer = std::make_shared<DetectorDataContainer>();
     ContainerFactory::copyAndInitStructure<GainFit>(*fDetectorContainer, *theGainContainer);
 
+    auto firstChip = RD53::getFirstChip(fDetectorConainer);
+
     size_t index = 0;
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    for(auto row = 0u; row < RD53::nRows; row++)
-                        for(auto col = 0u; col < RD53::nCols; col++)
+                    for(auto row = 0u; row < firstChip.getNRows(); row++)
+                        for(auto col = 0u; col < firstChip.getNCols(); col++)
                             if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
                                                                                                                    ->at(cBoard->getIndex())
                                                                                                                    ->at(cOpticalGroup->getIndex())

@@ -62,7 +62,7 @@ class Command
 
   protected:
     template <int... Sizes, class... Args>
-      uint8_t packAndEncode(Args&&... args)
+    uint8_t packAndEncode(Args&&... args)
     {
         return map5to8bit[bits::pack<Sizes...>(std::forward<Args>(args)...)];
     }
@@ -70,29 +70,29 @@ class Command
 
 template <class cmdType>
 void serialize(const cmdType& cmd, std::vector<uint16_t>& frameVector) const
- {
-   // Insert command code
-   frameVector.push_back(cmdType::cmdCode);
+{
+    // Insert command code
+    frameVector.push_back(cmdType::cmdCode);
 
-   if constexpr(nFields != 0)
-		 {
-   auto fields = cmd.serializeFields();
+    if constexpr(nFields != 0)
+    {
+        auto fields = cmd.serializeFields();
 
-   // Insert: chip id, address and data
-   for(auto i = 1; i < static_cast<int>(cmdType::nFields); i += 2) frameVector.push_back(bits::pack<8, 8>(fields[i - 1], fields[i]));
-		 }
- }
+        // Insert: chip id, address and data
+        for(auto i = 1; i < static_cast<int>(cmdType::nFields); i += 2) frameVector.push_back(bits::pack<8, 8>(fields[i - 1], fields[i]));
+    }
+}
 
 template <class cmdType>
 std::vector<uint16_t> getFrames(const cmdType& cmd) const
-   {
-     std::vector<uint16_t> frameVector;
-     
-     frameVector.reserve(1 + cmdType::nFields / 2);
-     Command::serialize(cmd, frameVector);
-     
-     return frameVector;
-   }
+{
+    std::vector<uint16_t> frameVector;
+
+    frameVector.reserve(1 + cmdType::nFields / 2);
+    Command::serialize(cmd, frameVector);
+
+    return frameVector;
+}
 
 struct ECR : public Command<RD53CmdEncoder::RESET_ECR, 0>
 {
@@ -108,44 +108,44 @@ struct Sync : public Command<RD53CmdEncoder::SYNC, 0>
 };
 struct GlobalPulse : public Command<RD53CmdEncoder::GLOB_PULSE, 2>
 {
-  uint8_t chip_id;
-  uint8_t data;
+    uint8_t chip_id;
+    uint8_t data;
 
- std::array<uint8_t, nFields> serializeFields() const;
+    std::array<uint8_t, nFields> serializeFields() const;
 };
 struct Cal : public Command<RD53CmdEncoder::CAL, 4>
 {
-  uint8_t chip_id;
-  bool cal_edge_mode;
-   uint8_t cal_edge_delay;
-   uint8_t cal_edge_width;
-   bool cal_aux_mode;
-uint8_t cal_aux_delay;
+    uint8_t chip_id;
+    bool    cal_edge_mode;
+    uint8_t cal_edge_delay;
+    uint8_t cal_edge_width;
+    bool    cal_aux_mode;
+    uint8_t cal_aux_delay;
 
- std::array<uint8_t, nFields> serializeFields() const;
+    std::array<uint8_t, nFields> serializeFields() const;
 };
 struct WrReg : public Command<RD53CmdEncoder::WRITE, 6>
 {
-  uint8_t chip_id;
-  uint16_t address;
-  uint16_t value;
+    uint8_t  chip_id;
+    uint16_t address;
+    uint16_t value;
 
- std::array<uint8_t, nFields> serializeFields() const;
+    std::array<uint8_t, nFields> serializeFields() const;
 };
 struct WrRegLong : public Command<RD53CmdEncoder::WRITE, 22>
 {
-  uint8_t chip_id;
-  uint16_t address;
-  std::vector<uint16_t> values;
+    uint8_t               chip_id;
+    uint16_t              address;
+    std::vector<uint16_t> values;
 
- std::array<uint8_t, nFields> serializeFields() const;
+    std::array<uint8_t, nFields> serializeFields() const;
 };
 struct RdReg : public Command<RD53CmdEncoder::READ, 4>
 {
-  uint8_t chip_id;
-uint16_t address;
+    uint8_t  chip_id;
+    uint16_t address;
 
- std::array<uint8_t, nFields> serializeFields() const;
+    std::array<uint8_t, nFields> serializeFields() const;
 };
 
 #endif

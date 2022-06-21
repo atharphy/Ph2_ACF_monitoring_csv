@@ -3,46 +3,57 @@
 
 #include "../Utils/BitSerialization/BitVector.h"
 
-namespace RD53BCmd {
+namespace RD53BCmd
+{
+struct PLLlock
+{
+};
 
-struct PLLlock {};
+struct Sync
+{
+};
 
-struct Sync {};
-
-struct Clear {
+struct Clear
+{
     uint8_t chip_id;
 };
 
-struct GlobalPulse {
+struct GlobalPulse
+{
     uint8_t chip_id;
 };
 
-struct WrReg {
-    uint8_t chip_id;
+struct WrReg
+{
+    uint8_t  chip_id;
     uint16_t address;
     uint16_t value;
 };
 
-struct WrRegLong {
-    uint8_t chip_id;
+struct WrRegLong
+{
+    uint8_t               chip_id;
     std::vector<uint16_t> values;
 };
 
-struct RdReg {
-    uint8_t chip_id;
+struct RdReg
+{
+    uint8_t  chip_id;
     uint16_t address;
 };
 
-struct Cal {
+struct Cal
+{
     uint8_t chip_id;
-    bool mode;
+    bool    mode;
     uint8_t edge_delay;
     uint8_t edge_duration;
-    bool aux_enable;
+    bool    aux_enable;
     uint8_t aux_delay;
 };
 
-struct Trigger {
+struct Trigger
+{
     uint8_t pattern;
     uint8_t tag;
 };
@@ -50,6 +61,6 @@ struct Trigger {
 template <class Cmd>
 extern void serialize(Cmd&&, std::vector<uint16_t>&);
 
-} // namespace RD53BCommands
+} // namespace RD53BCmd
 
 #endif

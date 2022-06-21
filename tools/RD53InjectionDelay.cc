@@ -14,6 +14,8 @@ using namespace Ph2_HwInterface;
 
 void InjectionDelay::ConfigureCalibration()
 {
+    auto firstChip = RD53::getFirstChip(fDetectorContainer);
+
     // ##############################
     // # Initialize sub-calibration #
     // ##############################
@@ -28,7 +30,7 @@ void InjectionDelay::ConfigureCalibration()
     colStart       = this->findValueInSettings<double>("COLstart");
     colStop        = this->findValueInSettings<double>("COLstop");
     startValue     = 0;
-    stopValue      = RD53Shared::NLATENCYBINS * (RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY")) + 1) - 1;
+    stopValue      = RD53Shared::NLATENCYBINS * (RD53Shared::setBits(firstChip.getNumberOfBits("INJECTION_SELECT_DELAY")) + 1) - 1;
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
@@ -49,9 +51,8 @@ void InjectionDelay::ConfigureCalibration()
     // ##############################
     // # Injection register masking #
     // ##############################
-    saveInjection = RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT")) -
-                    RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"));
-    maxDelay = RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"));
+    saveInjection = RD53Shared::setBits(firstChip.getNumberOfBits("INJECTION_SELECT")) - RD53Shared::setBits(firstChip.getNumberOfBits("INJECTION_SELECT_DELAY"));
+    maxDelay = RD53Shared::setBits(firstChip.getNumberOfBits("INJECTION_SELECT_DELAY"));
 
     // #######################
     // # Initialize progress #

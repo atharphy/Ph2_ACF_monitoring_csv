@@ -31,7 +31,8 @@ void Physics::ConfigureCalibration()
     // ################################
     // # Custom channel group handler #
     // ################################
-    auto customChannelGroup = fDetectorContainer->at(0)->at(0)->at(0)->at(0)->getChannelGroup();
+    auto firstChip          = RD53::getFirstChip(fDetectorContainer);
+    auto customChannelGroup = firstChip.getChannelGroup();
     customChannelGroup->disableAllChannels();
 
     for(auto row = rowStart; row <= rowStop; row++)
@@ -246,6 +247,7 @@ void Physics::fillDataContainer(BeBoard& theBoard)
     const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
     const auto   cBoard    = theOccContainer.at(theBoard.getIndex());
+    auto         firstChip = RD53::getFirstChip(fDetectorConainer);
 
     // ###################
     // # Clear container #
@@ -315,8 +317,8 @@ void Physics::fillDataContainer(BeBoard& theBoard)
     for(const auto cOpticalGroup: *cBoard)
         for(const auto cHybrid: *cOpticalGroup)
             for(const auto cChip: *cHybrid)
-                for(auto row = 0u; row < RD53::nRows; row++)
-                    for(auto col = 0u; col < RD53::nCols; col++) cChip->getChannel<OccupancyAndPh>(row, col).normalize(events.size(), true);
+                for(auto row = 0u; row < firstChip.getNRows(); row++)
+                    for(auto col = 0u; col < firstChip.getNCols(); col++) cChip->getChannel<OccupancyAndPh>(row, col).normalize(events.size(), true);
 }
 
 void Physics::chipErrorReport() const
