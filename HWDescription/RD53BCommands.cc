@@ -1,6 +1,15 @@
+/*!
+  \file                  RD53BCommands.cc
+  \brief                 RD53BCommands implementation
+  \author                Alkiviadis PAPADOPOULOS
+  \version               1.0
+  \date                  28/06/22
+  Support:               email to mauro.dinardo@cern.ch
+  Support:               email to alkiviadis.papadopoulos@cern.ch
+*/
+
 #include "RD53BCommands.h"
 #include "../Utils/BitSerialization/Types/All.h"
-#include <sstream>
 
 namespace RD53BCmd
 {

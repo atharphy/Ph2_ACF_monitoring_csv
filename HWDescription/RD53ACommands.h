@@ -1,6 +1,6 @@
 /*!
   \file                  RD53ACommands.h
-  \brief                 RD53Commands description
+  \brief                 RD53ACommands description
   \author                Mauro DINARDO and Alkiviadis PAPADOPOULOS
   \version               1.0
   \date                  28/06/22
@@ -97,15 +97,19 @@ std::vector<uint16_t> getFrames(const cmdType& cmd) const
 struct ECR : public Command<RD53CmdEncoder::RESET_ECR, 0>
 {
 };
+
 struct BCR : public Command<RD53CmdEncoder::RESET_BCR, 0>
 {
 };
+
 struct NoOp : public Command<RD53CmdEncoder::NOOP, 0>
 {
 };
+
 struct Sync : public Command<RD53CmdEncoder::SYNC, 0>
 {
 };
+
 struct GlobalPulse : public Command<RD53CmdEncoder::GLOB_PULSE, 2>
 {
     uint8_t chip_id;
@@ -113,6 +117,7 @@ struct GlobalPulse : public Command<RD53CmdEncoder::GLOB_PULSE, 2>
 
     std::array<uint8_t, nFields> serializeFields() const;
 };
+
 struct Cal : public Command<RD53CmdEncoder::CAL, 4>
 {
     uint8_t chip_id;
@@ -124,6 +129,7 @@ struct Cal : public Command<RD53CmdEncoder::CAL, 4>
 
     std::array<uint8_t, nFields> serializeFields() const;
 };
+
 struct WrReg : public Command<RD53CmdEncoder::WRITE, 6>
 {
     uint8_t  chip_id;
@@ -132,6 +138,7 @@ struct WrReg : public Command<RD53CmdEncoder::WRITE, 6>
 
     std::array<uint8_t, nFields> serializeFields() const;
 };
+
 struct WrRegLong : public Command<RD53CmdEncoder::WRITE, 22>
 {
     uint8_t               chip_id;
@@ -140,6 +147,7 @@ struct WrRegLong : public Command<RD53CmdEncoder::WRITE, 22>
 
     std::array<uint8_t, nFields> serializeFields() const;
 };
+
 struct RdReg : public Command<RD53CmdEncoder::READ, 4>
 {
     uint8_t  chip_id;
@@ -147,5 +155,7 @@ struct RdReg : public Command<RD53CmdEncoder::READ, 4>
 
     std::array<uint8_t, nFields> serializeFields() const;
 };
+
+} // namespace RD53ACmd
 
 #endif

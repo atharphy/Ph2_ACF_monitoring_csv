@@ -16,7 +16,6 @@
 #include "../Utils/RD53Shared.h"
 #include "../Utils/bit_packing.h"
 #include "../Utils/easylogging++.h"
-
 #include "ReadoutChip.h"
 
 #include <iomanip>

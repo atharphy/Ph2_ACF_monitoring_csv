@@ -1,6 +1,6 @@
 /*!
   \file                  RD53ACommands.cc
-  \brief                 RD53Commands implementation
+  \brief                 RD53ACommands implementation
   \author                Mauro DINARDO and Alkiviadis PAPADOPOULOS
   \version               1.0
   \date                  28/06/22
@@ -74,3 +74,5 @@ std::array<uint8_t, nFields> RdReg::serializeFields() const
 
     return fields;
 }
+
+} // namespace RD53BCmd

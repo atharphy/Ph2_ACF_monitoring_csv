@@ -1,7 +1,17 @@
+/*!
+  \file                  RD53BCommands.h
+  \brief                 RD53BCommands description
+  \author                Alkiviadis PAPADOPOULOS
+  \version               1.0
+  \date                  28/06/22
+  Support:               email to mauro.dinardo@cern.ch
+  Support:               email to alkiviadis.papadopoulos@cern.ch
+*/
+
 #ifndef RD53BCOMMANDS_H
 #define RD53BCOMMANDS_H
 
-#include "../Utils/BitSerialization/BitVector.h"
+#include <sstream>
 
 namespace RD53BCmd
 {

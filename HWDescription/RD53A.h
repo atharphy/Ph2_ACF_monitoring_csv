@@ -1,6 +1,6 @@
 /*!
   \file                  RD53A.h
-  \brief                 RD53A description class, config of the RD53A
+  \brief                 RD53A description class
   \author                Mauro DINARDO and Alkiviadis PAPADOPOULOS
   \version               1.0
   \date                  28/06/22
