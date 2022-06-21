@@ -123,7 +123,7 @@ void RD53Interface::InitRD53UplinkSpeed(ReadoutChip* pChip)
     RD53Interface::WriteChipReg(pChip, "CDR_CONFIG", (auroraSpeed == 0 ? RD53Constants::CDRCONFIG_1Gbit : RD53Constants::CDRCONFIG_640Mbit), false);
     RD53Interface::sendCommand(pChip, RD53Cmd::ECR());
 
-    LOG(INFO) << GREEN << "Up-link speed: " << BOLDYELLOW << (auroraSpeed == 0 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
+    LOG(INFO) << GREEN << "Up-link speed set to: " << BOLDYELLOW << (auroraSpeed == 0 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 }
 
@@ -432,6 +432,12 @@ void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
                     RD53Cmd::WrReg(chipID, PIX_PORTAL_ADDR, data).appendTo(commandList);
                 }
             }
+
+            if((commandList.size() * 2 + RD53::nRows + 1) > (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO))
+            {
+                static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
+                commandList.clear();
+            }
         }
     }
     else
@@ -454,6 +460,12 @@ void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
                     RD53Cmd::WrRegLong(chipID, PIX_PORTAL_ADDR, data).appendTo(commandList);
                     data.clear();
                 }
+            }
+
+            if((commandList.size() + RD53::nRows + 1) * 2 > (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO))
+            {
+                static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
+                commandList.clear();
             }
         }
     }

@@ -1,11 +1,11 @@
 #include "CicFEAlignment.h"
 
 // #ifdef __USE_ROOT__
+#include "../HWInterface/D19cDebugFWInterface.h"
+#include "../HWInterface/TriggerInterface.h"
 #include "../Utils/CBCChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/Occupancy.h"
-#include "D19cDebugFWInterface.h"
-#include "TriggerInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -218,7 +218,7 @@ uint8_t CicFEAlignment::GenManPatternOutLine(uint8_t pOutLine)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                // configure ROCs to produce phase alignment patterns
+                // configure Chips to produce phase alignment patterns
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getFrontEndType() == FrontEndType::CBC3)
@@ -527,7 +527,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
             {
                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 fCicInterface->SetAutomaticPhaseAlignment(cCic, true);
-                // configure ROCs to produce phase alignment patterns
+                // configure Chips to produce phase alignment patterns
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getFrontEndType() == FrontEndType::CBC3) cWithCBC = true;

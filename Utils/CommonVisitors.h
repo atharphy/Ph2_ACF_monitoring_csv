@@ -103,21 +103,21 @@ class Counter : public HwDescriptionVisitor
 {
   private:
     uint32_t fNCbc;
-    uint32_t fNFe;
+    uint32_t fNHybrid;
     uint32_t fNBe;
     uint32_t fCbcMask;
 
   public:
-    Counter() : fNCbc(0), fNFe(0), fNBe(0), fCbcMask(0) {}
+    Counter() : fNCbc(0), fNHybrid(0), fNBe(0), fCbcMask(0) {}
     void visitChip(Ph2_HwDescription::Chip& pCbc)
     {
         fNCbc++;
         fCbcMask |= (1 << pCbc.getId());
     }
-    void     visitHybrid(Ph2_HwDescription::Hybrid& pHybrid) { fNFe++; }
+    void     visitHybrid(Ph2_HwDescription::Hybrid& pHybrid) { fNHybrid++; }
     void     visitBeboard(Ph2_HwDescription::BeBoard& pBoard) { fNBe++; }
     uint32_t getNChip() const { return fNCbc; }
-    uint32_t getNFe() const { return fNFe; }
+    uint32_t getNHybrid() const { return fNHybrid; }
     uint32_t getNBe() const { return fNBe; }
     uint32_t getChipMask() const { return fCbcMask; }
 };
@@ -211,7 +211,7 @@ struct ThresholdVisitor : public HwDescriptionVisitor
         if(fThreshold > 1023)
         {
             LOG(ERROR) << "Error, Threshold value can be 10 bit max (1023)! - quitting";
-            exit(10);
+            std::runtime_error(std::string("CommonVisitor::ThresholdVisitor : Error, Threshold value can be 10 bit max (1023)! - quitting"));
         }
     }
     // Read constructor
@@ -259,7 +259,7 @@ struct ThresholdVisitor : public HwDescriptionVisitor
             else
                 LOG(ERROR) << "Unknown option " << fOption;
         }
-        else if(pCbc.getFrontEndType() == FrontEndType::SSA)
+        else if(pCbc.getFrontEndType() == FrontEndType::SSA || pCbc.getFrontEndType() == FrontEndType::SSA2)
         {
             if(fOption == 'w')
             {
@@ -363,7 +363,7 @@ struct LatencyVisitor : public HwDescriptionVisitor
             }
         }
 
-        else if(pCbc.getFrontEndType() == FrontEndType::SSA)
+        else if(pCbc.getFrontEndType() == FrontEndType::SSA || pCbc.getFrontEndType() == FrontEndType::SSA2)
         {
             if(fOption == 'w')
             {

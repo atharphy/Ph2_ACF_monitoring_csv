@@ -28,6 +28,9 @@ bool LinkAlignmentOT::Align()
             AlignLpGBTInputs(cOpticalGroup);
             WordAlignBEdata(cOpticalGroup);
         }
+        // check that word alignment of L1 data worked
+        LOG(INFO) << BOLDYELLOW << "LinkAlignmentOT::Align ... trying to readout L1 data.. " << RESET;
+        ReadNEvents(cBoard, 10);
     } // align BE
 
     AlignStubPackage();
@@ -46,7 +49,7 @@ void LinkAlignmentOT::Initialise()
     std::vector<std::string> cBrdRegsToKeep{"fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay"};
     SetBrdRegstoPerserve(cBrdRegsToKeep);
 
-    // no ROC registers to perserve
+    // no Chip registers to perserve
 
     // initialize containers that hold values found by this tool
     ContainerFactory::copyAndInitHybrid<std::vector<uint8_t>>(*fDetectorContainer, fBeSamplingDelay);
@@ -303,8 +306,7 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
                 LOG(INFO) << BOLDRED << "Could not word align-BE data for BeBoard#" << +cBoardId << " Link#" << +pOpticalGroup->getId() << " stub line " << +(cLineId - 1) << RESET;
                 throw std::runtime_error(std::string("Could not word align-BE data in LinkAlignmentOT..."));
             }
-            // check if I allow a bit-slip of 0
-            if(cThisBeBitSlip[cLineId] == 0)
+            if(cThisBeBitSlip[cLineId] == 0 && !fAllowZeroBitslip)
             {
                 size_t cMaxAttempts = 10;
                 size_t cIter        = 0;
@@ -385,8 +387,6 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup)
         cIndx++;
     }
     LOG(INFO) << BOLDYELLOW << "Reached end of WordAlignBEData" << RESET;
-    LOG(INFO) << BOLDYELLOW << "LinkAlignmentOT::WordAlignBEdata ... trying to readout L1 data.. " << RESET;
-    ReadNEvents(*cBoardIter, 10);
     return cAligned;
 }
 
@@ -487,7 +487,7 @@ std::pair<bool, uint8_t> LinkAlignmentOT::PhaseTuneLine(const Chip* pChip, uint8
     auto cBoardId   = pChip->getBeBoardId();
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     fBeBoardInterface->setBoard((*cBoardIter)->getId());
-    LOG(DEBUG) << BOLDYELLOW << "LinkAlignmentOT::PhaseTuneLine#" << +pLineId << " for a ROC#" << +pChip->getId() << RESET;
+    LOG(DEBUG) << BOLDYELLOW << "LinkAlignmentOT::PhaseTuneLine#" << +pLineId << " for a Chip#" << +pChip->getId() << RESET;
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
 
     D19cBackendAlignmentFWInterface* cAlignerInterface = cInterface->getBackendAlignmentInterface();
@@ -546,7 +546,7 @@ std::pair<bool, uint8_t> LinkAlignmentOT::WordAlignLine(const Chip* pChip, uint8
         throw std::runtime_error(std::string("Could not word align-BE data in LinkAlignmentOT..."));
     }
     // check if I allow a bit-slip of 0
-    if(cLineStatus.second == 0 && fAllowZeroBitslip == 0)
+    if(cLineStatus.second == 0 && !fAllowZeroBitslip)
     {
         size_t cMaxAttempts = 10;
         size_t cIter        = 0;
@@ -677,10 +677,13 @@ bool LinkAlignmentOT::LineTuning(const Chip* pChip, uint8_t pLineId, uint8_t pAl
 
         cAttempts++;
     } while(!cSuccess && cAttempts < 10);
-    if(cSuccess && pLineId == 1 && (pChip->getFrontEndType() == FrontEndType::CBC3 || pChip->getFrontEndType() == FrontEndType::SSA || pChip->getFrontEndType() == FrontEndType::MPA))
+    if(cSuccess && pLineId == 1 &&
+       (pChip->getFrontEndType() == FrontEndType::CBC3 || pChip->getFrontEndType() == FrontEndType::SSA || pChip->getFrontEndType() == FrontEndType::SSA2 ||
+        pChip->getFrontEndType() == FrontEndType::MPA || pChip->getFrontEndType() == FrontEndType::MPA2))
     {
         LOG(INFO) << BOLDBLUE << "Forcing L1A line to match alignment result for first stub line." << RESET;
-        uint8_t cBitslip = cWordAlignmentStatus.second + (uint8_t)(pChip->getFrontEndType() == FrontEndType::SSA || pChip->getFrontEndType() == FrontEndType::MPA);
+        uint8_t cBitslip = cWordAlignmentStatus.second + (uint8_t)(pChip->getFrontEndType() == FrontEndType::SSA || pChip->getFrontEndType() == FrontEndType::SSA2 ||
+                                                                   pChip->getFrontEndType() == FrontEndType::MPA || pChip->getFrontEndType() == FrontEndType::MPA2);
         ManuallyConfigureLine(pChip, pLineId, cPhaseAlignmentStatus.second, cBitslip);
     }
     return cSuccess;
@@ -713,6 +716,8 @@ bool LinkAlignmentOT::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
         cVecReg.push_back({cRegName, cFcmdRegVals[cIndx]});
     }
     cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    cVecReg.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
+    cVecReg.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1});
     fBeBoardInterface->WriteBoardMultReg(*cBoardIter, cVecReg);
 
     auto& cBeBitSlip   = fBeBitSlip.at((*cBoardIter)->getIndex());

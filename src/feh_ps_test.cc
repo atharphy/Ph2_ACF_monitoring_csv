@@ -233,11 +233,11 @@ int main(int argc, char* argv[])
         // align back-end
         BackEndAlignment cBackEndAligner;
         cBackEndAligner.Inherit(&cHybridTester);
-        cBackEndAligner.Start(0);
-        cBackEndAligner.waitForRunToBeCompleted();
-        // reset all chip and board registers
-        // to what they were before this tool was called
-        cBackEndAligner.Reset();
+        // cBackEndAligner.Start(0);
+        // cBackEndAligner.waitForRunToBeCompleted();
+        // // reset all chip and board registers
+        // // to what they were before this tool was called
+        // cBackEndAligner.Reset();
 
         bool    cAligned = false;
         double  cAlignedDouble;
@@ -273,7 +273,8 @@ int main(int argc, char* argv[])
             cCicAligner.Initialise();
 
             LOG(INFO) << "Phase alignment MPA" << RESET;
-            cAligned       = cCicAligner.PhaseAlignment(100);
+            // cAligned       = cCicAligner.PhaseAlignment(100);
+            cAligned = cCicAligner.AlignInputs();
             cAlignedDouble = cAligned ? 1.0 : 0.0;
 #if defined(__USE_ROOT__)
             cHybridTester.fillSummaryTree(Form("MPA Alignment attemp %d", i + 1), cAlignedDouble);
@@ -290,18 +291,21 @@ int main(int argc, char* argv[])
             if(cAligned) break;
         }
 
+        LOG(INFO) << "Phase Aligned CIC Inputs" << RESET;
         // align back-end
-        // cBackEndAligner.Start(0);
-        // cBackEndAligner.waitForRunToBeCompleted();
+        cBackEndAligner.Start(0);
+        cBackEndAligner.waitForRunToBeCompleted();
         // // reset all chip and board registers
         // // to what they were before this tool was called
-        // cBackEndAligner.Reset();
+        cBackEndAligner.Reset();
 
         // and then re-align back-end just because
         // cHybridTester.AlignCICout(cPhaseAlignmentPattern);
 
         cDPInterfacer.Stop(cInterface);
         cDPInterfacer.CheckNPatterns(cInterface);
+
+        LOG(INFO) << "Alignment of CIC inputs and outputs is done" << RESET;
     }
 
     if(cmd.foundOption("checkAsync"))
@@ -317,12 +321,9 @@ int main(int argc, char* argv[])
     // cOpenFinder.Inherit(&cHybridTester);
     // std::string antennaValue = (cmd.foundOption("antennaValue")) ? cmd.optionValue("antennaValue") : "512";
     // cOpenFinder.SelectAntennaPosition("Disable", 512);
-    // // cOpenFinder.SelectAntennaPosition("Enable", 550 );
-    // if(cmd.foundOption("antennaValue"))
-    // {
-    //     cOpenFinder.SelectAntennaPosition("EvenChannels", std::stoi(antennaValue));
-    //     LOG(INFO) << "Setting antenna" << RESET;
-    // }
+    // cOpenFinder.SelectAntennaPosition("Enable", 550 );
+    // cOpenFinder.SelectAntennaPosition("EvenChannels", 650);
+    // LOG(INFO) << "Setting antenna" << RESET;
     // #endif
 
     // measure noise on FE chips before calibration
@@ -516,7 +517,7 @@ int main(int argc, char* argv[])
             if(cSSAPair != "ALL")
             {
                 cHybridTester.SSAPairSelect(cSSAPair);
-                cBackendAlignment.SetEnabledROCs(cSSAPair);
+                cBackendAlignment.SetEnabledChips(cSSAPair);
                 for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
                 cHybridTester.SSATestStubOutput(cSSAPair);
                 cHybridTester.SSATestL1Output(cSSAPair);
@@ -530,7 +531,7 @@ int main(int argc, char* argv[])
                     LOG(INFO) << "Starting SSA outputs test" << RESET;
                     cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
                     cHybridTester.SSAPairSelect(cCurrentSSAPair);
-                    cBackendAlignment.SetEnabledROCs(cCurrentSSAPair);
+                    cBackendAlignment.SetEnabledChips(cCurrentSSAPair);
                     for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
                     cHybridTester.SSATestStubOutput(cCurrentSSAPair);
                     cHybridTester.SSATestL1Output(cCurrentSSAPair);
@@ -541,10 +542,21 @@ int main(int argc, char* argv[])
                     LOG(INFO) << "Starting inter-SSA communication test" << RESET;
                     cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
                     cHybridTester.SSAPairSelect(cCurrentSSAPair);
-                    cBackendAlignment.SetEnabledROCs(cCurrentSSAPair);
+                    cBackendAlignment.SetEnabledChips(cCurrentSSAPair);
                     for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
+                    // cHybridTester.SSATestStubOutput(cCurrentSSAPair);
+                    // cHybridTester.SSATestL1Output(cCurrentSSAPair);
                     cHybridTester.SSATestLateralCommunication(cCurrentSSAPair);
                 }
+
+                // for(int i = 0; i < 7; i++)
+                // {
+                //     cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
+                //     cHybridTester.SSAPairSelect(cCurrentSSAPair);
+                //     cBackendAlignment.SetEnabledChips(cCurrentSSAPair);
+                //     for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
+                //     cHybridTester.SSATestLateralCommunication(cCurrentSSAPair);
+                // }
             }
         }
         // configure SSA to output something on L1 lines

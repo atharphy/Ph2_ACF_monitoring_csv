@@ -7,12 +7,10 @@ namespace Ph2_HwInterface
 D19cTriggerInterface::D19cTriggerInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : TriggerInterface(pId, pUri, pAddressTable)
 {
     LOG(INFO) << BOLDYELLOW << "D19cTriggerInterface::D19cTriggerInterface Constructor" << RESET;
-    TriggerConfiguration();
 }
 D19cTriggerInterface::D19cTriggerInterface(const std::string& puHalConfigFileName, uint32_t pBoardId) : TriggerInterface(puHalConfigFileName, pBoardId)
 {
     LOG(INFO) << BOLDYELLOW << "D19cTriggerInterface::D19cTriggerInterface Constructor" << RESET;
-    TriggerConfiguration();
 }
 D19cTriggerInterface::~D19cTriggerInterface() {}
 

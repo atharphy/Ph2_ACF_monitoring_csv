@@ -13,7 +13,6 @@
 #include "tools/MemoryCheck2S.h"
 #include "tools/OpenFinder.h"
 #include "tools/PedeNoise.h"
-#include "tools/PedeNoiseTime.h"
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
 #include "tools/ShortFinder.h"
@@ -147,7 +146,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("completeDataCheck", "Complete data check for the following CBCs", ArgvParser::OptionRequiresValue);
     cmd.defineOption("cyclePower", "Cycle Power", ArgvParser::NoOptionAttribute);
     cmd.defineOption("powerState", "Get State of power supply", ArgvParser::NoOptionAttribute);
-    cmd.defineOption("registerTest", "Test I2C registers on ROCs", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("registerTest", "Test I2C registers on Chips", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkL1Timing", "Check L1 timing for hybrid# [please provide hybrid number]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("linkTest", "Check data quality on L1/stub data", ArgvParser::NoOptionAttribute);
 
@@ -589,12 +588,12 @@ int main(int argc, char* argv[])
         //         for(auto cHybrid: *cOpticalGroup)
         //         {
         //             // set all SSAs + MPAs to output data in async mode
-        //             for(auto cROC: *cHybrid)
+        //             for(auto cChip: *cHybrid)
         //             {
         //                 // TBC - what about MPA here?
-        //                 if( cROC->getFrontEndType() == FrontEndType::SSA || cROC->getFrontEndType() == FrontEndType::SSA2 )
+        //                 if( cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2 )
         //                 {
-        //                     cTool.fReadoutChipInterface->WriteChipReg(cROC, "AnalogueSync", 1);
+        //                     cTool.fReadoutChipInterface->WriteChipReg(cChip, "AnalogueSync", 1);
         //                 }
         //             }
         //         }
@@ -643,25 +642,6 @@ int main(int argc, char* argv[])
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
     }
-    if(cmd.foundOption("scanNoiseTime"))
-    {
-        t.start();
-        // if this is true, I need to create an object of type PedeNoise from the members of Calibration
-        // tool provides an Inherit(Tool* pTool) for this purpose
-        PedeNoiseTime cPedeNoise;
-        cPedeNoise.Inherit(&cTool);
-        // second parameter disables stub logic on CBC3
-        // auto myFunction = [](const ChipContainer *theChip){return (theChip->getId()==0);};
-        // auto myFunction = [](const ChipContainer *theChip){return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA);};
-        // cTool.fDetectorContainer->setReadoutChipQueryFunction(myFunction);
-        cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
-        cPedeNoise.measureNoise();
-        cPedeNoise.writeObjects();
-        cPedeNoise.dumpConfigFiles();
-        // cTool.fDetectorContainer->resetReadoutChipQueryFunction();
-        t.stop();
-        t.show("Time to Scan Pedestals and Noise");
-    }
     // inject hits and stubs using mask and compare input against output
     if(cmd.foundOption("memCheck"))
     {
@@ -676,12 +656,12 @@ int main(int argc, char* argv[])
         // find pedestal and set threshold
         if(cmd.foundOption("completeDataCheck"))
         {
-            std::string          cArgsStr    = cmd.optionValue("completeDataCheck");
-            std::vector<uint8_t> cFesToCheck = getArgs(cArgsStr);
+            std::string          cArgsStr      = cmd.optionValue("completeDataCheck");
+            std::vector<uint8_t> cChipsToCheck = getArgs(cArgsStr);
             cMemoryChecker.EvaluatePedeNoise(100); // find pedestal + noise
             cMemoryChecker.SetThreshold(-2.0);     // set threshold to 3 sigma away from pedestal
             int cTriggerGap = cTool.findValueInSettings<double>("TriggerSeparation", 500);
-            cMemoryChecker.DataCheck(cFesToCheck, cTriggerGap);
+            cMemoryChecker.DataCheck(cChipsToCheck, cTriggerGap);
         }
         cMemoryChecker.MemoryCheck2SRaw(true);  // all ones
         cMemoryChecker.MemoryCheck2SRaw(false); // all zeros

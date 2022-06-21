@@ -11,4 +11,11 @@ FEConfigurationInterface::FEConfigurationInterface(const std::string& puHalConfi
 }
 FEConfigurationInterface::~FEConfigurationInterface() {}
 
+void FEConfigurationInterface::Configure(Configuration pConfiguration)
+{
+    fConfiguration.fRetry       = pConfiguration.fRetry;
+    fConfiguration.fVerify      = pConfiguration.fVerify;
+    fConfiguration.fMaxAttempts = pConfiguration.fMaxAttempts;
+}
+
 } // namespace Ph2_HwInterface

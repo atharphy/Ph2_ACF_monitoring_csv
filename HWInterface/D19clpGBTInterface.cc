@@ -18,18 +18,28 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop, uint32_t pBlockSize)
+bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerify, uint32_t pBlockSize)
 {
     std::stringstream cOutput;
     setBoard(pChip->getBeBoardId());
     pChip->printChipType(cOutput);
-    LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pChip->getId() << "]" << RESET;
-
-    // Configure High Speed Link Tx Rx Polarity
-    // do this before doing anything else
-    ConfigureHighSpeedPolarity(pChip, 1, 0);
-    bool cReconfigure = true; // if using I2C interface maybe I want to confiugre?
-    if(cReconfigure)          // by de
+    uint8_t cChipVersion = static_cast<lpGBT*>(pChip)->getVersion();
+    LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pChip->getId() << "] , Version[" << +cChipVersion << "]" << RESET;
+    PrintChipMode(pChip);
+    // Waiting for at least PauseForDllConfig state before configuring chip. If state beyond, then I can still configure
+    uint16_t cIter = 0, cMaxIter = 200;
+    for(auto& ele: fPUSMStatusMap[cChipVersion]) revertedPUSMStatusMap[ele.second] = ele.first;
+    uint8_t cPUSMState = 0;
+    do
+    {
+        cPUSMState = GetPUSMStatus(pChip);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        cIter++;
+    } while((cPUSMState < revertedPUSMStatusMap["PAUSE_FOR_DLL_CONFIG"]) && (cIter < cMaxIter));
+    if(cIter == cMaxIter) { throw std::runtime_error(std::string("lpGBT Power-Up State Machine Stuck at state" + fPUSMStatusMap[cChipVersion][cPUSMState])); }
+    // Configuring chip
+    bool cReconfigure = false;
+    if(cReconfigure)
     {
         ChipRegMap                                    clpGBTRegMap = pChip->getRegMap();
         std::vector<std::pair<std::string, uint16_t>> cRegVec;
@@ -43,23 +53,25 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
             LOG(DEBUG) << BOLDBLUE << "\tWriting 0x" << std::hex << +cReg.second << std::dec << " to " << cReg.first << RESET;
             WriteChipReg(pChip, cReg.first, cReg.second);
         }
-        SetPUSMDone(pChip, true, true);
     }
-    uint16_t cIter = 0, cMaxIter = 200;
-    bool     cReady = false;
+    // Setting PUSM Done bits
+    SetPUSMDone(pChip, true, true);
+    // Checking if lpGBT reaches Ready state
+    bool cReady = false;
+    cIter = 0, cMaxIter = 200;
     while(!cReady && cIter < cMaxIter)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         cReady = IsPUSMDone(pChip);
         cIter++;
     }
-    if(cReady)
+    if(cReady) { LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET; }
+    else
     {
-        LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
-        ResetI2C(pChip, {0, 1, 2});
+        throw std::runtime_error(std::string("lpGBT Power-Up State Machine NOT DONE"));
     }
-    if(!cReady) throw std::runtime_error(std::string("lpGBT Power-Up State Machine NOT DONE"));
-    // PrintChipMode(pChip);
+    // Reset I2C Masters
+    ResetI2C(pChip, {0, 1, 2});
     return cReady;
 } //
 
@@ -98,7 +110,9 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
 {
     uint8_t cChipRate = GetChipRate(pChip);
     LOG(INFO) << BOLDGREEN << "Applying 2S-SEH lpGBT configuration for " << +cChipRate << "G module." << RESET;
-
+    // Forcing driver attenuation to be 1
+    uint8_t cEQAttenuation = 3;
+    WriteChipReg(pChip, "EQConfig", cEQAttenuation << 3);
     // Clocks - by default all are off
     std::vector<uint8_t> cClocks  = {fClock_RHS_Hybrid, fClock_LHS_Hybrid}; // Reduced number of clocks and only 320 MHz
     uint8_t              cClkFreq = 0, cClkDriveStr = 7, cClkInvert = 1;
@@ -116,6 +130,7 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     }
     // Rx configuration and Phase Align
     // Configure Rx Groups
+    // WriteChipReg(pChip, "EPRXDllConfig", , false);
     std::vector<uint8_t> cRxGroups = {0, 1, 2, 3, 4, 5, 6}, cRxChannels = {0, 2};
     uint8_t              cRxDataRate = 2, cRxTrackMode = 0; // manual mode by default
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
@@ -149,9 +164,13 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
         this->cicReset(pChip, true, cSide);
     }
 #if defined(__TCUSB__)
-    ContinuousPhaseAlignRx(pChip, cRxGroups, cRxChannels);
-    // InternalPhaseAlignRx(pChip, cRxGroups, cRxChannels);
-    // DpPhaseAlignRx(pChip, cRxGroups, cRxChannels);
+    // // ContinuousPhaseAlignRx(pChip, cRxGroups, cRxChannels);
+    std::vector<uint8_t> cEportGroups = {4, 4, 5, 5, 6, 0};
+    std::vector<uint8_t> cEportChnls  = {0, 2, 0, 2, 0, 0};
+    InitialPhaseAlignRx(pChip, cEportGroups, cEportChnls);
+    cEportGroups = {0, 1, 1, 2, 2, 3};
+    cEportChnls  = {2, 0, 2, 0, 2, 2};
+    InitialPhaseAlignRx(pChip, cEportGroups, cEportChnls);
     ConfigureCurrentDAC(pChip, std::vector<std::string>{"ADC4"}, 0x1c); // current chosen according to measurement range
 #endif
 
@@ -163,10 +182,28 @@ void D19clpGBTInterface::ContinuousPhaseAlignRx(Chip* pChip, const std::vector<u
     D19clpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, 2, 2);
 }
 
+void D19clpGBTInterface::InitialPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
+{
+    std::vector<uint8_t> cOptimalTaps = {};
+    AutoPhaseAlignRx(pChip, pGroups, pChannels);
+    // find mode
+    for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++) { cOptimalTaps.push_back(GetPhaseTap(pChip, pGroups[cIndx], pChannels[cIndx])); }
+    std::vector<uint8_t> cTapsHist(15, 0);
+    for(auto cItem: cOptimalTaps) cTapsHist[cItem]++;
+    // return cTapsHist;
+    auto cTapMode = std::max_element(cTapsHist.begin(), cTapsHist.end()) - cTapsHist.begin();
+    LOG(INFO) << BOLDGREEN << "Applying Phase " << cTapMode << RESET;
+    if(cTapMode != 15)
+        for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++) { ConfigureRxPhase(pChip, pGroups[cIndx], pChannels[cIndx], cTapMode); }
+}
+
 void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
 {
     uint8_t cChipRate = GetChipRate(pChip);
     LOG(INFO) << BOLDGREEN << "Applying PS-ROH-" << +cChipRate << "G lpGBT configuration" << RESET;
+    // Forcing driver attenuation to be 1
+    uint8_t cEQAttenuation = 3;
+    WriteChipReg(pChip, "EQConfig", cEQAttenuation << 3);
     // Clocks
     std::vector<uint8_t> cClocks = {fClock_LHS_Hybrid, fClock_LHS_CIC, fClock_RHS_Hybrid, fClock_RHS_CIC};
     // clock frequency set to 0 to disable it at first and only later configure what is needed
@@ -224,6 +261,16 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
         this->mpaReset(pChip, true, cSide);
         this->cicReset(pChip, true, cSide);
     }
+#if defined(__TCUSB__)
+    // ContinuousPhaseAlignRx(pChip, cRxGroups, cRxChannels);
+    std::vector<uint8_t> cEportGroups = {4, 4, 5, 5, 6, 6, 0};
+    std::vector<uint8_t> cEportChnls  = {0, 2, 0, 2, 0, 2, 0};
+    InitialPhaseAlignRx(pChip, cEportGroups, cEportChnls);
+    cEportGroups = {0, 1, 1, 2, 2, 3, 3};
+    cEportChnls  = {2, 0, 2, 0, 2, 0, 2};
+    InitialPhaseAlignRx(pChip, cEportGroups, cEportChnls);
+
+#endif
     LOG(INFO) << BOLDGREEN << "PS-ROH-" << +cChipRate << "G lpGBT configuration APPLIED" << RESET;
 }
 } // namespace Ph2_HwInterface

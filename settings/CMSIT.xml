@@ -11,7 +11,7 @@
     <OpticalGroup Id="0" FMCId="0">
       <!--
       <lpGBT_Files path="${PWD}/" />
-      <lpGBT Id="0" configfile="CMSIT_LpGBT.txt" ChipAddress="0x70" RxDataRate="1280" RxHSLPolarity="0" TxDataRate="160" TxHSLPolarity="1">
+      <lpGBT Id="0" version="0" configfile="CMSIT_LpGBT.txt" ChipAddress="0x70" RxDataRate="1280" RxHSLPolarity="0" TxDataRate="160" TxHSLPolarity="1">
         <Settings
             EPRX60ChnCntr_phase = "6"
             />
@@ -48,7 +48,7 @@
               PRECOMP_DIFF           =  "512"
               COMP_DIFF              = "1023"
               VFF_DIFF               =   "40"
-              VTH1_DIFF              =  "700"
+              VTH1_DIFF              =  "400"
               VTH2_DIFF              =  "100"
               LCC_DIFF               =   "20"
               CONF_FE_DIFF           =    "0"
@@ -282,11 +282,13 @@
     <Setting name="DisableChannelsAtExit"> 1 </Setting>
 
     <!-- === Expert settings ===
+         OutputBinaryDir: set the output directory for binary data for "Physics" data taking. If not specified files will be saved in ./Results/
          SaveBinaryData = 0: do not save raw data in binary format; SaveBinaryData = 1: save raw data in binary format
-         nHITxCol:      number of simultaneously injected pixels per column (it must be a divider of chip rows)
-         InjLatency:    controls the latency of the injection in terms of 100ns period (up to 4095)
-         nClkDelays:    controls the delay between two consecutive injections in terms of 100ns period (up to 4095)
+         nHITxCol:        number of simultaneously injected pixels per column (it must be a divider of chip rows)
+         InjLatency:      controls the latency of the injection in terms of 100ns period (up to 4095)
+         nClkDelays:      controls the delay between two consecutive injections in terms of 100ns period (up to 4095)
     -->
+    <Setting name="OutputBinaryDir">         </Setting>
     <Setting name="SaveBinaryData">        0 </Setting>
     <Setting name="nHITxCol">              1 </Setting>
     <Setting name="InjLatency">           32 </Setting>
@@ -299,16 +301,18 @@
   <MonitoringSettings>
     <Monitoring type="RD53" enable="0">
       <MonitoringSleepTime> 1000 </MonitoringSleepTime>
-      <MonitoringElements
-        VIN_ana_ShuLDO  = "0"
-        VOUT_ana_ShuLDO = "1"
-        VIN_dig_ShuLDO  = "0"
-        VOUT_dig_ShuLDO = "1"
-        ADCbandgap      = "1"
-        Iref            = "1"
-        TEMPSENS_1      = "1"
-        TEMPSENS_4      = "1"
-      />
+      <MonitoringElement device="RD53" register="VIN_ana_ShuLDO"  enable="0"/>
+      <MonitoringElement device="RD53" register="VOUT_ana_ShuLDO" enable="1"/>
+      <MonitoringElement device="RD53" register="VIN_dig_ShuLDO"  enable="0"/>
+      <MonitoringElement device="RD53" register="VOUT_dig_ShuLDO" enable="1"/>
+      <MonitoringElement device="RD53" register="ADCbandgap"      enable="1"/>
+      <MonitoringElement device="RD53" register="Iref"            enable="1"/>
+      <MonitoringElement device="RD53" register="TEMPSENS_1"      enable="1"/>
+      <MonitoringElement device="RD53" register="TEMPSENS_4"      enable="1"/>
+
+      <MonitoringElement device="LpGBT" register="TEMP"            enable="1"/>
+      <MonitoringElement device="LpGBT" register="VDD"             enable="1"/>
+      <MonitoringElement device="LpGBT" register="PUSMStatus"      enable="1"/>
     </Monitoring>
   </MonitoringSettings>
 

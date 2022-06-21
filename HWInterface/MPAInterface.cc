@@ -95,7 +95,7 @@ uint16_t MPAInterface::ReadChipReg(Chip* pMPA, const std::string& pRegNode)
     }
 }
 
-uint16_t MPAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVerifLoop)
+uint16_t MPAInterface::ReadReg(Chip* pChip, uint16_t pRegisterAddress, bool pVerify)
 {
     setBoard(pChip->getBeBoardId());
     ChipRegItem cRegItem;
@@ -196,7 +196,7 @@ std::vector<uint8_t> MPAInterface::readLUT(ReadoutChip* pChip, uint8_t pMode)
     }
     return cBendCodes;
 }
-bool MPAInterface::configPixel(Chip* pChip, std::string cReg, int pPixelNum, uint8_t pValue, bool pVerifLoop)
+bool MPAInterface::configPixel(Chip* pChip, std::string cReg, int pPixelNum, uint8_t pValue, bool pVerify)
 {
     // auto cRowCol = static_cast<MPA*>(pChip)->PNlocal(pPixelNum);
     int      cPixNum     = pPixelNum - 1;
@@ -227,8 +227,8 @@ bool MPAInterface::configPixel(Chip* pChip, std::string cReg, int pPixelNum, uin
     //         }
     //     }
     // }
-    pVerifLoop = (cRow == 0 || cColumn == 0) ? false : pVerifLoop;
-    return MPAInterface::WriteReg(pChip, cAddress, pValue, pVerifLoop);
+    pVerify = (cRow == 0 || cColumn == 0) ? false : pVerify;
+    return MPAInterface::WriteReg(pChip, cAddress, pValue, pVerify);
 }
 uint16_t MPAInterface::readPixel(Chip* pChip, std::string cReg, int pPixelNum)
 {
@@ -240,21 +240,21 @@ uint16_t MPAInterface::readPixel(Chip* pChip, std::string cReg, int pPixelNum)
     LOG(DEBUG) << BOLDBLUE << "PXL#" << +pPixelNum << " register is row " << +cRow << " column " << +cColumn << " register 0x" << std::hex << cAddress << std::dec << RESET;
     return MPAInterface::ReadReg(pChip, cAddress);
 }
-bool MPAInterface::maskPixel(Chip* pChip, int pPixelNum, uint8_t pMask, bool pVerifLoop)
+bool MPAInterface::maskPixel(Chip* pChip, int pPixelNum, uint8_t pMask, bool pVerify)
 {
     // pixel num starts from 1 [0 == global]
     auto    cRegValue = this->readPixel(pChip, "ENFLAGS", pPixelNum);
     uint8_t cNewValue = (cRegValue & 0xFE) | (1 - pMask);
     LOG(DEBUG) << BOLDBLUE << "Setting pixel mask to 0x" << std::hex << +cNewValue << std::dec << " on PixelNum#" << pPixelNum << RESET;
-    return this->configPixel(pChip, "ENFLAGS", pPixelNum, cNewValue, pVerifLoop);
+    return this->configPixel(pChip, "ENFLAGS", pPixelNum, cNewValue, pVerify);
 }
-bool MPAInterface::maskRowCol(Chip* pChip, int pRow, int pColumn, uint8_t pMask, bool pVerifLoop)
+bool MPAInterface::maskRowCol(Chip* pChip, int pRow, int pColumn, uint8_t pMask, bool pVerify)
 {
     // row and col num starts from 1 [0 == global]
     int cPixNum = 1 + (pColumn - 1) * NSSACHANNELS + (pRow - 1); // starting from 1
-    return this->maskPixel(pChip, cPixNum, pMask, pVerifLoop);
+    return this->maskPixel(pChip, cPixNum, pMask, pVerify);
 }
-bool MPAInterface::configRow(Chip* pChip, std::string cReg, int pRow, uint8_t pValue, bool pVerifLoop)
+bool MPAInterface::configRow(Chip* pChip, std::string cReg, int pRow, uint8_t pValue, bool pVerify)
 {
     // LOG(INFO) << BOLDBLUE << "Configuring row register "
     //     << cReg
@@ -278,12 +278,12 @@ bool MPAInterface::configRow(Chip* pChip, std::string cReg, int pRow, uint8_t pV
     }
 
     // if global register don't readback
-    pVerifLoop        = (pRow == 0) ? false : pVerifLoop;
+    pVerify           = (pRow == 0) ? false : pVerify;
     uint16_t cAddress = this->regRow(pChip, cRegAddress, pRow);
     LOG(DEBUG) << BOLDBLUE << "\t... register address 0x" << std::hex << +cAddress << std::dec << RESET;
-    return MPAInterface::WriteReg(pChip, cAddress, pValue, pVerifLoop);
+    return MPAInterface::WriteReg(pChip, cAddress, pValue, pVerify);
 }
-bool MPAInterface::configPeri(Chip* pChip, std::string cReg, uint8_t pValue, bool pVerifLoop)
+bool MPAInterface::configPeri(Chip* pChip, std::string cReg, uint8_t pValue, bool pVerify)
 {
     // LOG(INFO) << BOLDBLUE << "Configuring peri register "
     //     << cReg
@@ -294,7 +294,7 @@ bool MPAInterface::configPeri(Chip* pChip, std::string cReg, uint8_t pValue, boo
     uint8_t  cRegAddress = (PERI_CONFIG_TABLE.find(cReg))->second;
     uint16_t cAddress    = this->regPeri(pChip, cRegAddress);
     LOG(DEBUG) << BOLDBLUE << "\t... register address 0x" << std::hex << +cAddress << std::dec << RESET;
-    return MPAInterface::WriteReg(pChip, cAddress, pValue, pVerifLoop);
+    return MPAInterface::WriteReg(pChip, cAddress, pValue, pVerify);
 }
 uint16_t MPAInterface::readPeri(Chip* pChip, std::string cReg)
 {
@@ -322,7 +322,7 @@ uint16_t MPAInterface::regRow(Chip* pChip, int pBaseRegister, int pRow)
 
 // two methods -- also kinda slow but cant really use broadcast commands with enflags without overwriting other bits
 // Would want  to do a rowwise broadcast -- maybe using col 0  for bit mask?
-bool MPAInterface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop)
+bool MPAInterface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify)
 {
     auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>>(cChip->getChipOriginalMask());
     auto groupToMask   = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>>(group);
@@ -351,13 +351,13 @@ bool MPAInterface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<Ch
         // Req.second=regval;
         // pVecReq.push_back(Req);
 
-        returnval &= maskPixel(cChip, ipix + 1, (1 - bitval), pVerifLoop); // I  think mask 0 is enable?
+        returnval &= maskPixel(cChip, ipix + 1, (1 - bitval), pVerify); // I  think mask 0 is enable?
     }
     // return this->WriteChipMultReg(cChip, pVecReq);
     return returnval;
 }
 
-bool MPAInterface::setInjectionSchema(ReadoutChip* cChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop)
+bool MPAInterface::setInjectionSchema(ReadoutChip* cChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify)
 {
     std::bitset<NSSACHANNELS* NMPACOLS> cBitset = std::bitset<NSSACHANNELS * NMPACOLS>(std::static_pointer_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>>(group)->getBitset());
     if(cBitset.count() == 0) // no mask set... so do nothing
@@ -378,35 +378,35 @@ bool MPAInterface::setInjectionSchema(ReadoutChip* cChip, const std::shared_ptr<
         auto shifted = std::bitset<NSSACHANNELS * NMPACOLS>(0x1) << ipix;
         bool bitval  = bool(((cBitset & shifted) >> ipix).to_ulong());
 
-        returnval &= enablePixelInjection(cChip, ipix + 1, bitval, pVerifLoop);
+        returnval &= enablePixelInjection(cChip, ipix + 1, bitval, pVerify);
     }
 
     return returnval;
 }
-bool MPAInterface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop)
+bool MPAInterface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerify)
 {
     bool success = true;
-    if(mask) success &= maskChannelGroup(pChip, group, pVerifLoop);
-    if(inject) success &= setInjectionSchema(pChip, group, pVerifLoop);
+    if(mask) success &= maskChannelGroup(pChip, group, pVerify);
+    if(inject) success &= setInjectionSchema(pChip, group, pVerify);
 
     return success;
 }
 
-bool MPAInterface::enablePixelInjection(Chip* pChip, int pPixelNum, uint8_t pInj, bool pVerifLoop)
+bool MPAInterface::enablePixelInjection(Chip* pChip, int pPixelNum, uint8_t pInj, bool pVerify)
 {
     auto    cRegValue = this->readPixel(pChip, "PixelEnable", pPixelNum);
     uint8_t cNewValue = (cRegValue & 0xBF) | (pInj << 6);
 
     LOG(DEBUG) << BOLDBLUE << "Setting Enable to 0x" << std::hex << +cNewValue << std::dec << RESET;
-    return this->configPixel(pChip, "PixelEnable", pPixelNum, cNewValue, pVerifLoop);
+    return this->configPixel(pChip, "PixelEnable", pPixelNum, cNewValue, pVerify);
 }
 
-bool MPAInterface::ConfigureChipOriginalMask(ReadoutChip* pCbc, bool pVerifLoop, uint32_t pBlockSize)
+bool MPAInterface::ConfigureChipOriginalMask(ReadoutChip* pCbc, bool pVerify, uint32_t pBlockSize)
 {
     auto allChannelEnabledGroup = std::make_shared<ChannelGroup<NSSACHANNELS * NMPACOLS>>();
-    return maskChannelGroup(pCbc, allChannelEnabledGroup, pVerifLoop);
+    return maskChannelGroup(pCbc, allChannelEnabledGroup, pVerify);
 }
-bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_t pValue, bool pVerifLoop)
+bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_t pValue, bool pVerify)
 {
     setBoard(pMPA->getBeBoardId());
 
@@ -435,7 +435,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         std::string cToken    = "MaskChannel";
         auto        cPixelNum = std::atoi(pRegName.substr(pRegName.find(cToken) + cToken.length(), 4).c_str());
         LOG(DEBUG) << BOLDMAGENTA << "Masking pixel number " << +cPixelNum << " register is " << pRegName << RESET;
-        return maskPixel(pMPA, cPixelNum, pValue, pVerifLoop);
+        return maskPixel(pMPA, cPixelNum, pValue, pVerify);
     }
     else if(pRegName.find("SelectEdgeT1") != std::string::npos)
     {
@@ -491,7 +491,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         uint16_t cRegAddress = this->regPeri(pMPA, 5 + cIndex);
         uint16_t cRegValue   = MPAInterface::ReadReg(pMPA, cRegAddress);
         uint8_t  cValue      = (cRegValue & cRegMask) | (pValue << cBitShift);
-        return MPAInterface::WriteReg(pMPA, cRegAddress, cValue, pVerifLoop);
+        return MPAInterface::WriteReg(pMPA, cRegAddress, cValue, pVerify);
     }
     else if(PERI_CONFIG_TABLE.find(pRegName) != PERI_CONFIG_TABLE.end())
     {
@@ -586,9 +586,9 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
         LOG(INFO) << BOLDBLUE << "Register mask " << pRegName << " 0x" << std::hex << +cRegMask << std::dec << " readback value is 0x" << std::hex << +cReadValue << std::dec << " will write value 0x"
                   << std::hex << +cValue << std::dec << " register value is 0x" << std::hex << +cRegValue << std::dec << RESET;
 
-        bool cEnableDigital = this->configPixel(pMPA, "ENFLAGS", cPixelNumber, cRegValue, pVerifLoop);
+        bool cEnableDigital = this->configPixel(pMPA, "ENFLAGS", cPixelNumber, cRegValue, pVerify);
         // configure pattern
-        bool cConfigPattern = this->configPixel(pMPA, "DigiPattern", cPixelNumber, pValue, pVerifLoop);
+        bool cConfigPattern = this->configPixel(pMPA, "DigiPattern", cPixelNumber, pValue, pVerify);
         return cReadoutMode && cEnableDigital && cConfigPattern;
     }
     else if(pRegName == "AnalogueAsync")
@@ -615,7 +615,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
             LOG(DEBUG) << BOLDBLUE << "Enabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +pMPA->getRegItem("ENFLAGS_ALL").fValue << std::dec << RESET;
         else
             LOG(DEBUG) << BOLDBLUE << "Disabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +pMPA->getRegItem("ENFLAGS_ALL").fValue << std::dec << RESET;
-        bool cEnableAnalogue = this->configPixel(pMPA, "ENFLAGS", 0, pMPA->getRegItem("ENFLAGS_ALL").fValue, pVerifLoop);
+        bool cEnableAnalogue = this->configPixel(pMPA, "ENFLAGS", 0, pMPA->getRegItem("ENFLAGS_ALL").fValue, pVerify);
         // enabling async readout for stubs
         bool cReadoutMode = true;
         if(pValue == 1)
@@ -641,7 +641,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
             LOG(DEBUG) << BOLDBLUE << "Enabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +pMPA->getRegItem("ENFLAGS_ALL").fValue << std::dec << RESET;
         else
             LOG(DEBUG) << BOLDBLUE << "Disabling analogue injection on MPA by setting register ENFLAGS_ALL to 0x" << std::hex << +pMPA->getRegItem("ENFLAGS_ALL").fValue << std::dec << RESET;
-        bool cEnableAnalogue = this->configPixel(pMPA, "ENFLAGS", 0, pMPA->getRegItem("ENFLAGS_ALL").fValue, pVerifLoop);
+        bool cEnableAnalogue = this->configPixel(pMPA, "ENFLAGS", 0, pMPA->getRegItem("ENFLAGS_ALL").fValue, pVerify);
         // enabling async readout for stubs
         bool cReadoutMode = configPeri(pMPA, "ReadoutMode", 0x00);
         return cEnableAnalogue && cReadoutMode;
@@ -666,19 +666,19 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
     else
     {
         LOG(DEBUG) << BOLDMAGENTA << "Writing " << +pValue << " to " << pRegName << RESET;
-        return this->WriteChipSingleReg(pMPA, pRegName, pValue, pVerifLoop);
+        return this->WriteChipSingleReg(pMPA, pRegName, pValue, pVerify);
     }
 }
 
-bool MPAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop)
+bool MPAInterface::WriteChipSingleReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerify)
 {
     setBoard(pChip->getBeBoardId());
     auto cRegItem   = pChip->getRegMap().find(pRegNode)->second;
     cRegItem.fValue = pValue & 0xFF;
-    return fBoardFW->SingleRegisterWrite(pChip, cRegItem, pVerifLoop);
+    return fBoardFW->SingleRegisterWrite(pChip, cRegItem, pVerify);
 }
 
-bool MPAInterface::WriteChipMultReg(Chip* pMPA, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop)
+bool MPAInterface::WriteChipMultReg(Chip* pMPA, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify)
 {
     // first, identify the correct BeBoardFWInterface
     setBoard(pMPA->getBeBoardId());
@@ -697,19 +697,16 @@ bool MPAInterface::WriteChipMultReg(Chip* pMPA, const std::vector<std::pair<std:
         cItem.fValue      = cReq.second;
         cRegItems.push_back(cItem);
     }
-    return fBoardFW->MultiRegisterWrite(pMPA, cRegItems, pVerifLoop);
+    return fBoardFW->MultiRegisterWrite(pMPA, cRegItems, pVerify);
 }
 
-bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& dacName, ChipContainer& localRegValues, bool pVerifLoop)
+bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& dacName, ChipContainer& localRegValues, bool pVerify)
 {
     setBoard(pMPA->getBeBoardId());
     assert(localRegValues.size() == pMPA->getNumberOfChannels());
     std::string dacTemplate;
 
-    if(dacName == "TrimDAC_P" or dacName == "ThresholdTrim")
-    {
-        if(pMPA->getFrontEndType() == FrontEndType::MPA) dacTemplate = "TrimDAC_P%d";
-    }
+    if(dacName == "TrimDAC_P" or dacName == "ThresholdTrim") { dacTemplate = "TrimDAC_P%d"; }
 
     else
         LOG(ERROR) << "Error, DAC " << dacName << " is not a Local DAC";
@@ -734,7 +731,7 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
         if(dacName == "TrimDAC_P" or dacName == "ThresholdTrim")
         {
             bool cWrite = this->WriteChipReg(pMPA, "TrimDAC_ALL", cVals[0], false);
-            if(pVerifLoop)
+            if(pVerify)
             {
                 auto cReadback = this->ReadChipReg(pMPA, "TrimDAC_P100");
                 LOG(DEBUG) << BOLDMAGENTA << "Read-back a value of " << +cReadback << " from trim-dac register" << RESET;
@@ -753,12 +750,12 @@ bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& da
         char dacName1[20];
         sprintf(dacName1, dacTemplate.c_str(), 1 + iChannel);
         LOG(DEBUG) << BOLDBLUE << "Setting register " << dacName1 << " to " << (localRegValues.getChannel<uint16_t>(iChannel) & 0x1F) << RESET;
-        cSuccess = cSuccess && this->WriteChipReg(pMPA, dacName1, (localRegValues.getChannel<uint16_t>(iChannel) & 0x1F), pVerifLoop);
+        cSuccess = cSuccess && this->WriteChipReg(pMPA, dacName1, (localRegValues.getChannel<uint16_t>(iChannel) & 0x1F), pVerify);
     }
     return cSuccess;
 }
 
-bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSize)
+bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerify, uint32_t pBlockSize)
 {
     // for now ..
     bool              cConfigLocalRegs = true;
@@ -789,19 +786,19 @@ bool MPAInterface::ConfigureChip(Chip* pMPA, bool pVerifLoop, uint32_t pBlockSiz
     bool cSuccess = fBoardFW->MultiRegisterWrite(pMPA, cCntrlRegItems, false);
     if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cCntrlRegItems.size() << " control registers in" << cOutput.str() << "#" << +pMPA->getId() << RESET;
     // glbl
-    cSuccess = fBoardFW->MultiRegisterWrite(pMPA, cRegItems, pVerifLoop);
+    cSuccess = fBoardFW->MultiRegisterWrite(pMPA, cRegItems, pVerify);
     if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cRegItems.size() << " R/W registers in" << cOutput.str() << "#" << +pMPA->getId() << RESET;
     // lcl
     if(cConfigLocalRegs)
     {
-        cSuccess = fBoardFW->MultiRegisterWrite(pMPA, cLocalRegItems, pVerifLoop);
+        cSuccess = fBoardFW->MultiRegisterWrite(pMPA, cLocalRegItems, pVerify);
         if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cLocalRegItems.size() << " local R/W registers in" << cOutput.str() << "#" << +pMPA->getId() << RESET;
     }
     pMPA->setRegisterTracking(1);
     return cSuccess;
 }
 
-bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerifLoop)
+bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerify)
 {
     setBoard(pChip->getBeBoardId());
     std::vector<ChipRegItem> cRegItems;
@@ -819,17 +816,17 @@ bool MPAInterface::WriteRegs(Chip* pChip, const std::vector<std::pair<uint16_t, 
         cItem.fValue      = cReq.second;
         cRegItems.push_back(cItem);
     }
-    return fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerifLoop);
+    return fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerify);
 }
 
-bool MPAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerifLoop)
+bool MPAInterface::WriteReg(Chip* pChip, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerify)
 {
     setBoard(pChip->getBeBoardId());
     auto        cRegMap   = pChip->getRegMap();
     auto        cIterator = find_if(cRegMap.begin(), cRegMap.end(), [&pRegisterAddress](const ChipRegPair& obj) { return obj.second.fAddress == pRegisterAddress; });
     ChipRegItem cItem     = cIterator->second;
     cItem.fValue          = pRegisterValue;
-    return fBoardFW->SingleRegisterWrite(pChip, cItem, pVerifLoop);
+    return fBoardFW->SingleRegisterWrite(pChip, cItem, pVerify);
 }
 void MPAInterface::readAllBias(Chip* pChip)
 {
@@ -867,7 +864,7 @@ void MPAInterface::Set_threshold(Chip* pMPA, uint32_t th)
     this->WriteChipReg(pMPA, "ThDAC6", th);
 }
 
-bool MPAInterface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerifLoop)
+bool MPAInterface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerify)
 {
     setBoard(pChip->getBeBoardId());
     // if sync
@@ -875,12 +872,10 @@ bool MPAInterface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerifL
     // uint32_t enwrite=1;
     // if(inject) enwrite=17;
 
-    return this->WriteChipReg(pChip, "AnalogueAsync", 1);
-    /*
+    // return this->WriteChipReg(pChip, "AnalogueAsync", 1);
     uint32_t enwrite = 0x17;
     if(inject) enwrite = 0x53;
-    this->WriteChipReg(pChip, "ENFLAGS_ALL", enwrite);
-    return true;*/
+    return this->WriteChipReg(pChip, "ENFLAGS_ALL", enwrite);
 }
 
 } // namespace Ph2_HwInterface

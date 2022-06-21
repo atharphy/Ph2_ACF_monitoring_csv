@@ -16,7 +16,6 @@ Hybrid::Hybrid() : FrontEndDescription(), HybridContainer(0) {}
 
 Hybrid::Hybrid(const FrontEndDescription& pFeDesc, uint8_t pHybridId) : FrontEndDescription(pFeDesc), HybridContainer(pHybridId) {}
 
-Hybrid::Hybrid(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pHybridId) : FrontEndDescription(pBeId, pFMCId, pFeId), HybridContainer(pHybridId) {}
+Hybrid::Hybrid(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId) : FrontEndDescription(pBeId, pFMCId, pOpticalGroupId, pHybridId), HybridContainer(pHybridId) {}
 
-Hybrid::Hybrid(uint8_t pBeId, uint8_t pFMCId, uint8_t pFeId, uint8_t pHybridId, uint8_t pLinkId) : FrontEndDescription(pBeId, pFMCId, pFeId), HybridContainer(pFeId), fLinkId(pLinkId) {}
 } // namespace Ph2_HwDescription

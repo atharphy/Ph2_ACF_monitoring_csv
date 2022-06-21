@@ -21,18 +21,18 @@ RD53Monitor::RD53Monitor(const Ph2_System::SystemController* theSystemController
 
 void RD53Monitor::runMonitor()
 {
-    if(fDetectorMonitorConfig.fMonitorElementList.empty()) return;
+    if(fDetectorMonitorConfig.getNumberOfMonitoredRegisters() == 0) return;
 
     for(const auto cBoard: *fTheSystemController->fDetectorContainer)
     {
-        fTheSystemController->ReadSystemMonitor(cBoard, fDetectorMonitorConfig.fMonitorElementList);
+        fTheSystemController->ReadSystemMonitor(cBoard, fDetectorMonitorConfig.fMonitorElementList.at("RD53"));
 
-        for(unsigned int i = 0; i < fDetectorMonitorConfig.fMonitorElementList.size(); i++)
-            if(fDetectorMonitorConfig.isElementToMonitor(fDetectorMonitorConfig.fMonitorElementList[i]) == true) runRegisterMonitor(fDetectorMonitorConfig.fMonitorElementList[i]);
+        for(unsigned int i = 0; i < fDetectorMonitorConfig.fMonitorElementList.at("RD53").size(); i++) runRD53RegisterMonitor(fDetectorMonitorConfig.fMonitorElementList.at("RD53").at(i));
+        for(unsigned int i = 0; i < fDetectorMonitorConfig.fMonitorElementList.at("LpGBT").size(); i++) runLpGBTRegisterMonitor(fDetectorMonitorConfig.fMonitorElementList.at("LpGBT").at(i));
     }
 }
 
-void RD53Monitor::runRegisterMonitor(const std::string& registerName)
+void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
 {
     DetectorDataContainer theRegisterContainer;
     ContainerFactory::copyAndInitChip<std::tuple<time_t, float>>(*fTheSystemController->fDetectorContainer, theRegisterContainer);
@@ -57,6 +57,42 @@ void RD53Monitor::runRegisterMonitor(const std::string& registerName)
                     {
                     }
                 }
+
+#ifdef __USE_ROOT__
+    fMonitorDQM->fillRegisterPlots(theRegisterContainer, registerName);
+#endif
+
+    RD53Monitor::sendData(theRegisterContainer, registerName);
+}
+
+void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
+{
+    DetectorDataContainer theRegisterContainer;
+    ContainerFactory::copyAndInitChip<std::tuple<time_t, float>>(*fTheSystemController->fDetectorContainer, theRegisterContainer);
+
+    for(const auto cBoard: *fTheSystemController->fDetectorContainer)
+        for(const auto cOpticalGroup: *cBoard)
+        {
+            float registerValue;
+            try
+            {
+                if(fTheSystemController->flpGBTInterface->fADCInputMap.find(registerName) != fTheSystemController->flpGBTInterface->fADCInputMap.end())
+                {
+                    if(registerName.find("TEMP") != std::string::npos)
+                        registerValue = fTheSystemController->flpGBTInterface->GetInternalTemperature(cOpticalGroup->flpGBT);
+                    else
+                        registerValue = fTheSystemController->flpGBTInterface->ReadADC(cOpticalGroup->flpGBT, registerName);
+                }
+                else
+                    registerValue = fTheSystemController->flpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, registerName);
+
+                theRegisterContainer.at(cBoard->getId())->at(cOpticalGroup->getId())->getSummary<std::tuple<time_t, float>>() = std::make_tuple(getTimeStamp(), registerValue);
+            }
+            catch(...)
+            {
+                theRegisterContainer.at(cBoard->getId())->at(cOpticalGroup->getId())->getSummary<std::tuple<time_t, float>>() = std::make_tuple(getTimeStamp(), -1);
+            }
+        }
 
 #ifdef __USE_ROOT__
     fMonitorDQM->fillRegisterPlots(theRegisterContainer, registerName);

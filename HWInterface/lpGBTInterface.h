@@ -18,6 +18,7 @@
 #if defined(__TCUSB__)
 #include "TCInterface.h"
 #endif
+
 // ##########################
 // # LpGBT useful constants #
 // ##########################
@@ -30,6 +31,7 @@ const uint8_t PATTERN_CONST_INV = 0x5; // Inverted constant pattern
 const uint8_t fictitiousGroup   = 6;   // Fictitious group used when no need to speficy frontend chip
 const uint8_t fictitiousChannel = 0;   // Fictitious channel used when no need to speficy frontend chip
 const uint8_t rxPhaseTracking   = 2;   // Rx phase tracking mode [0 = no-tracking, 2 = automatic-tracking]
+const uint8_t SUPERDEEPSLEEP    = 10;  // [milliseconds]
 } // namespace lpGBTconstants
 
 namespace Ph2_HwInterface
@@ -47,13 +49,6 @@ struct lpGBTClockConfig
     uint8_t fClkFreq = 4, fClkDriveStr = 1, fClkInvert = 1;
     uint8_t fClkPreEmphWidth = 0, fClkPreEmphMode = 0, fClkPreEmphStr = 0;
 };
-// struct i2cConfig
-// {
-//     uint8_t fMasterId=0;
-//     uint8_t fI2CFrequency=3;
-//     uint8_t fSCLmode=0;
-//     uint8_t fRetry=0;
-// };
 
 class lpGBTInterface : public ChipInterface
 {
@@ -62,10 +57,6 @@ class lpGBTInterface : public ChipInterface
     TestCardInterface* fExternalController{nullptr};
 #endif
 
-  protected:
-    const float fClockSpeed = 40e6; // 40 MHz clock for the lpGBT
-                                    // std::vector<i2cConfig> fI2Cconfigs(3);
-                                    // if external interface is compiled then return the ptr to access the controller
   public:
 #if defined(__TCUSB__)
     void iniitalizeExternalController()
@@ -74,7 +65,6 @@ class lpGBTInterface : public ChipInterface
         LOG(INFO) << BOLDYELLOW << "Initializing controller (via usb) for PS-ROH test system..." << RESET;
         fExternalController = new TestCardInterface("ROH_USB");
 #elif defined(__SEH_USB__)
-
         LOG(INFO) << BOLDYELLOW << "Initializing controller (via usb) for 2S-SEH test system..." << RESET;
         fExternalController = new TestCardInterface("SEH_USB");
 #endif
@@ -84,17 +74,16 @@ class lpGBTInterface : public ChipInterface
 #endif
 #endif
 
-  public:
     lpGBTInterface(const BeBoardFWMap& pBoardMap) : ChipInterface(pBoardMap) {}
     virtual ~lpGBTInterface() {}
 
     void StartPRBSpattern(Ph2_HwDescription::Chip* pChip);
     void StopPRBSpattern(Ph2_HwDescription::Chip* pChip);
 
-    // #######################################
+    // ################################
     // # Chip configuration functions #
-    // #######################################
-    bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerifLoop = false) override;
+    // ################################
+    bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerify = true) override;
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
 
     // #######################################
@@ -130,11 +119,12 @@ class lpGBTInterface : public ChipInterface
     // ###########################
     uint16_t ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN = "VREF/2", uint8_t pGain = 0);
     void     ConfigureInternalMonitoring(Ph2_HwDescription::Chip* pChip, uint8_t pEnable);
-    // ###########################
+
+    // ##############################
     // # LpGBT retreive temperature #
-    // ###########################
+    // ##############################
     float GetInternalTemperature(Ph2_HwDescription::Chip* pChip);
-    float ReadResistance(Ph2_HwDescription::Chip* pChip, std::string pADC, std::vector<uint8_t> pCurrents, uint8_t pGain = 0);
+    float ReadResistance(Ph2_HwDescription::Chip* pChip, const std::string& pADC, const std::vector<uint8_t>& pCurrents, uint8_t pGain = 0);
 
     // ####################################
     // # LpGBT eye opening monitor tester #
@@ -155,19 +145,15 @@ class lpGBTInterface : public ChipInterface
     double RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed);
     double BERtestCL(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double bits_or_time, float pConfidenceLevel);
 
-    // ##############
-    // # LpGBT Manual phase alignment of Rx ports
-    // #############
+    // ############################################
+    // # LpGBT Manual phase alignment of Rx ports #
+    // ############################################
     void ManualPhaseAlignRx(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel);
-
-    // ##############################################
-    // # LpGBT Reset  functions (Slow Control) #
-    // ##############################################
-    void ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pMasters);
 
     // ##############################################
     // # LpGBT I2C Masters functions (Slow Control) #
     // ##############################################
+    void     ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pMasters);
     void     ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode);
     bool     WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes, uint8_t pFreq = 3 /* 3   1 MHz */);
     uint32_t ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes, uint8_t pFreq = 3 /* 3   1 MHz */);
@@ -181,30 +167,16 @@ class lpGBTInterface : public ChipInterface
     void ConfigureCurrentDAC(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& pCurrentDACChannels, uint8_t pCurrentDACOutput);
     bool IsReadADCDone(Ph2_HwDescription::Chip* pChip);
 
-    // #######################################
-    // # LpGBT retreive configuration  #
-    // #######################################
-
+    // ################################
+    // # LpGBT retreive configuration #
+    // ################################
     uint16_t GetRxDataRate(Ph2_HwDescription::Chip* pChip, uint8_t pGroup);
     uint8_t  GetChipRate(Ph2_HwDescription::Chip* pChip);
 
-    // ###########################
+    // #######################
     // # LpGBT Vref function #
-    // ###########################
+    // #######################
     bool ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection);
-
-    // ####################################
-    // # LpGBT I2C master config #
-    // ####################################
-    // void SetI2Cconfig(i2cConfig pConfig){
-    //     fI2Cconfigs[pConfig.fMasterId].fMasterId = pConfig.fMasterId;
-    //     fI2Cconfigs[pConfig.fMasterId].fI2CFrequency = pConfig.fI2CFrequency;
-    //     fI2Cconfigs[pConfig.fMasterId].fSCLmode = pConfig.fSCLmode;
-    //     fI2Cconfigs[pConfig.fMasterId].fRetry = pConfig.fRetry;
-    // }
-    // i2cConfig GetI2Cconfig(uint8_t pMasterId){
-    //     return fI2Cconfigs[pMasterId];
-    // }
 
     void    PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     uint8_t AutoPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
@@ -217,9 +189,30 @@ class lpGBTInterface : public ChipInterface
                                 uint8_t                     pPreEmphStr,
                                 uint8_t                     pPreEmphWidth,
                                 uint8_t                     pInvert);
+    void    SetPhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
+    uint8_t GetPhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel); // To-Do: change to a map
+
+    std::map<std::string, uint8_t> fADCInputMap = {{"ADC0", 0},
+                                                   {"ADC1", 1},
+                                                   {"ADC2", 2},
+                                                   {"ADC3", 3},
+                                                   {"ADC4", 4},
+                                                   {"ADC5", 5},
+                                                   {"ADC6", 6},
+                                                   {"ADC7", 7},
+                                                   {"EOM_DAC", 8},
+                                                   {"VDDIO", 9},
+                                                   {"VDDTX", 10},
+                                                   {"VDDRX", 11},
+                                                   {"VDD", 12},
+                                                   {"VDDA", 13},
+                                                   {"TEMP", 14},
+                                                   {"VREF/2", 15}};
 
   protected:
-    bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerifLoop = true) override;
+    const float fClockSpeed = 40e6; // 40 MHz clock for the LpGBT
+
+    bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerify = true) override;
 
     // #######################################
     // # LpGBT block configuration functions #
@@ -281,42 +274,49 @@ class lpGBTInterface : public ChipInterface
     std::map<uint8_t, uint8_t> fGroup2BERTsourceCourse      = {{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 6}, {6, 7}};
     std::map<uint8_t, uint8_t> fChannelSpeed2BERTsourceFine = {{0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}, {6, 5}, {8, 6}}; // channel + 4 * (2 - frontendSpeed)
 
-    std::map<std::string, uint8_t> fADCInputMap = {{"ADC0", 0},
-                                                   {"ADC1", 1},
-                                                   {"ADC2", 2},
-                                                   {"ADC3", 3},
-                                                   {"ADC4", 4},
-                                                   {"ADC5", 5},
-                                                   {"ADC6", 6},
-                                                   {"ADC7", 7},
-                                                   {"EOM_DAC", 8},
-                                                   {"VDDIO", 9},
-                                                   {"VDDTX", 10},
-                                                   {"VDDRX", 11},
-                                                   {"VDD", 12},
-                                                   {"VDDA", 13},
-                                                   {"TEMP", 14},
-                                                   {"VREF/2", 15}};
-
-    std::map<uint8_t, std::string> fPUSMStatusMap = {{0, "ARESET"},
-                                                     {1, "RESET"},
-                                                     {2, "WAIT_VDD_STABLE"},
-                                                     {3, "WAIT_VDD_HIGHER_THAN_0V90"},
-                                                     {4, "FUSE_SAMPLING"},
-                                                     {5, "UPDATE_FROM_FUSES"},
-                                                     {6, "WAIT_FOR_PLL_CONFIG"},
-                                                     {7, "WAIT_POWER_GOOD"},
-                                                     {8, "RESETOUT"},
-                                                     {9, "I2C_TRANS"},
-                                                     {10, "RESET_PLL"},
-                                                     {11, "WAIT_PLL_LOCK"},
-                                                     {12, "INIT_SCRAM"},
-                                                     {13, "PAUSE_FOR_DLL_CONFIG"},
-                                                     {14, "RESET_DLLS"},
-                                                     {15, "WAIT_DLL_LOCK"},
-                                                     {16, "RESET_LOGIC_USING_DLL"},
-                                                     {17, "WAIT_CHNS_LOCKED"},
-                                                     {18, "READY"}};
+    // Power Up State Machine maps for both LpGBT-v0 and LpGBT-v1
+    // map read as : map[lpgbt_version][state_id] = state_description
+    std::map<uint8_t, std::map<uint8_t, std::string>> fPUSMStatusMap = {{0,
+                                                                         {{0, "ARESET"},
+                                                                          {1, "RESET"},
+                                                                          {2, "WAIT_VDD_STABLE"},
+                                                                          {3, "WAIT_VDD_HIGHER_THAN_0V90"},
+                                                                          {4, "FUSE_SAMPLING"},
+                                                                          {5, "UPDATE_FROM_FUSES"},
+                                                                          {6, "WAIT_FOR_PLL_CONFIG"},
+                                                                          {7, "WAIT_POWER_GOOD"},
+                                                                          {8, "RESETOUT"},
+                                                                          {9, "I2C_TRANS"},
+                                                                          {10, "RESET_PLL"},
+                                                                          {11, "WAIT_PLL_LOCK"},
+                                                                          {12, "INIT_SCRAM"},
+                                                                          {13, "PAUSE_FOR_DLL_CONFIG"},
+                                                                          {14, "RESET_DLLS"},
+                                                                          {15, "WAIT_DLL_LOCK"},
+                                                                          {16, "RESET_LOGIC_USING_DLL"},
+                                                                          {17, "WAIT_CHNS_LOCKED"},
+                                                                          {18, "READY"}}},
+                                                                        {1,
+                                                                         {{0, "ARESET"},
+                                                                          {1, "RESET"},
+                                                                          {2, "WAIT_VDD_STABLE"},
+                                                                          {3, "WAIT_VDD_HIGHER_THAN_0V90"},
+                                                                          {4, "STATE_COPY_FUSES"},
+                                                                          {5, "STATE_CALCULATE_CHECKSUM"},
+                                                                          {6, "COPY_ROM"},
+                                                                          {7, "PAUSE_FOR_PLL_CONFIG"},
+                                                                          {8, "WAIT_POWER_GOOD"},
+                                                                          {9, "RESET_PLL"},
+                                                                          {10, "WAIT_PLL_LOCK"},
+                                                                          {11, "INIT_SCRAM"},
+                                                                          {12, "RESETOUT"},
+                                                                          {13, "I2C_TRANS"},
+                                                                          {14, "PAUSE_FOR_DLL_CONFIG"},
+                                                                          {15, "RESET_DLLS"},
+                                                                          {16, "WAIT_DLL_LOCK"},
+                                                                          {17, "RESET_LOGIC_USING_DLL"},
+                                                                          {18, "WAIT_CHNS_LOCKED"},
+                                                                          {19, "READY"}}}};
 
     std::map<std::string, uint8_t> revertedPUSMStatusMap;
     std::map<uint8_t, double>      fBERTMeasTimeMap = {{0, RD53Shared::setBits(5) + 1},
@@ -339,6 +339,22 @@ class lpGBTInterface : public ChipInterface
     std::map<uint8_t, std::string> fEOMStatusMap = {{0, "smIdle"}, {1, "smResetCounters"}, {2, "smCount"}, {3, "smEndOfCount"}};
 
     std::map<uint8_t, std::string> fI2CStatusMap = {{4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
+    std::map<std::string, uint8_t> fPhaseTapMap  = {
+        {"Group0Channel0", 0},
+        {"Group0Channel2", 0},
+        {"Group1Channel0", 0},
+        {"Group1Channel2", 0},
+        {"Group2Channel0", 0},
+        {"Group2Channel2", 0},
+        {"Group3Channel0", 0},
+        {"Group3Channel2", 0},
+        {"Group4Channel0", 0},
+        {"Group4Channel2", 0},
+        {"Group5Channel0", 0},
+        {"Group5Channel2", 0},
+        {"Group6Channel0", 0},
+        {"Group6Channel2", 0},
+    };
 };
 
 } // namespace Ph2_HwInterface

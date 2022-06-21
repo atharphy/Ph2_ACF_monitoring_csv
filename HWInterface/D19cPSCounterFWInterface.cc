@@ -38,27 +38,26 @@ void D19cPSCounterFWInterface::PS_Send_pulses(uint32_t pNtriggers, bool manual)
 // compose id for counter data
 uint32_t D19cPSCounterFWInterface::Compose_Id(const BeBoard* pBoard, const OpticalGroup* pGroup, const Hybrid* pHybrid, const Chip* pChip)
 {
-    uint8_t  cType = (pChip->getFrontEndType() == FrontEndType::MPA) ? 1 : 0;
+    uint8_t  cType = (pChip->getFrontEndType() == FrontEndType::MPA || pChip->getFrontEndType() == FrontEndType::MPA2) ? 1 : 0;
     uint32_t cId   = (pBoard->getId() << (3 + 6 + 4 + 1 + 4)) | (pGroup->getId() << (3 + 6 + 4 + 1)) | (pHybrid->getId() << (3 + 6 + 1)) | (pChip->getId() << (3 + 1)) | cType;
     return cId;
 }
 
 // method to read counter from regiseter
-void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard, FrontEndType pType)
+void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard)
 {
     for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cFe: *cOpticalGroup)
+        for(auto cHybrid: *cOpticalGroup)
         {
-            for(auto cChip: *cFe)
+            for(auto cChip: *cHybrid)
             {
                 std::stringstream cChipType;
                 cChip->printChipType(cChipType);
 
-                if(cChip->getFrontEndType() != pType) continue;
-                LOG(DEBUG) << BOLDBLUE << "Directly reading back counters from ROC#" << +cChip->getId() << RESET;
+                LOG(DEBUG) << BOLDBLUE << "Directly reading back counters from Chip#" << +cChip->getId() << RESET;
                 std::vector<ChipRegItem> cRegItems;
-                auto                     cId       = Compose_Id(pBoard, cOpticalGroup, cFe, cChip);
+                auto                     cId       = Compose_Id(pBoard, cOpticalGroup, cHybrid, cChip);
                 auto                     cIterator = fPSCounterData.find(cId);
                 if(cIterator != fPSCounterData.end()) cIterator->second.clear();
                 for(uint16_t cChnl = 0; cChnl < cChip->size(); cChnl++)
@@ -66,7 +65,7 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard, FrontEndType pTyp
                     uint32_t cBaseRegisterLSB, cBaseRegisterMSB;
                     cBaseRegisterLSB = 0;
                     cBaseRegisterMSB = 0;
-                    if(cChip->getFrontEndType() == FrontEndType::MPA)
+                    if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
                     {
                         int cRowNumber   = 1 + cChnl / 120;
                         int cPixelNumber = 1 + cChnl % 120;
@@ -99,7 +98,7 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard, FrontEndType pTyp
                     cRegItems.push_back(cReg_Counters_LSB);
                 }
                 if(!fFEConfigurationInterface->MultiRead(cChip, cRegItems)) continue;
-                LOG(DEBUG) << BOLDYELLOW << "Read-back " << cRegItems.size() << " counters from " << cChipType.str() << "#" << +cChip->getId() << RESET;
+                LOG(DEBUG) << BOLDYELLOW << "Read-back " << cRegItems.size() << " counters from " << cChipType.str() << "#" << +cChip->getId() << "#" << +cId << RESET;
                 // fill counter information
                 for(auto cIter = cRegItems.begin(); cIter < cRegItems.end(); cIter += 2)
                 {
@@ -201,9 +200,9 @@ void D19cPSCounterFWInterface::ReadPSSCCountersFast(BeBoard* pBoard, std::vector
     pData.clear();
     for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cFe: *cOpticalGroup)
+        for(auto cHybrid: *cOpticalGroup)
         {
-            for(auto cChip: *cFe)
+            for(auto cChip: *cHybrid)
             {
                 uint8_t cPairId = (cChip->getId() % 2 == 0) ? 1 : 0;
                 uint8_t cChipId = (fPairSelect) ? cPairId : cChip->getId();
@@ -230,7 +229,7 @@ void D19cPSCounterFWInterface::ReadPSSCCountersFast(BeBoard* pBoard, std::vector
                         uint32_t cycle = 0;
                         // MPA will output 16*120 + 120 counters
                         // SSA witll output 120 counters
-                        size_t                cNCounters = (cChip->getFrontEndType() == FrontEndType::MPA) ? 2040 : cChip->size();
+                        size_t                cNCounters = (cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2) ? 2040 : cChip->size();
                         std::vector<uint16_t> count(cNCounters, 0);
                         for(int i = 0; i < 20000; i++)
                         {
@@ -282,17 +281,10 @@ void D19cPSCounterFWInterface::ReadPSSCCountersFast(BeBoard* pBoard, std::vector
 void D19cPSCounterFWInterface::GetCounterData(const BeBoard* pBoard)
 {
     LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::GetCounterData" << RESET;
-    auto cFeTypes = pBoard->connectedFrontEndTypes();
-    LOG(DEBUG) << BOLDYELLOW << cFeTypes.size() << " different types of ROCs connected to BeBoard#" << +pBoard->getId() << RESET;
+    auto cFrontEndTypes = pBoard->connectedFrontEndTypes();
+    LOG(DEBUG) << BOLDYELLOW << cFrontEndTypes.size() << " different types of Chips connected to BeBoard#" << +pBoard->getId() << RESET;
     if(fPSCounterFast == 0) // readout over registers
-    {
-        std::vector<FrontEndType> cValidTypes{FrontEndType::MPA, FrontEndType::SSA, FrontEndType::SSA2};
-        for(auto cValidType: cValidTypes)
-        {
-            if(std::find(cFeTypes.begin(), cFeTypes.end(), cValidType) == cFeTypes.end()) continue;
-            SlowRead(pBoard, cValidType);
-        }
-    }
+    { SlowRead(pBoard); }
     else // readout over fast interface
     {
     }
@@ -434,7 +426,7 @@ bool D19cPSCounterFWInterface::CheckStartPattern()
                 std::vector<uint32_t>                        cStubs(0);
                 std::vector<std::pair<std::string, uint8_t>> cStubFlds;
                 cStubFlds.push_back(std::make_pair("Offset", 3));
-                cStubFlds.push_back(std::make_pair("FeId", 3));
+                cStubFlds.push_back(std::make_pair("HybridId", 3));
                 cStubFlds.push_back(std::make_pair("Stub", 15));
                 size_t cSizeAvailable = cStubPkt.length() - cShft;
                 if(cSizeAvailable < (3 + 3 + 15) * cNstubs) continue;

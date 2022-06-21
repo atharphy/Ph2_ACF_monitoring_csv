@@ -230,14 +230,14 @@ int main(int argc, char* argv[])
                 for(auto chip: *hybrid)
                 {
                     cTool.fReadoutChipInterface->WriteChipReg(chip, "InjectedCharge", 77);
-                    if(chip->getFrontEndType() == FrontEndType::SSA)
+                    if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2)
                     {
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "AnalogueSync", 1);
                         // cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 1);
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth);
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "TriggerLatency", cPSmoduleLat - 1);
                     }
-                    if(chip->getFrontEndType() == FrontEndType::MPA)
+                    if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
                     {
                         // cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0x5F);
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);

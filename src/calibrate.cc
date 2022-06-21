@@ -158,8 +158,8 @@ int main(int argc, char* argv[])
         // cPedeNoise.sweepSCurves (205);
 
         // Crashes with high event numbers, need to make as a setting
-        if(cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA)
-            cPedeNoise.Validate(1, 1);
+        if(cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA || cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA2)
+            cPedeNoise.Validate();
         else
             cPedeNoise.Validate();
         cPedeNoise.writeObjects();

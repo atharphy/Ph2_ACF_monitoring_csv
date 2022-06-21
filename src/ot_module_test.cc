@@ -6,16 +6,17 @@
 #include "Utils/argvparser.h"
 #include "boost/format.hpp"
 #include "tools/BackEndAlignment.h"
-#include "tools/BeamTestCheck2S.h"
+#include "tools/BeamTestCheck.h"
+#include "tools/CBCPulseShape.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
 #include "tools/LatencyScan.h"
 #include "tools/LinkAlignmentOT.h"
 #include "tools/MemoryCheck2S.h"
+#include "tools/OTCMNoise.h"
 #include "tools/OTTemperature.h"
 #include "tools/PSAlignment.h"
 #include "tools/PedeNoise.h"
-#include "tools/PedeNoiseTime.h"
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
@@ -45,6 +46,25 @@ using namespace CommandLineProcessing;
 INITIALIZE_EASYLOGGINGPP
 
 #define CHIPSLAVE 4
+
+sig_atomic_t killProcess  = 0;
+sig_atomic_t runCompleted = 0;
+
+void interruptHandler(int handler) { killProcess = 1; }
+
+void killProcessFunction(Tool* theTool)
+{
+    while(1)
+    {
+        usleep(250000);
+        if(killProcess || runCompleted) break;
+    }
+    if(killProcess)
+    {
+        theTool->Destroy();
+        abort();
+    }
+}
 
 uint16_t returnRunNumber(std::string cFileName)
 {
@@ -102,6 +122,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("measurePedeNoise", "measure pedestal and noise on readout chips connected to CIC.");
     cmd.defineOptionAlternative("measurePedeNoise", "m");
 
+    cmd.defineOption("cmNoise", "measure common mode noise");
+
     cmd.defineOption("read", "Read data from a raw file.  ", ArgvParser::OptionRequiresValue);
     cmd.defineOption("save", "Save the data to a raw file.  ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("skipAlignment", "Skip the back-end alignment step ", ArgvParser::OptionRequiresValue);
@@ -133,10 +155,10 @@ int main(int argc, char* argv[])
     cmd.defineOption("completeDataCheck", "Complete data check for the following CBCs", ArgvParser::OptionRequiresValue);
 
     cmd.defineOption("pageToTest", "Page to test", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("registerTestWrite", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("registerTestWriteAndToggle", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("registerTestRead", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("registerTestReadAndToggle", "Test I2C registers on ROCs", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("registerTestWrite", "Test I2C registers on Chips", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("registerTestWriteAndToggle", "Test I2C registers on Chips", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("registerTestRead", "Test I2C registers on Chips", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("registerTestReadAndToggle", "Test I2C registers on Chips", ArgvParser::OptionRequiresValue);
     cmd.defineOption("sortOrder", "Sort order for CBC registers  : 0 - no sort other than page; 1 - page then increasing addresss; 2 - page then decreasing addresss", ArgvParser::OptionRequiresValue);
     cmd.defineOption("bitToFlip", "Bit to flip when testing register write", ArgvParser::OptionRequiresValue);
     cmd.defineOption("testAttempts", "Number of attempts", ArgvParser::OptionRequiresValue);
@@ -159,6 +181,7 @@ int main(int argc, char* argv[])
     //
     cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("readMonitors", "Read internal monitors on lpGBT [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("pulseShape", "Scan the threshold and fit for signal Vcth", ArgvParser::NoOptionAttribute);
 
     int result = cmd.parse(argc, argv);
 
@@ -178,7 +201,9 @@ int main(int argc, char* argv[])
     std::string cSrcLnkTst       = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
     std::string cModuleId        = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
     std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
-    uint16_t    cRunNumber       = 666;
+    bool        cPulseShape      = (cmd.foundOption("pulseShape")) ? true : false;
+
+    uint16_t cRunNumber = 666;
     if(!cmd.foundOption("read"))
     {
         std::ofstream cRunLog;
@@ -208,6 +233,14 @@ int main(int argc, char* argv[])
 
     std::stringstream outp;
     Tool              cTool;
+
+    std::thread softKillThread(killProcessFunction, &cTool);
+    softKillThread.detach();
+
+    struct sigaction act;
+    act.sa_handler = interruptHandler;
+    sigaction(SIGINT, &act, NULL);
+
     if(cSaveToFile)
     {
         char cRawFileName[80];
@@ -222,13 +255,7 @@ int main(int argc, char* argv[])
     LOG(INFO) << outp.str();
     cTool.CreateResultDirectory(cDirectory, false, false);
     cTool.InitResultFile(cResultfile);
-    // make sure  all interfaces are configured
-    for(const auto cBoard: *cTool.fDetectorContainer)
-    {
-        cTool.fBeBoardInterface->setBoard(cBoard->getId());
-        auto cInterface = static_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
-        cInterface->ConfigureInterfaces(cBoard);
-    }
+    cTool.AddMetadata();
 
     if(cmd.foundOption("readTemperatures"))
     {
@@ -733,8 +760,9 @@ int main(int argc, char* argv[])
                         {
                             // and that readout mode is set
                             // make sure L1 latency is configured
-                            if(cChip->getFrontEndType() == FrontEndType::MPA) { (static_cast<PSInterface*>(cTool.fReadoutChipInterface))->digiInjection(cChip, cInjections, 0x01); }
-                            if(cChip->getFrontEndType() == FrontEndType::SSA)
+                            if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                            { (static_cast<PSInterface*>(cTool.fReadoutChipInterface))->digiInjection(cChip, cInjections, 0x01); }
+                            if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                                 cTool.fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
@@ -805,7 +833,7 @@ int main(int argc, char* argv[])
                     {
                         for(auto chip: *hybrid)
                         {
-                            if(chip->getFrontEndType() == FrontEndType::MPA)
+                            if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
                             {
                                 for(auto cPxl: cPxls)
                                 {
@@ -817,7 +845,7 @@ int main(int argc, char* argv[])
                                     cTool.fReadoutChipInterface->WriteChipReg(chip, cRegNameTrim.str(), 0x0);
                                 }
                             }
-                            if(chip->getFrontEndType() == FrontEndType::SSA)
+                            if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 for(auto sStrp: cStrps)
                                 {
@@ -836,12 +864,12 @@ int main(int argc, char* argv[])
                     {
                         for(auto chip: *hybrid)
                         {
-                            if(chip->getFrontEndType() == FrontEndType::SSA)
+                            if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "SAMPLINGMODE_ALL", cSamplingSSA);
                             }
-                            if(chip->getFrontEndType() == FrontEndType::MPA)
+                            if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "ModeSel_ALL", cSamplingMPA);
@@ -869,12 +897,12 @@ int main(int argc, char* argv[])
                     {
                         for(auto chip: *hybrid)
                         {
-                            if(chip->getFrontEndType() == FrontEndType::SSA)
+                            if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "SAMPLINGMODE_ALL", cSamplingSSA);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth);
                             }
-                            if(chip->getFrontEndType() == FrontEndType::MPA)
+                            if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "ModeSel_ALL", cSamplingMPA);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);
@@ -989,15 +1017,29 @@ int main(int argc, char* argv[])
         PedeNoise cPedeNoise;
         cPedeNoise.Inherit(&cTool);
         cPedeNoise.Initialise(cAllChan, true); // canvases etc. for fast calibration
-        // cPedeNoise.scanScurves();
         cPedeNoise.measureNoise();
-        // cPedeNoise.Validate();
+        cPedeNoise.Validate();
         cPedeNoise.writeObjects();
         cPedeNoise.dumpConfigFiles();
         cPedeNoise.Reset();
         t.stop();
         t.show("Time to Scan Pedestals and Noise");
     }
+
+    if(cmd.foundOption("cmNoise") && !cmd.foundOption("read"))
+    {
+        LOG(INFO) << "OT_MODULE_TEST:: Measuring CM Noise" << RESET;
+
+        OTCMNoise cTester;
+        cTester.Inherit(&cTool);
+        cTester.Initialize();
+        LOG(INFO) << "OT_MODULE_TEST:: Setting thresholds" << RESET;
+        cTester.SetThresholds();
+
+        LOG(INFO) << "OT_MODULE_TEST:: Taking measurements " << RESET;
+        cTester.TakeData();
+    }
+
     // inject hits and stubs using mask and compare input against output
     if(cmd.foundOption("memCheck") && !cmd.foundOption("read"))
     {
@@ -1012,12 +1054,12 @@ int main(int argc, char* argv[])
         // find pedestal and set threshold
         if(cmd.foundOption("completeDataCheck"))
         {
-            std::string          cArgsStr    = cmd.optionValue("completeDataCheck");
-            std::vector<uint8_t> cFesToCheck = getArgs(cArgsStr);
+            std::string          cArgsStr      = cmd.optionValue("completeDataCheck");
+            std::vector<uint8_t> cChipsToCheck = getArgs(cArgsStr);
             cMemoryChecker.EvaluatePedeNoise(10); // find pedestal + noise
             cMemoryChecker.SetThreshold(-2.0);    // set threshold to 3 sigma away from pedestal
             int cTriggerGap = cTool.findValueInSettings<double>("TriggerSeparation", 500);
-            cMemoryChecker.DataCheck(cFesToCheck, cTriggerGap);
+            cMemoryChecker.DataCheck(cChipsToCheck, cTriggerGap);
         }
         cMemoryChecker.MemoryCheck2SRaw(true);  // all ones
         cMemoryChecker.MemoryCheck2SRaw(false); // all zeros
@@ -1085,7 +1127,7 @@ int main(int argc, char* argv[])
         cCng.fVerbose    = 1;
         cCng.fPrintEvery = 1;
 
-        BeamTestCheck2S cBeamTestCheck;
+        BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         cBeamTestCheck.ConfigureScans(cScanL1, cScanStubs);
@@ -1102,7 +1144,7 @@ int main(int argc, char* argv[])
         cGoodRuns << cRunNumber << "\n";
         cGoodRuns.close();
 
-        BeamTestCheck2S cBeamTestCheck;
+        BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         cBeamTestCheck.ConfigureScans(cScanL1, cScanStubs);
@@ -1119,7 +1161,7 @@ int main(int argc, char* argv[])
         cGoodRuns << cRunNumber << "\n";
         cGoodRuns.close();
 
-        BeamTestCheck2S cBeamTestCheck;
+        BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         cBeamTestCheck.ConfigureScans(cScanL1, cScanStubs);
@@ -1139,7 +1181,7 @@ int main(int argc, char* argv[])
         cGoodRuns << cRunNumber << "\n";
         cGoodRuns.close();
 
-        BeamTestCheck2S cBeamTestCheck;
+        BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         cBeamTestCheck.ConfigureScans(cScanL1, cScanStubs);
@@ -1155,8 +1197,8 @@ int main(int argc, char* argv[])
         cGoodRuns << cRunNumber << "\n";
         cGoodRuns.close();
 
-        uint8_t         cDisableFEs = (cmd.foundOption("DataMonitor")) ? convertAnyInt(cmd.optionValue("DataMonitor").c_str()) : 0;
-        BeamTestCheck2S cBeamTestCheck;
+        uint8_t       cDisableFEs = (cmd.foundOption("DataMonitor")) ? convertAnyInt(cmd.optionValue("DataMonitor").c_str()) : 0;
+        BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
         if(cDisableFEs == 1) cBeamTestCheck.DisableAllFEs();
@@ -1175,8 +1217,8 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("read"))
     {
-        std::string     cRawFileName = cmd.foundOption("read") ? cmd.optionValue("read") : "";
-        BeamTestCheck2S cBeamTestCheck;
+        std::string   cRawFileName = cmd.foundOption("read") ? cmd.optionValue("read") : "";
+        BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.SetReadoutMode(1);
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
@@ -1191,10 +1233,27 @@ int main(int argc, char* argv[])
     }
     if(!cmd.foundOption("read")) { cTool.dumpConfigFiles(); }
 
+    if(cPulseShape)
+    {
+        std::cout << "I am in" << std::endl;
+        Timer t;
+        t.start();
+        CBCPulseShape cCBCPulseShape;
+        cCBCPulseShape.Inherit(&cTool);
+        cCBCPulseShape.Initialise();
+        cCBCPulseShape.runCBCPulseShape();
+        cCBCPulseShape.writeObjects();
+        t.stop();
+        t.show("Time for pulseShape plot measurement");
+        t.reset();
+    }
+
     cTool.SaveResults();
     cTool.WriteRootFile();
     cTool.CloseResultFile();
     cTool.Destroy();
+    signal(SIGINT, SIG_DFL);
+    runCompleted = 1;
     if(!batchMode) cApp.Run();
     cGlobalTimer.stop();
     cGlobalTimer.show("Total execution time: ");

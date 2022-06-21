@@ -13,12 +13,6 @@ using namespace Ph2_HwInterface;
 
 CBCMonitor::CBCMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {
-    fDoMonitorThreshold  = fDetectorMonitorConfig.isElementToMonitor("CBCThreshold");
-    fDoMonitorLpGBT_ADC1 = fDetectorMonitorConfig.isElementToMonitor("LpGBT_ADC1");
-    fDoMonitorLpGBT_VDD  = fDetectorMonitorConfig.isElementToMonitor("LpGBT_VDD");
-    fDoMonitorLpGBT_VDDA = fDetectorMonitorConfig.isElementToMonitor("LpGBT_VDDA");
-    fDoMonitorLpGBT_TEMP = fDetectorMonitorConfig.isElementToMonitor("LpGBT_TEMP");
-
 #ifdef __USE_ROOT__
     fMonitorPlotDQM    = new MonitorDQMPlotCBC();
     fMonitorDQMPlotCBC = static_cast<MonitorDQMPlotCBC*>(fMonitorPlotDQM);
@@ -28,13 +22,10 @@ CBCMonitor::CBCMonitor(const Ph2_System::SystemController* theSystemController, 
 
 void CBCMonitor::runMonitor()
 {
-    if(fDoMonitorThreshold) runCBCRegisterMonitor("VCth");
-    std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
-
-    if(fDoMonitorLpGBT_ADC1) runLpGBTRegisterMonitor("ADC1");
-    if(fDoMonitorLpGBT_VDD) runLpGBTRegisterMonitor("VDD");
-    if(fDoMonitorLpGBT_VDDA) runLpGBTRegisterMonitor("VDDA");
-    if(fDoMonitorLpGBT_TEMP) runLpGBTRegisterMonitor("TEMP");
+    std::recursive_mutex                  theMutex;
+    std::lock_guard<std::recursive_mutex> theGuard(theMutex);
+    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("CBC")) runCBCRegisterMonitor(registerName);
+    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT")) runLpGBTRegisterMonitor(registerName);
 }
 
 void CBCMonitor::runCBCRegisterMonitor(std::string registerName)
@@ -66,15 +57,9 @@ void CBCMonitor::runCBCRegisterMonitor(std::string registerName)
     theCBCRegisterStreamer->setHeaderElement(CharArray(registerName));
     if(fTheSystemController->fDQMStreamerEnabled)
     {
-        for(auto board: theCBCRegisterContainer)
-        {
-            std::cout << __PRETTY_FUNCTION__ << "board index = " << board->getIndex() << " board size = " << board->size() << std::endl;
-            theCBCRegisterStreamer->streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer);
-        }
-        std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
+        for(auto board: theCBCRegisterContainer) { theCBCRegisterStreamer->streamAndSendBoard(board, fTheSystemController->fMonitorDQMStreamer); }
     }
 #endif
-    std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
 }
 
 void CBCMonitor::runLpGBTRegisterMonitor(std::string registerName)
@@ -84,6 +69,12 @@ void CBCMonitor::runLpGBTRegisterMonitor(std::string registerName)
 
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
+        if(board->at(0)->flpGBT == nullptr)
+        {
+            for(const auto& opticalGroup: *board)
+                theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<std::tuple<time_t, uint16_t>>() = std::make_tuple(getTimeStamp(), -1);
+            continue;
+        }
         for(const auto& opticalGroup: *board)
         {
             uint16_t registerValue = static_cast<D19clpGBTInterface*>(fTheSystemController->flpGBTInterface)->ReadADC(opticalGroup->flpGBT, registerName);

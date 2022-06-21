@@ -33,7 +33,7 @@ class OTTool : public Tool
     void        Prepare();
     void        Reset();
     void        ConfigurePrintout(PrintConfig pCnfg);
-    void        SetROCRegstoPerserve(FrontEndType pType, std::vector<std::string> pListOfRegs);
+    void        SetChipRegstoPerserve(FrontEndType pType, std::vector<std::string> pListOfRegs);
     void        SetBrdRegstoPerserve(std::vector<std::string> pListOfRegs);
     void        SetReadoutPause(uint32_t pReadoutPause) { fReadoutPause = pReadoutPause; }
     void        ReadDataFromFile(std::string pRawFileName);
@@ -94,6 +94,6 @@ class OTTool : public Tool
 
     // list of registers to perserve
     std::vector<std::string> fBrdRegsToPerserve;
-    DetectorDataContainer    fROCRegsToPerserve;
+    DetectorDataContainer    fChipRegsToPerserve;
 };
 #endif

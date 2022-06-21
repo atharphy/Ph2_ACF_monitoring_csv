@@ -48,7 +48,8 @@ class PedestalEqualization : public Tool
     bool     fTestPulse{false};
     uint8_t  fTestPulseAmplitude{0};
     uint32_t fEventsPerPoint{10};
-    uint16_t fTargetVcth{0x0};
+    uint16_t fStripTargetVcth{0x0};
+    uint16_t fPixelTargetVcth{0x0};
     uint8_t  fTargetOffset{0x80};
     bool     fCheckLoop{true};
     bool     fAllChan{true};
@@ -62,9 +63,9 @@ class PedestalEqualization : public Tool
     // DetectorDataContainer fStubLogicCointainer;
     // DetectorDataContainer fHIPCountCointainer;
     DetectorDataContainer fBoardRegContainer;
-    bool                  cWithCBC = true;
-    bool                  cWithSSA = false;
-    bool                  cWithMPA = false;
+    bool                  fWithCBC = true;
+    bool                  fWithSSA = false;
+    bool                  fWithMPA = false;
 
 #ifdef __USE_ROOT__
     DQMHistogramPedestalEqualization fDQMHistogramPedestalEqualization;

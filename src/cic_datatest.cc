@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
     std::string cHWFile    = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/Calibration8CBC.xml";
     std::string cDirectory = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     int         cVcth      = (cmd.foundOption("vcth")) ? convertAnyInt(cmd.optionValue("vcth").c_str()) : 0;
-    int         cFeChip    = (cmd.foundOption("fe")) ? convertAnyInt(cmd.optionValue("fe").c_str()) : -1;
+    int         cChipId    = (cmd.foundOption("fe")) ? convertAnyInt(cmd.optionValue("fe").c_str()) : -1;
 
     cDirectory += "CIC";
     bool         batchMode = (cmd.foundOption("batch")) ? true : false;
@@ -106,17 +106,17 @@ int main(int argc, char* argv[])
                 // init threshold visitior
                 LOG(INFO) << BOLDBLUE << "Setting Vcth to " << +cVcth << " units." << RESET;
                 ThresholdVisitor cThresholdVisitor(cCicAligner.fReadoutChipInterface, cVcth);
-                if(cFeChip < 0)
+                if(cChipId < 0)
                     cCicAligner.accept(cThresholdVisitor);
                 else
                 {
                     for(auto cOpticalGroup: *pBoard)
                     {
-                        for(auto cFe: *cOpticalGroup)
+                        for(auto cHybrid: *cOpticalGroup)
                         {
-                            for(auto cChip: *cFe)
+                            for(auto cChip: *cHybrid)
                             {
-                                if(cChip->getId() == cFeChip)
+                                if(cChip->getId() == cChipId)
                                 {
                                     cThresholdVisitor.setThreshold(cVcth);
                                     static_cast<ReadoutChip*>(cChip)->accept(cThresholdVisitor);

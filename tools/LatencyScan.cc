@@ -23,8 +23,8 @@ void LatencyScan::Initialize()
 
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
     bool         cWithCBC          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-    bool         cWithSSA          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
-    bool         cWithMPA          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
+    bool         cWithSSA          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA || cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA2);
+    bool         cWithMPA          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA || cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA2);
 
     if(cWithCBC)
     {
@@ -183,7 +183,7 @@ void LatencyScan::ScanLatency()
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getFrontEndType() == FrontEndType::SSA)
+                        if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                             fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLat - 1);
                         else
                             fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLat);
@@ -253,12 +253,12 @@ void LatencyScan::ScanLatency()
 
                             for(auto cChip: *cHybrid)
                             {
-                                if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                                 if(cChip->getFrontEndType() == FrontEndType::CBC3)
                                 {
                                     auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
-                                    LOG(DEBUG) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << "ROC#" << +cChip->getId() % 8 << " " << +cHits.size() << " hits." << RESET;
+                                    LOG(DEBUG) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << "Chip#" << +cChip->getId() % 8 << " " << +cHits.size() << " hits." << RESET;
                                     cTotalHits += cHits.size();
                                     for(auto cHit: cHits)
                                     {
@@ -282,7 +282,7 @@ void LatencyScan::ScanLatency()
                                     cTotalHitsS0 += cPclstrs.size();
                                     cTotalHitsS1 += cSclstrs.size();
                                     if(cPclstrs.size() > 0 && cSclstrs.size() > 0)
-                                        LOG(DEBUG) << BOLDBLUE << "\t\t\t\t Event#" << (*cEventIter)->GetEventCount() << " Trigger#" << +cTriggerId << " ROC#" << +cChip->getId() % 8 << " "
+                                        LOG(DEBUG) << BOLDBLUE << "\t\t\t\t Event#" << (*cEventIter)->GetEventCount() << " Trigger#" << +cTriggerId << " Chip#" << +cChip->getId() % 8 << " "
                                                    << +cPclstrs.size() << " P-clusters " << +cSclstrs.size() << " S-clusters." << RESET;
                                     for(auto& cPclstr: cPclstrs)
                                     {
@@ -404,7 +404,7 @@ void LatencyScan::StubLatencyScan()
                 if(cSet) continue;
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                    if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                     cSet                     = true;
                     auto     cTriggerLatency = fReadoutChipInterface->ReadChipReg(cChip, "TriggerLatency");
@@ -496,7 +496,7 @@ void LatencyScan::StubLatencyScan()
                             size_t cNStubs = 0;
                             for(auto cChip: *cHybrid)
                             {
-                                // auto& cMatchesThisROC = cMatchesThisHybrid->at(cChip->getIndex());
+                                // auto& cMatchesThisChip = cMatchesThisHybrid->at(cChip->getIndex());
                                 if(cChip->getFrontEndType() == FrontEndType::CBC3)
                                 {
                                     // first check for hits
@@ -551,12 +551,12 @@ void LatencyScan::StubLatencyScan()
                                                   << " of which " << cNStubsThisChip << " stubs match the hits.."
                                                   << " there are " << cHits.size() << " hits in this event... " << RESET;
                                 }
-                                else if(cChip->getFrontEndType() == FrontEndType::SSA)
+                                else if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                                 {
                                     auto cStubs = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
                                     cNStubs     = cStubs.size();
                                 }
-                                else if(cChip->getFrontEndType() == FrontEndType::MPA)
+                                else if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
                                 {
                                     auto cHits  = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
                                     auto cStubs = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
@@ -625,7 +625,7 @@ void LatencyScan::StubLatencyScan()
     //                     size_t cNStubs = 0;
     //                     for(auto cChip: *cHybrid)
     //                     {
-    //                         // auto& cMatchesThisROC = cMatchesThisHybrid->at(cChip->getIndex());
+    //                         // auto& cMatchesThisChip = cMatchesThisHybrid->at(cChip->getIndex());
     //                         if(cChip->getFrontEndType() == FrontEndType::CBC3)
     //                         {
     //                             // first check for hits
@@ -663,7 +663,7 @@ void LatencyScan::StubLatencyScan()
     //                                 for(auto cHit: cExpectedHits)
     //                                 {
     //                                     auto cFound = std::find(cHits.begin(), cHits.end(), cHit);
-    //                                     // cMatchesThisROC->getChannel<Occupancy>(cHit).fOccupancy += (cFound != cHits.end()) ? 1 : 0;
+    //                                     // cMatchesThisChip->getChannel<Occupancy>(cHit).fOccupancy += (cFound != cHits.end()) ? 1 : 0;
     //                                     cMatchedHits += (cFound != cHits.end()) ? 1 : 0;
     //                                 }
     //                                 // only count stubs where the match is perfect
@@ -779,17 +779,17 @@ void LatencyScan::ScanLatency2D()
                     cNevents += events.size();
                     for(auto cOpticalGroup: *pBoard)
                     {
-                        for(auto cFe: *cOpticalGroup)
+                        for(auto cHybrid: *cOpticalGroup)
                         {
                             for(auto cEvent: events)
                             {
                                 bool cHitFound  = false;
                                 bool cStubFound = false;
                                 // now loop the channels for this particular event and increment a counter
-                                for(auto cCbc: *cFe)
+                                for(auto cCbc: *cHybrid)
                                 {
-                                    int               cHitCounter  = cEvent->GetNHits(cFe->getId(), cCbc->getId());
-                                    std::vector<Stub> cStubs       = cEvent->StubVector(cFe->getId(), cCbc->getId());
+                                    int               cHitCounter  = cEvent->GetNHits(cHybrid->getId(), cCbc->getId());
+                                    std::vector<Stub> cStubs       = cEvent->StubVector(cHybrid->getId(), cCbc->getId());
                                     int               cStubCounter = cStubs.size();
 
                                     if(cHitCounter == 0) {}
@@ -805,7 +805,7 @@ void LatencyScan::ScanLatency2D()
 
                             theLatencyContainer.at(pBoard->getIndex())
                                 ->at(cOpticalGroup->getIndex())
-                                ->at(cFe->getIndex())
+                                ->at(cHybrid->getIndex())
                                 ->getSummary<GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>()[cStubLatency][(cLatency - fStartLatency)] += cNEvents_wBoth;
                         }
                     }
@@ -830,7 +830,7 @@ void LatencyScan::ScanLatency2D()
     {
         for(auto cOpticalGroup: *pBoard)
         {
-            for(auto cFe: *cOpticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
                 std::pair<uint8_t, uint16_t> cOptimalLatencies;
                 cOptimalLatencies.first  = 0;
@@ -845,7 +845,7 @@ void LatencyScan::ScanLatency2D()
                     {
                         uint16_t val = theLatencyContainer.at(pBoard->getIndex())
                                            ->at(cOpticalGroup->getIndex())
-                                           ->at(cFe->getIndex())
+                                           ->at(cHybrid->getIndex())
                                            ->getSummary<GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>()[cStubLatency][(cLatency - fStartLatency)];
 
                         if(val >= cMaxNEvents_wBoth)
@@ -857,7 +857,7 @@ void LatencyScan::ScanLatency2D()
                     }
 
                     LOG(INFO) << BOLDRED << "************************************************************************************" << RESET;
-                    LOG(INFO) << BOLDRED << "For FE" << +cFe->getId() << " found optimal latencies to be : " << RESET;
+                    LOG(INFO) << BOLDRED << "For FE" << +cHybrid->getId() << " found optimal latencies to be : " << RESET;
                     LOG(INFO) << BOLDRED << "........ Stub Latency of " << +cOptimalLatencies.first << " and a Trigger Latency of " << +cOptimalLatencies.second << RESET;
                     LOG(INFO) << BOLDRED << "************************************************************************************" << RESET;
                 }
@@ -983,21 +983,21 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanStubLatency(uint8_t pStartL
 
     LOG(INFO) << "Identified the Latency with the maximum number of Stubs at: ";
 
-    for(auto cFe: fHybridHistMap)
+    for(auto cHybrid: fHybridHistMap)
     {
-        TH1F*   cTmpHist           = dynamic_cast<TH1F*>(getHist(cFe.first, "hybrid_stub_latency"));
-        uint8_t cStubLatency       = static_cast<uint8_t>(cTmpHist->GetMaximumBin() - 1);
-        cStubLatencyMap[cFe.first] = cStubLatency;
+        TH1F*   cTmpHist               = dynamic_cast<TH1F*>(getHist(cHybrid.first, "hybrid_stub_latency"));
+        uint8_t cStubLatency           = static_cast<uint8_t>(cTmpHist->GetMaximumBin() - 1);
+        cStubLatencyMap[cHybrid.first] = cStubLatency;
 
         // BeBoardRegWriter cLatWriter ( fBeBoardInterface, "", 0 );
 
-        // if ( cFe.first->getHybridId() == 0 ) cLatWriter.setRegister ( "cbc_stubdata_latency_adjust_fe1", cStubLatency );
-        // else if ( cFe.first->getHybridId() == 1 ) cLatWriter.setRegister ( "cbc_stubdata_latency_adjust_fe2",
+        // if ( cHybrid.first->getHybridId() == 0 ) cLatWriter.setRegister ( "cbc_stubdata_latency_adjust_fe1", cStubLatency );
+        // else if ( cHybrid.first->getHybridId() == 1 ) cLatWriter.setRegister ( "cbc_stubdata_latency_adjust_fe2",
         // cStubLatency );
 
         // this->accept ( cLatWriter );
 
-        LOG(INFO) << "Stub Latency FE " << +cFe.first->getId() << ": " << +cStubLatency << " clock cycles!";
+        LOG(INFO) << "Stub Latency FE " << +cHybrid.first->getId() << ": " << +cStubLatency << " clock cycles!";
     }
 
     return cStubLatencyMap;
@@ -1062,13 +1062,13 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanLatency_root(uint16_t pStar
     // analyze the Histograms
     std::map<HybridContainer*, uint8_t> cLatencyMap;
 
-    for(auto cFe: fHybridHistMap)
+    for(auto cHybrid: fHybridHistMap)
     {
-        TH1F*   cTmpHist       = dynamic_cast<TH1F*>(getHist(cFe.first, "hybrid_latency"));
-        uint8_t cHitLatency    = static_cast<uint8_t>(cTmpHist->GetXaxis()->GetBinUpEdge(cTmpHist->GetMaximumBin()));
-        cLatencyMap[cFe.first] = cHitLatency;
+        TH1F*   cTmpHist           = dynamic_cast<TH1F*>(getHist(cHybrid.first, "hybrid_latency"));
+        uint8_t cHitLatency        = static_cast<uint8_t>(cTmpHist->GetXaxis()->GetBinUpEdge(cTmpHist->GetMaximumBin()));
+        cLatencyMap[cHybrid.first] = cHitLatency;
 
-        LOG(INFO) << "Hit Latency FE " << +cFe.first->getId() << ": " << +cHitLatency << " clock cycles!";
+        LOG(INFO) << "Hit Latency FE " << +cHybrid.first->getId() << ": " << +cHitLatency << " clock cycles!";
     }
 
     return cLatencyMap;
@@ -1079,25 +1079,25 @@ int LatencyScan::countHitsLat(BeBoard* pBoard, const std::vector<Event*> pEventV
     uint32_t cTotalHits = 0;
     for(auto cOpticalGroup: *pBoard)
     {
-        for(auto cFe: *cOpticalGroup)
+        for(auto cHybrid: *cOpticalGroup)
         {
             uint32_t cHitSum = 0;
             //  get histogram to fill
-            TH1F* cTmpHist = dynamic_cast<TH1F*>(getHist(cFe, pHistName));
+            TH1F* cTmpHist = dynamic_cast<TH1F*>(getHist(cHybrid, pHistName));
             for(auto& cEvent: pEventVec)
             {
                 // first, reset the hit counter - I need separate counters for each event
                 int cHitCounter = 0;
 
-                for(auto cCbc: *cFe)
+                for(auto cCbc: *cHybrid)
                 {
                     // now loop the channels for this particular event and increment a counter
-                    if(cCbc->getFrontEndType() == FrontEndType::MPA)
-                        cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNPixelClusters(cFe->getId(), cCbc->getId());
-                    else if(cCbc->getFrontEndType() == FrontEndType::SSA)
-                        cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNStripClusters(cFe->getId(), static_cast<SSA*>(cCbc)->getPartid());
+                    if(cCbc->getFrontEndType() == FrontEndType::MPA || cCbc->getFrontEndType() == FrontEndType::MPA2)
+                        cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNPixelClusters(cHybrid->getId(), cCbc->getId());
+                    else if(cCbc->getFrontEndType() == FrontEndType::SSA || cCbc->getFrontEndType() == FrontEndType::SSA2)
+                        cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNStripClusters(cHybrid->getId(), static_cast<SSA*>(cCbc)->getPartid());
                     else
-                        cHitCounter += cEvent->GetNHits(cFe->getId(), cCbc->getId());
+                        cHitCounter += cEvent->GetNHits(cHybrid->getId(), cCbc->getId());
                 }
 
                 // now I have the number of hits in this particular event for all CBCs and the TDC value
@@ -1112,7 +1112,7 @@ int LatencyScan::countHitsLat(BeBoard* pBoard, const std::vector<Event*> pEventV
                 cHitSum += cHitCounter;
             }
 
-            LOG(INFO) << "FE: " << +cFe->getId() << "; Latency " << +pParameter << " clock cycles; Hits " << cHitSum << "; Events " << fNevents;
+            LOG(INFO) << "FE: " << +cHybrid->getId() << "; Latency " << +pParameter << " clock cycles; Hits " << cHitSum << "; Events " << fNevents;
             cTotalHits += cHitSum;
         }
     }

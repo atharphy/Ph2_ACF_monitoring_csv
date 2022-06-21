@@ -4,21 +4,22 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
+#include "../HWInterface/FEConfigurationInterface.h"
+#include "../HWInterface/L1ReadoutInterface.h"
+#include "../HWInterface/TriggerInterface.h"
 #include "../Utils/ContainerFactory.h"
-#include "FEConfigurationInterface.h"
-#include "TriggerInterface.h"
 
 OTTool::OTTool() : Tool()
 {
     fBoardRegContainer.reset();
     fBrdRegsToPerserve.clear();
-    fROCRegsToPerserve.reset();
+    fChipRegsToPerserve.reset();
     fSuccess = false;
     fMyName  = "OTTool";
 }
 
 OTTool::~OTTool() {}
-// Reset register on BeBoard + ROCs
+// Reset register on BeBoard + Chips
 void OTTool::Reset()
 {
     if(fReadoutMode == 1) return;
@@ -45,27 +46,27 @@ void OTTool::Reset()
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
     } // for the board - reset registers
 
-    for(auto cBoard: *fDetectorContainer) // now reset ROC registers
+    for(auto cBoard: *fDetectorContainer) // now reset Chip registers
     {
-        auto& cROCRegsToPreserveThisBrd = fROCRegsToPerserve.at(cBoard->getIndex());
+        auto& cChipRegsToPreserveThisBrd = fChipRegsToPerserve.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cROCRegsToPreserveThisOG = cROCRegsToPreserveThisBrd->at(cOpticalGroup->getIndex());
+            auto& cChipRegsToPreserveThisOG = cChipRegsToPreserveThisBrd->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
                 LOG(INFO) << BOLDYELLOW << fMyName << ":Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
-                auto& cROCRegsToPreserveThisHybrd = cROCRegsToPreserveThisOG->at(cHybrid->getIndex());
+                auto& cChipRegsToPreserveThisHybrd = cChipRegsToPreserveThisOG->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cROCRegsToPreserveThisROC = cROCRegsToPreserveThisHybrd->at(cChip->getIndex());
-                    auto& cRegsToPerserve           = cROCRegsToPreserveThisROC->getSummary<std::vector<std::string>>();
+                    auto& cChipRegsToPreserveThisChip = cChipRegsToPreserveThisHybrd->at(cChip->getIndex());
+                    auto& cRegsToPerserve             = cChipRegsToPreserveThisChip->getSummary<std::vector<std::string>>();
                     // reset registers
                     auto cModMap = cChip->GetModifiedRegisterMap();
-                    LOG(INFO) << BOLDYELLOW << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
+                    LOG(DEBUG) << BOLDYELLOW << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
                     std::vector<std::pair<std::string, uint16_t>> cRegList;
                     for(auto cMapItem: cModMap)
                     {
-                        // skip registers that I should perserve for this ROC
+                        // skip registers that I should perserve for this Chip
                         if(std::find(cRegsToPerserve.begin(), cRegsToPerserve.end(), cMapItem.first) != cRegsToPerserve.end())
                         {
                             LOG(DEBUG) << BOLDBLUE << "Skipping reconfiguration of " << cMapItem.first << RESET;
@@ -73,8 +74,8 @@ void OTTool::Reset()
                         }
 
                         auto cValueInMemory = cChip->getReg(cMapItem.first);
-                        LOG(INFO) << BOLDYELLOW << fMyName << "::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
-                                  << cMapItem.second.fValue << RESET;
+                        LOG(DEBUG) << BOLDYELLOW << fMyName << "::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
+                                   << cMapItem.second.fValue << RESET;
 
                         cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second.fValue));
                     }
@@ -84,11 +85,11 @@ void OTTool::Reset()
                     // and also disable register tracking for this chip
                     cChip->ClearModifiedRegisterMap();
                     cChip->setRegisterTracking(0);
-                    LOG(INFO) << BOLDYELLOW << fMyName << "::Reset Chip#" << +cChip->getId() << " register tracking set to " << +cChip->getRegisterTracking() << RESET;
+                    LOG(DEBUG) << BOLDYELLOW << fMyName << "::Reset Chip#" << +cChip->getId() << " register tracking set to " << +cChip->getRegisterTracking() << RESET;
                 }
             }
         }
-    } // ROC registers
+    } // Chip registers
     resetPointers();
 }
 
@@ -112,9 +113,25 @@ void OTTool::Prepare()
     // check sparsification
     for(auto cBoard: *fDetectorContainer)
     {
-        bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
-        cBoard->setSparsification(cSparsified);
+        uint32_t cSparsified = cBoard->getSparsification(); // this is set in the file parser .. so check using that
+        LOG(INFO) << BOLDYELLOW << +cSparsified << RESET;
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", cSparsified);
+        // make sure I am in un-sparsified mode
+        LOG(INFO) << BOLDGREEN << "Setting sparsification on BeBoard#" << +cBoard->getId() << ((cSparsified == 1) ? " ON" : " OFF") << RESET;
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                fCicInterface->SetSparsification(cCic, cSparsified);
+            }
+        }
     }
+    // for(auto cBoard: *fDetectorContainer)
+    // {
+    //     bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
+    //     cBoard->setSparsification(cSparsified);
+    // }
 
     // clear map of modified registers
     // probably this should be a container per board
@@ -137,7 +154,7 @@ void OTTool::Prepare()
                 {
                     cChip->setRegisterTracking(1);
                     cChip->ClearModifiedRegisterMap();
-                    LOG(INFO) << BOLDYELLOW << fMyName << "::Prepare Chip#" << +cChip->getId() << " register tracking set to " << +cChip->getRegisterTracking() << RESET;
+                    LOG(DEBUG) << BOLDYELLOW << fMyName << "::Prepare Chip#" << +cChip->getId() << " register tracking set to " << +cChip->getRegisterTracking() << RESET;
                 } // chips
             }     // hybrids
         }         // optical groups
@@ -147,9 +164,9 @@ void OTTool::Prepare()
     for(auto cBoard: *fDetectorContainer)
     {
         auto cConnectedFEs = cBoard->connectedFrontEndTypes();
-        fWithSSA           = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return x == FrontEndType::SSA; }) != cConnectedFEs.end()) ? 1 : 0;
-        fWithMPA           = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return x == FrontEndType::MPA; }) != cConnectedFEs.end()) ? 1 : 0;
-        fWithCBC           = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return x == FrontEndType::CBC3; }) != cConnectedFEs.end()) ? 1 : 0;
+        fWithSSA = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return (x == FrontEndType::SSA || x == FrontEndType::SSA2); }) != cConnectedFEs.end()) ? 1 : 0;
+        fWithMPA = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return (x == FrontEndType::MPA || x == FrontEndType::MPA2); }) != cConnectedFEs.end()) ? 1 : 0;
+        fWithCBC = (std::find_if(cConnectedFEs.begin(), cConnectedFEs.end(), [](FrontEndType x) { return x == FrontEndType::CBC3; }) != cConnectedFEs.end()) ? 1 : 0;
         for(auto cOpticalGroup: *cBoard)
         {
             fWithLpGBT = (cOpticalGroup->flpGBT != nullptr) ? 1 : 0;
@@ -162,8 +179,8 @@ void OTTool::Prepare()
         }     // optical group
     }         // board
 
-    // prepare list of ROC registers to perserve
-    fDetectorDataContainer = &fROCRegsToPerserve;
+    // prepare list of Chip registers to perserve
+    fDetectorDataContainer = &fChipRegsToPerserve;
     ContainerFactory::copyAndInitChip<std::vector<std::string>>(*fDetectorContainer, *fDetectorDataContainer);
 
     fSuccess = false;
@@ -185,32 +202,32 @@ void OTTool::SetBrdRegstoPerserve(std::vector<std::string> pListOfRegs)
         fBrdRegsToPerserve.push_back(cRegName);
     }
 }
-// set list of ROC registers to perserve
-void OTTool::SetROCRegstoPerserve(FrontEndType pType, std::vector<std::string> pListOfRegs)
+// set list of Chip registers to perserve
+void OTTool::SetChipRegstoPerserve(FrontEndType pType, std::vector<std::string> pListOfRegs)
 {
-    LOG(INFO) << BOLDBLUE << fMyName << " setting registers to store on ROCs." << RESET;
+    LOG(INFO) << BOLDBLUE << fMyName << " setting registers to store on Chips." << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cROCRegsToPreserveThisBrd = fROCRegsToPerserve.at(cBoard->getIndex());
+        auto& cChipRegsToPreserveThisBrd = fChipRegsToPerserve.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cROCRegsToPreserveThisOG = cROCRegsToPreserveThisBrd->at(cOpticalGroup->getIndex());
+            auto& cChipRegsToPreserveThisOG = cChipRegsToPreserveThisBrd->at(cOpticalGroup->getIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cROCRegsToPreserveThisHybrd = cROCRegsToPreserveThisOG->at(cHybrid->getIndex());
+                auto& cChipRegsToPreserveThisHybrd = cChipRegsToPreserveThisOG->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getFrontEndType() != pType) continue;
 
-                    auto& cROCRegsToPreserveThisROC = cROCRegsToPreserveThisHybrd->at(cChip->getIndex());
-                    auto& cRegsToPerserve           = cROCRegsToPreserveThisROC->getSummary<std::vector<std::string>>();
+                    auto& cChipRegsToPreserveThisChip = cChipRegsToPreserveThisHybrd->at(cChip->getIndex());
+                    auto& cRegsToPerserve             = cChipRegsToPreserveThisChip->getSummary<std::vector<std::string>>();
                     cRegsToPerserve.clear();
                     for(const auto& cRegName: pListOfRegs)
                     {
-                        LOG(INFO) << BOLDBLUE << "Adding " << cRegName << " to list of ROC Regs to perserve...ROC#" << +cChip->getId() << RESET;
+                        LOG(INFO) << BOLDBLUE << "Adding " << cRegName << " to list of Chip Regs to perserve...Chip#" << +cChip->getId() << RESET;
                         cRegsToPerserve.push_back(cRegName);
                     }
-                } // ROCs
+                } // Chips
             }     // Hybrds
         }         // OGs
     }             // brd
@@ -222,13 +239,13 @@ void OTTool::ReadDataFromFile(std::string pRawFileName)
     this->addFileHandler(pRawFileName, 'r');
     std::vector<uint32_t> cData;
     this->readFile(cData);
-    LOG(INFO) << BOLDBLUE << "BeamTestCheck2S::ReadDataFromFile Read back " << +cData.size() << " 32-bit words from the .raw file : " << pRawFileName << RESET;
+    LOG(INFO) << BOLDBLUE << "BeamTestCheck::ReadDataFromFile Read back " << +cData.size() << " 32-bit words from the .raw file : " << pRawFileName << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
         size_t cNevents = fNevents;
         DecodeData(cBoard, cData, cNevents, fBeBoardInterface->getBoardType(cBoard));
         // const std::vector<Event*>& cEvents = GetEvents ();
-        LOG(INFO) << BOLDBLUE << "BeamTestCheck2S::ReadDataFromFile decoded back " << +cNevents << " events from the .raw file [BeBoard#" << +cBoard->getId() << "]" << RESET;
+        LOG(INFO) << BOLDBLUE << "BeamTestCheck::ReadDataFromFile decoded back " << +cNevents << " events from the .raw file [BeBoard#" << +cBoard->getId() << "]" << RESET;
         if(fPrintConfig.fVerbose) PrintData(cBoard);
     }
 }
@@ -277,7 +294,7 @@ void OTTool::WaitForTriggers(BeBoard* pBoard)
         auto cTriggerCounter = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
         cTriggerCounters.push_back(cTriggerCounter);
         if(cCounter % 200 == 0 && cCounter > 0)
-        { LOG(INFO) << BOLDMAGENTA << "BeamTestCheck2S continuousReadout loop ... " << +cTriggerCounters[cTriggerCounters.size() - 1] << " triggers received" << RESET; }
+        { LOG(INFO) << BOLDMAGENTA << "BeamTestCheck continuousReadout loop ... " << +cTriggerCounters[cTriggerCounters.size() - 1] << " triggers received" << RESET; }
         cCounter++;
         cBreak = (cTriggerCounter >= fNevents);
     } while(!cBreak);
@@ -490,6 +507,8 @@ void OTTool::StartReadoutTh(uint8_t cBrdId)
     fBeBoardInterface->setBoard((*cBoardIter)->getId());
     auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     auto cTriggerInterface = cInterface->getTriggerInterface();
+    auto cReadoutInterface = cInterface->getL1ReadoutInterface();
+    cReadoutInterface->ResetReadout();
     cTriggerInterface->Start();
     LOG(INFO) << BOLDMAGENTA << "Started triggers on BeBoard#" << +cBrdId << RESET;
 }
@@ -527,7 +546,7 @@ void OTTool::ContinousReadout(BeBoard* pBoard)
         if(cData.size() != 0) std::move(cData.begin(), cData.end(), std::back_inserter(cCompleteData));
         cTriggerCounters.push_back(cTriggerCounter);
         if(cCounter % 200 == 0 && cCounter > 0)
-        { LOG(INFO) << BOLDMAGENTA << "BeamTestCheck2S continuousReadout loop ... " << +cTriggerCounters[cTriggerCounters.size() - 1] << " triggers received" << RESET; }
+        { LOG(INFO) << BOLDMAGENTA << "BeamTestCheck continuousReadout loop ... " << +cTriggerCounters[cTriggerCounters.size() - 1] << " triggers received" << RESET; }
         cCounter++;
         cBreak = (fEventCounter >= fNevents);
     } while(!cBreak);
@@ -789,7 +808,7 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
             //     if(cChip->getFrontEndType() == FrontEndType::CBC3 )
             //     {
             //         auto cClusters = (pEvent)->getClusters(cHybrid->getId(), cChip->getId());
-            //         cOutL1 << BOLDBLUE << "\t..ROC#" << +cChip->getId() << " has " << +cClusters.size() << " clusters." << RESET;
+            //         cOutL1 << BOLDBLUE << "\t..Chip#" << +cChip->getId() << " has " << +cClusters.size() << " clusters." << RESET;
             //     }
             //     else
             //     {
@@ -798,7 +817,7 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
             //         if( cStubs.size() > 0 )
             //         {
             //             cStubFound=true;
-            //             cOutStubs << BOLDYELLOW << "\t..ROC#" << +cChip->getId() << " has "
+            //             cOutStubs << BOLDYELLOW << "\t..Chip#" << +cChip->getId() << " has "
             //                 << +cStubs.size() << " stubs"
             //                 << "\t : ";
             //             uint8_t cIndx=0;
@@ -814,7 +833,7 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
             //         if( cStripClusters.size() > 0 &&  cPxlClusters.size() > 0 )
             //         {
             //             cClusterFound=true;
-            //             cOutL1 << BOLDBLUE << "\t..ROC#" << +cChip->getId() << " has "
+            //             cOutL1 << BOLDBLUE << "\t..Chip#" << +cChip->getId() << " has "
             //                 << +cStripClusters.size() << " S-clusters and "
             //                 << +cPxlClusters.size() << " P-clusters\t";
             //             for( auto cPxlCluster : cPxlClusters )
@@ -844,7 +863,7 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
             //             }
             //             cCenterOfMassS /= cStripClusters.size();
 
-            //             cOutAna << BOLDYELLOW << "\t..ROC#" << +cChip->getId() << " has "
+            //             cOutAna << BOLDYELLOW << "\t..Chip#" << +cChip->getId() << " has "
             //                 << +cStripClusters.size() << " S-clusters and "
             //                 << +cPxlClusters.size() << " P-clusters\t"
             //                 << "..Center of mass P : " << cCenterOfMassP << " Center of mass S : " << cCenterOfMassS
@@ -912,7 +931,7 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
             {
                 // fReadoutChipInterface->WriteChipReg(cChip, "ReadoutMode",0x0);
                 if(cChip->getId() % 8 != pChipId && pChipId > 0) continue;
-                LOG(DEBUG) << BOLDMAGENTA << "Injecting patterns in ROC#" << +cChip->getId() << RESET;
+                LOG(DEBUG) << BOLDMAGENTA << "Injecting patterns in Chip#" << +cChip->getId() << RESET;
                 // make sure L1 latency is configured
                 if(cChip->getFrontEndType() == FrontEndType::MPA)
                 {
@@ -936,7 +955,7 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                         if(cInjectAll) fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x5F);
                     }
                 }
-                if(cChip->getFrontEndType() == FrontEndType::SSA)
+                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
                     // for digi injection .. explicity disable all other strips
                     if(pInjections.size() > 0 && fInjectionType == 0)
@@ -984,7 +1003,11 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
     cBoardRegs.push_back("fc7_daq_cnfg.tlu_block.tlu_enabled");
     cBoardRegs.push_back("fc7_daq_cnfg.tlu_block.handshake_mode");
     BeBoardRegMap cRegMap = pBoard->getBeBoardRegMap();
-    for(auto cReg: cBoardRegs) { fBeBoardInterface->WriteBoardReg(pBoard, cReg, cRegMap[cReg]); }
+    for(auto cReg: cBoardRegs)
+    {
+        LOG(INFO) << BOLDBLUE << "Setting " << cReg << " to " << +cRegMap[cReg] << RESET;
+        fBeBoardInterface->WriteBoardReg(pBoard, cReg, cRegMap[cReg]);
+    }
 
     // set thresholds
     for(auto cOpticalGroup: *pBoard)
@@ -995,17 +1018,9 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
             {
                 uint32_t cThreshold = 0;
                 if(cChip->getFrontEndType() == FrontEndType::CBC3) cThreshold = (cChip->getReg("VCth1") + (cChip->getReg("VCth2") << 8));
-                if(cChip->getFrontEndType() == FrontEndType::SSA) cThreshold = cChip->getReg("Bias_THDAC");
-                if(cChip->getFrontEndType() == FrontEndType::MPA)
-                {
-                    for(uint8_t cDAC = 0; cDAC < 1; cDAC++)
-                    {
-                        std::stringstream cRegName;
-                        cRegName << "ThDAC" << +cDAC;
-                        cThreshold = cChip->getReg(cRegName.str());
-                    }
-                }
-                LOG(INFO) << BOLDMAGENTA << "Setting threshold on ROC#" << +cChip->getId() << " to 0x" << std::hex << +cThreshold << std::dec << RESET;
+                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) cThreshold = cChip->getReg("Bias_THDAC");
+                if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2) cThreshold = cChip->getReg("ThDAC0");
+                LOG(INFO) << BOLDMAGENTA << "Setting threshold on Chip#" << +cChip->getId() << " to 0x" << std::hex << +cThreshold << std::dec << RESET;
                 fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold);
             }
         }
@@ -1021,7 +1036,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                 {
                     auto cMode = cChip->getReg("ECM");
                     fReadoutChipInterface->WriteChipReg(cChip, "ECM", cMode);
-                    LOG(INFO) << BOLDMAGENTA << "Setting StubMode regisger on ROC#" << +cChip->getId() << " to " << cMode << RESET;
+                    LOG(INFO) << BOLDMAGENTA << "Setting StubMode regisger on Chip#" << +cChip->getId() << " to " << cMode << RESET;
                 }
             }
         }
@@ -1033,17 +1048,17 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
         {
             for(auto cChip: *cHybrid)
             {
-                if(cChip->getFrontEndType() == FrontEndType::MPA)
+                if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
                     auto cMode = cChip->getReg("ModeSel_ALL");
                     fReadoutChipInterface->WriteChipReg(cChip, "ModeSel_ALL", cMode);
-                    LOG(INFO) << BOLDMAGENTA << "Setting HitLogicMode register on ROC#" << +cChip->getId() << " to " << cMode << RESET;
+                    LOG(INFO) << BOLDMAGENTA << "Setting HitLogicMode register on Chip#" << +cChip->getId() << " to " << cMode << RESET;
                 }
-                else if(cChip->getFrontEndType() == FrontEndType::SSA)
+                else if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
                     auto cMode = cChip->getReg("SAMPLINGMODE_ALL");
                     fReadoutChipInterface->WriteChipReg(cChip, "SAMPLINGMODE_ALL", cMode);
-                    LOG(INFO) << BOLDMAGENTA << "Setting HitLogicMode register on ROC#" << +cChip->getId() << " to " << cMode << RESET;
+                    LOG(INFO) << BOLDMAGENTA << "Setting HitLogicMode register on Chip#" << +cChip->getId() << " to " << cMode << RESET;
                 }
             }
         }
@@ -1056,8 +1071,8 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
             for(auto cChip: *cHybrid)
             {
                 std::string cRegName = "";
-                if(cChip->getFrontEndType() == FrontEndType::MPA) { cRegName = "CalDAC0"; }
-                else if(cChip->getFrontEndType() == FrontEndType::SSA)
+                if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2) { cRegName = "CalDAC0"; }
+                else if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
                     cRegName = "Bias_CALDAC";
                 }
@@ -1068,7 +1083,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                 uint8_t cInjectedCharge = cChip->getReg(cRegName);
                 if(cChip->getFrontEndType() == FrontEndType::CBC3) cInjectedCharge = (cInjectedCharge >> 6) & 0x3F;
                 fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", cInjectedCharge);
-                LOG(INFO) << BOLDMAGENTA << "Setting Charge injection register on ROC#" << +cChip->getId() << " to " << +cInjectedCharge << RESET;
+                LOG(INFO) << BOLDMAGENTA << "Setting Charge injection register on Chip#" << +cChip->getId() << " to " << +cInjectedCharge << RESET;
             }
         }
     }
@@ -1080,8 +1095,9 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
             for(auto cChip: *cHybrid)
             {
                 uint16_t cLatency = 0;
-                if(cChip->getFrontEndType() == FrontEndType::MPA) { cLatency = cChip->getReg("L1Offset_2_ALL") << 8 | cChip->getReg("L1Offset_1_ALL"); }
-                else if(cChip->getFrontEndType() == FrontEndType::SSA)
+                if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                { cLatency = cChip->getReg("L1Offset_2_ALL") << 8 | cChip->getReg("L1Offset_1_ALL"); }
+                else if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
                     cLatency = cChip->getReg("L1-Latency_MSB") << 8 | cChip->getReg("L1-Latency_LSB");
                 }
@@ -1091,7 +1107,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                     auto cRegValueSecond = cChip->getReg("TriggerLatency1");
                     cLatency             = ((cRegValueFirst & 0x1) << 8) | cRegValueSecond;
                 }
-                LOG(INFO) << BOLDYELLOW << "Setting latency on ROC#" << +cChip->getId() << " to " << cLatency << RESET;
+                LOG(INFO) << BOLDYELLOW << "Setting latency on Chip#" << +cChip->getId() << " to " << cLatency << RESET;
                 fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency);
             }
         }
@@ -1105,12 +1121,12 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
             {
                 uint16_t    cCut = 0;
                 std::string cRegName;
-                if(cChip->getFrontEndType() == FrontEndType::MPA)
+                if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
                     cRegName = "HipCut_ALL";
                     cCut     = cChip->getReg(cRegName);
                 }
-                else if(cChip->getFrontEndType() == FrontEndType::SSA)
+                else if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
                     cRegName = "HIPCUT_ALL";
                     cCut     = cChip->getReg(cRegName);
@@ -1119,7 +1135,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                 {
                     cCut = cChip->getReg("HIP&TestMode");
                 }
-                LOG(INFO) << BOLDYELLOW << "Setting HIP register on ROC#" << +cChip->getId() << " to " << cCut << RESET;
+                LOG(INFO) << BOLDYELLOW << "Setting HIP register on Chip#" << +cChip->getId() << " to " << cCut << RESET;
                 fReadoutChipInterface->WriteChipReg(cChip, cRegName, cCut);
             }
         }
@@ -1131,7 +1147,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
         {
             for(auto cChip: *cHybrid)
             {
-                if(cChip->getFrontEndType() == FrontEndType::SSA)
+                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
                     std::vector<std::string> cRegNames{"PhaseShiftClock", "ClockDeskewing"};
                     for(auto cRegName: cRegNames)
@@ -1140,7 +1156,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                         fReadoutChipInterface->WriteChipReg(cChip, cRegName, cValueInMemory);
                     }
                 }
-                else if(cChip->getFrontEndType() == FrontEndType::MPA)
+                else if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
                     std::vector<std::string> cRegNames{"PhaseShift", "ConfDLL"};
                     for(auto cRegName: cRegNames)
@@ -1166,12 +1182,12 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
             for(auto cChip: *cHybrid)
             {
                 std::string cRegName = "";
-                if(cChip->getFrontEndType() == FrontEndType::MPA)
+                if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
                     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0F);
-                    LOG(INFO) << BOLDMAGENTA << "Setting ENFLAGS_ALL on ROC#" << +cChip->getId() << " to enable both modes.." << RESET;
+                    LOG(INFO) << BOLDMAGENTA << "Setting ENFLAGS_ALL on Chip#" << +cChip->getId() << " to enable both modes.." << RESET;
                 }
-                if(cChip->getFrontEndType() == FrontEndType::SSA)
+                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
                     for(size_t cIndx = 0; cIndx < NSSACHANNELS; cIndx++)
                     {

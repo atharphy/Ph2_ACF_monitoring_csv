@@ -139,13 +139,15 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
     // Validation
     HistContainer<TH1F> theTH1FValidationContainer("Occupancy", "Occupancy", NCH, -0.5, float(NCH) - 0.5);
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorValidationHistograms, theTH1FValidationContainer);
+
+    fDetectorContainer = &theDetectorStructure;
 }
 
 //========================================================================================================================
 bool DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 {
     HybridContainerStream<Occupancy, Occupancy, Occupancy> theOccupancy("PedeNoise");
-    ChannelContainerStream<Occupancy, uint16_t>            theSCurve("PedeNoiseSCurve");
+    ChannelContainerStream<Occupancy, uint16_t, uint16_t>  theSCurve("PedeNoiseSCurve");
     ChannelContainerStream<ThresholdAndNoise>              theThresholdAndNoiseStream("PedeNoise");
 
     if(theOccupancy.attachBuffer(&dataBuffer))
@@ -161,7 +163,7 @@ bool DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
     {
         std::cout << "Matched PedeNoise SCurve!!!!!\n";
         theSCurve.decodeChipData(fDetectorData);
-        fillSCurvePlots(theSCurve.getHeaderElement(), fDetectorData);
+        fillSCurvePlots(theSCurve.getHeaderElement<0>(), theSCurve.getHeaderElement<1>(), fDetectorData);
 
         fDetectorData.cleanDataStored();
         return true;
@@ -505,7 +507,7 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& the
 }
 
 //========================================================================================================================
-void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t vcthr, DetectorDataContainer& fSCurveOccupancy)
+void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t pStripTh, uint16_t pPixelTh, DetectorDataContainer& fSCurveOccupancy)
 {
     for(auto board: fSCurveOccupancy)
     {
@@ -522,10 +524,16 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t vcthr, DetectorDataContaine
                     uint16_t channelNumber = 0;
                     for(auto channel: *chip->getChannelContainer<Occupancy>())
                     {
+                        auto     cType = fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getFrontEndType();
+                        uint16_t cTh   = 0;
+                        if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                            cTh = pStripTh;
+                        else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                            cTh = pPixelTh;
                         float tmpOccupancy      = channel.fOccupancy;
                         float tmpOccupancyError = channel.fOccupancyError;
-                        chipSCurve->SetBinContent(channelNumber + 1, vcthr + 1, tmpOccupancy);
-                        chipSCurve->SetBinError(channelNumber + 1, vcthr + 1, tmpOccupancyError);
+                        chipSCurve->SetBinContent(channelNumber + 1, cTh + 1, tmpOccupancy);
+                        chipSCurve->SetBinError(channelNumber + 1, cTh + 1, tmpOccupancyError);
 
                         if(fFitSCurves)
                         {
@@ -535,8 +543,8 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t vcthr, DetectorDataContaine
                                                       ->at(chip->getIndex())
                                                       ->getChannel<HistContainer<TH1F>>(channelNumber)
                                                       .fTheHistogram;
-                            channelSCurve->SetBinContent(vcthr + 1, tmpOccupancy);
-                            channelSCurve->SetBinError(vcthr + 1, tmpOccupancyError);
+                            channelSCurve->SetBinContent(cTh + 1, tmpOccupancy);
+                            channelSCurve->SetBinError(cTh + 1, tmpOccupancyError);
                         }
                         ++channelNumber;
                     }

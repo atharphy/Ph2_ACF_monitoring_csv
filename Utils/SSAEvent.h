@@ -54,101 +54,101 @@ class SSAEvent : public Event
     std::string HexString() const override { return ""; };
     /*!
      * \brief Function to get bit string in hexadecimal format for CBC data
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return Data Bit string in Hex
      */
-    std::string DataHexString(uint8_t pFeId, uint8_t pCbcId) const override { return ""; };
+    std::string DataHexString(uint8_t pHybridId, uint8_t pCbcId) const override { return ""; };
 
     /*!
      * \brief Function to get Error bit
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \param i : Error bit number i
      * \return Error bit
      */
-    bool Error(uint8_t pFeId, uint8_t pCbcId, uint32_t i) const override { return false; };
+    bool Error(uint8_t pHybridId, uint8_t pCbcId, uint32_t i) const override { return false; };
     /*!
      * \brief Function to get all Error bits
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return Error bit
      */
-    uint32_t Error(uint8_t pFeId, uint8_t pCbcId) const override { return 0; };
+    uint32_t Error(uint8_t pHybridId, uint8_t pCbcId) const override { return 0; };
     /*!
      * \brief Function to get pipeline address
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return Pipeline address
      */
-    uint32_t PipelineAddress(uint8_t pFeId, uint8_t pCbcId) const override { return 0; };
+    uint32_t PipelineAddress(uint8_t pHybridId, uint8_t pCbcId) const override { return 0; };
     /*!
      * \brief Function to get a CBC pixel bit data
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \param i : pixel bit data number i
      * \return Data Bit
      */
-    bool DataBit(uint8_t pFeId, uint8_t pCbcId, uint32_t i) const override { return false; };
+    bool DataBit(uint8_t pHybridId, uint8_t pCbcId, uint32_t i) const override { return false; };
     /*!
      * \brief Function to get bit string of CBC data
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return Data Bit string
      */
-    std::string DataBitString(uint8_t pFeId, uint8_t pCbcId) const override { return ""; };
+    std::string DataBitString(uint8_t pHybridId, uint8_t pCbcId) const override { return ""; };
     /*!
      * \brief Function to get bit vector of CBC data
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return Data Bit vector
      */
-    std::vector<bool> DataBitVector(uint8_t pFeId, uint8_t pCbcId) const override { return std::vector<bool>(); };
-    std::vector<bool> DataBitVector(uint8_t pFeId, uint8_t pCbcId, const std::vector<uint8_t>& channelList) const override { return std::vector<bool>(); };
+    std::vector<bool> DataBitVector(uint8_t pHybridId, uint8_t pCbcId) const override { return std::vector<bool>(); };
+    std::vector<bool> DataBitVector(uint8_t pHybridId, uint8_t pCbcId, const std::vector<uint8_t>& channelList) const override { return std::vector<bool>(); };
     /*!
      * \brief Function to get GLIB flag string
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return Glib flag string
      */
-    std::string GlibFlagString(uint8_t pFeId, uint8_t pCbcId) const override { return ""; };
+    std::string GlibFlagString(uint8_t pHybridId, uint8_t pCbcId) const override { return ""; };
     /*!
      * \brief Function to get Stub bit
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return stub bit?
      */
-    std::string StubBitString(uint8_t pFeId, uint8_t pCbcId) const override { return ""; };
+    std::string StubBitString(uint8_t pHybridId, uint8_t pCbcId) const override { return ""; };
     /*!
      * \brief Function to get Stub bit
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return stub bit?
      */
-    bool StubBit(uint8_t pFeId, uint8_t pCbcId) const override { return false; };
+    bool StubBit(uint8_t pHybridId, uint8_t pCbcId) const override { return false; };
     /*!
      * \brief Get a vector of Stubs - will be empty for Cbc2
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      */
-    std::vector<Stub> StubVector(uint8_t pFeId, uint8_t pCbcId) const override { return std::vector<Stub>(); };
+    std::vector<Stub> StubVector(uint8_t pHybridId, uint8_t pCbcId) const override { return std::vector<Stub>(); };
 
     /*!
      * \brief Function to count the Hits in this event
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return number of hits
      */
-    uint32_t GetNHits(uint8_t pFeId, uint8_t pCbcId) const override { return false; };
+    uint32_t GetNHits(uint8_t pHybridId, uint8_t pCbcId) const override { return false; };
     /*!
      * \brief Function to get a sparsified hit vector
-     * \param pFeId : FE Id
+     * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return vector with hit channels
      */
-    std::vector<uint32_t> GetHits(uint8_t pFeId, uint8_t pCbcId) const override { return std::vector<uint32_t>(); };
+    std::vector<uint32_t> GetHits(uint8_t pHybridId, uint8_t pCbcId) const override { return std::vector<uint32_t>(); };
 
-    std::vector<Cluster> getClusters(uint8_t pFeId, uint8_t pCbcId) const override { return std::vector<Cluster>(); };
+    std::vector<Cluster> getClusters(uint8_t pHybridId, uint8_t pCbcId) const override { return std::vector<Cluster>(); };
 
     void print(std::ostream& out) const override{};
 

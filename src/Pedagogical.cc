@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
     strip_v_thdac_31->SetStats(0);
     for(auto cSSA: *ChipVec)
     {
-        LOG(INFO) << BOLDRED << "ROC" << RESET;
+        LOG(INFO) << BOLDRED << "Chip" << RESET;
 
         ReadoutChip* theSSA = static_cast<ReadoutChip*>(cSSA);
         cTool.fReadoutChipInterface->WriteChipReg(theSSA, "ReadoutMode", 0x0); // sync mode = 0

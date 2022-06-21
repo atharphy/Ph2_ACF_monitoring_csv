@@ -10,8 +10,8 @@
  *
  */
 
-#ifndef BeamTestCheck2S_h__
-#define BeamTestCheck2S_h__
+#ifndef BeamTestCheck_h__
+#define BeamTestCheck_h__
 
 #include "../Utils/ContainerRecycleBin.h"
 #include "OTTool.h"
@@ -29,11 +29,11 @@ class Occupancy;
 
 using namespace Ph2_HwDescription;
 
-class BeamTestCheck2S : public OTTool
+class BeamTestCheck : public OTTool
 {
   public:
-    BeamTestCheck2S();
-    ~BeamTestCheck2S();
+    BeamTestCheck();
+    ~BeamTestCheck();
 
     void CheckWithTP(uint8_t pContinousReadout = 1);
     void ValidateTP();
