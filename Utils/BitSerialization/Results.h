@@ -1,7 +1,7 @@
-#ifndef BITSERIALIZATION__RESULTS_HPP
-#define BITSERIALIZATION__RESULTS_HPP
+#ifndef BITSERIALIZATION_RESULTS_H
+#define BITSERIALIZATION_RESULTS_H
 
-#include "Errors.hpp"
+#include "Errors.h"
 #include <optional>
 
 namespace BitSerialization {

@@ -1,10 +1,11 @@
 /*!
-  \file                  RD53.cc
-  \brief                 RD53 implementation class, config of the RD53
-  \author                Mauro DINARDO
+  \file                  RD53A.cc
+  \brief                 RD53A implementation class
+  \author                Mauro DINARDO and Alkiviadis PAPADOPOULOS
   \version               1.0
-  \date                  28/06/18
-  Support:               email to mauro.dinard@cern.ch
+  \date                  28/06/22
+  Support:               email to mauro.dinardo@cern.ch
+  Support:               email to alkiviadis.papadopoulos@cern.ch
 */
 
 #include "RD53A.h"
@@ -26,7 +27,7 @@ const RD53A::FrontEnd* RD53A::getMajorityFE(size_t colStart, size_t colStop) con
     });
 }
 
-void RD53::Event::DecodeQuad(uint32_t data)
+void RD53A::Event::DecodeQuad(uint32_t data)
 {
     uint32_t core_col, side, row, col, all_tots;
 
@@ -41,7 +42,7 @@ void RD53::Event::DecodeQuad(uint32_t data)
     if((row >= RD53::nRows) || (col >= (RD53::nCols - (RD53Constants::NPIX_REGION - 1)))) eventStatus |= RD53EvtEncoder::CHIPPIX;
 }
 
-RD53::Event::Event(const uint32_t* data, size_t n)
+RD53A::Event::Event(const uint32_t* data, size_t n)
 {
     uint32_t header;
 

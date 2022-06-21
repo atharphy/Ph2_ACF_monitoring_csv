@@ -1,10 +1,11 @@
-\/*!
-  \file                  RD53.h
-  \brief                 RD53 description class, config of the RD53
-  \author                Mauro DINARDO
+/*!
+  \file                  RD53A.h
+  \brief                 RD53A description class, config of the RD53A
+  \author                Mauro DINARDO and Alkiviadis PAPADOPOULOS
   \version               1.0
-  \date                  28/06/18
+  \date                  28/06/22
   Support:               email to mauro.dinardo@cern.ch
+  Support:               email to alkiviadis.papadopoulos@cern.ch
 */
 
 #ifndef RD53A_H

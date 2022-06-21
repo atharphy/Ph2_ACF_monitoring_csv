@@ -1,17 +1,13 @@
-#ifndef BITSERIALIZATION__UTILITIY_HPP
-#define BITSERIALIZATION__UTILITIY_HPP
+#ifndef BITSERIALIZATION_UTILITIY_H
+#define BITSERIALIZATION_UTILITIY_H
 
 #include <cstddef>
 #include <cstdint>
 #include <utility>
 #include <algorithm>
 
-// #include "compile_time_string_literal.hpp"
-
 namespace BitSerialization {
     
-// using namespace compile_time_string_literal;
-
 template <class T>
 struct ConvertibleVector : public std::vector<T> {
     ConvertibleVector() {}
@@ -60,8 +56,6 @@ struct ConvertibleVector : public std::vector<T> {
         return {this->begin(), this->end()};
     }
 };
-
-// using uint128_t = unsigned __int128;
 
 template <size_t N>
 using uint_t =  std::conditional_t<N <=  8, uint8_t,

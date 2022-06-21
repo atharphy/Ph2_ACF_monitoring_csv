@@ -1,7 +1,7 @@
-#ifndef BITSERIALIZATION__TYPES__STRING_HPP
-#define BITSERIALIZATION__TYPES__STRING_HPP
+#ifndef BITSERIALIZATION_TYPES_STRING_H
+#define BITSERIALIZATION_TYPES_STRING_H
 
-#include "../Core.hpp"
+#include "../Core.h"
 
 namespace BitSerialization {
     

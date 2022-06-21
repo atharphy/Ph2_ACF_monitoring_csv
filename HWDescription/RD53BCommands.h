@@ -50,28 +50,6 @@ struct Trigger {
 template <class Cmd>
 extern void serialize(Cmd&&, std::vector<uint16_t>&);
 
-template <class Cmd>
-const bool isBroadcast = false;
-
-template <> const bool isBroadcast<Sync> = true;
-template <> const bool isBroadcast<PLLlock> = true;
-template <> const bool isBroadcast<Trigger> = true;
-
-template <class Cmd, class... Args>
-void serialize(std::false_type, BitVector<uint16_t>& bits, uint8_t chip_id, Args... args) {
-    serialize(Cmd{chip_id, std::forward<Args>(args)...}, bits);
-}
-
-template <class Cmd, class... Args>
-void serialize(std::true_type, BitVector<uint16_t>& bits, uint8_t chip_id, Args... args) {
-    serialize(Cmd{std::forward<Args>(args)...}, bits);
-}
-
-template <class Cmd, class... Args>
-void serialize(BitVector<uint16_t>& bits, uint8_t chip_id, Args... args) {
-    serialize<Cmd>(std::integral_constant<bool, isBroadcast<Cmd>>{} ,bits, chip_id, std::forward<Args>(args)...);
-}
-
 } // namespace RD53BCommands
 
 #endif

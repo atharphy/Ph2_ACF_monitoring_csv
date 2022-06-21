@@ -128,5 +128,9 @@ if [[ $1 == "ci" ]]; then
     export UseTCUSBTcpServer=false
 fi
 
+################################
+# Enable devtools-10 for C++20 #
+################################
+source scl_source enable devtoolset-10
 
 echo "=== DONE ==="

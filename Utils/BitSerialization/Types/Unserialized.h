@@ -1,7 +1,7 @@
-#ifndef BITSERIALIZATION__TYPES__Unserialized_HPP
-#define BITSERIALIZATION__TYPES__Unserialized_HPP
+#ifndef BITSERIALIZATION_TYPES_Unserialized_H
+#define BITSERIALIZATION_TYPES_Unserialized_H
 
-#include "../Core.hpp"
+#include "../Core.h"
 
 namespace BitSerialization {
     

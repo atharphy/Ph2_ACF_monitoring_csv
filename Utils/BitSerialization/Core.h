@@ -1,11 +1,10 @@
-#ifndef BITSERIALIZATION__CORE_HPP
-#define BITSERIALIZATION__CORE_HPP
+#ifndef BITSERIALIZATION_CORE_H
+#define BITSERIALIZATION_CORE_H
 
-#include "../Bits/BitVector.hpp"
-
-#include "Utility.hpp"
-#include "Results.hpp"
-#include "Printing.hpp"
+#include "BitVector.h"
+#include "Utility.h"
+#include "Results.h"
+#include "Printing.h"
 
 namespace BitSerialization {
 

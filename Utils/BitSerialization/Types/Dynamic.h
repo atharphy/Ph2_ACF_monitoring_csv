@@ -1,7 +1,7 @@
-#ifndef BITSERIALIZATION__TYPES__DYNAMIC_HPP
-#define BITSERIALIZATION__TYPES__DYNAMIC_HPP
+#ifndef BITSERIALIZATION_TYPES_DYNAMIC_H
+#define BITSERIALIZATION_TYPES_DYNAMIC_H
 
-#include "../Core.hpp"
+#include "../Core.h"
 
 namespace BitSerialization {
     

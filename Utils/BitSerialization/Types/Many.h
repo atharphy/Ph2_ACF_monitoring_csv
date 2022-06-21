@@ -1,7 +1,7 @@
-#ifndef BITSERIALIZATION__TYPES__MANY_HPP
-#define BITSERIALIZATION__TYPES__MANY_HPP
+#ifndef BITSERIALIZATION_TYPES_MANY_H
+#define BITSERIALIZATION_TYPES_MANY_H
 
-#include "../Core.hpp"
+#include "../Core.h"
 
 namespace BitSerialization {
     

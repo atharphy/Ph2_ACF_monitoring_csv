@@ -239,7 +239,8 @@ struct command_encoding<PLLlock> {
 };
 
 template <class Cmd>
-void serialize(Cmd&& cmd, std::vector<uint16_t>& bits) {
+void serialize(Cmd&& cmd, std::vector<uint16_t>& theBits) {
+    BitVector<uint16_t> bits;
     using encoding = command_encoding_t<std::remove_reference_t<Cmd>>;
     auto serialize = [&] (auto&& value) {
         auto result = encoding::serialize(value, bits);
@@ -253,6 +254,8 @@ void serialize(Cmd&& cmd, std::vector<uint16_t>& bits) {
         serialize(value_type_t<encoding>{});
     else
         serialize(value_type_t<encoding>{std::forward<Cmd>(cmd)});
+
+    theBits.insert(theBits.end(), bits.blocks().begin(), bits.blocks().end());
 }
 
 #define INSTANTIATE_SERIALIZE_FUNC(Cmd) \

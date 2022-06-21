@@ -1,9 +1,8 @@
-#ifndef BITSERIALIZATION__TYPES__CLASSOBJECT_HPP
-#define BITSERIALIZATION__TYPES__CLASSOBJECT_HPP
+#ifndef BITSERIALIZATION_TYPES_CLASSOBJECT_H
+#define BITSERIALIZATION_TYPES_CLASSOBJECT_H
 
-#include "../Core.hpp"
+#include "../Core.h"
 #include <type_traits>
-
 
 namespace BitSerialization {
     

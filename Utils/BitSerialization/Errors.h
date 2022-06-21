@@ -1,5 +1,5 @@
-#ifndef BITSERIALIZATION__ERRORS_HPP
-#define BITSERIALIZATION__ERRORS_HPP
+#ifndef BITSERIALIZATION_ERRORS_H
+#define BITSERIALIZATION_ERRORS_H
 
 #include <ostream>
 #include <variant>

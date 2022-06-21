@@ -1,7 +1,7 @@
-#ifndef BITSERIALIZATION__TYPES__VALIDATED_HPP
-#define BITSERIALIZATION__TYPES__VALIDATED_HPP
+#ifndef BITSERIALIZATION_TYPES_VALIDATED_H
+#define BITSERIALIZATION_TYPES_VALIDATED_H
 
-#include "../Core.hpp"
+#include "../Core.h"
 
 namespace BitSerialization {
     

@@ -1,5 +1,5 @@
 /*!
-  \file                  RD53B.h
+  \file                  RD53B.cc
   \brief                 RD53B implementation class
   \author                Mauro DINARDO and Alkiviadis PAPADOPOULOS
   \version               1.0

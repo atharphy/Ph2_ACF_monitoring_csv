@@ -1,7 +1,7 @@
-#ifndef BITSERIALIZATION__TYPES__TRANSFORMED_HPP
-#define BITSERIALIZATION__TYPES__TRANSFORMED_HPP
+#ifndef BITSERIALIZATION_TYPES_TRANSFORMED_HPP
+#define BITSERIALIZATION_TYPES_TRANSFORMED_HPP
 
-#include "../Core.hpp"
+#include "../Core.h"
 
 namespace BitSerialization {
     
@@ -11,7 +11,6 @@ struct Transformed {
     using value_type = decltype(
         Transform.decode(std::declval<value_type_t<Type>>())
     );
-
 
     template <class T, class U=Void>
     static ParseResult<value_type, parse_error_t<Type>> 
