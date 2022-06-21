@@ -11,21 +11,6 @@
 
 namespace Ph2_HwDescription
 {
-// ########################################
-// # Support for different FrontEnd types #
-// ########################################
-constexpr RD53::FrontEnd RD53::SYNC;
-constexpr RD53::FrontEnd RD53::LIN;
-constexpr RD53::FrontEnd RD53::DIFF;
-const RD53::FrontEnd*    RD53::frontEnds[] = {&RD53::SYNC, &RD53::LIN, &RD53::DIFF};
-
-const RD53::FrontEnd* RD53::getMajorityFE(size_t colStart, size_t colStop)
-{
-    return *std::max_element(std::begin(frontEnds), std::end(frontEnds), [&](const FrontEnd* a, const FrontEnd* b) {
-        return int(std::min(colStop, a->colStop)) - int(std::max(colStart, a->colStart)) < int(std::min(colStop, b->colStop)) - int(std::max(colStart, b->colStart));
-    });
-}
-
 RD53::RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment)
     : ReadoutChip(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id)
 {
@@ -44,7 +29,7 @@ void RD53::loadfRegMap(const std::string& fileName)
 {
     std::ifstream      file(fileName.c_str(), std::ios::in);
     std::stringstream  myString;
-    perColumnPixelData pixData;
+    perColumnPixelData pixData(RD53::getNRows());
 
     if(file.good() == true)
     {
@@ -64,10 +49,10 @@ void RD53::loadfRegMap(const std::string& fileName)
 
                 if(line.find("COL") != std::string::npos)
                 {
-                    pixData.Enable.fill(0);
-                    pixData.HitBus.fill(0);
-                    pixData.InjEn.fill(0);
-                    pixData.TDAC.fill(0);
+		  std::fill(pixData.Enable.begin(),pixData.Enable.begin(),0);
+		  std::fill(pixData.HitBus.begin(), pixData.HitBus.end(), 0);
+		  std::fill(pixData.InjEn.begin(), pixData.InjEn.end(),0);
+		  std::fill(pixData.TDAC.begin(), pixData.TDAC.end(), 0);
                 }
                 else if(line.find("ENABLE") != std::string::npos)
                 {
@@ -394,7 +379,7 @@ void RD53::resetTDAC()
 
 uint8_t RD53::getTDAC(unsigned int row, unsigned int col) { return fPixelsMask[col].TDAC[row]; }
 
-uint32_t RD53::getNumberOfChannels() const { return nRows * nCols; }
+  uint32_t RD53::getNumberOfChannels() const { return RD53::getNRows() * RD53::getNCols(); }
 
 bool RD53::isDACLocal(const std::string& regName)
 {
@@ -407,41 +392,6 @@ uint8_t RD53::getNumberOfBits(const std::string& regName)
     auto it = fRegMap.find(regName);
     if(it == fRegMap.end()) return 0;
     return it->second.fBitSize;
-}
-
-void RD53::Event::DecodeQuad(uint32_t data)
-{
-    uint32_t core_col, side, row, col, all_tots;
-
-    std::tie(core_col, row, side, all_tots) = bits::unpack<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_ROW, RD53EvtEncoder::NBIT_SIDE, RD53EvtEncoder::NBIT_TOT>(data);
-    col                                     = RD53Constants::NPIX_REGION * bits::pack<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_SIDE>(core_col, side);
-
-    uint8_t tots[RD53Constants::NPIX_REGION];
-    bits::RangePacker<RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION>::unpack_reverse(all_tots, tots);
-
-    for(int i = 0; i < RD53Constants::NPIX_REGION; i++)
-        if(tots[i] != RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION)) hit_data.emplace_back(row, col + i, tots[i]);
-    if((row >= RD53::nRows) || (col >= (RD53::nCols - (RD53Constants::NPIX_REGION - 1)))) eventStatus |= RD53EvtEncoder::CHIPPIX;
-}
-
-RD53::Event::Event(const uint32_t* data, size_t n)
-{
-    uint32_t header;
-
-    eventStatus = RD53EvtEncoder::CHIPGOOD;
-
-    std::tie(header, trigger_id, trigger_tag, bc_id) = bits::unpack<RD53EvtEncoder::NBIT_HEADER, RD53EvtEncoder::NBIT_TRIGID, RD53EvtEncoder::NBIT_TRGTAG, RD53EvtEncoder::NBIT_BCID>(*data);
-    if(header != RD53EvtEncoder::HEADER) eventStatus |= RD53EvtEncoder::CHIPHEAD;
-
-    const size_t noHitToT = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT);
-    for(auto i = 1u; i < n; i++)
-        if(data[i] != noHitToT) DecodeQuad(data[i]);
-    // #######################################################
-    // # If the number of 32bit words do not make an integer #
-    // # number of 128bit words, then 0x0000FFFF words are   #
-    // # added to the event                                  #
-    // #######################################################
-    if(n == 1) eventStatus |= RD53EvtEncoder::CHIPNOHIT;
 }
 
 RD53::CalCmd::CalCmd(const uint8_t& cal_edge_mode, const uint8_t& cal_edge_delay, const uint8_t& cal_edge_width, const uint8_t& cal_aux_mode, const uint8_t& cal_aux_delay)
@@ -460,55 +410,3 @@ void RD53::CalCmd::setCalCmd(const uint8_t& _cal_edge_mode, const uint8_t& _cal_
 
 uint32_t RD53::CalCmd::getCalCmd(const uint8_t& chipId) { return bits::pack<4, 1, 3, 6, 1, 5>(chipId, cal_edge_mode, cal_edge_delay, cal_edge_width, cal_aux_mode, cal_aux_delay); }
 } // namespace Ph2_HwDescription
-
-// ###############################
-// # RD53 command base functions #
-// ###############################
-namespace RD53Cmd
-{
-GlobalPulse::GlobalPulse(uint8_t chip_id, uint8_t data)
-{
-    fields[0] = packAndEncode<4, 1>(chip_id, 0);
-    fields[1] = packAndEncode<4, 1>(data, 0);
-}
-
-Cal::Cal(uint8_t chip_id, bool cal_edge_mode, uint8_t cal_edge_delay, uint8_t cal_edge_width, bool cal_aux_mode, uint8_t cal_aux_delay)
-{
-    fields[0] = packAndEncode<4, 1>(chip_id, cal_edge_mode);
-    fields[1] = packAndEncode<3, 2>(cal_edge_delay, cal_edge_width >> 4);
-    fields[2] = packAndEncode<4, 1>(cal_edge_width, cal_aux_mode);
-    fields[3] = packAndEncode<5>(cal_aux_delay);
-}
-
-WrReg::WrReg(uint8_t chip_id, uint16_t address, uint16_t value)
-{
-    fields[0] = packAndEncode<4, 1>(chip_id, 0);
-    fields[1] = packAndEncode<5>(address >> 4);
-    fields[2] = packAndEncode<4, 1>(address, value >> 15);
-    fields[3] = packAndEncode<5>(value >> 10);
-    fields[4] = packAndEncode<5>(value >> 5);
-    fields[5] = packAndEncode<5>(value);
-}
-
-WrRegLong::WrRegLong(uint8_t chip_id, uint16_t address, const std::vector<uint16_t>& values)
-{
-    fields[0] = packAndEncode<4, 1>(chip_id, 1);
-    fields[1] = packAndEncode<5>(address >> 4);
-    fields[2] = packAndEncode<4, 1>(address, values[0] >> 15);
-    fields[3] = packAndEncode<5>(values[0] >> 10);
-    fields[4] = packAndEncode<5>(values[0] >> 5);
-    fields[5] = packAndEncode<5>(values[0]);
-
-    bits::unpack_range<5>(values.begin() + 1, values.end(), fields.begin() + 6);
-    for(auto i = 6u; i < fields.size(); i++) fields[i] = map5to8bit[fields[i]];
-}
-
-RdReg::RdReg(uint8_t chip_id, uint16_t address)
-{
-    fields[0] = packAndEncode<4, 1>(chip_id, 0);
-    fields[1] = packAndEncode<5>(address >> 4);
-    fields[2] = packAndEncode<4, 1>(address, 0);
-    fields[3] = packAndEncode<5>(0);
-}
-
-} // namespace RD53Cmd

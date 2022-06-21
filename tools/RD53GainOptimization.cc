@@ -39,7 +39,7 @@ void GainOptimization::ConfigureCalibration()
     doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
 
-    frontEnd = RD53::getMajorityFE(colStart, colStop);
+    frontEnd = static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getMajorityFE(colStart, colStop);
     colStart = std::max(colStart, frontEnd->colStart);
     colStop  = std::min(colStop, frontEnd->colStop);
     LOG(INFO) << GREEN << "GainOptimization will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << RESET << BOLDYELLOW << colStart << ", " << colStop
