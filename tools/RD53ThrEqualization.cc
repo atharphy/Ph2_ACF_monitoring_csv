@@ -46,13 +46,13 @@ void ThrEqualization::ConfigureCalibration()
     // ########################
     // # Custom channel group #
     // ########################
-    ChannelGroup<RD53::nRows, RD53::nCols> customChannelGroup;
-    customChannelGroup.disableAllChannels();
+    auto customChannelGroup = fDetectorContainer->at(0)->at(0)->at(0)->at(0)->getChannelGroup();
+    customChannelGroup->disableAllChannels();
 
     for(auto row = PixelAlive::rowStart; row <= PixelAlive::rowStop; row++)
-        for(auto col = PixelAlive::colStart; col <= PixelAlive::colStop; col++) customChannelGroup.enableChannel(row, col);
+        for(auto col = PixelAlive::colStart; col <= PixelAlive::colStop; col++) customChannelGroup->enableChannel(row, col);
 
-    PixelAlive::theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
+    PixelAlive::theChnGroupHandler->setCustomChannelGroup(*customChannelGroup);
 
     // #######################
     // # Initialize progress #

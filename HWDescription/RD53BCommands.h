@@ -1,7 +1,7 @@
 #ifndef RD53BCOMMANDS_H
 #define RD53BCOMMANDS_H
 
-#include "../Utils/Bits/BitVector.hpp"
+#include "../Utils/BitSerialization/BitVector.h"
 
 namespace RD53BCmd {
 

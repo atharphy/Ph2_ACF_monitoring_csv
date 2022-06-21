@@ -1,14 +1,10 @@
-#include "../Utils/BitSerialization/Types/All.hpp"
-
+#include "../Utils/BitSerialization/Types/All.h"
 #include "RD53BCommands.h"
-
 #include <sstream>
-
 
 namespace RD53BCmd {
 
 using namespace BitSerialization;
-
 
 struct ByteTransform {
     constexpr ByteTransform(std::initializer_list<uint8_t> encoding) 

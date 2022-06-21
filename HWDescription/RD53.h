@@ -14,15 +14,12 @@
 #include "../Utils/RD53Shared.h"
 #include "../Utils/bit_packing.h"
 #include "../Utils/easylogging++.h"
+#include "../Utils/ChannelGroupHanlder.h"
+#include "../Utils/Container.h"
+
 #include "ReadoutChip.h"
 
 #include <iomanip>
-
-// #############
-// # CONSTANTS #
-// #############
-#define NROWS 192 // Total number of rows
-#define NCOLS 400 // Total number of columns
 
 // #########################
 // # Chip useful constants #
@@ -136,6 +133,10 @@ class RD53 : public ReadoutChip
         size_t      colStop;
     };
 
+
+    static RD53& getFirstChip (DetectorContainer& theDetContainer) { return *satic_cast<RD53*>(theDetContainer->at(0)->at(0)->at(0)->at(0)); };
+
+    virtual std::unique_ptr<ChannelGroupBase> getChannelGroup() const = 0;
     virtual size_t getNRows() const = 0;
     virtual size_t getNCols() const = 0;
     virtual const FrontEnd* getMajorityFE(size_t colStart, size_t colStop) const = 0;

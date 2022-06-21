@@ -31,14 +31,14 @@ void Physics::ConfigureCalibration()
     // ################################
     // # Custom channel group handler #
     // ################################
-    ChannelGroup<RD53::nRows, RD53::nCols> customChannelGroup;
-    customChannelGroup.disableAllChannels();
+    auto customChannelGroup = fDetectorContainer->at(0)->at(0)->at(0)->at(0)->getChannelGroup();
+    customChannelGroup->disableAllChannels();
 
     for(auto row = rowStart; row <= rowStop; row++)
-        for(auto col = colStart; col <= colStop; col++) customChannelGroup.enableChannel(row, col);
+        for(auto col = colStart; col <= colStop; col++) customChannelGroup->enableChannel(row, col);
 
-    theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup, RD53GroupType::AllPixels);
-    theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
+    theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, RD53GroupType::AllPixels);
+    theChnGroupHandler->setCustomChannelGroup(*customChannelGroup);
     this->setChannelGroupHandler(theChnGroupHandler);
 
     // ##############################

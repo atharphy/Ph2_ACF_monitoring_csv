@@ -39,6 +39,7 @@ class RD53A : public RD53
     static constexpr FrontEnd DIFF = {"DIFF", "VTH1_DIFF", "VFF_DIFF", 31, 264, 399};
     static const FrontEnd* frontEnds[];
 
+    std::unique_ptr<ChannelGroupBase> getChannelGroup() const override { return new ChannelGroup<RD53A::NROWS, RD53A::NCOLS>; }
     size_t getNRows() const override { return RD53A::NROWS; }
     size_t getNCols() const override { return RD53A::NCOLS; }
     const FrontEnd* getMajorityFE(size_t colStart, size_t colStop) const override;

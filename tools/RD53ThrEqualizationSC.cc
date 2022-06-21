@@ -45,13 +45,13 @@ void ThrEqualizationSC::ConfigureCalibration()
     // ########################
     // # Custom channel group #
     // ########################
-    ChannelGroup<RD53::nRows, RD53::nCols> customChannelGroup;
-    customChannelGroup.disableAllChannels();
+    auto customChannelGroup = fDetectorContainer->at(0)->at(0)->at(0)->at(0)->getChannelGroup();
+    customChannelGroup->disableAllChannels();
 
     for(auto row = SCurve::rowStart; row <= SCurve::rowStop; row++)
-        for(auto col = SCurve::colStart; col <= SCurve::colStop; col++) customChannelGroup.enableChannel(row, col);
+        for(auto col = SCurve::colStart; col <= SCurve::colStop; col++) customChannelGroup->enableChannel(row, col);
 
-    SCurve::theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
+    SCurve::theChnGroupHandler->setCustomChannelGroup(*customChannelGroup);
 
     // #######################
     // # Initialize progress #

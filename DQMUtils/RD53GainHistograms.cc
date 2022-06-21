@@ -17,6 +17,8 @@ void GainHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorSt
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
+    auto firstChip = RD53::getFirstChip(theDetectorStructure);
+
     // #######################
     // # Retrieve parameters #
     // #######################

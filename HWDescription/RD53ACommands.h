@@ -11,6 +11,8 @@
 #ifndef RD53ACommands_H
 #define RD53ACommands_H
 
+#include <cstdint>
+
 namespace RD53Cmd
 {
 // Map 5-bit to 8-bit fields
