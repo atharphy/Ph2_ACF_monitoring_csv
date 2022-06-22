@@ -2,7 +2,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "    ${BoldYellow}========================================================================================================${Reset}")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/ProductionTools/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/ProductionToolsIT/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
     # Includes
@@ -14,7 +14,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
     include_directories(${PROJECT_SOURCE_DIR}/Utils)
     include_directories(${PROJECT_SOURCE_DIR}/tools)
-    include_directories(${PROJECT_SOURCE_DIR}/ProductionTools)
+    include_directories(${PROJECT_SOURCE_DIR}/ProductionToolsIT)
     include_directories(${PROJECT_SOURCE_DIR}/DQMUtils)
     include_directories(${PROJECT_SOURCE_DIR}/System)
     include_directories(${PROJECT_SOURCE_DIR})
@@ -102,7 +102,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_DQMUtils Ph2_Tools NetworkUtils)
 
-    file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/ProductionTools *.cc)
+    file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/ProductionToolsIT *.cc)
 
     ####################################
     ## EXECUTABLES
@@ -111,19 +111,19 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")
 
     # Add the library
-    add_library(Ph2_ProductionTools STATIC ${SOURCES} ${HEADERS})
+    add_library(Ph2_ProductionToolsIT STATIC ${SOURCES} ${HEADERS})
 
     foreach(sourcefile ${BINARIES})
         string(REPLACE ".cc" "" name ${sourcefile})
         message(STATUS "    ${name}")
     endforeach(sourcefile ${BINARIES})
 
-    TARGET_LINK_LIBRARIES(Ph2_ProductionTools ${LIBS})
+    TARGET_LINK_LIBRARIES(Ph2_ProductionToolsIT ${LIBS})
 
     message("--     ${BoldCyan}#### End ####${Reset}")
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/ProductionTools/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/ProductionToolsIT/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
 
@@ -131,7 +131,7 @@ else()
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/ProductionTools/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/ProductionToolsIT/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
     include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/uhal/include)
@@ -143,7 +143,7 @@ else()
     include_directories($ENV{PH2ACF_BASE_DIR}/HWInterface)
     include_directories($ENV{PH2ACF_BASE_DIR}/Utils)
     include_directories($ENV{PH2ACF_BASE_DIR}/tools)
-    include_directories($ENV{PH2ACF_BASE_DIR}/ProductionTools)
+    include_directories($ENV{PH2ACF_BASE_DIR}/ProductionToolsIT)
     include_directories($ENV{PH2ACF_BASE_DIR}/DQMUtils)
     include_directories($ENV{PH2ACF_BASE_DIR}/System)
 
@@ -151,7 +151,7 @@ else()
      EXTRA_FLAGS -Wno-reorder -Wl,--undefined
      )
 
-    cet_make(LIBRARY_NAME Ph2_ProductionTools_${Ph2_ACF_Master}
+    cet_make(LIBRARY_NAME Ph2_ProductionToolsIT_${Ph2_ACF_Master}
             LIBRARIES
             pthread
             ${Boost_SYSTEM_LIBRARY}
@@ -161,7 +161,7 @@ else()
     install_source()
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/ProductionTools/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/ProductionToolsIT/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
 

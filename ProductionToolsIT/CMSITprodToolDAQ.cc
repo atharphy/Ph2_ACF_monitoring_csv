@@ -4,8 +4,8 @@
 #include "../Utils/RD53Shared.h"
 #include "../Utils/argvparser.h"
 
-#include "../ProductionTools/RD53EyeDiag.h"
-#include "../ProductionTools/RD53EyeScanOptimization.h"
+#include "../ProductionToolsIT/RD53EyeDiag.h"
+#include "../ProductionToolsIT/RD53EyeScanOptimization.h"
 
 #include <chrono>
 #include <sys/wait.h>

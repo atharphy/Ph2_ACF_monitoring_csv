@@ -15,14 +15,14 @@
 
 #include "../tools/RD53PixelAlive.h"
 
-#include "../ProductionTools/RD53ADCHistogram.h"
-#include "../ProductionTools/RD53RingOscillator.h"
+#include "../ProductionToolsIT/RD53ADCHistogram.h"
+#include "../ProductionToolsIT/RD53RingOscillator.h"
 
 // #ifdef __POWERSUPPLY__
-#include "../ProductionTools/RD53ADCPowerSupply.h"
-#include "../ProductionTools/RD53ADCScan.h"
-#include "../ProductionTools/RD53DACScan.h"
-#include "../ProductionTools/RD53TempSensor.h"
+#include "../ProductionToolsIT/RD53ADCPowerSupply.h"
+#include "../ProductionToolsIT/RD53ADCScan.h"
+#include "../ProductionToolsIT/RD53DACScan.h"
+#include "../ProductionToolsIT/RD53TempSensor.h"
 // #endif
 
 #include <chrono>

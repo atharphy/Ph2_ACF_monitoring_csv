@@ -14,7 +14,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/Utils)
     include_directories(${PROJECT_SOURCE_DIR}/System)
     include_directories(${PROJECT_SOURCE_DIR}/tools)
-    include_directories(${PROJECT_SOURCE_DIR}/ProductionTools)
+    include_directories(${PROJECT_SOURCE_DIR}/ProductionToolsIT)
     include_directories(${PROJECT_SOURCE_DIR})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -25,7 +25,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     link_directories(${PROJECT_SOURCE_DIR/lib})
 
     # Initial set of libraries
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_Tools Ph2_RootUtils Ph2_DQMUtils Ph2_MonitorDQM Ph2_MonitorUtils Ph2_ProductionTools NetworkUtils)
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_Tools Ph2_RootUtils Ph2_DQMUtils Ph2_MonitorDQM Ph2_MonitorUtils Ph2_ProductionToolsIT NetworkUtils)
 
     # Check for ZMQ installed
     if(ZMQ_FOUND)
