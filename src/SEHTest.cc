@@ -238,7 +238,7 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDYELLOW << "Switching on SEH without remote power supply control" << RESET;
         cSEHTester.TurnOn(cRightLoad, cLeftLoad);
     }
-    if(cmd.foundOption("ext-leak") & cmd.foundOption("parallelHV"))
+    if(cmd.foundOption("ext-leak") )
     {
         if(cmd.foundOption("parallelHV"))
         {
@@ -248,7 +248,7 @@ int main(int argc, char* argv[])
         else
         {
             LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply" << RESET;
-            cSEHTester.ExternalTestLeakageCurrent(cExtLeakVoltage, 150, cHVPowerSupplyId, cHVChannelId);
+            cSEHTester.ExternalTestLeakageCurrent(cExtLeakVoltage, 600, cHVPowerSupplyId, cHVChannelId);
         }
     }
 
