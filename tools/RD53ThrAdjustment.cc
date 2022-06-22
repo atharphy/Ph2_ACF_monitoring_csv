@@ -32,7 +32,7 @@ void ThrAdjustment::ConfigureCalibration()
     doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData  = this->findValueInSettings<double>("SaveBinaryData");
 
-    frontEnd       = firstChip.getMajorityFE(PixelAlive::colStart, PixelAlive::colStop);
+    frontEnd             = firstChip.getMajorityFE(PixelAlive::colStart, PixelAlive::colStop);
     PixelAlive::colStart = std::max(PixelAlive::colStart, frontEnd->colStart);
     PixelAlive::colStop  = std::min(PixelAlive::colStop, frontEnd->colStop);
     LOG(INFO) << GREEN << "ThrAdjustment will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << RESET << BOLDYELLOW << colStart << ", " << colStop << RESET

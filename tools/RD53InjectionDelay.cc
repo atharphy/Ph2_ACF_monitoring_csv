@@ -23,11 +23,8 @@ void InjectionDelay::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    startValue     = 0;
-    stopValue      = RD53Shared::NLATENCYBINS * (RD53Shared::setBits(firstChip.getNumberOfBits("INJECTION_SELECT_DELAY")) + 1) - 1;
-    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
+    startValue = 0;
+    stopValue  = RD53Shared::NLATENCYBINS * (RD53Shared::setBits(firstChip.getNumberOfBits("INJECTION_SELECT_DELAY")) + 1) - 1;
 
     // ##############################
     // # Initialize dac scan values #
@@ -46,7 +43,7 @@ void InjectionDelay::ConfigureCalibration()
     // # Injection register masking #
     // ##############################
     saveInjection = RD53Shared::setBits(firstChip.getNumberOfBits("INJECTION_SELECT")) - RD53Shared::setBits(firstChip.getNumberOfBits("INJECTION_SELECT_DELAY"));
-    maxDelay = RD53Shared::setBits(firstChip.getNumberOfBits("INJECTION_SELECT_DELAY"));
+    maxDelay      = RD53Shared::setBits(firstChip.getNumberOfBits("INJECTION_SELECT_DELAY"));
 
     // #######################
     // # Initialize progress #
@@ -59,7 +56,7 @@ void InjectionDelay::Running()
     theCurrentRun = this->fRunNumber;
     LOG(INFO) << GREEN << "[InjectionDelay::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
-    if(saveBinaryData == true)
+    if(PixelAlive::saveBinaryData == true)
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_InjectionDelay.raw", 'w');
         this->initializeWriteFileHandler();
@@ -118,7 +115,7 @@ void InjectionDelay::initializeFiles(const std::string& fileRes_, int currentRun
 {
     fileRes = fileRes_;
 
-    if((currentRun >= 0) && (saveBinaryData == true))
+    if((currentRun >= 0) && (PixelAlive::saveBinaryData == true))
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_InjectionDelay.raw", 'w');
         this->initializeWriteFileHandler();
@@ -205,7 +202,7 @@ void InjectionDelay::draw()
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
-    if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
+    if(PixelAlive::doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
@@ -217,7 +214,7 @@ void InjectionDelay::draw()
     InjectionDelay::fillHisto();
     histos->process();
 
-    if(doDisplay == true) myApp->Run(true);
+    if(PixelAlive::doDisplay == true) myApp->Run(true);
 #endif
 }
 
@@ -348,7 +345,7 @@ void InjectionDelay::saveChipRegisters(int currentRun)
                 for(const auto cChip: *cHybrid)
                 {
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
-                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
+                    if(PixelAlive::doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
                     std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + this->fDirectoryName);
                     system(command.c_str());

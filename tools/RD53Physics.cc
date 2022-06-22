@@ -14,6 +14,8 @@ using namespace Ph2_HwInterface;
 
 void Physics::ConfigureCalibration()
 {
+    firstChip = RD53::getFirstChip(fDetectorContainer);
+
     // #######################
     // # Retrieve parameters #
     // #######################
@@ -26,12 +28,11 @@ void Physics::ConfigureCalibration()
     doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData  = this->findValueInSettings<double>("SaveBinaryData");
     outputBinaryDir = this->findValueInSettings<std::string>("OutputBinaryDir", "");
-    frontEnd        = RD53::getMajorityFE(colStart, colStop);
+    frontEnd        = firstChip.getMajorityFE(colStart, colStop);
 
     // ################################
     // # Custom channel group handler #
     // ################################
-    auto firstChip          = RD53::getFirstChip(fDetectorContainer);
     auto customChannelGroup = firstChip.getChannelGroup();
     customChannelGroup->disableAllChannels();
 

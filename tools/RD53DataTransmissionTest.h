@@ -41,10 +41,6 @@ class DataTransmissionTest : public BERtest
 #endif
 
   private:
-    double BERtarget;
-    bool   given_time;
-    double frames_or_time;
-
     DetectorDataContainer theTAP0scanContainer;
     DetectorDataContainer theTAP0tgtContainer;
 
@@ -53,9 +49,12 @@ class DataTransmissionTest : public BERtest
     void chipErrorReport() const;
 
   protected:
+    double BERtarget;
+    bool   given_time;
+    double frames_or_time;
+
     std::string fileRes;
     int         theCurrentRun;
-    bool        doDisplay;
 };
 
 #endif

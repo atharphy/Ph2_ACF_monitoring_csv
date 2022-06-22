@@ -132,8 +132,8 @@ class RD53 : public ReadoutChip
     virtual size_t                            getNRows() const                                     = 0;
     virtual size_t                            getNCols() const                                     = 0;
     virtual std::unique_ptr<ChannelGroupBase> getChannelGroup() const                              = 0;
-    virtual ChannelGroupBase* getChannelGroupAll() const                           = 0;
-    virtual ChannelGroupBase* getChannelGroupPattern() const                       = 0;
+    virtual ChannelGroupBase*                 getChannelGroupAll() const                           = 0;
+    virtual ChannelGroupBase*                 getChannelGroupPattern() const                       = 0;
     virtual const FrontEnd*                   getMajorityFE(size_t colStart, size_t colStop) const = 0;
 
     RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);

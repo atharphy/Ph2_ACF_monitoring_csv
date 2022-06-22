@@ -10,12 +10,12 @@
 #ifndef RD53SCurve_H
 #define RD53SCurve_H
 
+#include "../HWDescription/RD53.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerRecycleBin.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "../Utils/ThresholdAndNoise.h"
-#include "../HWDescription/RD53.h"
 #include "Tool.h"
 
 #ifdef __USE_ROOT__
@@ -48,23 +48,14 @@ class SCurve : public Tool
     void                                   run();
     void                                   draw(bool doSaveData = true);
     std::shared_ptr<DetectorDataContainer> analyze();
-    size_t getNumberIterations() { return theChnGroupHandler->getNumberOfGroups() * nSteps; }
-    void   saveChipRegisters(int currentRun);
+    size_t                                 getNumberIterations() { return theChnGroupHandler->getNumberOfGroups() * nSteps; }
+    void                                   saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     SCurveHistograms* histos;
 #endif
 
   private:
-    size_t nEvents;
-    size_t startValue;
-    size_t stopValue;
-    size_t nSteps;
-    size_t offset;
-    size_t nHITxCol;
-    bool   doFast;
-    size_t doOnlyNGroups;
-
     std::vector<uint16_t> dacList;
 
     std::vector<DetectorDataContainer*>    detectorContainerVector;
@@ -76,17 +67,26 @@ class SCurve : public Tool
     void chipErrorReport() const;
 
   protected:
+    size_t rowStart;
+    size_t rowStop;
+    size_t colStart;
+    size_t colStop;
+    size_t nEvents;
+    size_t startValue;
+    size_t stopValue;
+    size_t nSteps;
+    size_t offset;
+    size_t nHITxCol;
+    bool   doFast;
+    size_t doOnlyNGroups;
+    bool   doDisplay;
+    bool   doUpdateChip;
+    bool   saveBinaryData;
+
     std::string fileRes;
     int         theCurrentRun;
-    size_t      rowStart;
-    size_t      rowStop;
-    size_t      colStart;
-    size_t      colStop;
-    bool        doUpdateChip;
-    bool        doDisplay;
-    bool        saveBinaryData;
     bool        saveData;
-    RD53 firstChip;
+    RD53        firstChip;
 
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
 };

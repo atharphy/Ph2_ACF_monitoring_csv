@@ -23,23 +23,15 @@ void Latency::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings<double>("ROWstart");
-    rowStop        = this->findValueInSettings<double>("ROWstop");
-    colStart       = this->findValueInSettings<double>("COLstart");
-    colStop        = this->findValueInSettings<double>("COLstop");
-    nTRIGxEvent    = this->findValueInSettings<double>("nTRIGxEvent");
-    startValue     = this->findValueInSettings<double>("LatencyStart");
-    stopValue      = this->findValueInSettings<double>("LatencyStop");
-    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
+    startValue = this->findValueInSettings<double>("LatencyStart");
+    stopValue  = this->findValueInSettings<double>("LatencyStop");
 
     // ##############################
     // # Initialize dac scan values #
     // ##############################
-    const size_t nSteps = ((stopValue - startValue) / nTRIGxEvent + 1 <= RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1 ? (stopValue - startValue) / nTRIGxEvent + 1
-                                                                                                                            : RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
-    const size_t step   = nTRIGxEvent;
+    const size_t nSteps = ((stopValue - startValue) / PixelAlive::nTRIGxEvent + 1 <= RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1 ? (stopValue - startValue) / PixelAlive::nTRIGxEvent + 1
+                                                                                                                                        : RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
+    const size_t step   = PixelAlive::nTRIGxEvent;
     for(auto i = 0u; i < nSteps; i++) dacList.push_back(startValue + step * i);
 
     // #######################
@@ -53,7 +45,7 @@ void Latency::Running()
     theCurrentRun = this->fRunNumber;
     LOG(INFO) << GREEN << "[Latency::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
-    if(saveBinaryData == true)
+    if(PixelAlive::saveBinaryData == true)
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Latency.raw", 'w');
         this->initializeWriteFileHandler();
@@ -110,7 +102,7 @@ void Latency::initializeFiles(const std::string& fileRes_, int currentRun)
 {
     fileRes = fileRes_;
 
-    if((currentRun >= 0) && (saveBinaryData == true))
+    if((currentRun >= 0) && (PixelAlive::saveBinaryData == true))
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Latency.raw", 'w');
         this->initializeWriteFileHandler();
@@ -142,7 +134,7 @@ void Latency::draw(bool saveData)
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
-    if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
+    if(PixelAlive::doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
@@ -154,7 +146,7 @@ void Latency::draw(bool saveData)
     Latency::fillHisto();
     histos->process();
 
-    if(doDisplay == true) myApp->Run(true);
+    if(PixelAlive::doDisplay == true) myApp->Run(true);
 #endif
 }
 
@@ -183,10 +175,11 @@ void Latency::analyze()
                         }
                     }
 
-                    if(nTRIGxEvent > 1)
+                    if(PixelAlive::nTRIGxEvent > 1)
                         LOG(INFO) << BOLDMAGENTA << ">>> Best latency for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
                                   << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] is within [" << BOLDYELLOW
-                                  << (regVal - (int)nTRIGxEvent + 1 >= 0 ? std::to_string(regVal - (int)nTRIGxEvent + 1) : "N.A.") << "," << regVal << BOLDMAGENTA << "] (n.bx) <<<" << RESET;
+                                  << (regVal - (int)PixelAlive::nTRIGxEvent + 1 >= 0 ? std::to_string(regVal - (int)PixelAlive::nTRIGxEvent + 1) : "N.A.") << "," << regVal << BOLDMAGENTA
+                                  << "] (n.bx) <<<" << RESET;
                     else
                         LOG(INFO) << BOLDMAGENTA << ">>> Best latency for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
                                   << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << regVal << BOLDMAGENTA << " (n.bx) <<<" << RESET;

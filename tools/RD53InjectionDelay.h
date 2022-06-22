@@ -53,8 +53,6 @@ class InjectionDelay : public PixelAlive
 
   private:
     Latency la;
-    size_t  startValue;
-    size_t  stopValue;
 
     std::vector<uint16_t> dacList;
 
@@ -66,13 +64,13 @@ class InjectionDelay : public PixelAlive
     void chipErrorReport() const;
 
   protected:
+    size_t startValue;
+    size_t stopValue;
+
     std::string fileRes;
     int         theCurrentRun;
     size_t      saveInjection;
     size_t      maxDelay;
-    bool        doUpdateChip;
-    bool        doDisplay;
-    bool        saveBinaryData;
 };
 
 #endif

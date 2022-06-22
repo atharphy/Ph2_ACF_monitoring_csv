@@ -25,14 +25,12 @@ void ThrEqualization::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    nEvents      = this->findValueInSettings<double>("nEvents");
-    nEvtsBurst   = this->findValueInSettings<double>("nEvtsBurst") < nEvents ? this->findValueInSettings<double>("nEvtsBurst") : nEvents;
     startValue   = this->findValueInSettings<double>("VCalHstart");
     stopValue    = this->findValueInSettings<double>("VCalHstop");
     doDisplay    = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip = this->findValueInSettings<double>("UpdateChipCfg");
 
-    frontEnd       = firstChip.getMajorityFE(PixelAlive::colStart, PixelAlive::colStop);
+    frontEnd = firstChip.getMajorityFE(PixelAlive::colStart, PixelAlive::colStop);
     if(frontEnd == &RD53::SYNC)
     {
         LOG(ERROR) << BOLDRED << "ThrEqualization cannot be used on the Synchronous FE, please change the selected columns" << RESET;
@@ -153,7 +151,7 @@ void ThrEqualization::run()
     size_t TDACsize = RD53Shared::setBits(RD53Constants::NBIT_TDAC) + 1;
     if(frontEnd == &RD53::DIFF) TDACsize *= 2;
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, theTDACcontainer);
-    ThrEqualization::bitWiseScanLocal(frontEnd->name, nEvents, TARGETEFF /*PixelAlive::thrOccupancy*/, nEvtsBurst);
+    ThrEqualization::bitWiseScanLocal(frontEnd->name, PixelAlive::nEvents, TARGETEFF /*PixelAlive::thrOccupancy*/, PixelAlive::nEvtsBurst);
 
     // #################################################
     // # Fill TDAC container and mark enabled channels #

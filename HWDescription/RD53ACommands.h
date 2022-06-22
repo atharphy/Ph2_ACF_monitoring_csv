@@ -57,8 +57,8 @@ class Command
     static_assert(nFields % 2 == 0, "RD53Cmd::Command: a command must have an even number of fields");
 
   public:
-    static constexpr size_t nFields = nFields;
     static constexpr size_t cmdCode = cmdCode;
+    static constexpr size_t nFields = nFields;
 
   protected:
     template <int... Sizes, class... Args>
@@ -156,6 +156,6 @@ struct RdReg : public Command<RD53CmdEncoder::READ, 4>
     std::array<uint8_t, nFields> serializeFields() const;
 };
 
-} // namespace RD53ACmd
+} // namespace RD53Cmd
 
 #endif

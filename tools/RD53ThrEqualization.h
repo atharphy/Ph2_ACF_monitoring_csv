@@ -60,11 +60,6 @@ class ThrEqualization : public PixelAlive
 #endif
 
   private:
-    size_t nEvents;
-    size_t nEvtsBurst;
-    size_t startValue;
-    size_t stopValue;
-
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
     std::shared_ptr<DetectorDataContainer> theOccContainer;
@@ -76,10 +71,13 @@ class ThrEqualization : public PixelAlive
     void chipErrorReport() const;
 
   protected:
+    size_t startValue;
+    size_t stopValue;
+    bool   doUpdateChip;
+    bool   doDisplay;
+
     std::string fileRes;
     int         theCurrentRun;
-    bool        doUpdateChip;
-    bool        doDisplay;
 };
 
 #endif

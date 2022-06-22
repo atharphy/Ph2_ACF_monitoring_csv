@@ -8,7 +8,6 @@
 */
 
 #include "RD53ThrEqualizationSC.h"
-#include "../Utils/ChannelGroupHandler.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -26,12 +25,10 @@ void ThrEqualizationSC::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    colStart     = this->findValueInSettings<double>("COLstart");
-    colStop      = this->findValueInSettings<double>("COLstop");
     doDisplay    = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip = this->findValueInSettings<double>("UpdateChipCfg");
 
-    frontEnd       = firstChip.getMajorityFE(PixelAlive::colStart, PixelAlive::colStop);
+    frontEnd = firstChip.getMajorityFE(SCurve::colStart, SCurve::colStop);
     if(frontEnd == &RD53::SYNC)
     {
         LOG(ERROR) << BOLDRED << "ThrEqualizationSC cannot be used on the Synchronous FE, please change the selected columns" << RESET;

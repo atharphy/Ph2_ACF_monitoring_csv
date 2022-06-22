@@ -44,12 +44,13 @@ void SCurve::ConfigureCalibration()
     for(auto row = rowStart; row <= rowStop; row++)
         for(auto col = colStart; col <= colStop; col++) customChannelGroup->enableChannel(row, col);
 
-    auto groupType = doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups;
-     theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, groupType, nHITxCol, doOnlyNGroups);
+    auto groupType     = doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups;
+    theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, groupType, nHITxCol, doOnlyNGroups);
     if(groupType == RD53GroupType::AllPixels)
-      theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, firstChip.getChannelGroupAll(), firstChip.getChannelGroupAll(), groupType, nHITxCol, doOnlyNGroups);
+        theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, firstChip.getChannelGroupAll(), firstChip.getChannelGroupAll(), groupType, nHITxCol, doOnlyNGroups);
     else
-      theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, firstChip.getChannelGroupPattern(nHITxCol), firstChip.getChannelGroupPattern(nHITxCol), groupType, nHITxCol, doOnlyNGroups);
+        theChnGroupHandler =
+            std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, firstChip.getChannelGroupPattern(nHITxCol), firstChip.getChannelGroupPattern(nHITxCol), groupType, nHITxCol, doOnlyNGroups);
     theChnGroupHandler->setCustomChannelGroup(*customChannelGroup);
     this->setChannelGroupHandler(theChnGroupHandler);
 

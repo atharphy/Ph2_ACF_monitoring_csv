@@ -25,7 +25,6 @@ void DataTransmissionTest::ConfigureCalibration()
     BERtarget      = this->findValueInSettings<double>("TargetBER");
     given_time     = this->findValueInSettings<double>("byTime");
     frames_or_time = this->findValueInSettings<double>("framesORtime");
-    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
 
     // ############################################################
     // # Create directory for: raw data, config files, histograms #
@@ -108,7 +107,7 @@ void DataTransmissionTest::draw(bool saveData)
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
-    if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
+    if(BERtest::doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
     this->InitResultFile(fileRes);
     LOG(INFO) << BOLDBLUE << "\t--> DataTransmissionTest saving histograms..." << RESET;
@@ -118,7 +117,7 @@ void DataTransmissionTest::draw(bool saveData)
     histos->process();
     this->WriteRootFile();
 
-    if(doDisplay == true) myApp->Run(true);
+    if(BERtest::doDisplay == true) myApp->Run(true);
 
     this->CloseResultFile();
 #endif

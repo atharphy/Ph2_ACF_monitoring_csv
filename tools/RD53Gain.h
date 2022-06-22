@@ -27,10 +27,10 @@
 // #############
 #define NGAINPAR 4 // Number of parameters for gain data regression
 
-// ###################
-// # Gain test suite #
-// ###################
-class Gain : public Tool
+    // ###################
+    // # Gain test suite #
+    // ###################
+    class Gain : public Tool
 {
   public:
     ~Gain()
@@ -52,8 +52,8 @@ class Gain : public Tool
     void                                   run();
     void                                   draw(bool saveData = true);
     std::shared_ptr<DetectorDataContainer> analyze();
-    size_t getNumberIterations() { return theChnGroupHandler->getNumberOfGroups() * nSteps; }
-    void   saveChipRegisters(int currentRun);
+    size_t                                 getNumberIterations() { return theChnGroupHandler->getNumberOfGroups() * nSteps; }
+    void                                   saveChipRegisters(int currentRun);
 
     static float gainFunction(const std::vector<float>& par, float q) { return par[0] + par[1] * q; }
 
@@ -62,13 +62,6 @@ class Gain : public Tool
 #endif
 
   private:
-    float  targetCharge;
-    size_t nSteps;
-    size_t offset;
-    size_t nHITxCol;
-    bool   doFast;
-    size_t doOnlyNGroups;
-
     std::vector<uint16_t> dacList;
 
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
@@ -88,16 +81,23 @@ class Gain : public Tool
     void chipErrorReport() const;
 
   protected:
-    std::string fileRes;
-    int         theCurrentRun;
     size_t rowStart;
     size_t rowStop;
     size_t colStart;
     size_t colStop;
     size_t nEvents;
-    bool        doUpdateChip;
-    bool        doDisplay;
-    bool        saveBinaryData;
+    float  targetCharge;
+    size_t nSteps;
+    size_t offset;
+    size_t nHITxCol;
+    bool   doFast;
+    size_t doOnlyNGroups;
+    bool   doDisplay;
+    bool   doUpdateChip;
+    bool   saveBinaryData;
+
+    std::string fileRes;
+    int         theCurrentRun;
     bool        saveData;
     RD53        firstChip;
 };

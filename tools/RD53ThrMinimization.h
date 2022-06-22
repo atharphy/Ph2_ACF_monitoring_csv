@@ -53,10 +53,6 @@ class ThrMinimization : public PixelAlive
 #endif
 
   private:
-    float  targetOccupancy;
-    size_t startValue;
-    size_t stopValue;
-
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
     DetectorDataContainer theThrContainer;
@@ -66,11 +62,15 @@ class ThrMinimization : public PixelAlive
     void chipErrorReport() const;
 
   protected:
+    float  targetOccupancy;
+    size_t startValue;
+    size_t stopValue;
+    bool   doDisplay;
+    bool   doUpdateChip;
+    bool   saveBinaryData;
+
     std::string fileRes;
     int         theCurrentRun;
-    bool        doUpdateChip;
-    bool        doDisplay;
-    bool        saveBinaryData;
 };
 
 #endif

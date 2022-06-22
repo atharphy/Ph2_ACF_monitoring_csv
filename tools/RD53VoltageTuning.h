@@ -49,11 +49,6 @@ class VoltageTuning : public Tool
 #endif
 
   private:
-    float targetDig;
-    float targetAna;
-    float toleranceDig;
-    float toleranceAna;
-
     DetectorDataContainer theAnaContainer;
     DetectorDataContainer theDigContainer;
 
@@ -61,9 +56,14 @@ class VoltageTuning : public Tool
     std::vector<int> createScanRange(Ph2_HwDescription::Chip* pChip, const std::string regName, float target, float initial);
 
   protected:
+    float targetDig;
+    float targetAna;
+    float toleranceDig;
+    float toleranceAna;
+    bool  doDisplay;
+
     std::string fileRes;
     int         theCurrentRun;
-    bool        doDisplay;
 };
 
 #endif

@@ -23,48 +23,50 @@ class RD53ChannelGroupHandler : public ChannelGroupHandler
 {
   public:
     RD53ChannelGroupHandler(ChannelGroupBase& customChannelGroup,
-			    ChannelGroupBase* allChannelGroup,
-			    ChannelGroupBase* currentChannelGroup,
-			    uint8_t groupType, uint8_t hitPerCol = 1, uint8_t onlyNGroups = 0);
+                            ChannelGroupBase* allChannelGroup,
+                            ChannelGroupBase* currentChannelGroup,
+                            uint8_t           groupType,
+                            uint8_t           hitPerCol   = 1,
+                            uint8_t           onlyNGroups = 0);
     ~RD53ChannelGroupHandler();
 
-    template<size_t R, size_t C>
-      class RD53ChannelGroupAll : public ChannelGroup<R,C>
+    template <size_t R, size_t C>
+    class RD53ChannelGroupAll : public ChannelGroup<R, C>
     {
         void makeTestGroup(std::shared_ptr<ChannelGroupBase>& currentChannelGroup,
                            uint32_t                           groupNumber,
                            uint32_t                           numberOfClustersPerGroup,
                            uint16_t                           numberOfRowsPerCluster,
                            uint16_t                           numberOfColsPerCluster = 1) const override;
-	{
-	  currentChannelGroup->enableAllChannels();
-	}
+        {
+            currentChannelGroup->enableAllChannels();
+        }
     };
 
-    template<size_t R, size_t C>
-      class RD53ChannelGroupPattern : public ChannelGroup<R,C>
+    template <size_t R, size_t C>
+    class RD53ChannelGroupPattern : public ChannelGroup<R, C>
     {
       public:
         RD53ChannelGroupPattern(uint8_t hitPerCol) : hitPerCol(hitPerCol){};
 
       private:
-        void    makeTestGroup(std::shared_ptr<ChannelGroupBase>& currentChannelGroup,
-                              uint32_t                           groupNumber,
-                              uint32_t                           numberOfClustersPerGroup,
-                              uint16_t                           numberOfRowsPerCluster,
-                              uint16_t                           numberOfColsPerCluster = 1) const override;
-	{
-    static_cast<ChannelGroup*>(currentChannelGroup.get())->disableAllChannels();
-    
-    for(auto col = 0u; col < Ph2_HwDescription::RD53::nCols; col++)
-        for(auto i = 0u; i < hitPerCol; i++)
+        void makeTestGroup(std::shared_ptr<ChannelGroupBase>& currentChannelGroup,
+                           uint32_t                           groupNumber,
+                           uint32_t                           numberOfClustersPerGroup,
+                           uint16_t                           numberOfRowsPerCluster,
+                           uint16_t                           numberOfColsPerCluster = 1) const override;
         {
-            auto row = (RD53Constants::NROW_CORE * col + i * currentChannelGroup.getNumberOfRows() / hitPerCol) % currentChannelGroup.getNumberOfRows();
-            row += groupNumber;
-            row %= currentChannelGroup.getNumberOfRows();
-            currentChannelGroup->enableChannel(row, col);
+            static_cast<ChannelGroup*>(currentChannelGroup.get())->disableAllChannels();
+
+            for(auto col = 0u; col < Ph2_HwDescription::RD53::nCols; col++)
+                for(auto i = 0u; i < hitPerCol; i++)
+                {
+                    auto row = (RD53Constants::NROW_CORE * col + i * currentChannelGroup.getNumberOfRows() / hitPerCol) % currentChannelGroup.getNumberOfRows();
+                    row += groupNumber;
+                    row %= currentChannelGroup.getNumberOfRows();
+                    currentChannelGroup->enableChannel(row, col);
+                }
         }
-	}
 
         uint8_t hitPerCol;
     };

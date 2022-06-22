@@ -25,13 +25,10 @@ void GainOptimization::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    targetCharge   = RD53chargeConverter::Charge2VCal(this->findValueInSettings<double>("TargetCharge"));
-    KrumCurrStart  = this->findValueInSettings<double>("KrumCurrStart");
-    KrumCurrStop   = this->findValueInSettings<double>("KrumCurrStop");
-    doFast         = this->findValueInSettings<double>("DoFast");
-    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
+    KrumCurrStart = this->findValueInSettings<double>("KrumCurrStart");
+    KrumCurrStop  = this->findValueInSettings<double>("KrumCurrStop");
+    doDisplay     = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip  = this->findValueInSettings<double>("UpdateChipCfg");
 
     frontEnd = firstChip.getMajorityFE(Gain::colStart, Gain::colStop);
     colStart = std::max(Gain::colStart, frontEnd->colStart);
@@ -51,7 +48,7 @@ void GainOptimization::Running()
     Gain::theCurrentRun = this->fRunNumber;
     LOG(INFO) << GREEN << "[GainOptimization::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
-    if(saveBinaryData == true)
+    if(Gain::saveBinaryData == true)
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_GainOptimization.raw", 'w');
         this->initializeWriteFileHandler();
@@ -111,7 +108,7 @@ void GainOptimization::initializeFiles(const std::string& fileRes_, int currentR
 
     fileRes = fileRes_;
 
-    if((currentRun >= 0) && (saveBinaryData == true))
+    if((currentRun >= 0) && (Gain::saveBinaryData == true))
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_GainOptimization.raw", 'w');
         this->initializeWriteFileHandler();
@@ -125,7 +122,7 @@ void GainOptimization::initializeFiles(const std::string& fileRes_, int currentR
 
 void GainOptimization::run()
 {
-    GainOptimization::bitWiseScanGlobal(frontEnd->gainReg, targetCharge, KrumCurrStart, KrumCurrStop);
+    GainOptimization::bitWiseScanGlobal(frontEnd->gainReg, Gain::targetCharge, KrumCurrStart, KrumCurrStop);
 
     // #######################################
     // # Fill Krummenacher Current container #

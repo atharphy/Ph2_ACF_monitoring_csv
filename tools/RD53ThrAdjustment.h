@@ -21,10 +21,10 @@
 // #############
 #define TARGETEFF 0.50 // Target efficiency for optimization algorithm
 
-// #####################################
-// # Threshold minimization test suite #
-// #####################################
-class ThrAdjustment : public PixelAlive
+    // #####################################
+    // # Threshold minimization test suite #
+    // #####################################
+    class ThrAdjustment : public PixelAlive
 {
   public:
     ~ThrAdjustment()
@@ -58,10 +58,6 @@ class ThrAdjustment : public PixelAlive
 #endif
 
   private:
-    float  targetThreshold;
-    size_t startValue;
-    size_t stopValue;
-
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
     DetectorDataContainer theThrContainer;
@@ -71,11 +67,15 @@ class ThrAdjustment : public PixelAlive
     void chipErrorReport() const;
 
   protected:
+    float  targetThreshold;
+    size_t startValue;
+    size_t stopValue;
+    bool   doUpdateChip;
+    bool   doDisplay;
+    bool   saveBinaryData;
+
     std::string fileRes;
     int         theCurrentRun;
-    bool        doUpdateChip;
-    bool        doDisplay;
-    bool        saveBinaryData;
 };
 
 #endif

@@ -14,7 +14,7 @@ using namespace Ph2_HwInterface;
 
 void PixelAlive::ConfigureCalibration()
 {
-   firstChip = RD53::getFirstChip(fDetectorContainer);
+    firstChip = RD53::getFirstChip(fDetectorContainer);
 
     // #######################
     // # Retrieve parameters #
@@ -47,11 +47,10 @@ void PixelAlive::ConfigureCalibration()
 
     auto groupType = injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels;
     if(groupType == RD53GroupType::AllPixels)
-      theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(
-								     *customChannelGroup, firstChip.getChannelGroupAll(), firstChip.getChannelGroupAll(), groupType, nHITxCol, doOnlyNGroups);
+        theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, firstChip.getChannelGroupAll(), firstChip.getChannelGroupAll(), groupType, nHITxCol, doOnlyNGroups);
     else
-      theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(
-								     *customChannelGroup, firstChip.getChannelGroupPattern(nHITxCol), firstChip.getChannelGroupPattern(nHITxCol), groupType, nHITxCol, doOnlyNGroups);
+        theChnGroupHandler =
+            std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, firstChip.getChannelGroupPattern(nHITxCol), firstChip.getChannelGroupPattern(nHITxCol), groupType, nHITxCol, doOnlyNGroups);
     theChnGroupHandler->setCustomChannelGroup(*customChannelGroup);
     this->setChannelGroupHandler(theChnGroupHandler);
 

@@ -10,11 +10,11 @@
 #ifndef RD53PixelAlive_H
 #define RD53PixelAlive_H
 
+#include "../HWDescription/RD53.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/GenericDataArray.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
-#include "../HWDescription/RD53.h"
 #include "Tool.h"
 
 #ifdef __USE_ROOT__
@@ -46,11 +46,8 @@ class PixelAlive : public Tool
     void                                   run();
     void                                   draw(bool doSaveData = true);
     std::shared_ptr<DetectorDataContainer> analyze();
-    size_t                                 getNumberIterations()
-    {
-        return theChnGroupHandler->getNumberOfGroups() * nEvents / nEvtsBurst;
-    }
-    void saveChipRegisters(int currentRun);
+    size_t                                 getNumberIterations() { return theChnGroupHandler->getNumberOfGroups() * nEvents / nEvtsBurst; }
+    void                                   saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     PixelAliveHistograms* histos;
@@ -75,22 +72,23 @@ class PixelAlive : public Tool
         Digital
     };
 
+    size_t rowStart;
+    size_t rowStop;
+    size_t colStart;
+    size_t colStop;
+    size_t nEvents;
+    size_t nEvtsBurst;
+    size_t nTRIGxEvent;
+    size_t nHITxCol;
+    float  thrOccupancy;
+    bool   doFast;
+    size_t doOnlyNGroups;
+    bool   doDisplay;
+    bool   doUpdateChip;
+    bool   saveBinaryData;
+
     std::string fileRes;
     int         theCurrentRun;
-    size_t      rowStart;
-    size_t      rowStop;
-    size_t      colStart;
-    size_t      colStop;
-    size_t      nEvents;
-    size_t      nEvtsBurst;
-    size_t      nTRIGxEvent;
-    size_t      nHITxCol;
-    float       thrOccupancy;
-    bool        doFast;
-    size_t      doOnlyNGroups;
-    bool        doDisplay;
-    bool        doUpdateChip;
-    bool        saveBinaryData;
     bool        saveData;
     RD53        firstChip;
 

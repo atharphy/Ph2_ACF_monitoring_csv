@@ -50,8 +50,8 @@ void Gain::ConfigureCalibration()
 
     auto groupType = doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups;
     if(groupType == RD53GroupType::AllPixels)
-    else
-      theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, firstChip.getChannelGroupPattern(nHITxCol), firstChip.getChannelGroupPattern(nHITxCol), groupType, nHITxCol, doOnlyNGroups);
+        else theChnGroupHandler =
+            std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, firstChip.getChannelGroupPattern(nHITxCol), firstChip.getChannelGroupPattern(nHITxCol), groupType, nHITxCol, doOnlyNGroups);
     theChnGroupHandler->setCustomChannelGroup(*customChannelGroup);
     this->setChannelGroupHandler(theChnGroupHandler);
 

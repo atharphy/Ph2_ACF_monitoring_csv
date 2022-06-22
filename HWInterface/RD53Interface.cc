@@ -394,7 +394,7 @@ void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
     // ##########################
     // # Disable default config #
     // ##########################
-    RD53Cmd::WrReg(chipID, pRD53->getRegItem("PIX_DEFAULT_CONFIG").fAddress, 0x0).appendTo(commandList);
+    RD53Cmd::serialize(RD53Cmd::WrReg(chipID, pRD53->getRegItem("PIX_DEFAULT_CONFIG").fAddress, 0x0), commandList);
 
     // ############
     // # PIX_MODE #
@@ -408,9 +408,9 @@ void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
 
     if(doSparse == true)
     {
-        RD53Cmd::WrReg(chipID, pRD53->getRegItem("PIX_MODE").fAddress, 0x27).appendTo(commandList);
-        RD53Cmd::WrReg(chipID, pRD53->getRegItem("PIX_PORTAL").fAddress, 0x0).appendTo(commandList);
-        RD53Cmd::WrReg(chipID, pRD53->getRegItem("PIX_MODE").fAddress, 0x0).appendTo(commandList);
+        RD53Cmd::serialize(RD53Cmd::WrReg(chipID, pRD53->getRegItem("PIX_MODE").fAddress, 0x27), commandList);
+        RD53Cmd::serialize(RD53Cmd::WrReg(chipID, pRD53->getRegItem("PIX_PORTAL").fAddress, 0x0), commandList);
+        RD53Cmd::serialize(RD53Cmd::WrReg(chipID, pRD53->getRegItem("PIX_MODE").fAddress, 0x0), commandList);
 
         uint16_t data;
 
@@ -420,7 +420,7 @@ void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
                (std::find(mask[col + 1].Enable.begin(), mask[col].Enable.end(), true) == mask[col + 1].Enable.end()))
                 continue;
 
-            RD53Cmd::WrReg(chipID, REGION_COL_ADDR, col / 2).appendTo(commandList);
+            RD53Cmd::serialize(RD53Cmd::WrReg(chipID, REGION_COL_ADDR, col / 2), commandList);
 
             for(auto row = 0u; row < RD53::nRows; row++)
             {
@@ -428,8 +428,8 @@ void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
                 {
                     data = getPixelConfig(mask, row, col, highGain);
 
-                    RD53Cmd::WrReg(chipID, REGION_ROW_ADDR, row).appendTo(commandList);
-                    RD53Cmd::WrReg(chipID, PIX_PORTAL_ADDR, data).appendTo(commandList);
+                    RD53Cmd::serialize(RD53Cmd::WrReg(chipID, REGION_ROW_ADDR, row), commandList);
+                    RD53Cmd::serialize(RD53Cmd::WrReg(chipID, PIX_PORTAL_ADDR, data), commandList);
                 }
             }
 
@@ -442,14 +442,14 @@ void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
     }
     else
     {
-        RD53Cmd::WrReg(chipID, pRD53->getRegItem("PIX_MODE").fAddress, 0x8).appendTo(commandList);
+        RD53Cmd::serialize(RD53Cmd::WrReg(chipID, pRD53->getRegItem("PIX_MODE").fAddress, 0x8), commandList);
 
         std::vector<uint16_t> data;
 
         for(auto col = 0u; col < RD53::nCols; col += 2)
         {
-            RD53Cmd::WrReg(chipID, REGION_COL_ADDR, col / 2).appendTo(commandList);
-            RD53Cmd::WrReg(chipID, REGION_ROW_ADDR, 0x0).appendTo(commandList);
+            RD53Cmd::serialize(RD53Cmd::WrReg(chipID, REGION_COL_ADDR, col / 2), commandList);
+            RD53Cmd::serialize(RD53Cmd::WrReg(chipID, REGION_ROW_ADDR, 0x0), commandList);
 
             for(auto row = 0u; row < RD53::nRows; row++)
             {
@@ -457,7 +457,7 @@ void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
 
                 if((row % RD53Constants::NREGIONS_LONGCMD) == (RD53Constants::NREGIONS_LONGCMD - 1))
                 {
-                    RD53Cmd::WrRegLong(chipID, PIX_PORTAL_ADDR, data).appendTo(commandList);
+                    RD53Cmd::serialize(RD53Cmd::WrRegLong(chipID, PIX_PORTAL_ADDR, data), commandList);
                     data.clear();
                 }
             }
@@ -621,7 +621,7 @@ void RD53Interface::ReadChipAllLocalReg(ReadoutChip* pChip, const std::string& r
 
 void RD53Interface::PackChipCommands(ReadoutChip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg)
 {
-    RD53Cmd::WrReg(pChip->getId(), pChip->getRegItem(regName).fAddress, data).appendTo(chipCommandList);
+    RD53Cmd::serialize(RD53Cmd::WrReg(pChip->getId(), pChip->getRegItem(regName).fAddress, data), chipCommandList);
     if(updateReg == true) pChip->setReg(regName, data);
 }
 
@@ -731,15 +731,15 @@ uint32_t RD53Interface::measureADC(ReadoutChip* pChip, uint32_t data)
 
     std::vector<uint16_t> commandList;
 
-    RD53Cmd::WrReg(chipID, pChip->getRegItem("MONITOR_CONFIG").fAddress, trimADC).appendTo(commandList);
-    RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x0040).appendTo(commandList); // Reset Monitor Data
-    RD53Cmd::GlobalPulse(pChip->getId(), 0x0004).appendTo(commandList);
-    RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x0008).appendTo(commandList); // Clear Monitor Data
-    RD53Cmd::GlobalPulse(pChip->getId(), 0x0004).appendTo(commandList);
-    RD53Cmd::WrReg(chipID, pChip->getRegItem("MONITOR_SELECT").fAddress, data).appendTo(commandList); // 14 bits: bit 13 enable, bits 7:12 I-Mon, bits 0:6 V-Mon
-    RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x1000).appendTo(commandList);                         // Trigger Monitor Data to start conversion
-    RD53Cmd::GlobalPulse(pChip->getId(), 0x0004).appendTo(commandList);
-    RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, GlbPulseVal).appendTo(commandList); // Restore value in Global Pulse Route
+    RD53Cmd::serialize(RD53Cmd::WrReg(chipID, pChip->getRegItem("MONITOR_CONFIG").fAddress, trimADC), commandList);
+    RD53Cmd::serialize(RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x0040), commandList); // Reset Monitor Data
+    RD53Cmd::serialize(RD53Cmd::GlobalPulse(pChip->getId(), 0x0004), commandList);
+    RD53Cmd::serialize(RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x0008), commandList); // Clear Monitor Data
+    RD53Cmd::serialize(RD53Cmd::GlobalPulse(pChip->getId(), 0x0004), commandList);
+    RD53Cmd::serialize(RD53Cmd::WrReg(chipID, pChip->getRegItem("MONITOR_SELECT").fAddress, data), commandList); // 14 bits: bit 13 enable, bits 7:12 I-Mon, bits 0:6 V-Mon
+    RD53Cmd::serialize(RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, 0x1000), commandList);                         // Trigger Monitor Data to start conversion
+    RD53Cmd::serialize(RD53Cmd::GlobalPulse(pChip->getId(), 0x0004), commandList);
+    RD53Cmd::serialize(RD53Cmd::WrReg(chipID, GLOBAL_PULSE_ROUTE, GlbPulseVal), commandList); // Restore value in Global Pulse Route
 
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pChip->getHybridId());
     return RD53Interface::ReadChipReg(pChip, "MONITORING_DATA_ADC");

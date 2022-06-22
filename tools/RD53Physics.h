@@ -65,13 +65,7 @@ class Physics : public Tool
 #endif
 
   private:
-    size_t      rowStart;
-    size_t      rowStop;
-    size_t      colStart;
-    size_t      colStop;
-    size_t      nTRIGxEvent;
-    size_t      errors;
-    std::string outputBinaryDir;
+    size_t errors;
 
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
@@ -90,12 +84,20 @@ class Physics : public Tool
         void operator()(const std::vector<Ph2_HwInterface::RD53Event>& RD53EvtList){};
     };
 
+    size_t      rowStart;
+    size_t      rowStop;
+    size_t      colStart;
+    size_t      colStop;
+    size_t      nTRIGxEvent;
+    bool        doDisplay;
+    bool        doUpdateChip;
+    bool        saveBinaryData;
+    std::string outputBinaryDir;
+
     std::string fileRes;
     int         theCurrentRun;
+    RD53        firstChip;
     size_t      numberOfEventsPerRun;
-    bool        doUpdateChip;
-    bool        doDisplay;
-    bool        saveBinaryData;
     std::mutex  theMtx;
     evtConvType genericEvtConverter;
 };

@@ -75,4 +75,4 @@ std::array<uint8_t, nFields> RdReg::serializeFields() const
     return fields;
 }
 
-} // namespace RD53BCmd
+} // namespace RD53Cmd
