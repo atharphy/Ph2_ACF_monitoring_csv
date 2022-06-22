@@ -37,6 +37,8 @@ class RD53B : public RD53
     static constexpr FrontEnd CROC = {"CROC", "DAC_GDAC_M_LIN", "DAC_KRUM_CURR_LIN", 32, 0, RD53B::NCOLS - 1};
 
     std::unique_ptr<ChannelGroupBase> getChannelGroup() const override { return new ChannelGroup<RD53B::NROWS, RD53B::NCOLS>; }
+    ChannelGroupBase* getChannelGroupAll() const override { return new RD53ChannelGroupHandler::RD53ChannelGroupAll<RD53B::NROWS, RD53B::NCOLS>; }
+    ChannelGroupBase* getChannelGroupPattern(uint8_t hitPerCol) const override { return new RD53ChannelGroupHandler::RD53ChannelGroupPattern<RD53B::NROWS, RD53B::NCOLS>(hitPerCol); }
     size_t                            getNRows() const override { return RD53B::NROWS; }
     size_t                            getNCols() const override { return RD53B::NCOLS; }
     const FrontEnd*                   getMajorityFE(size_t colStart, size_t colStop) const override { return RD53B::CROC; }

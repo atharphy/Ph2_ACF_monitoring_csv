@@ -31,7 +31,6 @@ void ThrEqualizationSC::ConfigureCalibration()
     doDisplay    = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip = this->findValueInSettings<double>("UpdateChipCfg");
 
-    auto firstChip = RD53::getFirstChip(fDetectorContainer);
     frontEnd       = firstChip.getMajorityFE(PixelAlive::colStart, PixelAlive::colStop);
     if(frontEnd == &RD53::SYNC)
     {
@@ -140,8 +139,6 @@ void ThrEqualizationSC::initializeFiles(const std::string& fileRes_, int current
 
 void ThrEqualizationSC::run()
 {
-    auto firstChip = RD53::getFirstChip(fDetectorConainer);
-
     // #########################
     // # Find global threshold #
     // #########################
@@ -218,7 +215,6 @@ void ThrEqualizationSC::analyze()
 {
     const float  maxTDACdistance = 2; // @CONST@
     const size_t TDACcenter      = RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2;
-    auto         firstChip       = RD53::getFirstChip(fDetectorConainer);
 
     for(const auto cBoard: *fDetectorContainer)
     {
@@ -274,8 +270,6 @@ void ThrEqualizationSC::fillHisto()
 
 void ThrEqualizationSC::bitWiseScanLocal(const std::string& regName, std::shared_ptr<DetectorDataContainer> target)
 {
-    auto firstChip = RD53::getFirstChip(fDetectorConainer);
-
     float    tmp;
     uint16_t init;
     uint16_t numberOfBits = floor(log2(frontEnd->nTDACvalues) + 1);

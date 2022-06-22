@@ -17,6 +17,8 @@ using namespace Ph2_HwInterface;
 
 void Gain::ConfigureCalibration()
 {
+    firstChip = RD53::getFirstChip(fDetectorConainer);
+
     // #######################
     // # Retrieve parameters #
     // #######################
@@ -46,7 +48,10 @@ void Gain::ConfigureCalibration()
     for(auto row = rowStart; row <= rowStop; row++)
         for(auto col = colStart; col <= colStop; col++) customChannelGroup->enableChannel(row, col);
 
-    theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol, doOnlyNGroups);
+    auto groupType = doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups;
+    if(groupType == RD53GroupType::AllPixels)
+    else
+      theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, firstChip.getChannelGroupPattern(nHITxCol), firstChip.getChannelGroupPattern(nHITxCol), groupType, nHITxCol, doOnlyNGroups);
     theChnGroupHandler->setCustomChannelGroup(*customChannelGroup);
     this->setChannelGroupHandler(theChnGroupHandler);
 
@@ -154,8 +159,6 @@ void Gain::initializeFiles(const std::string& fileRes_, int currentRun)
 
 void Gain::run()
 {
-    auto firstChip = RD53::getFirstChip(fDetectorConainer);
-
     // ##########################
     // # Set new VCAL_MED value #
     // ##########################
@@ -230,8 +233,6 @@ void Gain::draw(bool doSaveData)
     // #####################
     if(saveBinaryData == true)
     {
-        auto firstChip = RD53::getFirstChip(fDetectorConainer);
-
         for(const auto cBoard: *fDetectorContainer)
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
@@ -297,8 +298,6 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
 
     theGainContainer = std::make_shared<DetectorDataContainer>();
     ContainerFactory::copyAndInitStructure<GainFit>(*fDetectorContainer, *theGainContainer);
-
-    auto firstChip = RD53::getFirstChip(fDetectorConainer);
 
     size_t index = 0;
     for(const auto cBoard: *fDetectorContainer)

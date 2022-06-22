@@ -10,7 +10,6 @@
 #ifndef RD53ChannelGroupHandler_H
 #define RD53ChannelGroupHandler_H
 
-#include "../HWDescription/RD53.h"
 #include "ChannelGroupHandler.h"
 
 namespace RD53GroupType
@@ -23,28 +22,27 @@ constexpr uint8_t OneGroup  = 2;
 class RD53ChannelGroupHandler : public ChannelGroupHandler
 {
   public:
-    RD53ChannelGroupHandler(ChannelGroup<Ph2_HwDescription::RD53::nRows, Ph2_HwDescription::RD53::nCols>& customChannelGroup, uint8_t groupType, uint8_t hitPerCol = 1, uint8_t onlyNGroups = 0);
+    RD53ChannelGroupHandler(ChannelGroupBase& customChannelGroup,
+			    ChannelGroupBase* allChannelGroup,
+			    ChannelGroupBase* currentChannelGroup,
+			    uint8_t groupType, uint8_t hitPerCol = 1, uint8_t onlyNGroups = 0);
     ~RD53ChannelGroupHandler();
 
-    static size_t getNumberOfGroups(uint8_t groupType, uint8_t hitPerCol, uint8_t onlyNGroups)
-    {
-        if(groupType == RD53GroupType::AllGroups)
-            return (onlyNGroups == 0 ? Ph2_HwDescription::RD53::nRows : onlyNGroups) / hitPerCol;
-        else
-            return 1;
-    };
-
-  private:
-    class RD53ChannelGroupAll : public ChannelGroup<Ph2_HwDescription::RD53::nRows, Ph2_HwDescription::RD53::nCols>
+    template<size_t R, size_t C>
+      class RD53ChannelGroupAll : public ChannelGroup<R,C>
     {
         void makeTestGroup(std::shared_ptr<ChannelGroupBase>& currentChannelGroup,
                            uint32_t                           groupNumber,
                            uint32_t                           numberOfClustersPerGroup,
                            uint16_t                           numberOfRowsPerCluster,
                            uint16_t                           numberOfColsPerCluster = 1) const override;
+	{
+	  currentChannelGroup->enableAllChannels();
+	}
     };
 
-    class RD53ChannelGroupPattern : public ChannelGroup<Ph2_HwDescription::RD53::nRows, Ph2_HwDescription::RD53::nCols>
+    template<size_t R, size_t C>
+      class RD53ChannelGroupPattern : public ChannelGroup<R,C>
     {
       public:
         RD53ChannelGroupPattern(uint8_t hitPerCol) : hitPerCol(hitPerCol){};
@@ -55,6 +53,19 @@ class RD53ChannelGroupHandler : public ChannelGroupHandler
                               uint32_t                           numberOfClustersPerGroup,
                               uint16_t                           numberOfRowsPerCluster,
                               uint16_t                           numberOfColsPerCluster = 1) const override;
+	{
+    static_cast<ChannelGroup*>(currentChannelGroup.get())->disableAllChannels();
+    
+    for(auto col = 0u; col < Ph2_HwDescription::RD53::nCols; col++)
+        for(auto i = 0u; i < hitPerCol; i++)
+        {
+            auto row = (RD53Constants::NROW_CORE * col + i * currentChannelGroup.getNumberOfRows() / hitPerCol) % currentChannelGroup.getNumberOfRows();
+            row += groupNumber;
+            row %= currentChannelGroup.getNumberOfRows();
+            currentChannelGroup->enableChannel(row, col);
+        }
+	}
+
         uint8_t hitPerCol;
     };
 };

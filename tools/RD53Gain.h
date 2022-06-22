@@ -1,4 +1,4 @@
-/*!
+\\/*!
   \file                  RD53Gain.h
   \brief                 Implementaion of Gain scan
   \author                Mauro DINARDO
@@ -52,7 +52,7 @@ class Gain : public Tool
     void                                   run();
     void                                   draw(bool saveData = true);
     std::shared_ptr<DetectorDataContainer> analyze();
-    size_t getNumberIterations() { return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol, doOnlyNGroups) * nSteps; }
+    size_t getNumberIterations() { return theChnGroupHandler->getNumberOfGroups() * nSteps; }
     void   saveChipRegisters(int currentRun);
 
     static float gainFunction(const std::vector<float>& par, float q) { return par[0] + par[1] * q; }
@@ -62,13 +62,6 @@ class Gain : public Tool
 #endif
 
   private:
-    size_t rowStart;
-    size_t rowStop;
-    size_t colStart;
-    size_t colStop;
-    size_t nEvents;
-    size_t startValue;
-    size_t stopValue;
     float  targetCharge;
     size_t nSteps;
     size_t offset;
@@ -97,10 +90,16 @@ class Gain : public Tool
   protected:
     std::string fileRes;
     int         theCurrentRun;
+    size_t rowStart;
+    size_t rowStop;
+    size_t colStart;
+    size_t colStop;
+    size_t nEvents;
     bool        doUpdateChip;
     bool        doDisplay;
     bool        saveBinaryData;
     bool        saveData;
+    RD53        firstChip;
 };
 
 #endif

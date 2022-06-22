@@ -14,8 +14,6 @@ using namespace Ph2_HwInterface;
 
 void InjectionDelay::ConfigureCalibration()
 {
-    auto firstChip = RD53::getFirstChip(fDetectorContainer);
-
     // ##############################
     // # Initialize sub-calibration #
     // ##############################
@@ -25,10 +23,6 @@ void InjectionDelay::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings<double>("ROWstart");
-    rowStop        = this->findValueInSettings<double>("ROWstop");
-    colStart       = this->findValueInSettings<double>("COLstart");
-    colStop        = this->findValueInSettings<double>("COLstop");
     startValue     = 0;
     stopValue      = RD53Shared::NLATENCYBINS * (RD53Shared::setBits(firstChip.getNumberOfBits("INJECTION_SELECT_DELAY")) + 1) - 1;
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");

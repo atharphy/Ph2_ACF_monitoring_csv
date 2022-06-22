@@ -14,8 +14,7 @@ using namespace Ph2_HwInterface;
 
 void SCurve::ConfigureCalibration()
 {
-    auto firstChip = RD53::getFirstChip(fDetectorContainer);
-
+    firstChip = RD53::getFirstChip(fDetectorContainer);
 
     // #######################
     // # Retrieve parameters #
@@ -45,7 +44,12 @@ void SCurve::ConfigureCalibration()
     for(auto row = rowStart; row <= rowStop; row++)
         for(auto col = colStart; col <= colStop; col++) customChannelGroup->enableChannel(row, col);
 
-    theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol, doOnlyNGroups);
+    auto groupType = doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups;
+     theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, groupType, nHITxCol, doOnlyNGroups);
+    if(groupType == RD53GroupType::AllPixels)
+      theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, firstChip.getChannelGroupAll(), firstChip.getChannelGroupAll(), groupType, nHITxCol, doOnlyNGroups);
+    else
+      theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, firstChip.getChannelGroupPattern(nHITxCol), firstChip.getChannelGroupPattern(nHITxCol), groupType, nHITxCol, doOnlyNGroups);
     theChnGroupHandler->setCustomChannelGroup(*customChannelGroup);
     this->setChannelGroupHandler(theChnGroupHandler);
 
@@ -153,8 +157,6 @@ void SCurve::initializeFiles(const std::string& fileRes_, int currentRun)
 
 void SCurve::run()
 {
-    auto firstChip = RD53::getFirstChip(fDetectorConainer);
-
     // ##########################
     // # Set new VCAL_MED value #
     // ##########################
@@ -229,8 +231,6 @@ void SCurve::draw(bool doSaveData)
     // #####################
     if(saveBinaryData == true)
     {
-        auto firstChip = RD53::getFirstChip(fDetectorConainer);
-
         for(const auto cBoard: *fDetectorContainer)
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
@@ -291,8 +291,6 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
     ContainerFactory::copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *theThresholdAndNoiseContainer);
     DetectorDataContainer theMaxThresholdContainer;
     ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, theMaxThresholdContainer, mean = 0);
-
-    auto firstChip = RD53::getFirstChip(fDetectorConainer);
 
     size_t index = 0;
     for(const auto cBoard: *fDetectorContainer)

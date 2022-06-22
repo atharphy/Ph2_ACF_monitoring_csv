@@ -25,20 +25,16 @@ void ThrAdjustment::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart        = this->findValueInSettings<double>("ROWstart");
-    rowStop         = this->findValueInSettings<double>("ROWstop");
-    colStart        = this->findValueInSettings<double>("COLstart");
-    colStop         = this->findValueInSettings<double>("COLstop");
     targetThreshold = this->findValueInSettings<double>("TargetThr");
-    ThrStart        = this->findValueInSettings<double>("ThrStart");
-    ThrStop         = this->findValueInSettings<double>("ThrStop");
+    startValue      = this->findValueInSettings<double>("ThrStart");
+    stopValue       = this->findValueInSettings<double>("ThrStop");
     doDisplay       = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData  = this->findValueInSettings<double>("SaveBinaryData");
 
-    frontEnd = RD53::getMajorityFE(colStart, colStop);
-    colStart = std::max(colStart, frontEnd->colStart);
-    colStop  = std::min(colStop, frontEnd->colStop);
+    frontEnd       = firstChip.getMajorityFE(PixelAlive::colStart, PixelAlive::colStop);
+    PixelAlive::colStart = std::max(PixelAlive::colStart, frontEnd->colStart);
+    PixelAlive::colStop  = std::min(PixelAlive::colStop, frontEnd->colStop);
     LOG(INFO) << GREEN << "ThrAdjustment will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << RESET << BOLDYELLOW << colStart << ", " << colStop << RESET
               << GREEN << "]" << RESET;
 
@@ -126,7 +122,7 @@ void ThrAdjustment::initializeFiles(const std::string& fileRes_, int currentRun)
 
 void ThrAdjustment::run()
 {
-    ThrAdjustment::bitWiseScanGlobal(frontEnd->thresholdReg, targetThreshold, ThrStart, ThrStop);
+    ThrAdjustment::bitWiseScanGlobal(frontEnd->thresholdReg, targetThreshold, startValue, stopValue);
 
     // ############################
     // # Fill threshold container #

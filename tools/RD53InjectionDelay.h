@@ -53,10 +53,6 @@ class InjectionDelay : public PixelAlive
 
   private:
     Latency la;
-    size_t  rowStart;
-    size_t  rowStop;
-    size_t  colStart;
-    size_t  colStop;
     size_t  startValue;
     size_t  stopValue;
 

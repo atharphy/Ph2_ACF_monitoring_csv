@@ -25,20 +25,16 @@ void ThrMinimization::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart        = this->findValueInSettings<double>("ROWstart");
-    rowStop         = this->findValueInSettings<double>("ROWstop");
-    colStart        = this->findValueInSettings<double>("COLstart");
-    colStop         = this->findValueInSettings<double>("COLstop");
     targetOccupancy = this->findValueInSettings<double>("TargetOcc");
-    ThrStart        = this->findValueInSettings<double>("ThrStart");
-    ThrStop         = this->findValueInSettings<double>("ThrStop");
+    startValue      = this->findValueInSettings<double>("ThrStart");
+    stopValue       = this->findValueInSettings<double>("ThrStop");
     doDisplay       = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData  = this->findValueInSettings<double>("SaveBinaryData");
 
-    frontEnd = RD53::getMajorityFE(colStart, colStop);
-    colStart = std::max(colStart, frontEnd->colStart);
-    colStop  = std::min(colStop, frontEnd->colStop);
+    frontEnd       = firstChip.getMajorityFE(PixelAlive::colStart, PixelAlive::colStop);
+    colStart = std::max(PixelAlive::colStart, frontEnd->colStart);
+    colStop  = std::min(PixelAlive::colStop, frontEnd->colStop);
     LOG(INFO) << GREEN << "ThrMinimization will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << BOLDYELLOW << colStart << ", " << colStop << RESET
               << GREEN << "]" << RESET;
 
@@ -126,7 +122,7 @@ void ThrMinimization::initializeFiles(const std::string& fileRes_, int currentRu
 
 void ThrMinimization::run()
 {
-    ThrMinimization::bitWiseScanGlobal(frontEnd->thresholdReg, targetOccupancy, ThrStart, ThrStop);
+    ThrMinimization::bitWiseScanGlobal(frontEnd->thresholdReg, targetOccupancy, startValue, stopValue);
 
     // ############################
     // # Fill threshold container #

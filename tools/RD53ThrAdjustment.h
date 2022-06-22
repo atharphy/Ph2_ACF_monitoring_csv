@@ -1,4 +1,4 @@
-/*!
+\/*!
   \file                  RD53ThrAdjustment.h
   \brief                 Implementaion of threshold adjustment
   \author                Mauro DINARDO
@@ -58,13 +58,9 @@ class ThrAdjustment : public PixelAlive
 #endif
 
   private:
-    size_t rowStart;
-    size_t rowStop;
-    size_t colStart;
-    size_t colStop;
     float  targetThreshold;
-    size_t ThrStart;
-    size_t ThrStop;
+    size_t startValue;
+    size_t stopValue;
 
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 

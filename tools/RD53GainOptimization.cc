@@ -14,8 +14,6 @@ using namespace Ph2_HwInterface;
 
 void GainOptimization::ConfigureCalibration()
 {
-    auto firstChip = RD53::getFirstChip(fDetectorContainer);
-
     // ##############################
     // # Initialize sub-calibration #
     // ##############################
@@ -27,12 +25,6 @@ void GainOptimization::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings<double>("ROWstart");
-    rowStop        = this->findValueInSettings<double>("ROWstop");
-    colStart       = this->findValueInSettings<double>("COLstart");
-    colStop        = this->findValueInSettings<double>("COLstop");
-    startValue     = this->findValueInSettings<double>("VCalHstart");
-    stopValue      = this->findValueInSettings<double>("VCalHstop");
     targetCharge   = RD53chargeConverter::Charge2VCal(this->findValueInSettings<double>("TargetCharge"));
     KrumCurrStart  = this->findValueInSettings<double>("KrumCurrStart");
     KrumCurrStop   = this->findValueInSettings<double>("KrumCurrStop");
@@ -41,9 +33,9 @@ void GainOptimization::ConfigureCalibration()
     doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
 
-    frontEnd = firstChip.getMajorityFE(colStart, colStop);
-    colStart = std::max(colStart, frontEnd->colStart);
-    colStop  = std::min(colStop, frontEnd->colStop);
+    frontEnd = firstChip.getMajorityFE(Gain::colStart, Gain::colStop);
+    colStart = std::max(Gain::colStart, frontEnd->colStart);
+    colStop  = std::min(Gain::colStop, frontEnd->colStop);
     LOG(INFO) << GREEN << "GainOptimization will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << RESET << BOLDYELLOW << colStart << ", " << colStop
               << RESET << GREEN << "]" << RESET;
 
@@ -196,8 +188,6 @@ void GainOptimization::fillHisto()
 
 void GainOptimization::bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue)
 {
-    auto firstChip = RD53::getFirstChip(fDetectorConainer);
-
     std::vector<uint16_t> chipCommandList;
     std::vector<uint32_t> hybridCommandList;
 

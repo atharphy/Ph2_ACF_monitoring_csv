@@ -14,6 +14,7 @@
 #include "../Utils/ContainerFactory.h"
 #include "../Utils/GenericDataArray.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
+#include "../HWDescription/RD53.h"
 #include "Tool.h"
 
 #ifdef __USE_ROOT__
@@ -47,9 +48,7 @@ class PixelAlive : public Tool
     std::shared_ptr<DetectorDataContainer> analyze();
     size_t                                 getNumberIterations()
     {
-        return RD53ChannelGroupHandler::getNumberOfGroups(
-                   injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels, nHITxCol, doOnlyNGroups) *
-               nEvents / nEvtsBurst;
+        return theChnGroupHandler->getNumberOfGroups() * nEvents / nEvtsBurst;
     }
     void saveChipRegisters(int currentRun);
 
@@ -93,6 +92,7 @@ class PixelAlive : public Tool
     bool        doUpdateChip;
     bool        saveBinaryData;
     bool        saveData;
+    RD53        firstChip;
 
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
 };

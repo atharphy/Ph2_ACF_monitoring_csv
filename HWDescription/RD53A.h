@@ -40,6 +40,8 @@ class RD53A : public RD53
     static const FrontEnd*    frontEnds[];
 
     std::unique_ptr<ChannelGroupBase> getChannelGroup() const override { return new ChannelGroup<RD53A::NROWS, RD53A::NCOLS>; }
+    ChannelGroupBase* getChannelGroupAll() const override { return new RD53ChannelGroupHandler::RD53ChannelGroupAll<RD53A::NROWS, RD53A::NCOLS>; }
+    ChannelGroupBase* getChannelGroupPattern(uint8_t hitPerCol) const override { return new RD53ChannelGroupHandler::RD53ChannelGroupPattern<RD53A::NROWS, RD53A::NCOLS>(hitPerCol); }
     size_t                            getNRows() const override { return RD53A::NROWS; }
     size_t                            getNCols() const override { return RD53A::NCOLS; }
     const FrontEnd*                   getMajorityFE(size_t colStart, size_t colStop) const override;

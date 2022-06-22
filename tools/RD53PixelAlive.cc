@@ -14,6 +14,8 @@ using namespace Ph2_HwInterface;
 
 void PixelAlive::ConfigureCalibration()
 {
+   firstChip = RD53::getFirstChip(fDetectorContainer);
+
     // #######################
     // # Retrieve parameters #
     // #######################
@@ -37,15 +39,19 @@ void PixelAlive::ConfigureCalibration()
     // ################################
     // # Custom channel group handler #
     // ################################
-    auto firstChip          = RD53::getFirstChip(fDetectorContainer);
     auto customChannelGroup = firstChip.getChannelGroup();
     customChannelGroup->disableAllChannels();
 
     for(auto row = rowStart; row <= rowStop; row++)
         for(auto col = colStart; col <= colStop; col++) customChannelGroup->enableChannel(row, col);
 
-    theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(
-        *customChannelGroup, injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels, nHITxCol, doOnlyNGroups);
+    auto groupType = injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels;
+    if(groupType == RD53GroupType::AllPixels)
+      theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(
+								     *customChannelGroup, firstChip.getChannelGroupAll(), firstChip.getChannelGroupAll(), groupType, nHITxCol, doOnlyNGroups);
+    else
+      theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(
+								     *customChannelGroup, firstChip.getChannelGroupPattern(nHITxCol), firstChip.getChannelGroupPattern(nHITxCol), groupType, nHITxCol, doOnlyNGroups);
     theChnGroupHandler->setCustomChannelGroup(*customChannelGroup);
     this->setChannelGroupHandler(theChnGroupHandler);
 
@@ -197,7 +203,6 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
 {
     const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
-    auto         firstChip = RD53::getFirstChip(fDetectorConainer);
 
     theBCIDContainer.reset();
     theTrgIDContainer.reset();

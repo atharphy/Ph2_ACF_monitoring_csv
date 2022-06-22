@@ -15,6 +15,7 @@
 #include "../Utils/ContainerRecycleBin.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "../Utils/ThresholdAndNoise.h"
+#include "../HWDescription/RD53.h"
 #include "Tool.h"
 
 #ifdef __USE_ROOT__
@@ -47,7 +48,7 @@ class SCurve : public Tool
     void                                   run();
     void                                   draw(bool doSaveData = true);
     std::shared_ptr<DetectorDataContainer> analyze();
-    size_t getNumberIterations() { return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol, doOnlyNGroups) * nSteps; }
+    size_t getNumberIterations() { return theChnGroupHandler->getNumberOfGroups() * nSteps; }
     void   saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
@@ -85,6 +86,7 @@ class SCurve : public Tool
     bool        doDisplay;
     bool        saveBinaryData;
     bool        saveData;
+    RD53 firstChip;
 
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
 };
