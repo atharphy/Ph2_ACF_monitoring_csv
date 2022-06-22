@@ -366,8 +366,8 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
     // enable CIC mux - phyPort 0 - 9 are stub lines. phyPort 10 and 11 are L1 lines.
     for(uint8_t cPhyPort = 0; cPhyPort < 12; cPhyPort++)
     {
-        // cRuns = 0;
-        // cRun  = true;
+        cRuns = 0;
+        cRun  = true;
 
         for(auto cOpticalGroup: *pBoard)
         {
@@ -376,12 +376,161 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 fCicInterface->SelectMux(cCic, cPhyPort);
             } // hybrid
-        }     // hybrid
-        // check output
-        fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-        cDebugInterface->StubDebug(true, 4);
+        }     // module
+
+        std::vector<std::string> cReadLines; // Container for the received lines
+        uint8_t                               cPhyPortBadLines = 0;
+
+        bool cLineAlreadyChecked[4] = {false, false, false, false};
+
+        while(cRun && (cRuns <= cMaxRuns))
+        {
+            cPhyPortBadLines = 0;
+            cRun             = false;
+
+            if(cRuns > 0) LOG(INFO) << BOLDRED << "Retrying test on phyPort " << +cPhyPort << "." << RESET;
+
+            // align lines 1,2,3 and 4 (first 4 stub lines from CIC )
+            cDPInterfacer.Stop(cInterface);
+            cDPInterfacer.Configure(cInterface, 0xEA);
+            cDPInterfacer.Start(cInterface);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            for(auto cOpticalGroup: *pBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    for(auto cChip: *cHybrid) //define CIC with ID 0 and tune only for it.
+                    {
+                        if( cChip->getFrontEndType() != FrontEndType::CIC2 ) { continue; }
+                        for(uint8_t cLineId = 1; cLineId < 5; cLineId++)
+                        {
+                            LOG(INFO) << "Tuning line " << +cLineId << "for PhyPort " << +cPhyPort; 
+                            PhaseTuneLine(cChip, cLineId);
+                        }
+                    } // Chip
+                } // Hybrid
+            } // Optical group
+
+
+            // D19cFWInterface::PhaseTuner pTuner;
+            // uint8_t cMode        = 2;
+            // uint8_t cBitslip     = 0;
+            // uint8_t cEnableL1    = 0;
+            // uint8_t pFeId      = 1;
+            // uint8_t cChipId    = 0;
+            // uint8_t cLineId = 0;
+            // uint8_t cDelay = 20;
+            // pTuner.SetLineMode( static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()) , pFeId, cChipId, cLineId, cMode, cDelay, cBitslip, cEnableL1, 0);
+
+
+            // CicFEAlignment cCicAligner;
+            // cCicAligner.Inherit(this);
+            // uint8_t cCICPhase = 6;
+            // cCicAligner.ManualPhaseAlignment(cCICPhase);
+
+            uint8_t cBadLines[4] = {0, 0, 0, 0};
+
+            // Stop 0xAA pattern and use test patterns
+            for(int cPatternId = 0; cPatternId < 4; cPatternId++)
+            {
+                cReadLines.clear();
+
+                uint32_t cPattern = cTestPatterns[cPatternId];
+
+                std::stringstream sstream;
+                std::string       cPattern_str;
+                std::string       cPattern_str_hex;
+
+                cPattern_str = std::bitset<8>(cPattern).to_string();
+                sstream << std::hex << cPattern;
+                cPattern_str_hex = sstream.str();
+
+                // fResultFile->cd();
+                // std::string cTitle = Form("CICinTree0x%s",cPattern_str_hex.c_str());
+                // std::string cDesc = Form("Bad Lines in the CIC IN test for pattern %s", cPattern_str_hex.c_str());
+                // TTree* CICinTree = new TTree( cTitle.c_str() , cDesc.c_str() );
+                // CICinTree->Branch("Parameter", &cParameter);
+                // CICinTree->Branch("Value", &cValue);
+                // cParameter = "Pattern";
+                // cValue     = cPattern_str;
+                // CICinTree->Fill();
+
+                LOG(INFO) << BOLDCYAN << "Testing phyPort " << +cPhyPort << " using pattern " << cPattern_str << RESET;
+
+                cDPInterfacer.Stop(cInterface);
+                cDPInterfacer.Configure(cInterface, cPattern);
+                cDPInterfacer.Start(cInterface);
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+                // check output
+                fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+                cReadLines = cDebugInterface->StubDebug(true, 4, true);
+
+                for(int a = 0; a < (int)cReadLines.size(); a++)
+                {
+                    std::string cLine;
+                    int         badLines;
+                    std::string cSubLine;
+                    // bool bad = false;
+                    // for(int b = 0; b < (int)cReadLines[a].size(); b++)
+                    // {
+                        badLines = 0;
+                        // cLine    = cReadLines[a][b];
+                        cLine    = cReadLines[a];
+                        int b = a;
+                        LOG(INFO) << "[a] : [" << +a << "]" << cLine << RESET;
+                        // Go throught the read line and compare with pattern
+                        for(int k = 0; (k + cPattern_str.length()) < cLine.length(); k += cPattern_str.length())
+                        {
+                            cSubLine           = cLine.substr(k, cPattern_str.length());
+                            bool cPatternFound = false;
+                            for(int j = 0; j < (int)cPattern_str.length(); j++) cPatternFound |= ((cPattern_str.substr(j, cPattern_str.length() - j) + cPattern_str.substr(0, j)) == cSubLine);
+                            if(!cPatternFound)
+                            {
+                                badLines++;
+                                cRun = true;
+                            }
+                        }
+
+                        std::string recovered = "";
+                        for(int k = 0; (k + cPattern_str.length()) < cLine.length(); k += cPattern_str.length()) { recovered += cLine.substr(k, cPattern_str.length()) + "  "; }
+                        if(badLines > 2) // 35
+                        {
+                            cBadLines[b] = 1;
+                            LOG(INFO) << "The pattern " << cPattern_str << " was" << BOLDRED << " NOT" << RESET << " recovered correctly on" << BOLDRED << " PhyPort " << +cPhyPort << " line " << b 
+                                      << "." << RESET;
+                            std::string recovered = "";
+                            for(int k = 0; (k + cPattern_str.length()) < cLine.length(); k += cPattern_str.length()) { recovered += cLine.substr(k, cPattern_str.length()) + "  "; }
+                            LOG(INFO) << "Recovered:  " << recovered << RESET;
+                            cParameter[cPatternId] = "";
+                            cParameter[cPatternId] = std::to_string(cPhyPort) + "_" + std::to_string(b);
+                            cValue[cPatternId]     = cLine;
+                            CICinTree[cPatternId]->Fill();
+                            if(cRuns > 0 && !cLineAlreadyChecked[b])
+                            {
+                                // this->PhyPortPhaseAlignmentMap(pBoard, cPhyPort, true, b);
+                                cLineAlreadyChecked[b] = true;
+                            }
+                        }
+                        else
+                        {
+                            // cBadLines[b] = 0
+                            LOG(DEBUG) << "The pattern 0x" << cPattern_str_hex << " was" << BOLDGREEN << " recovered correctly " << RESET << "on PhyPort " << +cPhyPort << " line " << b << "."
+                                       << RESET;
+                            LOG(DEBUG) << "Recovered:  " << recovered << RESET;
+                        }
+                    // }
+                }
+            }
+            cRuns++;
+            for(int i = 0; i < 4; i++) cPhyPortBadLines += cBadLines[i];
+        }
+        cTotalBadLines += cPhyPortBadLines;
     }
-#endif
+    LOG(INFO) << BOLDYELLOW << "***************************************Bad CIC IN lines in the hybrid : " << cTotalBadLines << "*************************************" << RESET;
+    fillSummaryTree("CIC IN bad lines", cTotalBadLines);
+  #endif
 }
 
 void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAPairSel)
