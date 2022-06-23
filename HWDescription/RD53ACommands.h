@@ -66,6 +66,8 @@ class Command
     {
         return map5to8bit[bits::pack<Sizes...>(std::forward<Args>(args)...)];
     }
+
+    std::array<uint8_t, nFields> serializeFields() const { return std::array<uint8_t, nFields>(); }
 };
 
 template <class cmdType>
@@ -74,13 +76,10 @@ void serialize(const cmdType& cmd, std::vector<uint16_t>& frameVector) const
     // Insert command code
     frameVector.push_back(cmdType::cmdCode);
 
-    if constexpr(nFields != 0)
-    {
-        auto fields = cmd.serializeFields();
+    auto fields = cmd.serializeFields();
 
-        // Insert: chip id, address and data
-        for(auto i = 1; i < static_cast<int>(cmdType::nFields); i += 2) frameVector.push_back(bits::pack<8, 8>(fields[i - 1], fields[i]));
-    }
+    // Insert: chip id, address and data
+    for(auto i = 1; i < static_cast<int>(cmdType::nFields); i += 2) frameVector.push_back(bits::pack<8, 8>(fields[i - 1], fields[i]));
 }
 
 template <class cmdType>
