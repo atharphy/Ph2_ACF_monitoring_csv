@@ -170,12 +170,12 @@
     <node id="lpgbt_mappping"       address="0x00000018"      permission="rw"      description="Configuration lpGBT link mapping">
       <node id="update_downlink"        mask="0x00000001"     permission="rw"      description="Update mapping for downlink groups/channels" />
       <node id="update_uplink"          mask="0x00000002"     permission="rw"      description="Update mapping for downlink groups/channels" />
-      <node id="module_map_id"          mask="0x0000007C"     permission="rw"      description=" " />
-      <node id="chip_map_id"            mask="0x00000180"     permission="rw"      description=" " />
-      <node id="downlink_map_id"        mask="0x00001E00"     permission="rw"      description=" " />
-      <node id="downgroup_map_id"       mask="0x0000E000"     permission="rw"      description=" " />
-      <node id="uplink_map_id"          mask="0x000F0000"     permission="rw"      description=" " />
-      <node id="upgroup_map_id"         mask="0x00700000"     permission="rw"      description=" " />
+      <node id="module_map_id"          mask="0x0000007C"     permission="rw"      description="" />
+      <node id="chip_map_id"            mask="0x00000180"     permission="rw"      description="" />
+      <node id="downlink_map_id"        mask="0x00001E00"     permission="rw"      description="" />
+      <node id="downgroup_map_id"       mask="0x0000E000"     permission="rw"      description="" />
+      <node id="uplink_map_id"          mask="0x000F0000"     permission="rw"      description="" />
+      <node id="upgroup_map_id"         mask="0x00700000"     permission="rw"      description="" />
     </node>
 
     <node id="gtx_drp"              address="0x0000001A"      permission="rw"      description="Control registers for drp ports">
