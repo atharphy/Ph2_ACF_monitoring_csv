@@ -518,7 +518,7 @@ int main(int argc, char* argv[])
         cLinkAlignment.Inherit(&cTool);
         try
         {
-            cLinkAlignment.Start(0);
+            cLinkAlignment.Start(cRunNumber);
         }
         catch(const std::exception& e)
         {
@@ -538,7 +538,7 @@ int main(int argc, char* argv[])
         // align FEs - CIC
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit(&cTool);
-        cCicAligner.Start(0);
+        cCicAligner.Start(cRunNumber);
         cCicAligner.waitForRunToBeCompleted();
         cCicAligner.dumpConfigFiles();
     }
@@ -561,7 +561,7 @@ int main(int argc, char* argv[])
         cLinkAlignment.Inherit(&cTool);
         try
         {
-            cLinkAlignment.Start(0);
+            cLinkAlignment.Start(cRunNumber);
         }
         catch(const std::exception& e)
         {
@@ -601,7 +601,7 @@ int main(int argc, char* argv[])
             LOG(INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
             StubBackEndAlignment cStubBackEndAligner;
             cStubBackEndAligner.Inherit(&cTool);
-            cStubBackEndAligner.Start(0);
+            cStubBackEndAligner.Start(cRunNumber);
             cStubBackEndAligner.waitForRunToBeCompleted();
         }
 
@@ -626,7 +626,7 @@ int main(int argc, char* argv[])
     // LOG (INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
     // StubBackEndAlignment cStubBackEndAligner;
     // cStubBackEndAligner.Inherit(&cTool);
-    // cStubBackEndAligner.Start(0);
+    // cStubBackEndAligner.Start(cRunNumber);
     // cStubBackEndAligner.waitForRunToBeCompleted();
 
     // equalize thresholds on readout chips

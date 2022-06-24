@@ -528,6 +528,7 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
 #ifdef __USE_ROOT__
 void Tool::InitResultFile(const std::string& pFilename)
 {
+    if(fResultFile!= nullptr) return;
     if(!fDirectoryName.empty())
     {
         std::string cFilename = fDirectoryName + "/" + pFilename + ".root";
@@ -536,7 +537,7 @@ void Tool::InitResultFile(const std::string& pFilename)
         {
             fResultFile     = TFile::Open(cFilename.c_str(), "RECREATE");
             fResultFileName = cFilename;
-            // AddMetadata();
+            AddMetadata();
         }
         catch(std::exception& e)
         {
