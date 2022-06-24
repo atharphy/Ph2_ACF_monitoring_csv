@@ -255,7 +255,7 @@ int main(int argc, char* argv[])
     LOG(INFO) << outp.str();
     cTool.CreateResultDirectory(cDirectory, false, false);
     cTool.InitResultFile(cResultfile);
-    cTool.AddMetadata();
+    if(!cmd.foundOption("read")) cTool.AddMetadata();
 
     if(cmd.foundOption("readTemperatures"))
     {

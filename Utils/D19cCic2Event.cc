@@ -1250,7 +1250,7 @@ std::vector<Cluster> D19cCic2Event::getClusters(uint8_t pHybridId, uint8_t pRead
         uint8_t cWidth        = 1 + (cClusterWord & 0x7);
         uint8_t cFirstChannel = 2 * cStrip + cLayerId;
 
-        LOG(INFO) << BOLDBLUE << "Cluster " << +cClusterId << " : " << std::bitset<CLUSTER_WORD_SIZE>(cClusterWord) << "... " << +cWidth << " strip cluster in strip " << +cStrip << " in layer "
+        LOG(DEBUG) << BOLDBLUE << "Cluster " << +cClusterId << " : " << std::bitset<CLUSTER_WORD_SIZE>(cClusterWord) << "... " << +cWidth << " strip cluster in strip " << +cStrip << " in layer "
                    << +cLayerId << " so first hit is in channel " << +cFirstChannel << " of chip " << +cChipId << " [ real hybrid  " << +cChipIdMapped << " ]" << RESET;
 
         Cluster cCluster;

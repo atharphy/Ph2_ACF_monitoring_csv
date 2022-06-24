@@ -670,7 +670,7 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
 {
     auto cSparsified = pBoard->getSparsification();
     if(cSparsified)
-        LOG(DEBUG) << BOLDBLUE << "Checking with internal - sparisified data" << RESET;
+        LOG(INFO) << BOLDBLUE << "Checking with internal - sparisified data" << RESET;
     else
         LOG(DEBUG) << BOLDBLUE << "Checking with internal - un-sparisified data" << RESET;
 
