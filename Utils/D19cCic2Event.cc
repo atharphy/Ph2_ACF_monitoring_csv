@@ -912,6 +912,8 @@ std::bitset<NCHANNELS> D19cCic2Event::decodeClusters(uint8_t pHybridId, uint8_t 
         {
             uint8_t cChipId       = (cClusterWord & (0x7 << 11)) >> 11;
             auto    cChipIdMapped = this->getChipIdMapped(pHybridId, cChipId);
+            if(cChipIdMapped != pReadoutChipId) continue;
+            
             uint8_t cLayerId      = ((cClusterWord & (0xFF << 3)) >> 3) & 0x01;        // LSB is the layer
             uint8_t cStrip        = (((cClusterWord & (0xFF << 3)) >> 3) & 0xFE) >> 1; // strip id
             uint8_t cWidth        = 1 + (cClusterWord & 0x7);
