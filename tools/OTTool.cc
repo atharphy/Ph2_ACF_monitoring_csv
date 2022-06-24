@@ -727,8 +727,8 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
                 //{
                 std::stringstream cEventPrintout_TopSensor;
                 std::stringstream cEventPrintout_BottomSensor;
-                cEventPrintout_TopSensor << cBxId << "\t";
-                cEventPrintout_BottomSensor << cBxId << "\t";
+                // cEventPrintout_TopSensor << cBxId << "\t";
+                // cEventPrintout_BottomSensor << cBxId << "\t";
                 for(auto cStripId = 0; cStripId < cHybrid->size() * 127; cStripId++)
                 {
                     if(cStripId < cHybrid->size() * 127 - 1)
