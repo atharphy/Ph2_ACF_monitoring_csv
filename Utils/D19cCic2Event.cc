@@ -1068,11 +1068,11 @@ std::vector<uint32_t> D19cCic2Event::GetHits(uint8_t pHybridId, uint8_t pReadout
             for(auto cCluster: getClusters(pHybridId, pReadoutChipId))
             {
                 uint8_t cFirstChannel = 2 * (cCluster.fFirstStrip - 127 * pReadoutChipId) + cCluster.fSensor;
-                LOG(INFO) << BOLDMAGENTA << "Hybid#" << +pHybridId << " Chip#" << +pReadoutChipId << " Cluster in sensor " << +cCluster.fSensor << " in strip# " << +cCluster.fFirstStrip
+                LOG(DEBUG) << BOLDMAGENTA << "Hybid#" << +pHybridId << " Chip#" << +pReadoutChipId << " Cluster in sensor " << +cCluster.fSensor << " in strip# " << +cCluster.fFirstStrip
                            << " actual strip " << +(cCluster.fFirstStrip - 127 * pReadoutChipId) << " of width " << +cCluster.fClusterWidth << RESET;
                 for(int cId = 0; cId <= cCluster.fClusterWidth; cId++)
                 {
-                    LOG(INFO) << BOLDMAGENTA << "\t\t.. hit in channel " << +cFirstChannel + 2 * cId << RESET;
+                    LOG(DEBUG) << BOLDMAGENTA << "\t\t.. hit in channel " << +cFirstChannel + 2 * cId << RESET;
                     cHits.push_back(cFirstChannel + cId * 2);
                 }
             }

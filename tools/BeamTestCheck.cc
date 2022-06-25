@@ -181,8 +181,8 @@ void BeamTestCheck::ValidateRaw() {
     }
     #ifdef __USE_ROOT__
         fDQMHistogrammer.fillHitMaps(fHitMap, fStubMap, fHitContainerTDC);
-        fDQMHistogrammer.fillBendPlots(fBendMap);
-        fDQMHistogrammer.fillCountPlots(fEventSubSet, fStubSubSet);
+        // fDQMHistogrammer.fillBendPlots(fBendMap);
+        // fDQMHistogrammer.fillCountPlots(fEventSubSet, fStubSubSet);
     #endif
 }
 void BeamTestCheck::Validate()
@@ -2049,9 +2049,10 @@ void BeamTestCheck::PrepareForExternal(BeBoard* pBoard)
 
     // stop triggers
     fBeBoardInterface->Stop(pBoard);
+    // update registers 
+    UpdateFromRegMap(pBoard);
     // send a ReSync
     fBeBoardInterface->ChipReSync(pBoard);
-    UpdateFromRegMap(pBoard);
 }
 void BeamTestCheck::Stop() {}
 
