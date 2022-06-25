@@ -61,7 +61,7 @@ class OTHybridTester : public Tool
     // Test lpGBT Down Link with internal pattern (Hybrid Fast Command)
     void LpGBTInjectDLInternalPattern(uint8_t pPattern);
     // Test lpGBT I2C Masters
-    bool LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters);
+    bool LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters, int pNTries = 1000);
     // Test lpGBT ADC
     void LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_t pMinDAC, uint32_t pMaxDAC, uint32_t pStep);
     // Set GPIO level

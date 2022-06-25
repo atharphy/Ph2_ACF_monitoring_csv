@@ -252,7 +252,7 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
     }
 }
 
-bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
+bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters, int pNTries)
 {
     bool                cTestSuccess    = true;
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
@@ -286,10 +286,9 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
                 gettimeofday(&start, NULL);
                 // do stuff
                 uint8_t failureIter   = 0;
-                int     tries         = 100000;
                 uint8_t cFrequency    = (cMaster == 1) ? 2 : 3;
                 uint8_t cSlaveAddress = 0x60;
-                for(int j = 0; j < tries; j++)
+                for(int j = 0; j < pNTries; j++)
                 // int j = 0;
                 // while(true)
                 {

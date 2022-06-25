@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("testReset", "Test Reset lines");
     cmd.defineOptionAlternative("testReset", "r");
     // test I2C Masters
-    cmd.defineOption("testI2C", "Test I2C LpGBT Masters on SEH");
+    cmd.defineOption("testI2C", "Test I2C LpGBT Masters on SEH", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
     cmd.defineOptionAlternative("testI2C", "i");
     // test ADC channels
     cmd.defineOption("testADC", "Test LpGBT ADCs on SEH");
@@ -390,8 +390,9 @@ int main(int argc, char* argv[])
     // for(int j=0; j<100; j++){
     if(cmd.foundOption("testI2C"))
     {
+	int pNTries = convertAnyInt(cmd.optionValue("testI2C").c_str());
         std::vector<uint8_t> cMasters = {0, 2};
-        bool                 cStatus  = cSEHTester.LpGBTTestI2CMaster(cMasters);
+        bool                 cStatus  = cSEHTester.LpGBTTestI2CMaster(cMasters, pNTries);
 #ifdef __USE_ROOT__
         cTool.fillSummaryTree("status_i2cmasters", (cStatus) ? 1 : 0);
 #endif
