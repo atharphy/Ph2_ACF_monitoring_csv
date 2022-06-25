@@ -42,7 +42,7 @@ void PSROHTester::Initialise()
 
 void PSROHTester::MeasureInputIV(const std::string& cTestStep)
 {
-    auto cTestCardInterface = flpGBTInterface->getExternalController()->getInterface();
+    auto cTestCardInterface = flpGBTInterface->GetExternalController()->getInterface();
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;

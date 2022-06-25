@@ -124,7 +124,7 @@ void SEHMonitor::runTestCardMonitor(std::string registerName)
 #ifdef __TCP_SERVER__
     fTheSystemController->fTestcardClient->sendAndReceivePacket("read_hvmon:HV_meas");
 #else
-    fTheSystemController->flpGBTInterface->getExternalController()->getInterface().read_hvmon(fTheSystemController->flpGBTInterface->getExternalController()->getInterface().HV_meas, cValue);
+    fTheSystemController->flpGBTInterface->GetExternalController()->getInterface().read_hvmon(fTheSystemController->flpGBTInterface->GetExternalController()->getInterface().HV_meas, cValue);
 #endif
     LOG(INFO) << BOLDMAGENTA << cValue << " " << registerName << RESET;
 #endif
