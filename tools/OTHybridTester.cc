@@ -86,6 +86,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
 
+        fBeBoardInterface->Start(cBoard);
         for(auto cOpticalGroup: *cBoard)
         {
             for(int hybridNumber = 0; hybridNumber < 2; hybridNumber++)
@@ -97,16 +98,16 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 }
                 D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+
                 size_t           cLine        = 0;
                 do
                 {
                     fBeBoardInterface->setBoard(cBoard->getId());
                     cFWInterface->selectLink(cOpticalGroup->getId());
                     cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
-                    LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
 
+                    LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
                     cFWInterface->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable", 0x01);
-                    cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
                     cFWInterface->ChipTestPulse();
                     auto                     cWords = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
                     std::vector<std::string> cLines(0);
@@ -151,40 +152,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
 #endif
 
                 LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
-
-                auto cInitFastReset = cFWInterface->ReadReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable");
-                auto cInitBP        = cFWInterface->ReadReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable");
-                // enable initial fast reset
-                cFWInterface->WriteReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable", 1);
-                // disable back-pressure
-                cFWInterface->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0);
-                cFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
-                // reset trigger
-                cFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset", 0x1);
-                // load new trigger configuration
-                cFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
-                cFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
-                LOG(DEBUG) << BOLDBLUE << "Started triggers ...." << RESET;
-                // wait until you've received at least one trigger
-                auto cNTriggersRxd = cFWInterface->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-                auto cStartTime = std::chrono::high_resolution_clock::now(), cEndTime = cStartTime;
-                auto cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
-                do
-                {
-                    cDuration     = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
-                    cNTriggersRxd = cFWInterface->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-                    LOG(DEBUG) << BOLDMAGENTA << "Trigger in counter is " << +cNTriggersRxd << " waited for " << cDuration << " us so far" << RESET;
-                    cEndTime = std::chrono::high_resolution_clock::now();
-                } while(cNTriggersRxd < 10 && cDuration < 1 * 1e3);
-                cFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
-
-                LOG(DEBUG) << BOLDMAGENTA << "First header found after " << cFWInterface->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay") << " clock cycles." << RESET;
-
                 auto cWordsL1A = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
-
-                cFWInterface->WriteReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable", cInitFastReset);
-                cFWInterface->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", cInitBP);
-                cFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
                 uint32_t cCicOutOutputL1A = cWordsL1A[0];
                 LOG(INFO) << BOLDBLUE << "Scoped output on L1A Line: " << std::bitset<32>(cCicOutOutputL1A) << " for hybrid side " << +hybridNumber << RESET;
 
@@ -210,7 +178,6 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 {
                     LOG(INFO) << BOLDGREEN << "CIC Out Test passed for L1A line"
                               << " for hybrid side " << +hybridNumber << RESET;
-                    // cStatusVec.push_back(1);
                 }
                 else
                 {
@@ -233,6 +200,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 LOG(DEBUG) << "L1A total wrong bits: " << BOLDBLUE << +cL1ATotalWrong << " in a total of: " << +cL1ATotal << RESET;
             }
         }
+        fBeBoardInterface->Stop(cBoard);
     }
     return res;
 }
