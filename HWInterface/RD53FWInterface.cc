@@ -232,7 +232,7 @@ void RD53FWInterface::ComposeAndPackChipCommands(const std::vector<uint16_t>& da
     for(auto i = 1u; i < data.size(); i += 2) commandList.emplace_back(bits::pack<16, 16>(data[i - 1], data[i]));
 
     // If data.size() is not even, add a sync command
-    if(data.size() % 2 != 0) commandList.emplace_back(bits::pack<16, 16>(data.back(), RD53CmdEncoder::SYNC));
+    if(data.size() % 2 != 0) commandList.emplace_back(bits::pack<16, 16>(data.back(), Rd53Cmd::RD53CmdEncoder::SYNC));
 }
 
 void RD53FWInterface::SendChipCommandsPack(const std::vector<uint32_t>& commandList)

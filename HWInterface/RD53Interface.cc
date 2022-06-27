@@ -66,7 +66,7 @@ bool RD53Interface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlockS
     if(doWriteClkDataDelay == true)
     {
         RD53Interface::WriteChipReg(pChip, nameAndValue.first, nameAndValue.second, false);
-        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORS, RD53CmdEncoder::SYNC), -1);
+        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORS, RD53Cmd::RD53CmdEncoder::SYNC), -1);
         RD53Interface::WriteChipReg(pChip, nameAndValue.first, nameAndValue.second, pVerifLoop);
     }
 
@@ -110,7 +110,7 @@ void RD53Interface::InitRD53Downlink(const BeBoard* pBoard)
     this->setBoard(pBoard->getId());
 
     LOG(INFO) << GREEN << "Down-link phase initialization..." << RESET;
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORS, RD53CmdEncoder::SYNC), -1);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORS, RD53Cmd::RD53CmdEncoder::SYNC), -1);
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
@@ -382,7 +382,7 @@ void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
     this->setBoard(pRD53->getBeBoardId());
 
     std::vector<uint16_t> commandList;
-    std::vector<uint16_t> syncList(RD53Constants::NSYNC_WORS, RD53CmdEncoder::SYNC);
+    std::vector<uint16_t> syncList(RD53Constants::NSYNC_WORS, RD53Cmd::RD53CmdEncoder::SYNC);
 
     const uint16_t                   REGION_COL_ADDR = pRD53->getRegItem("REGION_COL").fAddress;
     const uint16_t                   REGION_ROW_ADDR = pRD53->getRegItem("REGION_ROW").fAddress;

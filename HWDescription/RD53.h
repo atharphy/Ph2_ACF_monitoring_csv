@@ -44,21 +44,6 @@ const uint16_t GLOBAL_PULSE_ADDR = 0x2C; // Global Pulse Route regiser address
 const uint16_t SET_SEL_OUT_ADDR  = 0x44; // SET_SEL_OUT regiser address
 } // namespace RD53Constants
 
-// ############
-// # Commands #
-// ############
-namespace RD53CmdEncoder
-{
-const uint16_t RESET_ECR  = 0x5A5A; // Event Counter Reset word
-const uint16_t RESET_BCR  = 0x5959; // Bunch Counter Reset word
-const uint16_t GLOB_PULSE = 0x5C5C; // Global pulse word
-const uint16_t CAL        = 0x6363; // Calibration word
-const uint16_t WRITE      = 0x6666; // Write command word
-const uint16_t READ       = 0x6565; // Read command word
-const uint16_t NOOP       = 0x6969; // No operation word
-const uint16_t SYNC       = 0x817E; // Synchronization word
-} // namespace RD53CmdEncoder
-
 namespace RD53EvtEncoder
 {
 // #######################

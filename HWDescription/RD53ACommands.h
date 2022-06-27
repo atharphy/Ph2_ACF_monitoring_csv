@@ -51,6 +51,21 @@ constexpr uint8_t map5to8bit[] = {
     0xD4  // 31: 0b11010100
 };
 
+// ############
+// # Commands #
+// ############
+namespace RD53CmdEncoder
+{
+const uint16_t RESET_ECR  = 0x5A5A; // Event Counter Reset word
+const uint16_t RESET_BCR  = 0x5959; // Bunch Counter Reset word
+const uint16_t GLOB_PULSE = 0x5C5C; // Global pulse word
+const uint16_t CAL        = 0x6363; // Calibration word
+const uint16_t WRITE      = 0x6666; // Write command word
+const uint16_t READ       = 0x6565; // Read command word
+const uint16_t NOOP       = 0x6969; // No operation word
+const uint16_t SYNC       = 0x817E; // Synchronization word
+} // namespace RD53CmdEncoder
+
 template <uint16_t cmdCode, size_t nFields>
 class Command
 {
@@ -71,7 +86,7 @@ class Command
 };
 
 template <class cmdType>
-void serialize(const cmdType& cmd, std::vector<uint16_t>& frameVector) const
+void serialize(const cmdType& cmd, std::vector<uint16_t>& frameVector)
 {
     // Insert command code
     frameVector.push_back(cmdType::cmdCode);
@@ -83,7 +98,7 @@ void serialize(const cmdType& cmd, std::vector<uint16_t>& frameVector) const
 }
 
 template <class cmdType>
-std::vector<uint16_t> getFrames(const cmdType& cmd) const
+std::vector<uint16_t> getFrames(const cmdType& cmd)
 {
     std::vector<uint16_t> frameVector;
 
