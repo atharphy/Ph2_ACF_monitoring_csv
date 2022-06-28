@@ -12,9 +12,7 @@
 
 namespace RD53Cmd
 {
-
-
- std::array<uint8_t, GlobalPulse::nFields>  serializeFields(const GlobalPulse& cmd)
+std::array<uint8_t, GlobalPulse::nFields> serializeFields(const GlobalPulse& cmd)
 {
     std::array<uint8_t, GlobalPulse::nFields> fields;
 
@@ -35,7 +33,6 @@ std::array<uint8_t, Cal::nFields> serializeFields(const Cal& cmd)
 
     return fields;
 }
-
 
 std::array<uint8_t, WrReg::nFields> serializeFields(const WrReg& cmd)
 {

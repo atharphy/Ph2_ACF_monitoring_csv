@@ -39,5 +39,3 @@ RD53ChannelGroupHandler::RD53ChannelGroupHandler(ChannelGroupBase& customChannel
                 if(currentChannelGroup_->isChannelEnabled(row, col) == true) customChannelGroup.enableChannel(row, col);
     }
 }
-
-RD53ChannelGroupHandler::~RD53ChannelGroupHandler() {}

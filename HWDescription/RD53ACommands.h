@@ -69,25 +69,6 @@ const uint16_t NOOP       = 0x6969; // No operation word
 const uint16_t SYNC       = 0x817E; // Synchronization word
 } // namespace RD53CmdEncoder
 
-// template <uint16_t cmdCode, size_t nFields>
-// class Command
-// {
-//     static_assert(nFields % 2 == 0, "RD53Cmd::Command: a command must have an even number of fields");
-
-//   public:
-//     static constexpr size_t cmdCode = cmdCode;
-//     static constexpr size_t nFields = nFields;
-
-//     std::array<uint8_t, nFields> serializeFields() const { return std::array<uint8_t, nFields>(); }
-
-//   protected:
-//     template <int... Sizes, class... Args>
-//     uint8_t packAndEncode(Args&&... args)
-//     {
-//         return map5to8bit[bits::pack<Sizes...>(std::forward<Args>(args)...)];
-//     }
-// };
-
 template <int... Sizes, class... Args>
 uint8_t packAndEncode(Args&&... args)
 {
@@ -151,7 +132,7 @@ struct GlobalPulse
 {
     static const uint16_t cmdCode = RD53CmdEncoder::SYNC;
     static const uint16_t nFields = 2;
-    
+
     uint8_t chip_id;
     uint8_t data;
 };

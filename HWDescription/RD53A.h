@@ -11,8 +11,8 @@
 #ifndef RD53A_H
 #define RD53A_H
 
-#include "RD53.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
+#include "RD53.h"
 
 namespace Ph2_HwDescription
 {
@@ -30,11 +30,11 @@ class RD53A : public RD53
     RD53A(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
 
     ChannelGroupBase* getChannelGroup() const override { return new ChannelGroup<RD53A::NROWS, RD53A::NCOLS>; }
-    ChannelGroupBase*                 getChannelGroupAll() const override { return new RD53ChannelGroupHandler::RD53ChannelGroupAll<RD53A::NROWS, RD53A::NCOLS>; }
-    ChannelGroupBase*                 getChannelGroupPattern(uint8_t hitPerCol) const override { return new RD53ChannelGroupHandler::RD53ChannelGroupPattern<RD53A::NROWS, RD53A::NCOLS>(hitPerCol); }
-    size_t                            getNRows() const override { return RD53A::NROWS; }
-    size_t                            getNCols() const override { return RD53A::NCOLS; }
-    const FrontEnd&                   getMajorityFE(size_t colStart, size_t colStop) const override;
+    ChannelGroupBase* getChannelGroupAll() const override { return new RD53ChannelGroupHandler::RD53ChannelGroupAll<RD53A::NROWS, RD53A::NCOLS>; }
+    ChannelGroupBase* getChannelGroupPattern(uint8_t hitPerCol) const override { return new RD53ChannelGroupHandler::RD53ChannelGroupPattern<RD53A::NROWS, RD53A::NCOLS>(hitPerCol); }
+    size_t            getNRows() const override { return RD53A::NROWS; }
+    size_t            getNCols() const override { return RD53A::NCOLS; }
+    const FrontEnd&   getMajorityFE(size_t colStart, size_t colStop) const override;
 
     struct HitData
     {

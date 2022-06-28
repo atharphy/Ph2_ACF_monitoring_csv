@@ -14,8 +14,8 @@ namespace Ph2_HwDescription
 RD53::RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment)
     : ReadoutChip(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id)
 {
-    fMaxRegValue      = RD53Shared::setBits(RD53Constants::NBIT_MAXREG);
-    configFileName    = fileName;
+    fMaxRegValue   = RD53Shared::setBits(RD53Constants::NBIT_MAXREG);
+    configFileName = fileName;
     RD53::loadfRegMap(configFileName);
     this->setFrontEndType(FrontEndType::RD53);
     myComment  = cfgComment;

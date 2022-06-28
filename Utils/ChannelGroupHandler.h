@@ -124,9 +124,6 @@ class ChannelGroup : public ChannelGroupBase
                                uint16_t                           numberOfRowsPerCluster,
                                uint16_t                           numberOfColsPerCluster = 1) const override
     {
-        // if(customPatternSet_ && (numberOfRowsPerCluster>1 || numberOfColsPerCluster>1))
-        //     std::cout << __PRETTY_FUNCTION__ << " Warning, automatic group creation may not work when a custom
-        //     pattern is set" << std::endl;
         if(numberOfClustersPerGroup * numberOfRowsPerCluster * numberOfColsPerCluster >= numberOfEnabledChannels_)
         {
             static_cast<ChannelGroup<R, C>*>(currentChannelGroup.get())->setCustomPattern(*this);
@@ -136,10 +133,6 @@ class ChannelGroup : public ChannelGroupBase
 
         uint32_t numberOfClusterToSkip = numberOfEnabledChannels_ / (numberOfRowsPerCluster * numberOfColsPerCluster * numberOfClustersPerGroup) - 1;
         if(numberOfEnabledChannels_ % (numberOfRowsPerCluster * numberOfColsPerCluster * numberOfClustersPerGroup) > 0) ++numberOfClusterToSkip;
-
-        // std::cout << "numberOfClustersPerGroup = " << numberOfClustersPerGroup << "\n";
-
-        // std::cout << "numberOfClusterToSkip = " << numberOfClusterToSkip << "\n";
 
         uint32_t clusterSkipped = numberOfClusterToSkip - groupNumber;
         for(uint16_t col = 0; col < numberOfCols_; col += numberOfColsPerCluster)
@@ -170,8 +163,6 @@ class ChannelGroup : public ChannelGroupBase
     {
         std::bitset<R * C> tmpBitset;
         tmpBitset = this->channelsBitset_ & static_cast<const ChannelGroup<R, C>*>(mask)->channelsBitset_;
-        // std::cout << tmpBitset << "\n";
-        // throw("[Tool::selectGroupTestPulse]\tError, FrontEnd type not found");
         return tmpBitset.count();
     }
 
@@ -207,11 +198,7 @@ class ChannelGroupHandler
 
     virtual void setChannelGroupParameters(uint32_t numberOfClustersPerGroup, uint32_t numberOfRowsPerCluster, uint32_t numberOfColsPerCluster = 1);
 
-    // template <size_t R, size_t C>
-    void setCustomChannelGroup(ChannelGroupBase& customChannelGroup)
-    {
-        allChannelGroup_->setCustomPattern(customChannelGroup);
-    }
+    void setCustomChannelGroup(ChannelGroupBase& customChannelGroup) { allChannelGroup_->setCustomPattern(customChannelGroup); }
 
     virtual ChannelGroupIterator begin() { return ChannelGroupIterator(*this, 0); }
 
