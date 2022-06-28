@@ -212,6 +212,8 @@
     <Setting name="FitSCurves">1</Setting>
     <Setting name="PlotSCurves">1</Setting>
     <Setting name="NoiseMeasurementLimit">10</Setting>
+    <Setting name="NeventsForValidation">100000</Setting>
+    <Setting name="MaskingThreshold">0.001</Setting>
     <!-- <Setting name="PedeNoiseMinThreshold">375</Setting>
     <Setting name="PedeNoiseMaxThreshold">750</Setting> -->
 

@@ -397,9 +397,7 @@ int main(int argc, char* argv[])
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
-
-                        auto cFusedId = static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->ReadCbcIDeFuse(cChip);
+                        auto cFusedId = cTool.fReadoutChipInterface->ReadChipFuseID(cChip);
                         LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cChip->getId() << " CBC#" << +cChip->getId() << " Fused Id is " << +cFusedId << RESET;
                     }
                 }

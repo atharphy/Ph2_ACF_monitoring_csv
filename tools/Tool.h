@@ -25,7 +25,6 @@
 #include "TH1.h"
 #include "TObject.h"
 #include "TROOT.h"
-#include "TString.h"
 #include "TSystem.h"
 #include "TTree.h"
 #endif
@@ -393,8 +392,8 @@ class Tool : public Ph2_System::SystemController
     HybridHistogramMap  fHybridHistMap;
     BeBoardHistogramMap fBeBoardHistMap;
     TTree*              fSummaryTree; /*< TTree for summary of results*/
-    static TString      fSummaryTreeParameter;
-    static Double_t     fSummaryTreeValue;
+    static std::string  fSummaryTreeParameter;
+    static double       fSummaryTreeValue;
 #endif
 
     FrontEndType        fType;

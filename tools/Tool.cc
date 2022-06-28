@@ -229,8 +229,8 @@ void Tool::SoftDestroy()
 }
 
 #ifdef __USE_ROOT__
-TString  Tool::fSummaryTreeParameter = "";
-Double_t Tool::fSummaryTreeValue     = 0.0;
+std::string  Tool::fSummaryTreeParameter = "";
+double Tool::fSummaryTreeValue     = 0.0;
 
 /*!
  * \brief Initialize a 'summary' TTree in the ROOT File, with branches 'parameter'(string) and 'value'(double)
@@ -255,7 +255,7 @@ void Tool::fillSummaryTree(std::string cParameter, Double_t cValue) // MINE
     // TString currentDirectory = getDirectoryName();
     // const char* currentDirectory = gDirectory->GetPath();
     fResultFile->cd();
-    fSummaryTreeParameter.Clear();
+    fSummaryTreeParameter.clear();
     TString cParameter_TString(cParameter);
     fSummaryTreeParameter = cParameter_TString;
     fSummaryTreeValue     = cValue;
@@ -585,8 +585,21 @@ void Tool::AddMetadata()
     t->Branch("username", &user);
 
     // save chip IDs
-    int chipIds[20];
-    int i = 0;
+    std::vector<uint32_t> chipIds;
+
+    uint16_t chipVectorSize = 0;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                chipVectorSize += cHybrid->size();
+            }
+        }
+    }
+    chipIds.reserve(chipVectorSize); // Need to be done to avoid jumps of the vector memory that messes with the pointer associated to the branch
+
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -595,19 +608,13 @@ void Tool::AddMetadata()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::CBC3)
-                    {
-                        std::stringstream label;
-                        label << "hybrid_" << std::to_string(cHybrid->getId()) << "_CBC3_" << std::to_string(cChip->getId());
+                    std::string label = getReadoutChipString(cBoard->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId()); 
 
-                        uint32_t value = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadCbcIDeFuse(cChip);
+                    uint32_t value = fReadoutChipInterface->ReadChipFuseID(cChip);
 
-                        chipIds[i] = value;
-                        // this is ok because we will only set one value per branch
-                        t->Branch(label.str().c_str(), &chipIds[i]);
-
-                        i++;
-                    }
+                    chipIds.push_back(value);
+                    // this is ok because we will only set one value per branch
+                    t->Branch(label.c_str(), &chipIds.back());
                 }
             }
         }

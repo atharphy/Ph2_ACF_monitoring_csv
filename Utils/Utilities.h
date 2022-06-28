@@ -165,4 +165,13 @@ std::vector<typename std::iterator_traits<T>::value_type> get_mismatches(T pWrit
     return pMismatchedWriteVector;
 }
 
+std::string getBoardString(uint16_t boardId);
+
+std::string getOpticalGroupString(uint16_t boardId, uint16_t opticalGroupId);
+
+std::string getHybridString(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId);
+
+std::string getReadoutChipString(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t readoutChipId);
+
+
 #endif
