@@ -291,15 +291,15 @@
 
 
 <MonitoringSettings>
-<Monitoring type="2S" enable="1">
+<Monitoring type="2S" enable="9">
     <MonitoringSleepTime> 1000 </MonitoringSleepTime>
-    <MonitoringElement device="CBC"   register="VCth" enable="1"/>
-    <MonitoringElement device="LpGBT" register="ADC0" enable="1"/>
-    <MonitoringElement device="LpGBT" register="ADC1" enable="1"/>
-    <MonitoringElement device="LpGBT" register="ADC3" enable="1"/>
-    <MonitoringElement device="LpGBT" register="VDD"  enable="1"/>
-    <MonitoringElement device="LpGBT" register="VDDA" enable="1"/>
-    <MonitoringElement device="LpGBT" register="TEMP" enable="1"/>
+    <MonitoringElement device="CBC"   register="VCth" enable="0"/>
+    <MonitoringElement device="LpGBT" register="ADC0" enable="0"/>
+    <MonitoringElement device="LpGBT" register="ADC1" enable="0"/>
+    <MonitoringElement device="LpGBT" register="ADC3" enable="0"/>
+    <MonitoringElement device="LpGBT" register="VDD"  enable="0"/>
+    <MonitoringElement device="LpGBT" register="VDDA" enable="0"/>
+    <MonitoringElement device="LpGBT" register="TEMP" enable="0"/>
 </Monitoring>
 </MonitoringSettings>
 

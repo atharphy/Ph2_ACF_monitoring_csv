@@ -1225,6 +1225,7 @@ int main(int argc, char* argv[])
         cCng.fVerbose    = 1;
         cCng.fPrintEvery = 1;
         cBeamTestCheck.ConfigurePrintout(cCng);
+        cBeamTestCheck.SaveHitDataTree();
         cBeamTestCheck.ReadDataFromFile(cRawFileName);
         cBeamTestCheck.ValidateRaw();
         cBeamTestCheck.writeObjects();
