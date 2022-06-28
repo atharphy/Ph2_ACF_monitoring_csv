@@ -33,9 +33,9 @@ void ThrAdjustment::ConfigureCalibration()
     saveBinaryData  = this->findValueInSettings<double>("SaveBinaryData");
 
     frontEnd             = firstChip.getMajorityFE(PixelAlive::colStart, PixelAlive::colStop);
-    PixelAlive::colStart = std::max(PixelAlive::colStart, frontEnd->colStart);
-    PixelAlive::colStop  = std::min(PixelAlive::colStop, frontEnd->colStop);
-    LOG(INFO) << GREEN << "ThrAdjustment will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << RESET << BOLDYELLOW << colStart << ", " << colStop << RESET
+    PixelAlive::colStart = std::max(PixelAlive::colStart, frontEnd.colStart);
+    PixelAlive::colStop  = std::min(PixelAlive::colStop, frontEnd.colStop);
+    LOG(INFO) << GREEN << "ThrAdjustment will run on the " << RESET << BOLDYELLOW << frontEnd.name << RESET << GREEN << " FE, columns [" << RESET << BOLDYELLOW << colStart << ", " << colStop << RESET
               << GREEN << "]" << RESET;
 
     // #######################
@@ -122,7 +122,7 @@ void ThrAdjustment::initializeFiles(const std::string& fileRes_, int currentRun)
 
 void ThrAdjustment::run()
 {
-    ThrAdjustment::bitWiseScanGlobal(frontEnd->thresholdReg, targetThreshold, startValue, stopValue);
+    ThrAdjustment::bitWiseScanGlobal(frontEnd.thresholdReg, targetThreshold, startValue, stopValue);
 
     // ############################
     // # Fill threshold container #
@@ -133,7 +133,7 @@ void ThrAdjustment::run()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                     theThrContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                        static_cast<RD53*>(cChip)->getReg(frontEnd->thresholdReg);
+                        static_cast<RD53*>(cChip)->getReg(frontEnd.thresholdReg);
 
     // ################
     // # Error report #

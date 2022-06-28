@@ -39,7 +39,7 @@ void PixelAlive::ConfigureCalibration()
     // ################################
     // # Custom channel group handler #
     // ################################
-    auto customChannelGroup = firstChip.getChannelGroup();
+    std::unique_ptr<ChannelGroupBase> customChannelGroup{firstChip.getChannelGroup()};
     customChannelGroup->disableAllChannels();
 
     for(auto row = rowStart; row <= rowStop; row++)

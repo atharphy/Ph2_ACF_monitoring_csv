@@ -31,20 +31,20 @@ void ThrEqualization::ConfigureCalibration()
     doUpdateChip = this->findValueInSettings<double>("UpdateChipCfg");
 
     frontEnd = firstChip.getMajorityFE(PixelAlive::colStart, PixelAlive::colStop);
-    if(frontEnd == &RD53::SYNC)
+    if(frontEnd == RD53::SYNC)
     {
         LOG(ERROR) << BOLDRED << "ThrEqualization cannot be used on the Synchronous FE, please change the selected columns" << RESET;
         exit(EXIT_FAILURE);
     }
-    PixelAlive::colStart = std::max(PixelAlive::colStart, frontEnd->colStart);
-    PixelAlive::colStop  = std::min(PixelAlive::colStop, frontEnd->colStop);
-    LOG(INFO) << GREEN << "ThrEqualization will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << GREEN << BOLDYELLOW << PixelAlive::colStart << ", "
+    PixelAlive::colStart = std::max(PixelAlive::colStart, frontEnd.colStart);
+    PixelAlive::colStop  = std::min(PixelAlive::colStop, frontEnd.colStop);
+    LOG(INFO) << GREEN << "ThrEqualization will run on the " << RESET << BOLDYELLOW << frontEnd.name << RESET << GREEN << " FE, columns [" << GREEN << BOLDYELLOW << PixelAlive::colStart << ", "
               << PixelAlive::colStop << RESET << GREEN << "]" << RESET;
 
     // ########################
     // # Custom channel group #
     // ########################
-    auto customChannelGroup = firstChip.getChannelGroup();
+    std::unique_ptr<ChannelGroupBase> customChannelGroup{firstChip.getChannelGroup()};
     customChannelGroup->disableAllChannels();
 
     for(auto row = PixelAlive::rowStart; row <= PixelAlive::rowStop; row++)
@@ -149,9 +149,9 @@ void ThrEqualization::run()
     // # Run threshold equalization #
     // ##############################
     size_t TDACsize = RD53Shared::setBits(RD53Constants::NBIT_TDAC) + 1;
-    if(frontEnd == &RD53::DIFF) TDACsize *= 2;
+    if(frontEnd == RD53::DIFF) TDACsize *= 2;
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, theTDACcontainer);
-    ThrEqualization::bitWiseScanLocal(frontEnd->name, PixelAlive::nEvents, TARGETEFF /*PixelAlive::thrOccupancy*/, PixelAlive::nEvtsBurst);
+    ThrEqualization::bitWiseScanLocal(frontEnd.name, PixelAlive::nEvents, TARGETEFF /*PixelAlive::thrOccupancy*/, PixelAlive::nEvtsBurst);
 
     // #################################################
     // # Fill TDAC container and mark enabled channels #
@@ -453,7 +453,7 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
 {
     float    tmp;
     uint16_t init;
-    uint16_t numberOfBits = floor(log2(frontEnd->nTDACvalues) + 1);
+    uint16_t numberOfBits = floor(log2(frontEnd.nTDACvalues) + 1);
 
     DetectorDataContainer minDACcontainer;
     DetectorDataContainer midDACcontainer;
@@ -464,7 +464,7 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
 
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, minDACcontainer, init = 0);
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, midDACcontainer);
-    ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, maxDACcontainer, init = frontEnd->nTDACvalues);
+    ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, maxDACcontainer, init = frontEnd.nTDACvalues);
 
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, bestDACcontainer);
     ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, bestContainer, tmp = (target < 0.5 ? 1 : 0));

@@ -15,14 +15,20 @@ namespace Ph2_HwDescription
 // ########################################
 // # Support for different FrontEnd types #
 // ########################################
-constexpr RD53A::FrontEnd RD53A::SYNC;
-constexpr RD53A::FrontEnd RD53A::LIN;
-constexpr RD53A::FrontEnd RD53A::DIFF;
-const RD53A::FrontEnd*    RD53A::frontEnds[] = {&RD53A::SYNC, &RD53A::LIN, &RD53A::DIFF};
+constexpr RD53::FrontEnd RD53A::SYNC;
+constexpr RD53::FrontEnd RD53A::LIN;
+constexpr RD53::FrontEnd RD53A::DIFF;
+const RD53::FrontEnd*    RD53A::frontEnds[] = {&RD53A::SYNC, &RD53A::LIN, &RD53A::DIFF};
 
-const RD53A::FrontEnd* RD53A::getMajorityFE(size_t colStart, size_t colStop) const
+RD53A::RD53A(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment)
+    : RD53(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id, pRD53Lane, fileName, cfgComment)
 {
-    return *std::max_element(std::begin(frontEnds), std::end(frontEnds), [&](const FrontEnd* a, const FrontEnd* b) {
+    fChipOriginalMask.reset(getChannelGroup());
+}
+
+const RD53A::FrontEnd& RD53A::getMajorityFE(size_t colStart, size_t colStop) const
+{
+    return **std::max_element(std::begin(frontEnds), std::end(frontEnds), [&](const FrontEnd* a, const FrontEnd* b) {
         return int(std::min(colStop, a->colStop)) - int(std::max(colStart, a->colStart)) < int(std::min(colStop, b->colStop)) - int(std::max(colStart, b->colStart));
     });
 }
@@ -39,7 +45,7 @@ void RD53A::Event::DecodeQuad(uint32_t data)
 
     for(int i = 0; i < RD53Constants::NPIX_REGION; i++)
         if(tots[i] != RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION)) hit_data.emplace_back(row, col + i, tots[i]);
-    if((row >= RD53::nRows) || (col >= (RD53::nCols - (RD53Constants::NPIX_REGION - 1)))) eventStatus |= RD53EvtEncoder::CHIPPIX;
+    if((row >= RD53A::NROWS) || (col >= (RD53A::NCOLS - (RD53Constants::NPIX_REGION - 1)))) eventStatus |= RD53EvtEncoder::CHIPPIX;
 }
 
 RD53A::Event::Event(const uint32_t* data, size_t n)

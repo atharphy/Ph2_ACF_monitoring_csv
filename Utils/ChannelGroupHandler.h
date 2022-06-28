@@ -43,6 +43,7 @@ class ChannelGroupBase
     virtual void     enableAllChannels(void)                                                        = 0;
     virtual void     flipAllChannels(void)                                                          = 0;
     virtual bool     areAllChannelsEnabled(void) const                                              = 0;
+    virtual void     setCustomPattern(const ChannelGroupBase& customChannelGroupBase)               = 0;
 
   protected:
     virtual uint32_t getNumberOfEnabledChannels(const ChannelGroupBase* mask) const = 0;
@@ -106,8 +107,9 @@ class ChannelGroup : public ChannelGroupBase
 
     inline std::bitset<R * C> getBitset(void) const { return channelsBitset_; }
 
-    inline void setCustomPattern(const ChannelGroup<R, C>& customChannelGroup)
+    inline void setCustomPattern(const ChannelGroupBase& customChannelGroupBase) override
     {
+        auto& customChannelGroup = static_cast<const ChannelGroup<R, C>&>(customChannelGroupBase);
         channelsBitset_          = customChannelGroup.channelsBitset_;
         customPatternSet_        = true;
         numberOfEnabledChannels_ = channelsBitset_.count();
@@ -205,10 +207,10 @@ class ChannelGroupHandler
 
     virtual void setChannelGroupParameters(uint32_t numberOfClustersPerGroup, uint32_t numberOfRowsPerCluster, uint32_t numberOfColsPerCluster = 1);
 
-    template <size_t R, size_t C>
-    void setCustomChannelGroup(ChannelGroup<R, C>& customChannelGroup)
+    // template <size_t R, size_t C>
+    void setCustomChannelGroup(ChannelGroupBase& customChannelGroup)
     {
-        static_cast<ChannelGroup<R, C>*>(allChannelGroup_.get())->setCustomPattern(customChannelGroup);
+        allChannelGroup_->setCustomPattern(customChannelGroup);
     }
 
     virtual ChannelGroupIterator begin() { return ChannelGroupIterator(*this, 0); }

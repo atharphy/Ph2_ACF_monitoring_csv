@@ -15,7 +15,6 @@ RD53::RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybr
     : ReadoutChip(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id)
 {
     fMaxRegValue      = RD53Shared::setBits(RD53Constants::NBIT_MAXREG);
-    fChipOriginalMask = std::make_shared<ChannelGroup<nRows, nCols>>();
     configFileName    = fileName;
     RD53::loadfRegMap(configFileName);
     this->setFrontEndType(FrontEndType::RD53);
@@ -74,7 +73,7 @@ void RD53::loadfRegMap(const std::string& fileName)
                         }
                     }
 
-                    if(row < nRows)
+                    if(row < RD53::getNRows())
                     {
                         myString.str("");
                         myString.clear();
@@ -103,7 +102,7 @@ void RD53::loadfRegMap(const std::string& fileName)
                         }
                     }
 
-                    if(row < nRows)
+                    if(row < RD53::getNRows())
                     {
                         myString.str("");
                         myString.clear();
@@ -130,7 +129,7 @@ void RD53::loadfRegMap(const std::string& fileName)
                         }
                     }
 
-                    if(row < nRows)
+                    if(row < RD53::getNRows())
                     {
                         myString.str("");
                         myString.clear();
@@ -157,7 +156,7 @@ void RD53::loadfRegMap(const std::string& fileName)
                         }
                     }
 
-                    if(row < nRows)
+                    if(row < RD53::getNRows())
                     {
                         myString.str("");
                         myString.clear();
@@ -326,10 +325,10 @@ void RD53::resetMask()
 {
     for(auto col = 0u; col < fPixelsMask.size(); col++)
     {
-        fPixelsMask[col].Enable.fill(0);
-        fPixelsMask[col].HitBus.fill(0);
-        fPixelsMask[col].InjEn.fill(0);
-        fPixelsMask[col].TDAC.fill(RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2);
+        std::fill(fPixelsMask[col].Enable.begin(), fPixelsMask[col].Enable.end(), 0);
+        std::fill(fPixelsMask[col].HitBus.begin(), fPixelsMask[col].HitBus.end(), 0);
+        std::fill(fPixelsMask[col].InjEn.begin(), fPixelsMask[col].InjEn.end(), 0);
+        std::fill(fPixelsMask[col].TDAC.begin(), fPixelsMask[col].TDAC.end(), RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2);
     }
 }
 
@@ -337,8 +336,8 @@ void RD53::enableAllPixels()
 {
     for(auto col = 0u; col < fPixelsMask.size(); col++)
     {
-        fPixelsMask[col].Enable.fill(1);
-        fPixelsMask[col].HitBus.fill(1);
+        std::fill(fPixelsMask[col].Enable.begin(), fPixelsMask[col].Enable.end(), 1);
+        std::fill(fPixelsMask[col].HitBus.begin(), fPixelsMask[col].HitBus.end(), 1);
     }
 }
 
@@ -346,8 +345,8 @@ void RD53::disableAllPixels()
 {
     for(auto col = 0u; col < fPixelsMask.size(); col++)
     {
-        fPixelsMask[col].Enable.fill(0);
-        fPixelsMask[col].HitBus.fill(0);
+        std::fill(fPixelsMask[col].Enable.begin(), fPixelsMask[col].Enable.end(), 0);
+        std::fill(fPixelsMask[col].HitBus.begin(), fPixelsMask[col].HitBus.end(), 0);
     }
 }
 
@@ -374,7 +373,7 @@ void RD53::setTDAC(unsigned int row, unsigned int col, uint8_t TDAC) { fPixelsMa
 
 void RD53::resetTDAC()
 {
-    for(auto col = 0u; col < fPixelsMask.size(); col++) fPixelsMask[col].TDAC.fill(RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2);
+    for(auto col = 0u; col < fPixelsMask.size(); col++) std::fill(fPixelsMask[col].TDAC.begin(), fPixelsMask[col].TDAC.end(), RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2);
 }
 
 uint8_t RD53::getTDAC(unsigned int row, unsigned int col) { return fPixelsMask[col].TDAC[row]; }

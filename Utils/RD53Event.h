@@ -10,7 +10,7 @@
 #ifndef RD53Event_H
 #define RD53Event_H
 
-#include "../HWDescription/RD53.h"
+#include "../HWDescription/RD53A.h"
 #include "DataContainer.h"
 #include "Event.h"
 #include "GenericDataVector.h"
@@ -114,7 +114,7 @@ class RD53Event : public Ph2_HwInterface::Event
     uint32_t l1a_counter;
     uint32_t bx_counter;
 
-    std::vector<std::pair<ChipFrame, Ph2_HwDescription::RD53::Event>> chip_frames_events;
+    std::vector<std::pair<ChipFrame, Ph2_HwDescription::RD53A::Event>> chip_frames_events;
 
     uint16_t eventStatus;
 

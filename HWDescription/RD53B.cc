@@ -17,4 +17,10 @@ namespace Ph2_HwDescription
 // ########################################
 constexpr RD53B::FrontEnd RD53B::CROC;
 
+RD53B::RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment)
+    : RD53(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id, pRD53Lane, fileName, cfgComment)
+{
+    fChipOriginalMask.reset(getChannelGroup());
+}
+
 } // namespace Ph2_HwDescription

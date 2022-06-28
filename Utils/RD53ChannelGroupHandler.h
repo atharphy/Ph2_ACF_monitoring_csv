@@ -11,6 +11,7 @@
 #define RD53ChannelGroupHandler_H
 
 #include "ChannelGroupHandler.h"
+#include "../HWDescription/RD53.h"
 
 namespace RD53GroupType
 {
@@ -37,7 +38,7 @@ class RD53ChannelGroupHandler : public ChannelGroupHandler
                            uint32_t                           groupNumber,
                            uint32_t                           numberOfClustersPerGroup,
                            uint16_t                           numberOfRowsPerCluster,
-                           uint16_t                           numberOfColsPerCluster = 1) const override;
+                           uint16_t                           numberOfColsPerCluster = 1) const override
         {
             currentChannelGroup->enableAllChannels();
         }
@@ -54,16 +55,16 @@ class RD53ChannelGroupHandler : public ChannelGroupHandler
                            uint32_t                           groupNumber,
                            uint32_t                           numberOfClustersPerGroup,
                            uint16_t                           numberOfRowsPerCluster,
-                           uint16_t                           numberOfColsPerCluster = 1) const override;
+                           uint16_t                           numberOfColsPerCluster = 1) const override
         {
-            static_cast<ChannelGroup*>(currentChannelGroup.get())->disableAllChannels();
+            currentChannelGroup->disableAllChannels();
 
-            for(auto col = 0u; col < Ph2_HwDescription::RD53::nCols; col++)
+            for(auto col = 0u; col < currentChannelGroup->getNumberOfCols(); col++)
                 for(auto i = 0u; i < hitPerCol; i++)
                 {
-                    auto row = (RD53Constants::NROW_CORE * col + i * currentChannelGroup.getNumberOfRows() / hitPerCol) % currentChannelGroup.getNumberOfRows();
+                    auto row = (RD53Constants::NROW_CORE * col + i * currentChannelGroup->getNumberOfRows() / hitPerCol) % currentChannelGroup->getNumberOfRows();
                     row += groupNumber;
-                    row %= currentChannelGroup.getNumberOfRows();
+                    row %= currentChannelGroup->getNumberOfRows();
                     currentChannelGroup->enableChannel(row, col);
                 }
         }

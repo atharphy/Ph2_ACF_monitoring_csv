@@ -31,9 +31,9 @@ void GainOptimization::ConfigureCalibration()
     doUpdateChip  = this->findValueInSettings<double>("UpdateChipCfg");
 
     frontEnd = firstChip.getMajorityFE(Gain::colStart, Gain::colStop);
-    colStart = std::max(Gain::colStart, frontEnd->colStart);
-    colStop  = std::min(Gain::colStop, frontEnd->colStop);
-    LOG(INFO) << GREEN << "GainOptimization will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << RESET << BOLDYELLOW << colStart << ", " << colStop
+    colStart = std::max(Gain::colStart, frontEnd.colStart);
+    colStop  = std::min(Gain::colStop, frontEnd.colStop);
+    LOG(INFO) << GREEN << "GainOptimization will run on the " << RESET << BOLDYELLOW << frontEnd.name << RESET << GREEN << " FE, columns [" << RESET << BOLDYELLOW << colStart << ", " << colStop
               << RESET << GREEN << "]" << RESET;
 
     // #######################
@@ -122,7 +122,7 @@ void GainOptimization::initializeFiles(const std::string& fileRes_, int currentR
 
 void GainOptimization::run()
 {
-    GainOptimization::bitWiseScanGlobal(frontEnd->gainReg, Gain::targetCharge, KrumCurrStart, KrumCurrStop);
+    GainOptimization::bitWiseScanGlobal(frontEnd.gainReg, Gain::targetCharge, KrumCurrStart, KrumCurrStop);
 
     // #######################################
     // # Fill Krummenacher Current container #
@@ -133,7 +133,7 @@ void GainOptimization::run()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                     theKrumCurrContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                        static_cast<RD53*>(cChip)->getReg(frontEnd->gainReg);
+                        static_cast<RD53*>(cChip)->getReg(frontEnd.gainReg);
 
     // ################
     // # Error report #

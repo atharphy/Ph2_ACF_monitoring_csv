@@ -38,7 +38,7 @@ void SCurve::ConfigureCalibration()
     // ########################
     // # Custom channel group #
     // ########################
-    auto customChannelGroup = firstChip.getChannelGroup();
+    std::unique_ptr<ChannelGroupBase> customChannelGroup{firstChip.getChannelGroup()};
     customChannelGroup->disableAllChannels();
 
     for(auto row = rowStart; row <= rowStop; row++)

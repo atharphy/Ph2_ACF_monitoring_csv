@@ -33,7 +33,7 @@ void Physics::ConfigureCalibration()
     // ################################
     // # Custom channel group handler #
     // ################################
-    auto customChannelGroup = firstChip.getChannelGroup();
+    std::unique_ptr<ChannelGroupBase> customChannelGroup{firstChip.getChannelGroup()};
     customChannelGroup->disableAllChannels();
 
     for(auto row = rowStart; row <= rowStop; row++)
@@ -168,7 +168,7 @@ void Physics::run()
         RD53Event::decodedEvents.clear();
         Physics::analyze();
 
-        if(strcmp(frontEnd->name, "SYNC") == 0)
+        if(strcmp(frontEnd.name, "SYNC") == 0)
             for(const auto cBoard: *fDetectorContainer)
             {
                 static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])

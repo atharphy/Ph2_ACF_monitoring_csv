@@ -20,9 +20,9 @@ RD53ChannelGroupHandler::RD53ChannelGroupHandler(ChannelGroupBase& customChannel
     currentChannelGroup_ = std::shared_ptr<ChannelGroupBase>(currentChannelGroup);
 
     if(groupType == RD53GroupType::AllGroups)
-        numberOfGroups = (onlyNGroups == 0 ? customChannelGroup.getNumberOfRows() : onlyNGroups) / hitPerCol;
+        numberOfGroups_ = (onlyNGroups == 0 ? customChannelGroup.getNumberOfRows() : onlyNGroups) / hitPerCol;
     else
-        rnumberOfGroups = 1;
+        numberOfGroups_ = 1;
 
     // ###############################
     // # Refine custom channel group #
