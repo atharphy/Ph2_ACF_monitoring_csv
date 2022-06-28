@@ -110,6 +110,7 @@ void GenericDacDacScan::localConfigure(const std::string& fileRes_, int currentR
         LOG(INFO) << GREEN << "[GenericDacDacScan::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     GenericDacDacScan::ConfigureCalibration();
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "GenericDacDacScan");
     GenericDacDacScan::initializeFiles(fileRes_, currentRun);
 }
 

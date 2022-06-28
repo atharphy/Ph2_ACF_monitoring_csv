@@ -59,6 +59,10 @@ class RegManager
      */
     RegManager(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
 
+    RegManager(const RegManager&) = delete;
+
+    RegManager(RegManager&& theRegManager);
+
     /*!
      * \brief Destructor of the RegManager class
      */

@@ -14,6 +14,7 @@
 #include "../Utils/RD53Shared.h"
 #include "../Utils/argvparser.h"
 
+#include "../miniDAQ/CombinedCalibrationFactory.h"
 #include "../tools/RD53BERtest.h"
 #include "../tools/RD53ClockDelay.h"
 #include "../tools/RD53DataReadbackOptimization.h"
@@ -269,7 +270,9 @@ int main(int argc, char** argv)
                     LOG(INFO) << BOLDBLUE << "Supervisor sending configure" << RESET;
 
                     LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
-                    theMiddlewareInterface.configure(cmd.optionValue("calib"), cmd.optionValue("file"));
+                    CombinedCalibrationFactory theCombinedCalibrationFactory;
+
+                    theMiddlewareInterface.configure(theCombinedCalibrationFactory.getCalibrationEnum(cmd.optionValue("calib")), cmd.optionValue("file"));
                     theDQMInterface.configure(cmd.optionValue("calib"), cmd.optionValue("file"));
                     theMonitorDQMInterface.configure(cmd.optionValue("file"));
                     LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
@@ -282,9 +285,9 @@ int main(int argc, char** argv)
                 {
                     LOG(INFO) << BOLDBLUE << "Supervisor sending start" << RESET;
 
-                    theDQMInterface.startProcessingData(RD53Shared::fromInt2Str(runNumber));
+                    theDQMInterface.startProcessingData(runNumber);
                     theMonitorDQMInterface.startProcessingData();
-                    theMiddlewareInterface.start(RD53Shared::fromInt2Str(runNumber));
+                    theMiddlewareInterface.start(runNumber);
 
                     stateMachineStatus = RUNNING;
                     break;
@@ -331,7 +334,7 @@ int main(int argc, char** argv)
 
             std::stringstream outp;
             mySysCntr.InitializeSettings(configFile, outp);
-            mySysCntr.InitializeHw(configFile, outp, true, false);
+            mySysCntr.InitializeHw(configFile, outp, false);
             if(reset == true)
             {
                 if(mySysCntr.fDetectorContainer->at(0)->at(0)->flpGBT == nullptr)

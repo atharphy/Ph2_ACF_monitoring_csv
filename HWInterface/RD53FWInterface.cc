@@ -14,7 +14,7 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-RD53FWInterface::RD53FWInterface(const char* pId, const char* pUri, const char* pAddressTable) : BeBoardFWInterface(pId, pUri, pAddressTable), ddr3Offset(0), FWinfo(0) {}
+RD53FWInterface::RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : BeBoardFWInterface(pId, pUri, pAddressTable), ddr3Offset(0), FWinfo(0) {}
 
 void RD53FWInterface::setFileHandler(FileHandler* pHandler)
 {

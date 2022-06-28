@@ -176,7 +176,7 @@ void OTCMNoise::parseSettings()
 
 void OTCMNoise::writeObjects() {}
 
-void OTCMNoise::ConfigureCalibration() { CreateResultDirectory("Results/Run_CMNoise"); }
+void OTCMNoise::ConfigureCalibration() {}
 
 void OTCMNoise::Running()
 {

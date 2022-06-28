@@ -103,8 +103,8 @@ class D19cFWInterface : public BeBoardFWInterface
      * \param puHalConfigFileName : path of the uHal Config File
      * \param pBoardId
      */
-    D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoardId);
-    D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler);
+    D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
+    D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler);
     /*!
      *
      * \brief Constructor of the Cbc3Fc7FWInterface class
@@ -113,8 +113,8 @@ class D19cFWInterface : public BeBoardFWInterface
      * \param pAddressTable: address tabel string
      */
 
-    D19cFWInterface(const char* pId, const char* pUri, const char* pAddressTable);
-    D19cFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler);
+    D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
+    D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, FileHandler* pFileHandler);
     void setFileHandler(FileHandler* pHandler);
 
     void                                 printReadoutInterface() { LOG(INFO) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET; }

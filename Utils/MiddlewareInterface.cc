@@ -1,5 +1,8 @@
 #include "../Utils/MiddlewareInterface.h"
+#include "../MessageUtils/cpp/ReplyMessage.pb.h"
 #include <iostream>
+
+using namespace MessageUtils;
 
 //========================================================================================================================
 MiddlewareInterface::MiddlewareInterface(std::string serverIP, int serverPort) : TCPClient(serverIP, serverPort) {}
@@ -29,14 +32,25 @@ void MiddlewareInterface::initialize(void)
         std::cout << __PRETTY_FUNCTION__ << "ERROR CAN'T CONNECT TO SERVER!" << std::endl;
         abort();
     }
-    std::string readBuffer = sendCommand("Initialize");
+
+    QueryMessage theQuery;
+    theQuery.mutable_query_type()->set_type(QueryType::INITIALIZE);
+    std::string theCommandString;
+    theQuery.SerializeToString(&theCommandString);
+    std::string readBuffer = sendCommand(theCommandString);
     std::cout << __PRETTY_FUNCTION__ << "DONE WITH Initialize-" << readBuffer << "-" << std::endl;
 }
 
 //========================================================================================================================
-void MiddlewareInterface::configure(std::string const& calibrationName, std::string const& configurationFilePath)
+void MiddlewareInterface::configure(MessageUtils::CalibrationList::CalibrationNameEnum theCalibrationEnum, std::string const& configurationFilePath)
 {
-    std::string readBuffer = sendCommand("Configure,Calibration:" + calibrationName + ",ConfigurationFile:" + configurationFilePath);
+    ConfigurationMessage theQuery;
+    theQuery.mutable_query_type()->set_type(QueryType::CONFIGURE);
+    theQuery.mutable_data()->mutable_calibration()->set_calibration_name(theCalibrationEnum);
+    theQuery.mutable_data()->set_configuration_file(configurationFilePath);
+    std::string theCommandString;
+    theQuery.SerializeToString(&theCommandString);
+    std::string readBuffer = sendCommand(theCommandString);
     std::cout << __PRETTY_FUNCTION__ << "DONE WITH Configure-" << readBuffer << "-" << std::endl;
 }
 
@@ -44,7 +58,12 @@ void MiddlewareInterface::configure(std::string const& calibrationName, std::str
 void MiddlewareInterface::halt(void)
 {
     std::cout << __PRETTY_FUNCTION__ << "Sending Halt!" << std::endl;
-    std::string readBuffer = sendCommand("Halt");
+
+    QueryMessage theQuery;
+    theQuery.mutable_query_type()->set_type(QueryType::HALT);
+    std::string theCommandString;
+    theQuery.SerializeToString(&theCommandString);
+    std::string readBuffer = sendCommand(theCommandString);
 
     std::cout << __PRETTY_FUNCTION__ << "DONE WITH Halt-" << readBuffer << "-" << std::endl;
 }
@@ -56,24 +75,63 @@ void MiddlewareInterface::pause(void) {}
 void MiddlewareInterface::resume(void) {}
 
 //========================================================================================================================
-void MiddlewareInterface::start(std::string runNumber)
+void MiddlewareInterface::start(int runNumber)
 {
-    std::string readBuffer = sendCommand("Start:{RunNumber:" + runNumber + "}");
+    StartMessage theQuery;
+    theQuery.mutable_query_type()->set_type(QueryType::START);
+    theQuery.mutable_data()->set_run_number(runNumber);
+    std::string theCommandString;
+    theQuery.SerializeToString(&theCommandString);
+    std::string readBuffer = sendCommand(theCommandString);
     std::cout << __PRETTY_FUNCTION__ << "DONE WITH Start-" << readBuffer << "-" << std::endl;
 }
 
 //========================================================================================================================
 std::string MiddlewareInterface::status()
 {
-    std::string readBuffer = sendCommand("Status?");
-    std::cout << __PRETTY_FUNCTION__ << "Status: " << readBuffer << std::endl;
-    return readBuffer;
+    QueryMessage theQuery;
+    theQuery.mutable_query_type()->set_type(QueryType::STATUS);
+    std::string theCommandString;
+    theQuery.SerializeToString(&theCommandString);
+    std::string readBuffer = sendCommand(theCommandString);
+
+    ReplyMessage theStatus;
+    theStatus.ParseFromString(readBuffer);
+
+    std::string status;
+    switch(theStatus.reply_type().type())
+    {
+    case ReplyType::RUNNING:
+    {
+        status = "Running";
+        break;
+    }
+    case ReplyType::SUCCESS:
+    {
+        status = "Done";
+        break;
+    }
+    case ReplyType::ERROR:
+    {
+        status = "Error";
+        break;
+    }
+
+    default: status = "Unknown"; break;
+    }
+
+    std::cout << __PRETTY_FUNCTION__ << "Status: " << status << std::endl;
+    return status;
 }
 //========================================================================================================================
 void MiddlewareInterface::stop(void)
 {
     std::cout << __PRETTY_FUNCTION__ << "Sending Stop!" << std::endl;
-    std::string readBuffer = sendCommand("Stop");
+    QueryMessage theQuery;
+    theQuery.mutable_query_type()->set_type(QueryType::STOP);
+    std::string theCommandString;
+    theQuery.SerializeToString(&theCommandString);
+    std::string readBuffer = sendCommand(theCommandString);
 
     std::cout << __PRETTY_FUNCTION__ << "DONE WITH Stop-" << readBuffer << "-" << std::endl;
 }

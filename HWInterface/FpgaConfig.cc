@@ -19,21 +19,19 @@
 */
 
 #include "FpgaConfig.h"
-#include "BeBoardFWInterface.h"
-#include <boost/format.hpp>
-#include <boost/thread.hpp>
-#include <fstream>
-#include <sys/stat.h>
-#include <time.h>
+// #include <boost/format.hpp>
+// #include <boost/thread.hpp>
+// #include <fstream>
+// #include <sys/stat.h>
+// #include <time.h>
 
-using namespace std;
-using namespace Ph2_HwDescription;
+// using namespace std;
+// using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-FpgaConfig::FpgaConfig(BeBoardFWInterface* pbbfi)
+FpgaConfig::FpgaConfig(RegManager&& pbbfi) : fwManager(std::move(pbbfi))
 {
-    fwManager        = pbbfi;
     numUploadingFpga = 0;
     progressValue    = 0;
     progressString   = "";

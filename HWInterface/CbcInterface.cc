@@ -801,7 +801,7 @@ void CbcInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
     }
     injectStubs(static_cast<ReadoutChip*>(pChip), cStubs, cBends);
 }
-uint32_t CbcInterface::ReadCbcIDeFuse(Chip* pCbc)
+uint32_t CbcInterface::ReadChipFuseID(Chip* pCbc)
 {
     // make fuse read-able
     WriteChipReg(pCbc, "ChipIDFuse3", 8, false);

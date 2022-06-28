@@ -255,7 +255,6 @@ int main(int argc, char* argv[])
     LOG(INFO) << outp.str();
     cTool.CreateResultDirectory(cDirectory, false, false);
     cTool.InitResultFile(cResultfile);
-    if(!cmd.foundOption("read")) cTool.AddMetadata();
 
     if(cmd.foundOption("readTemperatures"))
     {
@@ -264,7 +263,7 @@ int main(int argc, char* argv[])
         OTTemperature cTemperatureReader;
         cTemperatureReader.Inherit(&cTool);
         cTemperatureReader.SetGain(cGain);
-        cTemperatureReader.Start(0);
+        cTemperatureReader.Start(cRunNumber);
         cTemperatureReader.waitForRunToBeCompleted();
     }
 
@@ -351,9 +350,7 @@ int main(int argc, char* argv[])
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
-
-                        auto cFusedId = static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->ReadCbcIDeFuse(cChip);
+                        auto cFusedId = cTool.fReadoutChipInterface->ReadChipFuseID(cChip);
                         LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cChip->getId() << " CBC#" << +cChip->getId() << " Fused Id is " << +cFusedId << RESET;
                     }
                 }
@@ -482,7 +479,7 @@ int main(int argc, char* argv[])
         cLinkAlignment.Inherit(&cTool);
         try
         {
-            cLinkAlignment.Start(0);
+            cLinkAlignment.Start(cRunNumber);
         }
         catch(const std::exception& e)
         {
@@ -500,7 +497,7 @@ int main(int argc, char* argv[])
         // align FEs - CIC
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit(&cTool);
-        cCicAligner.Start(0);
+        cCicAligner.Start(cRunNumber);
         cCicAligner.waitForRunToBeCompleted();
         cCicAligner.dumpConfigFiles();
 
@@ -533,7 +530,7 @@ int main(int argc, char* argv[])
         cLinkAlignment.Inherit(&cTool);
         try
         {
-            cLinkAlignment.Start(0);
+            cLinkAlignment.Start(cRunNumber);
         }
         catch(const std::exception& e)
         {
@@ -573,7 +570,7 @@ int main(int argc, char* argv[])
             LOG(INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
             StubBackEndAlignment cStubBackEndAligner;
             cStubBackEndAligner.Inherit(&cTool);
-            cStubBackEndAligner.Start(0);
+            cStubBackEndAligner.Start(cRunNumber);
             cStubBackEndAligner.waitForRunToBeCompleted();
         }
 
@@ -607,7 +604,7 @@ int main(int argc, char* argv[])
     // LOG (INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
     // StubBackEndAlignment cStubBackEndAligner;
     // cStubBackEndAligner.Inherit(&cTool);
-    // cStubBackEndAligner.Start(0);
+    // cStubBackEndAligner.Start(cRunNumber);
     // cStubBackEndAligner.waitForRunToBeCompleted();
 
     // equalize thresholds on readout chips

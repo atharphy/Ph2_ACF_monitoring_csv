@@ -105,6 +105,7 @@ void GainOptimization::localConfigure(const std::string& fileRes_, int currentRu
         LOG(INFO) << GREEN << "[GainOptimization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     GainOptimization::ConfigureCalibration();
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "GainOptimization");
     GainOptimization::initializeFiles(fileRes_, currentRun);
 }
 
