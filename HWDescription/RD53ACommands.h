@@ -75,14 +75,14 @@ class Command
     static constexpr size_t cmdCode = cmdCode;
     static constexpr size_t nFields = nFields;
 
+    std::array<uint8_t, nFields> serializeFields() const { return std::array<uint8_t, nFields>(); }
+
   protected:
     template <int... Sizes, class... Args>
     uint8_t packAndEncode(Args&&... args)
     {
         return map5to8bit[bits::pack<Sizes...>(std::forward<Args>(args)...)];
     }
-
-    std::array<uint8_t, nFields> serializeFields() const { return std::array<uint8_t, nFields>(); }
 };
 
 template <class cmdType>
