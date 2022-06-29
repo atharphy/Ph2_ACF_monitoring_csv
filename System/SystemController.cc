@@ -15,6 +15,7 @@
 #include "../MonitorUtils/SEHMonitor.h"
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/ContainerFactory.h"
+#include "../HWDescription/RD53A.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -413,7 +414,10 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     bool   resetMask   = SystemController::findValueInSettings<double>("ResetMask");
     bool   resetTDAC   = SystemController::findValueInSettings<double>("ResetTDAC");
     LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
-    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[pBoard->getId()])->SetAndConfigureFastCommands(pBoard, nTRIGxEvent, injType, injLatency, nClkDelays, colStart < RD53::LIN.colStart);
+
+    RD53Shared::firstChip = static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
+
+    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[pBoard->getId()])->SetAndConfigureFastCommands(pBoard, nTRIGxEvent, injType, injLatency, nClkDelays, RD53Shared::firstChip->getMajorityFE(colStart, colStart) == &RD53A::SYNC);
     LOG(INFO) << CYAN << "================== Done ==================" << RESET;
 
     // ########################
@@ -492,6 +496,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     }
     LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
     LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
+    
     RD53Event::ForkDecodingThreads();
 }
 

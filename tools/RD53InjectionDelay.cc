@@ -24,7 +24,7 @@ void InjectionDelay::ConfigureCalibration()
     // # Retrieve parameters #
     // #######################
     startValue = 0;
-    stopValue  = RD53Shared::NLATENCYBINS * (RD53Shared::setBits(firstChip.getNumberOfBits("INJECTION_SELECT_DELAY")) + 1) - 1;
+    stopValue  = RD53Shared::NLATENCYBINS * (RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("INJECTION_SELECT_DELAY")) + 1) - 1;
 
     // ##############################
     // # Initialize dac scan values #
@@ -42,8 +42,8 @@ void InjectionDelay::ConfigureCalibration()
     // ##############################
     // # Injection register masking #
     // ##############################
-    saveInjection = RD53Shared::setBits(firstChip.getNumberOfBits("INJECTION_SELECT")) - RD53Shared::setBits(firstChip.getNumberOfBits("INJECTION_SELECT_DELAY"));
-    maxDelay      = RD53Shared::setBits(firstChip.getNumberOfBits("INJECTION_SELECT_DELAY"));
+    saveInjection = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("INJECTION_SELECT")) - RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("INJECTION_SELECT_DELAY"));
+    maxDelay      = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("INJECTION_SELECT_DELAY"));
 
     // #######################
     // # Initialize progress #

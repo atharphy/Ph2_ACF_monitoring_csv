@@ -49,9 +49,6 @@ class ChipInterface
     //     #endif
     // #endif
     uint16_t fPrevBoardIdentifier; /*!< Id of the previous board */
-
-    uint16_t fRegisterCount;     /*!< Counter for the number of Registers written */
-    uint16_t fTransactionCount;  /*!< Counter for the number of Transactions */
     bool     fWithlpGBT = false; /*!< lpGBT is used for configuration */
 
     /*!
@@ -135,6 +132,7 @@ class ChipInterface
 
     void output();
 };
+
 } // namespace Ph2_HwInterface
 
 #endif

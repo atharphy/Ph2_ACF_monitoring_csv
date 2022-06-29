@@ -32,10 +32,10 @@ void ThrMinimization::ConfigureCalibration()
     doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData  = this->findValueInSettings<double>("SaveBinaryData");
 
-    frontEnd = firstChip.getMajorityFE(PixelAlive::colStart, PixelAlive::colStop);
-    colStart = std::max(PixelAlive::colStart, frontEnd.colStart);
-    colStop  = std::min(PixelAlive::colStop, frontEnd.colStop);
-    LOG(INFO) << GREEN << "ThrMinimization will run on the " << RESET << BOLDYELLOW << frontEnd.name << RESET << GREEN << " FE, columns [" << BOLDYELLOW << colStart << ", " << colStop << RESET
+    frontEnd = RD53Shared::firstChip->getMajorityFE(PixelAlive::colStart, PixelAlive::colStop);
+    colStart = std::max(PixelAlive::colStart, frontEnd->colStart);
+    colStop  = std::min(PixelAlive::colStop, frontEnd->colStop);
+    LOG(INFO) << GREEN << "ThrMinimization will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << BOLDYELLOW << colStart << ", " << colStop << RESET
               << GREEN << "]" << RESET;
 
     // #######################
@@ -122,7 +122,7 @@ void ThrMinimization::initializeFiles(const std::string& fileRes_, int currentRu
 
 void ThrMinimization::run()
 {
-    ThrMinimization::bitWiseScanGlobal(frontEnd.thresholdReg, targetOccupancy, startValue, stopValue);
+    ThrMinimization::bitWiseScanGlobal(frontEnd->thresholdReg, targetOccupancy, startValue, stopValue);
 
     // ############################
     // # Fill threshold container #
@@ -133,7 +133,7 @@ void ThrMinimization::run()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                     theThrContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                        static_cast<RD53*>(cChip)->getReg(frontEnd.thresholdReg);
+                        static_cast<RD53*>(cChip)->getReg(frontEnd->thresholdReg);
 
     // ################
     // # Error report #

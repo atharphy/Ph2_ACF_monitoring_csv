@@ -29,7 +29,7 @@ class RD53ChannelGroupHandler : public ChannelGroupHandler
                             uint8_t           groupType,
                             uint8_t           hitPerCol   = 1,
                             uint8_t           onlyNGroups = 0);
-    ~RD53ChannelGroupHandler();
+    // ~RD53ChannelGroupHandler();
 
     template <size_t R, size_t C>
     class RD53ChannelGroupAll : public ChannelGroup<R, C>

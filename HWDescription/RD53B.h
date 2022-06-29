@@ -13,6 +13,7 @@
 
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "RD53.h"
+#include "RD53BCommands.h"
 
 namespace Ph2_HwDescription
 {
@@ -31,7 +32,8 @@ class RD53B : public RD53
     ChannelGroupBase* getChannelGroupPattern(uint8_t hitPerCol) const override { return new RD53ChannelGroupHandler::RD53ChannelGroupPattern<RD53B::NROWS, RD53B::NCOLS>(hitPerCol); }
     size_t            getNRows() const override { return RD53B::NROWS; }
     size_t            getNCols() const override { return RD53B::NCOLS; }
-    const FrontEnd&   getMajorityFE(size_t colStart, size_t colStop) const override { return RD53B::CROC; }
+    const FrontEnd*   getMajorityFE(size_t colStart, size_t colStop) const override { return &RD53B::CROC; }
+    void decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::RD53ChipEvent& chipEvent) const override {}
 };
 
 } // namespace Ph2_HwDescription

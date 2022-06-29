@@ -1,4 +1,4 @@
-\\/*!
+/*!
   \file                  RD53Gain.h
   \brief                 Implementaion of Gain scan
   \author                Mauro DINARDO
@@ -86,6 +86,8 @@
     size_t colStart;
     size_t colStop;
     size_t nEvents;
+    size_t startValue;
+    size_t stopValue;
     float  targetCharge;
     size_t nSteps;
     size_t offset;
@@ -99,7 +101,6 @@
     std::string fileRes;
     int         theCurrentRun;
     bool        saveData;
-    RD53        firstChip;
 };
 
 #endif

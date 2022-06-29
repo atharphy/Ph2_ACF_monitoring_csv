@@ -179,7 +179,7 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
             // ##################################################
             do
             {
-                for(const auto& frame: RD53EvtList[it].chip_frames_events)
+                for(const auto& frame: RD53EvtList[it].chip_events)
                 {
                     std::string chipType = "unknown";
                     for(const auto& cHybrid: *(eudaqProducer->RD53sysCntrPhys.fDetectorContainer->at(0)->at(0)))

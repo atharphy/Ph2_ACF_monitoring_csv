@@ -16,7 +16,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace RD53Cmd
+namespace RD53ACmd
 {
 // Map 5-bit to 8-bit fields
 constexpr uint8_t map5to8bit[] = {
@@ -85,20 +85,20 @@ template <class cmdType>
 void serialize(const cmdType& cmd, std::vector<uint16_t>& frameVector)
 {
     // Insert command code
-    frameVector.push_back(cmdType::cmdCode);
+    frameVector.push_back(cmdType::cmdCode());
 
-    auto fields = cmd.serializeFields();
+    auto fields = serializeFields(cmd);
 
     // Insert: chip id, address and data
-    for(auto i = 1; i < static_cast<int>(cmdType::nFields); i += 2) frameVector.push_back(bits::pack<8, 8>(fields[i - 1], fields[i]));
+    for(auto i = 1; i < static_cast<int>(cmdType::nFields()); i += 2) frameVector.push_back(bits::pack<8, 8>(fields[i - 1], fields[i]));
 }
 
 template <class cmdType>
-std::vector<uint16_t> getFrames(const cmdType& cmd)
+std::vector<uint16_t> serialize(const cmdType& cmd)
 {
     std::vector<uint16_t> frameVector;
 
-    frameVector.reserve(1 + cmdType::nFields / 2);
+    frameVector.reserve(1 + cmdType::nFields() / 2);
     serialize(cmd, frameVector);
 
     return frameVector;
@@ -106,43 +106,43 @@ std::vector<uint16_t> getFrames(const cmdType& cmd)
 
 struct ECR
 {
-    static const uint16_t cmdCode = RD53CmdEncoder::RESET_ECR;
-    static const uint16_t nFields = 0;
+    static constexpr uint16_t cmdCode() { return RD53CmdEncoder::RESET_ECR; }
+    static constexpr uint16_t nFields() { return 0; }
 };
 
 struct BCR
 {
-    static const uint16_t cmdCode = RD53CmdEncoder::RESET_BCR;
-    static const uint16_t nFields = 0;
+    static constexpr uint16_t cmdCode() { return RD53CmdEncoder::RESET_BCR; }
+    static constexpr uint16_t nFields() { return 0; }
 };
 
 struct NoOp
 {
-    static const uint16_t cmdCode = RD53CmdEncoder::NOOP;
-    static const uint16_t nFields = 0;
+    static constexpr uint16_t cmdCode() { return RD53CmdEncoder::NOOP; }
+    static constexpr uint16_t nFields() { return 0; }
 };
 
 struct Sync
 {
-    static const uint16_t cmdCode = RD53CmdEncoder::SYNC;
-    static const uint16_t nFields = 0;
+    static constexpr uint16_t cmdCode() { return RD53CmdEncoder::SYNC; }
+    static constexpr uint16_t nFields() { return 0; }
 };
 
 struct GlobalPulse
 {
-    static const uint16_t cmdCode = RD53CmdEncoder::SYNC;
-    static const uint16_t nFields = 2;
+    static constexpr uint16_t cmdCode() { return RD53CmdEncoder::GLOB_PULSE; }
+    static constexpr uint16_t nFields() { return 2; }
 
     uint8_t chip_id;
     uint8_t data;
 };
 
-std::array<uint8_t, GlobalPulse::nFields> serializeFields(const GlobalPulse& cmd);
+std::array<uint8_t, GlobalPulse::nFields()> serializeFields(const GlobalPulse& cmd);
 
 struct Cal
 {
-    static const uint16_t cmdCode = RD53CmdEncoder::CAL;
-    static const uint16_t nFields = 4;
+    static constexpr uint16_t cmdCode() { return RD53CmdEncoder::CAL; }
+    static constexpr uint16_t nFields() { return 4; }
 
     uint8_t chip_id;
     bool    cal_edge_mode;
@@ -152,45 +152,43 @@ struct Cal
     uint8_t cal_aux_delay;
 };
 
-std::array<uint8_t, Cal::nFields> serializeFields(const Cal& cmd);
+std::array<uint8_t, Cal::nFields()> serializeFields(const Cal& cmd);
 
 struct WrReg
 {
-    static const uint16_t cmdCode = RD53CmdEncoder::WRITE;
-    static const uint16_t nFields = 6;
+    static constexpr uint16_t cmdCode() { return RD53CmdEncoder::WRITE; }
+    static constexpr uint16_t nFields() { return 6; }
 
     uint8_t  chip_id;
     uint16_t address;
     uint16_t value;
 };
 
-std::array<uint8_t, WrReg::nFields> serializeFields(const WrReg& cmd);
+std::array<uint8_t, WrReg::nFields()> serializeFields(const WrReg& cmd);
 
 struct WrRegLong
 {
-    static const uint16_t cmdCode = RD53CmdEncoder::WRITE;
-    static const uint16_t nFields = 22;
+    static constexpr uint16_t cmdCode() { return RD53CmdEncoder::WRITE; }
+    static constexpr uint16_t nFields() { return 22; }
 
     uint8_t               chip_id;
     uint16_t              address;
     std::vector<uint16_t> values;
-
-    std::array<uint8_t, nFields> serializeFields() const;
 };
 
-std::array<uint8_t, WrRegLong::nFields> serializeFields(const WrRegLong& cmd);
+std::array<uint8_t, WrRegLong::nFields()> serializeFields(const WrRegLong& cmd);
 
 struct RdReg
 {
-    static const uint16_t cmdCode = RD53CmdEncoder::READ;
-    static const uint16_t nFields = 4;
+    static constexpr uint16_t cmdCode() { return RD53CmdEncoder::READ; }
+    static constexpr uint16_t nFields() { return 4; }
 
     uint8_t  chip_id;
     uint16_t address;
 };
 
-std::array<uint8_t, RdReg::nFields> serializeFields(const RdReg& cmd);
+std::array<uint8_t, RdReg::nFields()> serializeFields(const RdReg& cmd);
 
-} // namespace RD53Cmd
+} // namespace RD53ACmd
 
 #endif

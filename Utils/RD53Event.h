@@ -10,7 +10,6 @@
 #ifndef RD53Event_H
 #define RD53Event_H
 
-#include "../HWDescription/RD53A.h"
 #include "DataContainer.h"
 #include "Event.h"
 #include "GenericDataVector.h"
@@ -19,10 +18,10 @@
 #include <condition_variable>
 #include <omp.h>
 
-#ifdef __USE_ROOT__
-#include "TFile.h"
-#include "TTree.h"
-#endif
+namespace Ph2_HwDescription
+{
+class RD53;
+}
 
 // #############
 // # CONSTANTS #
@@ -76,10 +75,20 @@ const uint16_t MISSCHIP   = 0x0080; // Event status Chip data are missing
 
 namespace Ph2_HwInterface
 {
-struct ChipFrame
-{
-    ChipFrame(const uint32_t data0, const uint32_t data1);
+      struct HitData
+    {
+        HitData(uint16_t row, uint16_t col, uint8_t tot) : row(row), col(col), tot(tot) {}
 
+        uint16_t row;
+        uint16_t col;
+        uint8_t  tot;
+    };
+
+struct RD53ChipEvent
+{
+    static RD53ChipEvent decodeChipFrame(const uint32_t data0, const uint32_t data1);
+
+// # Firmware event data #
     uint16_t error_code;
     uint16_t hybrid_id;
     uint16_t chip_id;
@@ -87,6 +96,14 @@ struct ChipFrame
     uint16_t l1a_data_size;
     uint16_t chip_type;
     uint16_t frame_delay;
+
+// # Chip event data #
+     uint16_t             trigger_id;
+        uint16_t             trigger_tag;
+        uint16_t             bc_id;
+        std::vector<HitData> hit_data;
+
+        uint16_t eventStatus;
 };
 
 class RD53Event : public Ph2_HwInterface::Event
@@ -114,7 +131,7 @@ class RD53Event : public Ph2_HwInterface::Event
     uint32_t l1a_counter;
     uint32_t bx_counter;
 
-    std::vector<std::pair<ChipFrame, Ph2_HwDescription::RD53A::Event>> chip_frames_events;
+    std::vector<RD53ChipEvent> chip_events;
 
     uint16_t eventStatus;
 

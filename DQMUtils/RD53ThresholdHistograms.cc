@@ -17,8 +17,8 @@ void ThresholdHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
-    auto           firstChip      = RD53::getFirstChip(theDetectorStructure);
-    const uint16_t rangeThreshold = RD53Shared::setBits(firstChip.getNumberOfBits("Vthreshold_LIN")) + 1;
+
+    const uint16_t rangeThreshold = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("Vthreshold_LIN")) + 1;
 
     auto hThrehsold = CanvasContainer<TH1F>("Threhsold", "Threhsold", rangeThreshold, 0, rangeThreshold);
     bookImplementer(theOutputFile, theDetectorStructure, Threhsold, hThrehsold, "Threhsold", "Entries");

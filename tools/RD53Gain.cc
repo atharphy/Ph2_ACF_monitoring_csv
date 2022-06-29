@@ -17,7 +17,7 @@ using namespace Ph2_HwInterface;
 
 void Gain::ConfigureCalibration()
 {
-    firstChip = RD53::getFirstChip(fDetectorConainer);
+
 
     // #######################
     // # Retrieve parameters #
@@ -42,7 +42,7 @@ void Gain::ConfigureCalibration()
     // ########################
     // # Custom channel group #
     // ########################
-    std::unique_ptr<ChannelGroupBase> customChannelGroup{firstChip.getChannelGroup()};
+    std::unique_ptr<ChannelGroupBase> customChannelGroup{RD53Shared::firstChip->getChannelGroup()};
     customChannelGroup->disableAllChannels();
 
     for(auto row = rowStart; row <= rowStop; row++)
@@ -50,8 +50,10 @@ void Gain::ConfigureCalibration()
 
     auto groupType = doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups;
     if(groupType == RD53GroupType::AllPixels)
+        theChnGroupHandler =
+            std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, RD53Shared::firstChip->getChannelGroupAll(), RD53Shared::firstChip->getChannelGroupAll(), groupType, nHITxCol, doOnlyNGroups);
         else theChnGroupHandler =
-            std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, firstChip.getChannelGroupPattern(nHITxCol), firstChip.getChannelGroupPattern(nHITxCol), groupType, nHITxCol, doOnlyNGroups);
+            std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, RD53Shared::firstChip->getChannelGroupPattern(nHITxCol), RD53Shared::firstChip->getChannelGroupPattern(nHITxCol), groupType, nHITxCol, doOnlyNGroups);
     theChnGroupHandler->setCustomChannelGroup(*customChannelGroup);
     this->setChannelGroupHandler(theChnGroupHandler);
 
@@ -180,8 +182,8 @@ void Gain::run()
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
-                    for(auto row = 0u; row < firstChip.getNRows(); row++)
-                        for(auto col = 0u; col < firstChip.getNCols(); col++)
+                    for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
+                        for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                             if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !this->getChannelGroupHandlerContainer()
                                                                                                                      ->at(cBoard->getIndex())
                                                                                                                      ->at(cOpticalGroup->getIndex())
@@ -250,8 +252,8 @@ void Gain::draw(bool doSaveData)
                         for(auto i = 0u; i < dacList.size(); i++)
                         {
                             fileOutID << "Iteration " << i << " --- reg = " << dacList[i] - offset << std::endl;
-                            for(auto row = 0u; row < firstChip.getNRows(); row++)
-                                for(auto col = 0u; col < firstChip.getNCols(); col++)
+                            for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
+                                for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                                     if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
                                                                                                                            ->at(cBoard->getIndex())
                                                                                                                            ->at(cOpticalGroup->getIndex())
@@ -305,8 +307,8 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    for(auto row = 0u; row < firstChip.getNRows(); row++)
-                        for(auto col = 0u; col < firstChip.getNCols(); col++)
+                    for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
+                        for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                             if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
                                                                                                                    ->at(cBoard->getIndex())
                                                                                                                    ->at(cOpticalGroup->getIndex())

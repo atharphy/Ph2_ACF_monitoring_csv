@@ -43,6 +43,8 @@ class PixelAliveHistograms : public DQMHistogramBase
     DetectorDataContainer TriggerID;
 
     size_t nEvents;
+    size_t nRows;
+    size_t nCols;
 };
 
 #endif

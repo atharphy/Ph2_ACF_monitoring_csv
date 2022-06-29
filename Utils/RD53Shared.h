@@ -21,8 +21,14 @@
 #include <boost/numeric/ublas/lu.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
 
+namespace Ph2_HwDescription {
+    class RD53;
+}
+
 namespace RD53Shared
 {
+extern Ph2_HwDescription::RD53* firstChip;
+
 const char     RESULTDIR[]   = "Results";                                       // Directory containing the results
 const double   ISDISABLED    = -1.0;                                            // Encoding disabled channels
 const double   FITERROR      = -2.0;                                            // Encoding fit errors

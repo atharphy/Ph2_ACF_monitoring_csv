@@ -1,4 +1,4 @@
-\/*!
+/*!
   \file                  RD53ThrAdjustment.h
   \brief                 Implementaion of threshold adjustment
   \author                Mauro DINARDO
@@ -47,7 +47,7 @@
     void   analyze();
     size_t getNumberIterations()
     {
-        uint16_t nIterationsThr = floor(log2(ThrStop - ThrStart + 1) + 2);
+        uint16_t nIterationsThr = floor(log2(stopValue - startValue + 1) + 2);
         uint16_t moreIterations = 1;
         return PixelAlive::getNumberIterations() * (nIterationsThr + moreIterations);
     }

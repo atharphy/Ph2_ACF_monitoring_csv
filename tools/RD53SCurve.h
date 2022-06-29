@@ -86,7 +86,6 @@ class SCurve : public Tool
     std::string fileRes;
     int         theCurrentRun;
     bool        saveData;
-    RD53        firstChip;
 
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
 };

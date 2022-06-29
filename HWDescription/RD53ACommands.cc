@@ -10,11 +10,11 @@
 
 #include "RD53ACommands.h"
 
-namespace RD53Cmd
+namespace RD53ACmd
 {
-std::array<uint8_t, GlobalPulse::nFields> serializeFields(const GlobalPulse& cmd)
+std::array<uint8_t, GlobalPulse::nFields()> serializeFields(const GlobalPulse& cmd)
 {
-    std::array<uint8_t, GlobalPulse::nFields> fields;
+    std::array<uint8_t, GlobalPulse::nFields()> fields;
 
     fields[0] = packAndEncode<4, 1>(cmd.chip_id, 0);
     fields[1] = packAndEncode<4, 1>(cmd.data, 0);
@@ -22,9 +22,9 @@ std::array<uint8_t, GlobalPulse::nFields> serializeFields(const GlobalPulse& cmd
     return fields;
 }
 
-std::array<uint8_t, Cal::nFields> serializeFields(const Cal& cmd)
+std::array<uint8_t, Cal::nFields()> serializeFields(const Cal& cmd)
 {
-    std::array<uint8_t, Cal::nFields> fields;
+    std::array<uint8_t, Cal::nFields()> fields;
 
     fields[0] = packAndEncode<4, 1>(cmd.chip_id, cmd.cal_edge_mode);
     fields[1] = packAndEncode<3, 2>(cmd.cal_edge_delay, cmd.cal_edge_width >> 4);
@@ -34,9 +34,9 @@ std::array<uint8_t, Cal::nFields> serializeFields(const Cal& cmd)
     return fields;
 }
 
-std::array<uint8_t, WrReg::nFields> serializeFields(const WrReg& cmd)
+std::array<uint8_t, WrReg::nFields()> serializeFields(const WrReg& cmd)
 {
-    std::array<uint8_t, WrReg::nFields> fields;
+    std::array<uint8_t, WrReg::nFields()> fields;
 
     fields[0] = packAndEncode<4, 1>(cmd.chip_id, 0);
     fields[1] = packAndEncode<5>(cmd.address >> 4);
@@ -48,9 +48,9 @@ std::array<uint8_t, WrReg::nFields> serializeFields(const WrReg& cmd)
     return fields;
 }
 
-std::array<uint8_t, WrRegLong::nFields> serializeFields(const WrRegLong& cmd)
+std::array<uint8_t, WrRegLong::nFields()> serializeFields(const WrRegLong& cmd)
 {
-    std::array<uint8_t, WrRegLong::nFields> fields;
+    std::array<uint8_t, WrRegLong::nFields()> fields;
 
     fields[0] = packAndEncode<4, 1>(cmd.chip_id, 1);
     fields[1] = packAndEncode<5>(cmd.address >> 4);
@@ -65,9 +65,9 @@ std::array<uint8_t, WrRegLong::nFields> serializeFields(const WrRegLong& cmd)
     return fields;
 }
 
-std::array<uint8_t, RdReg::nFields> serializeFields(const RdReg& cmd)
+std::array<uint8_t, RdReg::nFields()> serializeFields(const RdReg& cmd)
 {
-    std::array<uint8_t, RdReg::nFields> fields;
+    std::array<uint8_t, RdReg::nFields()> fields;
 
     fields[0] = packAndEncode<4, 1>(cmd.chip_id, 0);
     fields[1] = packAndEncode<5>(cmd.address >> 4);
@@ -77,4 +77,4 @@ std::array<uint8_t, RdReg::nFields> serializeFields(const RdReg& cmd)
     return fields;
 }
 
-} // namespace RD53Cmd
+} // namespace RD53ACmd

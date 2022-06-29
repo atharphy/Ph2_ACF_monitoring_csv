@@ -96,7 +96,6 @@ class Physics : public Tool
 
     std::string fileRes;
     int         theCurrentRun;
-    RD53        firstChip;
     size_t      numberOfEventsPerRun;
     std::mutex  theMtx;
     evtConvType genericEvtConverter;

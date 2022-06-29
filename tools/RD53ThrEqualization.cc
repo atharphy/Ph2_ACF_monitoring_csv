@@ -8,6 +8,7 @@
 */
 
 #include "RD53ThrEqualization.h"
+#include "../HWDescription/RD53A.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -30,21 +31,21 @@ void ThrEqualization::ConfigureCalibration()
     doDisplay    = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip = this->findValueInSettings<double>("UpdateChipCfg");
 
-    frontEnd = firstChip.getMajorityFE(PixelAlive::colStart, PixelAlive::colStop);
-    if(frontEnd == RD53::SYNC)
+    frontEnd = RD53Shared::firstChip->getMajorityFE(PixelAlive::colStart, PixelAlive::colStop);
+    if(frontEnd == &RD53A::SYNC)
     {
         LOG(ERROR) << BOLDRED << "ThrEqualization cannot be used on the Synchronous FE, please change the selected columns" << RESET;
         exit(EXIT_FAILURE);
     }
-    PixelAlive::colStart = std::max(PixelAlive::colStart, frontEnd.colStart);
-    PixelAlive::colStop  = std::min(PixelAlive::colStop, frontEnd.colStop);
-    LOG(INFO) << GREEN << "ThrEqualization will run on the " << RESET << BOLDYELLOW << frontEnd.name << RESET << GREEN << " FE, columns [" << GREEN << BOLDYELLOW << PixelAlive::colStart << ", "
+    PixelAlive::colStart = std::max(PixelAlive::colStart, frontEnd->colStart);
+    PixelAlive::colStop  = std::min(PixelAlive::colStop, frontEnd->colStop);
+    LOG(INFO) << GREEN << "ThrEqualization will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << GREEN << BOLDYELLOW << PixelAlive::colStart << ", "
               << PixelAlive::colStop << RESET << GREEN << "]" << RESET;
 
     // ########################
     // # Custom channel group #
     // ########################
-    std::unique_ptr<ChannelGroupBase> customChannelGroup{firstChip.getChannelGroup()};
+    std::unique_ptr<ChannelGroupBase> customChannelGroup{RD53Shared::firstChip->getChannelGroup()};
     customChannelGroup->disableAllChannels();
 
     for(auto row = PixelAlive::rowStart; row <= PixelAlive::rowStop; row++)
@@ -149,9 +150,9 @@ void ThrEqualization::run()
     // # Run threshold equalization #
     // ##############################
     size_t TDACsize = RD53Shared::setBits(RD53Constants::NBIT_TDAC) + 1;
-    if(frontEnd == RD53::DIFF) TDACsize *= 2;
+    if(frontEnd == &RD53A::DIFF) TDACsize *= 2;
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, theTDACcontainer);
-    ThrEqualization::bitWiseScanLocal(frontEnd.name, PixelAlive::nEvents, TARGETEFF /*PixelAlive::thrOccupancy*/, PixelAlive::nEvtsBurst);
+    ThrEqualization::bitWiseScanLocal(frontEnd->name, PixelAlive::nEvents, TARGETEFF /*PixelAlive::thrOccupancy*/, PixelAlive::nEvtsBurst);
 
     // #################################################
     // # Fill TDAC container and mark enabled channels #
@@ -164,8 +165,8 @@ void ThrEqualization::run()
                     this->fReadoutChipInterface->ReadChipAllLocalReg(
                         static_cast<RD53*>(cChip), "PIX_PORTAL", *theTDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
 
-                    for(auto row = 0u; row < firstChip.getNRows(); row++)
-                        for(auto col = 0u; col < firstChip.getNCols(); col++)
+                    for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
+                        for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                             if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !this->getChannelGroupHandlerContainer()
                                                                                                                      ->at(cBoard->getIndex())
                                                                                                                      ->at(cOpticalGroup->getIndex())
@@ -232,8 +233,8 @@ void ThrEqualization::analyze()
                     int   counterMinBin = 0;
                     int   counterMaxBin = 0;
 
-                    for(auto row = 0u; row < firstChip.getNRows(); row++)
-                        for(auto col = 0u; col < firstChip.getNCols(); col++)
+                    for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
+                        for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                             if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
                                                                                                                    ->at(cBoard->getIndex())
                                                                                                                    ->at(cOpticalGroup->getIndex())
@@ -453,7 +454,7 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
 {
     float    tmp;
     uint16_t init;
-    uint16_t numberOfBits = floor(log2(frontEnd.nTDACvalues) + 1);
+    uint16_t numberOfBits = floor(log2(frontEnd->nTDACvalues) + 1);
 
     DetectorDataContainer minDACcontainer;
     DetectorDataContainer midDACcontainer;
@@ -464,7 +465,7 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
 
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, minDACcontainer, init = 0);
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, midDACcontainer);
-    ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, maxDACcontainer, init = frontEnd.nTDACvalues);
+    ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, maxDACcontainer, init = frontEnd->nTDACvalues);
 
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, bestDACcontainer);
     ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, bestContainer, tmp = (target < 0.5 ? 1 : 0));
@@ -509,8 +510,8 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
-                        for(auto row = 0u; row < firstChip.getNRows(); row++)
-                            for(auto col = 0u; col < firstChip.getNCols(); col++)
+                        for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
+                            for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                             {
                                 // #######################
                                 // # Build discriminator #

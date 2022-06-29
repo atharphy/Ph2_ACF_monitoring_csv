@@ -8,6 +8,7 @@
 */
 
 #include "RD53ClockDelay.h"
+#include "../HWDescription/RD53ACommands.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -24,7 +25,7 @@ void ClockDelay::ConfigureCalibration()
     // # Retrieve parameters #
     // #######################
     startValue = 0;
-    stopValue  = RD53Shared::NLATENCYBINS * (RD53Shared::setBits(firstChip.getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY")) + 1) - 1;
+    stopValue  = RD53Shared::NLATENCYBINS * (RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY")) + 1) - 1;
 
     // ##############################
     // # Initialize dac scan values #
@@ -42,8 +43,8 @@ void ClockDelay::ConfigureCalibration()
     // ##################
     // # Register masks #
     // ##################
-    maxClkDelay = RD53Shared::setBits(firstChip.getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY"));
-    maxCmdDelay = RD53Shared::setBits(firstChip.getNumberOfBits("CLK_DATA_DELAY_CMD_DELAY"));
+    maxClkDelay = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY"));
+    maxCmdDelay = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CLK_DATA_DELAY_CMD_DELAY"));
 
     // #######################
     // # Initialize progress #
@@ -363,6 +364,6 @@ void ClockDelay::saveChipRegisters(int currentRun)
 void ClockDelay::writeSequence(const Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::ReadoutChip* pChip, uint16_t clk_data_delay)
 {
     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(pChip), "CLK_DATA_DELAY", clk_data_delay, false);
-    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[pBoard->getId()])->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORS, RD53Cmd::RD53CmdEncoder::SYNC), -1);
+    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[pBoard->getId()])->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORS, RD53ACmd::RD53CmdEncoder::SYNC), -1);
     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(pChip), "CLK_DATA_DELAY", clk_data_delay);
 }

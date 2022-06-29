@@ -9,12 +9,14 @@
 
 #include "RD53Physics.h"
 
+#include "../HWDescription/RD53ACommands.h"
+
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
 void Physics::ConfigureCalibration()
 {
-    firstChip = RD53::getFirstChip(fDetectorContainer);
+
 
     // #######################
     // # Retrieve parameters #
@@ -28,18 +30,18 @@ void Physics::ConfigureCalibration()
     doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData  = this->findValueInSettings<double>("SaveBinaryData");
     outputBinaryDir = this->findValueInSettings<std::string>("OutputBinaryDir", "");
-    frontEnd        = firstChip.getMajorityFE(colStart, colStop);
+    frontEnd        = RD53Shared::firstChip->getMajorityFE(colStart, colStop);
 
     // ################################
     // # Custom channel group handler #
     // ################################
-    std::unique_ptr<ChannelGroupBase> customChannelGroup{firstChip.getChannelGroup()};
+    std::unique_ptr<ChannelGroupBase> customChannelGroup{RD53Shared::firstChip->getChannelGroup()};
     customChannelGroup->disableAllChannels();
 
     for(auto row = rowStart; row <= rowStop; row++)
         for(auto col = colStart; col <= colStop; col++) customChannelGroup->enableChannel(row, col);
 
-    theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, RD53GroupType::AllPixels);
+    theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, RD53Shared::firstChip->getChannelGroupAll(), RD53Shared::firstChip->getChannelGroupAll(), RD53GroupType::AllPixels);
     theChnGroupHandler->setCustomChannelGroup(*customChannelGroup);
     this->setChannelGroupHandler(theChnGroupHandler);
 
@@ -168,14 +170,14 @@ void Physics::run()
         RD53Event::decodedEvents.clear();
         Physics::analyze();
 
-        if(strcmp(frontEnd.name, "SYNC") == 0)
+        if(strcmp(frontEnd->name, "SYNC") == 0)
             for(const auto cBoard: *fDetectorContainer)
             {
                 static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])
-                    ->WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
-                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommand(RD53Cmd::GlobalPulse(RD53Constants::BROADCAST_CHIPID, 0x6).getFrames(), -1);
+                    ->WriteChipCommand(serialize(RD53ACmd::WrReg{RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14}), -1);
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommand(serialize(RD53ACmd::GlobalPulse{RD53Constants::BROADCAST_CHIPID, 0x6}), -1);
                 std::this_thread::sleep_for(std::chrono::microseconds(10));
-                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommand(RD53Cmd::ECR().getFrames(), -1);
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommand(serialize(RD53ACmd::ECR{}), -1);
                 std::this_thread::sleep_for(std::chrono::microseconds(20));
             }
 
@@ -248,7 +250,7 @@ void Physics::fillDataContainer(BeBoard& theBoard)
     const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
     const auto   cBoard    = theOccContainer.at(theBoard.getIndex());
-    auto         firstChip = RD53::getFirstChip(fDetectorConainer);
+
 
     // ###################
     // # Clear container #
@@ -318,8 +320,8 @@ void Physics::fillDataContainer(BeBoard& theBoard)
     for(const auto cOpticalGroup: *cBoard)
         for(const auto cHybrid: *cOpticalGroup)
             for(const auto cChip: *cHybrid)
-                for(auto row = 0u; row < firstChip.getNRows(); row++)
-                    for(auto col = 0u; col < firstChip.getNCols(); col++) cChip->getChannel<OccupancyAndPh>(row, col).normalize(events.size(), true);
+                for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
+                    for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++) cChip->getChannel<OccupancyAndPh>(row, col).normalize(events.size(), true);
 }
 
 void Physics::chipErrorReport() const

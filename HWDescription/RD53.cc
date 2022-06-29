@@ -28,7 +28,7 @@ void RD53::loadfRegMap(const std::string& fileName)
 {
     std::ifstream      file(fileName.c_str(), std::ios::in);
     std::stringstream  myString;
-    perColumnPixelData pixData(RD53::getNRows());
+    perColumnPixelData pixData(getNRows());
 
     if(file.good() == true)
     {
@@ -73,7 +73,7 @@ void RD53::loadfRegMap(const std::string& fileName)
                         }
                     }
 
-                    if(row < RD53::getNRows())
+                    if(row < getNRows())
                     {
                         myString.str("");
                         myString.clear();
@@ -102,7 +102,7 @@ void RD53::loadfRegMap(const std::string& fileName)
                         }
                     }
 
-                    if(row < RD53::getNRows())
+                    if(row < getNRows())
                     {
                         myString.str("");
                         myString.clear();
@@ -129,7 +129,7 @@ void RD53::loadfRegMap(const std::string& fileName)
                         }
                     }
 
-                    if(row < RD53::getNRows())
+                    if(row < getNRows())
                     {
                         myString.str("");
                         myString.clear();
@@ -156,7 +156,7 @@ void RD53::loadfRegMap(const std::string& fileName)
                         }
                     }
 
-                    if(row < RD53::getNRows())
+                    if(row < getNRows())
                     {
                         myString.str("");
                         myString.clear();
@@ -378,7 +378,7 @@ void RD53::resetTDAC()
 
 uint8_t RD53::getTDAC(unsigned int row, unsigned int col) { return fPixelsMask[col].TDAC[row]; }
 
-uint32_t RD53::getNumberOfChannels() const { return RD53::getNRows() * RD53::getNCols(); }
+uint32_t RD53::getNumberOfChannels() const { return getNRows() * getNCols(); }
 
 bool RD53::isDACLocal(const std::string& regName)
 {
