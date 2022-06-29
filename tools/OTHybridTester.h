@@ -18,6 +18,7 @@
 #include "D19cDebugFWInterface.h"
 #include "D19cLinkInterface.h"
 #include "D19cOpticalInterface.h"
+#include "D19cTriggerInterface.h"
 #include "L1ReadoutInterface.h"
 #include "Tool.h"
 #include "linearFitter.h"

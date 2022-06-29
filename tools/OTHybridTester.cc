@@ -86,7 +86,11 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
 
-        fBeBoardInterface->Start(cBoard);
+        fBeBoardInterface->setBoard(cBoard->getId());
+        D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        D19cTriggerInterface* cTriggerInterface = dynamic_cast<D19cTriggerInterface*>(cFWInterface->getTriggerInterface());
+	cTriggerInterface->ResetTriggerFSM();
+        cTriggerInterface->Start();
         for(auto cOpticalGroup: *cBoard)
         {
             for(int hybridNumber = 0; hybridNumber < 2; hybridNumber++)
@@ -97,12 +101,10 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 0);
                     std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 }
-                D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
 
                 size_t           cLine        = 0;
                 do
                 {
-                    fBeBoardInterface->setBoard(cBoard->getId());
                     cFWInterface->selectLink(cOpticalGroup->getId());
                     cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
 
@@ -200,7 +202,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 LOG(DEBUG) << "L1A total wrong bits: " << BOLDBLUE << +cL1ATotalWrong << " in a total of: " << +cL1ATotal << RESET;
             }
         }
-        fBeBoardInterface->Stop(cBoard);
+        cTriggerInterface->Stop();
     }
     return res;
 }
