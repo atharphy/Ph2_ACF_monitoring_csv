@@ -21,10 +21,10 @@
 // #############
 #define TARGETEFF 0.50 // Target efficiency for optimization algorithm
 
-    // #####################################
-    // # Threshold minimization test suite #
-    // #####################################
-    class ThrAdjustment : public PixelAlive
+// #####################################
+// # Threshold minimization test suite #
+// #####################################
+class ThrAdjustment : public PixelAlive
 {
   public:
     ~ThrAdjustment()

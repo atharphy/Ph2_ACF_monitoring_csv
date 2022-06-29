@@ -16,9 +16,7 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-ChipInterface::ChipInterface(const BeBoardFWMap& pBoardMap) : fBoardMap(pBoardMap), fBoardFW(nullptr), fPrevBoardIdentifier(65535)
-{
-}
+ChipInterface::ChipInterface(const BeBoardFWMap& pBoardMap) : fBoardMap(pBoardMap), fBoardFW(nullptr), fPrevBoardIdentifier(65535) {}
 
 void ChipInterface::setBoard(uint16_t pBoardIdentifier)
 {

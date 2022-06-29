@@ -11,6 +11,7 @@
 #define RD53FWInterface_H
 
 #include "../HWDescription/RD53.h"
+#include "../HWDescription/RD53ACommands.h"
 #include "../Utils/RD53Event.h"
 #include "../Utils/RD53RunProgress.h"
 #include "../Utils/RD53Shared.h"

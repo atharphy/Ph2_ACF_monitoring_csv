@@ -21,8 +21,9 @@
 #include <boost/numeric/ublas/lu.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
 
-namespace Ph2_HwDescription {
-    class RD53;
+namespace Ph2_HwDescription
+{
+class RD53;
 }
 
 namespace RD53Shared

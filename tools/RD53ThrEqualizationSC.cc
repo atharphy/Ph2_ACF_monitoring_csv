@@ -235,7 +235,6 @@ void ThrEqualizationSC::analyze()
                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                         for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                             if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !cTestChannelGroup->isChannelEnabled(row, col))
-                            // if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->fChannelGroupHandler->allChannelGroup()->isChannelEnabled(row, col))
                             {
                                 static_cast<RD53*>(cChip)->setTDAC(
                                     row, col, theTDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col));

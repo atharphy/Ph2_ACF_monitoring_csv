@@ -23,4 +23,6 @@ RD53B::RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHy
     fChipOriginalMask.reset(getChannelGroup());
 }
 
+void RD53B::decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::RD53ChipEvent& chipEvent) const {}
+
 } // namespace Ph2_HwDescription

@@ -8,8 +8,8 @@
 */
 
 #include "RD53Event.h"
-#include "../Utils/bit_packing.h"
 #include "../HWDescription/RD53.h"
+#include "../Utils/bit_packing.h"
 
 #ifdef __USE_ROOT__
 #include "TFile.h"
@@ -20,13 +20,11 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-RD53ChipEvent RD53ChipEvent::decodeChipFrame(const uint32_t data0, const uint32_t data1)
+void RD53ChipEvent::decodeChipFrame(const uint32_t data0, const uint32_t data1, RD53ChipEvent& event)
 {
-    RD53ChipEvent evt;
-    std::tie(evt.error_code, evt.hybrid_id, evt.chip_lane, evt.l1a_data_size) =
+    std::tie(event.error_code, event.hybrid_id, event.chip_lane, event.l1a_data_size) =
         bits::unpack<RD53FWEvtEncoder::NBIT_ERR, RD53FWEvtEncoder::NBIT_HYBRID, RD53FWEvtEncoder::NBIT_CHIPID, RD53FWEvtEncoder::NBIT_L1ASIZE>(data0);
-    std::tie(evt.chip_type, evt.frame_delay) = bits::unpack<RD53FWEvtEncoder::NBIT_CHIPTYPE, RD53FWEvtEncoder::NBIT_DELAY>(data1);
-    return evt;
+    std::tie(event.chip_type, event.frame_delay) = bits::unpack<RD53FWEvtEncoder::NBIT_CHIPTYPE, RD53FWEvtEncoder::NBIT_DELAY>(data1);
 }
 
 RD53Event::RD53Event(const uint32_t* data, size_t n)
@@ -87,9 +85,9 @@ RD53Event::RD53Event(const uint32_t* data, size_t n)
     index = 4;
     for(auto size: event_sizes)
     {
-        auto event = RD53ChipEvent::decodeChipFrame(data[index], data[index + 1]);
+        RD53ChipEvent event;
+        RD53ChipEvent::decodeChipFrame(data[index], data[index + 1], event);
         RD53Shared::firstChip->decodeChipData(&data[index + 2], size - 2, event);
-        // chip_events.emplace_back(std::pair<RD53ChipEvent, RD53::Event>(RD53ChipEvent(data[index], data[index + 1]), RD53::Event(&data[index + 2], size - 2)));
 
         if(event.error_code != 0)
         {
@@ -148,12 +146,12 @@ void RD53Event::fillChipDataContainer(ChipDataContainer* chipContainer, const st
 
 bool RD53Event::isHittedChip(uint8_t hybrid_id, uint8_t chip_id, size_t& chipIndx) const
 {
-    auto it = std::find_if(chip_events.begin(), chip_events.end(), [&](const RD53ChipEvent& event) {
-        return ((event.hybrid_id == hybrid_id) && (event.chip_id == chip_id) && (event.hit_data.size() != 0));
-    });
+    auto it = std::find_if(
+        chip_events.begin(), chip_events.end(), [&](const RD53ChipEvent& event) { return ((event.hybrid_id == hybrid_id) && (event.chip_id == chip_id) && (event.hit_data.size() != 0)); });
 
     if(it == chip_events.end()) return false;
     chipIndx = it - chip_events.begin();
+
     return true;
 }
 
@@ -175,6 +173,7 @@ int RD53Event::lane2chipId(const BeBoard* pBoard, uint16_t optGroup_id, uint16_t
             }
         }
     }
+
     return -1; // Chip not found
 }
 
@@ -518,7 +517,7 @@ void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std:
 // # Use of OpenMP (compiler flag -fopenmp) #
 // ##########################################
 /*
-void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint16_t& eventStatus, const RD53& chip)
+void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint16_t& eventStatus)
 {
     // #####################
     // # Consistency check #
@@ -567,7 +566,7 @@ void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std:
             auto     lastEvent  = firstEvent + nEvents + 1 < eventStart.end() ? firstEvent + nEvents + 1 : eventStart.end();
             std::move(firstEvent, lastEvent, std::back_inserter(vecEventStart));
 
-            RD53Event::DecodeEvents(data, vecEvents, vecEventStart, status, chip);
+            RD53Event::DecodeEvents(data, vecEvents, vecEventStart, status);
 
             // #####################
             // # Pack event vector #

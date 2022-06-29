@@ -27,10 +27,10 @@
 // #############
 #define NGAINPAR 4 // Number of parameters for gain data regression
 
-    // ###################
-    // # Gain test suite #
-    // ###################
-    class Gain : public Tool
+// ###################
+// # Gain test suite #
+// ###################
+class Gain : public Tool
 {
   public:
     ~Gain()

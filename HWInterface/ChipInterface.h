@@ -49,7 +49,7 @@ class ChipInterface
     //     #endif
     // #endif
     uint16_t fPrevBoardIdentifier; /*!< Id of the previous board */
-    bool     fWithlpGBT = false; /*!< lpGBT is used for configuration */
+    bool     fWithlpGBT = false;   /*!< lpGBT is used for configuration */
 
     /*!
      * \brief Set the board to talk with

@@ -10,6 +10,7 @@
 #ifndef RD53Physics_H
 #define RD53Physics_H
 
+#include "../HWDescription/RD53ACommands.h"
 #include "../HWInterface/RD53FWInterface.h"
 #include "../Utils/Container.h"
 #include "../Utils/ContainerFactory.h"

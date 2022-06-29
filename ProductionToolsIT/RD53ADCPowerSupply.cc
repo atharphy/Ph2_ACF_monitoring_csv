@@ -109,7 +109,7 @@ void ADCPowerSupply::run(std::string configFile)
 
 void ADCPowerSupply::draw(bool saveData)
 {
-// #ifdef __USE_ROOT__
+    // #ifdef __USE_ROOT__
     // histos->fillPS(*fDetectorContainer, fitStart, fitEnd, VMUXvolt, ADCcode);
-// #endif
+    // #endif
 }

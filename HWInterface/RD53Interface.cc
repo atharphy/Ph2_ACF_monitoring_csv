@@ -8,8 +8,6 @@
 */
 
 #include "RD53Interface.h"
-#include "../HWDescription/RD53ACommands.h"
-#include "../HWDescription/RD53A.h"
 
 using namespace Ph2_HwDescription;
 
@@ -739,7 +737,7 @@ uint32_t RD53Interface::measureADC(ReadoutChip* pChip, uint32_t data)
     RD53ACmd::serialize(RD53ACmd::WrReg{chipID, GLOBAL_PULSE_ROUTE, 0x0008}, commandList); // Clear Monitor Data
     RD53ACmd::serialize(RD53ACmd::GlobalPulse{(uint8_t)pChip->getId(), 0x0004}, commandList);
     RD53ACmd::serialize(RD53ACmd::WrReg{chipID, pChip->getRegItem("MONITOR_SELECT").fAddress, (uint16_t)data}, commandList); // 14 bits: bit 13 enable, bits 7:12 I-Mon, bits 0:6 V-Mon
-    RD53ACmd::serialize(RD53ACmd::WrReg{chipID, GLOBAL_PULSE_ROUTE, 0x1000}, commandList);                         // Trigger Monitor Data to start conversion
+    RD53ACmd::serialize(RD53ACmd::WrReg{chipID, GLOBAL_PULSE_ROUTE, 0x1000}, commandList);                                   // Trigger Monitor Data to start conversion
     RD53ACmd::serialize(RD53ACmd::GlobalPulse{(uint8_t)pChip->getId(), 0x0004}, commandList);
     RD53ACmd::serialize(RD53ACmd::WrReg{chipID, GLOBAL_PULSE_ROUTE, GlbPulseVal}, commandList); // Restore value in Global Pulse Route
 

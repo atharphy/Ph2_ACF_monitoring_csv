@@ -11,6 +11,8 @@
 #define RD53Interface_H
 
 #include "../HWDescription/ChipRegItem.h"
+#include "../HWDescription/RD53A.h"
+#include "../HWDescription/RD53ACommands.h"
 #include "BeBoardFWInterface.h"
 #include "RD53FWInterface.h"
 #include "ReadoutChipInterface.h"

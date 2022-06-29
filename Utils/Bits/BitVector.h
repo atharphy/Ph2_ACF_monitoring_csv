@@ -89,11 +89,9 @@ class BitVector
     }
 
     operator BitView<BlockType>() { return {_data.data(), 0, _size}; }
-
     operator BitView<const BlockType>() const { return {_data.data(), 0, _size}; }
 
     BitView<BlockType> view() { return {_data.data(), 0, _size}; }
-
     BitView<const BlockType> view() const { return {_data.data(), 0, _size}; }
 
     std::vector<BlockType>&       blocks() { return _data; }

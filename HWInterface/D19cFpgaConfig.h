@@ -27,6 +27,8 @@ class D19cFpgaConfig : public FpgaConfig
 
   public:
     D19cFpgaConfig(BeBoardFWInterface* pbbi);
+    D19cFpgaConfig(const D19cFpgaConfig& fpga) = default;
+    D19cFpgaConfig& operator=(const D19cFpgaConfig& fpga) = default;
     ~D19cFpgaConfig();
     /*! \brief Launch the firmware upload in a separate thread
      * \param strConfig FPGA configuration name

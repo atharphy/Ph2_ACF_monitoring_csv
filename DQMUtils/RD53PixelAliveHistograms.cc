@@ -18,9 +18,8 @@ void PixelAliveHistograms::book(TFile* theOutputFile, DetectorContainer& theDete
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
-
-    nRows          = RD53Shared::firstChip->getNRows();
-    nCols          = RD53Shared::firstChip->getNCols();
+    nRows = RD53Shared::firstChip->getNRows();
+    nCols = RD53Shared::firstChip->getNCols();
 
     // #######################
     // # Retrieve parameters #

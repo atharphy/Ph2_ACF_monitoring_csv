@@ -9,7 +9,6 @@
 
 #include "RD53FWInterface.h"
 #include "RD53Interface.h"
-#include "../HWDescription/RD53ACommands.h"
 
 using namespace Ph2_HwDescription;
 

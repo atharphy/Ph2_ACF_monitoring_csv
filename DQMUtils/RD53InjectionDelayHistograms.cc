@@ -21,8 +21,8 @@ void InjectionDelayHistograms::book(TFile* theOutputFile, DetectorContainer& the
     // # Retrieve parameters #
     // #######################
 
-    startValue     = 0;
-    stopValue      = RD53Shared::NLATENCYBINS * (RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("INJECTION_SELECT_DELAY")) + 1) - 1;
+    startValue = 0;
+    stopValue  = RD53Shared::NLATENCYBINS * (RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("INJECTION_SELECT_DELAY")) + 1) - 1;
 
     auto hInjectionDelay = CanvasContainer<TH1F>("InjectionDelay", "Injection Delay", stopValue - startValue + 1, startValue, stopValue + 1);
     bookImplementer(theOutputFile, theDetectorStructure, InjectionDelay, hInjectionDelay, "Injection Delay (1.5625 ns)", "Entries");

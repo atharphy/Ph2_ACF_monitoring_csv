@@ -17,9 +17,8 @@ void PhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetecto
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
-
-    nRows          = RD53Shared::firstChip->getNRows();
-    nCols          = RD53Shared::firstChip->getNCols();
+    nRows = RD53Shared::firstChip->getNRows();
+    nCols = RD53Shared::firstChip->getNCols();
 
     const size_t ToTsize   = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) + 1;
     const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;

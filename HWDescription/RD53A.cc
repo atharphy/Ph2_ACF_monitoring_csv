@@ -33,4 +33,42 @@ const RD53A::FrontEnd* RD53A::getMajorityFE(size_t colStart, size_t colStop) con
     });
 }
 
+void RD53A::decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::RD53ChipEvent& chipEvent) const
+{
+    uint32_t header;
+
+    chipEvent.eventStatus = RD53EvtEncoder::CHIPGOOD;
+
+    std::tie(header, chipEvent.trigger_id, chipEvent.trigger_tag, chipEvent.bc_id) =
+        bits::unpack<RD53EvtEncoder::NBIT_HEADER, RD53EvtEncoder::NBIT_TRIGID, RD53EvtEncoder::NBIT_TRGTAG, RD53EvtEncoder::NBIT_BCID>(*data);
+    if(header != RD53EvtEncoder::HEADER) chipEvent.eventStatus |= RD53EvtEncoder::CHIPHEAD;
+
+    const size_t noHitToT = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT);
+
+    for(auto i = 1u; i < size; i++)
+    {
+        if(data[i] != noHitToT)
+        {
+            uint32_t core_col, side, row, col, all_tots;
+
+            std::tie(core_col, row, side, all_tots) = bits::unpack<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_ROW, RD53EvtEncoder::NBIT_SIDE, RD53EvtEncoder::NBIT_TOT>(data[i]);
+            col                                     = RD53Constants::NPIX_REGION * bits::pack<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_SIDE>(core_col, side);
+
+            uint8_t tots[RD53Constants::NPIX_REGION];
+            bits::RangePacker<RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION>::unpack_reverse(all_tots, tots);
+
+            for(int j = 0; j < RD53Constants::NPIX_REGION; j++)
+                if(tots[j] != RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION)) chipEvent.hit_data.push_back({(uint16_t)row, (uint16_t)(col + i), tots[j]});
+            if((row >= RD53A::NROWS) || (col >= (RD53A::NCOLS - (RD53Constants::NPIX_REGION - 1)))) chipEvent.eventStatus |= RD53EvtEncoder::CHIPPIX;
+        }
+    }
+
+    // ########################################################
+    // # If the number of 32bit words do not make an integer  #
+    // # number of 128bit words, then special words are added #
+    // # to the event                                         #
+    // ########################################################
+    if(size == 1) chipEvent.eventStatus |= RD53EvtEncoder::CHIPNOHIT;
+}
+
 } // namespace Ph2_HwDescription

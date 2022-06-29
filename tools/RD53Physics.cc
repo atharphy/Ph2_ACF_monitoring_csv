@@ -9,15 +9,11 @@
 
 #include "RD53Physics.h"
 
-#include "../HWDescription/RD53ACommands.h"
-
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
 void Physics::ConfigureCalibration()
 {
-
-
     // #######################
     // # Retrieve parameters #
     // #######################
@@ -41,7 +37,8 @@ void Physics::ConfigureCalibration()
     for(auto row = rowStart; row <= rowStop; row++)
         for(auto col = colStart; col <= colStop; col++) customChannelGroup->enableChannel(row, col);
 
-    theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, RD53Shared::firstChip->getChannelGroupAll(), RD53Shared::firstChip->getChannelGroupAll(), RD53GroupType::AllPixels);
+    theChnGroupHandler =
+        std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, RD53Shared::firstChip->getChannelGroupAll(), RD53Shared::firstChip->getChannelGroupAll(), RD53GroupType::AllPixels);
     theChnGroupHandler->setCustomChannelGroup(*customChannelGroup);
     this->setChannelGroupHandler(theChnGroupHandler);
 
@@ -250,7 +247,6 @@ void Physics::fillDataContainer(BeBoard& theBoard)
     const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
     const auto   cBoard    = theOccContainer.at(theBoard.getIndex());
-
 
     // ###################
     // # Clear container #
