@@ -2,7 +2,7 @@
 
 #include "OTHybridTester.h"
 
-OTHybridTester::OTHybridTester() : Tool()
+OTHybridTester::OTHybridTester() : LinkAlignmentOT()
 {
     // I think that this is where the TC interface should be initialized
     // and where the lpGBT interface should be linked if needed
@@ -255,6 +255,32 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
             uint8_t cSource = 3;
             clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern << 24 | pPattern << 16 | pPattern << 8 | pPattern);
             clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, cSource); // 0 --> link data, 3 --> constant pattern
+            // clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {,}, cSource); // 0 --> link data, 3 --> constant pattern
+
+            LinkAlignmentOT::Inherit(this);
+            LinkAlignmentOT::Initialise();
+            PhaseTuneLineEleFC7(0, 0);
+            PhaseTuneLineEleFC7(0, 1);
+            PhaseTuneLineEleFC7(0, 2);
+            PhaseTuneLineEleFC7(0, 3);
+            PhaseTuneLineEleFC7(0, 4);
+            PhaseTuneLineEleFC7(0, 5);
+            PhaseTuneLineEleFC7(1, 0);
+            PhaseTuneLineEleFC7(1, 1);
+            PhaseTuneLineEleFC7(1, 2);
+            PhaseTuneLineEleFC7(1, 3);
+            PhaseTuneLineEleFC7(1, 4);
+            PhaseTuneLineEleFC7(1, 5);
+            // PhaseTuneLineEleFC7(1,0);
+            // PhaseTuneLineEleFC7(1,1);
+        }
+    }
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        for(auto cOpticalGroup: *cBoard)
+        {
+            clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, 0); // 0 --> link data, 3 --> constant pattern
         }
     }
 }
@@ -404,6 +430,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
 #elif __SEH_USB__
                     flpGBTInterface->getExternalController()->getInterface().set_AMUX(cDACValue, cDACValue);
 #endif
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1200));
                     int cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
 
                     LOG(INFO) << BOLDBLUE << "DAC value = " << +cDACValue << " --- ADC value = " << +cADCValue << RESET;
@@ -447,7 +474,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
             fillSummaryTree("VREFCNTR", cTrim);
             fResultFile->cd();
             cDACtoADCTree->Write();
-            cDACtoADCMultiGraph->Draw("AL");
+            cDACtoADCMultiGraph->Draw("AL*");
             cDACtoADCMultiGraph->GetXaxis()->SetTitle("DAC");
             cDACtoADCMultiGraph->GetYaxis()->SetTitle("ADC");
             dieLegende->Draw();
@@ -609,7 +636,7 @@ bool OTHybridTester::LpGBTTestResetLines()
         LpGBTSetGPIOLevel(cGPIOs, cLevel.second);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
 #ifdef __SEH_USB__
-        std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
         // mu-controller is too slow
 #endif
         auto cMapIterator = cResetLines.begin();
@@ -625,7 +652,7 @@ bool OTHybridTester::LpGBTTestResetLines()
 #else
             flpGBTInterface->getExternalController()->getInterface().read_reset(cMapIterator->second, cMeasurement);
 #endif
-            float cDifference_mV = std::fabs((cLevel.second * 1300) - cMeasurement * 1000.); // 1300
+            float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement * 1000.); // 1300
             fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
             cStatus = cStatus && (cDifference_mV <= 100);
 #endif
@@ -715,9 +742,12 @@ bool OTHybridTester::LpGBTTestVTRx()
             {
                 cVTRxplusDefaultRegisters = fVTRxplusDefaultRegistersV13;
                 LOG(INFO) << BOLDGREEN << "VTRx+ register map for version 1.3 is used!" << RESET;
+                fillSummaryTree("vtrxplusversion", 1.3);
             }
-            else
+            else {
                 LOG(INFO) << BOLDGREEN << "VTRx+ register map for version 1.2 is used!" << RESET;
+                fillSummaryTree("vtrxplusversion", 1.2);
+            }
             auto cMapIterator = cVTRxplusDefaultRegisters.begin();
             do
             {
