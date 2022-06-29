@@ -506,7 +506,7 @@ std::pair<bool, uint8_t> LinkAlignmentOT::PhaseTuneLine(const Chip* pChip, uint8
     {
         LOG(INFO) << BOLDRED << "Could not phase align-BE data for BeBoard#" << +cBoardId << " Board#" << +pChip->getBeBoardId() << " Hybrid#" << +pChip->getHybridId() << " Chip#" << +pChip->getId()
                   << " line# " << +pLineId << RESET;
-        throw std::runtime_error(std::string("Could not phase align-BE data in LinkAlignmentOT..."));
+        //throw std::runtime_error(std::string("Could not phase align-BE data in LinkAlignmentOT..."));
     }
 
     cLineStatus.second = cAlignerInterface->GetLineConfiguration().fDelay;
@@ -543,7 +543,7 @@ std::pair<bool, uint8_t> LinkAlignmentOT::WordAlignLine(const Chip* pChip, uint8
     {
         LOG(INFO) << BOLDRED << "Could not word align-BE data for BeBoard#" << +cBoardId << " Board#" << +pChip->getBeBoardId() << " Hybrid#" << +pChip->getHybridId() << " Chip#" << +pChip->getId()
                   << " line# " << +pLineId << RESET;
-        throw std::runtime_error(std::string("Could not word align-BE data in LinkAlignmentOT..."));
+        //throw std::runtime_error(std::string("Could not word align-BE data in LinkAlignmentOT..."));
     }
     // check if I allow a bit-slip of 0
     if(cLineStatus.second == 0 && !fAllowZeroBitslip)
@@ -673,7 +673,7 @@ bool LinkAlignmentOT::LineTuning(const Chip* pChip, uint8_t pLineId, uint8_t pAl
         cWordAlignmentStatus = WordAlignLine(pChip, pLineId, pAlignmentPattern, pPeriod);
         cSuccess             = cWordAlignmentStatus.first && cSuccess;
 
-        LOG(DEBUG) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
+       LOG(INFO) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
 
         cAttempts++;
     } while(!cSuccess && cAttempts < 10);

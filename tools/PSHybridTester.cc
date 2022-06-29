@@ -325,16 +325,16 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
 #if defined(__USE_ROOT__)
     uint32_t cTestPatterns[4] = {0xAA, 0xCC, 0x00, 0xFF};
     // String with the binary representation of the pattern
-    // int         cTotalBadLines = 0;                // Number of bad CIC in lines
-    std::string cParameter[4] = {"", "", "", ""}; // Placeholder for the name of the summaryTree parameter name
-    std::string cValue[4]     = {"", "", "", ""};
+    int         cTotalBadLines = 0;                // Number of bad CIC in lines
+    std::string cParameter[4]  = {"", "", "", ""}; // Placeholder for the name of the summaryTree parameter name
+    std::string cValue[4]      = {"", "", "", ""};
 
-    DPInterface cDPInterfacer;
+    DPInterface         cDPInterfacer;
     // BeBoardFWInterface* cInterface = dynamic_cast<BeBoardFWInterface*>(this->fBeBoardFWMap.find(0)->second);
 
-    // bool    cRun     = true;
-    // uint8_t cRuns    = 0;
-    // uint8_t cMaxRuns = 1;
+    bool    cRun     = true;
+    uint8_t cRuns    = 0;
+    uint8_t cMaxRuns = 1;
 
     TTree* CICinTree[4];
 
@@ -395,21 +395,65 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
             cDPInterfacer.Configure(cInterface, 0xEA);
             cDPInterfacer.Start(cInterface);
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            bool cAlignmentStatus = true;
             for(auto cOpticalGroup: *pBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    for(auto cChip: *cHybrid) //define CIC with ID 0 and tune only for it.
+                    for (auto cChip: *cHybrid) 
                     {
-                        if( cChip->getFrontEndType() != FrontEndType::CIC2 ) { continue; }
-                        for(uint8_t cLineId = 1; cLineId < 5; cLineId++)
+                        if(cChip->getId() != 0) continue;	
+                        //auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                        LOG(INFO) << "Tuning lines for PhyPort " << +cPhyPort << RESET; 
+                        cAlignmentStatus = true;
+                        bool cFirstRun = true;
+                        do
                         {
-                            LOG(INFO) << "Tuning line " << +cLineId << "for PhyPort " << +cPhyPort; 
-                            PhaseTuneLine(cChip, cLineId);
+                            for(uint8_t cLineId = 1; cLineId < 5; cLineId++)
+                            {
+                                //auto cPhaseTuneLineOutput = PhaseTuneLine(cCic, cLineId);
+                                //cAlignmentStatus = cPhaseTuneLineOutput.first;
+                                //if (cAlignmentStatus) {
+                                //    LOG(INFO) << "Phase Alignment of Line#" << +cLineId << " is " << BOLDGREEN << "GOOD" << RESET;
+                                //}
+                                //else 
+                                //{
+                                //    LOG(INFO) << "Phase Alignment of Line#" << +cLineId << " is " << BOLDRED << "BAD" << RESET;
+                                //}
+                                //auto cPhaseTuneLineOutput = WordAlignLine(cChip, cLineId, 0xEA, 8);
+                                //cAlignmentStatus &= cPhaseTuneLineOutput.first;
+                                
+                                cAlignmentStatus &= LineTuning( cChip, cLineId, 0xEA, 8);
+
+                                //if (cPhaseTuneLineOutput.first) {
+                                if( cAlignmentStatus ) {
+                                    LOG(INFO) << "Phase/Word Alignment of Line#" << +cLineId << " is " << BOLDGREEN << "GOOD" << RESET;
+                                }
+                                else 
+                                {
+                                    LOG(INFO) << "Phase/Word Alignment of Line#" << +cLineId << " is " << BOLDRED << "BAD" << RESET;
+                                }
+                            }
+                            cFirstRun = false;
                         }
-                    } // Chip
+                        while(!cAlignmentStatus && cFirstRun );
+                    } 
+                        }
+                    } 
                 } // Hybrid
             } // Optical group
+
+	    //BackEndAlignment cBackEndAlignment;
+	    //cBackEndAlignment.Inherit(this);
+	    //cBackEndAlignment.Initialise();
+	    //cAlignmentStatus = cBackEndAlignment.CICAlignment(pBoard);
+	    if( cAlignmentStatus ) {
+		LOG(INFO) << "Phase/Word Alignment of PhyPort#" << +cPhyPort << RESET;
+	    }
+	    else 
+	    {
+		LOG(INFO) << "Phase/Word Alignment of PhyPort#" << +cPhyPort << RESET;
+	    }
 
 
             // D19cFWInterface::PhaseTuner pTuner;
