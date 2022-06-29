@@ -21,7 +21,6 @@ class OccupancyAndPh
 {
   public:
     OccupancyAndPh() : fOccupancy(0), fOccupancyMedian(0), fPh(0), fPhError(0), readoutError(false) {}
-    ~OccupancyAndPh() {}
 
     void print(void) { std::cout << fOccupancy << "\t" << fPh << std::endl; }
 
