@@ -80,7 +80,7 @@ A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/
 10. Run the command: `CMSITminiDAQ -f CMSIT.xml -r` to reset the FC7 (just once)
 11. Run the command: `CMSITminiDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSITminiDAQ --help` for help)
 
-**N.B.:** to speed up the `IPbus` communication you can read a trick [here](https://ipbus.web.cern.ch/doc/user/html/performance.html)
+**N.B.:** to speed up the `IPbus` communication you can implement [this](https://ipbus.web.cern.ch/doc/user/html/performance.html) trick
 
 **Basic list of commands for the `fpgaconfig` program (run from the `choose_a_name` directory):**
 - Run the command: `fpgaconfig -c CMSIT.xml -l` to check which firmware is on the microSD card
