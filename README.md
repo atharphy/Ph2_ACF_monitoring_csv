@@ -63,7 +63,7 @@ More details on the hardware needed to setup the system can be found [here](http
 5. Plug the microSD card in the FC7
 6. From Ph2_ACF use the command `fpgaconfig` to upload the proper IT firmware (see instructions: `IT-DAQ setup and run` before running this command)
 
-*A golden firmware is any stable firmware either from IT or OT, and it's needed just to initialize the IPbus communication at bootstrap (in order to create and image of the microSD card you can use the command: `dd if=/dev/sd_card_name conv=sync,noerror bs=128K | gzip -c > sdgoldenimage.img.gz`) <br />
+*A golden firmware is any stable firmware either from IT or OT, and it's needed just to initialize the `IPbus` communication at bootstrap (in order to create and image of the microSD card you can use the command: `dd if=/dev/sd_card_name conv=sync,noerror bs=128K | gzip -c > sdgoldenimage.img.gz`) <br />
 A golden firmware can be downloaded from the [cms-tracker-daq webpage](https://cms-tracker-daq.web.cern.ch/cms-tracker-daq/Downloads/sdgoldenimage.img) <br />
 A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/cmstkph2-IT/d19c-firmware/blob/master/doc/IT-uDTC_fw_manual_v1.0.pdf)
 
@@ -80,7 +80,7 @@ A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/
 10. Run the command: `CMSITminiDAQ -f CMSIT.xml -r` to reset the FC7 (just once)
 11. Run the command: `CMSITminiDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSITminiDAQ --help` for help)
 
-**N.B.:** a skeleton/template file to build your own IT mini DAQ can be found in `src/templateCMSITminiDAQ.cc`
+**N.B.:** to speed up the `IPbus` communication you can read a trick [here](https://ipbus.web.cern.ch/doc/user/html/performance.html)
 
 **Basic list of commands for the `fpgaconfig` program (run from the `choose_a_name` directory):**
 - Run the command: `fpgaconfig -c CMSIT.xml -l` to check which firmware is on the microSD card
