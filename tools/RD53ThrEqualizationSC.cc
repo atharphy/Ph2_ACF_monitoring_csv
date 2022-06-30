@@ -44,8 +44,7 @@ void ThrEqualizationSC::ConfigureCalibration()
     // # Custom channel group #
     // ########################
     for(auto row = SCurve::rowStart; row <= SCurve::rowStop; row++)
-        for(auto col = SCurve::colStart; col <= SCurve::colStop; col++)
-	  SCurve::theChnGroupHandler->getRegionOfInterest().enableChannel(row, col);
+        for(auto col = SCurve::colStart; col <= SCurve::colStop; col++) SCurve::theChnGroupHandler->getRegionOfInterest().enableChannel(row, col);
 
     // #######################
     // # Initialize progress #

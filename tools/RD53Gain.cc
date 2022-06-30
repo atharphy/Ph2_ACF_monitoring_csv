@@ -20,17 +20,17 @@ void Gain::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings<double>("ROWstart");
-    rowStop        = this->findValueInSettings<double>("ROWstop");
-    colStart       = this->findValueInSettings<double>("COLstart");
-    colStop        = this->findValueInSettings<double>("COLstop");
-    nEvents        = this->findValueInSettings<double>("nEvents");
-    startValue     = this->findValueInSettings<double>("VCalHstart");
-    stopValue      = this->findValueInSettings<double>("VCalHstop");
-    targetCharge   = RD53chargeConverter::Charge2VCal(this->findValueInSettings<double>("TargetCharge"));
-    nSteps         = this->findValueInSettings<double>("VCalHnsteps");
-    offset         = this->findValueInSettings<double>("VCalMED");
-    nHITxCol       = this->findValueInSettings<double>("nHITxCol");
+    rowStart     = this->findValueInSettings<double>("ROWstart");
+    rowStop      = this->findValueInSettings<double>("ROWstop");
+    colStart     = this->findValueInSettings<double>("COLstart");
+    colStop      = this->findValueInSettings<double>("COLstop");
+    nEvents      = this->findValueInSettings<double>("nEvents");
+    startValue   = this->findValueInSettings<double>("VCalHstart");
+    stopValue    = this->findValueInSettings<double>("VCalHstop");
+    targetCharge = RD53chargeConverter::Charge2VCal(this->findValueInSettings<double>("TargetCharge"));
+    nSteps       = this->findValueInSettings<double>("VCalHnsteps");
+    offset       = this->findValueInSettings<double>("VCalMED");
+    nHITxCol     = this->findValueInSettings<double>("nHITxCol");
     // doFast         = this->findValueInSettings<double>("DoFast");
     doOnlyNGroups  = this->findValueInSettings<double>("DoOnlyNGroups");
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
@@ -40,18 +40,8 @@ void Gain::ConfigureCalibration()
     // ########################
     // # Custom channel group #
     // ########################
-
     theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(
-        rowStart,
-        rowStop,
-        colStart,
-        colStop,
-        RD53Shared::firstChip->getNRows(),
-        RD53Shared::firstChip->getNCols(),
-        RD53GroupType::Groups,
-        nHITxCol,
-        doOnlyNGroups
-    );
+        rowStart, rowStop, colStart, colStop, RD53Shared::firstChip->getNRows(), RD53Shared::firstChip->getNCols(), RD53GroupType::Groups, nHITxCol, doOnlyNGroups);
     this->setChannelGroupHandler(theChnGroupHandler);
 
     // ##############################

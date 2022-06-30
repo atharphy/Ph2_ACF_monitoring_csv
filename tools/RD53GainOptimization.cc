@@ -40,8 +40,7 @@ void GainOptimization::ConfigureCalibration()
     // # Custom channel group #
     // ########################
     for(auto row = Gain::rowStart; row <= Gain::rowStop; row++)
-        for(auto col = Gain::colStart; col <= Gain::colStop; col++)
-	  Gain::theChnGroupHandler->getRegionOfInterest().enableChannel(row, col);
+        for(auto col = Gain::colStart; col <= Gain::colStop; col++) Gain::theChnGroupHandler->getRegionOfInterest().enableChannel(row, col);
 
     // #######################
     // # Initialize progress #

@@ -31,17 +31,10 @@ void Physics::ConfigureCalibration()
     // ################################
     // # Custom channel group handler #
     // ################################
-    theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(
-        rowStart,
-        rowStop,
-        colStart,
-        colStop,
-        RD53Shared::firstChip->getNRows(),
-        RD53Shared::firstChip->getNCols(),
-        RD53GroupType::AllPixels
-    );
+    theChnGroupHandler =
+        std::make_shared<RD53ChannelGroupHandler>(rowStart, rowStop, colStart, colStop, RD53Shared::firstChip->getNRows(), RD53Shared::firstChip->getNCols(), RD53GroupType::AllPixels);
     this->setChannelGroupHandler(theChnGroupHandler);
-    
+
     // ##############################
     // # Initialize data containers #
     // ##############################

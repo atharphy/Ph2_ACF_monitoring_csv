@@ -17,15 +17,15 @@ void PixelAlive::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings<double>("ROWstart");
-    rowStop        = this->findValueInSettings<double>("ROWstop");
-    colStart       = this->findValueInSettings<double>("COLstart");
-    colStop        = this->findValueInSettings<double>("COLstop");
-    nEvents        = this->findValueInSettings<double>("nEvents");
-    nEvtsBurst     = this->findValueInSettings<double>("nEvtsBurst") < nEvents ? this->findValueInSettings<double>("nEvtsBurst") : nEvents;
-    nTRIGxEvent    = this->findValueInSettings<double>("nTRIGxEvent");
-    injType        = this->findValueInSettings<double>("INJtype");
-    nHITxCol       = this->findValueInSettings<double>("nHITxCol");
+    rowStart    = this->findValueInSettings<double>("ROWstart");
+    rowStop     = this->findValueInSettings<double>("ROWstop");
+    colStart    = this->findValueInSettings<double>("COLstart");
+    colStop     = this->findValueInSettings<double>("COLstop");
+    nEvents     = this->findValueInSettings<double>("nEvents");
+    nEvtsBurst  = this->findValueInSettings<double>("nEvtsBurst") < nEvents ? this->findValueInSettings<double>("nEvtsBurst") : nEvents;
+    nTRIGxEvent = this->findValueInSettings<double>("nTRIGxEvent");
+    injType     = this->findValueInSettings<double>("INJtype");
+    nHITxCol    = this->findValueInSettings<double>("nHITxCol");
     // doFast         = this->findValueInSettings<double>("DoFast");
     doOnlyNGroups  = this->findValueInSettings<double>("DoOnlyNGroups");
     thrOccupancy   = this->findValueInSettings<double>("TargetOcc");
@@ -38,17 +38,8 @@ void PixelAlive::ConfigureCalibration()
     // # Custom channel group handler #
     // ################################
     auto groupType = injType != INJtype::None ? RD53GroupType::Groups : RD53GroupType::AllPixels;
-    theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(
-        rowStart,
-        rowStop,
-        colStart,
-        colStop,
-        RD53Shared::firstChip->getNRows(),
-        RD53Shared::firstChip->getNCols(),
-        groupType,
-        nHITxCol,
-        doOnlyNGroups
-    );
+    theChnGroupHandler =
+        std::make_shared<RD53ChannelGroupHandler>(rowStart, rowStop, colStart, colStop, RD53Shared::firstChip->getNRows(), RD53Shared::firstChip->getNCols(), groupType, nHITxCol, doOnlyNGroups);
     this->setChannelGroupHandler(theChnGroupHandler);
 
     // ######################

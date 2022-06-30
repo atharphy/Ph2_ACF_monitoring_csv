@@ -66,12 +66,11 @@ void OccupancyAndPh::normalize(const uint32_t numberOfEvents, bool doOnlyPh)
     if(doOnlyPh == false) fOccupancy /= numberOfEvents;
 }
 
-
 template <>
 void OccupancyAndPh::makeChannelAverage<OccupancyAndPh>(const ChipContainer*              theChipContainer,
-                                                               std::shared_ptr<ChannelGroupBase> chipOriginalMask,
-                                                               std::shared_ptr<ChannelGroupBase> cTestChannelGroup,
-                                                               const uint32_t                    numberOfEvents)
+                                                        std::shared_ptr<ChannelGroupBase> chipOriginalMask,
+                                                        std::shared_ptr<ChannelGroupBase> cTestChannelGroup,
+                                                        const uint32_t                    numberOfEvents)
 {
     fOccupancy       = 0;
     fOccupancyMedian = 0;
@@ -85,7 +84,8 @@ void OccupancyAndPh::makeChannelAverage<OccupancyAndPh>(const ChipContainer*    
         for(auto col = 0u; col < theChipContainer->getNumberOfCols(); col++)
             if(chipOriginalMask->isChannelEnabled(row, col) && cTestChannelGroup->isChannelEnabled(row, col))
             {
-                fOccupancy += theChipContainer->getChannel<OccupancyAndPh>(row, col).fOccupancy;;
+                fOccupancy += theChipContainer->getChannel<OccupancyAndPh>(row, col).fOccupancy;
+                ;
                 sortedOcc.insert(std::upper_bound(sortedOcc.begin(), sortedOcc.end(), theChipContainer->getChannel<OccupancyAndPh>(row, col).fOccupancy),
                                  theChipContainer->getChannel<OccupancyAndPh>(row, col).fOccupancy);
 

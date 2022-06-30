@@ -46,8 +46,7 @@ void ThrEqualization::ConfigureCalibration()
     // # Custom channel group #
     // ########################
     for(auto row = PixelAlive::rowStart; row <= PixelAlive::rowStop; row++)
-        for(auto col = PixelAlive::colStart; col <= PixelAlive::colStop; col++)
-            PixelAlive::theChnGroupHandler->getRegionOfInterest().enableChannel(row, col);
+        for(auto col = PixelAlive::colStart; col <= PixelAlive::colStop; col++) PixelAlive::theChnGroupHandler->getRegionOfInterest().enableChannel(row, col);
 
     // #######################
     // # Initialize progress #

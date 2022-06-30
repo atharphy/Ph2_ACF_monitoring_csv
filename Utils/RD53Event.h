@@ -10,6 +10,7 @@
 #ifndef RD53Event_H
 #define RD53Event_H
 
+#include "../Utils/BitMaster/bit_packing.h"
 #include "DataContainer.h"
 #include "Event.h"
 #include "GenericDataVector.h"

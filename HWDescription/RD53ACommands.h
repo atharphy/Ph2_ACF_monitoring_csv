@@ -8,10 +8,10 @@
   Support:               email to alkiviadis.papadopoulos@cern.ch
 */
 
-#ifndef RD53ACommands_H
-#define RD53ACommands_H
+#ifndef RD53ACOMMANDS_H
+#define RD53ACOMMANDS_H
 
-#include "../Utils/bit_packing.h"
+#include "../Utils/BitMaster/bit_packing.h"
 
 #include <cstdint>
 #include <vector>

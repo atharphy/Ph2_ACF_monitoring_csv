@@ -285,27 +285,24 @@ XilinxBitStream MmcPipeInterface::FileFromSD(const std::string& aFilename, uint3
 
         if(MMCtoFPGADataAvailable())
         {
-	  size_t wordCount;
-	  if(lWordCount < MMCtoFPGADataAvailable())
-	      {
-		wordCount = lWordCount;
+            size_t wordCount;
+            if(lWordCount < MMCtoFPGADataAvailable())
+            {
+                wordCount  = lWordCount;
                 lWordCount = 0;
-	      }
+            }
             else
-	      {
-		wordCount = MMCtoFPGADataAvailable();
+            {
+                wordCount = MMCtoFPGADataAvailable();
                 lWordCount -= MMCtoFPGADataAvailable();
-	      }
-	  auto lPayload   = this->getNode("FIFO").readBlock(wordCount);
+            }
+            auto lPayload = this->getNode("FIFO").readBlock(wordCount);
 
             this->getClient().dispatch();
 
             lRet.insert(lRet.end(), lPayload.begin(), lPayload.end());
 
-            if(!(i++ % 500) && pProgress)
-            {
-                *pProgress = 33 - lWordCount * 33 / lTot + uOffset;
-            }
+            if(!(i++ % 500) && pProgress) { *pProgress = 33 - lWordCount * 33 / lTot + uOffset; }
         }
         else
         {

@@ -9,7 +9,6 @@
 
 #include "RD53Event.h"
 #include "../HWDescription/RD53.h"
-#include "../Utils/bit_packing.h"
 
 #ifdef __USE_ROOT__
 #include "TFile.h"

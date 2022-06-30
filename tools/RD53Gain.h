@@ -64,9 +64,9 @@ class Gain : public Tool
   private:
     std::vector<uint16_t> dacList;
 
-    std::vector<DetectorDataContainer*>      detectorContainerVector;
-    std::shared_ptr<DetectorDataContainer>   theGainContainer;
-    ContainerRecycleBin<OccupancyAndPh>      theRecyclingBin;
+    std::vector<DetectorDataContainer*>    detectorContainerVector;
+    std::shared_ptr<DetectorDataContainer> theGainContainer;
+    ContainerRecycleBin<OccupancyAndPh>    theRecyclingBin;
 
     void fillHisto();
     void computeStats(const std::vector<float>& x,

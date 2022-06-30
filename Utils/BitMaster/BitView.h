@@ -8,8 +8,8 @@
   Support:               email to alkiviadis.papadopoulos@cern.ch
 */
 
-#ifndef BITS_BIT_VIEW_HPP
-#define BITS_BIT_VIEW_HPP
+#ifndef BITS_BIT_VIEW_H
+#define BITS_BIT_VIEW_H
 
 #include <array>
 #include <bitset>

@@ -1,5 +1,4 @@
 /*
-
         \file                          Container.h
         \brief                         containers for DAQ
         \author                        Fabio Ravera, Lorenzo Uplegger
@@ -24,8 +23,7 @@ class ChannelGroupBase
 {
   public:
     ChannelGroupBase(){};
-    ChannelGroupBase(uint16_t numberOfRows, uint16_t numberOfCols)
-        : numberOfRows_(numberOfRows), numberOfCols_(numberOfCols), numberOfEnabledChannels_(numberOfRows * numberOfCols) {};
+    ChannelGroupBase(uint16_t numberOfRows, uint16_t numberOfCols) : numberOfRows_(numberOfRows), numberOfCols_(numberOfCols), numberOfEnabledChannels_(numberOfRows * numberOfCols){};
     virtual ~ChannelGroupBase() { ; }
     virtual void     makeTestGroup(std::shared_ptr<ChannelGroupBase>& currentChannelGroup,
                                    uint32_t                           groupNumber,
@@ -166,7 +164,7 @@ class ChannelGroup : public ChannelGroupBase
     }
 
     std::bitset<R * C> channelsBitset_;
-    bool             customPatternSet_ = false;
+    bool               customPatternSet_ = false;
 };
 
 class ChannelGroupHandler

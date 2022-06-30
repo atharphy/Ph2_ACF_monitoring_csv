@@ -44,8 +44,8 @@ class OccupancyAndPh
 
 template <>
 void OccupancyAndPh::makeChannelAverage<OccupancyAndPh>(const ChipContainer*              theChipContainer,
-                                                               std::shared_ptr<ChannelGroupBase> chipOriginalMask,
-                                                               std::shared_ptr<ChannelGroupBase> cTestChannelGroup,
-                                                               const uint32_t                    numberOfEvents);
+                                                        std::shared_ptr<ChannelGroupBase> chipOriginalMask,
+                                                        std::shared_ptr<ChannelGroupBase> cTestChannelGroup,
+                                                        const uint32_t                    numberOfEvents);
 
 #endif

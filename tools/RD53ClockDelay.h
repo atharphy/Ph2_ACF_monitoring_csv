@@ -10,6 +10,7 @@
 #ifndef RD53ClockDelay_H
 #define RD53ClockDelay_H
 
+#include "../HWDescription/RD53ACommands.h"
 #include "RD53Latency.h"
 
 #ifdef __USE_ROOT__

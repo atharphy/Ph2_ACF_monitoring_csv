@@ -8,8 +8,8 @@
   Support:               email to alkiviadis.papadopoulos@cern.ch
 */
 
-#ifndef BITS_BIT_VECTOR_HPP
-#define BITS_BIT_VECTOR_HPP
+#ifndef BITS_BIT_VECTOR_H
+#define BITS_BIT_VECTOR_H
 
 #include "BitView.h"
 
@@ -91,7 +91,7 @@ class BitVector
     operator BitView<BlockType>() { return {_data.data(), 0, _size}; }
     operator BitView<const BlockType>() const { return {_data.data(), 0, _size}; }
 
-    BitView<BlockType> view() { return {_data.data(), 0, _size}; }
+    BitView<BlockType>       view() { return {_data.data(), 0, _size}; }
     BitView<const BlockType> view() const { return {_data.data(), 0, _size}; }
 
     std::vector<BlockType>&       blocks() { return _data; }

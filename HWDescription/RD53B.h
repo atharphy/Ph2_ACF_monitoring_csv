@@ -27,10 +27,10 @@ class RD53B : public RD53
 
     RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
 
-    size_t            getNRows() const override { return RD53B::NROWS; }
-    size_t            getNCols() const override { return RD53B::NCOLS; }
-    const FrontEnd*   getMajorityFE(size_t colStart, size_t colStop) const override { return &RD53B::CROC; }
-    void              decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::RD53ChipEvent& chipEvent) const override;
+    const FrontEnd* getMajorityFE(size_t colStart, size_t colStop) const override { return &RD53B::CROC; }
+    size_t          getNRows() const override { return RD53B::NROWS; }
+    size_t          getNCols() const override { return RD53B::NCOLS; }
+    void            decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::RD53ChipEvent& chipEvent) const override;
 };
 
 } // namespace Ph2_HwDescription

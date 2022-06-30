@@ -56,7 +56,7 @@ class ThrEqualizationSC : public SCurve
   private:
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
-    DetectorDataContainer                    theTDACcontainer;
+    DetectorDataContainer theTDACcontainer;
 
     void fillHisto();
     void bitWiseScanLocal(const std::string& regName, std::shared_ptr<DetectorDataContainer> target);
