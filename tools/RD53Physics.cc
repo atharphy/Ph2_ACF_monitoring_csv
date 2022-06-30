@@ -31,17 +31,17 @@ void Physics::ConfigureCalibration()
     // ################################
     // # Custom channel group handler #
     // ################################
-    std::unique_ptr<ChannelGroupBase> customChannelGroup{RD53Shared::firstChip->getChannelGroup()};
-    customChannelGroup->disableAllChannels();
-
-    for(auto row = rowStart; row <= rowStop; row++)
-        for(auto col = colStart; col <= colStop; col++) customChannelGroup->enableChannel(row, col);
-
-    theChnGroupHandler =
-        std::make_shared<RD53ChannelGroupHandler>(*customChannelGroup, RD53Shared::firstChip->getChannelGroupAll(), RD53Shared::firstChip->getChannelGroupAll(), RD53GroupType::AllPixels);
-    theChnGroupHandler->setCustomChannelGroup(*customChannelGroup);
+    theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(
+        rowStart,
+        rowStop,
+        colStart,
+        colStop,
+        RD53Shared::firstChip->getNRows(),
+        RD53Shared::firstChip->getNCols(),
+        RD53GroupType::AllPixels
+    );
     this->setChannelGroupHandler(theChnGroupHandler);
-
+    
     // ##############################
     // # Initialize data containers #
     // ##############################

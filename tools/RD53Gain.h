@@ -64,7 +64,6 @@ class Gain : public Tool
   private:
     std::vector<uint16_t> dacList;
 
-    std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
     std::vector<DetectorDataContainer*>      detectorContainerVector;
     std::shared_ptr<DetectorDataContainer>   theGainContainer;
     ContainerRecycleBin<OccupancyAndPh>      theRecyclingBin;
@@ -101,6 +100,8 @@ class Gain : public Tool
     std::string fileRes;
     int         theCurrentRun;
     bool        saveData;
+
+    std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
 };
 
 #endif

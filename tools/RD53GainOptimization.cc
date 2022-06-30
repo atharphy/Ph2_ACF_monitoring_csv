@@ -36,6 +36,13 @@ void GainOptimization::ConfigureCalibration()
     LOG(INFO) << GREEN << "GainOptimization will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << RESET << BOLDYELLOW << colStart << ", " << colStop
               << RESET << GREEN << "]" << RESET;
 
+    // ########################
+    // # Custom channel group #
+    // ########################
+    for(auto row = Gain::rowStart; row <= Gain::rowStop; row++)
+        for(auto col = Gain::colStart; col <= Gain::colStop; col++)
+	  Gain::theChnGroupHandler->getRegionOfInterest().enableChannel(row, col);
+
     // #######################
     // # Initialize progress #
     // #######################

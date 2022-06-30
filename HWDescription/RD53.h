@@ -115,9 +115,6 @@ class RD53 : public ReadoutChip
 
     virtual size_t            getNRows() const                                                                                   = 0;
     virtual size_t            getNCols() const                                                                                   = 0;
-    virtual ChannelGroupBase* getChannelGroup() const                                                                            = 0;
-    virtual ChannelGroupBase* getChannelGroupAll() const                                                                         = 0;
-    virtual ChannelGroupBase* getChannelGroupPattern(uint8_t) const                                                              = 0;
     virtual const FrontEnd*   getMajorityFE(size_t colStart, size_t colStop) const                                               = 0;
     virtual void              decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::RD53ChipEvent& chipEvent) const = 0;
 

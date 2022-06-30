@@ -16,7 +16,6 @@ RD53::RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybr
 {
     fMaxRegValue   = RD53Shared::setBits(RD53Constants::NBIT_MAXREG);
     configFileName = fileName;
-    RD53::loadfRegMap(configFileName);
     this->setFrontEndType(FrontEndType::RD53);
     myComment  = cfgComment;
     myChipLane = pRD53Lane;
@@ -26,9 +25,9 @@ RD53::RD53(const RD53& chipObj) : ReadoutChip(chipObj) {}
 
 void RD53::loadfRegMap(const std::string& fileName)
 {
-    std::ifstream      file(fileName.c_str(), std::ios::in);
     std::stringstream  myString;
-    perColumnPixelData pixData(getNRows());
+    std::ifstream      file(fileName.c_str(), std::ios::in);
+    perColumnPixelData pixData(this->getNRows());
 
     if(file.good() == true)
     {
@@ -73,7 +72,7 @@ void RD53::loadfRegMap(const std::string& fileName)
                         }
                     }
 
-                    if(row < getNRows())
+                    if(row < this->getNRows())
                     {
                         myString.str("");
                         myString.clear();
@@ -102,7 +101,7 @@ void RD53::loadfRegMap(const std::string& fileName)
                         }
                     }
 
-                    if(row < getNRows())
+                    if(row < this->getNRows())
                     {
                         myString.str("");
                         myString.clear();
@@ -129,7 +128,7 @@ void RD53::loadfRegMap(const std::string& fileName)
                         }
                     }
 
-                    if(row < getNRows())
+                    if(row < this->getNRows())
                     {
                         myString.str("");
                         myString.clear();
@@ -156,7 +155,7 @@ void RD53::loadfRegMap(const std::string& fileName)
                         }
                     }
 
-                    if(row < getNRows())
+                    if(row < this->getNRows())
                     {
                         myString.str("");
                         myString.clear();
@@ -303,13 +302,13 @@ void RD53::copyMaskFromDefault()
 }
 
 void RD53::copyMaskToDefault(const std::string& which)
-// ########################
-// # which = all          #
-// # which =  en : Enable #
-// # which =  hb : HitBus #
-// # which =  in : InjEn  #
-// # which =  td : TDAC   #
-// ########################
+// #######################
+// # which = all         #
+// # which = en : Enable #
+// # which = hb : HitBus #
+// # which = in : InjEn  #
+// # which = td : TDAC   #
+// #######################
 {
     for(auto col = 0u; col < fPixelsMaskDefault.size(); col++)
     {
@@ -378,7 +377,7 @@ void RD53::resetTDAC()
 
 uint8_t RD53::getTDAC(unsigned int row, unsigned int col) { return fPixelsMask[col].TDAC[row]; }
 
-uint32_t RD53::getNumberOfChannels() const { return getNRows() * getNCols(); }
+uint32_t RD53::getNumberOfChannels() const { return this->getNRows() * this->getNCols(); }
 
 bool RD53::isDACLocal(const std::string& regName)
 {

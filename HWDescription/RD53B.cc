@@ -20,7 +20,8 @@ constexpr RD53B::FrontEnd RD53B::CROC;
 RD53B::RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment)
     : RD53(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id, pRD53Lane, fileName, cfgComment)
 {
-    fChipOriginalMask.reset(getChannelGroup());
+    ReadoutChip::fChipOriginalMask = std::make_shared<RD53ChannelGroup>(RD53B::NROWS, RD53B::NCOLS, true);
+    loadfRegMap(fileName);
 }
 
 void RD53B::decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::RD53ChipEvent& chipEvent) const {}

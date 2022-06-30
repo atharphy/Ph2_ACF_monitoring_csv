@@ -23,7 +23,8 @@ const RD53::FrontEnd*    RD53A::frontEnds[] = {&RD53A::SYNC, &RD53A::LIN, &RD53A
 RD53A::RD53A(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment)
     : RD53(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id, pRD53Lane, fileName, cfgComment)
 {
-    fChipOriginalMask.reset(getChannelGroup());
+    ReadoutChip::fChipOriginalMask = std::make_shared<RD53ChannelGroup>(RD53A::NROWS, RD53A::NCOLS, true);
+    loadfRegMap(fileName);
 }
 
 const RD53A::FrontEnd* RD53A::getMajorityFE(size_t colStart, size_t colStop) const
@@ -58,7 +59,7 @@ void RD53A::decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::R
             bits::RangePacker<RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION>::unpack_reverse(all_tots, tots);
 
             for(int j = 0; j < RD53Constants::NPIX_REGION; j++)
-                if(tots[j] != RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION)) chipEvent.hit_data.push_back({(uint16_t)row, (uint16_t)(col + i), tots[j]});
+                if(tots[j] != RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION)) chipEvent.hit_data.push_back({(uint16_t)row, (uint16_t)(col + j), tots[j]});
             if((row >= RD53A::NROWS) || (col >= (RD53A::NCOLS - (RD53Constants::NPIX_REGION - 1)))) chipEvent.eventStatus |= RD53EvtEncoder::CHIPPIX;
         }
     }

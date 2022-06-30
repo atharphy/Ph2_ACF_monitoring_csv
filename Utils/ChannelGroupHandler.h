@@ -25,13 +25,13 @@ class ChannelGroupBase
   public:
     ChannelGroupBase(){};
     ChannelGroupBase(uint16_t numberOfRows, uint16_t numberOfCols)
-        : numberOfRows_(numberOfRows), numberOfCols_(numberOfCols), numberOfEnabledChannels_(numberOfRows * numberOfCols), customPatternSet_(false){};
+        : numberOfRows_(numberOfRows), numberOfCols_(numberOfCols), numberOfEnabledChannels_(numberOfRows * numberOfCols) {};
     virtual ~ChannelGroupBase() { ; }
     virtual void     makeTestGroup(std::shared_ptr<ChannelGroupBase>& currentChannelGroup,
                                    uint32_t                           groupNumber,
                                    uint32_t                           numberOfClustersPerGroup,
                                    uint16_t                           numberOfRowsPerCluster,
-                                   uint16_t                           numberOfColsPerCluster = 1) const = 0;
+                                   uint16_t                           numberOfColsPerCluster = 1) const {};
     uint32_t         getNumberOfRows(void) const { return numberOfRows_; }
     uint32_t         getNumberOfCols(void) const { return numberOfCols_; }
     uint32_t         getNumberOfEnabledChannels(void) const { return numberOfEnabledChannels_; }
@@ -50,7 +50,6 @@ class ChannelGroupBase
     uint16_t         numberOfRows_;
     uint16_t         numberOfCols_;
     uint32_t         numberOfEnabledChannels_;
-    bool             customPatternSet_;
 };
 
 template <size_t R, size_t C = 1>
@@ -167,6 +166,7 @@ class ChannelGroup : public ChannelGroupBase
     }
 
     std::bitset<R * C> channelsBitset_;
+    bool             customPatternSet_ = false;
 };
 
 class ChannelGroupHandler

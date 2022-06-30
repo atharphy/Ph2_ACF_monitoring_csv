@@ -43,13 +43,9 @@ void ThrEqualizationSC::ConfigureCalibration()
     // ########################
     // # Custom channel group #
     // ########################
-    std::unique_ptr<ChannelGroupBase> customChannelGroup{RD53Shared::firstChip->getChannelGroup()};
-    customChannelGroup->disableAllChannels();
-
     for(auto row = SCurve::rowStart; row <= SCurve::rowStop; row++)
-        for(auto col = SCurve::colStart; col <= SCurve::colStop; col++) customChannelGroup->enableChannel(row, col);
-
-    SCurve::theChnGroupHandler->setCustomChannelGroup(*customChannelGroup);
+        for(auto col = SCurve::colStart; col <= SCurve::colStop; col++)
+	  SCurve::theChnGroupHandler->getRegionOfInterest().enableChannel(row, col);
 
     // #######################
     // # Initialize progress #

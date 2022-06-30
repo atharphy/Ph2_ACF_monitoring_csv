@@ -45,13 +45,9 @@ void ThrEqualization::ConfigureCalibration()
     // ########################
     // # Custom channel group #
     // ########################
-    std::unique_ptr<ChannelGroupBase> customChannelGroup{RD53Shared::firstChip->getChannelGroup()};
-    customChannelGroup->disableAllChannels();
-
     for(auto row = PixelAlive::rowStart; row <= PixelAlive::rowStop; row++)
-        for(auto col = PixelAlive::colStart; col <= PixelAlive::colStop; col++) customChannelGroup->enableChannel(row, col);
-
-    PixelAlive::theChnGroupHandler->setCustomChannelGroup(*customChannelGroup);
+        for(auto col = PixelAlive::colStart; col <= PixelAlive::colStop; col++)
+            PixelAlive::theChnGroupHandler->getRegionOfInterest().enableChannel(row, col);
 
     // #######################
     // # Initialize progress #

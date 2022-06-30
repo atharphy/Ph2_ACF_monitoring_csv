@@ -38,6 +38,13 @@ void ThrAdjustment::ConfigureCalibration()
     LOG(INFO) << GREEN << "ThrAdjustment will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << RESET << BOLDYELLOW << colStart << ", " << colStop << RESET
               << GREEN << "]" << RESET;
 
+    // ########################
+    // # Custom channel group #
+    // ########################
+    for(auto row = PixelAlive::rowStart; row <= PixelAlive::rowStop; row++)
+        for(auto col = PixelAlive::colStart; col <= PixelAlive::colStop; col++)
+            PixelAlive::theChnGroupHandler->getRegionOfInterest().enableChannel(row, col);
+
     // #######################
     // # Initialize progress #
     // #######################
