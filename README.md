@@ -159,7 +159,7 @@ then
     echo "gainopt" >> calibDone.txt
 
     echo "Choose whether to accept new Krummenacher current (i.e. copy it into the xml file(s))"
-    echo "- Set nTRIGxEvent = 1 and DoFast = 1 in the xml file(s)"
+    echo "- Set nTRIGxEvent = 1 and DoOnlyNGroups = 1 in the xml file(s)"
     echo "- Set VCAL_HIGH to MIP value in the xml file(s)"
     read -p "Press any key to continue... " -n1 -s
     echo
@@ -170,7 +170,7 @@ then
     echo "injdelay" >> calibDone.txt
 
     echo "Choose whether to accept new LATENCY_CONFIG and INJECTION_SELECT (i.e. copy them into the xml file(s))"
-    echo "- Set DoFast to whatever value you prefer in the xml files(s)"
+    echo "- Set DoOnlyNGroups to 0 in the xml files(s)"
     read -p "Press any key to continue... " -n1 -s
     echo
 elif [ $1 == "step5" ]
