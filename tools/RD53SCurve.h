@@ -77,7 +77,6 @@ class SCurve : public Tool
     size_t nSteps;
     size_t offset;
     size_t nHITxCol;
-    bool   doFast;
     size_t doOnlyNGroups;
     bool   doDisplay;
     bool   doUpdateChip;

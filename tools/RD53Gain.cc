@@ -20,18 +20,17 @@ void Gain::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart     = this->findValueInSettings<double>("ROWstart");
-    rowStop      = this->findValueInSettings<double>("ROWstop");
-    colStart     = this->findValueInSettings<double>("COLstart");
-    colStop      = this->findValueInSettings<double>("COLstop");
-    nEvents      = this->findValueInSettings<double>("nEvents");
-    startValue   = this->findValueInSettings<double>("VCalHstart");
-    stopValue    = this->findValueInSettings<double>("VCalHstop");
-    targetCharge = RD53chargeConverter::Charge2VCal(this->findValueInSettings<double>("TargetCharge"));
-    nSteps       = this->findValueInSettings<double>("VCalHnsteps");
-    offset       = this->findValueInSettings<double>("VCalMED");
-    nHITxCol     = this->findValueInSettings<double>("nHITxCol");
-    // doFast         = this->findValueInSettings<double>("DoFast");
+    rowStart       = this->findValueInSettings<double>("ROWstart");
+    rowStop        = this->findValueInSettings<double>("ROWstop");
+    colStart       = this->findValueInSettings<double>("COLstart");
+    colStop        = this->findValueInSettings<double>("COLstop");
+    nEvents        = this->findValueInSettings<double>("nEvents");
+    startValue     = this->findValueInSettings<double>("VCalHstart");
+    stopValue      = this->findValueInSettings<double>("VCalHstop");
+    targetCharge   = RD53chargeConverter::Charge2VCal(this->findValueInSettings<double>("TargetCharge"));
+    nSteps         = this->findValueInSettings<double>("VCalHnsteps");
+    offset         = this->findValueInSettings<double>("VCalMED");
+    nHITxCol       = this->findValueInSettings<double>("nHITxCol");
     doOnlyNGroups  = this->findValueInSettings<double>("DoOnlyNGroups");
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");

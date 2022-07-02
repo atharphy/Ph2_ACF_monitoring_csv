@@ -81,7 +81,6 @@ class PixelAlive : public Tool
     size_t nTRIGxEvent;
     size_t nHITxCol;
     float  thrOccupancy;
-    bool   doFast;
     size_t doOnlyNGroups;
     bool   doDisplay;
     bool   doUpdateChip;
