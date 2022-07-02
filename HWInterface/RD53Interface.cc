@@ -384,12 +384,12 @@ void RD53Interface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
     std::vector<uint16_t> commandList;
     std::vector<uint16_t> syncList(RD53Constants::NSYNC_WORS, RD53ACmd::RD53CmdEncoder::SYNC);
 
-    const uint16_t                   REGION_COL_ADDR = pRD53->getRegItem("REGION_COL").fAddress;
-    const uint16_t                   REGION_ROW_ADDR = pRD53->getRegItem("REGION_ROW").fAddress;
-    const uint16_t                   PIX_PORTAL_ADDR = pRD53->getRegItem("PIX_PORTAL").fAddress;
-    const uint8_t                    highGain        = pRD53->getRegItem("HighGain_LIN").fValue;
-    const uint8_t                    chipID          = pRD53->getId();
-    std::vector<perColumnPixelData>& mask            = doDefault == true ? *pRD53->getPixelsMaskDefault() : *pRD53->getPixelsMask();
+    const uint16_t REGION_COL_ADDR = pRD53->getRegItem("REGION_COL").fAddress;
+    const uint16_t REGION_ROW_ADDR = pRD53->getRegItem("REGION_ROW").fAddress;
+    const uint16_t PIX_PORTAL_ADDR = pRD53->getRegItem("PIX_PORTAL").fAddress;
+    const uint8_t  highGain        = pRD53->getRegItem("HighGain_LIN").fValue;
+    const uint8_t  chipID          = pRD53->getId();
+    auto&          mask            = doDefault == true ? pRD53->getPixelsMaskDefault() : pRD53->getPixelsMask();
 
     // ##########################
     // # Disable default config #
@@ -498,16 +498,17 @@ bool RD53Interface::MaskAllChannels(ReadoutChip* pChip, bool mask, bool pVerifLo
 
 bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop)
 {
-    RD53* pRD53 = static_cast<RD53*>(pChip);
+    RD53* pRD53          = static_cast<RD53*>(pChip);
+    auto& pixMaskDefault = pRD53->getPixelsMaskDefault();
 
-    for(auto row = 0u; row < RD53A::NROWS; row++)
-        for(auto col = 0u; col < RD53A::NCOLS; col++)
+    for(auto col = 0u; col < RD53A::NCOLS; col++)
+        for(auto row = 0u; row < RD53A::NROWS; row++)
         {
-            if(mask == true) pRD53->enablePixel(row, col, group->isChannelEnabled(row, col) && (*pRD53->getPixelsMaskDefault())[col].Enable[row]);
+            if(mask == true) pRD53->enablePixel(row, col, group->isChannelEnabled(row, col) && pixMaskDefault[col].Enable[row]);
             if(inject == true)
-                pRD53->injectPixel(row, col, group->isChannelEnabled(row, col) && (*pRD53->getPixelsMaskDefault())[col].Enable[row]);
+                pRD53->injectPixel(row, col, group->isChannelEnabled(row, col) && pixMaskDefault[col].Enable[row]);
             else
-                pRD53->injectPixel(row, col, group->isChannelEnabled(row, col) && (*pRD53->getPixelsMaskDefault())[col].Enable[row] && (*pRD53->getPixelsMaskDefault())[col].InjEn[row]);
+                pRD53->injectPixel(row, col, group->isChannelEnabled(row, col) && pixMaskDefault[col].Enable[row] && pixMaskDefault[col].InjEn[row]);
         }
 
     RD53Interface::WriteRD53Mask(pRD53, true, false);
@@ -605,8 +606,8 @@ bool RD53Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
 {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
-    for(auto row = 0u; row < RD53A::NROWS; row++)
-        for(auto col = 0u; col < RD53A::NCOLS; col++) pRD53->setTDAC(row, col, pValue.getChannel<uint16_t>(row, col));
+    for(auto col = 0u; col < RD53A::NCOLS; col++)
+        for(auto row = 0u; row < RD53A::NROWS; row++) pRD53->setTDAC(row, col, pValue.getChannel<uint16_t>(row, col));
 
     RD53Interface::WriteRD53Mask(pRD53, false, false);
 
@@ -615,8 +616,8 @@ bool RD53Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
 
 void RD53Interface::ReadChipAllLocalReg(ReadoutChip* pChip, const std::string& regName, ChipContainer& pValue)
 {
-    for(auto row = 0u; row < RD53A::NROWS; row++)
-        for(auto col = 0u; col < RD53A::NCOLS; col++) pValue.getChannel<uint16_t>(row, col) = static_cast<RD53*>(pChip)->getTDAC(row, col);
+    for(auto col = 0u; col < RD53A::NCOLS; col++)
+        for(auto row = 0u; row < RD53A::NROWS; row++) pValue.getChannel<uint16_t>(row, col) = static_cast<RD53*>(pChip)->getTDAC(row, col);
 }
 
 void RD53Interface::PackChipCommands(ReadoutChip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg)

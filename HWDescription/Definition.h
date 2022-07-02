@@ -167,6 +167,7 @@ enum class FrontEndType
     SSA,
     SSA2,
     RD53,
+    CROC,
     CIC,
     CIC2,
     OuterTracker2S,

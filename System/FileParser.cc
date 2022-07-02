@@ -4,6 +4,7 @@
 #include "../HWDescription/Hybrid.h"
 #include "../HWDescription/OuterTrackerHybrid.h"
 #include "../HWDescription/RD53A.h"
+#include "../HWDescription/RD53B.h"
 #include "../HWDescription/SSA2.h"
 #include "../HWDescription/lpGBT.h"
 #include "../Utils/Utilities.h"
@@ -181,9 +182,7 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
     {
         if(cBeBoard->getBoardType() == BoardType::D19C) { pBeBoardFWMap[cBeBoard->getId()] = new D19cFWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str()); }
         else if(cBeBoard->getBoardType() == BoardType::RD53)
-        {
             pBeBoardFWMap[cBeBoard->getId()] = new RD53FWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str());
-        }
     }
     os << BOLDCYAN << "|"
        << "       "
@@ -865,6 +864,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("MPA") != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("CIC") != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("RD53") != std::string::npos;
+            cIsTrackerASIC             = cIsTrackerASIC || cName.find("CROC") != std::string::npos;
 
             if(cIsTrackerASIC)
             {
@@ -874,10 +874,10 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                     int         cChipId   = cChild.attribute("Id").as_int();
                     std::string cFileName = expandEnvironmentVariables(static_cast<std::string>(cChild.attribute("configfile").value()));
 
-                    if(cName.find("RD53") != std::string::npos)
+                    if((cName.find("RD53") != std::string::npos) || (cName.find("CROC") != std::string::npos))
                     {
                         pBoard->setFrontEndType(FrontEndType::RD53);
-                        this->parseRD53(cChild, cHybrid, cConfigFileDirectory, os);
+                        this->parseRD53(cChild, cHybrid, cConfigFileDirectory, os, cName.find("RD53") != std::string::npos ? FrontEndType::RD53 : FrontEndType::CROC);
                         if(cNextName.empty() || cNextName != cName) this->parseGlobalRD53Settings(pHybridNode, cHybrid, os);
                     }
                     else if(cName.find("CBC") != std::string::npos)
@@ -1498,7 +1498,7 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
 // ########################
 // # RD53 specific parser #
 // ########################
-void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os)
+void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os, const FrontEndType& frontEndType)
 {
     std::string cFileName;
 
@@ -1522,8 +1522,11 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
        << cFileName << BOLDBLUE << ", RxGroup: " << BOLDYELLOW << +cRxGroup << BOLDBLUE << ", RxChannel: " << BOLDYELLOW << +cRxChannel << BOLDBLUE << ", TxGroup: " << BOLDYELLOW << +cTxGroup
        << BOLDBLUE << ", TxChannel: " << BOLDYELLOW << +cTxChannel << BOLDBLUE << ", Comment: " << BOLDYELLOW << cfgComment << RESET << std::endl;
 
-    ReadoutChip* theChip =
-        cHybrid->addChipContainer(chipId, new RD53A(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, cFileName, cfgComment));
+    ReadoutChip* theChip;
+    if(frontEndType == FrontEndType::RD53)
+        theChip = cHybrid->addChipContainer(chipId, new RD53A(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, cFileName, cfgComment));
+    else
+        theChip = cHybrid->addChipContainer(chipId, new RD53B(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, cFileName, cfgComment));
     theChip->setNumberOfChannels(static_cast<RD53*>(theChip)->getNRows(), static_cast<RD53*>(theChip)->getNCols());
 
     this->parseRD53Settings(theChipNode, theChip, os);

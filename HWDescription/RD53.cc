@@ -67,7 +67,7 @@ void RD53::loadfRegMap(const std::string& fileName)
                         if(std::all_of(readWord.begin(), readWord.end(), isdigit))
                         {
                             pixData.Enable[row] = atoi(readWord.c_str());
-                            if(pixData.Enable[row] == 0) fChipOriginalMask->disableChannel(row, col);
+                            if(pixData.Enable[row] == false) fChipOriginalMask->disableChannel(row, col);
                             row++;
                         }
                     }
@@ -266,19 +266,19 @@ void RD53::saveRegMap(const std::string& fName2Add)
             file << "COL                  " << std::setfill('0') << std::setw(3) << col << std::endl;
 
             file << "ENABLE " << +fPixelsMask[col].Enable[0];
-            for(auto row = 1u; row < fPixelsMask[col].Enable.size(); row++) file << "," << +fPixelsMask[col].Enable[row];
+            for(auto enable: fPixelsMask[col].Enable) file << "," << +enable;
             file << std::endl;
 
             file << "HITBUS " << +fPixelsMask[col].HitBus[0];
-            for(auto row = 1u; row < fPixelsMask[col].HitBus.size(); row++) file << "," << +fPixelsMask[col].HitBus[row];
+            for(auto hitbus: fPixelsMask[col].HitBus) file << "," << +hitbus;
             file << std::endl;
 
             file << "INJEN  " << +fPixelsMask[col].InjEn[0];
-            for(auto row = 1u; row < fPixelsMask[col].InjEn.size(); row++) file << "," << +fPixelsMask[col].InjEn[row];
+            for(auto injen: fPixelsMask[col].InjEn) file << "," << +injen;
             file << std::endl;
 
             file << "TDAC   " << +fPixelsMask[col].TDAC[0];
-            for(auto row = 1u; row < fPixelsMask[col].TDAC.size(); row++) file << "," << +fPixelsMask[col].TDAC[row];
+            for(auto tdac: fPixelsMask[col].TDAC) file << "," << +tdac;
             file << std::endl;
 
             file << std::endl;
@@ -290,16 +290,7 @@ void RD53::saveRegMap(const std::string& fName2Add)
         LOG(ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << output << RESET;
 }
 
-void RD53::copyMaskFromDefault()
-{
-    for(auto col = 0u; col < fPixelsMask.size(); col++)
-    {
-        fPixelsMask[col].Enable = fPixelsMaskDefault[col].Enable;
-        fPixelsMask[col].HitBus = fPixelsMaskDefault[col].HitBus;
-        fPixelsMask[col].InjEn  = fPixelsMaskDefault[col].InjEn;
-        for(auto row = 0u; row < fPixelsMask[col].TDAC.size(); row++) fPixelsMask[col].TDAC[row] = fPixelsMaskDefault[col].TDAC[row];
-    }
-}
+void RD53::copyMaskFromDefault() { fPixelsMask = fPixelsMaskDefault; }
 
 void RD53::copyMaskToDefault(const std::string& which)
 // #######################
@@ -310,42 +301,49 @@ void RD53::copyMaskToDefault(const std::string& which)
 // # which = td : TDAC   #
 // #######################
 {
-    for(auto col = 0u; col < fPixelsMaskDefault.size(); col++)
-    {
-        if((which == "all") || (which == "en")) fPixelsMaskDefault[col].Enable = fPixelsMask[col].Enable;
-        if((which == "all") || (which == "hb")) fPixelsMaskDefault[col].HitBus = fPixelsMask[col].HitBus;
-        if((which == "all") || (which == "in")) fPixelsMaskDefault[col].InjEn = fPixelsMask[col].InjEn;
-        if((which == "all") || (which == "td"))
-            for(auto row = 0u; row < fPixelsMaskDefault[col].TDAC.size(); row++) fPixelsMaskDefault[col].TDAC[row] = fPixelsMask[col].TDAC[row];
-    }
+  if(which == "all") fPixelsMaskDefault = fPixelsMask;
+  else
+  {
+      for(auto col = 0u; col < fPixelsMaskDefault.size(); col++)
+      {
+          if(which == "en")
+              fPixelsMaskDefault[col].Enable = fPixelsMask[col].Enable;
+          else if(which == "hb")
+              fPixelsMaskDefault[col].HitBus = fPixelsMask[col].HitBus;
+          else if(which == "in")
+              fPixelsMaskDefault[col].InjEn = fPixelsMask[col].InjEn;
+          else if(which == "td")
+              fPixelsMaskDefault[col].TDAC = fPixelsMask[col].TDAC;
+      }
+  }
 }
 
 void RD53::resetMask()
 {
-    for(auto col = 0u; col < fPixelsMask.size(); col++)
+    for(auto& perColPixData: fPixelsMask)
     {
-        std::fill(fPixelsMask[col].Enable.begin(), fPixelsMask[col].Enable.end(), 0);
-        std::fill(fPixelsMask[col].HitBus.begin(), fPixelsMask[col].HitBus.end(), 0);
-        std::fill(fPixelsMask[col].InjEn.begin(), fPixelsMask[col].InjEn.end(), 0);
-        std::fill(fPixelsMask[col].TDAC.begin(), fPixelsMask[col].TDAC.end(), RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2);
+        std::fill(perColPixData.Enable.begin(), perColPixData.Enable.end(), 0);
+        std::fill(perColPixData.HitBus.begin(), perColPixData.HitBus.end(), 0);
+        std::fill(perColPixData.InjEn.begin(), perColPixData.InjEn.end(), 0);
+        std::fill(perColPixData.TDAC.begin(), perColPixData.TDAC.end(), RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2);
     }
 }
 
 void RD53::enableAllPixels()
 {
-    for(auto col = 0u; col < fPixelsMask.size(); col++)
+    for(auto& perColPixData: fPixelsMask)
     {
-        std::fill(fPixelsMask[col].Enable.begin(), fPixelsMask[col].Enable.end(), 1);
-        std::fill(fPixelsMask[col].HitBus.begin(), fPixelsMask[col].HitBus.end(), 1);
+        std::fill(perColPixData.Enable.begin(), perColPixData.Enable.end(), 1);
+        std::fill(perColPixData.HitBus.begin(), perColPixData.HitBus.end(), 1);
     }
 }
 
 void RD53::disableAllPixels()
 {
-    for(auto col = 0u; col < fPixelsMask.size(); col++)
+    for(auto& perColPixData: fPixelsMask)
     {
-        std::fill(fPixelsMask[col].Enable.begin(), fPixelsMask[col].Enable.end(), 0);
-        std::fill(fPixelsMask[col].HitBus.begin(), fPixelsMask[col].HitBus.end(), 0);
+        std::fill(perColPixData.Enable.begin(), perColPixData.Enable.end(), 0);
+        std::fill(perColPixData.HitBus.begin(), perColPixData.HitBus.end(), 0);
     }
 }
 
@@ -353,9 +351,7 @@ size_t RD53::getNbMaskedPixels()
 {
     size_t cnt = 0;
 
-    for(auto col = 0u; col < fPixelsMask.size(); col++)
-        for(auto row = 0u; row < fPixelsMask[col].Enable.size(); row++)
-            if(fPixelsMask[col].Enable[row] == 0) cnt++;
+    for(auto& perColPixData: fPixelsMask) cnt += std::count(perColPixData.Enable.begin(), perColPixData.Enable.begin(), 0);
 
     return cnt;
 }
@@ -372,7 +368,7 @@ void RD53::setTDAC(unsigned int row, unsigned int col, uint8_t TDAC) { fPixelsMa
 
 void RD53::resetTDAC()
 {
-    for(auto col = 0u; col < fPixelsMask.size(); col++) std::fill(fPixelsMask[col].TDAC.begin(), fPixelsMask[col].TDAC.end(), RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2);
+    for(auto& perColPixData: fPixelsMask) std::fill(perColPixData.TDAC.begin(), perColPixData.TDAC.end(), RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2);
 }
 
 uint8_t RD53::getTDAC(unsigned int row, unsigned int col) { return fPixelsMask[col].TDAC[row]; }

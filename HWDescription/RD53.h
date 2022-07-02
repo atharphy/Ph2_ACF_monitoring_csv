@@ -91,9 +91,9 @@ struct perColumnPixelData
 {
     perColumnPixelData(size_t size) : Enable(size), HitBus(size), InjEn(size), TDAC(size) {}
 
-    std::vector<uint8_t> Enable;
-    std::vector<uint8_t> HitBus;
-    std::vector<uint8_t> InjEn;
+    std::vector<bool> Enable;
+    std::vector<bool> HitBus;
+    std::vector<bool> InjEn;
     std::vector<uint8_t> TDAC;
 };
 
@@ -128,8 +128,8 @@ class RD53 : public ReadoutChip
     uint8_t  getNumberOfBits(const std::string& regName) override;
 
     std::string                      getFileName(const std::string& fName2Add) { return RD53Shared::composeFileName(configFileName, fName2Add); }
-    std::vector<perColumnPixelData>* getPixelsMask() { return &fPixelsMask; }
-    std::vector<perColumnPixelData>* getPixelsMaskDefault() { return &fPixelsMaskDefault; }
+    std::vector<perColumnPixelData>& getPixelsMask() { return fPixelsMask; }
+    std::vector<perColumnPixelData>& getPixelsMaskDefault() { return fPixelsMaskDefault; }
 
     void        copyMaskFromDefault();
     void        copyMaskToDefault(const std::string& which = "all");
