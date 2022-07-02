@@ -320,32 +320,12 @@ void RD53::copyMaskToDefault(const std::string& which)
 
 void RD53::resetMask()
 {
-    for(auto& perColPixData: fPixelsMask)
-    {
-        std::fill(perColPixData.Enable.begin(), perColPixData.Enable.end(), 0);
-        std::fill(perColPixData.HitBus.begin(), perColPixData.HitBus.end(), 0);
-        std::fill(perColPixData.InjEn.begin(), perColPixData.InjEn.end(), 0);
-        std::fill(perColPixData.TDAC.begin(), perColPixData.TDAC.end(), RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2);
-    }
+    std::fill(fPixelsMask.begin(), fPixelsMask.end(), perColumnPixelData{fPixelsMask.at(0).Enable.size(), false, false, false, RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2});
 }
 
-void RD53::enableAllPixels()
-{
-    for(auto& perColPixData: fPixelsMask)
-    {
-        std::fill(perColPixData.Enable.begin(), perColPixData.Enable.end(), 1);
-        std::fill(perColPixData.HitBus.begin(), perColPixData.HitBus.end(), 1);
-    }
-}
+void RD53::enableAllPixels() { std::fill(fPixelsMask.begin(), fPixelsMask.end(), perColumnPixelData{fPixelsMask.at(0).Enable.size(), true, true}); }
 
-void RD53::disableAllPixels()
-{
-    for(auto& perColPixData: fPixelsMask)
-    {
-        std::fill(perColPixData.Enable.begin(), perColPixData.Enable.end(), 0);
-        std::fill(perColPixData.HitBus.begin(), perColPixData.HitBus.end(), 0);
-    }
-}
+void RD53::disableAllPixels() { std::fill(fPixelsMask.begin(), fPixelsMask.end(), perColumnPixelData{fPixelsMask.at(0).Enable.size(), false, false}); }
 
 size_t RD53::getNbMaskedPixels()
 {
@@ -366,10 +346,7 @@ void RD53::injectPixel(unsigned int row, unsigned int col, bool inject) { fPixel
 
 void RD53::setTDAC(unsigned int row, unsigned int col, uint8_t TDAC) { fPixelsMask[col].TDAC[row] = TDAC; }
 
-void RD53::resetTDAC()
-{
-    for(auto& perColPixData: fPixelsMask) std::fill(perColPixData.TDAC.begin(), perColPixData.TDAC.end(), RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2);
-}
+void RD53::resetTDAC() { std::fill(fPixelsMask.begin(), fPixelsMask.end(), perColumnPixelData{fPixelsMask.at(0).TDAC.size(), RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2}); }
 
 uint8_t RD53::getTDAC(unsigned int row, unsigned int col) { return fPixelsMask[col].TDAC[row]; }
 

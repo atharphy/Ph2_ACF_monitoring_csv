@@ -90,6 +90,9 @@ namespace Ph2_HwDescription
 struct perColumnPixelData
 {
     perColumnPixelData(size_t size) : Enable(size), HitBus(size), InjEn(size), TDAC(size) {}
+    perColumnPixelData(size_t size, bool en, bool hb, bool ie, uint8_t tdac) : Enable(size, en), HitBus(size, hb), InjEn(size, ie), TDAC(size, tdac) {}
+    perColumnPixelData(size_t size, bool en, bool hb) : Enable(size, en), HitBus(size, hb) {}
+    perColumnPixelData(size_t size, uint8_t tdac) : TDAC(size, tdac) {}
 
     std::vector<bool> Enable;
     std::vector<bool> HitBus;
