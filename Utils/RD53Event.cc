@@ -260,6 +260,9 @@ void RD53Event::PrintEvents(const std::vector<RD53Event>& events, const std::vec
                 LOG(INFO) << BOLDYELLOW << "Column: " << std::setw(3) << hit.col << std::setw(-1) << ", Row: " << std::setw(3) << hit.row << std::setw(-1) << ", ToT: " << std::setw(3) << +hit.tot
                           << std::setw(-1) << RESET;
         }
+        LOG(INFO) << BOLDGREEN << "===========================" << RESET;
+        LOG(INFO) << BOLDGREEN << "EVENT STATUS    = " << evt.eventStatus << RESET;
+        RD53Event::EvtErrorHandler(evt.eventStatus);
     }
 }
 
