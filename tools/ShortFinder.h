@@ -14,7 +14,7 @@
 
 #include "Tool.h"
 
-const float THRESHOLD_SHORT = 0.5;
+const float THRESHOLD_SHORT = 0.1;
 
 typedef std::vector<uint8_t> ChannelList;
 
