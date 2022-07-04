@@ -36,10 +36,10 @@ INITIALIZE_EASYLOGGINGPP
 
 #define CHIPSLAVE 4
 
-#if defined(__TCUSB__) and defined(__USE_ROOT__)
 
 int main(int argc, char* argv[])
 {
+#if defined(__TCUSB__) && defined(__USE_ROOT__)
     // configure the logger
     el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
@@ -635,6 +635,5 @@ int main(int argc, char* argv[])
 
     if(!batchMode) cApp.Run();
     return 0;
-}
-
 #endif
+}
