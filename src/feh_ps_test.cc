@@ -36,6 +36,8 @@ INITIALIZE_EASYLOGGINGPP
 
 #define CHIPSLAVE 4
 
+#if defined(__TCUSB__) and defined(__USE_ROOT__)
+
 int main(int argc, char* argv[])
 {
     // configure the logger
@@ -534,6 +536,17 @@ int main(int argc, char* argv[])
             else
             {
                 std::string cCurrentSSAPair;
+                // for(int i = 0; i < 7; i += 2)
+                // {
+                //     LOG(INFO) << "Starting SSA outputs test" << RESET;
+                //     cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
+                //     cHybridTester.SSAPairSelect(cCurrentSSAPair);
+                //     cBackendAlignment.SetEnabledChips(cCurrentSSAPair);
+                //     for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
+                //     cHybridTester.SSATestStubOutput(cCurrentSSAPair);
+                //     cHybridTester.SSATestL1Output(cCurrentSSAPair);
+                // }
+
                 for(int i = 0; i < 7; i++)
                 {
                     // LOG(INFO) << "Starting inter-SSA communication test" << RESET;
@@ -623,3 +636,5 @@ int main(int argc, char* argv[])
     if(!batchMode) cApp.Run();
     return 0;
 }
+
+#endif
