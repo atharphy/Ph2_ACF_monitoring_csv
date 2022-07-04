@@ -80,7 +80,7 @@ void CicFEAlignment::writeObjects()
 #endif
 }
 // State machine control functions
-void CicFEAlignment::AlignInputs()
+bool CicFEAlignment::AlignInputs()
 {
     LOG(INFO) << BOLDMAGENTA << "CicFEAlignment::Aligning Inputs " << RESET;
     // align CIC inputs - first phase
@@ -110,6 +110,7 @@ void CicFEAlignment::AlignInputs()
     // }
     // LOG(INFO) << BOLDGREEN << "SUCCESSFUL " << BOLDBLUE << " setting of Bx0 delay in CIC ... " << RESET;
     fSuccess = (cPhaseAligned && cWordAligned);
+    return fSuccess;
 }
 void CicFEAlignment::Running()
 {
