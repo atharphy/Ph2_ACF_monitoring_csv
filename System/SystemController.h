@@ -22,7 +22,6 @@
 #include "../HWInterface/MPA2Interface.h"
 #include "../HWInterface/MPAInterface.h"
 #include "../HWInterface/PSInterface.h"
-#include "../HWInterface/RD53Interface.h"
 #include "../HWInterface/RD53lpGBTInterface.h"
 #include "../HWInterface/ReadoutChipInterface.h"
 #include "../HWInterface/SSA2Interface.h"

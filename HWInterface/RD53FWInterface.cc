@@ -168,8 +168,8 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // # Set and check RD53 AURORA speed #
     // ###################################
     RegManager::WriteStackReg({{"user.ctrl_regs.gtx_drp.aurora_speed", RD53FWconstants::AURORA_SPEED}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 1}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 0}});
-    uint32_t auroraSpeed = RD53FWInterface::ReadoutSpeed();
-    LOG(INFO) << GREEN << "Aurora speed set to: " << BOLDYELLOW << (auroraSpeed == 0 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
+    auto auroraSpeed = RD53FWInterface::ReadoutSpeed();
+    LOG(INFO) << GREEN << "Aurora speed set to: " << BOLDYELLOW << (auroraSpeed == RD53FWconstants::ReadoutSpeed::x1280 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
 
     // ###########################
     // # Print clock measurement #
@@ -412,13 +412,13 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
     return true;
 }
 
-uint32_t RD53FWInterface::ReadoutSpeed()
+RD53FWconstants::ReadoutSpeed RD53FWInterface::ReadoutSpeed()
 // ####################
 // # 0  = 1.28 Gbit/s #
 // # !0 = 640 Mbit/s  #
 // ####################
 {
-    return RegManager::ReadReg("user.stat_regs.aurora_rx.speed");
+    return RegManager::ReadReg("user.stat_regs.aurora_rx.speed") == 0 : RD53FWconstants::ReadoutSpeed::x1280 : RD53FWconstants::ReadoutSpeed::x640;
 }
 
 void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)

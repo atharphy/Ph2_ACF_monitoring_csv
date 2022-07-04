@@ -236,7 +236,7 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, 
                             static_cast<RD53*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()))->getReg("VCAL_MED");
                         uint16_t vcal_high_setting = round(RD53chargeConverter::Charge2VCal(target)) + vcal_med_setting;
 
-                        static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackChipCommands(cChip, "VCAL_HIGH", vcal_high_setting, chipCommandList, true);
+                        static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackWriteCommand(cChip, "VCAL_HIGH", vcal_high_setting, chipCommandList, true);
 
                         LOG(INFO) << GREEN << "The target threshold is " << std::setprecision(1) << BOLDYELLOW << target << RESET << GREEN << " electrons" << RESET;
                         LOG(INFO) << BOLDBLUE << "\t--> Closest charge setting is " << BOLDYELLOW << "VCAL_HIGH" << RESET << GREEN << " = " << BOLDYELLOW << vcal_high_setting << RESET << GREEN
@@ -248,7 +248,7 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, 
                             2;
 
                         static_cast<RD53Interface*>(this->fReadoutChipInterface)
-                            ->PackChipCommands(cChip,
+                            ->PackWriteCommand(cChip,
                                                regName,
                                                midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
                                                chipCommandList,
@@ -334,7 +334,7 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, 
                     if(bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() != 0)
                     {
                         static_cast<RD53Interface*>(this->fReadoutChipInterface)
-                            ->PackChipCommands(cChip,
+                            ->PackWriteCommand(cChip,
                                                regName,
                                                bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
                                                chipCommandList,

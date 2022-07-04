@@ -15,6 +15,12 @@
 #include "RD53.h"
 #include "RD53ACommands.h"
 
+
+namespace RD53AConstants
+{
+const uint8_t  BROADCAST_CHIPID  = 0x08; // Broadcast chip ID used to send the command to multiple chips
+}
+
 namespace Ph2_HwDescription
 {
 class RD53A : public RD53

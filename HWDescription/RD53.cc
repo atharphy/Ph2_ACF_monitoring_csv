@@ -18,13 +18,14 @@ RD53::RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybr
     configFileName = fileName;
     myComment      = cfgComment;
     myChipLane     = pRD53Lane;
-    this->setFrontEndType(FrontEndType::RD53);
 }
 
 RD53::RD53(const RD53& chipObj) : ReadoutChip(chipObj) {}
 
 void RD53::loadfRegMap(const std::string& fileName)
 {
+    std::cout << "AAAAAAAAAAAAA " << this->getNRows() << std::endl;
+
     std::stringstream  myString;
     std::ifstream      file(fileName.c_str(), std::ios::in);
     perColumnPixelData pixData(this->getNRows());

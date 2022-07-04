@@ -13,6 +13,8 @@
 #include "../MonitorUtils/DetectorMonitor.h"
 #include "../MonitorUtils/RD53Monitor.h"
 #include "../MonitorUtils/SEHMonitor.h"
+#include "../HWInterface/RD53AInterface.h"
+#include "../HWInterface/RD53BInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -299,7 +301,10 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         else
         {
             flpGBTInterface       = new RD53lpGBTInterface(fBeBoardFWMap);
-            fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
+            if (cFirstBoard->getFrontEndType() == FrontEndType::RD53A)
+                fReadoutChipInterface = new RD53AInterface(fBeBoardFWMap);
+            else 
+                fReadoutChipInterface = new RD53BInterface(fBeBoardFWMap);
         }
     } // if there is something to create an interface for
 
@@ -488,7 +493,6 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
                 static_cast<RD53*>(cChip)->copyMaskToDefault();
                 static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);
                 LOG(INFO) << GREEN << "Number of masked pixels: " << RESET << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
-                // static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cChip), 0); @TMP@
             }
         }
     }

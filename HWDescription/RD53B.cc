@@ -22,6 +22,7 @@ RD53B::RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHy
 {
     ReadoutChip::fChipOriginalMask = std::make_shared<RD53ChannelGroup>(RD53B::NROWS, RD53B::NCOLS, true);
     loadfRegMap(fileName);
+    this->setFrontEndType(FrontEndType::RD53B);
 }
 
 void RD53B::decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::RD53ChipEvent& chipEvent) const {}

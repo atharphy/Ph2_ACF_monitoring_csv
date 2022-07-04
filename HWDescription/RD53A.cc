@@ -25,6 +25,7 @@ RD53A::RD53A(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHy
 {
     ReadoutChip::fChipOriginalMask = std::make_shared<RD53ChannelGroup>(RD53A::NROWS, RD53A::NCOLS, true);
     loadfRegMap(fileName);
+    this->setFrontEndType(FrontEndType::RD53A);
 }
 
 const RD53A::FrontEnd* RD53A::getMajorityFE(size_t colStart, size_t colStop) const

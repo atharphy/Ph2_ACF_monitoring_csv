@@ -36,6 +36,12 @@ const uint32_t NBIT_DATA_FIFO     = 27;   // Data FIFO depth 134.217.728, i.e. 2
 
 constexpr float VDDD2Volt(float val) { return (0.968 + val * 0.0115); }
 constexpr float CDR2Freq(float val) { return (140 + val * 5); }
+
+enum class ReadoutSpeed {
+  x1280,
+  x640
+};
+
 } // namespace RD53FWconstants
 
 namespace Ph2_HwInterface
@@ -83,7 +89,7 @@ class RD53FWInterface : public BeBoardFWInterface
     // # Check AURORA lock on data stream #
     // ####################################
     bool     CheckChipCommunication(const Ph2_HwDescription::BeBoard* pBoard);
-    uint32_t ReadoutSpeed();
+    RD53FWconstants::UplinkSpeed ReadoutSpeed();
 
     // #############################################
     // # hybridId < 0 --> broadcast to all hybrids #
