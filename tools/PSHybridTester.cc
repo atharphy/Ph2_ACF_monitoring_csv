@@ -438,8 +438,6 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
                         }
                         while(!cAlignmentStatus && cFirstRun );
                     } 
-                        }
-                    } 
                 } // Hybrid
             } // Optical group
 
@@ -908,7 +906,7 @@ void PSHybridTester::SSATestL1Output(BeBoard* pBoard, const std::string& cSSAPai
 }
 void PSHybridTester::SSATestLateralCommunication(Ph2_HwDescription::BeBoard* pBoard, const std::string& pSSAPairSel, bool pSweepPhaseSelector)
 {
-        std::string cParameter = "";
+    std::string cParameter = "";
     std::string cValue     = "";
 
     this->SSAPairSelect(pBoard, pSSAPairSel);
@@ -990,6 +988,7 @@ void PSHybridTester::SSATestLateralCommunication(Ph2_HwDescription::BeBoard* pBo
                                 uint8_t cEnFlags      = (cAnalogCalib << 4 | cDigitalCalib << 3 | cHitCounter << 2 | cPolarity << 1 | cMask);
                                 fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegisterName, cEnFlags);
                             }
+                            LOG(INFO) << "SSA# " << +cReadoutChip->getId() << " has been configured " << RESET; 
                         }
                         if(cReadoutChip->getId() == cAdjacentSSAId)
                         {
@@ -1031,6 +1030,7 @@ void PSHybridTester::SSATestLateralCommunication(Ph2_HwDescription::BeBoard* pBo
                                 uint8_t cEnFlags      = (cAnalogCalib << 4 | cDigitalCalib << 3 | cHitCounter << 2 | cPolarity << 1 | cMask);
                                 fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegisterName, cEnFlags);
                             }
+                            LOG(INFO) << "SSA# " << +cReadoutChip->getId() << " has been configured " << RESET; 
                         }
                         uint8_t cControlValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, "control_1");
                         LOG(INFO) << BOLDMAGENTA << "The register 'control_1' on SSA" << +cReadoutChip->getId() << " has the value: " << +cControlValue << "." << RESET;
