@@ -275,7 +275,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
     // make sure that the correct trigger source is enabled
     // async injection trigger
     std::vector<std::pair<std::string, uint32_t>> cRegVec;
-    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 12}); //Trigger source? 10 or 12?
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 12}); // Trigger source? 10 or 12?
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.cal_pulse", 1});
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.antenna", 0});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);

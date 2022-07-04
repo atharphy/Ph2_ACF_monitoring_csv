@@ -329,7 +329,7 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
     std::string cParameter[4]  = {"", "", "", ""}; // Placeholder for the name of the summaryTree parameter name
     std::string cValue[4]      = {"", "", "", ""};
 
-    DPInterface         cDPInterfacer;
+    DPInterface cDPInterfacer;
     // BeBoardFWInterface* cInterface = dynamic_cast<BeBoardFWInterface*>(this->fBeBoardFWMap.find(0)->second);
 
     bool    cRun     = true;
@@ -379,7 +379,7 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
         }     // module
 
         std::vector<std::string> cReadLines; // Container for the received lines
-        uint8_t                               cPhyPortBadLines = 0;
+        uint8_t                  cPhyPortBadLines = 0;
 
         bool cLineAlreadyChecked[4] = {false, false, false, false};
 
@@ -400,59 +400,53 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    for (auto cChip: *cHybrid) 
+                    for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getId() != 0) continue;	
-                        //auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                        LOG(INFO) << "Tuning lines for PhyPort " << +cPhyPort << RESET; 
+                        if(cChip->getId() != 0) continue;
+                        // auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                        LOG(INFO) << "Tuning lines for PhyPort " << +cPhyPort << RESET;
                         cAlignmentStatus = true;
-                        bool cFirstRun = true;
+                        bool cFirstRun   = true;
                         do
                         {
                             for(uint8_t cLineId = 1; cLineId < 5; cLineId++)
                             {
-                                //auto cPhaseTuneLineOutput = PhaseTuneLine(cCic, cLineId);
-                                //cAlignmentStatus = cPhaseTuneLineOutput.first;
-                                //if (cAlignmentStatus) {
+                                // auto cPhaseTuneLineOutput = PhaseTuneLine(cCic, cLineId);
+                                // cAlignmentStatus = cPhaseTuneLineOutput.first;
+                                // if (cAlignmentStatus) {
                                 //    LOG(INFO) << "Phase Alignment of Line#" << +cLineId << " is " << BOLDGREEN << "GOOD" << RESET;
                                 //}
-                                //else 
+                                // else
                                 //{
                                 //    LOG(INFO) << "Phase Alignment of Line#" << +cLineId << " is " << BOLDRED << "BAD" << RESET;
                                 //}
-                                //auto cPhaseTuneLineOutput = WordAlignLine(cChip, cLineId, 0xEA, 8);
-                                //cAlignmentStatus &= cPhaseTuneLineOutput.first;
-                                
-                                cAlignmentStatus &= LineTuning( cChip, cLineId, 0xEA, 8);
+                                // auto cPhaseTuneLineOutput = WordAlignLine(cChip, cLineId, 0xEA, 8);
+                                // cAlignmentStatus &= cPhaseTuneLineOutput.first;
 
-                                //if (cPhaseTuneLineOutput.first) {
-                                if( cAlignmentStatus ) {
-                                    LOG(INFO) << "Phase/Word Alignment of Line#" << +cLineId << " is " << BOLDGREEN << "GOOD" << RESET;
-                                }
-                                else 
+                                cAlignmentStatus &= LineTuning(cChip, cLineId, 0xEA, 8);
+
+                                // if (cPhaseTuneLineOutput.first) {
+                                if(cAlignmentStatus) { LOG(INFO) << "Phase/Word Alignment of Line#" << +cLineId << " is " << BOLDGREEN << "GOOD" << RESET; }
+                                else
                                 {
                                     LOG(INFO) << "Phase/Word Alignment of Line#" << +cLineId << " is " << BOLDRED << "BAD" << RESET;
                                 }
                             }
                             cFirstRun = false;
-                        }
-                        while(!cAlignmentStatus && cFirstRun );
-                    } 
+                        } while(!cAlignmentStatus && cFirstRun);
+                    }
                 } // Hybrid
-            } // Optical group
+            }     // Optical group
 
-	    //BackEndAlignment cBackEndAlignment;
-	    //cBackEndAlignment.Inherit(this);
-	    //cBackEndAlignment.Initialise();
-	    //cAlignmentStatus = cBackEndAlignment.CICAlignment(pBoard);
-	    if( cAlignmentStatus ) {
-		LOG(INFO) << "Phase/Word Alignment of PhyPort#" << +cPhyPort << RESET;
-	    }
-	    else 
-	    {
-		LOG(INFO) << "Phase/Word Alignment of PhyPort#" << +cPhyPort << RESET;
-	    }
-
+            // BackEndAlignment cBackEndAlignment;
+            // cBackEndAlignment.Inherit(this);
+            // cBackEndAlignment.Initialise();
+            // cAlignmentStatus = cBackEndAlignment.CICAlignment(pBoard);
+            if(cAlignmentStatus) { LOG(INFO) << "Phase/Word Alignment of PhyPort#" << +cPhyPort << RESET; }
+            else
+            {
+                LOG(INFO) << "Phase/Word Alignment of PhyPort#" << +cPhyPort << RESET;
+            }
 
             // D19cFWInterface::PhaseTuner pTuner;
             // uint8_t cMode        = 2;
@@ -463,7 +457,6 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
             // uint8_t cLineId = 0;
             // uint8_t cDelay = 20;
             // pTuner.SetLineMode( static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()) , pFeId, cChipId, cLineId, cMode, cDelay, cBitslip, cEnableL1, 0);
-
 
             // CicFEAlignment cCicAligner;
             // cCicAligner.Inherit(this);
@@ -517,51 +510,50 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
                     // bool bad = false;
                     // for(int b = 0; b < (int)cReadLines[a].size(); b++)
                     // {
-                        badLines = 0;
-                        // cLine    = cReadLines[a][b];
-                        cLine    = cReadLines[a];
-                        int b = a;
-                        LOG(INFO) << "[a] : [" << +a << "]" << cLine << RESET;
-                        // Go throught the read line and compare with pattern
-                        for(int k = 0; (k + cPattern_str.length()) < cLine.length(); k += cPattern_str.length())
+                    badLines = 0;
+                    // cLine    = cReadLines[a][b];
+                    cLine = cReadLines[a];
+                    int b = a;
+                    LOG(INFO) << "[a] : [" << +a << "]" << cLine << RESET;
+                    // Go throught the read line and compare with pattern
+                    for(int k = 0; (k + cPattern_str.length()) < cLine.length(); k += cPattern_str.length())
+                    {
+                        cSubLine           = cLine.substr(k, cPattern_str.length());
+                        bool cPatternFound = false;
+                        for(int j = 0; j < (int)cPattern_str.length(); j++) cPatternFound |= ((cPattern_str.substr(j, cPattern_str.length() - j) + cPattern_str.substr(0, j)) == cSubLine);
+                        if(!cPatternFound)
                         {
-                            cSubLine           = cLine.substr(k, cPattern_str.length());
-                            bool cPatternFound = false;
-                            for(int j = 0; j < (int)cPattern_str.length(); j++) cPatternFound |= ((cPattern_str.substr(j, cPattern_str.length() - j) + cPattern_str.substr(0, j)) == cSubLine);
-                            if(!cPatternFound)
-                            {
-                                badLines++;
-                                cRun = true;
-                            }
+                            badLines++;
+                            cRun = true;
                         }
+                    }
 
+                    std::string recovered = "";
+                    for(int k = 0; (k + cPattern_str.length()) < cLine.length(); k += cPattern_str.length()) { recovered += cLine.substr(k, cPattern_str.length()) + "  "; }
+                    if(badLines > 2) // 35
+                    {
+                        cBadLines[b] = 1;
+                        LOG(INFO) << "The pattern " << cPattern_str << " was" << BOLDRED << " NOT" << RESET << " recovered correctly on" << BOLDRED << " PhyPort " << +cPhyPort << " line " << b << "."
+                                  << RESET;
                         std::string recovered = "";
                         for(int k = 0; (k + cPattern_str.length()) < cLine.length(); k += cPattern_str.length()) { recovered += cLine.substr(k, cPattern_str.length()) + "  "; }
-                        if(badLines > 2) // 35
+                        LOG(INFO) << "Recovered:  " << recovered << RESET;
+                        cParameter[cPatternId] = "";
+                        cParameter[cPatternId] = std::to_string(cPhyPort) + "_" + std::to_string(b);
+                        cValue[cPatternId]     = cLine;
+                        CICinTree[cPatternId]->Fill();
+                        if(cRuns > 0 && !cLineAlreadyChecked[b])
                         {
-                            cBadLines[b] = 1;
-                            LOG(INFO) << "The pattern " << cPattern_str << " was" << BOLDRED << " NOT" << RESET << " recovered correctly on" << BOLDRED << " PhyPort " << +cPhyPort << " line " << b 
-                                      << "." << RESET;
-                            std::string recovered = "";
-                            for(int k = 0; (k + cPattern_str.length()) < cLine.length(); k += cPattern_str.length()) { recovered += cLine.substr(k, cPattern_str.length()) + "  "; }
-                            LOG(INFO) << "Recovered:  " << recovered << RESET;
-                            cParameter[cPatternId] = "";
-                            cParameter[cPatternId] = std::to_string(cPhyPort) + "_" + std::to_string(b);
-                            cValue[cPatternId]     = cLine;
-                            CICinTree[cPatternId]->Fill();
-                            if(cRuns > 0 && !cLineAlreadyChecked[b])
-                            {
-                                // this->PhyPortPhaseAlignmentMap(pBoard, cPhyPort, true, b);
-                                cLineAlreadyChecked[b] = true;
-                            }
+                            // this->PhyPortPhaseAlignmentMap(pBoard, cPhyPort, true, b);
+                            cLineAlreadyChecked[b] = true;
                         }
-                        else
-                        {
-                            // cBadLines[b] = 0
-                            LOG(DEBUG) << "The pattern 0x" << cPattern_str_hex << " was" << BOLDGREEN << " recovered correctly " << RESET << "on PhyPort " << +cPhyPort << " line " << b << "."
-                                       << RESET;
-                            LOG(DEBUG) << "Recovered:  " << recovered << RESET;
-                        }
+                    }
+                    else
+                    {
+                        // cBadLines[b] = 0
+                        LOG(DEBUG) << "The pattern 0x" << cPattern_str_hex << " was" << BOLDGREEN << " recovered correctly " << RESET << "on PhyPort " << +cPhyPort << " line " << b << "." << RESET;
+                        LOG(DEBUG) << "Recovered:  " << recovered << RESET;
+                    }
                     // }
                 }
             }
@@ -572,7 +564,7 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
     }
     LOG(INFO) << BOLDYELLOW << "***************************************Bad CIC IN lines in the hybrid : " << cTotalBadLines << "*************************************" << RESET;
     fillSummaryTree("CIC IN bad lines", cTotalBadLines);
-  #endif
+#endif
 }
 
 void PSHybridTester::SSATestStubOutput(BeBoard* pBoard, const std::string& cSSAPairSel)
@@ -988,7 +980,7 @@ void PSHybridTester::SSATestLateralCommunication(Ph2_HwDescription::BeBoard* pBo
                                 uint8_t cEnFlags      = (cAnalogCalib << 4 | cDigitalCalib << 3 | cHitCounter << 2 | cPolarity << 1 | cMask);
                                 fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegisterName, cEnFlags);
                             }
-                            LOG(INFO) << "SSA# " << +cReadoutChip->getId() << " has been configured " << RESET; 
+                            LOG(INFO) << "SSA# " << +cReadoutChip->getId() << " has been configured " << RESET;
                         }
                         if(cReadoutChip->getId() == cAdjacentSSAId)
                         {
@@ -1030,7 +1022,7 @@ void PSHybridTester::SSATestLateralCommunication(Ph2_HwDescription::BeBoard* pBo
                                 uint8_t cEnFlags      = (cAnalogCalib << 4 | cDigitalCalib << 3 | cHitCounter << 2 | cPolarity << 1 | cMask);
                                 fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegisterName, cEnFlags);
                             }
-                            LOG(INFO) << "SSA# " << +cReadoutChip->getId() << " has been configured " << RESET; 
+                            LOG(INFO) << "SSA# " << +cReadoutChip->getId() << " has been configured " << RESET;
                         }
                         uint8_t cControlValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, "control_1");
                         LOG(INFO) << BOLDMAGENTA << "The register 'control_1' on SSA" << +cReadoutChip->getId() << " has the value: " << +cControlValue << "." << RESET;

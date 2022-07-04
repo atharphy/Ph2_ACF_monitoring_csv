@@ -274,7 +274,7 @@ int main(int argc, char* argv[])
 
             LOG(INFO) << "Phase alignment MPA" << RESET;
             // cAligned       = cCicAligner.PhaseAlignment(100);
-            cAligned = cCicAligner.AlignInputs();
+            cAligned       = cCicAligner.AlignInputs();
             cAlignedDouble = cAligned ? 1.0 : 0.0;
 #if defined(__USE_ROOT__)
             cHybridTester.fillSummaryTree(Form("MPA Alignment attemp %d", i + 1), cAlignedDouble);
@@ -519,10 +519,12 @@ int main(int argc, char* argv[])
                 cHybridTester.SSAPairSelect(cSSAPair);
                 cBackendAlignment.SetEnabledChips(cSSAPair);
                 bool cAligned;
-                for(auto cBoard: *cHybridTester.fDetectorContainer) { 
-                    for (int i = 0; i<3; i++){
-                        cAligned = cBackendAlignment.PSAlignment(cBoard); 
-                        if (cAligned) break;
+                for(auto cBoard: *cHybridTester.fDetectorContainer)
+                {
+                    for(int i = 0; i < 3; i++)
+                    {
+                        cAligned = cBackendAlignment.PSAlignment(cBoard);
+                        if(cAligned) break;
                     }
                 }
                 cHybridTester.SSATestStubOutput(cSSAPair);
@@ -539,13 +541,16 @@ int main(int argc, char* argv[])
                     cHybridTester.SSAPairSelect(cCurrentSSAPair);
                     cBackendAlignment.SetEnabledChips(cCurrentSSAPair);
                     bool cAligned;
-                    for(auto cBoard: *cHybridTester.fDetectorContainer) { 
-                        for (int i = 0; i<3; i++){
-                            cAligned = cBackendAlignment.PSAlignment(cBoard); 
-                            if (cAligned) break;
+                    for(auto cBoard: *cHybridTester.fDetectorContainer)
+                    {
+                        for(int i = 0; i < 3; i++)
+                        {
+                            cAligned = cBackendAlignment.PSAlignment(cBoard);
+                            if(cAligned) break;
                         }
                     }
-                    if ( i%2 == 0) {
+                    if(i % 2 == 0)
+                    {
                         LOG(INFO) << "Starting SSA outputs tests" << RESET;
                         cHybridTester.SSATestStubOutput(cCurrentSSAPair);
                         cHybridTester.SSATestL1Output(cCurrentSSAPair);

@@ -673,7 +673,7 @@ bool LinkAlignmentOT::LineTuning(const Chip* pChip, uint8_t pLineId, uint8_t pAl
         cWordAlignmentStatus = WordAlignLine(pChip, pLineId, pAlignmentPattern, pPeriod);
         cSuccess             = cWordAlignmentStatus.first && cSuccess;
 
-       LOG(INFO) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
+        LOG(INFO) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
 
         cAttempts++;
     } while(!cSuccess && cAttempts < 10);
