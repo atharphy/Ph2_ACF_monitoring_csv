@@ -68,7 +68,7 @@ const uint16_t PLLLOCK    = 0xAAAA; // PLL lock word
 } // namespace RD53BCmdEncoder
 
 template <class CmdType>
-std::vector<uint8_t> serializeFields(const CmdType&, std::vector<uint16_t>&)
+std::vector<uint8_t> serializeFields(const CmdType&)
 {
     return {};
 }
@@ -85,62 +85,62 @@ struct Sync
 
 struct Clear
 {
-    static constexpr uint8_t cmdCode() { return RD53BCmdEncoder::CLEAR; }
+    static constexpr uint16_t cmdCode() { return RD53BCmdEncoder::CLEAR; }
 
-    uint8_t chip_id;
+    size_t chip_id;
 };
 
 struct GlobalPulse
 {
-    static constexpr uint8_t cmdCode() { return RD53BCmdEncoder::GLOB_PULSE; }
+    static constexpr uint16_t cmdCode() { return RD53BCmdEncoder::GLOB_PULSE; }
 
-    uint8_t chip_id;
+    size_t chip_id;
 };
 
 struct WrReg
 {
-    static constexpr uint8_t cmdCode() { return RD53BCmdEncoder::WRITE; }
+    static constexpr uint16_t cmdCode() { return RD53BCmdEncoder::WRITE; }
 
-    uint8_t  chip_id;
-    uint16_t address;
-    uint16_t value;
+    size_t  chip_id;
+    size_t address;
+    size_t value;
 };
 
-std::vector<uint8_t> serializeFields(const WrReg&, std::vector<uint16_t>&);
+std::vector<uint8_t> serializeFields(const WrReg&);
 
 struct WrRegLong
 {
-    static constexpr uint8_t cmdCode() { return RD53BCmdEncoder::WRITE; }
+    static constexpr uint16_t cmdCode() { return RD53BCmdEncoder::WRITE; }
 
-    uint8_t               chip_id;
+    size_t               chip_id;
     std::vector<uint16_t> values;
 };
 
-std::vector<uint8_t> serializeFields(const WrRegLong&, std::vector<uint16_t>&);
+std::vector<uint8_t> serializeFields(const WrRegLong&);
 
 struct RdReg
 {
-    static constexpr uint8_t cmdCode() { return RD53BCmdEncoder::READ; }
+    static constexpr uint16_t cmdCode() { return RD53BCmdEncoder::READ; }
 
-    uint8_t  chip_id;
-    uint16_t address;
+    size_t  chip_id;
+    size_t address;
 };
 
-std::vector<uint8_t> serializeFields(const RdReg&, std::vector<uint16_t>&);
+std::vector<uint8_t> serializeFields(const RdReg&);
 
 struct Cal
 {
-    static constexpr uint8_t cmdCode() { return RD53BCmdEncoder::CAL; }
+    static constexpr uint16_t cmdCode() { return RD53BCmdEncoder::CAL; }
 
-    uint8_t chip_id;
+    size_t chip_id;
     bool    mode;
-    uint8_t edge_delay;
-    uint8_t edge_duration;
+    size_t edge_delay;
+    size_t edge_duration;
     bool    aux_enable;
-    uint8_t aux_delay;
+    size_t aux_delay;
 };
 
-std::vector<uint8_t> serializeFields(const Cal&, std::vector<uint16_t>&);
+std::vector<uint8_t> serializeFields(const Cal&);
 
 // struct Trigger
 // {
@@ -154,23 +154,32 @@ uint8_t packAndEncode(Args&&... args)
     return map5to8bit[bits::pack<Sizes...>(std::forward<Args>(args)...)];
 }
 
-template <class CmdType, std::enable_if_t<(CmdType::cmdCode > 0xFF), int> = 0>
+template <class CmdType, std::enable_if_t<(CmdType::cmdCode() > 0xFF), int> = 0>
 void serialize(const CmdType& cmd, std::vector<uint16_t>& cmdStream)
 {
     // Insert command code
-    cmdStream.push_back(CmdType::cmdCode);
+    cmdStream.push_back(CmdType::cmdCode());
 }
 
-template <class CmdType, std::enable_if_t<(CmdType::cmdCode <= 0xFF), int> = 0>
+template <class CmdType, std::enable_if_t<(CmdType::cmdCode() <= 0xFF), int> = 0>
 void serialize(const CmdType& cmd, std::vector<uint16_t>& cmdStream)
 {
-    // Insert command code
-    cmdStream.push_back(bits::pack<8, 8>(CmdType::cmdCode, packAndEncode<5>(cmd.chip_id)));
+    auto fields = serializeFields(cmd);
+    cmdStream.reserve(cmdStream.size() + 1 + fields.size() / 2);
 
-    auto fields = cmd.serializeFields();
+    // Insert command code
+    cmdStream.push_back(bits::pack<8, 8>(CmdType::cmdCode(), packAndEncode<5>(cmd.chip_id)));
 
     // Insert: chip id, address and data
-    for(auto i = 1; i < static_cast<int>(CmdType::nFields); i += 2) cmdStream.push_back(bits::pack<8, 8>(fields[i - 1], fields[i]));
+    for(auto i = 1u; i < fields.size(); i += 2) cmdStream.push_back(bits::pack<8, 8>(fields[i - 1], fields[i]));
+}
+
+template <class cmdType>
+std::vector<uint16_t> serialize(const cmdType& cmd)
+{
+    std::vector<uint16_t> cmdStream;
+    serialize(cmd, cmdStream);
+    return cmdStream;
 }
 
 } // namespace RD53BCmd

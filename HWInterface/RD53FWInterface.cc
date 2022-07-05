@@ -214,7 +214,7 @@ void RD53FWInterface::WriteChipCommand(const std::vector<uint16_t>& data, int hy
     std::vector<uint32_t> commandList;
 
     RD53FWInterface::ComposeAndPackChipCommands(data, hybridId, commandList);
-    RD53FWInterface::SendChipCommandsPack(commandList);
+    RD53FWInterface::SendChipCommands(commandList);
 }
 
 void RD53FWInterface::ComposeAndPackChipCommands(const std::vector<uint16_t>& data, int hybridId, std::vector<uint32_t>& commandList)
@@ -232,10 +232,10 @@ void RD53FWInterface::ComposeAndPackChipCommands(const std::vector<uint16_t>& da
     for(auto i = 1u; i < data.size(); i += 2) commandList.emplace_back(bits::pack<16, 16>(data[i - 1], data[i]));
 
     // If data.size() is not even, add a sync command
-    if(data.size() % 2 != 0) commandList.emplace_back(bits::pack<16, 16>(data.back(), RD53ACmd::RD53CmdEncoder::SYNC));
+    if(data.size() % 2 != 0) commandList.emplace_back(bits::pack<16, 16>(data.back(), RD53ACmd::RD53ACmdEncoder::SYNC));
 }
 
-void RD53FWInterface::SendChipCommandsPack(const std::vector<uint32_t>& commandList)
+void RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
 {
     int nAttempts = 0;
 
@@ -418,7 +418,7 @@ RD53FWconstants::ReadoutSpeed RD53FWInterface::ReadoutSpeed()
 // # !0 = 640 Mbit/s  #
 // ####################
 {
-    return RegManager::ReadReg("user.stat_regs.aurora_rx.speed") == 0 : RD53FWconstants::ReadoutSpeed::x1280 : RD53FWconstants::ReadoutSpeed::x640;
+    return RegManager::ReadReg("user.stat_regs.aurora_rx.speed") == 0 ? RD53FWconstants::ReadoutSpeed::x1280 : RD53FWconstants::ReadoutSpeed::x640;
 }
 
 void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)

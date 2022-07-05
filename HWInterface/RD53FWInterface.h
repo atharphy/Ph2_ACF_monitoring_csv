@@ -37,10 +37,11 @@ const uint32_t NBIT_DATA_FIFO     = 27;   // Data FIFO depth 134.217.728, i.e. 2
 constexpr float VDDD2Volt(float val) { return (0.968 + val * 0.0115); }
 constexpr float CDR2Freq(float val) { return (140 + val * 5); }
 
-enum class ReadoutSpeed
+enum class ReadoutSpeed : uint8_t
 {
     x1280,
-    x640
+    x640,
+    x320
 };
 
 } // namespace RD53FWconstants
@@ -90,14 +91,14 @@ class RD53FWInterface : public BeBoardFWInterface
     // # Check AURORA lock on data stream #
     // ####################################
     bool                         CheckChipCommunication(const Ph2_HwDescription::BeBoard* pBoard);
-    RD53FWconstants::UplinkSpeed ReadoutSpeed();
+    RD53FWconstants::ReadoutSpeed ReadoutSpeed();
 
     // #############################################
     // # hybridId < 0 --> broadcast to all hybrids #
     // #############################################
     void                                       WriteChipCommand(const std::vector<uint16_t>& data, int hybridId);
     void                                       ComposeAndPackChipCommands(const std::vector<uint16_t>& data, int hybridId, std::vector<uint32_t>& commandList);
-    void                                       SendChipCommandsPack(const std::vector<uint32_t>& commandList);
+    void                                       SendChipCommands(const std::vector<uint32_t>& commandList);
     std::vector<std::pair<uint16_t, uint16_t>> ReadChipRegisters(Ph2_HwDescription::ReadoutChip* pChip);
 
     enum class TriggerSource : uint32_t

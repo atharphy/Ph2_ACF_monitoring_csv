@@ -24,8 +24,6 @@ RD53::RD53(const RD53& chipObj) : ReadoutChip(chipObj) {}
 
 void RD53::loadfRegMap(const std::string& fileName)
 {
-    std::cout << "AAAAAAAAAAAAA " << this->getNRows() << std::endl;
-
     std::stringstream  myString;
     std::ifstream      file(fileName.c_str(), std::ios::in);
     perColumnPixelData pixData(this->getNRows());
@@ -48,7 +46,7 @@ void RD53::loadfRegMap(const std::string& fileName)
 
                 if(line.find("COL") != std::string::npos)
                 {
-                    std::fill(pixData.Enable.begin(), pixData.Enable.begin(), 0);
+                    std::fill(pixData.Enable.begin(), pixData.Enable.end(), 0);
                     std::fill(pixData.HitBus.begin(), pixData.HitBus.end(), 0);
                     std::fill(pixData.InjEn.begin(), pixData.InjEn.end(), 0);
                     std::fill(pixData.TDAC.begin(), pixData.TDAC.end(), 0);

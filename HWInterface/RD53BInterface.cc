@@ -9,12 +9,14 @@
 */
 
 #include "RD53BInterface.h"
+#include "../HWDescription/RD53B.h"
+#include "../HWDescription/RD53BCommands.h"
 
 using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-void RD53BInterface::SendGlobalPulse(const Ph2_HwDescription::Chip* pChip, uint16_t route, uint16_t pulseDuration)
+void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulseDuration)
 {
     std::vector<uint16_t> cmdStream;
     PackWriteCommand(pChip, "GlobalPulseConf", route, cmdStream);
@@ -23,16 +25,16 @@ void RD53BInterface::SendGlobalPulse(const Ph2_HwDescription::Chip* pChip, uint1
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());
 }
 
-void RD53BInterface::SendGlobalPulseBroadcast(const Ph2_HwDescription::BeBoard* pBoard, uint16_t route, uint16_t pulseDuration)
+void RD53BInterface::SendGlobalPulseBroadcast(const BeBoard* pBoard, uint16_t route, uint16_t pulseDuration)
 {
     std::vector<uint16_t> cmdStream;
     serialize(RD53BCmd::WrReg{RD53BConstants::BROADCAST_CHIPID, 61, route}, cmdStream);
     serialize(RD53BCmd::WrReg{RD53BConstants::BROADCAST_CHIPID, 62, pulseDuration}, cmdStream);
     serialize(RD53BCmd::GlobalPulse{RD53BConstants::BROADCAST_CHIPID}, cmdStream);
-    SendChipCommandsPack(pBoard, cmdStream, -1);
+    SendChipCommands(pBoard, cmdStream, -1);
 }
 
-void RD53BInterface::InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard)
+void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
 {
     this->setBoard(pBoard->getId());
 
@@ -53,14 +55,14 @@ void RD53BInterface::InitRD53UplinkSpeed(ReadoutChip* pChip)
 {
     this->setBoard(pChip->getBeBoardId());
 
-    uint32_t auroraSpeed = static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed();
-    WriteChipReg(pChip, "CdrConf", (auroraSpeed == 0 ? RD53Constants::CDRCONFIG_1Gbit : RD53Constants::CDRCONFIG_640Mbit), false);
-    RD53Interface::sendCommand(pChip, RD53BCmd::CLEAR{});
-    LOG(INFO) << GREEN << "Up-link speed set to: " << BOLDYELLOW << (auroraSpeed == 0 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
+    auto auroraSpeed = static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed();
+    WriteChipReg(pChip, "CdrConf", (auroraSpeed == RD53FWconstants::ReadoutSpeed::x1280 ? RD53Constants::CDRCONFIG_1Gbit : RD53Constants::CDRCONFIG_640Mbit), false);
+    RD53Interface::SendCommand(pChip, RD53BCmd::Clear{});
+    LOG(INFO) << GREEN << "Up-link speed set to: " << BOLDYELLOW << (auroraSpeed == RD53FWconstants::ReadoutSpeed::x1280 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 }
 
-void RD53BInterface::InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1)
+void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
 {
     LOG(INFO) << GREEN << "Configuring up-link lanes and monitoring..." << RESET;
     WriteChipReg(pChip, "SER_SEL_OUT", 0x0055);
@@ -84,14 +86,14 @@ void RD53BInterface::InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip, int 
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     SendGlobalPulse(pChip, 0b110000, 0xFF);
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-    SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
-    SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
+    RD53Interface::SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
+    RD53Interface::SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
 
-void RD53BInterface::PackWriteCommand(ReadoutChip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg)
+void RD53BInterface::PackWriteCommand(Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg)
 {
-    RD53BCmd::serialize(RD53BCmd::WrReg{(uint8_t)pChip->getId(), pChip->getRegItem(regName).fAddress, data}, chipCommandList);
+    RD53BCmd::serialize(RD53BCmd::WrReg{pChip->getId(), pChip->getRegItem(regName).fAddress, data}, chipCommandList);
     if(updateReg == true) pChip->setReg(regName, data);
 }
 

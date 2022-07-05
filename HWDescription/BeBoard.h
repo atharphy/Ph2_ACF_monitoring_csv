@@ -102,7 +102,7 @@ class BeBoard : public BoardContainer
     // * \brief Get the Map of the registers
     // * \return The map of register
     // */
-    BeBoardRegMap getBeBoardRegMap() const { return fRegMap; }
+    const BeBoardRegMap& getBeBoardRegMap() const { return fRegMap; }
 
     void setOptical(bool pOptical) { fOptical = pOptical; }
 

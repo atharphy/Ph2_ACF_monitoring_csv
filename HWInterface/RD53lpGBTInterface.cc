@@ -213,7 +213,7 @@ void RD53lpGBTInterface::InternalPhaseAlignRx(Chip* pChip, const BeBoard* pBoard
     // Set back Rx groups to fixed phase
     this->ConfigureRxGroups(pChip, pGroups, pChannels, f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], lpGBTconstants::rxPhaseTracking);
 
-    static_cast<lpGBT*>(pChip)->setPhaseRxAligned(allGood); // @TMP@
+    static_cast<lpGBT*>(pChip)->setPhaseRxAligned(true); // @TMP@
 }
 
 bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
@@ -225,7 +225,7 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
     const double frames_or_time = 1; // @CONST@
     const bool   given_time     = true;
     bool         allGood        = true;
-    uint32_t     frontendSpeed  = static_cast<RD53FWInterface*>(pBeBoardFWInterface)->ReadoutSpeed();
+    auto     frontendSpeed  = static_cast<RD53FWInterface*>(pBeBoardFWInterface)->ReadoutSpeed();
 
     LOG(INFO) << GREEN << "Phase alignment ongoing for LpGBT chip: " << BOLDYELLOW << pChip->getId() << RESET;
 
@@ -256,7 +256,7 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                 static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
                 static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip);
 
-                const double result = this->RunBERtest(pChip, cGroup, cChannel, given_time, frames_or_time, frontendSpeed);
+                const double result = this->RunBERtest(pChip, cGroup, cChannel, given_time, frames_or_time, (uint8_t)frontendSpeed);
 
                 // #########################################################
                 // # Search for largest interval and set into middle point #

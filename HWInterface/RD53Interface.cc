@@ -19,33 +19,46 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
 {
     this->setBoard(pChip->getBeBoardId());
 
-    RD53Interface::sendCommand(static_cast<RD53*>(pChip), RD53ACmd::WrReg{(uint8_t)pChip->getId(), pChip->getRegItem(regName).fAddress, data});
+    auto nameAndValue(SplitSpecialRegisters(regName, data, RD53Shared::firstChip->getRegMap()));
+
+    RD53Interface::SendCommand(static_cast<RD53*>(pChip), RD53ACmd::WrReg{(uint8_t)pChip->getId(), pChip->getRegItem(nameAndValue.first).fAddress, nameAndValue.second});
     if((regName == "VCAL_HIGH") || (regName == "VCAL_MED")) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP)); // @TMP@
 
     bool status = true;
     if(pVerifLoop == true)
     {
+        uint16_t actualValue;
         if(regName == "PIX_PORTAL")
         {
             auto pixMode = RD53Interface::ReadChipReg(pChip, "PIX_MODE");
             if(pixMode == 0)
             {
                 auto regReadback = ReadRD53Reg(static_cast<RD53*>(pChip), regName);
+                actualValue = regReadback[0].second;
                 auto row         = RD53Interface::ReadChipReg(pChip, "REGION_ROW");
                 if(regReadback.size() == 0 /* @TMP@ */ || regReadback[0].first != row || regReadback[0].second != data) status = false;
             }
         }
-        else if(data != RD53Interface::ReadChipReg(pChip, regName))
-            status = false;
+        else {
+            actualValue = RD53Interface::ReadChipReg(pChip, nameAndValue.first);
+            if(nameAndValue.second != actualValue)
+                status = false;
+        }
+        
+        if(status == false)
+        {
+            LOG(ERROR) << BOLDRED << "Error when reading back what was written into RD53 reg. " << BOLDYELLOW << regName << ": wrote = " << nameAndValue.second << ", read = " << actualValue << RESET;
+            return false;
+        }
+        else {
+            LOG(INFO) << "Succesfully configured " << BOLDYELLOW << regName;
+            pChip->setReg(regName, data);
+            pChip->setReg(nameAndValue.first, nameAndValue.second);
+        }
     }
 
-    if(status == false)
-    {
-        LOG(ERROR) << BOLDRED << "Error when reading back what was written into RD53 reg. " << BOLDYELLOW << regName << RESET;
-        return false;
-    }
 
-    if((pVerifLoop == true) && (status == true)) pChip->setReg(regName, data);
+
     return true;
 }
 
@@ -53,12 +66,8 @@ void RD53Interface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std:
 {
     this->setBoard(pBoard->getId());
 
-    ChipRegItem Reg = RD53Shared::firstChip->getRegItem(regName);
-    Reg.fValue      = data;
-
-    std::pair<std::string, uint16_t> nameAndValue(SplitSpecialRegisters(regName, Reg, D53Shared::firstChip->getRegMap()));
-    const uint16_t                   address = D53Shared::firstChip->getRegItem(nameAndValue.first).fAddress;
-
+    std::pair<std::string, uint16_t> nameAndValue(SplitSpecialRegisters(regName, data, RD53Shared::firstChip->getRegMap()));
+    const uint16_t                   address = RD53Shared::firstChip->getRegItem(nameAndValue.first).fAddress;
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialize(RD53ACmd::WrReg{RD53Constants::BROADCAST_CHIPID, address, nameAndValue.second}), -1);
 
     if((regName == "VCAL_HIGH") || (regName == "VCAL_MED")) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP)); // @TMP@
@@ -114,8 +123,8 @@ bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
     RD53* pRD53          = static_cast<RD53*>(pChip);
     auto& pixMaskDefault = pRD53->getPixelsMaskDefault();
 
-    for(auto col = 0u; col < RD53A::NCOLS; col++)
-        for(auto row = 0u; row < RD53A::NROWS; row++)
+    for(auto col = 0u; col < pRD53->getNCols(); col++)
+        for(auto row = 0u; row < pRD53->getNRows(); row++)
         {
             if(mask == true) pRD53->enablePixel(row, col, group->isChannelEnabled(row, col) && pixMaskDefault[col].Enable[row]);
             if(inject == true)
@@ -154,8 +163,9 @@ bool RD53Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
 {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
-    for(auto col = 0u; col < RD53A::NCOLS; col++)
-        for(auto row = 0u; row < RD53A::NROWS; row++) pRD53->setTDAC(row, col, pValue.getChannel<uint16_t>(row, col));
+    for(auto col = 0u; col < pRD53->getNCols(); col++)
+        for(auto row = 0u; row < pRD53->getNRows(); row++)
+            pRD53->setTDAC(row, col, pValue.getChannel<uint16_t>(row, col));
 
     WriteRD53Mask(pRD53, false, false);
 
@@ -164,11 +174,13 @@ bool RD53Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
 
 void RD53Interface::ReadChipAllLocalReg(ReadoutChip* pChip, const std::string& regName, ChipContainer& pValue)
 {
-    for(auto col = 0u; col < RD53A::NCOLS; col++)
-        for(auto row = 0u; row < RD53A::NROWS; row++) pValue.getChannel<uint16_t>(row, col) = static_cast<RD53*>(pChip)->getTDAC(row, col);
+    RD53* pRD53 = static_cast<RD53*>(pChip);
+    for(auto col = 0u; col < pRD53->getNCols(); col++)
+        for(auto row = 0u; row < pRD53->getNRows(); row++)
+            pValue.getChannel<uint16_t>(row, col) = static_cast<RD53*>(pChip)->getTDAC(row, col);
 }
 
-void RD53Interface::SendChipCommandsPack(const BeBoard* pBoard, const std::vector<uint16_t>& chipCommandList, int hybridId)
+void RD53Interface::SendChipCommands(const BeBoard* pBoard, const std::vector<uint16_t>& chipCommandList, int hybridId)
 {
     this->setBoard(pBoard->getId());
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(chipCommandList, hybridId);
@@ -180,10 +192,10 @@ void RD53Interface::PackHybridCommands(const BeBoard* pBoard, const std::vector<
     static_cast<RD53FWInterface*>(fBoardFW)->ComposeAndPackChipCommands(chipCommandList, hybridId, hybridCommandList);
 }
 
-void RD53Interface::SendHybridCommandsPack(const BeBoard* pBoard, const std::vector<uint32_t>& hybridCommandList)
+void RD53Interface::SendHybridCommands(const BeBoard* pBoard, const std::vector<uint32_t>& hybridCommandList)
 {
     this->setBoard(pBoard->getId());
-    static_cast<RD53FWInterface*>(fBoardFW)->SendChipCommandsPack(hybridCommandList);
+    static_cast<RD53FWInterface*>(fBoardFW)->SendChipCommands(hybridCommandList);
 }
 
 // ###########################
@@ -276,12 +288,12 @@ uint32_t RD53Interface::measureADC(ReadoutChip* pChip, uint32_t data)
 
     RD53ACmd::serialize(RD53ACmd::WrReg{chipID, pChip->getRegItem("MONITOR_CONFIG").fAddress, trimADC}, commandList);
     RD53ACmd::serialize(RD53ACmd::WrReg{chipID, GLOBAL_PULSE_ROUTE, 0x0040}, commandList); // Reset Monitor Data
-    RD53ACmd::serialize(RD53ACmd::GlobalPulse{(uint8_t)pChip->getId(), 0x0004}, commandList);
+    RD53ACmd::serialize(RD53ACmd::GlobalPulse{pChip->getId(), 0x0004}, commandList);
     RD53ACmd::serialize(RD53ACmd::WrReg{chipID, GLOBAL_PULSE_ROUTE, 0x0008}, commandList); // Clear Monitor Data
-    RD53ACmd::serialize(RD53ACmd::GlobalPulse{(uint8_t)pChip->getId(), 0x0004}, commandList);
-    RD53ACmd::serialize(RD53ACmd::WrReg{chipID, pChip->getRegItem("MONITOR_SELECT").fAddress, (uint16_t)data}, commandList); // 14 bits: bit 13 enable, bits 7:12 I-Mon, bits 0:6 V-Mon
+    RD53ACmd::serialize(RD53ACmd::GlobalPulse{pChip->getId(), 0x0004}, commandList);
+    RD53ACmd::serialize(RD53ACmd::WrReg{chipID, pChip->getRegItem("MONITOR_SELECT").fAddress, data}, commandList); // 14 bits: bit 13 enable, bits 7:12 I-Mon, bits 0:6 V-Mon
     RD53ACmd::serialize(RD53ACmd::WrReg{chipID, GLOBAL_PULSE_ROUTE, 0x1000}, commandList);                                   // Trigger Monitor Data to start conversion
-    RD53ACmd::serialize(RD53ACmd::GlobalPulse{(uint8_t)pChip->getId(), 0x0004}, commandList);
+    RD53ACmd::serialize(RD53ACmd::GlobalPulse{pChip->getId(), 0x0004}, commandList);
     RD53ACmd::serialize(RD53ACmd::WrReg{chipID, GLOBAL_PULSE_ROUTE, GlbPulseVal}, commandList); // Restore value in Global Pulse Route
 
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pChip->getHybridId());
