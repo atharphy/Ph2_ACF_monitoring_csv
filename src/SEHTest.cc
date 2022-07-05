@@ -238,10 +238,13 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDYELLOW << "Switching on SEH without remote power supply control" << RESET;
         cSEHTester.TurnOn(cRightLoad, cLeftLoad);
     }
-    if(cmd.foundOption("ext-leak") & cmd.foundOption("parallelHV"))
+    if(cmd.foundOption("ext-leak") )
     {
-        LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply in parallel" << RESET;
-        cSEHTester.SetupExternalTestLeakageCurrent(cExtLeakVoltage, cHVPowerSupplyId, cHVChannelId);
+        if(cmd.foundOption("parallelHV"))
+        {
+            LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply in parallel" << RESET;
+            cSEHTester.SetupExternalTestLeakageCurrent(cExtLeakVoltage, cHVPowerSupplyId, cHVChannelId);
+        }
     }
 
     // establishes an optical link and configures the lpgbt over the optical cable
