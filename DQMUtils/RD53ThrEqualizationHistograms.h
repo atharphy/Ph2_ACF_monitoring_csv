@@ -1,7 +1,7 @@
 /*!
   \file                  RD53ThrEqualizationHistograms.h
   \brief                 Header file of ThrEqualization calibration histograms
-  \author                Alkiviadis PAPADOPOULOS
+  \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
   Support:               email to alkiviadis.papadopoulos@cern.ch
