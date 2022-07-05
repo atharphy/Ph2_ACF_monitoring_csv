@@ -38,6 +38,16 @@ void PSROHTester::Initialise()
             clpGBTInterface->cicClock(cOpticalGroup->flpGBT, cClkCnfg, 1);
         }
     }
+    float cMeasurement;
+    flpGBTInterface->getExternalController()->getInterface().adc_get(flpGBTInterface->getExternalController()->getInterface().ISEN_2V55, cMeasurement);
+    LOG(INFO) << BOLDBLUE << "ISEN_2V55 = " << +cMeasurement << RESET;
+    flpGBTInterface->getExternalController()->getInterface().adc_get(flpGBTInterface->getExternalController()->getInterface().ISEN_1V25, cMeasurement);
+    LOG(INFO) << BOLDBLUE << "ISEN_1V25 = " << +cMeasurement << RESET;
+
+    flpGBTInterface->getExternalController()->getInterface().adc_get(flpGBTInterface->getExternalController()->getInterface()._2V55, cMeasurement);
+    LOG(INFO) << BOLDBLUE << "_2V55 = " << +cMeasurement << RESET;
+    flpGBTInterface->getExternalController()->getInterface().adc_get(flpGBTInterface->getExternalController()->getInterface()._1V25, cMeasurement);
+    LOG(INFO) << BOLDBLUE << "_1V25 = " << +cMeasurement << RESET;
 }
 
 void PSROHTester::UserFCMDTranslate(const std::string& userFilename = "fcmd_file.txt")
