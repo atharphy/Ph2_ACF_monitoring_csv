@@ -290,7 +290,7 @@ class SystemController
 
     void PrintRegCount()
     {
-        // print number of I2C transactions
+        // Print number of I2C transactions
         for(auto cBoard: *fDetectorContainer)
         {
             for(auto cOpticalGroup: *cBoard)

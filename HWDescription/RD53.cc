@@ -302,21 +302,22 @@ void RD53::copyMaskToDefault(const std::string& which)
 // # which = td : TDAC   #
 // #######################
 {
-  if(which == "all") fPixelsMaskDefault = fPixelsMask;
-  else
-  {
-      for(auto col = 0u; col < fPixelsMaskDefault.size(); col++)
-      {
-          if(which == "en")
-              fPixelsMaskDefault[col].Enable = fPixelsMask[col].Enable;
-          else if(which == "hb")
-              fPixelsMaskDefault[col].HitBus = fPixelsMask[col].HitBus;
-          else if(which == "in")
-              fPixelsMaskDefault[col].InjEn = fPixelsMask[col].InjEn;
-          else if(which == "td")
-              fPixelsMaskDefault[col].TDAC = fPixelsMask[col].TDAC;
-      }
-  }
+    if(which == "all")
+        fPixelsMaskDefault = fPixelsMask;
+    else
+    {
+        for(auto col = 0u; col < fPixelsMaskDefault.size(); col++)
+        {
+            if(which == "en")
+                fPixelsMaskDefault[col].Enable = fPixelsMask[col].Enable;
+            else if(which == "hb")
+                fPixelsMaskDefault[col].HitBus = fPixelsMask[col].HitBus;
+            else if(which == "in")
+                fPixelsMaskDefault[col].InjEn = fPixelsMask[col].InjEn;
+            else if(which == "td")
+                fPixelsMaskDefault[col].TDAC = fPixelsMask[col].TDAC;
+        }
+    }
 }
 
 void RD53::resetMask()

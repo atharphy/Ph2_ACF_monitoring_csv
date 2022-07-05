@@ -94,9 +94,9 @@ struct perColumnPixelData
     perColumnPixelData(size_t size, bool en, bool hb) : Enable(size, en), HitBus(size, hb) {}
     perColumnPixelData(size_t size, uint8_t tdac) : TDAC(size, tdac) {}
 
-    std::vector<bool> Enable;
-    std::vector<bool> HitBus;
-    std::vector<bool> InjEn;
+    std::vector<bool>    Enable;
+    std::vector<bool>    HitBus;
+    std::vector<bool>    InjEn;
     std::vector<uint8_t> TDAC;
 };
 

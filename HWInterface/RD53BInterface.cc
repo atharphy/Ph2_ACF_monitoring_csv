@@ -14,8 +14,8 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-
-void RD53BInterface::SendGlobalPulse(const Ph2_HwDescription::Chip* pChip, uint16_t route, uint16_t pulseDuration) {
+void RD53BInterface::SendGlobalPulse(const Ph2_HwDescription::Chip* pChip, uint16_t route, uint16_t pulseDuration)
+{
     std::vector<uint16_t> cmdStream;
     PackWriteCommand(pChip, "GlobalPulseConf", route, cmdStream);
     PackWriteCommand(pChip, "GlobalPulseWidth", pulseDuration, cmdStream);
@@ -23,7 +23,8 @@ void RD53BInterface::SendGlobalPulse(const Ph2_HwDescription::Chip* pChip, uint1
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());
 }
 
-void RD53BInterface::SendGlobalPulseBroadcast(const Ph2_HwDescription::BeBoard* pBoard, uint16_t route, uint16_t pulseDuration) {
+void RD53BInterface::SendGlobalPulseBroadcast(const Ph2_HwDescription::BeBoard* pBoard, uint16_t route, uint16_t pulseDuration)
+{
     std::vector<uint16_t> cmdStream;
     serialize(RD53BCmd::WrReg{RD53BConstants::BROADCAST_CHIPID, 61, route}, cmdStream);
     serialize(RD53BCmd::WrReg{RD53BConstants::BROADCAST_CHIPID, 62, pulseDuration}, cmdStream);
@@ -33,62 +34,60 @@ void RD53BInterface::SendGlobalPulseBroadcast(const Ph2_HwDescription::BeBoard* 
 
 void RD53BInterface::InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard)
 {
-    
     this->setBoard(pBoard->getId());
 
     LOG(INFO) << GREEN << "Down-link phase initialization..." << RESET;
-
-    WriteBoardBroadcastChipReg(pBoard, "GCR_DEFAULT_CONFIG", 0xac75);
-    WriteBoardBroadcastChipReg(pBoard, "GCR_DEFAULT_CONFIG_B", 0x538a);
+    WriteBoardBroadcastChipReg(pBoard, "GCR_DEFAULT_CONFIG", 0xAC75);
+    WriteBoardBroadcastChipReg(pBoard, "GCR_DEFAULT_CONFIG_B", 0x538A);
     WriteBoardBroadcastChipReg(pBoard, "CmdErrCnt", 0);
     WriteBoardBroadcastChipReg(pBoard, "CdrConf", static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed() == RD53FWconstants::ReadoutSpeed::x1280 ? 0 : 1);
     SendGlobalPulseBroadcast(pBoard, 7, 0xFF); // ResetChannelSynchronizer, ResetCommandDecoder, ResetGlobalConfiguration
-    WriteBoardBroadcastChipReg(pBoard, "RingOscConfig", 0x7fff);
-    WriteBoardBroadcastChipReg(pBoard, "RingOscConfig", 0x7fff);
+    WriteBoardBroadcastChipReg(pBoard, "RingOscConfig", 0x7FFF);
+    WriteBoardBroadcastChipReg(pBoard, "RingOscConfig", 0x7FFF);
     SendGlobalPulseBroadcast(pBoard, 1 << 8, 0xFF); // ResetEfuses
-
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
 
+void RD53BInterface::InitRD53UplinkSpeed(ReadoutChip* pChip)
+{
+    this->setBoard(pChip->getBeBoardId());
+
+    uint32_t auroraSpeed = static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed();
+    WriteChipReg(pChip, "CdrConf", (auroraSpeed == 0 ? RD53Constants::CDRCONFIG_1Gbit : RD53Constants::CDRCONFIG_640Mbit), false);
+    RD53Interface::sendCommand(pChip, RD53BCmd::CLEAR{});
+    LOG(INFO) << GREEN << "Up-link speed set to: " << BOLDYELLOW << (auroraSpeed == 0 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+}
+
 void RD53BInterface::InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1)
 {
-// auto rd53b = static_cast<RD53B*>(pChip);
     LOG(INFO) << GREEN << "Configuring up-link lanes and monitoring..." << RESET;
     WriteChipReg(pChip, "SER_SEL_OUT", 0x0055);
-    
     size_t hybridId = pChip->getHybridId();
-
-    if (hybridId >= 2)
+    // @TMP@ : what is this?
+    if(hybridId >= 2)
         WriteChipReg(pChip, "CML_CONFIG", 15);
     else
         WriteChipReg(pChip, "CML_CONFIG", 1);
-
-    
     WriteChipReg(pChip, "AuroraConfig", bits::pack<4, 6, 2>(1, 25, 3));
-    
     uint16_t val;
-    if (hybridId >= 2)
+    // @TMP@ : what is this?
+    if(hybridId >= 2)
         val = bits::pack<2, 2, 2, 2, 2, 2, 2, 2>(0, 1, 2, 3, 0, 1, 2, 3);
-    else 
+    else
         val = bits::pack<2, 2, 2, 2, 2, 2, 2, 2>(3, 2, 1, 0, 3, 2, 1, 0);
-
     WriteChipReg(pChip, "DataMergingMux", val);
-
     WriteChipReg(pChip, "ServiceDataConf", (1 << 8) | 50);
     WriteChipReg(pChip, "AURORA_CB_CONFIG0", 0x0FF1);
     WriteChipReg(pChip, "AURORA_CB_CONFIG1", 0x0000);
-    
-    usleep(10000);
-    SendGlobalPulse(pChip, 0b110000, 0xff);
-    usleep(10000);
-    
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    SendGlobalPulse(pChip, 0b110000, 0xFF);
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
     SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
-
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
-
 
 void RD53BInterface::PackWriteCommand(ReadoutChip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg)
 {

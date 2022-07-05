@@ -15,13 +15,6 @@ namespace Ph2_HwInterface
 {
 RD53Interface::RD53Interface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterface(pBoardMap) {}
 
-void RD53Interface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
-{
-    StartPRBSpattern(pChip);
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-    StopPRBSpattern(pChip);
-}
-
 bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const uint16_t data, bool pVerifLoop)
 {
     this->setBoard(pChip->getBeBoardId());
@@ -60,11 +53,11 @@ void RD53Interface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std:
 {
     this->setBoard(pBoard->getId());
 
-    ChipRegItem Reg = pBoard->at(0)->at(0)->at(0)->getRegItem(regName);
+    ChipRegItem Reg = RD53Shared::firstChip->getRegItem(regName);
     Reg.fValue      = data;
 
-    std::pair<std::string, uint16_t> nameAndValue(SplitSpecialRegisters(regName, Reg, pBoard->at(0)->at(0)->at(0)->getRegMap()));
-    const uint16_t                   address = pBoard->at(0)->at(0)->at(0)->getRegItem(nameAndValue.first).fAddress;
+    std::pair<std::string, uint16_t> nameAndValue(SplitSpecialRegisters(regName, Reg, D53Shared::firstChip->getRegMap()));
+    const uint16_t                   address = D53Shared::firstChip->getRegItem(nameAndValue.first).fAddress;
 
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialize(RD53ACmd::WrReg{RD53Constants::BROADCAST_CHIPID, address, nameAndValue.second}), -1);
 
@@ -134,6 +127,13 @@ bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
     WriteRD53Mask(pRD53, true, false);
 
     return true;
+}
+
+void RD53Interface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
+{
+    StartPRBSpattern(pChip);
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    StopPRBSpattern(pChip);
 }
 
 // ##################

@@ -45,7 +45,7 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
         {
             doWriteClkDataDelay = true;
 
-            nameAndValue = SplitSpecialRegisters(std::string(cRegItem->first), cRegItem->second, pRD53RegMap);
+            nameAndValue = SplitSpecialRegisters(std::string(cRegItem->first), pRD53RegMap);
 
             if(cRegItem->first == "CLK_DATA_DELAY") break;
         }
@@ -72,7 +72,7 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
                 if(cRegItem.first == registerBlackList[i]) break;
             if(i == arraySize(registerBlackList))
             {
-                std::pair<std::string, uint16_t> nameAndValue(SplitSpecialRegisters(std::string(cRegItem.first), cRegItem.second, pRD53RegMap));
+                std::pair<std::string, uint16_t> nameAndValue(SplitSpecialRegisters(std::string(cRegItem.first), pRD53RegMap));
 
                 if(cRegItem.first == "CDR_CONFIG")
                 {
@@ -107,10 +107,13 @@ void RD53AInterface::InitRD53UplinkSpeed(ReadoutChip* pChip)
 {
     this->setBoard(pChip->getBeBoardId());
 
-    uint32_t auroraSpeed = static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed();
-    RD53Interface::WriteChipReg(pChip, "CDR_CONFIG", (auroraSpeed == 0 ? RD53Constants::CDRCONFIG_1Gbit : RD53Constants::CDRCONFIG_640Mbit), false);
-    RD53Interface::sendCommand(pChip, RD53ACmd::ECR{});
+    ChipRegMap& pRD53RegMap                      = pChip->getRegMap();
+    uint32_t    auroraSpeed                      = static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed();
+    pRD53RegMap["CDR_CONFIG_SEL_SER_CLK"].fValue = (auroraSpeed == 0 ? RD53Constants::CDRCONFIG_1Gbit : RD53Constants::CDRCONFIG_640Mbit);
 
+    std::pair<std::string, uint16_t> nameAndValue(SplitSpecialRegisters("CDR_CONFIG_SEL_SER_CLK", pRD53RegMap));
+    RD53Interface::WriteChipReg(pChip, nameAndValue.first, nameAndValue.second);
+    RD53Interface::sendCommand(pChip, RD53ACmd::ECR{});
     LOG(INFO) << GREEN << "Up-link speed set to: " << BOLDYELLOW << (auroraSpeed == 0 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 }
@@ -176,11 +179,17 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53AInterface::ReadRD53Reg(ReadoutCh
     return regReadback;
 }
 
-std::pair<std::string, uint16_t> RD53AInterface::SplitSpecialRegisters(std::string regName, ChipRegItem& Reg, ChipRegMap& pRD53RegMap)
+std::pair<std::string, uint16_t> RD53AInterface::SplitSpecialRegisters(std::string regName, ChipRegMap& pRD53RegMap)
 {
-    uint16_t value = Reg.fValue;
+    ChipRegItem& Reg   = pRD53RegMap[regName];
+    uint16_t     value = Reg.fValue;
 
-    if(regName == "CLK_DATA_DELAY_CMD_DELAY")
+    if(regName == "CDR_CONFIG_SEL_SER_CLK")
+    {
+        value = Reg.fValue | (value & (RD53Shared::setBits(pRD53RegMap["CDR_CONFIG"].fBitSize) - RD53Shared::setBits(Reg.fBitSize));
+        pRD53RegMap["CDR_CONFIG"].fPrmptCfg = true;
+    }
+    else if(regName == "CLK_DATA_DELAY_CMD_DELAY")
     {
         value                                   = Reg.fValue | (value & (RD53Shared::setBits(pRD53RegMap["CLK_DATA_DELAY"].fBitSize) - RD53Shared::setBits(Reg.fBitSize)));
         pRD53RegMap["CLK_DATA_DELAY"].fPrmptCfg = true;
@@ -263,8 +272,7 @@ std::pair<std::string, uint16_t> RD53AInterface::SplitSpecialRegisters(std::stri
     return std::pair<std::string, uint16_t>(regName, value);
 }
 
-// @TMP@
-uint16_t getPixelConfig(const std::vector<perColumnPixelData>& mask, uint16_t row, uint16_t col, bool highGain)
+uint16_t RD53AInterface::GetPixelConfig(const std::vector<perColumnPixelData>& mask, uint16_t row, uint16_t col, bool highGain)
 // ##############################################################################################################
 // # Encodes the configuration for a pixel pair                                                                 #
 // # In the LIN FE TDAC is unsigned and increasing it reduces the local threshold                               #
@@ -336,7 +344,7 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
             {
                 if((mask[col].Enable[row] == true) || (mask[col + 1].Enable[row] == true))
                 {
-                    data = getPixelConfig(mask, row, col, highGain);
+                    data = RD53AInterface::GetPixelConfig(mask, row, col, highGain);
 
                     RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_ROW_ADDR, (uint16_t)row}, commandList);
                     RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_PORTAL_ADDR, (uint16_t)data}, commandList);
@@ -363,7 +371,7 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
 
             for(auto row = 0u; row < RD53A::NROWS; row++)
             {
-                data.push_back(getPixelConfig(mask, row, col, highGain));
+                data.push_back(RD53AInterface::GetPixelConfig(mask, row, col, highGain));
 
                 if((row % RD53Constants::NREGIONS_LONGCMD) == (RD53Constants::NREGIONS_LONGCMD - 1))
                 {

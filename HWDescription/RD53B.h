@@ -17,7 +17,7 @@
 
 namespace RD53BConstants
 {
-const uint8_t  BROADCAST_CHIPID  = 31; // Broadcast chip ID used to send the command to multiple chips
+const uint8_t BROADCAST_CHIPID = 31; // Broadcast chip ID used to send the command to multiple chips
 }
 
 namespace Ph2_HwDescription

@@ -912,7 +912,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
               << mainClock / ((RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr + 1) * 4 - 1 + (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject + 1) * 4 + 7 +
                               (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger + 1) * 4 - 1 + (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime + 1) * 4 + 7 +
                               RD53FWInterface::localCfgFastCmd.trigger_duration)
-              << std::setprecision(-1) << " Hz" << RESET; // @TMP@
+              << std::setprecision(-1) << " Hz" << RESET;
     RD53Shared::resetDefaultFloat();
 
     // ##############################

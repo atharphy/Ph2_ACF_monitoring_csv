@@ -212,6 +212,8 @@ void RD53lpGBTInterface::InternalPhaseAlignRx(Chip* pChip, const BeBoard* pBoard
 
     // Set back Rx groups to fixed phase
     this->ConfigureRxGroups(pChip, pGroups, pChannels, f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], lpGBTconstants::rxPhaseTracking);
+
+    static_cast<lpGBT*>(pChip)->setPhaseRxAligned(allGood); // @TMP@
 }
 
 bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,

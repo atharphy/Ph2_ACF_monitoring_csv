@@ -9,12 +9,12 @@
 
 #include "SystemController.h"
 #include "../HWInterface/LinkInterface.h"
+#include "../HWInterface/RD53AInterface.h"
+#include "../HWInterface/RD53BInterface.h"
 #include "../MonitorUtils/CBCMonitor.h"
 #include "../MonitorUtils/DetectorMonitor.h"
 #include "../MonitorUtils/RD53Monitor.h"
 #include "../MonitorUtils/SEHMonitor.h"
-#include "../HWInterface/RD53AInterface.h"
-#include "../HWInterface/RD53BInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -300,10 +300,10 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         }
         else
         {
-            flpGBTInterface       = new RD53lpGBTInterface(fBeBoardFWMap);
-            if (cFirstBoard->getFrontEndType() == FrontEndType::RD53A)
+            flpGBTInterface = new RD53lpGBTInterface(fBeBoardFWMap);
+            if(cFirstBoard->getFrontEndType() == FrontEndType::RD53A)
                 fReadoutChipInterface = new RD53AInterface(fBeBoardFWMap);
-            else 
+            else
                 fReadoutChipInterface = new RD53BInterface(fBeBoardFWMap);
         }
     } // if there is something to create an interface for

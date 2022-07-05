@@ -13,7 +13,6 @@
 
 #include "../Utils/BitMaster/bit_packing.h"
 
-#include <cstdint>
 #include <vector>
 
 namespace RD53ACmd
@@ -57,51 +56,23 @@ constexpr uint8_t map5to8bit[] = {
 // ############
 // # Commands #
 // ############
-namespace RD53CmdEncoder
+namespace RD53ACmdEncoder
 {
-const uint16_t RESET_ECR  = 0x5A5A; // Event Counter Reset word
-const uint16_t RESET_BCR  = 0x5959; // Bunch Counter Reset word
-const uint16_t GLOB_PULSE = 0x5C5C; // Global pulse word
-const uint16_t CAL        = 0x6363; // Calibration word
-const uint16_t WRITE      = 0x6666; // Write command word
-const uint16_t READ       = 0x6565; // Read command word
-const uint16_t NOOP       = 0x6969; // No operation word
-const uint16_t SYNC       = 0x817E; // Synchronization word
-} // namespace RD53CmdEncoder
+const uint16_t CAL        = 0x63; // Calibration word
+const uint16_t READ       = 0x65; // Read command word
+const uint16_t WRITE      = 0x66; // Write command word
+const uint16_t GLOB_PULSE = 0x5C; // Global pulse word
 
-template <int... Sizes, class... Args>
-uint8_t packAndEncode(Args&&... args)
-{
-    return map5to8bit[bits::pack<Sizes...>(std::forward<Args>(args)...)];
-}
+const uint16_t RESET_ECR = 0x5A5A; // Event Counter Reset word
+const uint16_t RESET_BCR = 0x5959; // Bunch Counter Reset word
+const uint16_t NOOP      = 0x6969; // No operation word
+const uint16_t SYNC      = 0x817E; // Synchronization word
+} // namespace RD53ACmdEncoder
 
 template <class T>
 auto serializeFields(const T& cmd)
 {
     return std::array<uint8_t, 0>();
-}
-
-template <class cmdType>
-void serialize(const cmdType& cmd, std::vector<uint16_t>& frameVector)
-{
-    // Insert command code
-    frameVector.push_back(cmdType::cmdCode());
-
-    auto fields = serializeFields(cmd);
-
-    // Insert: chip id, address and data
-    for(auto i = 1; i < static_cast<int>(cmdType::nFields()); i += 2) frameVector.push_back(bits::pack<8, 8>(fields[i - 1], fields[i]));
-}
-
-template <class cmdType>
-std::vector<uint16_t> serialize(const cmdType& cmd)
-{
-    std::vector<uint16_t> frameVector;
-
-    frameVector.reserve(1 + cmdType::nFields() / 2);
-    serialize(cmd, frameVector);
-
-    return frameVector;
 }
 
 struct ECR
@@ -188,6 +159,42 @@ struct RdReg
 };
 
 std::array<uint8_t, RdReg::nFields()> serializeFields(const RdReg& cmd);
+
+template <int... Sizes, class... Args>
+uint8_t packAndEncode(Args&&... args)
+{
+    return map5to8bit[bits::pack<Sizes...>(std::forward<Args>(args)...)];
+}
+
+template <class CmdType, std::enable_if_t<(CmdType::cmdCode > 0xFF), int> = 0>
+void serialize(const CmdType& cmd, std::vector<uint16_t>& cmdStream)
+{
+    // Insert command code
+    cmdStream.push_back(CmdType::cmdCode);
+}
+
+template <class CmdType, std::enable_if_t<(CmdType::cmdCode <= 0xFF), int> = 0>
+void serialize(const CmdType& cmd, std::vector<uint16_t>& cmdStream)
+{
+    // Insert command code
+    cmdStream.push_back(bits::pack<8, 8>(CmdType::cmdCode, packAndEncode<5>(cmd.chip_id)));
+
+    auto fields = cmd.serializeFields();
+
+    // Insert: chip id, address and data
+    for(auto i = 1; i < static_cast<int>(CmdType::nFields); i += 2) cmdStream.push_back(bits::pack<8, 8>(fields[i - 1], fields[i]));
+}
+
+template <class cmdType>
+std::vector<uint16_t> serialize(const cmdType& cmd)
+{
+    std::vector<uint16_t> cmdStreamr;
+
+    cmdStream.reserve(1 + cmdType::nFields() / 2);
+    serialize(cmd, cmdStream);
+
+    return cmdStreamr;
+}
 
 } // namespace RD53ACmd
 
