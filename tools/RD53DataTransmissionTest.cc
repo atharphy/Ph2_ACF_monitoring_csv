@@ -214,7 +214,7 @@ void DataTransmissionTest::binSearch(DetectorDataContainer* theTAP0scanContainer
         for(const auto cBoard: *theTAP0scanContainer)
         {
             // Finding the total number of frames
-            uint8_t       frontendSpeed   = (uint8_t)static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
+            uint8_t        frontendSpeed   = (uint8_t) static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
             const uint32_t nBitInClkPeriod = 32. / std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
             const double   fps             = 1.28e9 / nBitInClkPeriod;         // Frames per second
             double         nFrames         = frames_or_time;

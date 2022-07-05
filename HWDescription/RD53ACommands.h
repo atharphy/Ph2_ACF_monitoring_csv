@@ -62,10 +62,10 @@ const uint16_t CAL        = 0x6363; // Calibration word
 const uint16_t READ       = 0x6565; // Read command word
 const uint16_t WRITE      = 0x6666; // Write command word
 const uint16_t GLOB_PULSE = 0x5C5C; // Global pulse word
-const uint16_t RESET_ECR = 0x5A5A; // Event Counter Reset word
-const uint16_t RESET_BCR = 0x5959; // Bunch Counter Reset word
-const uint16_t NOOP      = 0x6969; // No operation word
-const uint16_t SYNC      = 0x817E; // Synchronization word
+const uint16_t RESET_ECR  = 0x5A5A; // Event Counter Reset word
+const uint16_t RESET_BCR  = 0x5959; // Bunch Counter Reset word
+const uint16_t NOOP       = 0x6969; // No operation word
+const uint16_t SYNC       = 0x817E; // Synchronization word
 } // namespace RD53ACmdEncoder
 
 template <class T>
@@ -115,10 +115,10 @@ struct Cal
     static constexpr uint16_t nFields() { return 4; }
 
     size_t chip_id;
-    bool    cal_edge_mode;
+    bool   cal_edge_mode;
     size_t cal_edge_delay;
     size_t cal_edge_width;
-    bool    cal_aux_mode;
+    bool   cal_aux_mode;
     size_t cal_aux_delay;
 };
 
@@ -129,7 +129,7 @@ struct WrReg
     static constexpr uint16_t cmdCode() { return RD53ACmdEncoder::WRITE; }
     static constexpr uint16_t nFields() { return 6; }
 
-    size_t  chip_id;
+    size_t chip_id;
     size_t address;
     size_t value;
 };
@@ -141,8 +141,8 @@ struct WrRegLong
     static constexpr uint16_t cmdCode() { return RD53ACmdEncoder::WRITE; }
     static constexpr uint16_t nFields() { return 22; }
 
-    size_t               chip_id;
-    size_t              address;
+    size_t                  chip_id;
+    size_t                  address;
     std::array<uint16_t, 9> values;
 };
 
@@ -153,7 +153,7 @@ struct RdReg
     static constexpr uint16_t cmdCode() { return RD53ACmdEncoder::READ; }
     static constexpr uint16_t nFields() { return 4; }
 
-    size_t  chip_id;
+    size_t chip_id;
     size_t address;
 };
 

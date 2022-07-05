@@ -474,7 +474,14 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     // ####################################
     // # Check AURORA lock on data stream #
     // ####################################
-    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[pBoard->getId()])->CheckChipCommunication(pBoard);
+    try
+    {
+        static_cast<RD53FWInterface*>(this->fBeBoardFWMap[pBoard->getId()])->CheckChipCommunication(pBoard);
+    }
+    catch(...)
+    {
+        LOG(INFO) << BOLDRED << "===== Abort =====" << RESET;
+    }
 
     // ############################
     // # Configure frontend chips #

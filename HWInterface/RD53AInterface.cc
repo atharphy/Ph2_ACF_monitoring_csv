@@ -9,8 +9,6 @@
 */
 
 #include "RD53AInterface.h"
-#include "../HWDescription/RD53A.h"
-#include "../HWDescription/RD53ACommands.h"
 
 using namespace Ph2_HwDescription;
 
@@ -22,8 +20,6 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
 
     ChipRegMap& pRD53RegMap = pChip->getRegMap();
 
-std::cout << __LINE__ << " AAAAAAAAAA " << std::endl;
-
     // ################################################
     // # Programming global registers from white list #
     // ################################################
@@ -34,8 +30,6 @@ std::cout << __LINE__ << " AAAAAAAAAA " << std::endl;
         auto it = pRD53RegMap.find(registerWhileList[i]);
         if(it != pRD53RegMap.end()) RD53Interface::WriteChipReg(pChip, it->first, it->second.fValue, pVerifLoop);
     }
-
-std::cout << __LINE__ << " AAAAAAAAAA " << std::endl;
 
     // #######################################
     // # Programming CLK_DATA_DELAY register #
@@ -64,7 +58,6 @@ std::cout << __LINE__ << " AAAAAAAAAA " << std::endl;
         RD53Interface::WriteChipReg(pChip, nameAndValue.first, nameAndValue.second, pVerifLoop);
     }
 
-std::cout << __LINE__ << " AAAAAAAAAA " << std::endl;
     // ###############################
     // # Programmig global registers #
     // ###############################
@@ -74,8 +67,7 @@ std::cout << __LINE__ << " AAAAAAAAAA " << std::endl;
     for(auto& cRegItem: pRD53RegMap)
         if(cRegItem.second.fPrmptCfg == true)
         {
-            if (registerBlackList.find(cRegItem.first) != registerBlackList.end())
-                continue;
+            if(registerBlackList.find(cRegItem.first) != registerBlackList.end()) continue;
 
             if(cRegItem.first == "CDR_CONFIG")
             {
@@ -86,7 +78,6 @@ std::cout << __LINE__ << " AAAAAAAAAA " << std::endl;
 
             RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fValue, pVerifLoop);
         }
-std::cout << __LINE__ << " AAAAAAAAAA " << std::endl;
 
     // ###################################
     // # Programmig pixel cell registers #
@@ -102,6 +93,7 @@ void RD53AInterface::InitRD53Downlink(const BeBoard* pBoard)
 
     LOG(INFO) << GREEN << "Down-link phase initialization..." << RESET;
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORS, RD53ACmd::RD53ACmdEncoder::SYNC), -1);
+
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
@@ -111,12 +103,12 @@ void RD53AInterface::InitRD53UplinkSpeed(ReadoutChip* pChip)
     this->setBoard(pChip->getBeBoardId());
 
     ChipRegMap& pRD53RegMap                      = pChip->getRegMap();
-    auto    auroraSpeed                      = static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed();
+    auto        auroraSpeed                      = static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed();
     pRD53RegMap["CDR_CONFIG_SEL_SER_CLK"].fValue = (auroraSpeed == RD53FWconstants::ReadoutSpeed::x1280 ? RD53Constants::CDRCONFIG_1Gbit : RD53Constants::CDRCONFIG_640Mbit);
 
-    // std::pair<std::string, uint16_t> nameAndValue(SplitSpecialRegisters("CDR_CONFIG_SEL_SER_CLK", pRD53RegMap));
     RD53Interface::WriteChipReg(pChip, "CDR_CONFIG_SEL_SER_CLK", auroraSpeed == RD53FWconstants::ReadoutSpeed::x1280 ? RD53Constants::CDRCONFIG_1Gbit : RD53Constants::CDRCONFIG_640Mbit, false);
     RD53Interface::SendCommand(pChip, RD53ACmd::ECR{});
+
     LOG(INFO) << GREEN << "Up-link speed set to: " << BOLDYELLOW << (auroraSpeed == RD53FWconstants::ReadoutSpeed::x1280 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 }
@@ -172,7 +164,7 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53AInterface::ReadRD53Reg(ReadoutCh
 {
     this->setBoard(pChip->getBeBoardId());
 
-    RD53Interface::SendCommand(pChip, RD53ACmd::RdReg{(uint8_t)pChip->getId(), pChip->getRegItem(regName).fAddress});
+    RD53Interface::SendCommand(pChip, RD53ACmd::RdReg{pChip->getId(), pChip->getRegItem(regName).fAddress});
     auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip);
 
     for(auto i = 0u; i < regReadback.size(); i++)
@@ -182,48 +174,43 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53AInterface::ReadRD53Reg(ReadoutCh
     return regReadback;
 }
 
-uint16_t SetFieldValue(uint16_t regValue, uint16_t fieldValue, uint8_t start, uint8_t size) {
+uint16_t RD53AInterface::SetFieldValue(uint16_t regValue, uint16_t fieldValue, uint8_t start, uint8_t size)
+{
     uint16_t mask = ((1 << (size)) - 1) << start;
     return regValue ^ ((regValue ^ (fieldValue << start)) & mask);
 }
 
-struct SpecialRegInfo {
-    std::string regName;
-    uint8_t start; // Bit index at which the special register, i.e. field, starts
-};
-
 std::pair<std::string, uint16_t> RD53AInterface::SplitSpecialRegisters(std::string regName, uint16_t value, ChipRegMap& pRD53RegMap)
 {
-    static const std::map<std::string, SpecialRegInfo> specialRegMap = {
-        {"CDR_CONFIG_SEL_SER_CLK", {"CDR_CONFIG", 0}},
-        
-        {"CLK_DATA_DELAY_CMD_DELAY", {"CLK_DATA_DELAY", 0}},
-        {"CLK_DATA_DELAY_CLK_DELAY", {"CLK_DATA_DELAY", 4}},
-        {"CLK_DATA_DELAY_2INV_DELAY", {"CLK_DATA_DELAY", 5}},
-        
-        {"MONITOR_CONFIG_ADC", {"MONITOR_CONFIG", 0}},
-        {"MONITOR_CONFIG_BG", {"MONITOR_CONFIG", 6}},
+    static const std::map<std::string, SpecialRegInfo> specialRegMap = {{"CDR_CONFIG_SEL_SER_CLK", {"CDR_CONFIG", 0}},
 
-        {"VOLTAGE_TRIM_DIG", {"VOLTAGE_TRIM", 0}},
-        {"VOLTAGE_TRIM_ANA", {"VOLTAGE_TRIM", 5}},
-        
-        {"INJECTION_SELECT_DELAY", {"INJECTION_SELECT", 0}},
-        
-        {"CML_CONFIG_SER_EN_TAP", {"CML_CONFIG", 0}},
-        {"CML_CONFIG_SER_INV_TAP", {"CML_CONFIG", 2}},
+                                                                        {"CLK_DATA_DELAY_CMD_DELAY", {"CLK_DATA_DELAY", 0}},
+                                                                        {"CLK_DATA_DELAY_CLK_DELAY", {"CLK_DATA_DELAY", 4}},
+                                                                        {"CLK_DATA_DELAY_2INV_DELAY", {"CLK_DATA_DELAY", 5}},
 
-        {"SER_SEL_OUT_0", {"SER_SEL_OUT", 0}},
-        {"SER_SEL_OUT_1", {"SER_SEL_OUT", 2}},
-        {"SER_SEL_OUT_2", {"SER_SEL_OUT", 4}},
-        {"SER_SEL_OUT_3", {"SER_SEL_OUT", 6}}
-    };
+                                                                        {"MONITOR_CONFIG_ADC", {"MONITOR_CONFIG", 0}},
+                                                                        {"MONITOR_CONFIG_BG", {"MONITOR_CONFIG", 6}},
+
+                                                                        {"VOLTAGE_TRIM_DIG", {"VOLTAGE_TRIM", 0}},
+                                                                        {"VOLTAGE_TRIM_ANA", {"VOLTAGE_TRIM", 5}},
+
+                                                                        {"INJECTION_SELECT_DELAY", {"INJECTION_SELECT", 0}},
+
+                                                                        {"CML_CONFIG_SER_EN_TAP", {"CML_CONFIG", 0}},
+                                                                        {"CML_CONFIG_SER_INV_TAP", {"CML_CONFIG", 2}},
+
+                                                                        {"SER_SEL_OUT_0", {"SER_SEL_OUT", 0}},
+                                                                        {"SER_SEL_OUT_1", {"SER_SEL_OUT", 2}},
+                                                                        {"SER_SEL_OUT_2", {"SER_SEL_OUT", 4}},
+                                                                        {"SER_SEL_OUT_3", {"SER_SEL_OUT", 6}}};
 
     auto it = specialRegMap.find(regName);
-    if (it == specialRegMap.end())
+    if(it == specialRegMap.end())
         return {regName, value};
-    else {
-        ChipRegItem& specialReg   = pRD53RegMap.at(regName);
-        ChipRegItem& Reg   = pRD53RegMap.at(it->second.regName);
+    else
+    {
+        ChipRegItem& specialReg = pRD53RegMap.at(regName);
+        ChipRegItem& Reg        = pRD53RegMap.at(it->second.regName);
         return {it->second.regName, SetFieldValue(Reg.fValue, value, it->second.start, specialReg.fBitSize)};
     }
 }
@@ -326,11 +313,11 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
             RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_ROW_ADDR, 0x0}, commandList);
 
             size_t nValuesLongCmd = wrRegLongCmd.values.size();
-            size_t nLongCommands = RD53A::NROWS / nValuesLongCmd;
+            size_t nLongCommands  = RD53A::NROWS / nValuesLongCmd;
 
-            for (auto longCmdId = 0u; longCmdId < nLongCommands; ++longCmdId) {
-                for (size_t i = 0; i < nValuesLongCmd; ++i)
-                    wrRegLongCmd.values[i] = RD53AInterface::GetPixelConfig(mask, nValuesLongCmd * longCmdId + i, col, highGain);
+            for(auto longCmdId = 0u; longCmdId < nLongCommands; longCmdId++)
+            {
+                for(size_t i = 0; i < nValuesLongCmd; i++) wrRegLongCmd.values[i] = RD53AInterface::GetPixelConfig(mask, nValuesLongCmd * longCmdId + i, col, highGain);
                 serialize(wrRegLongCmd, commandList);
             }
 

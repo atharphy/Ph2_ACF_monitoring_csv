@@ -94,7 +94,7 @@ void BERtest::run()
     if(chain2test == 1)
         for(const auto cBoard: *fDetectorContainer)
         {
-            uint8_t frontendSpeed = (uint8_t)static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
+            uint8_t frontendSpeed = (uint8_t) static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
 
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
@@ -114,7 +114,7 @@ void BERtest::run()
     else
         for(const auto cBoard: *fDetectorContainer)
         {
-            uint8_t frontendSpeed = (uint8_t)static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
+            uint8_t frontendSpeed = (uint8_t) static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
 
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)

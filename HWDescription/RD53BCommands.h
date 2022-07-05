@@ -101,7 +101,7 @@ struct WrReg
 {
     static constexpr uint16_t cmdCode() { return RD53BCmdEncoder::WRITE; }
 
-    size_t  chip_id;
+    size_t chip_id;
     size_t address;
     size_t value;
 };
@@ -112,7 +112,7 @@ struct WrRegLong
 {
     static constexpr uint16_t cmdCode() { return RD53BCmdEncoder::WRITE; }
 
-    size_t               chip_id;
+    size_t                chip_id;
     std::vector<uint16_t> values;
 };
 
@@ -122,7 +122,7 @@ struct RdReg
 {
     static constexpr uint16_t cmdCode() { return RD53BCmdEncoder::READ; }
 
-    size_t  chip_id;
+    size_t chip_id;
     size_t address;
 };
 
@@ -133,10 +133,10 @@ struct Cal
     static constexpr uint16_t cmdCode() { return RD53BCmdEncoder::CAL; }
 
     size_t chip_id;
-    bool    mode;
+    bool   mode;
     size_t edge_delay;
     size_t edge_duration;
-    bool    aux_enable;
+    bool   aux_enable;
     size_t aux_delay;
 };
 

@@ -9,8 +9,6 @@
 */
 
 #include "RD53BInterface.h"
-#include "../HWDescription/RD53B.h"
-#include "../HWDescription/RD53BCommands.h"
 
 using namespace Ph2_HwDescription;
 
@@ -39,6 +37,7 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
     this->setBoard(pBoard->getId());
 
     LOG(INFO) << GREEN << "Down-link phase initialization..." << RESET;
+
     WriteBoardBroadcastChipReg(pBoard, "GCR_DEFAULT_CONFIG", 0xAC75);
     WriteBoardBroadcastChipReg(pBoard, "GCR_DEFAULT_CONFIG_B", 0x538A);
     WriteBoardBroadcastChipReg(pBoard, "CmdErrCnt", 0);
@@ -47,6 +46,7 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
     WriteBoardBroadcastChipReg(pBoard, "RingOscConfig", 0x7FFF);
     WriteBoardBroadcastChipReg(pBoard, "RingOscConfig", 0x7FFF);
     SendGlobalPulseBroadcast(pBoard, 1 << 8, 0xFF); // ResetEfuses
+
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
@@ -58,6 +58,7 @@ void RD53BInterface::InitRD53UplinkSpeed(ReadoutChip* pChip)
     auto auroraSpeed = static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed();
     WriteChipReg(pChip, "CdrConf", (auroraSpeed == RD53FWconstants::ReadoutSpeed::x1280 ? RD53Constants::CDRCONFIG_1Gbit : RD53Constants::CDRCONFIG_640Mbit), false);
     RD53Interface::SendCommand(pChip, RD53BCmd::Clear{});
+
     LOG(INFO) << GREEN << "Up-link speed set to: " << BOLDYELLOW << (auroraSpeed == RD53FWconstants::ReadoutSpeed::x1280 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 }
