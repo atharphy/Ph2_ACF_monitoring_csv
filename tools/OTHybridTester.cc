@@ -101,12 +101,12 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 }
                 D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
 
-                size_t           cLine        = 0;
+                size_t cLine = 0;
                 do
                 {
                     fBeBoardInterface->setBoard(cBoard->getId());
                     cFWInterface->selectLink(cOpticalGroup->getId());
-                    uint8_t cHybridId = 2 * cOpticalGroup->getId() + hybridNumber;                  
+                    uint8_t cHybridId = 2 * cOpticalGroup->getId() + hybridNumber;
                     cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
                     LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
                     cFWInterface->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable", 0x01);
@@ -154,7 +154,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
 #endif
 
                 LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
-                auto cWordsL1A = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
+                auto     cWordsL1A        = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
                 uint32_t cCicOutOutputL1A = cWordsL1A[0];
                 LOG(INFO) << BOLDBLUE << "Scoped output on L1A Line: " << std::bitset<32>(cCicOutOutputL1A) << " for hybrid side " << +hybridNumber << RESET;
 
@@ -225,17 +225,9 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
             PhaseTuneLineEleFC7(0, 0);
             PhaseTuneLineEleFC7(0, 1);
             PhaseTuneLineEleFC7(0, 2);
-            PhaseTuneLineEleFC7(0, 3);
+            //PhaseTuneLineEleFC7(0, 3);
             PhaseTuneLineEleFC7(0, 4);
-            PhaseTuneLineEleFC7(0, 5);
-            PhaseTuneLineEleFC7(1, 0);
-            PhaseTuneLineEleFC7(1, 1);
-            PhaseTuneLineEleFC7(1, 2);
-            PhaseTuneLineEleFC7(1, 3);
-            PhaseTuneLineEleFC7(1, 4);
-            PhaseTuneLineEleFC7(1, 5);
-            // PhaseTuneLineEleFC7(1,0);
-            // PhaseTuneLineEleFC7(1,1);
+            //PhaseTuneLineEleFC7(0, 5);
         }
     }
     for(auto cBoard: *fDetectorContainer)
@@ -707,7 +699,8 @@ bool OTHybridTester::LpGBTTestVTRx()
                 LOG(INFO) << BOLDGREEN << "VTRx+ register map for version 1.3 is used!" << RESET;
                 fillSummaryTree("vtrxplusversion", 1.3);
             }
-            else {
+            else
+            {
                 LOG(INFO) << BOLDGREEN << "VTRx+ register map for version 1.2 is used!" << RESET;
                 fillSummaryTree("vtrxplusversion", 1.2);
             }
