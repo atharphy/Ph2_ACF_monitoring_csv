@@ -1,10 +1,10 @@
 /*!
   \file                  RD53EyeScanOptimizationHistograms.cc
   \brief                 Implementation of data readback optimization histograms
-  \author                Mauro DINARDO
+  \author                Umberto MOLINATTI
   \version               1.0
-  \date                  28/06/18
-  Support:               email to mauro.dinardo@cern.ch
+  \date                  16/04/21
+  Support:               email to umberto.molinatti@cern.ch
 */
 
 #include "RD53EyeScanOptimizationHistograms.h"

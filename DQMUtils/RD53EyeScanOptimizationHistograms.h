@@ -1,10 +1,10 @@
 /*!
-  \file                  RD53EyeScanOptimizationHistograms.h
-  \brief                 Header file of data readback optimization histograms
-  \author                Mauro DINARDO
+  \file                  RD53ADCScanHistograms.h
+  \brief                 Header file of ADCScan histograms
+  \author                Umberto MOLINATTI
   \version               1.0
-  \date                  28/06/18
-  Support:               email to mauro.dinardo@cern.ch
+  \date                  16/04/21
+  Support:               email to umberto.molinatti@cern.ch
 */
 
 #ifndef RD53EyeScanOptimizationHistograms_H
