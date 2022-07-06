@@ -75,7 +75,8 @@ class RD53FWInterface : public BeBoardFWInterface
     void     ChipReset() override;
     void     ChipReSync() override;
 
-    void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) override;
+    void     selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) override;
+    uint32_t OptoLinkVersion() override;
     // #############################
 
     void     SelectBERcheckBitORFrame(const uint8_t bitORframe);

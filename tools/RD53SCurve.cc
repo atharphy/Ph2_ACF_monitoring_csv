@@ -391,7 +391,7 @@ void SCurve::computeStats(std::vector<float>& measurements, int offset, float& n
 
     for(auto i = 0; i < stop; i++)
     {
-        auto measurement = measurements[i + 1] - measurements[i];
+        auto measurement = std::fabs(measurements[i + 1] - measurements[i]);
         auto dacCenter   = (dacList[i] + dacList[i + 1]) / 2.;
 
         mean += measurement * (dacCenter - offset);

@@ -583,6 +583,7 @@ void lpGBTInterface::PhaseAlignRx(Chip* pChip, const OpticalGroup* pOpticalGroup
     lpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], lpGBTconstants::rxPhaseTracking);
     // If still used: check 2S config
 }
+
 // ################################
 // # LpGBT Block Status functions #
 // ################################

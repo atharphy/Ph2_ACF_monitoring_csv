@@ -160,6 +160,7 @@
       <node id="ic_tx_fifo_din"        mask="0x00007F80"      permission="rw"      description="Slow-Control Data to be transmited" />
       <node id="ic_chip_addr_tx"       mask="0x007F8000"      permission="rw"      description="lpgbt address (always 0x70 for now)" />
       <node id="active_link"           mask="0x07800000"      permission="rw"      description="select link for slow control (only one lpgbt at a time for now)" />
+      <node id="lpgbt_version"         mask="0x08000000"      permission="rw"      description="Version of the lpGBT chip. 0=lpGBTv0(default), 1=lpGBTv1" />
     </node>
 
     <node id="lpgbt_2"              address="0x00000016"      permission="rw"      description="Signals for Slow Control of lpgbt">
@@ -170,12 +171,12 @@
     <node id="lpgbt_mappping"       address="0x00000018"      permission="rw"      description="Configuration lpGBT link mapping">
       <node id="update_downlink"        mask="0x00000001"     permission="rw"      description="Update mapping for downlink groups/channels" />
       <node id="update_uplink"          mask="0x00000002"     permission="rw"      description="Update mapping for downlink groups/channels" />
-      <node id="module_map_id"          mask="0x0000007C"     permission="rw"      description=" " />
-      <node id="chip_map_id"            mask="0x00000180"     permission="rw"      description=" " />
-      <node id="downlink_map_id"        mask="0x00001E00"     permission="rw"      description=" " />
-      <node id="downgroup_map_id"       mask="0x0000E000"     permission="rw"      description=" " />
-      <node id="uplink_map_id"          mask="0x000F0000"     permission="rw"      description=" " />
-      <node id="upgroup_map_id"         mask="0x00700000"     permission="rw"      description=" " />
+      <node id="module_map_id"          mask="0x0000007C"     permission="rw"      description="" />
+      <node id="chip_map_id"            mask="0x00000180"     permission="rw"      description="" />
+      <node id="downlink_map_id"        mask="0x00001E00"     permission="rw"      description="" />
+      <node id="downgroup_map_id"       mask="0x0000E000"     permission="rw"      description="" />
+      <node id="uplink_map_id"          mask="0x000F0000"     permission="rw"      description="" />
+      <node id="upgroup_map_id"         mask="0x00700000"     permission="rw"      description="" />
     </node>
 
     <node id="gtx_drp"              address="0x0000001A"      permission="rw"      description="Control registers for drp ports">
