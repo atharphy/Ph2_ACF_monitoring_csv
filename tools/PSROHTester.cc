@@ -533,7 +533,7 @@ void PSROHTester::CheckClocks()
         this->CheckClocks(cBoard);
     }
 }
-void PSROHTester::FastCommandScope(BeBoard* pBoard)
+bool PSROHTester::FastCommandScope(BeBoard* pBoard)
 {
     fBeBoardInterface->setBoard(pBoard->getId());
     uint32_t cSSA_L = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_debug_ssa_l");
@@ -545,14 +545,52 @@ void PSROHTester::FastCommandScope(BeBoard* pBoard)
     LOG(INFO) << BOLDBLUE << "Scoped output on SSA_R : " << std::bitset<32>(cSSA_R) << RESET;
     LOG(INFO) << BOLDBLUE << "Scoped output on CIC_L : " << std::bitset<32>(cCIC_L) << RESET;
     LOG(INFO) << BOLDBLUE << "Scoped output on CIC_R : " << std::bitset<32>(cCIC_R) << RESET;
+
+    /******************************/
+    /* Processing of scoped lines */
+    /******************************/
+    bool cSuccess = true;
+    std::string cPattern = "11000001";
+    std::string cSSA_L_scoped = std::bitset<32>(cSSA_L).to_string();
+    std::string cSSA_R_scoped = std::bitset<32>(cSSA_R).to_string();
+    std::string cCIC_L_scoped = std::bitset<32>(cCIC_L).to_string();
+    std::string cCIC_R_scoped = std::bitset<32>(cCIC_R).to_string();
+
+
+    std::vector<std::string> cScoped_Lines = { cSSA_L_scoped, cSSA_R_scoped, cCIC_L_scoped, cCIC_R_scoped }; 
+    std::vector<bool> cStatus_Lines;
+    uint8_t cNFailedLines = 0;
+    
+    for ( auto& cLine: cScoped_Lines )
+    {
+        for(int i = 0; (i + cPattern.length()) < cLine.length(); i += cPattern.length())
+        {
+            std::string cSubLine = cLine.substr(i, cPattern.length());
+            bool cPatternFound = false;
+            for(int j = 0; j < (int)cPattern.length(); j++) cPatternFound |= ((cPattern.substr(j, cPattern.length() - j) + cPattern.substr(0, j)) == cSubLine);
+        
+            cSuccess &= cPatternFound;
+            cStatus_Lines.push_back (cPatternFound);
+            if (!cPatternFound)
+                cNFailedLines++;
+        }
+    }
+#ifdef __USE_ROOT__
+    fillSummaryTree("fcmd_failures", cNFailedLines);
+#endif
+    // TODO create summary tree with the details (failing line and actual scoped value)
+    return cSuccess;
 }
-void PSROHTester::FastCommandScope()
+
+bool PSROHTester::FastCommandScope()
 {
+    bool cSuccess = true;
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT != nullptr) continue;
-        this->FastCommandScope(cBoard);
+        cSuccess &= this->FastCommandScope(cBoard);
     }
+    return cSuccess;
 }
 void PSROHTester::CheckHybridInputs(BeBoard* pBoard, std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters)
 {
