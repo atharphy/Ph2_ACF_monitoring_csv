@@ -142,6 +142,15 @@ int main(int argc, char* argv[])
     //
     cmd.defineOption("hybridId", "Name or serial number of ROH", ArgvParser::OptionRequiresValue);
 
+    //
+    cmd.defineOption("output", "Output directory. Default: Results/", ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("output", "o");
+    
+    //
+    cmd.defineOption("useGui",
+                    "Support for running the test from the gui for hybrids testing. The named pipe for communication needs to be passed as the last parameter. Default: false",
+                    ArgvParser::NoOptionAttribute);
+
     int result = cmd.parse(argc, argv);
     if(result != ArgvParser::NoParserError)
     {
@@ -165,6 +174,9 @@ int main(int argc, char* argv[])
     std::string cRefBRAMAddr          = (cmd.foundOption("read-ref-bram")) ? cmd.optionValue("read-ref-bram") : "0";
     std::string cCheckBRAMAddr        = (cmd.foundOption("read-check-bram")) ? cmd.optionValue("read-check-bram") : "0";
     bool        cMeasureInputIV       = cmd.foundOption("measure-input-iv");
+    
+    // To use from the GUI
+    bool        cGui    = (cmd.foundOption("useGui"));
 
     cDirectory += Form("PS_ROH_%s", cHybridId.c_str());
 
@@ -176,6 +188,15 @@ int main(int argc, char* argv[])
 
     std::string cResultfile = "Hybrid";
     // Timer t;
+
+    if(cGui)
+    {
+        // Initialize gui communication with named pipe
+        gui::init(argv[argc - 1]);
+
+        gui::status("Initializing test");
+        gui::progress(0 / 10.0);
+    }
 
     // Initialize and Configure Back-End (Optical) FC7
     Tool cTool;
@@ -213,6 +234,14 @@ int main(int argc, char* argv[])
     /***************/
     if(cmd.foundOption("test-internal-pattern") || cmd.foundOption("test-external-pattern"))
     {
+        if(cGui)
+        {
+            gui::message("");
+            gui::status("Testing uplink");
+            gui::progress(1 / 10.0);
+        
+            gui::data("ResultsDirectory", cPSROHTester.getDirectoryName().c_str());
+        }
         /* INTERNALLY GENERATED PATTERN */
         if(cmd.foundOption("test-internal-pattern"))
         {
@@ -236,6 +265,12 @@ int main(int argc, char* argv[])
             {
                 LOG(INFO) << BOLDRED << "CIC_Out test failed." << RESET;
             }
+            if(cGui)
+            {
+                gui::message("CIC OUT test finished");
+                gui::status("Finished testing uplink");
+                gui::progress(3 / 10.0);
+            }
         }
     }
     /****************************/
@@ -243,6 +278,12 @@ int main(int argc, char* argv[])
     /****************************/
     if(cmd.foundOption("test-reset"))
     {
+        if(cGui)
+        {
+            gui::message("CIC OUT test finished");
+            gui::status("Testing reset lines");
+            gui::progress(3.5 / 10.0);
+        }
         bool cStatus = cPSROHTester.LpGBTTestResetLines();
 #ifdef __USE_ROOT__
         cTool.fillSummaryTree("status_ResetTest", (cStatus) ? 1 : 0);
@@ -267,6 +308,12 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("test-vtrx"))
     {
+        if(cGui)
+        {
+            gui::message("Reset lines test finished");
+            gui::status("Testing VTRX+ slow control lines");
+            gui::progress(4.5 / 10.0);
+        }
         bool cStatus = cPSROHTester.LpGBTTestVTRx();
 #ifdef __USE_ROOT__
         cTool.fillSummaryTree("status_vtrxplusslowcontrol", (cStatus) ? 1 : 0);
@@ -282,6 +329,12 @@ int main(int argc, char* argv[])
     /********************/
     if(cmd.foundOption("test-i2c"))
     {
+        if(cGui)
+        {
+            gui::message("VTRX+ test finished");
+            gui::status("Testing I2C Masters on the lpGBT");
+            gui::progress(5.5 / 10.0);
+        }
 	int pNTries = convertAnyInt(cmd.optionValue("test-i2c").c_str());
         std::vector<uint8_t> cMasters = {0, 2};
         bool                 cStatus  = cPSROHTester.LpGBTTestI2CMaster(cMasters, pNTries);
@@ -301,6 +354,12 @@ int main(int argc, char* argv[])
     /**********************************/
     if(cmd.foundOption("test-adc"))
     {
+        if(cGui)
+        {
+            gui::message("I2C Masters test finished");
+            gui::status("Testing ADC lines on the lpGBT");
+            gui::progress(6.5 / 10.0);
+        }
         cPSROHTester.LpGBTTestFixedADCs();
 
         std::vector<std::string> cADCs = {"ADC0", "ADC1", "ADC3"};
@@ -312,6 +371,12 @@ int main(int argc, char* argv[])
     /********************/
     if(cmd.foundOption("test-eom"))
     {
+        if(cGui)
+        {
+            gui::message("ADC test finished");
+            gui::status("Measuring eye opening");
+            gui::progress(7.5 / 10.0);
+        }
         uint8_t cEQAttenuation = cmd.foundOption("eq-attenuation") ? convertAnyInt(cmd.optionValue("eq-attenuation").c_str()) : 3;
         cPSROHTester.LpGBTRunEyeOpeningMonitor(7, cEQAttenuation);
     }
@@ -332,6 +397,12 @@ int main(int argc, char* argv[])
     /***************/
     if(cmd.foundOption("test-clock"))
     {
+        if(cGui)
+        {
+            gui::message("Eye opening monitoring finished");
+            gui::status("Testing clock lines");
+            gui::progress(8.5 / 10.0);
+        }
         LOG(INFO) << BOLDBLUE << "Clock test" << RESET;
         bool cStatus = cPSROHTester.LpGBTCheckClocks();
         if(cStatus)
@@ -350,6 +421,12 @@ int main(int argc, char* argv[])
     /*********************/
     if(cmd.foundOption("test-fcmd"))
     {
+        if(cGui)
+        {
+            gui::message("Clock line test finished");
+            gui::status("Testing FCMD lines");
+            gui::progress(9.5 / 10.0);
+        }
         if(cmd.foundOption("fcmd-pattern"))
         {
             int     cFmcdCounter = 0, cFcmdTries = 100;
@@ -368,7 +445,10 @@ int main(int argc, char* argv[])
         }
         else
         {
-            cPSROHTester.FastCommandScope();
+            if( cPSROHTester.FastCommandScope() )
+                LOG(INFO) << BOLDBLUE << "FCMD test " << BOLDGREEN << "passed" << RESET;
+            else
+                LOG(INFO) << BOLDBLUE << "FDMC test " << BOLDRED << "failed" << RESET;
         }
     }
 
@@ -428,6 +508,12 @@ int main(int argc, char* argv[])
         cPSROHTester.ClearBRAM(std::string("test"));
     }
 
+    if(cGui)
+    {
+        gui::message("FCMD lines test finished");
+        gui::status("Test finished");
+        gui::progress(10.0 / 10.0);
+    }
     // Save Result File
     cTool.SaveResults();
     cTool.WriteRootFile();
