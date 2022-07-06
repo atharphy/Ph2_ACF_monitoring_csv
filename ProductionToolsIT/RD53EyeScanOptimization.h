@@ -1,12 +1,3 @@
-/*!
-  \file                  RD53EyeScanOptimization.h
-  \brief                 Implementaion of data readback optimization scan
-  \author                Mauro DINARDO
-  \version               1.0
-  \date                  28/06/18
-  Support:               email to mauro.dinardo@cern.ch
-*/
-
 #ifndef RD53EyeScanOptimization_H
 #define RD53EyeScanOptimization_H
 

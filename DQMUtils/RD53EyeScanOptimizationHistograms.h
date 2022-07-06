@@ -1,12 +1,3 @@
-/*!
-  \file                  RD53ADCScanHistograms.h
-  \brief                 Header file of ADCScan histograms
-  \author                Umberto MOLINATTI
-  \version               1.0
-  \date                  16/04/21
-  Support:               email to umberto.molinatti@cern.ch
-*/
-
 #ifndef RD53EyeScanOptimizationHistograms_H
 #define RD53EyeScanOptimizationHistograms_H
 
