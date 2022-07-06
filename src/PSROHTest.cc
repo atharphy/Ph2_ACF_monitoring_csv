@@ -147,6 +147,8 @@ int main(int argc, char* argv[])
     cmd.defineOptionAlternative("output", "o");
     
     //
+    cmd.defineOption("USBBus", "USB device bus number", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("USBDev", "USB device device number", ArgvParser::OptionRequiresValue);
     cmd.defineOption("useGui",
                     "Support for running the test from the gui for hybrids testing. The named pipe for communication needs to be passed as the last parameter. Default: false",
                     ArgvParser::NoOptionAttribute);
@@ -174,8 +176,10 @@ int main(int argc, char* argv[])
     std::string cRefBRAMAddr          = (cmd.foundOption("read-ref-bram")) ? cmd.optionValue("read-ref-bram") : "0";
     std::string cCheckBRAMAddr        = (cmd.foundOption("read-check-bram")) ? cmd.optionValue("read-check-bram") : "0";
     bool        cMeasureInputIV       = cmd.foundOption("measure-input-iv");
-    
+
     // To use from the GUI
+    uint32_t    cUsbBus = (cmd.foundOption("USBBus")) ? (uint32_t)(std::stoi(cmd.optionValue("USBBus"))) : 0; // Default option?
+    uint8_t     cUsbDev = (cmd.foundOption("USBDev")) ? (uint32_t)(std::stoi(cmd.optionValue("USBDev"))) : 0; // Default option?
     bool        cGui    = (cmd.foundOption("useGui"));
 
     cDirectory += Form("PS_ROH_%s", cHybridId.c_str());
@@ -210,6 +214,11 @@ int main(int argc, char* argv[])
     cTool.CreateResultDirectory(cDirectory);
     cTool.InitResultFile(cResultfile);
     cTool.bookSummaryTree();
+
+    if( cmd.foundOption("USBBus") && cmd.foundOption("USBDev") )
+    {
+        TC_PSROH cTC_PSROH(cUsbBus, cUsbDev);
+    }
 
     // Initilaise PSROH tester
     PSROHTester cPSROHTester;
