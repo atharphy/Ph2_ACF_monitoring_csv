@@ -77,6 +77,8 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
 {
     this->setBoard(pChip->getBeBoardId());
 
+    LOG(INFO) << GREEN << "LpGBT version: " << BOLDYELLOW << (fBoardFW->OptoLinkVersion() == 0 ? "LpGBT-v0" : "LpGBT-v1") << RESET;
+
     // #####################
     // # Make reverted map #
     // #####################

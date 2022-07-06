@@ -414,9 +414,10 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
 
 uint32_t RD53FWInterface::ReadoutSpeed()
 // ####################
-// # 0  = 1.28 Gbit/s #
-// # !0 = 640 Mbit/s  #
-// ####################
+// # 0 = 1.28 Gbit/s #
+// # 1 = 640 Mbit/s  #
+// # 2 = 320 Mbit/s  #
+// ###################
 {
     return RegManager::ReadReg("user.stat_regs.aurora_rx.speed");
 }
@@ -1037,7 +1038,8 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(const Chip* pChip, const uint32_t
     return cRead;
 }
 
-void RD53FWInterface::selectLink(const uint8_t pLinkId, uint32_t pWait_ms) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.active_link", pLinkId); }
+void     RD53FWInterface::selectLink(const uint8_t pLinkId, uint32_t pWait_ms) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.active_link", pLinkId); }
+uint32_t RD53FWInterface::OptoLinkVersion() { return RegManager::ReadReg("user.ctrl_regs.lpgbt_1.lpgbt_version"); }
 
 void RD53FWInterface::SelectBERcheckBitORFrame(const uint8_t bitORframe) { RegManager::WriteReg("user.ctrl_regs.PRBS_checker.error_cntr_sel", bitORframe); }
 
