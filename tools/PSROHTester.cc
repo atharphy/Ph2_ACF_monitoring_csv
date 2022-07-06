@@ -577,6 +577,46 @@ bool PSROHTester::FastCommandScope(BeBoard* pBoard)
     }
 #ifdef __USE_ROOT__
     fillSummaryTree("fcmd_failures", cNFailedLines);
+
+    if (cNFailedLines > 0)
+    {
+        auto cFCMD_Tree =  new TTree( "tFCMD", "FCMD Lines Test Tree" );
+        TString cLine_name("");
+        TString cScoped_line("");
+        cFCMD_Tree->Branch("Line", &cLine_name);
+        cFCMD_Tree->Branch("Scoped data", &cScoped_line);
+
+        if (!cStatus_Lines[0])
+        {
+            cLine_name = "SSA_L";
+            cScoped_line = cScoped_Lines[0];
+            cFCMD_Tree->Fill();
+        }
+
+        if (!cStatus_Lines[1])
+        {
+            cLine_name = "SSA_R";
+            cScoped_line = cScoped_Lines[1];
+            cFCMD_Tree->Fill();
+        }
+        
+        if (!cStatus_Lines[2])
+        {
+            cLine_name = "CIC_L";
+            cScoped_line = cScoped_Lines[2];
+            cFCMD_Tree->Fill();
+        }
+        
+        if (!cStatus_Lines[3])
+        {
+            cLine_name = "CIC_R";
+            cScoped_line = cScoped_Lines[3];
+            cFCMD_Tree->Fill();
+        }
+
+        fResultFile->cd();
+        cFCMD_Tree->Write();
+    }
 #endif
     // TODO create summary tree with the details (failing line and actual scoped value)
     return cSuccess;
