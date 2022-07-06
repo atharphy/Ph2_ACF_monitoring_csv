@@ -1475,21 +1475,27 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
         if(cChildName.find("_Files") != std::string::npos) continue;
         if(cChildName.find("RD53") != std::string::npos)
         {
+            std::vector<uint8_t> cRxLinks    = splitToVector(cChild.attribute("RxLinks").value(), ',');
             std::vector<uint8_t> cRxGroups   = splitToVector(cChild.attribute("RxGroups").value(), ',');
             std::vector<uint8_t> cRxChannels = splitToVector(cChild.attribute("RxChannels").value(), ',');
+            std::vector<uint8_t> cTxLinks    = splitToVector(cChild.attribute("TxLinks").value(), ',');
             std::vector<uint8_t> cTxGroups   = splitToVector(cChild.attribute("TxGroups").value(), ',');
             std::vector<uint8_t> cTxChannels = splitToVector(cChild.attribute("TxChannels").value(), ',');
 
-            // Retrieve groups and channels from CIC node attirbutes and propagate to LpGBT class
+            // Retrieve links, groups and channels from CIC node attirbutes and propagate to LpGBT class
+            plpGBT->addRxLinks(cRxLinks);
             plpGBT->addRxGroups(cRxGroups);
             plpGBT->addRxChannels(cRxChannels);
+            plpGBT->addTxLinks(cTxLinks);
             plpGBT->addTxGroups(cTxGroups);
             plpGBT->addTxChannels(cTxChannels);
 
             // In the case of IT propagate LpGBT mapping the front-end chip
             uint8_t cChipId = cChild.attribute("Id").as_int();
+            static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxLink(cRxLinks[0]);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxGroup(cRxGroups[0]);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxChannel(cRxChannels[0]);
+            static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxLink(cTxLinks[0]);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxGroup(cTxGroups[0]);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxChannel(cTxChannels[0]);
         }

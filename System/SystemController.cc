@@ -418,15 +418,16 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
 
     RD53Shared::firstChip = static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
+    auto& theBeBoardFW    = this->fBeBoardFWMap[pBoard->getId()];
 
-    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[pBoard->getId()])
+    static_cast<RD53FWInterface*>(theBeBoardFW)
         ->SetAndConfigureFastCommands(pBoard, nTRIGxEvent, injType, injLatency, nClkDelays, RD53Shared::firstChip->getMajorityFE(colStart, colStart) == &RD53A::SYNC);
     LOG(INFO) << CYAN << "================== Done ==================" << RESET;
 
     // ########################
     // # Configuring from XML #
     // ########################
-    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[pBoard->getId()])->ConfigureFromXML(pBoard);
+    static_cast<RD53FWInterface*>(theBeBoardFW)->ConfigureFromXML(pBoard);
 
     // ########################
     // # Configure LpGBT chip #
@@ -438,8 +439,9 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
             LOG(INFO) << GREEN << "Initializing communication to Low-power Gigabit Transceiver (LpGBT): " << BOLDYELLOW << +cOpticalGroup->getId() << RESET;
 
             if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
+            // && (static_cast<RD53lpGBTInterface*>(flpGBTInterface)->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, theBeBoardFW, fReadoutChipInterface) == true))
             {
-                static_cast<RD53lpGBTInterface*>(flpGBTInterface)->InternalPhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, fReadoutChipInterface);
+                static_cast<RD53lpGBTInterface*>(flpGBTInterface)->PhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, fReadoutChipInterface);
                 LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;
             }
             else
@@ -452,7 +454,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     // #######################
     uint32_t txStatus, rxStatus, mgtStatus;
     LOG(INFO) << GREEN << "Checking status of the optical links:" << RESET;
-    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[pBoard->getId()])->StatusOptoLink(txStatus, rxStatus, mgtStatus);
+    static_cast<RD53FWInterface*>(theBeBoardFW)->StatusOptoLink(txStatus, rxStatus, mgtStatus);
 
     // ######################################################
     // # Configure down and up links to/from frontend chips #
@@ -476,7 +478,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     // ####################################
     try
     {
-        static_cast<RD53FWInterface*>(this->fBeBoardFWMap[pBoard->getId()])->CheckChipCommunication(pBoard);
+        static_cast<RD53FWInterface*>(theBeBoardFW)->CheckChipCommunication(pBoard);
     }
     catch(...)
     {

@@ -165,7 +165,29 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
 // # RD53 specific routine functions #
 // ###################################
 
-void RD53lpGBTInterface::InternalPhaseAlignRx(Chip* pChip, const BeBoard* pBoard, const OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface)
+void RD53lpGBTInterface::SetDownLinkMapping(const OpticalGroup* pOpticalGroup)
+{
+    for(const auto cHybrid: *pOpticalGroup)
+        for(const auto cChip: *cHybrid)
+        {
+            auto pChip = static_cast<RD53*>(cChip);
+            static_cast<RD53FWInterface*>(fBoardFW)->SetDownLinkMapping(pChip->getTxLink(), pChip->getTxGroup(), pChip->getHybridId());
+        }
+    // @TMP@ : map group and channel into fw group + check getHybridId + implement SetDownLinkMapping
+}
+
+void RD53lpGBTInterface::SetUpLinkMapping(const OpticalGroup* pOpticalGroup)
+{
+    for(const auto cHybrid: *pOpticalGroup)
+        for(const auto cChip: *cHybrid)
+        {
+            auto pChip = static_cast<RD53*>(cChip);
+            static_cast<RD53FWInterface*>(fBoardFW)->SetUpLinkMapping(pChip->getRxLink(), pChip->getRxGroup(), pChip->getHybridId(), pChip->getChipLane());
+        }
+    // @TMP@ : check getHybridId + implement SetUpLinkMapping
+}
+
+void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const BeBoard* pBoard, const OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface)
 {
     const uint8_t              cChipRate = this->GetChipRate(pChip);
     const std::vector<uint8_t> pGroups   = static_cast<lpGBT*>(pChip)->getRxGroups();

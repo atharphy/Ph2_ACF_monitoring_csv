@@ -166,20 +166,26 @@ class RD53 : public ReadoutChip
     // #################
     // # LpGBT mapping #
     // #################
+    void    setRxLink(uint8_t pRxLink) { fLpGBTmap.RxLink = pRxLink; }
     void    setRxGroup(uint8_t pRxGroup) { fLpGBTmap.RxGroup = pRxGroup; }
     void    setRxChannel(uint8_t pRxChannel) { fLpGBTmap.RxChannel = pRxChannel; }
+    void    setTxLink(uint8_t pTxLink) { fLpGBTmap.TxLink = pTxLink; }
     void    setTxGroup(uint8_t pTxGroup) { fLpGBTmap.TxGroup = pTxGroup; }
     void    setTxChannel(uint8_t pTxChannel) { fLpGBTmap.TxChannel = pTxChannel; }
+    uint8_t getRxLink() { return fLpGBTmap.RxLink; }
     uint8_t getRxGroup() { return fLpGBTmap.RxGroup; }
     uint8_t getRxChannel() { return fLpGBTmap.RxChannel; }
+    uint8_t getTxLink() { return fLpGBTmap.TxLink; }
     uint8_t getTxGroup() { return fLpGBTmap.TxGroup; }
     uint8_t getTxChannel() { return fLpGBTmap.TxChannel; }
 
   private:
     struct LpGBTmap
     {
+        uint8_t RxLink;
         uint8_t RxGroup;
         uint8_t RxChannel;
+        uint8_t TxLink;
         uint8_t TxGroup;
         uint8_t TxChannel;
     } fLpGBTmap;
