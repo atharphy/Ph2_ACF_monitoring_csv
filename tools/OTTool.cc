@@ -126,6 +126,9 @@ void OTTool::Prepare()
     // check sparsification
     for(auto cBoard: *fDetectorContainer)
     {
+#ifdef __TCUSB__
+        if(cBoard->at(0)->flpGBT == nullptr) continue;
+#endif
         uint32_t cSparsified = cBoard->getSparsification(); // this is set in the file parser .. so check using that
         LOG(INFO) << BOLDYELLOW << +cSparsified << RESET;
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", cSparsified);

@@ -19,6 +19,7 @@
 #include "D19cLinkInterface.h"
 #include "D19cOpticalInterface.h"
 #include "L1ReadoutInterface.h"
+#include "LinkAlignmentOT.h"
 #include "Tool.h"
 #include "linearFitter.h"
 
@@ -43,7 +44,7 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-class OTHybridTester : public Tool
+class OTHybridTester : public LinkAlignmentOT
 {
   public:
     OTHybridTester();

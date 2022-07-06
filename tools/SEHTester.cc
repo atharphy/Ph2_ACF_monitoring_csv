@@ -465,7 +465,7 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
 #else
     flpGBTInterface->getExternalController()->getInterface().set_HV(false, true, true, 0);
 #endif
-    std::this_thread::sleep_for(std::chrono::milliseconds(15000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 
     std::vector<float> cHvSetValVect;
     std::vector<float> cVHVJ7ValVect;
@@ -493,7 +493,7 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
 
         setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(-1 * cHvSet) + ",";
         fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
-        std::this_thread::sleep_for(std::chrono::milliseconds(15000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
         std::string buffer = fPowerSupplyClient->sendAndReceivePacket("GetStatus");
         cHvMea             = std::stof(getVariableValue(powerSupplyId + "_" + channelId + "_Voltage", buffer));
 #ifdef __TCP_SERVER__
@@ -584,6 +584,9 @@ void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
     float T;
     // check if the critical temperature of -35C has been reached
     flpGBTInterface->getExternalController()->getInterface().read_temperature(flpGBTInterface->getExternalController()->getInterface().Temp1, T);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    flpGBTInterface->getExternalController()->getInterface().read_temperature(flpGBTInterface->getExternalController()->getInterface().Temp1, T);
+
     fillSummaryTree("StartTemperature", T);
     // if(T < -35.0)
     // {
@@ -621,13 +624,15 @@ void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
     // waiting 7 seconds before turnin on the hybrid ensures propper
     // discharge of the side and lets the current rise so that the negative
     // over-current protection does not activate
-    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().U_P1V2_R, U_P1V2_R);
     flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().U_P1V2_L, U_P1V2_L);
     flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().P2V5_VTRx_MON, U_P2V5);
     flpGBTInterface->getExternalController()->getInterface().set_SehSupply(flpGBTInterface->getExternalController()->getInterface().sehSupply_On);
-    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    flpGBTInterface->getExternalController()->getInterface().set_load2(true, false, pLeftLoadValue);
+    flpGBTInterface->getExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
     flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().I_P1V2_R, I_P1V2_R);
     flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().I_P1V2_L, I_P1V2_L);
     flpGBTInterface->getExternalController()->getInterface().read_supply(flpGBTInterface->getExternalController()->getInterface().I_SEH, I_SEH);

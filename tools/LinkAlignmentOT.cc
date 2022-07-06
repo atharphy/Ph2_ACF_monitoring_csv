@@ -512,6 +512,45 @@ std::pair<bool, uint8_t> LinkAlignmentOT::PhaseTuneLine(const Chip* pChip, uint8
     cLineStatus.second = cAlignerInterface->GetLineConfiguration().fDelay;
     return cLineStatus;
 }
+// there is no chip in the SEH test system
+std::pair<bool, uint8_t> LinkAlignmentOT::PhaseTuneLineEleFC7(uint8_t pHybrid, uint8_t pLineId)
+{
+    std::pair<bool, uint8_t> cLineStatus;
+    cLineStatus.first  = false;
+    cLineStatus.second = 0;
+    uint8_t pChip      = 0;
+    auto    cBoardId   = 1;
+    auto    cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+    fBeBoardInterface->setBoard((*cBoardIter)->getId());
+    LOG(DEBUG) << BOLDYELLOW << "LinkAlignmentOT::PhaseTuneLine#" << +pLineId << " for a Chip#" << +pChip << RESET;
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+
+    D19cBackendAlignmentFWInterface* cAlignerInterface = cInterface->getBackendAlignmentInterface();
+    cAlignerInterface->InitializeConfiguration();
+    cAlignerInterface->InitializeAlignerObject();
+
+    AlignerObject cAlignerObjct;
+    cAlignerObjct.fHybrid = pHybrid;
+    cAlignerObjct.fChip   = 0;
+    cAlignerObjct.fLine   = pLineId;
+    LineConfiguration cLineCnfg;
+    cAlignerInterface->TunePhase(cAlignerObjct, cLineCnfg);
+    cAlignerInterface->GetLineStatus(cAlignerObjct);
+    cLineStatus.first = cAlignerInterface->IsLinePhaseAligned(cAlignerObjct);
+    if(!cLineStatus.first)
+    {
+        LOG(INFO) << BOLDRED << "Could not phase align-BE data for BeBoard#" << +cBoardId << " Hybrid#" << +pHybrid << " Chip#" << +pChip << " line# " << +pLineId << RESET;
+        // throw std::runtime_error(std::string("Could not phase align-BE data in LinkAlignmentOT..."));
+    }
+    else
+    {
+        LOG(INFO) << BOLDBLUE << "Could phase align-BE data for BeBoard#" << +cBoardId << " Hybrid#" << +pHybrid << " Chip#" << +pChip << " line# " << +pLineId << RESET;
+    }
+
+    cLineStatus.second = cAlignerInterface->GetLineConfiguration().fDelay;
+    return cLineStatus;
+}
+
 std::pair<bool, uint8_t> LinkAlignmentOT::WordAlignLine(const Chip* pChip, uint8_t pLineId, uint8_t pAlignmentPattern, uint8_t pPeriod)
 {
     std::pair<bool, uint8_t> cLineStatus;

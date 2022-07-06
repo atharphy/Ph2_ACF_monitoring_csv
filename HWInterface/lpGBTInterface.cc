@@ -89,6 +89,31 @@ uint16_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
     return cValue;
 }
 
+void lpGBTInterface::ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint8_t cFuseH, uint8_t cFuseL)
+{
+    WriteChipReg(pChip, "FUSEControl", 2);
+    int cReadBack = 0;
+    while(cReadBack != 4)
+    {
+        cReadBack = ReadChipReg(pChip, "FUSEStatus");
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        LOG(INFO) << BOLDGREEN << "lpgbt FUSEStatus = " << +cReadBack << RESET;
+    }
+    WriteChipReg(pChip, "FUSEBlowAddH", cFuseH);
+    WriteChipReg(pChip, "FUSEBlowAddL", cFuseL);
+    LOG(INFO) << BOLDGREEN << "lpgbt FUSEBlowAddH = " << +cFuseH << RESET;
+    LOG(INFO) << BOLDGREEN << "lpgbt FUSEBlowAddL = " << +cFuseL << RESET;
+    cReadBack = ReadChipReg(pChip, "FUSEValuesA");
+    LOG(INFO) << BOLDGREEN << "lpgbt FUSEValuesA = " << +cReadBack << RESET;
+    cReadBack = ReadChipReg(pChip, "FUSEValuesB");
+    LOG(INFO) << BOLDGREEN << "lpgbt FUSEValuesB = " << +cReadBack << RESET;
+    cReadBack = ReadChipReg(pChip, "FUSEValuesC");
+    LOG(INFO) << BOLDGREEN << "lpgbt FUSEValuesC = " << +cReadBack << RESET;
+    cReadBack = ReadChipReg(pChip, "FUSEValuesD");
+    LOG(INFO) << BOLDGREEN << "lpgbt FUSEValuesD = " << +cReadBack << RESET;
+    WriteChipReg(pChip, "FUSEControl", 0);
+}
+
 bool lpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerify)
 {
     bool writeGood = true;
@@ -289,13 +314,13 @@ void lpGBTInterface::ConfigureTxSource(Chip* pChip, const std::vector<uint8_t>& 
     for(const auto& cGroup: pGroups)
     {
         if(pSource == 0)
-            LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to NORMAL " << RESET;
+            LOG(INFO) << GREEN << "Configuring Tx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to NORMAL " << RESET;
         else if(pSource == 1)
-            LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to PRBS7 " << RESET;
+            LOG(INFO) << GREEN << "Configuring Tx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to PRBS7 " << RESET;
         else if(pSource == 2)
-            LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to Binary counter " << RESET;
+            LOG(INFO) << GREEN << "Configuring Tx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to Binary counter " << RESET;
         else if(pSource == 3)
-            LOG(INFO) << GREEN << "Configuring Rx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to Constant Pattern" << RESET;
+            LOG(INFO) << GREEN << "Configuring Tx Group " << BOLDYELLOW << +cGroup << RESET << GREEN << " Source to Constant Pattern" << RESET;
 
         uint8_t cULDataSrcValue = ReadChipReg(pChip, "ULDataSource5");
         cULDataSrcValue         = (cULDataSrcValue & ~(0x3 << (2 * cGroup))) | (pSource << (2 * cGroup));
@@ -497,6 +522,7 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
         {
             LOG(INFO) << BOLDGREEN << "Group#" << +cGroup << " Channel#" << +cChannel << "...\t\t..Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] << RESET;
             SetPhaseTap(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
+            cOptimalTaps.push_back(cUniquePhases[cIndxBstPhase]);
         }
         else
         {
