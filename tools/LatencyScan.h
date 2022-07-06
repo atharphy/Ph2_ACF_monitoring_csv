@@ -23,7 +23,6 @@
 #include "TGaxis.h"
 #include "TH1F.h"
 #include "TH2F.h"
-#include "TString.h"
 #endif
 
 using namespace Ph2_System;

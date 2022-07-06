@@ -116,6 +116,7 @@ void InjectionDelay::localConfigure(const std::string& fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[InjectionDelay::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     InjectionDelay::ConfigureCalibration();
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "InjectionDelay");
     InjectionDelay::initializeFiles(fileRes_, currentRun);
 }
 

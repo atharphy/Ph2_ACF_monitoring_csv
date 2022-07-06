@@ -65,11 +65,6 @@ void Gain::ConfigureCalibration()
     // # Initialize progress #
     // #######################
     RD53RunProgress::total() += Gain::getNumberIterations();
-
-    // ############################################################
-    // # Create directory for: raw data, config files, histograms #
-    // ############################################################
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "Gain");
 }
 
 void Gain::Running()
@@ -133,6 +128,7 @@ void Gain::localConfigure(const std::string& fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[Gain::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     Gain::ConfigureCalibration();
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "Gain");
     Gain::initializeFiles(fileRes_, currentRun);
 }
 

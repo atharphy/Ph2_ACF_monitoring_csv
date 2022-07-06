@@ -1,4 +1,14 @@
 #!/bin/bash
+majorRelease=$(cat /etc/centos-release | tr -dc '0-9.'|cut -d \. -f1)
+
+if [[ $majorRelease == "7" ]]; then
+  source scl_source enable devtoolset-10 || true # This might cause a nonzero exit code in the CI for some reason, so let's ignore it
+elif [[ $majorRelease == "8" ]]; then
+  source scl_source enable gcc-toolset-10
+else
+  echo OS Release not supported
+fi
+
 ###########
 # Ph2_ACF #
 ###########
@@ -11,6 +21,9 @@ export CACTUSROOT=/opt/cactus
 export CACTUSBIN=$CACTUSROOT/bin
 export CACTUSLIB=$CACTUSROOT/lib
 export CACTUSINCLUDE=$CACTUSROOT/include
+alias cmake="cmake3"
+alias PythonController.py="python pythonUtils/PythonController.py"
+alias fpgaconfig.py="python pythonUtils/fpgaconfig.py"
 
 ########
 # ROOT #
@@ -34,6 +47,7 @@ export POWERSUPPLYDIR=$EXTERNAL_TOOLS_BASE_DIR/power_supply
 # These are git references for the dependencies that are included via CMake ExternalProjects
 export PH2_TCUSB_REF=9c39f0f4082f8db6a6788baf3567f55631b53f16
 export EUDAQ_REF=ac59b87fca12806d775e95df2d253c3bf96420ee
+export PYBIND11_REF=v2.9.2
 
 #######
 # ZMQ #
@@ -56,6 +70,13 @@ export USBINSTLIB=$USBINSTDIR/lib
 # EUDAQ #
 #########
 export EUDAQLIB=$EUDAQDIR/lib
+
+##########
+# Pybind11 #
+##########
+# export PYBIND11=$PH2ACF_BASE_DIR/../pybind11-2.9.2/
+# export PYBIND11INCLUDE=$PYBIND11/include
+export PYTHONINCLUDE=/usr/include/python3.6m/
 
 ##########
 # System #
@@ -83,9 +104,6 @@ export EuDaqFlag='-D__EUDAQ__'
 # Compilation flags #
 #####################
 
-# C++ standard
-export STDCXX="-std=c++1y"
-
 # Stand-alone application, without data streaming
 export CompileForHerd=false
 export CompileForShep=false
@@ -110,6 +128,9 @@ export CompileWithTCUSB=true
 export UseTCUSBforROH=false
 export UseTCUSBTcpServer=false
 
+# Compile minimal executable to avoid too space for CI
+export CompileMinExecutable=false
+
 # Clang-format command
 if command -v clang-format &> /dev/null; then
  clang_command="clang-format"
@@ -117,7 +138,7 @@ else
   clang_command="/opt/rh/llvm-toolset-7.0/root/usr/bin/clang-format"
 fi
 
-alias formatAll="find ${PH2ACF_BASE_DIR} -iname *.h -o -iname *.cc | xargs ${clang_command} -i"
+alias formatAll="find ${PH2ACF_BASE_DIR} -path ${PH2ACF_BASE_DIR}/MessageUtils -prune -o -iname *.h -o -iname *.cc | xargs ${clang_command} -i"
 
 if [[ $1 == "ci" ]]; then
     export CompileForHerd=false
@@ -126,6 +147,7 @@ if [[ $1 == "ci" ]]; then
     export CompileWithTCUSB=false
     export UseTCUSBforROH=false
     export UseTCUSBTcpServer=false
+    export CompileMinExecutable=true
 fi
 
 

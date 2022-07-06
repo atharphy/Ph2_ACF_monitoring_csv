@@ -24,8 +24,7 @@ void StubTool::Initialize()
     //            else if ( cSignalFit ) cDirectory += "SignalFit";
     //                else                   cDirectory += "Commissioning";
     //
-    // Tool cTool;
-    // cTool.CreateResultDirectory ( cDirectory ,false , true);
+    // Tool cTool
     // LOG (INFO) << " AAAAAAAAA file name: "<<fDirectoryName;
 
     // TFile* ff;

@@ -116,6 +116,8 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fUseFixRange                 = findValueInSettings<double>("PedeNoiseUseFixRange", 0);
     fMinThreshold                = findValueInSettings<double>("PedeNoiseMinThreshold", 0);
     fMaxThreshold                = findValueInSettings<double>("PedeNoiseMaxThreshold", 0);
+    fNeventsForValidation        = findValueInSettings<double>("NeventsForValidation", 100000);
+    fMaskingThreshold            = findValueInSettings<double>("MaskingThreshold", 0.001);
     // if you forget to use the PedeNoiseUseFixRange setting but instead declare
     // min and max threshold ... will still work
     if(!fUseFixRange && fMinThreshold != fMaxThreshold) { fUseFixRange = true; }
@@ -351,7 +353,7 @@ void PedeNoise::measureNoise()
 
 void PedeNoise::Validate()
 {
-    LOG(INFO) << "Validation: Taking Data with " << fNEventsToValidate << " random triggers!";
+    LOG(INFO) << "Validation: Taking Data with " << fNeventsForValidation << " random triggers!";
 
     for(auto cBoard: *fDetectorContainer)
     {
@@ -365,8 +367,8 @@ void PedeNoise::Validate()
 
     LOG(INFO) << "Setting all channels";
     this->SetTestAllChannels(true);
-    LOG(INFO) << "measuring with " << fNEventsToValidate << "events and " << fNEventsPerBurst << " per burst";
-    this->measureData(fNEventsToValidate, fNEventsPerBurst);
+    LOG(INFO) << "measuring with " << fNeventsForValidation << " events and " << fNEventsPerBurst << " per burst";
+    this->measureData(fNeventsForValidation, fNEventsPerBurst);
     LOG(INFO) << "setting al channels v2";
     this->SetTestAllChannels(originalAllChannelFlag);
 #ifdef __USE_ROOT__
@@ -410,35 +412,36 @@ void PedeNoise::Validate()
                         // LOG (INFO) << RED << "Ch " << iChan << RESET ;
                         float occupancy =
                             theOccupancyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChan).fOccupancy;
-                        if(occupancy > fMaskingThreshold && fMaskNoisyChannels)
+                        if(occupancy > fMaskingThreshold)
                         {
-                            if(fWithCBC)
+                            std::string message =  "Found a noisy channel on Chip " + getReadoutChipString(cBoard->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId()) + " Channel " + std::to_string(iChan) + " with an occupancy of " + std::to_string(occupancy) + "(>" + std::to_string(fMaskingThreshold) + ")";
+                            if(fMaskNoisyChannels)
                             {
-                                // char cRegName[11];
-                                // sprintf(cRegName, "Channel%03d", iChan + 1);
-                                std::string cRegName = "Channel" + (boost::format("%|03|") % (iChan + 1)).str();
-                                cRegVec.push_back({cRegName, 0xFF});
+                                if(fWithCBC)
+                                {
+                                    // char cRegName[11];
+                                    // sprintf(cRegName, "Channel%03d", iChan + 1);
+                                    std::string cRegName = "Channel" + (boost::format("%|03|") % (iChan + 1)).str();
+                                    cRegVec.push_back({cRegName, 0xFF});
+                                }
+                                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
+                                {
+                                    // char cRegName[17];
+                                    // sprintf(cRegName, "THTRIMMING_S%03d", iChan + 1);
+                                    std::string cRegName = "THTRIMMING_S" + (boost::format("%|03|") % (iChan + 1)).str();
+                                    cRegVec.push_back({cRegName, 0x1F});
+                                }
+                                if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                                {
+                                    // char cRegName[12];
+                                    // sprintf(cRegName, "TrimDAC_P%04d", iChan + 1);
+                                    std::string cRegName = "TrimDAC_P" + (boost::format("%|04|") % (iChan + 1)).str();
+                                    cRegVec.push_back({cRegName, 0x1F});
+                                }
+                                message += ";  setting offset to 255";
                             }
-                            if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
-                            {
-                                // char cRegName[17];
-                                // sprintf(cRegName, "THTRIMMING_S%03d", iChan + 1);
-                                std::string cRegName = "THTRIMMING_S" + (boost::format("%|03|") % (iChan + 1)).str();
-                                cRegVec.push_back({cRegName, 0x1F});
-                            }
-                            if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
-                            {
-                                // char cRegName[12];
-                                // sprintf(cRegName, "TrimDAC_P%04d", iChan + 1);
-                                std::string cRegName = "TrimDAC_P" + (boost::format("%|04|") % (iChan + 1)).str();
-                                cRegVec.push_back({cRegName, 0x1F});
-                            }
-                            LOG(INFO) << RED << "Found a noisy channel on Chip " << +cChip->getId() << " Channel " << iChan << " with an occupancy of " << occupancy << "; setting offset to " << +0xFF
-                                      << RESET;
+                            LOG(INFO) << RED << message << RESET;
                         }
-                        else
-                            LOG(INFO) << BOLDGREEN << "Chip " << +cChip->getId() << " on Hybrid#" << +cHybrid->getId() << " Channel " << iChan << " with an occupancy of " << occupancy * 1e6
-                                      << " number of hits is " << fNEventsToValidate * occupancy << "; threshold is " << fMaskingThreshold << " setting offset to " << +0xFF << RESET;
                     }
 
                     fReadoutChipInterface->WriteChipMultReg(cChip, cRegVec);
@@ -989,7 +992,7 @@ void PedeNoise::writeObjects()
 #endif
 }
 
-void PedeNoise::ConfigureCalibration() { CreateResultDirectory("Results/Run_PedeNoise"); }
+void PedeNoise::ConfigureCalibration() {}
 
 void PedeNoise::Running()
 {

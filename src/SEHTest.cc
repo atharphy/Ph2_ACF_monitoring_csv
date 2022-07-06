@@ -548,7 +548,7 @@ int main(int argc, char* argv[])
         BackEndAlignment cBackEndAligner;
         cBackEndAligner.Inherit(&cTool);
         cBackEndAligner.Align();
-        // cBackEndAligner.Start(0);
+        // cBackEndAligner.Start(cRunNumber);
         // reset all chip and board registers
         // to what they were before this tool was called
         // cBackEndAligner.Reset();

@@ -8,6 +8,7 @@
 #include "../MonitorDQM/MonitorDQMInterface.h"
 #include "../Utils/MiddlewareInterface.h"
 #include "../Utils/argvparser.h"
+#include "../miniDAQ/CombinedCalibrationFactory.h"
 
 #include <cstring>
 #include <errno.h>
@@ -102,7 +103,11 @@ int main(int argc, char* argv[])
     cmd.defineOption("file", "Hw Description File", ArgvParser::OptionRequiresValue | ArgvParser::OptionRequired);
     cmd.defineOptionAlternative("file", "f");
 
-    cmd.defineOption("calibration", "Calibration to run", ArgvParser::OptionRequiresValue | ArgvParser::OptionRequired);
+    std::string                calibrationHelpMessage = "Calibration to run. List of available calibrations:\n";
+    CombinedCalibrationFactory theCombinedCalibrationFactory;
+    for(const auto& calibration: theCombinedCalibrationFactory.getAvailableCalibrations()) calibrationHelpMessage += (calibration + "\n");
+
+    cmd.defineOption("calibration", calibrationHelpMessage, ArgvParser::OptionRequiresValue | ArgvParser::OptionRequired);
     cmd.defineOptionAlternative("calibration", "c");
 
     cmd.defineOption("output", "Output Directory. Default value: Results", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
@@ -122,7 +127,7 @@ int main(int argc, char* argv[])
     if(result != ArgvParser::NoParserError)
     {
         LOG(INFO) << cmd.parseErrorDescription(result);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     // now query the parsing results
@@ -158,7 +163,7 @@ int main(int argc, char* argv[])
         // The return value is -1
         execv((binDir + "RunController").c_str(), argv);
         LOG(ERROR) << "Can't run RunController, error occured";
-        exit(0);
+        exit(EXIT_FAILURE);
     }
     // usleep(10000000);
     //	std::cout << "forking dqm" << std::endl;
@@ -261,9 +266,10 @@ int main(int argc, char* argv[])
                 case HALTED:
                 {
                     std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Configure!!!" << std::endl;
-                    std::string calibrationName   = cmd.optionValue("calibration");
-                    std::string configurationFile = cmd.optionValue("file");
-                    theMiddlewareInterface.configure(calibrationName, configurationFile);
+                    std::string                                               calibrationName   = cmd.optionValue("calibration");
+                    std::string                                               configurationFile = cmd.optionValue("file");
+                    const MessageUtils::CalibrationList::CalibrationNameEnum& calibrationEnum   = theCombinedCalibrationFactory.getCalibrationEnum(calibrationName);
+                    theMiddlewareInterface.configure(calibrationEnum, configurationFile);
                     theDQMInterface.configure(calibrationName, configurationFile);
                     theMonitorDQMInterface.configure(configurationFile);
                     stateMachineStatus = CONFIGURED;
@@ -272,7 +278,7 @@ int main(int argc, char* argv[])
                 case CONFIGURED:
                 {
                     std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Start!!!" << std::endl;
-                    std::string runNumber = "5";
+                    int runNumber = 5;
                     std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
                     theDQMInterface.startProcessingData(runNumber);
                     std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;

@@ -25,7 +25,7 @@ class SEHMonitor : public DetectorMonitor
     void runTestCardMonitor(std::string registerName);
 // bool doMonitorInputCurrent{false};
 #ifdef __USE_ROOT__
-    MonitorDQMPlotSEH* fMonitorDQMPlotSEH;
+    MonitorDQMPlotSEH* fMonitorPlotDQMSEH;
     MonitorDQMPlotCBC* fMonitorDQMPlotCBC;
 #endif
 
