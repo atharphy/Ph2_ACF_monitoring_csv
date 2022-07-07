@@ -438,6 +438,10 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
         {
             LOG(INFO) << GREEN << "Initializing communication to Low-power Gigabit Transceiver (LpGBT): " << BOLDYELLOW << +cOpticalGroup->getId() << RESET;
 
+            static_cast<RD53lpGBTInterface*>(flpGBTInterface)->SetDownLinkMapping(cOpticalGroup);
+            static_cast<RD53lpGBTInterface*>(flpGBTInterface)->SetUpLinkMapping(cOpticalGroup);
+            LOG(INFO) << BOLDBLUE << ">>> Configured up and down link mapping in firmware <<<" << RESET;
+
             if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
             // && (static_cast<RD53lpGBTInterface*>(flpGBTInterface)->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, theBeBoardFW, fReadoutChipInterface) == true))
             {

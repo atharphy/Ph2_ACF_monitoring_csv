@@ -1,6 +1,6 @@
 /*!
   \file                  RD53FWInterface.h
-  \brief                 RD53FWInterface to initialize and configure the FW
+  \bri7ef                 RD53FWInterface to initialize and configure the FW
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
@@ -75,8 +75,8 @@ class RD53FWInterface : public BeBoardFWInterface
     void     ChipReset() override;
     void     ChipReSync() override;
 
-    void     selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) override;
-    uint32_t OptoLinkVersion() override;
+    void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) override;
+    void SetOptoLinkVersion(uint8_t version) override;
     // #############################
 
     void     SelectBERcheckBitORFrame(const uint8_t bitORframe);
@@ -192,8 +192,8 @@ class RD53FWInterface : public BeBoardFWInterface
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override;
     bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerify = true) override;
     uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress) override;
-    void     SetDownLinkMapping(uint8_t TxLink, uint8_t TxGroup, uint8_t TxModuleId){};
-    void     SetUpLinkMapping(uint8_t RxLink, uint8_t RxGroup, uint8_t RxModuleId, uint8_t lane){};
+    void     SetDownLinkMapping(uint8_t TxLink, uint8_t TxGroup, uint8_t TxModuleId);
+    void     SetUpLinkMapping(uint8_t RxLink, uint8_t RxGroup, uint8_t RxModuleId, uint8_t lane);
 
     // ####################################################
     // # Hybrid ADC measurements: temperature and voltage #

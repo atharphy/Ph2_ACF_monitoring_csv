@@ -77,13 +77,13 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
 {
     this->setBoard(pChip->getBeBoardId());
 
-    LOG(INFO) << GREEN << "LpGBT version: " << BOLDYELLOW << (fBoardFW->OptoLinkVersion() == 0 ? "LpGBT-v0" : "LpGBT-v1") << RESET;
-
     // #####################
     // # Make reverted map #
     // #####################
     uint8_t cChipVersion = static_cast<lpGBT*>(pChip)->getVersion();
     for(auto& ele: fPUSMStatusMap[cChipVersion]) revertedPUSMStatusMap[ele.second] = ele.first;
+    fBoardFW->SetOptoLinkVersion(cChipVersion);
+    LOG(INFO) << GREEN << "LpGBT version: " << BOLDYELLOW << (cChipVersion == 0 ? "LpGBT-v0" : "LpGBT-v1") << RESET;
 
     // #########################
     // # Configure PLL and DLL #
@@ -171,9 +171,9 @@ void RD53lpGBTInterface::SetDownLinkMapping(const OpticalGroup* pOpticalGroup)
         for(const auto cChip: *cHybrid)
         {
             auto pChip = static_cast<RD53*>(cChip);
-            static_cast<RD53FWInterface*>(fBoardFW)->SetDownLinkMapping(pChip->getTxLink(), pChip->getTxGroup(), pChip->getHybridId());
+            auto fwGr  = mapLpGBTGrCh2fwGr[pChip->getTxGroup() * 10 + pChip->getTxChannel()];
+            static_cast<RD53FWInterface*>(fBoardFW)->SetDownLinkMapping(pChip->getTxLink(), fwGr, cHybrid->getId());
         }
-    // @TMP@ : map group and channel into fw group + check getHybridId + implement SetDownLinkMapping
 }
 
 void RD53lpGBTInterface::SetUpLinkMapping(const OpticalGroup* pOpticalGroup)
@@ -182,9 +182,8 @@ void RD53lpGBTInterface::SetUpLinkMapping(const OpticalGroup* pOpticalGroup)
         for(const auto cChip: *cHybrid)
         {
             auto pChip = static_cast<RD53*>(cChip);
-            static_cast<RD53FWInterface*>(fBoardFW)->SetUpLinkMapping(pChip->getRxLink(), pChip->getRxGroup(), pChip->getHybridId(), pChip->getChipLane());
+            static_cast<RD53FWInterface*>(fBoardFW)->SetUpLinkMapping(pChip->getRxLink(), pChip->getRxGroup(), cHybrid->getId(), pChip->getChipLane());
         }
-    // @TMP@ : check getHybridId + implement SetUpLinkMapping
 }
 
 void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const BeBoard* pBoard, const OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface)

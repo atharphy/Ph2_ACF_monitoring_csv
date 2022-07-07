@@ -343,7 +343,7 @@ class D19cFWInterface : public BeBoardFWInterface
     // # Read/Write Optical Group #
     // ############################
     // Functions for standard uDTC
-    uint32_t OptoLinkVersion() override { return 0; };
+    void     SetOptoLinkVersion(uint8_t version) override{};
     void     selectLink(const uint8_t pLinkId = 0, uint32_t cWait_ms = 100) override{};
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override {}
     void     ResetOptoLink() override{};

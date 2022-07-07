@@ -20,14 +20,13 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
     this->setBoard(pChip->getBeBoardId());
 
     auto nameAndValue(SplitSpecialRegisters(regName, data, RD53Shared::firstChip->getRegMap()));
-
     RD53Interface::SendCommand(static_cast<RD53*>(pChip), RD53ACmd::WrReg{(uint8_t)pChip->getId(), pChip->getRegItem(nameAndValue.first).fAddress, nameAndValue.second});
     if((regName == "VCAL_HIGH") || (regName == "VCAL_MED")) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP)); // @TMP@
 
-    bool status = true;
+    bool     status      = true;
+    uint16_t actualValue = 0;
     if(pVerifLoop == true)
     {
-        uint16_t actualValue;
         if(regName == "PIX_PORTAL")
         {
             auto pixMode = RD53Interface::ReadChipReg(pChip, "PIX_MODE");
@@ -44,22 +43,18 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
             actualValue = RD53Interface::ReadChipReg(pChip, nameAndValue.first);
             if(nameAndValue.second != actualValue) status = false;
         }
-
-        if(status == false)
-        {
-            LOG(ERROR) << BOLDRED << "Error when reading back what was written into RD53 reg. " << BOLDYELLOW << regName << BOLDRED << ": wrote = " << BOLDYELLOW << nameAndValue.second << BOLDRED
-                       << ", read = " << BOLDYELLOW << actualValue << RESET;
-            return false;
-        }
-        else
-        {
-            LOG(INFO) << GREEN << "Succesfully configured " << BOLDYELLOW << regName << RESET;
-            pChip->setReg(regName, data);
-            pChip->setReg(nameAndValue.first, nameAndValue.second);
-        }
     }
 
-    return true;
+    if(status == false)
+        LOG(ERROR) << BOLDRED << "Error when reading back what was written into RD53 reg. " << BOLDYELLOW << regName << BOLDRED << ": wrote = " << BOLDYELLOW << nameAndValue.second << BOLDRED
+                   << ", read = " << BOLDYELLOW << actualValue << RESET;
+    // else if((pVerifLoop == true) && (status == true))
+    //     LOG(INFO) << GREEN << "Succesfully configured chip register " << BOLDYELLOW << regName << RESET;
+
+    pChip->setReg(regName, data);
+    pChip->setReg(nameAndValue.first, nameAndValue.second);
+
+    return status;
 }
 
 void RD53Interface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std::string& regName, const uint16_t data)
