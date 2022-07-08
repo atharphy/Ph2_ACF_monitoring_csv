@@ -21,6 +21,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
 
     auto nameAndValue(SplitSpecialRegisters(regName, data, RD53Shared::firstChip->getRegMap()));
     RD53Interface::SendCommand(static_cast<RD53*>(pChip), RD53ACmd::WrReg{(uint8_t)pChip->getId(), pChip->getRegItem(nameAndValue.first).fAddress, nameAndValue.second});
+
     if((regName == "VCAL_HIGH") || (regName == "VCAL_MED")) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP)); // @TMP@
 
     bool     status      = true;
@@ -30,7 +31,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
         if(regName == "PIX_PORTAL")
         {
             auto pixMode = RD53Interface::ReadChipReg(pChip, "PIX_MODE");
-            if(pixMode == 0)
+            if((pChip->getFrontEndType() == FrontEndType::RD53A ? pixMode & 0x18 : pixMode & 0x1) == 0) // Check only auto-increment bits
             {
                 auto regReadback = ReadRD53Reg(static_cast<RD53*>(pChip), regName);
                 actualValue      = regReadback[0].second;
