@@ -238,7 +238,7 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDYELLOW << "Switching on SEH without remote power supply control" << RESET;
         cSEHTester.TurnOn(cRightLoad, cLeftLoad);
     }
-    if(cmd.foundOption("ext-leak") )
+    if(cmd.foundOption("ext-leak"))
     {
         if(cmd.foundOption("parallelHV"))
         {

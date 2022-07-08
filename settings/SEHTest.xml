@@ -11,8 +11,8 @@
     <OpticalGroup Id="0" FMCId="0" reset="1">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-        <lpGBT Id="0" version="1" configfile="lpGBT1.txt">
-        <!-- <lpGBT Id="0" version="0" configfile="lpGBT0.txt"> -->
+        <!-- <lpGBT Id="0" version="1" configfile="lpGBT1.txt"> -->
+        <lpGBT Id="0" version="0" configfile="lpGBT0.txt">
           <Settings
           />
         </lpGBT>
@@ -35,11 +35,11 @@
     <Register name="optical_block">
 		<Register name="rx_polarity"> 
 
-        		 <Register name="l8"> 1 </Register>  
-        		 <Register name="l12"> 1 </Register>  
+        		 <!-- <Register name="l8"> 1 </Register>  
+        		 <Register name="l12"> 1 </Register>   -->
                 <!-- lpGBT-v0 = 0 , lpGBT-v1 = 1 -->
-        		<!-- <Register name="l8"> 0 </Register> 
-        		<Register name="l12"> 0 </Register>  -->
+        		<Register name="l8"> 0 </Register> 
+        		<Register name="l12"> 0 </Register> 
 		</Register>
 		<Register name="tx_polarity"> 
         		<Register name="l8"> 0 </Register>
