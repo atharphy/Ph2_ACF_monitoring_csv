@@ -48,8 +48,8 @@ class RD53Interface : public ReadoutChipInterface
     void StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip);
     // #############################
 
-    virtual void Reset(Ph2_HwDescription::ReadoutChip* pChip, const int resetType) = 0;
-    virtual void ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip)            = 0;
+    virtual void Reset(Ph2_HwDescription::ReadoutChip* pChip, const size_t resetType) = 0;
+    virtual void ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip)               = 0;
 
     virtual void InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard)                                                                                                  = 0;
     virtual void InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1)                                                                                = 0;

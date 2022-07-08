@@ -8,8 +8,8 @@
   Support:               email to alkiviadis.papadopoulos@cern.ch
 */
 
-#ifndef BITS_BIT_VIEW_H
-#define BITS_BIT_VIEW_H
+#ifndef BITMASTER_BIT_VIEW_H
+#define BITMASTER_BIT_VIEW_H
 
 #include <array>
 #include <bitset>
@@ -107,6 +107,7 @@ class BitView
     {
         int    block_offset = _start / block_size;
         size_t bit_offset   = _start % block_size;
+
         while(begin != end)
         {
             if(bit_offset + 8 > block_size)
@@ -135,6 +136,7 @@ class BitView
             copy_into(std::rbegin(result.raw), std::rend(result.raw));
         else
             copy_into(std::begin(result.raw), std::end(result.raw));
+
         if(size() < 8 * sizeof(T))
         {
             if(big_endian)
@@ -142,6 +144,7 @@ class BitView
             else
                 result.val &= BitViewDetails::low_mask<T>(size());
         }
+
         return result.val;
     }
 

@@ -23,7 +23,7 @@ class RD53BInterface : public RD53Interface
     using RD53Interface::RD53Interface;
 
     bool ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override { return false; }
-    void Reset(Ph2_HwDescription::ReadoutChip* pChip, const int resetType) override {}
+    void Reset(Ph2_HwDescription::ReadoutChip* pChip, const size_t resetType) override {}
     void ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip) override {}
     void InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard) override;
     void InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1) override;

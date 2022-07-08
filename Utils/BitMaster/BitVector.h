@@ -8,8 +8,8 @@
   Support:               email to alkiviadis.papadopoulos@cern.ch
 */
 
-#ifndef BITS_BIT_VECTOR_H
-#define BITS_BIT_VECTOR_H
+#ifndef BITMASTER_BIT_VECTOR_H
+#define BITMASTER_BIT_VECTOR_H
 
 #include "BitView.h"
 
@@ -54,19 +54,24 @@ class BitVector
             _data.insert(std::end(_data), extra_words, 0);
         }
         auto   new_bits = BitView<BlockType>{_data.data(), _size, _size + bits.size()};
+
         size_t offset   = 0;
+
         while(offset + 8 < bits.size())
         {
             uint8_t byte = bits.slice(offset, offset + 8).template get<uint8_t>();
             new_bits.slice(offset, offset + 8).set(byte);
             offset += 8;
         }
+
         int leftover_bits = bits.size() - offset;
+
         if(leftover_bits > 0)
         {
             uint8_t byte = bits.slice(offset, offset + leftover_bits).template get<uint8_t>();
             new_bits.slice(offset, offset + leftover_bits).set(byte);
         }
+
         _size += bits.size();
     }
 
