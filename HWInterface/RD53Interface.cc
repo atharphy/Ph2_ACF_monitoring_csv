@@ -117,16 +117,12 @@ bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
 {
     RD53* pRD53          = static_cast<RD53*>(pChip);
     auto& pixMaskDefault = pRD53->getPixelsMaskDefault();
+    auto& pixMask        = pRD53->getPixelsMask();
 
-    for(auto col = 0u; col < pRD53->getNCols(); col++)
-        for(auto row = 0u; row < pRD53->getNRows(); row++)
-        {
-            if(mask == true) pRD53->enablePixel(row, col, group->isChannelEnabled(row, col) && pixMaskDefault[col].Enable[row]);
-            if(inject == true)
-                pRD53->injectPixel(row, col, group->isChannelEnabled(row, col) && pixMaskDefault[col].Enable[row]);
-            else
-                pRD53->injectPixel(row, col, group->isChannelEnabled(row, col) && pixMaskDefault[col].Enable[row] && pixMaskDefault[col].InjEn[row]);
-        }
+    if(mask == true)
+        std::transform(pixMaskDefault.Enable.begin(), pixMaskDefault.Enable.end(), static_cast<const RD53ChannelGroup*>(group.get())->getMask().begin(), pixMask.Enable.begin(), std::logical_and<>{});
+    std::transform(pixMaskDefault.Enable.begin(), pixMaskDefault.Enable.end(), static_cast<const RD53ChannelGroup*>(group.get())->getMask().begin(), pixMask.InjEn.begin(), std::logical_and<>{});
+    if(inject == false) std::transform(pixMask.InjEn.begin(), pixMask.InjEn.end(), pixMaskDefault.InjEn.begin(), pixMask.InjEn.begin(), std::logical_and<>{});
 
     WriteRD53Mask(pRD53, true, false);
 

@@ -35,7 +35,7 @@ class RD53AInterface : public RD53Interface
     void                                       WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault) override;
     std::pair<std::string, uint16_t>           SplitSpecialRegisters(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) override;
 
-    uint16_t GetPixelConfig(const std::vector<Ph2_HwDescription::perColumnPixelData>& mask, uint16_t row, uint16_t col, bool highGain);
+    uint16_t GetPixelConfig(const Ph2_HwDescription::pixelMask& mask, uint16_t NRows, uint16_t row, uint16_t col, bool highGain);
 
     uint16_t SetFieldValue(uint16_t regValue, uint16_t fieldValue, uint8_t start, uint8_t size);
     struct SpecialRegInfo

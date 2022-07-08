@@ -87,12 +87,10 @@ constexpr float Charge2VCal(float Charge) { return (Charge - offset) / (cap * 1e
 
 namespace Ph2_HwDescription
 {
-struct perColumnPixelData
+struct pixelMask
 {
-    perColumnPixelData(size_t size) : Enable(size), HitBus(size), InjEn(size), TDAC(size) {}
-    perColumnPixelData(size_t size, bool en, bool hb, bool ie, uint8_t tdac) : Enable(size, en), HitBus(size, hb), InjEn(size, ie), TDAC(size, tdac) {}
-    perColumnPixelData(size_t size, bool en, bool hb) : Enable(size, en), HitBus(size, hb) {}
-    perColumnPixelData(size_t size, uint8_t tdac) : TDAC(size, tdac) {}
+    pixelMask() = default;
+    pixelMask(size_t size, bool en, bool hb, bool ie, uint8_t tdac) : Enable(size, en), HitBus(size, hb), InjEn(size, ie), TDAC(size, tdac) {}
 
     std::vector<bool>    Enable;
     std::vector<bool>    HitBus;
@@ -130,9 +128,9 @@ class RD53 : public ReadoutChip
     bool     isDACLocal(const std::string& regName) override;
     uint8_t  getNumberOfBits(const std::string& regName) override;
 
-    std::string                      getFileName(const std::string& fName2Add) { return RD53Shared::composeFileName(configFileName, fName2Add); }
-    std::vector<perColumnPixelData>& getPixelsMask() { return fPixelsMask; }
-    std::vector<perColumnPixelData>& getPixelsMaskDefault() { return fPixelsMaskDefault; }
+    std::string getFileName(const std::string& fName2Add) { return RD53Shared::composeFileName(configFileName, fName2Add); }
+    pixelMask&  getPixelsMask() { return fPixelsMask; }
+    pixelMask&  getPixelsMaskDefault() { return fPixelsMaskDefault; }
 
     void        copyMaskFromDefault();
     void        copyMaskToDefault(const std::string& which = "all");
@@ -189,11 +187,11 @@ class RD53 : public ReadoutChip
         uint8_t TxGroup;
         uint8_t TxChannel;
     } fLpGBTmap;
-    std::vector<perColumnPixelData> fPixelsMask;
-    std::vector<perColumnPixelData> fPixelsMaskDefault;
-    std::string                     configFileName;
-    std::string                     myComment;
-    uint8_t                         myChipLane;
+    pixelMask   fPixelsMask;
+    pixelMask   fPixelsMaskDefault;
+    std::string configFileName;
+    std::string myComment;
+    uint8_t     myChipLane;
 };
 } // namespace Ph2_HwDescription
 

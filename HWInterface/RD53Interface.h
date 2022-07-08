@@ -12,6 +12,7 @@
 
 #include "../HWDescription/ChipRegItem.h"
 #include "../HWDescription/RD53.h"
+#include "../Utils/RD53ChannelGroupHandler.h"
 #include "BeBoardFWInterface.h"
 #include "RD53FWInterface.h"
 #include "ReadoutChipInterface.h"

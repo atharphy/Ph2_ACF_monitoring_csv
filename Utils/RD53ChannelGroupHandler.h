@@ -25,9 +25,9 @@ class RD53ChannelGroup : public ChannelGroupBase
     RD53ChannelGroup(size_t nRows, size_t nCols, bool initialValue = false) : ChannelGroupBase(nRows, nCols), storage(nRows * nCols, initialValue) {}
 
     uint32_t getNumberOfEnabledChannels(const std::shared_ptr<ChannelGroupBase> mask) const override { return getNumberOfEnabledChannels(mask.get()); }
-    bool     isChannelEnabled(uint16_t row, uint16_t col = 0) const override { return storage[col + numberOfCols_ * row]; }
-    void     enableChannel(uint16_t row, uint16_t col = 0) override { storage[col + numberOfCols_ * row] = true; }
-    void     disableChannel(uint16_t row, uint16_t col = 0) override { storage[col + numberOfCols_ * row] = false; }
+    bool     isChannelEnabled(uint16_t row, uint16_t col) const override { return storage[row + numberOfRows_ * col]; }
+    void     enableChannel(uint16_t row, uint16_t col) override { storage[row + numberOfRows_ * col] = true; }
+    void     disableChannel(uint16_t row, uint16_t col) override { storage[row + numberOfRows_ * col] = false; }
     void     disableAllChannels(void) override { std::fill(storage.begin(), storage.end(), false); }
     void     enableAllChannels(void) override { std::fill(storage.begin(), storage.end(), true); }
     void     flipAllChannels(void) override { std::transform(storage.begin(), storage.end(), storage.begin(), std::logical_not<>{}); }
@@ -35,7 +35,8 @@ class RD53ChannelGroup : public ChannelGroupBase
     {
         return std::all_of(storage.begin(), storage.end(), [](auto x) { return x; });
     }
-    void setCustomPattern(const ChannelGroupBase& customChannelGroupBase) {}
+    void                     setCustomPattern(const ChannelGroupBase& customChannelGroupBase) {}
+    const std::vector<bool>& getMask() const { return storage; }
 
   protected:
     uint32_t getNumberOfEnabledChannels(const ChannelGroupBase* mask) const override

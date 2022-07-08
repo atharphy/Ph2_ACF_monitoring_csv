@@ -215,7 +215,7 @@ std::pair<std::string, uint16_t> RD53AInterface::SplitSpecialRegisters(std::stri
     }
 }
 
-uint16_t RD53AInterface::GetPixelConfig(const std::vector<perColumnPixelData>& mask, uint16_t row, uint16_t col, bool highGain)
+uint16_t RD53AInterface::GetPixelConfig(const pixelMask& mask, uint16_t NRows, uint16_t row, uint16_t col, bool highGain)
 // ##############################################################################################################
 // # Encodes the configuration for a pixel pair                                                                 #
 // # In the LIN FE TDAC is unsigned and increasing it reduces the local threshold                               #
@@ -227,15 +227,23 @@ uint16_t RD53AInterface::GetPixelConfig(const std::vector<perColumnPixelData>& m
 // ##############################################################################################################
 {
     if(col <= RD53A::SYNC.colStop)
-        return bits::pack<8, 8>(bits::pack<1, 1, 1>(mask[col + 1].HitBus[row], mask[col + 1].InjEn[row], mask[col + 1].Enable[row]),
-                                bits::pack<1, 1, 1>(mask[col + 0].HitBus[row], mask[col + 0].InjEn[row], mask[col + 0].Enable[row]));
+        return bits::pack<8, 8>(bits::pack<1, 1, 1>(mask.HitBus[row + NRows * (col + 1)], mask.InjEn[row + NRows * (col + 1)], mask.Enable[row + NRows * (col + 1)]),
+                                bits::pack<1, 1, 1>(mask.HitBus[row + NRows * (col + 0)], mask.InjEn[row + NRows * (col + 0)], mask.Enable[row + NRows * (col + 0)]));
     else if(col <= RD53A::LIN.colStop)
-        return bits::pack<8, 8>(bits::pack<1, 4, 1, 1, 1>(highGain, mask[col + 1].TDAC[row], mask[col + 1].HitBus[row], mask[col + 1].InjEn[row], mask[col + 1].Enable[row]),
-                                bits::pack<1, 4, 1, 1, 1>(highGain, mask[col + 0].TDAC[row], mask[col + 0].HitBus[row], mask[col + 0].InjEn[row], mask[col + 0].Enable[row]));
-    else
         return bits::pack<8, 8>(
-            bits::pack<1, 4, 1, 1, 1>(mask[col + 1].TDAC[row] > 15, abs(15 - mask[col + 1].TDAC[row]), mask[col + 1].HitBus[row], mask[col + 1].InjEn[row], mask[col + 1].Enable[row]),
-            bits::pack<1, 4, 1, 1, 1>(mask[col + 0].TDAC[row] > 15, abs(15 - mask[col + 0].TDAC[row]), mask[col + 0].HitBus[row], mask[col + 0].InjEn[row], mask[col + 0].Enable[row]));
+            bits::pack<1, 4, 1, 1, 1>(highGain, mask.TDAC[row + NRows * (col + 1)], mask.HitBus[row + NRows * (col + 1)], mask.InjEn[row + NRows * (col + 1)], mask.Enable[row + NRows * (col + 1)]),
+            bits::pack<1, 4, 1, 1, 1>(highGain, mask.TDAC[row + NRows * (col + 0)], mask.HitBus[row + NRows * (col + 0)], mask.InjEn[row + NRows * (col + 0)], mask.Enable[row + NRows * (col + 0)]));
+    else
+        return bits::pack<8, 8>(bits::pack<1, 4, 1, 1, 1>(mask.TDAC[row + NRows * (col + 1)] > 15,
+                                                          abs(15 - mask.TDAC[row + NRows * (col + 1)]),
+                                                          mask.HitBus[row + NRows * (col + 1)],
+                                                          mask.InjEn[row + NRows * (col + 1)],
+                                                          mask.Enable[row + NRows * (col + 1)]),
+                                bits::pack<1, 4, 1, 1, 1>(mask.TDAC[row + NRows * (col + 0)] > 15,
+                                                          abs(15 - mask.TDAC[row + NRows * (col + 0)]),
+                                                          mask.HitBus[row + NRows * (col + 0)],
+                                                          mask.InjEn[row + NRows * (col + 0)],
+                                                          mask.Enable[row + NRows * (col + 0)]));
 }
 
 void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
@@ -243,14 +251,12 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
     this->setBoard(pRD53->getBeBoardId());
 
     std::vector<uint16_t> commandList;
-    std::vector<uint16_t> syncList(RD53Constants::NSYNC_WORS, RD53ACmd::RD53ACmdEncoder::SYNC);
-
-    const uint16_t REGION_COL_ADDR = pRD53->getRegItem("REGION_COL").fAddress;
-    const uint16_t REGION_ROW_ADDR = pRD53->getRegItem("REGION_ROW").fAddress;
-    const uint16_t PIX_PORTAL_ADDR = pRD53->getRegItem("PIX_PORTAL").fAddress;
-    const uint8_t  highGain        = pRD53->getRegItem("HighGain_LIN").fValue;
-    const uint8_t  chipID          = pRD53->getId();
-    auto&          mask            = doDefault == true ? pRD53->getPixelsMaskDefault() : pRD53->getPixelsMask();
+    const uint16_t        REGION_COL_ADDR = pRD53->getRegItem("REGION_COL").fAddress;
+    const uint16_t        REGION_ROW_ADDR = pRD53->getRegItem("REGION_ROW").fAddress;
+    const uint16_t        PIX_PORTAL_ADDR = pRD53->getRegItem("PIX_PORTAL").fAddress;
+    const uint8_t         highGain        = pRD53->getRegItem("HighGain_LIN").fValue;
+    const uint8_t         chipID          = pRD53->getId();
+    auto&                 mask            = doDefault == true ? pRD53->getPixelsMaskDefault() : pRD53->getPixelsMask();
 
     // ##########################
     // # Disable default config #
@@ -277,24 +283,25 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
 
         for(auto col = 0u; col < RD53A::NCOLS; col += 2)
         {
-            if((std::find(mask[col].Enable.begin(), mask[col].Enable.end(), true) == mask[col].Enable.end()) &&
-               (std::find(mask[col + 1].Enable.begin(), mask[col].Enable.end(), true) == mask[col + 1].Enable.end()))
+            if(std::find(mask.Enable.begin() + (0 + RD53A::NROWS * col), mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * col), true) ==
+               (mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * col)))
                 continue;
 
             RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
 
             for(auto row = 0u; row < RD53A::NROWS; row++)
             {
-                if((mask[col].Enable[row] == true) || (mask[col + 1].Enable[row] == true))
+                if((mask.Enable[row + RD53A::NROWS * col] == true) || (mask.Enable[row + RD53A::NROWS * (col + 1)] == true))
                 {
-                    data = RD53AInterface::GetPixelConfig(mask, row, col, highGain);
+                    data = RD53AInterface::GetPixelConfig(mask, RD53A::NROWS, row, col, highGain);
 
                     RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_ROW_ADDR, row}, commandList);
                     RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_PORTAL_ADDR, data}, commandList);
                 }
             }
 
-            if((commandList.size() * 2 + RD53A::NROWS + 1) > (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO))
+            auto n16bitWords = commandList.size() + RD53A::NROWS * 2 + 1;
+            if((n16bitWords / 2 + n16bitWords % 2) > (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO))
             {
                 static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
                 commandList.clear();
@@ -317,14 +324,15 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
 
             for(auto longCmdId = 0u; longCmdId < nLongCommands; longCmdId++)
             {
-                for(size_t i = 0; i < nValuesLongCmd; i++) wrRegLongCmd.values[i] = RD53AInterface::GetPixelConfig(mask, nValuesLongCmd * longCmdId + i, col, highGain);
-                serialize(wrRegLongCmd, commandList);
+                for(size_t i = 0; i < nValuesLongCmd; i++) wrRegLongCmd.values[i] = RD53AInterface::GetPixelConfig(mask, RD53A::NROWS, nValuesLongCmd * longCmdId + i, col, highGain);
+                RD53ACmd::serialize(wrRegLongCmd, commandList);
             }
 
             for(auto row = nValuesLongCmd * nLongCommands; row < RD53A::NROWS; row++)
-                serialize(RD53ACmd::WrReg{chipID, PIX_PORTAL_ADDR, RD53AInterface::GetPixelConfig(mask, row, col, highGain)}, commandList);
+                RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_PORTAL_ADDR, RD53AInterface::GetPixelConfig(mask, RD53A::NROWS, row, col, highGain)}, commandList);
 
-            if((commandList.size() + RD53A::NROWS + 1) * 2 > (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO))
+            auto n16bitWords = commandList.size() + RD53A::NROWS + 2;
+            if((n16bitWords / 2 + n16bitWords % 2) > (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO))
             {
                 static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
                 commandList.clear();
