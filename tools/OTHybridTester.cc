@@ -2,7 +2,7 @@
 
 #include "OTHybridTester.h"
 
-OTHybridTester::OTHybridTester() : LinkAlignmentOT()
+OTHybridTester::OTHybridTester() : Tool()
 {
     // I think that this is where the TC interface should be initialized
     // and where the lpGBT interface should be linked if needed
@@ -220,14 +220,15 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
             clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, cSource); // 0 --> link data, 3 --> constant pattern
             // clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {,}, cSource); // 0 --> link data, 3 --> constant pattern
 
-            LinkAlignmentOT::Inherit(this);
-            LinkAlignmentOT::Initialise();
-            PhaseTuneLineEleFC7(0, 0);
-            PhaseTuneLineEleFC7(0, 1);
-            PhaseTuneLineEleFC7(0, 2);
-            //PhaseTuneLineEleFC7(0, 3);
-            PhaseTuneLineEleFC7(0, 4);
-            //PhaseTuneLineEleFC7(0, 5);
+            LinkAlignmentOT cLinkAlignment;
+            cLinkAlignment.Inherit(this);
+            cLinkAlignment.Initialise();
+            cLinkAlignment.PhaseTuneLineEleFC7(0, 0);
+            cLinkAlignment.PhaseTuneLineEleFC7(0, 1);
+            cLinkAlignment.PhaseTuneLineEleFC7(0, 2);
+            // PhaseTuneLineEleFC7(0, 3);
+            cLinkAlignment.PhaseTuneLineEleFC7(0, 4);
+            // PhaseTuneLineEleFC7(0, 5);
         }
     }
     for(auto cBoard: *fDetectorContainer)
