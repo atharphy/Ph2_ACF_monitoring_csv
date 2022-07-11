@@ -143,7 +143,7 @@ void SystemController::readFile(std::vector<uint32_t>& pVec, uint32_t pNWords32)
         pVec = fFileHandler->readFileChunks(pNWords32);
 }
 
-void SystemController::InitializeHw(const std::string& pFilename, std::ostream& os, bool pIsFile, bool streamData, uint16_t DQMportNumber, uint16_t monitorDQMportNumber)
+void SystemController::InitializeHw(const std::string& pFilename, std::ostream& os, bool streamData, uint16_t DQMportNumber, uint16_t monitorDQMportNumber)
 {
     fDQMStreamerEnabled        = streamData;
     fMonitorDQMStreamerEnabled = streamData;
@@ -158,7 +158,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     }
 
     fDetectorContainer = new DetectorContainer;
-    this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os, pIsFile);
+    this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os);
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
     fBeBoardInterface->setBoard(0);
 
@@ -308,7 +308,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     if(fWriteHandlerEnabled == true) this->initializeWriteFileHandler();
 
     DetectorMonitorConfig theDetectorMonitorConfig;
-    std::string           monitoringType = fParser.parseMonitor(pFilename, theDetectorMonitorConfig, os, pIsFile);
+    std::string           monitoringType = fParser.parseMonitor(pFilename, theDetectorMonitorConfig, os);
 
     if(monitoringType != "None")
     {
@@ -379,7 +379,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     }
 }
 
-void SystemController::InitializeSettings(const std::string& pFilename, std::ostream& os, bool pIsFile) { this->fParser.parseSettings(pFilename, fSettingsMap, os, pIsFile); }
+void SystemController::InitializeSettings(const std::string& pFilename, std::ostream& os) { this->fParser.parseSettings(pFilename, fSettingsMap, os); }
 
 void SystemController::ReadSystemMonitor(BeBoard* pBoard, const std::vector<std::string>& args) const
 {
@@ -1085,7 +1085,7 @@ void SystemController::Configure(std::string cHWFile, bool enableStream, uint16_
 {
     std::stringstream outp;
 
-    InitializeHw(cHWFile, outp, true, enableStream, DQMportNumber);
+    InitializeHw(cHWFile, outp, enableStream, DQMportNumber);
     InitializeSettings(cHWFile, outp);
     std::cout << outp.str() << std::endl;
     ConfigureHw();

@@ -29,7 +29,6 @@ void Physics2S::ConfigureCalibration()
     // ###########################################
     // # Initialize directory and data container #
     // ###########################################
-    this->CreateResultDirectory(RESULTDIR, false, false);
 
     ContainerFactory::copyAndInitChannel<Occupancy>(*fDetectorContainer, fOccupancyContainer);
     ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, fStubContainer);

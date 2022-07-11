@@ -91,7 +91,6 @@ void PSPhysics::ConfigureCalibration()
     // ###########################################
     // # Initialize directory and data container #
     // ###########################################
-    this->CreateResultDirectory(RESULTDIR, false, false);
     // ContainerFactory::copyAndInitStructure<PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS_PS>>(*fDetectorContainer, fPSSyncContainer);
 
     ContainerFactory::copyAndInitChannel<float>(*fDetectorContainer, fOccupancyContainer);

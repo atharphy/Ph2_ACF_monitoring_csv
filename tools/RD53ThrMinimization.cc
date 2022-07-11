@@ -100,6 +100,7 @@ void ThrMinimization::localConfigure(const std::string& fileRes_, int currentRun
         LOG(INFO) << GREEN << "[ThrMinimization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     ThrMinimization::ConfigureCalibration();
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "ThrMinimization");
     ThrMinimization::initializeFiles(fileRes_, currentRun);
 }
 

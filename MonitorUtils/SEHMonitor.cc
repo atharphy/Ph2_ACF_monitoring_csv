@@ -31,8 +31,7 @@ SEHMonitor::SEHMonitor(const Ph2_System::SystemController* theSystemController, 
 
 #ifdef __USE_ROOT__
     fMonitorPlotDQMSEH = new MonitorDQMPlotSEH();
-    fMonitorDQMPlotSEH = static_cast<MonitorDQMPlotSEH*>(fMonitorPlotDQMSEH);
-    fMonitorDQMPlotSEH->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
+    fMonitorPlotDQMSEH->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
     fMonitorPlotDQM    = new MonitorDQMPlotCBC();
     fMonitorDQMPlotCBC = static_cast<MonitorDQMPlotCBC*>(fMonitorPlotDQM);
     fMonitorDQMPlotCBC->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
@@ -41,8 +40,18 @@ SEHMonitor::SEHMonitor(const Ph2_System::SystemController* theSystemController, 
 // Maybe not ideal here (but needed to avoid memory leak)?? Could be moved to ~DetectorMonitor() if fPowerSupplyClient is also used for other devices?
 SEHMonitor::~SEHMonitor()
 {
-    delete fPowerSupplyClient;
-    fPowerSupplyClient = nullptr;
+    if(fPowerSupplyClient!=nullptr)
+    {
+        delete fPowerSupplyClient;
+        fPowerSupplyClient = nullptr;
+    }
+#ifdef __USE_ROOT__
+    if(fMonitorPlotDQMSEH!=nullptr)
+    {
+        delete fMonitorPlotDQMSEH;
+        fMonitorPlotDQMSEH = nullptr;
+    }
+#endif
 }
 
 void SEHMonitor::runMonitor()
@@ -105,7 +114,7 @@ void SEHMonitor::runPowerSupplyMonitor(std::string registerName)
     thePowerSupplyContainer.getSummary<std::tuple<time_t, float>>() = std::make_tuple(getTimeStamp(), cValue);
 
 #ifdef __USE_ROOT__
-    fMonitorDQMPlotSEH->fillPowerSupplyPlots(thePowerSupplyContainer, registerName);
+    fMonitorPlotDQMSEH->fillPowerSupplyPlots(thePowerSupplyContainer, registerName);
 #else
     auto thePowerSupplyStreamer = prepareBoardContainerStreamer<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, float>, EmptyContainer, CharArray>("PowerSupply");
     thePowerSupplyStreamer->setHeaderElement(CharArray(registerName));
@@ -133,7 +142,7 @@ void SEHMonitor::runTestCardMonitor(std::string registerName)
     theTestCardContainer.getSummary<std::tuple<time_t, float>>() = std::make_tuple(getTimeStamp(), cValue);
 
 #ifdef __USE_ROOT__
-    fMonitorDQMPlotSEH->fillTestCardPlots(theTestCardContainer, registerName);
+    fMonitorPlotDQMSEH->fillTestCardPlots(theTestCardContainer, registerName);
 #else
     auto theTestCardStreamer = prepareBoardContainerStreamer<EmptyContainer, EmptyContainer, EmptyContainer, std::tuple<time_t, float>, EmptyContainer, CharArray>("TestCard");
     theTestCardStreamer->setHeaderElement(CharArray(registerName));

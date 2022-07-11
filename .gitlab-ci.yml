@@ -185,6 +185,7 @@ run:2S:
       - Hybrid.root
       - ci_tools/plot_hist.py
       - coreAnalysis2S.log
+      - MonitorResults/MonitorDQM*.root
     expire_in: 1 week
 
 

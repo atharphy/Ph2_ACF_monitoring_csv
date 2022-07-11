@@ -170,7 +170,21 @@ void BeamTestCheck::ValidateTP()
     // validate
     Validate();
 }
-void BeamTestCheck::ValidateRaw() { Validate(); }
+void BeamTestCheck::ValidateRaw() {
+    for(auto cBoard: *fDetectorContainer)
+    {
+        fBeBoardInterface->setBoard(cBoard->getId());
+        const std::vector<Event*>& cEvents              = this->GetEvents();
+        BeBoardRegMap cRegMap         = cBoard->getBeBoardRegMap();
+        uint32_t      cTriggerMult    = cRegMap["fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity"];
+        for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++) { Count(cEvents, cTriggerId, 1); }
+    }
+    #ifdef __USE_ROOT__
+        fDQMHistogrammer.fillHitMaps(fHitMap, fStubMap, fHitContainerTDC);
+        // fDQMHistogrammer.fillBendPlots(fBendMap);
+        // fDQMHistogrammer.fillCountPlots(fEventSubSet, fStubSubSet);
+    #endif
+}
 void BeamTestCheck::Validate()
 {
     // validate
@@ -2035,9 +2049,10 @@ void BeamTestCheck::PrepareForExternal(BeBoard* pBoard)
 
     // stop triggers
     fBeBoardInterface->Stop(pBoard);
+    // update registers 
+    UpdateFromRegMap(pBoard);
     // send a ReSync
     fBeBoardInterface->ChipReSync(pBoard);
-    UpdateFromRegMap(pBoard);
 }
 void BeamTestCheck::Stop() {}
 
