@@ -168,7 +168,7 @@
       <node id="ic_nb_of_words_to_read" mask="0xFFFF0000"     permission="rw"      description="nb of words to read through lpgbt sc" />
     </node>
 
-    <node id="lpgbt_mappping"        address="0x00000018"     permission="rw"      description="Configuration lpGBT link mapping">
+    <node id="lpgbt_mapping"         address="0x00000018"     permission="rw"      description="Configuration lpGBT link mapping">
       <node id="update_downlink"        mask="0x00000001"     permission="rw"      description="Update mapping for downlink groups/channels" />
       <node id="update_uplink"          mask="0x00000002"     permission="rw"      description="Update mapping for downlink groups/channels" />
       <node id="module_map_id"          mask="0x0000007C"     permission="rw"      description="" />

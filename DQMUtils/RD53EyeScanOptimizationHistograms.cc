@@ -1,3 +1,12 @@
+/*!
+  \file                  RD53EyeScanOptimizationHistograms.cc
+  \brief                 Implementation of EyeScan optimization histograms
+  \author                Sergio Sanchez CRUZ
+  \version               1.0
+  \date                  28/06/22
+  Support:               email to sergio.sanchez.cruz@cern.ch
+*/
+
 #include "RD53EyeScanOptimizationHistograms.h"
 #include "../Utils/ChipContainerStream.h"
 

@@ -1040,21 +1040,21 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(const Chip* pChip, const uint32_t
 
 void RD53FWInterface::SetDownLinkMapping(uint8_t TxLink, uint8_t TxGroup, uint8_t TxModuleId)
 {
-    RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_mappping.downlink_map_id", TxLink},
-                               {"user.ctrl_regs.lpgbt_mappping.downgroup_map_id", TxGroup},
-                               {"user.ctrl_regs.lpgbt_mappping.module_map_id", TxModuleId},
-                               {"user.ctrl_regs.lpgbt_mappping.update_downlink", 1},
-                               {"user.ctrl_regs.lpgbt_mappping.update_downlink", 0}});
+    RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_mapping.downlink_map_id", TxLink},
+                               {"user.ctrl_regs.lpgbt_mapping.downgroup_map_id", TxGroup},
+                               {"user.ctrl_regs.lpgbt_mapping.module_map_id", TxModuleId},
+                               {"user.ctrl_regs.lpgbt_mapping.update_downlink", 1},
+                               {"user.ctrl_regs.lpgbt_mapping.update_downlink", 0}});
 }
 
 void RD53FWInterface::SetUpLinkMapping(uint8_t RxLink, uint8_t RxGroup, uint8_t RxModuleId, uint8_t lane)
 {
-    RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_mappping.uplink_map_id", RxLink},
-                               {"user.ctrl_regs.lpgbt_mappping.upgroup_map_id", RxGroup},
-                               {"user.ctrl_regs.lpgbt_mappping.module_map_id", RxModuleId},
-                               {"user.ctrl_regs.lpgbt_mappping.chip_map_id", lane},
-                               {"user.ctrl_regs.lpgbt_mappping.update_uplink", 1},
-                               {"user.ctrl_regs.lpgbt_mappping.update_uplink", 0}});
+    RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_mapping.uplink_map_id", RxLink},
+                               {"user.ctrl_regs.lpgbt_mapping.upgroup_map_id", RxGroup},
+                               {"user.ctrl_regs.lpgbt_mapping.module_map_id", RxModuleId},
+                               {"user.ctrl_regs.lpgbt_mapping.chip_map_id", lane},
+                               {"user.ctrl_regs.lpgbt_mapping.update_uplink", 1},
+                               {"user.ctrl_regs.lpgbt_mapping.update_uplink", 0}});
 }
 
 void RD53FWInterface::selectLink(const uint8_t pLinkId, uint32_t pWait_ms) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.active_link", pLinkId); }
