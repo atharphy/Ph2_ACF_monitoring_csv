@@ -33,39 +33,69 @@ void D19clpGBTSlowControlWorkerInterface::SelectLink(uint8_t pLinkId)
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
 }
-
-std::vector<uint32_t> D19clpGBTSlowControlWorkerInterface::EncodeCommand(uint8_t pFunctionId, Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerify)
+std::vector<uint32_t> D19clpGBTSlowControlWorkerInterface::EncodeCommand(uint8_t pFunctionId, Ph2_HwDescription::Chip* pChip, const std::vector<Ph2_HwDescription::ChipRegItem>& pRegisterItems, bool pVerify)
 {
     std::vector<uint32_t> cCommand;
     uint8_t               cWorkerId = LpGBTSlowControlWorker::BASE_ID + pChip->getOpticalGroupId();
     uint8_t               cChipId   = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : (pChip->getId() % 8);
     uint8_t               cChipCode = pChip->getChipCode();
     uint8_t               cMasterId = pChip->getMasterId();
+    uint16_t              cNWords = pRegisterItems.size();
+
+    //fill command header (if needed)
     switch(pFunctionId)
     {
-    case LpGBTSlowControlWorker::SINGLE_READ_IC: cCommand.push_back(cWorkerId << 24 | pFunctionId << 16 | pItem.fAddress << 0); break;
+        case LpGBTSlowControlWorker::READ_IC : 
+            cCommand.push_back(cWorkerId << 24 | pFunctionId << 16 | cNWords << 0);
+            break;
 
-    case LpGBTSlowControlWorker::SINGLE_WRITE_IC:
-        cCommand.push_back(cWorkerId << 24 | pFunctionId << 16 | pItem.fAddress << 0);
-        cCommand.push_back(pItem.fValue << 0);
-        break;
+        case LpGBTSlowControlWorker::WRITE_IC : 
+            cCommand.push_back(cWorkerId << 24 | pFunctionId << 16 | cNWords << 0);
+            break;
 
-    case LpGBTSlowControlWorker::SINGLE_READ_FE:
-        cCommand.push_back(cWorkerId << 24 | pFunctionId << 16 | cMasterId << 6 | cChipCode << 3 | cChipId << 0);
-        cCommand.push_back(pItem.fAddress << 0);
-        break;
+        case LpGBTSlowControlWorker::READ_FE : 
+            cCommand.push_back(cWorkerId << 24 | pFunctionId << 16 | (cNWords + 1) << 0);
+            cCommand.push_back(cChipCode << 29 | cChipId << 26 | cMasterId << 24 | pVerify << 23);
+            break;
 
-    case LpGBTSlowControlWorker::SINGLE_WRITE_FE:
-        cCommand.push_back(cWorkerId << 24 | pFunctionId << 16 | pVerify << 8 | cMasterId << 6 | cChipCode << 3 | cChipId << 0);
-        cCommand.push_back(pItem.fValue << 16 | pItem.fAddress << 0);
-        break;
-    default:
-        LOG(ERROR) << "D19clpGBTSlowControlWorkerInterface::EncodeCommand : LpGBT-SC Worker fuction doesn't exist" << RESET;
-        throw std::runtime_error("D19clpGBTSlowControlWorkerInterface::EncodeCommand failure");
+        case LpGBTSlowControlWorker::WRITE_FE: 
+            cCommand.push_back(cWorkerId << 24 | pFunctionId << 16 | (cNWords + 1) << 0);
+            cCommand.push_back(cChipCode << 29 | cChipId << 26 | cMasterId << 24 | pVerify << 23);
+            break;
+
+        default:
+            LOG(ERROR) << "D19clpGBTSlowControlWorkerInterface::EncodeCommand Header : LpGBT-SC Worker fuction doesn't exist" << RESET;
+            throw std::runtime_error("D19clpGBTSlowControlWorkerInterface::EncodeCommand failure");
+    }
+
+    //fill command payload
+    for(auto& cRegItem : pRegisterItems)
+    {
+        switch(pFunctionId)
+        {
+        case LpGBTSlowControlWorker::READ_IC: 
+            cCommand.push_back(cRegItem.fAddress << 16); 
+            break;
+
+        case LpGBTSlowControlWorker::WRITE_IC:
+            cCommand.push_back(cRegItem.fAddress << 16 | cRegItem.fValue << 8);
+            break;
+
+        case LpGBTSlowControlWorker::READ_FE:
+            cCommand.push_back(cRegItem.fAddress << 16);
+            break;
+
+        case LpGBTSlowControlWorker::WRITE_FE:
+            cCommand.push_back(cRegItem.fAddress << 16 | cRegItem.fValue << 8);
+            break;
+
+        default:
+            LOG(ERROR) << "D19clpGBTSlowControlWorkerInterface::EncodeCommand Payload : LpGBT-SC Worker fuction doesn't exist" << RESET;
+            throw std::runtime_error("D19clpGBTSlowControlWorkerInterface::EncodeCommand failure");
+        }
     }
     return cCommand;
 }
-
 void D19clpGBTSlowControlWorkerInterface::PrintStateFSM()
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
@@ -88,12 +118,12 @@ bool D19clpGBTSlowControlWorkerInterface::IsDone(uint8_t pFunctionId)
     uint32_t                              cStatus       = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
     bool                                  cWorkerDone   = (cStatus & 0xFF) == 1;
     bool                                  cFunctionDone = false;
-    if((pFunctionId == LpGBTSlowControlWorker::SINGLE_READ_IC) || (pFunctionId == LpGBTSlowControlWorker::SINGLE_WRITE_IC)) { cFunctionDone = ((cStatus & (0xFF << 8)) >> 8) == 1; }
+    if((pFunctionId == LpGBTSlowControlWorker::READ_IC) || (pFunctionId == LpGBTSlowControlWorker::WRITE_IC)) { cFunctionDone = ((cStatus & (0xFF << 8)) >> 8) == 1; }
     else if((pFunctionId == LpGBTSlowControlWorker::SINGLE_BYTE_READ_I2C) || (pFunctionId == LpGBTSlowControlWorker::MULTI_BYTE_WRITE_I2C))
     {
         cFunctionDone = ((cStatus & (0xFF << 16)) >> 16) == 1;
     }
-    else if((pFunctionId == LpGBTSlowControlWorker::SINGLE_READ_FE) || (pFunctionId == LpGBTSlowControlWorker::SINGLE_WRITE_FE))
+    else if((pFunctionId == LpGBTSlowControlWorker::READ_FE) || (pFunctionId == LpGBTSlowControlWorker::WRITE_FE))
     {
         cFunctionDone = ((cStatus & (0xFF << 24)) >> 24) == 1;
     }
@@ -110,12 +140,12 @@ uint8_t D19clpGBTSlowControlWorkerInterface::GetTryCntr(uint8_t pFunctionId)
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     uint32_t                              cAllCntr = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters");
     uint8_t                               cCntr    = 255;
-    if((pFunctionId == LpGBTSlowControlWorker::SINGLE_READ_IC) || (pFunctionId == LpGBTSlowControlWorker::SINGLE_WRITE_IC)) { cCntr = (cAllCntr & (0xFF << 0)) >> 0; }
+    if((pFunctionId == LpGBTSlowControlWorker::READ_IC) || (pFunctionId == LpGBTSlowControlWorker::WRITE_IC)) { cCntr = (cAllCntr & (0xFF << 0)) >> 0; }
     else if((pFunctionId == LpGBTSlowControlWorker::SINGLE_BYTE_READ_I2C) || (pFunctionId == LpGBTSlowControlWorker::MULTI_BYTE_WRITE_I2C))
     {
         cCntr = (cAllCntr & (0xFF << 8)) >> 8;
     }
-    else if((pFunctionId == LpGBTSlowControlWorker::SINGLE_READ_FE) || (pFunctionId == LpGBTSlowControlWorker::SINGLE_WRITE_FE))
+    else if((pFunctionId == LpGBTSlowControlWorker::READ_FE) || (pFunctionId == LpGBTSlowControlWorker::WRITE_FE))
     {
         cCntr = (cAllCntr & (0xFF << 16)) >> 16;
     }

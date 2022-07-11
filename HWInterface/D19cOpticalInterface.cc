@@ -20,134 +20,175 @@ D19cOpticalInterface::~D19cOpticalInterface() {}
 // # Chip Register read/write #
 // #########################################
 
-bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem)
+bool D19cOpticalInterface::Read(Chip* pChip, std::vector<ChipRegItem>& pRegisterItems)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     flpGBTSlowControlWorkerInterface->SelectLink(pChip->getOpticalGroupId());
-    uint8_t cFunctionId = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? LpGBTSlowControlWorker::SINGLE_READ_IC : LpGBTSlowControlWorker::SINGLE_READ_FE;
-    auto    cCommand    = flpGBTSlowControlWorkerInterface->EncodeCommand(cFunctionId, pChip, pItem);
-    flpGBTSlowControlWorkerInterface->WriteCommand(cCommand);
-    int cWaitCounter = 1000;
-    while(!flpGBTSlowControlWorkerInterface->IsDone(cFunctionId) && (cWaitCounter != 0))
+    uint8_t cFunctionId = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? LpGBTSlowControlWorker::READ_IC : LpGBTSlowControlWorker::READ_FE;
+    std::vector<ChipRegItem> cRegisterBlock;
+    bool cSuccess = true;
+    int cBlockId = 0;
+    for(std::vector<ChipRegItem>::iterator cRegItemIter = pRegisterItems.begin(); cRegItemIter < pRegisterItems.end(); cRegItemIter++)
     {
-        cWaitCounter--;
-        continue;
+        cRegisterBlock.push_back(*cRegItemIter);
+        if(cRegisterBlock.size() == 200 || cRegItemIter == pRegisterItems.end() - 1)
+        {
+            auto    cCommand    = flpGBTSlowControlWorkerInterface->EncodeCommand(cFunctionId, pChip, cRegisterBlock);
+            flpGBTSlowControlWorkerInterface->WriteCommand(cCommand);
+            int cWaitCounter = 100000;
+            while(!flpGBTSlowControlWorkerInterface->IsDone(cFunctionId) && (cWaitCounter != 0))
+            {
+                cWaitCounter--;
+                continue;
+            }
+            if(cWaitCounter == 0)
+            {
+                flpGBTSlowControlWorkerInterface->PrintStateFSM();
+                flpGBTSlowControlWorkerInterface->Reset();
+                return false;
+            }
+            uint8_t cTryCntr = flpGBTSlowControlWorkerInterface->GetTryCntr(cFunctionId);
+            if(cTryCntr > 0)
+            {
+                uint8_t cMaxRetry = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? fConfiguration.fMaxRetryIC : fConfiguration.fMaxRetryFE;
+                LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Read : Tried " << +cTryCntr << "/" << +cMaxRetry << " before success" << RESET;
+            }
+            auto    cReplies     = flpGBTSlowControlWorkerInterface->ReadReply(cRegisterBlock.size() + 1); //N words + 1 header
+            for(size_t cReplyIdx = 0; cReplyIdx < cReplies.size(); cReplyIdx++)
+            {
+		if(cReplyIdx == 0) continue; //skip header
+                uint8_t cErrorCode = (cReplies[cReplyIdx] & (0xFF << 8)) >> 8;
+                uint8_t cStatusI2C = (cReplies[cReplyIdx] & (0xFF << 0)) >> 0;
+                if(cErrorCode != 0)
+                {
+                    if(pChip->getFrontEndType() == FrontEndType::LpGBT)
+                        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Read -- Error Code : " << +cErrorCode << RESET;
+                    else
+                        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Read -- Error Code : " << +cErrorCode << " -- I2C Status : " << +cStatusI2C << RESET;
+                    LOG(ERROR) << BOLDRED << "Chip code : " << +pChip->getChipCode() << " -- Chip Id : " << +pChip->getId() << " -- Register address 0x" << std::hex << +cRegisterBlock.at(cReplyIdx - 1).fAddress << std::dec << RESET;
+                    cSuccess &= false;
+                }
+                cRegisterBlock.at(cReplyIdx - 1).fValue = (cReplies[cReplyIdx] & (0xFF << 0)) >> 0;
+                pRegisterItems.at(cBlockId*200 + cReplyIdx - 1).fValue = cRegisterBlock.at(cReplyIdx - 1).fValue;
+            }
+            cRegisterBlock.clear();
+            cBlockId++;
+        }
     }
-    if(cWaitCounter == 0)
-    {
-        flpGBTSlowControlWorkerInterface->PrintStateFSM();
-        flpGBTSlowControlWorkerInterface->Reset();
-        return false;
-    }
-    uint8_t cTryCntr = flpGBTSlowControlWorkerInterface->GetTryCntr(cFunctionId);
-    if(cTryCntr > 0)
-    {
-        uint8_t cMaxRetry = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? fConfiguration.fMaxRetryIC : fConfiguration.fMaxRetryFE;
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleRead : Tried " << +cTryCntr << "/" << +cMaxRetry << " before success" << RESET;
-    }
-    auto    cReply     = flpGBTSlowControlWorkerInterface->ReadReply(1);
-    uint8_t cErrorCode = (cReply[0] & (0xFF << 8)) >> 8;
-    uint8_t cStatusI2C = (cReply[0] & (0xFF << 0)) >> 0;
-    if(cErrorCode != 0)
-    {
-        if(pChip->getFrontEndType() == FrontEndType::LpGBT)
-            LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleRead -- Error Code : " << +cErrorCode << RESET;
-        else
-            LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleRead -- Error Code : " << +cErrorCode << " -- I2C Status : " << +cStatusI2C << RESET;
-        LOG(ERROR) << BOLDRED << "Chip code : " << +pChip->getChipCode() << " -- Chip Id : " << +pChip->getId() << " -- Register address 0x" << std::hex << +pItem.fAddress << std::dec << RESET;
-        return false;
-    }
-    pItem.fValue = (cReply[0] & (0xFF << 0)) >> 0;
-    return true;
+    return cSuccess;
 }
 
-bool D19cOpticalInterface::WriteChipRegister(Chip* pChip, ChipRegItem& pItem, bool pVerify)
+bool D19cOpticalInterface::Write(Chip* pChip, std::vector<ChipRegItem>& pRegisterItems, bool pVerify)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     flpGBTSlowControlWorkerInterface->SelectLink(pChip->getOpticalGroupId());
-    uint8_t cFunctionId = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? LpGBTSlowControlWorker::SINGLE_WRITE_IC : LpGBTSlowControlWorker::SINGLE_WRITE_FE;
-    auto    cCommand    = flpGBTSlowControlWorkerInterface->EncodeCommand(cFunctionId, pChip, pItem, pVerify);
-    flpGBTSlowControlWorkerInterface->WriteCommand(cCommand);
-    int cWaitCounter = 1000;
-    while(!flpGBTSlowControlWorkerInterface->IsDone(cFunctionId) && (cWaitCounter != 0))
+    uint8_t cFunctionId = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? LpGBTSlowControlWorker::WRITE_IC : LpGBTSlowControlWorker::WRITE_FE;
+    std::vector<ChipRegItem> cRegisterBlock;
+    bool cSuccess = true;
+    int cBlockId = 0;
+    for(std::vector<ChipRegItem>::iterator cRegItemIter = pRegisterItems.begin(); cRegItemIter < pRegisterItems.end(); cRegItemIter++)
     {
-        cWaitCounter--;
-        continue;
-    }
-    if(cWaitCounter == 0)
-    {
-        flpGBTSlowControlWorkerInterface->PrintStateFSM();
-        flpGBTSlowControlWorkerInterface->Reset();
-        return false;
-    }
-    uint8_t cTryCntr = flpGBTSlowControlWorkerInterface->GetTryCntr(cFunctionId);
-    if(cTryCntr > 0)
-    {
-        uint8_t cMaxRetry = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? fConfiguration.fMaxRetryIC : fConfiguration.fMaxRetryFE;
-        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite : Tried " << +cTryCntr << "/" << +cMaxRetry << " before success" << RESET;
-    }
-    auto    cReply     = flpGBTSlowControlWorkerInterface->ReadReply(1);
-    uint8_t cErrorCode = (cReply[0] & (0xFF << 8)) >> 8;
-    uint8_t cStatusI2C = (cReply[0] & (0xFF << 0)) >> 0;
-    if(cErrorCode != 0)
-    {
-        if(pChip->getFrontEndType() == FrontEndType::LpGBT)
-            LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite -- Error Code : " << +cErrorCode << RESET;
-        else
-            LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite -- Error Code : " << +cErrorCode << " -- I2C Status : " << +cStatusI2C << RESET;
-        LOG(ERROR) << BOLDRED << "Chip code : " << +pChip->getChipCode() << " -- Chip Id : " << +pChip->getId() << " -- Register address 0x" << std::hex << +pItem.fAddress << std::dec << RESET;
-        return false;
-    }
-    uint8_t cReadBack = (cReply[0] & (0xFF << 0)) >> 0;
-    if(pVerify)
-    {
-        if(cReadBack != pItem.fValue)
+        cRegisterBlock.push_back(*cRegItemIter);
+        if(cRegisterBlock.size() == 200 || cRegItemIter == pRegisterItems.end() - 1)
         {
-            LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite : Wrong value read back" << RESET;
-            return false;
+            auto    cCommand    = flpGBTSlowControlWorkerInterface->EncodeCommand(cFunctionId, pChip, cRegisterBlock, pVerify);
+            flpGBTSlowControlWorkerInterface->WriteCommand(cCommand);
+            int cWaitCounter = 100000;
+            while(!flpGBTSlowControlWorkerInterface->IsDone(cFunctionId) && (cWaitCounter != 0))
+            {
+                cWaitCounter--;
+                continue;
+            }
+            if(cWaitCounter == 0)
+            {
+                flpGBTSlowControlWorkerInterface->PrintStateFSM();
+                flpGBTSlowControlWorkerInterface->Reset();
+                return false;
+            }
+            uint8_t cTryCntr = flpGBTSlowControlWorkerInterface->GetTryCntr(cFunctionId);
+            if(cTryCntr > 0)
+            {
+                uint8_t cMaxRetry = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? fConfiguration.fMaxRetryIC : fConfiguration.fMaxRetryFE;
+                LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Write : Tried " << +cTryCntr << "/" << +cMaxRetry << " before success" << RESET;
+            }
+            auto    cReplies     = flpGBTSlowControlWorkerInterface->ReadReply(cRegisterBlock.size() + 1); //N words + 1 header
+            for(size_t cReplyIdx = 0; cReplyIdx < cReplies.size(); cReplyIdx++)
+            {
+		if(cReplyIdx == 0) continue; //skip header
+                uint8_t cErrorCode = (cReplies[cReplyIdx] & (0xFF << 8)) >> 8;
+                uint8_t cStatusI2C = (cReplies[cReplyIdx] & (0xFF << 0)) >> 0;
+                if(cErrorCode != 0)
+                {
+                    if(pChip->getFrontEndType() == FrontEndType::LpGBT)
+                        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Write -- Error Code : " << +cErrorCode << RESET;
+                    else
+                        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Write -- Error Code : " << +cErrorCode << " -- I2C Status : " << +cStatusI2C << RESET;
+                    LOG(ERROR) << BOLDRED << "Chip code : " << +pChip->getChipCode() << " -- Chip Id : " << +pChip->getId() << " -- Register address 0x" << std::hex << +cRegisterBlock.at(cReplyIdx - 1).fAddress << std::dec << RESET;
+                    cSuccess &= false;
+                }
+                uint8_t cReadBack = (cReplies[cReplyIdx] & (0xFF << 0)) >> 0;
+                if(pVerify)
+                {
+                    if(cReadBack != cRegisterBlock.at(cReplyIdx - 1).fValue)
+                    {
+                        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Write : Wrong value read back" << RESET;
+                        cSuccess &= false;
+                    }
+                    cRegisterBlock.at(cReplyIdx - 1).fValue = cReadBack;
+                    pRegisterItems.at(cBlockId*200 + cReplyIdx - 1).fValue = cRegisterBlock.at(cReplyIdx - 1).fValue;
+                }
+            }
+            cRegisterBlock.clear();
+            cBlockId++;
         }
-        pItem.fValue = cReadBack;
     }
-    return true;
+    return cSuccess;
 }
 
 bool D19cOpticalInterface::SingleWrite(Chip* pChip, ChipRegItem& pItem)
 {
     pChip->UpdateModifiedRegMap(pItem);
-    return WriteChipRegister(pChip, pItem, false);
+    std::vector<ChipRegItem> cRegisterItem = {pItem};
+    bool cSuccess = Write(pChip, cRegisterItem, false);
+    pItem.fValue = cRegisterItem.at(0).fValue;
+    return cSuccess;
+}
+
+bool D19cOpticalInterface::SingleRead(Chip* pChip, ChipRegItem& pItem)
+{
+    std::vector<ChipRegItem> cRegisterItem = {pItem};
+    bool cSuccess = Read(pChip, cRegisterItem);
+    pItem.fValue = cRegisterItem.at(0).fValue;
+    return cSuccess;
 }
 
 // for now this is just looping over single read
 bool D19cOpticalInterface::MultiRead(Chip* pChip, std::vector<ChipRegItem>& pRegisterItems)
 {
-    bool cSuccess = true;
-    for(auto& cRegItem: pRegisterItems) { cSuccess = cSuccess && SingleRead(pChip, cRegItem); }
-    return cSuccess;
+    return Read(pChip, pRegisterItems);
 }
 
 // for now this is just looping over single write
 bool D19cOpticalInterface::MultiWrite(Chip* pChip, std::vector<ChipRegItem>& pRegisterItems)
 {
-    bool cSuccess = true;
-    for(auto cRegItem: pRegisterItems) { cSuccess = cSuccess && SingleWrite(pChip, cRegItem); }
-    return cSuccess;
+    return Write(pChip, pRegisterItems, false);
 }
 
 // for now this is just a write followed by a read
 bool D19cOpticalInterface::SingleWriteRead(Chip* pChip, ChipRegItem& pItem)
 {
     pChip->UpdateModifiedRegMap(pItem);
-    return WriteChipRegister(pChip, pItem, true);
-}
-
-// for now this is just a loop of WriteRead
-bool D19cOpticalInterface::MultiWriteRead(Chip* pChip, std::vector<ChipRegItem>& pWriteRegs)
-{
-    bool cSuccess = true;
-    for(auto cWriteReg: pWriteRegs) cSuccess = cSuccess && SingleWriteRead(pChip, cWriteReg);
+    std::vector<ChipRegItem> cRegisterItem = {pItem};
+    bool cSuccess = Write(pChip, cRegisterItem, true);
+    pItem.fValue = cRegisterItem.at(0).fValue;
     return cSuccess;
 }
 
+// for now this is just a loop of WriteRead
+bool D19cOpticalInterface::MultiWriteRead(Chip* pChip, std::vector<ChipRegItem>& pRegisterItems)
+{
+    return Write(pChip, pRegisterItems, true);
+}
 bool D19cOpticalInterface::MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress, uint32_t pSlaveData)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);

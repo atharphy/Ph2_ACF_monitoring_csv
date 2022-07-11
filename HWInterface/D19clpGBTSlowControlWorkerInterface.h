@@ -6,21 +6,23 @@
 namespace LpGBTSlowControlWorker
 {
 const uint8_t BASE_ID              = 16;
-const uint8_t SINGLE_READ_IC       = 2;
-const uint8_t SINGLE_WRITE_IC      = 3;
+const uint8_t READ_IC       = 2;
+const uint8_t WRITE_IC      = 3;
 const uint8_t SINGLE_BYTE_READ_I2C = 4;
 const uint8_t MULTI_BYTE_WRITE_I2C = 5;
-const uint8_t SINGLE_READ_FE       = 6;
-const uint8_t SINGLE_WRITE_FE      = 7;
+const uint8_t READ_FE       = 6;
+const uint8_t WRITE_FE      = 7;
 
 const std::map<int, std::string> WORKER_FSM_STATE_MAP{{0, "UNDEFINED"},
                                                       {1, "IDLE"},
-                                                      {2, "GET_COMMAND_PAYLOAD0"},
-                                                      {3, "GET_FUNCTION_ARG0"},
-                                                      {4, "GET_COMMAND_PAYLOAD1"},
-                                                      {5, "GET_FUNCTION_ARG1"},
-                                                      {6, "START_FUNCTION"},
-                                                      {7, "FORWARD_REPLY"}};
+                                                      {2, "GET_COMMAND_HEADER"},
+                                                      {3, "REQ_N_WORDS"},
+                                                      {4, "GET_FUNCTION_HEADER"},
+                                                      {5, "FORWARD_REPLY_HEADER"},
+                                                      {6, "REQ_FUNCTION_ARG"},
+                                                      {7, "GET_FUNCTION_ARG"},
+                                                      {8, "PERFORM_TRANSACTION"},
+                                                      {9, "FORWARD_REPLY_PAYLOADN"}};
 
 const std::map<int, std::string> IC_FSM_STATE_MAP{{0, "UNDEFINED"},
                                                   {1, "IDLE"},
@@ -77,7 +79,7 @@ class D19clpGBTSlowControlWorkerInterface : public D19cCommandProcessorInterface
 
   public:
     void                  Reset();
-    std::vector<uint32_t> EncodeCommand(uint8_t pFunctionId, Ph2_HwDescription::Chip* pChip, Ph2_HwDescription::ChipRegItem& pItem, bool pVerify = false);
+    std::vector<uint32_t> EncodeCommand(uint8_t pFunctionId, Ph2_HwDescription::Chip* pChip, const std::vector<Ph2_HwDescription::ChipRegItem>& pRegisterItems, bool pVerify = false);
     bool                  IsDone(uint8_t pFunctionId);
     uint8_t               GetTryCntr(uint8_t pFunctionId);
     void                  PrintStateFSM();

@@ -33,6 +33,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     do
     {
         cPUSMState = GetPUSMStatus(pChip);
+        LOG(INFO) << "PUSM State : " << +cPUSMState << RESET;
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         cIter++;
     } while((cPUSMState < revertedPUSMStatusMap["PAUSE_FOR_DLL_CONFIG"]) && (cIter < cMaxIter));
