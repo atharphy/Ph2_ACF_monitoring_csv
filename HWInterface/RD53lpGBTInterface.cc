@@ -167,6 +167,8 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
 
 void RD53lpGBTInterface::SetDownLinkMapping(const OpticalGroup* pOpticalGroup)
 {
+    this->setBoard(pOpticalGroup->getBeBoardId());
+
     for(const auto cHybrid: *pOpticalGroup)
         for(const auto cChip: *cHybrid)
         {
@@ -178,6 +180,8 @@ void RD53lpGBTInterface::SetDownLinkMapping(const OpticalGroup* pOpticalGroup)
 
 void RD53lpGBTInterface::SetUpLinkMapping(const OpticalGroup* pOpticalGroup)
 {
+    this->setBoard(pOpticalGroup->getBeBoardId());
+
     for(const auto cHybrid: *pOpticalGroup)
         for(const auto cChip: *cHybrid)
         {
