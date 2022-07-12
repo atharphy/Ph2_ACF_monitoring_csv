@@ -33,61 +33,50 @@ void D19clpGBTSlowControlWorkerInterface::SelectLink(uint8_t pLinkId)
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
 }
-std::vector<uint32_t> D19clpGBTSlowControlWorkerInterface::EncodeCommand(uint8_t pFunctionId, Ph2_HwDescription::Chip* pChip, const std::vector<Ph2_HwDescription::ChipRegItem>& pRegisterItems, bool pVerify)
+std::vector<uint32_t>
+D19clpGBTSlowControlWorkerInterface::EncodeCommand(uint8_t pFunctionId, Ph2_HwDescription::Chip* pChip, const std::vector<Ph2_HwDescription::ChipRegItem>& pRegisterItems, bool pVerify)
 {
     std::vector<uint32_t> cCommand;
     uint8_t               cWorkerId = LpGBTSlowControlWorker::BASE_ID + pChip->getOpticalGroupId();
     uint8_t               cChipId   = (pChip->getFrontEndType() == FrontEndType::CIC || pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : (pChip->getId() % 8);
     uint8_t               cChipCode = pChip->getChipCode();
     uint8_t               cMasterId = pChip->getMasterId();
-    uint16_t              cNWords = pRegisterItems.size();
+    uint16_t              cNWords   = pRegisterItems.size();
 
-    //fill command header (if needed)
+    // fill command header (if needed)
     switch(pFunctionId)
     {
-        case LpGBTSlowControlWorker::READ_IC : 
-            cCommand.push_back(cWorkerId << 24 | pFunctionId << 16 | cNWords << 0);
-            break;
+    case LpGBTSlowControlWorker::READ_IC: cCommand.push_back(cWorkerId << 24 | pFunctionId << 16 | cNWords << 0); break;
 
-        case LpGBTSlowControlWorker::WRITE_IC : 
-            cCommand.push_back(cWorkerId << 24 | pFunctionId << 16 | cNWords << 0);
-            break;
+    case LpGBTSlowControlWorker::WRITE_IC: cCommand.push_back(cWorkerId << 24 | pFunctionId << 16 | cNWords << 0); break;
 
-        case LpGBTSlowControlWorker::READ_FE : 
-            cCommand.push_back(cWorkerId << 24 | pFunctionId << 16 | (cNWords + 1) << 0);
-            cCommand.push_back(cChipCode << 29 | cChipId << 26 | cMasterId << 24 | pVerify << 23);
-            break;
+    case LpGBTSlowControlWorker::READ_FE:
+        cCommand.push_back(cWorkerId << 24 | pFunctionId << 16 | (cNWords + 1) << 0);
+        cCommand.push_back(cChipCode << 29 | cChipId << 26 | cMasterId << 24 | pVerify << 23);
+        break;
 
-        case LpGBTSlowControlWorker::WRITE_FE: 
-            cCommand.push_back(cWorkerId << 24 | pFunctionId << 16 | (cNWords + 1) << 0);
-            cCommand.push_back(cChipCode << 29 | cChipId << 26 | cMasterId << 24 | pVerify << 23);
-            break;
+    case LpGBTSlowControlWorker::WRITE_FE:
+        cCommand.push_back(cWorkerId << 24 | pFunctionId << 16 | (cNWords + 1) << 0);
+        cCommand.push_back(cChipCode << 29 | cChipId << 26 | cMasterId << 24 | pVerify << 23);
+        break;
 
-        default:
-            LOG(ERROR) << "D19clpGBTSlowControlWorkerInterface::EncodeCommand Header : LpGBT-SC Worker fuction doesn't exist" << RESET;
-            throw std::runtime_error("D19clpGBTSlowControlWorkerInterface::EncodeCommand failure");
+    default:
+        LOG(ERROR) << "D19clpGBTSlowControlWorkerInterface::EncodeCommand Header : LpGBT-SC Worker fuction doesn't exist" << RESET;
+        throw std::runtime_error("D19clpGBTSlowControlWorkerInterface::EncodeCommand failure");
     }
 
-    //fill command payload
-    for(auto& cRegItem : pRegisterItems)
+    // fill command payload
+    for(auto& cRegItem: pRegisterItems)
     {
         switch(pFunctionId)
         {
-        case LpGBTSlowControlWorker::READ_IC: 
-            cCommand.push_back(cRegItem.fAddress << 16); 
-            break;
+        case LpGBTSlowControlWorker::READ_IC: cCommand.push_back(cRegItem.fAddress << 16); break;
 
-        case LpGBTSlowControlWorker::WRITE_IC:
-            cCommand.push_back(cRegItem.fAddress << 16 | cRegItem.fValue << 8);
-            break;
+        case LpGBTSlowControlWorker::WRITE_IC: cCommand.push_back(cRegItem.fAddress << 16 | cRegItem.fValue << 8); break;
 
-        case LpGBTSlowControlWorker::READ_FE:
-            cCommand.push_back(cRegItem.fAddress << 16);
-            break;
+        case LpGBTSlowControlWorker::READ_FE: cCommand.push_back(cRegItem.fAddress << 16); break;
 
-        case LpGBTSlowControlWorker::WRITE_FE:
-            cCommand.push_back(cRegItem.fAddress << 16 | cRegItem.fValue << 8);
-            break;
+        case LpGBTSlowControlWorker::WRITE_FE: cCommand.push_back(cRegItem.fAddress << 16 | cRegItem.fValue << 8); break;
 
         default:
             LOG(ERROR) << "D19clpGBTSlowControlWorkerInterface::EncodeCommand Payload : LpGBT-SC Worker fuction doesn't exist" << RESET;
