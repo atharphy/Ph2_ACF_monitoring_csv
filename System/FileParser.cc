@@ -244,7 +244,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             os << BOLDBLUE << "|\t|----" << theChild.name() << " --> File: " << BOLDYELLOW << fileName << RESET << std::endl;
             uint8_t cChipId      = theChild.attribute("Id").as_int();
             uint8_t cChipVersion = theChild.attribute("version").as_int();
-            bool cIsOptical = theChild.attribute("optical").as_int();
+            bool    cIsOptical   = theChild.attribute("optical").as_int();
             lpGBT*  thelpGBT     = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, cChipId, fileName);
             thelpGBT->setVersion(cChipVersion);
             thelpGBT->setOptical(cIsOptical);

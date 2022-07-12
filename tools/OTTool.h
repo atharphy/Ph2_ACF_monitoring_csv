@@ -26,14 +26,14 @@ struct PrintConfig
 //***************************************************
 struct boardData
 {
-  uint8_t  hit;
-  uint8_t  localX; // 0 , Bottom - 1 , Tp[ ]
-  uint16_t localY;  // 0 - closest to SEH 
-  uint32_t cEventId; 
-  uint32_t L1Id; 
-  uint8_t  cSensorId; 
-  uint8_t opticalGroupId; 
-  uint8_t boardId; 
+    uint8_t  hit;
+    uint8_t  localX; // 0 , Bottom - 1 , Tp[ ]
+    uint16_t localY; // 0 - closest to SEH
+    uint32_t cEventId;
+    uint32_t L1Id;
+    uint8_t  cSensorId;
+    uint8_t  opticalGroupId;
+    uint8_t  boardId;
 };
 
 class OTTool : public Tool
@@ -46,7 +46,7 @@ class OTTool : public Tool
     void        Prepare();
     void        Reset();
     void        ConfigurePrintout(PrintConfig pCnfg);
-    void        SaveHitDataTree(){fSaveTree=true;}
+    void        SaveHitDataTree() { fSaveTree = true; }
     void        SetChipRegstoPerserve(FrontEndType pType, std::vector<std::string> pListOfRegs);
     void        SetBrdRegstoPerserve(std::vector<std::string> pListOfRegs);
     void        SetReadoutPause(uint32_t pReadoutPause) { fReadoutPause = pReadoutPause; }
@@ -110,11 +110,11 @@ class OTTool : public Tool
     std::vector<std::string> fBrdRegsToPerserve;
     DetectorDataContainer    fChipRegsToPerserve;
 
-    // 
+    //
     boardData fBoardData;
-    bool   fSaveTree{0};
-    #ifdef __USE_ROOT__
-      TTree* fTree;
-    #endif
+    bool      fSaveTree{0};
+#ifdef __USE_ROOT__
+    TTree* fTree;
+#endif
 };
 #endif

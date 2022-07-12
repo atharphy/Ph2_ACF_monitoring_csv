@@ -87,9 +87,9 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
         if(cBoard->at(0)->flpGBT == nullptr) continue;
 
         fBeBoardInterface->setBoard(cBoard->getId());
-        D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        D19cFWInterface*      cFWInterface      = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
         D19cTriggerInterface* cTriggerInterface = dynamic_cast<D19cTriggerInterface*>(cFWInterface->getTriggerInterface());
-	cTriggerInterface->ResetTriggerFSM();
+        cTriggerInterface->ResetTriggerFSM();
         cTriggerInterface->Start();
         for(auto cOpticalGroup: *cBoard)
         {
@@ -102,7 +102,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 }
 
-                size_t           cLine        = 0;
+                size_t cLine = 0;
                 do
                 {
                     cFWInterface->selectLink(cOpticalGroup->getId());
@@ -154,7 +154,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
 #endif
 
                 LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
-                auto cWordsL1A = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
+                auto     cWordsL1A        = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
                 uint32_t cCicOutOutputL1A = cWordsL1A[0];
                 LOG(INFO) << BOLDBLUE << "Scoped output on L1A Line: " << std::bitset<32>(cCicOutOutputL1A) << " for hybrid side " << +hybridNumber << RESET;
 

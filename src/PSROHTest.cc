@@ -145,13 +145,13 @@ int main(int argc, char* argv[])
     //
     cmd.defineOption("output", "Output directory. Default: Results/", ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("output", "o");
-    
+
     //
     cmd.defineOption("USBBus", "USB device bus number", ArgvParser::OptionRequiresValue);
     cmd.defineOption("USBDev", "USB device device number", ArgvParser::OptionRequiresValue);
     cmd.defineOption("useGui",
-                    "Support for running the test from the gui for hybrids testing. The named pipe for communication needs to be passed as the last parameter. Default: false",
-                    ArgvParser::NoOptionAttribute);
+                     "Support for running the test from the gui for hybrids testing. The named pipe for communication needs to be passed as the last parameter. Default: false",
+                     ArgvParser::NoOptionAttribute);
 
     int result = cmd.parse(argc, argv);
     if(result != ArgvParser::NoParserError)
@@ -178,9 +178,9 @@ int main(int argc, char* argv[])
     bool        cMeasureInputIV       = cmd.foundOption("measure-input-iv");
 
     // To use from the GUI
-    uint32_t    cUsbBus = (cmd.foundOption("USBBus")) ? (uint32_t)(std::stoi(cmd.optionValue("USBBus"))) : 0; // Default option?
-    uint8_t     cUsbDev = (cmd.foundOption("USBDev")) ? (uint32_t)(std::stoi(cmd.optionValue("USBDev"))) : 0; // Default option?
-    bool        cGui    = (cmd.foundOption("useGui"));
+    uint32_t cUsbBus = (cmd.foundOption("USBBus")) ? (uint32_t)(std::stoi(cmd.optionValue("USBBus"))) : 0; // Default option?
+    uint8_t  cUsbDev = (cmd.foundOption("USBDev")) ? (uint32_t)(std::stoi(cmd.optionValue("USBDev"))) : 0; // Default option?
+    bool     cGui    = (cmd.foundOption("useGui"));
 
     cDirectory += Form("PS_ROH_%s", cHybridId.c_str());
 
@@ -215,10 +215,7 @@ int main(int argc, char* argv[])
     cTool.InitResultFile(cResultfile);
     cTool.bookSummaryTree();
 
-    if( cmd.foundOption("USBBus") && cmd.foundOption("USBDev") )
-    {
-        TC_PSROH cTC_PSROH(cUsbBus, cUsbDev);
-    }
+    if(cmd.foundOption("USBBus") && cmd.foundOption("USBDev")) { TC_PSROH cTC_PSROH(cUsbBus, cUsbDev); }
 
     // Initilaise PSROH tester
     PSROHTester cPSROHTester;
@@ -248,7 +245,7 @@ int main(int argc, char* argv[])
             gui::message("");
             gui::status("Testing uplink");
             gui::progress(1 / 10.0);
-        
+
             gui::data("ResultsDirectory", cPSROHTester.getDirectoryName().c_str());
         }
         /* INTERNALLY GENERATED PATTERN */
@@ -344,7 +341,7 @@ int main(int argc, char* argv[])
             gui::status("Testing I2C Masters on the lpGBT");
             gui::progress(5.5 / 10.0);
         }
-	int pNTries = convertAnyInt(cmd.optionValue("test-i2c").c_str());
+        int                  pNTries  = convertAnyInt(cmd.optionValue("test-i2c").c_str());
         std::vector<uint8_t> cMasters = {0, 2};
         bool                 cStatus  = cPSROHTester.LpGBTTestI2CMaster(cMasters, pNTries);
 #ifdef __USE_ROOT__
@@ -454,7 +451,7 @@ int main(int argc, char* argv[])
         }
         else
         {
-            if( cPSROHTester.FastCommandScope() )
+            if(cPSROHTester.FastCommandScope())
                 LOG(INFO) << BOLDBLUE << "FCMD test " << BOLDGREEN << "passed" << RESET;
             else
                 LOG(INFO) << BOLDBLUE << "FDMC test " << BOLDRED << "failed" << RESET;

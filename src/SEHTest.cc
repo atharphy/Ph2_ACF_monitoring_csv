@@ -390,7 +390,7 @@ int main(int argc, char* argv[])
     // for(int j=0; j<100; j++){
     if(cmd.foundOption("testI2C"))
     {
-	int pNTries = convertAnyInt(cmd.optionValue("testI2C").c_str());
+        int                  pNTries  = convertAnyInt(cmd.optionValue("testI2C").c_str());
         std::vector<uint8_t> cMasters = {0, 2};
         bool                 cStatus  = cSEHTester.LpGBTTestI2CMaster(cMasters, pNTries);
 #ifdef __USE_ROOT__

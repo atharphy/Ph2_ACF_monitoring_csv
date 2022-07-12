@@ -17,7 +17,7 @@ namespace Ph2_HwInterface
 class D19clpGBTInterface : public lpGBTInterface
 {
   public:
-    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pOptical) : lpGBTInterface(pBoardMap) 
+    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pOptical) : lpGBTInterface(pBoardMap)
     {
         LOG(INFO) << BOLDRED << "Constructor D19clpGBTInterface" << RESET;
 #if defined(__TCUSB__)

@@ -17,18 +17,18 @@ OTTool::OTTool() : Tool()
     fSuccess = false;
     fMyName  = "OTTool";
 
-    #ifdef __USE_ROOT__
-        LOG (INFO) << BOLDYELLOW << "Creating TTree to hold event data in ROOT file.." << RESET;
-        fTree = new TTree();
-        fTree->SetName("EventData");
-        fTree->Branch("BeBoard_Id", &fBoardData.boardId);
-        fTree->Branch("OpticalGroup_Id", &fBoardData.opticalGroupId);
-        fTree->Branch("Event_Id", &fBoardData.cEventId);
-        fTree->Branch("SensorId", &fBoardData.cSensorId);
-        fTree->Branch("localX", &fBoardData.localX);
-        fTree->Branch("localY", &fBoardData.localY);
-        fTree->Branch("hit", &fBoardData.hit);
-    #endif
+#ifdef __USE_ROOT__
+    LOG(INFO) << BOLDYELLOW << "Creating TTree to hold event data in ROOT file.." << RESET;
+    fTree = new TTree();
+    fTree->SetName("EventData");
+    fTree->Branch("BeBoard_Id", &fBoardData.boardId);
+    fTree->Branch("OpticalGroup_Id", &fBoardData.opticalGroupId);
+    fTree->Branch("Event_Id", &fBoardData.cEventId);
+    fTree->Branch("SensorId", &fBoardData.cSensorId);
+    fTree->Branch("localX", &fBoardData.localX);
+    fTree->Branch("localY", &fBoardData.localY);
+    fTree->Branch("hit", &fBoardData.hit);
+#endif
 }
 
 OTTool::~OTTool() {}
@@ -261,9 +261,9 @@ void OTTool::ReadDataFromFile(std::string pRawFileName)
         LOG(INFO) << BOLDBLUE << "BeamTestCheck::ReadDataFromFile decoded back " << +cNevents << " events from the .raw file [BeBoard#" << +cBoard->getId() << "]" << RESET;
         if(fPrintConfig.fVerbose) PrintData(cBoard);
     }
-    #ifdef __USE_ROOT__
-        if( fSaveTree ) fTree->Write();
-    #endif
+#ifdef __USE_ROOT__
+    if(fSaveTree) fTree->Write();
+#endif
 }
 
 // print data
@@ -701,7 +701,7 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
     cOutFile_LB.open("OTTool_LB.dat", std::ios_base::app);
     cOutFile_RB.open("OTTool_RB.dat", std::ios_base::app);
     fBoardData.cEventId = pEvent->GetEventCount();
-    fBoardData.boardId = pBoard->getId();
+    fBoardData.boardId  = pBoard->getId();
     for(auto cOpticalGroup: *pBoard)
     {
         std::vector<uint16_t> cBxIds(0);
@@ -733,20 +733,20 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
                             cStripOffset = (cChip->size() * 8) / 2 - 1; //(cChnlIndx % 2 == 0) ? (cNchannels*8) / 2 : (cNchannels*8);
                             cStripId     = cStripOffset - (cChip->getId() * cChip->size() / 2 + cChnl / 2);
                         }
-                        fBoardData.localX = cHybrid->getId() % 2;
-                        fBoardData.localY = cStripId;
-                        fBoardData.cSensorId = (cChnl % 2 == 0) ? 0 : 1 ; 
-                        auto cHitFound = std::find(cHits.begin(), cHits.end(), cChnl) != cHits.end();
-                        fBoardData.hit = (cHitFound) ? 1 : 0;
-                        #ifdef __USE_ROOT__
-                            if( fSaveTree ) fTree->Fill();
-                        #endif
+                        fBoardData.localX    = cHybrid->getId() % 2;
+                        fBoardData.localY    = cStripId;
+                        fBoardData.cSensorId = (cChnl % 2 == 0) ? 0 : 1;
+                        auto cHitFound       = std::find(cHits.begin(), cHits.end(), cChnl) != cHits.end();
+                        fBoardData.hit       = (cHitFound) ? 1 : 0;
+#ifdef __USE_ROOT__
+                        if(fSaveTree) fTree->Fill();
+#endif
                         cTotalNHits += (cHitFound) ? 1 : 0;
                         if(cChnl % 2 == 0)
                             cHits_BottomSensor[cStripId] = cHitFound ? 1 : 0;
                         else
                             cHits_TopSensor[cStripId] = cHitFound ? 1 : 0;
-                     }
+                    }
                 }
                 // if(cTotalNHits >= 0 )
                 //{

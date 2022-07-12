@@ -40,13 +40,13 @@ SEHMonitor::SEHMonitor(const Ph2_System::SystemController* theSystemController, 
 // Maybe not ideal here (but needed to avoid memory leak)?? Could be moved to ~DetectorMonitor() if fPowerSupplyClient is also used for other devices?
 SEHMonitor::~SEHMonitor()
 {
-    if(fPowerSupplyClient!=nullptr)
+    if(fPowerSupplyClient != nullptr)
     {
         delete fPowerSupplyClient;
         fPowerSupplyClient = nullptr;
     }
 #ifdef __USE_ROOT__
-    if(fMonitorPlotDQMSEH!=nullptr)
+    if(fMonitorPlotDQMSEH != nullptr)
     {
         delete fMonitorPlotDQMSEH;
         fMonitorPlotDQMSEH = nullptr;

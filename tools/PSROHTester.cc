@@ -549,67 +549,65 @@ bool PSROHTester::FastCommandScope(BeBoard* pBoard)
     /******************************/
     /* Processing of scoped lines */
     /******************************/
-    bool cSuccess = true;
-    std::string cPattern = "11000001";
+    bool        cSuccess      = true;
+    std::string cPattern      = "11000001";
     std::string cSSA_L_scoped = std::bitset<32>(cSSA_L).to_string();
     std::string cSSA_R_scoped = std::bitset<32>(cSSA_R).to_string();
     std::string cCIC_L_scoped = std::bitset<32>(cCIC_L).to_string();
     std::string cCIC_R_scoped = std::bitset<32>(cCIC_R).to_string();
 
+    std::vector<std::string> cScoped_Lines = {cSSA_L_scoped, cSSA_R_scoped, cCIC_L_scoped, cCIC_R_scoped};
+    std::vector<bool>        cStatus_Lines;
+    uint8_t                  cNFailedLines = 0;
 
-    std::vector<std::string> cScoped_Lines = { cSSA_L_scoped, cSSA_R_scoped, cCIC_L_scoped, cCIC_R_scoped }; 
-    std::vector<bool> cStatus_Lines;
-    uint8_t cNFailedLines = 0;
-    
-    for ( auto& cLine: cScoped_Lines )
+    for(auto& cLine: cScoped_Lines)
     {
         for(int i = 0; (i + cPattern.length()) < cLine.length(); i += cPattern.length())
         {
-            std::string cSubLine = cLine.substr(i, cPattern.length());
-            bool cPatternFound = false;
+            std::string cSubLine      = cLine.substr(i, cPattern.length());
+            bool        cPatternFound = false;
             for(int j = 0; j < (int)cPattern.length(); j++) cPatternFound |= ((cPattern.substr(j, cPattern.length() - j) + cPattern.substr(0, j)) == cSubLine);
-        
+
             cSuccess &= cPatternFound;
-            cStatus_Lines.push_back (cPatternFound);
-            if (!cPatternFound)
-                cNFailedLines++;
+            cStatus_Lines.push_back(cPatternFound);
+            if(!cPatternFound) cNFailedLines++;
         }
     }
 #ifdef __USE_ROOT__
     fillSummaryTree("fcmd_failures", cNFailedLines);
 
-    if (cNFailedLines > 0)
+    if(cNFailedLines > 0)
     {
-        auto cFCMD_Tree =  new TTree( "tFCMD", "FCMD Lines Test Tree" );
+        auto    cFCMD_Tree = new TTree("tFCMD", "FCMD Lines Test Tree");
         TString cLine_name("");
         TString cScoped_line("");
         cFCMD_Tree->Branch("Line", &cLine_name);
         cFCMD_Tree->Branch("Scoped data", &cScoped_line);
 
-        if (!cStatus_Lines[0])
+        if(!cStatus_Lines[0])
         {
-            cLine_name = "SSA_L";
+            cLine_name   = "SSA_L";
             cScoped_line = cScoped_Lines[0];
             cFCMD_Tree->Fill();
         }
 
-        if (!cStatus_Lines[1])
+        if(!cStatus_Lines[1])
         {
-            cLine_name = "SSA_R";
+            cLine_name   = "SSA_R";
             cScoped_line = cScoped_Lines[1];
             cFCMD_Tree->Fill();
         }
-        
-        if (!cStatus_Lines[2])
+
+        if(!cStatus_Lines[2])
         {
-            cLine_name = "CIC_L";
+            cLine_name   = "CIC_L";
             cScoped_line = cScoped_Lines[2];
             cFCMD_Tree->Fill();
         }
-        
-        if (!cStatus_Lines[3])
+
+        if(!cStatus_Lines[3])
         {
-            cLine_name = "CIC_R";
+            cLine_name   = "CIC_R";
             cScoped_line = cScoped_Lines[3];
             cFCMD_Tree->Fill();
         }
