@@ -85,6 +85,7 @@ build:HerdApplication:
   before_script:
     - source ./setup.sh ci
     - export CompileForHerd=true
+    - yum remove -y root #final home will not have ROOT. Should test build without it.
 
 # Shep application
 build:ShepApplication:
@@ -98,14 +99,6 @@ build:StandAlone_wEUDAQ:
   extends: .build
   before_script:
     - source ./setup.sh ci
-    - export CompileWithEUDAQ=true
-
-# Herd application with EUDAQ libraries
-build:HerdApplication_wEUDAQ:
-  extends: .build
-  before_script:
-    - source ./setup.sh ci
-    - export CompileForHerd=true
     - export CompileWithEUDAQ=true
 
 # Compile with TC_USB library
@@ -192,6 +185,7 @@ run:2S:
       - Hybrid.root
       - ci_tools/plot_hist.py
       - coreAnalysis2S.log
+      - MonitorResults/MonitorDQM*.root
     expire_in: 1 week
 
 

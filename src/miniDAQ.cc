@@ -168,7 +168,7 @@ int main(int argc, char* argv[])
     // align back-end
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(&cTool);
-    cBackEndAligner.Start(0);
+    cBackEndAligner.Start(cRunNumber);
     cBackEndAligner.waitForRunToBeCompleted();
 
     // if CIC is enabled then align CIC first

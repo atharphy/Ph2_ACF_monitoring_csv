@@ -51,7 +51,7 @@ namespace Ph2_HwInterface
 class RD53FWInterface : public BeBoardFWInterface
 {
   public:
-    RD53FWInterface(const char* pId, const char* pUri, const char* pAddressTable);
+    RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
     ~RD53FWInterface() { delete fFileHandler; }
 
     // #############################
@@ -224,7 +224,6 @@ class RD53FWInterface : public BeBoardFWInterface
     void ReadClockGenerator();
 
     FastCommandsConfig localCfgFastCmd;
-    D19cFpgaConfig*    fpgaConfig;
     size_t             ddr3Offset;
     bool               singleChip;
     uint32_t           FWinfo;

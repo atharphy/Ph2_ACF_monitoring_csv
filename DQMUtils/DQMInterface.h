@@ -16,7 +16,7 @@ class DQMInterface
     ~DQMInterface(void);
 
     void configure(std::string const& calibrationName, std::string const& configurationFilePath);
-    void startProcessingData(std::string const& runNumber);
+    void startProcessingData(int runNumber);
     void stopProcessingData(void);
     void pauseProcessingData(void) {}
     void resumeProcessingData(void) {}

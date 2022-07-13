@@ -106,6 +106,7 @@ void ThrEqualizationSC::localConfigure(const std::string& fileRes_, int currentR
         LOG(INFO) << GREEN << "[ThrEqualizationSC::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     ThrEqualizationSC::ConfigureCalibration();
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "ThrEqualizationSC");
     ThrEqualizationSC::initializeFiles(fileRes_, currentRun);
 }
 

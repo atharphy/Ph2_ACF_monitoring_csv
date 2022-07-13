@@ -158,14 +158,14 @@ class SystemController
      * \param pFilename : HW Description file
      *\param os         : ostream to dump output
      */
-    void InitializeHw(const std::string& pFilename, std::ostream& os = std::cout, bool pIsFile = true, bool streamData = false, uint16_t DQMportNumber = 6000, uint16_t monitorDQMportNumber = 7000);
+    void InitializeHw(const std::string& pFilename, std::ostream& os = std::cout, bool streamData = false, uint16_t DQMportNumber = 6000, uint16_t monitorDQMportNumber = 7000);
 
     /*!
      * \brief Initialize the settings
      * \param pFilename : settings file
      *\param os         : ostream to dump output
      */
-    void InitializeSettings(const std::string& pFilename, std::ostream& os = std::cout, bool pIsFile = true);
+    void InitializeSettings(const std::string& pFilename, std::ostream& os = std::cout);
 
     /*!
      * \brief Configure the Hardware with XML file indicated values

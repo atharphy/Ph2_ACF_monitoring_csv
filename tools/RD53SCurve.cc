@@ -54,11 +54,6 @@ void SCurve::ConfigureCalibration()
     // # Initialize progress #
     // #######################
     RD53RunProgress::total() += SCurve::getNumberIterations();
-
-    // ############################################################
-    // # Create directory for: raw data, config files, histograms #
-    // ############################################################
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "SCurve");
 }
 
 void SCurve::Running()
@@ -122,6 +117,7 @@ void SCurve::localConfigure(const std::string& fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[SCurve::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     SCurve::ConfigureCalibration();
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "SCurve");
     SCurve::initializeFiles(fileRes_, currentRun);
 }
 

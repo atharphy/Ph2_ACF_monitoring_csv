@@ -53,9 +53,9 @@ class BitVector
             int extra_words = (extra_bits + block_size - 1) / block_size;
             _data.insert(std::end(_data), extra_words, 0);
         }
-        auto   new_bits = BitView<BlockType>{_data.data(), _size, _size + bits.size()};
+        auto new_bits = BitView<BlockType>{_data.data(), _size, _size + bits.size()};
 
-        size_t offset   = 0;
+        size_t offset = 0;
 
         while(offset + 8 < bits.size())
         {

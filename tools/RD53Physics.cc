@@ -43,11 +43,6 @@ void Physics::ConfigureCalibration()
     ContainerFactory::copyAndInitStructure<OccupancyAndPh, GenericDataVector>(*fDetectorContainer, theOccContainer);
     ContainerFactory::copyAndInitChip<GenericDataArray<BCIDsize>>(*fDetectorContainer, theBCIDContainer);
     ContainerFactory::copyAndInitChip<GenericDataArray<TrgIDsize>>(*fDetectorContainer, theTrgIDContainer);
-
-    // ############################################################
-    // # Create directory for: raw data, config files, histograms #
-    // ############################################################
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "Physics");
 }
 
 void Physics::Running()
@@ -127,6 +122,7 @@ void Physics::localConfigure(const std::string& fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[Physics::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     Physics::ConfigureCalibration();
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "Physics");
     Physics::initializeFiles(fileRes_, currentRun);
 }
 

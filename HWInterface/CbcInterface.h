@@ -129,7 +129,7 @@ class CbcInterface : public ReadoutChipInterface
      * \brief Read CBC ID eFuse
      * \param pChip: pointer to Chip object
      */
-    uint32_t ReadCbcIDeFuse(Ph2_HwDescription::Chip* pCbc);
+    uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip) override;
 
   private:
     bool                        fSortPageInc           = true;

@@ -33,3 +33,4 @@ core.*
 FEH_PS*/
 *.bin
 .vscode/*
+pythonUtils/__pycache__/

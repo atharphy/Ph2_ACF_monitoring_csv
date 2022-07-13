@@ -25,7 +25,6 @@
 #include "TH1.h"
 #include "TObject.h"
 #include "TROOT.h"
-#include "TString.h"
 #include "TSystem.h"
 #include "TTree.h"
 #endif
@@ -98,9 +97,9 @@ class Tool : public Ph2_System::SystemController
     TObject* getHist(ChipContainer* pChip, std::string pName);
     TObject* getHist(HybridContainer* pHybrid, std::string pName);
     TObject* getHist(BoardContainer* pBeBoard, std::string pName);
+#endif
 
     void WriteRootFile();
-#endif
 
     virtual void sendData(){};
     virtual void ConfigureCalibration(){};
@@ -113,6 +112,7 @@ class Tool : public Ph2_System::SystemController
 
     void waitForRunToBeCompleted();
     void SaveResults();
+    void CloseResultFile();
 
     /*!
      * \brief Create a result directory at the specified path + ChargeMode + Timestamp
@@ -127,7 +127,6 @@ class Tool : public Ph2_System::SystemController
  */
 #ifdef __USE_ROOT__
     void InitResultFile(const std::string& pFilename);
-    void CloseResultFile();
     void AddMetadata();
     void StartHttpServer(const int pPort = 8080, bool pReadonly = true);
     void HttpServerProcess();
@@ -393,8 +392,8 @@ class Tool : public Ph2_System::SystemController
     HybridHistogramMap  fHybridHistMap;
     BeBoardHistogramMap fBeBoardHistMap;
     TTree*              fSummaryTree; /*< TTree for summary of results*/
-    static TString      fSummaryTreeParameter;
-    static Double_t     fSummaryTreeValue;
+    static std::string  fSummaryTreeParameter;
+    static double       fSummaryTreeValue;
 #endif
 
     FrontEndType        fType;

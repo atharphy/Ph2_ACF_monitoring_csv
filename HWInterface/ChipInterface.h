@@ -106,6 +106,12 @@ class ChipInterface
         return false;
     }
 
+    virtual uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip)
+    {
+        LOG(WARNING) << BOLDYELLOW << __PRETTY_FUNCTION__ << "\tWarning: implementation of virtual member function is absent" << RESET;
+        return 0xFFFFFFFF;
+    };
+
     /*!
      * \brief Read the designated register in the Chip
      * \param pChip

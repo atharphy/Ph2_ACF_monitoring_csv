@@ -22,12 +22,13 @@ class RD53BInterface : public RD53Interface
   public:
     using RD53Interface::RD53Interface;
 
-    bool ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override { return false; }
-    void Reset(Ph2_HwDescription::ReadoutChip* pChip, const size_t resetType) override {}
-    void ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip) override {}
-    void InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard) override;
-    void InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1) override;
-    void PackWriteCommand(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = false) override;
+    bool     ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override { return false; }
+    void     Reset(Ph2_HwDescription::ReadoutChip* pChip, const size_t resetType) override {}
+    void     ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip) override {}
+    void     InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard) override;
+    void     InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1) override;
+    void     PackWriteCommand(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = false) override;
+    uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip) override;
 
   private:
     void                                       InitRD53UplinkSpeed(Ph2_HwDescription::ReadoutChip* pChip) override;

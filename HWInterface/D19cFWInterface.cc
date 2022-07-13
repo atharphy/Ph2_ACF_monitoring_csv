@@ -33,7 +33,7 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoardId)
+D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId)
     : BeBoardFWInterface(puHalConfigFileName, pBoardId), fBroadcastCbcId(0), fNReadoutChip(0), fNHybrids(0), fNCic(0), fFMCId(1)
 {
     fResetAttempts = 0;
@@ -69,7 +69,7 @@ D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoar
     fL1ReadoutInterface       = nullptr;
 }
 
-D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler)
+D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler)
     : BeBoardFWInterface(puHalConfigFileName, pBoardId), fFileHandler(pFileHandler), fBroadcastCbcId(0), fNReadoutChip(0), fNHybrids(0), fNCic(0), fFMCId(1)
 {
     if(fFileHandler == nullptr)
@@ -109,7 +109,7 @@ D19cFWInterface::D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoar
     fL1ReadoutInterface       = nullptr;
 }
 
-D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* pAddressTable)
+D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable)
     : BeBoardFWInterface(pId, pUri, pAddressTable), fFileHandler(nullptr), fBroadcastCbcId(0), fNReadoutChip(0), fNHybrids(0), fNCic(0), fFMCId(1)
 {
     LOG(INFO) << BOLDYELLOW << "D19cFWInterface Constructor" << RESET;
@@ -147,7 +147,7 @@ D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* 
     fL1ReadoutInterface       = nullptr;
 }
 
-D19cFWInterface::D19cFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler)
+D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, FileHandler* pFileHandler)
     : BeBoardFWInterface(pId, pUri, pAddressTable), fFileHandler(pFileHandler), fBroadcastCbcId(0), fNReadoutChip(0), fNHybrids(0), fNCic(0), fFMCId(1)
 {
     if(fFileHandler == nullptr)
@@ -461,15 +461,14 @@ void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
         {
             LOG(INFO) << BOLDBLUE << "Optical readout . initializing Optical interface for FE configuration" << RESET;
             fFEConfigurationInterface   = new D19cOpticalInterface(this->getId(), this->getUri(), this->getAddressTable());
-            cConfiguration.fRetryIC     = true;
-            cConfiguration.fMaxRetryIC  = 100;
-            cConfiguration.fRetryI2C    = true;
-            cConfiguration.fMaxRetryI2C = 100;
-            cConfiguration.fRetryFE     = true;
-            cConfiguration.fMaxRetryFE  = 100;
+            cConfiguration.fRetryIC     = ReadReg("fc7_daq_cnfg.optical_block.lpgbt_sc_worker.ic_retry");
+            cConfiguration.fMaxRetryIC  = ReadReg("fc7_daq_cnfg.optical_block.lpgbt_sc_worker.max_ic_retry");
+            cConfiguration.fRetryI2C    = ReadReg("fc7_daq_cnfg.optical_block.lpgbt_sc_worker.i2c_retry");
+            cConfiguration.fMaxRetryI2C = ReadReg("fc7_daq_cnfg.optical_block.lpgbt_sc_worker.max_i2c_retry");
+            cConfiguration.fRetryFE     = ReadReg("fc7_daq_cnfg.optical_block.lpgbt_sc_worker.fe_retry");
+            cConfiguration.fMaxRetryFE  = ReadReg("fc7_daq_cnfg.optical_block.lpgbt_sc_worker.max_fe_retry");
             static_cast<D19cOpticalInterface*>(fFEConfigurationInterface)->LinkLpGBTSlowControlWorkerInterface(flpGBTSlowControlWorkerInterface);
         }
-        fFEConfigurationInterface->Configure(cConfiguration);
     }
 
     // configure L1 readout interface

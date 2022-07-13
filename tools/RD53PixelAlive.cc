@@ -61,11 +61,6 @@ void PixelAlive::ConfigureCalibration()
     // # Initialize progress #
     // #######################
     RD53RunProgress::total() += PixelAlive::getNumberIterations();
-
-    // ############################################################
-    // # Create directory for: raw data, config files, histograms #
-    // ############################################################
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "PixelAlive");
 }
 
 void PixelAlive::Running()
@@ -126,6 +121,7 @@ void PixelAlive::localConfigure(const std::string& fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[PixelAlive::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     PixelAlive::ConfigureCalibration();
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "PixelAlive");
     PixelAlive::initializeFiles(fileRes_, currentRun);
 }
 
