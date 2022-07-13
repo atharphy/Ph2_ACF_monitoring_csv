@@ -3,7 +3,8 @@
 #include "../HWDescription/Cic.h"
 #include "../HWDescription/Hybrid.h"
 #include "../HWDescription/OuterTrackerHybrid.h"
-#include "../HWDescription/RD53.h"
+#include "../HWDescription/RD53A.h"
+#include "../HWDescription/RD53B.h"
 #include "../HWDescription/SSA2.h"
 #include "../HWDescription/lpGBT.h"
 #include "../Utils/Utilities.h"
@@ -13,49 +14,12 @@ using namespace Ph2_HwInterface;
 
 namespace Ph2_System
 {
-void FileParser::parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile)
-{
-    if(pIsFile && pFilename.find(".xml") != std::string::npos) { parseHWxml(pFilename, pBeBoardFWMap, pDetectorContainer, os, pIsFile); }
-    else if(!pIsFile)
-    {
-        parseHWxml(pFilename, pBeBoardFWMap, pDetectorContainer, os, pIsFile);
-    }
-    else
-    {
-        LOG(ERROR) << BOLDRED << "Could not parse settings file " << pFilename << " - it is not .xml" << RESET;
-    }
-}
-
-void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile)
-{
-    if((pIsFile && pFilename.find(".xml") != std::string::npos) || (!pIsFile))
-        parseSettingsxml(pFilename, pSettingsMap, os, pIsFile);
-    else
-        LOG(ERROR) << BOLDRED << "Could not parse settings file " << pFilename << " - it is not .xml" << RESET;
-}
-
-void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile)
+void FileParser::parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os)
 {
     int i, j;
 
-    pugi::xml_document     doc;
-    pugi::xml_parse_result result;
-
-    if(pIsFile)
-        result = doc.load_file(pFilename.c_str());
-    else
-        result = doc.load_string(pFilename.c_str());
-
-    if(!result)
-    {
-        os << BOLDRED << "ERROR :\n Unable to open the file : " << RESET << pFilename << std::endl;
-        os << BOLDRED << "Error description : " << RED << result.description() << RESET << std::endl;
-
-        if(!pIsFile) os << "Error offset: " << result.offset << " (error at [..." << (pFilename.c_str() + result.offset) << "]\n" << std::endl;
-
-        throw Exception("Unable to parse XML source!");
-        return;
-    }
+    pugi::xml_document doc;
+    openHWconfig(pFilename, doc);
 
     os << RESET << "\n\n";
 
@@ -67,8 +31,6 @@ void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoard
 
     for(i = 0; i < 80; i++) os << "*";
     os << "\n";
-
-    const std::string strUhalConfig = expandEnvironmentVariables(doc.child("HwDescription").child("Connections").attribute("name").value());
 
     // ##################################
     // # Iterate over the BeBoard Nodes #
@@ -89,6 +51,39 @@ void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoard
     for(i = 0; i < 80; i++) os << "*";
 
     os << std::endl;
+}
+
+void FileParser::openHWconfig(const std::string& pFilename, pugi::xml_document& doc)
+{
+    pugi::xml_parse_result result = doc.load_file(pFilename.c_str());
+    if(!result) // try if it is not a a file, but a string containing the full xml
+        result = doc.load_string(pFilename.c_str());
+
+    if(!result)
+    {
+        LOG(ERROR) << BOLDRED << "ERROR :\n Unable to open the file : " << RESET << pFilename << std::endl;
+        LOG(ERROR) << BOLDRED << "Error description : " << RED << result.description() << RESET << std::endl;
+        throw Exception("Unable to parse XML source!");
+    }
+}
+
+std::map<uint16_t, RegManager> FileParser::getRegManagerList(const std::string& pFilename)
+{
+    pugi::xml_document doc;
+    openHWconfig(pFilename, doc);
+
+    std::map<uint16_t, Ph2_HwInterface::RegManager> theRegManagerMap;
+    for(pugi::xml_node cBeBoardNode = doc.child("HwDescription").child("BeBoard"); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling())
+    {
+        if(static_cast<std::string>(cBeBoardNode.name()) != "BeBoard") continue;
+        pugi::xml_node cBeBoardConnectionNode = cBeBoardNode.child("connection");
+
+        std::string cId           = cBeBoardConnectionNode.attribute("id").value();
+        std::string cUri          = cBeBoardConnectionNode.attribute("uri").value();
+        std::string cAddressTable = expandEnvironmentVariables(cBeBoardConnectionNode.attribute("address_table").value());
+        theRegManagerMap.insert(std::pair<uint16_t, Ph2_HwInterface::RegManager>(cBeBoardNode.attribute("Id").as_int(), std::move(RegManager(cId, cUri, cAddressTable))));
+    }
+    return theRegManagerMap;
 }
 
 void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os)
@@ -179,11 +174,9 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
 
     if(fEnableInterfaces)
     {
-        if(cBeBoard->getBoardType() == BoardType::D19C) { pBeBoardFWMap[cBeBoard->getId()] = new D19cFWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str()); }
+        if(cBeBoard->getBoardType() == BoardType::D19C) { pBeBoardFWMap[cBeBoard->getId()] = new D19cFWInterface(cId, cUri, cAddressTable); }
         else if(cBeBoard->getBoardType() == BoardType::RD53)
-        {
-            pBeBoardFWMap[cBeBoard->getId()] = new RD53FWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str());
-        }
+            pBeBoardFWMap[cBeBoard->getId()] = new RD53FWInterface(cId, cUri, cAddressTable);
     }
     os << BOLDCYAN << "|"
        << "       "
@@ -864,7 +857,8 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("SSA2") != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("MPA") != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("CIC") != std::string::npos;
-            cIsTrackerASIC             = cIsTrackerASIC || cName.find("RD53") != std::string::npos;
+            cIsTrackerASIC             = cIsTrackerASIC || cName.find("RD53A") != std::string::npos;
+            cIsTrackerASIC             = cIsTrackerASIC || cName.find("RD53B") != std::string::npos;
 
             if(cIsTrackerASIC)
             {
@@ -876,8 +870,9 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
 
                     if(cName.find("RD53") != std::string::npos)
                     {
-                        pBoard->setFrontEndType(FrontEndType::RD53);
-                        this->parseRD53(cChild, cHybrid, cConfigFileDirectory, os);
+                        auto frontEndType = cName.find("RD53A") != std::string::npos ? FrontEndType::RD53A : FrontEndType::RD53B;
+                        pBoard->setFrontEndType(frontEndType);
+                        this->parseRD53(cChild, cHybrid, cConfigFileDirectory, os, frontEndType);
                         if(cNextName.empty() || cNextName != cName) this->parseGlobalRD53Settings(pHybridNode, cHybrid, os);
                     }
                     else if(cName.find("CBC") != std::string::npos)
@@ -1419,25 +1414,10 @@ void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, st
     }
 }
 
-void FileParser::parseSettingsxml(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile)
+void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os)
 {
-    pugi::xml_document     doc;
-    pugi::xml_parse_result result;
-
-    if(pIsFile == true)
-        result = doc.load_file(pFilename.c_str());
-    else
-        result = doc.load_string(pFilename.c_str());
-
-    if(result == false)
-    {
-        os << BOLDRED << "ERROR : Unable to open the file " << RESET << pFilename << std::endl;
-        os << BOLDRED << "Error description: " << RED << result.description() << RESET << std::endl;
-
-        if(pIsFile == false) os << "Error offset: " << result.offset << " (error at [..." << (pFilename.c_str() + result.offset) << "]" << std::endl;
-
-        throw Exception("Unable to parse XML source!");
-    }
+    pugi::xml_document doc;
+    openHWconfig(pFilename, doc);
 
     for(pugi::xml_node nSettings = doc.child("HwDescription").child("Settings"); nSettings == doc.child("HwDescription").child("Settings"); nSettings = nSettings.next_sibling())
     {
@@ -1474,21 +1454,27 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
         if(cChildName.find("_Files") != std::string::npos) continue;
         if(cChildName.find("RD53") != std::string::npos)
         {
+            std::vector<uint8_t> cRxLinks    = splitToVector(cChild.attribute("RxLinks").value(), ',');
             std::vector<uint8_t> cRxGroups   = splitToVector(cChild.attribute("RxGroups").value(), ',');
             std::vector<uint8_t> cRxChannels = splitToVector(cChild.attribute("RxChannels").value(), ',');
+            std::vector<uint8_t> cTxLinks    = splitToVector(cChild.attribute("TxLinks").value(), ',');
             std::vector<uint8_t> cTxGroups   = splitToVector(cChild.attribute("TxGroups").value(), ',');
             std::vector<uint8_t> cTxChannels = splitToVector(cChild.attribute("TxChannels").value(), ',');
 
-            // Retrieve groups and channels from CIC node attirbutes and propagate to LpGBT class
+            // Retrieve links, groups and channels from CIC node attirbutes and propagate to LpGBT class
+            plpGBT->addRxLinks(cRxLinks);
             plpGBT->addRxGroups(cRxGroups);
             plpGBT->addRxChannels(cRxChannels);
+            plpGBT->addTxLinks(cTxLinks);
             plpGBT->addTxGroups(cTxGroups);
             plpGBT->addTxChannels(cTxChannels);
 
             // In the case of IT propagate LpGBT mapping the front-end chip
             uint8_t cChipId = cChild.attribute("Id").as_int();
+            static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxLink(cRxLinks[0]);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxGroup(cRxGroups[0]);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxChannel(cRxChannels[0]);
+            static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxLink(cTxLinks[0]);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxGroup(cTxGroups[0]);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxChannel(cTxChannels[0]);
         }
@@ -1498,7 +1484,7 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
 // ########################
 // # RD53 specific parser #
 // ########################
-void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os)
+void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os, const FrontEndType& frontEndType)
 {
     std::string cFileName;
 
@@ -1512,19 +1498,25 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
 
     uint32_t    chipId     = theChipNode.attribute("Id").as_int();
     uint32_t    chipLane   = theChipNode.attribute("Lane").as_int();
+    uint8_t     cRxLink    = theChipNode.attribute("RxLinks").as_int();
     uint8_t     cRxGroup   = theChipNode.attribute("RxGroups").as_int();
     uint8_t     cRxChannel = theChipNode.attribute("RxChannels").as_int();
+    uint8_t     cTxLink    = theChipNode.attribute("TxLinks").as_int();
     uint8_t     cTxGroup   = theChipNode.attribute("TxGroups").as_int();
     uint8_t     cTxChannel = theChipNode.attribute("TxChannels").as_int();
     std::string cfgComment = theChipNode.attribute("Comment").as_string();
 
     os << BOLDBLUE << "|\t|\t|----" << theChipNode.name() << " --> Id: " << BOLDYELLOW << chipId << BOLDBLUE << ", Lane: " << BOLDYELLOW << chipLane << BOLDBLUE << ", File: " << BOLDYELLOW
-       << cFileName << BOLDBLUE << ", RxGroup: " << BOLDYELLOW << +cRxGroup << BOLDBLUE << ", RxChannel: " << BOLDYELLOW << +cRxChannel << BOLDBLUE << ", TxGroup: " << BOLDYELLOW << +cTxGroup
-       << BOLDBLUE << ", TxChannel: " << BOLDYELLOW << +cTxChannel << BOLDBLUE << ", Comment: " << BOLDYELLOW << cfgComment << RESET << std::endl;
+       << cFileName << BOLDBLUE << ", RxLink: " << BOLDYELLOW << +cRxLink << BOLDBLUE << ", RxGroup: " << BOLDYELLOW << +cRxGroup << BOLDBLUE << ", RxChannel: " << BOLDYELLOW << +cRxChannel
+       << BOLDBLUE << ", TxLink: " << BOLDYELLOW << +cTxLink << BOLDBLUE << ", TxGroup: " << BOLDYELLOW << +cTxGroup << BOLDBLUE << ", TxChannel: " << BOLDYELLOW << +cTxChannel << BOLDBLUE
+       << ", Comment: " << BOLDYELLOW << cfgComment << RESET << std::endl;
 
-    ReadoutChip* theChip =
-        cHybrid->addChipContainer(chipId, new RD53(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, cFileName, cfgComment));
-    theChip->setNumberOfChannels(RD53::nRows, RD53::nCols);
+    ReadoutChip* theChip;
+    if(frontEndType == FrontEndType::RD53A)
+        theChip = cHybrid->addChipContainer(chipId, new RD53A(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, cFileName, cfgComment));
+    else
+        theChip = cHybrid->addChipContainer(chipId, new RD53B(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, cFileName, cfgComment));
+    theChip->setNumberOfChannels(static_cast<RD53*>(theChip)->getNRows(), static_cast<RD53*>(theChip)->getNCols());
 
     this->parseRD53Settings(theChipNode, theChip, os);
 }
@@ -1552,7 +1544,10 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
     pugi::xml_node cLocalChipSettings = theChipNode.child("Settings");
     if(cLocalChipSettings != nullptr)
     {
-        os << BOLDCYAN << "|\t|\t|----FrontEndType: " << BOLDYELLOW << "RD53" << RESET << std::endl;
+        if(theChip->getFrontEndType() == FrontEndType::RD53A)
+            os << BOLDCYAN << "|\t|\t|----FrontEndType: " << BOLDYELLOW << "RD53A" << RESET << std::endl;
+        else
+            os << BOLDCYAN << "|\t|\t|----FrontEndType: " << BOLDYELLOW << "RD53B" << RESET << std::endl;
 
         for(const pugi::xml_attribute& attr: cLocalChipSettings.attributes())
         {
@@ -1565,37 +1560,10 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
 }
 // ########################
 
-std::string FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os, bool pIsFile)
+std::string FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os)
 {
-    if(pIsFile && pFilename.find(".xml") != std::string::npos)
-        return parseMonitorxml(pFilename, theDetectorMonitorConfig, os, pIsFile);
-    else if(!pIsFile)
-        return parseMonitorxml(pFilename, theDetectorMonitorConfig, os, pIsFile);
-    else
-        LOG(ERROR) << BOLDRED << "Could not parse monitor file " << pFilename << " - it is not .xml" << RESET;
-    return "None";
-}
-
-std::string FileParser::parseMonitorxml(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os, bool pIsFile)
-{
-    pugi::xml_document     doc;
-    pugi::xml_parse_result result;
-
-    if(pIsFile == true)
-        result = doc.load_file(pFilename.c_str());
-    else
-        result = doc.load_string(pFilename.c_str());
-
-    if(result == false)
-    {
-        os << BOLDRED << "ERROR : Unable to open the file " << RESET << pFilename << std::endl;
-        os << BOLDRED << "Error description: " << RED << result.description() << RESET << std::endl;
-
-        if(pIsFile == false) os << "Error offset: " << result.offset << " (error at [..." << (pFilename.c_str() + result.offset) << "]" << std::endl;
-
-        throw Exception("Unable to parse XML source!");
-        return "None";
-    }
+    pugi::xml_document doc;
+    openHWconfig(pFilename, doc);
 
     if(!bool(doc.child("HwDescription").child("MonitoringSettings")))
     {

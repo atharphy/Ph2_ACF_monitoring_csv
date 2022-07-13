@@ -70,10 +70,10 @@ void MonitorDQMInterface::configure(std::string const& configurationFilePath)
     std::stringstream                                        out;
     DetectorContainer                                        fDetectorStructure;
 
-    fParser.parseHW(configurationFilePath, fBeBoardFWMap, &fDetectorStructure, out, true);
+    fParser.parseHW(configurationFilePath, fBeBoardFWMap, &fDetectorStructure, out);
 
     DetectorMonitorConfig theDetectorMonitorConfig;
-    std::string           monitoringType = fParser.parseMonitor(configurationFilePath, theDetectorMonitorConfig, out, true);
+    std::string           monitoringType = fParser.parseMonitor(configurationFilePath, theDetectorMonitorConfig, out);
 
     if(monitoringType == "2S") fMonitorDQMVector.push_back(new MonitorDQMPlotCBC());
 

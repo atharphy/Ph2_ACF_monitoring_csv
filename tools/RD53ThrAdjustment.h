@@ -47,7 +47,7 @@ class ThrAdjustment : public PixelAlive
     void   analyze();
     size_t getNumberIterations()
     {
-        uint16_t nIterationsThr = floor(log2(ThrStop - ThrStart + 1) + 2);
+        uint16_t nIterationsThr = floor(log2(stopValue - startValue + 1) + 2);
         uint16_t moreIterations = 1;
         return PixelAlive::getNumberIterations() * (nIterationsThr + moreIterations);
     }
@@ -58,14 +58,6 @@ class ThrAdjustment : public PixelAlive
 #endif
 
   private:
-    size_t rowStart;
-    size_t rowStop;
-    size_t colStart;
-    size_t colStop;
-    float  targetThreshold;
-    size_t ThrStart;
-    size_t ThrStop;
-
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
     DetectorDataContainer theThrContainer;
@@ -75,11 +67,15 @@ class ThrAdjustment : public PixelAlive
     void chipErrorReport() const;
 
   protected:
+    float  targetThreshold;
+    size_t startValue;
+    size_t stopValue;
+    bool   doUpdateChip;
+    bool   doDisplay;
+    bool   saveBinaryData;
+
     std::string fileRes;
     int         theCurrentRun;
-    bool        doUpdateChip;
-    bool        doDisplay;
-    bool        saveBinaryData;
 };
 
 #endif

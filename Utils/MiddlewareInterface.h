@@ -1,6 +1,7 @@
 #ifndef _MiddlewareInterface_h_
 #define _MiddlewareInterface_h_
 
+#include "../MessageUtils/cpp/QueryMessage.pb.h"
 #include "../NetworkUtils/TCPClient.h"
 #include <string>
 
@@ -10,18 +11,18 @@ class MiddlewareInterface : public TCPClient
     MiddlewareInterface(std::string serverIP, int serverPort);
     virtual ~MiddlewareInterface(void);
     void        initialize(void);
-    void        configure(std::string const& calibrationName, std::string const& configurationFilePath);
+    void        configure(MessageUtils::CalibrationList::CalibrationNameEnum theCalibrationEnum, std::string const& configurationFilePath);
     void        halt(void);
     void        pause(void);
     void        resume(void);
-    void        start(std::string runNumber);
+    void        start(int runNumber);
     void        stop(void);
     std::string status(void);
 
   protected:
-    std::string currentRun_ = "0";
-    bool        running_    = false;
-    bool        paused_     = false;
+    // std::string currentRun_ = "0";
+    // bool        running_    = false;
+    // bool        paused_     = false;
 
   private:
     std::string sendCommand(const std::string& command);

@@ -49,10 +49,7 @@ class ChipInterface
     //     #endif
     // #endif
     uint16_t fPrevBoardIdentifier; /*!< Id of the previous board */
-
-    uint16_t fRegisterCount;     /*!< Counter for the number of Registers written */
-    uint16_t fTransactionCount;  /*!< Counter for the number of Transactions */
-    bool     fWithlpGBT = false; /*!< lpGBT is used for configuration */
+    bool     fWithlpGBT = false;   /*!< lpGBT is used for configuration */
 
     /*!
      * \brief Set the board to talk with
@@ -109,6 +106,12 @@ class ChipInterface
         return false;
     }
 
+    virtual uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip)
+    {
+        LOG(WARNING) << BOLDYELLOW << __PRETTY_FUNCTION__ << "\tWarning: implementation of virtual member function is absent" << RESET;
+        return 0xFFFFFFFF;
+    };
+
     /*!
      * \brief Read the designated register in the Chip
      * \param pChip
@@ -135,6 +138,7 @@ class ChipInterface
 
     void output();
 };
+
 } // namespace Ph2_HwInterface
 
 #endif

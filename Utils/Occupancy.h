@@ -20,7 +20,7 @@ class Occupancy //: public streammable
 {
   public:
     Occupancy() : fOccupancy(0), fOccupancyError(0) { ; }
-    ~Occupancy() { ; }
+
     void print(void) { std::cout << fOccupancy << std::endl; }
 
     template <typename T>
