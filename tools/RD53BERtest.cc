@@ -26,11 +26,6 @@ void BERtest::ConfigureCalibration()
     // # Select BER counter meaning: number of frames with errors or number of bits with errors #
     // ##########################################################################################
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->SelectBERcheckBitORFrame(0);
-
-    // ############################################################
-    // # Create directory for: raw data, config files, histograms #
-    // ############################################################
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "BERtest");
 }
 
 void BERtest::Running()
@@ -74,6 +69,7 @@ void BERtest::localConfigure(const std::string& fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[BERtest::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     BERtest::ConfigureCalibration();
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "BERtest");
     BERtest::initializeFiles(fileRes_, currentRun);
 }
 
@@ -94,14 +90,14 @@ void BERtest::run()
     if(chain2test == 1)
         for(const auto cBoard: *fDetectorContainer)
         {
-            uint32_t frontendSpeed = static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
+            uint8_t frontendSpeed = (uint8_t) static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
 
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                 {
                     static_cast<D19clpGBTInterface*>(flpGBTInterface)->StartPRBSpattern(cOpticalGroup->flpGBT);
 
-                    auto value = fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, cHybrid->getId(), 0, frontendSpeed); // @TMP@
+                    auto value = fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, cHybrid->getId(), 0, frontendSpeed); // @TMP@ : fixed chip lane
                     theBERtestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(0)->getSummary<double>() = value;
 
                     LOG(INFO) << GREEN << "BER test for [board/opticalGroup/hybrid = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << RESET << GREEN
@@ -114,7 +110,7 @@ void BERtest::run()
     else
         for(const auto cBoard: *fDetectorContainer)
         {
-            uint32_t frontendSpeed = static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
+            uint8_t frontendSpeed = (uint8_t) static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
 
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)

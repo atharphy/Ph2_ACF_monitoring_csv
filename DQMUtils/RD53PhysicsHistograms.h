@@ -39,6 +39,9 @@ class PhysicsHistograms : public DQMHistogramBase
     DetectorDataContainer ErrorReadOut2D;
     DetectorDataContainer BCID;
     DetectorDataContainer TriggerID;
+
+    size_t nRows;
+    size_t nCols;
 };
 
 #endif

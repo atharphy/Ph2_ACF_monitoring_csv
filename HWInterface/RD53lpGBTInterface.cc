@@ -77,13 +77,13 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
 {
     this->setBoard(pChip->getBeBoardId());
 
-    LOG(INFO) << GREEN << "LpGBT version: " << BOLDYELLOW << (fBoardFW->OptoLinkVersion() == 0 ? "LpGBT-v0" : "LpGBT-v1") << RESET;
-
     // #####################
     // # Make reverted map #
     // #####################
     uint8_t cChipVersion = static_cast<lpGBT*>(pChip)->getVersion();
     for(auto& ele: fPUSMStatusMap[cChipVersion]) revertedPUSMStatusMap[ele.second] = ele.first;
+    fBoardFW->SetOptoLinkVersion(cChipVersion);
+    LOG(INFO) << GREEN << "LpGBT version: " << BOLDYELLOW << (cChipVersion == 0 ? "LpGBT-v0" : "LpGBT-v1") << RESET;
 
     // #########################
     // # Configure PLL and DLL #
@@ -165,7 +165,32 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
 // # RD53 specific routine functions #
 // ###################################
 
-void RD53lpGBTInterface::InternalPhaseAlignRx(Chip* pChip, const BeBoard* pBoard, const OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface)
+void RD53lpGBTInterface::SetDownLinkMapping(const OpticalGroup* pOpticalGroup)
+{
+    this->setBoard(pOpticalGroup->getBeBoardId());
+
+    for(const auto cHybrid: *pOpticalGroup)
+        for(const auto cChip: *cHybrid)
+        {
+            auto pChip = static_cast<RD53*>(cChip);
+            auto fwGr  = mapLpGBTGrCh2fwGr[pChip->getTxGroup() * 10 + pChip->getTxChannel()];
+            static_cast<RD53FWInterface*>(fBoardFW)->SetDownLinkMapping(pChip->getTxLink(), fwGr, cHybrid->getId());
+        }
+}
+
+void RD53lpGBTInterface::SetUpLinkMapping(const OpticalGroup* pOpticalGroup)
+{
+    this->setBoard(pOpticalGroup->getBeBoardId());
+
+    for(const auto cHybrid: *pOpticalGroup)
+        for(const auto cChip: *cHybrid)
+        {
+            auto pChip = static_cast<RD53*>(cChip);
+            static_cast<RD53FWInterface*>(fBoardFW)->SetUpLinkMapping(pChip->getRxLink(), pChip->getRxGroup(), cHybrid->getId(), pChip->getChipLane());
+        }
+}
+
+void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const BeBoard* pBoard, const OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface)
 {
     const uint8_t              cChipRate = this->GetChipRate(pChip);
     const std::vector<uint8_t> pGroups   = static_cast<lpGBT*>(pChip)->getRxGroups();
@@ -214,6 +239,8 @@ void RD53lpGBTInterface::InternalPhaseAlignRx(Chip* pChip, const BeBoard* pBoard
 
     // Set back Rx groups to fixed phase
     this->ConfigureRxGroups(pChip, pGroups, pChannels, f10GRxDataRateMap[static_cast<lpGBT*>(pChip)->getRxDataRate()], lpGBTconstants::rxPhaseTracking);
+
+    static_cast<lpGBT*>(pChip)->setPhaseRxAligned(true); // @TMP@
 }
 
 bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
@@ -225,7 +252,7 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
     const double frames_or_time = 1; // @CONST@
     const bool   given_time     = true;
     bool         allGood        = true;
-    uint32_t     frontendSpeed  = static_cast<RD53FWInterface*>(pBeBoardFWInterface)->ReadoutSpeed();
+    auto         frontendSpeed  = static_cast<RD53FWInterface*>(pBeBoardFWInterface)->ReadoutSpeed();
 
     LOG(INFO) << GREEN << "Phase alignment ongoing for LpGBT chip: " << BOLDYELLOW << pChip->getId() << RESET;
 
@@ -256,7 +283,7 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                 static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
                 static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip);
 
-                const double result = this->RunBERtest(pChip, cGroup, cChannel, given_time, frames_or_time, frontendSpeed);
+                const double result = this->RunBERtest(pChip, cGroup, cChannel, given_time, frames_or_time, (uint8_t)frontendSpeed);
 
                 // #########################################################
                 // # Search for largest interval and set into middle point #

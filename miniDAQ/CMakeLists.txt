@@ -10,6 +10,7 @@ include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
 include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
 include_directories(${UHAL_LOG_INCLUDE_PREFIX})
 include_directories(${PROJECT_SOURCE_DIR}/miniDAQ)
+include_directories(${PROJECT_SOURCE_DIR}/MessageUtils/cpp)
 include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
 include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
 include_directories(${PROJECT_SOURCE_DIR}/Utils)
@@ -24,7 +25,7 @@ link_directories(${UHAL_UHAL_LIB_PREFIX})
 link_directories(${PROJECT_SOURCE_DIR/lib})
 
 # Initial set of libraries
-set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System NetworkUtils)
+set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System NetworkUtils MessageUtils)
 
 # Check for ZMQ installed
 if(ZMQ_FOUND)
@@ -59,18 +60,42 @@ if(${PH2_ANTENNA_FOUND})
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{AntennaFlag}")
 endif()
 
+# Find root and link against it
+if(${ROOT_FOUND})
+    include_directories(${ROOT_INCLUDE_DIRS})
+    set(LIBS ${LIBS} ${ROOT_LIBRARIES})
+    if(NoDataShipping)
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
+    endif()
+
+    #check for THttpServer
+    if(${ROOT_HAS_HTTP})
+        set(LIBS ${LIBS} ${ROOT_RHTTP_LIBRARY})
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{HttpFlag}")
+    endif()
+endif()
+
+find_package(Protobuf REQUIRED)
+
 # Boost also needs to be linked
 include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
-set(LIBS ${LIBS} ${Boost_IOSTREAMS_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY})
+
+set(LIBS ${LIBS} ${Boost_IOSTREAMS_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Protobuf_LIBRARIES})
+
+# Find source files
+file(GLOB SOURCES *.cc)
+add_library(Ph2_miniDAQ STATIC ${SOURCES})
 
 ###############
 # EXECUTABLES #
 ###############
 
 # RunController
-add_executable(RunController RunController.cc MiddlewareController.cc)
-target_link_libraries(RunController ${LIBS} Ph2_Tools)
+if(CompileForHerd)
+    add_executable(RunController RunController.cc MiddlewareController.cc MiddlewareMessageHandler.cc MiddlewareStateMachine.cc CombinedCalibrationFactory.cc)
+    target_link_libraries(RunController ${LIBS} Ph2_Tools Ph2_System Ph2_miniDAQ MessageUtils)
+endif()
 
 MESSAGE(STATUS " ")
 MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/miniDAQ/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")

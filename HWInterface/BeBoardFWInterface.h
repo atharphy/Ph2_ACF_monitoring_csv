@@ -23,7 +23,6 @@ Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pier
 #include "../Utils/FileHandler.h"
 #include "../Utils/Utilities.h"
 #include "../Utils/easylogging++.h"
-#include "D19cFpgaConfig.h"
 #include "RegManager.h"
 
 #include <uhal/uhal.hpp>
@@ -59,8 +58,10 @@ class BeBoardFWInterface : public RegManager
     /*!
      * \brief Constructor of the BeBoardFWInterface class
      * \param puHalConfigFileName : path of the uHal Config File*/
-    BeBoardFWInterface(const char* puHalConfigFileName, uint32_t pBoardId);
-    BeBoardFWInterface(const char* pId, const char* pUri, const char* pAddressTable);
+    BeBoardFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
+    BeBoardFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
+    // BeBoardFWInterface(RegManager&& theRegManager);
+
     /*!
      * \brief set a FileHandler Object and enable saving to file!
      * \param pFileHandler : pointer to file handler for saving Raw Data*/
@@ -95,7 +96,7 @@ class BeBoardFWInterface : public RegManager
 
     virtual void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) = 0;
 
-    virtual uint32_t OptoLinkVersion() = 0;
+    virtual void SetOptoLinkVersion(uint8_t version) = 0;
 
     /*! \brief Run Bit Error Rate test */
     virtual double RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) = 0;

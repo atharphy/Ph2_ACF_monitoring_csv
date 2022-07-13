@@ -24,7 +24,6 @@ void SSAPhysics::ConfigureCalibration()
     // ###########################################
     // # Initialize directory and data container #
     // ###########################################
-    this->CreateResultDirectory(RESULTDIR, false, false);
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, fOccContainer);
 
     SSA2ChannelGroupHandler theChannelGroupHandler;

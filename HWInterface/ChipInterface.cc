@@ -16,19 +16,7 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-ChipInterface::ChipInterface(const BeBoardFWMap& pBoardMap) : fBoardMap(pBoardMap), fBoardFW(nullptr), fPrevBoardIdentifier(65535), fRegisterCount(0), fTransactionCount(0)
-{
-#ifdef COUNT_FLAG
-    LOG(DEBUG) << "Counting number of Transactions!";
-#endif
-}
-
-void ChipInterface::output()
-{
-#ifdef COUNT_FLAG
-    LOG(DEBUG) << "This instance of HWInterface::ChipInterface wrote (only write!) " << fRegisterCount << " Registers in " << fTransactionCount << " Transactions (only write!)! ";
-#endif
-}
+ChipInterface::ChipInterface(const BeBoardFWMap& pBoardMap) : fBoardMap(pBoardMap), fBoardFW(nullptr), fPrevBoardIdentifier(65535) {}
 
 void ChipInterface::setBoard(uint16_t pBoardIdentifier)
 {
@@ -45,4 +33,5 @@ void ChipInterface::setBoard(uint16_t pBoardIdentifier)
         }
     }
 }
+
 } // namespace Ph2_HwInterface

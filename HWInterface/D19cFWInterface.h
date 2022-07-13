@@ -103,8 +103,8 @@ class D19cFWInterface : public BeBoardFWInterface
      * \param puHalConfigFileName : path of the uHal Config File
      * \param pBoardId
      */
-    D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoardId);
-    D19cFWInterface(const char* puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler);
+    D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId);
+    D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler);
     /*!
      *
      * \brief Constructor of the Cbc3Fc7FWInterface class
@@ -113,8 +113,8 @@ class D19cFWInterface : public BeBoardFWInterface
      * \param pAddressTable: address tabel string
      */
 
-    D19cFWInterface(const char* pId, const char* pUri, const char* pAddressTable);
-    D19cFWInterface(const char* pId, const char* pUri, const char* pAddressTable, FileHandler* pFileHandler);
+    D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
+    D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, FileHandler* pFileHandler);
     void setFileHandler(FileHandler* pHandler);
 
     void                                 printReadoutInterface() { LOG(INFO) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET; }
@@ -343,7 +343,7 @@ class D19cFWInterface : public BeBoardFWInterface
     // # Read/Write Optical Group #
     // ############################
     // Functions for standard uDTC
-    uint32_t OptoLinkVersion() override { return 0; };
+    void     SetOptoLinkVersion(uint8_t version) override{};
     void     selectLink(const uint8_t pLinkId = 0, uint32_t cWait_ms = 100) override{};
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override {}
     void     ResetOptoLink() override{};

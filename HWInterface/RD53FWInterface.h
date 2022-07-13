@@ -1,6 +1,6 @@
 /*!
   \file                  RD53FWInterface.h
-  \brief                 RD53FWInterface to initialize and configure the FW
+  \bri7ef                 RD53FWInterface to initialize and configure the FW
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
@@ -11,6 +11,7 @@
 #define RD53FWInterface_H
 
 #include "../HWDescription/RD53.h"
+#include "../HWDescription/RD53ACommands.h"
 #include "../Utils/RD53Event.h"
 #include "../Utils/RD53RunProgress.h"
 #include "../Utils/RD53Shared.h"
@@ -35,6 +36,14 @@ const uint32_t NBIT_DATA_FIFO     = 27;   // Data FIFO depth 134.217.728, i.e. 2
 
 constexpr float VDDD2Volt(float val) { return (0.968 + val * 0.0115); }
 constexpr float CDR2Freq(float val) { return (140 + val * 5); }
+
+enum class ReadoutSpeed : uint8_t
+{
+    x1280,
+    x640,
+    x320
+};
+
 } // namespace RD53FWconstants
 
 namespace Ph2_HwInterface
@@ -42,7 +51,7 @@ namespace Ph2_HwInterface
 class RD53FWInterface : public BeBoardFWInterface
 {
   public:
-    RD53FWInterface(const char* pId, const char* pUri, const char* pAddressTable);
+    RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
     ~RD53FWInterface() { delete fFileHandler; }
 
     // #############################
@@ -66,8 +75,8 @@ class RD53FWInterface : public BeBoardFWInterface
     void     ChipReset() override;
     void     ChipReSync() override;
 
-    void     selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) override;
-    uint32_t OptoLinkVersion() override;
+    void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) override;
+    void SetOptoLinkVersion(uint8_t version) override;
     // #############################
 
     void     SelectBERcheckBitORFrame(const uint8_t bitORframe);
@@ -82,15 +91,15 @@ class RD53FWInterface : public BeBoardFWInterface
     // ####################################
     // # Check AURORA lock on data stream #
     // ####################################
-    bool     CheckChipCommunication(const Ph2_HwDescription::BeBoard* pBoard);
-    uint32_t ReadoutSpeed();
+    bool                          CheckChipCommunication(const Ph2_HwDescription::BeBoard* pBoard);
+    RD53FWconstants::ReadoutSpeed ReadoutSpeed();
 
     // #############################################
     // # hybridId < 0 --> broadcast to all hybrids #
     // #############################################
     void                                       WriteChipCommand(const std::vector<uint16_t>& data, int hybridId);
     void                                       ComposeAndPackChipCommands(const std::vector<uint16_t>& data, int hybridId, std::vector<uint32_t>& commandList);
-    void                                       SendChipCommandsPack(const std::vector<uint32_t>& commandList);
+    void                                       SendChipCommands(const std::vector<uint32_t>& commandList);
     std::vector<std::pair<uint16_t, uint16_t>> ReadChipRegisters(Ph2_HwDescription::ReadoutChip* pChip);
 
     enum class TriggerSource : uint32_t
@@ -183,6 +192,8 @@ class RD53FWInterface : public BeBoardFWInterface
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override;
     bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerify = true) override;
     uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress) override;
+    void     SetDownLinkMapping(uint8_t TxLink, uint8_t TxGroup, uint8_t TxModuleId);
+    void     SetUpLinkMapping(uint8_t RxLink, uint8_t RxGroup, uint8_t RxModuleId, uint8_t lane);
 
     // ####################################################
     // # Hybrid ADC measurements: temperature and voltage #
@@ -213,7 +224,6 @@ class RD53FWInterface : public BeBoardFWInterface
     void ReadClockGenerator();
 
     FastCommandsConfig localCfgFastCmd;
-    D19cFpgaConfig*    fpgaConfig;
     size_t             ddr3Offset;
     bool               singleChip;
     uint32_t           FWinfo;

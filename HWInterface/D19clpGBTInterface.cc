@@ -110,7 +110,9 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
 {
     uint8_t cChipRate = GetChipRate(pChip);
     LOG(INFO) << BOLDGREEN << "Applying 2S-SEH lpGBT configuration for " << +cChipRate << "G module." << RESET;
-
+    // Forcing driver attenuation to be 1
+    uint8_t cEQAttenuation = 3;
+    WriteChipReg(pChip, "EQConfig", cEQAttenuation << 3);
     // Clocks - by default all are off
     std::vector<uint8_t> cClocks  = {fClock_RHS_Hybrid, fClock_LHS_Hybrid}; // Reduced number of clocks and only 320 MHz
     uint8_t              cClkFreq = 0, cClkDriveStr = 7, cClkInvert = 1;
@@ -183,7 +185,7 @@ void D19clpGBTInterface::ContinuousPhaseAlignRx(Chip* pChip, const std::vector<u
 void D19clpGBTInterface::InitialPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
 {
     std::vector<uint8_t> cOptimalTaps = {};
-    AutoPhaseAlignRx(pChip, pGroups, pChannels);
+    PhaseAlignRx(pChip, pGroups, pChannels);
     // find mode
     for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++) { cOptimalTaps.push_back(GetPhaseTap(pChip, pGroups[cIndx], pChannels[cIndx])); }
     std::vector<uint8_t> cTapsHist(15, 0);
@@ -195,10 +197,132 @@ void D19clpGBTInterface::InitialPhaseAlignRx(Chip* pChip, const std::vector<uint
         for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++) { ConfigureRxPhase(pChip, pGroups[cIndx], pChannels[cIndx], cTapMode); }
 }
 
+uint8_t D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels)
+{
+    LOG(INFO) << BOLDBLUE << "Aligning lpGBT#" << +pChip->getId() << RESET;
+    const uint8_t cChipRate = lpGBTInterface::GetChipRate(pChip);
+
+    // Configure Rx Phase Shifter
+    uint16_t cDelay = 0;
+    uint8_t  cFreq = (cChipRate == 5) ? 4 : 5, cEnFTune = 0, cDriveStr = 3; // 4 --> 320 MHz || 5 --> 640 MHz
+    lpGBTInterface::ConfigurePhShifter(pChip, {0, 2}, cFreq, cDriveStr, cEnFTune, cDelay);
+
+    // // Set data source for channels 0,2 to PRBS
+    // lpGBTInterface::ConfigureRxSource(pChip, pGroups, lpGBTconstants::PATTERN_PRBS);
+    // // Turn ON PRBS for channels 0,2
+    // lpGBTInterface::ConfigureRxPRBS(pChip, pGroups, pChannels, true);
+    std::vector<uint8_t> cAligned(pGroups.size(), 0);
+    bool                 cSuccess = true;
+    std::vector<uint8_t> cOptimalTaps(0);
+
+    for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++)
+    {
+        uint8_t cGroup   = pGroups[cIndx];
+        uint8_t cChannel = pChannels[cIndx];
+
+        cFreq         = 2;
+        uint8_t cMode = 1; // Initial training mode
+        lpGBTInterface::ConfigureRxGroups(pChip, {cGroup}, {cChannel}, cFreq, cMode);
+        std::string cTrainRxReg;
+        if(cGroup == 0 || cGroup == 1)
+            cTrainRxReg = "EPRXTrain10";
+        else if(cGroup == 2 || cGroup == 3)
+            cTrainRxReg = "EPRXTrain32";
+        else if(cGroup == 4 || cGroup == 5)
+            cTrainRxReg = "EPRXTrain54";
+        else if(cGroup == 6)
+            cTrainRxReg = "EPRXTrainEc6";
+
+        std::vector<uint8_t> cPhases(0);
+        std::vector<uint8_t> cUniquePhases(0);
+        LOG(DEBUG) << BOLDYELLOW << "Group#" << +cGroup << " Channel#" << +cChannel << "...checking phase aligner" << RESET;
+        size_t cMaxAttempts = 5;
+        for(size_t cAttempt = 0; cAttempt < cMaxAttempts; cAttempt++)
+        {
+            ResetRxDll(pChip, {cGroup});
+
+            // Enable training
+            uint8_t cTrainingShift = cChannel + 4 * (cGroup % 2);
+            WriteChipReg(pChip, cTrainRxReg, (0x1 << cTrainingShift));
+            std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
+            WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
+            std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
+            // Check for lock
+            std::string cRXLockedReg = "EPRX" + std::to_string(cGroup) + "Locked";
+            uint8_t     cLockShift   = cChannel + 4;
+            auto        cLock        = 0;
+            uint8_t     cCurrPhase   = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
+            bool        cContinue    = (cLock == 0);
+            uint8_t     cMaxIters    = 10;
+            uint8_t     cIter        = 0;
+            do
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
+                cLock     = (ReadChipReg(pChip, cRXLockedReg) & (1 << cLockShift)) >> cLockShift;
+                cContinue = cLock == 0;
+                cIter++;
+            } while(cContinue && cIter < cMaxIters);
+            if(cLock) cAligned[cIndx] += 1;
+            WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
+            std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
+            cCurrPhase = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
+            LOG(DEBUG) << BOLDGREEN << "\t\t..Attempt# " << +cAttempt << "\t... RxPhase found  is... " << +cCurrPhase << RESET;
+            cPhases.push_back(cCurrPhase);
+            cUniquePhases.push_back(cCurrPhase);
+        }
+
+        cSuccess = cSuccess && (cAligned[cIndx] == cMaxAttempts);
+
+        std::sort(cUniquePhases.begin(), cUniquePhases.end());
+        cUniquePhases.erase(unique(cUniquePhases.begin(), cUniquePhases.end()), cUniquePhases.end());
+        std::vector<uint8_t> cCount(0);
+        size_t               cIndxBstPhase = 0;
+        size_t               cCntBstPhase  = 0;
+        for(size_t cIndx2 = 0; cIndx2 < cUniquePhases.size(); cIndx2++)
+        {
+            uint8_t cCountThisPhase = 0;
+            for(auto cThisPhase: cPhases) { cCountThisPhase += (cThisPhase == cUniquePhases[cIndx2]); }
+            if(cCountThisPhase >= cCntBstPhase)
+            {
+                cCntBstPhase  = cCountThisPhase;
+                cIndxBstPhase = cIndx2;
+            }
+        }
+
+        cSuccess = cSuccess && (cUniquePhases[cIndxBstPhase] != 15);
+        if(cUniquePhases[cIndxBstPhase] != 15)
+        {
+            LOG(INFO) << BOLDGREEN << "Group#" << +cGroup << " Channel#" << +cChannel << "...\t\t..Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] << RESET;
+            SetPhaseTap(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
+        }
+        else
+        {
+            LOG(INFO) << BOLDRED << "Group#" << +cGroup << " Channel#" << +cChannel << "\t\t..Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] << RESET;
+            ConfigureRxPhase(pChip, cGroup, cChannel, 0);
+            SetPhaseTap(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
+        }
+        ConfigureRxPhase(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
+    }
+
+    // Find mode
+    std::vector<uint8_t> cTapsHist(15, 0);
+    for(auto cItem: cOptimalTaps) cTapsHist[cItem]++;
+    // Return cTapsHist;
+    auto cTapMode = std::max_element(cTapsHist.begin(), cTapsHist.end()) - cTapsHist.begin();
+    LOG(INFO) << BOLDMAGENTA << "Most frequent optimal tap is " << +cTapMode << RESET;
+    uint8_t cMode = 0; // 2, continuous phase tracking : 0, fixed phase
+    lpGBTInterface::ConfigureRxGroups(pChip, pGroups, pChannels, 2, cMode);
+    // if(cTapMode!=15) for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++) { ConfigureRxPhase(pChip, pGroups[cIndx], pChannels[cIndx], cOptimalTaps[cIndx]); }
+    return (cSuccess) ? cTapMode : 15;
+}
+
 void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
 {
     uint8_t cChipRate = GetChipRate(pChip);
     LOG(INFO) << BOLDGREEN << "Applying PS-ROH-" << +cChipRate << "G lpGBT configuration" << RESET;
+    // Forcing driver attenuation to be 1
+    uint8_t cEQAttenuation = 3;
+    WriteChipReg(pChip, "EQConfig", cEQAttenuation << 3);
     // Clocks
     std::vector<uint8_t> cClocks = {fClock_LHS_Hybrid, fClock_LHS_CIC, fClock_RHS_Hybrid, fClock_RHS_CIC};
     // clock frequency set to 0 to disable it at first and only later configure what is needed
@@ -243,7 +367,6 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
         uint8_t cRxInvert = cInvrtRight[cIndx];
         ConfigureRxChannels(pChip, {cGroup}, {cChannel}, cRxEqual, cRxTerm, cRxAcBias, cRxInvert, cRxPhase);
     }
-    // InternalPhaseAlignRx(pChip, cRxGroups, cRxChannels);
     // Reset I2C Masters
     ResetI2C(pChip, {0, 1, 2});
     // Setting GPIO levels for PS ROH

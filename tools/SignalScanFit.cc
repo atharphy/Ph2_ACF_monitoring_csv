@@ -621,11 +621,7 @@ cHist->Write (cHist->GetName(), TObject::kOverwrite);
 
 // State machine control functions
 
-void SignalScanFit::ConfigureCalibration()
-{
-    CreateResultDirectory("Results/Run_SignalScanFit");
-    InitResultFile("SignalScanFitResults");
-}
+void SignalScanFit::ConfigureCalibration() {}
 
 void SignalScanFit::Running() {}
 

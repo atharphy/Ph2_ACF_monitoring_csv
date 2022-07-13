@@ -163,12 +163,12 @@
       <node id="lpgbt_version"         mask="0x08000000"      permission="rw"      description="Version of the lpGBT chip. 0=lpGBTv0(default), 1=lpGBTv1" />
     </node>
 
-    <node id="lpgbt_2"              address="0x00000016"      permission="rw"      description="Signals for Slow Control of lpgbt">
+    <node id="lpgbt_2"               address="0x00000016"     permission="rw"      description="Signals for Slow Control of lpgbt">
       <node id="ic_reg_addr_tx"         mask="0x0000FFFF"     permission="rw"      description="lpgbt register address to read" />
       <node id="ic_nb_of_words_to_read" mask="0xFFFF0000"     permission="rw"      description="nb of words to read through lpgbt sc" />
     </node>
 
-    <node id="lpgbt_mappping"       address="0x00000018"      permission="rw"      description="Configuration lpGBT link mapping">
+    <node id="lpgbt_mapping"         address="0x00000018"     permission="rw"      description="Configuration lpGBT link mapping">
       <node id="update_downlink"        mask="0x00000001"     permission="rw"      description="Update mapping for downlink groups/channels" />
       <node id="update_uplink"          mask="0x00000002"     permission="rw"      description="Update mapping for downlink groups/channels" />
       <node id="module_map_id"          mask="0x0000007C"     permission="rw"      description="" />
@@ -179,7 +179,7 @@
       <node id="upgroup_map_id"         mask="0x00700000"     permission="rw"      description="" />
     </node>
 
-    <node id="gtx_drp"              address="0x0000001A"      permission="rw"      description="Control registers for drp ports">
+    <node id="gtx_drp"               address="0x0000001A"     permission="rw"      description="Control registers for drp ports">
       <node id="address"                mask="0x000007FF"     permission="rw"      description="Address for DRP Register transaction" />
       <node id="wr_din"                 mask="0x0007F800"     permission="rw"      description="Write data in" />
       <node id="wr_en"                  mask="0x00080000"     permission="rw"      description="Write enable" />

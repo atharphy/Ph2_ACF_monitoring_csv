@@ -75,7 +75,24 @@ Tool::Tool(const Tool& pTool) { this->Inherit(&pTool); }
 
 Tool::~Tool() {}
 
-bool Tool::GetRunningStatus() { return (fRunningFuture.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready); }
+bool Tool::GetRunningStatus()
+{
+    std::future_status runningStatus = fRunningFuture.wait_for(std::chrono::milliseconds(500u));
+    if(runningStatus == std::future_status::ready || runningStatus == std::future_status::deferred)
+    {
+        try
+        {
+            if(fRunningFuture.valid()) { fRunningFuture.get(); }
+        }
+        catch(const std::exception& e)
+        {
+            throw std::runtime_error(e.what());
+        }
+        return true;
+    }
+    else
+        return false;
+}
 
 void Tool::waitForRunToBeCompleted()
 {
@@ -90,6 +107,11 @@ void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNum
 
 void Tool::Start(int runNumber)
 {
+    std::string resultDirectory = "Results/OT_ModuleTest_ModuleOT_Run" + std::to_string(runNumber);
+    CreateResultDirectory(resultDirectory, false, false);
+#ifdef __USE_ROOT__
+    InitResultFile("Hybrid");
+#endif
     fKeepRunning   = true;
     fRunNumber     = runNumber;
     fRunningFuture = std::async(std::launch::async, &Tool::Running, this);
@@ -207,8 +229,8 @@ void Tool::SoftDestroy()
 }
 
 #ifdef __USE_ROOT__
-TString  Tool::fSummaryTreeParameter = "";
-Double_t Tool::fSummaryTreeValue     = 0.0;
+std::string Tool::fSummaryTreeParameter = "";
+double      Tool::fSummaryTreeValue     = 0.0;
 
 /*!
  * \brief Initialize a 'summary' TTree in the ROOT File, with branches 'parameter'(string) and 'value'(double)
@@ -233,7 +255,7 @@ void Tool::fillSummaryTree(std::string cParameter, Double_t cValue) // MINE
     // TString currentDirectory = getDirectoryName();
     // const char* currentDirectory = gDirectory->GetPath();
     fResultFile->cd();
-    fSummaryTreeParameter.Clear();
+    fSummaryTreeParameter.clear();
     TString cParameter_TString(cParameter);
     fSummaryTreeParameter = cParameter_TString;
     fSummaryTreeValue     = cValue;
@@ -406,12 +428,14 @@ TObject* Tool::getHist(BoardContainer* pBeBoard, std::string pName)
             return cHisto->second;
     }
 }
+#endif
 
 void Tool::WriteRootFile()
 {
+#ifdef __USE_ROOT__
     if((fResultFile != nullptr) && (fResultFile->IsOpen() == true)) fResultFile->Write();
-}
 #endif
+}
 
 void Tool::SaveResults()
 {
@@ -471,7 +495,8 @@ void Tool::SaveResults()
         cCanvas.second->SaveAs(cPdfName.c_str());
     }
     // Save summary TTree
-    fResultFile->cd();
+    // fResultFile->cd();
+    if((fResultFile != nullptr) && (fResultFile->IsOpen() == true)) fResultFile->cd();
     if(fSummaryTree != nullptr) fSummaryTree->Write(); // Seems to be needed with ROOT6, seems to break with ROOT5...
 #endif
 }
@@ -503,6 +528,7 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
 #ifdef __USE_ROOT__
 void Tool::InitResultFile(const std::string& pFilename)
 {
+    if(fResultFile != nullptr) return;
     if(!fDirectoryName.empty())
     {
         std::string cFilename = fDirectoryName + "/" + pFilename + ".root";
@@ -511,7 +537,7 @@ void Tool::InitResultFile(const std::string& pFilename)
         {
             fResultFile     = TFile::Open(cFilename.c_str(), "RECREATE");
             fResultFileName = cFilename;
-            // AddMetadata();
+            AddMetadata();
         }
         catch(std::exception& e)
         {
@@ -521,9 +547,11 @@ void Tool::InitResultFile(const std::string& pFilename)
     else
         LOG(INFO) << RED << "ERROR: " << RESET << "No Result Directory initialized - not saving results!";
 }
+#endif
 
 void Tool::CloseResultFile()
 {
+#ifdef __USE_ROOT__
     if(fResultFile != nullptr)
     {
         LOG(INFO) << GREEN << "Closing result file" << RESET;
@@ -531,8 +559,10 @@ void Tool::CloseResultFile()
         delete fResultFile;
         fResultFile = nullptr;
     }
+#endif
 }
 
+#ifdef __USE_ROOT__
 // add username, chip IDs to a metadata tree
 void Tool::AddMetadata()
 {
@@ -555,8 +585,18 @@ void Tool::AddMetadata()
     t->Branch("username", &user);
 
     // save chip IDs
-    int chipIds[20];
-    int i = 0;
+    std::vector<uint32_t> chipIds;
+
+    uint16_t chipVectorSize = 0;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup) { chipVectorSize += cHybrid->size(); }
+        }
+    }
+    chipIds.reserve(chipVectorSize); // Need to be done to avoid jumps of the vector memory that messes with the pointer associated to the branch
+
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -565,19 +605,13 @@ void Tool::AddMetadata()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::CBC3)
-                    {
-                        std::stringstream label;
-                        label << "hybrid_" << std::to_string(cHybrid->getId()) << "_CBC3_" << std::to_string(cChip->getId());
+                    std::string label = getReadoutChipString(cBoard->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId());
 
-                        uint32_t value = static_cast<CbcInterface*>(fReadoutChipInterface)->ReadCbcIDeFuse(cChip);
+                    uint32_t value = fReadoutChipInterface->ReadChipFuseID(cChip);
 
-                        chipIds[i] = value;
-                        // this is ok because we will only set one value per branch
-                        t->Branch(label.str().c_str(), &chipIds[i]);
-
-                        i++;
-                    }
+                    chipIds.push_back(value);
+                    // this is ok because we will only set one value per branch
+                    t->Branch(label.c_str(), &chipIds.back());
                 }
             }
         }

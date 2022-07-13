@@ -489,7 +489,7 @@ void PedestalEqualization::writeObjects()
 
 // State machine control functions
 
-void PedestalEqualization::ConfigureCalibration() { CreateResultDirectory("Results/Run_PedestalEqualization"); }
+void PedestalEqualization::ConfigureCalibration() {}
 
 void PedestalEqualization::Running()
 {

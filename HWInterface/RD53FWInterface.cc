@@ -14,7 +14,7 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-RD53FWInterface::RD53FWInterface(const char* pId, const char* pUri, const char* pAddressTable) : BeBoardFWInterface(pId, pUri, pAddressTable), ddr3Offset(0), FWinfo(0) {}
+RD53FWInterface::RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : BeBoardFWInterface(pId, pUri, pAddressTable), ddr3Offset(0), FWinfo(0) {}
 
 void RD53FWInterface::setFileHandler(FileHandler* pHandler)
 {
@@ -168,8 +168,8 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // # Set and check RD53 AURORA speed #
     // ###################################
     RegManager::WriteStackReg({{"user.ctrl_regs.gtx_drp.aurora_speed", RD53FWconstants::AURORA_SPEED}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 1}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 0}});
-    uint32_t auroraSpeed = RD53FWInterface::ReadoutSpeed();
-    LOG(INFO) << GREEN << "Aurora speed set to: " << BOLDYELLOW << (auroraSpeed == 0 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
+    auto auroraSpeed = RD53FWInterface::ReadoutSpeed();
+    LOG(INFO) << GREEN << "Aurora speed set to: " << BOLDYELLOW << (auroraSpeed == RD53FWconstants::ReadoutSpeed::x1280 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
 
     // ###########################
     // # Print clock measurement #
@@ -214,7 +214,7 @@ void RD53FWInterface::WriteChipCommand(const std::vector<uint16_t>& data, int hy
     std::vector<uint32_t> commandList;
 
     RD53FWInterface::ComposeAndPackChipCommands(data, hybridId, commandList);
-    RD53FWInterface::SendChipCommandsPack(commandList);
+    RD53FWInterface::SendChipCommands(commandList);
 }
 
 void RD53FWInterface::ComposeAndPackChipCommands(const std::vector<uint16_t>& data, int hybridId, std::vector<uint32_t>& commandList)
@@ -232,10 +232,10 @@ void RD53FWInterface::ComposeAndPackChipCommands(const std::vector<uint16_t>& da
     for(auto i = 1u; i < data.size(); i += 2) commandList.emplace_back(bits::pack<16, 16>(data[i - 1], data[i]));
 
     // If data.size() is not even, add a sync command
-    if(data.size() % 2 != 0) commandList.emplace_back(bits::pack<16, 16>(data.back(), RD53CmdEncoder::SYNC));
+    if(data.size() % 2 != 0) commandList.emplace_back(bits::pack<16, 16>(data.back(), RD53ACmd::RD53ACmdEncoder::SYNC));
 }
 
-void RD53FWInterface::SendChipCommandsPack(const std::vector<uint32_t>& commandList)
+void RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
 {
     int nAttempts = 0;
 
@@ -412,14 +412,14 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
     return true;
 }
 
-uint32_t RD53FWInterface::ReadoutSpeed()
+RD53FWconstants::ReadoutSpeed RD53FWInterface::ReadoutSpeed()
 // ####################
 // # 0 = 1.28 Gbit/s #
 // # 1 = 640 Mbit/s  #
 // # 2 = 320 Mbit/s  #
 // ###################
 {
-    return RegManager::ReadReg("user.stat_regs.aurora_rx.speed");
+    return RegManager::ReadReg("user.stat_regs.aurora_rx.speed") == 0 ? RD53FWconstants::ReadoutSpeed::x1280 : RD53FWconstants::ReadoutSpeed::x640;
 }
 
 void RD53FWInterface::InitHybridByHybrid(const BeBoard* pBoard)
@@ -674,13 +674,13 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
 
     // @TMP@
     if(RD53FWInterface::localCfgFastCmd.autozero_source == AutozeroSource::FastCMDFSM)
-        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
+        RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::WrReg{RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14}), -1);
     else if(RD53FWInterface::localCfgFastCmd.autozero_source == AutozeroSource::Software)
     {
-        RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
-        RD53FWInterface::WriteChipCommand(RD53Cmd::GlobalPulse(RD53Constants::BROADCAST_CHIPID, 0x6).getFrames(), -1);
+        RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::WrReg{RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14}), -1);
+        RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::GlobalPulse{RD53Constants::BROADCAST_CHIPID, 0x6}), -1);
         std::this_thread::sleep_for(std::chrono::microseconds(10));
-        RD53FWInterface::WriteChipCommand(RD53Cmd::ECR().getFrames(), -1);
+        RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::ECR{}), -1);
         std::this_thread::sleep_for(std::chrono::microseconds(20));
     }
 
@@ -747,7 +747,7 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
     if(cfg == nullptr) cfg = &(RD53FWInterface::localCfgFastCmd);
 
     // @TMP@ : Prepare GLOBAL_PULSE_RT to acquire zero level in SYNC FE
-    if(cfg->autozero_source != AutozeroSource::Disabled) RD53FWInterface::WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
+    if(cfg->autozero_source != AutozeroSource::Disabled) RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::WrReg{RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14}), -1);
 
     // ##################################
     // # Configuring fast command block #
@@ -913,7 +913,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
               << mainClock / ((RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr + 1) * 4 - 1 + (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject + 1) * 4 + 7 +
                               (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger + 1) * 4 - 1 + (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime + 1) * 4 + 7 +
                               RD53FWInterface::localCfgFastCmd.trigger_duration)
-              << std::setprecision(-1) << " Hz" << RESET; // @TMP@
+              << std::setprecision(-1) << " Hz" << RESET;
     RD53Shared::resetDefaultFloat();
 
     // ##############################
@@ -1038,8 +1038,27 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(const Chip* pChip, const uint32_t
     return cRead;
 }
 
-void     RD53FWInterface::selectLink(const uint8_t pLinkId, uint32_t pWait_ms) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.active_link", pLinkId); }
-uint32_t RD53FWInterface::OptoLinkVersion() { return RegManager::ReadReg("user.ctrl_regs.lpgbt_1.lpgbt_version"); }
+void RD53FWInterface::SetDownLinkMapping(uint8_t TxLink, uint8_t TxGroup, uint8_t TxModuleId)
+{
+    RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_mapping.downlink_map_id", TxLink},
+                               {"user.ctrl_regs.lpgbt_mapping.downgroup_map_id", TxGroup},
+                               {"user.ctrl_regs.lpgbt_mapping.module_map_id", TxModuleId},
+                               {"user.ctrl_regs.lpgbt_mapping.update_downlink", 1},
+                               {"user.ctrl_regs.lpgbt_mapping.update_downlink", 0}});
+}
+
+void RD53FWInterface::SetUpLinkMapping(uint8_t RxLink, uint8_t RxGroup, uint8_t RxModuleId, uint8_t lane)
+{
+    RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_mapping.uplink_map_id", RxLink},
+                               {"user.ctrl_regs.lpgbt_mapping.upgroup_map_id", RxGroup},
+                               {"user.ctrl_regs.lpgbt_mapping.module_map_id", RxModuleId},
+                               {"user.ctrl_regs.lpgbt_mapping.chip_map_id", lane},
+                               {"user.ctrl_regs.lpgbt_mapping.update_uplink", 1},
+                               {"user.ctrl_regs.lpgbt_mapping.update_uplink", 0}});
+}
+
+void RD53FWInterface::selectLink(const uint8_t pLinkId, uint32_t pWait_ms) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.active_link", pLinkId); }
+void RD53FWInterface::SetOptoLinkVersion(uint8_t version) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.lpgbt_version", version); }
 
 void RD53FWInterface::SelectBERcheckBitORFrame(const uint8_t bitORframe) { RegManager::WriteReg("user.ctrl_regs.PRBS_checker.error_cntr_sel", bitORframe); }
 

@@ -8,7 +8,7 @@
 #include "../Utils/Utilities.h"
 #include "../Utils/argvparser.h"
 #include "../tools/Tool.h"
-#include "FC7FpgaControlFWInterface.h"
+#include "FC7FpgaConfig.h"
 #include "TApplication.h"
 #include "TROOT.h"
 #ifdef __ANTENNA__
@@ -119,8 +119,8 @@ int main(int argc, char** argv)
     if(cHardReset)
     {
         cTool.fBeBoardInterface->setBoard(pBoard->getId());
-        auto cInterface = FC7FpgaControlFWInterface(cTool.fBeBoardInterface->getFirmwareInterface());
-        cInterface.RebootBoard();
+        auto cInterface = FC7FpgaConfig(std::move(*static_cast<RegManager*>(cTool.fBeBoardInterface->getFirmwareInterface())));
+        cInterface.rebootBoard();
     }
     else if(cDDR3SelfTest)
     {

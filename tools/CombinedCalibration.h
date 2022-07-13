@@ -1,3 +1,6 @@
+#ifndef __COMBINED_CALIBRATION__
+#define __COMBINED_CALIBRATION__
+
 #include "../tools/Tool.h"
 #include <iostream>
 
@@ -34,29 +37,19 @@ struct CombinedCalibration : public Tool
 
     CombinedCalibration() : current_tool(this) {}
 
-    void Running()
-    {
-        runningCompleted = false;
-        start_impl(std::make_index_sequence<size>());
-        runningCompleted = true;
-    }
+    void Running() { start_impl(std::make_index_sequence<size>()); }
 
-    void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000) override
-    {
-        Tool::Configure(cHWFile, enableStream, DQMportNumber);
-        Tool::CreateResultDirectory("Results", false, false);
-    }
-
-    bool GetRunningStatus() override { return runningCompleted; }
+    void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000) override { Tool::Configure(cHWFile, enableStream, DQMportNumber); }
 
     void Stop() override
     {
         Tool::dumpConfigFiles();
         Tool::SaveResults();
+        Tool::WriteRootFile();
+        Tool::CloseResultFile();
     }
 
   private:
-    bool runningCompleted;
     template <size_t... Is>
     void start_impl(std::index_sequence<Is...>)
     {
@@ -79,3 +72,5 @@ struct CombinedCalibration : public Tool
     Tool*                current_tool;
     std::tuple<Tools...> tools;
 };
+
+#endif

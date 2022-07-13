@@ -38,7 +38,6 @@ typedef std::vector<EventTag> EventsList;
 #include "TH2.h"
 #include "TProfile.h"
 #include "TProfile2D.h"
-#include "TString.h"
 #include "TText.h"
 #include "TTree.h"
 #endif

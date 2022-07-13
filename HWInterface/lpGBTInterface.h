@@ -80,6 +80,13 @@ class lpGBTInterface : public ChipInterface
     void StartPRBSpattern(Ph2_HwDescription::Chip* pChip);
     void StopPRBSpattern(Ph2_HwDescription::Chip* pChip);
 
+    // #####################################
+    // # Phase alignment virtual functions #
+    // #####################################
+    virtual uint8_t PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels) = 0;
+    virtual void
+    PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const Ph2_HwDescription::BeBoard* pBoard, const Ph2_HwDescription::OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface) = 0;
+
     // ################################
     // # Chip configuration functions #
     // ################################
@@ -145,11 +152,6 @@ class lpGBTInterface : public ChipInterface
     double RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed);
     double BERtestCL(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double bits_or_time, float pConfidenceLevel);
 
-    // ############################################
-    // # LpGBT Manual phase alignment of Rx ports #
-    // ############################################
-    void ManualPhaseAlignRx(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel);
-
     // ##############################################
     // # LpGBT I2C Masters functions (Slow Control) #
     // ##############################################
@@ -178,8 +180,6 @@ class lpGBTInterface : public ChipInterface
     // #######################
     bool ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection);
 
-    void    PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    uint8_t AutoPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
     void    ConfigureRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
     void    ConfigureTxChannels(Ph2_HwDescription::Chip*    pChip,
                                 const std::vector<uint8_t>& pGroups,
@@ -235,7 +235,6 @@ class lpGBTInterface : public ChipInterface
     // # LpGBT specific routine functions #
     // ####################################
     void PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups);
-    void InternalPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
     void ResetRxDll(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups);
 
     // ################################

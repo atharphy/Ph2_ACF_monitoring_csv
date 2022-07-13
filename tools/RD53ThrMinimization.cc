@@ -25,22 +25,24 @@ void ThrMinimization::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart        = this->findValueInSettings<double>("ROWstart");
-    rowStop         = this->findValueInSettings<double>("ROWstop");
-    colStart        = this->findValueInSettings<double>("COLstart");
-    colStop         = this->findValueInSettings<double>("COLstop");
     targetOccupancy = this->findValueInSettings<double>("TargetOcc");
-    ThrStart        = this->findValueInSettings<double>("ThrStart");
-    ThrStop         = this->findValueInSettings<double>("ThrStop");
+    startValue      = this->findValueInSettings<double>("ThrStart");
+    stopValue       = this->findValueInSettings<double>("ThrStop");
     doDisplay       = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData  = this->findValueInSettings<double>("SaveBinaryData");
 
-    frontEnd = RD53::getMajorityFE(colStart, colStop);
-    colStart = std::max(colStart, frontEnd->colStart);
-    colStop  = std::min(colStop, frontEnd->colStop);
+    frontEnd = RD53Shared::firstChip->getMajorityFE(PixelAlive::colStart, PixelAlive::colStop);
+    colStart = std::max(PixelAlive::colStart, frontEnd->colStart);
+    colStop  = std::min(PixelAlive::colStop, frontEnd->colStop);
     LOG(INFO) << GREEN << "ThrMinimization will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << BOLDYELLOW << colStart << ", " << colStop << RESET
               << GREEN << "]" << RESET;
+
+    // ########################
+    // # Custom channel group #
+    // ########################
+    for(auto row = PixelAlive::rowStart; row <= PixelAlive::rowStop; row++)
+        for(auto col = PixelAlive::colStart; col <= PixelAlive::colStop; col++) PixelAlive::theChnGroupHandler->getRegionOfInterest().enableChannel(row, col);
 
     // #######################
     // # Initialize progress #
@@ -100,6 +102,7 @@ void ThrMinimization::localConfigure(const std::string& fileRes_, int currentRun
         LOG(INFO) << GREEN << "[ThrMinimization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     ThrMinimization::ConfigureCalibration();
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "ThrMinimization");
     ThrMinimization::initializeFiles(fileRes_, currentRun);
 }
 
@@ -126,7 +129,7 @@ void ThrMinimization::initializeFiles(const std::string& fileRes_, int currentRu
 
 void ThrMinimization::run()
 {
-    ThrMinimization::bitWiseScanGlobal(frontEnd->thresholdReg, targetOccupancy, ThrStart, ThrStop);
+    ThrMinimization::bitWiseScanGlobal(frontEnd->thresholdReg, targetOccupancy, startValue, stopValue);
 
     // ############################
     // # Fill threshold container #
@@ -233,7 +236,7 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, const float&
                             2;
 
                         static_cast<RD53Interface*>(this->fReadoutChipInterface)
-                            ->PackChipCommands(cChip,
+                            ->PackWriteCommand(cChip,
                                                regName,
                                                midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
                                                chipCommandList,
@@ -248,7 +251,7 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, const float&
                     static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(cBoard, chipCommandList, hybridId, hybridCommandList);
                 }
 
-                static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendHybridCommandsPack(cBoard, hybridCommandList);
+                static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendHybridCommands(cBoard, hybridCommandList);
             }
 
         // ################
@@ -320,7 +323,7 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, const float&
                     if(bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() != 0)
                     {
                         static_cast<RD53Interface*>(this->fReadoutChipInterface)
-                            ->PackChipCommands(cChip,
+                            ->PackWriteCommand(cChip,
                                                regName,
                                                bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
                                                chipCommandList,
@@ -338,7 +341,7 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, const float&
                 static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(cBoard, chipCommandList, hybridId, hybridCommandList);
             }
 
-            static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendHybridCommandsPack(cBoard, hybridCommandList);
+            static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendHybridCommands(cBoard, hybridCommandList);
         }
 
     // ################
