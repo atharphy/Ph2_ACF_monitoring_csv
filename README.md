@@ -268,7 +268,7 @@ Install devtoolset 10
 
 Install python3
 
-        $> sudo yum install -y python3-devel
+        $> sudo yum install -y python3 python3-devel
 
 Install protobuf:
 
@@ -321,7 +321,7 @@ Install pybind11 (if installed in the same directoory when you plan to install t
 
 6. Install python3
 
-        $> sudo yum install -y python3-devel
+        $> sudo yum install -y python3 python3-devel
 
 7. Install protobuf:
 

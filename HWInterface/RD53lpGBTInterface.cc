@@ -174,7 +174,7 @@ void RD53lpGBTInterface::SetDownLinkMapping(const OpticalGroup* pOpticalGroup)
         {
             auto pChip = static_cast<RD53*>(cChip);
             auto fwGr  = mapLpGBTGrCh2fwGr[pChip->getTxGroup() * 10 + pChip->getTxChannel()];
-            static_cast<RD53FWInterface*>(fBoardFW)->SetDownLinkMapping(pChip->getTxLink(), fwGr, cHybrid->getId());
+            static_cast<RD53FWInterface*>(fBoardFW)->SetDownLinkMapping(pOpticalGroup->getOpticalGroupId(), fwGr, cHybrid->getId());
         }
 }
 
@@ -186,7 +186,7 @@ void RD53lpGBTInterface::SetUpLinkMapping(const OpticalGroup* pOpticalGroup)
         for(const auto cChip: *cHybrid)
         {
             auto pChip = static_cast<RD53*>(cChip);
-            static_cast<RD53FWInterface*>(fBoardFW)->SetUpLinkMapping(pChip->getRxLink(), pChip->getRxGroup(), cHybrid->getId(), pChip->getChipLane());
+            static_cast<RD53FWInterface*>(fBoardFW)->SetUpLinkMapping(pOpticalGroup->getOpticalGroupId(), pChip->getRxGroup(), cHybrid->getId(), pChip->getChipLane());
         }
 }
 

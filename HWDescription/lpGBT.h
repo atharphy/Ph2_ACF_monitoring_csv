@@ -29,7 +29,7 @@ class lpGBT : public Chip
     uint8_t getNumberOfBits(const std::string& dacName) override { return 0; }
 
     void    setVersion(uint8_t pVersion) { fVersion = pVersion; }
-    uint8_t getVersion() { return fVersion; }
+    uint8_t getVersion() const { return fVersion; }
 
     void setPhaseRxAligned(const bool done) { phaseRxAligned = done; };
     bool getPhaseRxAligned() { return phaseRxAligned; };
@@ -41,15 +41,11 @@ class lpGBT : public Chip
 
     void setClocksFrequency(uint16_t pClocksFrequency) { fClocksFrequency = pClocksFrequency; }
 
-    void addRxLinks(const std::vector<uint8_t>& pRxLinks) { addNoDuplicate<uint8_t>(fRxLinks, pRxLinks); }
-
     void addRxGroups(const std::vector<uint8_t>& pRxGroups) { addNoDuplicate<uint8_t>(fRxGroups, pRxGroups); }
 
     void addRxChannels(const std::vector<uint8_t>& pRxChannels) { addNoDuplicate<uint8_t>(fRxChannels, pRxChannels); }
 
     void setRxDataRate(uint16_t pRxDataRate) { fRxDataRate = pRxDataRate; }
-
-    void addTxLinks(const std::vector<uint8_t>& pTxLinks) { addNoDuplicate<uint8_t>(fTxLinks, pTxLinks); }
 
     void addTxGroups(const std::vector<uint8_t>& pTxGroups) { addNoDuplicate<uint8_t>(fTxGroups, pTxGroups); }
 
@@ -60,12 +56,10 @@ class lpGBT : public Chip
     std::vector<uint8_t> getClocks() { return fClocks; }
     uint16_t             getClocksFrequency() { return fClocksFrequency; }
 
-    std::vector<uint8_t> getRxLinks() { return fRxLinks; }
     std::vector<uint8_t> getRxGroups() { return fRxGroups; }
     std::vector<uint8_t> getRxChannels() { return fRxChannels; }
     uint16_t             getRxDataRate() { return fRxDataRate; }
 
-    std::vector<uint8_t> getTxLinks() { return fTxLinks; }
     std::vector<uint8_t> getTxGroups() { return fTxGroups; }
     std::vector<uint8_t> getTxChannels() { return fTxChannels; }
     uint16_t             getTxDataRate() { return fTxDataRate; }
@@ -82,7 +76,7 @@ class lpGBT : public Chip
     uint8_t              fVersion;
     bool                 phaseRxAligned; // @TMP@
     std::string          configFileName;
-    std::vector<uint8_t> fClocks, fRxLinks, fRxGroups, fRxChannels, fTxLinks, fTxGroups, fTxChannels;
+    std::vector<uint8_t> fClocks, fRxGroups, fRxChannels, fTxGroups, fTxChannels;
     uint16_t             fClocksFrequency, fRxDataRate, fTxDataRate, fChipAddress;
     uint8_t              fRxHSLPolarity, fTxHSLPolarity;
     // Number of write transactions - one element per master

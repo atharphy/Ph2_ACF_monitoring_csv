@@ -1454,27 +1454,21 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
         if(cChildName.find("_Files") != std::string::npos) continue;
         if(cChildName.find("RD53") != std::string::npos)
         {
-            std::vector<uint8_t> cRxLinks    = splitToVector(cChild.attribute("RxLinks").value(), ',');
             std::vector<uint8_t> cRxGroups   = splitToVector(cChild.attribute("RxGroups").value(), ',');
             std::vector<uint8_t> cRxChannels = splitToVector(cChild.attribute("RxChannels").value(), ',');
-            std::vector<uint8_t> cTxLinks    = splitToVector(cChild.attribute("TxLinks").value(), ',');
             std::vector<uint8_t> cTxGroups   = splitToVector(cChild.attribute("TxGroups").value(), ',');
             std::vector<uint8_t> cTxChannels = splitToVector(cChild.attribute("TxChannels").value(), ',');
 
             // Retrieve links, groups and channels from CIC node attirbutes and propagate to LpGBT class
-            plpGBT->addRxLinks(cRxLinks);
             plpGBT->addRxGroups(cRxGroups);
             plpGBT->addRxChannels(cRxChannels);
-            plpGBT->addTxLinks(cTxLinks);
             plpGBT->addTxGroups(cTxGroups);
             plpGBT->addTxChannels(cTxChannels);
 
             // In the case of IT propagate LpGBT mapping the front-end chip
             uint8_t cChipId = cChild.attribute("Id").as_int();
-            static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxLink(cRxLinks[0]);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxGroup(cRxGroups[0]);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxChannel(cRxChannels[0]);
-            static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxLink(cTxLinks[0]);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxGroup(cTxGroups[0]);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxChannel(cTxChannels[0]);
         }
@@ -1498,18 +1492,15 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
 
     uint32_t    chipId     = theChipNode.attribute("Id").as_int();
     uint32_t    chipLane   = theChipNode.attribute("Lane").as_int();
-    uint8_t     cRxLink    = theChipNode.attribute("RxLinks").as_int();
     uint8_t     cRxGroup   = theChipNode.attribute("RxGroups").as_int();
     uint8_t     cRxChannel = theChipNode.attribute("RxChannels").as_int();
-    uint8_t     cTxLink    = theChipNode.attribute("TxLinks").as_int();
     uint8_t     cTxGroup   = theChipNode.attribute("TxGroups").as_int();
     uint8_t     cTxChannel = theChipNode.attribute("TxChannels").as_int();
     std::string cfgComment = theChipNode.attribute("Comment").as_string();
 
     os << BOLDBLUE << "|\t|\t|----" << theChipNode.name() << " --> Id: " << BOLDYELLOW << chipId << BOLDBLUE << ", Lane: " << BOLDYELLOW << chipLane << BOLDBLUE << ", File: " << BOLDYELLOW
-       << cFileName << BOLDBLUE << ", RxLink: " << BOLDYELLOW << +cRxLink << BOLDBLUE << ", RxGroup: " << BOLDYELLOW << +cRxGroup << BOLDBLUE << ", RxChannel: " << BOLDYELLOW << +cRxChannel
-       << BOLDBLUE << ", TxLink: " << BOLDYELLOW << +cTxLink << BOLDBLUE << ", TxGroup: " << BOLDYELLOW << +cTxGroup << BOLDBLUE << ", TxChannel: " << BOLDYELLOW << +cTxChannel << BOLDBLUE
-       << ", Comment: " << BOLDYELLOW << cfgComment << RESET << std::endl;
+       << cFileName << BOLDBLUE << ", RxGroup: " << BOLDYELLOW << +cRxGroup << BOLDBLUE << ", RxChannel: " << BOLDYELLOW << +cRxChannel << BOLDBLUE << ", TxGroup: " << BOLDYELLOW << +cTxGroup
+       << BOLDBLUE << ", TxChannel: " << BOLDYELLOW << +cTxChannel << BOLDBLUE << ", Comment: " << BOLDYELLOW << cfgComment << RESET << std::endl;
 
     ReadoutChip* theChip;
     if(frontEndType == FrontEndType::RD53A)
