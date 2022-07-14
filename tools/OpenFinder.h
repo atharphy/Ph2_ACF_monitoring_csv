@@ -12,12 +12,15 @@
 #ifndef OpenFinder_h__
 #define OpenFinder_h__
 
-#if defined(__TCUSB__) && defined(__USE_ROOT__) && defined(__ANTENNA__)
+#if defined(__ANTENNA__)
+#include "Antenna.h"
+#endif
+
+#if defined(__TCUSB__) && defined(__USE_ROOT__)
 #include "PSHybridTester.h"
 #include "TH2F.h"
 #include "TTree.h"
 
-#include "Antenna.h"
 #include "USB_a.h"
 
 #define ADC_SLAVE 4

@@ -895,6 +895,25 @@ void PedeNoise::producePedeNoisePlots()
 {
 #ifdef __USE_ROOT__
     fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(*fThresholdAndNoiseContainer);
+
+    // Storing noise and pedestal average and RMS values on the summaryTree
+    for(auto board: *fThresholdAndNoiseContainer)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto module: *opticalGroup)
+            {
+                for(auto chip: *module)
+                {
+                    fillSummaryTree("AvgNoiseSSA" + std::to_string(chip->getId()), chip->getSummary<ThresholdAndNoise>().fNoise );      // For GUI summaryTree
+                    fillSummaryTree("StDvNoiseSSA" + std::to_string(chip->getId()), chip->getSummary<ThresholdAndNoise>().fNoiseError );   // For GUI summaryTree
+                    fillSummaryTree("AvgPedeSSA" + std::to_string(chip->getId()), chip->getSummary<ThresholdAndNoise>().fThreshold );    // For GUI summaryTree
+                    fillSummaryTree("StDvPedeSSA" + std::to_string(chip->getId()), chip->getSummary<ThresholdAndNoise>().fThresholdError ); // For GUI summaryTree
+                }
+            }
+        }
+    }
+
 #else
     auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
     for(auto board: *fThresholdAndNoiseContainer)

@@ -142,7 +142,7 @@
     ELECTRICAL FC7 
   ###############-->
   <BeBoard Id="1" boardType="D19C" eventType="VR" linkReset="1" boardReset="1">
-      <connection id="board" uri="chtcp-2.0://cmsuptkhsetup1.cern.ch:10203?target=192.168.0.13:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+      <connection id="board" uri="chtcp-2.0://hybridtesting.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <CDCE configure="0" clockRate="320"/>
     
     <OpticalGroup Id="0" FMCId="0" reset="1">
