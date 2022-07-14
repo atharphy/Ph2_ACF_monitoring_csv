@@ -77,13 +77,7 @@ void D19cLinkInterface::GeneralLinkReset(const BeBoard* pBoard)
     if(!cAllLocked)
     {
         LOG(ERROR) << BOLDRED << "Failed to lock all links after a general reset" << RESET;
-#ifdef __TCUSB__
-        // In the test system a run time error is undesired
-        return;
-#else
-
         throw Exception("Failed to lock all links after a general reset");
-#endif
     }
 }
 

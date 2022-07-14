@@ -684,15 +684,6 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
             LOG(INFO) << BOLDMAGENTA << "Resetting lpGBT-FPGA core on BeBoard#" << +pBoard->getId() << RESET;
             flpGBTSlowControlWorkerInterface->Reset();
             fLinkInterface->GeneralLinkReset(pBoard);
-#ifdef __TCUSB__
-            // In the test system a run time error is undesired
-            for(auto cOpticalReadout: *pBoard)
-            {
-                uint8_t cLinkId = cOpticalReadout->getId();
-                if(!fLinkInterface->GetLinkStatus(cLinkId)) { return; }
-            }
-
-#endif
         }
         else
         {
@@ -703,11 +694,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
                 if(!fLinkInterface->GetLinkStatus(cLinkId))
                 {
                     LOG(ERROR) << BOLDRED << "Link#" << +cLinkId << " not locked" RESET;
-#ifdef __TCUSB__
-                    return;
-#else
                     throw Exception("Link not locked...");
-#endif
                 }
             }
         }
