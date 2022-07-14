@@ -250,17 +250,27 @@ int main(int argc, char* argv[])
     // establishes an optical link and configures the lpgbt over the optical cable
     uint8_t cExternalPattern = (cmd.foundOption("external-pattern")) ? convertAnyInt(cmd.optionValue("external-pattern").c_str()) : 0;
     cSEHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
-    cTool.ConfigureHw();
-    if(!cSEHTester.LpGBTGetLinkLock())
+
+    try
+    {
+        cTool.ConfigureHw();
+    }
+    catch(...)
     {
         cSEHTester.TurnOff();
         cSEHTester.SetLoad(300, 300);
         std::this_thread::sleep_for(std::chrono::milliseconds(1500));
         cSEHTester.TurnOn(cRightLoad, cLeftLoad);
         std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-        cTool.ConfigureHw();
+        try
+        {
+            cTool.ConfigureHw();
+        }
+        catch(...)
+        {
+            return -1;
+        }
     }
-    if(!cSEHTester.LpGBTGetLinkLock()) { return -1; }
     cSEHTester.Initialise();
 
     // Initialize BackEnd & Control LpGBT Tester
