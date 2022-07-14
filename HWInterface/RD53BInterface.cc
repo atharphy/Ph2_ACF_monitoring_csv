@@ -102,7 +102,7 @@ uint32_t RD53BInterface::ReadChipFuseID(Ph2_HwDescription::Chip* pChip)
 {
     uint16_t low  = RD53Interface::ReadChipReg(pChip, "EfusesReadData0");
     uint16_t high = RD53Interface::ReadChipReg(pChip, "EfusesReadData1");
-    return low | (high << 16);
+    return low | (high << pChip->getNumberOfBits("EfusesReadData0"));
 }
 
 } // namespace Ph2_HwInterface
