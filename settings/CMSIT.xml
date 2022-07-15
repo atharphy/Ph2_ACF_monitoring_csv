@@ -11,7 +11,7 @@
     <OpticalGroup Id="0" FMCId="0">
       <!--
       <lpGBT_Files path="${PWD}/" />
-      <lpGBT Id="0" version="0" configfile="CMSIT_LpGBT.txt" ChipAddress="0x70" RxDataRate="1280" RxHSLPolarity="0" TxDataRate="160" TxHSLPolarity="1">
+      <lpGBT Id="0" version="0" configfile="CMSIT_LpGBT-v0.txt" ChipAddress="0x70" RxDataRate="1280" RxHSLPolarity="0" TxDataRate="160" TxHSLPolarity="1">
         <Settings
             EPRX60ChnCntr_phase = "6"
             />
