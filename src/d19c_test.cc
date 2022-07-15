@@ -1,4 +1,4 @@
-﻿#include <fstream>
+#include <fstream>
 #include <cstring>
 #include <ios>
 
@@ -61,6 +61,7 @@ int main(int argc, char** argv)
     cmd.defineOption("mask", "Hybrid mask - default all enabled", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOption("hard_reset", "Hard Reset the board", ArgvParser::NoOptionAttribute);
     cmd.defineOption("ddr3test", "Test the on-board ddr3 chip", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("sfp_ddmi", "Digital diagnostic monitoring interface for SFPs.", ArgvParser::NoOptionAttribute);
 
     int result = cmd.parse(argc, argv);
 
@@ -72,6 +73,7 @@ int main(int argc, char** argv)
 
     bool cHardReset    = (cmd.foundOption("hard_reset")) ? true : false;
     bool cDDR3SelfTest = (cmd.foundOption("ddr3test")) ? true : false;
+    bool cSFP_DDMI = (cmd.foundOption("sfp_ddmi")) ? true : false;
 
     bool        cSaveToFile = false;
     std::string cOutputFile;
@@ -127,6 +129,25 @@ int main(int argc, char** argv)
         cTool.fBeBoardInterface->setBoard(pBoard->getId());
         dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->DDR3SelfTest();
         //(D19cFWInterface*)(cTool.fBeBoardInterface->fBoardFW)->DDR3SelfTest();
+    }
+    else if(cSFP_DDMI) 
+    {
+        cTool.fBeBoardInterface->setBoard(pBoard->getId());
+        for (int i=0;i<8;i++)
+	    {
+            std::cout <<"###--------------l8---------------###"<< std::endl;
+            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("T",i);
+            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("V",i);
+            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("I",i);
+	        dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("TX",i);
+            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("RX",i);
+	        std::cout <<"###--------------l12--------------###"<< std::endl;
+            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("T",i);
+            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("V",i);
+            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("I",i);
+	        dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("TX",i);
+            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("RX",i);
+	    }   
     }
     else
     {
