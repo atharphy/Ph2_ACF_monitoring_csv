@@ -1,6 +1,7 @@
 #if defined(__TCUSB__) && defined(__USE_ROOT__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
 
 #include "OTHybridTester.h"
+#include "../HWInterface/D19cBackendAlignmentFWInterface.h"
 
 OTHybridTester::OTHybridTester() : Tool()
 {
@@ -219,6 +220,22 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
             uint8_t cSource = 3;
             clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern << 24 | pPattern << 16 | pPattern << 8 | pPattern);
             clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, cSource); // 0 --> link data, 3 --> constant pattern
+            // clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {,}, cSource); // 0 --> link data, 3 --> constant pattern
+
+            PhaseTuneLineEleFC7(0, 0);
+            PhaseTuneLineEleFC7(0, 1);
+            PhaseTuneLineEleFC7(0, 2);
+            // PhaseTuneLineEleFC7(0, 3);
+            PhaseTuneLineEleFC7(0, 4);
+            // PhaseTuneLineEleFC7(0, 5);
+        }
+    }
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        for(auto cOpticalGroup: *cBoard)
+        {
+            clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, 0); // 0 --> link data, 3 --> constant pattern
         }
     }
 }
@@ -367,6 +384,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
 #elif __SEH_USB__
                     flpGBTInterface->GetExternalController()->getInterface().set_AMUX(cDACValue, cDACValue);
 #endif
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1200));
                     int cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
 
                     LOG(INFO) << BOLDBLUE << "DAC value = " << +cDACValue << " --- ADC value = " << +cADCValue << RESET;
@@ -410,7 +428,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
             fillSummaryTree("VREFCNTR", cTrim);
             fResultFile->cd();
             cDACtoADCTree->Write();
-            cDACtoADCMultiGraph->Draw("AL");
+            cDACtoADCMultiGraph->Draw("AL*");
             cDACtoADCMultiGraph->GetXaxis()->SetTitle("DAC");
             cDACtoADCMultiGraph->GetYaxis()->SetTitle("ADC");
             dieLegende->Draw();
@@ -572,7 +590,7 @@ bool OTHybridTester::LpGBTTestResetLines()
         LpGBTSetGPIOLevel(cGPIOs, cLevel.second);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
 #ifdef __SEH_USB__
-        std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
         // mu-controller is too slow
 #endif
         auto cMapIterator = cResetLines.begin();
@@ -588,7 +606,7 @@ bool OTHybridTester::LpGBTTestResetLines()
 #else
             flpGBTInterface->GetExternalController()->getInterface().read_reset(cMapIterator->second, cMeasurement);
 #endif
-            float cDifference_mV = std::fabs((cLevel.second * 1300) - cMeasurement * 1000.); // 1300
+            float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement * 1000.); // 1300
             fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
             cStatus = cStatus && (cDifference_mV <= 100);
 #endif
@@ -678,9 +696,13 @@ bool OTHybridTester::LpGBTTestVTRx()
             {
                 cVTRxplusDefaultRegisters = fVTRxplusDefaultRegistersV13;
                 LOG(INFO) << BOLDGREEN << "VTRx+ register map for version 1.3 is used!" << RESET;
+                fillSummaryTree("vtrxplusversion", 1.3);
             }
             else
+            {
                 LOG(INFO) << BOLDGREEN << "VTRx+ register map for version 1.2 is used!" << RESET;
+                fillSummaryTree("vtrxplusversion", 1.2);
+            }
             auto cMapIterator = cVTRxplusDefaultRegisters.begin();
             do
             {
@@ -933,6 +955,44 @@ bool OTHybridTester::LpGBTCheckClocks()
         LOG(INFO) << GREEN << "============================" << RESET;
     }
     return cStatus;
+}
+
+std::pair<bool, uint8_t> OTHybridTester::PhaseTuneLineEleFC7(uint8_t pHybrid, uint8_t pLineId)
+{
+    std::pair<bool, uint8_t> cLineStatus;
+    cLineStatus.first  = false;
+    cLineStatus.second = 0;
+    uint8_t pChip      = 0;
+    auto    cBoardId   = 1;
+    auto    cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+    fBeBoardInterface->setBoard((*cBoardIter)->getId());
+    LOG(DEBUG) << BOLDYELLOW << "OTHybridTester::PhaseTuneLineEleFC7#" << +pLineId << " for a Chip#" << +pChip << RESET;
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+
+    D19cBackendAlignmentFWInterface* cAlignerInterface = cInterface->getBackendAlignmentInterface();
+    cAlignerInterface->InitializeConfiguration();
+    cAlignerInterface->InitializeAlignerObject();
+
+    AlignerObject cAlignerObjct;
+    cAlignerObjct.fHybrid = pHybrid;
+    cAlignerObjct.fChip   = 0;
+    cAlignerObjct.fLine   = pLineId;
+    LineConfiguration cLineCnfg;
+    cAlignerInterface->TunePhase(cAlignerObjct, cLineCnfg);
+    cAlignerInterface->GetLineStatus(cAlignerObjct);
+    cLineStatus.first = cAlignerInterface->IsLinePhaseAligned(cAlignerObjct);
+    if(!cLineStatus.first)
+    {
+        LOG(INFO) << BOLDRED << "Could not phase align-BE data for BeBoard#" << +cBoardId << " Hybrid#" << +pHybrid << " Chip#" << +pChip << " line# " << +pLineId << RESET;
+        // throw std::runtime_error(std::string("Could not phase align-BE data in LinkAlignmentOT..."));
+    }
+    else
+    {
+        LOG(INFO) << BOLDBLUE << "Could phase align-BE data for BeBoard#" << +cBoardId << " Hybrid#" << +pHybrid << " Chip#" << +pChip << " line# " << +pLineId << RESET;
+    }
+
+    cLineStatus.second = cAlignerInterface->GetLineConfiguration().fDelay;
+    return cLineStatus;
 }
 
 #ifdef __TCP_SERVER__

@@ -512,6 +512,7 @@ std::pair<bool, uint8_t> LinkAlignmentOT::PhaseTuneLine(const Chip* pChip, uint8
     cLineStatus.second = cAlignerInterface->GetLineConfiguration().fDelay;
     return cLineStatus;
 }
+
 std::pair<bool, uint8_t> LinkAlignmentOT::WordAlignLine(const Chip* pChip, uint8_t pLineId, uint8_t pAlignmentPattern, uint8_t pPeriod)
 {
     std::pair<bool, uint8_t> cLineStatus;
@@ -667,13 +668,25 @@ bool LinkAlignmentOT::LineTuning(const Chip* pChip, uint8_t pLineId, uint8_t pAl
     std::pair<bool, uint8_t> cPhaseAlignmentStatus, cWordAlignmentStatus;
     do
     {
-        cPhaseAlignmentStatus = PhaseTuneLine(pChip, pLineId);
-        cSuccess              = cPhaseAlignmentStatus.first;
+        try {
+            cPhaseAlignmentStatus = PhaseTuneLine(pChip, pLineId);
+            cSuccess              = cPhaseAlignmentStatus.first;
+        } 
+        catch( const std::runtime_error& e ) {
+            LOG (ERROR) << "Failed to phase align line " << +pLineId << " of chip " << +pChip->getId() << RESET;
+            cSuccess = false;
+        }
 
-        cWordAlignmentStatus = WordAlignLine(pChip, pLineId, pAlignmentPattern, pPeriod);
-        cSuccess             = cWordAlignmentStatus.first && cSuccess;
+        try {
+            cWordAlignmentStatus = WordAlignLine(pChip, pLineId, pAlignmentPattern, pPeriod);
+            cSuccess             = cWordAlignmentStatus.first && cSuccess;
+        }
+        catch( const std::runtime_error& e ) {
+            LOG (ERROR) << "Failed to word align line " << +pLineId << " of chip " << +pChip->getId() << RESET;
+            cSuccess = false;
+        }
 
-        LOG(DEBUG) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
+        LOG(INFO) << BOLDBLUE << "Automated phase tuning attempt" << cAttempts << " : " << ((cSuccess) ? "Worked" : "Failed") << RESET;
 
         cAttempts++;
     } while(!cSuccess && cAttempts < 10);

@@ -81,6 +81,7 @@ void PSHybridTester::SSAOutputsPogoScope(BeBoard* pBoard, bool pTrigger)
         {
             LOG(INFO) << BOLDBLUE << "SLVS debug [L1 line] : Chip " << +cPairId << RESET;
         }
+        fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", 0);
         fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cPairId);
         if(pTrigger)
             cDebugInterface->L1ADebug((uint8_t)1, false);
@@ -104,6 +105,7 @@ void PSHybridTester::SSAOutputsPogoScope(std::vector<std::vector<std::string>>& 
         {
             if(pPrintScoped) { LOG(INFO) << BOLDBLUE << "SLVS debug [L1 line] : Chip " << +cPairId << RESET; }
         }
+        fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", 0);
         fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cPairId);
         if(pTrigger)
         {
@@ -323,16 +325,16 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
 #if defined(__USE_ROOT__)
     uint32_t cTestPatterns[4] = {0xAA, 0xCC, 0x00, 0xFF};
     // String with the binary representation of the pattern
-    // int         cTotalBadLines = 0;                // Number of bad CIC in lines
-    std::string cParameter[4] = {"", "", "", ""}; // Placeholder for the name of the summaryTree parameter name
-    std::string cValue[4]     = {"", "", "", ""};
+    int         cTotalBadLines = 0;                // Number of bad CIC in lines
+    std::string cParameter[4]  = {"", "", "", ""}; // Placeholder for the name of the summaryTree parameter name
+    std::string cValue[4]      = {"", "", "", ""};
 
     DPInterface cDPInterfacer;
     // BeBoardFWInterface* cInterface = dynamic_cast<BeBoardFWInterface*>(this->fBeBoardFWMap.find(0)->second);
 
-    // bool    cRun     = true;
-    // uint8_t cRuns    = 0;
-    // uint8_t cMaxRuns = 1;
+    bool    cRun     = true;
+    uint8_t cRuns    = 0;
+    uint8_t cMaxRuns = 1;
 
     TTree* CICinTree[4];
 
@@ -364,8 +366,8 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
     // enable CIC mux - phyPort 0 - 9 are stub lines. phyPort 10 and 11 are L1 lines.
     for(uint8_t cPhyPort = 0; cPhyPort < 12; cPhyPort++)
     {
-        // cRuns = 0;
-        // cRun  = true;
+        cRuns = 0;
+        cRun  = true;
 
         for(auto cOpticalGroup: *pBoard)
         {
@@ -374,11 +376,194 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 fCicInterface->SelectMux(cCic, cPhyPort);
             } // hybrid
-        }     // hybrid
-        // check output
-        fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-        cDebugInterface->StubDebug(true, 4);
+        }     // module
+
+        std::vector<std::string> cReadLines; // Container for the received lines
+        uint8_t                  cPhyPortBadLines = 0;
+
+        bool cLineAlreadyChecked[4] = {false, false, false, false};
+
+        while(cRun && (cRuns <= cMaxRuns))
+        {
+            cPhyPortBadLines = 0;
+            cRun             = false;
+
+            if(cRuns > 0) LOG(INFO) << BOLDRED << "Retrying test on phyPort " << +cPhyPort << "." << RESET;
+
+            // align lines 1,2,3 and 4 (first 4 stub lines from CIC )
+            cDPInterfacer.Stop(cInterface);
+            cDPInterfacer.Configure(cInterface, 0xEA);
+            cDPInterfacer.Start(cInterface);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            bool cAlignmentStatus = true;
+            for(auto cOpticalGroup: *pBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    for(auto cChip: *cHybrid)
+                    {
+                        if(cChip->getId() != 0) continue;
+                        // auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                        LOG(INFO) << "Tuning lines for PhyPort " << +cPhyPort << RESET;
+                        cAlignmentStatus = true;
+                        bool cFirstRun   = true;
+                        do
+                        {
+                            for(uint8_t cLineId = 1; cLineId < 5; cLineId++)
+                            {
+                                // auto cPhaseTuneLineOutput = PhaseTuneLine(cCic, cLineId);
+                                // cAlignmentStatus = cPhaseTuneLineOutput.first;
+                                // if (cAlignmentStatus) {
+                                //    LOG(INFO) << "Phase Alignment of Line#" << +cLineId << " is " << BOLDGREEN << "GOOD" << RESET;
+                                //}
+                                // else
+                                //{
+                                //    LOG(INFO) << "Phase Alignment of Line#" << +cLineId << " is " << BOLDRED << "BAD" << RESET;
+                                //}
+                                // auto cPhaseTuneLineOutput = WordAlignLine(cChip, cLineId, 0xEA, 8);
+                                // cAlignmentStatus &= cPhaseTuneLineOutput.first;
+
+                                cAlignmentStatus &= LineTuning(cChip, cLineId, 0xEA, 8);
+
+                                // if (cPhaseTuneLineOutput.first) {
+                                if(cAlignmentStatus) { LOG(INFO) << "Phase/Word Alignment of Line#" << +cLineId << " is " << BOLDGREEN << "GOOD" << RESET; }
+                                else
+                                {
+                                    LOG(INFO) << "Phase/Word Alignment of Line#" << +cLineId << " is " << BOLDRED << "BAD" << RESET;
+                                }
+                            }
+                            cFirstRun = false;
+                        } while(!cAlignmentStatus && cFirstRun);
+                    }
+                } // Hybrid
+            }     // Optical group
+
+            // BackEndAlignment cBackEndAlignment;
+            // cBackEndAlignment.Inherit(this);
+            // cBackEndAlignment.Initialise();
+            // cAlignmentStatus = cBackEndAlignment.CICAlignment(pBoard);
+            if(cAlignmentStatus) { LOG(INFO) << "Phase/Word Alignment of PhyPort#" << +cPhyPort << RESET; }
+            else
+            {
+                LOG(INFO) << "Phase/Word Alignment of PhyPort#" << +cPhyPort << RESET;
+            }
+
+            // D19cFWInterface::PhaseTuner pTuner;
+            // uint8_t cMode        = 2;
+            // uint8_t cBitslip     = 0;
+            // uint8_t cEnableL1    = 0;
+            // uint8_t pFeId      = 1;
+            // uint8_t cChipId    = 0;
+            // uint8_t cLineId = 0;
+            // uint8_t cDelay = 20;
+            // pTuner.SetLineMode( static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()) , pFeId, cChipId, cLineId, cMode, cDelay, cBitslip, cEnableL1, 0);
+
+            // CicFEAlignment cCicAligner;
+            // cCicAligner.Inherit(this);
+            // uint8_t cCICPhase = 6;
+            // cCicAligner.ManualPhaseAlignment(cCICPhase);
+
+            uint8_t cBadLines[4] = {0, 0, 0, 0};
+
+            // Stop 0xAA pattern and use test patterns
+            for(int cPatternId = 0; cPatternId < 4; cPatternId++)
+            {
+                cReadLines.clear();
+
+                uint32_t cPattern = cTestPatterns[cPatternId];
+
+                std::stringstream sstream;
+                std::string       cPattern_str;
+                std::string       cPattern_str_hex;
+
+                cPattern_str = std::bitset<8>(cPattern).to_string();
+                sstream << std::hex << cPattern;
+                cPattern_str_hex = sstream.str();
+
+                // fResultFile->cd();
+                // std::string cTitle = Form("CICinTree0x%s",cPattern_str_hex.c_str());
+                // std::string cDesc = Form("Bad Lines in the CIC IN test for pattern %s", cPattern_str_hex.c_str());
+                // TTree* CICinTree = new TTree( cTitle.c_str() , cDesc.c_str() );
+                // CICinTree->Branch("Parameter", &cParameter);
+                // CICinTree->Branch("Value", &cValue);
+                // cParameter = "Pattern";
+                // cValue     = cPattern_str;
+                // CICinTree->Fill();
+
+                LOG(INFO) << BOLDCYAN << "Testing phyPort " << +cPhyPort << " using pattern " << cPattern_str << RESET;
+
+                cDPInterfacer.Stop(cInterface);
+                cDPInterfacer.Configure(cInterface, cPattern);
+                cDPInterfacer.Start(cInterface);
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+                // check output
+                fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+                cReadLines = cDebugInterface->StubDebug(true, 4, true);
+
+                for(int a = 0; a < (int)cReadLines.size(); a++)
+                {
+                    std::string cLine;
+                    int         badLines;
+                    std::string cSubLine;
+                    // bool bad = false;
+                    // for(int b = 0; b < (int)cReadLines[a].size(); b++)
+                    // {
+                    badLines = 0;
+                    // cLine    = cReadLines[a][b];
+                    cLine = cReadLines[a];
+                    int b = a;
+                    LOG(INFO) << "[a] : [" << +a << "]" << cLine << RESET;
+                    // Go throught the read line and compare with pattern
+                    for(int k = 0; (k + cPattern_str.length()) < cLine.length(); k += cPattern_str.length())
+                    {
+                        cSubLine           = cLine.substr(k, cPattern_str.length());
+                        bool cPatternFound = false;
+                        for(int j = 0; j < (int)cPattern_str.length(); j++) cPatternFound |= ((cPattern_str.substr(j, cPattern_str.length() - j) + cPattern_str.substr(0, j)) == cSubLine);
+                        if(!cPatternFound)
+                        {
+                            badLines++;
+                            cRun = true;
+                        }
+                    }
+
+                    std::string recovered = "";
+                    for(int k = 0; (k + cPattern_str.length()) < cLine.length(); k += cPattern_str.length()) { recovered += cLine.substr(k, cPattern_str.length()) + "  "; }
+                    if(badLines > 2) // 35
+                    {
+                        cBadLines[b] = 1;
+                        LOG(INFO) << "The pattern " << cPattern_str << " was" << BOLDRED << " NOT" << RESET << " recovered correctly on" << BOLDRED << " PhyPort " << +cPhyPort << " line " << b << "."
+                                  << RESET;
+                        std::string recovered = "";
+                        for(int k = 0; (k + cPattern_str.length()) < cLine.length(); k += cPattern_str.length()) { recovered += cLine.substr(k, cPattern_str.length()) + "  "; }
+                        LOG(INFO) << "Recovered:  " << recovered << RESET;
+                        cParameter[cPatternId] = "";
+                        cParameter[cPatternId] = std::to_string(cPhyPort) + "_" + std::to_string(b);
+                        cValue[cPatternId]     = cLine;
+                        CICinTree[cPatternId]->Fill();
+                        if(cRuns > 0 && !cLineAlreadyChecked[b])
+                        {
+                            // this->PhyPortPhaseAlignmentMap(pBoard, cPhyPort, true, b);
+                            cLineAlreadyChecked[b] = true;
+                        }
+                    }
+                    else
+                    {
+                        // cBadLines[b] = 0
+                        LOG(DEBUG) << "The pattern 0x" << cPattern_str_hex << " was" << BOLDGREEN << " recovered correctly " << RESET << "on PhyPort " << +cPhyPort << " line " << b << "." << RESET;
+                        LOG(DEBUG) << "Recovered:  " << recovered << RESET;
+                    }
+                    // }
+                }
+            }
+            cRuns++;
+            for(int i = 0; i < 4; i++) cPhyPortBadLines += cBadLines[i];
+        }
+        cTotalBadLines += cPhyPortBadLines;
     }
+    LOG(INFO) << BOLDYELLOW << "***************************************Bad CIC IN lines in the hybrid : " << cTotalBadLines << "*************************************" << RESET;
+    fillSummaryTree("CIC IN bad lines", cTotalBadLines);
 #endif
 }
 
@@ -713,322 +898,297 @@ void PSHybridTester::SSATestL1Output(BeBoard* pBoard, const std::string& cSSAPai
 }
 void PSHybridTester::SSATestLateralCommunication(Ph2_HwDescription::BeBoard* pBoard, const std::string& pSSAPairSel, bool pSweepPhaseSelector)
 {
-    LOG(INFO) << BOLDYELLOW << "PSHybridTester::SSATestLateralCommunication" << RESET;
     std::string cParameter = "";
     std::string cValue     = "";
 
     this->SSAPairSelect(pBoard, pSSAPairSel);
-    // setSameDacBeBoard(static_cast<BeBoard*>(pBoard), "EnableSLVSTestOutput", 0);
-    // setSameDacBeBoard(static_cast<BeBoard*>(pBoard), "DigitalSync", 0);
-    // pBoard->setEventType(EventType::PSAS); // needed?
-    // std::vector<std::pair<std::string, uint32_t>> cRegVec;
-    // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
-    // uint8_t cLatency = 100;
+    setSameDacBeBoard(static_cast<BeBoard*>(pBoard), "EnableSLVSTestOutput", 0);
+    setSameDacBeBoard(static_cast<BeBoard*>(pBoard), "DigitalSync", 0);
+
+    // bool cWithSSA2 = false;
+
+    pBoard->setEventType(EventType::PSAS); // needed?
 
     std::vector<std::pair<std::string, uint32_t>> cRegVec;
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
-    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", 10});
-    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse", 2});
-    // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset", 10});
+    uint8_t cLatency = 10;
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", cLatency});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse", 10});
+    // cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset", 50});
+    uint8_t cLatencyOffset = 2;
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0});
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-    fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
-    fBeBoardInterface->Start(pBoard);
-
-    for(auto cOpticalReadout: *pBoard)
+    for(uint8_t cPairId = 0; cPairId < 2; cPairId++)
     {
-        for(auto cHybrid: *cOpticalReadout)
+        fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
+        fBeBoardInterface->Start(pBoard);
+
+        int         cInjectedSSAId       = (int)(pSSAPairSel[cPairId] - '0');
+        int         cAdjacentSSAId       = (int)(pSSAPairSel[1 - cPairId] - '0');
+        uint8_t     cInjectedStrip       = 0;
+        std::string cInjectedSSACentroid = ""; // Centroid that should be generated on the injected SSA.
+        std::string cAdjacentSSACentroid = ""; // Centroid that should be generated on the adjacent SSA.
+        LOG(INFO) << BOLDMAGENTA << "Injected chip is SSA#" << +cInjectedSSAId << " (chip " << +(1 - cInjectedSSAId % 2) << " in StubDebug). Adjacent chip is SSA#" << cAdjacentSSAId << " (chip "
+                  << +(1 - cAdjacentSSAId % 2) << " in StubDebug)." << RESET;
+
+        bool cLineGood = false;
+
+        bool cLateralPhaseSelectionSuccess = false;
+        int  cLateralPhase                 = 0;
+        for(cLateralPhase = 0; (cLateralPhase < 8 && !cLateralPhaseSelectionSuccess) && !(!pSweepPhaseSelector && cLateralPhase > 0); cLateralPhase++)
         {
-            for(auto cChip: *cHybrid)
+            if(pSweepPhaseSelector) { LOG(INFO) << "cLateralPhase " << std::bitset<3>(cLateralPhase).to_string() << RESET; }
+            for(auto cOpticalReadout: *pBoard)
             {
-                fReadoutChipInterface->WriteChipReg(cChip, "EdgeSel", 0);
-                fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_H", 0xFF);
-                fReadoutChipInterface->WriteChipReg(cChip, "DigitalSync", 0x0);
-                fReadoutChipInterface->WriteChipReg(cChip, "PulseDuration", 0x8);
-                std::vector<int> cStrips{0, 119};
-                for(auto cStrip: cStrips)
+                for(auto cHybrid: *cOpticalReadout)
                 {
-                    std::stringstream cRegName1, cRegName2;
-                    cRegName2 << "DigitalSync_S" << cStrip;
-                    fReadoutChipInterface->WriteChipReg(cChip, cRegName2.str(), 0x1);
+                    for(auto cReadoutChip: *cHybrid)
+                    {
+                        if(cReadoutChip->getFrontEndType() != FrontEndType::SSA && cReadoutChip->getFrontEndType() != FrontEndType::SSA2) continue;
+                        // if(cReadoutChip->getFrontEndType() == FrontEndType::SSA2) cWithSSA2 = true;
+                        if((cReadoutChip->getId() != (int)(pSSAPairSel[0] - '0')) && (cReadoutChip->getId() != (int)(pSSAPairSel[1] - '0'))) // Check only the chips in the pair
+                            continue;
+                        fReadoutChipInterface->WriteChipReg(cReadoutChip, "TriggerLatency", cLatency - cLatencyOffset);
+                        // fReadoutChipInterface->WriteChipReg(cReadoutChip, "PulseDuration", 0x1);
+                        // configure Digital Injection
+                        if(cReadoutChip->getId() == cInjectedSSAId)
+                        {
+                            LOG(INFO) << "Configuring SSA#" << +cReadoutChip->getId() << " to inject digital pulses for lateral communication test" << RESET;
+                            if(cPairId == 1)
+                            {
+                                // cInjectedStrip = 0;
+                                cInjectedStrip = 1;
+                            }
+                            else
+                            {
+                                // cInjectedStrip = 113;
+                                cInjectedStrip = 118;
+                            }
+
+                            for(uint8_t strip = 0; strip < cReadoutChip->size(); strip++)
+                            {
+                                std::string cRegisterName = "DigCalibPattern_H_S" + std::to_string(strip + 1);
+                                // uint8_t cValue = ( strip == cInjectedStrip || strip == cInjectedStrip + 2 || strip == cInjectedStrip + 4 || strip == cInjectedStrip + 6  ) ? 1 : 0;
+                                uint8_t cValue = (strip == cInjectedStrip) ? 1 : 0;
+                                fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegisterName, cValue);
+                                cRegisterName         = "ENFLAGS_S" + std::to_string(strip + 1);
+                                uint8_t cMask         = 0;
+                                uint8_t cPolarity     = 0;
+                                uint8_t cHitCounter   = 0;
+                                uint8_t cDigitalCalib = cValue;
+                                uint8_t cAnalogCalib  = 0;
+                                uint8_t cEnFlags      = (cAnalogCalib << 4 | cDigitalCalib << 3 | cHitCounter << 2 | cPolarity << 1 | cMask);
+                                fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegisterName, cEnFlags);
+                            }
+                            LOG(INFO) << "SSA# " << +cReadoutChip->getId() << " has been configured " << RESET;
+                        }
+                        if(cReadoutChip->getId() == cAdjacentSSAId)
+                        {
+                            if(pSweepPhaseSelector)
+                            {
+                                uint8_t cRegisterValue;
+                                if(cPairId == 1)
+                                {
+                                    cRegisterValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, "LateralRX_sampling");
+                                    LOG(INFO) << "LateralRX_sampling was " << std::bitset<8>(cRegisterValue).to_string() << RESET;
+                                    // cRegisterValue = (cRegisterValue & 0x8F) | (cLateralPhase << 4);
+                                    LOG(INFO) << "LateralRX_sampling (Right rx) set to " << std::bitset<3>(cLateralPhase).to_string() << "(" << +cLateralPhase << ")"
+                                              << " on chip " << +cReadoutChip->getId() << RESET;
+                                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "LateralRX_R_PhaseData", cLateralPhase, false); // Set right receiver of adjacent SSA
+                                }
+                                else
+                                {
+                                    cRegisterValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, "LateralRX_sampling");
+                                    LOG(INFO) << "LateralRX_sampling was " << std::bitset<8>(cRegisterValue).to_string() << RESET;
+                                    // cRegisterValue = (cRegisterValue & 0xF8) | cLateralPhase;
+                                    LOG(INFO) << "LateralRX_sampling (Left rx) set to " << std::bitset<3>(cLateralPhase).to_string() << " on chip " << +cReadoutChip->getId() << RESET;
+                                    fReadoutChipInterface->WriteChipReg(cReadoutChip, "LateralRX_L_PhaseData", cLateralPhase, false); // Set left receiver of adjacent SSA
+                                }
+                            }
+                            LOG(INFO) << "Configuring SSA#" << +cReadoutChip->getId() << " to NOT inject digital pulses for lateral communication test" << RESET;
+                            for(uint8_t strip = 0; strip < cReadoutChip->size(); strip++)
+                            {
+                                std::string cRegisterName = "DigCalibPattern_H_S" + std::to_string(strip + 1);
+                                // uint8_t cValue = ( strip == 42 || strip == 44  || strip == 46 || strip == 48 || strip == 50 || strip == 52) ? 1 : 0;
+                                uint8_t cValue = 0;
+                                fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegisterName, cValue);
+
+                                cRegisterName         = "ENFLAGS_S" + std::to_string(strip + 1);
+                                uint8_t cMask         = 0;
+                                uint8_t cPolarity     = 0;
+                                uint8_t cHitCounter   = 0;
+                                uint8_t cDigitalCalib = cValue;
+                                uint8_t cAnalogCalib  = 0;
+                                uint8_t cEnFlags      = (cAnalogCalib << 4 | cDigitalCalib << 3 | cHitCounter << 2 | cPolarity << 1 | cMask);
+                                fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegisterName, cEnFlags);
+                            }
+                            LOG(INFO) << "SSA# " << +cReadoutChip->getId() << " has been configured " << RESET;
+                        }
+                        uint8_t cControlValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, "control_1");
+                        LOG(INFO) << BOLDMAGENTA << "The register 'control_1' on SSA" << +cReadoutChip->getId() << " has the value: " << +cControlValue << "." << RESET;
+                    } // chip
+                }     // hybrid
+            }         // optical group
+
+            // Scope lines
+            // std::vector<std::vector<std::string>> cReadL1Lines;
+            // this->SSAOutputsPogoScope(cReadL1Lines, pSSAPairSel, pBoard, true, !pSweepPhaseSelector); // Scope SSA L1 lines
+            std::vector<std::vector<std::string>> cReadStubLines;
+            this->SSAOutputsPogoScope(cReadStubLines, pSSAPairSel, pBoard, false, !pSweepPhaseSelector); // Scope SSA stub lines
+
+            // Check that the channels were actually injected in the injected SSA.
+            bool cInjectionSuccesful = false;
+            // Option 1: by checking the L1 packet
+            // std::string cInjectedSSAL1Data = (cInjectedSSAId %2 == 0 ) ? cReadL1Lines[1][0] : cReadL1Lines[0][0];
+            // std::size_t cL1PacketPosition = cInjectedSSAL1Data.find("11");
+            // if( cL1PacketPosition != std::string::npos )
+            // {
+            //     cL1PacketPosition += 0; //Set cL1PacketPosition to the real start of the packet
+            //     std::size_t cL1PacketPositionEnd = cInjectedSSAL1Data.find("11110000000", cL1PacketPosition+2+9+9+120+24);
+            //     if (cL1PacketPositionEnd!=std::string::npos && cL1PacketPositionEnd == cL1PacketPosition+2+9+9+120+24)
+            //     {
+            //         //Decode L1 packet to get the strips
+            //         std::vector<std::string> cDecodedL1Packet;
+            //         if (cWithSSA2) //SSA2
+            //             cDecodedL1Packet = this->DecodeSSAL1Packet((int)2,cInjectedSSAL1Data.substr(cL1PacketPosition, 2+9+9+120+24));
+            //         else //SSA1
+            //             cDecodedL1Packet = this->DecodeSSAL1Packet((int)1,cInjectedSSAL1Data.substr(cL1PacketPosition, 2+4+9+24+120));
+
+            //         std::string cStripsL1Packet = cDecodedL1Packet[3]; //Recover strips
+
+            //         LOG(INFO) << "Strips on injected SSA: " << cStripsL1Packet << RESET;
+
+            //         cInjectionSuccesful = true;
+            //         for (uint8_t strip=0; strip < cStripsL1Packet.length() ; strip++)
+            //         {
+            //             LOG(DEBUG) << "Starting at 0: strip #" << +strip << "should be " << +( cInjectedStrip == strip ) << ", " << "is " << +(uint8_t)(cStripsL1Packet[cStripsL1Packet.length() -
+            //             strip - 1]-'0') << RESET; cInjectionSuccesful &=  (uint8_t)( cInjectedStrip == strip ) == (uint8_t)(cStripsL1Packet[cStripsL1Packet.length() - strip - 1]-'0');
+            //         }
+            //         if(!cInjectionSuccesful)
+            //         {
+            //             LOG(ERROR) << BOLDRED << "Digital injection failed on injected SSA (hits not present on L1 data)" << RESET; // The rest of the test is skipped
+            //             // continue;
+            //         }
+            //     }
+            //     else
+            //     {
+            //         LOG(ERROR) << "Couldn't find L1 packet on injected SSA L1 data." << RESET;
+            //         continue;
+            //     }
+            // }
+            // else
+            // {
+            //     LOG(ERROR) << "Couldn't find L1 packet injected SSA L1 data." << RESET;
+            //     continue;
+            // }
+
+            // Option 2: by checking that the centroid is present on the stub lines of the injected chip. To do if the check in the L1 line failed (because the line is bad)
+            if(!cInjectionSuccesful)
+            {
+                LOG(INFO) << "cInjectedStrip " << +cInjectedStrip << RESET;
+                cInjectedSSACentroid = std::bitset<8>(cInjectedStrip * 2 + 9).to_string();
+                LOG(INFO) << "Centroid that should be generated on the injected SSA: " << cInjectedSSACentroid << RESET;
+                // Search the scoped lines for data on the injected chip
+                std::vector<std::string> cInjectedSSAOutputs = (cInjectedSSAId % 2 == 0) ? cReadStubLines[1] : cReadStubLines[0];
+                for(uint8_t cLine = 0; cLine < cInjectedSSAOutputs.size(); cLine++) { cInjectionSuccesful |= (cInjectedSSAOutputs[cLine].find(cInjectedSSACentroid) != std::string::npos); }
+                if(!cInjectionSuccesful)
+                {
+                    LOG(ERROR) << BOLDRED << "Digital injection failed on injected SSA (hits not present on injected SSA stub lines)" << RESET; // The rest of the test is skipped for this pair
+                    continue;
                 }
             }
-        }
-    } // enable digital sync on all strips
+            LOG(INFO) << "Injected chip is SSA#" << +cInjectedSSAId << " (chip " << +(1 - cInjectedSSAId % 2) << " in StubDebug). Adjacent chip is SSA#" << cAdjacentSSAId << " (chip "
+                      << +(1 - cAdjacentSSAId % 2) << " in StubDebug)." << RESET;
+            int cAdjacentSSAStripNumber;
+            if(cPairId == 1)
+                cAdjacentSSAStripNumber = 119 + cInjectedStrip + 1;
+            else
+                cAdjacentSSAStripNumber = cInjectedStrip - 120;
+            LOG(INFO) << "cInjectedStrip " << +cInjectedStrip << ". cAdjacentSSAStripNumber " << +cAdjacentSSAStripNumber << RESET;
+            cAdjacentSSACentroid = std::bitset<8>(cAdjacentSSAStripNumber * 2 + 9).to_string();
+            LOG(INFO) << "Centroid that should be generated on the adjacent SSA: " << cAdjacentSSACentroid << RESET;
+            LOG(DEBUG) << "cInjectedSSACentroid " << std::bitset<8>(cInjectedStrip * 2 + 9).to_string() << RESET;
 
-    // just checking digital injection
-    auto                  cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
-    for(auto cOpticalReadout: *pBoard)
-    {
-        for(auto cHybrid: *cOpticalReadout)
+            // Search the scoped lines for data on the non-injected chip
+            std::vector<std::string> cAdjacentSSAOutputs = (cAdjacentSSAId % 2 == 0) ? cReadStubLines[1] : cReadStubLines[0];
+            for(uint8_t cLine = 0; cLine < cAdjacentSSAOutputs.size(); cLine++) { cLineGood |= (cAdjacentSSAOutputs[cLine].find(cAdjacentSSACentroid) != std::string::npos); }
+            cLateralPhaseSelectionSuccess = cLineGood;
+        }
+
+        if(pSweepPhaseSelector)
         {
-            for(uint8_t cChipId = 0; cChipId < 2; cChipId++)
+            // Reconfigure the chips to show output with correct phase selection values
+            for(auto cOpticalReadout: *pBoard)
             {
-                LOG(INFO) << BOLDYELLOW << "Chip#" << +cChipId << RESET;
-                fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
-                fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cChipId);
-                cDebugInterface->StubDebug(true, 8);
-            }
+                for(auto cHybrid: *cOpticalReadout)
+                {
+                    for(auto cReadoutChip: *cHybrid)
+                    {
+                        if(cReadoutChip->getFrontEndType() != FrontEndType::SSA && cReadoutChip->getFrontEndType() != FrontEndType::SSA2) continue;
+                        if((cReadoutChip->getId() != (int)(pSSAPairSel[0] - '0')) && (cReadoutChip->getId() != (int)(pSSAPairSel[1] - '0'))) // Check only the chips in the pair
+                            continue;
+                        // LOG(INFO) << "Configuring SSA#" << +cReadoutChip->getId() << " for lateral communication test" << RESET;
+                        fReadoutChipInterface->WriteChipReg(cReadoutChip, "TriggerLatency", cLatency - 2);
+
+                        // configure Digital Injection
+                        if(cReadoutChip->getId() == cInjectedSSAId)
+                        {
+                            LOG(DEBUG) << "Configuring SSA#" << +cReadoutChip->getId() << " to inject digital pulses for lateral communication test" << RESET;
+                            if(cPairId == 1)
+                                cInjectedStrip = 1;
+                            else
+                                cInjectedStrip = 118;
+
+                            for(uint8_t strip = 0; strip < cReadoutChip->size(); strip++)
+                            {
+                                std::string cRegisterName = "DigCalibPattern_L_S" + std::to_string(strip + 1);
+                                uint8_t     cValue        = (strip == cInjectedStrip) ? 1 : 0;
+                                fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegisterName, cValue);
+                                cRegisterName = "DigCalibPattern_L_S" + std::to_string(strip);
+                            }
+                        }
+                        if(cReadoutChip->getId() == cAdjacentSSAId)
+                        {
+                            LOG(DEBUG) << "Configuring SSA#" << +cReadoutChip->getId() << " to NOT inject digital pulses for lateral communication test" << RESET;
+                            for(uint8_t strip = 0; strip < cReadoutChip->size(); strip++)
+                            {
+                                std::string cRegisterName = "DigCalibPattern_L_S" + std::to_string(strip + 1);
+                                uint8_t     cValue        = 0;
+                                fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegisterName, cValue);
+                                LOG(DEBUG) << cRegisterName << " on chip " << +cReadoutChip->getId() << " set to " << +cValue << RESET;
+                            }
+                        }
+                    } // chip
+                }     // hybrid
+            }         // optical group
+            // // Scope lines
+            std::vector<std::vector<std::string>> cReadL1Lines;
+            this->SSAOutputsPogoScope(cReadL1Lines, pSSAPairSel, pBoard, true, true); // Scope SSA L1 lines
+            std::vector<std::vector<std::string>> cReadStubLines;
+            this->SSAOutputsPogoScope(cReadStubLines, pSSAPairSel, pBoard, false, true); // Scope SSA stub lines
         }
-    } // check stub debug
-
-    // uint8_t cLatencyOffset = 2;
-    // bool cWithSSA2 = false;
-    //     for(uint8_t cPairId = 0; cPairId < 2; cPairId++)
-    //     {
-    //         int         cInjectedSSAId       = (int)(pSSAPairSel[cPairId] - '0');
-    //         int         cAdjacentSSAId       = (int)(pSSAPairSel[1 - cPairId] - '0');
-    //         uint8_t     cInjectedStrip       = 0;
-    //         std::string cInjectedSSACentroid = ""; // Centroid that should be generated on the injected SSA.
-    //         std::string cAdjacentSSACentroid = ""; // Centroid that should be generated on the adjacent SSA.
-    //         LOG(INFO) << BOLDMAGENTA << "Injected chip is SSA#" << +cInjectedSSAId << " (chip " << +(1 - cInjectedSSAId % 2) << " in StubDebug). Adjacent chip is SSA#" << cAdjacentSSAId << " (chip
-    //         "
-    //                   << +(1 - cAdjacentSSAId % 2) << " in StubDebug)." << RESET;
-
-    //         bool cLineGood = false;
-
-    //         bool cLateralPhaseSelectionSuccess = false;
-    //         int  cLateralPhase                 = 0;
-    //         for(cLateralPhase = 0; (cLateralPhase < 8 && !cLateralPhaseSelectionSuccess) && !(!pSweepPhaseSelector && cLateralPhase > 0); cLateralPhase++)
-    //         {
-    //             if(pSweepPhaseSelector) { LOG(INFO) << "cLateralPhase " << std::bitset<3>(cLateralPhase).to_string() << RESET; }
-    //             for(auto cOpticalReadout: *pBoard)
-    //             {
-    //                 for(auto cHybrid: *cOpticalReadout)
-    //                 {
-    //                     for(auto cReadoutChip: *cHybrid)
-    //                     {
-    //                         if(cReadoutChip->getFrontEndType() != FrontEndType::SSA && cReadoutChip->getFrontEndType() != FrontEndType::SSA2) continue;
-    //                         if((cReadoutChip->getId() != (int)(pSSAPairSel[0] - '0')) && (cReadoutChip->getId() != (int)(pSSAPairSel[1] - '0'))) // Check only the chips in the pair
-    //                             continue;
-    //                         fReadoutChipInterface->WriteChipReg(cReadoutChip, "TriggerLatency", cLatency - 2);
-    //                         // configure Digital Injection
-    //                         if(cReadoutChip->getId() == cInjectedSSAId)
-    //                         {
-    //                             LOG(INFO) << "Configuring SSA#" << +cReadoutChip->getId() << " to inject digital pulses for lateral communication test" << RESET;
-    //                             if(cPairId == 1)
-    //                             {
-    //                                 // cInjectedStrip = 0;
-    //                                 cInjectedStrip = 1;
-    //                             }
-    //                             else
-    //                             {
-    //                                 // cInjectedStrip = 113;
-    //                                 cInjectedStrip = 118;
-    //                             }
-
-    //                             for(uint8_t strip = 0; strip < cReadoutChip->size(); strip++)
-    //                             {
-    //                                 std::string cRegisterName = "DigCalibPattern_L_S" + std::to_string(strip + 1);
-    //                                 // uint8_t cValue = ( strip == cInjectedStrip || strip == cInjectedStrip + 2 || strip == cInjectedStrip + 4 || strip == cInjectedStrip + 6  ) ? 1 : 0;
-    //                                 uint8_t cValue = (strip == cInjectedStrip) ? 1 : 0;
-    //                                 fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegisterName, cValue);
-    //                                 cRegisterName         = "ENFLAGS_S" + std::to_string(strip + 1);
-    //                                 uint8_t cMask         = 0;
-    //                                 uint8_t cPolarity     = 0;
-    //                                 uint8_t cHitCounter   = 0;
-    //                                 uint8_t cDigitalCalib = cValue;
-    //                                 uint8_t cAnalogCalib  = 0;
-    //                                 uint8_t cEnFlags      = (cAnalogCalib << 4 | cDigitalCalib << 3 | cHitCounter << 2 | cPolarity << 1 | cMask);
-    //                                 fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegisterName, cEnFlags);
-    //                             }
-    //                         }
-    //                         if(cReadoutChip->getId() == cAdjacentSSAId)
-    //                         {
-    //                             if(pSweepPhaseSelector)
-    //                             {
-    //                                 uint8_t cRegisterValue;
-    //                                 if(cPairId == 1)
-    //                                 {
-    //                                     cRegisterValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, "LateralRX_sampling");
-    //                                     LOG(INFO) << "LateralRX_sampling was " << std::bitset<8>(cRegisterValue).to_string() << RESET;
-    //                                     cRegisterValue = (cRegisterValue & 0x8F) | (cLateralPhase << 4);
-    //                                     LOG(INFO) << "LateralRX_sampling (Right rx) set to " << std::bitset<8>(cRegisterValue).to_string() << " on chip " << +cReadoutChip->getId() << RESET;
-    //                                     fReadoutChipInterface->WriteChipReg(cReadoutChip, "LateralRX_R_PhaseData", cRegisterValue, false); // Set right receiver of adjacent SSA
-    //                                 }
-    //                                 else
-    //                                 {
-    //                                     cRegisterValue = fReadoutChipInterface->ReadChipReg(cReadoutChip, "LateralRX_sampling");
-    //                                     LOG(INFO) << "LateralRX_sampling was " << std::bitset<8>(cRegisterValue).to_string() << RESET;
-    //                                     cRegisterValue = (cRegisterValue & 0xF8) | cLateralPhase;
-    //                                     LOG(INFO) << "LateralRX_sampling (Left rx) set to " << std::bitset<8>(cRegisterValue).to_string() << " on chip " << +cReadoutChip->getId() << RESET;
-    //                                     fReadoutChipInterface->WriteChipReg(cReadoutChip, "LateralRX_L_PhaseData", cRegisterValue, false); // Set left receiver of adjacent SSA
-    //                                 }
-    //                             }
-    //                             LOG(INFO) << "Configuring SSA#" << +cReadoutChip->getId() << " to NOT inject digital pulses for lateral communication test" << RESET;
-    //                             for(uint8_t strip = 0; strip < cReadoutChip->size(); strip++)
-    //                             {
-    //                                 std::string cRegisterName = "DigCalibPattern_L_S" + std::to_string(strip + 1);
-    //                                 // uint8_t cValue = ( strip == 42 || strip == 44  || strip == 46 || strip == 48 || strip == 50 || strip == 52) ? 1 : 0;
-    //                                 uint8_t cValue = 0;
-    //                                 fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegisterName, cValue);
-
-    //                                 cRegisterName         = "ENFLAGS_S" + std::to_string(strip + 1);
-    //                                 uint8_t cMask         = 0;
-    //                                 uint8_t cPolarity     = 0;
-    //                                 uint8_t cHitCounter   = 0;
-    //                                 uint8_t cDigitalCalib = cValue;
-    //                                 uint8_t cAnalogCalib  = 0;
-    //                                 uint8_t cEnFlags      = (cAnalogCalib << 4 | cDigitalCalib << 3 | cHitCounter << 2 | cPolarity << 1 | cMask);
-    //                                 fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegisterName, cEnFlags);
-    //                             }
-    //                         }
-    //                     } // chip
-    //                 }     // hybrid
-    //             }         // optical group
-
-    //             // Scope lines
-    //             std::vector<std::vector<std::string>> cReadL1Lines;
-    //             this->SSAOutputsPogoScope(cReadL1Lines, pSSAPairSel, pBoard, true, !pSweepPhaseSelector); // Scope SSA L1 lines
-    //             std::vector<std::vector<std::string>> cReadStubLines;
-    //             this->SSAOutputsPogoScope(cReadStubLines, pSSAPairSel, pBoard, false, !pSweepPhaseSelector); // Scope SSA stub lines
-
-    //             // Check that the channels were actually injected in the injected SSA.
-    //             // Option 1: by checking the L1 packet
-    //             // std::string cInjectedSSAL1Data = (cInjectedSSAId %2 == 0 ) ? cReadL1Lines[1][0] : cReadL1Lines[0][0];
-    //             // std::size_t cL1PacketPosition = cInjectedSSAL1Data.find("0011");
-    //             // if( cL1PacketPosition != std::string::npos )
-    //             // {
-    //             //     cL1PacketPosition += 2; //Set cL1PacketPosition to the real start of the packet
-    //             //     std::size_t cL1PacketPositionEnd = cInjectedSSAL1Data.find("11110000000", cL1PacketPosition+2+9+9+120+24);
-    //             //     if (cL1PacketPositionEnd!=std::string::npos && cL1PacketPositionEnd == cL1PacketPosition+2+9+9+120+24)
-    //             //     {
-    //             //         std::vector<std::string> cDecodedL1Packet = this->DecodeSSAL1Packet((int)2,cInjectedSSAL1Data.substr(cL1PacketPosition, 2+9+9+120+24)); //TODO Pass SSA Version correctly
-    //             with
-    //             //         Readout type std::string cStripsL1Packet = cDecodedL1Packet[3]; //Recover strips
-
-    //             //         LOG(INFO) << "Strips on injected SSA: " << cStripsL1Packet << RESET;
-
-    //             //         bool cInjectionSuccesful = true;
-    //             //         for (uint8_t strip=0; strip < cStripsL1Packet.length() ; strip++)
-    //             //         {
-    //             //             LOG(DEBUG) << "Starting at 0: strip #" << +strip << "should be " << +( cInjectedStrip == strip ) << RESET;
-    //             //             cInjectionSuccesful &=  (uint8_t)( cInjectedStrip == strip ) == (uint8_t)(cStripsL1Packet[cStripsL1Packet.length() - strip - 1]-'0');
-    //             //         }
-    //             //         if(!cInjectionSuccesful)
-    //             //         {
-    //             //             LOG(INFO) << BOLDRED << "Digital injection failed on injected SSA (hits not present on L1 data)" << RESET; // The rest of the test is skipped
-    //             //             continue;
-    //             //         }
-    //             //     }
-    //             //     else
-    //             //     {
-    //             //         LOG(ERROR) << "Couldn't find L1 packet on injected SSA L1 data." << RESET;
-    //             //         continue;
-    //             //     }
-    //             // }
-    //             // else
-    //             // {
-    //             //     LOG(ERROR) << "Couldn't find L1 packet injected SSA L1 data." << RESET;
-    //             //     continue;
-    //             // }
-
-    //             // Option 2: by checking that the centroid is present on the stub lines of the injected chip
-    //             bool cInjectionSuccesful = false;
-    //             LOG(INFO) << "cInjectedStrip " << +cInjectedStrip << RESET;
-    //             cInjectedSSACentroid = std::bitset<8>(cInjectedStrip * 2 + 9).to_string();
-    //             LOG(INFO) << "Centroid that should be generated on the injected SSA: " << cInjectedSSACentroid << RESET;
-    //             // Search the scoped lines for data on the injected chip
-    //             std::vector<std::string> cInjectedSSAOutputs = (cInjectedSSAId % 2 == 0) ? cReadStubLines[1] : cReadStubLines[0];
-    //             for(uint8_t cLine = 0; cLine < cInjectedSSAOutputs.size(); cLine++) { cInjectionSuccesful |= (cInjectedSSAOutputs[cLine].find(cInjectedSSACentroid) != std::string::npos); }
-    //             if(!cInjectionSuccesful)
-    //             {
-    //                 LOG(INFO) << BOLDRED << "Digital injection failed on injected SSA (hits not present on L1 data)" << RESET; // The rest of the test is skipped for this pair
-    //                 continue;
-    //             }
-
-    //             LOG(INFO) << "Injected chip is SSA#" << +cInjectedSSAId << " (chip " << +(1 - cInjectedSSAId % 2) << " in StubDebug). Adjacent chip is SSA#" << cAdjacentSSAId << " (chip "
-    //                       << +(1 - cAdjacentSSAId % 2) << " in StubDebug)." << RESET;
-    //             int cAdjacentSSAStripNumber;
-    //             if(cPairId == 1)
-    //                 cAdjacentSSAStripNumber = 119 + cInjectedStrip + 1;
-    //             else
-    //                 cAdjacentSSAStripNumber = cInjectedStrip - 120;
-    //             LOG(INFO) << "cInjectedStrip " << +cInjectedStrip << ". cAdjacentSSAStripNumber " << +cAdjacentSSAStripNumber << RESET;
-    //             cAdjacentSSACentroid = std::bitset<8>(cAdjacentSSAStripNumber * 2 + 9).to_string();
-    //             LOG(INFO) << "Centroid that should be generated on the adjacent SSA: " << cAdjacentSSACentroid << RESET;
-    //             LOG(DEBUG) << "cInjectedSSACentroid " << std::bitset<8>(cInjectedStrip * 2 + 9).to_string() << RESET;
-
-    //             // Search the scoped lines for data on the non-injected chip
-    //             std::vector<std::string> cAdjacentSSAOutputs = (cAdjacentSSAId % 2 == 0) ? cReadStubLines[1] : cReadStubLines[0];
-    //             for(uint8_t cLine = 0; cLine < cAdjacentSSAOutputs.size(); cLine++) { cLineGood |= (cAdjacentSSAOutputs[cLine].find(cAdjacentSSACentroid) != std::string::npos); }
-    //             cLateralPhaseSelectionSuccess = cLineGood;
-    //         }
-
-    //         if(pSweepPhaseSelector)
-    //         {
-    //             // Reconfigure the chips to show output with correct phase selection values
-    //             for(auto cOpticalReadout: *pBoard)
-    //             {
-    //                 for(auto cHybrid: *cOpticalReadout)
-    //                 {
-    //                     for(auto cReadoutChip: *cHybrid)
-    //                     {
-    //                         if(cReadoutChip->getFrontEndType() != FrontEndType::SSA && cReadoutChip->getFrontEndType() != FrontEndType::SSA2) continue;
-    //                         if((cReadoutChip->getId() != (int)(pSSAPairSel[0] - '0')) && (cReadoutChip->getId() != (int)(pSSAPairSel[1] - '0'))) // Check only the chips in the pair
-    //                             continue;
-    //                         // LOG(INFO) << "Configuring SSA#" << +cReadoutChip->getId() << " for lateral communication test" << RESET;
-    //                         fReadoutChipInterface->WriteChipReg(cReadoutChip, "TriggerLatency", cLatency - 2);
-
-    //                         // configure Digital Injection
-    //                         if(cReadoutChip->getId() == cInjectedSSAId)
-    //                         {
-    //                             LOG(DEBUG) << "Configuring SSA#" << +cReadoutChip->getId() << " to inject digital pulses for lateral communication test" << RESET;
-    //                             if(cPairId == 1)
-    //                                 cInjectedStrip = 1;
-    //                             else
-    //                                 cInjectedStrip = 118;
-
-    //                             for(uint8_t strip = 0; strip < cReadoutChip->size(); strip++)
-    //                             {
-    //                                 std::string cRegisterName = "DigCalibPattern_L_S" + std::to_string(strip + 1);
-    //                                 uint8_t     cValue        = (strip == cInjectedStrip) ? 1 : 0;
-    //                                 fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegisterName, cValue);
-    //                                 cRegisterName = "DigCalibPattern_L_S" + std::to_string(strip);
-    //                             }
-    //                         }
-    //                         if(cReadoutChip->getId() == cAdjacentSSAId)
-    //                         {
-    //                             LOG(DEBUG) << "Configuring SSA#" << +cReadoutChip->getId() << " to NOT inject digital pulses for lateral communication test" << RESET;
-    //                             for(uint8_t strip = 0; strip < cReadoutChip->size(); strip++)
-    //                             {
-    //                                 std::string cRegisterName = "DigCalibPattern_L_S" + std::to_string(strip + 1);
-    //                                 uint8_t     cValue        = 0;
-    //                                 fReadoutChipInterface->WriteChipReg(cReadoutChip, cRegisterName, cValue);
-    //                                 LOG(DEBUG) << cRegisterName << " on chip " << +cReadoutChip->getId() << " set to " << +cValue << RESET;
-    //                             }
-    //                         }
-    //                     } // chip
-    //                 }     // hybrid
-    //             }         // optical group
-    //             // // Scope lines
-    //             std::vector<std::vector<std::string>> cReadL1Lines;
-    //             this->SSAOutputsPogoScope(cReadL1Lines, pSSAPairSel, pBoard, true, true); // Scope SSA L1 lines
-    //             std::vector<std::vector<std::string>> cReadStubLines;
-    //             this->SSAOutputsPogoScope(cReadStubLines, pSSAPairSel, pBoard, false, true); // Scope SSA stub lines
-    //         }
-    //         if(cLineGood)
-    //         {
-    //             LOG(INFO) << "Lateral communication line from SSA#" << +cInjectedSSAId << " to SSA# " << +cAdjacentSSAId << " is " << BOLDGREEN << "GOOD." << RESET;
-    // #if defined(__USE_ROOT__)
-    //             fillSummaryTree(Form("SSA%d_to_%d_lateral_line", cInjectedSSAId, cAdjacentSSAId), 0.0);
-    // #endif
-    //         }
-    //         else
-    //         {
-    //             LOG(INFO) << "Lateral communication line from SSA#" << +cInjectedSSAId << " to SSA#" << +cAdjacentSSAId << " is " << BOLDRED << "BAD." << RESET;
-    // #if defined(__USE_ROOT__)
-    //             fillSummaryTree(Form("SSA%d_to_%d_lateral_line", cInjectedSSAId, cAdjacentSSAId), 1.0);
-    //             cParameter = " ";
-    //             // cParameter = "FE"+std::to_string(cInjectedSSAId)+"_to_"+std::to_string(cAdjacentSSAId)+"_lateral_line";
-    //             cParameter = "lateral_FE" + std::to_string(cInjectedSSAId) + "_to_" + std::to_string(cAdjacentSSAId);
-    //             cValue     = "  ";
-    //             FillSSATree(cParameter, cValue);
-    // #endif
-    //         }
-    //     }
+        if(cLineGood)
+        {
+            LOG(INFO) << "Lateral communication line from SSA#" << +cInjectedSSAId << " to SSA# " << +cAdjacentSSAId << " is " << BOLDGREEN << "GOOD." << RESET;
+#if defined(__USE_ROOT__)
+            fillSummaryTree(Form("SSA%d_to_%d_lateral_line", cInjectedSSAId, cAdjacentSSAId), 0.0);
+#endif
+        }
+        else
+        {
+            LOG(INFO) << "Lateral communication line from SSA#" << +cInjectedSSAId << " to SSA#" << +cAdjacentSSAId << " is " << BOLDRED << "BAD." << RESET;
+#if defined(__USE_ROOT__)
+            fillSummaryTree(Form("SSA%d_to_%d_lateral_line", cInjectedSSAId, cAdjacentSSAId), 1.0);
+            cParameter = " ";
+            // cParameter = "FE"+std::to_string(cInjectedSSAId)+"_to_"+std::to_string(cAdjacentSSAId)+"_lateral_line";
+            cParameter = "lateral_FE" + std::to_string(cInjectedSSAId) + "_to_" + std::to_string(cAdjacentSSAId);
+            cValue     = "  ";
+            FillSSATree(cParameter, cValue);
+#endif
+        }
+    }
 }
+
 std::vector<double> PSHybridTester::DecodeSSACentroids(std::vector<std::string> cStubLines)
 {
     LOG(INFO) << "Not implemented yet" << RESET;
@@ -1038,7 +1198,7 @@ std::vector<double> PSHybridTester::DecodeSSACentroids(std::vector<std::string> 
 std::vector<std::string> PSHybridTester::DecodeSSAL1Packet(int pSSAType, std::string pL1Data)
 {
     std::vector<std::string> cDecodedL1Packet;
-    if(pSSAType == 1)
+    if(pSSAType == 1) // SSA1 L1 packet: Header [2 bits] + L1 counter [4 bits] + BX counter [9 bits] + Strips [120 bits] + MIP flags [24 bits]
     {
         cDecodedL1Packet.push_back(pL1Data.substr(0, 2));                //[0] Header
         cDecodedL1Packet.push_back(pL1Data.substr(2, 4));                //[1] L1 Counter
@@ -1046,7 +1206,7 @@ std::vector<std::string> PSHybridTester::DecodeSSAL1Packet(int pSSAType, std::st
         cDecodedL1Packet.push_back(pL1Data.substr(2 + 4 + 9, 120));      //[3] Strips
         cDecodedL1Packet.push_back(pL1Data.substr(2 + 4 + 9 + 120, 24)); //[4] MIP Flags
     }
-    else if(pSSAType == 2)
+    else if(pSSAType == 2) // SSA2 L1 packet: Header [2 bits] + L1 counter [9 bits] + BX counter [9 bits] + MIP flags [24 bits] + Strips [120 bits]
     {
         cDecodedL1Packet.push_back(pL1Data.substr(0, 2));                //[0] Header
         cDecodedL1Packet.push_back(pL1Data.substr(2, 9));                //[1] L1 Counter
@@ -1060,11 +1220,11 @@ std::vector<std::string> PSHybridTester::DecodeSSAL1Packet(int pSSAType, std::st
         exit(80);
     }
 
-    LOG(DEBUG) << "Header " << cDecodedL1Packet[0] << RESET;
-    LOG(DEBUG) << "L1 Counter " << cDecodedL1Packet[1] << RESET;
-    LOG(DEBUG) << "BX Counter " << cDecodedL1Packet[2] << RESET;
-    LOG(DEBUG) << "Strips " << cDecodedL1Packet[3] << RESET;
-    LOG(DEBUG) << "MIP flags " << cDecodedL1Packet[4] << RESET;
+    LOG(INFO) << "Header " << cDecodedL1Packet[0] << RESET;
+    LOG(INFO) << "L1 Counter " << cDecodedL1Packet[1] << RESET;
+    LOG(INFO) << "BX Counter " << cDecodedL1Packet[2] << RESET;
+    LOG(INFO) << "Strips " << cDecodedL1Packet[3] << RESET;
+    LOG(INFO) << "MIP flags " << cDecodedL1Packet[4] << RESET;
     return cDecodedL1Packet;
 }
 void PSHybridTester::SetHybridVoltage(uint32_t pUsbBus, uint8_t pUsbDev)
