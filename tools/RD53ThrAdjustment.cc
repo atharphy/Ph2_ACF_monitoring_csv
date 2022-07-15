@@ -30,7 +30,6 @@ void ThrAdjustment::ConfigureCalibration()
     stopValue       = this->findValueInSettings<double>("ThrStop");
     doDisplay       = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
-    saveBinaryData  = this->findValueInSettings<double>("SaveBinaryData");
 
     frontEnd             = RD53Shared::firstChip->getMajorityFE(PixelAlive::colStart, PixelAlive::colStop);
     PixelAlive::colStart = std::max(PixelAlive::colStart, frontEnd->colStart);
@@ -55,7 +54,7 @@ void ThrAdjustment::Running()
     theCurrentRun = this->fRunNumber;
     LOG(INFO) << GREEN << "[ThrAdjustment::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
-    if(saveBinaryData == true)
+    if(PixelAlive::saveBinaryData == true)
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_ThrAdjustment.raw", 'w');
         this->initializeWriteFileHandler();
@@ -115,7 +114,7 @@ void ThrAdjustment::initializeFiles(const std::string& fileRes_, int currentRun)
 
     fileRes = fileRes_;
 
-    if((currentRun >= 0) && (saveBinaryData == true))
+    if((currentRun >= 0) && (PixelAlive::saveBinaryData == true))
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrAdjustment.raw", 'w');
         this->initializeWriteFileHandler();

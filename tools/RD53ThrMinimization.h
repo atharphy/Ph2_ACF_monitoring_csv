@@ -67,7 +67,6 @@ class ThrMinimization : public PixelAlive
     size_t stopValue;
     bool   doDisplay;
     bool   doUpdateChip;
-    bool   saveBinaryData;
 
     std::string fileRes;
     int         theCurrentRun;

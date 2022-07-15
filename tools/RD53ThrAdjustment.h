@@ -72,7 +72,6 @@ class ThrAdjustment : public PixelAlive
     size_t stopValue;
     bool   doUpdateChip;
     bool   doDisplay;
-    bool   saveBinaryData;
 
     std::string fileRes;
     int         theCurrentRun;
