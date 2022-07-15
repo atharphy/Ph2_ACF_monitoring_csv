@@ -106,6 +106,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 {
                     cFWInterface->selectLink(cOpticalGroup->getId());
                     cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
+
                     LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
                     cFWInterface->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable", 0x01);
                     cFWInterface->ChipTestPulse();
@@ -239,7 +240,7 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
     }
 }
 
-bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
+bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters, int pNTries)
 {
     bool                cTestSuccess    = true;
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
@@ -273,10 +274,9 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
                 gettimeofday(&start, NULL);
                 // do stuff
                 uint8_t failureIter   = 0;
-                int     tries         = 100000;
                 uint8_t cFrequency    = (cMaster == 1) ? 2 : 3;
                 uint8_t cSlaveAddress = 0x60;
-                for(int j = 0; j < tries; j++)
+                for(int j = 0; j < pNTries; j++)
                 // int j = 0;
                 // while(true)
                 {
@@ -380,9 +380,9 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
 // fTC_2SSEH->set_AMUX(cDACValue, cDACValue);
 // example to program current Dac for temperature sensor clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, pADCs,0);
 #ifdef __ROH_USB__
-                    flpGBTInterface->getExternalController()->getInterface().dac_output(cDACValue);
+                    flpGBTInterface->GetExternalController()->getInterface().dac_output(cDACValue);
 #elif __SEH_USB__
-                    flpGBTInterface->getExternalController()->getInterface().set_AMUX(cDACValue, cDACValue);
+                    flpGBTInterface->GetExternalController()->getInterface().set_AMUX(cDACValue, cDACValue);
 #endif
                     std::this_thread::sleep_for(std::chrono::milliseconds(1200));
                     int cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
@@ -466,7 +466,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     cDefaultParameters   = &f2SSEHDefaultParameters;
     cADCNametoPinMapping = &f2SSEHADCInputMap;
 
-    flpGBTInterface->getExternalController()->getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
+    flpGBTInterface->GetExternalController()->getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
 #elif __ROH_USB__
 
     cADCsMap = {{"12V_MONITOR_VD", "12V_MONITOR_VD_Nominal"},
@@ -498,9 +498,9 @@ bool OTHybridTester::LpGBTTestFixedADCs()
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
 #ifdef __ROH_USB__
             // FIXME why is this here and what is cDACValue
-            // flpGBTInterface->getExternalController()->getInterface().dac_output(cDACValue);
+            // flpGBTInterface->GetExternalController()->getInterface().dac_output(cDACValue);
 #elif __SEH_USB__
-            flpGBTInterface->getExternalController()->getInterface().set_AMUX(3500, 3500);
+            flpGBTInterface->GetExternalController()->getInterface().set_AMUX(3500, 3500);
 #endif
             do
             {
@@ -550,7 +550,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     cFixedADCsTree->Write();
 
 #ifdef __SEH_USB__
-    flpGBTInterface->getExternalController()->getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
+    flpGBTInterface->GetExternalController()->getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
 #endif
     return cReturn;
 }
@@ -598,13 +598,13 @@ bool OTHybridTester::LpGBTTestResetLines()
         do
         {
 #ifdef __ROH_USB__
-            flpGBTInterface->getExternalController()->getInterface().adc_get(cMapIterator->second, cMeasurement);
+            flpGBTInterface->GetExternalController()->getInterface().adc_get(cMapIterator->second, cMeasurement);
             float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement);
 #elif __SEH_USB__
 #ifdef __TCP_SERVER__
             cMeasurement = this->getMeasurement("read_reset:" + cMapIterator->first);
 #else
-            flpGBTInterface->getExternalController()->getInterface().read_reset(cMapIterator->second, cMeasurement);
+            flpGBTInterface->GetExternalController()->getInterface().read_reset(cMapIterator->second, cMeasurement);
 #endif
             float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement * 1000.); // 1300
             fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
