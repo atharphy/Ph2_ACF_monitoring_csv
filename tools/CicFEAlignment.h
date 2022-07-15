@@ -55,7 +55,7 @@ class CicFEAlignment : public OTTool
     void Initialise();
     bool CicLpGbtAlignment();
     bool CicLpGbtAlignment(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    void AlignInputs();
+    bool AlignInputs();
     void SetStaticPhaseAlignment();
     // manual scan of CIC input phases
     void                  InputLineScan();
