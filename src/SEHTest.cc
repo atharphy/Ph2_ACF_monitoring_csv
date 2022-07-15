@@ -238,35 +238,41 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDYELLOW << "Switching on SEH without remote power supply control" << RESET;
         cSEHTester.TurnOn(cRightLoad, cLeftLoad);
     }
-    if(cmd.foundOption("ext-leak") & cmd.foundOption("parallelHV"))
+    if(cmd.foundOption("ext-leak"))
     {
         if(cmd.foundOption("parallelHV"))
         {
             LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply in parallel" << RESET;
             cSEHTester.SetupExternalTestLeakageCurrent(cExtLeakVoltage, cHVPowerSupplyId, cHVChannelId);
         }
-        else
-        {
-            LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply" << RESET;
-            cSEHTester.ExternalTestLeakageCurrent(cExtLeakVoltage, 150, cHVPowerSupplyId, cHVChannelId);
-        }
     }
 
     // establishes an optical link and configures the lpgbt over the optical cable
     uint8_t cExternalPattern = (cmd.foundOption("external-pattern")) ? convertAnyInt(cmd.optionValue("external-pattern").c_str()) : 0;
     cSEHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
-    cTool.ConfigureHw();
-    cSEHTester.Initialise();
-    if(!cSEHTester.LpGBTGetLinkLock())
+
+    try
+    {
+        cTool.ConfigureHw();
+    }
+    catch(...)
     {
         cSEHTester.TurnOff();
         cSEHTester.SetLoad(300, 300);
         std::this_thread::sleep_for(std::chrono::milliseconds(1500));
         cSEHTester.TurnOn(cRightLoad, cLeftLoad);
         std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-        cTool.ConfigureHw();
+        try
+        {
+            cTool.ConfigureHw();
+        }
+        catch(...)
+        {
+            return -1;
+        }
     }
-    if(!cSEHTester.LpGBTGetLinkLock()) { return -1; }
+    cSEHTester.Initialise();
+
     // Initialize BackEnd & Control LpGBT Tester
     // cSEHTester.exampleFit();
     // cSEHTester.DCDCOutputEvaluation();
@@ -413,7 +419,7 @@ int main(int argc, char* argv[])
         // cSEHTester.ToyTestFixedADCs();
         cSEHTester.LpGBTTestFixedADCs();
         std::vector<std::string> cADCs = {"ADC0", "ADC3"};
-        // cSEHTester.LpGBTTestADC(cADCs, 0, 0xe00, 300); // DAC *should* be 16 bit with 1V reference, ROH is 12 bit something, needs to be included somewhere
+        cSEHTester.LpGBTTestADC(cADCs, 0, 3720, 300); // DAC *should* be 16 bit with 1V reference, ROH is 12 bit something, needs to be included somewhere
     }
 
     if(cClockTest)
@@ -430,8 +436,9 @@ int main(int argc, char* argv[])
         cTool.fillSummaryTree("status_clocktest", (cStatus) ? 1 : 0);
 #endif
     }
+    // while(true){
     int cFmcdCounter = 0;
-    int cFcmdTries   = 100;
+    int cFcmdTries   = 10;
     if(cmd.foundOption("scope-fcmd"))
     {
         // align lines in the back-end
@@ -440,9 +447,11 @@ int main(int argc, char* argv[])
         {
             LOG(INFO) << BOLDBLUE << "FCMD pattern test" << RESET;
             cSEHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
+            // std::this_thread::sleep_for(std::chrono::milliseconds(30000));
+
             for(int i = 0; i < cFcmdTries; i++)
             {
-                if(!cSEHTester.LpGBTFastCommandChecker(cFCMDPattern)) cFmcdCounter += 1;
+                if(!cSEHTester.LpGBTFastCommandChecker(7)) cFmcdCounter += 1;
             }
             LOG(INFO) << BOLDRED << "FCMD pattern test failed " << +cFmcdCounter << " times" << RESET;
 #ifdef __USE_ROOT__
@@ -452,10 +461,15 @@ int main(int argc, char* argv[])
         }
         else
         {
-            cSEHTester.FastCommandScope();
+            for(int i = 0; i < cFcmdTries; i++)
+            {
+                if(!cSEHTester.LpGBTFastCommandChecker(7)) cFmcdCounter += 1;
+            }
+            LOG(INFO) << BOLDRED << "FCMD pattern test failed " << +cFmcdCounter << " times" << RESET;
         }
     }
-
+    // getchar();
+    //}
     // cSEHTester.changeDir("");
     //}
 
@@ -476,6 +490,12 @@ int main(int argc, char* argv[])
     {
         LOG(INFO) << BOLDBLUE << "Measuring bias voltage on sensor side" << RESET;
         cSEHTester.TestBiasVoltage(cBiasVoltage);
+    }
+
+    if(cmd.foundOption("ext-leak") & !cmd.foundOption("parallelHV"))
+    {
+        LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply" << RESET;
+        cSEHTester.ExternalTestLeakageCurrent(cExtLeakVoltage, 150, cHVPowerSupplyId, cHVChannelId);
     }
 
     if(cmd.foundOption("ext-bias"))

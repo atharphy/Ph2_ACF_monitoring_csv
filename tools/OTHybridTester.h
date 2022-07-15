@@ -18,7 +18,9 @@
 #include "D19cDebugFWInterface.h"
 #include "D19cLinkInterface.h"
 #include "D19cOpticalInterface.h"
+#include "D19cTriggerInterface.h"
 #include "L1ReadoutInterface.h"
+#include "LinkAlignmentOT.h"
 #include "Tool.h"
 #include "linearFitter.h"
 
@@ -79,7 +81,8 @@ class OTHybridTester : public Tool
     void LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint32_t pPattern = 0x00000000);
 
     // Phase Alignment
-    void BackEndAlignment(std::vector<std::string> pLines);
+    void                     BackEndAlignment(std::vector<std::string> pLines);
+    std::pair<bool, uint8_t> PhaseTuneLineEleFC7(uint8_t pHybrid, uint8_t pLineId);
 
   private:
     float       getMeasurement(std::string name);

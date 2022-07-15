@@ -115,7 +115,6 @@ class ChipInterface
         return 0xFFFFFFFF;
     };
 
-
     /*!
      * \brief Read the designated register in the Chip
      * \param pChip
