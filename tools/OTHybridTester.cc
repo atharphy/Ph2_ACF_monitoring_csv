@@ -1,6 +1,7 @@
 #if defined(__TCUSB__) && defined(__USE_ROOT__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
 
 #include "OTHybridTester.h"
+#include "../HWInterface/D19cBackendAlignmentFWInterface.h"
 
 OTHybridTester::OTHybridTester() : Tool()
 {
@@ -220,14 +221,11 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
             clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, cSource); // 0 --> link data, 3 --> constant pattern
             // clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {,}, cSource); // 0 --> link data, 3 --> constant pattern
 
-            LinkAlignmentOT cLinkAlignment;
-            cLinkAlignment.Inherit(this);
-            cLinkAlignment.Initialise();
-            cLinkAlignment.PhaseTuneLineEleFC7(0, 0);
-            cLinkAlignment.PhaseTuneLineEleFC7(0, 1);
-            cLinkAlignment.PhaseTuneLineEleFC7(0, 2);
+            PhaseTuneLineEleFC7(0, 0);
+            PhaseTuneLineEleFC7(0, 1);
+            PhaseTuneLineEleFC7(0, 2);
             // PhaseTuneLineEleFC7(0, 3);
-            cLinkAlignment.PhaseTuneLineEleFC7(0, 4);
+            PhaseTuneLineEleFC7(0, 4);
             // PhaseTuneLineEleFC7(0, 5);
         }
     }
@@ -960,6 +958,44 @@ bool OTHybridTester::LpGBTCheckClocks()
         LOG(INFO) << GREEN << "============================" << RESET;
     }
     return cStatus;
+}
+
+std::pair<bool, uint8_t> OTHybridTester::PhaseTuneLineEleFC7(uint8_t pHybrid, uint8_t pLineId)
+{
+    std::pair<bool, uint8_t> cLineStatus;
+    cLineStatus.first  = false;
+    cLineStatus.second = 0;
+    uint8_t pChip      = 0;
+    auto    cBoardId   = 1;
+    auto    cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+    fBeBoardInterface->setBoard((*cBoardIter)->getId());
+    LOG(DEBUG) << BOLDYELLOW << "LinkAlignmentOT::PhaseTuneLine#" << +pLineId << " for a Chip#" << +pChip << RESET;
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+
+    D19cBackendAlignmentFWInterface* cAlignerInterface = cInterface->getBackendAlignmentInterface();
+    cAlignerInterface->InitializeConfiguration();
+    cAlignerInterface->InitializeAlignerObject();
+
+    AlignerObject cAlignerObjct;
+    cAlignerObjct.fHybrid = pHybrid;
+    cAlignerObjct.fChip   = 0;
+    cAlignerObjct.fLine   = pLineId;
+    LineConfiguration cLineCnfg;
+    cAlignerInterface->TunePhase(cAlignerObjct, cLineCnfg);
+    cAlignerInterface->GetLineStatus(cAlignerObjct);
+    cLineStatus.first = cAlignerInterface->IsLinePhaseAligned(cAlignerObjct);
+    if(!cLineStatus.first)
+    {
+        LOG(INFO) << BOLDRED << "Could not phase align-BE data for BeBoard#" << +cBoardId << " Hybrid#" << +pHybrid << " Chip#" << +pChip << " line# " << +pLineId << RESET;
+        // throw std::runtime_error(std::string("Could not phase align-BE data in LinkAlignmentOT..."));
+    }
+    else
+    {
+        LOG(INFO) << BOLDBLUE << "Could phase align-BE data for BeBoard#" << +cBoardId << " Hybrid#" << +pHybrid << " Chip#" << +pChip << " line# " << +pLineId << RESET;
+    }
+
+    cLineStatus.second = cAlignerInterface->GetLineConfiguration().fDelay;
+    return cLineStatus;
 }
 
 #ifdef __TCP_SERVER__
