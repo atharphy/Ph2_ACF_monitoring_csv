@@ -906,10 +906,10 @@ void PedeNoise::producePedeNoisePlots()
             {
                 for(auto chip: *module)
                 {
-                    fillSummaryTree("AvgNoiseSSA" + std::to_string(chip->getId()), chip->getSummary<ThresholdAndNoise>().fNoise );      // For GUI summaryTree
-                    fillSummaryTree("StDvNoiseSSA" + std::to_string(chip->getId()), chip->getSummary<ThresholdAndNoise>().fNoiseError );   // For GUI summaryTree
-                    fillSummaryTree("AvgPedeSSA" + std::to_string(chip->getId()), chip->getSummary<ThresholdAndNoise>().fThreshold );    // For GUI summaryTree
-                    fillSummaryTree("StDvPedeSSA" + std::to_string(chip->getId()), chip->getSummary<ThresholdAndNoise>().fThresholdError ); // For GUI summaryTree
+                    fillSummaryTree("AvgNoiseSSA" + std::to_string(chip->getId()), chip->getSummary<ThresholdAndNoise>().fNoise);          // For GUI summaryTree
+                    fillSummaryTree("StDvNoiseSSA" + std::to_string(chip->getId()), chip->getSummary<ThresholdAndNoise>().fNoiseError);    // For GUI summaryTree
+                    fillSummaryTree("AvgPedeSSA" + std::to_string(chip->getId()), chip->getSummary<ThresholdAndNoise>().fThreshold);       // For GUI summaryTree
+                    fillSummaryTree("StDvPedeSSA" + std::to_string(chip->getId()), chip->getSummary<ThresholdAndNoise>().fThresholdError); // For GUI summaryTree
                 }
             }
         }
