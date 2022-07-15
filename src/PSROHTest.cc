@@ -31,6 +31,27 @@ using namespace std;
 INITIALIZE_EASYLOGGINGPP
 
 #define CHIPSLAVE 4
+sig_atomic_t killProcess  = 0;
+sig_atomic_t runCompleted = 0;
+
+void interruptHandler(int handler) { killProcess = 1; }
+
+void killProcessFunction(Tool* theTool)
+{
+    while(1)
+    {
+        usleep(250000);
+        if(killProcess || runCompleted) break;
+    }
+    if(killProcess)
+    {
+        theTool->SaveResults();
+        theTool->WriteRootFile();
+        theTool->CloseResultFile();
+        theTool->Destroy();
+        abort();
+    }
+}
 
 int main(int argc, char* argv[])
 {
@@ -51,39 +72,42 @@ int main(int argc, char* argv[])
     cmd.defineOption("file", "Hw Description file. Default value: settings/D19CDescription_ROH_EFC7.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOptionAlternative("file", "f");
     // Load pattern
-    cmd.defineOption("internal-pattern", "Internally Generated LpGBT Pattern", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
-    cmd.defineOptionAlternative("internal-pattern", "ip");
-    cmd.defineOption("external-pattern", "Externlly Generated LpGBT Pattern using the Data Player for Control FC7", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
-    cmd.defineOptionAlternative("external-pattern", "ep");
+    cmd.defineOption("test-internal-pattern", "Internally Generated LpGBT Pattern", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
+    cmd.defineOptionAlternative("test-internal-pattern", "ip");
+    cmd.defineOption("test-external-pattern", "Externlly Generated LpGBT Pattern using the Data Player for Control FC7", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
+    cmd.defineOptionAlternative("test-external-pattern", "ep");
 
-    cmd.defineOption("cic-pattern", "Externlly Generated LpGBT Pattern using CIC output", ArgvParser::NoOptionAttribute /*| ArgvParser::OptionRequires*/);
+    cmd.defineOption("cic-pattern", "Externally Generated LpGBT Pattern using CIC output", ArgvParser::NoOptionAttribute /*| ArgvParser::OptionRequires*/);
     cmd.defineOptionAlternative("cic-pattern", "cp");
 
     // Test Reset lines
-    cmd.defineOption("testReset", "Test Reset lines");
-    cmd.defineOptionAlternative("testReset", "r");
+    cmd.defineOption("test-reset", "Test Reset lines");
+    cmd.defineOptionAlternative("test-reset", "r");
     // test I2C Masters
-    cmd.defineOption("testI2C", "Test I2C LpGBT Masters on ROH");
-    cmd.defineOptionAlternative("testI2C", "i");
+    cmd.defineOption("test-i2c", "Test I2C LpGBT Masters on ROH");
+    cmd.defineOptionAlternative("test-i2c", "i2c");
     // test ADC channels
-    cmd.defineOption("testADC", "Test LpGBT ADCs on ROH");
-    cmd.defineOptionAlternative("testADC", "a");
+    cmd.defineOption("test-adc", "Test LpGBT ADCs on ROH");
+    cmd.defineOptionAlternative("test-adc", "a");
     // run Eye Opening Monitor
-    cmd.defineOption("eye-monitor", "Run Eye Opening Monitor test");
-    cmd.defineOptionAlternative("eye-monitor", "eom");
+    cmd.defineOption("test-eom", "Run Eye Opening Monitor test");
+    cmd.defineOptionAlternative("test-eom", "eom");
+    //
+    cmd.defineOption("eq-attenuation", "EQ attenuation for eye opening measurement", ArgvParser::OptionRequiresValue);
+    cmd.defineOptionAlternative("eq-attenuation", "eqa");
     // run Bit Error Test
-    cmd.defineOption("bit-error-rate", "Run Bit Error Rate test");
-    cmd.defineOptionAlternative("bit-error-rate", "ber");
+    cmd.defineOption("test-ber", "Run Bit Error Rate test");
+    cmd.defineOptionAlternative("test-ber", "ber");
     cmd.defineOption("ber-pattern", "Define pattern to be used for Bit Error Rate test", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
     cmd.defineOptionAlternative("ber-pattern", "bp");
     // clock test
-    cmd.defineOption("clock-test", "Run clock tests", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("test-clock", "Run clock tests", ArgvParser::NoOptionAttribute);
     // fast command test
-    cmd.defineOption("scope-fcmd", "Scope fast commands [de-serialized]");
+    cmd.defineOption("test-fcmd", "Scope fast commands [de-serialized]");
     cmd.defineOption("fcmd-pattern", "Injected pattern (simulates FCMD) on the DownLink", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
     cmd.defineOptionAlternative("fcmd-pattern", "fp");
     //
-    cmd.defineOption("fcmd-test", "Run fast command tests", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("fmcd-test", "Run fast command tests", ArgvParser::NoOptionAttribute);
     cmd.defineOption("fcmd-test-start-pattern", "Fast command FSM test start pattern", ArgvParser::OptionRequiresValue);
     cmd.defineOption("fcmd-test-userfile", "User file with fastcommands for testing", ArgvParser::OptionRequiresValue);
     // FCMD check in BRAM
@@ -104,11 +128,19 @@ int main(int argc, char* argv[])
     cmd.defineOption("debug", "Run debug", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("debug", "d");
     // Test VTRx+ registers
-    cmd.defineOption("testVTRx+", "Test testVTRx+ slow control");
+    cmd.defineOption("test-vtrx", "Test testVTRx+ slow control");
     cmd.defineOptionAlternative("testVTRx+", "v");
+    // Check ROM
+    cmd.defineOption("test-rom", "Test ROM loading [only lpGBT-v1]");
+    // Measure Current-Voltages on test card
+    cmd.defineOption("measure-input-iv", "Measure input currents and voltages on test card");
+    cmd.defineOptionAlternative("measure-input-iv", "iv");
     // general
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
+
+    //
+    cmd.defineOption("hybridId", "Name or serial number of ROH", ArgvParser::OptionRequiresValue);
 
     int result = cmd.parse(argc, argv);
     if(result != ArgvParser::NoParserError)
@@ -124,7 +156,7 @@ int main(int argc, char* argv[])
     std::string       cHybridId  = (cmd.foundOption("hybridId")) ? cmd.optionValue("hybridId") : "xxxx";
     bool              cDebug     = (cmd.foundOption("debug"));
     // Test to perform
-    bool        cFCMDTest             = (cmd.foundOption("fcmd-test")) ? true : false;
+    bool        cFCMDTest             = (cmd.foundOption("fmcd-test")) ? true : false;
     std::string cFCMDTestStartPattern = (cmd.foundOption("fcmd-test-start-pattern")) ? cmd.optionValue("fcmd-test-start-pattern") : "11000001";
     std::string cFCMDTestUserFileName = (cmd.foundOption("fcmd-test-userfile")) ? cmd.optionValue("fcmd-test-userfile") : "fcmd_file.txt";
     std::string cBRAMFCMDLine         = (cmd.foundOption("bramfcmd-check")) ? cmd.optionValue("bramfcmd-check") : "fe_for_ps_roh_fcmd_SSA_l_check";
@@ -132,6 +164,7 @@ int main(int argc, char* argv[])
     std::string cConvertUserFileName  = (cmd.foundOption("convert-userfile")) ? cmd.optionValue("convert-userfile") : "fcmd_file.txt";
     std::string cRefBRAMAddr          = (cmd.foundOption("read-ref-bram")) ? cmd.optionValue("read-ref-bram") : "0";
     std::string cCheckBRAMAddr        = (cmd.foundOption("read-check-bram")) ? cmd.optionValue("read-check-bram") : "0";
+    bool        cMeasureInputIV       = cmd.foundOption("measure-input-iv");
 
     cDirectory += Form("PS_ROH_%s", cHybridId.c_str());
 
@@ -155,55 +188,89 @@ int main(int argc, char* argv[])
     outp.str("");
     cTool.CreateResultDirectory(cDirectory);
     cTool.InitResultFile(cResultfile);
-    LOG(INFO) << BOLDYELLOW << "Configuring FC7" << RESET;
-    cTool.ConfigureHw();
+    cTool.bookSummaryTree();
 
-    // Initialize BackEnd & Control LpGBT Tester
+    // Initilaise PSROH tester
     PSROHTester cPSROHTester;
     cPSROHTester.Inherit(&cTool);
+
+    uint8_t cExternalPattern = (cmd.foundOption("test-external-pattern")) ? convertAnyInt(cmd.optionValue("test-external-pattern").c_str()) : 0;
+    cPSROHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
+
+    // Initialize BackEnd & Control LpGBT Tester
+    LOG(INFO) << BOLDYELLOW << "Configuring FC7" << RESET;
+    if(cMeasureInputIV) cPSROHTester.MeasureInputIV("BEFORE_CONFIG");
+    LOG(INFO) << BOLDMAGENTA << " ------------------------------------------- " << RESET;
+    cTool.ConfigureHw();
+
+    // Initialise tester
     cPSROHTester.Initialise();
+
+    if(cMeasureInputIV) cPSROHTester.MeasureInputIV("AFTER_CONFIG");
 
     /***************/
     /* TEST UPLINK */
     /***************/
-    if(cmd.foundOption("internal-pattern") || cmd.foundOption("external-pattern"))
+    if(cmd.foundOption("test-internal-pattern") || cmd.foundOption("test-external-pattern"))
     {
         /* INTERNALLY GENERATED PATTERN */
-        if(cmd.foundOption("internal-pattern"))
+        if(cmd.foundOption("test-internal-pattern"))
         {
-            uint8_t  cInternalPattern8  = (cmd.foundOption("internal-pattern")) ? convertAnyInt(cmd.optionValue("internal-pattern").c_str()) : 0;
+            uint8_t  cInternalPattern8  = (cmd.foundOption("test-internal-pattern")) ? convertAnyInt(cmd.optionValue("test-internal-pattern").c_str()) : 0;
             uint32_t cInternalPattern32 = cInternalPattern8 << 24 | cInternalPattern8 << 16 | cInternalPattern8 << 8 | cInternalPattern8 << 0;
             cPSROHTester.LpGBTInjectULInternalPattern(cInternalPattern32);
             cPSROHTester.LpGBTCheckULPattern(false, cInternalPattern8);
         }
         /* EXTERNALLY GENERATED PATTERN */
-        else if(cmd.foundOption("external-pattern"))
+        else if(cmd.foundOption("test-external-pattern"))
         {
-            uint8_t cExternalPattern = (cmd.foundOption("external-pattern")) ? convertAnyInt(cmd.optionValue("external-pattern").c_str()) : 0;
-            cPSROHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
-            cPSROHTester.LpGBTCheckULPattern(true, cExternalPattern);
+            uint8_t cExternalPattern = (cmd.foundOption("test-external-pattern")) ? convertAnyInt(cmd.optionValue("test-external-pattern").c_str()) : 0;
+            // cPSROHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
+            bool cStatus = cPSROHTester.LpGBTCheckULPattern(true, cExternalPattern);
+#ifdef __USE_ROOT__
+            cTool.fillSummaryTree("status_CicOutTest", (cStatus) ? 1 : 0);
+#endif
             cPSROHTester.LpGBTInjectULExternalPattern(false, cExternalPattern);
+            if(cStatus) { LOG(INFO) << BOLDGREEN << "CIC_Out test passed." << RESET; }
+            else
+            {
+                LOG(INFO) << BOLDRED << "CIC_Out test failed." << RESET;
+            }
         }
     }
     /****************************/
     /* TEST RESET LINES (GPIOs) */
     /****************************/
-    if(cmd.foundOption("testReset"))
+    if(cmd.foundOption("test-reset"))
     {
         bool cStatus = cPSROHTester.LpGBTTestResetLines();
-        cPSROHTester.LpGBTTestGPILines();
-        if(cStatus)
-            LOG(INFO) << BOLDBLUE << "Reset test passed." << RESET;
+#ifdef __USE_ROOT__
+        cTool.fillSummaryTree("status_ResetTest", (cStatus) ? 1 : 0);
+#endif
+        if(cStatus) { LOG(INFO) << BOLDGREEN << "Reset test passed." << RESET; }
         else
+        {
             LOG(INFO) << BOLDRED << "Reset test failed." << RESET;
+        }
+        cStatus = cPSROHTester.LpGBTTestGPILines();
+#ifdef __USE_ROOT__
+        cTool.fillSummaryTree("status_PowerGoodTest", (cStatus) ? 1 : 0);
+#endif
+        if(cStatus) { LOG(INFO) << BOLDGREEN << "Power Good test passed." << RESET; }
+        else
+        {
+            LOG(INFO) << BOLDRED << "Power Good test failed." << RESET;
+        }
     }
 
     // Test VTRx+ slow control
 
-    if(cmd.foundOption("testVTRx+"))
+    if(cmd.foundOption("test-vtrx"))
     {
         bool cStatus = cPSROHTester.LpGBTTestVTRx();
-
+#ifdef __USE_ROOT__
+        cTool.fillSummaryTree("status_vtrxplusslowcontrol", (cStatus) ? 1 : 0);
+#endif
         if(cStatus)
             LOG(INFO) << BOLDBLUE << "VTRx+ slow control test passed." << RESET;
         else
@@ -213,20 +280,25 @@ int main(int argc, char* argv[])
     /********************/
     /* TEST I2C MASTERS */
     /********************/
-    if(cmd.foundOption("testI2C"))
+    if(cmd.foundOption("test-i2c"))
     {
         std::vector<uint8_t> cMasters = {0, 2};
         bool                 cStatus  = cPSROHTester.LpGBTTestI2CMaster(cMasters);
+#ifdef __USE_ROOT__
+        cTool.fillSummaryTree("status_i2cmasters", (cStatus) ? 1 : 0);
+#endif
         if(cStatus)
             LOG(INFO) << BOLDBLUE << "I2C test " << BOLDGREEN << " passed" << RESET;
         else
+        {
             LOG(INFO) << BOLDBLUE << "I2C test " << BOLDRED << " failed" << RESET;
+        }
     }
 
     /**********************************/
     /* TEST ANALOG-DIGITAL-CONVERTERS */
     /**********************************/
-    if(cmd.foundOption("testADC"))
+    if(cmd.foundOption("test-adc"))
     {
         cPSROHTester.LpGBTTestFixedADCs();
 
@@ -237,12 +309,16 @@ int main(int argc, char* argv[])
     /********************/
     /* TEST EYE OPENING */
     /********************/
-    if(cmd.foundOption("eye-monitor")) { cPSROHTester.LpGBTRunEyeOpeningMonitor(7); }
+    if(cmd.foundOption("test-eom"))
+    {
+        uint8_t cEQAttenuation = cmd.foundOption("eq-attenuation") ? convertAnyInt(cmd.optionValue("eq-attenuation").c_str()) : 3;
+        cPSROHTester.LpGBTRunEyeOpeningMonitor(7, cEQAttenuation);
+    }
 
     /***********************/
     /* TEST BIT ERROR RATE */
     /***********************/
-    if(cmd.foundOption("bit-error-rate"))
+    if(cmd.foundOption("test-ber"))
     {
         uint32_t cBERTPattern32 = cmd.foundOption("ber-pattern") ? convertAnyInt(cmd.optionValue("ber-pattern").c_str()) : 0x00000000;
         // FIXME still hard coded
@@ -253,22 +329,41 @@ int main(int argc, char* argv[])
     /***************/
     /* TEST CLOCKS */
     /***************/
-    if(cmd.foundOption("clock-test"))
+    if(cmd.foundOption("test-clock"))
     {
         LOG(INFO) << BOLDBLUE << "Clock test" << RESET;
-        cPSROHTester.LpGBTCheckClocks();
+        bool cStatus = cPSROHTester.LpGBTCheckClocks();
+        if(cStatus)
+            LOG(INFO) << BOLDBLUE << "Clock test " << BOLDGREEN << " passed" << RESET;
+        else
+        {
+            LOG(INFO) << BOLDBLUE << "Clock test " << BOLDRED << " failed" << RESET;
+        }
+#ifdef __USE_ROOT__
+        cTool.fillSummaryTree("status_clocktest", (cStatus) ? 1 : 0);
+#endif
     }
 
     /*********************/
     /* TEST FAST COMMAND */
     /*********************/
-    if(cmd.foundOption("scope-fcmd"))
+    if(cmd.foundOption("test-fcmd"))
     {
         if(cmd.foundOption("fcmd-pattern"))
         {
+            int     cFmcdCounter = 0, cFcmdTries = 100;
             uint8_t cFCMDPattern = (cmd.foundOption("fcmd-pattern")) ? convertAnyInt(cmd.optionValue("fcmd-pattern").c_str()) : 0;
+            LOG(INFO) << BOLDBLUE << "FCMD pattern test" << RESET;
             cPSROHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
-            cPSROHTester.LpGBTFastCommandChecker(cFCMDPattern);
+            for(int i = 0; i < cFcmdTries; i++)
+            {
+                if(!cPSROHTester.LpGBTFastCommandChecker(cFCMDPattern)) cFmcdCounter += 1;
+            }
+            LOG(INFO) << BOLDRED << "FCMD pattern test failed " << +cFmcdCounter << " times" << RESET;
+#ifdef __USE_ROOT__
+            cTool.fillSummaryTree("fcmd_tries", cFcmdTries);
+            cTool.fillSummaryTree("fcmd_failures", cFmcdCounter);
+#endif
         }
         else
         {
@@ -338,7 +433,7 @@ int main(int argc, char* argv[])
     cTool.CloseResultFile();
     // Destroy Tools
     cTool.Destroy();
-    cTool.Destroy();
+    runCompleted = 1;
 
     if(!batchMode) cApp.Run();
 #endif

@@ -18,7 +18,7 @@ void RD53eudaqProducer::DoReset()
 void RD53eudaqProducer::DoInitialise()
 {
     std::stringstream outp;
-    RD53sysCntrPhys.InitializeHw(configFile, outp, true, false);
+    RD53sysCntrPhys.InitializeHw(configFile, outp, false);
     RD53sysCntrPhys.InitializeSettings(configFile, outp);
     nTRIGxEvent = RD53sysCntrPhys.findValueInSettings<double>("nTRIGxEvent");
 }
@@ -36,8 +36,9 @@ void RD53eudaqProducer::DoStartRun()
             for(auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid) static_cast<Ph2_HwInterface::RD53Interface*>(RD53sysCntrPhys.fReadoutChipInterface)->ConfigureChip(cChip);
 
-    theRunNumber = GetRunNumber();
-    swTrigCnt    = 0;
+    theRunNumber      = GetRunNumber();
+    swTrigCnt         = 0;
+    previousTLUTrigId = 0;
 
     // #####################
     // # Send a BORE event #
@@ -140,6 +141,17 @@ void RD53eudaqProducer::MySendEvent(eudaq::EventSP theEvent)
 
 void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_HwInterface::RD53Event>& RD53EvtList)
 {
+    // #######################################################################################################################
+    // # EUDAQ event parameters                                                                                              #
+    // #######################################################################################################################
+    // # - EventN:   is computed in the software                                                                             #
+    // # - TriggerN: are typically assigned by the TLU to the event data, and TriggerN is typically used to build events     #
+    // # Running ./euCliCollector                                                                                            #
+    // # If we build events online with EventIDSyncDataCollector data collector then the building is done with EventN        #
+    // # If we build events online with DirectSaveDataCOllector data collector then the building is done with TriggerN       #
+    // # If we analyze with Corryvreckan, we unpack all events and subevents and look at either their timestamps or TriggerN #
+    // #######################################################################################################################
+
     if(RD53EvtList.size() != 0)
     {
         size_t it = 0;
@@ -149,7 +161,18 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
             auto                      eudaqEvent = static_cast<eudaq::RawEvent*>(ev.get());
             auto                      tluTrigId  = RD53EvtList[it].tlu_trigger_id;
             CMSITEventData::EventData theEvent{std::time(nullptr), eudaqProducer->nTRIGxEvent, RD53EvtList[it].l1a_counter, RD53EvtList[it].tdc, RD53EvtList[it].bx_counter, tluTrigId, {}};
-            ev->SetTriggerN(eudaqProducer->swTrigCnt++);
+
+            // ######################################################
+            // # Choose between internal vs TLU event counter @TMP@ #
+            // ######################################################
+            // ev->SetTriggerN(eudaqProducer->swTrigCnt++); // Use internal counter
+            // Use TLU counter
+            if(tluTrigId < eudaqProducer->previousTLUTrigId)
+            {
+                eudaqProducer->swTrigCnt += 1 << EUDAQ::NBITSTLU;
+                std::cout << "[RD53eudaqProducer::RD53eudaqEvtConverter] Detected TLU trigger ID wrap around" << std::endl;
+            }
+            ev->SetTriggerN(eudaqProducer->swTrigCnt + tluTrigId);
 
             // ##################################################
             // # Collect all hits that have same TLU trigger ID #
@@ -181,6 +204,8 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
 
             eudaqEvent->AddBlock(0, theStream.c_str(), theStream.size());
             eudaqProducer->MySendEvent(std::move(ev));
+
+            eudaqProducer->previousTLUTrigId = tluTrigId;
         }
     }
 }

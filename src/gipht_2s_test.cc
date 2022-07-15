@@ -397,9 +397,7 @@ int main(int argc, char* argv[])
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
-
-                        auto cFusedId = static_cast<CbcInterface*>(cTool.fReadoutChipInterface)->ReadCbcIDeFuse(cChip);
+                        auto cFusedId = cTool.fReadoutChipInterface->ReadChipFuseID(cChip);
                         LOG(INFO) << BOLDMAGENTA << "Hybrid#" << +cChip->getId() << " CBC#" << +cChip->getId() << " Fused Id is " << +cFusedId << RESET;
                     }
                 }
@@ -518,7 +516,7 @@ int main(int argc, char* argv[])
         cLinkAlignment.Inherit(&cTool);
         try
         {
-            cLinkAlignment.Start(0);
+            cLinkAlignment.Start(cRunNumber);
         }
         catch(const std::exception& e)
         {
@@ -538,7 +536,7 @@ int main(int argc, char* argv[])
         // align FEs - CIC
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit(&cTool);
-        cCicAligner.Start(0);
+        cCicAligner.Start(cRunNumber);
         cCicAligner.waitForRunToBeCompleted();
         cCicAligner.dumpConfigFiles();
     }
@@ -561,7 +559,7 @@ int main(int argc, char* argv[])
         cLinkAlignment.Inherit(&cTool);
         try
         {
-            cLinkAlignment.Start(0);
+            cLinkAlignment.Start(cRunNumber);
         }
         catch(const std::exception& e)
         {
@@ -601,7 +599,7 @@ int main(int argc, char* argv[])
             LOG(INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
             StubBackEndAlignment cStubBackEndAligner;
             cStubBackEndAligner.Inherit(&cTool);
-            cStubBackEndAligner.Start(0);
+            cStubBackEndAligner.Start(cRunNumber);
             cStubBackEndAligner.waitForRunToBeCompleted();
         }
 
@@ -626,7 +624,7 @@ int main(int argc, char* argv[])
     // LOG (INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
     // StubBackEndAlignment cStubBackEndAligner;
     // cStubBackEndAligner.Inherit(&cTool);
-    // cStubBackEndAligner.Start(0);
+    // cStubBackEndAligner.Start(cRunNumber);
     // cStubBackEndAligner.waitForRunToBeCompleted();
 
     // equalize thresholds on readout chips
@@ -778,8 +776,9 @@ int main(int argc, char* argv[])
                         {
                             // and that readout mode is set
                             // make sure L1 latency is configured
-                            if(cChip->getFrontEndType() == FrontEndType::MPA) { (static_cast<PSInterface*>(cTool.fReadoutChipInterface))->digiInjection(cChip, cInjections, 0x01); }
-                            if(cChip->getFrontEndType() == FrontEndType::SSA)
+                            if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                            { (static_cast<PSInterface*>(cTool.fReadoutChipInterface))->digiInjection(cChip, cInjections, 0x01); }
+                            if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                                 cTool.fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
@@ -850,7 +849,7 @@ int main(int argc, char* argv[])
                     {
                         for(auto chip: *hybrid)
                         {
-                            if(chip->getFrontEndType() == FrontEndType::MPA)
+                            if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
                             {
                                 for(auto cPxl: cPxls)
                                 {
@@ -862,7 +861,7 @@ int main(int argc, char* argv[])
                                     cTool.fReadoutChipInterface->WriteChipReg(chip, cRegNameTrim.str(), 0x0);
                                 }
                             }
-                            if(chip->getFrontEndType() == FrontEndType::SSA)
+                            if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 for(auto sStrp: cStrps)
                                 {
@@ -881,12 +880,12 @@ int main(int argc, char* argv[])
                     {
                         for(auto chip: *hybrid)
                         {
-                            if(chip->getFrontEndType() == FrontEndType::SSA)
+                            if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "SAMPLINGMODE_ALL", cSamplingSSA);
                             }
-                            if(chip->getFrontEndType() == FrontEndType::MPA)
+                            if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "ModeSel_ALL", cSamplingMPA);
@@ -914,12 +913,12 @@ int main(int argc, char* argv[])
                     {
                         for(auto chip: *hybrid)
                         {
-                            if(chip->getFrontEndType() == FrontEndType::SSA)
+                            if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "SAMPLINGMODE_ALL", cSamplingSSA);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth);
                             }
-                            if(chip->getFrontEndType() == FrontEndType::MPA)
+                            if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "ModeSel_ALL", cSamplingMPA);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);

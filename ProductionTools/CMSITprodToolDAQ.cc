@@ -95,7 +95,7 @@ int main(int argc, char** argv)
         // ######################################
 
         std::stringstream outp;
-        mySysCntr.InitializeHw(configFile, outp, true, false);
+        mySysCntr.InitializeHw(configFile, outp, false);
         mySysCntr.InitializeSettings(configFile, outp);
         if(mySysCntr.fDetectorContainer->at(0)->at(0)->flpGBT == nullptr)
             static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("160");

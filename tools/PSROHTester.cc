@@ -50,6 +50,21 @@ void PSROHTester::Initialise()
     LOG(INFO) << BOLDBLUE << "_1V25 = " << +cMeasurement << RESET;
 }
 
+void PSROHTester::MeasureInputIV(const std::string& cTestStep)
+{
+    auto cTestCardInterface = flpGBTInterface->getExternalController()->getInterface();
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        for(auto& cMeas: fInputIVMap)
+        {
+            float cVal;
+            cTestCardInterface.adc_get(cMeas.second, cVal);
+            LOG(INFO) << BOLDYELLOW << "Measuring " << cMeas.first << " to be at " << +(cVal / 1000) << " [SI] during phase " << cTestStep << RESET;
+        }
+    }
+}
+
 void PSROHTester::UserFCMDTranslate(const std::string& userFilename = "fcmd_file.txt")
 {
     const std::string cUserFilenameFull    = "fcmd_files/user_files/" + userFilename;

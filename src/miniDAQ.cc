@@ -168,7 +168,7 @@ int main(int argc, char* argv[])
     // align back-end
     BackEndAlignment cBackEndAligner;
     cBackEndAligner.Inherit(&cTool);
-    cBackEndAligner.Start(0);
+    cBackEndAligner.Start(cRunNumber);
     cBackEndAligner.waitForRunToBeCompleted();
 
     // if CIC is enabled then align CIC first
@@ -210,13 +210,13 @@ int main(int argc, char* argv[])
             {
                 for(auto chip: *hybrid)
                 {
-                    if(chip->getFrontEndType() == FrontEndType::SSA)
+                    if(chip->getFrontEndType() == FrontEndType::SSA || chip->getFrontEndType() == FrontEndType::SSA2)
                     {
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0x1);
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth);
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "TriggerLatency", cPSmoduleLat - 1);
                     }
-                    if(chip->getFrontEndType() == FrontEndType::MPA)
+                    if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
                     {
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "ENFLAGS_ALL", 0x5F);
                         cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);
@@ -243,10 +243,11 @@ int main(int argc, char* argv[])
                 if(cHybrid->getIndex() > 0) break;
                 for(auto cReadoutChip: *cHybrid)
                 {
-                    if(cReadoutChip->getFrontEndType() == FrontEndType::SSA) continue;
+                    if(cReadoutChip->getFrontEndType() == FrontEndType::SSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA2) continue;
                     if(cTriggerLatency != 0) continue;
                     cTriggerLatency = cTool.fReadoutChipInterface->ReadChipReg(cReadoutChip, "TriggerLatency");
-                    if(cReadoutChip->getFrontEndType() == FrontEndType::MPA) cReTimePix = cTool.fReadoutChipInterface->ReadChipReg(cReadoutChip, "RetimePix");
+                    if(cReadoutChip->getFrontEndType() == FrontEndType::MPA || cReadoutChip->getFrontEndType() == FrontEndType::MPA2)
+                        cReTimePix = cTool.fReadoutChipInterface->ReadChipReg(cReadoutChip, "RetimePix");
                 }
             }
         }

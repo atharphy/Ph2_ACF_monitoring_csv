@@ -13,49 +13,12 @@ using namespace Ph2_HwInterface;
 
 namespace Ph2_System
 {
-void FileParser::parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile)
-{
-    if(pIsFile && pFilename.find(".xml") != std::string::npos) { parseHWxml(pFilename, pBeBoardFWMap, pDetectorContainer, os, pIsFile); }
-    else if(!pIsFile)
-    {
-        parseHWxml(pFilename, pBeBoardFWMap, pDetectorContainer, os, pIsFile);
-    }
-    else
-    {
-        LOG(ERROR) << BOLDRED << "Could not parse settings file " << pFilename << " - it is not .xml" << RESET;
-    }
-}
-
-void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile)
-{
-    if((pIsFile && pFilename.find(".xml") != std::string::npos) || (!pIsFile))
-        parseSettingsxml(pFilename, pSettingsMap, os, pIsFile);
-    else
-        LOG(ERROR) << BOLDRED << "Could not parse settings file " << pFilename << " - it is not .xml" << RESET;
-}
-
-void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os, bool pIsFile)
+void FileParser::parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os)
 {
     int i, j;
 
-    pugi::xml_document     doc;
-    pugi::xml_parse_result result;
-
-    if(pIsFile)
-        result = doc.load_file(pFilename.c_str());
-    else
-        result = doc.load_string(pFilename.c_str());
-
-    if(!result)
-    {
-        os << BOLDRED << "ERROR :\n Unable to open the file : " << RESET << pFilename << std::endl;
-        os << BOLDRED << "Error description : " << RED << result.description() << RESET << std::endl;
-
-        if(!pIsFile) os << "Error offset: " << result.offset << " (error at [..." << (pFilename.c_str() + result.offset) << "]\n" << std::endl;
-
-        throw Exception("Unable to parse XML source!");
-        return;
-    }
+    pugi::xml_document doc;
+    openHWconfig(pFilename, doc);
 
     os << RESET << "\n\n";
 
@@ -67,8 +30,6 @@ void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoard
 
     for(i = 0; i < 80; i++) os << "*";
     os << "\n";
-
-    const std::string strUhalConfig = expandEnvironmentVariables(doc.child("HwDescription").child("Connections").attribute("name").value());
 
     // ##################################
     // # Iterate over the BeBoard Nodes #
@@ -89,6 +50,39 @@ void FileParser::parseHWxml(const std::string& pFilename, BeBoardFWMap& pBeBoard
     for(i = 0; i < 80; i++) os << "*";
 
     os << std::endl;
+}
+
+void FileParser::openHWconfig(const std::string& pFilename, pugi::xml_document& doc)
+{
+    pugi::xml_parse_result result = doc.load_file(pFilename.c_str());
+    if(!result) // try if it is not a a file, but a string containing the full xml
+        result = doc.load_string(pFilename.c_str());
+
+    if(!result)
+    {
+        LOG(ERROR) << BOLDRED << "ERROR :\n Unable to open the file : " << RESET << pFilename << std::endl;
+        LOG(ERROR) << BOLDRED << "Error description : " << RED << result.description() << RESET << std::endl;
+        throw Exception("Unable to parse XML source!");
+    }
+}
+
+std::map<uint16_t, RegManager> FileParser::getRegManagerList(const std::string& pFilename)
+{
+    pugi::xml_document doc;
+    openHWconfig(pFilename, doc);
+
+    std::map<uint16_t, Ph2_HwInterface::RegManager> theRegManagerMap;
+    for(pugi::xml_node cBeBoardNode = doc.child("HwDescription").child("BeBoard"); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling())
+    {
+        if(static_cast<std::string>(cBeBoardNode.name()) != "BeBoard") continue;
+        pugi::xml_node cBeBoardConnectionNode = cBeBoardNode.child("connection");
+
+        std::string cId           = cBeBoardConnectionNode.attribute("id").value();
+        std::string cUri          = cBeBoardConnectionNode.attribute("uri").value();
+        std::string cAddressTable = expandEnvironmentVariables(cBeBoardConnectionNode.attribute("address_table").value());
+        theRegManagerMap.insert(std::pair<uint16_t, Ph2_HwInterface::RegManager>(cBeBoardNode.attribute("Id").as_int(), std::move(RegManager(cId, cUri, cAddressTable))));
+    }
+    return theRegManagerMap;
 }
 
 void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os)
@@ -179,10 +173,10 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
 
     if(fEnableInterfaces)
     {
-        if(cBeBoard->getBoardType() == BoardType::D19C) { pBeBoardFWMap[cBeBoard->getId()] = new D19cFWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str()); }
+        if(cBeBoard->getBoardType() == BoardType::D19C) { pBeBoardFWMap[cBeBoard->getId()] = new D19cFWInterface(cId, cUri, cAddressTable); }
         else if(cBeBoard->getBoardType() == BoardType::RD53)
         {
-            pBeBoardFWMap[cBeBoard->getId()] = new RD53FWInterface(cId.c_str(), cUri.c_str(), cAddressTable.c_str());
+            pBeBoardFWMap[cBeBoard->getId()] = new RD53FWInterface(cId, cUri, cAddressTable);
         }
     }
     os << BOLDCYAN << "|"
@@ -521,7 +515,7 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
         {
             for(auto cChip: *pHybrid)
             {
-                if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
+                if(cChip->getFrontEndType() != FrontEndType::SSA && cChip->getFrontEndType() != FrontEndType::SSA2) continue;
                 int cThresholdStrps = convertAnyInt(cThresholdNode.attribute("stripThreshold").value()) / 250.;
                 cThresholdStrps     = (cThresholdStrps > 0xFF) ? 0xFF : cThresholdStrps;
 
@@ -537,7 +531,7 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
         {
             for(auto cChip: *pHybrid)
             {
-                if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
+                if(cChip->getFrontEndType() != FrontEndType::SSA && cChip->getFrontEndType() != FrontEndType::SSA2) continue;
                 uint8_t cMode = static_cast<uint8_t>(convertAnyInt(cHitLogicNode.attribute("stripMode").value()));
                 cChip->setReg("SAMPLINGMODE_ALL", cMode);
                 os << BOLDCYAN << "|\t|\t|----Applying global SSA hit logic settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode
@@ -551,7 +545,7 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
         {
             for(auto cChip: *pHybrid)
             {
-                if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
+                if(cChip->getFrontEndType() != FrontEndType::SSA && cChip->getFrontEndType() != FrontEndType::SSA2) continue;
                 int cInjStrps = convertAnyInt(cInjectionNode.attribute("stripCharge").value()) / 243.;
                 cInjStrps     = (cInjStrps > 0xFF) ? 0xFF : cInjStrps;
                 cChip->setReg("Bias_CALDAC", cInjStrps);
@@ -566,7 +560,7 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
         {
             for(auto cChip: *pHybrid)
             {
-                if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
+                if(cChip->getFrontEndType() != FrontEndType::SSA && cChip->getFrontEndType() != FrontEndType::SSA2) continue;
                 int cLatency = convertAnyInt(cLatencyNode.attribute("stripLatency").value());
                 cChip->setReg("L1-Latency_LSB", cLatency & 0xFF);
                 cChip->setReg("L1-Latency_MSB", (cLatency >> 8) & 0xFF);
@@ -581,7 +575,7 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
         {
             for(auto cChip: *pHybrid)
             {
-                if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
+                if(cChip->getFrontEndType() != FrontEndType::SSA && cChip->getFrontEndType() != FrontEndType::SSA2) continue;
                 int cCut = convertAnyInt(cHIPmode.attribute("stripCut").value());
                 cChip->setReg("HIPCUT_ALL", cCut);
                 os << BOLDCYAN << "|\t|\t|----Applying global SSA HIP settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut << std::dec
@@ -595,7 +589,7 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
         {
             for(auto cChip: *pHybrid)
             {
-                if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
+                if(cChip->getFrontEndType() != FrontEndType::SSA && cChip->getFrontEndType() != FrontEndType::SSA2) continue;
                 int cCoarse = convertAnyInt(cSamplingDelay.attribute("stripCoarse").value());
                 int cFine   = convertAnyInt(cSamplingDelay.attribute("stripFine").value());
                 cChip->setReg("PhaseShiftClock", cCoarse);
@@ -688,7 +682,7 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
         {
             for(auto cChip: *pHybrid)
             {
-                if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 int cThresholdPxls = convertAnyInt(cThresholdNode.attribute("pixelThreshold").value()) / 94.;
                 cThresholdPxls     = (cThresholdPxls > 0xFF) ? 0xFF : cThresholdPxls;
                 for(size_t cIndx = 0; cIndx < 7; cIndx++)
@@ -708,7 +702,7 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
         {
             for(auto cChip: *pHybrid)
             {
-                if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 uint8_t cMode   = static_cast<uint8_t>(convertAnyInt(cStubLogicNode.attribute("mode").value()));
                 uint8_t cWindow = static_cast<uint8_t>(convertAnyInt(cStubLogicNode.attribute("window").value()));
                 uint8_t cRegVal = (cMode << 6) | cWindow;
@@ -725,7 +719,7 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
         {
             for(auto cChip: *pHybrid)
             {
-                if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 uint8_t cMode = static_cast<uint8_t>(convertAnyInt(cHitLogicNode.attribute("pixelMode").value()));
                 cChip->setReg("ModeSel_ALL", cMode);
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA hit logic settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode
@@ -739,7 +733,7 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
         {
             for(auto cChip: *pHybrid)
             {
-                if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 int cInjPxls = convertAnyInt(cInjectionNode.attribute("pixelCharge").value()) / 220.;
                 cInjPxls     = (cInjPxls > 0xFF) ? 0xFF : cInjPxls;
                 for(size_t cIndx = 0; cIndx < 7; cIndx++)
@@ -760,7 +754,7 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
         {
             for(auto cChip: *pHybrid)
             {
-                if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 int cLatency = convertAnyInt(cLatencyNode.attribute("pixelLatency").value());
                 cChip->setReg("L1Offset_1_ALL", cLatency & 0xFF);
                 cChip->setReg("L1Offset_2_ALL", (cLatency >> 8) & 0xFF);
@@ -775,7 +769,7 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
         {
             for(auto cChip: *pHybrid)
             {
-                if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 int cCut = convertAnyInt(cHIPmode.attribute("pixelCut").value());
                 cChip->setReg("HipCut_ALL", cCut);
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA HIP settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut << std::dec
@@ -789,7 +783,7 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
         {
             for(auto cChip: *pHybrid)
             {
-                if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 int cCoarse = convertAnyInt(cSamplingDelay.attribute("pixelCoarse").value());
                 int cFine   = convertAnyInt(cSamplingDelay.attribute("pixelFine").value());
                 cChip->setReg("PhaseShift", cCoarse);
@@ -1002,6 +996,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                         LOG(INFO) << BOLDBLUE << "Implement for SSA2" << RESET;
                         pBoard->setFrontEndType(FrontEndType::SSA2);
                         this->parseSSA2Container(cChild, cHybrid, cConfigFileDirectory, os);
+                        if(cNextName.empty() || cNextName != cName) this->parseSSASettings(pHybridNode, cHybrid, os);
                     }
                     else if(cName == "MPA")
                     {
@@ -1061,6 +1056,7 @@ void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybr
                         cMapOfMaks[cItem]  = cMskedChnls;
                         FrontEndType cType = FrontEndType::CBC3;
                         if(cAttrName.find("MPA") != std::string::npos) cType = FrontEndType::MPA;
+                        if(cAttrName.find("MPA2") != std::string::npos) cType = FrontEndType::MPA2;
                         if(cAttrName.find("SSA") != std::string::npos) cType = FrontEndType::SSA;
                         if(cAttrName.find("SSA2") != std::string::npos) cType = FrontEndType::SSA2;
                         if(cAttrName.find("CBCId") != std::string::npos) cType = FrontEndType::CBC3;
@@ -1097,7 +1093,7 @@ void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybr
         {
             auto        cType        = cMapOfTypes[cChipId];
             std::string cRegNameBase = "";
-            if(cType == FrontEndType::MPA)
+            if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
             {
                 os << GREEN << "|\t|\t|\t|\t| ---- ChipId" << +cChipId << " have " << cMapOfMaks[cChipId].size() << " MPA pixels to mask..."
                    << "\n";
@@ -1417,25 +1413,10 @@ void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, st
     }
 }
 
-void FileParser::parseSettingsxml(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os, bool pIsFile)
+void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os)
 {
-    pugi::xml_document     doc;
-    pugi::xml_parse_result result;
-
-    if(pIsFile == true)
-        result = doc.load_file(pFilename.c_str());
-    else
-        result = doc.load_string(pFilename.c_str());
-
-    if(result == false)
-    {
-        os << BOLDRED << "ERROR : Unable to open the file " << RESET << pFilename << std::endl;
-        os << BOLDRED << "Error description: " << RED << result.description() << RESET << std::endl;
-
-        if(pIsFile == false) os << "Error offset: " << result.offset << " (error at [..." << (pFilename.c_str() + result.offset) << "]" << std::endl;
-
-        throw Exception("Unable to parse XML source!");
-    }
+    pugi::xml_document doc;
+    openHWconfig(pFilename, doc);
 
     for(pugi::xml_node nSettings = doc.child("HwDescription").child("Settings"); nSettings == doc.child("HwDescription").child("Settings"); nSettings = nSettings.next_sibling())
     {
@@ -1563,37 +1544,10 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
 }
 // ########################
 
-std::string FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os, bool pIsFile)
+std::string FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os)
 {
-    if(pIsFile && pFilename.find(".xml") != std::string::npos)
-        return parseMonitorxml(pFilename, theDetectorMonitorConfig, os, pIsFile);
-    else if(!pIsFile)
-        return parseMonitorxml(pFilename, theDetectorMonitorConfig, os, pIsFile);
-    else
-        LOG(ERROR) << BOLDRED << "Could not parse monitor file " << pFilename << " - it is not .xml" << RESET;
-    return "None";
-}
-
-std::string FileParser::parseMonitorxml(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os, bool pIsFile)
-{
-    pugi::xml_document     doc;
-    pugi::xml_parse_result result;
-
-    if(pIsFile == true)
-        result = doc.load_file(pFilename.c_str());
-    else
-        result = doc.load_string(pFilename.c_str());
-
-    if(result == false)
-    {
-        os << BOLDRED << "ERROR : Unable to open the file " << RESET << pFilename << std::endl;
-        os << BOLDRED << "Error description: " << RED << result.description() << RESET << std::endl;
-
-        if(pIsFile == false) os << "Error offset: " << result.offset << " (error at [..." << (pFilename.c_str() + result.offset) << "]" << std::endl;
-
-        throw Exception("Unable to parse XML source!");
-        return "None";
-    }
+    pugi::xml_document doc;
+    openHWconfig(pFilename, doc);
 
     if(!bool(doc.child("HwDescription").child("MonitoringSettings")))
     {

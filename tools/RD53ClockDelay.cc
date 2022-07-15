@@ -115,6 +115,7 @@ void ClockDelay::localConfigure(const std::string& fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[ClockDelay::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     ClockDelay::ConfigureCalibration();
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "ClockDelay");
     ClockDelay::initializeFiles(fileRes_, currentRun);
 }
 

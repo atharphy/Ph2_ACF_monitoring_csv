@@ -3,7 +3,6 @@
   <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
   <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1" boardReset="1">
     <!--<connection id="board" uri="chtcp-2.0://outertracker01.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />-->
-    <!-- <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.72:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
     <connection id="board" uri="chtcp-2.0://cmsmoduletest01:10203?target=192.168.1.84:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <CDCE configure="0" clockRate="320"/>
     
@@ -29,7 +28,7 @@
                 <HipLogic        stripCut="7" pixelCut="7"/>
                 <SamplingDelay   stripCoarse="1" stripFine="0" pixelCoarse="2" pixelFine="0"/>
                 <InjectedCharge  stripCharge="0" pixelCharge="0"/> 
-                <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/>
+                <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
             </Global>
             
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
@@ -55,7 +54,7 @@
             <CIC Id="8" configfile="CIC_default.txt" />
         </Hybrid>
 
-        <Hybrid Id="1" Status="1" reset="1" i2cMaster="1">
+        <Hybrid Id="1" Status="1" reset="1"> <!--i2cMaster="1"-->
             <Global>
                 <!-- in electrons, file parser will take care of conversion to DAC units for each chip type --> 
                 <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  -->
@@ -70,8 +69,8 @@
                 <HipLogic        stripCut="7" pixelCut="7"/>
                 <SamplingDelay   stripCoarse="1" stripFine="0" pixelCoarse="2" pixelFine="0"/>
                 <InjectedCharge  stripCharge="0" pixelCharge="0"/> 
-                <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/>
-                <MaskedStrips SSAId="4" Rows="58,59" />
+                <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+                <!--<MaskedStrips SSAId="4" Rows="58,59" />-->
             </Global>
             
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
@@ -107,13 +106,21 @@
     <Register name="fc7_daq_cnfg">
 	<Register name="optical_block">
                 <Register name="rx_polarity">
-                        <Register name="l8"> 0 </Register>
+                        <Register name="l8"> 1 </Register>
                         <Register name="l12"> 0 </Register>
                 </Register>
                 <Register name="tx_polarity">
                         <Register name="l8"> 0 </Register>
                         <Register name="l12"> 0 </Register>
                 </Register>
+		<Register name="lpgbt_sc_worker">
+                        <Register name="ic_retry"> 1 </Register>
+                        <Register name="i2c_retry"> 1 </Register>
+                        <Register name="fe_retry"> 1 </Register>
+                        <Register name="max_ic_retry"> 10 </Register>
+                        <Register name="max_i2c_retry"> 10 </Register>
+                        <Register name="max_fe_retry"> 10 </Register>
+		</Register>
         </Register>
     <Register name="sync_block">
         <Register name="enable"          >0</Register>

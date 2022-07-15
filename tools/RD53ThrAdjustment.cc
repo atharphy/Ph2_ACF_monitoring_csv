@@ -100,6 +100,7 @@ void ThrAdjustment::localConfigure(const std::string& fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[ThrAdjustment::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     ThrAdjustment::ConfigureCalibration();
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "ThrAdjustment");
     ThrAdjustment::initializeFiles(fileRes_, currentRun);
 }
 

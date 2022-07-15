@@ -65,7 +65,7 @@ void D19cLinkInterface::GeneralLinkReset(const BeBoard* pBoard)
     do
     {
         cAllLocked = true;
-        LOG(INFO) << BOLDMAGENTA << "D19cLinkInterface::GeneralLinkReset Resetting lpGBT-FPGA core on BeBoard#" << +pBoard->getId() << " [Attempt#" << cAttempts << "]" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "D19cLinkInterface::GeneralLinkReset Resetting lpGBT-FPGA core on BeBoard#" << +pBoard->getId() << " [Attempt#" << cAttempts++ << "]" << RESET;
         ResetLinks();
         for(auto cOpticalReadout: *pBoard)
         {

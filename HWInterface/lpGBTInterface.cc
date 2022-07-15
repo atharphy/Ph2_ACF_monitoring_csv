@@ -52,7 +52,6 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
     {
 #if defined(__TCUSB__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
         cSuccess = (fExternalController->getInterface().write_i2c(cAddress, static_cast<char>(pDacValue)) == pDacValue);
-        // cSuccess = (!pVerify) ? cSuccess : (ReadChipReg(pChip, pDacName) == pDacValue);
 #endif
     }
 
@@ -495,7 +494,7 @@ uint8_t lpGBTInterface::AutoPhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
             WriteChipReg(pChip, cTrainRxReg, (0x0 << cTrainingShift));
             std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
             cCurrPhase = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
-            LOG(INFO) << BOLDGREEN << "\t\t..Attempt# " << +cAttempt << "\t... RxPhase found  is... " << +cCurrPhase << RESET;
+            LOG(DEBUG) << BOLDGREEN << "\t\t..Attempt# " << +cAttempt << "\t... RxPhase found  is... " << +cCurrPhase << RESET;
             cPhases.push_back(cCurrPhase);
             cUniquePhases.push_back(cCurrPhase);
         }
@@ -862,7 +861,7 @@ float lpGBTInterface::GetInternalTemperature(Chip* pChip)
     return std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
 }
 
-float lpGBTInterface::ReadResistance(Chip* pChip, std::string pADC, std::vector<uint8_t> pCurrents, uint8_t pGain)
+float lpGBTInterface::ReadResistance(Chip* pChip, const std::string& pADC, const std::vector<uint8_t>& pCurrents, uint8_t pGain)
 {
     std::vector<float> cTempVoltageReadings;
     std::vector<float> cTempCurrentValues;
@@ -885,10 +884,10 @@ float lpGBTInterface::ReadResistance(Chip* pChip, std::string pADC, std::vector<
             float cMean = std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
             cTempCurrentValues.push_back(cCurrent);
             cTempVoltageReadings.push_back(cMean);
-            LOG(DEBUG) << "Current of " << cCurrent << " mean voltage reading is " << cMean << " ADC units." << RESET;
+            LOG(DEBUG) << "Current of " << cCurrent << " mean voltage reading is " << cMean << " ADC units" << RESET;
         }
         else
-            LOG(DEBUG) << BOLDBLUE << "\t\t Current DAC " << +cCurrentDAC << " no valid ADC readings.." << RESET;
+            LOG(DEBUG) << BOLDBLUE << "\t\t Current DAC " << +cCurrentDAC << " no valid ADC readings" << RESET;
     }
     ConfigureCurrentDAC(pChip, {pADC}, 0x00);
     float cLSQResistance = (cTempVoltageReadings.size() != 0) ? getLeastSquareSlope<float>(cTempCurrentValues, cTempVoltageReadings) : -1;
@@ -1093,7 +1092,7 @@ double lpGBTInterface::BERtestCL(Chip* pChip, uint8_t pGroup, uint8_t pChannel, 
     if(lpGBTInterface::IsBERTEmptyData(pChip) == true)
     {
         lpGBTInterface::StartBERT(pChip, false); // Stop
-        throw Exception("[lpGBTInterface::RunBERtest] All zeros at input");
+        throw Exception("[lpGBTInterface::BERtestCL] All zeros at input");
     }
 
     // ########
@@ -1222,7 +1221,7 @@ void lpGBTInterface::SelectEOMVof(Chip* pChip, uint8_t pVof) { WriteChipReg(pChi
 uint8_t lpGBTInterface::GetEOMStatus(Chip* pChip)
 {
     uint8_t cEOMStatus = ReadChipReg(pChip, "EOMStatus");
-    LOG(INFO) << GREEN << "Eye Opening Monitor status : " << BOLDYELLOW << lpGBTInterface::fEOMStatusMap[(cEOMStatus & (0x3 << 2)) >> 2] << RESET;
+    LOG(DEBUG) << GREEN << "Eye Opening Monitor status : " << BOLDYELLOW << lpGBTInterface::fEOMStatusMap[(cEOMStatus & (0x3 << 2)) >> 2] << RESET;
     return cEOMStatus;
 }
 
@@ -1370,7 +1369,7 @@ uint8_t lpGBTInterface::GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMa
 {
     std::string cI2CStatReg = "I2CM" + std::to_string(pMaster) + "Status";
     uint8_t     cStatus     = ReadChipReg(pChip, cI2CStatReg);
-    LOG(INFO) << GREEN << "I2C Master " << +pMaster << " -- Status : " << lpGBTInterface::fI2CStatusMap[cStatus] << RESET;
+    LOG(DEBUG) << GREEN << "I2C Master " << +pMaster << " -- Status : " << lpGBTInterface::fI2CStatusMap[cStatus] << RESET;
     return cStatus;
 }
 

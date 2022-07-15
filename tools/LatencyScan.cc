@@ -23,8 +23,8 @@ void LatencyScan::Initialize()
 
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
     bool         cWithCBC          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-    bool         cWithSSA          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA);
-    bool         cWithMPA          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
+    bool         cWithSSA          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA || cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA2);
+    bool         cWithMPA          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA || cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA2);
 
     if(cWithCBC)
     {
@@ -183,7 +183,7 @@ void LatencyScan::ScanLatency()
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getFrontEndType() == FrontEndType::SSA)
+                        if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                             fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLat - 1);
                         else
                             fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLat);
@@ -253,7 +253,7 @@ void LatencyScan::ScanLatency()
 
                             for(auto cChip: *cHybrid)
                             {
-                                if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                                 if(cChip->getFrontEndType() == FrontEndType::CBC3)
                                 {
@@ -404,7 +404,7 @@ void LatencyScan::StubLatencyScan()
                 if(cSet) continue;
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::SSA) continue;
+                    if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
                     cSet                     = true;
                     auto     cTriggerLatency = fReadoutChipInterface->ReadChipReg(cChip, "TriggerLatency");
@@ -551,12 +551,12 @@ void LatencyScan::StubLatencyScan()
                                                   << " of which " << cNStubsThisChip << " stubs match the hits.."
                                                   << " there are " << cHits.size() << " hits in this event... " << RESET;
                                 }
-                                else if(cChip->getFrontEndType() == FrontEndType::SSA)
+                                else if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                                 {
                                     auto cStubs = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
                                     cNStubs     = cStubs.size();
                                 }
-                                else if(cChip->getFrontEndType() == FrontEndType::MPA)
+                                else if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
                                 {
                                     auto cHits  = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
                                     auto cStubs = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
@@ -887,7 +887,7 @@ void LatencyScan::writeObjects()
 
 // State machine control functions
 
-void LatencyScan::ConfigureCalibration() { CreateResultDirectory("Results/Run_Latency"); }
+void LatencyScan::ConfigureCalibration() {}
 
 void LatencyScan::Running()
 {
@@ -1092,9 +1092,9 @@ int LatencyScan::countHitsLat(BeBoard* pBoard, const std::vector<Event*> pEventV
                 for(auto cCbc: *cHybrid)
                 {
                     // now loop the channels for this particular event and increment a counter
-                    if(cCbc->getFrontEndType() == FrontEndType::MPA)
+                    if(cCbc->getFrontEndType() == FrontEndType::MPA || cCbc->getFrontEndType() == FrontEndType::MPA2)
                         cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNPixelClusters(cHybrid->getId(), cCbc->getId());
-                    else if(cCbc->getFrontEndType() == FrontEndType::SSA)
+                    else if(cCbc->getFrontEndType() == FrontEndType::SSA || cCbc->getFrontEndType() == FrontEndType::SSA2)
                         cHitCounter += static_cast<D19cMPAEvent*>(cEvent)->GetNStripClusters(cHybrid->getId(), static_cast<SSA*>(cCbc)->getPartid());
                     else
                         cHitCounter += cEvent->GetNHits(cHybrid->getId(), cCbc->getId());

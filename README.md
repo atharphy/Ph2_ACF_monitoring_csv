@@ -34,12 +34,12 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 03/02/2022
++ Last change made to this section: 06/06/2022
 ```
 
 **Suggested software and firmware versions:**
-- Software git branch / tag : `Dev` / `v4-02`
-- Firmware tag: `4.2`
+- Software git branch / tag : `Dev` / `v4-05`
+- Firmware tag: `4.4`
 
 **Important webpages:**
 - Mattermost forum: [`cms-it-daq`](https://mattermost.web.cern.ch/cms-it-daq/)
@@ -239,7 +239,7 @@ The following procedure will install (in order):
 
 ```bash
 # Libraries needed by Ph2_ACF
-sudo yum install -y boost-devel pugixml-devel
+sudo yum install -y boost-devel pugixml-devel json-devel
 
 # uHAL libraries (cactus)
 sudo curl https://ipbus.web.cern.ch/doc/user/html/_downloads/ipbus-sw.centos8.x86_64.repo \
@@ -253,10 +253,30 @@ sudo yum install -y root root-net-http root-net-httpsniff root-graf3d-gl root-ph
   root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
 
 # Build tools and some nice git extras
-sudo yum install -y cmake
+sudo yum install -y cmake3
 sudo yum install -y clang-tools-extra
 sudo yum install -y git-extras
 ```
+
+Install devtoolset 10
+
+        $> sudo yum makecache --refresh
+        $> sudo yum -y install gcc-toolset-10-gcc
+
+Install python3
+
+        $> sudo yum install -y python3
+
+Install protobuf:
+
+        Follow instructions to install protobuf from (Just install section is needed)
+        https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
+
+Install pybind11 (if installed in the same directoory when you plan to install the Ph2_ACF, the setup.sh will point to the correct location)
+
+        $> wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
+        $> tar zxvf v2.9.2.tar.gz
+
 
 ### clang-format (required to submit merge requests!!!)
 
@@ -264,7 +284,6 @@ sudo yum install -y git-extras
 
         $> yum install centos-release-scl
         $> yum install llvm-toolset-7.0
-        $> scl enable devtoolset-7 bash
 
 2. if you already sourced the environment, you should be able to run the command to format the Ph2_ACF (to be done before each merge request!!!):
 
@@ -273,14 +292,14 @@ sudo yum install -y git-extras
 
 ### Setup on CC7 (scroll down for instructions on setting up on SLC6)
 
-1. Check which version of gcc is installed on your CC7, it should be > 4.8 (could be the default on CC7):
+1. Install devtoolset 10
 
-        $> gcc --version
+        $> sudo yum install -y centos-release-scl-rh
+        $> sudo yum install -y devtoolset-10
 
 2. On CC7 you also need to install boost v1.53 headers (default on this system) and pugixml as they don't ship with uHAL any more:
 
-        $> sudo yum install boost-devel
-        $> sudo yum install pugixml-devel
+        $> sudo yum install -y boost-devel pugixml-devel json-devel
 
 2. Install uHAL. SW tested with uHAL version up to 2.7.1
 
@@ -289,62 +308,42 @@ sudo yum install -y git-extras
 
 3. Install CERN ROOT
 
-        $> sudo yum install root
-        $> sudo yum install root-net-http root-net-httpsniff  root-graf3d-gl root-physics root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
+        $> sudo yum install -y root
+        $> sudo yum install -y root-net-http root-net-httpsniff  root-graf3d-gl root-physics root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
 
 
-5. Install CMAKE > 2.8:
+5. Install CMAKE3 > 3.0:
 
-        $> sudo yum install cmake
+        $> sudo yum install -y cmake3
 
+6. Install python3
 
-### Setup on SLC6
+        $> sudo yum install -y python3
 
-1. Install a gcc compiler version > 4.8 - on scientific linux you can obtain this by installing devtoolset-2 or devtoolset-2.1:
+7. Install protobuf:
 
-        $> sudo wget -O /etc/yum.repos.d/slc6-devtoolset.repo http://linuxsoft.cern.ch/cern/devtoolset/slc6-devtoolset.repo
-        $> sudo yum install devtoolset-2
-        $> . /opt/rh/devtoolset-2/enable   # add this to your .bashrc
-        $> sudo ln -s /opt/rh/devtoolset-2/root/usr/bin/* /usr/local/bin/
-        $> hash -r
+        Follow instructions from
+        https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
 
-    This should give you a more recent gcc (e.g. gcc 4.8.2)
+8. Install pybind11 (if installed in the same directoory when you plan to install the Ph2_ACF, the setup.sh will point to the correct location)
 
-        $> gcc --version
+        $> wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
+        $> tar zxvf v2.9.2.tar.gz
 
-    Alternatively you can use a gcc version > 4.8 from AFS
+### Run in docker container
+    Docker container are provided to facilitate users and developers in setting up the framework.
 
-2. Install uHAL. The uHAL version should be 2.5 or lower. Version 2.6 does not work with the middleware at the moment! 
+    All docker containers can be found here:
+    https://gitlab.cern.ch/cms_tk_ph2/docker_exploration/container_registry
 
-    First create a new ipbus repo for yum:
+    Do run using one of the container, use the command:
+    $> docker run --rm -ti -v $PWD:$PWD -w $PWD <image>
 
-        $> sudo cat > /etc/yum.repos.d/ipbus-sw.repo << EOF
-        $> [ipbus-sw-base]
-        $> name=IPbus software repository
-        $> baseurl=http://www.cern.ch/ipbus/sw/release/2.5/centos7_x86_64/base/RPMS
-        $> enabled=1
-        $> gpgcheck=0
+    Suggested emages are:
+    For users (comes with Ph2_ACF of Dev branch installed): `gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_udaq_c7:latest`
+    For developers (no Ph2_ACF, just environment and libraries): `gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_user_c7:latest`
 
-        $> [ipbus-sw-updates]
-        $> name=IPbus software repository updates
-        $> baseurl=http://www.cern.ch/ipbus/sw/release/2.5/centos7_x86_64/updates/RPMS
-        $> enabled=1
-        $> gpgcheck=0
-
-    Then install uHAL as follows:
-
-        $> sudo yum clean all
-        $> sudo yum groupinstall uhal
-
-3. Install CERN ROOT version 5.34.32 [Instructions](http://root.cern.ch/drupal/content/installing-root-source) - make sure to use "fixed location installation" when building yourself. If root is installed on a CERN computer of virtual machine you can use:
-       
-        $> sudo yum install root
-        $> sudo yum install root-net-http root-graf3d-gl root-physics root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
-
-4. Install CMAKE > 2.8. On SLC6 the default is cmake 2.8
-
-        $> sudo yum install cmake
-
+    Specific tags can be pulled substituting `latest` with `ph2_acf_<Ph2_ACF tag>` (i.e. `ph2_acf_v4-05`)
 
 ### The Ph2_ACF software
 

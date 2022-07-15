@@ -76,7 +76,7 @@ class OTHybridTester : public Tool
     bool LpGBTCheckClocks();
     bool LpGBTFastCommandChecker(uint8_t pPattern);
     // Run Eye Openin Monitor
-    void LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect);
+    void LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect, uint8_t pEQAttenuation = 3);
     // Run Bit Error Rate Test
     void LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint32_t pPattern = 0x00000000);
 
