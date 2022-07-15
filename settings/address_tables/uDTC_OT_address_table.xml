@@ -767,13 +767,13 @@
             
         <node id="sfp_ddmi"           address="0xA000">
             <node id="data_l8"                     mask="0x0000ffff"/>
-	        <node id="data_l12"                    mask="0xffff0000"/>
-	    </node>
+            <node id="data_l12"                    mask="0xffff0000"/>
+        </node>
         
         <node id="sfp_ddmi_status"           address="0xA001">
             <node id="error_l8"                     mask="0x00000003"/>
             <node id="busy_l8"                      mask="0x00000004"/>
-	        <node id="error_l12"                    mask="0x00000018"/>
+            <node id="error_l12"                    mask="0x00000018"/>
             <node id="busy_l12"                     mask="0x00000020"/>
         </node>
 
