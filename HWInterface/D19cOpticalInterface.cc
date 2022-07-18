@@ -273,7 +273,7 @@ bool D19cOpticalInterface::MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uin
     uint8_t               cFunctionId = LpGBTSlowControlWorker::MULTI_BYTE_WRITE_I2C;
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
-    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | 1 << 0); //for now keep Nwords = 1
+    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | 2 << 0); //for now keep Nwords = 2
     cCommandVector.push_back(pMasterId << 30 | pMasterConfig << 22);
     cCommandVector.push_back(pSlaveAddress << 24 | pSlaveData << 0);
     flpGBTSlowControlWorkerInterface->WriteCommand(cCommandVector);
@@ -311,7 +311,7 @@ uint8_t D19cOpticalInterface::SingleByteReadI2C(Ph2_HwDescription::Chip* pChip, 
     uint8_t               cFunctionId = LpGBTSlowControlWorker::SINGLE_BYTE_READ_I2C;
     std::vector<uint32_t> cCommandVector;
     cCommandVector.clear();
-    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | 1 << 0); //for now keep Nwords = 1
+    cCommandVector.push_back(cWorkerId << 24 | cFunctionId << 16 | 2 << 0); //for now keep Nwords = 2
     cCommandVector.push_back(pMasterId << 30 | pMasterConfig << 22);
     cCommandVector.push_back(pSlaveAddress << 24);   
     flpGBTSlowControlWorkerInterface->WriteCommand(cCommandVector);
