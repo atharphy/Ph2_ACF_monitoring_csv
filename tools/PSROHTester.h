@@ -53,13 +53,13 @@ class PSROHTester : public OTHybridTester
     void UserFCMDTranslate(const std::string&);
     void CheckFastCommandsBRAM(const std::string& sFastCommandLine);
     void WritePatternToBRAM(const std::string& sFileName);
-    void FastCommandScope();
+    bool FastCommandScope();
     bool TestResetLines(uint8_t pLevel);
 
     void MeasureInputIV(const std::string& cTestStep);
 
   private:
-    void FastCommandScope(Ph2_HwDescription::BeBoard* pBoard);
+    bool FastCommandScope(Ph2_HwDescription::BeBoard* pBoard);
     void CheckFastCommands(Ph2_HwDescription::BeBoard* pBoard, const std::string& sFastCommandPattern, const std::string& userFilename);
     void CheckClocks(Ph2_HwDescription::BeBoard* pBoard);
     void CheckFastCommandsBRAM(Ph2_HwDescription::BeBoard* pBoard, const std::string& sFastCommandLine);

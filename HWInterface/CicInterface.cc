@@ -931,7 +931,7 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
         cRegItem.fAddress   = cRegBaseAddress + cIndex;
         cRegItem.fStatusReg = 0x01;
         auto cRegValue      = fBoardFW->SingleRegisterRead(pChip, cRegItem);
-        LOG(DEBUG) << BOLDBLUE << "Lock on input " << cIndex << " -- " << std::bitset<8>(cRegValue) << RESET;
+        LOG(INFO) << BOLDBLUE << "Lock on input " << cIndex << " -- " << std::bitset<8>(cRegValue) << RESET;
 
         for(size_t cBitIndex = 0; cBitIndex < 8; cBitIndex++)
         {

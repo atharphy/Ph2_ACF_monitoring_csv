@@ -59,7 +59,7 @@ class lpGBTInterface : public ChipInterface
 
   public:
 #if defined(__TCUSB__)
-    void iniitalizeExternalController()
+    void InitializeExternalController()
     {
 #if defined(__ROH_USB__)
         LOG(INFO) << BOLDYELLOW << "Initializing controller (via usb) for PS-ROH test system..." << RESET;
@@ -70,7 +70,7 @@ class lpGBTInterface : public ChipInterface
 #endif
     }
 #if defined(__ROH_USB__) || defined(__SEH_USB__)
-    TestCardInterface* getExternalController() const { return fExternalController; }
+    TestCardInterface* GetExternalController() const { return fExternalController; }
 #endif
 #endif
 
@@ -85,7 +85,7 @@ class lpGBTInterface : public ChipInterface
     // ################################
     bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerify = true) override;
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
-
+    void     ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint8_t cFuseH, uint8_t cFuseL);
     // #######################################
     // # LpGBT block configuration functions #
     // #######################################

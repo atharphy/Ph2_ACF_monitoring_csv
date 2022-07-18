@@ -275,7 +275,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
     // make sure that the correct trigger source is enabled
     // async injection trigger
     std::vector<std::pair<std::string, uint32_t>> cRegVec;
-    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 12}); // Trigger source? 10 or 12?
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.cal_pulse", 1});
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.antenna", 0});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
@@ -293,7 +293,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
 
     // find pedestal
     float cOccTarget = 0.5;
-    this->bitWiseScan("Threshold", fEventsPerPoint, cOccTarget);
+    // this->bitWiseScan("Threshold", fEventsPerPoint, cOccTarget);
     DetectorDataContainer cPedestalContainer;
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, cPedestalContainer);
     float cMeanValue       = 0;
@@ -381,6 +381,7 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
             }     // hybrid
         }         // opticalGroup
 
+        LOG(INFO) << "SSAs configured..." << RESET;
         bool retry = true;
 
         for(int i = 0; i < 2 && retry; i++) // 'Retry' to read events when the event returns with 0 on every channel of every chip.

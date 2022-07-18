@@ -80,29 +80,21 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 /* OT specific functions */
 /*-----------------------*/
 
-void D19clpGBTInterface::SetConfigMode(bool pUseOpticalLink, bool pUseCPB, bool pToggleTC)
+void D19clpGBTInterface::SetConfigMode(bool pOptical, bool pToggleTC)
 {
-    if(pUseOpticalLink)
+    if(pOptical)
     {
         LOG(INFO) << BOLDGREEN << "Using Serial Interface configuration mode" << RESET;
 #if defined(__TC_USB__) && defined(__ROH_USB__)
         LOG(INFO) << BOLDBLUE << "Toggling Test Card" << RESET;
         if(pToggleTC && fExternalController != nullptr) fExternalController->getInterface().toggle_SCI2C();
 #endif
-        fUseOpticalLink = true;
-        if(pUseCPB)
-        {
-            LOG(INFO) << BOLDGREEN << "Using Command Processor Block" << RESET;
-            fUseCPB = true;
-        }
-        else
-            LOG(INFO) << BOLDRED << "Not using Command Processor Block" << RESET;
+        fOptical = true;
     }
     else
     {
         LOG(INFO) << BOLDGREEN << "Using I2C Slave Interface configuration mode" << RESET;
-        fUseOpticalLink = false;
-        fUseCPB         = false;
+        fOptical = false;
     }
 }
 
@@ -137,7 +129,7 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     ConfigureRxGroups(pChip, cRxGroups, cRxChannels, cRxDataRate, cRxTrackMode);
     // Configure Rx Channels
     // module/skeleton
-    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 9;
+    uint8_t cRxEqual = 0, cRxTerm = 1, cRxAcBias = 0, cRxInvert = 0, cRxPhase = 5;
     for(const auto& cGroup: cRxGroups)
     {
         for(const auto cChannel: cRxChannels)
