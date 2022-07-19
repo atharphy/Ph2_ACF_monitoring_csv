@@ -12,14 +12,7 @@
 
 #include "Tool.h"
 #include <map>
-<<<<<<< HEAD
 // Calibration is not running on the SoC: I need to instantiate the DQM histrgrammer here
-=======
-#ifdef __USE_ROOT__
-// Calibration is not running on the SoC: I need to instantiate the DQM histrgrammer here
-#include "../DQMUtils/DQMHistogramCheckCbcNeighbors.h"
->>>>>>> ba5da0a8e95dd81b0045e658793696e02d0b0899
-#endif
 
 class CheckCbcNeighbors : public Tool
 {
@@ -52,5 +45,5 @@ class CheckCbcNeighbors : public Tool
 
     void UnmaskChannels(std::vector<uint8_t> pToUnmask, ChannelGroup<NCHANNELS, 1>& pChannelMask);
 
-
-
+};
+#endif

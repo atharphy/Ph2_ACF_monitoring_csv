@@ -166,10 +166,6 @@ void CheckCbcNeighbors::Running()
 void CheckCbcNeighbors::Stop(void)
 {
     LOG(INFO) << "Stopping CheckCbcNeighbors measurement.";
-#ifdef __USE_ROOT__
-    // Calibration is not running on the SoC: processing the histograms
-    fDQMHistogramCheckCbcNeighbors.process();
-#endif
     dumpConfigFiles();
     SaveResults();
     closeFileHandler();
