@@ -1045,7 +1045,7 @@ int main(int argc, char* argv[])
         MemoryCheck2S cMemoryChecker;
         cMemoryChecker.Inherit(&cTool);
         cMemoryChecker.Initialise();
-        
+
         // configure reference voltage
         /*cMemoryChecker.ConfigureVref();
         cMemoryChecker.MonitorTemperature();
@@ -1135,7 +1135,6 @@ int main(int argc, char* argv[])
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
 
-
         cBeamTestCheck.ConfigureScans(cScanL1, cScanStubs);
         cBeamTestCheck.ConfigurePrintout(cCng);
         cBeamTestCheck.CheckWithTP();
@@ -1220,10 +1219,9 @@ int main(int argc, char* argv[])
         cBeamTestCheck.writeObjects();
         cBeamTestCheck.Reset();
     }
-    
+
     if(!cmd.foundOption("read") && cmd.foundOption("checkSharedStubs"))
     {
-
         LOG(INFO) << BOLDMAGENTA << "Checking stubs across CBC neighbors" << RESET;
         t.start();
 
@@ -1232,21 +1230,20 @@ int main(int argc, char* argv[])
         cMemoryChecker.Initialise();
         cMemoryChecker.EvaluatePedeNoise(10); // find pedestal + noise
         cMemoryChecker.SetThreshold(-2.0);    // set threshold to 3 sigma away from pedestal
-        //cMemoryChecker.SetThreshold(-2.0);
+        // cMemoryChecker.SetThreshold(-2.0);
 
         CheckCbcNeighbors cCheckCbcNeighbors;
         cCheckCbcNeighbors.Inherit(&cTool);
-        cCheckCbcNeighbors.Initialise(); 
+        cCheckCbcNeighbors.Initialise();
 
-            
         cCheckCbcNeighbors.TestCbcNeighbors();
-  
+
         /*
         for(uint8_t iChip=0; iChip < NCHIPS_OT; iChip++){
             if(iChip == 7) continue;
             cCheckCbcNeighbors.SetChip1(iChip);
-            cCheckCbcNeighbors.SetChip2(iChip+1); 
-            
+            cCheckCbcNeighbors.SetChip2(iChip+1);
+
             cCheckCbcNeighbors.ConfigureSharedChannels();
             cCheckCbcNeighbors.CheckStubs();
 
@@ -1256,8 +1253,6 @@ int main(int argc, char* argv[])
         t.stop();
         t.show("Time to check stubs on shared channels");
     }
-
-
 
     if(cmd.foundOption("read"))
     {

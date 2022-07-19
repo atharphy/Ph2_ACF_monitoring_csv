@@ -675,7 +675,6 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("checkSharedStubs"))
     {
-
         LOG(INFO) << BOLDMAGENTA << "Checking stubs across CBC neighbors" << RESET;
         t.start();
 
@@ -687,9 +686,9 @@ int main(int argc, char* argv[])
 
         CheckCbcNeighbors cCheckCbcNeighbors;
         cCheckCbcNeighbors.Inherit(&cTool);
-        cCheckCbcNeighbors.Initialise();   
+        cCheckCbcNeighbors.Initialise();
         cCheckCbcNeighbors.TestCbcNeighbors();
-  
+
         t.stop();
         t.show("Time to check stubs on shared channels");
     }
