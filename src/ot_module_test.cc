@@ -8,6 +8,7 @@
 #include "tools/BackEndAlignment.h"
 #include "tools/BeamTestCheck.h"
 #include "tools/CBCPulseShape.h"
+#include "tools/CheckCbcNeighbors.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
 #include "tools/LatencyScan.h"
@@ -178,6 +179,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkCICAlignment", "Manually scan CIC input aligner", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkLink", "Check that I can receive constant pattern from link", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("checkSharedStubs", "Check stubs at boundary between chips", ArgvParser::NoOptionAttribute);
     //
     cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("readMonitors", "Read internal monitors on lpGBT [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
@@ -1043,21 +1045,26 @@ int main(int argc, char* argv[])
         MemoryCheck2S cMemoryChecker;
         cMemoryChecker.Inherit(&cTool);
         cMemoryChecker.Initialise();
-
+        
         // configure reference voltage
-        cMemoryChecker.ConfigureVref();
+        /*cMemoryChecker.ConfigureVref();
         cMemoryChecker.MonitorTemperature();
-        cMemoryChecker.MonitorInputVoltage();
+        cMemoryChecker.MonitorInputVoltage();*/
         // find pedestal and set threshold
         if(cmd.foundOption("completeDataCheck"))
         {
+            LOG(INFO) << "starting complete data check";
             std::string          cArgsStr      = cmd.optionValue("completeDataCheck");
             std::vector<uint8_t> cChipsToCheck = getArgs(cArgsStr);
             cMemoryChecker.EvaluatePedeNoise(10); // find pedestal + noise
             cMemoryChecker.SetThreshold(-2.0);    // set threshold to 3 sigma away from pedestal
+            LOG(INFO) << "Finished Thresholds";
+
             int cTriggerGap = cTool.findValueInSettings<double>("TriggerSeparation", 500);
+            LOG(INFO) << "Starting data check";
             cMemoryChecker.DataCheck(cChipsToCheck, cTriggerGap);
         }
+
         cMemoryChecker.MemoryCheck2SRaw(true);  // all ones
         cMemoryChecker.MemoryCheck2SRaw(false); // all zeros
 
@@ -1127,6 +1134,8 @@ int main(int argc, char* argv[])
         BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
+
+
         cBeamTestCheck.ConfigureScans(cScanL1, cScanStubs);
         cBeamTestCheck.ConfigurePrintout(cCng);
         cBeamTestCheck.CheckWithTP();
@@ -1211,6 +1220,45 @@ int main(int argc, char* argv[])
         cBeamTestCheck.writeObjects();
         cBeamTestCheck.Reset();
     }
+    
+    if(!cmd.foundOption("read") && cmd.foundOption("checkSharedStubs"))
+    {
+
+        LOG(INFO) << BOLDMAGENTA << "Checking stubs across CBC neighbors" << RESET;
+        t.start();
+
+        MemoryCheck2S cMemoryChecker;
+        cMemoryChecker.Inherit(&cTool);
+        cMemoryChecker.Initialise();
+        cMemoryChecker.EvaluatePedeNoise(10); // find pedestal + noise
+        cMemoryChecker.SetThreshold(-2.0);    // set threshold to 3 sigma away from pedestal
+        //cMemoryChecker.SetThreshold(-2.0);
+
+        CheckCbcNeighbors cCheckCbcNeighbors;
+        cCheckCbcNeighbors.Inherit(&cTool);
+        cCheckCbcNeighbors.Initialise(); 
+
+            
+        cCheckCbcNeighbors.ConfigureSharedChannels();
+        //cCheckCbcNeighbors.CheckStubs();
+        
+        /*
+        for(uint8_t iChip=0; iChip < NCHIPS_OT; iChip++){
+            if(iChip == 7) continue;
+            cCheckCbcNeighbors.SetChip1(iChip);
+            cCheckCbcNeighbors.SetChip2(iChip+1); 
+            
+            cCheckCbcNeighbors.ConfigureSharedChannels();
+            cCheckCbcNeighbors.CheckStubs();
+
+            LOG(INFO) << "Stubs on hybrid 0 between chip " << +iChip << " and " << +(iChip+1) << " " << +cCheckCbcNeighbors.getNStubs(0, iChip);
+            LOG(INFO) << "Stubs on hybrid 1 between chip " << +iChip << " and " << +(iChip+1) << " " << +cCheckCbcNeighbors.getNStubs(1, iChip);
+        }   */
+        t.stop();
+        t.show("Time to check stubs on shared channels");
+    }
+
+
 
     if(cmd.foundOption("read"))
     {

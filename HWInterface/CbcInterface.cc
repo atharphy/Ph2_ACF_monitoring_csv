@@ -149,19 +149,21 @@ std::vector<uint8_t> CbcInterface::createHitListFromStubs(uint8_t pSeed, bool pS
 {
     std::vector<uint8_t> cChannelList(0);
     uint32_t             cSeedStrip = std::floor(pSeed / 2.0); // counting from 1
-    // LOG(DEBUG) << BOLDMAGENTA << "Seed of " << +pSeed << " means first hit is in strip " << +cSeedStrip << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Seed of " << +pSeed << " means first hit is in strip " << +cSeedStrip << RESET;
     size_t cNumberOfChannels = 1 + (pSeed % 2 != 0);
     for(size_t cIndex = 0; cIndex < cNumberOfChannels; cIndex++)
     {
         uint32_t cSeedChannel = 2 * (cSeedStrip - 1) + !pSeedLayer + 2 * cIndex;
-        // LOG(DEBUG) << BOLDMAGENTA << ".. need to unmask channel " << +cSeedChannel << RESET;
+        LOG(INFO) << BOLDMAGENTA << ".. need to unmask channel " << +cSeedChannel << RESET;
         cChannelList.push_back(static_cast<uint32_t>(cSeedChannel));
     }
     return cChannelList;
 }
+
+
 std::vector<uint8_t> CbcInterface::stubInjectionPattern(uint8_t pStubAddress, int pStubBend, bool pLayerSwap)
 {
-    // LOG(DEBUG) << BOLDBLUE << "Injecting... stub in position " << +pStubAddress << " [half strips] with a bend of " << pStubBend << " [half strips]." << RESET;
+     LOG(INFO) << BOLDBLUE << "Injecting... stub in position " << +pStubAddress << " [half strips] with a bend of " << pStubBend << " [half strips]." << RESET;
     std::vector<uint8_t> cSeedHits = createHitListFromStubs(pStubAddress, !pLayerSwap);
     // correlation layer
     uint8_t              cCorrelated     = pStubAddress + pStubBend; // start counting strips from 0
@@ -175,6 +177,62 @@ std::vector<uint8_t> CbcInterface::stubInjectionPattern(ReadoutChip* pChip, uint
     bool cLayerSwap = (this->ReadChipReg(pChip, "LayerSwap") == 1);
     return stubInjectionPattern(pStubAddress, pStubBend, cLayerSwap);
 }
+
+
+//this doesn't need to be in CBC interface, move later
+void CbcInterface::unmaskChannels(std::vector<uint8_t> pToUnmask, ChannelGroup<NCHANNELS, 1> &pChannelMask)
+{
+    for(size_t cChnl : pToUnmask)
+    {
+            LOG(INFO) << GREEN <<  "enabling "  << +cChnl << RESET;
+            pChannelMask.enableChannel(cChnl);
+    }
+}
+
+//Unmask channels shared with neighbouring chip
+//Lowest 13 top sensor, lowest 3 bottom sensor
+//true for top sensor, false for bottom sensor
+void CbcInterface::unmaskSharedLow(ReadoutChip* pChip, bool top, ChannelGroup<NCHANNELS, 1> &pChannelMask)
+{
+    
+    //even channels are bottom sensors
+    std::vector<uint8_t> bottom_chans {0, 2, 4};
+    std::vector<uint8_t> top_chans{1, 3, 5, 7, 9, 11, 13, 15, 17, 21, 23, 25, 27};
+
+    for(size_t cChnl = 0; cChnl < pChip->size(); cChnl++)
+    {
+        if( ( !top && (std::find(bottom_chans.begin(), bottom_chans.end(), cChnl) != bottom_chans.end())) || ( top && (std::find(top_chans.begin(), top_chans.end(), cChnl) != top_chans.end())) )
+        {
+            LOG(INFO) << GREEN <<  "enabling" << (top ? " top ": " bot ") << +cChnl << RESET;
+            pChannelMask.enableChannel(cChnl);
+        }
+    }
+
+}
+
+//Unmask channels shared with neighbouring chip 
+//Highest 12 top sensor, highest 2 bottom sensor
+//true for top sensor, false for bottom sensor
+void CbcInterface::unmaskSharedHigh(ReadoutChip* pChip, bool top, ChannelGroup<NCHANNELS, 1> &pChannelMask)
+{
+    
+    //even channels are bottom sensors
+    std::vector<uint8_t> bottom_chans {250, 252};
+    std::vector<uint8_t> top_chans{233, 235, 235, 237, 239, 241, 243, 245, 247, 249, 251, 253};
+ 
+    for(size_t cChnl = 0; cChnl < pChip->size(); cChnl++)
+    {
+        if( ( !top && (std::find(bottom_chans.begin(), bottom_chans.end(), cChnl) != bottom_chans.end())) || ( top && (std::find(top_chans.begin(), top_chans.end(), cChnl) != top_chans.end())) )
+        {
+            LOG(INFO) << GREEN <<  "enabling" << (top ? " top ": " bot ") << +cChnl  << RESET;
+            pChannelMask.enableChannel(cChnl);
+        }
+    }
+
+}
+
+
+
 bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<uint8_t> pStubAddresses, std::vector<int> pStubBends, bool pUseNoise, bool pUseOffsets, uint8_t pAllOff)
 {
     setBoard(pCbc->getBeBoardId());
@@ -191,10 +249,12 @@ bool CbcInterface::injectStubs(ReadoutChip* pCbc, std::vector<uint8_t> pStubAddr
         {
             if(std::find(cPattern.begin(), cPattern.end(), cChnl) != cPattern.end())
             {
+                LOG(INFO) << GREEN <<  "enabling " << +cChnl  << RESET;
                 cActiveChannels.push_back(cChnl);
                 cChannelMask.enableChannel(cChnl);
             }
             else
+                //LOG(INFO) << "disabling " << +cChnl;
                 cDisabledChannels.push_back(cChnl);
         }
     }
