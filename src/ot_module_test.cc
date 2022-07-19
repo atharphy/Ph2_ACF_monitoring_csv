@@ -1054,15 +1054,12 @@ int main(int argc, char* argv[])
         // find pedestal and set threshold
         if(cmd.foundOption("completeDataCheck"))
         {
-            LOG(INFO) << "starting complete data check";
             std::string          cArgsStr      = cmd.optionValue("completeDataCheck");
             std::vector<uint8_t> cChipsToCheck = getArgs(cArgsStr);
             cMemoryChecker.EvaluatePedeNoise(10); // find pedestal + noise
             cMemoryChecker.SetThreshold(-2.0);    // set threshold to 3 sigma away from pedestal
-            LOG(INFO) << "Finished Thresholds";
 
             int cTriggerGap = cTool.findValueInSettings<double>("TriggerSeparation", 500);
-            LOG(INFO) << "Starting data check";
             cMemoryChecker.DataCheck(cChipsToCheck, cTriggerGap);
         }
 
