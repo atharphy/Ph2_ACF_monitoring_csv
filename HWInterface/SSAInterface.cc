@@ -515,6 +515,11 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         LOG(INFO) << BOLDYELLOW << pRegName << RESET;
         return ConfigureAmux(pSSA, pRegName);
     }
+    else if(fAmuxMap.find(pRegName) != fAmuxMap.end())
+    {
+        LOG(INFO) << BOLDYELLOW << pRegName << RESET;
+        return ConfigureAmux(pSSA, pRegName);
+    }
     else if(pRegName.substr(0, pRegName.find("__")) == "AMUX")
     {
         return this->ConfigureAmux(pSSA, pRegName.substr(1, pRegName.find("__")));
@@ -697,7 +702,7 @@ bool SSAInterface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& d
 
     if(std::adjacent_find(cVals.begin(), cVals.end(), std::not_equal_to<uint16_t>()) == cVals.end())
     {
-        LOG(DEBUG) << BOLDBLUE << "All elements of " << dacName << " are equal to one  another .. will use global register" << RESET;
+        LOG(INFO) << BOLDBLUE << "All elements of " << dacName << " are equal to one  another .. will use global register" << RESET;
         if(dacName == "TrimDAC_S" or dacName == "ThresholdTrim")
         {
             bool cWrite = this->WriteChipReg(pChip, "THTRIMMING_ALL", cVals[0], false);

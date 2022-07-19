@@ -40,13 +40,13 @@ SEHMonitor::SEHMonitor(const Ph2_System::SystemController* theSystemController, 
 // Maybe not ideal here (but needed to avoid memory leak)?? Could be moved to ~DetectorMonitor() if fPowerSupplyClient is also used for other devices?
 SEHMonitor::~SEHMonitor()
 {
-    if(fPowerSupplyClient!=nullptr)
+    if(fPowerSupplyClient != nullptr)
     {
         delete fPowerSupplyClient;
         fPowerSupplyClient = nullptr;
     }
 #ifdef __USE_ROOT__
-    if(fMonitorPlotDQMSEH!=nullptr)
+    if(fMonitorPlotDQMSEH != nullptr)
     {
         delete fMonitorPlotDQMSEH;
         fMonitorPlotDQMSEH = nullptr;
@@ -133,7 +133,7 @@ void SEHMonitor::runTestCardMonitor(std::string registerName)
 #ifdef __TCP_SERVER__
     fTheSystemController->fTestcardClient->sendAndReceivePacket("read_hvmon:HV_meas");
 #else
-    fTheSystemController->flpGBTInterface->getExternalController()->getInterface().read_hvmon(fTheSystemController->flpGBTInterface->getExternalController()->getInterface().HV_meas, cValue);
+    fTheSystemController->flpGBTInterface->GetExternalController()->getInterface().read_hvmon(fTheSystemController->flpGBTInterface->GetExternalController()->getInterface().HV_meas, cValue);
 #endif
     LOG(INFO) << BOLDMAGENTA << cValue << " " << registerName << RESET;
 #endif

@@ -229,8 +229,8 @@ void Tool::SoftDestroy()
 }
 
 #ifdef __USE_ROOT__
-std::string  Tool::fSummaryTreeParameter = "";
-double Tool::fSummaryTreeValue     = 0.0;
+std::string Tool::fSummaryTreeParameter = "";
+double      Tool::fSummaryTreeValue     = 0.0;
 
 /*!
  * \brief Initialize a 'summary' TTree in the ROOT File, with branches 'parameter'(string) and 'value'(double)
@@ -528,7 +528,7 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
 #ifdef __USE_ROOT__
 void Tool::InitResultFile(const std::string& pFilename)
 {
-    if(fResultFile!= nullptr) return;
+    if(fResultFile != nullptr) return;
     if(!fDirectoryName.empty())
     {
         std::string cFilename = fDirectoryName + "/" + pFilename + ".root";
@@ -592,10 +592,7 @@ void Tool::AddMetadata()
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                chipVectorSize += cHybrid->size();
-            }
+            for(auto cHybrid: *cOpticalGroup) { chipVectorSize += cHybrid->size(); }
         }
     }
     chipIds.reserve(chipVectorSize); // Need to be done to avoid jumps of the vector memory that messes with the pointer associated to the branch
@@ -608,7 +605,7 @@ void Tool::AddMetadata()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    std::string label = getReadoutChipString(cBoard->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId()); 
+                    std::string label = getReadoutChipString(cBoard->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId());
 
                     uint32_t value = fReadoutChipInterface->ReadChipFuseID(cChip);
 
@@ -833,8 +830,9 @@ void Tool::setFWTestPulse()
             }
             else
             {
-                LOG(INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 10" << RESET;
-                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 10});
+                LOG(INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 12" << RESET; // Should be 12 for us!?
+                // fc7_daq_stat.fast_command_block.general.source
+                cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 12});
                 cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
             }
             break;

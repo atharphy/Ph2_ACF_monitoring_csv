@@ -1,6 +1,7 @@
 #if defined(__TCUSB__) && defined(__USE_ROOT__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
 
 #include "OTHybridTester.h"
+#include "../HWInterface/D19cBackendAlignmentFWInterface.h"
 
 OTHybridTester::OTHybridTester() : Tool()
 {
@@ -86,6 +87,9 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
 
+        fBeBoardInterface->setBoard(cBoard->getId());
+        D19cFWInterface*      cFWInterface      = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        D19cTriggerInterface* cTriggerInterface = dynamic_cast<D19cTriggerInterface*>(cFWInterface->getTriggerInterface());
         for(auto cOpticalGroup: *cBoard)
         {
             for(int hybridNumber = 0; hybridNumber < 2; hybridNumber++)
@@ -96,17 +100,15 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     clpGBTInterface->ConfigureRxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, 0);
                     std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 }
-                D19cFWInterface* cFWInterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-                size_t           cLine        = 0;
+
+                size_t cLine = 0;
                 do
                 {
-                    fBeBoardInterface->setBoard(cBoard->getId());
                     cFWInterface->selectLink(cOpticalGroup->getId());
                     cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
-                    LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
 
+                    LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
                     cFWInterface->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable", 0x01);
-                    cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
                     cFWInterface->ChipTestPulse();
                     auto                     cWords = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.stub_debug", 80);
                     std::vector<std::string> cLines(0);
@@ -137,7 +139,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                     fillSummaryTree(Form("stub_%d_hybrid_%d_match", int(cLine), hybridNumber), cMatch);
                     fillSummaryTree(Form("stub_%d_hybrid_%d_shift", int(cLine), hybridNumber), cShift);
 
-                    if((cMatch == 0)) { LOG(INFO) << BOLDBLUE << "CIC Out Test passed for stub line " << +cLine << " for hybrid side " << +hybridNumber << RESET; }
+                    if((cMatch == 0)) { LOG(INFO) << BOLDGREEN << "CIC Out Test passed for stub line " << +cLine << " for hybrid side " << +hybridNumber << RESET; }
                     else
                     {
                         LOG(INFO) << BOLDRED << "CIC Out Test failed for stub line " << +cLine << " for hybrid side " << +hybridNumber << RESET;
@@ -151,40 +153,11 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
 #endif
 
                 LOG(INFO) << BOLDBLUE << "L1 data " << RESET;
-
-                auto cInitFastReset = cFWInterface->ReadReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable");
-                auto cInitBP        = cFWInterface->ReadReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable");
-                // enable initial fast reset
-                cFWInterface->WriteReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable", 1);
-                // disable back-pressure
-                cFWInterface->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0);
-                cFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
-                // reset trigger
-                cFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset", 0x1);
-                // load new trigger configuration
-                cFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
-                cFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
-                LOG(DEBUG) << BOLDBLUE << "Started triggers ...." << RESET;
-                // wait until you've received at least one trigger
-                auto cNTriggersRxd = cFWInterface->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-                auto cStartTime = std::chrono::high_resolution_clock::now(), cEndTime = cStartTime;
-                auto cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
-                do
-                {
-                    cDuration     = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
-                    cNTriggersRxd = cFWInterface->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-                    LOG(DEBUG) << BOLDMAGENTA << "Trigger in counter is " << +cNTriggersRxd << " waited for " << cDuration << " us so far" << RESET;
-                    cEndTime = std::chrono::high_resolution_clock::now();
-                } while(cNTriggersRxd < 10 && cDuration < 1 * 1e3);
-                cFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
-
-                LOG(DEBUG) << BOLDMAGENTA << "First header found after " << cFWInterface->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay") << " clock cycles." << RESET;
-
+                cTriggerInterface->Start();
+                cTriggerInterface->WaitForNTriggers(10);
+                cTriggerInterface->Stop();
                 auto cWordsL1A = cFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
-
-                cFWInterface->WriteReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable", cInitFastReset);
-                cFWInterface->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", cInitBP);
-                cFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
+                for(auto cWord: cWordsL1A) LOG(DEBUG) << BOLDBLUE << "# " << std::bitset<32>(cWord) << RESET;
                 uint32_t cCicOutOutputL1A = cWordsL1A[0];
                 LOG(INFO) << BOLDBLUE << "Scoped output on L1A Line: " << std::bitset<32>(cCicOutOutputL1A) << " for hybrid side " << +hybridNumber << RESET;
 
@@ -210,7 +183,6 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 {
                     LOG(INFO) << BOLDGREEN << "CIC Out Test passed for L1A line"
                               << " for hybrid side " << +hybridNumber << RESET;
-                    // cStatusVec.push_back(1);
                 }
                 else
                 {
@@ -248,11 +220,27 @@ void OTHybridTester::LpGBTInjectDLInternalPattern(uint8_t pPattern)
             uint8_t cSource = 3;
             clpGBTInterface->ConfigureDPPattern(cOpticalGroup->flpGBT, pPattern << 24 | pPattern << 16 | pPattern << 8 | pPattern);
             clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, cSource); // 0 --> link data, 3 --> constant pattern
+            // clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {,}, cSource); // 0 --> link data, 3 --> constant pattern
+
+            PhaseTuneLineEleFC7(0, 0);
+            PhaseTuneLineEleFC7(0, 1);
+            PhaseTuneLineEleFC7(0, 2);
+            // PhaseTuneLineEleFC7(0, 3);
+            PhaseTuneLineEleFC7(0, 4);
+            // PhaseTuneLineEleFC7(0, 5);
+        }
+    }
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        for(auto cOpticalGroup: *cBoard)
+        {
+            clpGBTInterface->ConfigureTxSource(cOpticalGroup->flpGBT, {0, 1, 2, 3}, 0); // 0 --> link data, 3 --> constant pattern
         }
     }
 }
 
-bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
+bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters, int pNTries)
 {
     bool                cTestSuccess    = true;
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
@@ -286,10 +274,9 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters)
                 gettimeofday(&start, NULL);
                 // do stuff
                 uint8_t failureIter   = 0;
-                int     tries         = 100000;
                 uint8_t cFrequency    = (cMaster == 1) ? 2 : 3;
                 uint8_t cSlaveAddress = 0x60;
-                for(int j = 0; j < tries; j++)
+                for(int j = 0; j < pNTries; j++)
                 // int j = 0;
                 // while(true)
                 {
@@ -393,10 +380,11 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
 // fTC_2SSEH->set_AMUX(cDACValue, cDACValue);
 // example to program current Dac for temperature sensor clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, pADCs,0);
 #ifdef __ROH_USB__
-                    flpGBTInterface->getExternalController()->getInterface().dac_output(cDACValue);
+                    flpGBTInterface->GetExternalController()->getInterface().dac_output(cDACValue);
 #elif __SEH_USB__
-                    flpGBTInterface->getExternalController()->getInterface().set_AMUX(cDACValue, cDACValue);
+                    flpGBTInterface->GetExternalController()->getInterface().set_AMUX(cDACValue, cDACValue);
 #endif
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1200));
                     int cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
 
                     LOG(INFO) << BOLDBLUE << "DAC value = " << +cDACValue << " --- ADC value = " << +cADCValue << RESET;
@@ -440,7 +428,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
             fillSummaryTree("VREFCNTR", cTrim);
             fResultFile->cd();
             cDACtoADCTree->Write();
-            cDACtoADCMultiGraph->Draw("AL");
+            cDACtoADCMultiGraph->Draw("AL*");
             cDACtoADCMultiGraph->GetXaxis()->SetTitle("DAC");
             cDACtoADCMultiGraph->GetYaxis()->SetTitle("ADC");
             dieLegende->Draw();
@@ -478,7 +466,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     cDefaultParameters   = &f2SSEHDefaultParameters;
     cADCNametoPinMapping = &f2SSEHADCInputMap;
 
-    flpGBTInterface->getExternalController()->getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
+    flpGBTInterface->GetExternalController()->getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
 #elif __ROH_USB__
 
     cADCsMap = {{"12V_MONITOR_VD", "12V_MONITOR_VD_Nominal"},
@@ -510,9 +498,9 @@ bool OTHybridTester::LpGBTTestFixedADCs()
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
 #ifdef __ROH_USB__
             // FIXME why is this here and what is cDACValue
-            // flpGBTInterface->getExternalController()->getInterface().dac_output(cDACValue);
+            // flpGBTInterface->GetExternalController()->getInterface().dac_output(cDACValue);
 #elif __SEH_USB__
-            flpGBTInterface->getExternalController()->getInterface().set_AMUX(3500, 3500);
+            flpGBTInterface->GetExternalController()->getInterface().set_AMUX(3500, 3500);
 #endif
             do
             {
@@ -562,7 +550,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
     cFixedADCsTree->Write();
 
 #ifdef __SEH_USB__
-    flpGBTInterface->getExternalController()->getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
+    flpGBTInterface->GetExternalController()->getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_Off);
 #endif
     return cReturn;
 }
@@ -602,7 +590,7 @@ bool OTHybridTester::LpGBTTestResetLines()
         LpGBTSetGPIOLevel(cGPIOs, cLevel.second);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
 #ifdef __SEH_USB__
-        std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
         // mu-controller is too slow
 #endif
         auto cMapIterator = cResetLines.begin();
@@ -610,15 +598,15 @@ bool OTHybridTester::LpGBTTestResetLines()
         do
         {
 #ifdef __ROH_USB__
-            flpGBTInterface->getExternalController()->getInterface().adc_get(cMapIterator->second, cMeasurement);
+            flpGBTInterface->GetExternalController()->getInterface().adc_get(cMapIterator->second, cMeasurement);
             float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement);
 #elif __SEH_USB__
 #ifdef __TCP_SERVER__
             cMeasurement = this->getMeasurement("read_reset:" + cMapIterator->first);
 #else
-            flpGBTInterface->getExternalController()->getInterface().read_reset(cMapIterator->second, cMeasurement);
+            flpGBTInterface->GetExternalController()->getInterface().read_reset(cMapIterator->second, cMeasurement);
 #endif
-            float cDifference_mV = std::fabs((cLevel.second * 1300) - cMeasurement * 1000.); // 1300
+            float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement * 1000.); // 1300
             fillSummaryTree(cMapIterator->first.c_str() + cLevel.first + "_value", cMeasurement);
             cStatus = cStatus && (cDifference_mV <= 100);
 #endif
@@ -708,9 +696,13 @@ bool OTHybridTester::LpGBTTestVTRx()
             {
                 cVTRxplusDefaultRegisters = fVTRxplusDefaultRegistersV13;
                 LOG(INFO) << BOLDGREEN << "VTRx+ register map for version 1.3 is used!" << RESET;
+                fillSummaryTree("vtrxplusversion", 1.3);
             }
             else
+            {
                 LOG(INFO) << BOLDGREEN << "VTRx+ register map for version 1.2 is used!" << RESET;
+                fillSummaryTree("vtrxplusversion", 1.2);
+            }
             auto cMapIterator = cVTRxplusDefaultRegisters.begin();
             do
             {
@@ -963,6 +955,44 @@ bool OTHybridTester::LpGBTCheckClocks()
         LOG(INFO) << GREEN << "============================" << RESET;
     }
     return cStatus;
+}
+
+std::pair<bool, uint8_t> OTHybridTester::PhaseTuneLineEleFC7(uint8_t pHybrid, uint8_t pLineId)
+{
+    std::pair<bool, uint8_t> cLineStatus;
+    cLineStatus.first  = false;
+    cLineStatus.second = 0;
+    uint8_t pChip      = 0;
+    auto    cBoardId   = 1;
+    auto    cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+    fBeBoardInterface->setBoard((*cBoardIter)->getId());
+    LOG(DEBUG) << BOLDYELLOW << "OTHybridTester::PhaseTuneLineEleFC7#" << +pLineId << " for a Chip#" << +pChip << RESET;
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+
+    D19cBackendAlignmentFWInterface* cAlignerInterface = cInterface->getBackendAlignmentInterface();
+    cAlignerInterface->InitializeConfiguration();
+    cAlignerInterface->InitializeAlignerObject();
+
+    AlignerObject cAlignerObjct;
+    cAlignerObjct.fHybrid = pHybrid;
+    cAlignerObjct.fChip   = 0;
+    cAlignerObjct.fLine   = pLineId;
+    LineConfiguration cLineCnfg;
+    cAlignerInterface->TunePhase(cAlignerObjct, cLineCnfg);
+    cAlignerInterface->GetLineStatus(cAlignerObjct);
+    cLineStatus.first = cAlignerInterface->IsLinePhaseAligned(cAlignerObjct);
+    if(!cLineStatus.first)
+    {
+        LOG(INFO) << BOLDRED << "Could not phase align-BE data for BeBoard#" << +cBoardId << " Hybrid#" << +pHybrid << " Chip#" << +pChip << " line# " << +pLineId << RESET;
+        // throw std::runtime_error(std::string("Could not phase align-BE data in LinkAlignmentOT..."));
+    }
+    else
+    {
+        LOG(INFO) << BOLDBLUE << "Could phase align-BE data for BeBoard#" << +cBoardId << " Hybrid#" << +pHybrid << " Chip#" << +pChip << " line# " << +pLineId << RESET;
+    }
+
+    cLineStatus.second = cAlignerInterface->GetLineConfiguration().fDelay;
+    return cLineStatus;
 }
 
 #ifdef __TCP_SERVER__

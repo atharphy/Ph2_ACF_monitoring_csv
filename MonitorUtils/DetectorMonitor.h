@@ -33,8 +33,8 @@ class DetectorMonitor
     const Ph2_System::SystemController* fTheSystemController{nullptr};
     DetectorMonitorConfig               fDetectorMonitorConfig;
 #ifdef __USE_ROOT__
-    TFile*              fOutputFile {nullptr};
-    MonitorDQMPlotBase* fMonitorPlotDQM {nullptr};
+    TFile*              fOutputFile{nullptr};
+    MonitorDQMPlotBase* fMonitorPlotDQM{nullptr};
 #endif
     time_t      getTimeStamp();
     std::string getMonitorName();
