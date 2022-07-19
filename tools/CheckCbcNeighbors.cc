@@ -10,7 +10,17 @@ CheckCbcNeighbors::CheckCbcNeighbors() : Tool() { fNEvents = this->findValueInSe
 
 CheckCbcNeighbors::~CheckCbcNeighbors() {}
 
+<<<<<<< HEAD
 void CheckCbcNeighbors::Initialise(void)  {}
+=======
+void CheckCbcNeighbors::Initialise(void)
+{
+#ifdef __USE_ROOT__ // to disable and anable ROOT by command
+    // Calibration is not running on the SoC: plots are booked during initialization
+    fDQMHistogramCheckCbcNeighbors.book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
+}
+>>>>>>> ba5da0a8e95dd81b0045e658793696e02d0b0899
 
 bool CheckCbcNeighbors::TestCbcNeighbors()
 {
@@ -109,8 +119,11 @@ bool CheckCbcNeighbors::TestCbcNeighbors()
     return allPass;
 }
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> ba5da0a8e95dd81b0045e658793696e02d0b0899
 bool CheckCbcNeighbors::CheckStubs(uint8_t hybridId, uint8_t chipId)
 {
     uint32_t eventsWStubs = 0;
@@ -168,6 +181,13 @@ void CheckCbcNeighbors::Running()
 void CheckCbcNeighbors::Stop(void)
 {
     LOG(INFO) << "Stopping CheckCbcNeighbors measurement.";
+<<<<<<< HEAD
+=======
+#ifdef __USE_ROOT__
+    // Calibration is not running on the SoC: processing the histograms
+    fDQMHistogramCheckCbcNeighbors.process();
+#endif
+>>>>>>> ba5da0a8e95dd81b0045e658793696e02d0b0899
     dumpConfigFiles();
     SaveResults();
     closeFileHandler();
