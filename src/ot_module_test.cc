@@ -1239,9 +1239,8 @@ int main(int argc, char* argv[])
         cCheckCbcNeighbors.Initialise(); 
 
             
-        cCheckCbcNeighbors.ConfigureSharedChannels();
-        //cCheckCbcNeighbors.CheckStubs();
-        
+        cCheckCbcNeighbors.TestCbcNeighbors();
+  
         /*
         for(uint8_t iChip=0; iChip < NCHIPS_OT; iChip++){
             if(iChip == 7) continue;

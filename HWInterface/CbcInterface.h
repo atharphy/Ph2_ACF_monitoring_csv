@@ -124,17 +124,6 @@ class CbcInterface : public ReadoutChipInterface
     uint8_t              GetLastPage(Ph2_HwDescription::Chip* pCbc);
     void                 resetPageMap() { fPageMap.clear(); }
 
-    //Unmask channels shared with neighbouring chip 
-    //Highest 12 top sensor, highest 2 bottom sensor
-    void                 unmaskSharedHigh(Ph2_HwDescription::ReadoutChip* pChip, bool top, ChannelGroup<NCHANNELS, 1> &pChannelMask);
-
-    //Unmask channels shared with neighbouring chip
-    //Lowest 13 top sensor, lowest 3 bottom sensor
-    void                 unmaskSharedLow(Ph2_HwDescription::ReadoutChip* pChip, bool top, ChannelGroup<NCHANNELS, 1> &pChannelMask);
-    
-    //unmask vector of channels
-    void unmaskChannels(std::vector<uint8_t> pToUnmask, ChannelGroup<NCHANNELS, 1> &pChannelMask);
-    
     std::vector<uint8_t> getWordAlignmentPatterns() override { return fWordAlignmentPatterns; }
     /*!
      * \brief Read CBC ID eFuse

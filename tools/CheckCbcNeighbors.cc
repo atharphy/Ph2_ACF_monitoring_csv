@@ -22,9 +22,8 @@ void CheckCbcNeighbors::Initialise(void)
 #endif
 }
 
-void CheckCbcNeighbors::ConfigureSharedChannels()
+bool CheckCbcNeighbors::TestCbcNeighbors()
 {
-    ContainerFactory::copyAndInitChip<bool>(*fDetectorContainer, theStubContainer);
     bool result;
     bool allPass = true;
 
@@ -32,17 +31,12 @@ void CheckCbcNeighbors::ConfigureSharedChannels()
     {
         for(auto cOpticalGroup: *cBoard)
         {
-
             for(auto cHybrid: *cOpticalGroup)
             {
-                //turn off sparsification
-               // auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-               // fCicInterface->SetSparsification(cCic, false);
-                
+                //first disable everything on all chips
                 for(auto cChip: *cHybrid)
                 {
                     CbcInterface* theCbcInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
-                    //first disable everything
                     ChannelGroup<NCHANNELS, 1> cChannelMask;
                     cChannelMask.disableAllChannels();
                     theCbcInterface->maskChannelGroup(cChip, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask)));
@@ -51,90 +45,91 @@ void CheckCbcNeighbors::ConfigureSharedChannels()
                 //now begin test 
                 for(auto cChip1: *cHybrid)
                 {
-                    CbcInterface* theCbcInterface_1 = static_cast<CbcInterface*>(fReadoutChipInterface);
-                    // //disable everything
-                    // ChannelGroup<NCHANNELS, 1> cChannelMask_1;
-                    // cChannelMask_1.disableAllChannels();
-                    // theCbcInterface->maskChannelGroup(cChip1, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_1)));
-                    
                     for(auto cChip2: *cHybrid)
                     {
                         ChannelGroup<NCHANNELS, 1> cChannelMask_1;
                         ChannelGroup<NCHANNELS, 1> cChannelMask_2;
-                        CbcInterface* theCbcInterface_2 = static_cast<CbcInterface*>(fReadoutChipInterface);
+                        CbcInterface* theCbcInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
 
                         if( cChip2->getId() !=  cChip1->getId()+1){
                             continue;
                         }
                         //if(! (cChip1->getId() == 0 && cChip2->getId() == 1)) continue;
 
-                        LOG(INFO) << "CheckCBCNeighbors with Hybrid " << +cHybrid->getId() << " chip1: " << +cChip1->getId() << " chip2: " << +cChip2->getId();
+                        LOG(DEBUG) << "CheckCBCNeighbors with Hybrid " << +cHybrid->getId() << " chip1: " << +cChip1->getId() << " chip2: " << +cChip2->getId();
 
                         //-------------------------------------
                         //check stubs from 1->2 -- all of these will be read out as being on chip1 
                         //-------------------------------------
-                        LOG(INFO) << BOLDCYAN << "Checking stubs from lower chip to higher chip" << RESET;
+                        LOG(INFO) << BOLDCYAN << "Checking stubs from lower chip " << +cChip1->getId() << " to higher chip " << +cChip2->getId()<< RESET;
                         cChannelMask_1.disableAllChannels();
                         cChannelMask_2.disableAllChannels();
-                        theCbcInterface_1->maskChannelGroup(cChip1, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_1)));
-                        theCbcInterface_2->maskChannelGroup(cChip2, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_2)));
+                        theCbcInterface->maskChannelGroup(cChip1, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_1)));
+                        theCbcInterface->maskChannelGroup(cChip2, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_2)));
                         
-                        theCbcInterface_1->unmaskChannels({250, 252}, cChannelMask_1);
-                        theCbcInterface_2->unmaskChannels({1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25}, cChannelMask_2);
+                        this->UnmaskChannels(fSharedTopHigh, cChannelMask_1);
+                        this->UnmaskChannels(fSharedBottomLow, cChannelMask_2);
                         
 
-                        theCbcInterface_1->maskChannelGroup(cChip1, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_1)));
-                        theCbcInterface_2->maskChannelGroup(cChip2, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_2)));
+                        theCbcInterface->maskChannelGroup(cChip1, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_1)));
+                        theCbcInterface->maskChannelGroup(cChip2, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_2)));
 
-                        LOG(INFO) << "Unmasked Chip1 " << +cChannelMask_1.getNumberOfEnabledChannels() << " Unmasked Chip2 " << +cChannelMask_2.getNumberOfEnabledChannels() << RESET;
+                        LOG(DEBUG) << "Unmasked Chip1 " << +cChannelMask_1.getNumberOfEnabledChannels() << " Unmasked Chip2 " << +cChannelMask_2.getNumberOfEnabledChannels() << RESET;
                         result = CheckStubs(cHybrid->getId(), cChip1->getId());
-                        LOG(INFO) << "result " << +result;
+                        LOG(DEBUG) << "result " << +result;
                         allPass = allPass && result;
-                        if(!result) LOG(INFO) << BOLDRED << "FAILED chip1 " << +cChip1->getId() << " chip2 " << +cChip2->getId() << RESET; 
-                        else LOG(INFO) << BOLDGREEN << "PASSED chip1 " << +cChip1->getId() << " chip2 " << +cChip2->getId() << RESET; 
+                        if(!result) LOG(INFO) << RED << "FAILED hybrid " << +cHybrid->getId() << " chip1 " << +cChip1->getId() << " chip2 " << +cChip2->getId() << std::endl << RESET; 
+                        else LOG(INFO) << GREEN << "PASSED hybrid " << +cHybrid->getId() << " chip1 " << +cChip1->getId() << " chip2 " << +cChip2->getId() << std::endl << RESET; 
                         //theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip1->getIndex())->getSummary<bool>() = result;
 
 
                         //-------------------------------------
                         //check stubs from 2->1 -- all of these will be read out as if they are on chip2
                         //-------------------------------------
-                        /* LOG(INFO) << BOLDMAGENTA << "Checking stubs from higher chip to lower chip" << RESET;
+                        LOG(INFO) << BOLDMAGENTA << "Checking stubs from higher chip to lower chip" << RESET;
                         cChannelMask_1.disableAllChannels();
                         cChannelMask_2.disableAllChannels();
-
-                        theCbcInterface->unmaskChannels({233, 235, 235, 237, 239, 241, 243, 245, 247, 249, 251, 253}, cChannelMask_1);
-                        theCbcInterface->unmaskChannels({0, 2, 4}, cChannelMask_2);
-                        
                         theCbcInterface->maskChannelGroup(cChip1, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_1)));
                         theCbcInterface->maskChannelGroup(cChip2, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_2)));
-                        LOG(INFO) << "Unmasked Chip1 " << +cChannelMask_1.getNumberOfEnabledChannels() << " Unmasked Chip2 " << +cChannelMask_2.getNumberOfEnabledChannels() << RESET;
+                        
+                        this->UnmaskChannels(fSharedBottomHigh, cChannelMask_1);
+                        this->UnmaskChannels(fSharedTopLow, cChannelMask_2);
+                        
+
+                        theCbcInterface->maskChannelGroup(cChip1, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_1)));
+                        theCbcInterface->maskChannelGroup(cChip2, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_2)));
+
+                        LOG(DEBUG) << "Unmasked Chip1 " << +cChannelMask_1.getNumberOfEnabledChannels() << " Unmasked Chip2 " << +cChannelMask_2.getNumberOfEnabledChannels() << RESET;
                         result = CheckStubs(cHybrid->getId(), cChip2->getId());
-                        theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip2->getIndex())->getSummary<bool>() = result;
-                        */
+                        LOG(DEBUG) << "result " << +result;
+                        allPass = allPass && result;
+                        if(!result) LOG(INFO) << RED << "FAILED hybrid " << +cHybrid->getId() << " chip1 " << +cChip1->getId() << " chip2 " << +cChip2->getId() << std::endl << RESET; 
+                        else LOG(INFO) << GREEN << "PASSED hybrid " << +cHybrid->getId() << " chip1 " << +cChip1->getId() << " chip2 " << +cChip2->getId() <<  std::endl << RESET; 
+                        
 
                         //remask channels for the next test
                         cChannelMask_2.disableAllChannels();
                         cChannelMask_1.disableAllChannels();
-                        theCbcInterface_1->maskChannelGroup(cChip1, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_1)));
-                        theCbcInterface_2->maskChannelGroup(cChip2, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_2)));
+                        theCbcInterface->maskChannelGroup(cChip1, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_1)));
+                        theCbcInterface->maskChannelGroup(cChip2, std::make_shared<ChannelGroup<NCHANNELS, 1>>(std::move(cChannelMask_2)));
                     }
                 }
             }
         }
     }
-    LOG(INFO) << "CheckCbcNeighbors " << (allPass ? "PASSED " : "FAILED");
+    LOG(INFO) << BOLDGREEN <<  "CheckCbcNeighbors " << (allPass ? "PASSED " : "FAILED");
+    return allPass;
 }
 
 bool CheckCbcNeighbors::CheckStubs(uint8_t hybridId, uint8_t chipId)
 {
-    ContainerFactory::copyAndInitChip<uint32_t>(*fDetectorContainer, theStubContainer);
     uint32_t eventsWStubs = 0;
 
     for(auto cBoard: *fDetectorContainer)
     {
         ReadNEvents(cBoard, fNEvents);
         const std::vector<Event*>& cEvents = this->GetEvents();
-        LOG(INFO) << "Got " << cEvents.size() << " events.";
+        LOG(DEBUG) << "Got " << cEvents.size() << " events.";
         for(auto& cEvent: cEvents)
         {
             auto cStubs = cEvent->StubVector(hybridId, chipId);
@@ -142,14 +137,33 @@ bool CheckCbcNeighbors::CheckStubs(uint8_t hybridId, uint8_t chipId)
             
             for(auto cReadoutStub: cStubs)
             {
-                std::vector<uint8_t> channelList;
-                LOG(DEBUG) << MAGENTA <<  "Stub position " << +cReadoutStub.getPosition() << " bend " << +cReadoutStub.getBend() << " row " << +cReadoutStub.getRow() << " center " << +cReadoutStub.getCenter() << " on hybrid " << +hybridId << " and chip " << +chipId << RESET;
-                LOG(DEBUG) << CYAN << "\t Databit string " << cEvent->DataBitString(hybridId, chipId) << RESET;
+                //bad stub
+                if ( (cReadoutStub.getPosition() >= 2 && cReadoutStub.getPosition() <=6) || (cReadoutStub.getPosition() >= 252 && cReadoutStub.getPosition() <= 254 ) )
+                {
+                    LOG(DEBUG) <<  "Stub position " << +cReadoutStub.getPosition() << " bend " << +cReadoutStub.getBend() << " row " << +cReadoutStub.getRow() << " center " << +cReadoutStub.getCenter() << " on hybrid " << +hybridId << " and chip " << +chipId << RESET;
+                    LOG(DEBUG) << CYAN << "\t Databit string " << cEvent->DataBitString(hybridId, chipId) << RESET;
+                }
+                //good stub
+                else
+                {
+                    LOG(INFO) << RED << "WRONG STUB FOUND Stub position " << +cReadoutStub.getPosition() << " bend " << +cReadoutStub.getBend() << " row " << +cReadoutStub.getRow() << " center " << +cReadoutStub.getCenter() << " on hybrid " << +hybridId << " and chip " << +chipId << RESET;
+
+                }
+
             }
         }
     }
-    LOG(INFO) << eventsWStubs << " events with stubs";
+    LOG(DEBUG) << eventsWStubs << " events with stubs";
     return eventsWStubs > 0;
+}
+
+void CheckCbcNeighbors::UnmaskChannels(std::vector<uint8_t> pToUnmask, ChannelGroup<NCHANNELS, 1> &pChannelMask)
+{
+    for(size_t cChnl : pToUnmask)
+    {
+            LOG(DEBUG) << GREEN <<  "enabling "  << +cChnl << RESET;
+            pChannelMask.enableChannel(cChnl);
+    }
 }
 
 
