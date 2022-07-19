@@ -47,3 +47,5 @@ class CheckCbcNeighbors : public Tool
     void UnmaskChannels(std::vector<uint8_t> pToUnmask, ChannelGroup<NCHANNELS, 1>& pChannelMask);
 
 };
+
+
