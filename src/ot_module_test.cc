@@ -8,7 +8,6 @@
 #include "tools/BackEndAlignment.h"
 #include "tools/BeamTestCheck.h"
 #include "tools/CBCPulseShape.h"
-#include "tools/CheckCbcNeighbors.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
 #include "tools/LatencyScan.h"
@@ -181,7 +180,6 @@ int main(int argc, char* argv[])
     cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkCICAlignment", "Manually scan CIC input aligner", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkLink", "Check that I can receive constant pattern from link", ArgvParser::OptionRequiresValue);
-    cmd.defineOption("checkSharedStubs", "Check stubs at boundary between chips", ArgvParser::NoOptionAttribute);
     //
     cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("readMonitors", "Read internal monitors on lpGBT [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
@@ -1050,9 +1048,9 @@ int main(int argc, char* argv[])
         cMemoryChecker.Initialise();
 
         // configure reference voltage
-        /*cMemoryChecker.ConfigureVref();
+        cMemoryChecker.ConfigureVref();
         cMemoryChecker.MonitorTemperature();
-        cMemoryChecker.MonitorInputVoltage();*/
+        cMemoryChecker.MonitorInputVoltage();
         // find pedestal and set threshold
         if(cmd.foundOption("completeDataCheck"))
         {
