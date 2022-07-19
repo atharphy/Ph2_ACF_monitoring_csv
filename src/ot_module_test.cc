@@ -1223,40 +1223,6 @@ int main(int argc, char* argv[])
         cBeamTestCheck.Reset();
     }
 
-    if(!cmd.foundOption("read") && cmd.foundOption("checkSharedStubs"))
-    {
-        LOG(INFO) << BOLDMAGENTA << "Checking stubs across CBC neighbors" << RESET;
-        t.start();
-
-        MemoryCheck2S cMemoryChecker;
-        cMemoryChecker.Inherit(&cTool);
-        cMemoryChecker.Initialise();
-        cMemoryChecker.EvaluatePedeNoise(10); // find pedestal + noise
-        cMemoryChecker.SetThreshold(-2.0);    // set threshold to 3 sigma away from pedestal
-        // cMemoryChecker.SetThreshold(-2.0);
-
-        CheckCbcNeighbors cCheckCbcNeighbors;
-        cCheckCbcNeighbors.Inherit(&cTool);
-        cCheckCbcNeighbors.Initialise();
-
-        cCheckCbcNeighbors.TestCbcNeighbors();
-
-        /*
-        for(uint8_t iChip=0; iChip < NCHIPS_OT; iChip++){
-            if(iChip == 7) continue;
-            cCheckCbcNeighbors.SetChip1(iChip);
-            cCheckCbcNeighbors.SetChip2(iChip+1);
-
-            cCheckCbcNeighbors.ConfigureSharedChannels();
-            cCheckCbcNeighbors.CheckStubs();
-
-            LOG(INFO) << "Stubs on hybrid 0 between chip " << +iChip << " and " << +(iChip+1) << " " << +cCheckCbcNeighbors.getNStubs(0, iChip);
-            LOG(INFO) << "Stubs on hybrid 1 between chip " << +iChip << " and " << +(iChip+1) << " " << +cCheckCbcNeighbors.getNStubs(1, iChip);
-        }   */
-        t.stop();
-        t.show("Time to check stubs on shared channels");
-    }
-
     if(cmd.foundOption("read"))
     {
         std::string   cRawFileName = cmd.foundOption("read") ? cmd.optionValue("read") : "";

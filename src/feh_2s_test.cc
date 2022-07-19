@@ -733,29 +733,6 @@ int main(int argc, char* argv[])
         cTool.setSameDac("VCth", cThreshold);
         LOG(INFO) << BOLDBLUE << "Threshold for next steps is set to " << +cThreshold << " DAC units." << RESET;
     }
-    
-    if(!cmd.foundOption("read") && cmd.foundOption("checkSharedStubs"))
-    {
-        LOG(INFO) << BOLDMAGENTA << "Checking stubs across CBC neighbors" << RESET;
-        t.start();
-
-        MemoryCheck2S cMemoryChecker;
-        cMemoryChecker.Inherit(&cTool);
-        cMemoryChecker.Initialise();
-        cMemoryChecker.EvaluatePedeNoise(10); // find pedestal + noise
-        cMemoryChecker.SetThreshold(-2.0);    // set threshold to 3 sigma away from pedestal
-
-        CheckCbcNeighbors cCheckCbcNeighbors;
-        cCheckCbcNeighbors.Inherit(&cTool);
-        cCheckCbcNeighbors.Initialise();
-
-        cCheckCbcNeighbors.TestCbcNeighbors();
-
-
-        t.stop();
-        t.show("Time to check stubs on shared channels");
-    }
-
 
     // Inject charge with antenna circuit and look for opens
     if(cFindOpens)
