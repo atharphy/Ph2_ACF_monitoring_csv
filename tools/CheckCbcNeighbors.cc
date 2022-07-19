@@ -109,11 +109,6 @@ bool CheckCbcNeighbors::TestCbcNeighbors()
     return allPass;
 }
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> ba5da0a8e95dd81b0045e658793696e02d0b0899
 bool CheckCbcNeighbors::CheckStubs(uint8_t hybridId, uint8_t chipId)
 {
     uint32_t eventsWStubs = 0;
