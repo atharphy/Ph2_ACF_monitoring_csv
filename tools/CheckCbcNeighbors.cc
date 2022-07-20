@@ -105,7 +105,8 @@ bool CheckCbcNeighbors::TestCbcNeighbors()
             }
         }
     }
-    LOG(INFO) << BOLDGREEN << "CheckCbcNeighbors " << (allPass ? "PASSED " : "FAILED");
+    if(allPass) LOG(INFO) << BOLDGREEN << "CheckCbcNeighbors PASSED" << RESET;
+    else LOG(INFO) << BOLDRED << "CheckCbcNeighbors FAILED" << RESET;
     return allPass;
 }
 
