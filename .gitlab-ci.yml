@@ -58,7 +58,10 @@ include:
     - make -j4
   artifacts:
     paths:
-      - $CI_PROJECT_DIR/
+      - $CI_PROJECT_DIR/setup.sh
+      - $CI_PROJECT_DIR/bin/ot_module_test
+      - $CI_PROJECT_DIR/bin/CMSITminiDAQ
+      - $CI_PROJECT_DIR/settings
     expire_in: 1 week
 
 # Stand-alone application, without data streaming
@@ -155,7 +158,6 @@ run:IT:
     - cp ci_tools/Results/Run000000_PixelAlive.root .
     - cp ci_tools/Results/Run000001_ThrEqualization.root .
     - cp ci_tools/Results/Run000002_SCurve.root .
-    - gdb bin/ot_module_test core.* -ex where --batch > coreAnalysisRD53.log
     - cp coreAnalysisRD53.log .
   artifacts:
     paths:
