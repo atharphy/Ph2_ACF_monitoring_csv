@@ -202,17 +202,17 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 if(cWithLpGBT)
                 {
                     LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for lpGBT" << RESET;
-                    flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap, cFirstBoard->isOptical(), cFirstBoard->ifUseCPB());
+                    flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap, cFirstOpticalGroup->flpGBT->isOptical());
 // check link to external interface
 #ifdef __TCUSB__
 #if defined(__SEH_USB__) || defined(__ROH_USB__)
-                    if(flpGBTInterface->getExternalController() != nullptr)
+                    if(flpGBTInterface->GetExternalController() != nullptr)
                     {
-                        LOG(INFO) << BOLDBLUE << "TC interface should be initialized... type is " << flpGBTInterface->getExternalController()->getName() << RESET;
+                        LOG(INFO) << BOLDBLUE << "TC interface should be initialized... type is " << flpGBTInterface->GetExternalController()->getName() << RESET;
 #ifdef __ROH_USB__
                         // check reading of ADC from PSROH TC
                         float cOutput;
-                        flpGBTInterface->getExternalController()->getInterface().adc_get(TC_PSROH::measurement::_1V25_REF, cOutput);
+                        flpGBTInterface->GetExternalController()->getInterface().adc_get(TC_PSROH::measurement::_1V25_REF, cOutput);
                         LOG(INFO) << BOLDBLUE << "Checking communication with test card by reading 1V25_Ref : " << cOutput << RESET;
 #endif
                     }

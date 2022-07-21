@@ -211,8 +211,6 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
         if(static_cast<std::string>(pOpticalGroupNode.name()) == "OpticalGroup")
         {
             cBeBoard->setOptical(false);
-            cBeBoard->setUseOpticalLink(false);
-            cBeBoard->setUseCPB(false);
             this->parseOpticalGroupContainer(pOpticalGroupNode, cBeBoard, os);
         }
     }
@@ -227,24 +225,13 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
     uint32_t      cFMCId          = pOpticalGroupNode.attribute("FMCId").as_int();
     uint32_t      cBoardId        = pBoard->getId();
     OpticalGroup* theOpticalGroup = pBoard->addOpticalGroupContainer(cOpticalGroupId, new OpticalGroup(cBoardId, cFMCId, cOpticalGroupId));
-
-    bool cWithOptical = false;
-    for(pugi::xml_node theChild: pOpticalGroupNode.children())
-    {
-        if(static_cast<std::string>(theChild.name()) == "lpGBT_Interface") { cWithOptical = convertAnyInt(theChild.attribute("useOpticalLink").value()); }
-    }
-    pBoard->setOptical(cWithOptical);
-    theOpticalGroup->setOptical(cWithOptical);
+    theOpticalGroup->setOptical(false);
 
     uint8_t cLinkReset = convertAnyInt(pOpticalGroupNode.attribute("reset").value());
     theOpticalGroup->setReset(cLinkReset);
     for(pugi::xml_node theChild: pOpticalGroupNode.children())
     {
         if(static_cast<std::string>(theChild.name()) == "Hybrid") { this->parseHybridContainer(theChild, theOpticalGroup, os, pBoard); }
-        else if(static_cast<std::string>(theChild.name()) == "lpGBT_Interface")
-        {
-            pBoard->setUseCPB(convertAnyInt(theChild.attribute("useCPB").value()));
-        }
         else if(static_cast<std::string>(theChild.name()) == "lpGBT_Files")
         {
             cFilePath = expandEnvironmentVariables(theChild.attribute("path").value());
@@ -256,9 +243,12 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             os << BOLDBLUE << "|\t|----" << theChild.name() << " --> File: " << BOLDYELLOW << fileName << RESET << std::endl;
             uint8_t cChipId      = theChild.attribute("Id").as_int();
             uint8_t cChipVersion = theChild.attribute("version").as_int();
+            bool    cIsOptical   = theChild.attribute("optical").as_int();
             lpGBT*  thelpGBT     = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, cChipId, fileName);
             thelpGBT->setVersion(cChipVersion);
-            thelpGBT->setOptical(pBoard->isOptical());
+            thelpGBT->setOptical(cIsOptical);
+            theOpticalGroup->setOptical(cIsOptical);
+            pBoard->setOptical(cIsOptical);
             theOpticalGroup->addlpGBT(thelpGBT);
 
             // ####################################################

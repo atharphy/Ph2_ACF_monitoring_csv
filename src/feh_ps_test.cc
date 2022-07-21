@@ -38,6 +38,7 @@ INITIALIZE_EASYLOGGINGPP
 
 int main(int argc, char* argv[])
 {
+#if defined(__TCUSB__) && defined(__USE_ROOT__)
     // configure the logger
     el::Configurations conf(std::string(std::getenv("PH2ACF_BASE_DIR")) + "/settings/logger.conf");
     el::Loggers::reconfigureAllLoggers(conf);
@@ -172,7 +173,7 @@ int main(int argc, char* argv[])
     // cHybridTester.CheckHybridCurrents();
     // check voltage on PS FEH
     // cHybridTester.CheckHybridVoltages();
-    if(cSSAPair.empty()) { cHybridTester.RunHybridETest(); }
+    cHybridTester.RunHybridETest();
     LOG(INFO) << outp.str() << RESET;
     // select CIC readout
     // cHybridTester.SelectCIC(true);
@@ -193,7 +194,7 @@ int main(int argc, char* argv[])
     // cHybridTester.ReadSSABias("MonitorVoltageBias");
     // cHybridTester.ReadSSABias("MonitorCurrentBias");
 
-    if(cSSAPair.empty()) { cHybridTester.CalibrateSSABias(); }
+    // if(cSSAPair.empty()) { cHybridTester.CalibrateSSABias(); }
 
     if(cGui)
     {
@@ -230,33 +231,51 @@ int main(int argc, char* argv[])
     {
         cHybridTester.SelectCIC(true);
 
+        // align back-end
+        BackEndAlignment cBackEndAligner;
+        cBackEndAligner.Inherit(&cHybridTester);
+        // cBackEndAligner.Start(0);
+        // cBackEndAligner.waitForRunToBeCompleted();
+        // // reset all chip and board registers
+        // // to what they were before this tool was called
+        // cBackEndAligner.Reset();
+
         bool    cAligned = false;
         double  cAlignedDouble;
         uint8_t cPhaseAlignmentPattern = 0xAA;
         for(int i = 0; i < 3; i++)
         {
-            // Check if data player is running
-            if(cDPInterfacer.IsRunning(cInterface))
+            for(int i = 0; i < 10; i++)
             {
-                LOG(INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
-                cDPInterfacer.Stop(cInterface);
+                // Check if data player is running
+                if(cDPInterfacer.IsRunning(cInterface))
+                {
+                    LOG(INFO) << BOLDBLUE << " STATUS : Data Player is running and will be stopped " << RESET;
+                    cDPInterfacer.Stop(cInterface);
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                // Configure and Start DataPlayer to send phase alignment pattern
+                cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                cDPInterfacer.Start(cInterface, 0);
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                if(cDPInterfacer.IsRunning(cInterface, 0))
+                {
+                    LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET;
+                    break;
+                }
+                else
+                    LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
             }
-
-            // Configure and Start DataPlayer
-            // to send phase alignment pattern
-            cDPInterfacer.Configure(cInterface, cPhaseAlignmentPattern);
-            cDPInterfacer.Start(cInterface);
-            // cDPInterfacer.StartSyncPlaying(cInterface);
-            if(cDPInterfacer.IsRunning(cInterface)) { LOG(INFO) << BOLDBLUE << "FE data player " << BOLDGREEN << " running correctly!" << RESET; }
-            else
-                LOG(INFO) << BOLDRED << "Could not start FE data player" << RESET;
 
             // align CIC inputs
             CicFEAlignment cCicAligner;
             cCicAligner.Inherit(&cHybridTester);
+            cCicAligner.Initialise();
 
             LOG(INFO) << "Phase alignment MPA" << RESET;
-            cAligned       = cCicAligner.PhaseAlignment(100);
+            // cAligned       = cCicAligner.PhaseAlignment(100);
+            cAligned       = cCicAligner.AlignInputs();
             cAlignedDouble = cAligned ? 1.0 : 0.0;
 #if defined(__USE_ROOT__)
             cHybridTester.fillSummaryTree(Form("MPA Alignment attemp %d", i + 1), cAlignedDouble);
@@ -273,11 +292,21 @@ int main(int argc, char* argv[])
             if(cAligned) break;
         }
 
+        LOG(INFO) << "Phase Aligned CIC Inputs" << RESET;
+        // align back-end
+        cBackEndAligner.Start(0);
+        cBackEndAligner.waitForRunToBeCompleted();
+        // // reset all chip and board registers
+        // // to what they were before this tool was called
+        cBackEndAligner.Reset();
+
         // and then re-align back-end just because
-        cHybridTester.AlignCICout(cPhaseAlignmentPattern);
+        // cHybridTester.AlignCICout(cPhaseAlignmentPattern);
 
         cDPInterfacer.Stop(cInterface);
         cDPInterfacer.CheckNPatterns(cInterface);
+
+        LOG(INFO) << "Alignment of CIC inputs and outputs is done" << RESET;
     }
 
     if(cmd.foundOption("checkAsync"))
@@ -288,45 +317,42 @@ int main(int argc, char* argv[])
         // cDataChecker.resetPointers();
     }
 
-#if defined(__ANTENNA__)
-    OpenFinder cOpenFinder;
-    cOpenFinder.Inherit(&cHybridTester);
-    std::string antennaValue = (cmd.foundOption("antennaValue")) ? cmd.optionValue("antennaValue") : "512";
-    cOpenFinder.SelectAntennaPosition("Disable", 512);
+    // #if defined(__ANTENNA__)
+    // OpenFinder cOpenFinder;
+    // cOpenFinder.Inherit(&cHybridTester);
+    // std::string antennaValue = (cmd.foundOption("antennaValue")) ? cmd.optionValue("antennaValue") : "512";
+    // cOpenFinder.SelectAntennaPosition("Disable", 512);
     // cOpenFinder.SelectAntennaPosition("Enable", 550 );
-    if(cmd.foundOption("antennaValue"))
-    {
-        cOpenFinder.SelectAntennaPosition("Enable", std::stoi(antennaValue));
-        LOG(INFO) << "Setting antenna" << RESET;
-    }
-#endif
+    // cOpenFinder.SelectAntennaPosition("EvenChannels", 650);
+    // LOG(INFO) << "Setting antenna" << RESET;
+    // #endif
 
     // measure noise on FE chips before calibration
-    if(cmd.foundOption("measurePedeNoise") && cmd.foundOption("antennaValue"))
-    {
-        if(cGui)
-        {
-            gui::status("Measuring noise on front-end chips before calibration");
-            gui::message("");
-            gui::progress(3.5 / 10.0);
-        }
-        t.start();
-        // if this is true, I need to create an object of type PedeNoise from the members of Calibration
-        // tool provides an Inherit(Tool* pTool) for this purpose
-        PedeNoise cPedeNoise;
-        cPedeNoise.Inherit(&cHybridTester);
-        // second parameter disables stub logic on CBC3
-        cPedeNoise.Initialise(true, true); // canvases etc. for fast calibration
-        cPedeNoise.measureNoise();
-        cPedeNoise.writeObjects();
-        cPedeNoise.dumpConfigFiles();
-        cPedeNoise.Reset();
-        t.stop();
-        t.show("Time to Scan Pedestals and Noise");
-        if(cGui) { gui::message("Noise measured"); }
+    // if(cmd.foundOption("measurePedeNoise") && cmd.foundOption("antennaValue"))
+    // {
+    //     if(cGui)
+    //     {
+    //         gui::status("Measuring noise on front-end chips before calibration");
+    //         gui::message("");
+    //         gui::progress(3.5 / 10.0);
+    //     }
+    //     t.start();
+    //     // if this is true, I need to create an object of type PedeNoise from the members of Calibration
+    //     // tool provides an Inherit(Tool* pTool) for this purpose
+    //     PedeNoise cPedeNoise;
+    //     cPedeNoise.Inherit(&cHybridTester);
+    //     // second parameter disables stub logic on CBC3
+    //     cPedeNoise.Initialise(true, true); // canvases etc. for fast calibration
+    //     cPedeNoise.measureNoise();
+    //     cPedeNoise.writeObjects();
+    //     cPedeNoise.dumpConfigFiles();
+    //     cPedeNoise.Reset();
+    //     t.stop();
+    //     t.show("Time to Scan Pedestals and Noise");
+    //     if(cGui) { gui::message("Noise measured"); }
 
-        // cOpenFinder.SelectAntennaPosition("Disable", 512);
-    }
+    //     // cOpenFinder.SelectAntennaPosition("Disable", 512);
+    // }
 
     // cHybridTester.SetTrim("GAINTRIMMING",7);
     // // equalize thresholds on readout chips
@@ -388,34 +414,14 @@ int main(int argc, char* argv[])
     }
 
     if(cmd.foundOption("checkCountersRead")) { cHybridTester.CheckCounters(); }
-    if(cmd.foundOption("findShorts"))
-    {
-        if(cGui)
-        {
-            gui::status("Running short finding procedure...");
-            gui::message("");
-            gui::progress(5 / 10.0);
-        }
-        ShortFinder cShortFinder;
-        cShortFinder.Inherit(&cHybridTester);
-        cShortFinder.Initialise();
-        cShortFinder.FindShorts();
 
-        if(cGui)
-        {
-            gui::message("Short finding done");
-            gui::progress(5.5 / 10.0);
-        }
-    }
-
-#if defined(__ANTENNA__)
     if(cmd.foundOption("findOpens"))
     {
         if(cGui)
         {
             gui::status("Running open finding procedure...");
             gui::message("");
-            gui::progress(6 / 10.0);
+            gui::progress(5 / 10.0);
         }
 
         OpenFinder cOpenFinder;
@@ -425,11 +431,29 @@ int main(int argc, char* argv[])
         if(cGui)
         {
             gui::message("Open finding done");
+            gui::progress(6 / 10.0);
+        }
+    }
+
+    if(cmd.foundOption("findShorts"))
+    {
+        if(cGui)
+        {
+            gui::status("Running short finding procedure...");
+            gui::message("");
+            gui::progress(6.5 / 10.0);
+        }
+        ShortFinder cShortFinder;
+        cShortFinder.Inherit(&cHybridTester);
+        cShortFinder.Initialise();
+        cShortFinder.FindShorts();
+
+        if(cGui)
+        {
+            gui::message("Short finding done");
             gui::progress(7 / 10.0);
         }
     }
-#endif
-
     // test MPA outputs
     // test MPA outputs
     if(cmd.foundOption("mpaTest"))
@@ -495,7 +519,15 @@ int main(int argc, char* argv[])
             {
                 cHybridTester.SSAPairSelect(cSSAPair);
                 cBackendAlignment.SetEnabledChips(cSSAPair);
-                for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
+                bool cAligned;
+                for(auto cBoard: *cHybridTester.fDetectorContainer)
+                {
+                    for(int i = 0; i < 3; i++)
+                    {
+                        cAligned = cBackendAlignment.PSAlignment(cBoard);
+                        if(cAligned) break;
+                    }
+                }
                 cHybridTester.SSATestStubOutput(cSSAPair);
                 cHybridTester.SSATestL1Output(cSSAPair);
                 cHybridTester.SSATestLateralCommunication(cSSAPair);
@@ -503,14 +535,39 @@ int main(int argc, char* argv[])
             else
             {
                 std::string cCurrentSSAPair;
-                for(int i = 0; i < 7; i += 2)
+                // for(int i = 0; i < 7; i += 2)
+                // {
+                //     LOG(INFO) << "Starting SSA outputs test" << RESET;
+                //     cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
+                //     cHybridTester.SSAPairSelect(cCurrentSSAPair);
+                //     cBackendAlignment.SetEnabledChips(cCurrentSSAPair);
+                //     for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
+                //     cHybridTester.SSATestStubOutput(cCurrentSSAPair);
+                //     cHybridTester.SSATestL1Output(cCurrentSSAPair);
+                // }
+
+                for(int i = 0; i < 7; i++)
                 {
+                    // LOG(INFO) << "Starting inter-SSA communication test" << RESET;
                     cCurrentSSAPair = std::to_string(i) + std::to_string(i + 1);
                     cHybridTester.SSAPairSelect(cCurrentSSAPair);
                     cBackendAlignment.SetEnabledChips(cCurrentSSAPair);
-                    for(auto cBoard: *cHybridTester.fDetectorContainer) { cBackendAlignment.PSAlignment(cBoard); }
-                    // cHybridTester.SSATestStubOutput(cCurrentSSAPair);
-                    // cHybridTester.SSATestL1Output(cCurrentSSAPair);
+                    bool cAligned;
+                    for(auto cBoard: *cHybridTester.fDetectorContainer)
+                    {
+                        for(int i = 0; i < 3; i++)
+                        {
+                            cAligned = cBackendAlignment.PSAlignment(cBoard);
+                            if(cAligned) break;
+                        }
+                    }
+                    if(i % 2 == 0)
+                    {
+                        LOG(INFO) << "Starting SSA outputs tests" << RESET;
+                        cHybridTester.SSATestStubOutput(cCurrentSSAPair);
+                        cHybridTester.SSATestL1Output(cCurrentSSAPair);
+                    }
+                    LOG(INFO) << "Starting inter-SSA communication test" << RESET;
                     cHybridTester.SSATestLateralCommunication(cCurrentSSAPair);
                 }
 
@@ -577,4 +634,5 @@ int main(int argc, char* argv[])
 
     if(!batchMode) cApp.Run();
     return 0;
+#endif
 }
