@@ -80,8 +80,8 @@ export EUDAQLIB=$EUDAQDIR/lib
 ############
 # Pybind11 #
 ############
-export PYBIND11=$PH2ACF_BASE_DIR/../pybind11/
-export PYBIND11INCLUDE=$PYBIND11/include
+#export PYBIND11=$PH2ACF_BASE_DIR/../pybind11-2.9.2/
+#export PYBIND11INCLUDE=$PYBIND11/include
 export PYTHONINCLUDE=/usr/include/python3.6m/
 
 ##########
