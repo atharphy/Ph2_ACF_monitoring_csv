@@ -377,7 +377,7 @@ void lpGBTInterface::ResetRxDll(Chip* pChip, const std::vector<uint8_t>& pGroups
     uint8_t     cValue   = 0x00;
     for(auto cGroup: pGroups) { cValue = cValue | (1 << cGroup); }
     this->WriteChipReg(pChip, "RST1", cValue);
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
     this->WriteChipReg(pChip, "RST1", 0x00);
 }
 
@@ -639,7 +639,7 @@ void lpGBTInterface::ConfigureCurrentDAC(Chip* pChip, const std::vector<std::str
 void lpGBTInterface::ConfigureInternalMonitoring(Chip* pChip, uint8_t pEnable)
 {
     WriteChipReg(pChip, "ADCMon", (pEnable == 1) ? 0x1F : 0x00);
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
 }
 
 float lpGBTInterface::GetInternalTemperature(Chip* pChip)
@@ -647,7 +647,7 @@ float lpGBTInterface::GetInternalTemperature(Chip* pChip)
     auto cVal = ReadChipReg(pChip, "ADCMon");
     // Enable reset on temperature sensor
     WriteChipReg(pChip, "ADCMon", (1 << 4 | cVal));
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
     // Disable reset on temperature sensor
     WriteChipReg(pChip, "ADCMon", (0 << 4 | cVal));
 
@@ -706,7 +706,7 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
 
     // Enable Internal VREF
     WriteChipReg(pChip, "VREFCNTR", 1 << 7 | 0x00);
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
 
     // Start ADC conversion
     lpGBTInterface::ConfigureADC(pChip, pGain, true, true);
@@ -720,8 +720,8 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
 
         cSuccess = lpGBTInterface::IsReadADCDone(pChip);
         cIter++;
-    } while((cIter < RD53Shared::MAXATTEMPTS) && (cSuccess == false));
-    if(cIter == RD53Shared::MAXATTEMPTS) throw std::runtime_error(std::string("ADC conversion timed out"));
+    } while((cIter < lpGBTconstants::MAXATTEMPTS) && (cSuccess == false));
+    if(cIter == lpGBTconstants::MAXATTEMPTS) throw std::runtime_error(std::string("ADC conversion timed out"));
 
     // Read ADC value
     uint8_t cADCvalue1 = ReadChipReg(pChip, "ADCStatusH") & 0x3;
@@ -798,13 +798,13 @@ double lpGBTInterface::GetBERTResult(Chip* pChip)
 {
     lpGBTInterface::StartBERT(pChip, false); // Stop
     lpGBTInterface::StartBERT(pChip, true);  // Start
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
 
     // Wait for BERT to end
     while(lpGBTInterface::IsBERTDone(pChip) == false)
     {
         LOG(INFO) << BOLDBLUE << "\t--> BERT still running ... " << RESET;
-        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+        std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
     }
 
     // Throw error if empty data
@@ -867,7 +867,7 @@ double lpGBTInterface::BERtestCL(Chip* pChip, uint8_t pGroup, uint8_t pChannel, 
     // #########
     lpGBTInterface::StartBERT(pChip, false); // Stop
     lpGBTInterface::StartBERT(pChip, true);  // Start
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
 
     LOG(INFO) << BOLDGREEN << "===== BER run starting =====" << std::fixed << std::setprecision(0) << RESET;
     int      idx = 1;
@@ -922,7 +922,7 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
         time2run = frames_or_time;
     else
         time2run = frames_or_time / fps;
-    uint32_t BERTMeasTime = (log2(time2run * mainClock) - 5) / 2.;
+    size_t BERTMeasTime   = (log2(time2run * mainClock) - 5) / 2.;
     frames2run            = fBERTMeasTimeMap[BERTMeasTime];
 
     // Configure number of printouts and calculate the frequency of printouts
@@ -939,7 +939,7 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     // #########
     lpGBTInterface::StartBERT(pChip, false); // Stop
     lpGBTInterface::StartBERT(pChip, true);  // Start
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
 
     LOG(INFO) << BOLDGREEN << "===== BER run starting =====" << std::fixed << std::setprecision(0) << RESET;
     int      idx = 1;
@@ -1000,7 +1000,7 @@ void lpGBTInterface::StopPRBSpattern(Chip* pChip)
 void lpGBTInterface::ConfigureEOM(Chip* pChip, uint8_t pEndOfCountSelect, bool pByPassPhaseInterpolator, bool pEnableEOM)
 {
     WriteChipReg(pChip, "EOMConfigH", pEndOfCountSelect << 4 | pByPassPhaseInterpolator << 2 | pEnableEOM << 0);
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
 }
 
 void lpGBTInterface::StartEOM(Chip* pChip, bool pStartEOM)
@@ -1090,9 +1090,9 @@ bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, u
     {
         LOG(DEBUG) << GREEN << "Waiting for I2C Write transaction to finisih" << RESET;
         cIter++;
-    } while(cIter < RD53Shared::MAXATTEMPTS && !IsI2CSuccess(pChip, pMaster));
+    } while(cIter < lpGBTconstants::MAXATTEMPTS && !IsI2CSuccess(pChip, pMaster));
 
-    if(cIter == RD53Shared::MAXATTEMPTS)
+    if(cIter == lpGBTconstants::MAXATTEMPTS)
     {
         LOG(INFO) << BOLDRED << "I2C Write transaction FAILED" << RESET;
 #if defined(__TCUSB__)
@@ -1130,8 +1130,8 @@ uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster
     {
         LOG(DEBUG) << GREEN << "Waiting for I2C Read transaction to finisih" << RESET;
         cIter++;
-    } while(cIter < RD53Shared::MAXATTEMPTS && !lpGBTInterface::IsI2CSuccess(pChip, pMaster));
-    if(cIter == RD53Shared::MAXATTEMPTS)
+    } while(cIter < lpGBTconstants::MAXATTEMPTS && !lpGBTInterface::IsI2CSuccess(pChip, pMaster));
+    if(cIter == lpGBTconstants::MAXATTEMPTS)
     {
         LOG(INFO) << BOLDRED << "I2C Read Transaction FAILED" << RESET;
 #if defined(__TCUSB__)

@@ -12,7 +12,6 @@
 #define lpGBTInterface_H
 
 #include "../HWDescription/lpGBT.h"
-#include "../Utils/RD53Shared.h"
 #include "ChipInterface.h"
 #include "ReadoutChipInterface.h"
 
@@ -25,14 +24,16 @@
 // ##########################
 namespace lpGBTconstants
 {
-const uint8_t PATTERN_PRBS      = 0x1; // Start PRBS pattern
-const uint8_t PATTERN_NORMAL    = 0x0; // Start normal-mode pattern
-const uint8_t PATTERN_CONST     = 0x4; // Constant pattern set by DP pattern
-const uint8_t PATTERN_CONST_INV = 0x5; // Inverted constant pattern
-const uint8_t fictitiousGroup   = 6;   // Fictitious group used when no need to speficy frontend chip
-const uint8_t fictitiousChannel = 0;   // Fictitious channel used when no need to speficy frontend chip
-const uint8_t rxPhaseTracking   = 2;   // Rx phase tracking mode [0 = no-tracking, 2 = automatic-tracking]
-const uint8_t SUPERDEEPSLEEP    = 10;  // [milliseconds]
+const uint8_t  PATTERN_PRBS      = 0x1; // Start PRBS pattern
+const uint8_t  PATTERN_NORMAL    = 0x0; // Start normal-mode pattern
+const uint8_t  PATTERN_CONST     = 0x4; // Constant pattern set by DP pattern
+const uint8_t  PATTERN_CONST_INV = 0x5; // Inverted constant pattern
+const uint8_t  fictitiousGroup   = 6;   // Fictitious group used when no need to speficy frontend chip
+const uint8_t  fictitiousChannel = 0;   // Fictitious channel used when no need to speficy frontend chip
+const uint8_t  rxPhaseTracking   = 2;   // Rx phase tracking mode [0 = no-tracking, 2 = automatic-tracking]
+const uint8_t  SUPERDEEPSLEEP    = 10;  // [milliseconds]
+const uint32_t DEEPSLEEP         = 100000; // [microseconds]
+const uint8_t  MAXATTEMPTS       = 40;     // Maximum number of attempts
 } // namespace lpGBTconstants
 
 namespace Ph2_HwInterface
@@ -319,22 +320,22 @@ class lpGBTInterface : public ChipInterface
                                                                           {19, "READY"}}}};
 
     std::map<std::string, uint8_t> revertedPUSMStatusMap;
-    std::map<uint8_t, double>      fBERTMeasTimeMap = {{0, RD53Shared::setBits(5) + 1},
-                                                  {1, RD53Shared::setBits(7) + 1},
-                                                  {2, RD53Shared::setBits(9) + 1},
-                                                  {3, RD53Shared::setBits(11) + 1},
-                                                  {4, RD53Shared::setBits(13) + 1},
-                                                  {5, RD53Shared::setBits(15) + 1},
-                                                  {6, RD53Shared::setBits(17) + 1},
-                                                  {7, RD53Shared::setBits(19) + 1},
-                                                  {8, RD53Shared::setBits(21) + 1},
-                                                  {9, RD53Shared::setBits(23) + 1},
-                                                  {10, RD53Shared::setBits(25) + 1},
-                                                  {11, RD53Shared::setBits(27) + 1},
-                                                  {12, RD53Shared::setBits(29) + 1},
-                                                  {13, RD53Shared::setBits(31) + 1},
-                                                  {14, RD53Shared::setBits(33) + 1},
-                                                  {15, RD53Shared::setBits(35) + 1}};
+    std::map<uint8_t, size_t>      fBERTMeasTimeMap = {{0, 1UL << 5},
+                                                  {1, 1UL << 7},
+                                                  {2, 1UL << 9},
+                                                  {3, 1UL << 11},
+                                                  {4, 1UL << 13},
+                                                  {5, 1UL << 15},
+                                                  {6, 1UL << 17},
+                                                  {7, 1UL << 19},
+                                                  {8, 1UL << 21},
+                                                  {9, 1UL << 23},
+                                                  {10, 1UL << 25},
+                                                  {11, 1UL << 27},
+                                                  {12, 1UL << 29},
+                                                  {13, 1UL << 31},
+                                                  {14, 1UL << 33},
+                                                  {15, 1UL < 35}};
 
     std::map<uint8_t, std::string> fEOMStatusMap = {{0, "smIdle"}, {1, "smResetCounters"}, {2, "smCount"}, {3, "smEndOfCount"}};
 
