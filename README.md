@@ -357,7 +357,7 @@ Follow these instructions to install and compile the libraries:
         $> source setup.sh
         $> mkdir build 
         $> cd build 
-        $> cmake ..
+        $> cmake .. # add -DCMAKE_BUILD_TYPE=Debug if you plan to use gdb for debugging
 
 2. Do a `make -jN` in the build/ directory or alternatively do `make -C build/ -jN` in the Ph2_ACF root directory.
 
