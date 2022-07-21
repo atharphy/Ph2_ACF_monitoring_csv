@@ -348,8 +348,8 @@ EPRXEq32Control           0x0ee         0x00              0x00                  
 EPRXEq54Control           0x0ef         0x00              0x00                          8
 EPRXEq6Control            0x0f0         0x00              0x00                          8
 EPRXDllConfig             0x0f1         0x00              0x00                          8
-EPRXLockFilter            0x0f2         0x00              0x00                          8
-EPRXLockFilter2           0x0f3         0x00              0x00                          8
+EPRXLOCKFILTER            0x0f2         0x00              0x00                          8
+EPRXLOCKFILTER2           0x0f3         0x00              0x00                          8
 
 
 *-------------------------------------------------------------------------------------------------------

@@ -612,7 +612,8 @@ void DPInterface::Start(BeBoardFWInterface* pInterface, uint8_t pType)
 bool DPInterface::IsRunning(BeBoardFWInterface* pInterface, uint8_t pType)
 {
     std::string cRegName = (pType == 0) ? "fc7_daq_stat.physical_interface_block.fe_data_player.stat_feh_data_player" : "fc7_daq_stat.physical_interface_block.fe_data_player.stat_roh_data_player";
-    fEmulatorRunning     = (pInterface->ReadReg(cRegName) == 1);
+    // std::string cRegName = "fc7_daq_stat.physical_interface_block.fe_data_player.stat_roh_data_player";
+    fEmulatorRunning = (pInterface->ReadReg(cRegName) == 1);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     return fEmulatorRunning;
 }

@@ -80,8 +80,8 @@ export EUDAQLIB=$EUDAQDIR/lib
 ############
 # Pybind11 #
 ############
-export PYBIND11=$PH2ACF_BASE_DIR/../pybind11/
-export PYBIND11INCLUDE=$PYBIND11/include
+#export PYBIND11=$PH2ACF_BASE_DIR/../pybind11-2.9.2/
+#export PYBIND11INCLUDE=$PYBIND11/include
 export PYTHONINCLUDE=/usr/include/python3.6m/
 
 ##########
@@ -134,8 +134,6 @@ export CompileWithTCUSB=false
 export UseTCUSBforROH=false
 export UseTCUSBTcpServer=false
 
-# Compile minimal executable to avoid too space for CI
-export CompileMinExecutable=false
 
 # Clang-format command
 if command -v clang-format &> /dev/null; then
@@ -153,7 +151,6 @@ if [[ $1 == "ci" ]]; then
     export CompileWithTCUSB=false
     export UseTCUSBforROH=false
     export UseTCUSBTcpServer=false
-    export CompileMinExecutable=true
 fi
 
 echo "=== DONE ==="
