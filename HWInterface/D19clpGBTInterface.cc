@@ -286,6 +286,7 @@ uint8_t D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
         {
             LOG(INFO) << BOLDGREEN << "Group#" << +cGroup << " Channel#" << +cChannel << "...\t\t..Most frequently found phase is " << +cUniquePhases[cIndxBstPhase] << RESET;
             SetPhaseTap(pChip, cGroup, cChannel, cUniquePhases[cIndxBstPhase]);
+            cOptimalTaps.push_back(cUniquePhases[cIndxBstPhase]);
         }
         else
         {
