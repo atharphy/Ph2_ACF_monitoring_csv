@@ -305,6 +305,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 fReadoutChipInterface = new RD53AInterface(fBeBoardFWMap);
             else
                 fReadoutChipInterface = new RD53BInterface(fBeBoardFWMap);
+            RD53Shared::firstChip = static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
         }
     } // if there is something to create an interface for
 
@@ -417,8 +418,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     bool   resetTDAC   = SystemController::findValueInSettings<double>("ResetTDAC");
     LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
 
-    RD53Shared::firstChip = static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
-    auto& theBeBoardFW    = this->fBeBoardFWMap[pBoard->getId()];
+    auto& theBeBoardFW = this->fBeBoardFWMap[pBoard->getId()];
 
     static_cast<RD53FWInterface*>(theBeBoardFW)
         ->SetAndConfigureFastCommands(pBoard, nTRIGxEvent, injType, injLatency, nClkDelays, RD53Shared::firstChip->getMajorityFE(colStart, colStart) == &RD53A::SYNC);
