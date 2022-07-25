@@ -68,20 +68,14 @@ A golden firmware can be downloaded from the [cms-tracker-daq webpage](https://c
 A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/cmstkph2-IT/d19c-firmware/blob/master/doc/IT-uDTC_fw_manual_v1.0.pdf)
 
 **IT-DAQ setup and run:**
-1. `sudo yum install pugixml-devel` (if necesary run `sudo yum install epel-release` before point 1.)
-2. Install: `boost` by running `sudo yum install boost-devel`, `CERN ROOT` from https://root.cern.ch, and `IPbus` from http://ipbus.web.cern.ch/ipbus (either using `sudo yum` or from source)
-3. `sudo yum -y install gcc-toolset-10-gcc`
-4. `sudo yum install -y python3-devel`
-5. Install `protobuf` and `pybind11` as described in the common (IT and OT) section below
-6. Checkout the DAQ code from git: `git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git` (**N.B.** to syncrhonize only the submodule: `git submodule sync; git submodule update --init --recursive --remote`)
-7. `cd Ph2_ACF; source setup.sh; mkdir myBuild; cd myBuild; cmake ..; make -j4; cd ..`
-8. `mkdir choose_a_name`
-9. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
-10. `cp settings/CMSIT.xml choose_a_name`
-11. `cd choose_a_name`
-12. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
-13. Run the command: `CMSITminiDAQ -f CMSIT.xml -r` to reset the FC7 (just once)
-14. Run the command: `CMSITminiDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSITminiDAQ --help` for help)
+1. Folow instructions below to install all needed software packages (like pugixml, boost, python. etc ...)
+2. `mkdir choose_a_name`
+3. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
+4. `cp settings/CMSIT.xml choose_a_name`
+5. `cd choose_a_name`
+6. Edit the file `CMSIT.xml` in case you want to change some parameters needed for the calibrations or for configuring the chip
+7. Run the command: `CMSITminiDAQ -f CMSIT.xml -r` to reset the FC7 (just once)
+8. Run the command: `CMSITminiDAQ -f CMSIT.xml -c name_of_the_calibration` (or `CMSITminiDAQ --help` for help)
 
 **N.B.:** to speed up the `IPbus` communication you can implement [this](https://ipbus.web.cern.ch/doc/user/html/performance.html) trick
 
@@ -231,7 +225,6 @@ For more information on the firmware, please check the doc directory of https://
     ii. click the `Allow shared Runners` button
 
 
-
 ### Setup on CentOs8
 
 The following procedure will install (in order):
@@ -355,12 +348,12 @@ Follow these instructions to install and compile the libraries:
 
 1. Clone the GitHub repo and run cmake
   
-        $> git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git 
+        $> git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git # **N.B.** to syncrhonize only the submodule: `git submodule sync; git submodule update --init --recursive --remote`
         $> cd Ph2_ACF
         $> source setup.sh
         $> mkdir build 
         $> cd build 
-        $> cmake .. # add -DCMAKE_BUILD_TYPE=Debug if you plan to use gdb for debugging
+        $> cmake .. # add -DCMAKE_BUILD_TYPE=Debug if you plan to use gdb for debugging, if you yum-instanlled `cmake3`, you might need to tall it `cmake3 ..`
 
 2. Do a `make -jN` in the build/ directory or alternatively do `make -C build/ -jN` in the Ph2_ACF root directory.
 
