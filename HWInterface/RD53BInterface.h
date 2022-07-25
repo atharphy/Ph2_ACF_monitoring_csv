@@ -22,19 +22,18 @@ class RD53BInterface : public RD53Interface
   public:
     using RD53Interface::RD53Interface;
 
-    bool     ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override { return false; }
-    void     Reset(Ph2_HwDescription::ReadoutChip* pChip, const size_t resetType) override {}
-    void     ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip) override {}
+    bool     ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
+    void     Reset(Ph2_HwDescription::ReadoutChip* pChip, const size_t resetType) override;
+    void     ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip) override;
     void     InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard) override;
     void     InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1) override;
     void     PackWriteCommand(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = false) override;
     uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip) override;
 
   private:
-    void                                       InitRD53UplinkSpeed(Ph2_HwDescription::ReadoutChip* pChip) override;
-    std::vector<std::pair<uint16_t, uint16_t>> ReadRD53Reg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName) override { return {}; }
-    void                                       WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault) override{};
-    std::pair<std::string, uint16_t>           SplitSpecialRegisters(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) override { return {}; }
+    void                             InitRD53UplinkSpeed(Ph2_HwDescription::ReadoutChip* pChip) override;
+    void                             WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault) override;
+    std::pair<std::string, uint16_t> SplitSpecialRegisters(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) override;
 
     void SendGlobalPulse(Ph2_HwDescription::Chip* pChip, uint16_t route, uint16_t pulseDuration);
     void SendGlobalPulseBroadcast(const Ph2_HwDescription::BeBoard* pBoard, uint16_t route, uint16_t pulseDuration);

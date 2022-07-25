@@ -365,8 +365,8 @@ class D19cFWInterface : public BeBoardFWInterface
     // fast command generic block
     void ResetFCMDBram();
     void ConfigureFCMDBram(std::vector<uint8_t> pFastCommands);
-    void GetSFPParameter_L8(std::string parameter,int channel);
-    void GetSFPParameter_L12(std::string parameter,int channel);
+    void GetSFPParameter_L8(std::string parameter, int channel);
+    void GetSFPParameter_L12(std::string parameter, int channel);
 };
 } // namespace Ph2_HwInterface
 

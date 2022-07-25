@@ -160,20 +160,6 @@ void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     RD53AInterface::InitRD53UplinkSpeed(pChip);
 }
 
-std::vector<std::pair<uint16_t, uint16_t>> RD53AInterface::ReadRD53Reg(ReadoutChip* pChip, const std::string& regName)
-{
-    this->setBoard(pChip->getBeBoardId());
-
-    RD53Interface::SendCommand(pChip, RD53ACmd::RdReg{pChip->getId(), pChip->getRegItem(regName).fAddress});
-    auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip);
-
-    for(auto i = 0u; i < regReadback.size(); i++)
-        // Removing bit related to PIX_PORTAL register identification
-        regReadback[i].first = regReadback[i].first & static_cast<uint16_t>(RD53Shared::setBits(RD53Constants::NBIT_ADDR));
-
-    return regReadback;
-}
-
 uint16_t RD53AInterface::SetFieldValue(uint16_t regValue, uint16_t fieldValue, uint8_t start, uint8_t size)
 {
     uint16_t mask = ((1 << (size)) - 1) << start;
@@ -348,7 +334,7 @@ void RD53AInterface::Reset(Ph2_HwDescription::ReadoutChip* pChip, const size_t r
 // # resetType = 0 --> Reset Channel Synchronizer #
 // # resetType = 1 --> Reset Command Decoder      #
 // # resetType = 2 --> Reset Global Configuration #
-// # resetType = 3 --> Reset Monitor Data         #
+// # resetType = 3 --> Reset Service Data         #
 // # resetType = 4 --> Reset Aurora               #
 // # resetType = 5 --> Reset Serializer           #
 // # resetType = 6 --> Reset ADC                  #

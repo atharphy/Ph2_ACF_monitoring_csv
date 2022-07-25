@@ -17,8 +17,9 @@
 
 namespace RD53AConstants
 {
-const uint8_t BROADCAST_CHIPID = 0x08; // Broadcast chip ID used to send the command to multiple chips
-}
+const uint8_t BROADCAST_CHIPID    = 0x08; // Broadcast chip ID used to send the command to multiple chips
+const uint8_t AUTO_INCREMENT_MASK = 0x18; // Auto-increment mask bits
+} // namespace RD53AConstants
 
 namespace Ph2_HwDescription
 {

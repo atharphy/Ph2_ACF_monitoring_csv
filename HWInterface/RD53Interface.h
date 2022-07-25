@@ -12,6 +12,8 @@
 
 #include "../HWDescription/ChipRegItem.h"
 #include "../HWDescription/RD53.h"
+#include "../HWDescription/RD53A.h"
+#include "../HWDescription/RD53B.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "BeBoardFWInterface.h"
 #include "RD53FWInterface.h"
@@ -60,10 +62,11 @@ class RD53Interface : public ReadoutChipInterface
     void SendHybridCommands(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& hybridCommandList);
 
   protected:
-    virtual void                                       InitRD53UplinkSpeed(Ph2_HwDescription::ReadoutChip* pChip)                                             = 0;
-    virtual std::vector<std::pair<uint16_t, uint16_t>> ReadRD53Reg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName)                         = 0;
-    virtual void                                       WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault)                           = 0;
-    virtual std::pair<std::string, uint16_t>           SplitSpecialRegisters(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) = 0;
+    virtual void                             InitRD53UplinkSpeed(Ph2_HwDescription::ReadoutChip* pChip)                                             = 0;
+    virtual void                             WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault)                           = 0;
+    virtual std::pair<std::string, uint16_t> SplitSpecialRegisters(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) = 0;
+
+    std::vector<std::pair<uint16_t, uint16_t>> ReadRD53Reg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName);
 
     template <typename T>
     void SendCommand(Ph2_HwDescription::ReadoutChip* pChip, const T& cmd)

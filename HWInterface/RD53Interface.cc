@@ -31,7 +31,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
         if(regName == "PIX_PORTAL")
         {
             auto pixMode = RD53Interface::ReadChipReg(pChip, "PIX_MODE");
-            if((pChip->getFrontEndType() == FrontEndType::RD53A ? pixMode & 0x18 : pixMode & 0x1) == 0) // Check only auto-increment bits
+            if((pChip->getFrontEndType() == FrontEndType::RD53A ? pixMode & RD53AConstants::AUTO_INCREMENT_MASK : pixMode & RD53BConstants::AUTO_INCREMENT_MASK) == 0) // Check only auto-increment bits
             {
                 auto regReadback = ReadRD53Reg(static_cast<RD53*>(pChip), regName);
                 actualValue      = regReadback[0].second;
@@ -90,6 +90,20 @@ uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
     LOG(ERROR) << BOLDRED << "Empty register readback FIFO after " << BOLDYELLOW << nAttempts << BOLDRED " attempts" << RESET;
 
     return 0;
+}
+
+std::vector<std::pair<uint16_t, uint16_t>> RD53Interface::ReadRD53Reg(ReadoutChip* pChip, const std::string& regName)
+{
+    this->setBoard(pChip->getBeBoardId());
+
+    RD53Interface::SendCommand(pChip, RD53BCmd::RdReg{pChip->getId(), pChip->getRegItem(regName).fAddress});
+    auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip);
+
+    for(auto i = 0u; i < regReadback.size(); i++)
+        // Removing bit related to PIX_PORTAL register identification
+        regReadback[i].first = regReadback[i].first & static_cast<uint16_t>(RD53Shared::setBits(RD53Constants::NBIT_ADDR));
+
+    return regReadback;
 }
 
 bool RD53Interface::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerifLoop, uint32_t pBlockSize)
