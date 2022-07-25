@@ -9,6 +9,8 @@
 
 #include "RD53Shared.h"
 
+Ph2_HwDescription::RD53* RD53Shared::firstChip;
+
 std::string RD53Shared::fromInt2Str(int val)
 {
     std::stringstream myString;

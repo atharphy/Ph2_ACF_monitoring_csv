@@ -10,19 +10,16 @@
 #ifndef RD53_H
 #define RD53_H
 
+#include "../Utils/BitMaster/bit_packing.h"
 #include "../Utils/ConsoleColor.h"
+#include "../Utils/Container.h"
+#include "../Utils/RD53Event.h"
 #include "../Utils/RD53Shared.h"
-#include "../Utils/bit_packing.h"
 #include "../Utils/easylogging++.h"
+#include "BeBoard.h"
 #include "ReadoutChip.h"
 
 #include <iomanip>
-
-// #############
-// # CONSTANTS #
-// #############
-#define NROWS 192 // Total number of rows
-#define NCOLS 400 // Total number of columns
 
 // #########################
 // # Chip useful constants #
@@ -47,21 +44,6 @@ const uint8_t  PATTERN_CLOCK     = 0x00; // Start clock pattern
 const uint16_t GLOBAL_PULSE_ADDR = 0x2C; // Global Pulse Route regiser address
 const uint16_t SET_SEL_OUT_ADDR  = 0x44; // SET_SEL_OUT regiser address
 } // namespace RD53Constants
-
-// ############
-// # Commands #
-// ############
-namespace RD53CmdEncoder
-{
-const uint16_t RESET_ECR  = 0x5A5A; // Event Counter Reset word
-const uint16_t RESET_BCR  = 0x5959; // Bunch Counter Reset word
-const uint16_t GLOB_PULSE = 0x5C5C; // Global pulse word
-const uint16_t CAL        = 0x6363; // Calibration word
-const uint16_t WRITE      = 0x6666; // Write command word
-const uint16_t READ       = 0x6565; // Read command word
-const uint16_t NOOP       = 0x6969; // No operation word
-const uint16_t SYNC       = 0x817E; // Synchronization word
-} // namespace RD53CmdEncoder
 
 namespace RD53EvtEncoder
 {
@@ -105,20 +87,20 @@ constexpr float Charge2VCal(float Charge) { return (Charge - offset) / (cap * 1e
 
 namespace Ph2_HwDescription
 {
-struct perColumnPixelData
+struct pixelMask
 {
-    std::array<uint8_t, NROWS> Enable;
-    std::array<uint8_t, NROWS> HitBus;
-    std::array<uint8_t, NROWS> InjEn;
-    std::array<uint8_t, NROWS> TDAC;
+    pixelMask() = default;
+    pixelMask(size_t size, bool en, bool hb, bool ie, uint8_t tdac) : Enable(size, en), HitBus(size, hb), InjEn(size, ie), TDAC(size, tdac) {}
+
+    std::vector<bool>    Enable;
+    std::vector<bool>    HitBus;
+    std::vector<bool>    InjEn;
+    std::vector<uint8_t> TDAC;
 };
 
 class RD53 : public ReadoutChip
 {
   public:
-    static constexpr size_t nRows = NROWS;
-    static constexpr size_t nCols = NCOLS;
-
     // ########################################
     // # Support for different FrontEnd types #
     // ########################################
@@ -132,11 +114,10 @@ class RD53 : public ReadoutChip
         size_t      colStop;
     };
 
-    static constexpr FrontEnd SYNC = {"SYNC", "VTH_SYNC", "IBIAS_KRUM_SYNC", 0, 0, 127};
-    static constexpr FrontEnd LIN  = {"LIN", "Vthreshold_LIN", "KRUM_CURR_LIN", 16, 128, 263};
-    static constexpr FrontEnd DIFF = {"DIFF", "VTH1_DIFF", "VFF_DIFF", 31, 264, 399};
-    static const FrontEnd*    frontEnds[];
-    static const FrontEnd*    getMajorityFE(size_t colStart, size_t colStop);
+    virtual size_t          getNRows() const                                                                                   = 0;
+    virtual size_t          getNCols() const                                                                                   = 0;
+    virtual const FrontEnd* getMajorityFE(size_t colStart, size_t colStop) const                                               = 0;
+    virtual void            decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::RD53ChipEvent& chipEvent) const = 0;
 
     RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
     RD53(const RD53& chipObj);
@@ -147,9 +128,9 @@ class RD53 : public ReadoutChip
     bool     isDACLocal(const std::string& regName) override;
     uint8_t  getNumberOfBits(const std::string& regName) override;
 
-    std::string                      getFileName(const std::string& fName2Add) { return RD53Shared::composeFileName(configFileName, fName2Add); }
-    std::vector<perColumnPixelData>* getPixelsMask() { return &fPixelsMask; }
-    std::vector<perColumnPixelData>* getPixelsMaskDefault() { return &fPixelsMaskDefault; }
+    std::string getFileName(const std::string& fName2Add) { return RD53Shared::composeFileName(configFileName, fName2Add); }
+    pixelMask&  getPixelsMask() { return fPixelsMask; }
+    pixelMask&  getPixelsMaskDefault() { return fPixelsMaskDefault; }
 
     void        copyMaskFromDefault();
     void        copyMaskToDefault(const std::string& which = "all");
@@ -164,30 +145,6 @@ class RD53 : public ReadoutChip
     uint8_t     getTDAC(unsigned int row, unsigned int col);
     uint8_t     getChipLane() const { return myChipLane; }
     std::string getComment() const { return myComment; }
-
-    struct HitData
-    {
-        HitData(uint16_t row, uint16_t col, uint8_t tot) : row(row), col(col), tot(tot) {}
-
-        uint16_t row;
-        uint16_t col;
-        uint8_t  tot;
-    };
-
-    struct Event
-    {
-        Event(const uint32_t* data, size_t n);
-
-        uint16_t             trigger_id;
-        uint16_t             trigger_tag;
-        uint16_t             bc_id;
-        std::vector<HitData> hit_data;
-
-        uint16_t eventStatus;
-
-      private:
-        void DecodeQuad(uint32_t data);
-    };
 
     struct CalCmd
     {
@@ -224,123 +181,12 @@ class RD53 : public ReadoutChip
         uint8_t TxGroup;
         uint8_t TxChannel;
     } fLpGBTmap;
-    std::vector<perColumnPixelData> fPixelsMask;
-    std::vector<perColumnPixelData> fPixelsMaskDefault;
-    std::string                     configFileName;
-    std::string                     myComment;
-    uint8_t                         myChipLane;
+    pixelMask   fPixelsMask;
+    pixelMask   fPixelsMaskDefault;
+    std::string configFileName;
+    std::string myComment;
+    uint8_t     myChipLane;
 };
 } // namespace Ph2_HwDescription
-
-// ###############################
-// # RD53 command base functions #
-// ###############################
-namespace RD53Cmd
-{
-// Map 5-bit to 8-bit fields
-constexpr uint8_t map5to8bit[] = {
-    0x6A, // 00: 0b01101010,
-    0x6C, // 01: 0b01101100,
-    0x71, // 02: 0b01110001,
-    0x72, // 03: 0b01110010,
-    0x74, // 04: 0b01110100,
-    0x8B, // 05: 0b10001011,
-    0x8D, // 06: 0b10001101,
-    0x8E, // 07: 0b10001110,
-    0x93, // 08: 0b10010011,
-    0x95, // 09: 0b10010101,
-    0x96, // 10: 0b10010110,
-    0x99, // 11: 0b10011001,
-    0x9A, // 12: 0b10011010,
-    0x9C, // 13: 0b10011100,
-    0xA3, // 14: 0b10100011,
-    0xA5, // 15: 0b10100101,
-    0xA6, // 16: 0b10100110,
-    0xA9, // 17: 0b10101001,
-    0xAA, // 18: 0b10101010,
-    0xAC, // 19: 0b10101100,
-    0xB1, // 20: 0b10110001,
-    0xB2, // 21: 0b10110010,
-    0xB4, // 22: 0b10110100,
-    0xC3, // 23: 0b11000011,
-    0xC5, // 24: 0b11000101,
-    0xC6, // 25: 0b11000110,
-    0xC9, // 26: 0b11001001,
-    0xCA, // 27: 0b11001010,
-    0xCC, // 28: 0b11001100,
-    0xD1, // 29: 0b11010001,
-    0xD2, // 30: 0b11010010,
-    0xD4  // 31: 0b11010100
-};
-
-template <uint16_t cmdCode, size_t nFields>
-class Command
-{
-    static_assert(nFields % 2 == 0, "RD53Cmd::Command: a command must have an even number of fields");
-
-  public:
-    void appendTo(std::vector<uint16_t>& frameVector) const
-    {
-        // Insert command code
-        frameVector.push_back(cmdCode);
-
-        // Insert: chip id, address and data
-        for(auto i = 1; i < static_cast<int>(nFields); i += 2) frameVector.push_back(bits::pack<8, 8>(fields[i - 1], fields[i]));
-    }
-
-    std::vector<uint16_t> getFrames() const
-    {
-        std::vector<uint16_t> frameVector;
-
-        frameVector.reserve(1 + nFields / 2);
-        Command::appendTo(frameVector);
-
-        return frameVector;
-    }
-
-  protected:
-    template <int... Sizes, class... Args>
-    uint8_t packAndEncode(Args&&... args)
-    {
-        return map5to8bit[bits::pack<Sizes...>(std::forward<Args>(args)...)];
-    }
-
-    std::array<uint8_t, nFields> fields;
-};
-
-struct ECR : public Command<RD53CmdEncoder::RESET_ECR, 0>
-{
-};
-struct BCR : public Command<RD53CmdEncoder::RESET_BCR, 0>
-{
-};
-struct NoOp : public Command<RD53CmdEncoder::NOOP, 0>
-{
-};
-struct Sync : public Command<RD53CmdEncoder::SYNC, 0>
-{
-};
-struct GlobalPulse : public Command<RD53CmdEncoder::GLOB_PULSE, 2>
-{
-    GlobalPulse(uint8_t chip_id, uint8_t data);
-};
-struct Cal : public Command<RD53CmdEncoder::CAL, 4>
-{
-    Cal(uint8_t chip_id, bool cal_edge_mode, uint8_t cal_edge_delay, uint8_t cal_edge_width, bool cal_aux_mode, uint8_t cal_aux_delay);
-};
-struct WrReg : public Command<RD53CmdEncoder::WRITE, 6>
-{
-    WrReg(uint8_t chip_id, uint16_t address, uint16_t value);
-};
-struct WrRegLong : public Command<RD53CmdEncoder::WRITE, 22>
-{
-    WrRegLong(uint8_t chip_id, uint16_t address, const std::vector<uint16_t>& values);
-};
-struct RdReg : public Command<RD53CmdEncoder::READ, 4>
-{
-    RdReg(uint8_t chip_id, uint16_t address);
-};
-
-} // namespace RD53Cmd
 
 #endif

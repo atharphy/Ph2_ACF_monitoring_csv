@@ -107,7 +107,8 @@ void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNum
 
 void Tool::Start(int runNumber)
 {
-    std::string resultDirectory = "Results/OT_ModuleTest_ModuleOT_Run" + std::to_string(runNumber);
+    // std::string resultDirectory = "Results/OT_ModuleTest_ModuleOT_Run" + std::to_string(runNumber); // It should be made more generic
+    std::string resultDirectory = "Results";
     CreateResultDirectory(resultDirectory, false, false);
 #ifdef __USE_ROOT__
     InitResultFile("Hybrid");

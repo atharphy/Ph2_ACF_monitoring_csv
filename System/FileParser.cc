@@ -3,7 +3,8 @@
 #include "../HWDescription/Cic.h"
 #include "../HWDescription/Hybrid.h"
 #include "../HWDescription/OuterTrackerHybrid.h"
-#include "../HWDescription/RD53.h"
+#include "../HWDescription/RD53A.h"
+#include "../HWDescription/RD53B.h"
 #include "../HWDescription/SSA2.h"
 #include "../HWDescription/lpGBT.h"
 #include "../Utils/Utilities.h"
@@ -175,9 +176,7 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
     {
         if(cBeBoard->getBoardType() == BoardType::D19C) { pBeBoardFWMap[cBeBoard->getId()] = new D19cFWInterface(cId, cUri, cAddressTable); }
         else if(cBeBoard->getBoardType() == BoardType::RD53)
-        {
             pBeBoardFWMap[cBeBoard->getId()] = new RD53FWInterface(cId, cUri, cAddressTable);
-        }
     }
     os << BOLDCYAN << "|"
        << "       "
@@ -848,7 +847,8 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("SSA2") != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("MPA") != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("CIC") != std::string::npos;
-            cIsTrackerASIC             = cIsTrackerASIC || cName.find("RD53") != std::string::npos;
+            cIsTrackerASIC             = cIsTrackerASIC || cName.find("RD53A") != std::string::npos;
+            cIsTrackerASIC             = cIsTrackerASIC || cName.find("RD53B") != std::string::npos;
 
             if(cIsTrackerASIC)
             {
@@ -860,8 +860,9 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
 
                     if(cName.find("RD53") != std::string::npos)
                     {
-                        pBoard->setFrontEndType(FrontEndType::RD53);
-                        this->parseRD53(cChild, cHybrid, cConfigFileDirectory, os);
+                        auto frontEndType = cName.find("RD53A") != std::string::npos ? FrontEndType::RD53A : FrontEndType::RD53B;
+                        pBoard->setFrontEndType(frontEndType);
+                        this->parseRD53(cChild, cHybrid, cConfigFileDirectory, os, frontEndType);
                         if(cNextName.empty() || cNextName != cName) this->parseGlobalRD53Settings(pHybridNode, cHybrid, os);
                     }
                     else if(cName.find("CBC") != std::string::npos)
@@ -1448,7 +1449,7 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
             std::vector<uint8_t> cTxGroups   = splitToVector(cChild.attribute("TxGroups").value(), ',');
             std::vector<uint8_t> cTxChannels = splitToVector(cChild.attribute("TxChannels").value(), ',');
 
-            // Retrieve groups and channels from CIC node attirbutes and propagate to LpGBT class
+            // Retrieve links, groups and channels from CIC node attirbutes and propagate to LpGBT class
             plpGBT->addRxGroups(cRxGroups);
             plpGBT->addRxChannels(cRxChannels);
             plpGBT->addTxGroups(cTxGroups);
@@ -1467,7 +1468,7 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
 // ########################
 // # RD53 specific parser #
 // ########################
-void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os)
+void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os, const FrontEndType& frontEndType)
 {
     std::string cFileName;
 
@@ -1491,9 +1492,12 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
        << cFileName << BOLDBLUE << ", RxGroup: " << BOLDYELLOW << +cRxGroup << BOLDBLUE << ", RxChannel: " << BOLDYELLOW << +cRxChannel << BOLDBLUE << ", TxGroup: " << BOLDYELLOW << +cTxGroup
        << BOLDBLUE << ", TxChannel: " << BOLDYELLOW << +cTxChannel << BOLDBLUE << ", Comment: " << BOLDYELLOW << cfgComment << RESET << std::endl;
 
-    ReadoutChip* theChip =
-        cHybrid->addChipContainer(chipId, new RD53(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, cFileName, cfgComment));
-    theChip->setNumberOfChannels(RD53::nRows, RD53::nCols);
+    ReadoutChip* theChip;
+    if(frontEndType == FrontEndType::RD53A)
+        theChip = cHybrid->addChipContainer(chipId, new RD53A(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, cFileName, cfgComment));
+    else
+        theChip = cHybrid->addChipContainer(chipId, new RD53B(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, cFileName, cfgComment));
+    theChip->setNumberOfChannels(static_cast<RD53*>(theChip)->getNRows(), static_cast<RD53*>(theChip)->getNCols());
 
     this->parseRD53Settings(theChipNode, theChip, os);
 }
@@ -1521,7 +1525,10 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
     pugi::xml_node cLocalChipSettings = theChipNode.child("Settings");
     if(cLocalChipSettings != nullptr)
     {
-        os << BOLDCYAN << "|\t|\t|----FrontEndType: " << BOLDYELLOW << "RD53" << RESET << std::endl;
+        if(theChip->getFrontEndType() == FrontEndType::RD53A)
+            os << BOLDCYAN << "|\t|\t|----FrontEndType: " << BOLDYELLOW << "RD53A" << RESET << std::endl;
+        else
+            os << BOLDCYAN << "|\t|\t|----FrontEndType: " << BOLDYELLOW << "RD53B" << RESET << std::endl;
 
         for(const pugi::xml_attribute& attr: cLocalChipSettings.attributes())
         {

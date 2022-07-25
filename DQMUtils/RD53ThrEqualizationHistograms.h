@@ -1,7 +1,7 @@
 /*!
   \file                  RD53ThrEqualizationHistograms.h
   \brief                 Header file of ThrEqualization calibration histograms
-  \author                Alkiviadis PAPADOPOULOS
+  \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
   Support:               email to alkiviadis.papadopoulos@cern.ch
@@ -40,6 +40,9 @@ class ThrEqualizationHistograms : public DQMHistogramBase
 
     size_t nEvents;
     size_t VCalHnsteps;
+
+    size_t nRows;
+    size_t nCols;
 
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 };

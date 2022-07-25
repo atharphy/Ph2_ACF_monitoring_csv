@@ -52,8 +52,8 @@ class Gain : public Tool
     void                                   run();
     void                                   draw(bool saveData = true);
     std::shared_ptr<DetectorDataContainer> analyze();
-    size_t getNumberIterations() { return RD53ChannelGroupHandler::getNumberOfGroups(doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups, nHITxCol, doOnlyNGroups) * nSteps; }
-    void   saveChipRegisters(int currentRun);
+    size_t                                 getNumberIterations() { return theChnGroupHandler->getNumberOfGroups() * nSteps; }
+    void                                   saveChipRegisters(int currentRun);
 
     static float gainFunction(const std::vector<float>& par, float q) { return par[0] + par[1] * q; }
 
@@ -62,26 +62,11 @@ class Gain : public Tool
 #endif
 
   private:
-    size_t rowStart;
-    size_t rowStop;
-    size_t colStart;
-    size_t colStop;
-    size_t nEvents;
-    size_t startValue;
-    size_t stopValue;
-    float  targetCharge;
-    size_t nSteps;
-    size_t offset;
-    size_t nHITxCol;
-    bool   doFast;
-    size_t doOnlyNGroups;
-
     std::vector<uint16_t> dacList;
 
-    std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
-    std::vector<DetectorDataContainer*>      detectorContainerVector;
-    std::shared_ptr<DetectorDataContainer>   theGainContainer;
-    ContainerRecycleBin<OccupancyAndPh>      theRecyclingBin;
+    std::vector<DetectorDataContainer*>    detectorContainerVector;
+    std::shared_ptr<DetectorDataContainer> theGainContainer;
+    ContainerRecycleBin<OccupancyAndPh>    theRecyclingBin;
 
     void fillHisto();
     void computeStats(const std::vector<float>& x,
@@ -95,12 +80,27 @@ class Gain : public Tool
     void chipErrorReport() const;
 
   protected:
+    size_t rowStart;
+    size_t rowStop;
+    size_t colStart;
+    size_t colStop;
+    size_t nEvents;
+    size_t startValue;
+    size_t stopValue;
+    float  targetCharge;
+    size_t nSteps;
+    size_t offset;
+    size_t nHITxCol;
+    size_t doOnlyNGroups;
+    bool   doDisplay;
+    bool   doUpdateChip;
+    bool   saveBinaryData;
+
     std::string fileRes;
     int         theCurrentRun;
-    bool        doUpdateChip;
-    bool        doDisplay;
-    bool        saveBinaryData;
     bool        saveData;
+
+    std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
 };
 
 #endif

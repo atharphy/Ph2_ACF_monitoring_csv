@@ -89,8 +89,7 @@ std::vector<uint32_t> MmcPipeInterface::Receive()
         UpdateCounters();
     }
 
-    uhal::ValVector<uint32_t> lHeader, lPayload;
-    lHeader = this->getNode("FIFO").readBlock(2);
+    auto lHeader = this->getNode("FIFO").readBlock(2);
     this->getClient().dispatch();
 
     if(lHeader[1])
@@ -101,7 +100,7 @@ std::vector<uint32_t> MmcPipeInterface::Receive()
             UpdateCounters();
         }
 
-        lPayload = this->getNode("FIFO").readBlock(lHeader[1]);
+        auto lPayload = this->getNode("FIFO").readBlock(lHeader[1]);
         this->getClient().dispatch();
         lRet = lPayload.value();
     }
@@ -271,15 +270,13 @@ XilinxBitStream MmcPipeInterface::FileFromSD(const std::string& aFilename, uint3
         UpdateCounters();
     }
 
-    uhal::ValVector<uint32_t> lHeader, lPayload;
-    lHeader = this->getNode("FIFO").readBlock(2);
+    auto lHeader = this->getNode("FIFO").readBlock(2);
     this->getClient().dispatch();
 
     std::vector<uint32_t> lRet;
     lRet.reserve(5120000);
     uint32_t lWordCount = lHeader[1], lTot = lWordCount;
 
-    // std::cout << "Retrieving firmware image" << std::endl;
     uint32_t i(0);
 
     while(lWordCount)
@@ -288,34 +285,30 @@ XilinxBitStream MmcPipeInterface::FileFromSD(const std::string& aFilename, uint3
 
         if(MMCtoFPGADataAvailable())
         {
+            size_t wordCount;
             if(lWordCount < MMCtoFPGADataAvailable())
             {
-                lPayload   = this->getNode("FIFO").readBlock(lWordCount);
+                wordCount  = lWordCount;
                 lWordCount = 0;
             }
             else
             {
-                lPayload = this->getNode("FIFO").readBlock(MMCtoFPGADataAvailable());
+                wordCount = MMCtoFPGADataAvailable();
                 lWordCount -= MMCtoFPGADataAvailable();
             }
+            auto lPayload = this->getNode("FIFO").readBlock(wordCount);
 
             this->getClient().dispatch();
 
             lRet.insert(lRet.end(), lPayload.begin(), lPayload.end());
 
-            if(!(i++ % 500) && pProgress)
-            {
-                *pProgress = 33 - lWordCount * 33 / lTot + uOffset;
-                // std::cout << "." << std::flush;
-            }
+            if(!(i++ % 500) && pProgress) { *pProgress = 33 - lWordCount * 33 / lTot + uOffset; }
         }
         else
         {
             usleep(1000); // Otherwise we get serious bus contention
         }
     }
-    // std::cout << std::endl;
-    // std::cout << "Done retrieving firmware image" << std::endl;
 
     if(lHeader[0])
     {

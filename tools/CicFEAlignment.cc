@@ -493,7 +493,7 @@ bool CicFEAlignment::CicLpGbtAlignment(const OpticalGroup* pOpticalGroup)
                 cChannels = {2, 0, 2, 0, 2, 0, 2};
             }
         }
-        auto cMode = flpGBTInterface->AutoPhaseAlignRx(clpGBT, cGroups, cChannels);
+        auto cMode = flpGBTInterface->PhaseAlignRx(clpGBT, cGroups, cChannels);
         cAligned   = cAligned && (cMode != 15);
     }
     // configure CICs to NOT output alignment pattern on stub lines

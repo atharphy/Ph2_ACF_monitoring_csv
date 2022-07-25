@@ -96,6 +96,8 @@ class BeBoardFWInterface : public RegManager
 
     virtual void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) = 0;
 
+    virtual void SetOptoLinkVersion(uint8_t version) = 0;
+
     /*! \brief Run Bit Error Rate test */
     virtual double RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) = 0;
 

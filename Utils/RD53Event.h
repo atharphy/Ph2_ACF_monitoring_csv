@@ -10,7 +10,7 @@
 #ifndef RD53Event_H
 #define RD53Event_H
 
-#include "../HWDescription/RD53.h"
+#include "../Utils/BitMaster/bit_packing.h"
 #include "DataContainer.h"
 #include "Event.h"
 #include "GenericDataVector.h"
@@ -19,10 +19,10 @@
 #include <condition_variable>
 #include <omp.h>
 
-#ifdef __USE_ROOT__
-#include "TFile.h"
-#include "TTree.h"
-#endif
+namespace Ph2_HwDescription
+{
+class RD53;
+}
 
 // #############
 // # CONSTANTS #
@@ -76,10 +76,20 @@ const uint16_t MISSCHIP   = 0x0080; // Event status Chip data are missing
 
 namespace Ph2_HwInterface
 {
-struct ChipFrame
+struct HitData
 {
-    ChipFrame(const uint32_t data0, const uint32_t data1);
+    uint16_t row;
+    uint16_t col;
+    uint8_t  tot;
+};
 
+struct RD53ChipEvent
+{
+    static void decodeChipFrame(const uint32_t data0, const uint32_t data1, RD53ChipEvent& event);
+
+    // #######################
+    // # Firmware event data #
+    // #######################
     uint16_t error_code;
     uint16_t hybrid_id;
     uint16_t chip_id;
@@ -87,6 +97,16 @@ struct ChipFrame
     uint16_t l1a_data_size;
     uint16_t chip_type;
     uint16_t frame_delay;
+
+    // ###################
+    // # Chip event data #
+    // ###################
+    uint16_t             trigger_id;
+    uint16_t             trigger_tag;
+    uint16_t             bc_id;
+    std::vector<HitData> hit_data;
+
+    uint16_t eventStatus;
 };
 
 class RD53Event : public Ph2_HwInterface::Event
@@ -107,16 +127,14 @@ class RD53Event : public Ph2_HwInterface::Event
     static void PrintEvents(const std::vector<RD53Event>& events, const std::vector<uint32_t>& pData = {});
     static void MakeNtuple(const std::string& fileName, const std::vector<RD53Event>& events);
 
-    uint16_t block_size;
-    uint16_t tlu_trigger_id;
-    uint16_t data_format_ver;
-    uint16_t tdc;
-    uint32_t l1a_counter;
-    uint32_t bx_counter;
-
-    std::vector<std::pair<ChipFrame, Ph2_HwDescription::RD53::Event>> chip_frames_events;
-
-    uint16_t eventStatus;
+    uint16_t                   block_size;
+    uint16_t                   tlu_trigger_id;
+    uint16_t                   data_format_ver;
+    uint16_t                   tdc;
+    uint32_t                   l1a_counter;
+    uint32_t                   bx_counter;
+    uint16_t                   eventStatus;
+    std::vector<RD53ChipEvent> chip_events;
 
     // ########################################
     // # Vector containing the decoded events #
