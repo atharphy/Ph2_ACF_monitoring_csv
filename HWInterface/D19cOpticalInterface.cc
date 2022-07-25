@@ -45,7 +45,6 @@ bool D19cOpticalInterface::Read(Chip* pChip, std::vector<ChipRegItem>& pRegister
             {
                 flpGBTSlowControlWorkerInterface->PrintStateFSM();
                 flpGBTSlowControlWorkerInterface->Reset();
-                return false;
             }
             uint8_t cTryCntr = flpGBTSlowControlWorkerInterface->GetTryCntr(cFunctionId);
             if(cTryCntr > 0)
@@ -54,6 +53,13 @@ bool D19cOpticalInterface::Read(Chip* pChip, std::vector<ChipRegItem>& pRegister
                 LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Read : Tried " << +cTryCntr << "/" << +cMaxRetry << " before success" << RESET;
             }
             auto cReplies = flpGBTSlowControlWorkerInterface->ReadReply(cRegisterBlock.size() + 1); // N words + 1 header
+            size_t cNWords  = (cReplies[0] & (0xFFFF << 0)) >> 0;
+            if(cNWords != cRegisterBlock.size())
+	    {
+                LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Read -- Corrupted CPB reply" << RESET;
+        	throw std::runtime_error("Corrupted CPB reply");
+		return false;
+            }
             for(size_t cReplyIdx = 0; cReplyIdx < cReplies.size(); cReplyIdx++)
             {
                 if(cReplyIdx == 0) continue; // skip header
@@ -103,7 +109,6 @@ bool D19cOpticalInterface::Write(Chip* pChip, std::vector<ChipRegItem>& pRegiste
             {
                 flpGBTSlowControlWorkerInterface->PrintStateFSM();
                 flpGBTSlowControlWorkerInterface->Reset();
-                return false;
             }
             uint8_t cTryCntr = flpGBTSlowControlWorkerInterface->GetTryCntr(cFunctionId);
             if(cTryCntr > 0)
@@ -112,6 +117,13 @@ bool D19cOpticalInterface::Write(Chip* pChip, std::vector<ChipRegItem>& pRegiste
                 LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Write : Tried " << +cTryCntr << "/" << +cMaxRetry << " before success" << RESET;
             }
             auto cReplies = flpGBTSlowControlWorkerInterface->ReadReply(cRegisterBlock.size() + 1); // N words + 1 header
+            size_t cNWords  = (cReplies[0] & (0xFFFF << 0)) >> 0;
+            if(cNWords != cRegisterBlock.size())
+	    {
+                LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Write -- Corrupted CPB reply" << RESET;
+        	throw std::runtime_error("Corrupted CPB reply");
+		return false;
+            }
             for(size_t cReplyIdx = 0; cReplyIdx < cReplies.size(); cReplyIdx++)
             {
                 if(cReplyIdx == 0) continue; // skip header
