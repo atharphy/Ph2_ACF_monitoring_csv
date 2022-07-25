@@ -68,7 +68,7 @@ A golden firmware can be downloaded from the [cms-tracker-daq webpage](https://c
 A detailed manual about the firmware can be found [here](https://gitlab.cern.ch/cmstkph2-IT/d19c-firmware/blob/master/doc/IT-uDTC_fw_manual_v1.0.pdf)
 
 **IT-DAQ setup and run:**
-1. Folow instructions below to install all needed software packages (like pugixml, boost, python. etc ...)
+1. Folow instructions below to install all needed software packages (like `pugixml`, `boost`, `python`. etc ...)
 2. `mkdir choose_a_name`
 3. `cp settings/RD53Files/CMSIT_RD53.txt choose_a_name`
 4. `cp settings/CMSIT.xml choose_a_name`
