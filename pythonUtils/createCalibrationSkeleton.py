@@ -4,7 +4,7 @@ import datetime
 
 def checkIfFileExists(fileName):
     if os.path.exists(fileName):
-        print "File ", fileName, " already exists\naborting..."
+        print ("File ", fileName, " already exists\naborting...")
         sys.exit(1)
 
 def createFileFromTemplate(templateFile, outputFile):
@@ -17,32 +17,32 @@ def createFileFromTemplate(templateFile, outputFile):
 
     # Write the file out again
     with open(outputFile, 'w') as file: file.write(filedata)
-    print "Created file ", outputFile
+    print ("Created file ", outputFile)
 
 
 if not 'PH2ACF_BASE_DIR' in os.environ:
-    print "Please source the setup.sh to set the enviromental variables\naborting..."
+    print ("Please source the setup.sh to set the enviromental variables\naborting...")
     sys.exit(1)
 
 ph2acfDirectory = os.environ['PH2ACF_BASE_DIR']
 
-className = raw_input("Please enter the calibration name: ")
-className = className.decode('utf-8')
+className = input("Please enter the calibration name: ")
+#className = className.decode(encoding='utf-8')
 
 if not className.isalnum():
-    print "C++ class names can contain only letters or numbers\naborting..."
+    print ("C++ class names can contain only letters or numbers\naborting...")
     sys.exit(1)
 
 if ' ' in className:
-    print "C++ class names cannot contain spaces\naborting..."
+    print ("C++ class names cannot contain spaces\naborting...")
     sys.exit(1)
 
 if className[0].isnumeric():
-    print "C++ class names cannot start with a number\naborting..."
+    print ("C++ class names cannot start with a number\naborting...")
     sys.exit(1)
 
 if not className[0].isupper():
-    print "Adopted convention required the class name to start with upper case\naborting..."
+    print ("Adopted convention required the class name to start with upper case\naborting...")
     sys.exit(1)
 
 templateFile    = ph2acfDirectory + "/pythonUtils/CalibrationTemplates/{0}"
@@ -54,7 +54,7 @@ checkIfFileExists(calibrationFile.format(className + ".cc"))
 checkIfFileExists(dqmFile        .format(className + ".h" ))
 checkIfFileExists(dqmFile        .format(className + ".cc"))
 
-autor = raw_input("Please enter the autor name: ")
+autor = input("Please enter the autor name: ")
 
 todayDate = datetime.datetime.now().strftime('%d/%m/%y')
 
