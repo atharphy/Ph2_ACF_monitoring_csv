@@ -10,7 +10,8 @@
     
     <OpticalGroup Id="0" FMCId="0" reset="1">
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-        <lpGBT Id="0" version="0" optical="1" configfile="lpGBT0.txt">
+        <lpGBT Id="0" version="1" optical="1" configfile="lpGBT1.txt">
+        <!-- <lpGBT Id="0" version="0" optical="1" configfile="lpGBT0.txt"> -->
           <Settings
           />
         </lpGBT>
