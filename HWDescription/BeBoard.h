@@ -106,10 +106,6 @@ class BeBoard : public BoardContainer
 
     void setOptical(bool pOptical) { fOptical = pOptical; }
 
-    void setUseOpticalLink(bool pUseOpticalLink) { fUseOpticalLink = pUseOpticalLink; }
-
-    void setUseCPB(bool pUseCPB) { fUseCPB = pUseCPB; }
-
     void setCDCEconfiguration(bool pConfigure, uint32_t pClockRate = 120)
     {
         fConfigureCDCE = pConfigure;
@@ -117,7 +113,6 @@ class BeBoard : public BoardContainer
     }
 
     bool isOptical() const { return fOptical; }
-    bool ifUseCPB() const { return fUseCPB; }
 
     std::pair<bool, uint32_t> configCDCE() const { return std::make_pair(fConfigureCDCE, fClockRateCDCE); }
 
@@ -170,7 +165,7 @@ class BeBoard : public BoardContainer
 
     BeBoardRegMap     fRegMap; /*!< Map of BeBoard Register Names vs. Register Values */
     ConditionDataSet* fCondDataSet;
-    bool              fOptical{false}, fUseOpticalLink{false}, fUseCPB{false};
+    bool              fOptical{false};
     bool              fConfigureCDCE{false};
     bool              fSparsifed{false};
     uint32_t          fClockRateCDCE{320};

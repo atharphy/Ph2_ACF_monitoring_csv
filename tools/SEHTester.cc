@@ -97,8 +97,8 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
         I_SEH = this->getMeasurement("read_supply:I_SEH");
         U_SEH = this->getMeasurement("read_supply:U_SEH");
 #else
-        flpGBTInterface->getExternalController()->getInterface().read_supply(flpGBTInterface->getExternalController()->getInterface().I_SEH, I_SEH);
-        flpGBTInterface->getExternalController()->getInterface().read_supply(flpGBTInterface->getExternalController()->getInterface().U_SEH, U_SEH);
+        flpGBTInterface->GetExternalController()->getInterface().read_supply(flpGBTInterface->GetExternalController()->getInterface().I_SEH, I_SEH);
+        flpGBTInterface->GetExternalController()->getInterface().read_supply(flpGBTInterface->GetExternalController()->getInterface().U_SEH, U_SEH);
 #endif
         cIinValVect.push_back(I_SEH);
         cUinValVect.push_back(U_SEH);
@@ -180,9 +180,9 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     float cVHVJ7 = 0;
     float cVHVJ8 = 0;
 
-    /* flpGBTInterface->getExternalController()->getInterface().set_HV(false, true, true, 0);
+    /* flpGBTInterface->GetExternalController()->getInterface().set_HV(false, true, true, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-    flpGBTInterface->getExternalController()->getInterface().set_HV(true, true, true, pBiasVoltage); // 0x155 = 100V
+    flpGBTInterface->GetExternalController()->getInterface().set_HV(true, true, true, pBiasVoltage); // 0x155 = 100V
 #endif
     std::this_thread::sleep_for(std::chrono::milliseconds(15000));
 #ifdef __TCP_SERVER__
@@ -190,14 +190,14 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
     cVHVJ7 = this->getMeasurement("read_hvmon:VHVJ7");
     cVHVJ8 = this->getMeasurement("read_hvmon:VHVJ8");
 #else
-    flpGBTInterface->getExternalController()->getInterface().read_hvmon(flpGBTInterface->getExternalController()->getInterface().Mon, cUMon);
-    flpGBTInterface->getExternalController()->getInterface().read_hvmon(flpGBTInterface->getExternalController()->getInterface().VHVJ7, cVHVJ7);
-    flpGBTInterface->getExternalController()->getInterface().read_hvmon(flpGBTInterface->getExternalController()->getInterface().VHVJ8, cVHVJ8); */
+    flpGBTInterface->GetExternalController()->getInterface().read_hvmon(flpGBTInterface->GetExternalController()->getInterface().Mon, cUMon);
+    flpGBTInterface->GetExternalController()->getInterface().read_hvmon(flpGBTInterface->GetExternalController()->getInterface().VHVJ7, cVHVJ7);
+    flpGBTInterface->GetExternalController()->getInterface().read_hvmon(flpGBTInterface->GetExternalController()->getInterface().VHVJ8, cVHVJ8); */
     //----------------------------------------------------
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:1,hvmonx8Relay:1,HVDAC_setvalue:0,");
 #else
-    flpGBTInterface->getExternalController()->getInterface().set_HV(false, true, true, 0);
+    flpGBTInterface->GetExternalController()->getInterface().set_HV(false, true, true, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
 #endif
@@ -217,7 +217,7 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
 #ifdef __TCP_SERVER__
         fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:1,hvmonx7Relay:1,hvmonx8Relay:1,HVDAC_setvalue:" + std::to_string(cDACValue) + ",");
 #else
-        flpGBTInterface->getExternalController()->getInterface().set_HV(true, true, true, cDACValue); // 0x155 = 100V
+        flpGBTInterface->GetExternalController()->getInterface().set_HV(true, true, true, cDACValue); // 0x155 = 100V
 #endif
         std::this_thread::sleep_for(std::chrono::milliseconds(15000));
 #ifdef __TCP_SERVER__
@@ -225,9 +225,9 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
         cVHVJ7 = this->getMeasurement("read_hvmon:VHVJ7");
         cVHVJ8 = this->getMeasurement("read_hvmon:VHVJ8");
 #else
-        flpGBTInterface->getExternalController()->getInterface().read_hvmon(flpGBTInterface->getExternalController()->getInterface().Mon, cUMon);
-        flpGBTInterface->getExternalController()->getInterface().read_hvmon(flpGBTInterface->getExternalController()->getInterface().VHVJ7, cVHVJ7);
-        flpGBTInterface->getExternalController()->getInterface().read_hvmon(flpGBTInterface->getExternalController()->getInterface().VHVJ8, cVHVJ8);
+        flpGBTInterface->GetExternalController()->getInterface().read_hvmon(flpGBTInterface->GetExternalController()->getInterface().Mon, cUMon);
+        flpGBTInterface->GetExternalController()->getInterface().read_hvmon(flpGBTInterface->GetExternalController()->getInterface().VHVJ7, cVHVJ7);
+        flpGBTInterface->GetExternalController()->getInterface().read_hvmon(flpGBTInterface->GetExternalController()->getInterface().VHVJ8, cVHVJ8);
 #endif
         LOG(INFO) << BOLDBLUE << "DAC value = " << +cDACValue << " --- Mon = " << +cUMon << " --- VHVJ7 = " << +cVHVJ7 << " --- VHVJ8 = " << +cVHVJ8 << RESET;
         cDACValVect.push_back(cDACValue);
@@ -272,7 +272,7 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:1,hvmonx8Relay:1,HVDAC_setvalue:0,");
 #else
-    flpGBTInterface->getExternalController()->getInterface().set_HV(false, true, true, 0);
+    flpGBTInterface->GetExternalController()->getInterface().set_HV(false, true, true, 0);
 #endif
     cDACtoHVMultiGraph->Draw("ALP");
     cDACtoHVMultiGraph->GetXaxis()->SetTitle("HV DAC");
@@ -285,7 +285,7 @@ void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:0,hvmonx8Relay:0,HVDAC_setvalue:0,");
 #else
-    flpGBTInterface->getExternalController()->getInterface().set_HV(false, false, false, 0);
+    flpGBTInterface->GetExternalController()->getInterface().set_HV(false, false, false, 0);
 #endif
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     fillSummaryTree("BiasDone", 1);
@@ -296,7 +296,7 @@ void SEHTester::SetupExternalTestLeakageCurrent(uint16_t pHvSet, std::string pow
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:1,hvmonx7Relay:0,hvmonx8Relay:0,HVDAC_setvalue:" + std::to_string(0) + ",");
 #else
-    flpGBTInterface->getExternalController()->getInterface().set_HV(true, false, false, 0);
+    flpGBTInterface->GetExternalController()->getInterface().set_HV(true, false, false, 0);
 #endif
     std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(-1 * static_cast<float>(pHvSet)) + ",";
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
@@ -309,7 +309,7 @@ void SEHTester::EndExternalTestLeakageCurrent(std::string powerSupplyId, std::st
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:1,hvmonx7Relay:0,hvmonx8Relay:0,HVDAC_setvalue:" + std::to_string(0) + ",");
 #else
-    flpGBTInterface->getExternalController()->getInterface().set_HV(true, false, false, 0);
+    flpGBTInterface->GetExternalController()->getInterface().set_HV(true, false, false, 0);
 #endif
     std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(-1 * static_cast<float>(0)) + ",";
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
@@ -336,7 +336,7 @@ void SEHTester::ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTi
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:1,hvmonx7Relay:0,hvmonx8Relay:0,HVDAC_setvalue:" + std::to_string(0) + ",");
 #else
-    flpGBTInterface->getExternalController()->getInterface().set_HV(true, false, false, 0);
+    flpGBTInterface->GetExternalController()->getInterface().set_HV(true, false, false, 0);
 #endif
     std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(-1 * static_cast<float>(pHvSet)) + ",";
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
@@ -376,9 +376,9 @@ void SEHTester::ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTi
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         ILeak = this->getMeasurement("read_hvmon:HV_meas");
 #else
-        // flpGBTInterface->getExternalController()->getInterface().read_hvmon(flpGBTInterface->getExternalController()->getInterface().Mon, UMon);
+        // flpGBTInterface->GetExternalController()->getInterface().read_hvmon(flpGBTInterface->GetExternalController()->getInterface().Mon, UMon);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        flpGBTInterface->getExternalController()->getInterface().read_hvmon(flpGBTInterface->getExternalController()->getInterface().HV_meas, ILeak);
+        flpGBTInterface->GetExternalController()->getInterface().read_hvmon(flpGBTInterface->GetExternalController()->getInterface().HV_meas, ILeak);
 #endif
         cILeakValVect.push_back(double(ILeak));
         cHvMeaValVect.push_back(HvMea);
@@ -443,7 +443,7 @@ void SEHTester::ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTi
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:0,hvmonx8Relay:0,HVDAC_setvalue:0,");
 #else
-    flpGBTInterface->getExternalController()->getInterface().set_HV(false, false, false, 0);
+    flpGBTInterface->GetExternalController()->getInterface().set_HV(false, false, false, 0);
 
     fillSummaryTree("ExternalLeakDone", 1);
 #endif
@@ -456,14 +456,14 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
     float cVHVJ8 = 0;
     if(fPowerSupplyClient == nullptr)
     {
-        LOG(ERROR) << BOLDRED << "Not connected to the power supply!!! ExternalflpGBTInterface->getExternalController()->getInterface().Voltage cannot be executed" << RESET;
-        throw std::runtime_error("ExternalflpGBTInterface->getExternalController()->getInterface().Voltage cannot be executed");
+        LOG(ERROR) << BOLDRED << "Not connected to the power supply!!! ExternalflpGBTInterface->GetExternalController()->getInterface().Voltage cannot be executed" << RESET;
+        throw std::runtime_error("ExternalflpGBTInterface->GetExternalController()->getInterface().Voltage cannot be executed");
     }
 
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:1,hvmonx8Relay:1,HVDAC_setvalue:0,");
 #else
-    flpGBTInterface->getExternalController()->getInterface().set_HV(false, true, true, 0);
+    flpGBTInterface->GetExternalController()->getInterface().set_HV(false, true, true, 0);
 #endif
     std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 
@@ -488,7 +488,7 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
 #ifdef __TCP_SERVER__
         fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:1,hvmonx7Relay:1,hvmonx8Relay:1,HVDAC_setvalue:" + std::to_string(0) + ",");
 #else
-        flpGBTInterface->getExternalController()->getInterface().set_HV(true, true, true, 0); // 0x155 = 100V
+        flpGBTInterface->GetExternalController()->getInterface().set_HV(true, true, true, 0); // 0x155 = 100V
 #endif
 
         setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(-1 * cHvSet) + ",";
@@ -501,9 +501,9 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
         cVHVJ7 = this->getMeasurement("read_hvmon:VHVJ7");
         cVHVJ8 = this->getMeasurement("read_hvmon:VHVJ8");
 #else
-        // flpGBTInterface->getExternalController()->getInterface().read_hvmon(flpGBTInterface->getExternalController()->getInterface().Mon, cUMon);
-        flpGBTInterface->getExternalController()->getInterface().read_hvmon(flpGBTInterface->getExternalController()->getInterface().VHVJ7, cVHVJ7);
-        flpGBTInterface->getExternalController()->getInterface().read_hvmon(flpGBTInterface->getExternalController()->getInterface().VHVJ8, cVHVJ8);
+        // flpGBTInterface->GetExternalController()->getInterface().read_hvmon(flpGBTInterface->GetExternalController()->getInterface().Mon, cUMon);
+        flpGBTInterface->GetExternalController()->getInterface().read_hvmon(flpGBTInterface->GetExternalController()->getInterface().VHVJ7, cVHVJ7);
+        flpGBTInterface->GetExternalController()->getInterface().read_hvmon(flpGBTInterface->GetExternalController()->getInterface().VHVJ8, cVHVJ8);
 #endif
         LOG(INFO) << BOLDBLUE << "Set HV value = " << +cHvSet << " --- VHVJ7 = " << +cVHVJ7 << " --- VHVJ8 = " << +cVHVJ8 << RESET;
         cHvSetValVect.push_back(cHvSet);
@@ -553,7 +553,7 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:1,hvmonx8Relay:1,HVDAC_setvalue:0,");
 #else
-    flpGBTInterface->getExternalController()->getInterface().set_HV(false, true, true, 0);
+    flpGBTInterface->GetExternalController()->getInterface().set_HV(false, true, true, 0);
 #endif
     cDACtoHVMultiGraph->Draw("ALP");
     cDACtoHVMultiGraph->GetXaxis()->SetTitle("Set HV [V]");
@@ -567,15 +567,15 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:0,hvmonx8Relay:0,HVDAC_setvalue:0,");
 #else
-    flpGBTInterface->getExternalController()->getInterface().set_HV(false, false, false, 0);
+    flpGBTInterface->GetExternalController()->getInterface().set_HV(false, false, false, 0);
 #endif
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     fillSummaryTree("ExternalBiasDone", 1);
 }
 void SEHTester::SetLoad(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
 {
-    flpGBTInterface->getExternalController()->getInterface().set_load2(true, false, pLeftLoadValue);
-    flpGBTInterface->getExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
+    flpGBTInterface->GetExternalController()->getInterface().set_load2(true, false, pLeftLoadValue);
+    flpGBTInterface->GetExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
 }
 void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
 {
@@ -583,9 +583,9 @@ void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
 
     float T;
     // check if the critical temperature of -35C has been reached
-    flpGBTInterface->getExternalController()->getInterface().read_temperature(flpGBTInterface->getExternalController()->getInterface().Temp1, T);
+    flpGBTInterface->GetExternalController()->getInterface().read_temperature(flpGBTInterface->GetExternalController()->getInterface().Temp1, T);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    flpGBTInterface->getExternalController()->getInterface().read_temperature(flpGBTInterface->getExternalController()->getInterface().Temp1, T);
+    flpGBTInterface->GetExternalController()->getInterface().read_temperature(flpGBTInterface->GetExternalController()->getInterface().Temp1, T);
 
     fillSummaryTree("StartTemperature", T);
     // if(T < -35.0)
@@ -597,8 +597,8 @@ void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
     //     // before turning on the service hybrid
     //     uint32_t cLeftLoadValue = pLeftLoadValue;
     //     if(pLeftLoadValue < 0x090) { cLeftLoadValue = 0x090; }
-    //     flpGBTInterface->getExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
-    //     flpGBTInterface->getExternalController()->getInterface().set_load2(true, false, cLeftLoadValue); // 1 step = 635uA 0xfff = 2.6A
+    //     flpGBTInterface->GetExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
+    //     flpGBTInterface->GetExternalController()->getInterface().set_load2(true, false, cLeftLoadValue); // 1 step = 635uA 0xfff = 2.6A
     //     // waiting 7 seconds before turnin on the hybrid ensures propper
     //     // discharge of the side and lets the current rise so that the negative
     //     // over-current protection does not activate
@@ -606,8 +606,8 @@ void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
     // }
     // else
     // {
-    flpGBTInterface->getExternalController()->getInterface().set_load2(true, false, pLeftLoadValue);
-    flpGBTInterface->getExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
+    flpGBTInterface->GetExternalController()->getInterface().set_load2(true, false, pLeftLoadValue);
+    flpGBTInterface->GetExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
     //}
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("TurnOn");
@@ -625,21 +625,21 @@ void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
     // discharge of the side and lets the current rise so that the negative
     // over-current protection does not activate
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().U_P1V2_R, U_P1V2_R);
-    flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().U_P1V2_L, U_P1V2_L);
-    flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().P2V5_VTRx_MON, U_P2V5);
-    flpGBTInterface->getExternalController()->getInterface().set_SehSupply(flpGBTInterface->getExternalController()->getInterface().sehSupply_On);
+    flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().U_P1V2_R, U_P1V2_R);
+    flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().U_P1V2_L, U_P1V2_L);
+    flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().P2V5_VTRx_MON, U_P2V5);
+    flpGBTInterface->GetExternalController()->getInterface().set_SehSupply(flpGBTInterface->GetExternalController()->getInterface().sehSupply_On);
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-    flpGBTInterface->getExternalController()->getInterface().set_load2(true, false, pLeftLoadValue);
-    flpGBTInterface->getExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
+    flpGBTInterface->GetExternalController()->getInterface().set_load2(true, false, pLeftLoadValue);
+    flpGBTInterface->GetExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-    flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().I_P1V2_R, I_P1V2_R);
-    flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().I_P1V2_L, I_P1V2_L);
-    flpGBTInterface->getExternalController()->getInterface().read_supply(flpGBTInterface->getExternalController()->getInterface().I_SEH, I_SEH);
-    flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().U_P1V2_R, U_P1V2_R);
-    flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().U_P1V2_L, U_P1V2_L);
-    flpGBTInterface->getExternalController()->getInterface().read_supply(flpGBTInterface->getExternalController()->getInterface().U_SEH, U_SEH);
-    flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().P2V5_VTRx_MON, U_P2V5);
+    flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().I_P1V2_R, I_P1V2_R);
+    flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().I_P1V2_L, I_P1V2_L);
+    flpGBTInterface->GetExternalController()->getInterface().read_supply(flpGBTInterface->GetExternalController()->getInterface().I_SEH, I_SEH);
+    flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().U_P1V2_R, U_P1V2_R);
+    flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().U_P1V2_L, U_P1V2_L);
+    flpGBTInterface->GetExternalController()->getInterface().read_supply(flpGBTInterface->GetExternalController()->getInterface().U_SEH, U_SEH);
+    flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().P2V5_VTRx_MON, U_P2V5);
     fillSummaryTree("TurnOnLoadRight", I_P1V2_R);
     fillSummaryTree("TurnOnLoadLeft", I_P1V2_L);
     // if(T < -35.0)
@@ -648,7 +648,7 @@ void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
     //     std::this_thread::sleep_for(std::chrono::milliseconds(4000));
     //     // to prevent indroducing a systematic current draw at -35C we turn
     //     // the load off
-    //     flpGBTInterface->getExternalController()->getInterface().set_load2(false, false, pLeftLoadValue); // 1 step = 635uA 0xfff = 2.6A
+    //     flpGBTInterface->GetExternalController()->getInterface().set_load2(false, false, pLeftLoadValue); // 1 step = 635uA 0xfff = 2.6A
     // }
 #endif
 }
@@ -657,7 +657,7 @@ void SEHTester::TurnOff()
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("TurnOff");
 #else
-    flpGBTInterface->getExternalController()->getInterface().set_SehSupply(flpGBTInterface->getExternalController()->getInterface().sehSupply_Off);
+    flpGBTInterface->GetExternalController()->getInterface().set_SehSupply(flpGBTInterface->GetExternalController()->getInterface().sehSupply_Off);
 #endif
 }
 void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
@@ -678,7 +678,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:1,hvmonx7Relay:0,hvmonx8Relay:0,HVDAC_setvalue:" + std::to_string(pHvDacValue) + ",");
 #else
-    flpGBTInterface->getExternalController()->getInterface().set_HV(true, false, false, pHvDacValue);
+    flpGBTInterface->GetExternalController()->getInterface().set_HV(true, false, false, pHvDacValue);
 #endif
     // Create TTree for leakage current
     auto cLeakTree = new TTree("tLeakTree", "Leakage Current");
@@ -708,9 +708,9 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         ILeak = this->getMeasurement("read_hvmon:HV_meas");
 #else
-        flpGBTInterface->getExternalController()->getInterface().read_hvmon(flpGBTInterface->getExternalController()->getInterface().Mon, UMon);
+        flpGBTInterface->GetExternalController()->getInterface().read_hvmon(flpGBTInterface->GetExternalController()->getInterface().Mon, UMon);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        flpGBTInterface->getExternalController()->getInterface().read_hvmon(flpGBTInterface->getExternalController()->getInterface().HV_meas, ILeak);
+        flpGBTInterface->GetExternalController()->getInterface().read_hvmon(flpGBTInterface->GetExternalController()->getInterface().HV_meas, ILeak);
 #endif
         cILeakValVect.push_back(double(ILeak));
         cUMonValVect.push_back(UMon);
@@ -755,7 +755,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:0,hvmonx8Relay:0,HVDAC_setvalue:0,");
 #else
-    flpGBTInterface->getExternalController()->getInterface().set_HV(false, false, false, 0);
+    flpGBTInterface->GetExternalController()->getInterface().set_HV(false, false, false, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(30000));
     fillSummaryTree("LeakDone", 1);
 #endif
@@ -817,8 +817,8 @@ void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, u
         fTestcardClient->sendAndReceivePacket("set_load1,enable:0,path:0,value:0,");
         fTestcardClient->sendAndReceivePacket("set_load2,enable:0,path:0,value:0,");
 #else
-        flpGBTInterface->getExternalController()->getInterface().set_load1(false, false, 0);
-        flpGBTInterface->getExternalController()->getInterface().set_load2(false, false, 0);
+        flpGBTInterface->GetExternalController()->getInterface().set_load1(false, false, 0);
+        flpGBTInterface->GetExternalController()->getInterface().set_load2(false, false, 0);
 #endif
         cIoutRValVect.clear(), cIinValVect.clear(), cUoutRValVect.clear(), cUoutLValVect.clear();
         cEfficiencyValVect.clear(), cU2v5ValVect.clear(), cIoutLValVect.clear();
@@ -846,11 +846,11 @@ void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, u
 #else
             if(cSide == "both")
             {
-                flpGBTInterface->getExternalController()->getInterface().set_load1(true, false, cLoadValue);
-                flpGBTInterface->getExternalController()->getInterface().set_load2(true, false, cLoadValue);
+                flpGBTInterface->GetExternalController()->getInterface().set_load1(true, false, cLoadValue);
+                flpGBTInterface->GetExternalController()->getInterface().set_load2(true, false, cLoadValue);
             }
-            if(cSide == "left") { flpGBTInterface->getExternalController()->getInterface().set_load2(true, false, cLoadValue); }
-            if(cSide == "right") { flpGBTInterface->getExternalController()->getInterface().set_load1(true, false, cLoadValue); }
+            if(cSide == "left") { flpGBTInterface->GetExternalController()->getInterface().set_load2(true, false, cLoadValue); }
+            if(cSide == "right") { flpGBTInterface->GetExternalController()->getInterface().set_load1(true, false, cLoadValue); }
 #endif
             // Delay needs to be optimized during functional testing
             std::this_thread::sleep_for(std::chrono::milliseconds(5000));
@@ -863,13 +863,13 @@ void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, u
             U_SEH    = this->getMeasurement("read_supply:U_SEH");
             U_P2V5   = this->getMeasurement("read_load:P2V5_VTRx_MON");
 #else
-            flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().I_P1V2_R, I_P1V2_R);
-            flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().I_P1V2_L, I_P1V2_L);
-            flpGBTInterface->getExternalController()->getInterface().read_supply(flpGBTInterface->getExternalController()->getInterface().I_SEH, I_SEH);
-            flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().U_P1V2_R, U_P1V2_R);
-            flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().U_P1V2_L, U_P1V2_L);
-            flpGBTInterface->getExternalController()->getInterface().read_supply(flpGBTInterface->getExternalController()->getInterface().U_SEH, U_SEH);
-            flpGBTInterface->getExternalController()->getInterface().read_load(flpGBTInterface->getExternalController()->getInterface().P2V5_VTRx_MON, U_P2V5);
+            flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().I_P1V2_R, I_P1V2_R);
+            flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().I_P1V2_L, I_P1V2_L);
+            flpGBTInterface->GetExternalController()->getInterface().read_supply(flpGBTInterface->GetExternalController()->getInterface().I_SEH, I_SEH);
+            flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().U_P1V2_R, U_P1V2_R);
+            flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().U_P1V2_L, U_P1V2_L);
+            flpGBTInterface->GetExternalController()->getInterface().read_supply(flpGBTInterface->GetExternalController()->getInterface().U_SEH, U_SEH);
+            flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().P2V5_VTRx_MON, U_P2V5);
 #endif
             // The input binning is performed in DAC values, the result is binned in the measured current
             cIoutValVect.push_back(I_P1V2_R + I_P1V2_L);
@@ -933,8 +933,8 @@ void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, u
     fTestcardClient->sendAndReceivePacket("set_load1,enable:0,path:0,value:0,");
     fTestcardClient->sendAndReceivePacket("set_load2,enable:0,path:0,value:0,");
 #else
-    flpGBTInterface->getExternalController()->getInterface().set_load1(false, false, 0);
-    flpGBTInterface->getExternalController()->getInterface().set_load2(false, false, 0);
+    flpGBTInterface->GetExternalController()->getInterface().set_load1(false, false, 0);
+    flpGBTInterface->GetExternalController()->getInterface().set_load2(false, false, 0);
 #endif
     fResultFile->cd();
     cEfficiencyTree->Write();
@@ -1121,13 +1121,13 @@ void SEHTester::TestCardVoltages()
 #ifdef __TCP_SERVER__
         k = this->getMeasurement("read_supply:" + c2SSEHMapIterator->first);
 #else
-        flpGBTInterface->getExternalController()->getInterface().read_supply(c2SSEHMapIterator->second, k);
+        flpGBTInterface->GetExternalController()->getInterface().read_supply(c2SSEHMapIterator->second, k);
 #endif
         fillSummaryTree(c2SSEHMapIterator->first, k);
         c2SSEHMapIterator++;
 
     } while(c2SSEHMapIterator != f2SSEHSupplyMeasurements.end());
-    // flpGBTInterface->getExternalController()->getInterface().set_SehSupply(flpGBTInterface->getExternalController()->getInterface().sehSupply_On);
+    // flpGBTInterface->GetExternalController()->getInterface().set_SehSupply(flpGBTInterface->GetExternalController()->getInterface().sehSupply_On);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     auto d2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
     do
@@ -1135,13 +1135,13 @@ void SEHTester::TestCardVoltages()
 #ifdef __TCP_SERVER__
         k = this->getMeasurement("read_supply:" + d2SSEHMapIterator->first);
 #else
-        flpGBTInterface->getExternalController()->getInterface().read_supply(d2SSEHMapIterator->second, k);
+        flpGBTInterface->GetExternalController()->getInterface().read_supply(d2SSEHMapIterator->second, k);
 #endif
         fillSummaryTree(d2SSEHMapIterator->first, k);
         d2SSEHMapIterator++;
 
     } while(d2SSEHMapIterator != f2SSEHSupplyMeasurements.end());
-    // flpGBTInterface->getExternalController()->getInterface().set_SehSupply(flpGBTInterface->getExternalController()->getInterface().sehSupply_Off);
+    // flpGBTInterface->GetExternalController()->getInterface().set_SehSupply(flpGBTInterface->GetExternalController()->getInterface().sehSupply_Off);
 }
 
 void SEHTester::DCDCOutputEvaluation()
@@ -1170,7 +1170,7 @@ void SEHTester::DCDCOutputEvaluation()
 #ifdef __TCP_SERVER__
             cDCDCValue = this->getMeasurement("read_load:" + cDCDCMapIterator->first);
 #else
-            flpGBTInterface->getExternalController()->getInterface().read_load(cDCDCMapIterator->second, cDCDCValue);
+            flpGBTInterface->GetExternalController()->getInterface().read_load(cDCDCMapIterator->second, cDCDCValue);
 #endif
             // cDCDCValue += gRandom->Rndm();
             cDCDCValueVect.push_back(cDCDCValue);
