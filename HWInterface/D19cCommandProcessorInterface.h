@@ -15,7 +15,7 @@ class D19cCommandProcessorInterface : public CommandProcessorInterface
   public:
     // void                  Reset() override;
     void                  WriteCommand(const std::vector<uint32_t>& pCommand) override;
-    std::vector<uint32_t> ReadReply(uint8_t pNWords) override;
+    std::vector<uint32_t> ReadReply(int pNWords) override;
 };
 } // namespace Ph2_HwInterface
 #endif

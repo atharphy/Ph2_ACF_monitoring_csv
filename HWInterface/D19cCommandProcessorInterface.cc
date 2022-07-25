@@ -26,7 +26,7 @@ void D19cCommandProcessorInterface::WriteCommand(const std::vector<uint32_t>& pC
     WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", pCommand);
 }
 
-std::vector<uint32_t> D19cCommandProcessorInterface::ReadReply(uint8_t pNWords)
+std::vector<uint32_t> D19cCommandProcessorInterface::ReadReply(int pNWords)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     std::vector<uint32_t>                 cReply     = ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", pNWords);
