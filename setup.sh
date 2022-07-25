@@ -74,8 +74,8 @@ export EUDAQLIB=$EUDAQDIR/lib
 ##########
 # Pybind11 #
 ##########
-# export PYBIND11=$PH2ACF_BASE_DIR/../pybind11-2.9.2/
-# export PYBIND11INCLUDE=$PYBIND11/include
+export PYBIND11=$PH2ACF_BASE_DIR/../pybind11-2.9.2/
+export PYBIND11INCLUDE=$PYBIND11/include
 export PYTHONINCLUDE=/usr/include/python3.6m/
 
 ##########
@@ -136,7 +136,7 @@ else
   clang_command="/opt/rh/llvm-toolset-7.0/root/usr/bin/clang-format"
 fi
 
-alias formatAll="find ${PH2ACF_BASE_DIR} -path ${PH2ACF_BASE_DIR}/MessageUtils -prune -o -iname *.h -o -iname *.cc | xargs ${clang_command} -i"
+alias formatAll="find ${PH2ACF_BASE_DIR} -type f \\( -name \"*.cc\" -o -name \"*.h\" \\) ! -path \"${PH2ACF_BASE_DIR}/MessageUtils/*\" ! -path \"${PH2ACF_BASE_DIR}/*/_deps/*\" | xargs ${clang_command} -i"
 
 if [[ $1 == "ci" ]]; then
     export CompileForHerd=false
