@@ -111,7 +111,7 @@ void D19clpGBTInterface::Configure2SSEH(Ph2_HwDescription::Chip* pChip)
     uint8_t cChipRate = GetChipRate(pChip);
     LOG(INFO) << BOLDGREEN << "Applying 2S-SEH lpGBT configuration for " << +cChipRate << "G module." << RESET;
     // Forcing driver attenuation to be 1
-    uint8_t cEQAttenuation = 3; 
+    uint8_t cEQAttenuation = 3;
     WriteChipReg(pChip, "EQConfig", cEQAttenuation << 3);
     // Clocks - by default all are off
     std::vector<uint8_t> cClocks  = {fClock_RHS_Hybrid, fClock_LHS_Hybrid}; // Reduced number of clocks and only 320 MHz

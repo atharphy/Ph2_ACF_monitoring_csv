@@ -819,11 +819,11 @@ void OTHybridTester::LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect, uint8_
         if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
-            LOG(INFO) << MAGENTA << "VDDRX read value = " << +clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "VDDRX") << RESET;
+            LOG(INFO) << BOLDBLUE << "VDDRX read value = " << +clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "VDDRX") << RESET;
             // uint8_t cEQConfig = (clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "EQConfig") & ~(0x2 << 3)) | (pEQAttenuation << 3);
             // FIXME for now I am forcing to 0x00 EQCap bits of the register
             clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "EQConfig", pEQAttenuation << 3);
-            LOG(INFO) << MAGENTA << "EQConfig set to : 0x" << std::hex << +clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "EQConfig") << std::dec << RESET;
+            LOG(INFO) << BOLDBLUE << "EQConfig set to : 0x" << std::hex << +clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "EQConfig") << std::dec << RESET;
             // ROOT Tree for Eye Diagram from lpGBT Eye Opening Monitor
             auto cEyeDiagramTree = new TTree(Form("tEyeDiagram%i", cOpticalGroup->getOpticalGroupId()), "Eye Diagram form lpGBT Eye Opening Monitor");
             // vectors for Tree
@@ -839,7 +839,8 @@ void OTHybridTester::LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect, uint8_
             auto cObj              = gROOT->FindObject(Form("hEyeDiagram%i", cOpticalGroup->getOpticalGroupId()));
             if(cObj) delete cObj;
             auto cEyeDiagramHist = new TH2I(Form("hEyeDiagram%i", cOpticalGroup->getOpticalGroupId()), "Eye Opening Image", 64, 0, 63, 32, 0, 31);
-            LOG(DEBUG) << BOLDRED << "EQConfig "<< +clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "EQConfig")<< RESET;;
+            LOG(DEBUG) << BOLDRED << "EQConfig " << +clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "EQConfig") << RESET;
+            ;
             clpGBTInterface->ConfigureEOM(cOpticalGroup->flpGBT, pEndOfCountSelect, false, true);
             for(uint8_t cVoltageStep = 0; cVoltageStep < 31; cVoltageStep++)
             {
