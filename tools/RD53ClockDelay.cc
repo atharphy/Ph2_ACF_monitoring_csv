@@ -24,7 +24,7 @@ void ClockDelay::ConfigureCalibration()
     // # Retrieve parameters #
     // #######################
     startValue = 0;
-    stopValue  = RD53Shared::NLATENCYBINS * (RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY")) + 1) - 1;
+    stopValue  = RD53Shared::NLATENCYBINS * (RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CLK_DATA_DELAY_CLK")) + 1) - 1;
 
     // ##############################
     // # Initialize dac scan values #
@@ -42,8 +42,8 @@ void ClockDelay::ConfigureCalibration()
     // ##################
     // # Register masks #
     // ##################
-    maxClkDelay = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY"));
-    maxCmdDelay = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CLK_DATA_DELAY_DATA_DELAY"));
+    maxClkDelay = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CLK_DATA_DELAY_CLK"));
+    maxCmdDelay = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CLK_DATA_DELAY_DATA"));
 
     // #######################
     // # Initialize progress #
