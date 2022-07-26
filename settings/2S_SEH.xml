@@ -10,7 +10,7 @@
     
     <OpticalGroup Id="0" FMCId="0" reset="1">
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-        <lpGBT Id="0" version="0" optical="1" configfile="lpGBT0.txt">
+        <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
           <Settings
           />
         </lpGBT>
@@ -31,13 +31,13 @@
     <Register name="clock_source_u8">3</Register> 
     <Register name="fc7_daq_cnfg">
     <Register name="optical_block">
-		<Register name="rx_polarity"> 
-        		<Register name="l8"> 0 </Register> <!-- lpGBT-v0 = 0 , lpGBT-v1 = 1 -->
-        		<Register name="l12"> 0 </Register> <!-- lpGBT-v0 = 0 , lpGBT-v1 = 1 -->
-		</Register>
-		<Register name="tx_polarity"> 
-        		<Register name="l8"> 0 </Register>
-        		<Register name="l12"> 0 </Register>
+		<Register name="lpgbt_sc_worker">
+                        <Register name="ic_retry"> 1 </Register>
+                        <Register name="i2c_retry"> 1 </Register>
+                        <Register name="fe_retry"> 1 </Register>
+                        <Register name="max_ic_retry"> 10 </Register>
+                        <Register name="max_i2c_retry"> 10 </Register>
+                        <Register name="max_fe_retry"> 10 </Register>
 		</Register>
 	</Register>
         <!-- Clock control -->
