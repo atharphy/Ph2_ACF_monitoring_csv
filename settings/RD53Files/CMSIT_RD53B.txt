@@ -85,7 +85,7 @@ CLK_DATA_FINE_DELAY       0x36          0b0                     0b0             
 VCAL_HIGH                 0x37          0d500                   0d500                              12
 VCAL_MED                  0x38          0d300                   0d300                              12
 MEAS_CAP                  0x39          0b0                     0b0                                 3
-CdrConf                   0x3A          0b1000                  0b1000                              4
+CDR_CONFIG                0x3A          0b1000                  0b1000                              4
 ClockEnableConf           0x3B          0b111111111111          0b111111111111                     12
 ChSyncConf                0x3C          0b10000                 0b10000                             5
 GlobalPulseConf           0x3D          0b0                     0b0                                16
@@ -301,22 +301,20 @@ SEU63_notmr               0xFF          0b0                     0b0             
 *-------------------------------------------------------------------------------------------------------
 * RegName                 Addr          Defval                  Value                           BitSize
 *-------------------------------------------------------------------------------------------------------
-HighGain_LIN              0x100          0b1                     0b1                                 1
-INJECTION_SELECT_DELAY    0x101          0b0000                  0b0000                              4
-VOLTAGE_TRIM_DIG          0x102          0b10000                 0b10000                             5
-VOLTAGE_TRIM_ANA          0x103          0b10000                 0b10000                             5
-CLK_DATA_DELAY_DATA_DELAY 0x104          0b0000                  0b0000                              4
-CLK_DATA_DELAY_CLK_DELAY  0x105          0b0000                  0b0000                              4
-CLK_DATA_DELAY_2INV_DELAY 0x106          0b0                     0b0                                 1
-MONITOR_CONFIG_ADC        0x107          0d5                     0d5                                 6
-MONITOR_CONFIG_BG         0x108          0d12                    0d12                                5
-CML_CONFIG_SER_INV_TAP    0x109          0b00                    0b00                                2
-CML_CONFIG_SER_EN_TAP     0x10A          0b00                    0b00                                2
-CML_CONFIG_EN_LANE        0x10B          0b1111                  0b1111                              4
-SER_SEL_OUT_0             0x10C          0b1                     0b1                                 2
-SER_SEL_OUT_1             0x10D          0b1                     0b1                                 2
-SER_SEL_OUT_2             0x10E          0b1                     0b1                                 2
-SER_SEL_OUT_3             0x10F          0b1                     0b1                                 2
+CalibrationConfig_DELAY   0x100          0b000000                0b000000                            6
+VOLTAGE_TRIM_DIG          0x101          0b1000                  0b1000                              4
+VOLTAGE_TRIM_ANA          0x102          0b1000                  0b1000                              4
+CLK_DATA_DELAY_DATA_DELAY 0x103          0b0000                  0b0000                              4
+CLK_DATA_DELAY_CLK_DELAY  0x104          0b0000                  0b0000                              4
+MON_ADC_TRIM              0x105          0d5                     0d5                                 6
+CML_CONFIG_SER_INV_TAP    0x106          0b00                    0b00                                2
+CML_CONFIG_SER_EN_TAP     0x107          0b00                    0b00                                2
+CML_CONFIG_EN_LANE        0x108          0b1111                  0b1111                              4
+SER_SEL_OUT_0             0x109          0b1                     0b1                                 2
+SER_SEL_OUT_1             0x10A          0b1                     0b1                                 2
+SER_SEL_OUT_2             0x10B          0b1                     0b1                                 2
+SER_SEL_OUT_3             0x10C          0b1                     0b1                                 2
+CDR_CONFIG_SEL_SER_CLK    0x10D          0b000                   0b000                               3
 
 ADC_OFFSET_VOLT           0x110          0d63                    0d63                               16
 ADC_MAXIMUM_VOLT          0x111          0d839                   0d839                              16
