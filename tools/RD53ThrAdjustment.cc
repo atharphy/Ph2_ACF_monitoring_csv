@@ -25,22 +25,23 @@ void ThrAdjustment::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart        = this->findValueInSettings<double>("ROWstart");
-    rowStop         = this->findValueInSettings<double>("ROWstop");
-    colStart        = this->findValueInSettings<double>("COLstart");
-    colStop         = this->findValueInSettings<double>("COLstop");
     targetThreshold = this->findValueInSettings<double>("TargetThr");
-    ThrStart        = this->findValueInSettings<double>("ThrStart");
-    ThrStop         = this->findValueInSettings<double>("ThrStop");
+    startValue      = this->findValueInSettings<double>("ThrStart");
+    stopValue       = this->findValueInSettings<double>("ThrStop");
     doDisplay       = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
-    saveBinaryData  = this->findValueInSettings<double>("SaveBinaryData");
 
-    frontEnd = RD53::getMajorityFE(colStart, colStop);
-    colStart = std::max(colStart, frontEnd->colStart);
-    colStop  = std::min(colStop, frontEnd->colStop);
+    frontEnd             = RD53Shared::firstChip->getMajorityFE(PixelAlive::colStart, PixelAlive::colStop);
+    PixelAlive::colStart = std::max(PixelAlive::colStart, frontEnd->colStart);
+    PixelAlive::colStop  = std::min(PixelAlive::colStop, frontEnd->colStop);
     LOG(INFO) << GREEN << "ThrAdjustment will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << RESET << BOLDYELLOW << colStart << ", " << colStop << RESET
               << GREEN << "]" << RESET;
+
+    // ########################
+    // # Custom channel group #
+    // ########################
+    for(auto row = PixelAlive::rowStart; row <= PixelAlive::rowStop; row++)
+        for(auto col = PixelAlive::colStart; col <= PixelAlive::colStop; col++) PixelAlive::theChnGroupHandler->getRegionOfInterest().enableChannel(row, col);
 
     // #######################
     // # Initialize progress #
@@ -53,7 +54,7 @@ void ThrAdjustment::Running()
     theCurrentRun = this->fRunNumber;
     LOG(INFO) << GREEN << "[ThrAdjustment::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
-    if(saveBinaryData == true)
+    if(PixelAlive::saveBinaryData == true)
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_ThrAdjustment.raw", 'w');
         this->initializeWriteFileHandler();
@@ -113,7 +114,7 @@ void ThrAdjustment::initializeFiles(const std::string& fileRes_, int currentRun)
 
     fileRes = fileRes_;
 
-    if((currentRun >= 0) && (saveBinaryData == true))
+    if((currentRun >= 0) && (PixelAlive::saveBinaryData == true))
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrAdjustment.raw", 'w');
         this->initializeWriteFileHandler();
@@ -127,7 +128,7 @@ void ThrAdjustment::initializeFiles(const std::string& fileRes_, int currentRun)
 
 void ThrAdjustment::run()
 {
-    ThrAdjustment::bitWiseScanGlobal(frontEnd->thresholdReg, targetThreshold, ThrStart, ThrStop);
+    ThrAdjustment::bitWiseScanGlobal(frontEnd->thresholdReg, targetThreshold, startValue, stopValue);
 
     // ############################
     // # Fill threshold container #
@@ -235,7 +236,7 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, 
                             static_cast<RD53*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()))->getReg("VCAL_MED");
                         uint16_t vcal_high_setting = round(RD53chargeConverter::Charge2VCal(target)) + vcal_med_setting;
 
-                        static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackChipCommands(cChip, "VCAL_HIGH", vcal_high_setting, chipCommandList, true);
+                        static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackWriteCommand(cChip, "VCAL_HIGH", vcal_high_setting, chipCommandList, true);
 
                         LOG(INFO) << GREEN << "The target threshold is " << std::setprecision(1) << BOLDYELLOW << target << RESET << GREEN << " electrons" << RESET;
                         LOG(INFO) << BOLDBLUE << "\t--> Closest charge setting is " << BOLDYELLOW << "VCAL_HIGH" << RESET << GREEN << " = " << BOLDYELLOW << vcal_high_setting << RESET << GREEN
@@ -247,7 +248,7 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, 
                             2;
 
                         static_cast<RD53Interface*>(this->fReadoutChipInterface)
-                            ->PackChipCommands(cChip,
+                            ->PackWriteCommand(cChip,
                                                regName,
                                                midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
                                                chipCommandList,
@@ -262,7 +263,7 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, 
                     static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(cBoard, chipCommandList, hybridId, hybridCommandList);
                 }
 
-                static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendHybridCommandsPack(cBoard, hybridCommandList);
+                static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendHybridCommands(cBoard, hybridCommandList);
             }
 
         // ################
@@ -333,7 +334,7 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, 
                     if(bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() != 0)
                     {
                         static_cast<RD53Interface*>(this->fReadoutChipInterface)
-                            ->PackChipCommands(cChip,
+                            ->PackWriteCommand(cChip,
                                                regName,
                                                bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
                                                chipCommandList,
@@ -351,7 +352,7 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, 
                 static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(cBoard, chipCommandList, hybridId, hybridCommandList);
             }
 
-            static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendHybridCommandsPack(cBoard, hybridCommandList);
+            static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendHybridCommands(cBoard, hybridCommandList);
         }
 
     // ################

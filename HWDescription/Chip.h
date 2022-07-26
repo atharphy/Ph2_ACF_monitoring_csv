@@ -95,7 +95,8 @@ class Chip : public FrontEndDescription
      * \param pReg
      * \return  RegItem
      */
-    ChipRegItem getRegItem(const std::string& pReg);
+    const ChipRegItem& getRegItem(const std::string& pReg) const;
+    ChipRegItem&       getRegItem(const std::string& pReg);
 
     /*!
      * \brief Write the registers of the Map in a file

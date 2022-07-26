@@ -54,23 +54,20 @@ class ThrEqualizationSC : public SCurve
 #endif
 
   private:
-    size_t colStart;
-    size_t colStop;
-
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
-    std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
-    DetectorDataContainer                    theTDACcontainer;
+    DetectorDataContainer theTDACcontainer;
 
     void fillHisto();
     void bitWiseScanLocal(const std::string& regName, std::shared_ptr<DetectorDataContainer> target);
     void chipErrorReport() const;
 
   protected:
+    bool doDisplay;
+    bool doUpdateChip;
+
     std::string fileRes;
     int         theCurrentRun;
-    bool        doUpdateChip;
-    bool        doDisplay;
 };
 
 #endif

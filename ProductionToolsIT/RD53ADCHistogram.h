@@ -13,7 +13,7 @@
 #include "../tools/Tool.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53ADCHistogramHistograms.h"
+#include "../DQMUtils/RD53ADCScanHistograms.h"
 #endif
 
 // #########################
@@ -26,7 +26,7 @@ class ADCHistogram : public Tool
     void draw();
 
 #ifdef __USE_ROOT__
-    ADCHistogramHistograms* histos;
+    ADCScanHistograms* histos;
 #endif
 
   private:

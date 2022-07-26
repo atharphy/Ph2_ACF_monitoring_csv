@@ -58,17 +58,6 @@ class GainOptimization : public Gain
 #endif
 
   private:
-    size_t rowStart;
-    size_t rowStop;
-    size_t colStart;
-    size_t colStop;
-    size_t startValue;
-    size_t stopValue;
-    float  targetCharge;
-    size_t KrumCurrStart;
-    size_t KrumCurrStop;
-    bool   doFast;
-
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
     DetectorDataContainer theKrumCurrContainer;
@@ -78,11 +67,13 @@ class GainOptimization : public Gain
     void chipErrorReport() const;
 
   protected:
+    size_t KrumCurrStart;
+    size_t KrumCurrStop;
+    bool   doUpdateChip;
+    bool   doDisplay;
+
     std::string fileRes;
     int         theCurrentRun;
-    bool        doUpdateChip;
-    bool        doDisplay;
-    bool        saveBinaryData;
 };
 
 #endif

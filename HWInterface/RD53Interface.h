@@ -11,6 +11,8 @@
 #define RD53Interface_H
 
 #include "../HWDescription/ChipRegItem.h"
+#include "../HWDescription/RD53.h"
+#include "../Utils/RD53ChannelGroupHandler.h"
 #include "BeBoardFWInterface.h"
 #include "RD53FWInterface.h"
 #include "ReadoutChipInterface.h"
@@ -30,8 +32,6 @@ class RD53Interface : public ReadoutChipInterface
     // #############################
     // # Override member functions #
     // #############################
-    int      CheckChipID(Ph2_HwDescription::Chip* pChip, const int chipIDfromDB) override;
-    bool     ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
     bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, bool pVerifLoop = true) override;
     void     WriteBoardBroadcastChipReg(const Ph2_HwDescription::BeBoard* pBoard, const std::string& regName, uint16_t data) override;
     bool     WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName, ChipContainer& pValue, bool pVerifLoop = true) override;
@@ -48,32 +48,31 @@ class RD53Interface : public ReadoutChipInterface
     void StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip);
     // #############################
 
-    void Reset(Ph2_HwDescription::ReadoutChip* pChip, const int resetType);
-    void ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip);
+    virtual void Reset(Ph2_HwDescription::ReadoutChip* pChip, const size_t resetType) = 0;
+    virtual void ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip)               = 0;
 
-    void InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard);
-    void InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1);
+    virtual void InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard)                                                                                                  = 0;
+    virtual void InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1)                                                                                = 0;
+    virtual void PackWriteCommand(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = false) = 0;
 
-    void PackChipCommands(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = false);
-    void SendChipCommandsPack(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint16_t>& chipCommandList, int hybridId);
-
+    void SendChipCommands(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint16_t>& chipCommandList, int hybridId);
     void PackHybridCommands(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint16_t>& chipCommandList, int hybridId, std::vector<uint32_t>& hybridCommandList);
-    void SendHybridCommandsPack(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& hybridCommandList);
+    void SendHybridCommands(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& hybridCommandList);
 
-  private:
-    void                                       InitRD53UplinkSpeed(Ph2_HwDescription::ReadoutChip* pChip);
-    std::vector<std::pair<uint16_t, uint16_t>> ReadRD53Reg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName);
-    void                                       WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault);
-    std::pair<std::string, uint16_t>           SplitSpecialRegisters(std::string regName, Ph2_HwDescription::ChipRegItem& cRegItem, Ph2_HwDescription::ChipRegMap& pRD53RegMap);
+  protected:
+    virtual void                                       InitRD53UplinkSpeed(Ph2_HwDescription::ReadoutChip* pChip)                                             = 0;
+    virtual std::vector<std::pair<uint16_t, uint16_t>> ReadRD53Reg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName)                         = 0;
+    virtual void                                       WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault)                           = 0;
+    virtual std::pair<std::string, uint16_t>           SplitSpecialRegisters(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) = 0;
 
     template <typename T>
-    void sendCommand(Ph2_HwDescription::ReadoutChip* pChip, const T& cmd)
+    void SendCommand(Ph2_HwDescription::ReadoutChip* pChip, const T& cmd)
     {
-        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmd.getFrames(), pChip->getHybridId());
+        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialize(cmd), pChip->getHybridId());
     }
 
     template <typename T, size_t N>
-    static size_t arraySize(const T (&)[N])
+    static size_t ArraySize(const T (&)[N])
     {
         return N;
     }

@@ -29,7 +29,7 @@ class lpGBT : public Chip
     uint8_t getNumberOfBits(const std::string& dacName) override { return 0; }
 
     void    setVersion(uint8_t pVersion) { fVersion = pVersion; }
-    uint8_t getVersion() { return fVersion; }
+    uint8_t getVersion() const { return fVersion; }
 
     void setPhaseRxAligned(const bool done) { phaseRxAligned = done; };
     bool getPhaseRxAligned() { return phaseRxAligned; };
