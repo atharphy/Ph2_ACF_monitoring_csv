@@ -68,9 +68,9 @@
 
               CML_CONFIG_SER_EN_TAP  = "0b00"
               CML_CONFIG_SER_INV_TAP = "0b00"
-              CML_TAP0_BIAS          =  "500"
-              CML_TAP1_BIAS          =    "0"
-              CML_TAP2_BIAS          =    "0"
+              DAC_CML_BIAS_0         =  "500"
+              DAC_CML_BIAS_1         =    "0"
+              DAC_CML_BIAS_2         =    "0"
 
               MON_ADC_TRIM           =    "5"
 
