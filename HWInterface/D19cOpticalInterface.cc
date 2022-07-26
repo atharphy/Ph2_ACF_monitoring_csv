@@ -52,13 +52,13 @@ bool D19cOpticalInterface::Read(Chip* pChip, std::vector<ChipRegItem>& pRegister
                 uint8_t cMaxRetry = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? fConfiguration.fMaxRetryIC : fConfiguration.fMaxRetryFE;
                 LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Read : Tried " << +cTryCntr << "/" << +cMaxRetry << " before success" << RESET;
             }
-            auto cReplies = flpGBTSlowControlWorkerInterface->ReadReply(cRegisterBlock.size() + 1); // N words + 1 header
+            auto   cReplies = flpGBTSlowControlWorkerInterface->ReadReply(cRegisterBlock.size() + 1); // N words + 1 header
             size_t cNWords  = (cReplies[0] & (0xFFFF << 0)) >> 0;
             if(cNWords != cRegisterBlock.size())
-	    {
+            {
                 LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Read -- Corrupted CPB reply" << RESET;
-        	throw std::runtime_error("Corrupted CPB reply");
-		return false;
+                throw std::runtime_error("Corrupted CPB reply");
+                return false;
             }
             for(size_t cReplyIdx = 0; cReplyIdx < cReplies.size(); cReplyIdx++)
             {
@@ -116,13 +116,13 @@ bool D19cOpticalInterface::Write(Chip* pChip, std::vector<ChipRegItem>& pRegiste
                 uint8_t cMaxRetry = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? fConfiguration.fMaxRetryIC : fConfiguration.fMaxRetryFE;
                 LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Write : Tried " << +cTryCntr << "/" << +cMaxRetry << " before success" << RESET;
             }
-            auto cReplies = flpGBTSlowControlWorkerInterface->ReadReply(cRegisterBlock.size() + 1); // N words + 1 header
+            auto   cReplies = flpGBTSlowControlWorkerInterface->ReadReply(cRegisterBlock.size() + 1); // N words + 1 header
             size_t cNWords  = (cReplies[0] & (0xFFFF << 0)) >> 0;
             if(cNWords != cRegisterBlock.size())
-	    {
+            {
                 LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Write -- Corrupted CPB reply" << RESET;
-        	throw std::runtime_error("Corrupted CPB reply");
-		return false;
+                throw std::runtime_error("Corrupted CPB reply");
+                return false;
             }
             for(size_t cReplyIdx = 0; cReplyIdx < cReplies.size(); cReplyIdx++)
             {
