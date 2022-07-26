@@ -51,7 +51,7 @@ class RD53Interface : public ReadoutChipInterface
     // #############################
 
     virtual void Reset(Ph2_HwDescription::ReadoutChip* pChip, const size_t resetType) = 0;
-    virtual void ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip)               = 0;
+    virtual void ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip);
 
     virtual void InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard)                                                                                                  = 0;
     virtual void InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1)                                                                                = 0;
@@ -79,6 +79,13 @@ class RD53Interface : public ReadoutChipInterface
     {
         return N;
     }
+
+    uint16_t SetFieldValue(uint16_t regValue, uint16_t fieldValue, uint8_t start, uint8_t size);
+    struct SpecialRegInfo
+    {
+        std::string regName;
+        uint8_t     start; // Bit index at which the special register, i.e. field, starts
+    };
 
     // ###########################
     // # Dedicated to monitoring #

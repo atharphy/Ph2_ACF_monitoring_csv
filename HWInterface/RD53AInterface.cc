@@ -34,7 +34,7 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     // #######################################
     // # Programming CLK_DATA_DELAY register #
     // #######################################
-    static const char*               registerClkDataDelayList[] = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_CMD_DELAY", "CLK_DATA_DELAY_CLK_DELAY", "CLK_DATA_DELAY_2INV_DELAY"}; // @CONST@
+    static const char*               registerClkDataDelayList[] = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA_DELAY", "CLK_DATA_DELAY_CLK_DELAY", "CLK_DATA_DELAY_2INV_DELAY"}; // @CONST@
     std::pair<std::string, uint16_t> nameAndValue("CLK_DATA_DELAY", pRD53RegMap["CLK_DATA_DELAY"].fValue);
     bool                             doWriteClkDataDelay = false;
 
@@ -62,7 +62,7 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     // # Programmig global registers #
     // ###############################
     static const std::set<std::string> registerBlackList = {
-        "HighGain_LIN", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "CLK_DATA_DELAY", "CLK_DATA_DELAY_CMD_DELAY", "CLK_DATA_DELAY_CLK_DELAY", "CLK_DATA_DELAY_2INV_DELAY"};
+        "HighGain_LIN", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA_DELAY", "CLK_DATA_DELAY_CLK_DELAY", "CLK_DATA_DELAY_2INV_DELAY"};
 
     for(auto& cRegItem: pRD53RegMap)
         if(cRegItem.second.fPrmptCfg == true)
@@ -160,35 +160,29 @@ void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     RD53AInterface::InitRD53UplinkSpeed(pChip);
 }
 
-uint16_t RD53AInterface::SetFieldValue(uint16_t regValue, uint16_t fieldValue, uint8_t start, uint8_t size)
-{
-    uint16_t mask = ((1 << (size)) - 1) << start;
-    return regValue ^ ((regValue ^ (fieldValue << start)) & mask);
-}
-
 std::pair<std::string, uint16_t> RD53AInterface::SplitSpecialRegisters(std::string regName, uint16_t value, ChipRegMap& pRD53RegMap)
 {
-    static const std::map<std::string, SpecialRegInfo> specialRegMap = {{"CDR_CONFIG_SEL_SER_CLK", {"CDR_CONFIG", 0}},
+    static const std::map<std::string, RD53Interface::SpecialRegInfo> specialRegMap = {{"CDR_CONFIG_SEL_SER_CLK", {"CDR_CONFIG", 0}},
 
-                                                                        {"CLK_DATA_DELAY_CMD_DELAY", {"CLK_DATA_DELAY", 0}},
-                                                                        {"CLK_DATA_DELAY_CLK_DELAY", {"CLK_DATA_DELAY", 4}},
-                                                                        {"CLK_DATA_DELAY_2INV_DELAY", {"CLK_DATA_DELAY", 5}},
+                                                                                       {"CLK_DATA_DELAY_CMD_DELAY", {"CLK_DATA_DELAY", 0}},
+                                                                                       {"CLK_DATA_DELAY_CLK_DELAY", {"CLK_DATA_DELAY", 4}},
+                                                                                       {"CLK_DATA_DELAY_2INV_DELAY", {"CLK_DATA_DELAY", 5}},
 
-                                                                        {"MONITOR_CONFIG_ADC", {"MONITOR_CONFIG", 0}},
-                                                                        {"MONITOR_CONFIG_BG", {"MONITOR_CONFIG", 6}},
+                                                                                       {"MONITOR_CONFIG_ADC", {"MONITOR_CONFIG", 0}},
+                                                                                       {"MONITOR_CONFIG_BG", {"MONITOR_CONFIG", 6}},
 
-                                                                        {"VOLTAGE_TRIM_DIG", {"VOLTAGE_TRIM", 0}},
-                                                                        {"VOLTAGE_TRIM_ANA", {"VOLTAGE_TRIM", 5}},
+                                                                                       {"VOLTAGE_TRIM_DIG", {"VOLTAGE_TRIM", 0}},
+                                                                                       {"VOLTAGE_TRIM_ANA", {"VOLTAGE_TRIM", 5}},
 
-                                                                        {"INJECTION_SELECT_DELAY", {"INJECTION_SELECT", 0}},
+                                                                                       {"INJECTION_SELECT_DELAY", {"INJECTION_SELECT", 0}},
 
-                                                                        {"CML_CONFIG_SER_EN_TAP", {"CML_CONFIG", 0}},
-                                                                        {"CML_CONFIG_SER_INV_TAP", {"CML_CONFIG", 2}},
+                                                                                       {"CML_CONFIG_SER_EN_TAP", {"CML_CONFIG", 0}},
+                                                                                       {"CML_CONFIG_SER_INV_TAP", {"CML_CONFIG", 2}},
 
-                                                                        {"SER_SEL_OUT_0", {"SER_SEL_OUT", 0}},
-                                                                        {"SER_SEL_OUT_1", {"SER_SEL_OUT", 2}},
-                                                                        {"SER_SEL_OUT_2", {"SER_SEL_OUT", 4}},
-                                                                        {"SER_SEL_OUT_3", {"SER_SEL_OUT", 6}}};
+                                                                                       {"SER_SEL_OUT_0", {"SER_SEL_OUT", 0}},
+                                                                                       {"SER_SEL_OUT_1", {"SER_SEL_OUT", 2}},
+                                                                                       {"SER_SEL_OUT_2", {"SER_SEL_OUT", 4}},
+                                                                                       {"SER_SEL_OUT_3", {"SER_SEL_OUT", 6}}};
 
     auto it = specialRegMap.find(regName);
     if(it == specialRegMap.end())
@@ -197,7 +191,7 @@ std::pair<std::string, uint16_t> RD53AInterface::SplitSpecialRegisters(std::stri
     {
         ChipRegItem& specialReg = pRD53RegMap.at(regName);
         ChipRegItem& Reg        = pRD53RegMap.at(it->second.regName);
-        return {it->second.regName, SetFieldValue(Reg.fValue, value, it->second.start, specialReg.fBitSize)};
+        return {it->second.regName, RD53Interface::SetFieldValue(Reg.fValue, value, it->second.start, specialReg.fBitSize)};
     }
 }
 
@@ -356,17 +350,12 @@ void RD53AInterface::Reset(Ph2_HwDescription::ReadoutChip* pChip, const size_t r
 
 void RD53AInterface::ChipErrorReport(ReadoutChip* pChip)
 {
-    LOG(INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "LOCKLOSS_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "BITFLIP_ERR_CNT     = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "CMDERR_CNT          = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "CMDERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "SKIPPED_TRIGGER_CNT = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "SKIPPED_TRIGGER_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "HITOR_0_CNT         = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "HITOR_0_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "HITOR_1_CNT         = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "HITOR_0_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "HITOR_2_CNT         = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "HITOR_0_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "HITOR_3_CNT         = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "HITOR_0_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "BCID_CNT            = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "BCID_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
-    LOG(INFO) << BOLDBLUE << "TRIG_CNT            = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "TRIG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    RD53Interface::ChipErrorReport(pChip);
+
+    LOG(INFO) << BOLDBLUE << "WNGFIFO_FULL_CNT_0  = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "WNGFIFO_FULL_CNT_0") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "WNGFIFO_FULL_CNT_1  = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "WNGFIFO_FULL_CNT_1") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "WNGFIFO_FULL_CNT_2  = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "WNGFIFO_FULL_CNT_2") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "WNGFIFO_FULL_CNT_3  = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "WNGFIFO_FULL_CNT_3") << std::setfill(' ') << std::setw(8) << "" << RESET;
 }
 
 void RD53AInterface::PackWriteCommand(Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg)

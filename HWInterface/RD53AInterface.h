@@ -36,12 +36,6 @@ class RD53AInterface : public RD53Interface
     std::pair<std::string, uint16_t> SplitSpecialRegisters(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) override;
 
     uint16_t GetPixelConfig(const Ph2_HwDescription::pixelMask& mask, uint16_t NRows, uint16_t row, uint16_t col, bool highGain);
-    uint16_t SetFieldValue(uint16_t regValue, uint16_t fieldValue, uint8_t start, uint8_t size);
-    struct SpecialRegInfo
-    {
-        std::string regName;
-        uint8_t     start; // Bit index at which the special register, i.e. field, starts
-    };
 };
 
 } // namespace Ph2_HwInterface

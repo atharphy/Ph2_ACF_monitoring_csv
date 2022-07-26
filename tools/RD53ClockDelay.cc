@@ -43,7 +43,7 @@ void ClockDelay::ConfigureCalibration()
     // # Register masks #
     // ##################
     maxClkDelay = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CLK_DATA_DELAY_CLK_DELAY"));
-    maxCmdDelay = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CLK_DATA_DELAY_CMD_DELAY"));
+    maxCmdDelay = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CLK_DATA_DELAY_DATA_DELAY"));
 
     // #######################
     // # Initialize progress #
