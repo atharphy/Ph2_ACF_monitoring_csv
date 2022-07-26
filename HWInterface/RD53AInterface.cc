@@ -143,15 +143,24 @@ void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     // ##############
     // # Link speed #
     // ##############
-    ChipRegMap& pRD53RegMap                      = pChip->getRegMap();
-    auto        auroraSpeed                      = static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed();
-    pRD53RegMap["CDR_CONFIG_SEL_SER_CLK"].fValue = (auroraSpeed == RD53FWconstants::ReadoutSpeed::x1280 ? RD53Constants::CDRCONFIG_1Gbit : RD53Constants::CDRCONFIG_640Mbit);
     RD53Interface::WriteChipReg(pChip, "CDR_CONFIG_SEL_SER_CLK", static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed() == RD53FWconstants::ReadoutSpeed::x1280 ? 0 : 1, false);
     RD53Interface::SendCommand(pChip, RD53ACmd::ECR{});
-    RD53Interface::SendCommand(pChip, RD53ACmd::ECR{});
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
+}
+
+std::vector<std::pair<uint16_t, uint16_t>> RD53AInterface::ReadRD53Reg(ReadoutChip* pChip, const std::string& regName)
+{
+    this->setBoard(pChip->getBeBoardId());
+
+    RD53Interface::SendCommand(pChip, RD53ACmd::RdReg{pChip->getId(), pChip->getRegItem(regName).fAddress});
+    auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip);
+
+    for(auto i = 0u; i < regReadback.size(); i++)
+        // Removing bit related to PIX_PORTAL register identification
+        regReadback[i].first = regReadback[i].first & static_cast<uint16_t>(RD53Shared::setBits(RD53Constants::NBIT_ADDR));
+
+    return regReadback;
 }
 
 std::pair<std::string, uint16_t> RD53AInterface::SplitSpecialRegisters(std::string regName, uint16_t value, ChipRegMap& pRD53RegMap)

@@ -49,9 +49,8 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
     if(status == false)
         LOG(ERROR) << BOLDRED << "Error when reading back what was written into RD53 reg. " << BOLDYELLOW << regName << BOLDRED << ": wrote = " << BOLDYELLOW << nameAndValue.second << BOLDRED
                    << ", read = " << BOLDYELLOW << actualValue << RESET;
-    // @TMP@
-    // else if((pVerifLoop == true) && (status == true))
-    //     LOG(INFO) << GREEN << "Succesfully configured chip register " << BOLDYELLOW << regName << RESET;
+    else if((pVerifLoop == true) && (status == true))
+        LOG(INFO) << BOLDBLUE << "\t--> Succesfully configured chip register " << BOLDYELLOW << regName << RESET;
 
     pChip->setReg(regName, data);
     pChip->setReg(nameAndValue.first, nameAndValue.second);
@@ -90,20 +89,6 @@ uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
     LOG(ERROR) << BOLDRED << "Empty register readback FIFO after " << BOLDYELLOW << nAttempts << BOLDRED " attempts" << RESET;
 
     return 0;
-}
-
-std::vector<std::pair<uint16_t, uint16_t>> RD53Interface::ReadRD53Reg(ReadoutChip* pChip, const std::string& regName)
-{
-    this->setBoard(pChip->getBeBoardId());
-
-    RD53Interface::SendCommand(pChip, RD53BCmd::RdReg{pChip->getId(), pChip->getRegItem(regName).fAddress});
-    auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip);
-
-    for(auto i = 0u; i < regReadback.size(); i++)
-        // Removing bit related to PIX_PORTAL register identification
-        regReadback[i].first = regReadback[i].first & static_cast<uint16_t>(RD53Shared::setBits(RD53Constants::NBIT_ADDR));
-
-    return regReadback;
 }
 
 bool RD53Interface::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerifLoop, uint32_t pBlockSize)
