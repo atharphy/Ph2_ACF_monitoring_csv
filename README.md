@@ -340,7 +340,7 @@ Follow these instructions to install and compile the libraries:
 
 1. Clone the GitHub repo and run cmake
   
-        $> git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git # **N.B.** to syncrhonize only the submodule: `git submodule sync; git submodule update --init --recursive --remote`
+        $> git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git # N.B. to syncrhonize only the submodule: `git submodule sync; git submodule update --init --recursive --remote`
         $> cd Ph2_ACF
         $> source setup.sh
         $> mkdir build 
