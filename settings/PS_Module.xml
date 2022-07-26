@@ -7,7 +7,7 @@
     
     <OpticalGroup Id="0" FMCId="0" reset="1">
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-        <lpGBT Id="0" version="1" optical="1" configfile="lpGBT1.txt">
+        <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
           <Settings
           />
         </lpGBT>
@@ -52,7 +52,7 @@
             <CIC Id="8" configfile="CIC_default.txt" />
         </Hybrid>
 
-        <Hybrid Id="1" Status="1" reset="1"> <!--i2cMaster="1"-->
+        <Hybrid Id="1" Status="1" reset="1" i2cMaster="1">
             <Global>
                 <!-- in electrons, file parser will take care of conversion to DAC units for each chip type --> 
                 <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  -->
@@ -101,14 +101,6 @@
     <Register name="clock_source">3</Register> 
     <Register name="fc7_daq_cnfg">
 	<Register name="optical_block">
-                <Register name="rx_polarity">
-                        <Register name="l8"> 1 </Register>
-                        <Register name="l12"> 1 </Register>
-                </Register>
-                <Register name="tx_polarity">
-                        <Register name="l8"> 0 </Register>
-                        <Register name="l12"> 0 </Register>
-                </Register>
 		<Register name="lpgbt_sc_worker">
                         <Register name="ic_retry"> 1 </Register>
                         <Register name="i2c_retry"> 1 </Register>
