@@ -72,7 +72,6 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
             if(cRegItem.first == "CDR_CONFIG")
             {
                 RD53Interface::SendCommand(static_cast<RD53*>(pChip), RD53ACmd::ECR{});
-                RD53Interface::SendCommand(static_cast<RD53*>(pChip), RD53ACmd::ECR{});
                 std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
             }
 
@@ -96,21 +95,6 @@ void RD53AInterface::InitRD53Downlink(const BeBoard* pBoard)
 
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
-}
-
-void RD53AInterface::InitRD53UplinkSpeed(ReadoutChip* pChip)
-{
-    this->setBoard(pChip->getBeBoardId());
-
-    ChipRegMap& pRD53RegMap                      = pChip->getRegMap();
-    auto        auroraSpeed                      = static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed();
-    pRD53RegMap["CDR_CONFIG_SEL_SER_CLK"].fValue = (auroraSpeed == RD53FWconstants::ReadoutSpeed::x1280 ? RD53Constants::CDRCONFIG_1Gbit : RD53Constants::CDRCONFIG_640Mbit);
-
-    RD53Interface::WriteChipReg(pChip, "CDR_CONFIG_SEL_SER_CLK", auroraSpeed == RD53FWconstants::ReadoutSpeed::x1280 ? RD53Constants::CDRCONFIG_1Gbit : RD53Constants::CDRCONFIG_640Mbit, false);
-    RD53Interface::SendCommand(pChip, RD53ACmd::ECR{});
-
-    LOG(INFO) << GREEN << "Up-link speed set to: " << BOLDYELLOW << (auroraSpeed == RD53FWconstants::ReadoutSpeed::x1280 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 }
 
 void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
@@ -155,18 +139,28 @@ void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x100, false); // 0x100 = start monitoring
     RD53Interface::SendCommand(pChip, RD53ACmd::GlobalPulse{pChip->getId(), 0x0004});
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 
-    RD53AInterface::InitRD53UplinkSpeed(pChip);
+    // ##############
+    // # Link speed #
+    // ##############
+    ChipRegMap& pRD53RegMap                      = pChip->getRegMap();
+    auto        auroraSpeed                      = static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed();
+    pRD53RegMap["CDR_CONFIG_SEL_SER_CLK"].fValue = (auroraSpeed == RD53FWconstants::ReadoutSpeed::x1280 ? RD53Constants::CDRCONFIG_1Gbit : RD53Constants::CDRCONFIG_640Mbit);
+    RD53Interface::WriteChipReg(pChip, "CDR_CONFIG_SEL_SER_CLK", static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed() == RD53FWconstants::ReadoutSpeed::x1280 ? 0 : 1, false);
+    RD53Interface::SendCommand(pChip, RD53ACmd::ECR{});
+    RD53Interface::SendCommand(pChip, RD53ACmd::ECR{});
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+
+    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
 
 std::pair<std::string, uint16_t> RD53AInterface::SplitSpecialRegisters(std::string regName, uint16_t value, ChipRegMap& pRD53RegMap)
 {
     static const std::map<std::string, RD53Interface::SpecialRegInfo> specialRegMap = {{"CDR_CONFIG_SEL_SER_CLK", {"CDR_CONFIG", 0}},
 
-                                                                                       {"CLK_DATA_DELAY_CMD_DELAY", {"CLK_DATA_DELAY", 0}},
-                                                                                       {"CLK_DATA_DELAY_CLK_DELAY", {"CLK_DATA_DELAY", 4}},
-                                                                                       {"CLK_DATA_DELAY_2INV_DELAY", {"CLK_DATA_DELAY", 5}},
+                                                                                       {"CLK_DATA_DELAY_DATA", {"CLK_DATA_DELAY", 0}},
+                                                                                       {"CLK_DATA_DELAY_CLK", {"CLK_DATA_DELAY", 4}},
+                                                                                       {"CLK_DATA_DELAY_2INV", {"CLK_DATA_DELAY", 5}},
 
                                                                                        {"MONITOR_CONFIG_ADC", {"MONITOR_CONFIG", 0}},
                                                                                        {"MONITOR_CONFIG_BG", {"MONITOR_CONFIG", 6}},

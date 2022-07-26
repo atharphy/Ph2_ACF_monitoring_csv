@@ -31,7 +31,6 @@ class RD53AInterface : public RD53Interface
     uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip) override { return pChip->getId(); }
 
   private:
-    void                             InitRD53UplinkSpeed(Ph2_HwDescription::ReadoutChip* pChip) override;
     void                             WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault) override;
     std::pair<std::string, uint16_t> SplitSpecialRegisters(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) override;
 

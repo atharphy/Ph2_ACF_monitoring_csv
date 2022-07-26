@@ -31,7 +31,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     RD53Interface::WriteChipReg(pChip, "BinaryReadOut", 0, pVerifLoop);
     RD53Interface::WriteChipReg(pChip, "RawData", 0, pVerifLoop);
     RD53Interface::WriteChipReg(pChip, "EnOutputDataChipId", 0, pVerifLoop);
-
+    /*
     // ################################################
     // # Programming global registers from white list #
     // ################################################
@@ -88,12 +88,13 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
             if(cRegItem.first == "CDR_CONFIG")
             {
                 RD53Interface::SendCommand(static_cast<RD53*>(pChip), RD53BCmd::Clear{});
+                RD53Interface::SendCommand(static_cast<RD53*>(pChip), RD53BCmd::Clear{});
                 std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
             }
 
             RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fValue, pVerifLoop);
         }
-
+    */
     // ###################################
     // # Programmig pixel cell registers #
     // ###################################
@@ -129,8 +130,14 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "GCR_DEFAULT_CONFIG", 0xAC75);
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "GCR_DEFAULT_CONFIG_B", 0x538A);
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "CMDERR_CNT", 0);
-    RD53Interface::WriteBoardBroadcastChipReg(pBoard, "CDR_CONFIG", static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed() == RD53FWconstants::ReadoutSpeed::x1280 ? 0 : 1);
+
+    // ##############
+    // # Link speed #
+    // ##############
+    // @TMP@ : why thisone is here?
+    RD53Interface::WriteBoardBroadcastChipReg(pBoard, "CDR_CONFIG_SEL_SER_CLK", static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed() == RD53FWconstants::ReadoutSpeed::x1280 ? 0 : 1);
     RD53BInterface::SendGlobalPulseBroadcast(pBoard, 7, 0xFF); // ResetChannelSynchronizer, ResetCommandDecoder, ResetGlobalConfiguration
+
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "RingOscConfig", 0x7FFF);
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "RingOscConfig", 0x7FFF);
     RD53BInterface::SendGlobalPulseBroadcast(pBoard, 1 << 8, 0xFF); // ResetEfuses
@@ -139,47 +146,39 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
 
-void RD53BInterface::InitRD53UplinkSpeed(ReadoutChip* pChip)
-{
-    this->setBoard(pChip->getBeBoardId());
-
-    auto auroraSpeed = static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed();
-    RD53Interface::WriteChipReg(pChip, "CdrConf", (auroraSpeed == RD53FWconstants::ReadoutSpeed::x1280 ? RD53Constants::CDRCONFIG_1Gbit : RD53Constants::CDRCONFIG_640Mbit), false);
-    RD53Interface::SendCommand(pChip, RD53BCmd::Clear{});
-
-    LOG(INFO) << GREEN << "Up-link speed set to: " << BOLDYELLOW << (auroraSpeed == RD53FWconstants::ReadoutSpeed::x1280 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-}
-
 void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
 {
     LOG(INFO) << GREEN << "Configuring up-link lanes and monitoring..." << RESET;
 
-    RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", 0x0055);
+    RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", 0x0055, false);
     size_t hybridId = pChip->getHybridId();
     // @TMP@ : what is this?
     if(hybridId >= 2)
-        RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 15);
+      RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 15, false);
     else
-        RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 1);
-    WriteChipReg(pChip, "AuroraConfig", bits::pack<4, 6, 2>(1, 25, 3));
+      RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 1, false);
+    RD53Interface::WriteChipReg(pChip, "AuroraConfig", bits::pack<4, 6, 2>(1, 25, 3), false);
     uint16_t val;
     // @TMP@ : what is this?
     if(hybridId >= 2)
         val = bits::pack<2, 2, 2, 2, 2, 2, 2, 2>(0, 1, 2, 3, 0, 1, 2, 3);
     else
         val = bits::pack<2, 2, 2, 2, 2, 2, 2, 2>(3, 2, 1, 0, 3, 2, 1, 0);
-    RD53Interface::WriteChipReg(pChip, "DataMergingMux", val);
-    RD53Interface::WriteChipReg(pChip, "ServiceDataConf", (1 << 8) | 50);
-    RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG0", 0x0FF1);
-    RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG1", 0x0000);
+    RD53Interface::WriteChipReg(pChip, "DataMergingMux", val, false);
+    RD53Interface::WriteChipReg(pChip, "ServiceDataConf", (1 << 8) | 50, false);
+    RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG0", 0x0FF1, false);
+    RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG1", 0x0000, false);
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     RD53BInterface::SendGlobalPulse(pChip, 0b110000, 0xFF);
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    RD53Interface::SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
 
-    RD53Interface::SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
-    RD53Interface::SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
+    // ##############
+    // # Link speed #
+    // ##############
+    RD53Interface::WriteChipReg(pChip, "CDR_CONFIG_SEL_SER_CLK", static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed() == RD53FWconstants::ReadoutSpeed::x1280 ? 0 : 1, false);
+    RD53Interface::SendCommand(pChip, RD53BCmd::Clear{});
 
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
@@ -188,8 +187,8 @@ std::pair<std::string, uint16_t> RD53BInterface::SplitSpecialRegisters(std::stri
 {
     static const std::map<std::string, RD53Interface::SpecialRegInfo> specialRegMap = {{"CDR_CONFIG_SEL_SER_CLK", {"CDR_CONFIG", 0}},
 
-                                                                                       {"CLK_DATA_DELAY_DATA_DELAY", {"CLK_DATA_DELAY", 0}},
-                                                                                       {"CLK_DATA_DELAY_CLK_DELAY", {"CLK_DATA_DELAY", 7}},
+                                                                                       {"CLK_DATA_DELAY_DATA", {"CLK_DATA_DELAY", 0}},
+                                                                                       {"CLK_DATA_DELAY_CLK", {"CLK_DATA_DELAY", 7}},
 
                                                                                        {"MON_ADC_TRIM", {"MON_ADC", 0}},
 
