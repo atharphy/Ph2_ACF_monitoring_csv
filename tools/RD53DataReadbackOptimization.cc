@@ -30,7 +30,6 @@ void DataReadbackOptimization::ConfigureCalibration()
     startValueTAP2 = this->findValueInSettings<double>("TAP2Start");
     stopValueTAP2  = this->findValueInSettings<double>("TAP2Stop");
     invTAP2        = this->findValueInSettings<double>("InvTAP2");
-    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
 
     // ##############################
@@ -159,7 +158,7 @@ void DataReadbackOptimization::draw(bool saveData)
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
-    if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
+    if(BERtest::doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
@@ -171,7 +170,7 @@ void DataReadbackOptimization::draw(bool saveData)
     DataReadbackOptimization::fillHisto();
     histos->process();
 
-    if(doDisplay == true) myApp->Run(true);
+    if(BERtest::doDisplay == true) myApp->Run(true);
 #endif
 }
 

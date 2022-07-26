@@ -53,14 +53,6 @@ class Latency : public PixelAlive
 #endif
 
   private:
-    size_t rowStart;
-    size_t rowStop;
-    size_t colStart;
-    size_t colStop;
-    size_t startValue;
-    size_t stopValue;
-    size_t nTRIGxEvent;
-
     std::vector<uint16_t> dacList;
 
     DetectorDataContainer theOccContainer;
@@ -71,11 +63,12 @@ class Latency : public PixelAlive
     void chipErrorReport() const;
 
   protected:
+    size_t startValue;
+    size_t stopValue;
+
     std::string fileRes;
     int         theCurrentRun;
     bool        doUpdateChip;
-    bool        doDisplay;
-    bool        saveBinaryData;
 };
 
 #endif

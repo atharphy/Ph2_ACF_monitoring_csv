@@ -17,11 +17,16 @@ void VoltageTuning::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    doDisplay    = this->findValueInSettings<double>("DisplayHisto");
     targetDig    = this->findValueInSettings<double>("VDDDTrimTarget", 1.3);
     targetAna    = this->findValueInSettings<double>("VDDATrimTarget", 1.2);
     toleranceDig = this->findValueInSettings<double>("VDDDTrimTolerance", 0.02);
     toleranceAna = this->findValueInSettings<double>("VDDATrimTolerance", 0.02);
+    doDisplay    = this->findValueInSettings<double>("DisplayHisto");
+
+    // ############################################################
+    // # Create directory for: raw data, config files, histograms #
+    // ############################################################
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "VoltageTuning");
 }
 
 void VoltageTuning::Running()
@@ -70,7 +75,6 @@ void VoltageTuning::localConfigure(const std::string& fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[VoltageTuning::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     VoltageTuning::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "VoltageTuning");
     VoltageTuning::initializeFiles(fileRes_, currentRun);
 }
 

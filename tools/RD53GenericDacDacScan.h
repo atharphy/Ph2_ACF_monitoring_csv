@@ -72,7 +72,6 @@ class GenericDacDacScan : public PixelAlive
     int         theCurrentRun;
     bool        doUpdateChip;
     bool        doDisplay;
-    bool        saveBinaryData;
     bool        isDAC1ChipReg;
     bool        isDAC2ChipReg;
 };

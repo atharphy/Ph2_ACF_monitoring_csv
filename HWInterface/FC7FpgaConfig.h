@@ -43,11 +43,13 @@ class FC7FpgaConfig : public FpgaConfig
      * \param pstrFile absolute path to the .bit or .bin file
      */
     void flashProm(const std::string& strConfig, const std::string& pstrFile);
+
     /*! \brief Launch the firmware download in a separate thread
      * \param strConfig FPGA configuration name
      * \param pstrFile absolute path to the .bin file
      */
     void downloadFpgaConfig(const std::string& strConfig, const std::string& pstrFile);
+
     /*! \brief Jump to an FPGA configuration
      * \param strConfig FPGA configuration name
      */
