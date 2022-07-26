@@ -128,8 +128,8 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
 
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "GCR_DEFAULT_CONFIG", 0xAC75);
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "GCR_DEFAULT_CONFIG_B", 0x538A);
-    RD53Interface::WriteBoardBroadcastChipReg(pBoard, "CmdErrCnt", 0);
-    RD53Interface::WriteBoardBroadcastChipReg(pBoard, "CdrConf", static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed() == RD53FWconstants::ReadoutSpeed::x1280 ? 0 : 1);
+    RD53Interface::WriteBoardBroadcastChipReg(pBoard, "CMDERR_CNT", 0);
+    RD53Interface::WriteBoardBroadcastChipReg(pBoard, "CDR_CONFIG", static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed() == RD53FWconstants::ReadoutSpeed::x1280 ? 0 : 1);
     RD53BInterface::SendGlobalPulseBroadcast(pBoard, 7, 0xFF); // ResetChannelSynchronizer, ResetCommandDecoder, ResetGlobalConfiguration
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "RingOscConfig", 0x7FFF);
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "RingOscConfig", 0x7FFF);
