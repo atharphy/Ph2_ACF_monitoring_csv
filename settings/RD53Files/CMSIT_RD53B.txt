@@ -60,14 +60,14 @@ VOLTAGE_TRIM              0x26          0b0010011001            0d0010011001    
 *-------------------------------------------------------------------------------------------------------
 * RegName                 Addr          Defval                  Value                           BitSize
 *-------------------------------------------------------------------------------------------------------
-EnCoreCol_3               0x27          0b010010                0b010010                            6
-EnCoreCol_2               0x28          0b0100100100100100      0b0100100100100100                 16
-EnCoreCol_1               0x29          0b1001001001001001      0b1001001001001001                 16
-EnCoreCol_0               0x2A          0d0010010010010010      0d0010010010010010                 16
-EnCoreColumnReset_3       0x2B          0b0                     0b0                                 6
-EnCoreColumnReset_2       0x2C          0b0                     0b0                                16
-EnCoreColumnReset_1       0x2D          0b0                     0b0                                16
-EnCoreColumnReset_0       0x2E          0b0                     0b0                                16
+EN_CORE_COL_3             0x27          0b010010                0b010010                            6
+EN_CORE_COL_2             0x28          0b0100100100100100      0b0100100100100100                 16
+EN_CORE_COL_1             0x29          0b1001001001001001      0b1001001001001001                 16
+EN_CORE_COL_0             0x2A          0d0010010010010010      0d0010010010010010                 16
+EN_CORE_COL_RESET_3       0x2B          0b0                     0b0                                 6
+EN_CORE_COL_RESET_2       0x2C          0b0                     0b0                                16
+EN_CORE_COL_RESET_1       0x2D          0b0                     0b0                                16
+EN_CORE_COL_RESET_0       0x2E          0b0                     0b0                                16
 
 *-------------------------------------------------------------------------------------------------------
 * Function
@@ -98,10 +98,10 @@ PrecisionToTEnable_1      0x43          0b0                     0b0             
 PrecisionToTEnable_0      0x44          0b0                     0b0                                16
 DataMerging               0x45          0b0000110000001         0b0000110000001                    13
 DataMergingMux            0x46          0b1110010011100100      0b1110010011100100                 16
-EnCoreColumnCalibration_3 0x47          0d111111                0d111111                            6
-EnCoreColumnCalibration_2 0x48          0b1111111111111111      0b1111111111111111                 16
-EnCoreColumnCalibration_1 0x49          0b1111111111111111      0b1111111111111111                 16
-EnCoreColumnCalibration_0 0x4A          0b1111111111111111      0b1111111111111111                 16
+EN_CORE_COL_CAL_3         0x47          0d111111                0d111111                            6
+EN_CORE_COL_CAL_2         0x48          0b1111111111111111      0b1111111111111111                 16
+EN_CORE_COL_CAL_1         0x49          0b1111111111111111      0b1111111111111111                 16
+EN_CORE_COL_CAL_0         0x4A          0b1111111111111111      0b1111111111111111                 16
 DataConcentratorConf      0x4B          0b000100010000          0b000100010000                     12
 CoreColEncoderConf        0x4C          0b0                     0b0                                 9
 EnHitsRemoval_3           0x4D          0b0                     0b0                                 6
@@ -180,10 +180,10 @@ BITFLIP_ERR_CNT           0x89          0b0                     0b0             
 CMDERR_CNT                0x8A          0b0                     0b0                                16
 RDWRFIFOERROR_CNT         0x8B          0b0                     0b0                                16
 AI_REGION_ROW             0x8C          0b0                     0b0                                 9
-HitOr_3_Cnt               0x8D          0b0                     0b0                                16
-HitOr_2_Cnt               0x8E          0b0                     0b0                                16
-HitOr_1_Cnt               0x8F          0b0                     0b0                                16
-HitOr_0_Cnt               0x90          0b0                     0b0                                16
+HITOR_3_CNT               0x8D          0b0                     0b0                                16
+HITOR_2_CNT               0x8E          0b0                     0b0                                16
+HITOR_1_CNT               0x8F          0b0                     0b0                                16
+HITOR_0_CNT               0x90          0b0                     0b0                                16
 PIXELSEU_CNT              0x91          0b0                     0b0                                16
 GLOBALCONFIGSEU_CNT       0x92          0b0                     0b0                                16
 SKIPPED_TRIGGER_CNT       0x93          0b0                     0b0                                16
