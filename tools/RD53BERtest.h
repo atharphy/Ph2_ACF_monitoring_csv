@@ -48,18 +48,18 @@ class BERtest : public Tool
 #endif
 
   private:
-    size_t chain2test;
-    bool   given_time;
-    double frames_or_time;
-
     void fillHisto();
 
   protected:
-    DetectorDataContainer theBERtestContainer;
+    size_t chain2test;
+    bool   given_time;
+    double frames_or_time;
+    bool   doDisplay;
 
     std::string fileRes;
     int         theCurrentRun;
-    bool        doDisplay;
+
+    DetectorDataContainer theBERtestContainer;
 };
 
 #endif

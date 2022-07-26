@@ -1,12 +1,3 @@
-/*!
-  \file                  EyeScanOptimization.cc
-  \brief                 Implementaion of data readback optimization scan
-  \author                Mauro DINARDO
-  \version               1.0
-  \date                  28/06/18
-  Support:               email to mauro.dinardo@cern.ch
-*/
-
 #include "RD53EyeScanOptimization.h"
 #include "../Utils/ContainerFactory.h"
 

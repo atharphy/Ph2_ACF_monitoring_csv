@@ -1,7 +1,7 @@
 /*!
   \file                  RD53GainHistograms.h
   \brief                 Header file of Gain calibration histograms
-  \author                Alkiviadis PAPADOPOULOS
+  \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
   Support:               email to alkiviadis.papadopoulos@cern.ch
@@ -64,6 +64,9 @@ class GainHistograms : public DQMHistogramBase
     size_t startValue;
     size_t stopValue;
     size_t offset;
+
+    size_t nRows;
+    size_t nCols;
 };
 
 #endif

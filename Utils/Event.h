@@ -50,6 +50,7 @@ class PSCluster
     uint8_t  fMip;
     uint8_t  fHybridId;
 };
+
 class PCluster
 {
   public:
@@ -143,11 +144,15 @@ class Event
      * \param pNbCbc
      * \param pEventBuf : the pointer to the raw Event buffer of this Event
      */
-    Event();
+    Event() {}
     /*!
      * \brief Copy Constructor of the Event Class
      */
-    Event(const Event& pEvent);
+    Event(const Event& pEvent) = default;
+    /*!
+     * \brief Copy Assignment of the Event Class
+     */
+    Event& operator=(const Event& pEvent) = default;
     /*!
      * \brief Destructor of the Event Class
      */
@@ -163,7 +168,6 @@ class Event
     //}
     /*! \brief Get the event size in bytes */
     uint32_t GetSize() const { return fEventSize; }
-
     /*!
      * \brief Get the bunch value
      * \return Bunch value
@@ -247,9 +251,9 @@ class Event
 
     bool operator==(const Event& pEvent) const;
 
-    ///////////////////////////////////////
-    // VIRTUAL METHODS                    //
-    ///////////////////////////////////////
+    // ###################
+    // # VIRTUAL METHODS #
+    // ###################
     /*!
      * \brief Set an Event to the Event map
      * \param pEvent : Event to set
@@ -270,7 +274,6 @@ class Event
 
     uint16_t GetL1Number() const { return fL1Number; }
 
-    // user interface
     /*!
      * \brief Get the Cbc Event counter
      * \return Cbc Event counter
@@ -404,9 +407,8 @@ class Event
     }
 
     virtual std::vector<Cluster> getClusters(uint8_t pHybridId, uint8_t pCbcId) const { return {}; }
-
-    virtual void fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup);
-    virtual void fillChipDataContainer(ChipDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) = 0;
+    virtual void                 fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup);
+    virtual void                 fillChipDataContainer(ChipDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) = 0;
 
     // split stream of data
     template <std::size_t N>
@@ -437,5 +439,6 @@ class Event
   protected:
     virtual void print(std::ostream& out) const {}
 };
+
 } // namespace Ph2_HwInterface
 #endif

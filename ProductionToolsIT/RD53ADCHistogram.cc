@@ -35,6 +35,6 @@ void ADCHistogram::run()
 void ADCHistogram::draw()
 {
 #ifdef __USE_ROOT__
-    histos->fillHH(ADCcode, max_counts);
+    // histos->fillADC(ADCcode, max_counts);
 #endif
 }

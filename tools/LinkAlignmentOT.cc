@@ -144,7 +144,7 @@ bool LinkAlignmentOT::AlignLpGBTInputs(const OpticalGroup* pOpticalGroup)
         for(auto cGrp: cGroups) cEportGroups.push_back(cGrp);
         for(auto cChnl: cChannels) cEportChnls.push_back(cChnl);
     }
-    auto cMode = flpGBTInterface->AutoPhaseAlignRx(clpGBT, cEportGroups, cEportChnls);
+    auto cMode = flpGBTInterface->PhaseAlignRx(clpGBT, cEportGroups, cEportChnls);
     cAligned   = cAligned && (cMode != 15);
     // cMode      = ( cMode > 8 ) ? 5 : cMode;
     for(size_t cIndx = 0; cIndx < cEportGroups.size(); cIndx++) { flpGBTInterface->ConfigureRxPhase(clpGBT, cEportGroups[cIndx], cEportChnls[cIndx], cMode); }

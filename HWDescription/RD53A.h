@@ -1,0 +1,46 @@
+/*!
+  \file                  RD53A.h
+  \brief                 RD53A description class
+  \author                Mauro DINARDO and Alkiviadis PAPADOPOULOS
+  \version               1.0
+  \date                  28/06/22
+  Support:               email to mauro.dinardo@cern.ch
+  Support:               email to alkiviadis.papadopoulos@cern.ch
+*/
+
+#ifndef RD53A_H
+#define RD53A_H
+
+#include "../Utils/RD53ChannelGroupHandler.h"
+#include "RD53.h"
+#include "RD53ACommands.h"
+
+namespace RD53AConstants
+{
+const uint8_t BROADCAST_CHIPID = 0x08; // Broadcast chip ID used to send the command to multiple chips
+}
+
+namespace Ph2_HwDescription
+{
+class RD53A : public RD53
+{
+  public:
+    static constexpr size_t NROWS = 192; // Total number of rows
+    static constexpr size_t NCOLS = 400; // Total number of columns
+
+    static constexpr FrontEnd SYNC = {"SYNC", "VTH_SYNC", "IBIAS_KRUM_SYNC", 0, 0, 127};
+    static constexpr FrontEnd LIN  = {"LIN", "Vthreshold_LIN", "KRUM_CURR_LIN", 16, 128, 263};
+    static constexpr FrontEnd DIFF = {"DIFF", "VTH1_DIFF", "VFF_DIFF", 31, 264, 399};
+    static const FrontEnd*    frontEnds[];
+
+    RD53A(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
+
+    const FrontEnd* getMajorityFE(size_t colStart, size_t colStop) const override;
+    size_t          getNRows() const override { return RD53A::NROWS; }
+    size_t          getNCols() const override { return RD53A::NCOLS; }
+    void            decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::RD53ChipEvent& chipEvent) const override;
+};
+
+} // namespace Ph2_HwDescription
+
+#endif

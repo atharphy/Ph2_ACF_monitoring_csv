@@ -26,19 +26,13 @@ void Physics::ConfigureCalibration()
     doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData  = this->findValueInSettings<double>("SaveBinaryData");
     outputBinaryDir = this->findValueInSettings<std::string>("OutputBinaryDir", "");
-    frontEnd        = RD53::getMajorityFE(colStart, colStop);
+    frontEnd        = RD53Shared::firstChip->getMajorityFE(colStart, colStop);
 
     // ################################
     // # Custom channel group handler #
     // ################################
-    ChannelGroup<RD53::nRows, RD53::nCols> customChannelGroup;
-    customChannelGroup.disableAllChannels();
-
-    for(auto row = rowStart; row <= rowStop; row++)
-        for(auto col = colStart; col <= colStop; col++) customChannelGroup.enableChannel(row, col);
-
-    theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(customChannelGroup, RD53GroupType::AllPixels);
-    theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
+    theChnGroupHandler =
+        std::make_shared<RD53ChannelGroupHandler>(rowStart, rowStop, colStart, colStop, RD53Shared::firstChip->getNRows(), RD53Shared::firstChip->getNCols(), RD53GroupType::AllPixels);
     this->setChannelGroupHandler(theChnGroupHandler);
 
     // ##############################
@@ -166,10 +160,10 @@ void Physics::run()
             for(const auto cBoard: *fDetectorContainer)
             {
                 static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])
-                    ->WriteChipCommand(RD53Cmd::WrReg(RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14).getFrames(), -1);
-                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommand(RD53Cmd::GlobalPulse(RD53Constants::BROADCAST_CHIPID, 0x6).getFrames(), -1);
+                    ->WriteChipCommand(serialize(RD53ACmd::WrReg{RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14}), -1);
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommand(serialize(RD53ACmd::GlobalPulse{RD53Constants::BROADCAST_CHIPID, 0x6}), -1);
                 std::this_thread::sleep_for(std::chrono::microseconds(10));
-                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommand(RD53Cmd::ECR().getFrames(), -1);
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommand(serialize(RD53ACmd::ECR{}), -1);
                 std::this_thread::sleep_for(std::chrono::microseconds(20));
             }
 
@@ -311,8 +305,8 @@ void Physics::fillDataContainer(BeBoard& theBoard)
     for(const auto cOpticalGroup: *cBoard)
         for(const auto cHybrid: *cOpticalGroup)
             for(const auto cChip: *cHybrid)
-                for(auto row = 0u; row < RD53::nRows; row++)
-                    for(auto col = 0u; col < RD53::nCols; col++) cChip->getChannel<OccupancyAndPh>(row, col).normalize(events.size(), true);
+                for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
+                    for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++) cChip->getChannel<OccupancyAndPh>(row, col).normalize(events.size(), true);
 }
 
 void Physics::chipErrorReport() const

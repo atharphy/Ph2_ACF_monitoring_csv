@@ -26,7 +26,6 @@ void PixelAlive::ConfigureCalibration()
     nTRIGxEvent    = this->findValueInSettings<double>("nTRIGxEvent");
     injType        = this->findValueInSettings<double>("INJtype");
     nHITxCol       = this->findValueInSettings<double>("nHITxCol");
-    doFast         = this->findValueInSettings<double>("DoFast");
     doOnlyNGroups  = this->findValueInSettings<double>("DoOnlyNGroups");
     thrOccupancy   = this->findValueInSettings<double>("TargetOcc");
     unstuckPixels  = this->findValueInSettings<double>("UnstuckPixels");
@@ -37,23 +36,17 @@ void PixelAlive::ConfigureCalibration()
     // ################################
     // # Custom channel group handler #
     // ################################
-    ChannelGroup<RD53::nRows, RD53::nCols> customChannelGroup;
-    customChannelGroup.disableAllChannels();
-
-    for(auto row = rowStart; row <= rowStop; row++)
-        for(auto col = colStart; col <= colStop; col++) customChannelGroup.enableChannel(row, col);
-
-    theChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(
-        customChannelGroup, injType != INJtype::None ? (doFast == true ? RD53GroupType::OneGroup : RD53GroupType::AllGroups) : RD53GroupType::AllPixels, nHITxCol, doOnlyNGroups);
-    theChnGroupHandler->setCustomChannelGroup(customChannelGroup);
+    auto groupType = injType != INJtype::None ? RD53GroupType::Groups : RD53GroupType::AllPixels;
+    theChnGroupHandler =
+        std::make_shared<RD53ChannelGroupHandler>(rowStart, rowStop, colStart, colStop, RD53Shared::firstChip->getNRows(), RD53Shared::firstChip->getNCols(), groupType, nHITxCol, doOnlyNGroups);
     this->setChannelGroupHandler(theChnGroupHandler);
 
     // ######################
     // # Set injection type #
     // ######################
     size_t inj = 0;
-    if(injType == INJtype::Digital) inj = 1 << static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY");
-    size_t maxDelay = RD53Shared::setBits(static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0))->getNumberOfBits("INJECTION_SELECT_DELAY"));
+    if(injType == INJtype::Digital) inj = 1 << RD53Shared::firstChip->getNumberOfBits("INJECTION_SELECT_DELAY");
+    size_t maxDelay = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("INJECTION_SELECT_DELAY"));
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
@@ -225,8 +218,8 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
 
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
 
-                    for(auto row = 0u; row < RD53::nRows; row++)
-                        for(auto col = 0u; col < RD53::nCols; col++)
+                    for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
+                        for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                             if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
                                                                                                                    ->at(cBoard->getIndex())
                                                                                                                    ->at(cOpticalGroup->getIndex())
