@@ -25,25 +25,22 @@ void GainOptimization::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings<double>("ROWstart");
-    rowStop        = this->findValueInSettings<double>("ROWstop");
-    colStart       = this->findValueInSettings<double>("COLstart");
-    colStop        = this->findValueInSettings<double>("COLstop");
-    startValue     = this->findValueInSettings<double>("VCalHstart");
-    stopValue      = this->findValueInSettings<double>("VCalHstop");
-    targetCharge   = RD53chargeConverter::Charge2VCal(this->findValueInSettings<double>("TargetCharge"));
-    KrumCurrStart  = this->findValueInSettings<double>("KrumCurrStart");
-    KrumCurrStop   = this->findValueInSettings<double>("KrumCurrStop");
-    doFast         = this->findValueInSettings<double>("DoFast");
-    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
+    KrumCurrStart = this->findValueInSettings<double>("KrumCurrStart");
+    KrumCurrStop  = this->findValueInSettings<double>("KrumCurrStop");
+    doDisplay     = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip  = this->findValueInSettings<double>("UpdateChipCfg");
 
-    frontEnd = RD53::getMajorityFE(colStart, colStop);
-    colStart = std::max(colStart, frontEnd->colStart);
-    colStop  = std::min(colStop, frontEnd->colStop);
+    frontEnd = RD53Shared::firstChip->getMajorityFE(Gain::colStart, Gain::colStop);
+    colStart = std::max(Gain::colStart, frontEnd->colStart);
+    colStop  = std::min(Gain::colStop, frontEnd->colStop);
     LOG(INFO) << GREEN << "GainOptimization will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << RESET << BOLDYELLOW << colStart << ", " << colStop
               << RESET << GREEN << "]" << RESET;
+
+    // ########################
+    // # Custom channel group #
+    // ########################
+    for(auto row = Gain::rowStart; row <= Gain::rowStop; row++)
+        for(auto col = Gain::colStart; col <= Gain::colStop; col++) Gain::theChnGroupHandler->getRegionOfInterest().enableChannel(row, col);
 
     // #######################
     // # Initialize progress #
@@ -57,7 +54,7 @@ void GainOptimization::Running()
     Gain::theCurrentRun = this->fRunNumber;
     LOG(INFO) << GREEN << "[GainOptimization::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
-    if(saveBinaryData == true)
+    if(Gain::saveBinaryData == true)
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_GainOptimization.raw", 'w');
         this->initializeWriteFileHandler();
@@ -118,7 +115,7 @@ void GainOptimization::initializeFiles(const std::string& fileRes_, int currentR
 
     fileRes = fileRes_;
 
-    if((currentRun >= 0) && (saveBinaryData == true))
+    if((currentRun >= 0) && (Gain::saveBinaryData == true))
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_GainOptimization.raw", 'w');
         this->initializeWriteFileHandler();
@@ -132,7 +129,7 @@ void GainOptimization::initializeFiles(const std::string& fileRes_, int currentR
 
 void GainOptimization::run()
 {
-    GainOptimization::bitWiseScanGlobal(frontEnd->gainReg, targetCharge, KrumCurrStart, KrumCurrStop);
+    GainOptimization::bitWiseScanGlobal(frontEnd->gainReg, Gain::targetCharge, KrumCurrStart, KrumCurrStop);
 
     // #######################################
     // # Fill Krummenacher Current container #
@@ -239,7 +236,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, const float
                             2;
 
                         static_cast<RD53Interface*>(this->fReadoutChipInterface)
-                            ->PackChipCommands(cChip,
+                            ->PackWriteCommand(cChip,
                                                regName,
                                                midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
                                                chipCommandList,
@@ -254,7 +251,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, const float
                     static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(cBoard, chipCommandList, hybridId, hybridCommandList);
                 }
 
-                static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendHybridCommandsPack(cBoard, hybridCommandList);
+                static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendHybridCommands(cBoard, hybridCommandList);
             }
 
         // ################
@@ -284,8 +281,8 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, const float
                         float  avg    = 0;
                         float  stdDev = 0;
                         size_t cnt    = 0;
-                        for(auto row = 0u; row < RD53::nRows; row++)
-                            for(auto col = 0u; col < RD53::nCols; col++)
+                        for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
+                            for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                                 if(cChip->getChannel<GainFit>(row, col).fChi2 > 0)
                                 {
                                     float ToTatTarget = Gain::gainFunction({cChip->getChannel<GainFit>(row, col).fIntercept, cChip->getChannel<GainFit>(row, col).fSlope}, target);
@@ -339,7 +336,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, const float
                     if(bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() != 0)
                     {
                         static_cast<RD53Interface*>(this->fReadoutChipInterface)
-                            ->PackChipCommands(cChip,
+                            ->PackWriteCommand(cChip,
                                                regName,
                                                bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
                                                chipCommandList,
@@ -357,7 +354,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, const float
                 static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(cBoard, chipCommandList, hybridId, hybridCommandList);
             }
 
-            static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendHybridCommandsPack(cBoard, hybridCommandList);
+            static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendHybridCommands(cBoard, hybridCommandList);
         }
 
     // ################

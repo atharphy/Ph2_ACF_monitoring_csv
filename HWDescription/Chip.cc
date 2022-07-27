@@ -39,16 +39,24 @@ Chip::~Chip()
     fModifiedRegs.clear();
 }
 
-ChipRegItem Chip::getRegItem(const std::string& pReg)
+const ChipRegItem& Chip::getRegItem(const std::string& pReg) const
 {
-    ChipRegItem          cItem;
-    ChipRegMap::iterator i = fRegMap.find(pReg);
+    auto i = fRegMap.find(pReg);
 
     if(i != std::end(fRegMap)) return (i->second);
 
     LOG(ERROR) << BOLDRED << "Error, no register " << BOLDYELLOW << pReg << BOLDRED << " found in the RegisterMap of ChipID: " << BOLDYELLOW << +fChipId << RESET;
     throw Exception("Chip: no matching register found");
-    return cItem;
+}
+
+ChipRegItem& Chip::getRegItem(const std::string& pReg)
+{
+    auto i = fRegMap.find(pReg);
+
+    if(i != std::end(fRegMap)) return (i->second);
+
+    LOG(ERROR) << BOLDRED << "Error, no register " << BOLDYELLOW << pReg << BOLDRED << " found in the RegisterMap of ChipID: " << BOLDYELLOW << +fChipId << RESET;
+    throw Exception("Chip: no matching register found");
 }
 
 uint16_t Chip::getReg(const std::string& pReg) const

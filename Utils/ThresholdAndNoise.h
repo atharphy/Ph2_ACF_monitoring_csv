@@ -19,7 +19,6 @@ class ThresholdAndNoise
 {
   public:
     ThresholdAndNoise() : fThreshold(0), fThresholdError(0), fNoise(0), fNoiseError(0) {}
-    ~ThresholdAndNoise() {}
 
     void print(void) { std::cout << fThreshold << "\t" << fNoise << std::endl; }
 

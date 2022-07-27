@@ -1,6 +1,9 @@
 #!/bin/bash
-majorRelease=$(cat /etc/centos-release | tr -dc '0-9.'|cut -d \. -f1)
 
+###################################
+# Enable devtools-10 for C++ > 14 #
+###################################
+majorRelease=$(cat /etc/centos-release | tr -dc '0-9.'|cut -d \. -f1)
 if [[ $majorRelease == "7" ]]; then
   source scl_source enable devtoolset-10 || true # This might cause a nonzero exit code in the CI for some reason, so let's ignore it
 elif [[ $majorRelease == "8" ]]; then
@@ -21,7 +24,10 @@ export CACTUSROOT=/opt/cactus
 export CACTUSBIN=$CACTUSROOT/bin
 export CACTUSLIB=$CACTUSROOT/lib
 export CACTUSINCLUDE=$CACTUSROOT/include
-alias cmake="cmake3"
+
+##########
+# PYTHON #
+##########
 alias PythonController.py="python pythonUtils/PythonController.py"
 alias fpgaconfig.py="python pythonUtils/fpgaconfig.py"
 
@@ -71,17 +77,17 @@ export USBINSTLIB=$USBINSTDIR/lib
 #########
 export EUDAQLIB=$EUDAQDIR/lib
 
-##########
+############
 # Pybind11 #
-##########
-# export PYBIND11=$PH2ACF_BASE_DIR/../pybind11-2.9.2/
-# export PYBIND11INCLUDE=$PYBIND11/include
+############
+#export PYBIND11=$PH2ACF_BASE_DIR/../pybind11-2.9.2/
+#export PYBIND11INCLUDE=$PYBIND11/include
 export PYTHONINCLUDE=/usr/include/python3.6m/
 
 ##########
 # System #
 ##########
-export PATH=$PH2ACF_BASE_DIR/bin:$PH2ACF_BASE_DIR/ProductionTools/LDACLINCalibration:$PATH
+export PATH=$PH2ACF_BASE_DIR/bin:$PH2ACF_BASE_DIR/ProductionToolsIT/LDACLINCalibration:$PATH
 export LD_LIBRARY_PATH=$USBINSTLIB:$ANTENNALIB:$PH2ACF_BASE_DIR/RootWeb/lib:$CACTUSLIB:$PH2ACF_BASE_DIR/lib:$EUDAQLIB:/opt/rh/llvm-toolset-7.0/root/usr/lib64:$LD_LIBRARY_PATH
 
 #########
@@ -136,7 +142,7 @@ else
   clang_command="/opt/rh/llvm-toolset-7.0/root/usr/bin/clang-format"
 fi
 
-alias formatAll="find ${PH2ACF_BASE_DIR} -path ${PH2ACF_BASE_DIR}/MessageUtils -prune -o -iname *.h -o -iname *.cc | xargs ${clang_command} -i"
+alias formatAll="find ${PH2ACF_BASE_DIR} -type f \\( -name \"*.cc\" -o -name \"*.h\" \\) ! -path \"${PH2ACF_BASE_DIR}/MessageUtils/*\" ! -path \"${PH2ACF_BASE_DIR}/*/_deps/*\" | xargs ${clang_command} -i"
 
 if [[ $1 == "ci" ]]; then
     export CompileForHerd=false
@@ -146,6 +152,5 @@ if [[ $1 == "ci" ]]; then
     export UseTCUSBforROH=false
     export UseTCUSBTcpServer=false
 fi
-
 
 echo "=== DONE ==="

@@ -9,12 +9,12 @@
 
 #include "SystemController.h"
 #include "../HWInterface/LinkInterface.h"
+#include "../HWInterface/RD53AInterface.h"
+#include "../HWInterface/RD53BInterface.h"
 #include "../MonitorUtils/CBCMonitor.h"
 #include "../MonitorUtils/DetectorMonitor.h"
 #include "../MonitorUtils/RD53Monitor.h"
 #include "../MonitorUtils/SEHMonitor.h"
-#include "../Utils/ChannelGroupHandler.h"
-#include "../Utils/ContainerFactory.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -300,8 +300,12 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         }
         else
         {
-            flpGBTInterface       = new RD53lpGBTInterface(fBeBoardFWMap);
-            fReadoutChipInterface = new RD53Interface(fBeBoardFWMap);
+            flpGBTInterface = new RD53lpGBTInterface(fBeBoardFWMap);
+            if(cFirstBoard->getFrontEndType() == FrontEndType::RD53A)
+                fReadoutChipInterface = new RD53AInterface(fBeBoardFWMap);
+            else
+                fReadoutChipInterface = new RD53BInterface(fBeBoardFWMap);
+            RD53Shared::firstChip = static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
         }
     } // if there is something to create an interface for
 
@@ -413,13 +417,17 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     bool   resetMask   = SystemController::findValueInSettings<double>("ResetMask");
     bool   resetTDAC   = SystemController::findValueInSettings<double>("ResetTDAC");
     LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
-    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[pBoard->getId()])->SetAndConfigureFastCommands(pBoard, nTRIGxEvent, injType, injLatency, nClkDelays, colStart < RD53::LIN.colStart);
+
+    auto& theBeBoardFW = this->fBeBoardFWMap[pBoard->getId()];
+
+    static_cast<RD53FWInterface*>(theBeBoardFW)
+        ->SetAndConfigureFastCommands(pBoard, nTRIGxEvent, injType, injLatency, nClkDelays, RD53Shared::firstChip->getMajorityFE(colStart, colStart) == &RD53A::SYNC);
     LOG(INFO) << CYAN << "================== Done ==================" << RESET;
 
     // ########################
     // # Configuring from XML #
     // ########################
-    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[pBoard->getId()])->ConfigureFromXML(pBoard);
+    static_cast<RD53FWInterface*>(theBeBoardFW)->ConfigureFromXML(pBoard);
 
     // ########################
     // # Configure LpGBT chip #
@@ -430,9 +438,14 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
         {
             LOG(INFO) << GREEN << "Initializing communication to Low-power Gigabit Transceiver (LpGBT): " << BOLDYELLOW << +cOpticalGroup->getId() << RESET;
 
+            static_cast<RD53lpGBTInterface*>(flpGBTInterface)->SetDownLinkMapping(cOpticalGroup);
+            static_cast<RD53lpGBTInterface*>(flpGBTInterface)->SetUpLinkMapping(cOpticalGroup);
+            LOG(INFO) << BOLDBLUE << "\t--> Configured up and down link mapping in firmware" << RESET;
+
             if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
+            // && (static_cast<RD53lpGBTInterface*>(flpGBTInterface)->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, theBeBoardFW, fReadoutChipInterface) == true))
             {
-                static_cast<RD53lpGBTInterface*>(flpGBTInterface)->InternalPhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, fReadoutChipInterface);
+                static_cast<RD53lpGBTInterface*>(flpGBTInterface)->PhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, fReadoutChipInterface);
                 LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;
             }
             else
@@ -445,7 +458,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     // #######################
     uint32_t txStatus, rxStatus, mgtStatus;
     LOG(INFO) << GREEN << "Checking status of the optical links:" << RESET;
-    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[pBoard->getId()])->StatusOptoLink(txStatus, rxStatus, mgtStatus);
+    static_cast<RD53FWInterface*>(theBeBoardFW)->StatusOptoLink(txStatus, rxStatus, mgtStatus);
 
     // ######################################################
     // # Configure down and up links to/from frontend chips #
@@ -467,7 +480,14 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     // ####################################
     // # Check AURORA lock on data stream #
     // ####################################
-    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[pBoard->getId()])->CheckChipCommunication(pBoard);
+    try
+    {
+        static_cast<RD53FWInterface*>(theBeBoardFW)->CheckChipCommunication(pBoard);
+    }
+    catch(...)
+    {
+        LOG(INFO) << BOLDRED << "===== Abort =====" << RESET;
+    }
 
     // ############################
     // # Configure frontend chips #
@@ -486,12 +506,12 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
                 static_cast<RD53*>(cChip)->copyMaskToDefault();
                 static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);
                 LOG(INFO) << GREEN << "Number of masked pixels: " << RESET << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
-                // static_cast<RD53Interface*>(fReadoutChipInterface)->CheckChipID(static_cast<RD53*>(cChip), 0); @TMP@
             }
         }
     }
     LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
     LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
+
     RD53Event::ForkDecodingThreads();
 }
 

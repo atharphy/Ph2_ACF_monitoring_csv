@@ -32,7 +32,7 @@ LDACLINMeasurement.sh
    
 4. Copy the ROOT macro to your working directory:
 ```
-cp ../ProductionTools/LDACLINCalibration/LDACLINCalibration.C .
+cp ../ProductionToolsIT/LDACLINCalibration/LDACLINCalibration.C .
 ```
 5. Run the ROOT macro to analyze the results (you should specify the measurement set as a string argument):
 ```

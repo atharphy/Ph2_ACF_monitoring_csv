@@ -19,7 +19,6 @@ class GainFit
 {
   public:
     GainFit() : fSlope(0), fSlopeError(0), fIntercept(0), fInterceptError(0), fSlopeLowQ(0), fSlopeLowQError(0), fInterceptLowQ(0), fInterceptLowQError(0), fChi2(0), fDoF(0) {}
-    ~GainFit() {}
 
     void print(void) { std::cout << fSlope << "\t" << fIntercept << "\t" << fChi2 << "\t" << fDoF << std::endl; }
 

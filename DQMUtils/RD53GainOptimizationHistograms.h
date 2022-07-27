@@ -1,7 +1,7 @@
 /*!
   \file                  RD53GainOptimizationHistograms.h
   \brief                 Header file of Gain optimization calibration histograms
-  \author                Alkiviadis PAPADOPOULOS
+  \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
   Support:               email to alkiviadis.papadopoulos@cern.ch
