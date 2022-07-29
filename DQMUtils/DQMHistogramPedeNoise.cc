@@ -72,8 +72,8 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
             }
         }
     }
-    fNPixelChannels = *std::max_element(std::begin(cNPixelChannels), std::end(cNPixelChannels)); // theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();
-    fNStripChannels = *std::max_element(std::begin(cNStripChannels), std::end(cNStripChannels)); // theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();
+    fNPixelChannels = *std::max_element(std::begin(cNPixelChannels), std::end(cNPixelChannels)); 
+    fNStripChannels = *std::max_element(std::begin(cNStripChannels), std::end(cNStripChannels));
 
     auto cSetting = pSettingsMap.find("PlotSCurves");
     fPlotSCurves  = (cSetting != std::end(pSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
