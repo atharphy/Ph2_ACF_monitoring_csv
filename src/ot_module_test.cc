@@ -8,6 +8,7 @@
 #include "tools/BackEndAlignment.h"
 #include "tools/BeamTestCheck.h"
 #include "tools/CBCPulseShape.h"
+#include "tools/CheckCbcNeighbors.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
 #include "tools/LatencyScan.h"
@@ -20,8 +21,6 @@
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
-#include "tools/CheckCbcNeighbors.h"
-
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -1269,11 +1268,9 @@ int main(int argc, char* argv[])
 
         cCheckCbcNeighbors.TestCbcNeighbors();
 
-
         t.stop();
         t.show("Time to check stubs on shared channels");
     }
-
 
     cTool.SaveResults();
     cTool.WriteRootFile();

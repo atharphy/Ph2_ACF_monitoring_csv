@@ -82,8 +82,8 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     DetectorDataContainer fDetectorHybridNoiseHistograms;
     DetectorDataContainer fDetectorHybridStripNoiseHistograms;
     DetectorDataContainer fDetectorHybridPixelNoiseHistograms;
-    DetectorDataContainer fDetectorHybridStripNoiseEvenHistograms; //only for CBC
-    DetectorDataContainer fDetectorHybridStripNoiseOddHistograms; //only for CBC
+    DetectorDataContainer fDetectorHybridStripNoiseEvenHistograms; // only for CBC
+    DetectorDataContainer fDetectorHybridStripNoiseOddHistograms;  // only for CBC
 
     DetectorDataContainer fDetectorChipStripSCurveHistograms;
     DetectorDataContainer fDetectorChipPixelSCurveHistograms;

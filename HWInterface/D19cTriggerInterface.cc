@@ -157,14 +157,14 @@ bool D19cTriggerInterface::Start()
     WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 
-    //FIXME Trigger FSM sometimes doesn't start despite the start_trigger assertion
+    // FIXME Trigger FSM sometimes doesn't start despite the start_trigger assertion
     // temporary ugly fix to do it one more time in case of failure
     cTriggerState = GetTriggerState();
     if(cTriggerState != 1)
     {
-      LOG(ERROR) << "D19cTriggerInterface::Start - Failed starting trigger FSM ... retrying" << RESET;
-      WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
-      std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+        LOG(ERROR) << "D19cTriggerInterface::Start - Failed starting trigger FSM ... retrying" << RESET;
+        WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
+        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
     }
 
     cTriggerState = GetTriggerState();

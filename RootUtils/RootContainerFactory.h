@@ -72,16 +72,16 @@ void initializePlot(T* plot, std::string name, std::string title, const T* refer
 using namespace details;
 
 template <typename T, typename SC, typename SM, typename SO, typename SB, typename SD>
-void bookHistogramsFromStructure(TFile*                   theOutputFile,
-                                 const DetectorContainer& original,
-                                 DetectorDataContainer&   copy,
-                                 const T&                 channel,
-                                 const SC&                chipSummary,
-				 const std::vector<FrontEndType> chipTypes,
-                                 const SM&                hybridSummary,
-                                 const SO&                opticalGroupSummary,
-                                 const SB&                boardSummary,
-                                 const SD&                detectorSummary)
+void bookHistogramsFromStructure(TFile*                          theOutputFile,
+                                 const DetectorContainer&        original,
+                                 DetectorDataContainer&          copy,
+                                 const T&                        channel,
+                                 const SC&                       chipSummary,
+                                 const std::vector<FrontEndType> chipTypes,
+                                 const SM&                       hybridSummary,
+                                 const SO&                       opticalGroupSummary,
+                                 const SB&                       boardSummary,
+                                 const SD&                       detectorSummary)
 {
     copy.reset();
 
@@ -161,7 +161,6 @@ void bookHistogramsFromStructure(TFile*                   theOutputFile,
                 // Chips
                 for(const auto chip: *hybrid)
                 {
-
                     std::string chipFolderType = "Chip";
                     if((chip)->getFrontEndType() == FrontEndType::MPA || (chip)->getFrontEndType() == FrontEndType::MPA2) chipFolderType = "MPA";
                     if((chip)->getFrontEndType() == FrontEndType::SSA || (chip)->getFrontEndType() == FrontEndType::SSA2) chipFolderType = "SSA";
@@ -172,8 +171,8 @@ void bookHistogramsFromStructure(TFile*                   theOutputFile,
                     ChipDataContainer* copyChip = copyHybrid->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
                     copyChip->initialize<SC, T>();
 
-		    if(!chipTypes.empty()) 
-		        if(!(std::find(chipTypes.begin(), chipTypes.end(), (chip)->getFrontEndType()) != chipTypes.end())) continue;
+                    if(!chipTypes.empty())
+                        if(!(std::find(chipTypes.begin(), chipTypes.end(), (chip)->getFrontEndType()) != chipTypes.end())) continue;
 
                     SC theChipSummary;
                     initializePlot(&theChipSummary,
