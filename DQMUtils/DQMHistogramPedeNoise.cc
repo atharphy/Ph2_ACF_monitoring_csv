@@ -97,12 +97,12 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
         }
         if(fWithSSA || fWithCBC)
         {
-            HistContainer<TH2F> theTH2FChipStripSCurve("StripSCurve", "StripSCurve", fNStripChannels, -0.5, fNStripChannels - 0.5, nYbins, minY, maxY);
+            HistContainer<TH2F> theTH2FChipStripSCurve("SCurve", "SCurve", fNStripChannels, -0.5, fNStripChannels - 0.5, nYbins, minY, maxY);
             RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipStripSCurveHistograms, theTH2FChipStripSCurve, cStripTypes);
         }
         if(fWithMPA)
         {
-            HistContainer<TH2F> theTH2FChipPixelSCurve("PixelSCurve", "PixelSCurve", fNPixelChannels, -0.5, fNPixelChannels - 0.5, nYbins, minY, maxY);
+            HistContainer<TH2F> theTH2FChipPixelSCurve("SCurve", "SCurve", fNPixelChannels, -0.5, fNPixelChannels - 0.5, nYbins, minY, maxY);
             RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelSCurveHistograms, theTH2FChipPixelSCurve, cPixelTypes);
         }
         // fit scurve
@@ -110,12 +110,12 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
         {
             if(fWithSSA || fWithCBC)
             {
-                HistContainer<TH1F> theTH1FChannelStripSCurveContainer("StripSCurve", "StripSCurve", nYbins, minY, maxY);
+                HistContainer<TH1F> theTH1FChannelStripSCurveContainer("SCurve", "SCurve", nYbins, minY, maxY);
                 RootContainerFactory::bookChannelHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelStripSCurveHistograms, theTH1FChannelStripSCurveContainer);
             }
             if(fWithMPA)
             {
-                HistContainer<TH1F> theTH1FChannelPixelSCurveContainer("PixelSCurve", "PixelSCurve", nYbins, minY, maxY);
+                HistContainer<TH1F> theTH1FChannelPixelSCurveContainer("SCurve", "SCurve", nYbins, minY, maxY);
                 RootContainerFactory::bookChannelHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelPixelSCurveHistograms, theTH1FChannelPixelSCurveContainer);
             }
 
@@ -129,7 +129,7 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
         HistContainer<TH1F> theTH1FChipStripPedestalContainer("PedestalDistribution", "PedestalDistribution", 2048, -0.5, 1023.5);
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipStripPedestalHistograms, theTH1FChipStripPedestalContainer, cStripTypes);
         //
-        HistContainer<TH1F> theTH1FChannelStripPedestalContainer("StripPedestalDistribution", "StripPedestal", fNStripChannels, -0.5, float(fNStripChannels) - 0.5);
+        HistContainer<TH1F> theTH1FChannelStripPedestalContainer("ChannelPedestalDistribution", "ChannelPedestal", fNStripChannels, -0.5, float(fNStripChannels) - 0.5);
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelStripPedestalHistograms, theTH1FChannelStripPedestalContainer, cStripTypes);
 
         // Noise
@@ -139,30 +139,30 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
         HistContainer<TH1F> theTH1FChipStripNoiseContainer("NoiseDistribution", "NoiseDistribution", 200, 0., 20.);
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipStripNoiseHistograms, theTH1FChipStripNoiseContainer, cStripTypes);
         //
-        HistContainer<TH1F> theTH1FChannelStripNoiseContainer("StripNoiseDistribution", "StripNoise", fNStripChannels, -0.5, float(fNStripChannels) - 0.5);
+        HistContainer<TH1F> theTH1FChannelStripNoiseContainer("ChannelNoiseDistribution", "ChannelNoise", fNStripChannels, -0.5, float(fNStripChannels) - 0.5);
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelStripNoiseHistograms, theTH1FChannelStripNoiseContainer, cStripTypes);
 
         if(fWithCBC)
         {
             // Strip Noise Even
-            HistContainer<TH1F> theTH1FHybridStripNoiseEvenContainer("HybridStripNoiseEvenDistribution", "HybridStripNoiseEven", fNStripChannels * 4, -0.5, float(fNStripChannels) * 4 - 0.5);
+            HistContainer<TH1F> theTH1FHybridStripNoiseEvenContainer("HybridNoiseEvenDistribution", "HybridNoiseEven", fNStripChannels * 4, -0.5, float(fNStripChannels) * 4 - 0.5);
             RootContainerFactory::bookHybridHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorHybridStripNoiseEvenHistograms, theTH1FHybridStripNoiseEvenContainer);
             //
-            HistContainer<TH1F> theTH1FChannelStripNoiseEvenContainer("StripNoiseEvenDistribution", "StripNoiseEven", fNStripChannels / 2, -0.5, float(fNStripChannels / 2) - 0.5);
+            HistContainer<TH1F> theTH1FChannelStripNoiseEvenContainer("ChannelNoiseEvenDistribution", "ChannelNoiseEven", fNStripChannels / 2, -0.5, float(fNStripChannels / 2) - 0.5);
             RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(
                 theOutputFile, theDetectorStructure, fDetectorChannelStripNoiseEvenHistograms, theTH1FChannelStripNoiseEvenContainer, {FrontEndType::CBC3});
 
             // Strip Noise Odd
-            HistContainer<TH1F> theTH1FHybridStripNoiseOddContainer("HybridStripNoiseOddDistribution", "HybridStripNoiseOdd", fNStripChannels * 4, -0.5, float(fNStripChannels) * 4 - 0.5);
+            HistContainer<TH1F> theTH1FHybridStripNoiseOddContainer("HybridNoiseOddDistribution", "HybridNoiseOdd", fNStripChannels * 4, -0.5, float(fNStripChannels) * 4 - 0.5);
             RootContainerFactory::bookHybridHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorHybridStripNoiseOddHistograms, theTH1FHybridStripNoiseOddContainer);
             //
-            HistContainer<TH1F> theTH1FChannelStripNoiseOddContainer("StripNoiseOddDistribution", "StripNoiseOdd", fNStripChannels / 2, -0.5, float(fNStripChannels / 2) - 0.5);
+            HistContainer<TH1F> theTH1FChannelStripNoiseOddContainer("ChannelNoiseOddDistribution", "ChannelNoiseOdd", fNStripChannels / 2, -0.5, float(fNStripChannels / 2) - 0.5);
             RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(
                 theOutputFile, theDetectorStructure, fDetectorChannelStripNoiseOddHistograms, theTH1FChannelStripNoiseOddContainer, {FrontEndType::CBC3});
         }
 
         // Validation
-        HistContainer<TH1F> theTH1FStripValidationContainer("StripOccupancy", "StripOccupancy", fNStripChannels, -0.5, float(fNStripChannels) - 0.5);
+        HistContainer<TH1F> theTH1FStripValidationContainer("Occupancy", "Occupancy", fNStripChannels, -0.5, float(fNStripChannels) - 0.5);
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorStripValidationHistograms, theTH1FStripValidationContainer, cStripTypes);
     }
     if(fWithMPA)
@@ -171,7 +171,7 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
         HistContainer<TH1F> theTH1FChipPixelPedestalContainer("PedestalDistribution", "PedestalDistribution", 2048, -0.5, 1023.5);
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelPedestalHistograms, theTH1FChipPixelPedestalContainer, cPixelTypes);
         //
-        HistContainer<TH1F> theTH1FChannelPixelPedestalContainer("PixelPedestalDistribution", "PixelPedestal", fNPixelChannels, -0.5, float(fNPixelChannels) - 0.5);
+        HistContainer<TH1F> theTH1FChannelPixelPedestalContainer("ChannelPedestalDistribution", "ChannelPedestal", fNPixelChannels, -0.5, float(fNPixelChannels) - 0.5);
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelPixelPedestalHistograms, theTH1FChannelPixelPedestalContainer, cPixelTypes);
 
         // Noise
@@ -181,14 +181,14 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
         HistContainer<TH1F> theTH1FChipPixelNoiseContainer("NoiseDistribution", "NoiseDistribution", 200, 0., 20.);
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelNoiseHistograms, theTH1FChipPixelNoiseContainer, cPixelTypes);
         // 1D pixel noise
-        HistContainer<TH1F> theTH1FChannelPixelNoiseContainer("PixelNoiseDistribution", "PixelNoise", fNPixelChannels, -0.5, float(fNPixelChannels) - 0.5);
+        HistContainer<TH1F> theTH1FChannelPixelNoiseContainer("ChannelNoiseDistribution", "ChannelNoise", fNPixelChannels, -0.5, float(fNPixelChannels) - 0.5);
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelPixelNoiseHistograms, theTH1FChannelPixelNoiseContainer, cPixelTypes);
         // 2D Pixel Noise
-        HistContainer<TH2F> theTH2FChannel2DPixelNoiseContainer("2DPixelNoise", "PixelNoise", 120, -0.5, float(120) - 0.5, fNPixelChannels / 120, -0.5, float(fNPixelChannels / 120) - 0.5);
+        HistContainer<TH2F> theTH2FChannel2DPixelNoiseContainer("2DPixelNoise", "2DChannelNoise", 120, -0.5, float(120) - 0.5, fNPixelChannels / 120, -0.5, float(fNPixelChannels / 120) - 0.5);
         RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChannel2DPixelNoiseHistograms, theTH2FChannel2DPixelNoiseContainer, cPixelTypes);
 
         // Validation
-        HistContainer<TH1F> theTH1FPixelValidationContainer("PixelOccupancy", "PixelOccupancy", fNPixelChannels, -0.5, float(fNPixelChannels) - 0.5);
+        HistContainer<TH1F> theTH1FPixelValidationContainer("Occupancy", "Occupancy", fNPixelChannels, -0.5, float(fNPixelChannels) - 0.5);
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorPixelValidationHistograms, theTH1FPixelValidationContainer, cPixelTypes);
     }
 
