@@ -78,6 +78,6 @@ std::string DetectorMonitor::getMonitorFileName()
 #ifdef __USE_ROOT__
     return fMonitorFileName;
 #else
-    return ""
+    return "";
 #endif
 }
