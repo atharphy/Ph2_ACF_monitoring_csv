@@ -74,5 +74,11 @@ std::string DetectorMonitor::getMonitorName()
     return className;
 }
 #ifdef __USE_ROOT__
-std::string DetectorMonitor::getMonitorFileName() { return fMonitorFileName; }
+std::string DetectorMonitor::getMonitorFileName()
+{
+#ifdef __USE_ROOT__
+    return fMonitorFileName;
+#else
+    return ""
 #endif
+}
