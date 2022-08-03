@@ -72,16 +72,15 @@ void initializePlot(T* plot, std::string name, std::string title, const T* refer
 using namespace details;
 
 template <typename T, typename SC, typename SM, typename SO, typename SB, typename SD>
-void bookHistogramsFromStructure(TFile*                          theOutputFile,
-                                 const DetectorContainer&        original,
-                                 DetectorDataContainer&          copy,
-                                 const T&                        channel,
-                                 const SC&                       chipSummary,
-                                 const std::vector<FrontEndType> chipTypes,
-                                 const SM&                       hybridSummary,
-                                 const SO&                       opticalGroupSummary,
-                                 const SB&                       boardSummary,
-                                 const SD&                       detectorSummary)
+void bookHistogramsFromStructure(TFile*                   theOutputFile,
+                                 const DetectorContainer& original,
+                                 DetectorDataContainer&   copy,
+                                 const T&                 channel,
+                                 const SC&                chipSummary,
+                                 const SM&                hybridSummary,
+                                 const SO&                opticalGroupSummary,
+                                 const SB&                boardSummary,
+                                 const SD&                detectorSummary)
 {
     copy.reset();
 
@@ -171,9 +170,6 @@ void bookHistogramsFromStructure(TFile*                          theOutputFile,
                     ChipDataContainer* copyChip = copyHybrid->addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
                     copyChip->initialize<SC, T>();
 
-                    if(!chipTypes.empty())
-                        if(!(std::find(chipTypes.begin(), chipTypes.end(), (chip)->getFrontEndType()) != chipTypes.end())) continue;
-
                     SC theChipSummary;
                     initializePlot(&theChipSummary,
                                    Form("D_B(%d)_O(%d)_H(%d)_%s_Chip(%d)", board->getId(), opticalGroup->getId(), hybrid->getId(), chipSummaryHistogramGenericName.c_str(), chip->getId()),
@@ -237,13 +233,13 @@ void bookHistogramsFromStructure(TFile*                          theOutputFile,
 template <typename T>
 void bookHistogramsFromStructure(TFile* theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, const T& channel)
 {
-    bookHistogramsFromStructure<T, T, T, T, T, T>(theOutputFile, original, copy, channel, channel, {}, channel, channel, channel, channel);
+    bookHistogramsFromStructure<T, T, T, T, T, T>(theOutputFile, original, copy, channel, channel, channel, channel, channel, channel);
 }
 
 template <typename T, typename S>
 void bookHistogramsFromStructure(TFile* theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, const T& channel, const S& summay)
 {
-    bookHistogramsFromStructure<T, S, S, S, S, S>(theOutputFile, original, copy, channel, summay, {}, summay, summay, summay, summay);
+    bookHistogramsFromStructure<T, S, S, S, S, S>(theOutputFile, original, copy, channel, summay, summay, summay, summay, summay);
 }
 
 template <typename T>
@@ -251,15 +247,15 @@ void bookChannelHistograms(TFile* theOutputFile, const DetectorContainer& origin
 {
     EmptyContainer theEmpty;
     bookHistogramsFromStructure<T, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer>(
-        theOutputFile, original, copy, channel, theEmpty, {}, theEmpty, theEmpty, theEmpty, theEmpty);
+        theOutputFile, original, copy, channel, theEmpty, theEmpty, theEmpty, theEmpty, theEmpty);
 }
 
 template <typename T>
-void bookChipHistograms(TFile* theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, const T& chipSummary, const std::vector<FrontEndType>& chipTypes = {})
+void bookChipHistograms(TFile* theOutputFile, const DetectorContainer& original, DetectorDataContainer& copy, const T& chipSummary)
 {
     EmptyContainer theEmpty;
     bookHistogramsFromStructure<EmptyContainer, T, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer>(
-        theOutputFile, original, copy, theEmpty, chipSummary, chipTypes, theEmpty, theEmpty, theEmpty, theEmpty);
+        theOutputFile, original, copy, theEmpty, chipSummary, theEmpty, theEmpty, theEmpty, theEmpty);
 }
 
 template <typename T>
@@ -267,7 +263,7 @@ void bookHybridHistograms(TFile* theOutputFile, const DetectorContainer& origina
 {
     EmptyContainer theEmpty;
     bookHistogramsFromStructure<EmptyContainer, EmptyContainer, T, EmptyContainer, EmptyContainer, EmptyContainer>(
-        theOutputFile, original, copy, theEmpty, theEmpty, {}, hybridSummary, theEmpty, theEmpty, theEmpty);
+        theOutputFile, original, copy, theEmpty, theEmpty, hybridSummary, theEmpty, theEmpty, theEmpty);
 }
 
 template <typename T>
@@ -275,7 +271,7 @@ void bookOpticalGroupHistograms(TFile* theOutputFile, const DetectorContainer& o
 {
     EmptyContainer theEmpty;
     bookHistogramsFromStructure<EmptyContainer, EmptyContainer, EmptyContainer, T, EmptyContainer, EmptyContainer>(
-        theOutputFile, original, copy, theEmpty, theEmpty, {}, theEmpty, opticalGroupSummary, theEmpty, theEmpty);
+        theOutputFile, original, copy, theEmpty, theEmpty, theEmpty, opticalGroupSummary, theEmpty, theEmpty);
 }
 
 template <typename T>
@@ -283,7 +279,7 @@ void bookBoardHistograms(TFile* theOutputFile, const DetectorContainer& original
 {
     EmptyContainer theEmpty;
     bookHistogramsFromStructure<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, T, EmptyContainer>(
-        theOutputFile, original, copy, theEmpty, theEmpty, {}, theEmpty, theEmpty, boardSummary, theEmpty);
+        theOutputFile, original, copy, theEmpty, theEmpty, theEmpty, theEmpty, boardSummary, theEmpty);
 }
 
 template <typename T>
@@ -291,7 +287,7 @@ void bookDetectorHistograms(TFile* theOutputFile, const DetectorContainer& origi
 {
     EmptyContainer theEmpty;
     bookHistogramsFromStructure<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, T>(
-        theOutputFile, original, copy, theEmpty, theEmpty, {}, theEmpty, theEmpty, theEmpty, detectorSummary);
+        theOutputFile, original, copy, theEmpty, theEmpty, theEmpty, theEmpty, theEmpty, detectorSummary);
 }
 
 } // namespace RootContainerFactory

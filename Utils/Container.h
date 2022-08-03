@@ -12,6 +12,7 @@
 #ifndef __CONTAINER_H__
 #define __CONTAINER_H__
 
+#include "../HWDescription/Definition.h"
 #include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/Exception.h"
 #include <boost/iterator/filter_iterator.hpp>
@@ -193,6 +194,8 @@ class ChipContainer : public BaseContainer
         return static_cast<ChannelContainer<T>*>(container_)->end();
     }
 
+    void setType(FrontEndType type) { type_ = type; }
+
     void setNumberOfChannels(unsigned int numberOfRows, unsigned int numberOfCols = 1)
     {
         nOfRows_ = numberOfRows;
@@ -202,6 +205,7 @@ class ChipContainer : public BaseContainer
     virtual const std::shared_ptr<ChannelGroupBase> getChipCurrentMask() const { return nullptr; };
 
     unsigned int size(void) const { return nOfRows_ * nOfCols_; }
+    FrontEndType getType() const { return type_; }
     unsigned int getNumberOfRows() const { return nOfRows_; }
     unsigned int getNumberOfCols() const { return nOfCols_; }
 
@@ -273,6 +277,7 @@ class ChipContainer : public BaseContainer
     }
 
   protected:
+    FrontEndType          type_;
     unsigned int          nOfRows_;
     unsigned int          nOfCols_;
     ChannelContainerBase* container_;
@@ -401,7 +406,9 @@ class HybridContainer : public HWDescriptionContainer<ChipContainer, Ph2_HwDescr
     template <typename T>
     T* addChipContainer(uint16_t id, T* chip)
     {
-        return static_cast<T*>(HWDescriptionContainer<ChipContainer, Ph2_HwDescription::ReadoutChip>::addObject(id, chip));
+        auto theChipContainer = HWDescriptionContainer<ChipContainer, Ph2_HwDescription::ReadoutChip>::addObject(id, chip);
+        theChipContainer->setType(chip->getFrontEndType());
+        return static_cast<T*>(theChipContainer);
     }
 
   private:
