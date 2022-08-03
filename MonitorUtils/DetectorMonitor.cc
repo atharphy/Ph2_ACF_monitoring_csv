@@ -18,8 +18,8 @@ DetectorMonitor::DetectorMonitor(const Ph2_System::SystemController* theSystemCo
         LOG(ERROR) << "Exceptin when trying to create MonitorResults directory: " << e.what();
     }
 
-    std::string monitorOutputFileName = monitorOutputDir + "/" + "MonitorDQM" + currentDateTime() + ".root";
-    fOutputFile                       = new TFile(monitorOutputFileName.c_str(), "RECREATE");
+    fMonitorFileName = monitorOutputDir + "/" + "MonitorDQM" + currentDateTime() + ".root";
+    fOutputFile      = new TFile(fMonitorFileName.c_str(), "RECREATE");
 #endif
 
     fTheSystemController = theSystemController;
@@ -73,3 +73,5 @@ std::string DetectorMonitor::getMonitorName()
     }
     return className;
 }
+
+std::string DetectorMonitor::getMonitorFileName() { return fMonitorFileName; }

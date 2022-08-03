@@ -26,24 +26,24 @@ TIME=`date +"%Y-%m-%d_%H-%M-%S"`
 mkdir Results/SEH_${hybridID}_${TIME}
 mux_setup -f settings/mux_setup.xml --mux_configure 0,$slot | tee -a logs/Logfile_${hybridID}_${TIME}.log
 
-SEHTest -f settings/SEHTest.xml --powersupply --external-pattern 202 --fcmd-pattern 202 --scope-fcmd --clock-test  -a -r --eff --ext-leak 1000 --ext-bias 0x155 -v -i -b --hybridId ${hybridID}_noLoad --output Results/SEH_${hybridID}_${TIME}/ | tee -a logs/Logfile_noLoad_${hybridID}_${TIME}.log
+SEHTest -f settings/2S_SEH.xml --measure-input-iv --test-external-pattern 202 --fcmd-pattern 202 --test-fcmd --test-clock  -a -r --test-efficiency --test-ext-leak 1000 --test-ext-bias -v --i2c 10000 -b --hybridId ${hybridID}_noLoad --output Results/SEH_${hybridID}_${TIME}/ | tee -a logs/Logfile_noLoad_${hybridID}_${TIME}.log
 #SEHTest -f settings/SEHTest.xml --external-pattern 202 --fcmd-pattern 202 --scope-fcmd --clock-test  -a -r --eff -v -i -b --hybridId ${hybridID}_noLoad --output Results/SEH_${hybridID}_${TIME}/ | tee -a logs/Logfile_noLoad_${hybridID}_${TIME}.log
 
-if [$? -eq 255]
+if [ $? -eq 255 ]
 then
 	mux_setup -f settings/mux_setup.xml --mux_configure 0,$slot | tee -a logs/Logfile_${hybridID}_${TIME}.log
     #SEHTest -f settings/SEHTest.xml --external-pattern 202 --fcmd-pattern 170 --scope-fcmd --clock-test  -a -r --eff -v -i -b --hybridId ${hybridID}_noLoad --output Results/SEH_${hybridID}_${TIME}/ | tee -a logs/Logfile_noLoad_${hybridID}_${TIME}.log
-    SEHTest -f settings/SEHTest.xml --powersupply --external-pattern 202 --fcmd-pattern 170 --scope-fcmd --clock-test  -a -r --eff --ext-leak 1000 --ext-bias 0x155 -v -i -b --hybridId ${hybridID}_noLoad --output Results/SEH_${hybridID}_${TIME}/ | tee -a logs/Logfile_noLoad_${hybridID}_${TIME}.log
+S   EHTest -f settings/2S_SEH.xml --measure-input-iv --test-external-pattern 202 --fcmd-pattern 202 --test-fcmd --test-clock  -a -r --test-efficiency --test-ext-leak 1000 --test-ext-bias -v --i2c 10000 -b --hybridId ${hybridID}_noLoad --output Results/SEH_${hybridID}_${TIME}/ | tee -a logs/Logfile_noLoad_${hybridID}_${TIME}.log
 fi
 
 mux_setup -f settings/mux_setup.xml --mux_configure 0,$slot | tee -a logs/Logfile_${hybridID}_${TIME}.log
 
-SEHTest -f settings/SEHTest.xml --external-pattern 202 --fcmd-pattern 170 --scope-fcmd --clock-test  -a -r -v -i -b --hybridId ${hybridID}_withLoad --output Results/SEH_${hybridID}_${TIME}/ --leftLoad 2000 --rightLoad 2000 | tee -a logs/Logfile_withLoad_${hybridID}_${TIME}.log
+SEHTest -f settings/2S_SEH.xml --test-external-pattern 202 --fcmd-pattern 170 --test-fcmd --test-clock  -a -r -v --i2c 10000 -b --hybridId ${hybridID}_withLoad --output Results/SEH_${hybridID}_${TIME}/ --leftLoad 2000 --rightLoad 2000 | tee -a logs/Logfile_withLoad_${hybridID}_${TIME}.log
 
-if [$? -eq 255]
+if [ $? -eq 255 ]
 then
 	mux_setup -f settings/mux_setup.xml --mux_configure 0,$slot | tee -a logs/Logfile_${hybridID}_${TIME}.log
-	SEHTest -f settings/SEHTest.xml --external-pattern 202 --fcmd-pattern 170 --scope-fcmd --clock-test  -a -r -v -i -b --hybridId ${hybridID}_withLoad --output Results/SEH_${hybridID}_${TIME}/ --leftLoad 2000 --rightLoad 2000 | tee -a logs/Logfile_withLoad_${hybridID}_${TIME}.log
+    SEHTest -f settings/2S_SEH.xml --test-external-pattern 202 --fcmd-pattern 170 --test-fcmd --test-clock  -a -r -v --i2c 10000 -b --hybridId ${hybridID}_withLoad --output Results/SEH_${hybridID}_${TIME}/ --leftLoad 2000 --rightLoad 2000 | tee -a logs/Logfile_withLoad_${hybridID}_${TIME}.log
 fi 
 mux_setup -f settings/mux_setup.xml --mux_disconnect 0,$slot | tee -a logs/Logfile_${hybridID}_${TIME}.log
 

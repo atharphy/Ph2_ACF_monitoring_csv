@@ -174,26 +174,12 @@ int SEHTester::exampleFit()
     return 0;
 }
 
-void SEHTester::TestBiasVoltage(uint16_t pBiasVoltage)
+void SEHTester::TestBiasVoltage()
 {
     float cUMon  = 0;
     float cVHVJ7 = 0;
     float cVHVJ8 = 0;
 
-    /* flpGBTInterface->GetExternalController()->getInterface().set_HV(false, true, true, 0);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-    flpGBTInterface->GetExternalController()->getInterface().set_HV(true, true, true, pBiasVoltage); // 0x155 = 100V
-#endif
-    std::this_thread::sleep_for(std::chrono::milliseconds(15000));
-#ifdef __TCP_SERVER__
-    cUMon  = this->getMeasurement("read_hvmon:Mon");
-    cVHVJ7 = this->getMeasurement("read_hvmon:VHVJ7");
-    cVHVJ8 = this->getMeasurement("read_hvmon:VHVJ8");
-#else
-    flpGBTInterface->GetExternalController()->getInterface().read_hvmon(flpGBTInterface->GetExternalController()->getInterface().Mon, cUMon);
-    flpGBTInterface->GetExternalController()->getInterface().read_hvmon(flpGBTInterface->GetExternalController()->getInterface().VHVJ7, cVHVJ7);
-    flpGBTInterface->GetExternalController()->getInterface().read_hvmon(flpGBTInterface->GetExternalController()->getInterface().VHVJ8, cVHVJ8); */
-    //----------------------------------------------------
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:0,hvmonx7Relay:1,hvmonx8Relay:1,HVDAC_setvalue:0,");
 #else
@@ -315,23 +301,13 @@ void SEHTester::EndExternalTestLeakageCurrent(std::string powerSupplyId, std::st
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
     setVoltageMessage = "TurnOff,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
-    fillSummaryTree("ExternalLeakDone", 1);
+    fillSummaryTree("ExternalParallelLeakDone", 1);
 }
 
 void SEHTester::ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTime, std::string powerSupplyId, std::string channelId)
 {
-    // time_t startTime;
-    // time(&startTime);
     struct timespec startTime, timer;
     srand(time(NULL));
-
-    /* generate secret number between 1 and 10: */
-    // int iSecond;
-    // int iMilli;
-
-    // start timer.
-    // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
-    // clock_gettime(CLOCK_REALTIME, &start);
     clock_gettime(CLOCK_MONOTONIC, &startTime);
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:1,hvmonx7Relay:0,hvmonx8Relay:0,HVDAC_setvalue:" + std::to_string(0) + ",");
@@ -355,18 +331,13 @@ void SEHTester::ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTi
     cLeakTree->Branch("IMea", &cIMeaValVect);
     cLeakTree->Branch("Time", &cTimeValVect);
 
-    // for(int cPoint = 0; cPoint <= (int)pPoints; cPoint += 1)
     double time_taken;
     do
     {
-        // iSecond = rand() % 2;
-        // iMilli  = rand() % 1000;
-        // LOG(INFO) << BOLDBLUE << "Seconds " << +iSecond << " Milli " << +iMilli << RESET;
         float ILeak = 0;
         float HvMea = 0;
         float IMea  = 0;
-        // time_t timer;
-        // time(&timer);
+
         clock_gettime(CLOCK_MONOTONIC, &timer);
         std::string buffer = fPowerSupplyClient->sendAndReceivePacket("GetStatus");
         HvMea              = std::stof(getVariableValue(powerSupplyId + "_" + channelId + "_Voltage", buffer));
@@ -584,35 +555,12 @@ void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
     float T;
     // check if the critical temperature of -35C has been reached
     flpGBTInterface->GetExternalController()->getInterface().read_temperature(flpGBTInterface->GetExternalController()->getInterface().Temp1, T);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    flpGBTInterface->GetExternalController()->getInterface().read_temperature(flpGBTInterface->GetExternalController()->getInterface().Temp1, T);
 
     fillSummaryTree("StartTemperature", T);
-    // if(T < -35.0)
-    // {
-    //     // if so add additional load to the lpGBT side of the hybrid to
-    //     // ensure larger currents and stop the negative over-current prottection
-    //     // of the bPOL
-    //     // 0x090 correcponds to 91mA a translates to 7mA of current draw
-    //     // before turning on the service hybrid
-    //     uint32_t cLeftLoadValue = pLeftLoadValue;
-    //     if(pLeftLoadValue < 0x090) { cLeftLoadValue = 0x090; }
-    //     flpGBTInterface->GetExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
-    //     flpGBTInterface->GetExternalController()->getInterface().set_load2(true, false, cLeftLoadValue); // 1 step = 635uA 0xfff = 2.6A
-    //     // waiting 7 seconds before turnin on the hybrid ensures propper
-    //     // discharge of the side and lets the current rise so that the negative
-    //     // over-current protection does not activate
-    //     std::this_thread::sleep_for(std::chrono::milliseconds(7000));
-    // }
-    // else
-    // {
-    flpGBTInterface->GetExternalController()->getInterface().set_load2(true, false, pLeftLoadValue);
-    flpGBTInterface->GetExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
-    //}
+
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("TurnOn");
 #else
-
     float I_SEH;
     float U_SEH;
     float I_P1V2_R;
@@ -620,14 +568,7 @@ void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
     float U_P1V2_R;
     float U_P1V2_L;
     float U_P2V5 = 0;
-    // 1 step = 635uA 0xfff = 2.6A
-    // waiting 7 seconds before turnin on the hybrid ensures propper
-    // discharge of the side and lets the current rise so that the negative
-    // over-current protection does not activate
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().U_P1V2_R, U_P1V2_R);
-    flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().U_P1V2_L, U_P1V2_L);
-    flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().P2V5_VTRx_MON, U_P2V5);
+
     flpGBTInterface->GetExternalController()->getInterface().set_SehSupply(flpGBTInterface->GetExternalController()->getInterface().sehSupply_On);
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
     flpGBTInterface->GetExternalController()->getInterface().set_load2(true, false, pLeftLoadValue);
@@ -642,14 +583,7 @@ void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
     flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().P2V5_VTRx_MON, U_P2V5);
     fillSummaryTree("TurnOnLoadRight", I_P1V2_R);
     fillSummaryTree("TurnOnLoadLeft", I_P1V2_L);
-    // if(T < -35.0)
-    // {
-    //     // wait 4 seconds
-    //     std::this_thread::sleep_for(std::chrono::milliseconds(4000));
-    //     // to prevent indroducing a systematic current draw at -35C we turn
-    //     // the load off
-    //     flpGBTInterface->GetExternalController()->getInterface().set_load2(false, false, pLeftLoadValue); // 1 step = 635uA 0xfff = 2.6A
-    // }
+
 #endif
 }
 void SEHTester::TurnOff()
@@ -662,18 +596,8 @@ void SEHTester::TurnOff()
 }
 void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 {
-    // time_t startTime;
-    // time(&startTime);
     struct timespec startTime, timer;
     srand(time(NULL));
-
-    /* generate secret number between 1 and 10: */
-    // int iSecond;
-    // int iMilli;
-
-    // start timer.
-    // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
-    // clock_gettime(CLOCK_REALTIME, &start);
     clock_gettime(CLOCK_MONOTONIC, &startTime);
 #ifdef __TCP_SERVER__
     fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:1,hvmonx7Relay:0,hvmonx8Relay:0,HVDAC_setvalue:" + std::to_string(pHvDacValue) + ",");
@@ -691,17 +615,11 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     cLeakTree->Branch("UMon", &cUMonValVect);
     cLeakTree->Branch("Time", &cTimeValVect);
 
-    // for(int cPoint = 0; cPoint <= (int)pPoints; cPoint += 1)
     double time_taken;
     do
     {
-        // iSecond = rand() % 2;
-        // iMilli  = rand() % 1000;
-        // LOG(INFO) << BOLDBLUE << "Seconds " << +iSecond << " Milli " << +iMilli << RESET;
         float ILeak = 0;
         float UMon  = 0;
-        // time_t timer;
-        // time(&timer);
         clock_gettime(CLOCK_MONOTONIC, &timer);
 #ifdef __TCP_SERVER__
         UMon = this->getMeasurement("read_hvmon:Mon");
@@ -714,7 +632,6 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 #endif
         cILeakValVect.push_back(double(ILeak));
         cUMonValVect.push_back(UMon);
-        // cTimeValVect.push_back(timer-startTime);
 
         time_taken = (timer.tv_sec - startTime.tv_sec) * 1e9;
         time_taken = (time_taken + (timer.tv_nsec - startTime.tv_nsec)) * 1e-9;
@@ -962,155 +879,6 @@ void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, u
 
     fillSummaryTree("EfficiencyDone", 1);
 }
-// Fixed in this context means: The ADC pin is not an AMUX pin
-// Need statistics on spread of RSSI and temperature sensors
-/* bool SEHTester::TestFixedADCs()
-{
-    bool cReturn;
-#ifdef __USE_ROOT__
-    auto cFixedADCsTree = new TTree("FixedADCs", "lpGBT ADCs not tied to AMUX");
-    gStyle->SetOptStat(0);
-    auto cADCHistogram = new TH2I("cADCHistogram", "Fixed ADC Histogram", 6, 0, 6, 1024, 0, 1024);
-    cADCHistogram->GetZaxis()->SetTitle("Number of entries");
-    std::map<std::string, std::string> cADCsMap         = {{"VMON_P1V25_L", "VMON_P1V25_L_Nominal"},
-                                                   {"VMIN", "VMIN_Nominal"},
-                                                   {"TEMPP", "TEMPP_Nominal"},
-                                                   {"VTRX+_RSSI_ADC", "VTRX+_RSSI_ADC_Nominal"},
-                                                   {"PTAT_BPOL2V5", "PTAT_BPOL2V5_Nominal"},
-                                                   {"PTAT_BPOL12V", "PTAT_BPOL12V_Nominal"}};
-    auto                               cADCsMapIterator = cADCsMap.begin();
-    int                                cADCValue;
-    int                                cBinCount         = 1;
-    float                              cConversionFactor = 1. / 1024.;
-    std::vector<int>                   cADCValueVect;
-    fillSummaryTree("ADC conversion factor", cConversionFactor);
-    for(auto cBoard: *fDetectorContainer)
-    {
-        if(cBoard->at(0)->flpGBT == nullptr)
-        {
-            LOG(INFO) << BOLDRED << "No lpGBT to test ADCs!" << RESET;
-            cReturn = false;
-            continue;
-        }
-        for(auto cOpticalGroup: *cBoard)
-        {
-            D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
-            // Configure Temperature sensor
-            clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, std::vector<std::string>{"ADC4"}, 0xff);
-            do
-            {
-                cADCValueVect.clear();
-                cADCHistogram->GetXaxis()->SetBinLabel(cBinCount, cADCsMapIterator->first.c_str());
-
-                for(int cIteration = 0; cIteration < 10; ++cIteration)
-                {
-                    cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADCsMapIterator->first);
-                    cADCValueVect.push_back(cADCValue);
-                    cADCHistogram->Fill(cADCsMapIterator->first.c_str(), cADCValue, 1);
-                }
-                // fTC_2SSEH->read_supply(c2SSEHMapIterator->second, k);
-
-                fillSummaryTree(cADCsMapIterator->first, cADCValue * cConversionFactor);
-                float sum           = std::accumulate(cADCValueVect.begin(), cADCValueVect.end(), 0.0);
-                float mean          = sum / cADCValueVect.size();
-                float cDifference_V = std::fabs((fDefaultParameters[cADCsMapIterator->second]) - mean * cConversionFactor);
-
-                // Still hard coded threshold for imidiate boolean result, actual values are stored
-                if(cDifference_V > 0.1)
-                {
-                    LOG(INFO) << BOLDRED << "Mismatch in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << cADCValue * cConversionFactor << " V, nominal value is "
-                              << fDefaultParameters[cADCsMapIterator->second] << " V" << RESET;
-                    cReturn = false;
-                }
-                else
-                {
-                    LOG(INFO) << BOLDGREEN << "Match in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << cADCValue * cConversionFactor << " V, nominal value is "
-                              << fDefaultParameters[cADCsMapIterator->second] << " V" << RESET;
-                }
-
-                cADCsMapIterator++;
-                cBinCount++;
-
-            } while(cADCsMapIterator != cADCsMap.end());
-        }
-    }
-    auto cADCCanvas = new TCanvas("tFixedADCs", "lpGBT ADCs not tied to AMUX", 1600, 900);
-    cADCCanvas->SetRightMargin(0.2);
-    cADCHistogram->GetXaxis()->SetTitle("ADC channel");
-    cADCHistogram->GetYaxis()->SetTitle("ADC count");
-
-    cADCHistogram->Draw("colz");
-    cADCCanvas->Write();
-#endif
-    return cReturn;
-} */
-
-/* bool SEHTester::ToyTestFixedADCs()
-{
-    bool cReturn;
-#ifdef __USE_ROOT__
-    auto                               cFixedADCsTree   = new TTree("ToyFixedADCs", "ToylpGBT ADCs not tied to AMUX");
-     gStyle->SetOptStat(0);
-    auto cADCHistogram= new TH2I("cToyADCHistogram","Toy Fixed ADC Histogram",6,0,6,1024,0,1024);
-
-    cADCHistogram->GetZaxis()->SetTitle("Number of entries");
-    std::map<std::string, std::string> cADCsMap         = {{"VMON_P1V25_L", "VMON_P1V25_L_Nominal"},
-                                                   {"VMIN", "VMIN_Nominal"},
-                                                   {"TEMPP","TEMPP_Nominal"},
-                                                   {"VTRX+_RSSI_ADC", "VTRX+_RSSI_ADC_Nominal"},
-                                                   {"PTAT_BPOL2V5", "PTAT_BPOL2V5_Nominal"},
-                                                   {"PTAT_BPOL12V", "PTAT_BPOL12V_Nominal"}};
-    auto                               cADCsMapIterator = cADCsMap.begin();
-    float                                cADCValue;
-    int cBinCount=1;
-    float                              cConversionFactor = 1. / 1024.;
-    std::vector<float> cADCValueVect;
-    fillSummaryTree("ADC conversion factor", cConversionFactor);
-    auto gRandom = new TRandom3();
-        do
-            {
-                cADCValueVect.clear();
-                cADCHistogram->GetXaxis()->SetBinLabel(cBinCount,cADCsMapIterator->first.c_str());
-
-                for (int cIteration=0;cIteration<1000;++cIteration)
-                {
-                    cADCValue = gRandom->Gaus(550.0, 50.0);
-                    cADCValueVect.push_back(cADCValue);
-                    cADCHistogram->Fill(cADCsMapIterator->first.c_str(),cADCValue,1);
-                }
-                    // fTC_2SSEH->read_supply(c2SSEHMapIterator->second, k);
-
-                    fillSummaryTree(cADCsMapIterator->first, cADCValue * cConversionFactor);
-                    float cDifference_V = std::fabs((fDefaultParameters[cADCsMapIterator->second]) - cADCValue * cConversionFactor);
-
-                // Still hard coded threshold for imidiate boolean result, actual values are stored
-                if(cDifference_V > 0.1)
-                {
-                    LOG(INFO) << BOLDRED << "Mismatch in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << cADCValue * cConversionFactor << " V, nominal value is "
-                              << fDefaultParameters[cADCsMapIterator->second] << " V" << RESET;
-                    cReturn = false;
-                }
-                else
-                {
-                    LOG(INFO) << BOLDGREEN << "Match in fixed ADC channel " << cADCsMapIterator->first << " measured value is " << cADCValue * cConversionFactor << " V, nominal value is "
-                              << fDefaultParameters[cADCsMapIterator->second] << " V" << RESET;
-                }
-
-                cADCsMapIterator++;cBinCount++;
-
-            } while(cADCsMapIterator != cADCsMap.end());
-
-    auto cToyADCCanvas = new TCanvas("tToyFixedADCs", "ToylpGBT ADCs not tied to AMUX", 1600, 900);
-    cToyADCCanvas->SetRightMargin(0.2);
-    cADCHistogram->GetXaxis()->SetTitle("ADC channel");
-    cADCHistogram->GetYaxis()->SetTitle("ADC count");
-
-    cADCHistogram->Draw("colz");
-    cToyADCCanvas->Write();
-#endif
-
-    return cReturn;
-} */
 
 void SEHTester::TestCardVoltages()
 {
@@ -1589,130 +1357,6 @@ void SEHTester::ReadCheckAddrBRAM(int iCheckBRAMAddr)
         if(cBoard->at(0)->flpGBT != nullptr) continue;
         this->ReadCheckAddrBRAM(cBoard, iCheckBRAMAddr);
     }
-}
-
-bool SEHTester::CheckClocks(BeBoard* pBoard)
-{
-    bool cStatus = true;
-    //     fBeBoardInterface->setBoard(pBoard->getId());
-    //     // clk test
-    //     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x01);
-    //     auto cMapIterator = f2SSEHClockMap.begin();
-    //     bool cClkTestDone=false;
-    //     bool cClkStat=false;
-
-    //     LOG(INFO) << GREEN << "============================" << RESET;
-    //     LOG(INFO) << BOLDGREEN << "Clock test" << RESET;
-
-    //     do
-    //     {
-    //         cClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, cMapIterator->second + "_test_done") == 1);
-    //         LOG(INFO) << "Waiting for clock test";
-    //         while(!cClkTestDone)
-    //         {
-    //             std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    //             cClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, cMapIterator->second + "_test_done") == 1);
-    //         }
-    //         if(cClkTestDone)
-    //         {
-    //             cClkStat = fBeBoardInterface->ReadBoardReg(pBoard, cMapIterator->second + "_stat");
-
-    //             if(cClkStat)
-    //                 LOG(INFO) << cMapIterator->first << " test ->" << BOLDGREEN << " PASSED" << RESET;
-    //             else
-    //             {
-    //                 LOG(ERROR) << cMapIterator->first << " test ->" << BOLDRED << " FAILED" << RESET;
-    //                 cStatus &= false;
-    //             }
-    // #ifdef __USE_ROOT__
-    //             fillSummaryTree(cMapIterator->first, cClkStat);
-    // #endif
-    //         }
-    //         cMapIterator++;
-    //     } while(cMapIterator != f2SSEHClockMap.end());
-    fBeBoardInterface->setBoard(pBoard->getId());
-    // clk test
-    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x01);
-    bool c320lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_l_test_done") == 1);
-    bool c320rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r_test_done") == 1);
-    bool c640lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_l_test_done") == 1);
-    bool c640rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_r_test_done") == 1);
-    LOG(INFO) << GREEN << "============================" << RESET;
-    LOG(INFO) << BOLDGREEN << "Clock test" << RESET;
-
-    LOG(INFO) << "Waiting for clock test";
-    while(!c320lClkTestDone)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        c320lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_l_test_done") == 1);
-    }
-    if(c320lClkTestDone)
-    {
-        bool Clk320lStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_l_stat");
-
-        if(Clk320lStat)
-            LOG(INFO) << "320 l clk test ->" << BOLDGREEN << " PASSED" << RESET;
-        else
-            LOG(ERROR) << "320 l clock test ->" << BOLDRED << " FAILED" << RESET;
-    }
-
-    while(!c320rClkTestDone)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        c320rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r_test_done") == 1);
-    }
-    if(c320rClkTestDone)
-    {
-        bool Clk320rStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r_stat");
-
-        if(Clk320rStat)
-            LOG(INFO) << "320 r clk test ->" << BOLDGREEN << " PASSED" << RESET;
-        else
-            LOG(ERROR) << "320 r clock test ->" << BOLDRED << " FAILED" << RESET;
-    }
-
-    while(!c640lClkTestDone)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        c640lClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_l_test_done") == 1);
-    }
-    if(c640lClkTestDone)
-    {
-        bool Clk640lStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_l_stat");
-
-        if(Clk640lStat)
-            LOG(INFO) << "640 l clk test ->" << BOLDGREEN << " PASSED" << RESET;
-        else
-            LOG(ERROR) << "640 l clock test ->" << BOLDRED << " FAILED" << RESET;
-    }
-
-    while(!c640rClkTestDone)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        c640rClkTestDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_r_test_done") == 1);
-    }
-    if(c640rClkTestDone)
-    {
-        bool Clk640rStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_r_stat");
-        if(Clk640rStat)
-            LOG(INFO) << "640 r clk test ->" << BOLDGREEN << " PASSED" << RESET;
-        else
-            LOG(ERROR) << "640 r clock test ->" << BOLDRED << " FAILED" << RESET;
-    }
-    LOG(INFO) << GREEN << "============================" << RESET;
-
-    return cStatus;
-}
-
-bool SEHTester::CheckClocks()
-{
-    bool cStatus = true;
-    for(auto cBoard: *fDetectorContainer)
-    {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
-        cStatus = this->CheckClocks(cBoard);
-    }
-    return cStatus;
 }
 
 void SEHTester::FastCommandScope(BeBoard* pBoard)

@@ -67,7 +67,6 @@ class SEHTester : public OTHybridTester
     void CheckFastCommands(const std::string& sFastCommandPattern, const std::string& userFilename);
     void CheckHybridInputs(std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters);
     void CheckHybridOutputs(std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters);
-    bool CheckClocks();
     void ClearBRAM(const std::string& sBRAMToReset = "ref");
     void ReadCheckAddrBRAM(int iCheckBRAMAddr = 0);
     void ReadRefAddrBRAM(int iRefBRAMAddr = 0);
@@ -80,7 +79,7 @@ class SEHTester : public OTHybridTester
     void TestCardVoltages();
     void TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, uint32_t pStep);
     void TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime);
-    void TestBiasVoltage(uint16_t pBiasVoltage);
+    void TestBiasVoltage();
     void ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTime, std::string powerSupplyId, std::string channelId);
     void ExternalTestBiasVoltage(std::string powerSupplyId, std::string channelId);
     int  exampleFit();
@@ -96,7 +95,6 @@ class SEHTester : public OTHybridTester
     void        FastCommandScope(Ph2_HwDescription::BeBoard* pBoard);
     bool        FastCommandChecker(Ph2_HwDescription::BeBoard* pBoard, uint8_t pPattern);
     void        CheckFastCommands(Ph2_HwDescription::BeBoard* pBoard, const std::string& sFastCommandPattern, const std::string& userFilename);
-    bool        CheckClocks(Ph2_HwDescription::BeBoard* pBoard);
     void        CheckFastCommandsBRAM(Ph2_HwDescription::BeBoard* pBoard, const std::string& sFastCommandLine);
     void        WritePatternToBRAM(Ph2_HwDescription::BeBoard* pBoard, const std::string&);
     void        ClearRefBRAM(Ph2_HwDescription::BeBoard* pBoard);
