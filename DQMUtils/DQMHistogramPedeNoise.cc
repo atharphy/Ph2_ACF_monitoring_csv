@@ -101,7 +101,7 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
 
             if(fFitSCurves)
             {
-                HistContainer<TH1F> theTH1FChannelStripSCurveContainer("ChannelSCurve", "SCurve", nYbins, minY, maxY);
+                HistContainer<TH1F> theTH1FChannelStripSCurveContainer("SCurve", "SCurve", nYbins, minY, maxY);
                 RootContainerFactory::bookChannelHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelStripSCurveHistograms, theTH1FChannelStripSCurveContainer);
             }
         }
@@ -164,7 +164,7 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
 
             if(fFitSCurves)
             {
-                HistContainer<TH1F> theTH1FChannelPixelSCurveContainer("ChannelSCurve", "SCurve", nYbins, minY, maxY);
+                HistContainer<TH1F> theTH1FChannelPixelSCurveContainer("SCurve", "SCurve", nYbins, minY, maxY);
                 RootContainerFactory::bookChannelHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelPixelSCurveHistograms, theTH1FChannelPixelSCurveContainer);
             }
         }
@@ -942,7 +942,6 @@ void DQMHistogramPedeNoise::fitSCurves()
                                                             ->getSummary<HistContainer<TH1F>>()
                                                             .fTheHistogram;
                         }
-                        cChannelSCurve = cChip->getChannel<HistContainer<TH1F>>(cChannel).fTheHistogram;
 
                         float cChannelNoise = cChannelNoiseHistogram->GetBinContent(cChannel + 1);
 
