@@ -10,7 +10,7 @@ CheckCbcNeighbors::CheckCbcNeighbors() : Tool() { fNEvents = this->findValueInSe
 
 CheckCbcNeighbors::~CheckCbcNeighbors() {}
 
-void CheckCbcNeighbors::Initialise(void)  {}
+void CheckCbcNeighbors::Initialise(void) {}
 
 bool CheckCbcNeighbors::TestCbcNeighbors()
 {
@@ -105,8 +105,10 @@ bool CheckCbcNeighbors::TestCbcNeighbors()
             }
         }
     }
-    if(allPass) LOG(INFO) << BOLDGREEN << "CheckCbcNeighbors PASSED" << RESET;
-    else LOG(INFO) << BOLDRED << "CheckCbcNeighbors FAILED" << RESET;
+    if(allPass)
+        LOG(INFO) << BOLDGREEN << "CheckCbcNeighbors PASSED" << RESET;
+    else
+        LOG(INFO) << BOLDRED << "CheckCbcNeighbors FAILED" << RESET;
     return allPass;
 }
 

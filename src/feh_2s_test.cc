@@ -6,6 +6,7 @@
 #include "Utils/argvparser.h"
 #include "boost/format.hpp"
 #include "tools/BackEndAlignment.h"
+#include "tools/CheckCbcNeighbors.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
 #include "tools/LatencyScan.h"
@@ -17,8 +18,6 @@
 #include "tools/RegisterTester.h"
 #include "tools/ShortFinder.h"
 #include "tools/StubBackEndAlignment.h"
-#include "tools/CheckCbcNeighbors.h"
-
 
 #ifdef __POWERSUPPLY__
 // Libraries
