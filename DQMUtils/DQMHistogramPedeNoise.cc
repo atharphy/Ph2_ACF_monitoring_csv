@@ -26,6 +26,8 @@
 #include "TH1F.h"
 #include "TH2F.h"
 
+using namespace Ph2_HwDescription;
+
 //========================================================================================================================
 DQMHistogramPedeNoise::DQMHistogramPedeNoise() {}
 
@@ -49,10 +51,14 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
                    std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA2) != cFrontEndTypes.end();
     }
 
-    std::vector<FrontEndType> cStripTypes = {FrontEndType::CBC3, FrontEndType::SSA, FrontEndType::SSA2};
-    std::vector<FrontEndType> cPixelTypes = {FrontEndType::MPA, FrontEndType::MPA2};
-    auto selectStripChipFunction          = [cStripTypes](const ChipContainer* pChip) { return (std::find(cStripTypes.begin(), cStripTypes.end(), pChip->getType()) != cStripTypes.end()); };
-    auto selectPixelChipFunction          = [cPixelTypes](const ChipContainer* pChip) { return (std::find(cPixelTypes.begin(), cPixelTypes.end(), pChip->getType()) != cPixelTypes.end()); };
+    std::vector<FrontEndType> cStripTypes             = {FrontEndType::CBC3, FrontEndType::SSA, FrontEndType::SSA2};
+    std::vector<FrontEndType> cPixelTypes             = {FrontEndType::MPA, FrontEndType::MPA2};
+    auto                      selectStripChipFunction = [cStripTypes](const ChipContainer* pChip) {
+        return (std::find(cStripTypes.begin(), cStripTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cStripTypes.end());
+    };
+    auto selectPixelChipFunction = [cPixelTypes](const ChipContainer* pChip) {
+        return (std::find(cPixelTypes.begin(), cPixelTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cPixelTypes.end());
+    };
 
     // find maximum number of channels
     std::vector<size_t> cNPixelChannels(0), cNStripChannels(0);
