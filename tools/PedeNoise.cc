@@ -441,7 +441,7 @@ void PedeNoise::Validate()
                                 }
                                 message += ";  setting offset to 255";
                             }
-                            LOG(INFO) << RED << message << RESET;
+                            LOG(DEBUG) << RED << message << RESET;
                         }
                     }
 

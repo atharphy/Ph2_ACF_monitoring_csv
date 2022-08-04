@@ -1,10 +1,11 @@
 /*!
         \file                DQMHistogramPedeNoise.h
         \brief               base class to create and fill monitoring histograms
-        \author              Fabio Ravera, Lorenzo Uplegger
+        \author              Fabio Ravera, Lorenzo Uplegger, Younes Otarid
         \version             1.0
         \date                6/5/19
         Support :            mail to : fabio.ravera@cern.ch
+        Support :            mail to : younes.otarid@cern.ch
 */
 
 #ifndef __DQMHISTOGRAMPEDENOISE_H__
@@ -75,28 +76,46 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
   private:
     DetectorContainer*    fDetectorContainer;
     void                  fitSCurves();
-    uint32_t              NCH = 0;
+    uint32_t              fNPixelChannels = 0, fNStripChannels = 0;
     DetectorDataContainer fThresholdAndNoiseContainer;
 
-    DetectorDataContainer fDetectorSCurveHistograms;
-    DetectorDataContainer fDetectorChannelSCurveHistograms;
-    DetectorDataContainer fDetectorValidationHistograms;
-    DetectorDataContainer fDetectorPedestalHistograms;
-    DetectorDataContainer fDetectorNoiseHistograms;
-    DetectorDataContainer fDetectorStripNoiseHistograms;
-    DetectorDataContainer fDetectorStripPedestalHistograms;
-    DetectorDataContainer fDetector2DPixelNoiseHistograms;
-    DetectorDataContainer fDetectorStripNoiseEvenHistograms;
-    DetectorDataContainer fDetectorStripNoiseOddHistograms;
     DetectorDataContainer fDetectorHybridNoiseHistograms;
     DetectorDataContainer fDetectorHybridStripNoiseHistograms;
-    DetectorDataContainer fDetectorHybridStripNoiseEvenHistograms;
-    DetectorDataContainer fDetectorHybridStripNoiseOddHistograms;
+    DetectorDataContainer fDetectorHybridPixelNoiseHistograms;
+    DetectorDataContainer fDetectorHybridStripNoiseEvenHistograms; // only for CBC
+    DetectorDataContainer fDetectorHybridStripNoiseOddHistograms;  // only for CBC
+
+    DetectorDataContainer fDetectorChipStripSCurveHistograms;
+    DetectorDataContainer fDetectorChipPixelSCurveHistograms;
+
+    DetectorDataContainer fDetectorChannelStripSCurveHistograms;
+    DetectorDataContainer fDetectorChannelPixelSCurveHistograms;
+
+    DetectorDataContainer fDetectorStripValidationHistograms;
+    DetectorDataContainer fDetectorPixelValidationHistograms;
+
+    DetectorDataContainer fDetectorChipStripPedestalHistograms;
+    DetectorDataContainer fDetectorChipPixelPedestalHistograms;
+
+    DetectorDataContainer fDetectorChipStripNoiseHistograms;
+    DetectorDataContainer fDetectorChipPixelNoiseHistograms;
+
+    DetectorDataContainer fDetectorChannelStripNoiseHistograms;
+    DetectorDataContainer fDetectorChannelPixelNoiseHistograms;
+
+    DetectorDataContainer fDetectorChannelStripPedestalHistograms;
+    DetectorDataContainer fDetectorChannelPixelPedestalHistograms;
+
+    DetectorDataContainer fDetectorChannel2DPixelNoiseHistograms;
+
+    DetectorDataContainer fDetectorChannelStripNoiseEvenHistograms;
+    DetectorDataContainer fDetectorChannelStripNoiseOddHistograms;
+
     DetectorDataContainer fDetectorData;
 
-    bool cWithCBC = true;
-    bool cWithSSA = false;
-    bool cWithMPA = false;
+    bool fWithCBC = false;
+    bool fWithSSA = false;
+    bool fWithMPA = false;
 
     bool fPlotSCurves{false};
     bool fFitSCurves{false};

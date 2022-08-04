@@ -44,6 +44,5 @@ class CheckCbcNeighbors : public Tool
     const std::vector<uint8_t> fSharedTopLow{0, 2, 4};
 
     void UnmaskChannels(std::vector<uint8_t> pToUnmask, ChannelGroup<NCHANNELS, 1>& pChannelMask);
-
 };
 #endif

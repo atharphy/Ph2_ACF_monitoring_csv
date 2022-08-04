@@ -26,6 +26,8 @@
 #include "TH1F.h"
 #include "TH2F.h"
 
+using namespace Ph2_HwDescription;
+
 //========================================================================================================================
 DQMHistogramPedeNoise::DQMHistogramPedeNoise() {}
 
@@ -35,30 +37,51 @@ DQMHistogramPedeNoise::~DQMHistogramPedeNoise() {}
 //========================================================================================================================
 void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
 {
-    // find the maximum number of channels
-    std::vector<size_t> cNChanls(0);
-    for(auto cBrdIndx = 0; cBrdIndx < theDetectorStructure.size(); cBrdIndx++)
+    // copy detector structrure
+    fDetectorContainer = &theDetectorStructure;
+
+    // find front-end types
+    for(auto cBoard: *fDetectorContainer)
     {
-        for(auto cOGIndx = 0; cOGIndx < theDetectorStructure.at(cBrdIndx)->size(); cOGIndx++)
+        auto cFrontEndTypes = cBoard->connectedFrontEndTypes();
+        fWithCBC            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::CBC3) != cFrontEndTypes.end();
+        fWithSSA            = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA) != cFrontEndTypes.end() ||
+                   std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::SSA2) != cFrontEndTypes.end();
+        fWithMPA = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA) != cFrontEndTypes.end() ||
+                   std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), FrontEndType::MPA2) != cFrontEndTypes.end();
+    }
+
+    std::vector<FrontEndType> cStripTypes             = {FrontEndType::CBC3, FrontEndType::SSA, FrontEndType::SSA2};
+    std::vector<FrontEndType> cPixelTypes             = {FrontEndType::MPA, FrontEndType::MPA2};
+    auto                      selectStripChipFunction = [cStripTypes](const ChipContainer* pChip) {
+        return (std::find(cStripTypes.begin(), cStripTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cStripTypes.end());
+    };
+    auto selectPixelChipFunction = [cPixelTypes](const ChipContainer* pChip) {
+        return (std::find(cPixelTypes.begin(), cPixelTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cPixelTypes.end());
+    };
+
+    // find maximum number of channels
+    std::vector<size_t> cNPixelChannels(0), cNStripChannels(0);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cHybridIndx = 0; cHybridIndx < theDetectorStructure.at(cBrdIndx)->at(cOGIndx)->size(); cHybridIndx++)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                for(auto cChipIndx = 0; cChipIndx < theDetectorStructure.at(cBrdIndx)->at(cOGIndx)->at(cHybridIndx)->size(); cChipIndx++)
+                for(auto cChip: *cHybrid)
                 {
-                    auto cNchnl = theDetectorStructure.at(cBrdIndx)->at(cOGIndx)->at(cHybridIndx)->at(cChipIndx)->size();
-                    cNChanls.push_back(cNchnl);
-                    // std::cout << __PRETTY_FUNCTION__ << "B" << +cBrdIndx << "OG" << +cOGIndx << "H" << +cHybridIndx << "C" << +cChipIndx << ":" << cNchnl << std::endl;
+                    auto cNChannels = theDetectorStructure.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->size();
+                    auto cType      = cChip->getFrontEndType();
+                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                        cNStripChannels.push_back(cNChannels);
+                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                        cNPixelChannels.push_back(cNChannels);
                 }
             }
         }
     }
-    // auto cMaxNChannels = std::max_element(std::begin(cNChanls), std::end(cNChanls));
-    // auto cMinNChannels = std::min_element(std::begin(cNChanls), std::end(cNChanls));
-    NCH = *std::max_element(std::begin(cNChanls), std::end(cNChanls)); // theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();
-    // theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();
-    // if
-    // (static_cast<Ph2_HwDescription::ReadoutChip*>(theDetectorStructure.at(0)->at(0)->at(0)->at(0))->getFrontEndType()
-    // == FrontEndType::SSA) NCH = NSSACHANNELS;
+    if(fWithCBC || fWithSSA) { fNStripChannels = *std::max_element(std::begin(cNStripChannels), std::end(cNStripChannels)); }
+    if(fWithMPA) { fNPixelChannels = *std::max_element(std::begin(cNPixelChannels), std::end(cNPixelChannels)); }
 
     auto cSetting = pSettingsMap.find("PlotSCurves");
     fPlotSCurves  = (cSetting != std::end(pSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
@@ -68,79 +91,124 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
 
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
 
-    // SCurve
-    if(fPlotSCurves)
+    if(fWithCBC || fWithSSA)
     {
-        uint16_t nYbins = 1024;
-        float    minY   = -0.5;
-        float    maxY   = 1023.5;
-        if(cWithSSA or cWithMPA)
+        // Set query function to only include strip chips in the data container
+        fDetectorContainer->setReadoutChipQueryFunction(selectStripChipFunction);
+
+        if(fPlotSCurves)
         {
-            nYbins = 255;
-            minY   = -0.5;
-            maxY   = 254.5;
+            uint16_t nYbins = (fWithSSA) ? 255 : 1024;
+            float    minY   = -0.5;
+            float    maxY   = (fWithSSA) ? 254.5 : 1023.5;
+
+            HistContainer<TH2F> theTH2FChipStripSCurve("SCurve", "SCurve", fNStripChannels, -0.5, fNStripChannels - 0.5, nYbins, minY, maxY);
+            RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipStripSCurveHistograms, theTH2FChipStripSCurve);
+
+            if(fFitSCurves)
+            {
+                HistContainer<TH1F> theTH1FChannelStripSCurveContainer("SCurve", "SCurve", nYbins, minY, maxY);
+                RootContainerFactory::bookChannelHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelStripSCurveHistograms, theTH1FChannelStripSCurveContainer);
+            }
         }
 
-        HistContainer<TH2F> theTH2FSCurve("SCurve", "SCurve", NCH, -0.5, NCH - 0.5, nYbins, minY, maxY);
-        RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorSCurveHistograms, theTH2FSCurve);
-        if(fFitSCurves)
-        {
-            HistContainer<TH1F> theTH1FSCurveContainer("SCurve", "SCurve", nYbins, minY, maxY);
-            RootContainerFactory::bookChannelHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelSCurveHistograms, theTH1FSCurveContainer);
+        // Pedestal
+        HistContainer<TH1F> theTH1FChipStripPedestalContainer("PedestalDistribution", "PedestalDistribution", 2048, -0.5, 1023.5);
+        RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipStripPedestalHistograms, theTH1FChipStripPedestalContainer);
+        //
+        HistContainer<TH1F> theTH1FChannelStripPedestalContainer("ChannelPedestalDistribution", "ChannelPedestal", fNStripChannels, -0.5, float(fNStripChannels) - 0.5);
+        RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelStripPedestalHistograms, theTH1FChannelStripPedestalContainer);
 
-            ContainerFactory::copyAndInitStructure<ThresholdAndNoise>(theDetectorStructure, fThresholdAndNoiseContainer);
+        // Noise
+        HistContainer<TH1F> theTH1FHybridStripNoiseContainer("HybridStripNoiseDistribution", "HybridStripNoise", fNStripChannels * 8, -0.5, float(fNStripChannels) * 8 - 0.5);
+        RootContainerFactory::bookHybridHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorHybridStripNoiseHistograms, theTH1FHybridStripNoiseContainer);
+        //
+        HistContainer<TH1F> theTH1FChipStripNoiseContainer("NoiseDistribution", "NoiseDistribution", 200, 0., 20.);
+        RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipStripNoiseHistograms, theTH1FChipStripNoiseContainer);
+        //
+        HistContainer<TH1F> theTH1FChannelStripNoiseContainer("ChannelNoiseDistribution", "ChannelNoise", fNStripChannels, -0.5, float(fNStripChannels) - 0.5);
+        RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelStripNoiseHistograms, theTH1FChannelStripNoiseContainer);
+
+        if(fWithCBC)
+        {
+            // Strip Noise Even
+            HistContainer<TH1F> theTH1FHybridStripNoiseEvenContainer("HybridNoiseEvenDistribution", "HybridNoiseEven", fNStripChannels * 4, -0.5, float(fNStripChannels) * 4 - 0.5);
+            RootContainerFactory::bookHybridHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorHybridStripNoiseEvenHistograms, theTH1FHybridStripNoiseEvenContainer);
+            //
+            HistContainer<TH1F> theTH1FChannelStripNoiseEvenContainer("ChannelNoiseEvenDistribution", "ChannelNoiseEven", fNStripChannels / 2, -0.5, float(fNStripChannels / 2) - 0.5);
+            RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelStripNoiseEvenHistograms, theTH1FChannelStripNoiseEvenContainer);
+
+            // Strip Noise Odd
+            HistContainer<TH1F> theTH1FHybridStripNoiseOddContainer("HybridNoiseOddDistribution", "HybridNoiseOdd", fNStripChannels * 4, -0.5, float(fNStripChannels) * 4 - 0.5);
+            RootContainerFactory::bookHybridHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorHybridStripNoiseOddHistograms, theTH1FHybridStripNoiseOddContainer);
+            //
+            HistContainer<TH1F> theTH1FChannelStripNoiseOddContainer("ChannelNoiseOddDistribution", "ChannelNoiseOdd", fNStripChannels / 2, -0.5, float(fNStripChannels / 2) - 0.5);
+            RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelStripNoiseOddHistograms, theTH1FChannelStripNoiseOddContainer);
         }
+
+        // Validation
+        HistContainer<TH1F> theTH1FStripValidationContainer("Occupancy", "Occupancy", fNStripChannels, -0.5, float(fNStripChannels) - 0.5);
+        RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorStripValidationHistograms, theTH1FStripValidationContainer);
+
+        // Reset query function from only including strip chips in the data container
+        fDetectorContainer->resetReadoutChipQueryFunction();
     }
 
-    // Pedestal
-    HistContainer<TH1F> theTH1FPedestalContainer("PedestalDistribution", "Pedestal Distribution", 2048, -0.5, 1023.5);
-    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorPedestalHistograms, theTH1FPedestalContainer);
+    if(fWithMPA)
+    {
+        // Set query function to only include strip chips in the data container
+        fDetectorContainer->setReadoutChipQueryFunction(selectPixelChipFunction);
 
-    // Noise
-    HistContainer<TH1F> theTH1FNoiseContainer("NoiseDistribution", "Noise Distribution", 200, 0., 20.);
-    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorNoiseHistograms, theTH1FNoiseContainer);
+        if(fPlotSCurves)
+        {
+            uint16_t nYbins = 255;
+            float    minY   = -0.5;
+            float    maxY   = 254.5;
 
-    // Strip Noise
-    HistContainer<TH1F> theTH1FStripNoiseContainer("StripNoiseDistribution", "Strip Noise", NCH, -0.5, float(NCH) - 0.5);
-    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorStripNoiseHistograms, theTH1FStripNoiseContainer);
+            HistContainer<TH2F> theTH2FChipPixelSCurve("SCurve", "SCurve", fNPixelChannels, -0.5, fNPixelChannels - 0.5, nYbins, minY, maxY);
+            RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelSCurveHistograms, theTH2FChipPixelSCurve);
 
-    // Strip Pedestal
-    HistContainer<TH1F> theTH1FStripPedestalContainer("StripPedestalDistribution", "Strip Pedestal", NCH, -0.5, float(NCH) - 0.5);
-    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorStripPedestalHistograms, theTH1FStripPedestalContainer);
+            if(fFitSCurves)
+            {
+                HistContainer<TH1F> theTH1FChannelPixelSCurveContainer("SCurve", "SCurve", nYbins, minY, maxY);
+                RootContainerFactory::bookChannelHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelPixelSCurveHistograms, theTH1FChannelPixelSCurveContainer);
+            }
+        }
 
-    // Strip Noise Even
-    HistContainer<TH1F> theTH1FStripNoiseEvenContainer("StripNoiseEvenDistribution", "Strip Noise Even", NCH / 2, -0.5, float(NCH / 2) - 0.5);
-    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorStripNoiseEvenHistograms, theTH1FStripNoiseEvenContainer);
+        // Pedestal
+        HistContainer<TH1F> theTH1FChipPixelPedestalContainer("PedestalDistribution", "PedestalDistribution", 2048, -0.5, 1023.5);
+        RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelPedestalHistograms, theTH1FChipPixelPedestalContainer);
+        //
+        HistContainer<TH1F> theTH1FChannelPixelPedestalContainer("ChannelPedestalDistribution", "ChannelPedestal", fNPixelChannels, -0.5, float(fNPixelChannels) - 0.5);
+        RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelPixelPedestalHistograms, theTH1FChannelPixelPedestalContainer);
 
-    // Strip Noise Odd
-    HistContainer<TH1F> theTH1FStripNoiseOddContainer("StripNoiseOddDistribution", "Strip Noise Odd", NCH / 2, -0.5, float(NCH / 2) - 0.5);
-    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorStripNoiseOddHistograms, theTH1FStripNoiseOddContainer);
+        // Noise
+        HistContainer<TH1F> theTH1FHybridPixelNoiseContainer("HybridPixelNoiseDistribution", "HybridPixelNoise", fNPixelChannels * 4, -0.5, float(fNPixelChannels) * 4 - 0.5);
+        RootContainerFactory::bookHybridHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorHybridPixelNoiseHistograms, theTH1FHybridPixelNoiseContainer);
+        //
+        HistContainer<TH1F> theTH1FChipPixelNoiseContainer("NoiseDistribution", "NoiseDistribution", 200, 0., 20.);
+        RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelNoiseHistograms, theTH1FChipPixelNoiseContainer);
+        // 1D pixel noise
+        HistContainer<TH1F> theTH1FChannelPixelNoiseContainer("ChannelNoiseDistribution", "ChannelNoise", fNPixelChannels, -0.5, float(fNPixelChannels) - 0.5);
+        RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelPixelNoiseHistograms, theTH1FChannelPixelNoiseContainer);
+        // 2D Pixel Noise
+        HistContainer<TH2F> theTH2FChannel2DPixelNoiseContainer("2DPixelNoise", "2DChannelNoise", 120, -0.5, float(120) - 0.5, fNPixelChannels / 120, -0.5, float(fNPixelChannels / 120) - 0.5);
+        RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChannel2DPixelNoiseHistograms, theTH2FChannel2DPixelNoiseContainer);
 
-    // Pixel Noise Odd
-    HistContainer<TH2F> theTH2F2DPixelNoiseContainer("2DPixelNoise", "Pixel Noise", 120, -0.5, float(120) - 0.5, NCH / 120, -0.5, float(NCH / 120) - 0.5);
-    RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetector2DPixelNoiseHistograms, theTH2F2DPixelNoiseContainer);
+        // Validation
+        HistContainer<TH1F> theTH1FPixelValidationContainer("Occupancy", "Occupancy", fNPixelChannels, -0.5, float(fNPixelChannels) - 0.5);
+        RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorPixelValidationHistograms, theTH1FPixelValidationContainer);
+
+        // Reset query function from only including strip chips in the data container
+        fDetectorContainer->resetReadoutChipQueryFunction();
+    }
+
+    // SCurve
+    if(fPlotSCurves && fFitSCurves) { ContainerFactory::copyAndInitStructure<ThresholdAndNoise>(theDetectorStructure, fThresholdAndNoiseContainer); }
 
     // Hybrid Noise
-    HistContainer<TH1F> theTH1FHybridNoiseContainer("HybridNoiseDistribution", "Hybrid Noise Distribution", 200, 0., 20.);
+    HistContainer<TH1F> theTH1FHybridNoiseContainer("HybridNoiseDistribution", "HybridNoiseDistribution", 200, 0., 20.);
     RootContainerFactory::bookHybridHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorHybridNoiseHistograms, theTH1FHybridNoiseContainer);
-
-    // Hybrid Strip Noise
-    HistContainer<TH1F> theTH1FHybridStripNoiseContainer("HybridStripNoiseDistribution", "Hybrid Strip Noise", NCH * 8, -0.5, float(NCH) * 8 - 0.5);
-    RootContainerFactory::bookHybridHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorHybridStripNoiseHistograms, theTH1FHybridStripNoiseContainer);
-
-    // Hybrid Strip Even Noise
-    HistContainer<TH1F> theTH1FHybridStripNoiseEvenContainer("HybridStripNoiseEvenDistribution", "Hybrid Strip Noise Even", NCH * 4, -0.5, float(NCH) * 4 - 0.5);
-    RootContainerFactory::bookHybridHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorHybridStripNoiseEvenHistograms, theTH1FHybridStripNoiseEvenContainer);
-
-    // Hybrid Strip Odd Noise
-    HistContainer<TH1F> theTH1FHybridStripNoiseOddContainer("HybridStripNoiseOddDistribution", "Hybrid Strip Noise Odd", NCH * 4, -0.5, float(NCH) * 4 - 0.5);
-    RootContainerFactory::bookHybridHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorHybridStripNoiseOddHistograms, theTH1FHybridStripNoiseOddContainer);
-
-    // Validation
-    HistContainer<TH1F> theTH1FValidationContainer("Occupancy", "Occupancy", NCH, -0.5, float(NCH) - 0.5);
-    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorValidationHistograms, theTH1FValidationContainer);
-
-    fDetectorContainer = &theDetectorStructure;
 }
 
 //========================================================================================================================
@@ -186,165 +254,252 @@ void DQMHistogramPedeNoise::process()
 {
     if(fFitSCurves) fitSCurves();
 
-    for(auto board: fDetectorPedestalHistograms)
+    for(auto cBoard: *fDetectorContainer)
     {
-        for(auto opticalGroup: *board)
+        for(auto cOpticalGroup: *cBoard)
         {
-            for(auto hybrid: *opticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                TH1F* hybridStripNoiseEvenHistogram =
-                    fDetectorHybridStripNoiseEvenHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                TH1F* hybridStripNoiseOddHistogram =
-                    fDetectorHybridStripNoiseOddHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                hybridStripNoiseEvenHistogram->SetLineColor(kBlue);
-                hybridStripNoiseEvenHistogram->SetMaximum(20);
-                hybridStripNoiseEvenHistogram->SetMinimum(0);
-                hybridStripNoiseOddHistogram->SetLineColor(kRed);
-                hybridStripNoiseOddHistogram->SetMaximum(20);
-                hybridStripNoiseOddHistogram->SetMinimum(0);
-                hybridStripNoiseEvenHistogram->SetStats(false);
-                hybridStripNoiseOddHistogram->SetStats(false);
-
-                std::string validationCanvasName = "Validation_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
-                std::string pedeNoiseCanvasName  = "PedeNoise_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
+                std::string validationCanvasName = "Validation_B_" + std::to_string(cBoard->getId()) + "_O_" + std::to_string(cOpticalGroup->getId()) + "_H_" + std::to_string(cHybrid->getId());
+                std::string pedeNoiseCanvasName  = "PedeNoise_B_" + std::to_string(cBoard->getId()) + "_O_" + std::to_string(cOpticalGroup->getId()) + "_H_" + std::to_string(cHybrid->getId());
 
                 TCanvas* cValidation = new TCanvas(validationCanvasName.data(), validationCanvasName.data(), 0, 0, 650, fPlotSCurves ? 900 : 650);
                 TCanvas* cPedeNoise  = new TCanvas(pedeNoiseCanvasName.data(), pedeNoiseCanvasName.data(), 670, 0, 650, 650);
 
-                cValidation->Divide(hybrid->size(), fPlotSCurves ? 3 : 2);
-                cPedeNoise->Divide(hybrid->size(), 2);
+                cValidation->Divide(cHybrid->size(), fPlotSCurves ? 3 : 2);
+                cPedeNoise->Divide(cHybrid->size(), 2);
 
-                for(auto chip: *hybrid)
+                for(auto cChip: *cHybrid)
                 {
-                    cValidation->cd(chip->getIndex() + 1 + hybrid->size() * 0);
-                    TH1F* validationHistogram = fDetectorValidationHistograms.at(board->getIndex())
-                                                    ->at(opticalGroup->getIndex())
-                                                    ->at(hybrid->getIndex())
-                                                    ->at(chip->getIndex())
-                                                    ->getSummary<HistContainer<TH1F>>()
-                                                    .fTheHistogram;
-                    validationHistogram->SetStats(false);
-                    validationHistogram->DrawCopy();
-                    gPad->SetLogy();
+                    auto cType = fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getFrontEndType();
+                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                    {
+                        cValidation->cd(cChip->getIndex() + 1 + cHybrid->size() * 0);
+                        TH1F* validationHistogram = fDetectorStripValidationHistograms.at(cBoard->getIndex())
+                                                        ->at(cOpticalGroup->getIndex())
+                                                        ->at(cHybrid->getIndex())
+                                                        ->at(cChip->getId() % 8)
+                                                        ->getSummary<HistContainer<TH1F>>()
+                                                        .fTheHistogram;
+                        validationHistogram->SetStats(false);
+                        validationHistogram->DrawCopy();
+                        gPad->SetLogy();
 
-                    cValidation->cd(chip->getIndex() + 1 + hybrid->size() * 1);
-                    TH1F* chipStripNoiseEvenHistogram = fDetectorStripNoiseEvenHistograms.at(board->getIndex())
-                                                            ->at(opticalGroup->getIndex())
-                                                            ->at(hybrid->getIndex())
-                                                            ->at(chip->getIndex())
-                                                            ->getSummary<HistContainer<TH1F>>()
-                                                            .fTheHistogram;
-                    TH1F* chipStripNoiseOddHistogram = fDetectorStripNoiseOddHistograms.at(board->getIndex())
-                                                           ->at(opticalGroup->getIndex())
-                                                           ->at(hybrid->getIndex())
-                                                           ->at(chip->getIndex())
-                                                           ->getSummary<HistContainer<TH1F>>()
-                                                           .fTheHistogram;
-                    chipStripNoiseEvenHistogram->SetLineColor(kBlue);
-                    chipStripNoiseEvenHistogram->SetMaximum(20);
-                    chipStripNoiseEvenHistogram->SetMinimum(0);
-                    chipStripNoiseOddHistogram->SetLineColor(kRed);
-                    chipStripNoiseOddHistogram->SetMaximum(20);
-                    chipStripNoiseOddHistogram->SetMinimum(0);
-                    chipStripNoiseEvenHistogram->SetStats(false);
-                    chipStripNoiseOddHistogram->SetStats(false);
-                    chipStripNoiseEvenHistogram->DrawCopy();
-                    chipStripNoiseOddHistogram->DrawCopy("same");
+                        cPedeNoise->cd(cChip->getIndex() + 1 + cHybrid->size() * 1);
+                        fDetectorChipStripPedestalHistograms.at(cBoard->getIndex())
+                            ->at(cOpticalGroup->getIndex())
+                            ->at(cHybrid->getIndex())
+                            ->at(cChip->getId() % 8)
+                            ->getSummary<HistContainer<TH1F>>()
+                            .fTheHistogram->DrawCopy();
 
-                    cPedeNoise->cd(chip->getIndex() + 1 + hybrid->size() * 1);
-                    fDetectorPedestalHistograms.at(board->getIndex())
-                        ->at(opticalGroup->getIndex())
-                        ->at(hybrid->getIndex())
-                        ->at(chip->getIndex())
-                        ->getSummary<HistContainer<TH1F>>()
-                        .fTheHistogram->DrawCopy();
+                        cPedeNoise->cd(cChip->getIndex() + 1 + cHybrid->size() * 0);
+                        fDetectorChipStripNoiseHistograms.at(cBoard->getIndex())
+                            ->at(cOpticalGroup->getIndex())
+                            ->at(cHybrid->getIndex())
+                            ->at(cChip->getId() % 8)
+                            ->getSummary<HistContainer<TH1F>>()
+                            .fTheHistogram->DrawCopy();
 
-                    cPedeNoise->cd(chip->getIndex() + 1 + hybrid->size() * 0);
-                    fDetectorNoiseHistograms.at(board->getIndex())
-                        ->at(opticalGroup->getIndex())
-                        ->at(hybrid->getIndex())
-                        ->at(chip->getIndex())
-                        ->getSummary<HistContainer<TH1F>>()
-                        .fTheHistogram->DrawCopy();
+                        if(fWithCBC)
+                        {
+                            cValidation->cd(cChip->getIndex() + 1 + cHybrid->size() * 1);
+                            TH1F* cChannelStripNoiseEvenHistogram = fDetectorChannelStripNoiseEvenHistograms.at(cBoard->getIndex())
+                                                                        ->at(cOpticalGroup->getIndex())
+                                                                        ->at(cHybrid->getIndex())
+                                                                        ->at(cChip->getId() % 8)
+                                                                        ->getSummary<HistContainer<TH1F>>()
+                                                                        .fTheHistogram;
+                            TH1F* cChannelStripNoiseOddHistogram = fDetectorChannelStripNoiseOddHistograms.at(cBoard->getIndex())
+                                                                       ->at(cOpticalGroup->getIndex())
+                                                                       ->at(cHybrid->getIndex())
+                                                                       ->at(cChip->getId() % 8)
+                                                                       ->getSummary<HistContainer<TH1F>>()
+                                                                       .fTheHistogram;
+                            cChannelStripNoiseEvenHistogram->SetLineColor(kBlue);
+                            cChannelStripNoiseEvenHistogram->SetMaximum(20);
+                            cChannelStripNoiseEvenHistogram->SetMinimum(0);
+                            cChannelStripNoiseOddHistogram->SetLineColor(kRed);
+                            cChannelStripNoiseOddHistogram->SetMaximum(20);
+                            cChannelStripNoiseOddHistogram->SetMinimum(0);
+                            cChannelStripNoiseEvenHistogram->SetStats(false);
+                            cChannelStripNoiseOddHistogram->SetStats(false);
+                            cChannelStripNoiseEvenHistogram->DrawCopy();
+                            cChannelStripNoiseOddHistogram->DrawCopy("same");
+
+                            fDetectorChannelStripNoiseEvenHistograms.at(cBoard->getIndex())
+                                ->at(cOpticalGroup->getIndex())
+                                ->at(cHybrid->getIndex())
+                                ->at(cChip->getId() % 8)
+                                ->getSummary<HistContainer<TH1F>>()
+                                .fTheHistogram->GetYaxis()
+                                ->SetRangeUser(0., 20.);
+                            fDetectorChannelStripNoiseOddHistograms.at(cBoard->getIndex())
+                                ->at(cOpticalGroup->getIndex())
+                                ->at(cHybrid->getIndex())
+                                ->at(cChip->getId() % 8)
+                                ->getSummary<HistContainer<TH1F>>()
+                                .fTheHistogram->GetYaxis()
+                                ->SetRangeUser(0., 20.);
+                        }
+                    }
+                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                    {
+                        cValidation->cd(cChip->getIndex() + 1 + cHybrid->size() * 0);
+                        TH1F* validationHistogram = fDetectorPixelValidationHistograms.at(cBoard->getIndex())
+                                                        ->at(cOpticalGroup->getIndex())
+                                                        ->at(cHybrid->getIndex())
+                                                        ->at(cChip->getId() % 8)
+                                                        ->getSummary<HistContainer<TH1F>>()
+                                                        .fTheHistogram;
+                        validationHistogram->SetStats(false);
+                        validationHistogram->DrawCopy();
+                        gPad->SetLogy();
+
+                        cPedeNoise->cd(cChip->getIndex() + 1 + cHybrid->size() * 1);
+                        fDetectorChipPixelPedestalHistograms.at(cBoard->getIndex())
+                            ->at(cOpticalGroup->getIndex())
+                            ->at(cHybrid->getIndex())
+                            ->at(cChip->getId() % 8)
+                            ->getSummary<HistContainer<TH1F>>()
+                            .fTheHistogram->DrawCopy();
+
+                        cPedeNoise->cd(cChip->getIndex() + 1 + cHybrid->size() * 0);
+                        fDetectorChipPixelNoiseHistograms.at(cBoard->getIndex())
+                            ->at(cOpticalGroup->getIndex())
+                            ->at(cHybrid->getIndex())
+                            ->at(cChip->getId() % 8)
+                            ->getSummary<HistContainer<TH1F>>()
+                            .fTheHistogram->DrawCopy();
+                    }
 
                     if(fPlotSCurves)
                     {
-                        TH2F* cSCurveHist = fDetectorSCurveHistograms.at(board->getIndex())
-                                                ->at(opticalGroup->getIndex())
-                                                ->at(hybrid->getIndex())
-                                                ->at(chip->getIndex())
-                                                ->getSummary<HistContainer<TH2F>>()
-                                                .fTheHistogram;
-                        TH1D* cTmp = cSCurveHist->ProjectionY();
-                        cSCurveHist->GetYaxis()->SetRangeUser(cTmp->GetBinCenter(cTmp->FindFirstBinAbove(0)) - 10, cTmp->GetBinCenter(cTmp->FindLastBinAbove(0.99)) + 10);
-                        // cSCurveHist->GetZaxis()->SetRangeUser(0,1.);
-                        delete cTmp;
-                        cValidation->cd(chip->getIndex() + 1 + hybrid->size() * 2);
-                        cSCurveHist->SetStats(false);
-                        cSCurveHist->DrawCopy("colz");
-                    }
+                        if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                        {
+                            TH2F* cChipStripSCurveHist = fDetectorChipStripSCurveHistograms.at(cBoard->getIndex())
+                                                             ->at(cOpticalGroup->getIndex())
+                                                             ->at(cHybrid->getIndex())
+                                                             ->at(cChip->getId() % 8)
+                                                             ->getSummary<HistContainer<TH2F>>()
+                                                             .fTheHistogram;
 
-                    fDetectorStripNoiseHistograms.at(board->getIndex())
-                        ->at(opticalGroup->getIndex())
-                        ->at(hybrid->getIndex())
-                        ->at(chip->getIndex())
+                            TH1D* cTmp = cChipStripSCurveHist->ProjectionY();
+                            cChipStripSCurveHist->GetYaxis()->SetRangeUser(cTmp->GetBinCenter(cTmp->FindFirstBinAbove(0)) - 10, cTmp->GetBinCenter(cTmp->FindLastBinAbove(0.99)) + 10);
+                            // cSCurveHist->GetZaxis()->SetRangeUser(0,1.);
+                            delete cTmp;
+                            cValidation->cd(cChip->getIndex() + 1 + cHybrid->size() * 2);
+                            cChipStripSCurveHist->SetStats(false);
+                            cChipStripSCurveHist->DrawCopy("colz");
+
+                            fDetectorChannelStripNoiseHistograms.at(cBoard->getIndex())
+                                ->at(cOpticalGroup->getIndex())
+                                ->at(cHybrid->getIndex())
+                                ->at(cChip->getId() % 8)
+                                ->getSummary<HistContainer<TH1F>>()
+                                .fTheHistogram->GetYaxis()
+                                ->SetRangeUser(0., 20.);
+                        }
+                        else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                        {
+                            TH2F* cChipPixelSCurveHist = fDetectorChipPixelSCurveHistograms.at(cBoard->getIndex())
+                                                             ->at(cOpticalGroup->getIndex())
+                                                             ->at(cHybrid->getIndex())
+                                                             ->at(cChip->getId() % 8)
+                                                             ->getSummary<HistContainer<TH2F>>()
+                                                             .fTheHistogram;
+
+                            TH1D* cTmp = cChipPixelSCurveHist->ProjectionY();
+                            cChipPixelSCurveHist->GetYaxis()->SetRangeUser(cTmp->GetBinCenter(cTmp->FindFirstBinAbove(0)) - 10, cTmp->GetBinCenter(cTmp->FindLastBinAbove(0.99)) + 10);
+                            // cSCurveHist->GetZaxis()->SetRangeUser(0,1.);
+                            delete cTmp;
+                            cValidation->cd(cChip->getIndex() + 1 + cHybrid->size() * 2);
+                            cChipPixelSCurveHist->SetStats(false);
+                            cChipPixelSCurveHist->DrawCopy("colz");
+
+                            fDetectorChannelPixelNoiseHistograms.at(cBoard->getIndex())
+                                ->at(cOpticalGroup->getIndex())
+                                ->at(cHybrid->getIndex())
+                                ->at(cChip->getId() % 8)
+                                ->getSummary<HistContainer<TH1F>>()
+                                .fTheHistogram->GetYaxis()
+                                ->SetRangeUser(0., 20.);
+                        }
+                    }
+                }
+
+                if(fWithCBC || fWithSSA)
+                {
+                    fDetectorHybridStripNoiseHistograms.at(cBoard->getIndex())
+                        ->at(cOpticalGroup->getIndex())
+                        ->at(cHybrid->getIndex())
+                        ->getSummary<HistContainer<TH1F>>()
+                        .fTheHistogram->GetXaxis()
+                        ->SetRangeUser(-0.5, fNStripChannels * cHybrid->size() - 0.5);
+                    fDetectorHybridStripNoiseHistograms.at(cBoard->getIndex())
+                        ->at(cOpticalGroup->getIndex())
+                        ->at(cHybrid->getIndex())
                         ->getSummary<HistContainer<TH1F>>()
                         .fTheHistogram->GetYaxis()
                         ->SetRangeUser(0., 20.);
-                    fDetectorStripNoiseEvenHistograms.at(board->getIndex())
-                        ->at(opticalGroup->getIndex())
-                        ->at(hybrid->getIndex())
-                        ->at(chip->getIndex())
+
+                    if(fWithCBC)
+                    {
+                        TH1F* cHybridStripNoiseEvenHistogram =
+                            fDetectorHybridStripNoiseEvenHistograms.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                        TH1F* cHybridStripNoiseOddHistogram =
+                            fDetectorHybridStripNoiseOddHistograms.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                        cHybridStripNoiseEvenHistogram->SetLineColor(kBlue);
+                        cHybridStripNoiseEvenHistogram->SetMaximum(20);
+                        cHybridStripNoiseEvenHistogram->SetMinimum(0);
+                        cHybridStripNoiseOddHistogram->SetLineColor(kRed);
+                        cHybridStripNoiseOddHistogram->SetMaximum(20);
+                        cHybridStripNoiseOddHistogram->SetMinimum(0);
+                        cHybridStripNoiseEvenHistogram->SetStats(false);
+                        cHybridStripNoiseOddHistogram->SetStats(false);
+
+                        fDetectorHybridStripNoiseEvenHistograms.at(cBoard->getIndex())
+                            ->at(cOpticalGroup->getIndex())
+                            ->at(cHybrid->getIndex())
+                            ->getSummary<HistContainer<TH1F>>()
+                            .fTheHistogram->GetXaxis()
+                            ->SetRangeUser(-0.5, fNStripChannels * cHybrid->size() - 0.5);
+                        fDetectorHybridStripNoiseEvenHistograms.at(cBoard->getIndex())
+                            ->at(cOpticalGroup->getIndex())
+                            ->at(cHybrid->getIndex())
+                            ->getSummary<HistContainer<TH1F>>()
+                            .fTheHistogram->GetYaxis()
+                            ->SetRangeUser(0., 20.);
+
+                        fDetectorHybridStripNoiseOddHistograms.at(cBoard->getIndex())
+                            ->at(cOpticalGroup->getIndex())
+                            ->at(cHybrid->getIndex())
+                            ->getSummary<HistContainer<TH1F>>()
+                            .fTheHistogram->GetXaxis()
+                            ->SetRangeUser(-0.5, fNStripChannels * cHybrid->size() - 0.5);
+                        fDetectorHybridStripNoiseOddHistograms.at(cBoard->getIndex())
+                            ->at(cOpticalGroup->getIndex())
+                            ->at(cHybrid->getIndex())
+                            ->getSummary<HistContainer<TH1F>>()
+                            .fTheHistogram->GetYaxis()
+                            ->SetRangeUser(0., 20.);
+                    }
+                }
+                if(fWithMPA)
+                {
+                    fDetectorHybridPixelNoiseHistograms.at(cBoard->getIndex())
+                        ->at(cOpticalGroup->getIndex())
+                        ->at(cHybrid->getIndex())
                         ->getSummary<HistContainer<TH1F>>()
-                        .fTheHistogram->GetYaxis()
-                        ->SetRangeUser(0., 20.);
-                    fDetectorStripNoiseOddHistograms.at(board->getIndex())
-                        ->at(opticalGroup->getIndex())
-                        ->at(hybrid->getIndex())
-                        ->at(chip->getIndex())
+                        .fTheHistogram->GetXaxis()
+                        ->SetRangeUser(-0.5, fNPixelChannels * cHybrid->size() - 0.5);
+                    fDetectorHybridPixelNoiseHistograms.at(cBoard->getIndex())
+                        ->at(cOpticalGroup->getIndex())
+                        ->at(cHybrid->getIndex())
                         ->getSummary<HistContainer<TH1F>>()
                         .fTheHistogram->GetYaxis()
                         ->SetRangeUser(0., 20.);
                 }
-
-                fDetectorHybridStripNoiseHistograms.at(board->getIndex())
-                    ->at(opticalGroup->getIndex())
-                    ->at(hybrid->getIndex())
-                    ->getSummary<HistContainer<TH1F>>()
-                    .fTheHistogram->GetXaxis()
-                    ->SetRangeUser(-0.5, NCH * hybrid->size() - 0.5);
-                fDetectorHybridStripNoiseHistograms.at(board->getIndex())
-                    ->at(opticalGroup->getIndex())
-                    ->at(hybrid->getIndex())
-                    ->getSummary<HistContainer<TH1F>>()
-                    .fTheHistogram->GetYaxis()
-                    ->SetRangeUser(0., 20.);
-
-                fDetectorHybridStripNoiseEvenHistograms.at(board->getIndex())
-                    ->at(opticalGroup->getIndex())
-                    ->at(hybrid->getIndex())
-                    ->getSummary<HistContainer<TH1F>>()
-                    .fTheHistogram->GetXaxis()
-                    ->SetRangeUser(-0.5, NCH * hybrid->size() - 0.5);
-                fDetectorHybridStripNoiseEvenHistograms.at(board->getIndex())
-                    ->at(opticalGroup->getIndex())
-                    ->at(hybrid->getIndex())
-                    ->getSummary<HistContainer<TH1F>>()
-                    .fTheHistogram->GetYaxis()
-                    ->SetRangeUser(0., 20.);
-
-                fDetectorHybridStripNoiseOddHistograms.at(board->getIndex())
-                    ->at(opticalGroup->getIndex())
-                    ->at(hybrid->getIndex())
-                    ->getSummary<HistContainer<TH1F>>()
-                    .fTheHistogram->GetXaxis()
-                    ->SetRangeUser(-0.5, NCH * hybrid->size() - 0.5);
-                fDetectorHybridStripNoiseOddHistograms.at(board->getIndex())
-                    ->at(opticalGroup->getIndex())
-                    ->at(hybrid->getIndex())
-                    ->getSummary<HistContainer<TH1F>>()
-                    .fTheHistogram->GetYaxis()
-                    ->SetRangeUser(0., 20.);
             }
         }
     }
@@ -356,29 +511,42 @@ void DQMHistogramPedeNoise::reset(void) {}
 //========================================================================================================================
 void DQMHistogramPedeNoise::fillValidationPlots(DetectorDataContainer& theOccupancy)
 {
-    for(auto board: theOccupancy)
+    for(auto cBoard: theOccupancy)
     {
-        for(auto opticalGroup: *board)
+        for(auto cOpticalGroup: *cBoard)
         {
-            for(auto hybrid: *opticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                // std::cout << __PRETTY_FUNCTION__ << " The Hybrid Occupancy = " <<
-                // hybrid->getSummary<Occupancy,Occupancy>().fOccupancy << std::endl;
-                for(auto chip: *hybrid)
+                for(auto cChip: *cHybrid)
                 {
-                    TH1F* chipValidationHistogram = fDetectorValidationHistograms.at(board->getIndex())
-                                                        ->at(opticalGroup->getIndex())
-                                                        ->at(hybrid->getIndex())
-                                                        ->at(chip->getIndex())
-                                                        ->getSummary<HistContainer<TH1F>>()
-                                                        .fTheHistogram;
-                    uint channelBin = 1;
-
-                    if(chip->getChannelContainer<Occupancy>() == nullptr) continue;
-                    for(auto channel: *chip->getChannelContainer<Occupancy>())
+                    TH1F* cChipValidationHistogram = nullptr;
+                    auto  cType                    = fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getFrontEndType();
+                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
                     {
-                        chipValidationHistogram->SetBinContent(channelBin, channel.fOccupancy);
-                        chipValidationHistogram->SetBinError(channelBin++, channel.fOccupancyError);
+                        cChipValidationHistogram = fDetectorStripValidationHistograms.at(cBoard->getIndex())
+                                                       ->at(cOpticalGroup->getIndex())
+                                                       ->at(cHybrid->getIndex())
+                                                       ->at(cChip->getId() % 8)
+                                                       ->getSummary<HistContainer<TH1F>>()
+                                                       .fTheHistogram;
+                    }
+                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                    {
+                        cChipValidationHistogram = fDetectorPixelValidationHistograms.at(cBoard->getIndex())
+                                                       ->at(cOpticalGroup->getIndex())
+                                                       ->at(cHybrid->getIndex())
+                                                       ->at(cChip->getId() % 8)
+                                                       ->getSummary<HistContainer<TH1F>>()
+                                                       .fTheHistogram;
+                    }
+
+                    uint cChannelBin = 1;
+
+                    if(cChip->getChannelContainer<Occupancy>() == nullptr) continue;
+                    for(auto cChannel: *cChip->getChannelContainer<Occupancy>())
+                    {
+                        cChipValidationHistogram->SetBinContent(cChannelBin, cChannel.fOccupancy);
+                        cChipValidationHistogram->SetBinError(cChannelBin++, cChannel.fOccupancyError);
                     }
                 }
             }
@@ -389,116 +557,162 @@ void DQMHistogramPedeNoise::fillValidationPlots(DetectorDataContainer& theOccupa
 //========================================================================================================================
 void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& thePedestalAndNoise)
 {
-    for(auto board: thePedestalAndNoise)
+    for(auto cBoard: thePedestalAndNoise)
     {
-        for(auto opticalGroup: *board)
+        for(auto cOpticalGroup: *cBoard)
         {
-            for(auto hybrid: *opticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                TH1F* hybridNoiseHistogram =
-                    fDetectorHybridNoiseHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                TH1F* hybridStripNoiseHistogram =
-                    fDetectorHybridStripNoiseHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                TH1F* hybridStripNoiseEvenHistogram =
-                    fDetectorHybridStripNoiseEvenHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                TH1F* hybridStripNoiseOddHistogram =
-                    fDetectorHybridStripNoiseOddHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                TH1F *cHybridNoiseHistogram = nullptr, *cHybridChannelNoiseHistogram = nullptr, *cHybridStripNoiseEvenHistogram = nullptr, *cHybridStripNoiseOddHistogram = nullptr;
 
-                for(auto chip: *hybrid)
+                cHybridNoiseHistogram = fDetectorHybridNoiseHistograms.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                if(fWithCBC)
                 {
-                    TH1F* chipPedestalHistogram =
-                        fDetectorPedestalHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                    TH1F* chipNoiseHistogram =
-                        fDetectorNoiseHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                    TH1F* chipStripNoiseHistogram = fDetectorStripNoiseHistograms.at(board->getIndex())
-                                                        ->at(opticalGroup->getIndex())
-                                                        ->at(hybrid->getIndex())
-                                                        ->at(chip->getIndex())
+                    cHybridStripNoiseEvenHistogram =
+                        fDetectorHybridStripNoiseEvenHistograms.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    cHybridStripNoiseOddHistogram =
+                        fDetectorHybridStripNoiseOddHistograms.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                }
+                for(auto cChip: *cHybrid)
+                {
+                    auto     cType                  = fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getFrontEndType();
+                    uint32_t cNChannels             = 0;
+                    TH1F *   cChipPedestalHistogram = nullptr, *cChipNoiseHistogram = nullptr, *cChannelPedestalHistogram = nullptr, *cChannelNoiseHistogram = nullptr,
+                         *cChannelStripNoiseEvenHistogram = nullptr, *cChannelStripNoiseOddHistogram = nullptr;
+                    TH2F* cChannel2DPixelNoiseHistogram = nullptr;
+                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                    {
+                        cNChannels = fNStripChannels;
+
+                        cHybridChannelNoiseHistogram =
+                            fDetectorHybridStripNoiseHistograms.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+
+                        cChipPedestalHistogram = fDetectorChipStripPedestalHistograms.at(cBoard->getIndex())
+                                                     ->at(cOpticalGroup->getIndex())
+                                                     ->at(cHybrid->getIndex())
+                                                     ->at(cChip->getId() % 8)
+                                                     ->getSummary<HistContainer<TH1F>>()
+                                                     .fTheHistogram;
+
+                        cChannelPedestalHistogram = fDetectorChannelStripPedestalHistograms.at(cBoard->getIndex())
+                                                        ->at(cOpticalGroup->getIndex())
+                                                        ->at(cHybrid->getIndex())
+                                                        ->at(cChip->getId() % 8)
                                                         ->getSummary<HistContainer<TH1F>>()
                                                         .fTheHistogram;
-                    TH1F* chipStripPedestalHistogram = fDetectorStripPedestalHistograms.at(board->getIndex())
-                                                           ->at(opticalGroup->getIndex())
-                                                           ->at(hybrid->getIndex())
-                                                           ->at(chip->getIndex())
-                                                           ->getSummary<HistContainer<TH1F>>()
-                                                           .fTheHistogram;
-                    TH1F* chipStripNoiseEvenHistogram = fDetectorStripNoiseEvenHistograms.at(board->getIndex())
-                                                            ->at(opticalGroup->getIndex())
-                                                            ->at(hybrid->getIndex())
-                                                            ->at(chip->getIndex())
-                                                            ->getSummary<HistContainer<TH1F>>()
-                                                            .fTheHistogram;
-                    TH1F* chipStripNoiseOddHistogram = fDetectorStripNoiseOddHistograms.at(board->getIndex())
-                                                           ->at(opticalGroup->getIndex())
-                                                           ->at(hybrid->getIndex())
-                                                           ->at(chip->getIndex())
-                                                           ->getSummary<HistContainer<TH1F>>()
-                                                           .fTheHistogram;
 
-                    TH2F* chip2DPixelNoiseHistogram = fDetector2DPixelNoiseHistograms.at(board->getIndex())
-                                                          ->at(opticalGroup->getIndex())
-                                                          ->at(hybrid->getIndex())
-                                                          ->at(chip->getIndex())
-                                                          ->getSummary<HistContainer<TH2F>>()
-                                                          .fTheHistogram;
+                        cChipNoiseHistogram = fDetectorChipStripNoiseHistograms.at(cBoard->getIndex())
+                                                  ->at(cOpticalGroup->getIndex())
+                                                  ->at(cHybrid->getIndex())
+                                                  ->at(cChip->getId() % 8)
+                                                  ->getSummary<HistContainer<TH1F>>()
+                                                  .fTheHistogram;
 
-                    if(chip->getChannelContainer<ThresholdAndNoise>() == nullptr) continue;
-                    uint16_t channelNumber = 0;
-                    for(auto channel: *chip->getChannelContainer<ThresholdAndNoise>())
+                        cChannelNoiseHistogram = fDetectorChannelStripNoiseHistograms.at(cBoard->getIndex())
+                                                     ->at(cOpticalGroup->getIndex())
+                                                     ->at(cHybrid->getIndex())
+                                                     ->at(cChip->getId() % 8)
+                                                     ->getSummary<HistContainer<TH1F>>()
+                                                     .fTheHistogram;
+
+                        if(cType == FrontEndType::CBC3)
+                        {
+                            cChannelStripNoiseEvenHistogram = fDetectorChannelStripNoiseEvenHistograms.at(cBoard->getIndex())
+                                                                  ->at(cOpticalGroup->getIndex())
+                                                                  ->at(cHybrid->getIndex())
+                                                                  ->at(cChip->getId() % 8)
+                                                                  ->getSummary<HistContainer<TH1F>>()
+                                                                  .fTheHistogram;
+                            cChannelStripNoiseOddHistogram = fDetectorChannelStripNoiseOddHistograms.at(cBoard->getIndex())
+                                                                 ->at(cOpticalGroup->getIndex())
+                                                                 ->at(cHybrid->getIndex())
+                                                                 ->at(cChip->getId() % 8)
+                                                                 ->getSummary<HistContainer<TH1F>>()
+                                                                 .fTheHistogram;
+                        }
+                    }
+                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
                     {
-                        float cNoise       = (std::isnan(channel.fNoise)) ? 666 : channel.fNoise;
-                        float cNoiseErr    = (std::isnan(channel.fNoiseError)) ? 666 : channel.fNoiseError;
-                        float cPedestal    = (std::isnan(channel.fThreshold)) ? 666 : channel.fThreshold;
-                        float cPedestalErr = (std::isnan(channel.fThreshold)) ? 666 : channel.fThresholdError;
-                        chipPedestalHistogram->Fill(cPedestal);
-                        chipNoiseHistogram->Fill(cNoise);
-                        hybridNoiseHistogram->Fill(cNoise);
+                        cNChannels = fNPixelChannels;
 
-                        chip2DPixelNoiseHistogram->SetBinContent(int(channelNumber % 120) + 1, int(channelNumber / 120) + 1, cNoise);
-                        if((int(channelNumber) % 2) == 0)
-                        {
-                            chipStripNoiseEvenHistogram->SetBinContent(int(channelNumber / 2) + 1, cNoise);
-                            chipStripNoiseEvenHistogram->SetBinError(int(channelNumber / 2) + 1, cNoiseErr);
-                            hybridStripNoiseEvenHistogram->SetBinContent(NCHANNELS / 2 * chip->getId() + int(channelNumber / 2) + 1, cNoise);
-                            hybridStripNoiseEvenHistogram->SetBinError(NCHANNELS / 2 * chip->getId() + int(channelNumber / 2) + 1, cNoiseErr);
-                        }
-                        else
-                        {
-                            chipStripNoiseOddHistogram->SetBinContent(int(channelNumber / 2) + 1, cNoise);
-                            chipStripNoiseOddHistogram->SetBinError(int(channelNumber / 2) + 1, cNoiseErr);
-                            hybridStripNoiseOddHistogram->SetBinContent(NCHANNELS / 2 * chip->getId() + int(channelNumber / 2) + 1, cNoise);
-                            hybridStripNoiseOddHistogram->SetBinError(NCHANNELS / 2 * chip->getId() + int(channelNumber / 2) + 1, cNoiseErr);
-                        }
+                        cHybridChannelNoiseHistogram =
+                            fDetectorHybridPixelNoiseHistograms.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
 
-                        chipStripNoiseHistogram->SetBinContent(channelNumber + 1, cNoise);
-                        chipStripNoiseHistogram->SetBinError(channelNumber + 1, cNoiseErr);
-                        chipStripPedestalHistogram->SetBinContent(channelNumber + 1, cPedestal);
-                        chipStripPedestalHistogram->SetBinError(channelNumber + 1, cPedestalErr);
-                        hybridStripNoiseHistogram->SetBinContent(NCHANNELS * chip->getId() + channelNumber + 1, cNoise);
-                        hybridStripNoiseHistogram->SetBinError(NCHANNELS * chip->getId() + channelNumber + 1, cNoiseErr);
+                        cChipPedestalHistogram = fDetectorChipPixelPedestalHistograms.at(cBoard->getIndex())
+                                                     ->at(cOpticalGroup->getIndex())
+                                                     ->at(cHybrid->getIndex())
+                                                     ->at(cChip->getId() % 8)
+                                                     ->getSummary<HistContainer<TH1F>>()
+                                                     .fTheHistogram;
 
-                        if((int(channelNumber) % 2) == 0)
-                        {
-                            chipStripNoiseEvenHistogram->SetBinContent(int(channelNumber / 2) + 1, cNoise);
-                            chipStripNoiseEvenHistogram->SetBinError(int(channelNumber / 2) + 1, cNoiseErr);
-                            hybridStripNoiseEvenHistogram->SetBinContent(NCH / 2 * chip->getIndex() + int(channelNumber / 2) + 1, cNoise);
-                            hybridStripNoiseEvenHistogram->SetBinError(NCH / 2 * chip->getIndex() + int(channelNumber / 2) + 1, cNoiseErr);
-                        }
-                        else
-                        {
-                            chipStripNoiseOddHistogram->SetBinContent(int(channelNumber / 2) + 1, cNoise);
-                            chipStripNoiseOddHistogram->SetBinError(int(channelNumber / 2) + 1, cNoiseErr);
-                            hybridStripNoiseOddHistogram->SetBinContent(NCH / 2 * chip->getIndex() + int(channelNumber / 2) + 1, cNoise);
-                            hybridStripNoiseOddHistogram->SetBinError(NCH / 2 * chip->getIndex() + int(channelNumber / 2) + 1, cNoiseErr);
-                        }
+                        cChannelPedestalHistogram = fDetectorChannelPixelPedestalHistograms.at(cBoard->getIndex())
+                                                        ->at(cOpticalGroup->getIndex())
+                                                        ->at(cHybrid->getIndex())
+                                                        ->at(cChip->getId() % 8)
+                                                        ->getSummary<HistContainer<TH1F>>()
+                                                        .fTheHistogram;
 
-                        chipStripNoiseHistogram->SetBinContent(channelNumber + 1, cNoise);
-                        chipStripNoiseHistogram->SetBinError(channelNumber + 1, cNoiseErr);
-                        chipStripPedestalHistogram->SetBinContent(channelNumber + 1, channel.fThreshold);
-                        chipStripPedestalHistogram->SetBinError(channelNumber + 1, channel.fThresholdError);
-                        hybridStripNoiseHistogram->SetBinContent(NCH * chip->getIndex() + channelNumber + 1, cNoise);
-                        hybridStripNoiseHistogram->SetBinError(NCH * chip->getIndex() + channelNumber + 1, cNoiseErr);
-                        ++channelNumber;
+                        cChipNoiseHistogram = fDetectorChipPixelNoiseHistograms.at(cBoard->getIndex())
+                                                  ->at(cOpticalGroup->getIndex())
+                                                  ->at(cHybrid->getIndex())
+                                                  ->at(cChip->getId() % 8)
+                                                  ->getSummary<HistContainer<TH1F>>()
+                                                  .fTheHistogram;
+
+                        cChannelNoiseHistogram = fDetectorChannelPixelNoiseHistograms.at(cBoard->getIndex())
+                                                     ->at(cOpticalGroup->getIndex())
+                                                     ->at(cHybrid->getIndex())
+                                                     ->at(cChip->getId() % 8)
+                                                     ->getSummary<HistContainer<TH1F>>()
+                                                     .fTheHistogram;
+
+                        cChannel2DPixelNoiseHistogram = fDetectorChannel2DPixelNoiseHistograms.at(cBoard->getIndex())
+                                                            ->at(cOpticalGroup->getIndex())
+                                                            ->at(cHybrid->getIndex())
+                                                            ->at(cChip->getId() % 8)
+                                                            ->getSummary<HistContainer<TH2F>>()
+                                                            .fTheHistogram;
+                    }
+
+                    if(cChip->getChannelContainer<ThresholdAndNoise>() == nullptr) continue;
+                    uint16_t cChannelNumber = 0;
+                    for(auto cChannel: *cChip->getChannelContainer<ThresholdAndNoise>())
+                    {
+                        float cNoise       = (std::isnan(cChannel.fNoise)) ? 666 : cChannel.fNoise;
+                        float cNoiseErr    = (std::isnan(cChannel.fNoiseError)) ? 666 : cChannel.fNoiseError;
+                        float cPedestal    = (std::isnan(cChannel.fThreshold)) ? 666 : cChannel.fThreshold;
+                        float cPedestalErr = (std::isnan(cChannel.fThreshold)) ? 666 : cChannel.fThresholdError;
+                        cChipPedestalHistogram->Fill(cPedestal);
+                        cChipNoiseHistogram->Fill(cNoise);
+                        cHybridNoiseHistogram->Fill(cNoise);
+
+                        cChannelNoiseHistogram->SetBinContent(cChannelNumber + 1, cNoise);
+                        cChannelNoiseHistogram->SetBinError(cChannelNumber + 1, cNoiseErr);
+                        cChannelPedestalHistogram->SetBinContent(cChannelNumber + 1, cPedestal);
+                        cChannelPedestalHistogram->SetBinError(cChannelNumber + 1, cPedestalErr);
+                        cHybridChannelNoiseHistogram->SetBinContent(cNChannels * (cChip->getId() % 8) + cChannelNumber + 1, cNoise);
+                        cHybridChannelNoiseHistogram->SetBinError(cNChannels * (cChip->getId() % 8) + cChannelNumber + 1, cNoiseErr);
+
+                        if(cType == FrontEndType::CBC3)
+                        {
+                            if((int(cChannelNumber) % 2) == 0)
+                            {
+                                cChannelStripNoiseEvenHistogram->SetBinContent(int(cChannelNumber / 2) + 1, cNoise);
+                                cChannelStripNoiseEvenHistogram->SetBinError(int(cChannelNumber / 2) + 1, cNoiseErr);
+                                cHybridStripNoiseEvenHistogram->SetBinContent(cNChannels / 2 * (cChip->getId() % 8) + int(cChannelNumber / 2) + 1, cNoise);
+                                cHybridStripNoiseEvenHistogram->SetBinError(cNChannels / 2 * (cChip->getId() % 8) + int(cChannelNumber / 2) + 1, cNoiseErr);
+                            }
+                            else
+                            {
+                                cChannelStripNoiseOddHistogram->SetBinContent(int(cChannelNumber / 2) + 1, cNoise);
+                                cChannelStripNoiseOddHistogram->SetBinError(int(cChannelNumber / 2) + 1, cNoiseErr);
+                                cHybridStripNoiseOddHistogram->SetBinContent(cNChannels / 2 * (cChip->getId() % 8) + int(cChannelNumber / 2) + 1, cNoise);
+                                cHybridStripNoiseOddHistogram->SetBinError(cNChannels / 2 * (cChip->getId() % 8) + int(cChannelNumber / 2) + 1, cNoiseErr);
+                            }
+                        }
+                        if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                        { cChannel2DPixelNoiseHistogram->SetBinContent(int(cChannelNumber % 120) + 1, int(cChannelNumber / 120) + 1, cNoise); }
+                        ++cChannelNumber;
                     }
                 }
             }
@@ -509,44 +723,77 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& the
 //========================================================================================================================
 void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t pStripTh, uint16_t pPixelTh, DetectorDataContainer& fSCurveOccupancy)
 {
-    for(auto board: fSCurveOccupancy)
+    for(auto cBoard: fSCurveOccupancy)
     {
-        for(auto opticalGroup: *board)
+        for(auto cOpticalGroup: *cBoard)
         {
-            for(auto hybrid: *opticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                for(auto chip: *hybrid)
+                for(auto cChip: *cHybrid)
                 {
-                    TH2F* chipSCurve =
-                        fDetectorSCurveHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    auto     cType = fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getFrontEndType();
+                    uint16_t cTh   = 0;
+                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                        cTh = pStripTh;
+                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                        cTh = pPixelTh;
 
-                    if(chip->getChannelContainer<Occupancy>() == nullptr) continue;
-                    uint16_t channelNumber = 0;
-                    for(auto channel: *chip->getChannelContainer<Occupancy>())
+                    TH2F* cChipSCurve = nullptr;
+                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
                     {
-                        auto     cType = fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getFrontEndType();
-                        uint16_t cTh   = 0;
-                        if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
-                            cTh = pStripTh;
-                        else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-                            cTh = pPixelTh;
-                        float tmpOccupancy      = channel.fOccupancy;
-                        float tmpOccupancyError = channel.fOccupancyError;
-                        chipSCurve->SetBinContent(channelNumber + 1, cTh + 1, tmpOccupancy);
-                        chipSCurve->SetBinError(channelNumber + 1, cTh + 1, tmpOccupancyError);
+                        cChipSCurve = fDetectorChipStripSCurveHistograms.at(cBoard->getIndex())
+                                          ->at(cOpticalGroup->getIndex())
+                                          ->at(cHybrid->getIndex())
+                                          ->at(cChip->getId() % 8)
+                                          ->getSummary<HistContainer<TH2F>>()
+                                          .fTheHistogram;
+                    }
+                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                    {
+                        cChipSCurve = fDetectorChipPixelSCurveHistograms.at(cBoard->getIndex())
+                                          ->at(cOpticalGroup->getIndex())
+                                          ->at(cHybrid->getIndex())
+                                          ->at(cChip->getId() % 8)
+                                          ->getSummary<HistContainer<TH2F>>()
+                                          .fTheHistogram;
+                    }
+
+                    if(cChip->getChannelContainer<Occupancy>() == nullptr) continue;
+                    uint16_t cChannelNumber = 0;
+                    for(auto cChannel: *cChip->getChannelContainer<Occupancy>())
+                    {
+                        float tmpOccupancy      = cChannel.fOccupancy;
+                        float tmpOccupancyError = cChannel.fOccupancyError;
+                        cChipSCurve->SetBinContent(cChannelNumber + 1, cTh + 1, tmpOccupancy);
+                        cChipSCurve->SetBinError(cChannelNumber + 1, cTh + 1, tmpOccupancyError);
 
                         if(fFitSCurves)
                         {
-                            TH1F* channelSCurve = fDetectorChannelSCurveHistograms.at(board->getIndex())
-                                                      ->at(opticalGroup->getIndex())
-                                                      ->at(hybrid->getIndex())
-                                                      ->at(chip->getIndex())
-                                                      ->getChannel<HistContainer<TH1F>>(channelNumber)
-                                                      .fTheHistogram;
-                            channelSCurve->SetBinContent(cTh + 1, tmpOccupancy);
-                            channelSCurve->SetBinError(cTh + 1, tmpOccupancyError);
+                            TH1F* cChannelSCurve = nullptr;
+
+                            if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                            {
+                                cChannelSCurve = fDetectorChannelStripSCurveHistograms.at(cBoard->getIndex())
+                                                     ->at(cOpticalGroup->getIndex())
+                                                     ->at(cHybrid->getIndex())
+                                                     ->at(cChip->getId() % 8)
+                                                     ->getChannel<HistContainer<TH1F>>(cChannelNumber)
+                                                     .fTheHistogram;
+                            }
+                            else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                            {
+                                cChannelSCurve = fDetectorChannelPixelSCurveHistograms.at(cBoard->getIndex())
+                                                     ->at(cOpticalGroup->getIndex())
+                                                     ->at(cHybrid->getIndex())
+                                                     ->at(cChip->getId() % 8)
+                                                     ->getChannel<HistContainer<TH1F>>(cChannelNumber)
+                                                     .fTheHistogram;
+                            }
+
+                            cChannelSCurve->SetBinContent(cTh + 1, tmpOccupancy);
+                            cChannelSCurve->SetBinError(cTh + 1, tmpOccupancyError);
                         }
-                        ++channelNumber;
+                        ++cChannelNumber;
                     }
                 }
             }
@@ -556,42 +803,74 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t pStripTh, uint16_t pPixelTh
 
 void DQMHistogramPedeNoise::fillSCurvePlots(DetectorDataContainer& fThresholds, DetectorDataContainer& fSCurveOccupancy)
 {
-    for(auto board: fSCurveOccupancy)
+    for(auto cBoard: fSCurveOccupancy)
     {
-        auto& cThThisBrd = fThresholds.at(board->getIndex());
-        for(auto opticalGroup: *board)
+        auto& cThThisBrd = fThresholds.at(cBoard->getIndex());
+        for(auto cOpticalGroup: *cBoard)
         {
-            auto& cThThisGrp = cThThisBrd->at(opticalGroup->getIndex());
-            for(auto hybrid: *opticalGroup)
+            auto& cThThisGrp = cThThisBrd->at(cOpticalGroup->getIndex());
+            for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cThThisHybrd = cThThisGrp->at(hybrid->getIndex());
-                for(auto chip: *hybrid)
+                auto& cThThisHybrd = cThThisGrp->at(cHybrid->getIndex());
+                for(auto cChip: *cHybrid)
                 {
-                    auto& cThThisChip = cThThisHybrd->at(chip->getIndex());
-                    TH2F* chipSCurve =
-                        fDetectorSCurveHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    auto cType = fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getFrontEndType();
 
-                    if(chip->getChannelContainer<Occupancy>() == nullptr) continue;
-                    uint16_t channelNumber = 0;
-                    for(auto channel: *chip->getChannelContainer<Occupancy>())
+                    auto& cThThisChip = cThThisHybrd->at(cChip->getIndex());
+                    TH2F* cChipSCurve = nullptr;
+                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
                     {
-                        float tmpOccupancy      = channel.fOccupancy;
-                        float tmpOccupancyError = channel.fOccupancyError;
-                        chipSCurve->SetBinContent(channelNumber + 1, cThThisChip->getSummary<uint16_t>() + 1, tmpOccupancy);
-                        chipSCurve->SetBinError(channelNumber + 1, cThThisChip->getSummary<uint16_t>() + 1, tmpOccupancyError);
+                        cChipSCurve = fDetectorChipStripSCurveHistograms.at(cBoard->getIndex())
+                                          ->at(cOpticalGroup->getIndex())
+                                          ->at(cHybrid->getIndex())
+                                          ->at(cChip->getId() % 8)
+                                          ->getSummary<HistContainer<TH2F>>()
+                                          .fTheHistogram;
+                    }
+                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                    {
+                        cChipSCurve = fDetectorChipPixelSCurveHistograms.at(cBoard->getIndex())
+                                          ->at(cOpticalGroup->getIndex())
+                                          ->at(cHybrid->getIndex())
+                                          ->at(cChip->getId() % 8)
+                                          ->getSummary<HistContainer<TH2F>>()
+                                          .fTheHistogram;
+                    }
+
+                    if(cChip->getChannelContainer<Occupancy>() == nullptr) continue;
+                    uint16_t cChannelNumber = 0;
+                    for(auto cChannel: *cChip->getChannelContainer<Occupancy>())
+                    {
+                        float tmpOccupancy      = cChannel.fOccupancy;
+                        float tmpOccupancyError = cChannel.fOccupancyError;
+                        cChipSCurve->SetBinContent(cChannelNumber + 1, cThThisChip->getSummary<uint16_t>() + 1, tmpOccupancy);
+                        cChipSCurve->SetBinError(cChannelNumber + 1, cThThisChip->getSummary<uint16_t>() + 1, tmpOccupancyError);
 
                         if(fFitSCurves)
                         {
-                            TH1F* channelSCurve = fDetectorChannelSCurveHistograms.at(board->getIndex())
-                                                      ->at(opticalGroup->getIndex())
-                                                      ->at(hybrid->getIndex())
-                                                      ->at(chip->getIndex())
-                                                      ->getChannel<HistContainer<TH1F>>(channelNumber)
-                                                      .fTheHistogram;
-                            channelSCurve->SetBinContent(cThThisChip->getSummary<uint16_t>() + 1, tmpOccupancy);
-                            channelSCurve->SetBinError(cThThisChip->getSummary<uint16_t>() + 1, tmpOccupancyError);
+                            TH1F* cChannelSCurve = nullptr;
+                            if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                            {
+                                cChannelSCurve = fDetectorChannelStripSCurveHistograms.at(cBoard->getIndex())
+                                                     ->at(cOpticalGroup->getIndex())
+                                                     ->at(cHybrid->getIndex())
+                                                     ->at(cChip->getId() % 8)
+                                                     ->getChannel<HistContainer<TH1F>>(cChannelNumber)
+                                                     .fTheHistogram;
+                            }
+                            else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                            {
+                                cChannelSCurve = fDetectorChannelPixelSCurveHistograms.at(cBoard->getIndex())
+                                                     ->at(cOpticalGroup->getIndex())
+                                                     ->at(cHybrid->getIndex())
+                                                     ->at(cChip->getId() % 8)
+                                                     ->getChannel<HistContainer<TH1F>>(cChannelNumber)
+                                                     .fTheHistogram;
+                            }
+                            cChannelSCurve->SetBinContent(cThThisChip->getSummary<uint16_t>() + 1, tmpOccupancy);
+                            cChannelSCurve->SetBinError(cThThisChip->getSummary<uint16_t>() + 1, tmpOccupancyError);
                         }
-                        ++channelNumber;
+                        ++cChannelNumber;
                     }
                 }
             }
@@ -602,41 +881,85 @@ void DQMHistogramPedeNoise::fillSCurvePlots(DetectorDataContainer& fThresholds, 
 //========================================================================================================================
 void DQMHistogramPedeNoise::fitSCurves()
 {
-    for(auto board: fDetectorChannelSCurveHistograms)
+    for(auto cBoard: *fDetectorContainer)
     {
-        for(auto opticalGroup: *board)
+        for(auto cOpticalGroup: *cBoard)
         {
-            for(auto hybrid: *opticalGroup)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                for(auto chip: *hybrid)
+                for(auto cChip: *cHybrid)
                 {
-                    ChipDataContainer* theChipThresholdAndNoise = fThresholdAndNoiseContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex());
+                    ChipDataContainer* theChipThresholdAndNoise = fThresholdAndNoiseContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex());
 
-                    for(uint32_t cChannel = 0; cChannel < NCH; cChannel++)
+                    auto     cType      = cChip->getFrontEndType();
+                    uint32_t cNChannels = 0;
+                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2) { cNChannels = fNStripChannels; }
+                    else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
                     {
-                        TH1F* channelSCurve = chip->getChannel<HistContainer<TH1F>>(cChannel).fTheHistogram;
+                        cNChannels = fNPixelChannels;
+                    }
 
-                        float channelNoise = fDetectorStripNoiseHistograms.at(board->getIndex())
-                                                 ->at(opticalGroup->getIndex())
-                                                 ->at(hybrid->getIndex())
-                                                 ->at(chip->getIndex())
-                                                 ->getSummary<HistContainer<TH1F>>()
-                                                 .fTheHistogram->GetBinContent(cChannel + 1);
+                    for(uint32_t cChannel = 0; cChannel < cNChannels; cChannel++)
+                    {
+                        TH1F *cChannelSCurve = nullptr, *cChannelNoiseHistogram = nullptr, *cChannelPedestalHistogram = nullptr;
+                        if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                        {
+                            cChannelSCurve = fDetectorChannelStripSCurveHistograms.at(cBoard->getIndex())
+                                                 ->at(cOpticalGroup->getIndex())
+                                                 ->at(cHybrid->getIndex())
+                                                 ->at(cChip->getId() % 8)
+                                                 ->getChannel<HistContainer<TH1F>>(cChannel)
+                                                 .fTheHistogram;
 
-                        float channelPedestal = fDetectorStripPedestalHistograms.at(board->getIndex())
-                                                    ->at(opticalGroup->getIndex())
-                                                    ->at(hybrid->getIndex())
-                                                    ->at(chip->getIndex())
-                                                    ->getSummary<HistContainer<TH1F>>()
-                                                    .fTheHistogram->GetBinContent(cChannel + 1);
+                            cChannelNoiseHistogram = fDetectorChannelStripNoiseHistograms.at(cBoard->getIndex())
+                                                         ->at(cOpticalGroup->getIndex())
+                                                         ->at(cHybrid->getIndex())
+                                                         ->at(cChip->getId() % 8)
+                                                         ->getSummary<HistContainer<TH1F>>()
+                                                         .fTheHistogram;
 
-                        TF1* cFit = new TF1("SCurveFit", MyErf, channelPedestal - (channelNoise * 5), channelPedestal + (channelNoise * 5), 2);
+                            cChannelPedestalHistogram = fDetectorChannelStripPedestalHistograms.at(cBoard->getIndex())
+                                                            ->at(cOpticalGroup->getIndex())
+                                                            ->at(cHybrid->getIndex())
+                                                            ->at(cChip->getId() % 8)
+                                                            ->getSummary<HistContainer<TH1F>>()
+                                                            .fTheHistogram;
+                        }
+                        else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                        {
+                            cChannelSCurve = fDetectorChannelPixelSCurveHistograms.at(cBoard->getIndex())
+                                                 ->at(cOpticalGroup->getIndex())
+                                                 ->at(cHybrid->getIndex())
+                                                 ->at(cChip->getId() % 8)
+                                                 ->getChannel<HistContainer<TH1F>>(cChannel)
+                                                 .fTheHistogram;
 
-                        cFit->SetParameter(0, channelPedestal);
-                        cFit->SetParameter(1, channelNoise);
+                            cChannelNoiseHistogram = fDetectorChannelPixelNoiseHistograms.at(cBoard->getIndex())
+                                                         ->at(cOpticalGroup->getIndex())
+                                                         ->at(cHybrid->getIndex())
+                                                         ->at(cChip->getId() % 8)
+                                                         ->getSummary<HistContainer<TH1F>>()
+                                                         .fTheHistogram;
+
+                            cChannelPedestalHistogram = fDetectorChannelPixelPedestalHistograms.at(cBoard->getIndex())
+                                                            ->at(cOpticalGroup->getIndex())
+                                                            ->at(cHybrid->getIndex())
+                                                            ->at(cChip->getId() % 8)
+                                                            ->getSummary<HistContainer<TH1F>>()
+                                                            .fTheHistogram;
+                        }
+
+                        float cChannelNoise = cChannelNoiseHistogram->GetBinContent(cChannel + 1);
+
+                        float cChannelPedestal = cChannelPedestalHistogram->GetBinContent(cChannel + 1);
+
+                        TF1* cFit = new TF1("SCurveFit", MyErf, cChannelPedestal - (cChannelNoise * 5), cChannelPedestal + (cChannelNoise * 5), 2);
+
+                        cFit->SetParameter(0, cChannelPedestal);
+                        cFit->SetParameter(1, cChannelNoise);
 
                         // Fit
-                        channelSCurve->Fit(cFit, "RQ+0");
+                        cChannelSCurve->Fit(cFit, "RQ+0");
 
                         theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(cChannel).fThreshold      = cFit->GetParameter(0);
                         theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(cChannel).fNoise          = cFit->GetParameter(1);
