@@ -690,6 +690,29 @@ float lpGBTInterface::ReadResistance(Chip* pChip, const std::string& pADC, const
     return cLSQResistance;
 }
 
+uint16_t lpGBTInterface::GetADCOffset(Chip* pChip)
+{
+    uint16_t cMeasurement = ReadADC(pChip, "VREF/2", "VREF/2");
+    LOG(INFO) << BLUE << "Reading ADC Offset " << BOLDYELLOW << +cMeasurement << RESET;
+    return cMeasurement;
+}
+
+float lpGBTInterface::GetADCGain(Chip* pChip)
+{
+    float cResult;
+    WriteChipReg(pChip, "ADCMon", 0 );
+    std::this_thread::sleep_for(std::chrono::microseconds(1000));
+    uint16_t cMeasurement = ReadADC(pChip, "VDD","VREF/2");
+    cResult=((cMeasurement*1.)-(GetADCOffset(pChip)*1.))/512.*2.*-1.;
+    LOG(INFO) << BLUE << "Reading ADC value " << BOLDYELLOW << +cMeasurement << RESET;
+    LOG(INFO) << BLUE << "Reading ADC Gain via GND-Vref/2 " << BOLDYELLOW << +cResult << RESET;
+    cMeasurement = ReadADC(pChip, "VREF/2","VDD");
+    cResult=((cMeasurement*1.)-(GetADCOffset(pChip)*1.))/512.*2.;
+    LOG(INFO) << BLUE << "Reading ADC value " << BOLDYELLOW << +cMeasurement << RESET;
+    LOG(INFO) << BLUE << "Reading ADC Gain via Vref/2-GND " << BOLDYELLOW << +cResult << RESET;
+    return cResult;
+}
+
 uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain)
 {
     // Read differential (converted) data on two ADC inputs

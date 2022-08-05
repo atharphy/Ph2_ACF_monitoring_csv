@@ -126,6 +126,9 @@ class lpGBTInterface : public ChipInterface
     // ###########################
     // # LpGBT ADC-DAC functions #
     // ###########################
+    uint16_t GetADCOffset(Ph2_HwDescription::Chip* pChip);
+    float GetADCGain(Ph2_HwDescription::Chip* pChip);
+
     uint16_t ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN = "VREF/2", uint8_t pGain = 0);
     void     ConfigureInternalMonitoring(Ph2_HwDescription::Chip* pChip, uint8_t pEnable);
 
