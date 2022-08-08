@@ -29,29 +29,32 @@ class ChipContainer;
 class BaseContainer
 {
   public:
-    BaseContainer(uint16_t id = -1) : id_(id), index_(0), isEnabled_(true) { ; }
+    BaseContainer(uint16_t id = -1) : id_(id), globalIndex_(0), localIndex_(0), isEnabled_(true) { ; }
 
     BaseContainer(const BaseContainer&) = delete;
     BaseContainer(BaseContainer&& theCopyContainer)
     {
-        id_    = theCopyContainer.id_;
-        index_ = theCopyContainer.index_;
+        id_          = theCopyContainer.id_;
+        globalIndex_ = theCopyContainer.globalIndex_;
+        localIndex_  = theCopyContainer.localIndex_;
     }
 
     virtual ~BaseContainer() { ; }
     uint16_t               getId(void) const { return id_; }
-    uint16_t               getIndex(void) const { return index_; }
+    uint16_t               getGlobalIndex(void) const { return globalIndex_; }
+    uint16_t               getLocalIndex(void) const { return localIndex_; }
     virtual void           cleanDataStored(void)            = 0;
     virtual BaseContainer* getElement(uint16_t index) const = 0;
     bool                   isEnabled() const { return isEnabled_; }
     void                   setEnabled(bool enable) { isEnabled_ = enable; }
     virtual void           setEnabledAll(bool enable) = 0;
 
-    void setIndex(uint16_t index) { index_ = index; }
+    void setGlobalIndex(uint16_t globalIndex) { globalIndex_ = globalIndex; }
+    void setLocalIndex(uint16_t localIndex) { localIndex_ = localIndex; }
 
   private:
     uint16_t id_;
-    uint16_t index_;
+    uint16_t globalIndex_, localIndex_;
     bool     isEnabled_;
 };
 
@@ -113,7 +116,7 @@ class Container
         }
         catch(std::exception& ex)
         {
-            object->setIndex(this->size());
+            object->setGlobalIndex(this->size());
             std::vector<T*>::push_back(object);
             Container::idObjectMap_[objectId] = this->back();
             return this->back();
@@ -342,7 +345,7 @@ class HWDescriptionContainer : public Container<T>
         if(!QueryFunction::fQueryFunction) return static_cast<theHW*>(this->std::vector<T*>::at(index));
         for(auto element: *this)
         {
-            if(element->getIndex() == index) return static_cast<theHW*>(element);
+            if(element->getGlobalIndex() == index) return static_cast<theHW*>(element);
         }
         throw std::runtime_error("out of range");
     }
@@ -354,7 +357,7 @@ class HWDescriptionContainer : public Container<T>
         if(!QueryFunction::fQueryFunction) return static_cast<theHW*>(this->std::vector<T*>::at(index));
         for(const auto element: *this)
         {
-            if(element->getIndex() == index) return static_cast<theHW*>(element);
+            if(element->getGlobalIndex() == index) return static_cast<theHW*>(element);
         }
         throw std::runtime_error("out of range");
     }
@@ -462,12 +465,12 @@ class DetectorContainer : public HWDescriptionContainer<BoardContainer, Ph2_HwDe
                         if(theQueryFunctor(theChip))
                         {
                             // std::cout << "Matched... index " << chipIndex << " new index " << theNewChipIndex << "\n";
-                            theChip->setIndex(theNewChipIndex++);
+                            theChip->setGlobalIndex(theNewChipIndex++);
                         }
                         else
                         {
                             // std::cout << "Did not match...\n";
-                            theChip->setIndex(0xFFFF);
+                            theChip->setGlobalIndex(0xFFFF);
                         }
                     }
                     theHybrid->size_ = theNewChipIndex;
@@ -490,9 +493,9 @@ class DetectorContainer : public HWDescriptionContainer<BoardContainer, Ph2_HwDe
                     auto                                 theHybrid = (*theOpticalGroup)[hybridIndex];
                     OpticalGroupContainer::QueryFunction theQueryFunctor;
                     if(theQueryFunctor(theHybrid))
-                        theHybrid->setIndex(theNewHybridIndex++);
+                        theHybrid->setGlobalIndex(theNewHybridIndex++);
                     else
-                        theHybrid->setIndex(0xFFFF);
+                        theHybrid->setGlobalIndex(0xFFFF);
                 }
                 theOpticalGroup->size_ = theNewHybridIndex;
             }
@@ -510,9 +513,9 @@ class DetectorContainer : public HWDescriptionContainer<BoardContainer, Ph2_HwDe
                 auto                          theOpticalGroup = (*theBoard)[opticalGroupIndex];
                 BoardContainer::QueryFunction theQueryFunctor;
                 if(theQueryFunctor(theOpticalGroup))
-                    theOpticalGroup->setIndex(theNewOpticalGroupIndex++);
+                    theOpticalGroup->setGlobalIndex(theNewOpticalGroupIndex++);
                 else
-                    theOpticalGroup->setIndex(0xFFFF);
+                    theOpticalGroup->setGlobalIndex(0xFFFF);
             }
             theBoard->size_ = theNewOpticalGroupIndex;
         }
@@ -526,9 +529,9 @@ class DetectorContainer : public HWDescriptionContainer<BoardContainer, Ph2_HwDe
             auto                             theBoard = (*this)[boardIndex];
             DetectorContainer::QueryFunction theQueryFunctor;
             if(theQueryFunctor(theBoard))
-                theBoard->setIndex(theNewBoardGroupIndex++);
+                theBoard->setGlobalIndex(theNewBoardGroupIndex++);
             else
-                theBoard->setIndex(0xFFFF);
+                theBoard->setGlobalIndex(0xFFFF);
         }
         this->size_ = theNewBoardGroupIndex;
     }

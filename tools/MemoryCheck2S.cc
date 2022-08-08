@@ -27,23 +27,23 @@ void MemoryCheck2S::Reset()
     {
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
         LOG(INFO) << BOLDBLUE << "Resetting all registers on back-end board " << +cBoard->getId() << RESET;
-        auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
+        auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getGlobalIndex())->getSummary<BeBoardRegMap>();
         std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
         cVecBeBoardRegs.clear();
         for(auto cReg: cBeRegMap) { cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second)); }
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
 
-        auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
+        auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getGlobalIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
+            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getGlobalIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getGlobalIndex());
                 LOG(INFO) << BOLDBLUE << "Resetting all registers on readout chips connected to FEhybrid#" << (cHybrid->getId()) << " back to their original values..." << RESET;
                 for(auto cChip: *cHybrid)
                 {
-                    auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>();
+                    auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getGlobalIndex())->getSummary<ChipRegMap>();
                     std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
                     cVecRegisters.clear();
                     for(auto cReg: cRegMapThisChip) cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
@@ -61,18 +61,18 @@ void MemoryCheck2S::ReconfigureOffsets()
     LOG(INFO) << BOLDMAGENTA << "\t... [MemoryCheck2S] Resetting all registers on Page1 of CBCs" << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
+        auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getGlobalIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
+            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getGlobalIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getGlobalIndex());
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
-                    auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>();
+                    auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getGlobalIndex())->getSummary<ChipRegMap>();
                     std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
                     cVecRegisters.clear();
                     for(auto cReg: cRegMapThisChip)
@@ -95,17 +95,17 @@ void MemoryCheck2S::Reconfigure()
         // reconfigure Chip registers
         // only those that I've touched
         LOG(INFO) << BOLDMAGENTA << "\t... [MemoryCheck2S] Resetting Chip regs back to their original values" << RESET;
-        auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
+        auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getGlobalIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
+            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getGlobalIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getGlobalIndex());
                 for(auto cChip: *cHybrid)
                 {
                     const ChipRegMap&                             cCurrentMap     = static_cast<ReadoutChip*>(cChip)->getRegMap();
-                    auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>();
+                    auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getGlobalIndex())->getSummary<ChipRegMap>();
                     std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
                     cVecRegisters.clear();
                     // LOG (INFO) << BOLDMAGENTA << "\t.. CBC#" << +cChip->getId() << RESET;
@@ -137,17 +137,17 @@ void MemoryCheck2S::Reconfigure()
         // fBeBoardInterface->ChipReSync(pBoard);
 
         // // reconfigure masks
-        auto& cMasksThisBrd = fChipMasks.at(cBoard->getIndex());
+        auto& cMasksThisBrd = fChipMasks.at(cBoard->getGlobalIndex());
         LOG(INFO) << BOLDMAGENTA << "\t... [MemoryCheck2S] Resetting Chip masks back to their original values" << RESET;
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cMasksThisOG = cMasksThisBrd->at(cOpticalGroup->getIndex());
+            auto& cMasksThisOG = cMasksThisBrd->at(cOpticalGroup->getGlobalIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cMasksThisHybrid = cMasksThisOG->at(cHybrid->getIndex());
+                auto& cMasksThisHybrid = cMasksThisOG->at(cHybrid->getGlobalIndex());
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cMasksThisChip = cMasksThisHybrid->at(cChip->getIndex());
+                    auto& cMasksThisChip = cMasksThisHybrid->at(cChip->getGlobalIndex());
                     auto& cOriginalMask  = cMasksThisChip->getSummary<std::shared_ptr<ChannelGroup<NCHANNELS>>>();
                     // for( uint16_t cChnl=0; cChnl < cChip->size(); cChnl++)
                     // {
@@ -172,15 +172,15 @@ void MemoryCheck2S::Reconfigure()
         LOG(INFO) << BOLDMAGENTA << "\t... [MemoryCheck2S] Resetting all registers on Page1 of CBCs" << RESET;
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
+            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getGlobalIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getGlobalIndex());
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
-                    auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>();
+                    auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getGlobalIndex())->getSummary<ChipRegMap>();
                     std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
                     cVecRegisters.clear();
                     for(auto cReg: cRegMapThisChip)
@@ -222,7 +222,7 @@ void MemoryCheck2S::Initialise()
     for(auto cBoard: *fDetectorContainer)
     {
         //
-        auto&                cBoardRegNap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
+        auto&                cBoardRegNap = fBoardRegContainer.at(cBoard->getGlobalIndex())->getSummary<BeBoardRegMap>();
         const BeBoardRegMap& cOrigRegMap  = static_cast<const BeBoard*>(cBoard)->getBeBoardRegMap();
         cBoardRegNap.insert(cOrigRegMap.begin(), cOrigRegMap.end());
         for(auto cOpticalGroup: *cBoard)
@@ -231,7 +231,8 @@ void MemoryCheck2S::Initialise()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    ChipRegMap&       theChipMap     = fRegMapContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<ChipRegMap>();
+                    ChipRegMap& theChipMap =
+                        fRegMapContainer.at(cBoard->getGlobalIndex())->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getSummary<ChipRegMap>();
                     const ChipRegMap& theOriginalMap = static_cast<ReadoutChip*>(cChip)->getRegMap();
                     theChipMap.insert(theOriginalMap.begin(), theOriginalMap.end());
                 }
@@ -243,16 +244,16 @@ void MemoryCheck2S::Initialise()
     ContainerFactory::copyAndInitChip<std::shared_ptr<ChannelGroup<NCHANNELS>>>(*fDetectorContainer, fChipMasks);
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cMasksThisBrd = fChipMasks.at(cBoard->getIndex());
+        auto& cMasksThisBrd = fChipMasks.at(cBoard->getGlobalIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cMasksThisOG = cMasksThisBrd->at(cOpticalGroup->getIndex());
+            auto& cMasksThisOG = cMasksThisBrd->at(cOpticalGroup->getGlobalIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cMasksThisHybrid = cMasksThisOG->at(cHybrid->getIndex());
+                auto& cMasksThisHybrid = cMasksThisOG->at(cHybrid->getGlobalIndex());
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cMasksThisChip                                                   = cMasksThisHybrid->at(cChip->getIndex());
+                    auto& cMasksThisChip                                                   = cMasksThisHybrid->at(cChip->getGlobalIndex());
                     cMasksThisChip->getSummary<std::shared_ptr<ChannelGroup<NCHANNELS>>>() = std::static_pointer_cast<ChannelGroup<NCHANNELS>>(cChip->getChipOriginalMask());
                     // cOriginalMask = new ChannelGroup<NCHANNELS, 1>;
                     // for( uint16_t cChnl=0; cChnl < cChip->size(); cChnl++)
@@ -411,7 +412,7 @@ void MemoryCheck2S::Initialise()
     ContainerFactory::copyAndInitBoard<uint8_t>(*fDetectorContainer, *fPackageDelays);
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cPkgDelayThisBrd = fPackageDelays->at(cBoard->getIndex());
+        auto& cPkgDelayThisBrd = fPackageDelays->at(cBoard->getGlobalIndex());
         auto& cPkgDelay        = cPkgDelayThisBrd->getSummary<uint8_t>();
         cPkgDelay              = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
     }
@@ -427,38 +428,38 @@ void MemoryCheck2S::zeroContainers()
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cInjections = fInjections.at(cBoard->getIndex());
-        auto& cMismatches = fDataMismatches.at(cBoard->getIndex());
-        auto& cBadEvents  = fBadEvents.at(cBoard->getIndex());
-        auto& cGoodEvents = fGoodEvents.at(cBoard->getIndex());
+        auto& cInjections = fInjections.at(cBoard->getGlobalIndex());
+        auto& cMismatches = fDataMismatches.at(cBoard->getGlobalIndex());
+        auto& cBadEvents  = fBadEvents.at(cBoard->getGlobalIndex());
+        auto& cGoodEvents = fGoodEvents.at(cBoard->getGlobalIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cInjectionsOpticalGroup = cInjections->at(cOpticalGroup->getIndex());
-            auto& cMismatchesOpticalGroup = cMismatches->at(cOpticalGroup->getIndex());
-            auto& cBadEventsOpticalGroup  = cBadEvents->at(cBoard->getIndex());
-            auto& cGoodEventsOpticalGroup = cGoodEvents->at(cBoard->getIndex());
+            auto& cInjectionsOpticalGroup = cInjections->at(cOpticalGroup->getGlobalIndex());
+            auto& cMismatchesOpticalGroup = cMismatches->at(cOpticalGroup->getGlobalIndex());
+            auto& cBadEventsOpticalGroup  = cBadEvents->at(cBoard->getGlobalIndex());
+            auto& cGoodEventsOpticalGroup = cGoodEvents->at(cBoard->getGlobalIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getIndex());
-                auto& cMismatchesHybrid = cMismatchesOpticalGroup->at(cHybrid->getIndex());
-                auto& cBadEventsHybrid  = cBadEventsOpticalGroup->at(cHybrid->getIndex());
-                auto& cGoodEventsHybrid = cGoodEventsOpticalGroup->at(cHybrid->getIndex());
+                auto& cInjectionsHybrid = cInjectionsOpticalGroup->at(cHybrid->getGlobalIndex());
+                auto& cMismatchesHybrid = cMismatchesOpticalGroup->at(cHybrid->getGlobalIndex());
+                auto& cBadEventsHybrid  = cBadEventsOpticalGroup->at(cHybrid->getGlobalIndex());
+                auto& cGoodEventsHybrid = cGoodEventsOpticalGroup->at(cHybrid->getGlobalIndex());
                 // cBxIdsMatchesHybrid->getSummary<std::vector<uint32_t>().clear();
 
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
-                    auto& cInjectionsChip = cInjectionsHybrid->at(cChip->getIndex());
-                    auto& cMismatchesChip = cMismatchesHybrid->at(cChip->getIndex());
-                    auto& cBadEventsChip  = cBadEventsHybrid->at(cChip->getIndex());
-                    auto& cGoodEventsChip = cGoodEventsHybrid->at(cChip->getIndex());
+                    auto& cInjectionsChip = cInjectionsHybrid->at(cChip->getGlobalIndex());
+                    auto& cMismatchesChip = cMismatchesHybrid->at(cChip->getGlobalIndex());
+                    auto& cBadEventsChip  = cBadEventsHybrid->at(cChip->getGlobalIndex());
+                    auto& cGoodEventsChip = cGoodEventsHybrid->at(cChip->getGlobalIndex());
                     //
                     cBadEventsChip->getSummary<EventsList>().clear();
                     cGoodEventsChip->getSummary<EventsList>().clear();
                     cInjectionsChip->getSummary<ChannelList>().clear();
                     cMismatchesChip->getSummary<uint32_t>() = 0;
-                    fRegMapContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<ChipRegMap>() =
+                    fRegMapContainer.at(cBoard->getGlobalIndex())->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getSummary<ChipRegMap>() =
                         static_cast<ReadoutChip*>(cChip)->getRegMap();
                 }
             }
@@ -475,8 +476,8 @@ void MemoryCheck2S::zeroContainers()
                 {
                     if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
-                    fHitCheckContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()  = 0;
-                    fStubCheckContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = 0;
+                    fHitCheckContainer.at(cBoard->getGlobalIndex())->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getSummary<uint16_t>()  = 0;
+                    fStubCheckContainer.at(cBoard->getGlobalIndex())->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getSummary<uint16_t>() = 0;
                 }
             }
         }
@@ -801,7 +802,7 @@ void MemoryCheck2S::EvaluatePedeNoise(int pNevents, int pScanRange)
     ContainerFactory::copyAndInitBoard<uint8_t>(*fDetectorContainer, cSparsBoards);
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cBeBoardSpars = cSparsBoards.at(cBoard->getIndex());
+        auto& cBeBoardSpars = cSparsBoards.at(cBoard->getGlobalIndex());
         auto& cSparsified   = cBeBoardSpars->getSummary<uint8_t>();
         cSparsified         = (uint8_t)(cBoard->getSparsification());
         if(cBeBoardSpars)
@@ -885,18 +886,18 @@ void MemoryCheck2S::EvaluatePedeNoise(int pNevents, int pScanRange)
 
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cThNoiseThisBrd = fThresholdAndNoiseContainer->at(cBoard->getIndex());
+        auto& cThNoiseThisBrd = fThresholdAndNoiseContainer->at(cBoard->getGlobalIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cThNoiseThisOG = cThNoiseThisBrd->at(cOpticalGroup->getIndex());
+            auto& cThNoiseThisOG = cThNoiseThisBrd->at(cOpticalGroup->getGlobalIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cThNoiseThisHybrid = cThNoiseThisOG->at(cHybrid->getIndex());
+                auto& cThNoiseThisHybrid = cThNoiseThisOG->at(cHybrid->getGlobalIndex());
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
-                    auto&              cThNoiseThisChip = cThNoiseThisHybrid->at(cChip->getIndex());
+                    auto&              cThNoiseThisChip = cThNoiseThisHybrid->at(cChip->getGlobalIndex());
                     std::vector<float> cPedestalsThisChip(0);
                     std::vector<float> cNoiseThisChip(0);
                     for(size_t cChnl = 0; cChnl < cChip->size(); cChnl++)
@@ -906,10 +907,10 @@ void MemoryCheck2S::EvaluatePedeNoise(int pNevents, int pScanRange)
                         std::vector<float> cV(cThresholds.size(), 0);
                         for(size_t cIndx = 0; cIndx < cThresholds.size(); cIndx++)
                         {
-                            auto& cDataThisBrd    = cScanData[cIndx]->at(cBoard->getIndex());
-                            auto& cDataThisOG     = cDataThisBrd->at(cOpticalGroup->getIndex());
-                            auto& cDataThisHybrid = cDataThisOG->at(cHybrid->getIndex());
-                            auto& cDataThisChip   = cDataThisHybrid->at(cChip->getIndex());
+                            auto& cDataThisBrd    = cScanData[cIndx]->at(cBoard->getGlobalIndex());
+                            auto& cDataThisOG     = cDataThisBrd->at(cOpticalGroup->getGlobalIndex());
+                            auto& cDataThisHybrid = cDataThisOG->at(cHybrid->getGlobalIndex());
+                            auto& cDataThisChip   = cDataThisHybrid->at(cChip->getGlobalIndex());
                             cW[cIndx]             = cDataThisChip->getChannel<Occupancy>(cChnl).fOccupancy;
                             cV[cIndx]             = cThresholds[cIndx];
                         }
@@ -933,7 +934,7 @@ void MemoryCheck2S::EvaluatePedeNoise(int pNevents, int pScanRange)
     LOG(INFO) << BOLDMAGENTA << "Re-setting sparisfication after evaluating pedestal and noise ." << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cBeBoardSpars = cSparsBoards.at(cBoard->getIndex())->getSummary<uint8_t>();
+        auto& cBeBoardSpars = cSparsBoards.at(cBoard->getGlobalIndex())->getSummary<uint8_t>();
         cBoard->setSparsification((cBeBoardSpars != 0));
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", cBeBoardSpars);
         for(auto cOpticalGroup: *cBoard)
@@ -952,16 +953,16 @@ void MemoryCheck2S::SetThreshold(float pSigma)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cThThisBoard    = fThresholds.at(cBoard->getIndex());
-        auto& cThNoiseThisBrd = fThresholdAndNoiseContainer->at(cBoard->getIndex());
+        auto& cThThisBoard    = fThresholds.at(cBoard->getGlobalIndex());
+        auto& cThNoiseThisBrd = fThresholdAndNoiseContainer->at(cBoard->getGlobalIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cThThisOG      = cThThisBoard->at(cOpticalGroup->getIndex());
-            auto& cThNoiseThisOG = cThNoiseThisBrd->at(cOpticalGroup->getIndex());
+            auto& cThThisOG      = cThThisBoard->at(cOpticalGroup->getGlobalIndex());
+            auto& cThNoiseThisOG = cThNoiseThisBrd->at(cOpticalGroup->getGlobalIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cThThisHybrid      = cThThisOG->at(cHybrid->getIndex());
-                auto& cThNoiseThisHybrid = cThNoiseThisOG->at(cHybrid->getIndex());
+                auto& cThThisHybrid      = cThThisOG->at(cHybrid->getGlobalIndex());
+                auto& cThNoiseThisHybrid = cThNoiseThisOG->at(cHybrid->getGlobalIndex());
                 LOG(INFO) << BOLDMAGENTA << "FE#" << +cHybrid->getId() << RESET;
 
                 for(auto cChip: *cHybrid)
@@ -969,7 +970,7 @@ void MemoryCheck2S::SetThreshold(float pSigma)
                     if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
                     // LOG (INFO) << BOLDMAGENTA << "\t... CBC#" << +cChip->getId() << RESET;
-                    auto&              cThNoiseThisChip = cThNoiseThisHybrid->at(cChip->getIndex());
+                    auto&              cThNoiseThisChip = cThNoiseThisHybrid->at(cChip->getGlobalIndex());
                     std::vector<float> cPedestalsThisChip(0);
                     std::vector<float> cNoiseThisChip(0);
                     for(size_t cChnl = 0; cChnl < cChip->size(); cChnl++)
@@ -994,7 +995,7 @@ void MemoryCheck2S::SetThreshold(float pSigma)
                     //     << " - maximum value is " << cNoiseStats.fMax
                     //     << RESET;
                     float cNoise          = std::sqrt(cNoiseStats.fMean * cNoiseStats.fMean + cNoiseStats.fStdDev * cNoiseStats.fStdDev);
-                    auto& cThThisChip     = cThThisHybrid->at(cChip->getIndex());
+                    auto& cThThisChip     = cThThisHybrid->at(cChip->getGlobalIndex());
                     auto& cThresholdToSet = cThThisChip->getSummary<uint16_t>();
                     cThresholdToSet       = (uint16_t)(cPedStats.fMean + pSigma * cNoise);
                     LOG(INFO) << BOLDMAGENTA << "\t Setting threshold on CBC#" << +cChip->getId() << " to " << cThresholdToSet << " DAC units - i.e. " << std::setprecision(2) << std::fixed << cNoise
@@ -1009,18 +1010,18 @@ void MemoryCheck2S::SetThreshold(float pSigma)
     {
         // only those that I've touched
         LOG(INFO) << BOLDMAGENTA << "\t... [MemoryCheck2S] Resetting CBCs regs on page1 back to their original values" << RESET;
-        auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
+        auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getGlobalIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
+            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getGlobalIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getGlobalIndex());
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
-                    auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>();
+                    auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getGlobalIndex())->getSummary<ChipRegMap>();
                     std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
                     cVecRegisters.clear();
                     for(auto cReg: cRegMapThisChip)
@@ -1057,7 +1058,7 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
     ContainerFactory::copyAndInitBoard<uint8_t>(*fDetectorContainer, cSparsBoards);
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cBeBoardSpars = cSparsBoards.at(cBoard->getIndex());
+        auto& cBeBoardSpars = cSparsBoards.at(cBoard->getGlobalIndex());
         auto& cSparsified   = cBeBoardSpars->getSummary<uint8_t>();
         cSparsified         = (uint8_t)(cBoard->getSparsification());
         if(cBeBoardSpars)
@@ -1090,25 +1091,25 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
     ContainerFactory::copyAndInitChip<std::vector<Stub>>(*fDetectorContainer, *fDetectorDataContainer);
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cExpectdStubsThisBoard = fExpectedStubs.at(cBoard->getIndex());
-        auto& cExpectedOccThisBoard  = fExpectedOccupancy.at(cBoard->getIndex());
+        auto& cExpectdStubsThisBoard = fExpectedStubs.at(cBoard->getGlobalIndex());
+        auto& cExpectedOccThisBoard  = fExpectedOccupancy.at(cBoard->getGlobalIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cExpectedStubsThisOG = cExpectdStubsThisBoard->at(cOpticalGroup->getIndex());
-            auto& cExpectedOccThisOG   = cExpectedOccThisBoard->at(cOpticalGroup->getIndex());
+            auto& cExpectedStubsThisOG = cExpectdStubsThisBoard->at(cOpticalGroup->getGlobalIndex());
+            auto& cExpectedOccThisOG   = cExpectedOccThisBoard->at(cOpticalGroup->getGlobalIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cExpectedStubsThisHybrid = cExpectedStubsThisOG->at(cHybrid->getIndex());
-                auto& cExpectedOccThisHybrid   = cExpectedOccThisOG->at(cHybrid->getIndex());
+                auto& cExpectedStubsThisHybrid = cExpectedStubsThisOG->at(cHybrid->getGlobalIndex());
+                auto& cExpectedOccThisHybrid   = cExpectedOccThisOG->at(cHybrid->getGlobalIndex());
                 // only 2S for now
                 // configure injection
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cExpectedStubsThisChip = cExpectedStubsThisHybrid->at(cChip->getIndex());
+                    auto& cExpectedStubsThisChip = cExpectedStubsThisHybrid->at(cChip->getGlobalIndex());
                     auto& cExpectedStubs         = cExpectedStubsThisChip->getSummary<std::vector<Stub>>();
                     cExpectedStubs.clear();
 
-                    auto& cExpectedOccThisChip = cExpectedOccThisHybrid->at(cChip->getIndex());
+                    auto& cExpectedOccThisChip = cExpectedOccThisHybrid->at(cChip->getGlobalIndex());
                     if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
                     // make sure we're in OR
@@ -1229,7 +1230,7 @@ void MemoryCheck2S::DataCheck(std::vector<uint8_t> pActiveCbcs, int pMeanTrigger
     LOG(INFO) << BOLDMAGENTA << "Re-setting sparisfication after data checker ." << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cBeBoardSpars = cSparsBoards.at(cBoard->getIndex())->getSummary<uint8_t>();
+        auto& cBeBoardSpars = cSparsBoards.at(cBoard->getGlobalIndex())->getSummary<uint8_t>();
         cBoard->setSparsification((cBeBoardSpars == 0) ? false : true);
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", cBeBoardSpars);
         for(auto cOpticalGroup: *cBoard)
@@ -1274,7 +1275,7 @@ void MemoryCheck2S::MemoryCheck2SRaw(bool pAllOnes)
     ContainerFactory::copyAndInitBoard<uint8_t>(*fDetectorContainer, cSparsBoards);
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cBeBoardSpars = cSparsBoards.at(cBoard->getIndex());
+        auto& cBeBoardSpars = cSparsBoards.at(cBoard->getGlobalIndex());
         auto& cSparsified   = cBeBoardSpars->getSummary<uint8_t>();
         cSparsified         = (uint8_t)(cBoard->getSparsification());
         if(cBeBoardSpars)
@@ -1314,18 +1315,18 @@ void MemoryCheck2S::MemoryCheck2SRaw(bool pAllOnes)
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cExpectedOccThisBoard = fExpectedOccupancy.at(cBoard->getIndex());
+        auto& cExpectedOccThisBoard = fExpectedOccupancy.at(cBoard->getGlobalIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cExpectedOccThisOG = cExpectedOccThisBoard->at(cOpticalGroup->getIndex());
+            auto& cExpectedOccThisOG = cExpectedOccThisBoard->at(cOpticalGroup->getGlobalIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cExpectedOccThisHybrid = cExpectedOccThisOG->at(cHybrid->getIndex());
+                auto& cExpectedOccThisHybrid = cExpectedOccThisOG->at(cHybrid->getGlobalIndex());
                 // only 2S for now
                 // configure injection
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cExpectedOccThisChip = cExpectedOccThisHybrid->at(cChip->getIndex());
+                    auto& cExpectedOccThisChip = cExpectedOccThisHybrid->at(cChip->getGlobalIndex());
                     if(cChip->getFrontEndType() == FrontEndType::CBC3)
                     {
                         std::vector<uint8_t> cExpectedHits(0);
@@ -1428,7 +1429,7 @@ void MemoryCheck2S::MemoryCheck2SRaw(bool pAllOnes)
     LOG(INFO) << BOLDMAGENTA << "Re-setting sparisfication after data checker ." << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cBeBoardSpars = cSparsBoards.at(cBoard->getIndex())->getSummary<uint8_t>();
+        auto& cBeBoardSpars = cSparsBoards.at(cBoard->getGlobalIndex())->getSummary<uint8_t>();
         cBoard->setSparsification((cBeBoardSpars == 0) ? false : true);
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", cBeBoardSpars);
         for(auto cOpticalGroup: *cBoard)
@@ -1479,13 +1480,13 @@ void MemoryCheck2S::MemoryCheck2SSparse()
         else
             LOG(INFO) << BOLDMAGENTA << "\t... Sparsification now off " << RESET;
 
-        auto& cExpectedOccThisBoard = fExpectedOccupancy.at(cBoard->getIndex());
+        auto& cExpectedOccThisBoard = fExpectedOccupancy.at(cBoard->getGlobalIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cExpectedOccThisOG = cExpectedOccThisBoard->at(cOpticalGroup->getIndex());
+            auto& cExpectedOccThisOG = cExpectedOccThisBoard->at(cOpticalGroup->getGlobalIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cExpectedOccThisHybrid = cExpectedOccThisOG->at(cHybrid->getIndex());
+                auto& cExpectedOccThisHybrid = cExpectedOccThisOG->at(cHybrid->getGlobalIndex());
                 auto& cCic                   = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 fCicInterface->SetSparsification(cCic, cSparisfication);
                 // only 2S for now
@@ -1494,7 +1495,7 @@ void MemoryCheck2S::MemoryCheck2SSparse()
                 {
                     if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
-                    auto& cExpectedOccThisChip = cExpectedOccThisHybrid->at(cChip->getIndex());
+                    auto& cExpectedOccThisChip = cExpectedOccThisHybrid->at(cChip->getGlobalIndex());
                     for(size_t cHit = 0; cHit < cChip->size(); cHit++) { cExpectedOccThisChip->getChannel<Occupancy>(cHit).fOccupancy = (cThreshold == 1000) ? 1 : 0; }
                 } // Chip
             }     // Hybrid
@@ -1616,7 +1617,7 @@ void MemoryCheck2S::SaveOptimalTaps()
     fPhyPort.fStopTime    = fPhyPort.fStartTime;
     for(auto cBoard: *fDetectorContainer)
     {
-        // auto& cVrefCorrThisBoard = fVrefCorrections.at(cBoard->getIndex());
+        // auto& cVrefCorrThisBoard = fVrefCorrections.at(cBoard->getGlobalIndex());
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
@@ -1655,7 +1656,7 @@ void MemoryCheck2S::ConfigureVref()
     fVrefCorrections.clear();
     for(auto cBoard: *fDetectorContainer)
     {
-        // auto& cVrefCorrThisBoard = fVrefCorrections.at(cBoard->getIndex());
+        // auto& cVrefCorrThisBoard = fVrefCorrections.at(cBoard->getGlobalIndex());
         for(auto cOpticalGroup: *cBoard)
         {
             auto& clpGBT = cOpticalGroup->flpGBT;
@@ -1708,7 +1709,7 @@ void MemoryCheck2S::ConfigureVref()
             //     << " correction is " << cCorr
             //     << RESET;
             // apply correction and check
-            // auto& cVrefCorrThisOG = cVrefCorrThisBoard->at(cOpticalGroup->getIndex());
+            // auto& cVrefCorrThisOG = cVrefCorrThisBoard->at(cOpticalGroup->getGlobalIndex());
             // auto& cVrefCorr = cVrefCorrThisOG->getSummary<uint8_t>();
             // cVrefCorr = (uint8_t)cCorr;
             fVrefCorrections.push_back((uint8_t)cCorr);
@@ -1886,17 +1887,17 @@ void MemoryCheck2S::MonitorAnalogue()
         size_t cCounter = 0;
         for(const auto cBoard: *fDetectorContainer)
         {
-            auto& cBiasThisBrd     = cAnBiases.at(cBoard->getIndex());
-            auto& cMeasThisBrd     = cAdcMeasurements.at(cBoard->getIndex());
-            auto& cFloatingThisBrd = cFloatingMonitor.at(cBoard->getIndex());
+            auto& cBiasThisBrd     = cAnBiases.at(cBoard->getGlobalIndex());
+            auto& cMeasThisBrd     = cAdcMeasurements.at(cBoard->getGlobalIndex());
+            auto& cFloatingThisBrd = cFloatingMonitor.at(cBoard->getGlobalIndex());
             // now for the analogue monitoring
             for(auto cOpticalGroup: *cBoard)
             {
                 uint8_t cVrefCorr = fVrefCorrections[cCounter];
                 cCounter++;
-                auto& cBiasThisOG     = cBiasThisBrd->at(cOpticalGroup->getIndex());
-                auto& cMeasThisOG     = cMeasThisBrd->at(cOpticalGroup->getIndex());
-                auto& cFloatingThisOG = cFloatingThisBrd->at(cOpticalGroup->getIndex());
+                auto& cBiasThisOG     = cBiasThisBrd->at(cOpticalGroup->getGlobalIndex());
+                auto& cMeasThisOG     = cMeasThisBrd->at(cOpticalGroup->getGlobalIndex());
+                auto& cFloatingThisOG = cFloatingThisBrd->at(cOpticalGroup->getGlobalIndex());
                 auto& clpGBT          = cOpticalGroup->flpGBT;
                 if(clpGBT == nullptr) continue;
                 auto clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
@@ -1927,7 +1928,7 @@ void MemoryCheck2S::MonitorAnalogue()
                         // now measure
                         for(auto cHybrid: *cOpticalGroup)
                         {
-                            auto& cFltThisHybrid = cFloatingThisOG->at(cHybrid->getIndex());
+                            auto& cFltThisHybrid = cFloatingThisOG->at(cHybrid->getGlobalIndex());
                             auto& cMeas          = cFltThisHybrid->getSummary<std::vector<float>>();
                             if(cMeasIndx == 0) cMeas.clear();
 
@@ -1966,7 +1967,7 @@ void MemoryCheck2S::MonitorAnalogue()
                         // now measure
                         for(auto cHybrid: *cOpticalGroup)
                         {
-                            auto& cMeasThisHybrid = cMeasThisOG->at(cHybrid->getIndex());
+                            auto& cMeasThisHybrid = cMeasThisOG->at(cHybrid->getGlobalIndex());
                             auto& cMeasThisChip   = cMeasThisHybrid->at(cChipIndx);
                             auto& cMeas           = cMeasThisChip->getSummary<std::vector<float>>();
                             if(cMeasIndx == 0) cMeas.clear();
@@ -1987,12 +1988,12 @@ void MemoryCheck2S::MonitorAnalogue()
 
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        auto& cMeasThisHybrid = cMeasThisOG->at(cHybrid->getIndex());
+                        auto& cMeasThisHybrid = cMeasThisOG->at(cHybrid->getGlobalIndex());
                         auto& cMeasThisChip   = cMeasThisHybrid->at(cChipIndx);
                         auto& cMeas           = cMeasThisChip->getSummary<std::vector<float>>();
                         auto  cStats          = SummarizeStats<float>(cMeas);
                         //
-                        auto&   cBiasThisHybrid      = cBiasThisOG->at(cHybrid->getIndex());
+                        auto&   cBiasThisHybrid      = cBiasThisOG->at(cHybrid->getGlobalIndex());
                         auto&   cBiasThisChip        = cBiasThisHybrid->at(cChipIndx);
                         auto&   cBias                = cBiasThisChip->getSummary<AdcMeasurements>();
                         uint8_t cADCsel              = (cHybrid->getId() % 2 == 0) ? 3 : 0;
@@ -2046,13 +2047,13 @@ void MemoryCheck2S::Check()
     size_t cNCorruptedCells = 0;
     for(auto cBoard: *fDetectorContainer)
     {
-        auto&                      cPkgDelayThisBrd   = fPackageDelays->at(cBoard->getIndex());
+        auto&                      cPkgDelayThisBrd   = fPackageDelays->at(cBoard->getGlobalIndex());
         auto&                      cPkgDelay          = cPkgDelayThisBrd->getSummary<uint8_t>();
-        auto&                      cThThisBoard       = fThresholds.at(cBoard->getIndex());
-        auto&                      cThNoiseThisBrd    = fThresholdAndNoiseContainer->at(cBoard->getIndex());
-        auto&                      cMemEventsThisBrd  = cMemEvents.at(cBoard->getIndex());
-        auto&                      cBadEventsThisBrd  = cCorruptedEvents.at(cBoard->getIndex());
-        auto&                      cExpectedOcThisBrd = fExpectedOccupancy.at(cBoard->getIndex());
+        auto&                      cThThisBoard       = fThresholds.at(cBoard->getGlobalIndex());
+        auto&                      cThNoiseThisBrd    = fThresholdAndNoiseContainer->at(cBoard->getGlobalIndex());
+        auto&                      cMemEventsThisBrd  = cMemEvents.at(cBoard->getGlobalIndex());
+        auto&                      cBadEventsThisBrd  = cCorruptedEvents.at(cBoard->getGlobalIndex());
+        auto&                      cExpectedOcThisBrd = fExpectedOccupancy.at(cBoard->getGlobalIndex());
         const std::vector<Event*>& cEvents            = this->GetEvents();
         LOG(INFO) << BOLDMAGENTA << "Running check on " << +cEvents.size() << " events from BeBoard#" << +cBoard->getId() << RESET;
         fReadoutSuccess = (cEvents.size() == fTotalEventsExpected) ? 1 : 0;
@@ -2068,36 +2069,36 @@ void MemoryCheck2S::Check()
             auto cTrialNumber             = fTrialCount[cEvntCnt];
             for(auto cOpticalGroup: *cBoard)
             {
-                auto& cThThisOG         = cThThisBoard->at(cOpticalGroup->getIndex());
-                auto& cThNoiseThisOG    = cThNoiseThisBrd->at(cOpticalGroup->getIndex());
-                auto& cMemEventsThisOG  = cMemEventsThisBrd->at(cOpticalGroup->getIndex());
-                auto& cBadEventsThisOG  = cBadEventsThisBrd->at(cOpticalGroup->getIndex());
-                auto& cExpectedOcThisOG = cExpectedOcThisBrd->at(cOpticalGroup->getIndex());
+                auto& cThThisOG         = cThThisBoard->at(cOpticalGroup->getGlobalIndex());
+                auto& cThNoiseThisOG    = cThNoiseThisBrd->at(cOpticalGroup->getGlobalIndex());
+                auto& cMemEventsThisOG  = cMemEventsThisBrd->at(cOpticalGroup->getGlobalIndex());
+                auto& cBadEventsThisOG  = cBadEventsThisBrd->at(cOpticalGroup->getGlobalIndex());
+                auto& cExpectedOcThisOG = cExpectedOcThisBrd->at(cOpticalGroup->getGlobalIndex());
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    auto& cThThisHybrid         = cThThisOG->at(cHybrid->getIndex());
-                    auto& cThNoiseThisHybrid    = cThNoiseThisOG->at(cHybrid->getIndex());
-                    auto& cMemEventsThisHybrid  = cMemEventsThisOG->at(cHybrid->getIndex());
-                    auto& cBadEventsThisHybrid  = cBadEventsThisOG->at(cHybrid->getIndex());
-                    auto& cExpectedOcThisHybrid = cExpectedOcThisOG->at(cHybrid->getIndex());
+                    auto& cThThisHybrid         = cThThisOG->at(cHybrid->getGlobalIndex());
+                    auto& cThNoiseThisHybrid    = cThNoiseThisOG->at(cHybrid->getGlobalIndex());
+                    auto& cMemEventsThisHybrid  = cMemEventsThisOG->at(cHybrid->getGlobalIndex());
+                    auto& cBadEventsThisHybrid  = cBadEventsThisOG->at(cHybrid->getGlobalIndex());
+                    auto& cExpectedOcThisHybrid = cExpectedOcThisOG->at(cHybrid->getGlobalIndex());
                     // only 2S for now
                     for(auto cChip: *cHybrid)
                     {
                         if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
-                        auto& cThThisChip   = cThThisHybrid->at(cChip->getIndex());
+                        auto& cThThisChip   = cThThisHybrid->at(cChip->getGlobalIndex());
                         auto& cThresholdSet = cThThisChip->getSummary<uint16_t>();
 
-                        auto& cThNoiseThisChip   = cThNoiseThisHybrid->at(cChip->getIndex());
-                        auto& cMemEventsThisChip = cMemEventsThisHybrid->at(cChip->getIndex());
+                        auto& cThNoiseThisChip   = cThNoiseThisHybrid->at(cChip->getGlobalIndex());
+                        auto& cMemEventsThisChip = cMemEventsThisHybrid->at(cChip->getGlobalIndex());
                         auto& cMemEventsSummary  = cMemEventsThisChip->getSummary<MemEvents>();
 
-                        auto& cBadEventsThisChip = cBadEventsThisHybrid->at(cChip->getIndex());
+                        auto& cBadEventsThisChip = cBadEventsThisHybrid->at(cChip->getGlobalIndex());
                         auto& cBadEventsSummary  = cBadEventsThisChip->getSummary<MemEvents>();
 
                         if(cEvntCnt == 0) cMemEventsSummary.clear();
 
-                        auto& cExpectedOcThisChip = cExpectedOcThisHybrid->at(cChip->getIndex());
+                        auto& cExpectedOcThisChip = cExpectedOcThisHybrid->at(cChip->getGlobalIndex());
                         //
                         auto cStubs           = cEvent->StubVector(cHybrid->getId(), cChip->getId());
                         auto cHits            = cEvent->GetHits(cHybrid->getId(), cChip->getId());
@@ -2135,10 +2136,10 @@ void MemoryCheck2S::Check()
                         if(fMemEvent.fType == 3)
                         {
                             CopyEvent(fStubEvent, fMemEvent);
-                            auto& cExpectdStubsThisBoard  = fExpectedStubs.at(cBoard->getIndex());
-                            auto& cExpectdStubsThisOG     = cExpectdStubsThisBoard->at(cOpticalGroup->getIndex());
-                            auto& cExpectdStubsThisHybrid = cExpectdStubsThisOG->at(cHybrid->getIndex());
-                            auto& cExpectdStubsThisChip   = cExpectdStubsThisHybrid->at(cChip->getIndex());
+                            auto& cExpectdStubsThisBoard  = fExpectedStubs.at(cBoard->getGlobalIndex());
+                            auto& cExpectdStubsThisOG     = cExpectdStubsThisBoard->at(cOpticalGroup->getGlobalIndex());
+                            auto& cExpectdStubsThisHybrid = cExpectdStubsThisOG->at(cHybrid->getGlobalIndex());
+                            auto& cExpectdStubsThisChip   = cExpectdStubsThisHybrid->at(cChip->getGlobalIndex());
                             auto& cExpectedStubs          = cExpectdStubsThisChip->getSummary<std::vector<Stub>>();
 //
 #ifdef __USE_ROOT__

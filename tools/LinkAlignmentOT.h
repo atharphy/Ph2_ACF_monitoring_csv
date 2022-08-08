@@ -53,7 +53,7 @@ class LinkAlignmentOT : public OTTool
     {
         auto cBoardId   = pOpticalGroup->getBeBoardId();
         auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
-        return fLpGBTSamplingDelay.at((*cBoardIter)->getIndex())->at(pOpticalGroup->getIndex())->at(0)->getSummary<uint8_t>();
+        return fLpGBTSamplingDelay.at((*cBoardIter)->getGlobalIndex())->at(pOpticalGroup->getGlobalIndex())->at(0)->getSummary<uint8_t>();
     }
     std::pair<bool, uint8_t> PhaseTuneLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId);                                             // generic
     std::pair<bool, uint8_t> WordAlignLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId, uint8_t pAlignmentPattern, uint8_t pPeriod); // generic

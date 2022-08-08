@@ -25,24 +25,24 @@ void OpenFinder::Reset()
     {
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
         LOG(INFO) << BOLDBLUE << "Resetting all registers on back-end board " << +cBoard->getId() << RESET;
-        auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
+        auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getGlobalIndex())->getSummary<BeBoardRegMap>();
         std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
         cVecBeBoardRegs.clear();
         for(auto cReg: cBeRegMap) cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second));
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
 
-        auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getIndex());
+        auto& cRegMapThisBoard = fRegMapContainer.at(cBoard->getGlobalIndex());
 
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
+            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getGlobalIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getGlobalIndex());
                 LOG(INFO) << BOLDBLUE << "Resetting all registers on readout chips connected to FEhybrid#" << (cHybrid->getId()) << " back to their original values..." << RESET;
                 for(auto cChip: *cHybrid)
                 {
-                    auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>();
+                    auto&                                         cRegMapThisChip = cRegMapThisHybrid->at(cChip->getGlobalIndex())->getSummary<ChipRegMap>();
                     std::vector<std::pair<std::string, uint16_t>> cVecRegisters;
                     cVecRegisters.clear();
                     for(auto cReg: cRegMapThisChip) cVecRegisters.push_back(make_pair(cReg.first, cReg.second.fValue));
@@ -84,26 +84,26 @@ void OpenFinder::Initialise(Parameters pParameters)
     ContainerFactory::copyAndInitStructure<ScanSummaries>(*fDetectorContainer, fInTimeOccupancy);
     for(auto cBoard: *fDetectorContainer)
     {
-        fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>() = static_cast<BeBoard*>(cBoard)->getBeBoardRegMap();
-        auto& cRegMapThisBoard                                                 = fRegMapContainer.at(cBoard->getIndex());
-        auto& cOpens                                                           = fOpens.at(cBoard->getIndex());
-        auto& cOccupancy                                                       = fInTimeOccupancy.at(cBoard->getIndex());
+        fBoardRegContainer.at(cBoard->getGlobalIndex())->getSummary<BeBoardRegMap>() = static_cast<BeBoard*>(cBoard)->getBeBoardRegMap();
+        auto& cRegMapThisBoard                                                       = fRegMapContainer.at(cBoard->getGlobalIndex());
+        auto& cOpens                                                                 = fOpens.at(cBoard->getGlobalIndex());
+        auto& cOccupancy                                                             = fInTimeOccupancy.at(cBoard->getGlobalIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cOpensOpticalGroup      = cOpens->at(cOpticalGroup->getIndex());
-            auto& cOccupancyOpticalGroup  = cOccupancy->at(cOpticalGroup->getIndex());
-            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getIndex());
+            auto& cOpensOpticalGroup      = cOpens->at(cOpticalGroup->getGlobalIndex());
+            auto& cOccupancyOpticalGroup  = cOccupancy->at(cOpticalGroup->getGlobalIndex());
+            auto& cRegMapThisOpticalGroup = cRegMapThisBoard->at(cOpticalGroup->getGlobalIndex());
 
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cOpensHybrid      = cOpensOpticalGroup->at(cHybrid->getIndex());
-                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getIndex());
-                auto& cOccupancyHybrid  = cOccupancyOpticalGroup->at(cHybrid->getIndex());
+                auto& cOpensHybrid      = cOpensOpticalGroup->at(cHybrid->getGlobalIndex());
+                auto& cRegMapThisHybrid = cRegMapThisOpticalGroup->at(cHybrid->getGlobalIndex());
+                auto& cOccupancyHybrid  = cOccupancyOpticalGroup->at(cHybrid->getGlobalIndex());
                 for(auto cChip: *cHybrid)
                 {
-                    cOpensHybrid->at(cChip->getIndex())->getSummary<ChannelList>().clear();
-                    cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>() = static_cast<ReadoutChip*>(cChip)->getRegMap();
-                    auto& cThisOcc                                                     = cOccupancyHybrid->at(cChip->getIndex())->getSummary<ScanSummaries>();
+                    cOpensHybrid->at(cChip->getGlobalIndex())->getSummary<ChannelList>().clear();
+                    cRegMapThisHybrid->at(cChip->getGlobalIndex())->getSummary<ChipRegMap>() = static_cast<ReadoutChip*>(cChip)->getRegMap();
+                    auto& cThisOcc                                                           = cOccupancyHybrid->at(cChip->getGlobalIndex())->getSummary<ScanSummaries>();
                     for(int cAntennaPosition = cAntennaSwitchMinValue; cAntennaPosition < cAntennaSwitchMaxValue; cAntennaPosition++)
                     {
                         ScanSummary cSummary;
@@ -157,7 +157,7 @@ bool OpenFinder::FindLatency(BeBoard* pBoard, std::vector<uint16_t> pLatencies)
     auto  cAntennaMap            = returnAntennaMap();
     int   cAntennaSwitchMinValue = (fParameters.antennaGroup > 0) ? fParameters.antennaGroup : 1;
     auto  cBeBoard               = static_cast<BeBoard*>(pBoard);
-    auto& cSummaryThisBoard      = fInTimeOccupancy.at(pBoard->getIndex());
+    auto& cSummaryThisBoard      = fInTimeOccupancy.at(pBoard->getGlobalIndex());
     auto  cSearchAntennaMap      = cAntennaMap.find(fAntennaPosition);
     // scan latency and record optimal latency
     for(auto cLatency: pLatencies)
@@ -169,13 +169,13 @@ bool OpenFinder::FindLatency(BeBoard* pBoard, std::vector<uint16_t> pLatencies)
         const std::vector<Event*>& cEvents = this->GetEvents();
         for(auto cOpticalGroup: *pBoard)
         {
-            auto& cSummaryThisOpticalGroup = cSummaryThisBoard->at(cOpticalGroup->getIndex());
+            auto& cSummaryThisOpticalGroup = cSummaryThisBoard->at(cOpticalGroup->getGlobalIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cSummaryThisHybrid = cSummaryThisOpticalGroup->at(cHybrid->getIndex());
+                auto& cSummaryThisHybrid = cSummaryThisOpticalGroup->at(cHybrid->getGlobalIndex());
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cSummaryThisChip = cSummaryThisHybrid->at(cChip->getIndex());
+                    auto& cSummaryThisChip = cSummaryThisHybrid->at(cChip->getGlobalIndex());
                     auto& cSummary         = cSummaryThisChip->getSummary<ScanSummaries>()[fAntennaPosition - cAntennaSwitchMinValue];
 
                     auto     cConnectedChannels = cSearchAntennaMap->second.find((int)cChip->getId())->second;
@@ -204,13 +204,13 @@ bool OpenFinder::FindLatency(BeBoard* pBoard, std::vector<uint16_t> pLatencies)
     bool cFailed = false;
     for(auto cOpticalGroup: *pBoard)
     {
-        auto& cSummaryThisOpticalGroup = cSummaryThisBoard->at(cOpticalGroup->getIndex());
+        auto& cSummaryThisOpticalGroup = cSummaryThisBoard->at(cOpticalGroup->getGlobalIndex());
         for(auto cHybrid: *cOpticalGroup)
         {
-            auto& cSummaryThisHybrid = cSummaryThisOpticalGroup->at(cHybrid->getIndex());
+            auto& cSummaryThisHybrid = cSummaryThisOpticalGroup->at(cHybrid->getGlobalIndex());
             for(auto cChip: *cHybrid)
             {
-                auto& cSummaryThisChip = cSummaryThisHybrid->at(cChip->getIndex())->getSummary<ScanSummaries>()[fAntennaPosition - cAntennaSwitchMinValue];
+                auto& cSummaryThisChip = cSummaryThisHybrid->at(cChip->getGlobalIndex())->getSummary<ScanSummaries>()[fAntennaPosition - cAntennaSwitchMinValue];
                 auto  cReadoutChip     = static_cast<ReadoutChip*>(cChip);
                 fReadoutChipInterface->WriteChipReg(cReadoutChip, "TriggerLatency", cSummaryThisChip.first);
                 LOG(INFO) << BOLDBLUE << "Optimal latency "
@@ -241,20 +241,20 @@ void OpenFinder::CountOpens(BeBoard* pBoard)
     this->ReadNEvents(cBeBoard, fEventsPerPoint);
     const std::vector<Event*>& cEvents = this->GetEvents();
 
-    auto& cOpens            = fOpens.at(pBoard->getIndex());
-    auto& cSummaryThisBoard = cMeasurement.at(pBoard->getIndex());
+    auto& cOpens            = fOpens.at(pBoard->getGlobalIndex());
+    auto& cSummaryThisBoard = cMeasurement.at(pBoard->getGlobalIndex());
     for(auto cOpticalGroup: *pBoard)
     {
-        auto& cOpensThisOpticalGroup   = cOpens->at(cOpticalGroup->getIndex());
-        auto& cSummaryThisOpticalGroup = cSummaryThisBoard->at(cOpticalGroup->getIndex());
+        auto& cOpensThisOpticalGroup   = cOpens->at(cOpticalGroup->getGlobalIndex());
+        auto& cSummaryThisOpticalGroup = cSummaryThisBoard->at(cOpticalGroup->getGlobalIndex());
         for(auto cHybrid: *cOpticalGroup)
         {
-            auto& cOpensThisHybrid   = cOpensThisOpticalGroup->at(cHybrid->getIndex());
-            auto& cSummaryThisHybrid = cSummaryThisOpticalGroup->at(cHybrid->getIndex());
+            auto& cOpensThisHybrid   = cOpensThisOpticalGroup->at(cHybrid->getGlobalIndex());
+            auto& cSummaryThisHybrid = cSummaryThisOpticalGroup->at(cHybrid->getGlobalIndex());
             for(auto cChip: *cHybrid)
             {
                 auto  cConnectedChannels = cSearchAntennaMap->second.find((int)cChip->getId())->second;
-                auto& cSummaryThisChip   = cSummaryThisHybrid->at(cChip->getIndex());
+                auto& cSummaryThisChip   = cSummaryThisHybrid->at(cChip->getGlobalIndex());
                 for(auto cEvent: cEvents)
                 {
                     auto cHits = cEvent->GetHits(cHybrid->getId(), cChip->getId());
@@ -264,7 +264,7 @@ void OpenFinder::CountOpens(BeBoard* pBoard)
                     }
                 }
 
-                auto& cOpensThisChip = cOpensThisHybrid->at(cChip->getIndex())->getSummary<ChannelList>();
+                auto& cOpensThisChip = cOpensThisHybrid->at(cChip->getGlobalIndex())->getSummary<ChannelList>();
                 for(auto cConnectedChannel: cConnectedChannels)
                 {
                     if(cSummaryThisChip->getChannelContainer<Occupancy>()->at(cConnectedChannel).fOccupancy > THRESHOLD_OPEN * fEventsPerPoint)
@@ -283,7 +283,7 @@ void OpenFinder::Print()
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cOpens = fOpens.at(cBoard->getIndex());
+        auto& cOpens = fOpens.at(cBoard->getGlobalIndex());
         for(auto cOpticalGroup: *cBoard)
         {
             // create TTree for opens: opensTree
@@ -297,13 +297,13 @@ void OpenFinder::Print()
             OpensTree->Branch("CBC", &nCBC);
             OpensTree->Branch("Channels", &openChannels);
 
-            auto& cOpensThisOpticalGroup = cOpens->at(cOpticalGroup->getIndex());
+            auto& cOpensThisOpticalGroup = cOpens->at(cOpticalGroup->getGlobalIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cOpensThisHybrid = cOpensThisOpticalGroup->at(cOpticalGroup->getIndex());
+                auto& cOpensThisHybrid = cOpensThisOpticalGroup->at(cOpticalGroup->getGlobalIndex());
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cOpensThisChip = cOpensThisHybrid->at(cChip->getIndex())->getSummary<ChannelList>();
+                    auto& cOpensThisChip = cOpensThisHybrid->at(cChip->getGlobalIndex())->getSummary<ChannelList>();
 
                     // empty openChannels vector
                     openChannels.clear();
@@ -574,11 +574,11 @@ void OpenFinder::FindOpensPS()
     //                       {
     //                           if(cChip->getFrontEndType() == FrontEndType::SSA)
     //                           {
-    //                               //   TH2F* fOccupancyHist = fOccupancyHistVect[cChip->getIndex()+cPosition];
+    //                               //   TH2F* fOccupancyHist = fOccupancyHistVect[cChip->getGlobalIndex()+cPosition];
 
     //                               //   fOccupancyHist->Clear();
 
-    //                               BeBoard* cBeBoard = static_cast<BeBoard*>(fDetectorContainer->at(cBoard->getIndex()));
+    //                               BeBoard* cBeBoard = static_cast<BeBoard*>(fDetectorContainer->at(cBoard->getGlobalIndex()));
     //                               this->ReadNEvents(cBeBoard, fParameters.nTriggers);
     //                               const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
     //                               for(auto cEvent: cEvents)
@@ -591,7 +591,7 @@ void OpenFinder::FindOpensPS()
     //                                       if(iChannel % 2 == cPosition)
     //                                       {
     //                                           occupancy_avg += cHitVector[iChannel];
-    //                                           fOccupancyHistVect[2 * cChip->getIndex() + cPosition]->Fill(antennaPullup, iChannel, cHitVector[iChannel]);
+    //                                           fOccupancyHistVect[2 * cChip->getGlobalIndex() + cPosition]->Fill(antennaPullup, iChannel, cHitVector[iChannel]);
     //                                           if(cHitVector[iChannel] >= fParameters.nTriggers)
     //                                           {
     //                                               high_outliers_channels++;
@@ -668,7 +668,7 @@ void OpenFinder::FindOpensPS()
                                     SelectAntennaPosition((cPosition == 0) ? "EvenChannels" : "OddChannels");
                                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
                                     // check counters
-                                    BeBoard* cBeBoard = static_cast<BeBoard*>(fDetectorContainer->at(cBoard->getIndex()));
+                                    BeBoard* cBeBoard = static_cast<BeBoard*>(fDetectorContainer->at(cBoard->getGlobalIndex()));
                                     this->ReadNEvents(cBeBoard, fParameters.nTriggers);
                                     const std::vector<Event*>& cEvents = this->GetEvents();
                                     // const std::vector<Event*>& cEvents = this->GetEvents(cBeBoard);
@@ -700,9 +700,9 @@ void OpenFinder::FindOpensPS()
                                             antenna_set = true;
                                             LOG(INFO) << BOLDGREEN << "Antenna value for " << chn << " channels of chip " << +cChip->getId() << " set to " << antennaPullup << RESET;
                                             if(cPosition == 0)
-                                                finalAntennaEven[cChip->getIndex()] = antennaPullup;
+                                                finalAntennaEven[cChip->getGlobalIndex()] = antennaPullup;
                                             else
-                                                finalAntennaOdd[cChip->getIndex()] = antennaPullup;
+                                                finalAntennaOdd[cChip->getGlobalIndex()] = antennaPullup;
                                         }
                                         else if(occupancy_avg < 0.90)
                                         {
@@ -760,15 +760,15 @@ void OpenFinder::FindOpensPS()
                             // Get Antenna value for chip and channels
                             if(cPosition == 0)
                             {
-                                if(finalAntennaEven[cChip->getIndex()] > 0)
+                                if(finalAntennaEven[cChip->getGlobalIndex()] > 0)
                                 {
                                     //   if (cChip->getId() == 6) {
                                     //     fParameters.potentiometer = 600;
                                     //     LOG(INFO) << "Potentiometer value: " << 600 << RESET;
                                     //   }
                                     //   else {
-                                    fParameters.potentiometer = finalAntennaEven[cChip->getIndex()] + 5;
-                                    LOG(INFO) << "Potentiometer value: " << finalAntennaEven[cChip->getIndex()] << RESET;
+                                    fParameters.potentiometer = finalAntennaEven[cChip->getGlobalIndex()] + 5;
+                                    LOG(INFO) << "Potentiometer value: " << finalAntennaEven[cChip->getGlobalIndex()] << RESET;
                                     ;
                                     // }
                                     Channels = "Even";
@@ -781,15 +781,15 @@ void OpenFinder::FindOpensPS()
                             }
                             else
                             {
-                                if(finalAntennaOdd[cChip->getIndex()] > 0)
+                                if(finalAntennaOdd[cChip->getGlobalIndex()] > 0)
                                 {
                                     // if (cChip->getId() == 1) {
                                     // fParameters.potentiometer = 781;
                                     // LOG(INFO) << "Potentiometer value: " << 781 << RESET;
                                     // }
                                     // else {
-                                    fParameters.potentiometer = finalAntennaOdd[cChip->getIndex()] + 5;
-                                    LOG(INFO) << "Potentiometer value: " << finalAntennaOdd[cChip->getIndex()];
+                                    fParameters.potentiometer = finalAntennaOdd[cChip->getGlobalIndex()] + 5;
+                                    LOG(INFO) << "Potentiometer value: " << finalAntennaOdd[cChip->getGlobalIndex()];
                                     // }
                                     Channels = "Odd";
                                 }
@@ -799,13 +799,13 @@ void OpenFinder::FindOpensPS()
                                     continue;
                                 }
                             }
-                            // FillSummaryTree(Form("Antenna_",cChip->GetId(),Channels), finalAntennaEven[cChip->getIndex()] );
+                            // FillSummaryTree(Form("Antenna_",cChip->GetId(),Channels), finalAntennaEven[cChip->getGlobalIndex()] );
 
                             // select antenna position
                             SelectAntennaPosition((cPosition == 0) ? "EvenChannels" : "OddChannels");
 
                             // check counters
-                            BeBoard* cBeBoard = static_cast<BeBoard*>(fDetectorContainer->at(cBoard->getIndex()));
+                            BeBoard* cBeBoard = static_cast<BeBoard*>(fDetectorContainer->at(cBoard->getGlobalIndex()));
                             // cBeBoard->setEventType(EventType::SSAAS);
 
                             this->ReadNEvents(cBeBoard, fParameters.nTriggers);

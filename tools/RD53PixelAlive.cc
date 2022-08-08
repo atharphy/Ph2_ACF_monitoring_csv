@@ -199,19 +199,19 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                 {
                     size_t nMaskedPixelsPerCalib = 0;
                     if(injType == INJtype::None)
-                        theOccContainer->at(cBoard->getIndex())
-                            ->at(cOpticalGroup->getIndex())
-                            ->at(cHybrid->getIndex())
-                            ->at(cChip->getIndex())
+                        theOccContainer->at(cBoard->getGlobalIndex())
+                            ->at(cOpticalGroup->getGlobalIndex())
+                            ->at(cHybrid->getGlobalIndex())
+                            ->at(cChip->getGlobalIndex())
                             ->getSummary<GenericDataVector, OccupancyAndPh>()
                             .fOccupancy /= nTRIGxEvent;
 
                     LOG(INFO) << GREEN << "Average occupancy for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                               << +cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW
-                              << theOccContainer->at(cBoard->getIndex())
-                                     ->at(cOpticalGroup->getIndex())
-                                     ->at(cHybrid->getIndex())
-                                     ->at(cChip->getIndex())
+                              << theOccContainer->at(cBoard->getGlobalIndex())
+                                     ->at(cOpticalGroup->getGlobalIndex())
+                                     ->at(cHybrid->getGlobalIndex())
+                                     ->at(cChip->getGlobalIndex())
                                      ->getSummary<GenericDataVector, OccupancyAndPh>()
                                      .fOccupancy
                               << RESET;
@@ -221,26 +221,26 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                         for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                             if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
-                                                                                                                   ->at(cBoard->getIndex())
-                                                                                                                   ->at(cOpticalGroup->getIndex())
-                                                                                                                   ->at(cHybrid->getIndex())
-                                                                                                                   ->at(cChip->getIndex())
+                                                                                                                   ->at(cBoard->getGlobalIndex())
+                                                                                                                   ->at(cOpticalGroup->getGlobalIndex())
+                                                                                                                   ->at(cHybrid->getGlobalIndex())
+                                                                                                                   ->at(cChip->getGlobalIndex())
                                                                                                                    ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                                                                                                    ->allChannelGroup()
                                                                                                                    ->isChannelEnabled(row, col))
                             {
                                 if(injType == INJtype::None)
-                                    theOccContainer->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
+                                    theOccContainer->at(cBoard->getGlobalIndex())
+                                        ->at(cOpticalGroup->getGlobalIndex())
+                                        ->at(cHybrid->getGlobalIndex())
+                                        ->at(cChip->getGlobalIndex())
                                         ->getChannel<OccupancyAndPh>(row, col)
                                         .fOccupancy /= nTRIGxEvent;
 
-                                float occupancy = theOccContainer->at(cBoard->getIndex())
-                                                      ->at(cOpticalGroup->getIndex())
-                                                      ->at(cHybrid->getIndex())
-                                                      ->at(cChip->getIndex())
+                                float occupancy = theOccContainer->at(cBoard->getGlobalIndex())
+                                                      ->at(cOpticalGroup->getGlobalIndex())
+                                                      ->at(cHybrid->getGlobalIndex())
+                                                      ->at(cChip->getGlobalIndex())
                                                       ->getChannel<OccupancyAndPh>(row, col)
                                                       .fOccupancy;
                                 bool enable = (injType == INJtype::None ? occupancy <= thrOccupancy : occupancy >= thrOccupancy);
@@ -263,70 +263,80 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                     // # Copy register values for streaming #
                     // ######################################
                     for(auto i = 0u; i < BCIDsize; i++)
-                        theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[i] = 0;
+                        theBCIDContainer.at(cBoard->getGlobalIndex())
+                            ->at(cOpticalGroup->getGlobalIndex())
+                            ->at(cHybrid->getGlobalIndex())
+                            ->at(cChip->getGlobalIndex())
+                            ->getSummary<GenericDataArray<BCIDsize>>()
+                            .data[i] = 0;
                     for(auto i = 0u; i < TrgIDsize; i++)
-                        theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[i] = 0;
+                        theTrgIDContainer.at(cBoard->getGlobalIndex())
+                            ->at(cOpticalGroup->getGlobalIndex())
+                            ->at(cHybrid->getGlobalIndex())
+                            ->at(cChip->getGlobalIndex())
+                            ->getSummary<GenericDataArray<TrgIDsize>>()
+                            .data[i] = 0;
 
-                    for(auto i = 1u; i < theOccContainer->at(cBoard->getIndex())
-                                             ->at(cOpticalGroup->getIndex())
-                                             ->at(cHybrid->getIndex())
-                                             ->at(cChip->getIndex())
+                    for(auto i = 1u; i < theOccContainer->at(cBoard->getGlobalIndex())
+                                             ->at(cOpticalGroup->getGlobalIndex())
+                                             ->at(cHybrid->getGlobalIndex())
+                                             ->at(cChip->getGlobalIndex())
                                              ->getSummary<GenericDataVector, OccupancyAndPh>()
                                              .data1.size();
                         i++)
                     {
-                        long int deltaBCID = theOccContainer->at(cBoard->getIndex())
-                                                 ->at(cOpticalGroup->getIndex())
-                                                 ->at(cHybrid->getIndex())
-                                                 ->at(cChip->getIndex())
+                        long int deltaBCID = theOccContainer->at(cBoard->getGlobalIndex())
+                                                 ->at(cOpticalGroup->getGlobalIndex())
+                                                 ->at(cHybrid->getGlobalIndex())
+                                                 ->at(cChip->getGlobalIndex())
                                                  ->getSummary<GenericDataVector, OccupancyAndPh>()
                                                  .data1[i] -
-                                             theOccContainer->at(cBoard->getIndex())
-                                                 ->at(cOpticalGroup->getIndex())
-                                                 ->at(cHybrid->getIndex())
-                                                 ->at(cChip->getIndex())
+                                             theOccContainer->at(cBoard->getGlobalIndex())
+                                                 ->at(cOpticalGroup->getGlobalIndex())
+                                                 ->at(cHybrid->getGlobalIndex())
+                                                 ->at(cChip->getGlobalIndex())
                                                  ->getSummary<GenericDataVector, OccupancyAndPh>()
                                                  .data1[i - 1];
                         deltaBCID += (deltaBCID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
                         if(deltaBCID >= int(BCIDsize))
                             LOG(ERROR) << BOLDBLUE << "[PixelAlive::analyze] " << BOLDRED << "deltaBCID out of range: " << BOLDYELLOW << deltaBCID << RESET;
                         else
-                            theBCIDContainer.at(cBoard->getIndex())
-                                ->at(cOpticalGroup->getIndex())
-                                ->at(cHybrid->getIndex())
-                                ->at(cChip->getIndex())
+                            theBCIDContainer.at(cBoard->getGlobalIndex())
+                                ->at(cOpticalGroup->getGlobalIndex())
+                                ->at(cHybrid->getGlobalIndex())
+                                ->at(cChip->getGlobalIndex())
                                 ->getSummary<GenericDataArray<BCIDsize>>()
                                 .data[deltaBCID]++;
                     }
 
-                    for(auto i = 1u; i < theOccContainer->at(cBoard->getIndex())
-                                             ->at(cOpticalGroup->getIndex())
-                                             ->at(cHybrid->getIndex())
-                                             ->at(cChip->getIndex())
+                    for(auto i = 1u; i < theOccContainer->at(cBoard->getGlobalIndex())
+                                             ->at(cOpticalGroup->getGlobalIndex())
+                                             ->at(cHybrid->getGlobalIndex())
+                                             ->at(cChip->getGlobalIndex())
                                              ->getSummary<GenericDataVector, OccupancyAndPh>()
                                              .data2.size();
                         i++)
                     {
-                        long int deltaTrgID = theOccContainer->at(cBoard->getIndex())
-                                                  ->at(cOpticalGroup->getIndex())
-                                                  ->at(cHybrid->getIndex())
-                                                  ->at(cChip->getIndex())
+                        long int deltaTrgID = theOccContainer->at(cBoard->getGlobalIndex())
+                                                  ->at(cOpticalGroup->getGlobalIndex())
+                                                  ->at(cHybrid->getGlobalIndex())
+                                                  ->at(cChip->getGlobalIndex())
                                                   ->getSummary<GenericDataVector, OccupancyAndPh>()
                                                   .data2[i] -
-                                              theOccContainer->at(cBoard->getIndex())
-                                                  ->at(cOpticalGroup->getIndex())
-                                                  ->at(cHybrid->getIndex())
-                                                  ->at(cChip->getIndex())
+                                              theOccContainer->at(cBoard->getGlobalIndex())
+                                                  ->at(cOpticalGroup->getGlobalIndex())
+                                                  ->at(cHybrid->getGlobalIndex())
+                                                  ->at(cChip->getGlobalIndex())
                                                   ->getSummary<GenericDataVector, OccupancyAndPh>()
                                                   .data2[i - 1];
                         deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
                         if(deltaTrgID >= int(TrgIDsize))
                             LOG(ERROR) << BOLDBLUE << "[PixelAlive::analyze] " << BOLDRED << "deltaTrgID out of range: " << BOLDYELLOW << deltaTrgID << RESET;
                         else
-                            theTrgIDContainer.at(cBoard->getIndex())
-                                ->at(cOpticalGroup->getIndex())
-                                ->at(cHybrid->getIndex())
-                                ->at(cChip->getIndex())
+                            theTrgIDContainer.at(cBoard->getGlobalIndex())
+                                ->at(cOpticalGroup->getGlobalIndex())
+                                ->at(cHybrid->getGlobalIndex())
+                                ->at(cChip->getGlobalIndex())
                                 ->getSummary<GenericDataArray<TrgIDsize>>()
                                 .data[deltaTrgID]++;
                     }

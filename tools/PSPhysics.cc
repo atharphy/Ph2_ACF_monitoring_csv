@@ -141,7 +141,7 @@ void PSPhysics::Running()
 // {
 //     auto thePSSyncStream = prepareChipContainerStreamer<EmptyContainer, PSSync<MAX_NUMBER_OF_STRIP_CLUSTERS, MAX_NUMBER_OF_PIXEL_CLUSTERS,MAX_NUMBER_OF_STUB_CLUSTERS_PS>>();
 
-//     if(fDQMStreamerEnabled == true) { thePSSyncStream->streamAndSendBoard(fPSSyncContainer.at(cBoard->getIndex()), fDQMStreamer); }
+//     if(fDQMStreamerEnabled == true) { thePSSyncStream->streamAndSendBoard(fPSSyncContainer.at(cBoard->getGlobalIndex()), fDQMStreamer); }
 // }
 
 void PSPhysics::sendBoardData(BoardContainer* const& cBoard)
@@ -167,8 +167,8 @@ void PSPhysics::sendBoardData(BoardContainer* const& cBoard)
 
     if(fDQMStreamerEnabled == true)
     {
-        theOccupancyStream->streamAndSendBoard(fOccupancyContainer.at(cBoard->getIndex()), fDQMStreamer);
-        theStubStream->streamAndSendBoard(fStubContainer.at(cBoard->getIndex()), fDQMStreamer);
+        theOccupancyStream->streamAndSendBoard(fOccupancyContainer.at(cBoard->getGlobalIndex()), fDQMStreamer);
+        theStubStream->streamAndSendBoard(fStubContainer.at(cBoard->getGlobalIndex()), fDQMStreamer);
     }
 }
 
@@ -301,7 +301,7 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
         // ###################
         // # Fill containers #
         // ###################
-        for(const auto cOpticalGroup: *fOccupancyContainer.at(cBoard->getIndex()))
+        for(const auto cOpticalGroup: *fOccupancyContainer.at(cBoard->getGlobalIndex()))
         {
             for(const auto cHybrid: *cOpticalGroup)
             {
@@ -311,7 +311,7 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
                 for(const auto cChip: *cHybrid)
                 {
                     // std::cout<<__LINE__<<std::endl;
-                    auto currentChip = fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex());
+                    auto currentChip = fDetectorContainer->at(cBoard->getGlobalIndex())->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex());
                     if(currentChip->getFrontEndType() != FrontEndType::MPA) continue;
 
                     // std::cout<<__LINE__<<std::endl;
@@ -330,7 +330,8 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
                     }
 
                     // std::cout<<__LINE__<<std::endl;
-                    ChipDataContainer* theStubChipContainer = fStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex());
+                    ChipDataContainer* theStubChipContainer =
+                        fStubContainer.at(cBoard->getGlobalIndex())->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex());
                     // std::cout<<__LINE__<<std::endl;
                     for(auto& stub: stubList)
                     {
@@ -363,12 +364,12 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
 
                     // std::cout<<__LINE__<<std::endl;
                     uint16_t theCorrespondingSSAIndex = 9999;
-                    for(auto theCorrespondingSSA: *fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex()))
+                    for(auto theCorrespondingSSA: *fDetectorContainer->at(cBoard->getGlobalIndex())->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex()))
                     {
                         if(theCorrespondingSSA->getFrontEndType() != FrontEndType::SSA) continue;
                         if(theCorrespondingSSA->getId() == currentChip->getId())
                         {
-                            theCorrespondingSSAIndex = theCorrespondingSSA->getIndex();
+                            theCorrespondingSSAIndex = theCorrespondingSSA->getGlobalIndex();
                             break;
                         }
                     }
@@ -399,7 +400,7 @@ void PSPhysics::clearContainers(BoardContainer* theBoard)
     // ####################
     // # Clear containers #
     // ####################
-    for(const auto cOpticalGroup: *fOccupancyContainer.at(theBoard->getIndex()))
+    for(const auto cOpticalGroup: *fOccupancyContainer.at(theBoard->getGlobalIndex()))
     {
         for(const auto cHybrid: *cOpticalGroup)
         {
@@ -410,7 +411,7 @@ void PSPhysics::clearContainers(BoardContainer* theBoard)
         }
     }
 
-    for(const auto cOpticalGroup: *fStubContainer.at(theBoard->getIndex()))
+    for(const auto cOpticalGroup: *fStubContainer.at(theBoard->getGlobalIndex()))
     {
         for(const auto cHybrid: *cOpticalGroup)
         {

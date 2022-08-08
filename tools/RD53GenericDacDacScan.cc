@@ -185,10 +185,10 @@ void GenericDacDacScan::analyze()
                     for(auto i = 0u; i < dac1List.size(); i++)
                         for(auto j = 0u; j < dac2List.size(); j++)
                         {
-                            auto current = theOccContainer.at(cBoard->getIndex())
-                                               ->at(cOpticalGroup->getIndex())
-                                               ->at(cHybrid->getIndex())
-                                               ->at(cChip->getIndex())
+                            auto current = theOccContainer.at(cBoard->getGlobalIndex())
+                                               ->at(cOpticalGroup->getGlobalIndex())
+                                               ->at(cHybrid->getGlobalIndex())
+                                               ->at(cChip->getGlobalIndex())
                                                ->getSummary<GenericDataArray<GenericDacDacScanSize>>()
                                                .data[i * dac2List.size() + j];
                             if(current > best)
@@ -206,8 +206,11 @@ void GenericDacDacScan::analyze()
                     // ######################################################
                     // # Fill latency container and download new DAC values #
                     // ######################################################
-                    theGenericDacDacScanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::pair<uint16_t, uint16_t>>() =
-                        std::pair<uint16_t, uint16_t>(regVal1, regVal2);
+                    theGenericDacDacScanContainer.at(cBoard->getGlobalIndex())
+                        ->at(cOpticalGroup->getGlobalIndex())
+                        ->at(cHybrid->getGlobalIndex())
+                        ->at(cChip->getGlobalIndex())
+                        ->getSummary<std::pair<uint16_t, uint16_t>>() = std::pair<uint16_t, uint16_t>(regVal1, regVal2);
                 }
 }
 
@@ -268,10 +271,10 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
                         for(const auto cChip: *cHybrid)
                         {
                             float occ = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
-                            theContainer->at(cBoard->getIndex())
-                                ->at(cOpticalGroup->getIndex())
-                                ->at(cHybrid->getIndex())
-                                ->at(cChip->getIndex())
+                            theContainer->at(cBoard->getGlobalIndex())
+                                ->at(cOpticalGroup->getGlobalIndex())
+                                ->at(cHybrid->getGlobalIndex())
+                                ->at(cChip->getGlobalIndex())
                                 ->getSummary<GenericDataArray<GenericDacDacScanSize>>()
                                 .data[i * dac2List.size() + j] = occ;
                         }

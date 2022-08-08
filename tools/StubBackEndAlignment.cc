@@ -88,7 +88,7 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
     //     //     {
     //     //         for(auto cHybrid: *cOpticalGroup)
     //     //         {
-    //     //             if(cHybrid->getIndex() > 0) continue;
+    //     //             if(cHybrid->getGlobalIndex() > 0) continue;
 
     //     //             auto cBx = (int)cEvent->BxId(cHybrid->getId());
     //     //             if(cBxIds.size() > 0)
@@ -168,7 +168,7 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    if(cHybrid->getIndex() > 0) continue;
+                    if(cHybrid->getGlobalIndex() > 0) continue;
 
                     auto cBx = (int)cEvent->BxId(cHybrid->getId());
                     if(cBxIds.size() > 0)

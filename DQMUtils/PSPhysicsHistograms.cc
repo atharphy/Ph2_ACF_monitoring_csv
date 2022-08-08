@@ -61,22 +61,22 @@ void PSPhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
 // 			{
 //                 for(const auto chip: *hybrid)
 //                 {
-//                     TH1F* SClusterHistograms = fSClusterHistograms.at(board->getIndex())
-//                                                         ->at(opticalGroup->getIndex())
-//                                                         ->at(hybrid->getIndex())
-//                                                         ->at(chip->getIndex())
+//                     TH1F* SClusterHistograms = fSClusterHistograms.at(board->getGlobalIndex())
+//                                                         ->at(opticalGroup->getGlobalIndex())
+//                                                         ->at(hybrid->getGlobalIndex())
+//                                                         ->at(chip->getGlobalIndex())
 //                                                         ->getSummary<HistContainer<TH1F>>()
 //                                                         .fTheHistogram;
-//                     TH2F* PClusterHistograms = fPClusterHistograms.at(board->getIndex())
-//                                                         ->at(opticalGroup->getIndex())
-//                                                         ->at(hybrid->getIndex())
-//                                                         ->at(chip->getIndex())
+//                     TH2F* PClusterHistograms = fPClusterHistograms.at(board->getGlobalIndex())
+//                                                         ->at(opticalGroup->getGlobalIndex())
+//                                                         ->at(hybrid->getGlobalIndex())
+//                                                         ->at(chip->getGlobalIndex())
 //                                                         ->getSummary<HistContainer<TH2F>>()
 //                                                         .fTheHistogram;
-//                     TH2F* StubHistograms = fStubHistogramContainer.at(board->getIndex())
-//                                                         ->at(opticalGroup->getIndex())
-//                                                         ->at(hybrid->getIndex())
-//                                                         ->at(chip->getIndex())
+//                     TH2F* StubHistograms = fStubHistogramContainer.at(board->getGlobalIndex())
+//                                                         ->at(opticalGroup->getGlobalIndex())
+//                                                         ->at(hybrid->getGlobalIndex())
+//                                                         ->at(chip->getGlobalIndex())
 //                                                         ->getSummary<HistContainer<TH2F>>()
 //                                                         .fTheHistogram;
 //                     if(!chip->hasSummary()) continue;
@@ -122,19 +122,20 @@ void PSPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContain
                     if(chip->getChannelContainer<float>() == nullptr) continue;
 
                     // std::cout<<__LINE__<<std::endl;
-                    // std::cout<<"board = "<<board->getIndex()<<std::endl;
-                    // std::cout<<"opticalGroup = "<<opticalGroup->getIndex()<<std::endl;
-                    // std::cout<<"hybrid = "<<hybrid->getIndex()<<std::endl;
-                    // std::cout<<"chip = "<<chip->getIndex()<<std::endl;
-                    FrontEndType theFrontEndType = fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getFrontEndType();
+                    // std::cout<<"board = "<<board->getGlobalIndex()<<std::endl;
+                    // std::cout<<"opticalGroup = "<<opticalGroup->getGlobalIndex()<<std::endl;
+                    // std::cout<<"hybrid = "<<hybrid->getGlobalIndex()<<std::endl;
+                    // std::cout<<"chip = "<<chip->getGlobalIndex()<<std::endl;
+                    FrontEndType theFrontEndType =
+                        fDetectorContainer->at(board->getGlobalIndex())->at(opticalGroup->getGlobalIndex())->at(hybrid->getGlobalIndex())->at(chip->getGlobalIndex())->getFrontEndType();
                     // std::cout<<__LINE__<<std::endl;
                     if(theFrontEndType == FrontEndType::MPA || theFrontEndType == FrontEndType::MPA2)
                     {
                         // std::cout<<__LINE__<<std::endl;
-                        TH2F* pixelClusterHistogram = fOccupancyHistogramContainer.at(board->getIndex())
-                                                          ->at(opticalGroup->getIndex())
-                                                          ->at(hybrid->getIndex())
-                                                          ->at(chip->getIndex())
+                        TH2F* pixelClusterHistogram = fOccupancyHistogramContainer.at(board->getGlobalIndex())
+                                                          ->at(opticalGroup->getGlobalIndex())
+                                                          ->at(hybrid->getGlobalIndex())
+                                                          ->at(chip->getGlobalIndex())
                                                           ->getSummary<HistContainer<TH2F>>()
                                                           .fTheHistogram;
 
@@ -154,13 +155,13 @@ void PSPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContain
                     else
                     {
                         // std::cout<<__LINE__<<std::endl;
-                        // std::cout<<chip->getIndex()<<std::endl;
+                        // std::cout<<chip->getGlobalIndex()<<std::endl;
                         // std::cout<<hybrid->size()<<std::endl;
 
-                        TH1F* stripClusterHistogram = fStripOccupancyHistogramContainer.at(board->getIndex())
-                                                          ->at(opticalGroup->getIndex())
-                                                          ->at(hybrid->getIndex())
-                                                          ->at(chip->getIndex())
+                        TH1F* stripClusterHistogram = fStripOccupancyHistogramContainer.at(board->getGlobalIndex())
+                                                          ->at(opticalGroup->getGlobalIndex())
+                                                          ->at(hybrid->getGlobalIndex())
+                                                          ->at(chip->getGlobalIndex())
                                                           ->getSummary<HistContainer<TH1F>>()
                                                           .fTheHistogram;
                         // std::cout<<__LINE__<<std::endl;
@@ -185,11 +186,16 @@ void PSPhysicsHistograms::fillStub(const DetectorDataContainer& DataContainer)
                 {
                     if(chip->getChannelContainer<float>() == nullptr) continue;
 
-                    FrontEndType theFrontEndType = fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getFrontEndType();
+                    FrontEndType theFrontEndType =
+                        fDetectorContainer->at(board->getGlobalIndex())->at(opticalGroup->getGlobalIndex())->at(hybrid->getGlobalIndex())->at(chip->getGlobalIndex())->getFrontEndType();
                     if(theFrontEndType != FrontEndType::MPA && theFrontEndType != FrontEndType::MPA2) continue;
 
-                    TH2F* stubHistogram =
-                        fStubHistogramContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* stubHistogram = fStubHistogramContainer.at(board->getGlobalIndex())
+                                              ->at(opticalGroup->getGlobalIndex())
+                                              ->at(hybrid->getGlobalIndex())
+                                              ->at(chip->getGlobalIndex())
+                                              ->getSummary<HistContainer<TH2F>>()
+                                              .fTheHistogram;
 
                     for(int row = 0; row < NMPACHANNELS / NSSACHANNELS; ++row)
                     {
@@ -237,14 +243,14 @@ void PSPhysicsHistograms::process()
     // otherwise they will be automatically saved
     /*for(auto board: fOccupancy) // for on boards - begin
     {
-        size_t boardIndex = board->getIndex();
+        size_t boardIndex = board->getGlobalIndex();
         for(auto opticalGroup: *board) // for on opticalGroup - begin
         {
-            size_t opticalGroupIndex = opticalGroup->getIndex();
+            size_t opticalGroupIndex = opticalGroup->getGlobalIndex();
 
             for(auto hybrid: *opticalGroup) // for on hybrid - begin
             {
-                size_t hybridIndex = hybrid->getIndex();
+                size_t hybridIndex = hybrid->getGlobalIndex();
 
                 for(auto chip: *hybrid) // for on chip - begin
                 {

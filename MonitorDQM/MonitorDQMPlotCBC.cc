@@ -96,19 +96,19 @@ void MonitorDQMPlotCBC::fillCBCRegisterPlots(DetectorDataContainer& theThreshold
 
     for(auto board: theThresholdContainer) // for on boards - begin
     {
-        size_t boardIndex = board->getIndex();
+        size_t boardIndex = board->getGlobalIndex();
         // std::cout <<  __PRETTY_FUNCTION__ << boardIndex << std::endl;
         for(auto opticalGroup: *board) // for on opticalGroup - begin
         {
-            size_t opticalGroupIndex = opticalGroup->getIndex();
+            size_t opticalGroupIndex = opticalGroup->getGlobalIndex();
             // std::cout <<  __PRETTY_FUNCTION__ << opticalGroupIndex << std::endl;
             for(auto hybrid: *opticalGroup) // for on hybrid - begin
             {
-                size_t hybridIndex = hybrid->getIndex();
+                size_t hybridIndex = hybrid->getGlobalIndex();
                 // std::cout <<  __PRETTY_FUNCTION__ << hybridIndex << std::endl;
                 for(auto chip: *hybrid) // for on chip - begin
                 {
-                    size_t chipIndex = chip->getIndex();
+                    size_t chipIndex = chip->getGlobalIndex();
                     // Retreive the corresponging chip histogram:
                     TGraph* chipDQMPlot =
                         fCBCRegisterMonitorPlotMap[registerName].at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getSummary<GraphContainer<TGraph>>().fTheGraph;
@@ -143,11 +143,11 @@ void MonitorDQMPlotCBC::fillLpGBTRegisterPlots(DetectorDataContainer& theThresho
 
     for(auto board: theThresholdContainer) // for on boards - begin
     {
-        size_t boardIndex = board->getIndex();
+        size_t boardIndex = board->getGlobalIndex();
         for(auto opticalGroup: *board) // for on opticalGroup - begin
         {
             if(!opticalGroup->hasSummary()) continue;
-            size_t  opticalGroupIndex = opticalGroup->getIndex();
+            size_t  opticalGroupIndex = opticalGroup->getGlobalIndex();
             TGraph* LpGBTDQMPlot      = fLpGBTRegisterMonitorPlotMap[registerName].at(boardIndex)->at(opticalGroupIndex)->getSummary<GraphContainer<TGraph>>().fTheGraph;
             LpGBTDQMPlot->SetPoint(LpGBTDQMPlot->GetN(),
                                    getTimeStampForRoot(std::get<0>(opticalGroup->getSummary<std::tuple<time_t, uint16_t>>())),

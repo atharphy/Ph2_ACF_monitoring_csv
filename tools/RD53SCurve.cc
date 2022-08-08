@@ -163,19 +163,19 @@ void SCurve::run()
                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                         for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                             if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !this->getChannelGroupHandlerContainer()
-                                                                                                                     ->at(cBoard->getIndex())
-                                                                                                                     ->at(cOpticalGroup->getIndex())
-                                                                                                                     ->at(cHybrid->getIndex())
-                                                                                                                     ->at(cChip->getIndex())
+                                                                                                                     ->at(cBoard->getGlobalIndex())
+                                                                                                                     ->at(cOpticalGroup->getGlobalIndex())
+                                                                                                                     ->at(cHybrid->getGlobalIndex())
+                                                                                                                     ->at(cChip->getGlobalIndex())
                                                                                                                      ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                                                                                                      ->allChannelGroup()
                                                                                                                      ->isChannelEnabled(row, col))
                                 for(auto i = 0u; i < dacList.size(); i++)
                                     detectorContainerVector[i]
-                                        ->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
+                                        ->at(cBoard->getGlobalIndex())
+                                        ->at(cOpticalGroup->getGlobalIndex())
+                                        ->at(cHybrid->getGlobalIndex())
+                                        ->at(cChip->getGlobalIndex())
                                         ->getChannel<OccupancyAndPh>(row, col)
                                         .fOccupancy = RD53Shared::ISDISABLED;
 
@@ -233,28 +233,28 @@ void SCurve::draw(bool doSaveData)
                             for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                                 for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                                     if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
-                                                                                                                           ->at(cBoard->getIndex())
-                                                                                                                           ->at(cOpticalGroup->getIndex())
-                                                                                                                           ->at(cHybrid->getIndex())
-                                                                                                                           ->at(cChip->getIndex())
+                                                                                                                           ->at(cBoard->getGlobalIndex())
+                                                                                                                           ->at(cOpticalGroup->getGlobalIndex())
+                                                                                                                           ->at(cHybrid->getGlobalIndex())
+                                                                                                                           ->at(cChip->getGlobalIndex())
                                                                                                                            ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                                                                                                            ->allChannelGroup()
                                                                                                                            ->isChannelEnabled(row, col))
                                         fileOutID << "r " << row << " c " << col << " h "
                                                   << detectorContainerVector[i]
-                                                             ->at(cBoard->getIndex())
-                                                             ->at(cOpticalGroup->getIndex())
-                                                             ->at(cHybrid->getIndex())
-                                                             ->at(cChip->getIndex())
+                                                             ->at(cBoard->getGlobalIndex())
+                                                             ->at(cOpticalGroup->getGlobalIndex())
+                                                             ->at(cHybrid->getGlobalIndex())
+                                                             ->at(cChip->getGlobalIndex())
                                                              ->getChannel<OccupancyAndPh>(row, col)
                                                              .fOccupancy *
                                                          nEvents
                                                   << " a "
                                                   << detectorContainerVector[i]
-                                                         ->at(cBoard->getIndex())
-                                                         ->at(cOpticalGroup->getIndex())
-                                                         ->at(cHybrid->getIndex())
-                                                         ->at(cChip->getIndex())
+                                                         ->at(cBoard->getGlobalIndex())
+                                                         ->at(cOpticalGroup->getGlobalIndex())
+                                                         ->at(cHybrid->getGlobalIndex())
+                                                         ->at(cChip->getGlobalIndex())
                                                          ->getChannel<OccupancyAndPh>(row, col)
                                                          .fPh
                                                   << std::endl;
@@ -283,20 +283,20 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                         for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                             if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
-                                                                                                                   ->at(cBoard->getIndex())
-                                                                                                                   ->at(cOpticalGroup->getIndex())
-                                                                                                                   ->at(cHybrid->getIndex())
-                                                                                                                   ->at(cChip->getIndex())
+                                                                                                                   ->at(cBoard->getGlobalIndex())
+                                                                                                                   ->at(cOpticalGroup->getGlobalIndex())
+                                                                                                                   ->at(cHybrid->getGlobalIndex())
+                                                                                                                   ->at(cChip->getGlobalIndex())
                                                                                                                    ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                                                                                                    ->allChannelGroup()
                                                                                                                    ->isChannelEnabled(row, col))
                             {
                                 for(auto i = 0u; i < dacList.size(); i++)
                                     measurements[i] = fabs(detectorContainerVector[i]
-                                                               ->at(cBoard->getIndex())
-                                                               ->at(cOpticalGroup->getIndex())
-                                                               ->at(cHybrid->getIndex())
-                                                               ->at(cChip->getIndex())
+                                                               ->at(cBoard->getGlobalIndex())
+                                                               ->at(cOpticalGroup->getGlobalIndex())
+                                                               ->at(cHybrid->getGlobalIndex())
+                                                               ->at(cChip->getGlobalIndex())
                                                                ->getChannel<OccupancyAndPh>(row, col)
                                                                .fOccupancy);
 
@@ -304,39 +304,47 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
 
                                 if((mean > 0) && (rms > 0) && (nHits > 0) && (std::isnormal(rms) == true))
                                 {
-                                    theThresholdAndNoiseContainer->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
+                                    theThresholdAndNoiseContainer->at(cBoard->getGlobalIndex())
+                                        ->at(cOpticalGroup->getGlobalIndex())
+                                        ->at(cHybrid->getGlobalIndex())
+                                        ->at(cChip->getGlobalIndex())
                                         ->getChannel<ThresholdAndNoise>(row, col)
                                         .fThreshold = mean;
-                                    theThresholdAndNoiseContainer->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
+                                    theThresholdAndNoiseContainer->at(cBoard->getGlobalIndex())
+                                        ->at(cOpticalGroup->getGlobalIndex())
+                                        ->at(cHybrid->getGlobalIndex())
+                                        ->at(cChip->getGlobalIndex())
                                         ->getChannel<ThresholdAndNoise>(row, col)
                                         .fThresholdError = rms / sqrt(nHits);
-                                    theThresholdAndNoiseContainer->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
+                                    theThresholdAndNoiseContainer->at(cBoard->getGlobalIndex())
+                                        ->at(cOpticalGroup->getGlobalIndex())
+                                        ->at(cHybrid->getGlobalIndex())
+                                        ->at(cChip->getGlobalIndex())
                                         ->getChannel<ThresholdAndNoise>(row, col)
                                         .fNoise = rms;
-                                    theThresholdAndNoiseContainer->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
+                                    theThresholdAndNoiseContainer->at(cBoard->getGlobalIndex())
+                                        ->at(cOpticalGroup->getGlobalIndex())
+                                        ->at(cHybrid->getGlobalIndex())
+                                        ->at(cChip->getGlobalIndex())
                                         ->getChannel<ThresholdAndNoise>(row, col)
                                         .fNoiseError = (nHits > 1 ? rms / sqrt(nHits) * sqrt(sqrt(2 / (nHits - 1))) : 0);
 
-                                    if(mean > theMaxThresholdContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>())
-                                        theMaxThresholdContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() = mean;
+                                    if(mean > theMaxThresholdContainer.at(cBoard->getGlobalIndex())
+                                                  ->at(cOpticalGroup->getGlobalIndex())
+                                                  ->at(cHybrid->getGlobalIndex())
+                                                  ->at(cChip->getGlobalIndex())
+                                                  ->getSummary<float>())
+                                        theMaxThresholdContainer.at(cBoard->getGlobalIndex())
+                                            ->at(cOpticalGroup->getGlobalIndex())
+                                            ->at(cHybrid->getGlobalIndex())
+                                            ->at(cChip->getGlobalIndex())
+                                            ->getSummary<float>() = mean;
                                 }
                                 else
-                                    theThresholdAndNoiseContainer->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
+                                    theThresholdAndNoiseContainer->at(cBoard->getGlobalIndex())
+                                        ->at(cOpticalGroup->getGlobalIndex())
+                                        ->at(cHybrid->getGlobalIndex())
+                                        ->at(cChip->getGlobalIndex())
                                         ->getChannel<ThresholdAndNoise>(row, col)
                                         .fNoise = RD53Shared::FITERROR;
                             }
@@ -354,9 +362,10 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
                     LOG(INFO) << GREEN << "Average threshold for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                               << +cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << std::fixed << std::setprecision(1)
                               << cChip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold << RESET << GREEN << " (Delta_VCal)" << std::setprecision(-1) << RESET;
-                    LOG(INFO) << BOLDBLUE << "\t--> Highest threshold: " << BOLDYELLOW << std::fixed << std::setprecision(1)
-                              << theMaxThresholdContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() << BOLDBLUE
-                              << " (Delta_VCal)" << std::setprecision(-1) << RESET;
+                    LOG(INFO)
+                        << BOLDBLUE << "\t--> Highest threshold: " << BOLDYELLOW << std::fixed << std::setprecision(1)
+                        << theMaxThresholdContainer.at(cBoard->getGlobalIndex())->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getSummary<float>()
+                        << BOLDBLUE << " (Delta_VCal)" << std::setprecision(-1) << RESET;
                     RD53Shared::resetDefaultFloat();
                 }
 

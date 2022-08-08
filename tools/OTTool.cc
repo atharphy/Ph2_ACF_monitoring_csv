@@ -43,7 +43,7 @@ void OTTool::Reset()
     {
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
         LOG(INFO) << BOLDBLUE << fMyName << ":Resetting all registers on back-end board " << +cBoard->getId() << RESET;
-        auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
+        auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getGlobalIndex())->getSummary<BeBoardRegMap>();
         std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
         cVecBeBoardRegs.clear();
         for(auto cReg: cBeRegMap)
@@ -61,17 +61,17 @@ void OTTool::Reset()
 
     for(auto cBoard: *fDetectorContainer) // now reset Chip registers
     {
-        auto& cChipRegsToPreserveThisBrd = fChipRegsToPerserve.at(cBoard->getIndex());
+        auto& cChipRegsToPreserveThisBrd = fChipRegsToPerserve.at(cBoard->getGlobalIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cChipRegsToPreserveThisOG = cChipRegsToPreserveThisBrd->at(cOpticalGroup->getIndex());
+            auto& cChipRegsToPreserveThisOG = cChipRegsToPreserveThisBrd->at(cOpticalGroup->getGlobalIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
                 LOG(INFO) << BOLDYELLOW << fMyName << ":Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
-                auto& cChipRegsToPreserveThisHybrd = cChipRegsToPreserveThisOG->at(cHybrid->getIndex());
+                auto& cChipRegsToPreserveThisHybrd = cChipRegsToPreserveThisOG->at(cHybrid->getGlobalIndex());
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cChipRegsToPreserveThisChip = cChipRegsToPreserveThisHybrd->at(cChip->getIndex());
+                    auto& cChipRegsToPreserveThisChip = cChipRegsToPreserveThisHybrd->at(cChip->getGlobalIndex());
                     auto& cRegsToPerserve             = cChipRegsToPreserveThisChip->getSummary<std::vector<std::string>>();
                     // reset registers
                     auto cModMap = cChip->GetModifiedRegisterMap();
@@ -118,7 +118,7 @@ void OTTool::Prepare()
     ContainerFactory::copyAndInitBoard<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
     for(auto cBoard: *fDetectorContainer)
     {
-        auto&                cBoardRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
+        auto&                cBoardRegMap = fBoardRegContainer.at(cBoard->getGlobalIndex())->getSummary<BeBoardRegMap>();
         const BeBoardRegMap& cOrigRegMap  = static_cast<const BeBoard*>(cBoard)->getBeBoardRegMap();
         cBoardRegMap.insert(cOrigRegMap.begin(), cOrigRegMap.end());
     }
@@ -224,18 +224,18 @@ void OTTool::SetChipRegstoPerserve(FrontEndType pType, std::vector<std::string> 
     LOG(INFO) << BOLDBLUE << fMyName << " setting registers to store on Chips." << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cChipRegsToPreserveThisBrd = fChipRegsToPerserve.at(cBoard->getIndex());
+        auto& cChipRegsToPreserveThisBrd = fChipRegsToPerserve.at(cBoard->getGlobalIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cChipRegsToPreserveThisOG = cChipRegsToPreserveThisBrd->at(cOpticalGroup->getIndex());
+            auto& cChipRegsToPreserveThisOG = cChipRegsToPreserveThisBrd->at(cOpticalGroup->getGlobalIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cChipRegsToPreserveThisHybrd = cChipRegsToPreserveThisOG->at(cHybrid->getIndex());
+                auto& cChipRegsToPreserveThisHybrd = cChipRegsToPreserveThisOG->at(cHybrid->getGlobalIndex());
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getFrontEndType() != pType) continue;
 
-                    auto& cChipRegsToPreserveThisChip = cChipRegsToPreserveThisHybrd->at(cChip->getIndex());
+                    auto& cChipRegsToPreserveThisChip = cChipRegsToPreserveThisHybrd->at(cChip->getGlobalIndex());
                     auto& cRegsToPerserve             = cChipRegsToPreserveThisChip->getSummary<std::vector<std::string>>();
                     cRegsToPerserve.clear();
                     for(const auto& cRegName: pListOfRegs)
@@ -365,7 +365,7 @@ void OTTool::TriggerMonitor(uint32_t pDelta_s)
         ContainerFactory::copyAndInitBoard<std::vector<uint32_t>>(*fDetectorContainer, cTrigCounters);
         for(auto cBoard: *fDetectorContainer)
         {
-            auto& cCounterThisBrd = cTrigCounters.at(cBoard->getIndex())->getSummary<std::vector<uint32_t>>();
+            auto& cCounterThisBrd = cTrigCounters.at(cBoard->getGlobalIndex())->getSummary<std::vector<uint32_t>>();
             cCounterThisBrd.clear();
         }
         auto cTime0 = startTimeUTC_us;
@@ -381,7 +381,7 @@ void OTTool::TriggerMonitor(uint32_t pDelta_s)
                 auto  cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
                 auto  cTriggerInterface = cInterface->getTriggerInterface();
                 auto  cTriggerState     = cTriggerInterface->GetTriggerState();
-                auto& cCounterThisBrd   = cTrigCounters.at(cBoard->getIndex())->getSummary<std::vector<uint32_t>>();
+                auto& cCounterThisBrd   = cTrigCounters.at(cBoard->getGlobalIndex())->getSummary<std::vector<uint32_t>>();
                 cCounterThisBrd.push_back(fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter"));
                 auto cDeltaTriggers   = (cCounterThisBrd.size() == 1) ? cCounterThisBrd[0] : cCounterThisBrd[cCounterThisBrd.size() - 1] - cCounterThisBrd[cCounterThisBrd.size() - 2];
                 auto cTriggerSource   = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source");
@@ -432,7 +432,7 @@ void OTTool::ContinousReadout()
         fBeBoardInterface->setBoard(cBoard->getId());
         auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
         cInterface->ResetEventCounter();
-        // cBrdEvntCntrs[cBoard->getIndex()] = cInterface->GetEventCounter();
+        // cBrdEvntCntrs[cBoard->getGlobalIndex()] = cInterface->GetEventCounter();
     }
 
     // temporary thread object representing a new thread
@@ -441,12 +441,12 @@ void OTTool::ContinousReadout()
     for(auto cBoard: *fDetectorContainer)
     {
         // launch threads for continuous readout
-        cStartThreads[cBoard->getIndex()] = std::thread(&OTTool::StartReadoutTh, this, cBoard->getIndex());
+        cStartThreads[cBoard->getGlobalIndex()] = std::thread(&OTTool::StartReadoutTh, this, cBoard->getGlobalIndex());
     }
     for(auto cBoard: *fDetectorContainer)
     {
         // launch threads for continuous readout
-        cStartThreads[cBoard->getIndex()].join(); // pauses until first finishes
+        cStartThreads[cBoard->getGlobalIndex()].join(); // pauses until first finishes
     }
 
     // temporary thread object representing a new thread
@@ -455,7 +455,7 @@ void OTTool::ContinousReadout()
     for(auto cBoard: *fDetectorContainer)
     {
         // launch threads for continuous readout
-        cCheckDoneThreads[cBoard->getIndex()] = std::thread(&OTTool::CheckFinishedTh, this, cBoard->getIndex());
+        cCheckDoneThreads[cBoard->getGlobalIndex()] = std::thread(&OTTool::CheckFinishedTh, this, cBoard->getGlobalIndex());
     }
 
     // temporary thread object representing a new thread
@@ -464,7 +464,7 @@ void OTTool::ContinousReadout()
     for(auto cBoard: *fDetectorContainer)
     {
         // launch threads for continuous readout
-        cReadoutThreads[cBoard->getIndex()] = std::thread(&OTTool::ContinousReadoutTh, this, cBoard->getIndex());
+        cReadoutThreads[cBoard->getGlobalIndex()] = std::thread(&OTTool::ContinousReadoutTh, this, cBoard->getGlobalIndex());
     }
 
     // start triggers on all boards
@@ -482,11 +482,11 @@ void OTTool::ContinousReadout()
     //     {
     //         fBeBoardInterface->setBoard(cBoard->getId());
     //         auto cInterface                   = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    //         cBrdEvntCntrs[cBoard->getIndex()] = cInterface->GetEventCounter();
+    //         cBrdEvntCntrs[cBoard->getGlobalIndex()] = cInterface->GetEventCounter();
     //         if(cWaitCounter % 1000 == 0)
-    //             LOG(DEBUG) << BOLDBLUE << fMyName << ":Main thread ... read-back " << cBrdEvntCntrs[cBoard->getIndex()] << " events from BeBoard#" << +cBoard->getId() << RESET;
+    //             LOG(DEBUG) << BOLDBLUE << fMyName << ":Main thread ... read-back " << cBrdEvntCntrs[cBoard->getGlobalIndex()] << " events from BeBoard#" << +cBoard->getId() << RESET;
     //         // finished if I've received all events or if someone else has stopped triggers for me
-    //         if(cBrdEvntCntrs[cBoard->getIndex()] >= fNevents || cInterface->GetTriggerState() == 0)
+    //         if(cBrdEvntCntrs[cBoard->getGlobalIndex()] >= fNevents || cInterface->GetTriggerState() == 0)
     //         {
     //             LOG(INFO) << BOLDBLUE << fMyName << ":Main thread ... finished collecting all requested events from BeBoard" << +cBoard->getId() << RESET;
     //             cNFinished++;
@@ -506,8 +506,8 @@ void OTTool::ContinousReadout()
     for(auto cBoard: *fDetectorContainer)
     {
         // launch threads for continuous readout
-        cReadoutThreads[cBoard->getIndex()].join();   // pauses until first finishes
-        cCheckDoneThreads[cBoard->getIndex()].join(); // pauses until first finishes
+        cReadoutThreads[cBoard->getGlobalIndex()].join();   // pauses until first finishes
+        cCheckDoneThreads[cBoard->getGlobalIndex()].join(); // pauses until first finishes
     }
 
     // now decode data sequentially

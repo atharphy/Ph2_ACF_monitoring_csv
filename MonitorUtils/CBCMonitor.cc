@@ -43,8 +43,11 @@ void CBCMonitor::runCBCRegisterMonitor(std::string registerName)
                 {
                     uint16_t registerValue = fTheSystemController->fReadoutChipInterface->ReadChipReg(chip, registerName); // just to read something
                     LOG(DEBUG) << BOLDMAGENTA << "CBC " << hybrid->getId() << " - " << registerName << " = " << registerValue << RESET;
-                    theCBCRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<std::tuple<time_t, uint16_t>>() =
-                        std::make_tuple(getTimeStamp(), registerValue);
+                    theCBCRegisterContainer.at(board->getGlobalIndex())
+                        ->at(opticalGroup->getGlobalIndex())
+                        ->at(hybrid->getGlobalIndex())
+                        ->at(chip->getGlobalIndex())
+                        ->getSummary<std::tuple<time_t, uint16_t>>() = std::make_tuple(getTimeStamp(), registerValue);
                 }
             }
         }
@@ -72,14 +75,14 @@ void CBCMonitor::runLpGBTRegisterMonitor(std::string registerName)
         if(board->at(0)->flpGBT == nullptr)
         {
             for(const auto& opticalGroup: *board)
-                theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<std::tuple<time_t, uint16_t>>() = std::make_tuple(getTimeStamp(), -1);
+                theLpGBTRegisterContainer.at(board->getGlobalIndex())->at(opticalGroup->getGlobalIndex())->getSummary<std::tuple<time_t, uint16_t>>() = std::make_tuple(getTimeStamp(), -1);
             continue;
         }
         for(const auto& opticalGroup: *board)
         {
             uint16_t registerValue = static_cast<D19clpGBTInterface*>(fTheSystemController->flpGBTInterface)->ReadADC(opticalGroup->flpGBT, registerName);
             LOG(DEBUG) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - " << registerName << " = " << registerValue << RESET;
-            theLpGBTRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->getSummary<std::tuple<time_t, uint16_t>>() = std::make_tuple(getTimeStamp(), registerValue);
+            theLpGBTRegisterContainer.at(board->getGlobalIndex())->at(opticalGroup->getGlobalIndex())->getSummary<std::tuple<time_t, uint16_t>>() = std::make_tuple(getTimeStamp(), registerValue);
         }
     }
 

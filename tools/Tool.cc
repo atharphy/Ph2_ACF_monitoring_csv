@@ -1117,25 +1117,27 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                         for(uint32_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
                         {
                             if(occupanyDirectlyProportionalToDAC)
-                                currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel) =
-                                    previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel) + (1 << iBit);
+                                currentDacList->at(boardIndex)->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getChannel<uint16_t>(iChannel) =
+                                    previousDacList->at(boardIndex)->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getChannel<uint16_t>(iChannel) +
+                                    (1 << iBit);
                             else
-                                currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel) =
-                                    previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel) &
+                                currentDacList->at(boardIndex)->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getChannel<uint16_t>(iChannel) =
+                                    previousDacList->at(boardIndex)->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getChannel<uint16_t>(iChannel) &
                                     (0xFFFF - (1 << iBit));
                         }
                     }
                     else
                     {
                         if(occupanyDirectlyProportionalToDAC)
-                            currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                                previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() + (1 << iBit);
+                            currentDacList->at(boardIndex)->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getSummary<uint16_t>() =
+                                previousDacList->at(boardIndex)->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getSummary<uint16_t>() + (1 << iBit);
                         else
-                            currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                                previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() & (0xFFFF - (1 << iBit));
+                            currentDacList->at(boardIndex)->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getSummary<uint16_t>() =
+                                previousDacList->at(boardIndex)->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getSummary<uint16_t>() &
+                                (0xFFFF - (1 << iBit));
 
                         LOG(DEBUG) << BOLDBLUE << "\t.. current setting is "
-                                   << currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << RESET;
+                                   << currentDacList->at(boardIndex)->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getSummary<uint16_t>() << RESET;
                     }
                 }
             }
@@ -1157,13 +1159,13 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
             auto& cDataContainerThisBrd = fDetectorDataContainer->at(boardIndex);
             for(auto cOpticalGroup: *(fDetectorContainer->at(boardIndex)))
             {
-                auto& cDataContainerThisOG = cDataContainerThisBrd->at(cOpticalGroup->getIndex());
+                auto& cDataContainerThisOG = cDataContainerThisBrd->at(cOpticalGroup->getGlobalIndex());
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    auto& cDataContainerThisFE = cDataContainerThisOG->at(cHybrid->getIndex());
+                    auto& cDataContainerThisFE = cDataContainerThisOG->at(cHybrid->getGlobalIndex());
                     for(auto cChip: *cHybrid)
                     {
-                        auto&                cDataContainerThisChip = cDataContainerThisFE->at(cChip->getIndex());
+                        auto&                cDataContainerThisChip = cDataContainerThisFE->at(cChip->getGlobalIndex());
                         auto&                cSummary               = cDataContainerThisChip->getSummary<Occupancy, Occupancy>();
                         ChannelGroupHandler* cHandler;
                         if(cChip->getFrontEndType() == FrontEndType::MPA)
@@ -1212,31 +1214,31 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                         {
                             cOut << BOLDBLUE << "localocc "
                                  << currentStepOccupancyContainer->at(boardIndex)
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
+                                        ->at(cOpticalGroup->getGlobalIndex())
+                                        ->at(cHybrid->getGlobalIndex())
+                                        ->at(cChip->getGlobalIndex())
                                         ->getChannel<Occupancy>(iChannel)
                                         .fOccupancy
                                  << "\n";
 
                             if(currentStepOccupancyContainer->at(boardIndex)
-                                   ->at(cOpticalGroup->getIndex())
-                                   ->at(cHybrid->getIndex())
-                                   ->at(cChip->getIndex())
+                                   ->at(cOpticalGroup->getGlobalIndex())
+                                   ->at(cHybrid->getGlobalIndex())
+                                   ->at(cChip->getGlobalIndex())
                                    ->getChannel<Occupancy>(iChannel)
                                    .fOccupancy <= targetOccupancy)
                             {
-                                previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel) =
-                                    currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel);
+                                previousDacList->at(boardIndex)->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getChannel<uint16_t>(iChannel) =
+                                    currentDacList->at(boardIndex)->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getChannel<uint16_t>(iChannel);
                                 previousStepOccupancyContainer->at(boardIndex)
-                                    ->at(cOpticalGroup->getIndex())
-                                    ->at(cHybrid->getIndex())
-                                    ->at(cChip->getIndex())
+                                    ->at(cOpticalGroup->getGlobalIndex())
+                                    ->at(cHybrid->getGlobalIndex())
+                                    ->at(cChip->getGlobalIndex())
                                     ->getChannel<Occupancy>(iChannel)
                                     .fOccupancy = currentStepOccupancyContainer->at(boardIndex)
-                                                      ->at(cOpticalGroup->getIndex())
-                                                      ->at(cHybrid->getIndex())
-                                                      ->at(cChip->getIndex())
+                                                      ->at(cOpticalGroup->getGlobalIndex())
+                                                      ->at(cHybrid->getGlobalIndex())
+                                                      ->at(cChip->getGlobalIndex())
                                                       ->getChannel<Occupancy>(iChannel)
                                                       .fOccupancy;
                             }
@@ -1244,34 +1246,34 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                     }
                     else
                     {
-                        auto& cCurrentDAC = currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                        auto& cCurrentDAC = currentDacList->at(boardIndex)->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getSummary<uint16_t>();
                         cOut << "Occupancy Chip#" << +cChip->getId() << "\t[ global] "
                              << currentStepOccupancyContainer->at(boardIndex)
-                                    ->at(cOpticalGroup->getIndex())
-                                    ->at(cHybrid->getIndex())
-                                    ->at(cChip->getIndex())
+                                    ->at(cOpticalGroup->getGlobalIndex())
+                                    ->at(cHybrid->getGlobalIndex())
+                                    ->at(cChip->getGlobalIndex())
                                     ->getSummary<Occupancy, Occupancy>()
                                     .fOccupancy
                              << " for a DAC value of " << cCurrentDAC;
 
                         if(currentStepOccupancyContainer->at(boardIndex)
-                               ->at(cOpticalGroup->getIndex())
-                               ->at(cHybrid->getIndex())
-                               ->at(cChip->getIndex())
+                               ->at(cOpticalGroup->getGlobalIndex())
+                               ->at(cHybrid->getGlobalIndex())
+                               ->at(cChip->getGlobalIndex())
                                ->getSummary<Occupancy, Occupancy>()
                                .fOccupancy <= targetOccupancy)
                         {
-                            previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                                currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                            previousDacList->at(boardIndex)->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getSummary<uint16_t>() =
+                                currentDacList->at(boardIndex)->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getSummary<uint16_t>();
                             previousStepOccupancyContainer->at(boardIndex)
-                                ->at(cOpticalGroup->getIndex())
-                                ->at(cHybrid->getIndex())
-                                ->at(cChip->getIndex())
+                                ->at(cOpticalGroup->getGlobalIndex())
+                                ->at(cHybrid->getGlobalIndex())
+                                ->at(cChip->getGlobalIndex())
                                 ->getSummary<Occupancy, Occupancy>()
                                 .fOccupancy = currentStepOccupancyContainer->at(boardIndex)
-                                                  ->at(cOpticalGroup->getIndex())
-                                                  ->at(cHybrid->getIndex())
-                                                  ->at(cChip->getIndex())
+                                                  ->at(cOpticalGroup->getGlobalIndex())
+                                                  ->at(cHybrid->getGlobalIndex())
+                                                  ->at(cChip->getGlobalIndex())
                                                   ->getSummary<Occupancy, Occupancy>()
                                                   .fOccupancy;
                         }
@@ -1635,7 +1637,7 @@ void Tool::setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string& dacNam
             for(auto cChip: *cHybrid)
             {
                 fReadoutChipInterface->WriteChipReg(
-                    cChip, dacName, globalDACContainer.at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>());
+                    cChip, dacName, globalDACContainer.at(boardIndex)->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getSummary<uint16_t>());
             }
         }
     }
@@ -1647,7 +1649,8 @@ void Tool::setAllLocalDacBeBoard(uint16_t boardIndex, const std::string& dacName
     for(auto cOpticalGroup: *(fDetectorContainer->at(boardIndex)))
         for(auto cHybrid: *cOpticalGroup)
             for(auto cChip: *cHybrid)
-                fReadoutChipInterface->WriteChipAllLocalReg(cChip, dacName, *globalDACContainer.at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
+                fReadoutChipInterface->WriteChipAllLocalReg(
+                    cChip, dacName, *globalDACContainer.at(boardIndex)->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex()));
 }
 
 // Set same global DAC for all chips
@@ -1689,7 +1692,7 @@ void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string& dacName, c
             for(auto cChip: *cHybrid)
             {
                 ChannelContainer<uint16_t>* dacVector = new ChannelContainer<uint16_t>(cChip->getNumberOfChannels(), dacValue);
-                ChipContainer               theChipContainer(cChip->getIndex(), cChip->getNumberOfRows(), cChip->getNumberOfCols());
+                ChipContainer               theChipContainer(cChip->getGlobalIndex(), cChip->getNumberOfRows(), cChip->getNumberOfCols());
                 theChipContainer.setChannelContainer(dacVector);
 
                 fReadoutChipInterface->WriteChipAllLocalReg(cChip, dacName, theChipContainer);

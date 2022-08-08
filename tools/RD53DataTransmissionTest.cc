@@ -164,7 +164,8 @@ void DataTransmissionTest::analyze(const DetectorDataContainer& theTAP0scanConta
                               << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << nearestTAP0 << BOLDMAGENTA << " <<<" << RESET;
 
                     // Fill the container with TAP0 value at target BER
-                    theTAP0tgtContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = (uint16_t)nearestTAP0;
+                    theTAP0tgtContainer.at(cBoard->getGlobalIndex())->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getSummary<uint16_t>() =
+                        (uint16_t)nearestTAP0;
 
                     // Fitting the last two points with exp(a-bx)
                     if(nearestBERup <= 1 && nearestBERlo < BERtarget)
@@ -224,7 +225,11 @@ void DataTransmissionTest::binSearch(DetectorDataContainer* theTAP0scanContainer
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
                     {
-                        auto bitErrRate  = BERtest::theBERtestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<double>();
+                        auto bitErrRate = BERtest::theBERtestContainer.at(cBoard->getGlobalIndex())
+                                              ->at(cOpticalGroup->getGlobalIndex())
+                                              ->at(cHybrid->getGlobalIndex())
+                                              ->at(cChip->getGlobalIndex())
+                                              ->getSummary<double>();
                         auto bitErrCount = bitErrRate * nFrames;
 
                         if(bitErrRate < 0) // in case a measurement fails for some reason

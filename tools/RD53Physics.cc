@@ -84,9 +84,9 @@ void Physics::sendBoardData(const BoardContainer* cBoard)
 
     if(fDQMStreamerEnabled == true)
     {
-        theOccStream->streamAndSendBoard(theOccContainer.at(cBoard->getIndex()), fDQMStreamer);
-        theBCIDStream->streamAndSendBoard(theBCIDContainer.at(cBoard->getIndex()), fDQMStreamer);
-        theTrgIDStream->streamAndSendBoard(theTrgIDContainer.at(cBoard->getIndex()), fDQMStreamer);
+        theOccStream->streamAndSendBoard(theOccContainer.at(cBoard->getGlobalIndex()), fDQMStreamer);
+        theBCIDStream->streamAndSendBoard(theBCIDContainer.at(cBoard->getGlobalIndex()), fDQMStreamer);
+        theTrgIDStream->streamAndSendBoard(theTrgIDContainer.at(cBoard->getGlobalIndex()), fDQMStreamer);
     }
 }
 
@@ -235,7 +235,7 @@ void Physics::fillDataContainer(BeBoard& theBoard)
 {
     const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
-    const auto   cBoard    = theOccContainer.at(theBoard.getIndex());
+    const auto   cBoard    = theOccContainer.at(theBoard.getGlobalIndex());
 
     // ###################
     // # Clear container #
@@ -275,10 +275,10 @@ void Physics::fillDataContainer(BeBoard& theBoard)
                     if(deltaBCID >= int(BCIDsize))
                         LOG(ERROR) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaBCID out of range: " << BOLDYELLOW << deltaBCID << RESET;
                     else
-                        theBCIDContainer.at(cBoard->getIndex())
-                            ->at(cOpticalGroup->getIndex())
-                            ->at(cHybrid->getIndex())
-                            ->at(cChip->getIndex())
+                        theBCIDContainer.at(cBoard->getGlobalIndex())
+                            ->at(cOpticalGroup->getGlobalIndex())
+                            ->at(cHybrid->getGlobalIndex())
+                            ->at(cChip->getGlobalIndex())
                             ->getSummary<GenericDataArray<BCIDsize>>()
                             .data[deltaBCID]++;
                 }
@@ -290,10 +290,10 @@ void Physics::fillDataContainer(BeBoard& theBoard)
                     if(deltaTrgID >= int(TrgIDsize))
                         LOG(ERROR) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaTrgID out of range: " << BOLDYELLOW << deltaTrgID << RESET;
                     else
-                        theTrgIDContainer.at(cBoard->getIndex())
-                            ->at(cOpticalGroup->getIndex())
-                            ->at(cHybrid->getIndex())
-                            ->at(cChip->getIndex())
+                        theTrgIDContainer.at(cBoard->getGlobalIndex())
+                            ->at(cOpticalGroup->getGlobalIndex())
+                            ->at(cHybrid->getGlobalIndex())
+                            ->at(cChip->getGlobalIndex())
                             ->getSummary<GenericDataArray<TrgIDsize>>()
                             .data[deltaTrgID]++;
                 }
@@ -347,7 +347,7 @@ void Physics::clearContainers(BeBoard& theBoard)
 
     const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
-    const auto   cBoard    = theOccContainer.at(theBoard.getIndex());
+    const auto   cBoard    = theOccContainer.at(theBoard.getGlobalIndex());
 
     // ####################
     // # Clear containers #
@@ -357,8 +357,18 @@ void Physics::clearContainers(BeBoard& theBoard)
             for(const auto cChip: *cHybrid)
             {
                 for(auto i = 0u; i < BCIDsize; i++)
-                    theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[i] = 0;
+                    theBCIDContainer.at(cBoard->getGlobalIndex())
+                        ->at(cOpticalGroup->getGlobalIndex())
+                        ->at(cHybrid->getGlobalIndex())
+                        ->at(cChip->getGlobalIndex())
+                        ->getSummary<GenericDataArray<BCIDsize>>()
+                        .data[i] = 0;
                 for(auto i = 0u; i < TrgIDsize; i++)
-                    theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[i] = 0;
+                    theTrgIDContainer.at(cBoard->getGlobalIndex())
+                        ->at(cOpticalGroup->getGlobalIndex())
+                        ->at(cHybrid->getGlobalIndex())
+                        ->at(cChip->getGlobalIndex())
+                        ->getSummary<GenericDataArray<TrgIDsize>>()
+                        .data[i] = 0;
             }
 }

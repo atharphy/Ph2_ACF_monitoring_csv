@@ -47,8 +47,12 @@ void SSAPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContai
                 {
                     if(cChip->getChannelContainer<Occupancy>() == nullptr) continue;
 
-                    auto* chipOccupancy =
-                        fOccupancy.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    auto* chipOccupancy = fOccupancy.at(cBoard->getGlobalIndex())
+                                              ->at(cOpticalGroup->getGlobalIndex())
+                                              ->at(cHybrid->getGlobalIndex())
+                                              ->at(cChip->getGlobalIndex())
+                                              ->getSummary<HistContainer<TH1F>>()
+                                              .fTheHistogram;
                     uint channelBin = 1;
 
                     // Get channel data and fill the histogram
@@ -63,14 +67,14 @@ void SSAPhysicsHistograms::process()
     // otherwise they will be automatically saved
     for(auto board: fOccupancy) // for on boards - begin
     {
-        size_t boardIndex = board->getIndex();
+        size_t boardIndex = board->getGlobalIndex();
         for(auto opticalGroup: *board) // for on opticalGroup - begin
         {
-            size_t opticalGroupIndex = opticalGroup->getIndex();
+            size_t opticalGroupIndex = opticalGroup->getGlobalIndex();
 
             for(auto hybrid: *opticalGroup) // for on hybrid - begin
             {
-                size_t hybridIndex = hybrid->getIndex();
+                size_t hybridIndex = hybrid->getGlobalIndex();
 
                 // Create a canvas do draw the plots
                 std::string occupancyCanvasName = "Occupancy_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
@@ -79,7 +83,7 @@ void SSAPhysicsHistograms::process()
 
                 for(auto chip: *hybrid) // for on chip - begin
                 {
-                    size_t chipIndex = chip->getIndex();
+                    size_t chipIndex = chip->getGlobalIndex();
                     cOccupancy->cd(chipIndex + 1);
                     // Retreive the corresponging chip histogram:
                     TH1F* chipHitHistogram = fOccupancy.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getSummary<HistContainer<TH1F>>().fTheHistogram;

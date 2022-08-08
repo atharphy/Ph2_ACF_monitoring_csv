@@ -82,8 +82,8 @@ void Physics2S::sendBoardData(BoardContainer* const& cBoard)
 
     if(fDQMStreamerEnabled == true)
     {
-        theOccupancyStream->streamAndSendBoard(fOccupancyContainer.at(cBoard->getIndex()), fDQMStreamer);
-        theStubStream->streamAndSendBoard(fStubContainer.at(cBoard->getIndex()), fDQMStreamer);
+        theOccupancyStream->streamAndSendBoard(fOccupancyContainer.at(cBoard->getGlobalIndex()), fDQMStreamer);
+        theStubStream->streamAndSendBoard(fStubContainer.at(cBoard->getGlobalIndex()), fDQMStreamer);
     }
 }
 
@@ -200,14 +200,14 @@ void Physics2S::display()
 //     const std::vector<Event*>& events = SystemController::GetEvents();
 //     for(const auto& event: events)
 // 	{
-// 		for(const auto cOpticalGroup: *f2SDataContainer.at(cBoard->getIndex()))
+// 		for(const auto cOpticalGroup: *f2SDataContainer.at(cBoard->getGlobalIndex()))
 // 		{
 // 		    for(const auto cHybrid: *cOpticalGroup)
 // 			{
 // 		        for(const auto cChip: *cHybrid)
 // 				{
 
-//     				auto curchip = cBoard->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex());;
+//     				auto curchip = cBoard->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex());;
 //                     if(curchip->getFrontEndType() != FrontEndType::MPA) continue;
 
 // 					auto data2S = cChip->getSummary<Data2S<NCHANNELS, MAX_NUMBER_OF_STUB_CLUSTERS_2S>>();
@@ -232,11 +232,11 @@ void Physics2S::fillDataContainer(BoardContainer* cBoard, const std::vector<Even
 
     for(auto event: eventList)
     {
-        event->fillDataContainer(fOccupancyContainer.at(cBoard->getIndex()), allChannelGroup);
+        event->fillDataContainer(fOccupancyContainer.at(cBoard->getGlobalIndex()), allChannelGroup);
         // ###################
         // # Fill containers #
         // ###################
-        for(const auto cOpticalGroup: *fStubContainer.at(cBoard->getIndex()))
+        for(const auto cOpticalGroup: *fStubContainer.at(cBoard->getGlobalIndex()))
         {
             for(const auto cHybrid: *cOpticalGroup)
             {
@@ -276,7 +276,7 @@ void Physics2S::clearContainers(BoardContainer* theBoard)
     // ####################
     // # Clear containers #
     // ####################
-    for(const auto cOpticalGroup: *fOccupancyContainer.at(theBoard->getIndex()))
+    for(const auto cOpticalGroup: *fOccupancyContainer.at(theBoard->getGlobalIndex()))
     {
         for(const auto cHybrid: *cOpticalGroup)
         {
@@ -287,7 +287,7 @@ void Physics2S::clearContainers(BoardContainer* theBoard)
         }
     }
 
-    for(const auto cOpticalGroup: *fStubContainer.at(theBoard->getIndex()))
+    for(const auto cOpticalGroup: *fStubContainer.at(theBoard->getGlobalIndex()))
     {
         for(const auto cHybrid: *cOpticalGroup)
         {

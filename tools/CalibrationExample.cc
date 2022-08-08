@@ -37,7 +37,7 @@ void CalibrationExample::runCalibrationExample(void)
     // getting n events and filling the container:
     for(auto board: theHitContainer) // for on boards - begin
     {
-        BeBoard* theBeBoard = static_cast<BeBoard*>(fDetectorContainer->at(board->getIndex()));
+        BeBoard* theBeBoard = static_cast<BeBoard*>(fDetectorContainer->at(board->getGlobalIndex()));
         // Send N triggers (as it was in the past)
         ReadNEvents(theBeBoard, fEventsPerPoint);
         // Get the event vector (as it was in the past)

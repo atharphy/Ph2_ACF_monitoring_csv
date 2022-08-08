@@ -64,6 +64,12 @@ class Hybrid
      */
     uint8_t getNChip() const { return this->size(); }
 
+    void setNPixelChips(uint16_t cNPixelChips) { fNPixelChips = cNPixelChips; }
+    void setNStripChips(uint16_t cNStripChips) { fNStripChips = cNStripChips; }
+
+    uint16_t getNPixelChips() const { return fNPixelChips; }
+    uint16_t getNStripChips() const { return fNStripChips; }
+
     /*!
      * \brief Set the I2C Master Id corresponding to the Chip
      * \param The I2C Master Id
@@ -77,7 +83,8 @@ class Hybrid
     uint8_t getMasterId() const { return fMasterId; };
 
   protected:
-    uint8_t fMasterId;
+    uint16_t fNPixelChips = 0, fNStripChips = 0;
+    uint8_t  fMasterId;
 };
 } // namespace Ph2_HwDescription
 

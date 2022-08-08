@@ -35,13 +35,13 @@ void BackEndAlignment::Initialise()
     ContainerFactory::copyAndInitHybrid<uint8_t>(*fDetectorContainer, fEnabledFEs);
     for(auto cBoard: *fDetectorContainer)
     {
-        auto& cEnabledFEs = fEnabledFEs.at(cBoard->getIndex());
+        auto& cEnabledFEs = fEnabledFEs.at(cBoard->getGlobalIndex());
         for(auto cOpticalGroup: *cBoard)
         {
-            auto& cEnabledFEsOG = cEnabledFEs->at(cOpticalGroup->getIndex());
+            auto& cEnabledFEsOG = cEnabledFEs->at(cOpticalGroup->getGlobalIndex());
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto& cEnabledFEsHybrid = cEnabledFEsOG->at(cHybrid->getIndex());
+                auto& cEnabledFEsHybrid = cEnabledFEsOG->at(cHybrid->getGlobalIndex());
                 auto& cEnabled          = cEnabledFEsHybrid->getSummary<uint8_t>();
                 cEnabled                = 0;
                 for(auto cChip: *cHybrid)
@@ -103,7 +103,7 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
         {
             for(auto cChip: *cHybrid)
             {
-                if(fEnabledChips.size() != cHybrid->size() && cChip->getIndex() > 1)
+                if(fEnabledChips.size() != cHybrid->size() && cChip->getGlobalIndex() > 1)
                 {
                     LOG(INFO) << BOLDYELLOW << "Skipping Phase tuning on Chip#" << +cChip->getId() << RESET;
                     continue;
@@ -138,7 +138,7 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
         {
             for(auto cChip: *cHybrid)
             {
-                if(fEnabledChips.size() != cHybrid->size() && cChip->getIndex() > 1)
+                if(fEnabledChips.size() != cHybrid->size() && cChip->getGlobalIndex() > 1)
                 {
                     LOG(INFO) << BOLDYELLOW << "Skipping word alignment on Chip#" << +cChip->getId() << RESET;
                     continue;
@@ -161,7 +161,7 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
     //     {
     //         for(auto cChip: *cHybrid)
     //         {
-    //             if(fEnabledChips.size() != cHybrid->size() && cChip->getIndex() > 1) { continue; }
+    //             if(fEnabledChips.size() != cHybrid->size() && cChip->getGlobalIndex() > 1) { continue; }
     //             LOG(INFO) << BOLDYELLOW << "Hybrid#" << +cHybrid->getId() << " Chip#" << +cChip->getId() << RESET;
     //             fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
     //             fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cChip->getId());
@@ -195,7 +195,7 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
     //     {
     //         for(auto cChip: *cHybrid)
     //         {
-    //             if(fEnabledChips.size() != cHybrid->size() && cChip->getIndex() <= 1)
+    //             if(fEnabledChips.size() != cHybrid->size() && cChip->getGlobalIndex() <= 1)
     //             {
     //                 fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid->getId());
     //                 fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", cChip->getId());
@@ -423,8 +423,8 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
         {
             for(size_t cLineId = 0; cLineId < cNlines; cLineId++)
             {
-                auto cDelay   = getBeSamplingDelay(pBoard->getIndex(), cOpticalGroup->getIndex(), cHybrid->getIndex(), cLineId);
-                auto cBitslip = getBeBitSlip(pBoard->getIndex(), cOpticalGroup->getIndex(), cHybrid->getIndex(), cLineId);
+                auto cDelay   = getBeSamplingDelay(pBoard->getGlobalIndex(), cOpticalGroup->getGlobalIndex(), cHybrid->getGlobalIndex(), cLineId);
+                auto cBitslip = getBeBitSlip(pBoard->getGlobalIndex(), cOpticalGroup->getGlobalIndex(), cHybrid->getGlobalIndex(), cLineId);
                 if(cLineId == 0)
                     LOG(INFO) << BOLDMAGENTA << "Delay on L1A line is " << +cDelay << "\t\t..Bitslip on Line#" << +cLineId << " is " << +cBitslip << RESET;
                 else
@@ -540,10 +540,10 @@ bool BackEndAlignment::Align()
         bool cWithMPA          = false;
         for(auto cOpticalReadout: *cBoard)
         {
-            if(cOpticalReadout->getIndex() > 0) break;
+            if(cOpticalReadout->getGlobalIndex() > 0) break;
             for(auto cHybrid: *cOpticalReadout)
             {
-                if(cHybrid->getIndex() > 0) break;
+                if(cHybrid->getGlobalIndex() > 0) break;
                 cWithCIC = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic != NULL;
                 for(auto cReadoutChip: *cHybrid)
                 {

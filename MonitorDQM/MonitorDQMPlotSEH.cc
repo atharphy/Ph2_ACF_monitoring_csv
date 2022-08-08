@@ -117,11 +117,11 @@ void MonitorDQMPlotSEH::bookTestCardPlots(TFile* theOutputFile, const DetectorCo
 
 //     for(auto board: theThresholdContainer) // for on boards - begin
 //     {
-//         size_t boardIndex = board->getIndex();
+//         size_t boardIndex = board->getGlobalIndex();
 //         for(auto opticalGroup: *board) // for on opticalGroup - begin
 //         {
 //             if(!opticalGroup->hasSummary()) continue;
-//             size_t  opticalGroupIndex = opticalGroup->getIndex();
+//             size_t  opticalGroupIndex = opticalGroup->getGlobalIndex();
 //             TGraph* LpGBTDQMPlot      = fLpGBTRegisterMonitorPlotMap[registerName].at(boardIndex)->at(opticalGroupIndex)->getSummary<GraphContainer<TGraph>>().fTheGraph;
 //             LpGBTDQMPlot->SetPoint(LpGBTDQMPlot->GetN(),
 //                                    getTimeStampForRoot(std::get<0>(opticalGroup->getSummary<std::tuple<time_t, uint16_t>>())),

@@ -46,7 +46,7 @@ void SSASCurve::run(void)
 
     for(auto cBoard: theHitContainer)
     {
-        BeBoard* theBeBoard = static_cast<BeBoard*>(fDetectorContainer->at(cBoard->getIndex()));
+        BeBoard* theBeBoard = static_cast<BeBoard*>(fDetectorContainer->at(cBoard->getGlobalIndex()));
 
         if(SyncDebug)
             LOG(INFO) << BOLDBLUE << "SYNC DEBUG!" << RESET;
@@ -141,7 +141,8 @@ void SSASCurve::run(void)
                     {
                         for(auto cChip: *cHybrid)
                         {
-                            ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
+                            ReadoutChip* theChip = static_cast<ReadoutChip*>(
+                                fDetectorContainer->at(cBoard->getGlobalIndex())->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex()));
                             if(cWithSSA) { this->fReadoutChipInterface->WriteChipReg(theChip, "Bias_THDAC", thd); }
                             if(cWithMPA)
                             {
@@ -253,7 +254,8 @@ void SSASCurve::run(void)
                         for(auto& channel: *cChip->getChannelContainer<std::pair<std::array<uint32_t, 2>, float>>()) // for on channel -
                                                                                                                      // begin
                         {
-                            ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(cChip->getIndex()));
+                            ReadoutChip* theChip = static_cast<ReadoutChip*>(
+                                fDetectorContainer->at(cBoard->getGlobalIndex())->at(opticalGroup->getGlobalIndex())->at(hybrid->getGlobalIndex())->at(cChip->getGlobalIndex()));
                             rms += (channel.second - mean) * (channel.second - mean);
 
                             int32_t cr      = fReadoutChipInterface->ReadChipReg(theChip, prestr + std::to_string(istrip));

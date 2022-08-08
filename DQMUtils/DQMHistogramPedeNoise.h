@@ -76,6 +76,7 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
   private:
     DetectorContainer*    fDetectorContainer;
     void                  fitSCurves();
+    uint8_t               fNPixelChips = 0, fNStripChips = 0;
     uint32_t              fNPixelChannels = 0, fNStripChannels = 0;
     DetectorDataContainer fThresholdAndNoiseContainer;
 

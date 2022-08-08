@@ -197,7 +197,7 @@ void D19cCbc3Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
             size_t cHybridIndex = 0;
             for(auto cHybrid: *pBoard->at(0))
             {
-                if(cHybrid->getId() == cHybridId) cHybridIndex = cHybrid->getIndex();
+                if(cHybrid->getId() == cHybridId) cHybridIndex = cHybrid->getGlobalIndex();
             }
             auto                  cReadoutChips = pBoard->at(0)->at(cHybridIndex);
             std::vector<uint32_t> cCbcData(cIterator, cIterator + cDataSize);

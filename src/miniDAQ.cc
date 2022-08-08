@@ -237,10 +237,10 @@ int main(int argc, char* argv[])
         uint8_t  cReTimePix      = 0;
         for(auto cOpticalReadout: *cBoard)
         {
-            if(cOpticalReadout->getIndex() > 0) break;
+            if(cOpticalReadout->getGlobalIndex() > 0) break;
             for(auto cHybrid: *cOpticalReadout)
             {
-                if(cHybrid->getIndex() > 0) break;
+                if(cHybrid->getGlobalIndex() > 0) break;
                 for(auto cReadoutChip: *cHybrid)
                 {
                     if(cReadoutChip->getFrontEndType() == FrontEndType::SSA || cReadoutChip->getFrontEndType() == FrontEndType::SSA2) continue;
@@ -252,8 +252,8 @@ int main(int argc, char* argv[])
             }
         }
         uint32_t cStubDataDelay = cTriggerLatency - (cStubOffset + cReTimePix);
-        LOG(INFO) << BOLDMAGENTA << "Trigger latency on FEs connected to BeBoard#" << +cBoard->getIndex() << " set to " << cTriggerLatency << RESET;
-        LOG(INFO) << BOLDMAGENTA << "Stub latency on FEs connected to BeBoard#" << +cBoard->getIndex() << " will be set to " << cStubDataDelay << RESET;
+        LOG(INFO) << BOLDMAGENTA << "Trigger latency on FEs connected to BeBoard#" << +cBoard->getGlobalIndex() << " set to " << cTriggerLatency << RESET;
+        LOG(INFO) << BOLDMAGENTA << "Stub latency on FEs connected to BeBoard#" << +cBoard->getGlobalIndex() << " will be set to " << cStubDataDelay << RESET;
         cTool.fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubDataDelay);
     }
 
@@ -269,7 +269,7 @@ int main(int argc, char* argv[])
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getIndex() > 2)
+                        if(cChip->getGlobalIndex() > 2)
                         {
                             LOG(INFO) << BOLDMAGENTA << "Since I am use the TP .. want to make sure I see stubs from only one chip "
                                       << " by disabling injection on Chip#" << +cChip->getId() << RESET;
@@ -595,14 +595,14 @@ int main(int argc, char* argv[])
             uint8_t cFirstChipId   = 0;
             for(auto cOpticalGroup: *cBeBoard)
             {
-                if(cOpticalGroup->getIndex() > 0) continue;
+                if(cOpticalGroup->getGlobalIndex() > 0) continue;
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    if(cHybrid->getIndex() > 0) continue;
+                    if(cHybrid->getGlobalIndex() > 0) continue;
                     cFirstHybridId = cHybrid->getId();
                     for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getIndex() > 0) continue;
+                        if(cChip->getGlobalIndex() > 0) continue;
                         cFirstChipId = cChip->getId();
                     }
                 }

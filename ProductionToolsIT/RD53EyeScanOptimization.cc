@@ -194,10 +194,10 @@ void EyeScanOptimization::scanDac(const std::string& regName, const std::vector<
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
                         cChip->getSummary<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>().data[i] =
-                            EyeDiag::theEyeDiagContainer.at(cBoard->getIndex())
-                                ->at(cOpticalGroup->getIndex())
-                                ->at(cHybrid->getIndex())
-                                ->at(cChip->getIndex())
+                            EyeDiag::theEyeDiagContainer.at(cBoard->getGlobalIndex())
+                                ->at(cOpticalGroup->getGlobalIndex())
+                                ->at(cHybrid->getGlobalIndex())
+                                ->at(cChip->getGlobalIndex())
                                 ->getSummary<std::unordered_map<std::string, std::array<float, 7>>>();
     }
 }
@@ -238,10 +238,10 @@ void EyeScanOptimization::scanDac3D(const std::string&           regName1,
                         for(const auto cHybrid: *cOpticalGroup)
                             for(const auto cChip: *cHybrid)
                                 cChip->getSummary<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>()
-                                    .data[i + j * dacList1.size() + k * dacList1.size() * dacList2.size()] = EyeDiag::theEyeDiagContainer.at(cBoard->getIndex())
-                                                                                                                 ->at(cOpticalGroup->getIndex())
-                                                                                                                 ->at(cHybrid->getIndex())
-                                                                                                                 ->at(cChip->getIndex())
+                                    .data[i + j * dacList1.size() + k * dacList1.size() * dacList2.size()] = EyeDiag::theEyeDiagContainer.at(cBoard->getGlobalIndex())
+                                                                                                                 ->at(cOpticalGroup->getGlobalIndex())
+                                                                                                                 ->at(cHybrid->getGlobalIndex())
+                                                                                                                 ->at(cChip->getGlobalIndex())
                                                                                                                  ->getSummary<std::unordered_map<std::string, std::array<float, 7>>>();
             }
         }

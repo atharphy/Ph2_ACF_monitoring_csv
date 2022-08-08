@@ -79,11 +79,11 @@ class CicFEAlignment : public OTTool
     // get alignment results
     uint8_t getPhaseAlignmentValue(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::OpticalGroup* pGroup, Ph2_HwDescription::Hybrid* pFe, Ph2_HwDescription::ReadoutChip* pChip, uint8_t pLine)
     {
-        return fPhaseAlignmentValues.at(pBoard->getIndex())->at(pGroup->getIndex())->at(pFe->getIndex())->at(pChip->getIndex())->getSummary<AlignmentValues>()[pLine];
+        return fPhaseAlignmentValues.at(pBoard->getGlobalIndex())->at(pGroup->getGlobalIndex())->at(pFe->getGlobalIndex())->at(pChip->getGlobalIndex())->getSummary<AlignmentValues>()[pLine];
     }
     uint8_t getWordAlignmentValue(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::OpticalGroup* pGroup, Ph2_HwDescription::Hybrid* pFe, Ph2_HwDescription::ReadoutChip* pChip, uint8_t pLine)
     {
-        return fWordAlignmentValues.at(pBoard->getIndex())->at(pGroup->getIndex())->at(pFe->getIndex())->at(pChip->getIndex())->getSummary<AlignmentValues>()[pLine];
+        return fWordAlignmentValues.at(pBoard->getGlobalIndex())->at(pGroup->getGlobalIndex())->at(pFe->getGlobalIndex())->at(pChip->getGlobalIndex())->getSummary<AlignmentValues>()[pLine];
     }
     bool getStatus() const { return fSuccess; }
 

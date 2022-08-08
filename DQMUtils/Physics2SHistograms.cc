@@ -41,22 +41,22 @@ void Physics2SHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
 // 			{
 //                 for(const auto chip: *hybrid)
 //                 {
-//                     TH1F* topClusterHistograms = fTopClusterHistograms.at(board->getIndex())
-//                                                         ->at(opticalGroup->getIndex())
-//                                                         ->at(hybrid->getIndex())
-//                                                         ->at(chip->getIndex())
+//                     TH1F* topClusterHistograms = fTopClusterHistograms.at(board->getGlobalIndex())
+//                                                         ->at(opticalGroup->getGlobalIndex())
+//                                                         ->at(hybrid->getGlobalIndex())
+//                                                         ->at(chip->getGlobalIndex())
 //                                                         ->getSummary<HistContainer<TH1F>>()
 //                                                         .fTheHistogram;
-//                     TH1F* bottomClusterHistograms = fBottomClusterHistograms.at(board->getIndex())
-//                                                         ->at(opticalGroup->getIndex())
-//                                                         ->at(hybrid->getIndex())
-//                                                         ->at(chip->getIndex())
+//                     TH1F* bottomClusterHistograms = fBottomClusterHistograms.at(board->getGlobalIndex())
+//                                                         ->at(opticalGroup->getGlobalIndex())
+//                                                         ->at(hybrid->getGlobalIndex())
+//                                                         ->at(chip->getGlobalIndex())
 //                                                         ->getSummary<HistContainer<TH1F>>()
 //                                                         .fTheHistogram;
-//                     TH1F* stubHistograms = fStubPositionHistograms.at(board->getIndex())
-//                                                         ->at(opticalGroup->getIndex())
-//                                                         ->at(hybrid->getIndex())
-//                                                         ->at(chip->getIndex())
+//                     TH1F* stubHistograms = fStubPositionHistograms.at(board->getGlobalIndex())
+//                                                         ->at(opticalGroup->getGlobalIndex())
+//                                                         ->at(hybrid->getGlobalIndex())
+//                                                         ->at(chip->getGlobalIndex())
 //                                                         ->getSummary<HistContainer<TH1F>>()
 //                                                         .fTheHistogram;
 // 					auto data2S = chip->getSummary<Data2S<NCHANNELS, MAX_NUMBER_OF_STUB_CLUSTERS_2S>>();
@@ -89,13 +89,17 @@ void Physics2SHistograms::fillOccupancy(const DetectorDataContainer& DataContain
                 {
                     if(chip->getChannelContainer<Occupancy>() == nullptr) continue;
 
-                    TH1F* topSensorHistogram =
-                        fTopSensorHistogramContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    TH1F* topSensorHistogram = fTopSensorHistogramContainer.at(board->getGlobalIndex())
+                                                   ->at(opticalGroup->getGlobalIndex())
+                                                   ->at(hybrid->getGlobalIndex())
+                                                   ->at(chip->getGlobalIndex())
+                                                   ->getSummary<HistContainer<TH1F>>()
+                                                   .fTheHistogram;
 
-                    TH1F* bottomSensorHistogram = fBottomSensorHistogramContainer.at(board->getIndex())
-                                                      ->at(opticalGroup->getIndex())
-                                                      ->at(hybrid->getIndex())
-                                                      ->at(chip->getIndex())
+                    TH1F* bottomSensorHistogram = fBottomSensorHistogramContainer.at(board->getGlobalIndex())
+                                                      ->at(opticalGroup->getGlobalIndex())
+                                                      ->at(hybrid->getGlobalIndex())
+                                                      ->at(chip->getGlobalIndex())
                                                       ->getSummary<HistContainer<TH1F>>()
                                                       .fTheHistogram;
 
@@ -127,8 +131,12 @@ void Physics2SHistograms::fillStub(const DetectorDataContainer& DataContainer)
                 {
                     if(chip->getChannelContainer<float>() == nullptr) continue;
 
-                    TH2F* stubHistogram =
-                        fStubHistogramContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* stubHistogram = fStubHistogramContainer.at(board->getGlobalIndex())
+                                              ->at(opticalGroup->getGlobalIndex())
+                                              ->at(hybrid->getGlobalIndex())
+                                              ->at(chip->getGlobalIndex())
+                                              ->getSummary<HistContainer<TH2F>>()
+                                              .fTheHistogram;
 
                     uint16_t channelNumber = 0;
                     for(auto channel: *chip->getChannelContainer<float>())
@@ -177,14 +185,14 @@ void Physics2SHistograms::process()
     // otherwise they will be automatically saved
     /*for(auto board: fOccupancy) // for on boards - begin
     {
-        size_t boardIndex = board->getIndex();
+        size_t boardIndex = board->getGlobalIndex();
         for(auto opticalGroup: *board) // for on opticalGroup - begin
         {
-            size_t opticalGroupIndex = opticalGroup->getIndex();
+            size_t opticalGroupIndex = opticalGroup->getGlobalIndex();
 
             for(auto hybrid: *opticalGroup) // for on hybrid - begin
             {
-                size_t hybridIndex = hybrid->getIndex();
+                size_t hybridIndex = hybrid->getGlobalIndex();
 
                 for(auto chip: *hybrid) // for on chip - begin
                 {

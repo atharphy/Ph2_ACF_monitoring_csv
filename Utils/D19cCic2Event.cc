@@ -144,7 +144,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         uint32_t cHitInfoSize   = (cHitInfoHeader & 0xFFF) * 4;
                         size_t   cOffset        = std::distance(pData.begin(), cIterator);
                         cStatusWord             = static_cast<uint8_t>(cGoodHitInfo == VALID_L1_HEADER);
-                        LOG(DEBUG) << BOLDBLUE << "\t.. ReadoutChip#" << +cHybrid->getIndex() << "...hit info header " << std::bitset<4>(cGoodHitInfo) << "... " << +cHitInfoSize
+                        LOG(DEBUG) << BOLDBLUE << "\t.. ReadoutChip#" << +cHybrid->getGlobalIndex() << "...hit info header " << std::bitset<4>(cGoodHitInfo) << "... " << +cHitInfoSize
                                    << " words in hit packet..."
                                    << "... status word " << std::bitset<2>(cStatusWord) << " Event#" << +fEventCount << RESET;
                         if(cStatusWord == 0x01)
@@ -225,7 +225,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                         // LOG(INFO) << BOLDCYAN << "\t...PCluster:" << std::bitset<P_CLUSTER_WORD_SIZE>(cWord) << "] \t... " << std::bitset<32>((uint32_t)((cVal & (0x7 << 14)) >> 14))
                                         //            << "\t" << +cId << "\t" << +cAdd << "\t" << +cWdth << "\t" << +cZInfo << RESET;
                                     } // push back p clusters
-                                    // LOG (INFO) << BOLDCYAN << "For Fe#" << +cHybrid->getIndex() << " [ Id " << +cHybrid->getId() << " ] event hist list has " <<
+                                    // LOG (INFO) << BOLDCYAN << "For Fe#" << +cHybrid->getGlobalIndex() << " [ Id " << +cHybrid->getId() << " ] event hist list has " <<
                                     // +fEventHitList[cHybridIndex].second.size() << " words." << RESET;
                                 }
                             }
@@ -304,8 +304,8 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         uint32_t                      cGoodStubInfo   = (cStubInfoHeader & (0xF << 28)) >> 28;
                         uint32_t                      cStubInfoSize   = (cStubInfoHeader & 0xFFF) * 4;
                         cStatusWord                                   = cStatusWord | (static_cast<uint8_t>(cGoodStubInfo == VALID_STUB_HEADER) << 1);
-                        // LOG(INFO) << BOLDBLUE << "\t\t.. ReadoutChip#" << +cHybrid->getIndex() << "...stub info header " << std::bitset<4>(cGoodStubInfo) << "... " << +cStubInfoSize << " words in
-                        // stub packet."
+                        // LOG(INFO) << BOLDBLUE << "\t\t.. ReadoutChip#" << +cHybrid->getGlobalIndex() << "...stub info header " << std::bitset<4>(cGoodStubInfo) << "... " << +cStubInfoSize << "
+                        // words in stub packet."
                         //            << "... status word " << std::bitset<2>(cStatusWord) << RESET;
                         if(cStatusWord == 0x03)
                         {
@@ -484,8 +484,8 @@ void D19cCic2Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
                 {
                     if(cHybrid->getId() == cHybridId)
                     {
-                        cOpticalGroupIndex = cOpticalGroup->getIndex();
-                        cHybridIndex       = cHybrid->getIndex();
+                        cOpticalGroupIndex = cOpticalGroup->getGlobalIndex();
+                        cHybridIndex       = cHybrid->getGlobalIndex();
                     }
                 }
             }
