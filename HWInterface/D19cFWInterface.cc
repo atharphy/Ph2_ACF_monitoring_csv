@@ -289,13 +289,15 @@ void D19cFWInterface::configureTxRxPolarity(const Ph2_HwDescription::BeBoard* pB
 
     // L12
     this->WriteReg("fc7_daq_cnfg.optical_block.tx_polarity.l12", cTxGlobalValueL12);
-    this->WriteReg("fc7_daq_cnfg.optical_block.tx_polarity.l12", cRxGlobalValueL12);
+    this->WriteReg("fc7_daq_cnfg.optical_block.rx_polarity.l12", cRxGlobalValueL12);
     // L8
     this->WriteReg("fc7_daq_cnfg.optical_block.tx_polarity.l8", cTxGlobalValueL8);
-    this->WriteReg("fc7_daq_cnfg.optical_block.tx_polarity.l8", cRxGlobalValueL8);
+    this->WriteReg("fc7_daq_cnfg.optical_block.rx_polarity.l8", cRxGlobalValueL8);
 
-    LOG(INFO) << BLUE << "FMC-L12 -- Rx Polarity = " << +cRxGlobalValueL12 << "  -- Tx Polarity = " << +cTxGlobalValueL12 << RESET;
-    LOG(INFO) << BLUE << "FMC-L8  -- Rx Polarity = " << +cRxGlobalValueL8 << "  -- Tx Polarity = " << +cTxGlobalValueL8 << RESET;
+    LOG(INFO) << BLUE << "FMC-L12 -- Rx Polarity = " << +this->ReadReg("fc7_daq_cnfg.optical_block.rx_polarity.l12")
+              << "  -- Tx Polarity = " << +this->ReadReg("fc7_daq_cnfg.optical_block.tx_polarity.l12") << RESET;
+    LOG(INFO) << BLUE << "FMC-L8  -- Rx Polarity = " << +this->ReadReg("fc7_daq_cnfg.optical_block.rx_polarity.l8")
+              << "  -- Tx Polarity = " << +this->ReadReg("fc7_daq_cnfg.optical_block.tx_polarity.l8") << RESET;
 }
 
 void D19cFWInterface::configureCDCE_old(uint16_t pClockRate)
