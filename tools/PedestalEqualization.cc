@@ -98,7 +98,7 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     ContainerFactory::copyAndInitBoard<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
     for(auto cBoard: *fDetectorContainer)
     {
-        auto&                cBoardRegNap = fBoardRegContainer.at(cBoard->getGlobalIndex())->getSummary<BeBoardRegMap>();
+        auto&                cBoardRegNap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
         const BeBoardRegMap& cOrigRegMap  = static_cast<const BeBoard*>(cBoard)->getBeBoardRegMap();
         cBoardRegNap.insert(cOrigRegMap.begin(), cOrigRegMap.end());
     }
@@ -156,10 +156,10 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
                         if(theChip->getFrontEndType() == FrontEndType::CBC3)
                         {
                             LOG(INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for offset tuning for CBC " << +chip->getId() << RESET;
-                            // fStubLogicCointainer.at(board->getGlobalIndex())->at(opticalGroup->getGlobalIndex())->at(hybrid->getGlobalIndex())->at(chip->getGlobalIndex())->getSummary<uint8_t>() =
+                            // fStubLogicCointainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<uint8_t>() =
                             //     fReadoutChipInterface->ReadChipReg(theChip, "Pipe&StubInpSel&Ptwidth");
                             // uint8_t value = fReadoutChipInterface->ReadChipReg(theChip, "HIP&TestMode");
-                            // fHIPCountCointainer.at(board->getGlobalIndex())->at(opticalGroup->getGlobalIndex())->at(hybrid->getGlobalIndex())->at(chip->getGlobalIndex())->getSummary<uint8_t>() =
+                            // fHIPCountCointainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<uint8_t>() =
                             // value;
                             static_cast<CbcInterface*>(fReadoutChipInterface)->enableHipSuppression(theChip, false, true, 0);
                         }
@@ -183,7 +183,7 @@ void PedestalEqualization::Reset()
     {
         BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
         LOG(INFO) << BOLDBLUE << "Resetting all registers on back-end board " << +cBoard->getId() << RESET;
-        auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getGlobalIndex())->getSummary<BeBoardRegMap>();
+        auto&                                         cBeRegMap = fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>();
         std::vector<std::pair<std::string, uint32_t>> cVecBeBoardRegs;
         cVecBeBoardRegs.clear();
         for(auto cReg: cBeRegMap) { cVecBeBoardRegs.push_back(make_pair(cReg.first, cReg.second)); }
@@ -305,7 +305,7 @@ void PedestalEqualization::FindVplus()
                 for(auto chip: *hybrid) // for on chip - begin
                 {
                     ReadoutChip* theChip =
-                        static_cast<ReadoutChip*>(fDetectorContainer->at(board->getGlobalIndex())->at(opticalGroup->getGlobalIndex())->at(hybrid->getGlobalIndex())->at(chip->getGlobalIndex()));
+                        static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
                     uint16_t tmpVthr = 0;
                     auto     cType   = theChip->getFrontEndType();
                     if(cType == FrontEndType::CBC3) tmpVthr = (theChip->getReg("VCth1") + (theChip->getReg("VCth2") << 8));
@@ -430,21 +430,21 @@ void PedestalEqualization::FindOffsets()
                     // if(fDisableStubLogic and fWithCBC)
                     // {
                     //     ReadoutChip* theChip =
-                    //     static_cast<ReadoutChip*>(fDetectorContainer->at(board->getGlobalIndex())->at(opticalGroup->getGlobalIndex())->at(hybrid->getGlobalIndex())->at(chip->getGlobalIndex()));
+                    //     static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
 
                     //     uint8_t stubLogicValue =
-                    //     fStubLogicCointainer.at(board->getGlobalIndex())->at(opticalGroup->getGlobalIndex())->at(hybrid->getGlobalIndex())->at(chip->getGlobalIndex())->getSummary<uint8_t>();
+                    //     fStubLogicCointainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<uint8_t>();
                     //     fReadoutChipInterface->WriteChipReg(theChip, "Pipe&StubInpSel&Ptwidth", stubLogicValue);
 
                     //     uint8_t HIPCountValue =
-                    //     fHIPCountCointainer.at(board->getGlobalIndex())->at(opticalGroup->getGlobalIndex())->at(hybrid->getGlobalIndex())->at(chip->getGlobalIndex())->getSummary<uint8_t>();
+                    //     fHIPCountCointainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<uint8_t>();
                     //     fReadoutChipInterface->WriteChipReg(theChip, "HIP&TestMode", HIPCountValue);
                     // }
 
                     unsigned int channelNumber = 1;
                     int          cMeanOffset   = 0;
                     ReadoutChip* roc =
-                        static_cast<ReadoutChip*>(fDetectorContainer->at(board->getGlobalIndex())->at(opticalGroup->getGlobalIndex())->at(hybrid->getGlobalIndex())->at(chip->getGlobalIndex()));
+                        static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
                     auto cType = roc->getFrontEndType();
                     for(auto& channel: *chip->getChannelContainer<uint8_t>()) // for on channel - begin
                     {

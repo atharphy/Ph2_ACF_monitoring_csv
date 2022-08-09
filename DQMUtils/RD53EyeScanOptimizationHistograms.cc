@@ -120,10 +120,10 @@ void EyeScanOptimizationHistograms::fillScanTAP0(const DetectorDataContainer& TA
                         if(cChip->getSummaryContainer<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>() == nullptr) continue;
 
                         auto* TAP0scanHist = TAP0scan[obs]
-                                                 ->at(cBoard->getGlobalIndex())
-                                                 ->at(cOpticalGroup->getGlobalIndex())
-                                                 ->at(cHybrid->getGlobalIndex())
-                                                 ->at(cChip->getGlobalIndex())
+                                                 ->at(cBoard->getIndex())
+                                                 ->at(cOpticalGroup->getIndex())
+                                                 ->at(cHybrid->getIndex())
+                                                 ->at(cChip->getIndex())
                                                  ->getSummary<CanvasContainer<TH1F>>()
                                                  .fTheHistogram;
 
@@ -150,10 +150,10 @@ void EyeScanOptimizationHistograms::fillScanTAP1(const DetectorDataContainer& TA
                         if(cChip->getSummaryContainer<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>() == nullptr) continue;
 
                         auto* TAP1scanHist = TAP1scan[obs]
-                                                 ->at(cBoard->getGlobalIndex())
-                                                 ->at(cOpticalGroup->getGlobalIndex())
-                                                 ->at(cHybrid->getGlobalIndex())
-                                                 ->at(cChip->getGlobalIndex())
+                                                 ->at(cBoard->getIndex())
+                                                 ->at(cOpticalGroup->getIndex())
+                                                 ->at(cHybrid->getIndex())
+                                                 ->at(cChip->getIndex())
                                                  ->getSummary<CanvasContainer<TH1F>>()
                                                  .fTheHistogram;
 
@@ -180,10 +180,10 @@ void EyeScanOptimizationHistograms::fillScanTAP2(const DetectorDataContainer& TA
                         if(cChip->getSummaryContainer<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>() == nullptr) continue;
 
                         auto* TAP2scanHist = TAP2scan[obs]
-                                                 ->at(cBoard->getGlobalIndex())
-                                                 ->at(cOpticalGroup->getGlobalIndex())
-                                                 ->at(cHybrid->getGlobalIndex())
-                                                 ->at(cChip->getGlobalIndex())
+                                                 ->at(cBoard->getIndex())
+                                                 ->at(cOpticalGroup->getIndex())
+                                                 ->at(cHybrid->getIndex())
+                                                 ->at(cChip->getIndex())
                                                  ->getSummary<CanvasContainer<TH1F>>()
                                                  .fTheHistogram;
 
@@ -212,10 +212,10 @@ void EyeScanOptimizationHistograms::fillScan3D(const DetectorDataContainer& the3
                         if(cChip->getSummaryContainer<GenericDataArray<TAPsize * TAPsize * TAPsize>>() == nullptr) continue;
 
                         auto* TAP3DscanHist = ThreeDscan[obs]
-                                                  ->at(cBoard->getGlobalIndex())
-                                                  ->at(cOpticalGroup->getGlobalIndex())
-                                                  ->at(cHybrid->getGlobalIndex())
-                                                  ->at(cChip->getGlobalIndex())
+                                                  ->at(cBoard->getIndex())
+                                                  ->at(cOpticalGroup->getIndex())
+                                                  ->at(cHybrid->getIndex())
+                                                  ->at(cChip->getIndex())
                                                   ->getSummary<CanvasContainer<TH3F>>()
                                                   .fTheHistogram;
 

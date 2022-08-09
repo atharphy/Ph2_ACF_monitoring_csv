@@ -1206,8 +1206,8 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
     else if(pType == BoardType::D19C && pBoard->getEventType() != EventType::PSAS)
     {
         bool cTLUconfig = 2;
-        // bool cTLUconfig = (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(pBoard->getGlobalIndex()), "fc7_daq_cnfg.tlu_block.handshake_mode") == 2 &&
-        //                    fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(pBoard->getGlobalIndex()), "fc7_daq_cnfg.tlu_block.tlu_enabled") == 1);
+        // bool cTLUconfig = (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(pBoard->getIndex()), "fc7_daq_cnfg.tlu_block.handshake_mode") == 2 &&
+        //                    fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(pBoard->getIndex()), "fc7_daq_cnfg.tlu_block.tlu_enabled") == 1);
         // for (auto L : pData) LOG(INFO) << BOLDBLUE << std::bitset<32>(L) << RESET;
         for(auto& pevt: fEventList) delete pevt;
         fEventList.clear();

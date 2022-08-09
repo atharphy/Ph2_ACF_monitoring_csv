@@ -61,10 +61,10 @@ void DataTransmissionTestGraphs::fillTAP0scan(const DetectorDataContainer& TAP0s
                 for(const auto cChip: *cHybrid)
                 {
                     if(cChip->getSummaryContainer<std::array<std::tuple<uint16_t, double, double, double>, 11>>() == nullptr) continue;
-                    auto* TAP0scanGraph = TAP0scan.at(cBoard->getGlobalIndex())
-                                              ->at(cOpticalGroup->getGlobalIndex())
-                                              ->at(cHybrid->getGlobalIndex())
-                                              ->at(cChip->getGlobalIndex())
+                    auto* TAP0scanGraph = TAP0scan.at(cBoard->getIndex())
+                                              ->at(cOpticalGroup->getIndex())
+                                              ->at(cHybrid->getIndex())
+                                              ->at(cChip->getIndex())
                                               ->getSummary<CanvasContainer<TGraphAsymmErrors>>()
                                               .fTheHistogram;
 
@@ -93,10 +93,10 @@ void DataTransmissionTestGraphs::fillTAP0tgt(const DetectorDataContainer& TAP0tg
                 {
                     if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
 
-                    auto* TAP0tgtHist = TAP0tgt.at(cBoard->getGlobalIndex())
-                                            ->at(cOpticalGroup->getGlobalIndex())
-                                            ->at(cHybrid->getGlobalIndex())
-                                            ->at(cChip->getGlobalIndex())
+                    auto* TAP0tgtHist = TAP0tgt.at(cBoard->getIndex())
+                                            ->at(cOpticalGroup->getIndex())
+                                            ->at(cHybrid->getIndex())
+                                            ->at(cChip->getIndex())
                                             ->getSummary<CanvasContainer<TH1F>>()
                                             .fTheHistogram;
 

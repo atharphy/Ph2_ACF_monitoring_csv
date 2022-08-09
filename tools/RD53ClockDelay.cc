@@ -170,10 +170,10 @@ void ClockDelay::run()
                     static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", latency - 1);
 
                     for(auto i = 0u; i < ClkDelaySize; i++)
-                        theOccContainer.at(cBoard->getGlobalIndex())
-                            ->at(cOpticalGroup->getGlobalIndex())
-                            ->at(cHybrid->getGlobalIndex())
-                            ->at(cChip->getGlobalIndex())
+                        theOccContainer.at(cBoard->getIndex())
+                            ->at(cOpticalGroup->getIndex())
+                            ->at(cHybrid->getIndex())
+                            ->at(cChip->getIndex())
                             ->getSummary<GenericDataArray<ClkDelaySize>>()
                             .data[i] = 0;
                 }
@@ -243,10 +243,10 @@ void ClockDelay::analyze()
 
                     for(auto i = 0u; i < dacList.size(); i++)
                     {
-                        auto current = theOccContainer.at(cBoard->getGlobalIndex())
-                                           ->at(cOpticalGroup->getGlobalIndex())
-                                           ->at(cHybrid->getGlobalIndex())
-                                           ->at(cChip->getGlobalIndex())
+                        auto current = theOccContainer.at(cBoard->getIndex())
+                                           ->at(cOpticalGroup->getIndex())
+                                           ->at(cHybrid->getIndex())
+                                           ->at(cChip->getIndex())
                                            ->getSummary<GenericDataArray<ClkDelaySize>>()
                                            .data[i];
                         if(current > best)
@@ -264,7 +264,7 @@ void ClockDelay::analyze()
                     // ####################################################
                     // # Fill delay container and download new DAC values #
                     // ####################################################
-                    theClockDelayContainer.at(cBoard->getGlobalIndex())->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getSummary<uint16_t>() =
+                    theClockDelayContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
                         regVal;
                     uint8_t phase, clock_delay, cmd_delay;
                     std::tie(phase, clock_delay, cmd_delay) = bits::unpack<1, 4, 4>(this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "CLK_DATA_DELAY"));
@@ -329,10 +329,10 @@ void ClockDelay::scanDac(const std::string& regName, const std::vector<uint16_t>
                     for(const auto cChip: *cHybrid)
                     {
                         float occ = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
-                        theContainer->at(cBoard->getGlobalIndex())
-                            ->at(cOpticalGroup->getGlobalIndex())
-                            ->at(cHybrid->getGlobalIndex())
-                            ->at(cChip->getGlobalIndex())
+                        theContainer->at(cBoard->getIndex())
+                            ->at(cOpticalGroup->getIndex())
+                            ->at(cHybrid->getIndex())
+                            ->at(cChip->getIndex())
                             ->getSummary<GenericDataArray<ClkDelaySize>>()
                             .data[i] = occ;
                     }

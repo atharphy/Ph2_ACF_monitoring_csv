@@ -55,16 +55,16 @@ void DQMHistogramSSASCurveAsync::fillSSASCurveAsyncPlots(DetectorDataContainer& 
 {
     for(auto board: theHitContainer) // for on boards - begin
     {
-        size_t boardIndex = board->getGlobalIndex();
+        size_t boardIndex = board->getIndex();
         for(auto opticalGroup: *board) // for on opticalGroup - begin
         {
-            size_t opticalGroupIndex = opticalGroup->getGlobalIndex();
+            size_t opticalGroupIndex = opticalGroup->getIndex();
             for(auto hybrid: *opticalGroup) // for on hybrid - begin
             {
-                size_t hybridIndex = hybrid->getGlobalIndex();
+                size_t hybridIndex = hybrid->getIndex();
                 for(auto chip: *hybrid) // for on chip - begin
                 {
-                    size_t chipIndex = chip->getGlobalIndex();
+                    size_t chipIndex = chip->getIndex();
                     // Retreive the corresponging chip histogram:
 
                     TH2F* chipHitHistogram = fDetectorHitHistograms.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getSummary<HistContainer<TH2F>>().fTheHistogram;
@@ -93,13 +93,13 @@ void DQMHistogramSSASCurveAsync::process()
     // otherwise they will be automatically saved
     for(auto board: fDetectorHitHistograms) // for on boards - begin
     {
-        size_t boardIndex = board->getGlobalIndex();
+        size_t boardIndex = board->getIndex();
         for(auto opticalGroup: *board) // for on opticalGroup - begin
         {
-            size_t opticalGroupIndex = opticalGroup->getGlobalIndex();
+            size_t opticalGroupIndex = opticalGroup->getIndex();
             for(auto hybrid: *opticalGroup) // for on hybrid - begin
             {
-                size_t hybridIndex = hybrid->getGlobalIndex();
+                size_t hybridIndex = hybrid->getIndex();
 
                 // Create a canvas do draw the plots
                 std::string validationCanvasName = "Hits_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
@@ -108,7 +108,7 @@ void DQMHistogramSSASCurveAsync::process()
                 cValidation->Divide(hybrid->size());
                 for(auto chip: *hybrid) // for on chip - begin
                 {
-                    size_t chipIndex = chip->getGlobalIndex();
+                    size_t chipIndex = chip->getIndex();
                     cValidation->cd(chipIndex + 1);
                     // Retreive the corresponging chip histogram:
                     TH2F* chipHitHistogram = fDetectorHitHistograms.at(boardIndex)->at(opticalGroupIndex)->at(hybridIndex)->at(chipIndex)->getSummary<HistContainer<TH2F>>().fTheHistogram;

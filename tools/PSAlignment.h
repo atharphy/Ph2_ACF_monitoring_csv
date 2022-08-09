@@ -58,21 +58,21 @@ class PSAlignment : public OTTool
         auto cBoard     = (*cBoardIter);
         //
         auto cOGId             = pChip->getOpticalGroupId();
-        auto cOpticalGroupIter = std::find_if(fDetectorContainer->at(cBoard->getGlobalIndex())->begin(),
-                                              fDetectorContainer->at(cBoard->getGlobalIndex())->end(),
+        auto cOpticalGroupIter = std::find_if(fDetectorContainer->at(cBoard->getIndex())->begin(),
+                                              fDetectorContainer->at(cBoard->getIndex())->end(),
                                               [&cOGId](Ph2_HwDescription::OpticalGroup* x) { return x->getId() == cOGId; });
         auto cOG               = (*cOpticalGroupIter);
         //
         auto cHybridId   = pChip->getHybridId();
-        auto cHybridIter = std::find_if(fDetectorContainer->at(cBoard->getGlobalIndex())->at(cOG->getGlobalIndex())->begin(),
-                                        fDetectorContainer->at(cBoard->getGlobalIndex())->at(cOG->getGlobalIndex())->end(),
+        auto cHybridIter = std::find_if(fDetectorContainer->at(cBoard->getIndex())->at(cOG->getIndex())->begin(),
+                                        fDetectorContainer->at(cBoard->getIndex())->at(cOG->getIndex())->end(),
                                         [&cHybridId](Ph2_HwDescription::Hybrid* x) { return x->getId() == cHybridId; });
         auto cHybrid     = (*cHybridIter);
         //
-        auto& cAlParsThisBoard = fAlParsContainer.at(cBoard->getGlobalIndex());
-        auto& cAlParsThisOG    = cAlParsThisBoard->at(cOG->getGlobalIndex());
-        auto& cAlParsThisHybrd = cAlParsThisOG->at(cHybrid->getGlobalIndex());
-        auto& cAlParsThisChip  = cAlParsThisHybrd->at(pChip->getGlobalIndex());
+        auto& cAlParsThisBoard = fAlParsContainer.at(cBoard->getIndex());
+        auto& cAlParsThisOG    = cAlParsThisBoard->at(cOG->getIndex());
+        auto& cAlParsThisHybrd = cAlParsThisOG->at(cHybrid->getIndex());
+        auto& cAlParsThisChip  = cAlParsThisHybrd->at(pChip->getIndex());
         return cAlParsThisChip->getSummary<std::vector<MPAInputAlignment>>();
     }
 

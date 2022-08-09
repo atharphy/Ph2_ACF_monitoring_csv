@@ -167,10 +167,10 @@ void InjectionDelay::run()
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", latency - 1);
 
                     for(auto i = 0u; i < InjDelaySize; i++)
-                        theOccContainer.at(cBoard->getGlobalIndex())
-                            ->at(cOpticalGroup->getGlobalIndex())
-                            ->at(cHybrid->getGlobalIndex())
-                            ->at(cChip->getGlobalIndex())
+                        theOccContainer.at(cBoard->getIndex())
+                            ->at(cOpticalGroup->getIndex())
+                            ->at(cHybrid->getIndex())
+                            ->at(cChip->getIndex())
                             ->getSummary<GenericDataArray<InjDelaySize>>()
                             .data[i] = 0;
                 }
@@ -240,10 +240,10 @@ void InjectionDelay::analyze()
 
                     for(auto i = 0u; i < dacList.size(); i++)
                     {
-                        auto current = theOccContainer.at(cBoard->getGlobalIndex())
-                                           ->at(cOpticalGroup->getGlobalIndex())
-                                           ->at(cHybrid->getGlobalIndex())
-                                           ->at(cChip->getGlobalIndex())
+                        auto current = theOccContainer.at(cBoard->getIndex())
+                                           ->at(cOpticalGroup->getIndex())
+                                           ->at(cHybrid->getIndex())
+                                           ->at(cChip->getIndex())
                                            ->getSummary<GenericDataArray<InjDelaySize>>()
                                            .data[i];
                         if(current > best)
@@ -261,7 +261,7 @@ void InjectionDelay::analyze()
                     // ####################################################
                     // # Fill delay container and download new DAC values #
                     // ####################################################
-                    theInjectionDelayContainer.at(cBoard->getGlobalIndex())->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getSummary<uint16_t>() =
+                    theInjectionDelayContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
                         regVal;
                     auto val = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT");
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT", (val & saveInjection) | (regVal & maxDelay));
@@ -318,10 +318,10 @@ void InjectionDelay::scanDac(const std::string& regName, const std::vector<uint1
                     for(const auto cChip: *cHybrid)
                     {
                         float occ = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
-                        theContainer->at(cBoard->getGlobalIndex())
-                            ->at(cOpticalGroup->getGlobalIndex())
-                            ->at(cHybrid->getGlobalIndex())
-                            ->at(cChip->getGlobalIndex())
+                        theContainer->at(cBoard->getIndex())
+                            ->at(cOpticalGroup->getIndex())
+                            ->at(cHybrid->getIndex())
+                            ->at(cChip->getIndex())
                             ->getSummary<GenericDataArray<InjDelaySize>>()
                             .data[dacList[i]] = occ;
                     }

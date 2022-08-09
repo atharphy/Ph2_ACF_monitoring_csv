@@ -167,10 +167,10 @@ void Latency::analyze()
 
                     for(auto i = 0u; i < dacList.size(); i++)
                     {
-                        auto current = theOccContainer.at(cBoard->getGlobalIndex())
-                                           ->at(cOpticalGroup->getGlobalIndex())
-                                           ->at(cHybrid->getGlobalIndex())
-                                           ->at(cChip->getGlobalIndex())
+                        auto current = theOccContainer.at(cBoard->getIndex())
+                                           ->at(cOpticalGroup->getIndex())
+                                           ->at(cHybrid->getIndex())
+                                           ->at(cChip->getIndex())
                                            ->getSummary<GenericDataArray<LatencySize>>()
                                            .data[i];
                         if(current > best)
@@ -192,7 +192,7 @@ void Latency::analyze()
                     // ######################################################
                     // # Fill latency container and download new DAC values #
                     // ######################################################
-                    theLatencyContainer.at(cBoard->getGlobalIndex())->at(cOpticalGroup->getGlobalIndex())->at(cHybrid->getGlobalIndex())->at(cChip->getGlobalIndex())->getSummary<uint16_t>() = regVal;
+                    theLatencyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", regVal);
                 }
 }
@@ -234,10 +234,10 @@ void Latency::scanDac(const std::string& regName, const std::vector<uint16_t>& d
                     for(const auto cChip: *cHybrid)
                     {
                         float occ = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
-                        theContainer->at(cBoard->getGlobalIndex())
-                            ->at(cOpticalGroup->getGlobalIndex())
-                            ->at(cHybrid->getGlobalIndex())
-                            ->at(cChip->getGlobalIndex())
+                        theContainer->at(cBoard->getIndex())
+                            ->at(cOpticalGroup->getIndex())
+                            ->at(cHybrid->getIndex())
+                            ->at(cChip->getIndex())
                             ->getSummary<GenericDataArray<LatencySize>>()
                             .data[i] = occ;
                     }

@@ -96,16 +96,16 @@ void CBCHistogramPulseShape::fillCBCPulseShapePlots(uint16_t delay, DetectorData
 
     for(auto board: theThresholdAndNoiseContainer) // for on boards - begin
     {
-        size_t boardIndex = board->getGlobalIndex();
+        size_t boardIndex = board->getIndex();
         for(auto opticalGroup: *board) // for on opticalGroup - begin
         {
-            size_t opticalGroupIndex = opticalGroup->getGlobalIndex();
+            size_t opticalGroupIndex = opticalGroup->getIndex();
             for(auto hybrid: *opticalGroup) // for on hybrid - begin
             {
-                size_t hybridIndex = hybrid->getGlobalIndex();
+                size_t hybridIndex = hybrid->getIndex();
                 for(auto chip: *hybrid) // for on chip - begin
                 {
-                    size_t chipIndex = chip->getGlobalIndex();
+                    size_t chipIndex = chip->getIndex();
                     // Retreive the corresponging chip histogram:
                     if(chip->getSummaryContainer<ThresholdAndNoise, ThresholdAndNoise>() == nullptr) continue;
                     TH1F* chipPulseShapeHistogram =
@@ -143,10 +143,10 @@ void CBCHistogramPulseShape::fillSCurvePlots(uint16_t vcthr, uint16_t latency, u
                 for(auto chip: *hybrid)
                 {
                     TH2F* chipSCurve = fDetectorSCurveHistogramMap.at(std::make_tuple(latency, delay))
-                                           .at(board->getGlobalIndex())
-                                           ->at(opticalGroup->getGlobalIndex())
-                                           ->at(hybrid->getGlobalIndex())
-                                           ->at(chip->getGlobalIndex())
+                                           .at(board->getIndex())
+                                           ->at(opticalGroup->getIndex())
+                                           ->at(hybrid->getIndex())
+                                           ->at(chip->getIndex())
                                            ->getSummary<HistContainer<TH2F>>()
                                            .fTheHistogram;
 
@@ -184,7 +184,7 @@ void CBCHistogramPulseShape::process()
 
                 for(auto chip: *hybrid) // for on chip - begin
                 {
-                    size_t       chipIndex     = chip->getGlobalIndex();
+                    size_t       chipIndex     = chip->getIndex();
                     TVirtualPad* currentCanvas = cChipPulseShape->cd(chipIndex + 1);
                     TPad*        myPad         = static_cast<TPad*>(cChipPulseShape->GetPad(chipIndex + 1));
                     // Retreive the corresponging chip histogram:

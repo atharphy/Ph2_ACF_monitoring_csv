@@ -53,7 +53,7 @@ void SSAPhysics::sendBoardData(BoardContainer* const& cBoard)
 {
     auto theOccStream = prepareChannelContainerStreamer<Occupancy>("Occ");
 
-    if(fDQMStreamerEnabled == true) { theOccStream->streamAndSendBoard(fOccContainer.at(cBoard->getGlobalIndex()), fDQMStreamer); }
+    if(fDQMStreamerEnabled == true) { theOccStream->streamAndSendBoard(fOccContainer.at(cBoard->getIndex()), fDQMStreamer); }
 }
 
 void SSAPhysics::Stop()
@@ -153,7 +153,7 @@ void SSAPhysics::fillDataContainer(BoardContainer* const& cBoard)
     // ###################
     // # Clear container #
     // ###################
-    for(const auto cOpticalGroup: *fOccContainer.at(cBoard->getGlobalIndex()))
+    for(const auto cOpticalGroup: *fOccContainer.at(cBoard->getIndex()))
         for(const auto cHybrid: *cOpticalGroup)
             for(const auto cChip: *cHybrid)
                 for(auto& channel: *cChip->getChannelContainer<Occupancy>())
@@ -169,7 +169,7 @@ void SSAPhysics::fillDataContainer(BoardContainer* const& cBoard)
     // Assuming all chip will have all channels enabled:
     auto allChannelGroup = getChannelGroup(-1);
 
-    for(const auto& event: events) { event->fillDataContainer(fOccContainer.at(cBoard->getGlobalIndex()), allChannelGroup); }
+    for(const auto& event: events) { event->fillDataContainer(fOccContainer.at(cBoard->getIndex()), allChannelGroup); }
 }
 
 void SSAPhysics::chipErrorReport() {}

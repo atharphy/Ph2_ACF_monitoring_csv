@@ -178,7 +178,7 @@ int RD53Event::lane2chipId(const BeBoard* pBoard, uint16_t optGroup_id, uint16_t
 
 void RD53Event::clearEventContainer(BeBoard& theBoard, DetectorDataContainer& theContainer)
 {
-    for(const auto cOpticalGroup: *theContainer.at(theBoard.getGlobalIndex()))
+    for(const auto cOpticalGroup: *theContainer.at(theBoard.getIndex()))
         for(const auto cHybrid: *cOpticalGroup)
             for(const auto cChip: *cHybrid)
             {

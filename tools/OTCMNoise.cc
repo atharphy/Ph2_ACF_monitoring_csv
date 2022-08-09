@@ -70,7 +70,7 @@ void OTCMNoise::TakeData()
     for(auto cBoard: theHitContainer)
     {
         // BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
-        BeBoard* theBoard = static_cast<BeBoard*>(fDetectorContainer->at(cBoard->getGlobalIndex()));
+        BeBoard* theBoard = static_cast<BeBoard*>(fDetectorContainer->at(cBoard->getIndex()));
 
         uint32_t cN = 0;
 
@@ -101,7 +101,7 @@ void OTCMNoise::TakeData()
                         // for 2d correlation, save channels with hits per chip
                         if(f2DHistograms)
                         {
-                            uint32_t chipOffset_module = (cHybrid->getGlobalIndex() * HYBRID_CHANNELS_OT) + (cChip->getGlobalIndex() * NCHANNELS);
+                            uint32_t chipOffset_module = (cHybrid->getIndex() * HYBRID_CHANNELS_OT) + (cChip->getIndex() * NCHANNELS);
                             for(uint32_t iCh = 0; iCh < NCHANNELS + 1; iCh++)
                             {
                                 if(cEvent->DataBit(cHybrid->getId(), cChip->getId(), iCh)) { hit_channels.push_back(iCh + chipOffset_module); }
@@ -122,8 +122,8 @@ void OTCMNoise::TakeData()
                     {
                         for(size_t iCh2 = 0; iCh2 < hit_channels.size(); iCh2++)
                         {
-                            the2DHitContainer.at(cBoard->getGlobalIndex())
-                                ->at(cOpticalGroup->getGlobalIndex())
+                            the2DHitContainer.at(cBoard->getIndex())
+                                ->at(cOpticalGroup->getIndex())
                                 ->getSummary<GenericDataArray_2D<TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT, uint32_t>>()(hit_channels[iCh1], hit_channels[iCh2]) += 1;
                         }
                     }
