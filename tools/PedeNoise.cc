@@ -274,12 +274,10 @@ void PedeNoise::reloadStubLogic()
                     if(cChip->getFrontEndType() == FrontEndType::CBC3)
                     {
                         LOG(INFO) << BOLDBLUE << "Chip Type = CBC3 - re-enabling stub logic to original value!" << RESET;
+                        cRegVec.push_back({"Pipe&StubInpSel&Ptwidth",
+                                           fStubLogicValue->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()});
                         cRegVec.push_back(
-                            {"Pipe&StubInpSel&Ptwidth",
-                             fStubLogicValue->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()});
-                        cRegVec.push_back(
-                            {"HIP&TestMode",
-                             fHIPCountValue->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()});
+                            {"HIP&TestMode", fHIPCountValue->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()});
                         fReadoutChipInterface->WriteChipMultReg(cChip, cRegVec);
                     }
                 }
@@ -412,12 +410,8 @@ void PedeNoise::Validate()
                     for(uint32_t iChan = 0; iChan < NCH; iChan++)
                     {
                         // LOG (INFO) << RED << "Ch " << iChan << RESET ;
-                        float occupancy = theOccupancyContainer.at(cBoard->getIndex())
-                                              ->at(cOpticalGroup->getIndex())
-                                              ->at(cHybrid->getIndex())
-                                              ->at(cChip->getIndex())
-                                              ->getChannel<Occupancy>(iChan)
-                                              .fOccupancy;
+                        float occupancy =
+                            theOccupancyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChan).fOccupancy;
                         if(occupancy > fMaskingThreshold)
                         {
                             std::string message = "Found a noisy channel on Chip " + getReadoutChipString(cBoard->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId()) + " Channel " +
@@ -757,12 +751,8 @@ void PedeNoise::extractPedeNoise()
                                                         ->at(chip->getIndex())
                                                         ->getChannel<Occupancy>(iChannel)
                                                         .fOccupancy;
-                                currentOccupancy = mStripIt->second->at(board->getIndex())
-                                                       ->at(opticalGroup->getIndex())
-                                                       ->at(hybrid->getIndex())
-                                                       ->at(chip->getIndex())
-                                                       ->getChannel<Occupancy>(iChannel)
-                                                       .fOccupancy;
+                                currentOccupancy =
+                                    mStripIt->second->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
                                 binCenter = (mStripIt->first + (previousStripIterator)->first) / 2.;
                             }
                             else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
@@ -774,12 +764,8 @@ void PedeNoise::extractPedeNoise()
                                                         ->at(chip->getIndex())
                                                         ->getChannel<Occupancy>(iChannel)
                                                         .fOccupancy;
-                                currentOccupancy = mPixelIt->second->at(board->getIndex())
-                                                       ->at(opticalGroup->getIndex())
-                                                       ->at(hybrid->getIndex())
-                                                       ->at(chip->getIndex())
-                                                       ->getChannel<Occupancy>(iChannel)
-                                                       .fOccupancy;
+                                currentOccupancy =
+                                    mPixelIt->second->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
                                 binCenter = (mPixelIt->first + (previousPixelIterator)->first) / 2.;
                             }
 

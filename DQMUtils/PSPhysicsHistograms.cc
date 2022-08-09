@@ -126,8 +126,7 @@ void PSPhysicsHistograms::fillOccupancy(const DetectorDataContainer& DataContain
                     // std::cout<<"opticalGroup = "<<opticalGroup->getIndex()<<std::endl;
                     // std::cout<<"hybrid = "<<hybrid->getIndex()<<std::endl;
                     // std::cout<<"chip = "<<chip->getIndex()<<std::endl;
-                    FrontEndType theFrontEndType =
-                        fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getFrontEndType();
+                    FrontEndType theFrontEndType = fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getFrontEndType();
                     // std::cout<<__LINE__<<std::endl;
                     if(theFrontEndType == FrontEndType::MPA || theFrontEndType == FrontEndType::MPA2)
                     {
@@ -186,16 +185,11 @@ void PSPhysicsHistograms::fillStub(const DetectorDataContainer& DataContainer)
                 {
                     if(chip->getChannelContainer<float>() == nullptr) continue;
 
-                    FrontEndType theFrontEndType =
-                        fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getFrontEndType();
+                    FrontEndType theFrontEndType = fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getFrontEndType();
                     if(theFrontEndType != FrontEndType::MPA && theFrontEndType != FrontEndType::MPA2) continue;
 
-                    TH2F* stubHistogram = fStubHistogramContainer.at(board->getIndex())
-                                              ->at(opticalGroup->getIndex())
-                                              ->at(hybrid->getIndex())
-                                              ->at(chip->getIndex())
-                                              ->getSummary<HistContainer<TH2F>>()
-                                              .fTheHistogram;
+                    TH2F* stubHistogram =
+                        fStubHistogramContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
 
                     for(int row = 0; row < NMPACHANNELS / NSSACHANNELS; ++row)
                     {

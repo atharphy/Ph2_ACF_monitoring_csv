@@ -330,8 +330,7 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
                     }
 
                     // std::cout<<__LINE__<<std::endl;
-                    ChipDataContainer* theStubChipContainer =
-                        fStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex());
+                    ChipDataContainer* theStubChipContainer = fStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex());
                     // std::cout<<__LINE__<<std::endl;
                     for(auto& stub: stubList)
                     {

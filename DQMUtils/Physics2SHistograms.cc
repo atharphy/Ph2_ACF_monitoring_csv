@@ -89,12 +89,8 @@ void Physics2SHistograms::fillOccupancy(const DetectorDataContainer& DataContain
                 {
                     if(chip->getChannelContainer<Occupancy>() == nullptr) continue;
 
-                    TH1F* topSensorHistogram = fTopSensorHistogramContainer.at(board->getIndex())
-                                                   ->at(opticalGroup->getIndex())
-                                                   ->at(hybrid->getIndex())
-                                                   ->at(chip->getIndex())
-                                                   ->getSummary<HistContainer<TH1F>>()
-                                                   .fTheHistogram;
+                    TH1F* topSensorHistogram =
+                        fTopSensorHistogramContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
 
                     TH1F* bottomSensorHistogram = fBottomSensorHistogramContainer.at(board->getIndex())
                                                       ->at(opticalGroup->getIndex())
@@ -131,12 +127,8 @@ void Physics2SHistograms::fillStub(const DetectorDataContainer& DataContainer)
                 {
                     if(chip->getChannelContainer<float>() == nullptr) continue;
 
-                    TH2F* stubHistogram = fStubHistogramContainer.at(board->getIndex())
-                                              ->at(opticalGroup->getIndex())
-                                              ->at(hybrid->getIndex())
-                                              ->at(chip->getIndex())
-                                              ->getSummary<HistContainer<TH2F>>()
-                                              .fTheHistogram;
+                    TH2F* stubHistogram =
+                        fStubHistogramContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
 
                     uint16_t channelNumber = 0;
                     for(auto channel: *chip->getChannelContainer<float>())

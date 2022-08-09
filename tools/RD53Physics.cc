@@ -357,18 +357,8 @@ void Physics::clearContainers(BeBoard& theBoard)
             for(const auto cChip: *cHybrid)
             {
                 for(auto i = 0u; i < BCIDsize; i++)
-                    theBCIDContainer.at(cBoard->getIndex())
-                        ->at(cOpticalGroup->getIndex())
-                        ->at(cHybrid->getIndex())
-                        ->at(cChip->getIndex())
-                        ->getSummary<GenericDataArray<BCIDsize>>()
-                        .data[i] = 0;
+                    theBCIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<BCIDsize>>().data[i] = 0;
                 for(auto i = 0u; i < TrgIDsize; i++)
-                    theTrgIDContainer.at(cBoard->getIndex())
-                        ->at(cOpticalGroup->getIndex())
-                        ->at(cHybrid->getIndex())
-                        ->at(cChip->getIndex())
-                        ->getSummary<GenericDataArray<TrgIDsize>>()
-                        .data[i] = 0;
+                    theTrgIDContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TrgIDsize>>().data[i] = 0;
             }
 }

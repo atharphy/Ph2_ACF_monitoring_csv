@@ -271,20 +271,13 @@ void DQMHistogramLatencyScan::fillLatencyPlots(uint16_t pLatency, DetectorDataCo
                                       << " - have found " << channel.fOccupancy << " hits." << RESET;
                         cChnlIndx++;
                     }
-                    TH2F* cLatencyTDC = fLatencyTDCHistograms.at(board->getIndex())
-                                            ->at(opticalGroup->getIndex())
-                                            ->at(hybrid->getIndex())
-                                            ->at(chip->getIndex())
-                                            ->getSummary<HistContainer<TH2F>>()
-                                            .fTheHistogram;
+                    TH2F* cLatencyTDC =
+                        fLatencyTDCHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     for(uint8_t cTDC = 0; cTDC < TDCBINS; cTDC++)
                     {
-                        cBin            = cLatencyTDC->FindBin((float)pLatency, (float)cTDC);
-                        uint32_t cNhits = pTDCsummary.at(board->getIndex())
-                                              ->at(opticalGroup->getIndex())
-                                              ->at(hybrid->getIndex())
-                                              ->at(chip->getIndex())
-                                              ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDC];
+                        cBin = cLatencyTDC->FindBin((float)pLatency, (float)cTDC);
+                        uint32_t cNhits =
+                            pTDCsummary.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDC];
                         LOG(DEBUG) << BOLDMAGENTA << "\t\t..TDC phase of " << +cTDC << " latency of " << pLatency << " bin of " << +cBin << " OG" << +opticalGroup->getId() << " Hybrid"
                                    << +hybrid->getId() << " Chip" << +chip->getId() << " - have found " << cNhits << " channels with a hit [per chip per event]." << RESET;
                         cLatencyTDC->SetBinContent(cBin, cNhits);
@@ -317,10 +310,8 @@ void DQMHistogramLatencyScan::fillLatencyPlots(DetectorDataContainer& theLatency
                 bool cFillS0 = (hybrid->hasSummary());
                 bool cFillS1 = (cHybridHitsS1->hasSummary());
 
-                TH1F* hybridLatencyHistogramS0 =
-                    fLatencyHistogramsS0.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                TH1F* hybridLatencyHistogramS1 =
-                    fLatencyHistogramsS1.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                TH1F* hybridLatencyHistogramS0 = fLatencyHistogramsS0.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                TH1F* hybridLatencyHistogramS1 = fLatencyHistogramsS1.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 for(uint32_t i = 0; i < fLatencyRange; i++)
                 {
                     if(cFillS0)
@@ -352,9 +343,8 @@ void DQMHistogramLatencyScan::fillLatencyPlots(DetectorDataContainer& theLatency
         {
             for(auto hybrid: *opticalGroup)
             {
-                bool  cFill = (hybrid->hasSummary());
-                TH1F* hybridLatencyHistogram =
-                    fLatencyHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                bool  cFill                  = (hybrid->hasSummary());
+                TH1F* hybridLatencyHistogram = fLatencyHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 for(uint32_t i = 0; i < fLatencyRange; i++)
                 {
                     if(cFill)
@@ -379,8 +369,7 @@ void DQMHistogramLatencyScan::fillStubLatencyPlots(DetectorDataContainer& theStu
             for(auto hybrid: *opticalGroup)
             {
                 if(!hybrid->hasSummary()) continue;
-                TH1F* hybridLatencyHistogram =
-                    fStubHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                TH1F* hybridLatencyHistogram = fStubHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
 
                 for(uint32_t i = 0; i < fLatencyRange; i++)
                 {
@@ -405,8 +394,7 @@ void DQMHistogramLatencyScan::fill2DLatencyPlots(DetectorDataContainer& the2DLat
             for(auto hybrid: *opticalGroup)
             {
                 if(!hybrid->hasSummary()) continue;
-                TH1F* hybridLatencyHistogram =
-                    fStubHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                TH1F* hybridLatencyHistogram = fStubHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
 
                 for(uint32_t i = 0; i < fLatencyRange; i++)
                 {

@@ -69,8 +69,7 @@ void SSALatencyScan::run(void)
             {
                 for(auto cChip: *cHybrid)
                 {
-                    ReadoutChip* theChip =
-                        static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
+                    ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
                     // this->fReadoutChipInterface->WriteChipReg(theChip, "Bias_CALDAC", 120);
                     // this->fReadoutChipInterface->WriteChipReg(theChip, "ReadoutMode", 0x0);
                     // this->fReadoutChipInterface->WriteChipReg(theChip, "Bias_THDAC", 60);
@@ -106,8 +105,7 @@ void SSALatencyScan::run(void)
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        ReadoutChip* theChip = static_cast<ReadoutChip*>(
-                            fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
+                        ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
                         if(cWithSSA) { this->fReadoutChipInterface->WriteChipReg(theChip, "L1-Latency_LSB", lat); }
                         if(cWithMPA)
 
@@ -167,8 +165,7 @@ void SSALatencyScan::run(void)
             {
                 for(auto cChip: *cHybrid)
                 {
-                    ReadoutChip* theChip =
-                        static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
+                    ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
 
                     if(cWithSSA) { this->fReadoutChipInterface->WriteChipReg(theChip, "L1-Latency_LSB", bestlat); }
 

@@ -167,12 +167,7 @@ void InjectionDelay::run()
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", latency - 1);
 
                     for(auto i = 0u; i < InjDelaySize; i++)
-                        theOccContainer.at(cBoard->getIndex())
-                            ->at(cOpticalGroup->getIndex())
-                            ->at(cHybrid->getIndex())
-                            ->at(cChip->getIndex())
-                            ->getSummary<GenericDataArray<InjDelaySize>>()
-                            .data[i] = 0;
+                        theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<InjDelaySize>>().data[i] = 0;
                 }
 
     // ###############################
@@ -240,12 +235,8 @@ void InjectionDelay::analyze()
 
                     for(auto i = 0u; i < dacList.size(); i++)
                     {
-                        auto current = theOccContainer.at(cBoard->getIndex())
-                                           ->at(cOpticalGroup->getIndex())
-                                           ->at(cHybrid->getIndex())
-                                           ->at(cChip->getIndex())
-                                           ->getSummary<GenericDataArray<InjDelaySize>>()
-                                           .data[i];
+                        auto current =
+                            theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<InjDelaySize>>().data[i];
                         if(current > best)
                         {
                             regVal = dacList[i];
@@ -261,8 +252,7 @@ void InjectionDelay::analyze()
                     // ####################################################
                     // # Fill delay container and download new DAC values #
                     // ####################################################
-                    theInjectionDelayContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                        regVal;
+                    theInjectionDelayContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
                     auto val = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT");
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT", (val & saveInjection) | (regVal & maxDelay));
 

@@ -85,9 +85,9 @@ void OpenFinder::Initialise(Parameters pParameters)
     for(auto cBoard: *fDetectorContainer)
     {
         fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>() = static_cast<BeBoard*>(cBoard)->getBeBoardRegMap();
-        auto& cRegMapThisBoard                                                       = fRegMapContainer.at(cBoard->getIndex());
-        auto& cOpens                                                                 = fOpens.at(cBoard->getIndex());
-        auto& cOccupancy                                                             = fInTimeOccupancy.at(cBoard->getIndex());
+        auto& cRegMapThisBoard                                                 = fRegMapContainer.at(cBoard->getIndex());
+        auto& cOpens                                                           = fOpens.at(cBoard->getIndex());
+        auto& cOccupancy                                                       = fInTimeOccupancy.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
             auto& cOpensOpticalGroup      = cOpens->at(cOpticalGroup->getIndex());
@@ -103,7 +103,7 @@ void OpenFinder::Initialise(Parameters pParameters)
                 {
                     cOpensHybrid->at(cChip->getIndex())->getSummary<ChannelList>().clear();
                     cRegMapThisHybrid->at(cChip->getIndex())->getSummary<ChipRegMap>() = static_cast<ReadoutChip*>(cChip)->getRegMap();
-                    auto& cThisOcc                                                           = cOccupancyHybrid->at(cChip->getIndex())->getSummary<ScanSummaries>();
+                    auto& cThisOcc                                                     = cOccupancyHybrid->at(cChip->getIndex())->getSummary<ScanSummaries>();
                     for(int cAntennaPosition = cAntennaSwitchMinValue; cAntennaPosition < cAntennaSwitchMaxValue; cAntennaPosition++)
                     {
                         ScanSummary cSummary;

@@ -195,8 +195,7 @@ void Eudaq2Producer::DoStartRun()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cRegister =
-                        fChipThreshContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                    auto& cRegister = fChipThreshContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
                     // Fill chip threshold with current value
                     if(cChip->getFrontEndType() == FrontEndType::CBC3)
                         cRegister = cChip->getReg("VCth2") << 8 | cChip->getReg("VCth1");
@@ -250,8 +249,7 @@ void Eudaq2Producer::DoStartRun()
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        auto& cRegister =
-                            fChipThreshContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                        auto& cRegister = fChipThreshContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
                         LOG(INFO) << "Set Threshold on FE" << cHybrid->getIndex() << " Chip" << cChip->getIndex() << " to " << int(cRegister) + fRelativeThreshold << RESET;
                         this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", int(cRegister) + fRelativeThreshold);
                     }
@@ -410,8 +408,7 @@ void Eudaq2Producer::DoStopRun()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    auto& cRegister =
-                        fChipThreshContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                    auto& cRegister = fChipThreshContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
                     LOG(INFO) << "Reset Threshold on FE" << cHybrid->getIndex() << " Chip" << cChip->getIndex() << " to " << int(cRegister) << RESET;
                     this->fReadoutChipInterface->WriteChipReg(cChip, "Threshold", int(cRegister));
                 }

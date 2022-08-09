@@ -206,11 +206,8 @@ void GenericDacDacScan::analyze()
                     // ######################################################
                     // # Fill latency container and download new DAC values #
                     // ######################################################
-                    theGenericDacDacScanContainer.at(cBoard->getIndex())
-                        ->at(cOpticalGroup->getIndex())
-                        ->at(cHybrid->getIndex())
-                        ->at(cChip->getIndex())
-                        ->getSummary<std::pair<uint16_t, uint16_t>>() = std::pair<uint16_t, uint16_t>(regVal1, regVal2);
+                    theGenericDacDacScanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<std::pair<uint16_t, uint16_t>>() =
+                        std::pair<uint16_t, uint16_t>(regVal1, regVal2);
                 }
 }
 

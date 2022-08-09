@@ -603,9 +603,8 @@ void DataChecker::print(std::vector<uint8_t> pChipIds)
                 {
                     auto cChipId = cChip->getId();
                     if(std::find(pChipIds.begin(), pChipIds.end(), cChipId) == pChipIds.end()) continue;
-                    auto cHitCheck = cChip->getSummary<uint16_t>();
-                    auto cStubCheck =
-                        fStubCheckContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                    auto cHitCheck  = cChip->getSummary<uint16_t>();
+                    auto cStubCheck = fStubCheckContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
                     LOG(INFO) << BOLDBLUE << "\t\t...Found " << +cHitCheck << " matched hits and " << +cStubCheck << " matched stubs in readout chip" << +cChipId << RESET;
                 }
             }

@@ -1118,8 +1118,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                         {
                             if(occupanyDirectlyProportionalToDAC)
                                 currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel) =
-                                    previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel) +
-                                    (1 << iBit);
+                                    previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel) + (1 << iBit);
                             else
                                 currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel) =
                                     previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel) &
@@ -1133,8 +1132,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                                 previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() + (1 << iBit);
                         else
                             currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
-                                previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() &
-                                (0xFFFF - (1 << iBit));
+                                previousDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() & (0xFFFF - (1 << iBit));
 
                         LOG(DEBUG) << BOLDBLUE << "\t.. current setting is "
                                    << currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << RESET;
@@ -1649,8 +1647,7 @@ void Tool::setAllLocalDacBeBoard(uint16_t boardIndex, const std::string& dacName
     for(auto cOpticalGroup: *(fDetectorContainer->at(boardIndex)))
         for(auto cHybrid: *cOpticalGroup)
             for(auto cChip: *cHybrid)
-                fReadoutChipInterface->WriteChipAllLocalReg(
-                    cChip, dacName, *globalDACContainer.at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
+                fReadoutChipInterface->WriteChipAllLocalReg(cChip, dacName, *globalDACContainer.at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
 }
 
 // Set same global DAC for all chips

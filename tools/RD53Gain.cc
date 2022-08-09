@@ -341,12 +341,8 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
 
                                 if(chi2 != 0)
                                 {
-                                    theGainContainer->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
-                                        ->getChannel<GainFit>(row, col)
-                                        .fIntercept = intercept;
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fIntercept =
+                                        intercept;
                                     theGainContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
                                         ->at(cHybrid->getIndex())
@@ -354,18 +350,10 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                                         ->getChannel<GainFit>(row, col)
                                         .fInterceptError = interceptErr;
 
-                                    theGainContainer->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
-                                        ->getChannel<GainFit>(row, col)
-                                        .fSlope = slope;
-                                    theGainContainer->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
-                                        ->getChannel<GainFit>(row, col)
-                                        .fSlopeError = slopeErr;
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlope =
+                                        slope;
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlopeError =
+                                        slopeErr;
 
                                     theGainContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
@@ -380,12 +368,8 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                                         ->getChannel<GainFit>(row, col)
                                         .fInterceptLowQError = lowQinterceptErr;
 
-                                    theGainContainer->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
-                                        ->getChannel<GainFit>(row, col)
-                                        .fSlopeLowQ = lowQslope;
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlopeLowQ =
+                                        lowQslope;
                                     theGainContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
                                         ->at(cHybrid->getIndex())
@@ -393,26 +377,12 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                                         ->getChannel<GainFit>(row, col)
                                         .fSlopeLowQError = lowQslopeErr;
 
-                                    theGainContainer->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
-                                        ->getChannel<GainFit>(row, col)
-                                        .fChi2 = chi2;
-                                    theGainContainer->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
-                                        ->getChannel<GainFit>(row, col)
-                                        .fDoF = DoF;
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fChi2 = chi2;
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fDoF  = DoF;
                                 }
                                 else
-                                    theGainContainer->at(cBoard->getIndex())
-                                        ->at(cOpticalGroup->getIndex())
-                                        ->at(cHybrid->getIndex())
-                                        ->at(cChip->getIndex())
-                                        ->getChannel<GainFit>(row, col)
-                                        .fChi2 = RD53Shared::FITERROR;
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fChi2 =
+                                        RD53Shared::FITERROR;
                             }
 
                     index++;

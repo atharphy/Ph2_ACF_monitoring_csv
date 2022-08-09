@@ -127,9 +127,9 @@ void ShortFinder::Initialise()
     for(auto cBoard: *fDetectorContainer)
     {
         fBoardRegContainer.at(cBoard->getIndex())->getSummary<BeBoardRegMap>() = static_cast<BeBoard*>(cBoard)->getBeBoardRegMap();
-        auto& cRegMapThisBoard                                                       = fRegMapContainer.at(cBoard->getIndex());
-        auto& cShorts                                                                = fShorts.at(cBoard->getIndex());
-        auto& cInjections                                                            = fInjections.at(cBoard->getIndex());
+        auto& cRegMapThisBoard                                                 = fRegMapContainer.at(cBoard->getIndex());
+        auto& cShorts                                                          = fShorts.at(cBoard->getIndex());
+        auto& cInjections                                                      = fInjections.at(cBoard->getIndex());
         for(auto cOpticalGroup: *cBoard)
         {
             auto& cShortsOpticalGroup     = cShorts->at(cOpticalGroup->getIndex());
@@ -308,8 +308,8 @@ void ShortFinder::FindShortsPS(BeBoard* pBoard)
                 cNchips += cHybridData->size();
                 for(auto cChipData: *cHybridData) // for on chip - begin
                 {
-                    ReadoutChip* cChip = static_cast<ReadoutChip*>(
-                        fDetectorContainer->at(cBoardData->getIndex())->at(cOpticalGroupData->getIndex())->at(cHybridData->getIndex())->at(cChipData->getIndex()));
+                    ReadoutChip* cChip =
+                        static_cast<ReadoutChip*>(fDetectorContainer->at(cBoardData->getIndex())->at(cOpticalGroupData->getIndex())->at(cHybridData->getIndex())->at(cChipData->getIndex()));
                     auto cThreshold                   = fReadoutChipInterface->ReadChipReg(cChip, "Threshold");
                     cChipData->getSummary<uint16_t>() = cThreshold;
                     cMeanValue += cThreshold;

@@ -231,8 +231,7 @@ void MemoryCheck2S::Initialise()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    ChipRegMap& theChipMap =
-                        fRegMapContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<ChipRegMap>();
+                    ChipRegMap&       theChipMap     = fRegMapContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<ChipRegMap>();
                     const ChipRegMap& theOriginalMap = static_cast<ReadoutChip*>(cChip)->getRegMap();
                     theChipMap.insert(theOriginalMap.begin(), theOriginalMap.end());
                 }

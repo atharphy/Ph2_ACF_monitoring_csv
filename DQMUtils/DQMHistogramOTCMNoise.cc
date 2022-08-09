@@ -186,8 +186,7 @@ bool DQMHistogramOTCMNoise::fill2DHitPlots(DetectorDataContainer& the2DHitData)
 
             for(auto hybrid: *opticalGroup)
             {
-                TH2F* hybridHitHistogram =
-                    f2DHybridHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                TH2F* hybridHitHistogram = f2DHybridHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 TH2F* hybridHitHistogram_chip =
                     f2DHybridHitHistograms_chip.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 uint32_t hybridOffset = HYBRID_CHANNELS_OT + 1;
@@ -223,12 +222,8 @@ bool DQMHistogramOTCMNoise::fill2DHitPlots(DetectorDataContainer& the2DHitData)
 
                 for(auto chip: *hybrid)
                 {
-                    TH2F* chipHitHistogram = f2DChipHitHistograms.at(board->getIndex())
-                                                 ->at(opticalGroup->getIndex())
-                                                 ->at(hybrid->getIndex())
-                                                 ->at(chip->getIndex())
-                                                 ->getSummary<HistContainer<TH2F>>()
-                                                 .fTheHistogram;
+                    TH2F* chipHitHistogram =
+                        f2DChipHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     uint16_t iChan_high = chip->getIndex() + 1 + (hybrid->getIndex() * NCHIPS_OT);
                     uint16_t iChan_low  = chip->getIndex() + (hybrid->getIndex() * NCHIPS_OT);
 
@@ -261,23 +256,18 @@ bool DQMHistogramOTCMNoise::fillHitPlots(DetectorDataContainer& theHitData)
             {
                 for(auto chip: *hybrid)
                 {
-                    TH1F* cChipHitHistogram = fChipHitHistograms.at(board->getIndex())
-                                                  ->at(opticalGroup->getIndex())
-                                                  ->at(hybrid->getIndex())
-                                                  ->at(chip->getIndex())
-                                                  ->getSummary<HistContainer<TH1F>>()
-                                                  .fTheHistogram;
+                    TH1F* cChipHitHistogram =
+                        fChipHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
 
                     // fill the histogram from the vector
                     for(uint16_t iChan = 0; iChan < NCHANNELS + 1; iChan++) { cChipHitHistogram->SetBinContent(iChan, chip->getSummary<GenericDataArray<NCHANNELS + 1, uint32_t>>()[iChan]); }
                     // do fitting
                     TF1* cChipFit = new TF1("chipFit", hitProbabilityFunction, 0, NCHANNELS + 1, 4);
                     fitCMNoise(cChipHitHistogram, cChipFit, NCHANNELS + 1);
-                    LOG(INFO) << BOLDRED << "FE " << hybrid->getIndex() << " CBC " << chip->getIndex() << " CM is " << fabs(cChipFit->GetParameter(1)) << "+/-"
-                              << fabs(cChipFit->GetParError(1)) << "%" << RESET;
+                    LOG(INFO) << BOLDRED << "FE " << hybrid->getIndex() << " CBC " << chip->getIndex() << " CM is " << fabs(cChipFit->GetParameter(1)) << "+/-" << fabs(cChipFit->GetParError(1)) << "%"
+                              << RESET;
                 }
-                TH1F* cHybridHitHistogram =
-                    fHybridHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                TH1F* cHybridHitHistogram = fHybridHitHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 for(uint16_t iChan = 0; iChan < HYBRID_CHANNELS_OT + 1; iChan++)
                 { cHybridHitHistogram->SetBinContent(iChan, hybrid->getSummary<GenericDataArray<HYBRID_CHANNELS_OT + 1, uint32_t>>()[iChan]); }
 

@@ -35,8 +35,8 @@ class BaseContainer
     BaseContainer(BaseContainer&& theCopyContainer)
     {
         id_          = theCopyContainer.id_;
-        index_ = theCopyContainer.index_;
-        globalIndex_  = theCopyContainer.globalIndex_;
+        index_       = theCopyContainer.index_;
+        globalIndex_ = theCopyContainer.globalIndex_;
     }
 
     virtual ~BaseContainer() { ; }

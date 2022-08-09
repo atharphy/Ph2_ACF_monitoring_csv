@@ -329,16 +329,8 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
                                         ->getChannel<ThresholdAndNoise>(row, col)
                                         .fNoiseError = (nHits > 1 ? rms / sqrt(nHits) * sqrt(sqrt(2 / (nHits - 1))) : 0);
 
-                                    if(mean > theMaxThresholdContainer.at(cBoard->getIndex())
-                                                  ->at(cOpticalGroup->getIndex())
-                                                  ->at(cHybrid->getIndex())
-                                                  ->at(cChip->getIndex())
-                                                  ->getSummary<float>())
-                                        theMaxThresholdContainer.at(cBoard->getIndex())
-                                            ->at(cOpticalGroup->getIndex())
-                                            ->at(cHybrid->getIndex())
-                                            ->at(cChip->getIndex())
-                                            ->getSummary<float>() = mean;
+                                    if(mean > theMaxThresholdContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>())
+                                        theMaxThresholdContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() = mean;
                                 }
                                 else
                                     theThresholdAndNoiseContainer->at(cBoard->getIndex())
@@ -362,10 +354,9 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
                     LOG(INFO) << GREEN << "Average threshold for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                               << +cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << std::fixed << std::setprecision(1)
                               << cChip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold << RESET << GREEN << " (Delta_VCal)" << std::setprecision(-1) << RESET;
-                    LOG(INFO)
-                        << BOLDBLUE << "\t--> Highest threshold: " << BOLDYELLOW << std::fixed << std::setprecision(1)
-                        << theMaxThresholdContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>()
-                        << BOLDBLUE << " (Delta_VCal)" << std::setprecision(-1) << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t--> Highest threshold: " << BOLDYELLOW << std::fixed << std::setprecision(1)
+                              << theMaxThresholdContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<float>() << BOLDBLUE
+                              << " (Delta_VCal)" << std::setprecision(-1) << RESET;
                     RD53Shared::resetDefaultFloat();
                 }
 

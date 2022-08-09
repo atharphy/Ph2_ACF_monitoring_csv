@@ -43,11 +43,8 @@ void CBCMonitor::runCBCRegisterMonitor(std::string registerName)
                 {
                     uint16_t registerValue = fTheSystemController->fReadoutChipInterface->ReadChipReg(chip, registerName); // just to read something
                     LOG(DEBUG) << BOLDMAGENTA << "CBC " << hybrid->getId() << " - " << registerName << " = " << registerValue << RESET;
-                    theCBCRegisterContainer.at(board->getIndex())
-                        ->at(opticalGroup->getIndex())
-                        ->at(hybrid->getIndex())
-                        ->at(chip->getIndex())
-                        ->getSummary<std::tuple<time_t, uint16_t>>() = std::make_tuple(getTimeStamp(), registerValue);
+                    theCBCRegisterContainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<std::tuple<time_t, uint16_t>>() =
+                        std::make_tuple(getTimeStamp(), registerValue);
                 }
             }
         }
