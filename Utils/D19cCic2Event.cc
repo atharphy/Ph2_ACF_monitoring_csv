@@ -304,8 +304,8 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         uint32_t                      cGoodStubInfo   = (cStubInfoHeader & (0xF << 28)) >> 28;
                         uint32_t                      cStubInfoSize   = (cStubInfoHeader & 0xFFF) * 4;
                         cStatusWord                                   = cStatusWord | (static_cast<uint8_t>(cGoodStubInfo == VALID_STUB_HEADER) << 1);
-                        // LOG(INFO) << BOLDBLUE << "\t\t.. ReadoutChip#" << +cHybrid->getIndex() << "...stub info header " << std::bitset<4>(cGoodStubInfo) << "... " << +cStubInfoSize << " words in
-                        // stub packet."
+                        // LOG(INFO) << BOLDBLUE << "\t\t.. ReadoutChip#" << +cHybrid->getIndex() << "...stub info header " << std::bitset<4>(cGoodStubInfo) << "... " << +cStubInfoSize << "
+                        // words in stub packet."
                         //            << "... status word " << std::bitset<2>(cStatusWord) << RESET;
                         if(cStatusWord == 0x03)
                         {
