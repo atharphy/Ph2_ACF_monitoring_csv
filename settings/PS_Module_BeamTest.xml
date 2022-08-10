@@ -23,7 +23,7 @@
                 <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns -->
                 <!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
                 <Latencies       stripLatency="118" pixelLatency="118"/>
-                <Thresholds      stripThreshold="10000" pixelThreshold="10000"/> 
+                <Thresholds      stripThreshold="40" pixelThreshold="40"/> 
                 <StubLogic       mode="0" window="16"/>
                 <HitLogic        stripMode="1" pixelMode="1"/>
                 <HipLogic        stripCut="7" pixelCut="7"/>
@@ -64,7 +64,7 @@
                 <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns -->
                 <!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
                 <Latencies       stripLatency="118" pixelLatency="118"/>
-                <Thresholds      stripThreshold="10000" pixelThreshold="10000"/> 
+                <Thresholds      stripThreshold="40" pixelThreshold="40"/> 
                 <StubLogic       mode="0" window="16"/>
                 <HitLogic        stripMode="1" pixelMode="1"/>
                 <HipLogic        stripCut="7" pixelCut="7"/>
