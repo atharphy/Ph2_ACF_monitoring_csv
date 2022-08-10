@@ -473,8 +473,6 @@ void FileParser::parseSSAContainer(pugi::xml_node pSSAnode, Hybrid* pHybrid, std
     else
         cFileName = expandEnvironmentVariables(pSSAnode.attribute("configfile").value());
     ReadoutChip* cSSA = pHybrid->addChipContainer(cChipId, new SSA(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getOpticalGroupId(), pHybrid->getId(), cChipId, cPartnerId, 0, cFileName));
-    cSSA->setGlobalIndex(pHybrid->getNStripChips() - 1);
-    LOG(INFO) << "SSA : " << +cSSA->getId() << " -- GlobalIndex " << cSSA->getGlobalIndex() << RESET;
     cSSA->setOptical(pHybrid->isOptical());
     cSSA->setNumberOfChannels(NSSACHANNELS);
     cSSA->setClockFrequency(320);
@@ -618,7 +616,6 @@ void FileParser::parseSSA2Container(pugi::xml_node pSSAnode, Hybrid* pHybrid, st
     else
         cFileName = expandEnvironmentVariables(pSSAnode.attribute("configfile").value());
     ReadoutChip* cSSA2 = pHybrid->addChipContainer(cChipId, new SSA2(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getOpticalGroupId(), pHybrid->getId(), cChipId, cPartnerId, 0, cFileName));
-    cSSA2->setGlobalIndex(pHybrid->getNStripChips() - 1);
     cSSA2->setOptical(pHybrid->isOptical());
     cSSA2->setNumberOfChannels(NSSACHANNELS);
     cSSA2->setClockFrequency(320);
@@ -643,8 +640,6 @@ void FileParser::parseMPAContainer(pugi::xml_node pMPANode, Hybrid* pHybrid, std
     else
         cFileName = expandEnvironmentVariables(pMPANode.attribute("configfile").value());
     ReadoutChip* cMPA = pHybrid->addChipContainer(cChipId, new MPA(pHybrid->getBeBoardId(), pHybrid->getFMCId(), pHybrid->getOpticalGroupId(), pHybrid->getId(), cChipId, cPartnerId, cFileName));
-    cMPA->setGlobalIndex(pHybrid->getNPixelChips() - 1);
-    LOG(INFO) << "MPA : " << +cMPA->getId() << " -- GlobalIndex " << cMPA->getGlobalIndex() << RESET;
     cMPA->setOptical(pHybrid->isOptical());
     cMPA->setNumberOfChannels(NSSACHANNELS, NMPACOLS);
     cMPA->setClockFrequency(320);
@@ -1191,7 +1186,6 @@ void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std
 
     uint32_t     cChipId = pCbcNode.attribute("Id").as_int();
     ReadoutChip* cCbc    = cHybrid->addChipContainer(cChipId, new Cbc(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), cChipId, cFileName));
-    cCbc->setGlobalIndex(cHybrid->getNStripChips() - 1);
     cCbc->setOptical(cHybrid->isOptical());
     cCbc->setClockFrequency(320);
     cCbc->setNumberOfChannels(254);
@@ -1509,7 +1503,6 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
         theChip = cHybrid->addChipContainer(chipId, new RD53A(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, cFileName, cfgComment));
     else
         theChip = cHybrid->addChipContainer(chipId, new RD53B(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, cFileName, cfgComment));
-    theChip->setGlobalIndex(cHybrid->getNPixelChips() - 1);
     theChip->setNumberOfChannels(static_cast<RD53*>(theChip)->getNRows(), static_cast<RD53*>(theChip)->getNCols());
 
     this->parseRD53Settings(theChipNode, theChip, os);

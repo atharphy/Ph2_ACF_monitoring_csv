@@ -48,7 +48,6 @@ class BaseContainer
     bool                   isEnabled() const { return isEnabled_; }
     void                   setEnabled(bool enable) { isEnabled_ = enable; }
     virtual void           setEnabledAll(bool enable) = 0;
-
     void setIndex(uint16_t index) { index_ = index; }
     void setGlobalIndex(uint16_t globalIndex) { globalIndex_ = globalIndex; }
 
@@ -117,6 +116,7 @@ class Container
         catch(std::exception& ex)
         {
             object->setIndex(this->size());
+            object->setGlobalIndex(this->size());
             std::vector<T*>::push_back(object);
             Container::idObjectMap_[objectId] = this->back();
             return this->back();
