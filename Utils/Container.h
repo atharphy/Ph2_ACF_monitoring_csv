@@ -48,8 +48,8 @@ class BaseContainer
     bool                   isEnabled() const { return isEnabled_; }
     void                   setEnabled(bool enable) { isEnabled_ = enable; }
     virtual void           setEnabledAll(bool enable) = 0;
-    void setIndex(uint16_t index) { index_ = index; }
-    void setGlobalIndex(uint16_t globalIndex) { globalIndex_ = globalIndex; }
+    void                   setIndex(uint16_t index) { index_ = index; }
+    void                   setGlobalIndex(uint16_t globalIndex) { globalIndex_ = globalIndex; }
 
   private:
     uint16_t id_;

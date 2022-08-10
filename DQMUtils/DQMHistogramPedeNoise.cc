@@ -446,10 +446,16 @@ void DQMHistogramPedeNoise::process()
 
                     if(fWithCBC)
                     {
-                        TH1F* cHybridStripNoiseEvenHistogram =
-                            fDetectorHybridStripNoiseEvenHistograms.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                        TH1F* cHybridStripNoiseOddHistogram =
-                            fDetectorHybridStripNoiseOddHistograms.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                        TH1F* cHybridStripNoiseEvenHistogram = fDetectorHybridStripNoiseEvenHistograms.getObject(cBoard->getId())
+                                                                   ->getObject(cOpticalGroup->getId())
+                                                                   ->getObject(cHybrid->getId())
+                                                                   ->getSummary<HistContainer<TH1F>>()
+                                                                   .fTheHistogram;
+                        TH1F* cHybridStripNoiseOddHistogram = fDetectorHybridStripNoiseOddHistograms.getObject(cBoard->getId())
+                                                                  ->getObject(cOpticalGroup->getId())
+                                                                  ->getObject(cHybrid->getId())
+                                                                  ->getSummary<HistContainer<TH1F>>()
+                                                                  .fTheHistogram;
                         cHybridStripNoiseEvenHistogram->SetLineColor(kBlue);
                         cHybridStripNoiseEvenHistogram->SetMaximum(20);
                         cHybridStripNoiseEvenHistogram->SetMinimum(0);
@@ -543,7 +549,8 @@ void DQMHistogramPedeNoise::fillValidationPlots(DetectorDataContainer& theOccupa
 
                     uint cChannelBin = 1;
 
-                    auto cChannelContainer = theOccupancy.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannelContainer<Occupancy>();
+                    auto cChannelContainer =
+                        theOccupancy.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannelContainer<Occupancy>();
                     if(cChannelContainer == nullptr) continue;
                     for(auto cChannel: *cChannelContainer)
                     {
@@ -567,13 +574,20 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& the
             {
                 TH1F *cHybridNoiseHistogram = nullptr, *cHybridChannelNoiseHistogram = nullptr, *cHybridStripNoiseEvenHistogram = nullptr, *cHybridStripNoiseOddHistogram = nullptr;
 
-                cHybridNoiseHistogram = fDetectorHybridNoiseHistograms.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                cHybridNoiseHistogram =
+                    fDetectorHybridNoiseHistograms.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 if(fWithCBC)
                 {
-                    cHybridStripNoiseEvenHistogram =
-                        fDetectorHybridStripNoiseEvenHistograms.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                    cHybridStripNoiseOddHistogram =
-                        fDetectorHybridStripNoiseOddHistograms.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    cHybridStripNoiseEvenHistogram = fDetectorHybridStripNoiseEvenHistograms.getObject(cBoard->getId())
+                                                         ->getObject(cOpticalGroup->getId())
+                                                         ->getObject(cHybrid->getId())
+                                                         ->getSummary<HistContainer<TH1F>>()
+                                                         .fTheHistogram;
+                    cHybridStripNoiseOddHistogram = fDetectorHybridStripNoiseOddHistograms.getObject(cBoard->getId())
+                                                        ->getObject(cOpticalGroup->getId())
+                                                        ->getObject(cHybrid->getId())
+                                                        ->getSummary<HistContainer<TH1F>>()
+                                                        .fTheHistogram;
                 }
                 for(auto cChip: *cHybrid)
                 {
@@ -586,8 +600,11 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& the
                     {
                         cNChannels = fNStripChannels;
 
-                        cHybridChannelNoiseHistogram =
-                            fDetectorHybridStripNoiseHistograms.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                        cHybridChannelNoiseHistogram = fDetectorHybridStripNoiseHistograms.getObject(cBoard->getId())
+                                                           ->getObject(cOpticalGroup->getId())
+                                                           ->getObject(cHybrid->getId())
+                                                           ->getSummary<HistContainer<TH1F>>()
+                                                           .fTheHistogram;
 
                         cChipPedestalHistogram = fDetectorChipStripPedestalHistograms.getObject(cBoard->getId())
                                                      ->getObject(cOpticalGroup->getId())
@@ -637,8 +654,11 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& the
                     {
                         cNChannels = fNPixelChannels;
 
-                        cHybridChannelNoiseHistogram =
-                            fDetectorHybridPixelNoiseHistograms.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                        cHybridChannelNoiseHistogram = fDetectorHybridPixelNoiseHistograms.getObject(cBoard->getId())
+                                                           ->getObject(cOpticalGroup->getId())
+                                                           ->getObject(cHybrid->getId())
+                                                           ->getSummary<HistContainer<TH1F>>()
+                                                           .fTheHistogram;
 
                         cChipPedestalHistogram = fDetectorChipPixelPedestalHistograms.getObject(cBoard->getId())
                                                      ->getObject(cOpticalGroup->getId())
@@ -676,8 +696,11 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& the
                                                             .fTheHistogram;
                     }
 
-                    auto cChannelContainer =
-                        thePedestalAndNoise.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannelContainer<ThresholdAndNoise>();
+                    auto cChannelContainer = thePedestalAndNoise.getObject(cBoard->getId())
+                                                 ->getObject(cOpticalGroup->getId())
+                                                 ->getObject(cHybrid->getId())
+                                                 ->getObject(cChip->getId())
+                                                 ->getChannelContainer<ThresholdAndNoise>();
                     if(cChannelContainer == nullptr) continue;
                     uint16_t cChannelNumber = 0;
                     for(auto cChannel: *cChannelContainer)
@@ -762,7 +785,8 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t pStripTh, uint16_t pPixelTh
                                           .fTheHistogram;
                     }
 
-                    auto cChannelContainer = fSCurveOccupancy.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannelContainer<Occupancy>();
+                    auto cChannelContainer =
+                        fSCurveOccupancy.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannelContainer<Occupancy>();
                     if(cChannelContainer == nullptr) continue;
                     uint16_t cChannelNumber = 0;
                     for(auto cChannel: *cChannelContainer)
@@ -820,7 +844,7 @@ void DQMHistogramPedeNoise::fillSCurvePlots(DetectorDataContainer& fThresholds, 
                 {
                     auto cType = cChip->getFrontEndType();
 
-                    auto cThThisChip = cThThisHybrd->getObject(cChip->getId());
+                    auto  cThThisChip = cThThisHybrd->getObject(cChip->getId());
                     TH2F* cChipSCurve = nullptr;
                     if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
                     {
@@ -841,7 +865,8 @@ void DQMHistogramPedeNoise::fillSCurvePlots(DetectorDataContainer& fThresholds, 
                                           .fTheHistogram;
                     }
 
-                    auto cChannelContainer = fSCurveOccupancy.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannelContainer<Occupancy>();
+                    auto cChannelContainer =
+                        fSCurveOccupancy.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannelContainer<Occupancy>();
                     if(cChannelContainer == nullptr) continue;
                     uint16_t cChannelNumber = 0;
                     for(auto cChannel: *cChannelContainer)
@@ -894,7 +919,8 @@ void DQMHistogramPedeNoise::fitSCurves()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    ChipDataContainer* theChipThresholdAndNoise = fThresholdAndNoiseContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                    ChipDataContainer* theChipThresholdAndNoise =
+                        fThresholdAndNoiseContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
 
                     auto     cType      = cChip->getFrontEndType();
                     uint32_t cNChannels = 0;
