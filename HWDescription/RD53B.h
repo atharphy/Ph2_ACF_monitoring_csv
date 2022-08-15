@@ -37,6 +37,7 @@ class RD53B : public RD53
     size_t          getNRows() const override { return RD53B::NROWS; }
     size_t          getNCols() const override { return RD53B::NCOLS; }
     void            decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::RD53ChipEvent& chipEvent) const override;
+    uint32_t getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const override;
 };
 
 } // namespace Ph2_HwDescription

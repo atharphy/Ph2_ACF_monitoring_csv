@@ -354,20 +354,4 @@ uint8_t RD53::getNumberOfBits(const std::string& regName)
     return it->second.fBitSize;
 }
 
-RD53::CalCmd::CalCmd(const uint8_t& cal_edge_mode, const uint8_t& cal_edge_delay, const uint8_t& cal_edge_width, const uint8_t& cal_aux_mode, const uint8_t& cal_aux_delay)
-    : cal_edge_mode(cal_edge_mode), cal_edge_delay(cal_edge_delay), cal_edge_width(cal_edge_width), cal_aux_mode(cal_aux_mode), cal_aux_delay(cal_aux_delay)
-{
-}
-
-void RD53::CalCmd::setCalCmd(const uint8_t& _cal_edge_mode, const uint8_t& _cal_edge_delay, const uint8_t& _cal_edge_width, const uint8_t& _cal_aux_mode, const uint8_t& _cal_aux_delay)
-{
-    cal_edge_mode  = _cal_edge_mode;
-    cal_edge_delay = _cal_edge_delay;
-    cal_edge_width = _cal_edge_width;
-    cal_aux_mode   = _cal_aux_mode;
-    cal_aux_delay  = _cal_aux_delay;
-}
-
-uint32_t RD53::CalCmd::getCalCmd(const uint8_t& chipId) { return bits::pack<4, 1, 3, 6, 1, 5>(chipId, cal_edge_mode, cal_edge_delay, cal_edge_width, cal_aux_mode, cal_aux_delay); }
-
 } // namespace Ph2_HwDescription

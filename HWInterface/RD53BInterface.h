@@ -27,7 +27,8 @@ class RD53BInterface : public RD53Interface
     void     ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip) override;
     void     InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard) override;
     void     InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1) override;
-    void     PackWriteCommand(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = false) override;
+    void     PackWriteCommand(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true) override;
+    void     PackWriteBroadcastCommand(const Ph2_HwDescription::BeBoard* board, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true) override;
     uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip) override;
 
   private:
@@ -35,9 +36,12 @@ class RD53BInterface : public RD53Interface
     std::vector<std::pair<uint16_t, uint16_t>> ReadRD53Reg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName);
     std::pair<std::string, uint16_t>           SplitSpecialRegisters(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) override;
 
-    uint16_t GetPixelConfig(const Ph2_HwDescription::pixelMask& mask, uint16_t NRows, uint16_t row, uint16_t col);
+    uint16_t GetPixelConfig(const Ph2_HwDescription::pixelMask& mask, uint16_t row, uint16_t col);
+    uint16_t GetPixelConfigMask(const Ph2_HwDescription::pixelMask& mask, uint16_t row, uint16_t col);
+    uint16_t GetPixelConfigTDAC(const Ph2_HwDescription::pixelMask& mask, uint16_t row, uint16_t col);
     void     SendGlobalPulse(Ph2_HwDescription::Chip* pChip, uint16_t route, uint16_t pulseDuration);
     void     SendGlobalPulseBroadcast(const Ph2_HwDescription::BeBoard* pBoard, uint16_t route, uint16_t pulseDuration);
+    void     SendChipCommandsWithSync(Ph2_HwDescription::RD53* pRD53, std::vector<uint16_t>& cmdStream);
 };
 
 } // namespace Ph2_HwInterface

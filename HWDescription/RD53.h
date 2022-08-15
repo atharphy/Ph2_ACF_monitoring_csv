@@ -26,7 +26,6 @@
 // #########################
 namespace RD53Constants
 {
-const uint8_t  BROADCAST_CHIPID  = 0x08; // Broadcast chip ID used to send the command to multiple chips
 const uint8_t  NREGIONS_LONGCMD  = 6;    // Number of regions to program with long write commands
 const uint8_t  FIELDS_SHORTCMD   = 8;    // Number of fields for the short write command
 const uint8_t  FIELDS_LONGCMD    = 24;   // Number of fields for the long write command
@@ -41,8 +40,6 @@ const uint16_t CDRCONFIG_640Mbit = 1049; // Value for 640 Mbit/s
 const uint8_t  PATTERN_PRBS      = 0x02; // Start PRBS pattern
 const uint8_t  PATTERN_AURORA    = 0x01; // Start AURORA pattern
 const uint8_t  PATTERN_CLOCK     = 0x00; // Start clock pattern
-const uint16_t GLOBAL_PULSE_ADDR = 0x2C; // Global Pulse Route regiser address
-const uint16_t SET_SEL_OUT_ADDR  = 0x44; // SET_SEL_OUT regiser address
 } // namespace RD53Constants
 
 namespace RD53EvtEncoder
@@ -145,21 +142,7 @@ class RD53 : public ReadoutChip
     uint8_t     getTDAC(unsigned int row, unsigned int col);
     uint8_t     getChipLane() const { return myChipLane; }
     std::string getComment() const { return myComment; }
-
-    struct CalCmd
-    {
-        CalCmd(const uint8_t& _cal_edge_mode, const uint8_t& _cal_edge_delay, const uint8_t& _cal_edge_width, const uint8_t& _cal_aux_mode, const uint8_t& _cal_aux_delay);
-
-        void setCalCmd(const uint8_t& _cal_edge_mode, const uint8_t& _cal_edge_delay, const uint8_t& _cal_edge_width, const uint8_t& _cal_aux_mode, const uint8_t& _cal_aux_delay);
-
-        uint32_t getCalCmd(const uint8_t& chipId);
-
-        uint8_t cal_edge_mode;
-        uint8_t cal_edge_delay;
-        uint8_t cal_edge_width;
-        uint8_t cal_aux_mode;
-        uint8_t cal_aux_delay;
-    };
+    virtual uint32_t getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const = 0;
 
     // #################
     // # LpGBT mapping #

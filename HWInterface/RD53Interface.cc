@@ -20,7 +20,9 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
     this->setBoard(pChip->getBeBoardId());
 
     auto nameAndValue(SplitSpecialRegisters(regName, data, RD53Shared::firstChip->getRegMap()));
-    RD53Interface::SendCommand(static_cast<RD53*>(pChip), RD53ACmd::WrReg{(uint8_t)pChip->getId(), pChip->getRegItem(nameAndValue.first).fAddress, nameAndValue.second});
+    std::vector<uint16_t> cmdStream;
+    PackWriteCommand(pChip, nameAndValue.first, nameAndValue.second, cmdStream);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());
 
     if((regName == "VCAL_HIGH") || (regName == "VCAL_MED")) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP)); // @TMP@
 
@@ -63,8 +65,9 @@ void RD53Interface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std:
     this->setBoard(pBoard->getId());
 
     std::pair<std::string, uint16_t> nameAndValue(SplitSpecialRegisters(regName, data, RD53Shared::firstChip->getRegMap()));
-    const uint16_t                   address = RD53Shared::firstChip->getRegItem(nameAndValue.first).fAddress;
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialize(RD53ACmd::WrReg{RD53Constants::BROADCAST_CHIPID, address, nameAndValue.second}), -1);
+    std::vector<uint16_t> cmdStream;
+    PackWriteBroadcastCommand(pBoard, nameAndValue.first, nameAndValue.second, cmdStream);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, -1);
 
     if((regName == "VCAL_HIGH") || (regName == "VCAL_MED")) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP)); // @TMP@
 }

@@ -8,7 +8,7 @@
 
   <node id="ctrl_regs"             address="0x00000040"       permission="rw"      description="User control registers.">
 
-    <node id="reset_reg"           address="0x00000000"       permission="rw"      description="Reset register. All resets are active high, unless otherwise states.">
+    <!-- <node id="reset_reg"           address="0x00000000"       permission="rw"      description="Reset register. All resets are active high, unless otherwise states.">
       <node id="global_rst"           mask="0x00000001"       permission="rw"      description="Global reset." />
       <node id="clk_gen_rst"          mask="0x00000002"       permission="rw"      description="Clock generator reset." />
       <node id="i2c_rst"              mask="0x00000004"       permission="rw"      description="I2C block reset." />
@@ -20,7 +20,29 @@
       <node id="readout_block_rst"    mask="0x00000200"       permission="rw"      description="Readout Block reset" />
       <node id="cmd_disable"          mask="0x00000080"       permission="rw"      description="When '1' cmd stream is stopped for all modules" />
       <node id="ext_clk_en"           mask="0x00000800"       permission="rw"      description="Enable external clock as main clock input (40MHz)" />
+    </node> -->
+
+
+    <node id="reset_reg"           address="0x00000000"       permission="rw"      description="Reset register. All resets are active high, unless otherwise states.">
+      <node id="global_rst"           mask="0x00000001"       permission="rw"      description="Global reset." />
+      <node id="clk_gen_rst"          mask="0x00000002"       permission="rw"      description="Clock generator reset." />
+      <node id="i2c_rst"              mask="0x00000004"       permission="rw"      description="I2C block reset." />
+      <node id="aurora_rst"           mask="0x00000008"       permission="rw"      description="Aurora receiver reset." />
+      <node id="fmc_pll_rst"          mask="0x00000010"       permission="rw"      description="FMC PLL reset. Active low!" />
+      <node id="cmd_rst"              mask="0x00000020"       permission="rw"      description="CMD processor reset." />
+      <node id="scc_rst"              mask="0x00000040"       permission="rw"      description="SCC reset. NOT CONNECTED!" />
+      <node id="chip_resync"          mask="0x00000080"       permission="rw"      description="Force initialization of chip communication" />
+      <node id="aurora_pma_rst"       mask="0x00000100"       permission="rw"      description="Aurora frame counter reset" />
+      <node id="readout_block_rst"    mask="0x00000200"       permission="rw"      description="Readout Block reset" />
+      <node id="enable_sync_word"     mask="0x00000400"       permission="rw"      description="When '1', Sync words are inserted in the cmd stream every 32 commands" />
+      <node id="ext_clk_en"           mask="0x00000800"       permission="rw"      description="Enable external clock as main clock input (40MHz)" />
+      <node id="rst_cdce_sync"        mask="0x00001000"       permission="rw"      description=" " />
+      <node id="set_sync_cmd_freq"    mask="0x00002000"       permission="rw"      description=" " />
+      <node id="nb_of_pll_words"      mask="0x000FC000"       permission="rw"      description=" " />
+      <node id="nb_of_sync_words"     mask="0x00700000"       permission="rw"      description=" " />
+      <node id="chip_reset_duration"  mask="0xFF800000"       permission="rw"      description=" " />
     </node>
+
 
     <!-- Fast Commands Block -->
     <node id="fast_cmd_reg_1"       address="0x00000001"      permission="rw"      description="Control registers associated with fast commands block">
