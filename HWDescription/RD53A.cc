@@ -73,7 +73,8 @@ void RD53A::decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::R
     if(size == 1) chipEvent.eventStatus |= RD53EvtEncoder::CHIPNOHIT;
 }
 
-uint32_t RD53A::getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const {
+uint32_t RD53A::getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const
+{
     return bits::pack<4, 1, 3, 6, 1, 5>(RD53AConstants::BROADCAST_CHIPID, cal_edge_mode, cal_edge_delay, cal_edge_width, cal_aux_mode, cal_aux_delay);
 }
 

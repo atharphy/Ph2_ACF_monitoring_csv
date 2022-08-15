@@ -213,9 +213,16 @@ uint16_t RD53AInterface::GetPixelConfig(const pixelMask& mask, uint16_t row, uin
         return bits::pack<8, 8>(bits::pack<1, 1, 1>(mask.HitBus[row + RD53A::NROWS * (col + 1)], mask.InjEn[row + RD53A::NROWS * (col + 1)], mask.Enable[row + RD53A::NROWS * (col + 1)]),
                                 bits::pack<1, 1, 1>(mask.HitBus[row + RD53A::NROWS * (col + 0)], mask.InjEn[row + RD53A::NROWS * (col + 0)], mask.Enable[row + RD53A::NROWS * (col + 0)]));
     else if(col <= RD53A::LIN.colStop)
-        return bits::pack<8, 8>(
-            bits::pack<1, 4, 1, 1, 1>(highGain, mask.TDAC[row + RD53A::NROWS * (col + 1)], mask.HitBus[row + RD53A::NROWS * (col + 1)], mask.InjEn[row + RD53A::NROWS * (col + 1)], mask.Enable[row + RD53A::NROWS * (col + 1)]),
-            bits::pack<1, 4, 1, 1, 1>(highGain, mask.TDAC[row + RD53A::NROWS * (col + 0)], mask.HitBus[row + RD53A::NROWS * (col + 0)], mask.InjEn[row + RD53A::NROWS * (col + 0)], mask.Enable[row + RD53A::NROWS * (col + 0)]));
+        return bits::pack<8, 8>(bits::pack<1, 4, 1, 1, 1>(highGain,
+                                                          mask.TDAC[row + RD53A::NROWS * (col + 1)],
+                                                          mask.HitBus[row + RD53A::NROWS * (col + 1)],
+                                                          mask.InjEn[row + RD53A::NROWS * (col + 1)],
+                                                          mask.Enable[row + RD53A::NROWS * (col + 1)]),
+                                bits::pack<1, 4, 1, 1, 1>(highGain,
+                                                          mask.TDAC[row + RD53A::NROWS * (col + 0)],
+                                                          mask.HitBus[row + RD53A::NROWS * (col + 0)],
+                                                          mask.InjEn[row + RD53A::NROWS * (col + 0)],
+                                                          mask.Enable[row + RD53A::NROWS * (col + 0)]));
     else
         return bits::pack<8, 8>(bits::pack<1, 4, 1, 1, 1>(mask.TDAC[row + RD53A::NROWS * (col + 1)] > 15,
                                                           abs(15 - mask.TDAC[row + RD53A::NROWS * (col + 1)]),
@@ -236,7 +243,7 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
     std::vector<uint16_t> commandList;
     const uint16_t        REGION_COL_ADDR = pRD53->getRegItem("REGION_COL").fAddress;
     const uint16_t        REGION_ROW_ADDR = pRD53->getRegItem("REGION_ROW").fAddress;
-        const uint16_t        PIX_MODE_ADDR   = pRD53->getRegItem("PIX_MODE").fAddress;
+    const uint16_t        PIX_MODE_ADDR   = pRD53->getRegItem("PIX_MODE").fAddress;
     const uint16_t        PIX_PORTAL_ADDR = pRD53->getRegItem("PIX_PORTAL").fAddress;
     const uint8_t         highGain        = pRD53->getRegItem("HighGain_LIN").fValue;
     const uint8_t         chipID          = pRD53->getId();
@@ -327,7 +334,7 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
     if(commandList.size() != 0) static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
 }
 
-void RD53AInterface::Reset(Ph2_HwDescription::ReadoutChip* pChip, const size_t resetType)
+void RD53AInterface::Reset(Ph2_HwDescription::ReadoutChip* pChip, const size_t resetType, const size_t duration)
 // ################################################
 // # resetType = 0 --> Reset Channel Synchronizer #
 // # resetType = 1 --> Reset Command Decoder      #
@@ -340,8 +347,6 @@ void RD53AInterface::Reset(Ph2_HwDescription::ReadoutChip* pChip, const size_t r
 // ################################################
 {
     this->setBoard(pChip->getBeBoardId());
-
-    const int duration = 0x0004; // @CONST@
 
     if(resetType > 6)
         RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false);
@@ -368,18 +373,14 @@ void RD53AInterface::PackWriteCommand(Chip* pChip, const std::string& regName, u
     if(updateReg == true) pChip->setReg(regName, data);
 }
 
-void RD53AInterface::PackWriteBroadcastCommand(const BeBoard* board, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg)
+void RD53AInterface::PackWriteBroadcastCommand(const BeBoard* pBoard, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg)
 {
     RD53BCmd::serialize(RD53ACmd::WrReg{RD53AConstants::BROADCAST_CHIPID, RD53Shared::firstChip->getRegItem(regName).fAddress, data}, chipCommandList);
-    if (updateReg) {
-        for (auto* opticalGroup : *board) {
-            for (auto* hybrid : *opticalGroup) {
-                for (auto* chip : *hybrid) {
-                    chip->setReg(regName, data);
-                }
-            }
-        }
-    }
+
+    if(updateReg == true)
+        for(auto cOpticalGroup: *pBoard)
+            for(auto cHybrid: *cOpticalGroup)
+                for(auto cChip: *cHybrid) cChip->setReg(regName, data);
 }
 
 } // namespace Ph2_HwInterface

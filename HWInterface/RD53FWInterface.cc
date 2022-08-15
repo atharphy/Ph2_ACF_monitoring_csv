@@ -82,13 +82,17 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     LOG(INFO) << BOLDBLUE << "\t--> L12 FMC type : " << BOLDYELLOW << cL12FMCtype << BOLDBLUE << " -- L08 FMC type : " << BOLDYELLOW << cL08FMCtype << BOLDBLUE
               << " (1=KSU, 2=CERN, 3=DIO5, 4=OPTO, 5=FERMI, 7=NONE, 0=Unspecified)" << RESET;
 
+    if(cFEtype == 2) WriteReg("user.ctrl_regs.reset_reg.enable_sync_word", 1);
 
-    if (cFEtype == 2)
-        WriteReg("user.ctrl_regs.reset_reg.enable_sync_word", 1);
-
-    
+    // #########################
+    // # Set RD53 AURORA speed #
+    // #########################
+    RegManager::WriteReg("user.ctrl_regs.gtx_drp.aurora_speed", RD53FWconstants::AURORA_SPEED);
     SendBoardCommand("user.ctrl_regs.gtx_drp.set_aurora_speed");
 
+    // ##########
+    // # Resets #
+    // ##########
     RD53FWInterface::ChipReset();
     RD53FWInterface::ChipReSync();
     RD53FWInterface::ResetFastCmdBlk();
@@ -171,10 +175,9 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     uint32_t txIsReady, rxIsReady;
     RD53FWInterface::StatusOptoLinkSlowControl(txIsReady, rxIsReady);
 
-    // ###################################
-    // # Set and check RD53 AURORA speed #
-    // ###################################
-    RegManager::WriteStackReg({{"user.ctrl_regs.gtx_drp.aurora_speed", RD53FWconstants::AURORA_SPEED}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 1}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 0}});
+    // ###########################
+    // # Check RD53 AURORA speed #
+    // ###########################
     auto auroraSpeed = RD53FWInterface::ReadoutSpeed();
     LOG(INFO) << GREEN << "Aurora speed set to: " << BOLDYELLOW << (auroraSpeed == RD53FWconstants::ReadoutSpeed::x1280 ? "1.28 Gbit/s" : "640 Mbit/s") << RESET;
 
@@ -754,7 +757,8 @@ void RD53FWInterface::ConfigureFastCommands(const FastCommandsConfig* cfg)
     if(cfg == nullptr) cfg = &(RD53FWInterface::localCfgFastCmd);
 
     // @TMP@ : Prepare GLOBAL_PULSE_RT to acquire zero level in SYNC FE
-    if(cfg->autozero_source != AutozeroSource::Disabled) RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::WrReg{RD53AConstants::BROADCAST_CHIPID, RD53AConstants::GLOBAL_PULSE_ADDR, 1 << 14}), -1);
+    if(cfg->autozero_source != AutozeroSource::Disabled)
+        RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::WrReg{RD53AConstants::BROADCAST_CHIPID, RD53AConstants::GLOBAL_PULSE_ADDR, 1 << 14}), -1);
 
     // ##################################
     // # Configuring fast command block #
@@ -818,7 +822,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
 // #  |---------------------------------------------------------------------------| #
 // ##################################################################################
 {
-    const double  mainClock = 40e6; // @CONST@
+    const double mainClock = 40e6; // @CONST@
     enum INJtype
     {
         None,
@@ -843,8 +847,8 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         // #######################################
         // # Configuration for digital injection #
         // #######################################
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data = RD53Shared::firstChip->getCalCmd(1, 2, 10, 0, 0);// calcmd_first.getCalCmd(chipId);
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = RD53Shared::firstChip->getCalCmd(0, 0, 2, 0, 0);// calcmd_second.getCalCmd(chipId);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data  = RD53Shared::firstChip->getCalCmd(1, 2, 10, 0, 0); // calcmd_first.getCalCmd(chipId);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = RD53Shared::firstChip->getCalCmd(0, 0, 2, 0, 0);  // calcmd_second.getCalCmd(chipId);
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr         = 0;
@@ -862,8 +866,8 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         // ######################################
         // # Configuration for analog injection #
         // ######################################
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data = RD53Shared::firstChip->getCalCmd(1, 0, 0, 0, 0);//calcmd_first.getCalCmd(chipId);
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = RD53Shared::firstChip->getCalCmd(0, 0, 1, 0, 0);//calcmd_second.getCalCmd(chipId);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data  = RD53Shared::firstChip->getCalCmd(1, 0, 0, 0, 0); // calcmd_first.getCalCmd(chipId);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = RD53Shared::firstChip->getCalCmd(0, 0, 1, 0, 0); // calcmd_second.getCalCmd(chipId);
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr         = 0;

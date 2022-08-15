@@ -103,7 +103,7 @@ struct GlobalPulse
     static constexpr uint16_t cmdCode() { return RD53ACmdEncoder::GLOB_PULSE; }
     static constexpr uint16_t nFields() { return 2; }
 
-    size_t chip_id;
+    size_t chip_id = 8;
     size_t data;
 };
 
@@ -114,7 +114,7 @@ struct Cal
     static constexpr uint16_t cmdCode() { return RD53ACmdEncoder::CAL; }
     static constexpr uint16_t nFields() { return 4; }
 
-    size_t chip_id;
+    size_t chip_id = 8;
     bool   cal_edge_mode;
     size_t cal_edge_delay;
     size_t cal_edge_width;
@@ -129,7 +129,7 @@ struct WrReg
     static constexpr uint16_t cmdCode() { return RD53ACmdEncoder::WRITE; }
     static constexpr uint16_t nFields() { return 6; }
 
-    size_t chip_id;
+    size_t chip_id = 8;
     size_t address;
     size_t value;
 };
@@ -141,7 +141,7 @@ struct WrRegLong
     static constexpr uint16_t cmdCode() { return RD53ACmdEncoder::WRITE; }
     static constexpr uint16_t nFields() { return 22; }
 
-    size_t                  chip_id;
+    size_t                  chip_id = 8;
     size_t                  address;
     std::array<uint16_t, 9> values;
 };
@@ -153,7 +153,7 @@ struct RdReg
     static constexpr uint16_t cmdCode() { return RD53ACmdEncoder::READ; }
     static constexpr uint16_t nFields() { return 4; }
 
-    size_t chip_id;
+    size_t chip_id = 8;
     size_t address;
 };
 

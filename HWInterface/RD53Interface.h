@@ -50,12 +50,12 @@ class RD53Interface : public ReadoutChipInterface
     void StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip);
     // #############################
 
-    virtual void Reset(Ph2_HwDescription::ReadoutChip* pChip, const size_t resetType) = 0;
+    virtual void Reset(Ph2_HwDescription::ReadoutChip* pChip, const size_t resetType, const size_t duration = 0x4) = 0;
     virtual void ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip);
 
-    virtual void InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard)                                                                                                  = 0;
-    virtual void InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1)                                                                                = 0;
-    virtual void PackWriteCommand(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true) = 0;
+    virtual void InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard)                                                                                                                   = 0;
+    virtual void InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1)                                                                                                 = 0;
+    virtual void PackWriteCommand(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true)                   = 0;
     virtual void PackWriteBroadcastCommand(const Ph2_HwDescription::BeBoard* board, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true) = 0;
 
     void SendChipCommands(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint16_t>& chipCommandList, int hybridId);

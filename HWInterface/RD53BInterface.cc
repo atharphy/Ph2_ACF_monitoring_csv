@@ -20,11 +20,13 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
 
     ChipRegMap& pRD53RegMap = pChip->getRegMap();
 
+    // @TMP@ : what is this?
     RD53Interface::WriteChipReg(pChip, "PIX_DEFAULT_CONFIG", 0x9CE2, pVerifLoop);
     RD53Interface::WriteChipReg(pChip, "PIX_DEFAULT_CONFIG_B", 0x631D, pVerifLoop);
 
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
+    // @TMP@ : what is this?
     RD53Interface::WriteChipReg(pChip, "TriggerConfig", 0, pVerifLoop);
     RD53Interface::WriteChipReg(pChip, "DataConcentratorConf", 0, pVerifLoop);
     RD53Interface::WriteChipReg(pChip, "CoreColEncoderConf", 0, pVerifLoop);
@@ -114,7 +116,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     // ###################################
     // # Programmig pixel cell registers #
     // ###################################
-    RD53BInterface::WriteRD53Mask(static_cast<RD53*>(const_cast<Chip*>(pChip)), false, true);
+    // RD53BInterface::WriteRD53Mask(static_cast<RD53*>(const_cast<Chip*>(pChip)), false, true);
 
     return true;
 }
@@ -143,6 +145,7 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
 
     LOG(INFO) << GREEN << "Down-link phase initialization..." << RESET;
 
+    // @TMP@ : what is this?
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "GCR_DEFAULT_CONFIG", 0xAC75);
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "GCR_DEFAULT_CONFIG_B", 0x538A);
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "CMDERR_CNT", 0);
@@ -150,8 +153,7 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
     // ##############
     // # Link speed #
     // ##############
-    RD53Interface::WriteBoardBroadcastChipReg(
-        pBoard, "CDR_CONFIG_SEL_SER_CLK", static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed() == RD53FWconstants::ReadoutSpeed::x1280 ? 0 : 1); // @TMP@ : why thisone is here?
+    RD53Interface::WriteBoardBroadcastChipReg(pBoard, "CDR_CONFIG_SEL_SER_CLK", static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed() == RD53FWconstants::ReadoutSpeed::x1280 ? 0 : 1);
 
     // ##########
     // # Resets #
@@ -173,9 +175,9 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     size_t hybridId = pChip->getHybridId();
     // @TMP@ : what is this?
     if(hybridId >= 2)
-      RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 15, false);
+        RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 15, false);
     else
-      RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 1, false);
+        RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 1, false);
     RD53Interface::WriteChipReg(pChip, "AuroraConfig", bits::pack<4, 6, 2>(1, 25, 3), false);
     uint16_t val;
     // @TMP@ : what is this?
@@ -189,7 +191,8 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG1", 0x0000, false);
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
-    RD53BInterface::SendGlobalPulse(pChip, 0b110000, 0xFF);
+    RD53BInterface::Reset(pChip, 4, 0xFF);
+    RD53BInterface::Reset(pChip, 5, 0xFF);
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     RD53Interface::SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
 
@@ -246,22 +249,21 @@ std::pair<std::string, uint16_t> RD53BInterface::SplitSpecialRegisters(std::stri
 uint16_t RD53BInterface::GetPixelConfig(const pixelMask& mask, uint16_t row, uint16_t col)
 {
     return bits::pack<8, 8>(
-        bits::pack<5, 1, 1, 1>(mask.TDAC[row + RD53B::NROWS * (col + 1)], mask.HitBus[row + RD53B::NROWS * (col + 1)], mask.InjEn[row + RD53B::NROWS * (col + 1)], mask.Enable[row + RD53B::NROWS * (col + 1)]),
-        bits::pack<5, 1, 1, 1>(mask.TDAC[row + RD53B::NROWS * (col + 0)], mask.HitBus[row + RD53B::NROWS * (col + 0)], mask.InjEn[row + RD53B::NROWS * (col + 0)], mask.Enable[row + RD53B::NROWS * (col + 0)]));
+        bits::pack<5, 1, 1, 1>(
+            mask.TDAC[row + RD53B::NROWS * (col + 1)], mask.HitBus[row + RD53B::NROWS * (col + 1)], mask.InjEn[row + RD53B::NROWS * (col + 1)], mask.Enable[row + RD53B::NROWS * (col + 1)]),
+        bits::pack<5, 1, 1, 1>(
+            mask.TDAC[row + RD53B::NROWS * (col + 0)], mask.HitBus[row + RD53B::NROWS * (col + 0)], mask.InjEn[row + RD53B::NROWS * (col + 0)], mask.Enable[row + RD53B::NROWS * (col + 0)]));
 }
 
 uint16_t RD53BInterface::GetPixelConfigMask(const pixelMask& mask, uint16_t row, uint16_t col)
 {
-    return bits::pack<5, 5>(
-        bits::pack<2, 1, 1, 1>(0, mask.HitBus[row + RD53B::NROWS * (col + 1)], mask.InjEn[row + RD53B::NROWS * (col + 1)], mask.Enable[row + RD53B::NROWS * (col + 1)]),
-        bits::pack<2, 1, 1, 1>(0, mask.HitBus[row + RD53B::NROWS * (col + 0)], mask.InjEn[row + RD53B::NROWS * (col + 0)], mask.Enable[row + RD53B::NROWS * (col + 0)]));
+    return bits::pack<5, 5>(bits::pack<2, 1, 1, 1>(0, mask.HitBus[row + RD53B::NROWS * (col + 1)], mask.InjEn[row + RD53B::NROWS * (col + 1)], mask.Enable[row + RD53B::NROWS * (col + 1)]),
+                            bits::pack<2, 1, 1, 1>(0, mask.HitBus[row + RD53B::NROWS * (col + 0)], mask.InjEn[row + RD53B::NROWS * (col + 0)], mask.Enable[row + RD53B::NROWS * (col + 0)]));
 }
 
 uint16_t RD53BInterface::GetPixelConfigTDAC(const pixelMask& mask, uint16_t row, uint16_t col)
 {
-    return bits::pack<5, 5>(
-        mask.TDAC[row + RD53B::NROWS * (col + 1)],
-        mask.TDAC[row + RD53B::NROWS * (col + 0)]);
+    return bits::pack<5, 5>(mask.TDAC[row + RD53B::NROWS * (col + 1)], mask.TDAC[row + RD53B::NROWS * (col + 0)]);
 }
 
 void RD53BInterface::WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault)
@@ -280,45 +282,45 @@ void RD53BInterface::WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse
     // ############
     // bit[0]: enable auto-row
     // bit[1]: select mask(0) or TDAC(1)
-    
-        // auto pixMode = ReadReg(pRD53, "PIX_MODE");
 
-        for(auto col = 0u; col < RD53B::NCOLS; col += 2)
-        {
-            RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
+    auto pixMode = RD53Interface::ReadChipReg(pRD53, "PIX_MODE");
+
+    for(auto col = 0u; col < RD53B::NCOLS; col += 2)
+    {
+        RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
 
         std::vector<uint16_t> dColConfigMask;
-            RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, 0x0}, commandList);
-        for(auto row = 0u; row < RD53B::NROWS; row++)
-                dColConfigMask.push_back(RD53BInterface::GetPixelConfigMask(mask, row, col));
+        RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, 0x0}, commandList);
+        for(auto row = 0u; row < RD53B::NROWS; row++) dColConfigMask.push_back(RD53BInterface::GetPixelConfigMask(mask, row, col));
 
         RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x1}, commandList);
-                RD53BCmd::serialize(RD53BCmd::WrRegLong{chipID, std::move(dColConfigMask)}, commandList);
+        RD53BCmd::serialize(RD53BCmd::WrRegLong{chipID, std::move(dColConfigMask)}, commandList);
 
         std::vector<uint16_t> dColConfigTDAC;
-            RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, 0x0}, commandList);
-        for(auto row = 0u; row < RD53B::NROWS; row++)
-                dColConfigTDAC.push_back(RD53BInterface::GetPixelConfigTDAC(mask, row, col));
+        RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, 0x0}, commandList);
+        for(auto row = 0u; row < RD53B::NROWS; row++) dColConfigTDAC.push_back(RD53BInterface::GetPixelConfigTDAC(mask, row, col));
 
         RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x3}, commandList);
-                RD53BCmd::serialize(RD53BCmd::WrRegLong{chipID, std::move(dColConfigTDAC)}, commandList);
-        }
-
+        RD53BCmd::serialize(RD53BCmd::WrRegLong{chipID, std::move(dColConfigTDAC)}, commandList);
+    }
     RD53BInterface::SendChipCommandsWithSync(pRD53, commandList);
-    // WriteReg(pRD53, "PIX_MODE", pixMode);
+
+    RD53Interface::WriteChipReg(pRD53, "PIX_MODE", pixMode);
 }
 
-void RD53BInterface::SendChipCommandsWithSync(RD53* pRD53, std::vector<uint16_t>& cmdStream) {
-    constexpr size_t nWordsPerPacketExclSync = 2 * (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO) / (1 + 2./30); // 
-    auto begin = cmdStream.begin();
-    
-    while (begin != cmdStream.end())
+void RD53BInterface::SendChipCommandsWithSync(RD53* pRD53, std::vector<uint16_t>& cmdStream)
+{
+    constexpr size_t nWordsPerPacketExclSync = 2 * (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO) / (1 + 2. / 30);
+    auto             begin                   = cmdStream.begin();
+
+    while(begin != cmdStream.end())
     {
         std::vector<uint16_t> cmdPacket;
-        size_t nWordsThisPacetExclSync = std::min(nWordsPerPacketExclSync, size_t(cmdStream.end() - begin));
+        size_t                nWordsThisPacetExclSync = std::min(nWordsPerPacketExclSync, size_t(cmdStream.end() - begin));
         cmdPacket.reserve(std::ceil(nWordsThisPacetExclSync + 2 * nWordsThisPacetExclSync / 30.));
         auto it = begin;
-        while (it != begin + nWordsThisPacetExclSync) {
+        while(it != begin + nWordsThisPacetExclSync)
+        {
             auto next = std::min(cmdStream.end(), std::min(it + 30, begin + nWordsThisPacetExclSync));
             std::copy(it, next, std::back_inserter(cmdPacket));
             it = next;
@@ -330,7 +332,7 @@ void RD53BInterface::SendChipCommandsWithSync(RD53* pRD53, std::vector<uint16_t>
     }
 }
 
-void RD53BInterface::Reset(Ph2_HwDescription::ReadoutChip* pChip, const size_t resetType)
+void RD53BInterface::Reset(ReadoutChip* pChip, const size_t resetType, const size_t duration)
 // #################################################
 // # resetType =  0 --> Reset Channel Synchronizer #
 // # resetType =  1 --> Reset Command Decoder      #
@@ -351,11 +353,7 @@ void RD53BInterface::Reset(Ph2_HwDescription::ReadoutChip* pChip, const size_t r
     if(resetType > 10)
         RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false);
     else
-    {
-        SendGlobalPulse(pChip, (size_t)(1 << resetType), 4);
-        // RD53Interface::SendCommand(pChip, RD53BCmd::WrReg{pChip->getId(), RD53Constants::GLOBAL_PULSE_ADDR, (size_t)(1 << resetType)});
-        // RD53Interface::SendCommand(pChip, RD53BCmd::GlobalPulse{pChip->getId()});
-    }
+        SendGlobalPulse(pChip, (size_t)(1 << resetType), duration);
 }
 
 void RD53BInterface::ChipErrorReport(ReadoutChip* pChip)
@@ -374,22 +372,17 @@ void RD53BInterface::PackWriteCommand(Chip* pChip, const std::string& regName, u
     if(updateReg == true) pChip->setReg(regName, data);
 }
 
-
-void RD53BInterface::PackWriteBroadcastCommand(const BeBoard* board, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg)
+void RD53BInterface::PackWriteBroadcastCommand(const BeBoard* pBoard, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg)
 {
     RD53BCmd::serialize(RD53BCmd::WrReg{RD53BConstants::BROADCAST_CHIPID, RD53Shared::firstChip->getRegItem(regName).fAddress, data}, chipCommandList);
-    if (updateReg) {
-        for (auto* opticalGroup : *board) {
-            for (auto* hybrid : *opticalGroup) {
-                for (auto* chip : *hybrid) {
-                    chip->setReg(regName, data);
-                }
-            }
-        }
-    }
+
+    if(updateReg == true)
+        for(auto cOpticalGroup: *pBoard)
+            for(auto cHybrid: *cOpticalGroup)
+                for(auto cChip: *cHybrid) cChip->setReg(regName, data);
 }
 
-uint32_t RD53BInterface::ReadChipFuseID(Ph2_HwDescription::Chip* pChip)
+uint32_t RD53BInterface::ReadChipFuseID(Chip* pChip)
 {
     uint16_t low  = RD53Interface::ReadChipReg(pChip, "EfusesReadData0");
     uint16_t high = RD53Interface::ReadChipReg(pChip, "EfusesReadData1");
