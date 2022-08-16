@@ -1,6 +1,6 @@
 /*!
   \file                  RD53Event.h
-  \brief                 RD53Event class implementation
+  \brief                 RD53Event description class
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
@@ -10,7 +10,7 @@
 #ifndef RD53Event_H
 #define RD53Event_H
 
-#include "../Utils/BitMaster/bit_packing.h"
+#include "BitMaster/bit_packing.h"
 #include "DataContainer.h"
 #include "Event.h"
 #include "GenericDataVector.h"
@@ -78,6 +78,11 @@ namespace Ph2_HwInterface
 {
 struct HitData
 {
+  HitData(uint16_t row, uint16_t col, uint8_t  tot)
+    : row(row)
+    , col(col)
+    , tot(tot) {}
+
     uint16_t row;
     uint16_t col;
     uint8_t  tot;
@@ -101,6 +106,7 @@ struct RD53ChipEvent
     // ###################
     // # Chip event data #
     // ###################
+    uint16_t chip_id_mod4;
     uint16_t             trigger_id;
     uint16_t             trigger_tag;
     uint16_t             bc_id;
@@ -112,6 +118,7 @@ struct RD53ChipEvent
 class RD53Event : public Ph2_HwInterface::Event
 {
   public:
+    RD53Event() {}
     RD53Event(const uint32_t* data, size_t n);
 
     void fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup) override;

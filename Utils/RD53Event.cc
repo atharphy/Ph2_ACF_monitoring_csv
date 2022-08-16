@@ -9,6 +9,7 @@
 
 #include "RD53Event.h"
 #include "../HWDescription/RD53.h"
+#include "RD53BEventDecoding.h"
 
 #ifdef __USE_ROOT__
 #include "TFile.h"
@@ -354,6 +355,8 @@ void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53
         return;
     }
 
+    if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53A)
+{
     if(eventStartExt.size() == 0)
     {
         size_t i = 0u;
@@ -390,6 +393,9 @@ void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53
                 if(events.back().l1a_counter % maxL1Counter != events.back().chip_events[j].trigger_id) eventStatus |= RD53FWEvtEncoder::L1A;
         }
     }
+}
+else
+    RD53BEventDecoding::decode_events(data, events);
 }
 
 void RD53Event::ForkDecodingThreads()
