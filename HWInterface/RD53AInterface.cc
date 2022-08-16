@@ -18,7 +18,7 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
 {
     this->setBoard(pChip->getBeBoardId());
 
-    auto pRD53 = static_cast<RD53*>(pChip);
+    auto        pRD53       = static_cast<RD53*>(pChip);
     ChipRegMap& pRD53RegMap = pChip->getRegMap();
 
     // ################################################

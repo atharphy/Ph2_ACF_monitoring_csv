@@ -11,15 +11,16 @@
 #ifndef RD53BEVENTDECODING_H
 #define RD53BEVENTDECODING_H
 
-#include "RD53Event.h"
 #include "../HWDescription/RD53B.h"
+#include "RD53Event.h"
 
-namespace RD53BEventDecoding {
-
-struct FormatOptions {
-    bool enableChipId = false;
-    bool enableToT = true;
-    bool enableBCID = false;
+namespace RD53BEventDecoding
+{
+struct FormatOptions
+{
+    bool enableChipId    = false;
+    bool enableToT       = true;
+    bool enableBCID      = false;
     bool enableTriggerId = false;
 };
 

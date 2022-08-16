@@ -18,7 +18,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
 {
     this->setBoard(pChip->getBeBoardId());
 
-    auto pRD53 = static_cast<RD53*>(pChip);
+    auto        pRD53       = static_cast<RD53*>(pChip);
     ChipRegMap& pRD53RegMap = pChip->getRegMap();
 
     // @TMP@ : what is this?
@@ -256,8 +256,10 @@ uint16_t RD53BInterface::GetPixelConfigTDAC(const pixelMask& mask, uint16_t row,
 
 void RD53BInterface::ResetCoreColumns(RD53* pRD53)
 {
-    for(auto suffix : {"_0", "_1", "_2"}) {
-        for (int i = 0; i < 2; i++) {
+    for(auto suffix: {"_0", "_1", "_2"})
+    {
+        for(int i = 0; i < 2; i++)
+        {
             uint16_t value = 0x55 << i;
             RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL") + suffix, value, false);
             RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL_RESET") + suffix, value, false);

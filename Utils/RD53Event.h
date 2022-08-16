@@ -78,10 +78,7 @@ namespace Ph2_HwInterface
 {
 struct HitData
 {
-  HitData(uint16_t row, uint16_t col, uint8_t  tot)
-    : row(row)
-    , col(col)
-    , tot(tot) {}
+    HitData(uint16_t row, uint16_t col, uint8_t tot) : row(row), col(col), tot(tot) {}
 
     uint16_t row;
     uint16_t col;
@@ -106,7 +103,7 @@ struct RD53ChipEvent
     // ###################
     // # Chip event data #
     // ###################
-    uint16_t chip_id_mod4;
+    uint16_t             chip_id_mod4;
     uint16_t             trigger_id;
     uint16_t             trigger_tag;
     uint16_t             bc_id;
