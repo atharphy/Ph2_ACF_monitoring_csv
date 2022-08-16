@@ -102,7 +102,6 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     // ###################################
     // # Programmig pixel cell registers #
     // ###################################
-    // RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{pChip->getId()});
     RD53BInterface::WriteRD53Mask(pRD53, false, true);
 
     return true;
