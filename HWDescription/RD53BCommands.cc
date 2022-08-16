@@ -32,7 +32,7 @@ std::vector<uint8_t> serializeFields(const WrRegLong& cmd)
     std::vector<uint8_t> fields;
 
     fields.reserve(2 + cmd.values.size() * 2);
-    fields.push_back(packAndEncode<1, 0>(1, 0));
+    fields.push_back(packAndEncode<1, 4>(1, 0));
     fields.push_back(packAndEncode<5>(0));
     for(const auto& value: cmd.values)
     {

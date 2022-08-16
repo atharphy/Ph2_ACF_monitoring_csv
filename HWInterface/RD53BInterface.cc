@@ -33,16 +33,16 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     RD53BInterface::ResetCoreColumns(pRD53);
 
     // @TMP@ : what is this?
-    RD53Interface::WriteChipReg(pChip, "TriggerConfig", 0, pVerifLoop);
-    RD53Interface::WriteChipReg(pChip, "DataConcentratorConf", 0, pVerifLoop);
-    RD53Interface::WriteChipReg(pChip, "CoreColEncoderConf", 0, pVerifLoop);
+    RD53Interface::WriteChipReg(pChip, "TriggerConfig", 136, false);
+    RD53Interface::WriteChipReg(pChip, "DataMerging", 0b0000110000001, false);
+    RD53Interface::WriteChipReg(pChip, "DataConcentratorConf", 0, false);
+    RD53Interface::WriteChipReg(pChip, "CoreColEncoderConf", 0, false);
 
     // ################################################
     // # Programming global registers from white list #
     // ################################################
-    static const char* registerWhileList[] = {"DAC_PREAMP_L_DIFF", "DAC_PREAMP_R_DIFF", "DAC_PREAMP_TL_DIFF", "DAC_PREAMP_TR_DIFF", "DAC_PREAMP_T_DIFF", "DAC_PREAMP_M_DIFF",
-                                              "DAC_PRECOMP_DIFF",  "DAC_COMP_DIFF",     "DAC_VFF_DIFF",       "DAC_TH1_L_DIFF",     "DAC_TH1_R_DIFF",    "DAC_TH1_M_DIFF",
-                                              "DAC_TH2_DIFF",      "DAC_LCC_DIFF",      "DAC_PREAMP_L_LIN",   "DAC_PREAMP_R_LIN",   "DAC_PREAMP_TL_LIN", "DAC_PREAMP_TR_LIN",
+    static const char* registerWhileList[] = {      
+                                              "DAC_PREAMP_L_LIN",   "DAC_PREAMP_R_LIN",   "DAC_PREAMP_TL_LIN", "DAC_PREAMP_TR_LIN",
                                               "DAC_PREAMP_T_LIN",  "DAC_PREAMP_M_LIN",  "DAC_FC_LIN",         "DAC_KRUM_CURR_LIN",  "DAC_REF_KRUM_LIN",  "DAC_COMP_LIN",
                                               "DAC_COMP_TA_LIN",   "DAC_GDAC_L_LIN",    "DAC_GDAC_R_LIN",     "DAC_GDAC_M_LIN",     "DAC_LDAC_LIN"}; // @CONST@
 
@@ -221,7 +221,12 @@ std::pair<std::string, uint16_t> RD53BInterface::SplitSpecialRegisters(std::stri
                                                                                        {"SER_SEL_OUT_0", {"SER_SEL_OUT", 0}},
                                                                                        {"SER_SEL_OUT_1", {"SER_SEL_OUT", 2}},
                                                                                        {"SER_SEL_OUT_2", {"SER_SEL_OUT", 4}},
-                                                                                       {"SER_SEL_OUT_3", {"SER_SEL_OUT", 6}}};
+                                                                                       {"SER_SEL_OUT_3", {"SER_SEL_OUT", 6}},
+
+                                                                                       {"CAL_EDGE_FINE_DELAY", {"CalibrationConfig", 0}},
+                                                                                       {"ANALOG_INJ_MODE", {"CalibrationConfig", 6}},
+                                                                                       {"DIGITAL_INJ_EN", {"CalibrationConfig", 7}}
+                                                                                       };
 
     auto it = specialRegMap.find(regName);
     if(it == specialRegMap.end())

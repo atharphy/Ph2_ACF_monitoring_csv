@@ -125,7 +125,7 @@ void RD53Event::fillChipDataContainer(ChipDataContainer* chipContainer, const st
 {
     bool   vectorRequired = chipContainer->isSummaryContainerType<Summary<GenericDataVector, OccupancyAndPh>>();
     size_t chipIndx;
-
+std::cout << __LINE__ << " AAAA " << std::hex << eventStatus << std::endl;
     if((eventStatus == RD53FWEvtEncoder::GOOD) && (RD53Event::isHittedChip(hybridId, chipContainer->getId(), chipIndx) == true))
     {
         if(vectorRequired == true)
@@ -147,7 +147,9 @@ void RD53Event::fillChipDataContainer(ChipDataContainer* chipContainer, const st
 bool RD53Event::isHittedChip(uint8_t hybrid_id, uint8_t chip_id, size_t& chipIndx) const
 {
     auto it = std::find_if(
-        chip_events.begin(), chip_events.end(), [&](const RD53ChipEvent& event) { return ((event.hybrid_id == hybrid_id) && (event.chip_id == chip_id) && (event.hit_data.size() != 0)); });
+        chip_events.begin(), chip_events.end(), [&](const RD53ChipEvent& event) { 
+            std::cout << __LINE__ << " AAAA " << event.chip_id << " " << chip_id << " " << event.hybrid_id  << " " << hybrid_id << std::endl;
+            return ((event.hybrid_id == hybrid_id) && (event.chip_id == chip_id) && (event.hit_data.size() != 0)); });
 
     if(it == chip_events.end()) return false;
     chipIndx = it - chip_events.begin();
@@ -165,11 +167,16 @@ int RD53Event::lane2chipId(const BeBoard* pBoard, uint16_t optGroup_id, uint16_t
         auto opticalGroup = std::find_if(pBoard->begin(), pBoard->end(), [&](OpticalGroupContainer* cOpticalGroup) { return cOpticalGroup->getId() == optGroup_id; });
         if(opticalGroup != pBoard->end())
         {
-            auto hybrid = std::find_if((*opticalGroup)->begin(), (*opticalGroup)->end(), [&](HybridContainer* cHybrid) { return cHybrid->getId() == hybrid_id; });
+            auto hybrid = std::find_if((*opticalGroup)->begin(), (*opticalGroup)->end(), [&](HybridContainer* cHybrid) { 
+                
+                return cHybrid->getId() == hybrid_id; });
             if(hybrid != (*opticalGroup)->end())
             {
-                auto it = std::find_if((*hybrid)->begin(), (*hybrid)->end(), [&](ChipContainer* pChip) { return static_cast<RD53*>(pChip)->getChipLane() == chip_lane; });
-                if(it != (*hybrid)->end()) return (*it)->getId();
+                auto it = std::find_if((*hybrid)->begin(), (*hybrid)->end(), [&](ChipContainer* pChip) { 
+                    return static_cast<RD53*>(pChip)->getChipLane() == chip_lane; });
+            
+                if(it != (*hybrid)->end()) 
+                return (*it)->getId();
             }
         }
     }
@@ -363,11 +370,17 @@ void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53
             while(i < data.size())
                 if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
                 {
-                    eventStartLocal.push_back(i);
-                    i += RD53FWEvtEncoder::EVT_HEADER_SIZE;
+                                        eventStartLocal.push_back(i);
+                    size_t block_size;
+                    std::tie(block_size) = bits::unpack<RD53FWEvtEncoder::NBIT_BLOCKSIZE>(data[i]);
+                    i += 4 * block_size - 1;
                 }
                 else
-                    i++;
+                {
+                std::cout << "No header found in the expected position" << std::endl;
+                eventStatus = RD53FWEvtEncoder::NOHEADER;
+                return;
+                }
             if(eventStartLocal.size() == 0)
             {
                 eventStatus = RD53FWEvtEncoder::NOHEADER;
@@ -395,7 +408,14 @@ void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53
         }
     }
     else
+    try
+    {
         RD53BEventDecoding::decode_events(data, events);
+    }
+    catch(std::runtime_error& e)
+    {
+        std::cout << e.what() << std::endl;
+    }
 }
 
 void RD53Event::ForkDecodingThreads()

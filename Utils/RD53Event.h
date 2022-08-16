@@ -109,7 +109,7 @@ struct RD53ChipEvent
     uint16_t             bc_id;
     std::vector<HitData> hit_data;
 
-    uint16_t eventStatus;
+    uint16_t eventStatus = RD53FWEvtEncoder::GOOD;
 };
 
 class RD53Event : public Ph2_HwInterface::Event

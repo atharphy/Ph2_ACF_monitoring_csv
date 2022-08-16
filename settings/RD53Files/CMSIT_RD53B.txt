@@ -315,6 +315,7 @@ SER_SEL_OUT_1             0x10A          0b1                     0b1            
 SER_SEL_OUT_2             0x10B          0b1                     0b1                                 2
 SER_SEL_OUT_3             0x10C          0b1                     0b1                                 2
 CDR_CONFIG_SEL_SER_CLK    0x10D          0b000                   0b000                               3
+DIGITAL_INJ_EN            0x10E          0b0                     0b0                                 1
 
 ADC_OFFSET_VOLT           0x110          0d63                    0d63                               16
 ADC_MAXIMUM_VOLT          0x111          0d839                   0d839                              16

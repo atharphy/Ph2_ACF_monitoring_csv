@@ -44,18 +44,11 @@ void PixelAlive::ConfigureCalibration()
     // ######################
     // # Set injection type #
     // ######################
-    size_t inj = 0;
-    if(injType == INJtype::Digital) inj = 1 << RD53Shared::firstChip->getNumberOfBits("INJECTION_SELECT_DELAY");
-    size_t maxDelay = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("INJECTION_SELECT_DELAY"));
-
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
-                {
-                    auto val = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT");
-                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "INJECTION_SELECT", inj | (val & maxDelay));
-                }
+                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "DIGITAL_INJ_EN", injType == INJtype::Digital);
 
     // #######################
     // # Initialize progress #

@@ -18,7 +18,7 @@ namespace RD53BEventDecoding
 {
 struct FormatOptions
 {
-    bool enableChipId    = false;
+    bool enableChipId    = true;
     bool enableToT       = true;
     bool enableBCID      = false;
     bool enableTriggerId = false;

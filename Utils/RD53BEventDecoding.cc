@@ -72,12 +72,12 @@ void decode_stream_header(BitView<const uint32_t>& bits, RD53ChipEvent& e, const
     if(options.enableTriggerId) e.trigger_id = bits.pop(8);
 }
 
-void decode_chip_id(uint8_t chipId, size_t i, RD53ChipEvent& e)
+void decode_chip_id(uint8_t chipId, size_t i, RD53ChipEvent& e, size_t n_words)
 {
     if(i == 0)
         e.chip_id_mod4 = chipId;
     else if(e.chip_id_mod4 != chipId)
-        throw std::runtime_error("Found conflicting chip ID: " + std::to_string(chipId) + " (previously " + std::to_string(e.chip_id_mod4) + ") @ word # " + std::to_string(i));
+        throw std::runtime_error("Found conflicting chip ID: " + std::to_string(chipId) + " (previously " + std::to_string(e.chip_id_mod4) + ") @ word # " + std::to_string(i) + " / " + std::to_string(n_words));
 }
 
 BitVector<uint32_t> decode_event_stream(BitView<const uint32_t> bits, RD53ChipEvent& e, const FormatOptions& options)
@@ -85,16 +85,21 @@ BitVector<uint32_t> decode_event_stream(BitView<const uint32_t> bits, RD53ChipEv
     BitVector<uint32_t> payload_data;
     size_t              n_words = bits.size() / 64;
     bool                isLast  = false;
+
     for(size_t i = 0; i < n_words && !isLast; i++)
     {
-        bool isLast = bits.pop(1);
-        if(isLast)
+        isLast = bits.pop(1);
+
+        if(isLast == true)
         {
             if(i + 2 < n_words) { throw std::runtime_error("The end-of-stream bit was 1 before the last word of the event stream"); }
         }
         else if(i == n_words)
             throw std::runtime_error("The end-of-stream bit was 0 in the last word of the event stream");
-        if(options.enableChipId) decode_chip_id(bits.pop(2), i, e);
+
+        if(options.enableChipId)
+            decode_chip_id(bits.pop(2), i, e, n_words);
+
         payload_data.append(bits.pop_slice(63 - 2 * options.enableChipId));
     }
     return payload_data;
@@ -125,7 +130,8 @@ void decode_chip_event(BitView<const uint32_t> bits, RD53ChipEvent& e, const For
             isLast      = event_stream_view.pop(1);
             size_t qrow = event_stream_view.pop(1) ? last_qrow[ccol - 1] + 1 : event_stream_view.pop(8);
 
-            if(2 * qrow >= RD53B::NROWS) throw std::runtime_error("Invalid row: " + std::to_string(2 * qrow));
+            if(2 * qrow >= RD53B::NROWS)
+                throw std::runtime_error("Invalid row: " + std::to_string(2 * qrow));
 
             last_qrow[ccol - 1] = qrow;
 
@@ -174,7 +180,7 @@ size_t decode_events(const std::vector<uint32_t>& data, std::vector<RD53Event>& 
             RD53ChipEvent chipEvt;
 
             event_bits.skip(4); // error_code
-            chipEvt.chip_id   = event_bits.pop(8);
+            chipEvt.hybrid_id = event_bits.pop(8);
             chipEvt.chip_lane = event_bits.pop(4);
             size_t l1a_size   = event_bits.pop(12);
             event_bits.skip(16); // padding
@@ -182,7 +188,6 @@ size_t decode_events(const std::vector<uint32_t>& data, std::vector<RD53Event>& 
             event_bits.skip(12); // frame_delay
 
             decode_chip_event(event_bits.pop_slice(l1a_size * 128 - 64), chipEvt, options);
-
             evt.chip_events.push_back(std::move(chipEvt));
         }
 
@@ -198,6 +203,7 @@ size_t count_events(const std::vector<uint32_t>& data)
 {
     auto   bits = bit_view(data);
     size_t n    = 0;
+
     while(bits.size())
     {
         if(bits.pop(16) != 0xFFFF) break;
@@ -205,6 +211,7 @@ size_t count_events(const std::vector<uint32_t>& data)
         bits.skip(128 * block_size - 32);
         ++n;
     }
+
     return n;
 }
 
