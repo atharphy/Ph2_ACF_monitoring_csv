@@ -52,9 +52,9 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
         LOG(ERROR) << BOLDRED << "Error when reading back what was written into RD53 reg. " << BOLDYELLOW << regName << BOLDRED << ": wrote = " << BOLDYELLOW << nameAndValue.second << BOLDRED
                    << ", read = " << BOLDYELLOW << actualValue << RESET;
     else if((pVerifLoop == true) && (status == true))
-        LOG(INFO) << BOLDBLUE << "\t--> Succesfully configured chip register " << BOLDYELLOW << regName << RESET;
+        LOG(INFO) << BOLDBLUE << "\t--> Succesfully configured chip register " << BOLDYELLOW << regName << RESET; // @TMP@
 
-    if(pVerifLoop)
+    if(pVerifLoop == true)
     {
         pChip->setReg(regName, data);
         pChip->setReg(nameAndValue.first, nameAndValue.second);

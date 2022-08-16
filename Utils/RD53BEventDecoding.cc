@@ -77,7 +77,8 @@ void decode_chip_id(uint8_t chipId, size_t i, RD53ChipEvent& e, size_t n_words)
     if(i == 0)
         e.chip_id_mod4 = chipId;
     else if(e.chip_id_mod4 != chipId)
-        throw std::runtime_error("Found conflicting chip ID: " + std::to_string(chipId) + " (previously " + std::to_string(e.chip_id_mod4) + ") @ word # " + std::to_string(i) + " / " + std::to_string(n_words));
+        throw std::runtime_error("Found conflicting chip ID: " + std::to_string(chipId) + " (previously " + std::to_string(e.chip_id_mod4) + ") @ word # " + std::to_string(i) + " / " +
+                                 std::to_string(n_words));
 }
 
 BitVector<uint32_t> decode_event_stream(BitView<const uint32_t> bits, RD53ChipEvent& e, const FormatOptions& options)
@@ -97,8 +98,7 @@ BitVector<uint32_t> decode_event_stream(BitView<const uint32_t> bits, RD53ChipEv
         else if(i == n_words)
             throw std::runtime_error("The end-of-stream bit was 0 in the last word of the event stream");
 
-        if(options.enableChipId)
-            decode_chip_id(bits.pop(2), i, e, n_words);
+        if(options.enableChipId) decode_chip_id(bits.pop(2), i, e, n_words);
 
         payload_data.append(bits.pop_slice(63 - 2 * options.enableChipId));
     }
@@ -130,18 +130,17 @@ void decode_chip_event(BitView<const uint32_t> bits, RD53ChipEvent& e, const For
             isLast      = event_stream_view.pop(1);
             size_t qrow = event_stream_view.pop(1) ? last_qrow[ccol - 1] + 1 : event_stream_view.pop(8);
 
-            if(2 * qrow >= RD53B::NROWS)
-                throw std::runtime_error("Invalid row: " + std::to_string(2 * qrow));
+            if(2 * qrow >= RD53B::NROWS) throw std::runtime_error("Invalid row: " + std::to_string(2 * qrow));
 
             last_qrow[ccol - 1] = qrow;
 
             auto hitmap = decode_compressed_hitmap(event_stream_view);
-            for(size_t row = 0; row < 2; ++row)
-                for(size_t col = 0; col < 8; ++col)
+            for(size_t row = 0; row < 2; row++)
+                for(size_t col = 0; col < 8; col++)
                     if(hitmap[row][col])
                     {
                         uint8_t tot = 0;
-                        if(options.enableToT)
+                        if(options.enableToT == true)
                         {
                             tot = event_stream_view.pop(4);
                             if(tot == 15) throw std::runtime_error("Invalid tot value: 15");

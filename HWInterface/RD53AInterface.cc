@@ -187,11 +187,10 @@ std::pair<std::string, uint16_t> RD53AInterface::SplitSpecialRegisters(std::stri
                                                                                        {"SER_SEL_OUT_1", {"SER_SEL_OUT", 2}},
                                                                                        {"SER_SEL_OUT_2", {"SER_SEL_OUT", 4}},
                                                                                        {"SER_SEL_OUT_3", {"SER_SEL_OUT", 6}},
-                                                                                       
+
                                                                                        {"CAL_EDGE_FINE_DELAY", {"INJECTION_SELECT", 0}},
                                                                                        {"DIGITAL_INJ_EN", {"INJECTION_SELECT", 4}},
-                                                                                       {"ANALOG_INJ_MODE", {"INJECTION_SELECT", 5}}
-                                                                                       };
+                                                                                       {"ANALOG_INJ_MODE", {"INJECTION_SELECT", 5}}};
 
     auto it = specialRegMap.find(regName);
     if(it == specialRegMap.end())

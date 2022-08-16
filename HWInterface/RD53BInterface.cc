@@ -33,7 +33,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     RD53BInterface::ResetCoreColumns(pRD53);
 
     // @TMP@ : what is this?
-    RD53Interface::WriteChipReg(pChip, "TriggerConfig", 136, false);
+    // RD53Interface::WriteChipReg(pChip, "TriggerConfig", 136, false);
     RD53Interface::WriteChipReg(pChip, "DataMerging", 0b0000110000001, false);
     RD53Interface::WriteChipReg(pChip, "DataConcentratorConf", 0, false);
     RD53Interface::WriteChipReg(pChip, "CoreColEncoderConf", 0, false);
@@ -41,10 +41,21 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     // ################################################
     // # Programming global registers from white list #
     // ################################################
-    static const char* registerWhileList[] = {      
-                                              "DAC_PREAMP_L_LIN",   "DAC_PREAMP_R_LIN",   "DAC_PREAMP_TL_LIN", "DAC_PREAMP_TR_LIN",
-                                              "DAC_PREAMP_T_LIN",  "DAC_PREAMP_M_LIN",  "DAC_FC_LIN",         "DAC_KRUM_CURR_LIN",  "DAC_REF_KRUM_LIN",  "DAC_COMP_LIN",
-                                              "DAC_COMP_TA_LIN",   "DAC_GDAC_L_LIN",    "DAC_GDAC_R_LIN",     "DAC_GDAC_M_LIN",     "DAC_LDAC_LIN"}; // @CONST@
+    static const char* registerWhileList[] = {"DAC_PREAMP_L_LIN",
+                                              "DAC_PREAMP_R_LIN",
+                                              "DAC_PREAMP_TL_LIN",
+                                              "DAC_PREAMP_TR_LIN",
+                                              "DAC_PREAMP_T_LIN",
+                                              "DAC_PREAMP_M_LIN",
+                                              "DAC_FC_LIN",
+                                              "DAC_KRUM_CURR_LIN",
+                                              "DAC_REF_KRUM_LIN",
+                                              "DAC_COMP_LIN",
+                                              "DAC_COMP_TA_LIN",
+                                              "DAC_GDAC_L_LIN",
+                                              "DAC_GDAC_R_LIN",
+                                              "DAC_GDAC_M_LIN",
+                                              "DAC_LDAC_LIN"}; // @CONST@
 
     for(auto i = 0u; i < ArraySize(registerWhileList); i++)
     {
@@ -178,6 +189,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
 
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
+    // @TMP@
     // RD53BInterface::Reset(pChip, 4, 0xFF);
     // RD53BInterface::Reset(pChip, 5, 0xFF);
     RD53BInterface::SendGlobalPulse(pChip, 0b110000, 0xFF);
@@ -225,8 +237,7 @@ std::pair<std::string, uint16_t> RD53BInterface::SplitSpecialRegisters(std::stri
 
                                                                                        {"CAL_EDGE_FINE_DELAY", {"CalibrationConfig", 0}},
                                                                                        {"ANALOG_INJ_MODE", {"CalibrationConfig", 6}},
-                                                                                       {"DIGITAL_INJ_EN", {"CalibrationConfig", 7}}
-                                                                                       };
+                                                                                       {"DIGITAL_INJ_EN", {"CalibrationConfig", 7}}};
 
     auto it = specialRegMap.find(regName);
     if(it == specialRegMap.end())
@@ -340,9 +351,10 @@ void RD53BInterface::SendChipCommandsWithSync(RD53* pRD53, std::vector<uint16_t>
 
     while(begin != cmdStream.end())
     {
-        std::vector<uint16_t> cmdPacket;
         size_t                nWordsThisPacketExclSync = std::min(nWordsPerPacketExclSync, size_t(cmdStream.end() - begin));
+        std::vector<uint16_t> cmdPacket;
         cmdPacket.reserve(std::ceil(nWordsThisPacketExclSync + 2 * nWordsThisPacketExclSync / 30.));
+
         auto it = begin;
         while(it != begin + nWordsThisPacketExclSync)
         {
@@ -352,6 +364,7 @@ void RD53BInterface::SendChipCommandsWithSync(RD53* pRD53, std::vector<uint16_t>
             serialize(RD53BCmd::Sync{}, cmdPacket);
             serialize(RD53BCmd::Sync{}, cmdPacket);
         }
+
         static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdPacket, pRD53->getHybridId());
         begin = it;
     }

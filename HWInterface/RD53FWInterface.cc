@@ -272,17 +272,17 @@ void RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
     RegManager::WriteBlockReg("user.ctrl_regs.Slow_cmd_fifo_din", commandList);
     RegManager::WriteStackReg({{"user.ctrl_regs.Slow_cmd.dispatch_packet", 1}, {"user.ctrl_regs.Slow_cmd.dispatch_packet", 0}});
 
-    // ####################################
-    // # Check if commands were dispached #
-    // ####################################
-    nAttempts             = 0;
-    const int maxAttempts = 500;
-    while((RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_packet_dispatched") == false) && (nAttempts < maxAttempts))
+    // #####################################
+    // # Check if commands were dispatched #
+    // #####################################
+    nAttempts = 0;
+    while((RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_packet_dispatched") == false) && (nAttempts < RD53Shared::MAXATTEMPTSCMDDISPATCH))
     {
         nAttempts++;
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
     }
-    if(nAttempts == maxAttempts) LOG(ERROR) << BOLDRED << "Error while dispatching chip register program, reached maximum number of attempts (" << BOLDYELLOW << maxAttempts << BOLDRED << ")" << RESET;
+    if(nAttempts == RD53Shared::MAXATTEMPTSCMDDISPATCH)
+        LOG(ERROR) << BOLDRED << "Error while dispatching chip register program, reached maximum number of attempts (" << BOLDYELLOW << RD53Shared::MAXATTEMPTSCMDDISPATCH << BOLDRED << ")" << RESET;
 
     // ############################
     // # Check write-command FIFO #
@@ -575,6 +575,9 @@ void RD53FWInterface::ResetBoard()
     // #######
     // # Set #
     // #######
+    RegManager::WriteReg("user.ctrl_regs.reset_reg.chip_resync", 0);
+    RegManager::WriteReg("user.ctrl_regs.reset_reg.chip_resync", 1);
+
     RegManager::WriteReg("user.ctrl_regs.reset_reg.aurora_rst", 0);
     RegManager::WriteReg("user.ctrl_regs.reset_reg.aurora_pma_rst", 0);
     RegManager::WriteReg("user.ctrl_regs.reset_reg.global_rst", 1);
@@ -715,7 +718,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         RD53Event::decodedEvents.clear();
         uint16_t status;
         // RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents, status); // Decode events with multiple threads
-        RD53Event::DecodeEvents(pData, RD53Event::decodedEvents, {}, status);         // Decode events with a single thread
+        RD53Event::DecodeEvents(pData, RD53Event::decodedEvents, {}, status); // Decode events with a single thread
         // RD53Event::PrintEvents(RD53Event::decodedEvents, pData);                      // @TMP@
         if(RD53Event::EvtErrorHandler(status) == false)
         {

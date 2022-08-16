@@ -8,8 +8,8 @@
   Support:               email to alkiviadis.papadopoulos@cern.ch
 */
 
-#ifndef RD53BEVENTDECODING_H
-#define RD53BEVENTDECODING_H
+#ifndef RD53BEventDecoding_H
+#define RD53BEventDecoding_H
 
 #include "../HWDescription/RD53B.h"
 #include "RD53Event.h"
