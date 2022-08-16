@@ -42,6 +42,7 @@ class RD53BInterface : public RD53Interface
     void     SendGlobalPulse(Ph2_HwDescription::Chip* pChip, uint16_t route, uint16_t pulseDuration);
     void     SendGlobalPulseBroadcast(const Ph2_HwDescription::BeBoard* pBoard, uint16_t route, uint16_t pulseDuration);
     void     SendChipCommandsWithSync(Ph2_HwDescription::RD53* pRD53, std::vector<uint16_t>& cmdStream);
+    void     ResetCoreColumns(Ph2_HwDescription::RD53* pRD53);
 };
 
 } // namespace Ph2_HwInterface

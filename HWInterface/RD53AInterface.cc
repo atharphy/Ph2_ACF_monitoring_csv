@@ -18,6 +18,7 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
 {
     this->setBoard(pChip->getBeBoardId());
 
+    auto pRD53 = static_cast<RD53*>(pChip);
     ChipRegMap& pRD53RegMap = pChip->getRegMap();
 
     // ################################################
@@ -71,7 +72,7 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
 
             if(cRegItem.first == "CDR_CONFIG")
             {
-                RD53Interface::SendCommand(static_cast<RD53*>(pChip), RD53ACmd::ECR{});
+                RD53Interface::SendCommand(pRD53, RD53ACmd::ECR{});
                 std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
             }
 
@@ -81,7 +82,7 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     // ###################################
     // # Programmig pixel cell registers #
     // ###################################
-    RD53AInterface::WriteRD53Mask(static_cast<RD53*>(const_cast<Chip*>(pChip)), false, true);
+    RD53AInterface::WriteRD53Mask(pRD53, false, true);
 
     return true;
 }

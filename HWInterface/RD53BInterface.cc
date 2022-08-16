@@ -18,6 +18,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
 {
     this->setBoard(pChip->getBeBoardId());
 
+    auto pRD53 = static_cast<RD53*>(pChip);
     ChipRegMap& pRD53RegMap = pChip->getRegMap();
 
     // @TMP@ : what is this?
@@ -25,6 +26,11 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     RD53Interface::WriteChipReg(pChip, "PIX_DEFAULT_CONFIG_B", 0x631D, pVerifLoop);
 
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+
+    // ######################
+    // # Reset Core Columns #
+    // ######################
+    RD53BInterface::ResetCoreColumns(pRD53);
 
     // @TMP@ : what is this?
     RD53Interface::WriteChipReg(pChip, "TriggerConfig", 0, pVerifLoop);
@@ -85,38 +91,19 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
 
             if(cRegItem.first == "CDR_CONFIG")
             {
-                RD53Interface::SendCommand(static_cast<RD53*>(pChip), RD53BCmd::Clear{});
-                RD53Interface::SendCommand(static_cast<RD53*>(pChip), RD53BCmd::Clear{});
+                RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{});
+                RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{});
                 std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
             }
 
             RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fValue, pVerifLoop);
         }
 
-    // #######################
-    // # Enable Core Columns #
-    // #######################
-    RD53Interface::WriteChipReg(pChip, "EN_CORE_COL_RESET_0", pRD53RegMap["EN_CORE_COL_0"].fValue, false);
-    RD53Interface::WriteChipReg(pChip, "EN_CORE_COL_RESET_1", pRD53RegMap["EN_CORE_COL_1"].fValue, false);
-    RD53Interface::WriteChipReg(pChip, "EN_CORE_COL_RESET_2", pRD53RegMap["EN_CORE_COL_2"].fValue, false);
-    RD53Interface::WriteChipReg(pChip, "EN_CORE_COL_RESET_3", pRD53RegMap["EN_CORE_COL_3"].fValue, false);
-
-    RD53Interface::WriteChipReg(pChip, "EN_CORE_COL_CAL_0", pRD53RegMap["EN_CORE_COL_0"].fValue, false);
-    RD53Interface::WriteChipReg(pChip, "EN_CORE_COL_CAL_1", pRD53RegMap["EN_CORE_COL_1"].fValue, false);
-    RD53Interface::WriteChipReg(pChip, "EN_CORE_COL_CAL_2", pRD53RegMap["EN_CORE_COL_2"].fValue, false);
-    RD53Interface::WriteChipReg(pChip, "EN_CORE_COL_CAL_3", pRD53RegMap["EN_CORE_COL_3"].fValue, false);
-
-    RD53Interface::WriteChipReg(pChip, "EN_CORE_COL_RESET_0", pRD53RegMap["EN_CORE_COL_0"].fValue, false);
-    RD53Interface::WriteChipReg(pChip, "EN_CORE_COL_RESET_1", pRD53RegMap["EN_CORE_COL_1"].fValue, false);
-    RD53Interface::WriteChipReg(pChip, "EN_CORE_COL_RESET_2", pRD53RegMap["EN_CORE_COL_2"].fValue, false);
-    RD53Interface::WriteChipReg(pChip, "EN_CORE_COL_RESET_3", pRD53RegMap["EN_CORE_COL_3"].fValue, false);
-
-    RD53Interface::SendCommand(static_cast<RD53*>(pChip), RD53BCmd::Clear{pChip->getId()});
-
     // ###################################
     // # Programmig pixel cell registers #
     // ###################################
-    RD53BInterface::WriteRD53Mask(static_cast<RD53*>(const_cast<Chip*>(pChip)), false, true);
+    // RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{pChip->getId()});
+    RD53BInterface::WriteRD53Mask(pRD53, false, true);
 
     return true;
 }
@@ -192,8 +179,9 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
 
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
-    RD53BInterface::Reset(pChip, 4, 0xFF);
-    RD53BInterface::Reset(pChip, 5, 0xFF);
+    // RD53BInterface::Reset(pChip, 4, 0xFF);
+    // RD53BInterface::Reset(pChip, 5, 0xFF);
+    RD53BInterface::SendGlobalPulse(pChip, 0b110000, 0xFF);
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     RD53Interface::SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
 
@@ -267,7 +255,29 @@ uint16_t RD53BInterface::GetPixelConfigTDAC(const pixelMask& mask, uint16_t row,
     return bits::pack<5, 5>(mask.TDAC[row + RD53B::NROWS * (col + 1)], mask.TDAC[row + RD53B::NROWS * (col + 0)]);
 }
 
-void RD53BInterface::WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault)
+void RD53BInterface::ResetCoreColumns(RD53* pRD53)
+{
+    for(auto suffix : {"_0", "_1", "_2"}) {
+        for (int i = 0; i < 2; i++) {
+            uint16_t value = 0x55 << i;
+            RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL") + suffix, value, false);
+            RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL_RESET") + suffix, value, false);
+            RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{});
+        }
+
+        RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL") + suffix, 0, false);
+        RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL_RESET") + suffix, 0, false);
+    }
+
+    RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_3", 0x3F, false);
+    RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_RESET_3", 0x3F, false);
+    RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{});
+
+    RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_3", 0, false);
+    RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_RESET_3", 0, false);
+}
+
+void RD53BInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
 {
     this->setBoard(pRD53->getBeBoardId());
 
@@ -319,7 +329,7 @@ void RD53BInterface::SendChipCommandsWithSync(RD53* pRD53, std::vector<uint16_t>
 {
     // Compute number of 16-bit words to which we add 2 sync words every 30:
     // nWordsPerPacketExclSync + 2 * nWordsPerPacketExclSync / 30 = totaNumb16bitWords ( = 2 * (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO))
-    constexpr size_t nWordsPerPacketExclSync = 2 * (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO) / (1 + 2. / 30);
+    constexpr size_t nWordsPerPacketExclSync = 2 * ((1 << RD53FWconstants::NBIT_SLOWCMD_FIFO) - 1) / (1 + 2. / 30);
     auto             begin                   = cmdStream.begin();
 
     while(begin != cmdStream.end())
@@ -362,7 +372,7 @@ void RD53BInterface::Reset(ReadoutChip* pChip, const size_t resetType, const siz
     if(resetType > 10)
         RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false);
     else
-        SendGlobalPulse(pChip, (size_t)(1 << resetType), duration);
+        RD53BInterface::SendGlobalPulse(pChip, (size_t)(1 << resetType), duration);
 }
 
 void RD53BInterface::ChipErrorReport(ReadoutChip* pChip)

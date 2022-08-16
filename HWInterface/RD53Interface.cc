@@ -21,7 +21,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
 
     auto                  nameAndValue(SplitSpecialRegisters(regName, data, RD53Shared::firstChip->getRegMap()));
     std::vector<uint16_t> cmdStream;
-    PackWriteCommand(pChip, nameAndValue.first, nameAndValue.second, cmdStream);
+    PackWriteCommand(pChip, nameAndValue.first, nameAndValue.second, cmdStream, pVerifLoop);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());
 
     if((regName == "VCAL_HIGH") || (regName == "VCAL_MED")) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP)); // @TMP@
@@ -54,8 +54,10 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
     else if((pVerifLoop == true) && (status == true))
         LOG(INFO) << BOLDBLUE << "\t--> Succesfully configured chip register " << BOLDYELLOW << regName << RESET;
 
-    pChip->setReg(regName, data);
-    pChip->setReg(nameAndValue.first, nameAndValue.second);
+    if (pVerifLoop) {
+        pChip->setReg(regName, data);
+        pChip->setReg(nameAndValue.first, nameAndValue.second);
+    }
 
     return status;
 }
