@@ -189,6 +189,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     RD53Interface::WriteChipReg(pChip, "ServiceDataConf", (1 << 8) | 50, false);
     RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG0", 0x0FF1, false);
     RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG1", 0x0000, false);
+
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     RD53BInterface::Reset(pChip, 4, 0xFF);
@@ -289,6 +290,9 @@ void RD53BInterface::WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse
     {
         RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
 
+        // ####################
+        // # Send pixels mask #
+        // ####################
         std::vector<uint16_t> dColConfigMask;
         RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, 0x0}, commandList);
         for(auto row = 0u; row < RD53B::NROWS; row++) dColConfigMask.push_back(RD53BInterface::GetPixelConfigMask(mask, row, col));
@@ -296,6 +300,9 @@ void RD53BInterface::WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse
         RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x1}, commandList);
         RD53BCmd::serialize(RD53BCmd::WrRegLong{chipID, std::move(dColConfigMask)}, commandList);
 
+        // ####################
+        // # Send pixels TDAC #
+        // ####################
         std::vector<uint16_t> dColConfigTDAC;
         RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, 0x0}, commandList);
         for(auto row = 0u; row < RD53B::NROWS; row++) dColConfigTDAC.push_back(RD53BInterface::GetPixelConfigTDAC(mask, row, col));
@@ -310,18 +317,20 @@ void RD53BInterface::WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse
 
 void RD53BInterface::SendChipCommandsWithSync(RD53* pRD53, std::vector<uint16_t>& cmdStream)
 {
+    // Compute number of 16-bit words to which we add 2 sync words every 30:
+    // nWordsPerPacketExclSync + 2 * nWordsPerPacketExclSync / 30 = totaNumb16bitWords ( = 2 * (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO))
     constexpr size_t nWordsPerPacketExclSync = 2 * (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO) / (1 + 2. / 30);
     auto             begin                   = cmdStream.begin();
 
     while(begin != cmdStream.end())
     {
         std::vector<uint16_t> cmdPacket;
-        size_t                nWordsThisPacetExclSync = std::min(nWordsPerPacketExclSync, size_t(cmdStream.end() - begin));
-        cmdPacket.reserve(std::ceil(nWordsThisPacetExclSync + 2 * nWordsThisPacetExclSync / 30.));
+        size_t                nWordsThisPacketExclSync = std::min(nWordsPerPacketExclSync, size_t(cmdStream.end() - begin));
+        cmdPacket.reserve(std::ceil(nWordsThisPacketExclSync + 2 * nWordsThisPacketExclSync / 30.));
         auto it = begin;
-        while(it != begin + nWordsThisPacetExclSync)
+        while(it != begin + nWordsThisPacketExclSync)
         {
-            auto next = std::min(cmdStream.end(), std::min(it + 30, begin + nWordsThisPacetExclSync));
+            auto next = std::min(cmdStream.end(), std::min(it + 30, begin + nWordsThisPacketExclSync));
             std::copy(it, next, std::back_inserter(cmdPacket));
             it = next;
             serialize(RD53BCmd::Sync{}, cmdPacket);
