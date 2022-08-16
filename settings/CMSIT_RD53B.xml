@@ -86,10 +86,10 @@
         </RD53B>
 
         <Global
-            EN_CORE_COL_0            =  "9362"
-            EN_CORE_COL_1            = "37449"
-            EN_CORE_COL_2            = "37449"
-            EN_CORE_COL_3            =    "18"
+            EN_CORE_COL_0            = "65535"
+            EN_CORE_COL_1            = "65535"
+            EN_CORE_COL_2            = "65535"
+            EN_CORE_COL_3            =    "63"
 
             EN_CORE_COL_CAL_0        = "65535"
             EN_CORE_COL_CAL_1        = "65535"
