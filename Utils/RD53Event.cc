@@ -9,7 +9,8 @@
 
 #include "RD53Event.h"
 #include "../HWDescription/RD53.h"
-#include "RD53BEventDecoding.h"
+#include "../HWDescription/RD53B.h"
+#include "BitMaster/BitVector.h"
 
 #ifdef __USE_ROOT__
 #include "TFile.h"
@@ -173,9 +174,8 @@ void RD53Event::fillChipDataContainer(ChipDataContainer* chipContainer, const st
 
 bool RD53Event::isHittedChip(uint8_t hybrid_id, uint8_t chip_id, size_t& chipIndx) const
 {
-    auto it = std::find_if(chip_events.begin(), chip_events.end(), [&](const RD53ChipEvent& event) {
-        return ((event.hybrid_id == hybrid_id) && (event.chip_id == chip_id) && (event.hit_data.size() != 0));
-    });
+    auto it = std::find_if(
+        chip_events.begin(), chip_events.end(), [&](const RD53ChipEvent& event) { return ((event.hybrid_id == hybrid_id) && (event.chip_id == chip_id) && (event.hit_data.size() != 0)); });
 
     if(it == chip_events.end()) return false;
     chipIndx = it - chip_events.begin();
@@ -372,7 +372,7 @@ bool RD53Event::EvtErrorHandler(uint16_t status)
 void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStartExt, uint16_t& eventStatus)
 {
     std::vector<size_t> eventStartLocal;
-    eventStatus                      = RD53FWEvtEncoder::GOOD;
+    eventStatus = RD53FWEvtEncoder::GOOD;
 
     // #####################
     // # Consistency check #
@@ -413,18 +413,15 @@ void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53
     }
     const std::vector<size_t>& refEventStart = (eventStartExt.size() == 0 ? const_cast<const std::vector<size_t>&>(eventStartLocal) : eventStartExt);
 
-    // ##############################
-    // # Branch for RD53A and RD53B #
-    // ##############################
+    // #################################
+    // # Branching for RD53A and RD53B #
+    // #################################
     events.reserve(events.size() + refEventStart.size() - 1);
-    if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53A)
-    {
-        RD53Event::DecodeRD53AEvents(data, events, refEventStart, eventStatus);
-        }
-            else
+    if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53A) { RD53Event::DecodeRD53AEvents(data, events, refEventStart, eventStatus); }
+    else
         try
         {
-            RD53BEventDecoding::decode_events(data, events, refEventStart);
+            RD53Event::DecodeRD53BEvents(data, events, refEventStart);
         }
         catch(std::runtime_error& e)
         {
@@ -480,6 +477,8 @@ void RD53Event::decoderThread(std::vector<uint32_t>*& data, std::vector<RD53Even
 
 void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint16_t& eventStatus)
 {
+    std::vector<size_t> eventStart;
+
     // #####################
     // # Consistency check #
     // #####################
@@ -498,16 +497,21 @@ void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std:
     // #####################
     // # Find events start #
     // #####################
-    std::vector<size_t> eventStart;
-    size_t              i = 0u;
+    size_t i = 0u;
     while(i < data.size())
         if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
         {
             eventStart.push_back(i);
-            i += RD53FWEvtEncoder::EVT_HEADER_SIZE;
+            size_t block_size;
+            std::tie(block_size) = bits::unpack<RD53FWEvtEncoder::NBIT_BLOCKSIZE>(data[i]);
+            i += 4 * block_size;
         }
         else
-            i++;
+        {
+            eventStatus = RD53FWEvtEncoder::EVSIZE;
+            return;
+        }
+
     if(eventStart.size() == 0)
     {
         eventStatus = RD53FWEvtEncoder::NOHEADER;
@@ -621,6 +625,202 @@ void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std:
     }
 }
 */
+
+// ######################
+// # Specific for RD53B #
+// ######################
+
+template <class T>
+size_t decodeCompressedBitpair(BitView<T>& bits)
+{
+    if(bits.pop(1) == 0) return 1;
+    return 2 | bits.pop(1);
+}
+
+template <class T>
+auto decodeCompressedHitmap(BitView<T>& bits)
+{
+    std::array<std::array<bool, 8>, 2> hits{{0}};
+
+    auto row_mask = decodeCompressedBitpair(bits);
+
+    for(size_t row = 0; row < 2; row++)
+    {
+        if(row_mask & (2 >> row))
+        {
+            auto quad_mask = decodeCompressedBitpair(bits);
+
+            std::vector<size_t> pair_masks;
+            for(size_t i = 0; i < __builtin_popcount(quad_mask); ++i)
+            {
+                auto pair_mask = decodeCompressedBitpair(bits);
+                pair_masks.push_back(pair_mask);
+            }
+
+            int current_quad = 0;
+            for(int pixel_quad = 0; pixel_quad < 2; pixel_quad++)
+            {
+                if(quad_mask & (2 >> pixel_quad))
+                {
+                    for(int pixel_pair = 0; pixel_pair < 2; pixel_pair++)
+                    {
+                        if(pair_masks[current_quad] & (2 >> pixel_pair))
+                        {
+                            size_t pixel_mask                              = decodeCompressedBitpair(bits);
+                            hits[row][pixel_quad * 4 + pixel_pair * 2]     = pixel_mask & 2;
+                            hits[row][pixel_quad * 4 + pixel_pair * 2 + 1] = pixel_mask & 1;
+                        }
+                    }
+                    ++current_quad;
+                }
+            }
+        }
+    }
+
+    return hits;
+}
+
+void decodeStreamHeader(BitView<const uint32_t>& bits, RD53ChipEvent& e, const FormatOptions& options)
+{
+    if(options.enableBCID) e.bc_id = bits.pop(11);
+    if(options.enableTriggerId) e.trigger_id = bits.pop(8);
+}
+
+void decodeChipId(uint8_t chipId, size_t i, RD53ChipEvent& e, size_t n_words)
+{
+    if(i == 0)
+        e.chip_id_mod4 = chipId;
+    else if(e.chip_id_mod4 != chipId)
+        throw std::runtime_error("Found conflicting chip ID: " + std::to_string(chipId) + " (previously " + std::to_string(e.chip_id_mod4) + ") @ word # " + std::to_string(i) + " / " +
+                                 std::to_string(n_words));
+}
+
+BitVector<uint32_t> decodeEventStream(BitView<const uint32_t> bits, RD53ChipEvent& e, const FormatOptions& options)
+{
+    BitVector<uint32_t> payload_data;
+    size_t              n_words = bits.size() / 64;
+    bool                isLast  = false;
+
+    for(size_t i = 0; i < n_words && !isLast; i++)
+    {
+        isLast = bits.pop(1);
+
+        if(isLast == true)
+        {
+            if(i + 2 < n_words) { throw std::runtime_error("The end-of-stream bit was 1 before the last word of the event stream"); }
+        }
+        else if(i == n_words)
+            throw std::runtime_error("The end-of-stream bit was 0 in the last word of the event stream");
+
+        if(options.enableChipId) decodeChipId(bits.pop(2), i, e, n_words);
+
+        payload_data.append(bits.pop_slice(63 - 2 * options.enableChipId));
+    }
+    return payload_data;
+}
+
+void decodeChipEvent(BitView<const uint32_t> bits, RD53ChipEvent& e, const FormatOptions& options)
+{
+    const auto event_stream      = decodeEventStream(bits, e, options);
+    auto       event_stream_view = bit_view(event_stream);
+
+    decodeStreamHeader(event_stream_view, e, options);
+
+    e.trigger_tag = event_stream_view.pop(8);
+
+    std::array<int, RD53B::NCOLS / 8> last_qrow;
+
+    while(true)
+    {
+        if(event_stream_view.size() < 6) return;
+        size_t ccol = event_stream_view.pop(6);
+        if(ccol == 0) return;
+
+        if(8 * (ccol - 1) >= RD53B::NCOLS) throw std::runtime_error("Invalid column: " + std::to_string(8 * (ccol - 1)));
+
+        bool isLast = false;
+        while(!isLast)
+        {
+            isLast      = event_stream_view.pop(1);
+            size_t qrow = event_stream_view.pop(1) ? last_qrow[ccol - 1] + 1 : event_stream_view.pop(8);
+
+            if(2 * qrow >= RD53B::NROWS) throw std::runtime_error("Invalid row: " + std::to_string(2 * qrow));
+
+            last_qrow[ccol - 1] = qrow;
+
+            auto hitmap = decodeCompressedHitmap(event_stream_view);
+            for(size_t row = 0; row < 2; row++)
+                for(size_t col = 0; col < 8; col++)
+                    if(hitmap[row][col])
+                    {
+                        uint8_t tot = 0;
+                        if(options.enableToT == true)
+                        {
+                            tot = event_stream_view.pop(4);
+                            if(tot == 15) throw std::runtime_error("Invalid tot value: 15");
+                        }
+                        e.hit_data.emplace_back(qrow * 2 + row, (ccol - 1) * 8 + col, tot);
+                    }
+        }
+    }
+}
+
+size_t RD53Event::DecodeRD53BEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const FormatOptions& options)
+{
+    return RD53Event::DecodeRD53BEvents(&data[0], events, 32 * data.size(), options);
+}
+
+size_t RD53Event::DecodeRD53BEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& refEventStart, const FormatOptions& options)
+{
+    return RD53Event::DecodeRD53BEvents(&data[refEventStart[0]], events, 32 * (refEventStart.back() - refEventStart[0]), options);
+}
+
+size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>& events, const size_t howMany, const FormatOptions& options)
+{
+    auto   bits    = bit_view(data, 0, howMany);
+    size_t nEvents = 0;
+
+    while(bits.size())
+    {
+        if(bits.pop(16) != 0xFFFF) throw std::runtime_error("Invalid event container header");
+
+        RD53Event evt;
+
+        size_t block_size  = bits.pop(16);
+        evt.tlu_trigger_id = bits.pop(16);
+        bits.skip(8); // trigger_tag
+        size_t dummy_size = bits.pop(8);
+        evt.tdc           = bits.pop(8);
+        evt.l1a_counter   = bits.pop(24);
+        evt.bx_counter    = bits.pop(32);
+
+        auto event_bits = bits.pop_slice(128 * (block_size - 1 - dummy_size));
+
+        while(event_bits.size())
+        {
+            if(event_bits.pop(4) != 0xA) throw std::runtime_error("Invalid event header");
+
+            RD53ChipEvent chipEvt;
+
+            event_bits.skip(4); // error_code
+            chipEvt.hybrid_id = event_bits.pop(8);
+            chipEvt.chip_lane = event_bits.pop(4);
+            size_t l1a_size   = event_bits.pop(12);
+            event_bits.skip(16); // padding
+            event_bits.skip(4);  // chip_type
+            event_bits.skip(12); // frame_delay
+
+            decodeChipEvent(event_bits.pop_slice(l1a_size * 128 - 64), chipEvt, options);
+            evt.chip_events.push_back(std::move(chipEvt));
+        }
+
+        bits.skip(128 * dummy_size);
+        events.push_back(std::move(evt));
+        ++nEvents;
+    }
+
+    return nEvents;
+}
 
 void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Event>& events)
 {

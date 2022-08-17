@@ -112,11 +112,32 @@ struct RD53ChipEvent
     uint16_t eventStatus = RD53FWEvtEncoder::GOOD;
 };
 
+// ######################
+// # Specific for RD53B #
+// ######################
+struct FormatOptions
+{
+    bool enableChipId    = true;
+    bool enableToT       = true;
+    bool enableBCID      = false;
+    bool enableTriggerId = false;
+};
+
 class RD53Event : public Ph2_HwInterface::Event
 {
   public:
-    void DecodeRD53AEvent(const uint32_t* data, size_t n);
+    // ######################
+    // # Specific for RD53A #
+    // ######################
+    void        DecodeRD53AEvent(const uint32_t* data, size_t n);
     static void DecodeRD53AEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& refEventStart, uint16_t& eventStatus);
+
+    // ######################
+    // # Specific for RD53B #
+    // ######################
+    static size_t DecodeRD53BEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const FormatOptions& options = {});
+    static size_t DecodeRD53BEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& refEventStart, const FormatOptions& options = {});
+    static size_t DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>& events, const size_t howMany, const FormatOptions& options = {});
 
     void fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup) override;
     void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) override;

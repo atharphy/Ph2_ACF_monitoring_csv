@@ -86,30 +86,28 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     // ###############################
     static const std::set<std::string> registerBlackList = {"ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"};
 
-// ################################################
+    // ################################################
     // # Programming global registers from white list #
     // ################################################
     static const std::set<std::string> registerWhileList = {"DAC_PREAMP_L_LIN",
-                                              "DAC_PREAMP_R_LIN",
-                                              "DAC_PREAMP_TL_LIN",
-                                              "DAC_PREAMP_TR_LIN",
-                                              "DAC_PREAMP_T_LIN",
-                                              "DAC_PREAMP_M_LIN",
-                                              "DAC_FC_LIN",
-                                              "DAC_KRUM_CURR_LIN",
-                                              "DAC_REF_KRUM_LIN",
-                                              "DAC_COMP_LIN",
-                                              "DAC_COMP_TA_LIN",
-                                              "DAC_GDAC_L_LIN",
-                                              "DAC_GDAC_R_LIN",
-                                              "DAC_GDAC_M_LIN",
-                                              "DAC_LDAC_LIN"}; // @CONST@
+                                                            "DAC_PREAMP_R_LIN",
+                                                            "DAC_PREAMP_TL_LIN",
+                                                            "DAC_PREAMP_TR_LIN",
+                                                            "DAC_PREAMP_T_LIN",
+                                                            "DAC_PREAMP_M_LIN",
+                                                            "DAC_FC_LIN",
+                                                            "DAC_KRUM_CURR_LIN",
+                                                            "DAC_REF_KRUM_LIN",
+                                                            "DAC_COMP_LIN",
+                                                            "DAC_COMP_TA_LIN",
+                                                            "DAC_GDAC_L_LIN",
+                                                            "DAC_GDAC_R_LIN",
+                                                            "DAC_GDAC_M_LIN",
+                                                            "DAC_LDAC_LIN"}; // @CONST@
 
     for(auto& cRegItem: pRD53RegMap)
         if(((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) == registerBlackList.end())) || (registerWhileList.find(cRegItem.first) != registerWhileList.end()))
         {
-            // if(registerBlackList.find(cRegItem.first) != registerBlackList.end()) continue;
-
             if(cRegItem.first == "CDR_CONFIG")
             {
                 RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{});

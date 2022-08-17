@@ -21,17 +21,6 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     auto        pRD53       = static_cast<RD53*>(pChip);
     ChipRegMap& pRD53RegMap = pChip->getRegMap();
 
-    // ################################################
-    // # Programming global registers from white list #
-    // ################################################
-    static const char* registerWhileList[] = {"PA_IN_BIAS_LIN", "FC_BIAS_LIN", "KRUM_CURR_LIN", "LDAC_LIN", "COMP_LIN", "REF_KRUM_LIN", "Vthreshold_LIN"}; // @CONST@
-
-    for(auto i = 0u; i < ArraySize(registerWhileList); i++)
-    {
-        auto it = pRD53RegMap.find(registerWhileList[i]);
-        if(it != pRD53RegMap.end()) RD53Interface::WriteChipReg(pChip, it->first, it->second.fValue, pVerifLoop);
-    }
-
     // #######################################
     // # Programming CLK_DATA_DELAY register #
     // #######################################
@@ -65,11 +54,11 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     static const std::set<std::string> registerBlackList = {
         "HighGain_LIN", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK", "CLK_DATA_DELAY_2INV"};
 
-    for(auto& cRegItem: pRD53RegMap)
-        if(cRegItem.second.fPrmptCfg == true)
-        {
-            if(registerBlackList.find(cRegItem.first) != registerBlackList.end()) continue;
+    static const std::set<std::string> registerWhileList = {"PA_IN_BIAS_LIN", "FC_BIAS_LIN", "KRUM_CURR_LIN", "LDAC_LIN", "COMP_LIN", "REF_KRUM_LIN", "Vthreshold_LIN"}; // @CONST@
 
+    for(auto& cRegItem: pRD53RegMap)
+        if(((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) == registerBlackList.end())) || (registerWhileList.find(cRegItem.first) != registerWhileList.end()))
+        {
             if(cRegItem.first == "CDR_CONFIG")
             {
                 RD53Interface::SendCommand(pRD53, RD53ACmd::ECR{});
@@ -122,8 +111,8 @@ void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     // Default 0 means 2 clocks, may need higher value in case of large propagation
     // delays, for example at low VDDD voltage after irradiation
     // bits [5:2]: Aurora lanes. Default 0001 means single lane mode
-    RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 0x0F, false);         // CML_EN_LANE[3:0]: the actual number of lanes is determined by OUTPUT_CONFIG
-    RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, false); // 0x30 = reset Aurora AND Serializer
+    RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 0x0F, false);                    // CML_EN_LANE[3:0]: the actual number of lanes is determined by OUTPUT_CONFIG
+    RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, false);            // 0x30 = reset Aurora AND Serializer
     RD53Interface::SendCommand(pChip, RD53ACmd::GlobalPulse{pChip->getId(), 0x0001}); // Reset Channel Synchronizer
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
