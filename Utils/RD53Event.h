@@ -115,8 +115,8 @@ struct RD53ChipEvent
 class RD53Event : public Ph2_HwInterface::Event
 {
   public:
-    RD53Event() {}
-    RD53Event(const uint32_t* data, size_t n);
+    void DecodeRD53AEvent(const uint32_t* data, size_t n);
+    static void DecodeRD53AEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& refEventStart, uint16_t& eventStatus);
 
     void fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup) override;
     void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) override;

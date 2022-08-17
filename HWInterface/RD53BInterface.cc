@@ -21,7 +21,9 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     auto        pRD53       = static_cast<RD53*>(pChip);
     ChipRegMap& pRD53RegMap = pChip->getRegMap();
 
-    // @TMP@ : what is this?
+    // ########################################################################
+    // # Switching to pixel-register configuration, instead of the hard-wired #
+    // ########################################################################
     RD53Interface::WriteChipReg(pChip, "PIX_DEFAULT_CONFIG", 0x9CE2, pVerifLoop);
     RD53Interface::WriteChipReg(pChip, "PIX_DEFAULT_CONFIG_B", 0x631D, pVerifLoop);
 
@@ -32,11 +34,25 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     // ######################
     RD53BInterface::ResetCoreColumns(pRD53);
 
-    // @TMP@ : what is this?
-    // RD53Interface::WriteChipReg(pChip, "TriggerConfig", 136, false);
     RD53Interface::WriteChipReg(pChip, "DataMerging", 0b0000110000001, false);
-    RD53Interface::WriteChipReg(pChip, "DataConcentratorConf", 0, false);
+    // # bits 10-13: DataMergingInputPolarityInvert[3:0]
+    // # bit 9:      EnOutputDataChipId
+    // # bit 8:      EnGatingDataMergeClk1280
+    // # bit 7:      SelDataMergeClk
+    // # bits 3-6:   EnDataMergeLane[3:0]
+    // # bit 2:      MergeChBonding
+    // # bit 1:      DataMergingGpoSel
+    RD53Interface::WriteChipReg(pChip, "DataConcentratorConf", 0, false); // To be consistent with RD53B event decoder
+    // # bit 12:   EnCRC
+    // # bit 11:   EnBCId
+    // # bit 10:   EnLv1Id
+    // # bit 9:    EnEoS
+    // # bits 1-8: NumOfEventsInStream[7:0]
     RD53Interface::WriteChipReg(pChip, "CoreColEncoderConf", 0, false);
+    // # bit9:     BinaryReadOut
+    // # bit8:     RawData
+    // # bits 4-7: MaxHits[3:0]
+    // # bits 1-3: MaxToT[2:0]
 
     // ################################################
     // # Programming global registers from white list #
@@ -142,10 +158,11 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
 
     LOG(INFO) << GREEN << "Down-link phase initialization..." << RESET;
 
-    // @TMP@ : what is this?
+    // #######################################################################
+    // # Switching to chip-register configuration, instead of the hard-wired #
+    // #######################################################################
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "GCR_DEFAULT_CONFIG", 0xAC75);
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "GCR_DEFAULT_CONFIG_B", 0x538A);
-    RD53Interface::WriteBoardBroadcastChipReg(pBoard, "CMDERR_CNT", 0);
 
     // ##############
     // # Link speed #
@@ -155,10 +172,18 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
     // ##########
     // # Resets #
     // ##########
-    RD53BInterface::SendGlobalPulseBroadcast(pBoard, 7, 0xFF); // ResetChannelSynchronizer, ResetCommandDecoder, ResetGlobalConfiguration
-    RD53Interface::WriteBoardBroadcastChipReg(pBoard, "RingOscConfig", 0x7FFF);
-    RD53Interface::WriteBoardBroadcastChipReg(pBoard, "RingOscConfig", 0x5EFF);
-    RD53BInterface::SendGlobalPulseBroadcast(pBoard, 1 << 8, 0xFF); // ResetEfuses
+    RD53BInterface::SendGlobalPulseBroadcast(pBoard, 0b111, 0xFF); // ResetChannelSynchronizer, ResetCommandDecoder, ResetGlobalConfiguration
+    RD53Interface::WriteBoardBroadcastChipReg(pBoard, "RingOscConfig", 0b111111111111111);
+    RD53Interface::WriteBoardBroadcastChipReg(pBoard, "RingOscConfig", 0b101111111111111);
+    // # bit 15:   RingOscBClear
+    // # bit 14:   RingOscBEnBL
+    // # bit 13:   RingOscBEnBR
+    // # bit 12:   RingOscBEnCAPA
+    // # bit 11:   RingOscBEnFF
+    // # bit 10:   RingOscBEnLVT
+    // # bit 9:    RingOscAClear
+    // # bits 1:8: RingOscAEnable[7:0]
+    RD53BInterface::SendGlobalPulseBroadcast(pBoard, 0b100000000, 0xFF); // ResetEfuses // @TMP@
 
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
@@ -169,30 +194,51 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     LOG(INFO) << GREEN << "Configuring up-link lanes and monitoring..." << RESET;
 
     RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", 0x0055, false);
-    size_t hybridId = pChip->getHybridId();
-    // @TMP@ : what is this?
-    if(hybridId >= 2)
-        RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 15, false);
-    else
-        RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 1, false);
-    RD53Interface::WriteChipReg(pChip, "AuroraConfig", bits::pack<4, 6, 2>(1, 25, 3), false);
+    // 0 = CK/2, 1 = AURORA, 2 = PRBS7, 3 = 0
+    // # bits 7-8: SerSelOut3[1:0]
+    // # bits 5-6: SerSelOut2[1:0]
+    // # bits 3-4: SerSelOut1[1:0]
+    // # bits 1-2: SerSelOut0[1:0]
+    RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 0b1111, false);
+    // # bits 7-8: SER_INV_TAP[1:0]
+    // # bits 5-6: SER_EN_TAP[1:0]
+    // # bits 1-4: SER_EN_LANE[3:0] --> actual output lanes
+    RD53Interface::WriteChipReg(pChip, "AuroraConfig", bits::pack<4, 6, 2>(0b1, 0b011001, 0b11), false);
+    // # bit 14:    SendAltOutput
+    // # bit 13:    EnablePRBS
+    // # bits 9-12: ActiveLanes[3:0] --> internal lanes
+    // # bits 3-8:  CCWait[5:0]
+    // # bits 1-2:  CCSend[1:0]
     uint16_t val;
-    // @TMP@ : what is this?
+    // @TMP@ : Display ports 3 and 4 in Kansas FMC have reverted mapping
+    size_t hybridId = pChip->getHybridId();
     if(hybridId >= 2)
         val = bits::pack<2, 2, 2, 2, 2, 2, 2, 2>(0, 1, 2, 3, 0, 1, 2, 3);
     else
         val = bits::pack<2, 2, 2, 2, 2, 2, 2, 2>(3, 2, 1, 0, 3, 2, 1, 0);
-    RD53Interface::WriteChipReg(pChip, "DataMergingMux", val, false);
-    RD53Interface::WriteChipReg(pChip, "ServiceDataConf", (1 << 8) | 50, false);
+    RD53Interface::WriteChipReg(pChip, "DataMergingMux", val, false); // Mux selection for Input and Output Lane mapping
+    // # bits 15-16: DataMergingInMux_3[1:0]
+    // # bits 13-14: DataMergingInMux_2[1:0]
+    // # bits 11-12: DataMergingInMux_1[1:0]
+    // # bits 9-10:  DataMergingInMux_0[1:0]
+    // # bits 7-8:   DataMergingOutMux_3[1:0]
+    // # bits 5-6:   DataMergingOutMux_2[1:0]
+    // # bits 3-4:   DataMergingOutMux_1[1:0]
+    // # bits 1-2:   DataMergingOutMux_0[1:0]
+    RD53Interface::WriteChipReg(pChip, "ServiceDataConf", 0x100 | 50, false); // How many Data frames to skip before sending a Monitor Frame
+    // # bit 9:    EnServiceData
+    // # bits 1-8: ServiceFrameSkip [7:0]
     RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG0", 0x0FF1, false);
-    RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG1", 0x0000, false);
-
+    // # bits 5-16: CBWait[11:0]
+    // # bits 1-4:  CBSend[3:0]
+    RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG1", 0x00, false);
+    // # bits 1-8: CBWait[19:12]
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     // @TMP@
     // RD53BInterface::Reset(pChip, 4, 0xFF);
     // RD53BInterface::Reset(pChip, 5, 0xFF);
-    RD53BInterface::SendGlobalPulse(pChip, 0b110000, 0xFF);
+    RD53BInterface::SendGlobalPulse(pChip, 0b110000, 0xFF); // ResetAurora, ResetSerializer
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     RD53Interface::SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
 
