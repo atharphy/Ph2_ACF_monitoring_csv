@@ -151,9 +151,16 @@ void decode_chip_event(BitView<const uint32_t> bits, RD53ChipEvent& e, const For
     }
 }
 
-size_t decode_events(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const FormatOptions& options)
+size_t decode_events(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const FormatOptions& options) { return decode_events(&data[0], events, 32 * data.size(), options); }
+
+size_t decode_events(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& refEventStart, const FormatOptions& options)
 {
-    auto   bits    = bit_view(data);
+    return decode_events(&data[refEventStart[0]], events, 32 * (refEventStart.back() - refEventStart[0]), options);
+}
+
+size_t decode_events(const uint32_t* data, std::vector<RD53Event>& events, const size_t howMany, const FormatOptions& options)
+{
+    auto   bits    = bit_view(data, 0, howMany);
     size_t nEvents = 0;
 
     while(bits.size())

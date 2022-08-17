@@ -384,6 +384,9 @@ void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53
         return;
     }
 
+    // ##########################
+    // # Search for event start #
+    // ##########################
     if(eventStartExt.size() == 0)
     {
         size_t i = 0u;
@@ -420,17 +423,16 @@ void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53
     }
     const std::vector<size_t>& refEventStart = (eventStartExt.size() == 0 ? const_cast<const std::vector<size_t>&>(eventStartLocal) : eventStartExt);
 
-    events.reserve(events.size() + refEventStart.size() - 1);
-
     // ##############################
     // # Branch for RD53A and RD53B #
     // ##############################
+    events.reserve(events.size() + refEventStart.size() - 1);
     if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53A)
         RD53Event::DecodeRD53AEvents(data, events, refEventStart, eventStatus);
     else
         try
         {
-            RD53BEventDecoding::decode_events(data, events);
+            RD53BEventDecoding::decode_events(data, events, refEventStart);
         }
         catch(std::runtime_error& e)
         {

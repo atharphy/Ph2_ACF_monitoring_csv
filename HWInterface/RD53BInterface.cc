@@ -164,11 +164,6 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "GCR_DEFAULT_CONFIG", 0xAC75);
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "GCR_DEFAULT_CONFIG_B", 0x538A);
 
-    // ##############
-    // # Link speed #
-    // ##############
-    RD53Interface::WriteBoardBroadcastChipReg(pBoard, "CDR_CONFIG_SEL_SER_CLK", static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed() == RD53FWconstants::ReadoutSpeed::x1280 ? 0 : 1);
-
     // ##########
     // # Resets #
     // ##########
@@ -191,6 +186,8 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
 
 void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
 {
+    this->setBoard(pChip->getBeBoardId());
+
     LOG(INFO) << GREEN << "Configuring up-link lanes and monitoring..." << RESET;
 
     RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", 0x0055, false);
@@ -233,7 +230,13 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     // # bits 1-4:  CBSend[3:0]
     RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG1", 0x00, false);
     // # bits 1-8: CBWait[19:12]
+
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+
+    // ##############
+    // # Link speed #
+    // ##############
+    RD53Interface::WriteChipReg(pChip, "CDR_CONFIG_SEL_SER_CLK", static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed() == RD53FWconstants::ReadoutSpeed::x1280 ? 0 : 1, false);
 
     // @TMP@
     // RD53BInterface::Reset(pChip, 4, 0xFF);
@@ -453,6 +456,7 @@ void RD53BInterface::ChipErrorReport(ReadoutChip* pChip)
 void RD53BInterface::PackWriteCommand(Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg)
 {
     RD53BCmd::serialize(RD53BCmd::WrReg{pChip->getId(), pChip->getRegItem(regName).fAddress, data}, chipCommandList);
+
     if(updateReg == true) pChip->setReg(regName, data);
 }
 

@@ -25,6 +25,8 @@ struct FormatOptions
 };
 
 size_t decode_events(const std::vector<uint32_t>& data, std::vector<Ph2_HwInterface::RD53Event>& events, const FormatOptions& options = {});
+size_t decode_events(const std::vector<uint32_t>& data, std::vector<Ph2_HwInterface::RD53Event>& events, const std::vector<size_t>& refEventStart, const FormatOptions& options = {});
+size_t decode_events(const uint32_t* data, std::vector<Ph2_HwInterface::RD53Event>& events, const size_t howMany, const FormatOptions& options = {});
 size_t count_events(const std::vector<uint32_t>& data);
 
 } // namespace RD53BEventDecoding

@@ -100,8 +100,6 @@ void RD53AInterface::InitRD53Downlink(const BeBoard* pBoard)
 
 void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
 {
-    RD53AInterface::ConfigureChip(pChip, false);
-
     this->setBoard(pChip->getBeBoardId());
 
     // ##############################
@@ -145,7 +143,7 @@ void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     // # Link speed #
     // ##############
     RD53Interface::WriteChipReg(pChip, "CDR_CONFIG_SEL_SER_CLK", static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed() == RD53FWconstants::ReadoutSpeed::x1280 ? 0 : 1, false);
-    RD53Interface::SendCommand(pChip, RD53ACmd::ECR{});
+    // RD53Interface::SendCommand(pChip, RD53ACmd::ECR{}); // @TMP@
 
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
@@ -375,6 +373,7 @@ void RD53AInterface::ChipErrorReport(ReadoutChip* pChip)
 void RD53AInterface::PackWriteCommand(Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg)
 {
     RD53ACmd::serialize(RD53ACmd::WrReg{(uint8_t)pChip->getId(), pChip->getRegItem(regName).fAddress, data}, chipCommandList);
+
     if(updateReg == true) pChip->setReg(regName, data);
 }
 
