@@ -76,7 +76,7 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
                 std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
             }
 
-            RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fValue, pVerifLoop);
+            RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, pVerifLoop);
         }
 
     // ###################################
@@ -143,7 +143,6 @@ void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     // # Link speed #
     // ##############
     RD53Interface::WriteChipReg(pChip, "CDR_CONFIG_SEL_SER_CLK", static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed() == RD53FWconstants::ReadoutSpeed::x1280 ? 0 : 1, false);
-    // RD53Interface::SendCommand(pChip, RD53ACmd::ECR{}); // @TMP@
 
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
@@ -176,10 +175,9 @@ std::pair<std::string, uint16_t> RD53AInterface::SplitSpecialRegisters(std::stri
                                                                                        {"VOLTAGE_TRIM_DIG", {"VOLTAGE_TRIM", 0}},
                                                                                        {"VOLTAGE_TRIM_ANA", {"VOLTAGE_TRIM", 5}},
 
-                                                                                       {"INJECTION_SELECT_DELAY", {"INJECTION_SELECT", 0}},
-
-                                                                                       {"CML_CONFIG_SER_EN_TAP", {"CML_CONFIG", 0}},
-                                                                                       {"CML_CONFIG_SER_INV_TAP", {"CML_CONFIG", 2}},
+                                                                                       {"CML_CONFIG_EN_LANE", {"CML_CONFIG", 0}},
+                                                                                       {"CML_CONFIG_SER_EN_TAP", {"CML_CONFIG", 4}},
+                                                                                       {"CML_CONFIG_SER_INV_TAP", {"CML_CONFIG", 6}},
 
                                                                                        {"SER_SEL_OUT_0", {"SER_SEL_OUT", 0}},
                                                                                        {"SER_SEL_OUT_1", {"SER_SEL_OUT", 2}},

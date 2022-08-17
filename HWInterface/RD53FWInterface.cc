@@ -247,11 +247,10 @@ void RD53FWInterface::ComposeAndPackChipCommands(const std::vector<uint16_t>& da
 
 void RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
 {
-    int nAttempts = 0;
-
     // ############################
     // # Check write-command FIFO #
     // ############################
+    int nAttempts = 0;
     while(((RegManager::ReadReg("user.stat_regs.slow_cmd.error_flag") || !RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_empty") || RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_full")) ==
            true) &&
           (nAttempts < RD53Shared::MAXATTEMPTS))
@@ -287,6 +286,7 @@ void RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
     // ############################
     // # Check write-command FIFO #
     // ############################
+    nAttempts = 0;
     while(((RegManager::ReadReg("user.stat_regs.slow_cmd.error_flag") || !RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_empty") || RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_full")) ==
            true) &&
           (nAttempts < RD53Shared::MAXATTEMPTS))
@@ -575,9 +575,6 @@ void RD53FWInterface::ResetBoard()
     // #######
     // # Set #
     // #######
-    RegManager::WriteReg("user.ctrl_regs.reset_reg.chip_resync", 0);
-    RegManager::WriteReg("user.ctrl_regs.reset_reg.chip_resync", 1);
-
     RegManager::WriteReg("user.ctrl_regs.reset_reg.aurora_rst", 0);
     RegManager::WriteReg("user.ctrl_regs.reset_reg.aurora_pma_rst", 0);
     RegManager::WriteReg("user.ctrl_regs.reset_reg.global_rst", 1);
@@ -717,8 +714,8 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         // ##################
         RD53Event::decodedEvents.clear();
         uint16_t status;
-        // RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents, status); // Decode events with multiple threads
-        RD53Event::DecodeEvents(pData, RD53Event::decodedEvents, {}, status); // Decode events with a single thread
+        RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents, status); // Decode events with multiple threads
+        // RD53Event::DecodeEvents(pData, RD53Event::decodedEvents, {}, status); // Decode events with a single thread
         // RD53Event::PrintEvents(RD53Event::decodedEvents, pData);                      // @TMP@
         if(RD53Event::EvtErrorHandler(status) == false)
         {

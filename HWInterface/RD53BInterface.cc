@@ -54,36 +54,11 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     // # bits 4-7: MaxHits[3:0]
     // # bits 1-3: MaxToT[2:0]
 
-    // ################################################
-    // # Programming global registers from white list #
-    // ################################################
-    static const char* registerWhileList[] = {"DAC_PREAMP_L_LIN",
-                                              "DAC_PREAMP_R_LIN",
-                                              "DAC_PREAMP_TL_LIN",
-                                              "DAC_PREAMP_TR_LIN",
-                                              "DAC_PREAMP_T_LIN",
-                                              "DAC_PREAMP_M_LIN",
-                                              "DAC_FC_LIN",
-                                              "DAC_KRUM_CURR_LIN",
-                                              "DAC_REF_KRUM_LIN",
-                                              "DAC_COMP_LIN",
-                                              "DAC_COMP_TA_LIN",
-                                              "DAC_GDAC_L_LIN",
-                                              "DAC_GDAC_R_LIN",
-                                              "DAC_GDAC_M_LIN",
-                                              "DAC_LDAC_LIN"}; // @CONST@
-
-    for(auto i = 0u; i < ArraySize(registerWhileList); i++)
-    {
-        auto it = pRD53RegMap.find(registerWhileList[i]);
-        if(it != pRD53RegMap.end()) RD53Interface::WriteChipReg(pChip, it->first, it->second.fValue, pVerifLoop);
-    }
-
     // #######################################
     // # Programming CLK_DATA_DELAY register #
     // #######################################
     static const char*               registerClkDataDelayList[] = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"}; // @CONST@
-    std::pair<std::string, uint16_t> nameAndValue("CLK_DATA_DELAY", pRD53RegMap["CLK_DATA_DELAY"].fValue);
+    std::pair<std::string, uint16_t> nameAndValue("CLK_DATA_DELAY", pRD53RegMap["CLK_DATA_DELAY"].fDefValue);
     bool                             doWriteClkDataDelay = false;
 
     for(auto i = 0u; i < ArraySize(registerClkDataDelayList); i++)
@@ -93,7 +68,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
         {
             doWriteClkDataDelay = true;
 
-            nameAndValue.second |= SplitSpecialRegisters(std::string(cRegItem->first), cRegItem->second.fValue, pRD53RegMap).second;
+            nameAndValue.second |= SplitSpecialRegisters(std::string(cRegItem->first), cRegItem->second.fDefValue, pRD53RegMap).second;
 
             if(cRegItem->first == "CLK_DATA_DELAY") break;
         }
@@ -111,10 +86,29 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     // ###############################
     static const std::set<std::string> registerBlackList = {"ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"};
 
+// ################################################
+    // # Programming global registers from white list #
+    // ################################################
+    static const std::set<std::string> registerWhileList = {"DAC_PREAMP_L_LIN",
+                                              "DAC_PREAMP_R_LIN",
+                                              "DAC_PREAMP_TL_LIN",
+                                              "DAC_PREAMP_TR_LIN",
+                                              "DAC_PREAMP_T_LIN",
+                                              "DAC_PREAMP_M_LIN",
+                                              "DAC_FC_LIN",
+                                              "DAC_KRUM_CURR_LIN",
+                                              "DAC_REF_KRUM_LIN",
+                                              "DAC_COMP_LIN",
+                                              "DAC_COMP_TA_LIN",
+                                              "DAC_GDAC_L_LIN",
+                                              "DAC_GDAC_R_LIN",
+                                              "DAC_GDAC_M_LIN",
+                                              "DAC_LDAC_LIN"}; // @CONST@
+
     for(auto& cRegItem: pRD53RegMap)
-        if(cRegItem.second.fPrmptCfg == true)
+        if(((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) == registerBlackList.end())) || (registerWhileList.find(cRegItem.first) != registerWhileList.end()))
         {
-            if(registerBlackList.find(cRegItem.first) != registerBlackList.end()) continue;
+            // if(registerBlackList.find(cRegItem.first) != registerBlackList.end()) continue;
 
             if(cRegItem.first == "CDR_CONFIG")
             {
@@ -123,7 +117,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
                 std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
             }
 
-            RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fValue, pVerifLoop);
+            RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, pVerifLoop);
         }
 
     // ###################################
@@ -169,7 +163,7 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
     // ##########
     RD53BInterface::SendGlobalPulseBroadcast(pBoard, 0b111, 0xFF); // ResetChannelSynchronizer, ResetCommandDecoder, ResetGlobalConfiguration
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "RingOscConfig", 0b111111111111111);
-    RD53Interface::WriteBoardBroadcastChipReg(pBoard, "RingOscConfig", 0b101111111111111);
+    RD53Interface::WriteBoardBroadcastChipReg(pBoard, "RingOscConfig", 0b101111011111111);
     // # bit 15:   RingOscBClear
     // # bit 14:   RingOscBEnBL
     // # bit 13:   RingOscBEnBR
@@ -178,7 +172,7 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
     // # bit 10:   RingOscBEnLVT
     // # bit 9:    RingOscAClear
     // # bits 1:8: RingOscAEnable[7:0]
-    RD53BInterface::SendGlobalPulseBroadcast(pBoard, 0b100000000, 0xFF); // ResetEfuses // @TMP@
+    RD53BInterface::SendGlobalPulseBroadcast(pBoard, 0x100, 0xFF); // ResetEfuses
 
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
@@ -190,13 +184,13 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
 
     LOG(INFO) << GREEN << "Configuring up-link lanes and monitoring..." << RESET;
 
-    RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", 0x0055, false);
+    RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", 0x55, false);
     // 0 = CK/2, 1 = AURORA, 2 = PRBS7, 3 = 0
     // # bits 7-8: SerSelOut3[1:0]
     // # bits 5-6: SerSelOut2[1:0]
     // # bits 3-4: SerSelOut1[1:0]
     // # bits 1-2: SerSelOut0[1:0]
-    RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 0b1111, false);
+    RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 0b1, false);
     // # bits 7-8: SER_INV_TAP[1:0]
     // # bits 5-6: SER_EN_TAP[1:0]
     // # bits 1-4: SER_EN_LANE[3:0] --> actual output lanes
@@ -238,9 +232,6 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     // ##############
     RD53Interface::WriteChipReg(pChip, "CDR_CONFIG_SEL_SER_CLK", static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed() == RD53FWconstants::ReadoutSpeed::x1280 ? 0 : 1, false);
 
-    // @TMP@
-    // RD53BInterface::Reset(pChip, 4, 0xFF);
-    // RD53BInterface::Reset(pChip, 5, 0xFF);
     RD53BInterface::SendGlobalPulse(pChip, 0b110000, 0xFF); // ResetAurora, ResetSerializer
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     RD53Interface::SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
@@ -273,8 +264,6 @@ std::pair<std::string, uint16_t> RD53BInterface::SplitSpecialRegisters(std::stri
 
                                                                                        {"VOLTAGE_TRIM_DIG", {"VOLTAGE_TRIM", 0}},
                                                                                        {"VOLTAGE_TRIM_ANA", {"VOLTAGE_TRIM", 4}},
-
-                                                                                       {"CalibrationConfig_DELAY", {"CalibrationConfig", 0}},
 
                                                                                        {"CML_CONFIG_SER_EN_TAP", {"CML_CONFIG", 4}},
                                                                                        {"CML_CONFIG_SER_INV_TAP", {"CML_CONFIG", 6}},

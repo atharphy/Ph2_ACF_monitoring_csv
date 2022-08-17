@@ -137,7 +137,7 @@ class RD53Event : public Ph2_HwInterface::Event
     uint16_t                   tdc;
     uint32_t                   l1a_counter;
     uint32_t                   bx_counter;
-    uint16_t                   eventStatus;
+    uint16_t                   eventStatus = RD53FWEvtEncoder::GOOD;
     std::vector<RD53ChipEvent> chip_events;
 
     // ########################################
