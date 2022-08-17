@@ -20,7 +20,6 @@ namespace RD53AConstants
 const uint8_t  BROADCAST_CHIPID    = 0x08; // Broadcast chip ID used to send the command to multiple chips
 const uint8_t  AUTO_INCREMENT_MASK = 0x18; // Auto-increment mask bits
 const uint16_t GLOBAL_PULSE_ADDR   = 0x2C; // Global Pulse Route regiser address
-const uint16_t SET_SEL_OUT_ADDR    = 0x44; // SET_SEL_OUT regiser address
 } // namespace RD53AConstants
 
 namespace Ph2_HwDescription

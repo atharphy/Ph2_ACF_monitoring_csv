@@ -26,20 +26,15 @@
 // #########################
 namespace RD53Constants
 {
-const uint8_t  NREGIONS_LONGCMD  = 6;    // Number of regions to program with long write commands
-const uint8_t  FIELDS_SHORTCMD   = 8;    // Number of fields for the short write command
-const uint8_t  FIELDS_LONGCMD    = 24;   // Number of fields for the long write command
-const uint8_t  NBIT_TDAC         = 4;    // Number of TDAC bits
-const uint8_t  NBIT_MAXREG       = 16;   // Maximum number of bits for a chip register
-const uint8_t  NPIX_REGION       = 4;    // Number of pixels in a region (1x4)
-const uint8_t  NROW_CORE         = 8;    // Number of rows in a core
-const uint8_t  NBIT_ADDR         = 9;    // Number of address bits
-const uint8_t  NSYNC_WORS        = 64;   // Number of Sync words for synchronization
-const uint16_t CDRCONFIG_1Gbit   = 1048; // Value for 1.28 Gbit/s
-const uint16_t CDRCONFIG_640Mbit = 1049; // Value for 640 Mbit/s
-const uint8_t  PATTERN_PRBS      = 0x02; // Start PRBS pattern
-const uint8_t  PATTERN_AURORA    = 0x01; // Start AURORA pattern
-const uint8_t  PATTERN_CLOCK     = 0x00; // Start clock pattern
+const uint8_t NBIT_TDAC      = 4;    // Number of TDAC bits
+const uint8_t NBIT_MAXREG    = 16;   // Maximum number of bits for a chip register
+const uint8_t NPIX_REGION    = 4;    // Number of pixels in a region (1x4)
+const uint8_t NROW_CORE      = 8;    // Number of rows in a core
+const uint8_t NBIT_ADDR      = 9;    // Number of address bits
+const uint8_t NSYNC_WORS     = 64;   // Number of Sync words for synchronization
+const uint8_t PATTERN_PRBS   = 0xAA; // Start PRBS pattern
+const uint8_t PATTERN_AURORA = 0x55; // Start AURORA pattern
+const uint8_t PATTERN_CLOCK  = 0x00; // Start clock pattern
 } // namespace RD53Constants
 
 namespace RD53EvtEncoder

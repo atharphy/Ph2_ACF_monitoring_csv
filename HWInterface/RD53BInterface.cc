@@ -138,8 +138,8 @@ void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulse
 void RD53BInterface::SendGlobalPulseBroadcast(const BeBoard* pBoard, uint16_t route, uint16_t pulseDuration)
 {
     std::vector<uint16_t> cmdStream;
-    serialize(RD53BCmd::WrReg{RD53BConstants::BROADCAST_CHIPID, 61, route}, cmdStream);
-    serialize(RD53BCmd::WrReg{RD53BConstants::BROADCAST_CHIPID, 62, pulseDuration}, cmdStream);
+    serialize(RD53BCmd::WrReg{RD53BConstants::BROADCAST_CHIPID, RD53BConstants::GLOBAL_PULSE_ADDR, route}, cmdStream);
+    serialize(RD53BCmd::WrReg{RD53BConstants::BROADCAST_CHIPID, RD53BConstants::GLOBAL_PULSE_ADDR + 1, pulseDuration}, cmdStream);
     serialize(RD53BCmd::GlobalPulse{RD53BConstants::BROADCAST_CHIPID}, cmdStream);
     SendChipCommands(pBoard, cmdStream, -1);
 }
@@ -182,7 +182,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
 
     LOG(INFO) << GREEN << "Configuring up-link lanes and monitoring..." << RESET;
 
-    RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", 0x55, false);
+    RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false);
     // 0 = CK/2, 1 = AURORA, 2 = PRBS7, 3 = 0
     // # bits 7-8: SerSelOut3[1:0]
     // # bits 5-6: SerSelOut2[1:0]
