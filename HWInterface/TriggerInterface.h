@@ -75,11 +75,12 @@ class TriggerInterface : public RegManager
 
     uint8_t getTriggerSource() { return fTriggerConfiguration.fTriggerSource; }
     uint8_t getTriggerRate() { return fTriggerConfiguration.fTriggerRate; }
-
+    void    setTimeout(uint32_t pTimeout_us){fTimeout_us = pTimeout_us; }
+    uint32_t getTimeout(){ return fTimeout_us; }
   protected:
     uint32_t             fWait_us{10};
     TriggerConfiguration fTriggerConfiguration;
-    uint32_t             fTimeout_us{5000000}; // time-out after 5s
+    uint32_t             fTimeout_us{60000000}; // time-out after 60s
 };
 } // namespace Ph2_HwInterface
 #endif
