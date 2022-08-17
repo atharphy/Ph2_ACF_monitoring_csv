@@ -141,10 +141,7 @@ void BeamTestCheck::CheckWithTP(uint8_t pContinousReadout)
     for(auto cBoard: *fDetectorContainer)
     {
         // prepare injection
-        PrepareForExternalTP(cBoard);
-        auto cRegValue = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.en_fast_reset");
-        LOG(INFO) << BOLDYELLOW << "Enable fast reset set to ... " << cRegValue << RESET;
-        // PrepareForTP(cBoard);
+        PrepareForTP(cBoard);
     }
     if(fScanL1Latency) ScanL1Latency(pContinousReadout);
     if(fScanStubLatency) ScanStubLatency(pContinousReadout);
