@@ -5,6 +5,7 @@
 #include "../tools/CombinedCalibration.h"
 #include "../tools/LatencyScan.h"
 #include "../tools/PedeNoise.h"
+#include "../tools/BeamTestCheck.h"
 #include "../tools/PedestalEqualization.h"
 #include "../tools/RD53ClockDelay.h"
 #include "../tools/RD53DataTransmissionTest.h"
@@ -33,6 +34,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 {
     // OT calibrations
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization>("calibration", CalibrationList::CALIBRATION);
+    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, BeamTestCheck>("takedata", CalibrationList::TAKEDATA);
     Register<LinkAlignmentOT, CicFEAlignment, PedeNoise>("pedenoise", CalibrationList::PEDENOISE);
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise>("calibrationandpedenoise", CalibrationList::CALIBRATIONANDPEDENOISE);
     Register<LinkAlignmentOT, CicFEAlignment, CalibrationExample>("calibrationexample", CalibrationList::CALIBRATIONEXAMPLE);

@@ -95,7 +95,7 @@
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
     		<Register name="triggers_to_accept"> 0 </Register>
-    		<Register name="trigger_source"> 3 </Register>
+    		<Register name="trigger_source"> 5 </Register>
     		<Register name="user_trigger_frequency"> 5 </Register>
     		<Register name="stubs_mask"> 1 </Register>
             <!--this is the delay for the stub trigger-->
@@ -171,9 +171,9 @@
                 <Register name="threshold"> 50 </Register>
             </Register>
         <Register name="ch2">
-                <Register name="out_enable"> 1 </Register>
-                <Register name="term_enable"> 0 </Register>
-                <Register name="threshold"> 0 </Register>
+                <Register name="out_enable"> 0 </Register>
+                <Register name="term_enable"> 1 </Register>
+                <Register name="threshold"> 50 </Register>
             </Register>
         <Register name="ch3">
                 <Register name="out_enable"> 1 </Register>
@@ -203,7 +203,7 @@
 
 <Settings>
     <!--PedestalEqualization-->
-    <Setting name="Nevents">100</Setting>
+    <Setting name="Nevents">1000</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
