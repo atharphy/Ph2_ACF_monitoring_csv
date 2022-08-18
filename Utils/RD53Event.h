@@ -46,7 +46,7 @@ const uint8_t  NBIT_FMTVER     = 8;  // Number of bits for the Format Version
 const uint8_t  NBIT_DUMMY      = 8;  // Number of bits for the Dummy Size
 const uint8_t  NBIT_TDC        = 8;  // Number of bits for the TDC
 const uint8_t  NBIT_L1ACNT     = 24; // Number of bits for the L1A Counter (Event number)
-const uint8_t  NBIT_BXCNT      = 32; // Number of bits for the BX Counter
+const uint8_t  NBIT_BXCNT      = 32; // Number of bits for the BX Counter */
 
 // ###############
 // # Chip header #
@@ -57,6 +57,7 @@ const uint8_t NBIT_ERR       = 4;  // Number of bits for the Error Code
 const uint8_t NBIT_HYBRID    = 8;  // Number of bits for the Hybrid ID
 const uint8_t NBIT_CHIPID    = 4;  // Number of bits for the Chip ID
 const uint8_t NBIT_L1ASIZE   = 12; // Number of bits for the L1A Data Size
+const uint8_t NBIT_PADDING   = 16; // Number of bits for the Padding
 const uint8_t NBIT_CHIPTYPE  = 4;  // Number of bits for the Chip Type
 const uint8_t NBIT_DELAY     = 12; // Number of bits for the Frame Delay
 

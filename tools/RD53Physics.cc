@@ -38,8 +38,8 @@ void Physics::ConfigureCalibration()
     // ##############################
     // # Initialize data containers #
     // ##############################
-    const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
-    const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+    const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
+    const size_t TrgIDsize = RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID) + 1;
     ContainerFactory::copyAndInitStructure<OccupancyAndPh, GenericDataVector>(*fDetectorContainer, theOccContainer);
     ContainerFactory::copyAndInitChip<GenericDataArray<BCIDsize>>(*fDetectorContainer, theBCIDContainer);
     ContainerFactory::copyAndInitChip<GenericDataArray<TrgIDsize>>(*fDetectorContainer, theTrgIDContainer);
@@ -75,8 +75,8 @@ void Physics::Running()
 
 void Physics::sendBoardData(const BoardContainer* cBoard)
 {
-    const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
-    const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+    const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
+    const size_t TrgIDsize = RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID) + 1;
 
     auto theOccStream   = prepareChannelContainerStreamer<OccupancyAndPh>("Occ");
     auto theBCIDStream  = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<BCIDsize>>("BCID");
@@ -233,8 +233,8 @@ void Physics::fillHisto()
 
 void Physics::fillDataContainer(BeBoard& theBoard)
 {
-    const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
-    const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+    const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
+    const size_t TrgIDsize = RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID) + 1;
     const auto   cBoard    = theOccContainer.at(theBoard.getIndex());
 
     // ###################
@@ -271,7 +271,7 @@ void Physics::fillDataContainer(BeBoard& theBoard)
                 for(auto i = 1u; i < cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.size(); i++)
                 {
                     int deltaBCID = cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1[i] - cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1[i - 1];
-                    deltaBCID += (deltaBCID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
+                    deltaBCID += (deltaBCID >= 0 ? 0 : RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1);
                     if(deltaBCID >= int(BCIDsize))
                         LOG(ERROR) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaBCID out of range: " << BOLDYELLOW << deltaBCID << RESET;
                     else
@@ -286,7 +286,7 @@ void Physics::fillDataContainer(BeBoard& theBoard)
                 for(auto i = 1u; i < cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.size(); i++)
                 {
                     int deltaTrgID = cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2[i] - cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2[i - 1];
-                    deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
+                    deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID) + 1);
                     if(deltaTrgID >= int(TrgIDsize))
                         LOG(ERROR) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaTrgID out of range: " << BOLDYELLOW << deltaTrgID << RESET;
                     else
@@ -345,8 +345,8 @@ void Physics::clearContainers(BeBoard& theBoard)
 {
     RD53Event::clearEventContainer(theBoard, theOccContainer);
 
-    const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
-    const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+    const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
+    const size_t TrgIDsize = RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID) + 1;
     const auto   cBoard    = theOccContainer.at(theBoard.getIndex());
 
     // ####################

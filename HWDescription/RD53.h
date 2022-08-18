@@ -37,24 +37,11 @@ const uint8_t PATTERN_AURORA = 0x55; // Start AURORA pattern
 const uint8_t PATTERN_CLOCK  = 0x00; // Start clock pattern
 } // namespace RD53Constants
 
+// #####################
+// # Chip event status #
+// #####################
 namespace RD53EvtEncoder
 {
-// #######################
-// # Event configuration #
-// #######################
-const uint8_t HEADER      = 0x1; // Data header word
-const uint8_t NBIT_HEADER = 7;   // Number of data header bits
-const uint8_t NBIT_TRIGID = 5;   // Number of trigger ID bits
-const uint8_t NBIT_TRGTAG = 5;   // Number of trigger tag bits
-const uint8_t NBIT_BCID   = 15;  // Number of bunch crossing ID bits
-const uint8_t NBIT_TOT    = 16;  // Number of ToT bits
-const uint8_t NBIT_SIDE   = 1;   // Number of "side" bits
-const uint8_t NBIT_ROW    = 9;   // Number of row bits
-const uint8_t NBIT_CCOL   = 6;   // Number of core column bits
-
-// ################
-// # Event status #
-// ################
 const uint16_t CHIPGOOD  = 0x0000; // Chip event status Good
 const uint16_t CHIPHEAD  = 0x0100; // Chip event status Bad chip header
 const uint16_t CHIPPIX   = 0x0200; // Chip event status Bad pixel row or column

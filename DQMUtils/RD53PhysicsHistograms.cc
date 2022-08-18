@@ -20,9 +20,9 @@ void PhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetecto
     nRows = RD53Shared::firstChip->getNRows();
     nCols = RD53Shared::firstChip->getNCols();
 
-    const size_t ToTsize   = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) + 1;
-    const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
-    const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+    const size_t ToTsize   = RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) + 1;
+    const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
+    const size_t TrgIDsize = RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID) + 1;
 
     auto hToT1D = CanvasContainer<TH1F>("ToT1D", "ToT Distribution", ToTsize, 0, ToTsize);
     bookImplementer(theOutputFile, theDetectorStructure, ToT1D, hToT1D, "ToT", "Entries");
@@ -45,8 +45,8 @@ void PhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetecto
 
 bool PhysicsHistograms::fill(std::vector<char>& dataBuffer)
 {
-    const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
-    const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+    const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
+    const size_t TrgIDsize = RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID) + 1;
 
     ChannelContainerStream<OccupancyAndPh>                           theOccStreamer("PhysicsOcc");
     ChipContainerStream<EmptyContainer, GenericDataArray<BCIDsize>>  theBCIDStreamer("PhysicsBCID");
@@ -121,7 +121,7 @@ void PhysicsHistograms::fill(const DetectorDataContainer& DataContainer)
 
 void PhysicsHistograms::fillBCID(const DetectorDataContainer& DataContainer)
 {
-    const size_t BCIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
+    const size_t BCIDsize = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
 
     for(const auto cBoard: DataContainer)
         for(const auto cOpticalGroup: *cBoard)
@@ -143,7 +143,7 @@ void PhysicsHistograms::fillBCID(const DetectorDataContainer& DataContainer)
 
 void PhysicsHistograms::fillTrgID(const DetectorDataContainer& DataContainer)
 {
-    const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+    const size_t TrgIDsize = RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID) + 1;
 
     for(const auto cBoard: DataContainer)
         for(const auto cOpticalGroup: *cBoard)

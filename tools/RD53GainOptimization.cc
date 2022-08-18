@@ -294,7 +294,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, const float
                         stdDev           = (cnt != 0 ? stdDev / cnt : 0) - avg * avg;
                         stdDev           = (stdDev > 0 ? sqrt(stdDev) : 0);
                         float  newValue  = avg + NSTDEV * stdDev;
-                        size_t targetToT = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION);
+                        size_t targetToT = RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION);
 
                         // ########################
                         // # Save best DAC values #
