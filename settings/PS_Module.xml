@@ -16,11 +16,11 @@
                 <!-- in electrons, file parser will take care of conversion to DAC units for each chip type --> 
                 <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  -->
                 <!-- Window in half pixels  -->
-                <!-- (0) level, (1) edge, (2) OR, (3) XOR  -->
+                <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
                 <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns -->
                 <!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
                 <Latencies       stripLatency="122" pixelLatency="122"/>
-                <Thresholds      stripThreshold="10000" pixelThreshold="10000"/> 
+                <Thresholds      stripThreshold="40" pixelThreshold="40"/> 
                 <StubLogic       mode="3" window="2"/>
                 <HitLogic        stripMode="1" pixelMode="1"/>
                 <HipLogic        stripCut="7" pixelCut="7"/>
@@ -57,11 +57,11 @@
                 <!-- in electrons, file parser will take care of conversion to DAC units for each chip type --> 
                 <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  -->
                 <!-- Window in half pixels  -->
-                <!-- (0) level, (1) edge, (2) OR, (3) XOR  -->
+                <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
                 <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns -->
                 <!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
                 <Latencies       stripLatency="122" pixelLatency="122"/>
-                <Thresholds      stripThreshold="10000" pixelThreshold="10000"/> 
+                <Thresholds      stripThreshold="40" pixelThreshold="40"/> 
                 <StubLogic       mode="0" window="2"/>
                 <HitLogic        stripMode="1" pixelMode="1"/>
                 <HipLogic        stripCut="7" pixelCut="7"/>

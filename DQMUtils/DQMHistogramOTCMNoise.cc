@@ -296,9 +296,9 @@ bool DQMHistogramOTCMNoise::fillHitPlots(DetectorDataContainer& theHitData)
             fitCMNoise(cModuleHitHistogram, cModuleFit, TOTAL_CHANNELS_OT+1);
             LOG(INFO) << BOLDRED << "Full Module " << opticalGroup->getIndex() << " CM is " << fabs(cModuleFit->GetParameter(1)) << "+/-" << fabs(cModuleFit->GetParameter(1)) << "%" << RESET;
             fitCMNoise(cModuleHitHistogramEven, cModuleFit, TOTAL_CHANNELS_OT+1);
-            LOG(INFO) << BOLDRED << "Full Module " << opticalGroup->getIndex() << " Even CM is " << fabs(cModuleFit->GetParameter(1)) << "+/-" << fabs(cModuleFit->GetParameter(1)) << "%" << RESET;
-            fitCMNoise(cModuleHitHistogramOdd, cModuleFit, TOTAL_CHANNELS_OT+1);
-            LOG(INFO) << BOLDRED << "Full Module " << opticalGroup->getIndex() << " Odd CM is " << fabs(cModuleFit->GetParameter(1)) << "+/-" << fabs(cModuleFit->GetParameter(1)) << "%" << RESET;
+            LOG(INFO) << BOLDRED << "Full Module " << opticalGroup->getIndex() << " Even CM is " << fabs(cModuleFit->GetParameter(1)) << "+/-" << fabs(cModuleFit->GetParameter(1)) << "%" <<
+            RESET; fitCMNoise(cModuleHitHistogramOdd, cModuleFit, TOTAL_CHANNELS_OT+1); LOG(INFO) << BOLDRED << "Full Module " << opticalGroup->getIndex() << " Odd CM is " <<
+            fabs(cModuleFit->GetParameter(1)) << "+/-" << fabs(cModuleFit->GetParameter(1)) << "%" << RESET;
             */
         }
     }
