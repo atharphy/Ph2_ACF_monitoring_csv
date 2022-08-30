@@ -415,7 +415,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
                           << " +/- " << cReg_Class.b_1_error << RESET;
                 LOG(INFO) << BOLDBLUE << "Using ROOT for ADC " << cADCId << ": Parameter 1  " << cFit->GetParameter(0) << " +/- " << cFit->GetParError(0) << "  Parameter 2   " << cFit->GetParameter(1)
                           << " +/- " << cFit->GetParError(1) << " Chi^2 " << cFit->GetChisquare() << " NDF " << cFit->GetNDF() << RESET;
-                cTrim = clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "VREFCNTR");
+                cTrim = clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "VREFTUNE");
                 LOG(INFO) << BOLDBLUE << "Trim value " << cTrim << RESET;
                 // ---Information also included in ROOT file of the fit
                 fillSummaryTree(Form("ADC%i_p0", cADCId), cReg_Class.b_0);
@@ -436,6 +436,17 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
             // dieLegende->AddEntry("pol1","Fit x","lpf");
             cDACtoADCCanvas->Write();
             // cDACtoADCMultiGraph->Write();
+            // uint16_t cADCValue;
+            // flpGBTInterface->GetExternalController()->getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
+
+            // for(int i=0; i<0xff;i+=0x1a){
+            //     clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "VREFTUNE",i);
+            //     LOG(INFO) << BOLDBLUE << "Trim value " << +i << RESET;
+
+            //     clpGBTInterface->GetADCGain(cOpticalGroup->flpGBT);
+            //     cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "ADC1");
+            //     LOG(INFO) << BOLDBLUE << "ADC VMON_P1V25 " << +cADCValue << RESET;
+            // }
         }
     }
 }

@@ -280,6 +280,33 @@ int main(int argc, char* argv[])
     cSEHTester.LpGBTInjectULExternalPattern(true, cExternalPattern);
     BeBoard* pBoard = static_cast<BeBoard*>(cTool.fDetectorContainer->at(0));
     cTool.fBeBoardInterface->getBoardInfo(pBoard);
+    // try
+    // {
+    //     cTool.ConfigureHw();
+    // }
+    // catch(...)
+    // {
+    //     cTool.fBeBoardInterface->setBoard(pBoard->getId());
+    //     for(int i = 0; i < 8; i++)
+    //     {
+    //         std::cout << "###--------------l8---------------###" << std::endl;
+    //         dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("T", i);
+    //         dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("V", i);
+    //         dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("I", i);
+    //         dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("TX", i);
+    //         dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("RX", i);
+    //         std::cout << "###--------------l12--------------###" << std::endl;
+    //         dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("T", i);
+    //         dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("V", i);
+    //         dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("I", i);
+    //         dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("TX", i);
+    //         dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("RX", i);
+    //     }
+    //     // cSEHTester.TurnOff();
+    //     // cSEHTester.SetLoad(300, 300);
+    //     // std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    //     // cSEHTester.TurnOn(cRightLoad, cLeftLoad);
+    //     // std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     try
     {
         cTool.ConfigureHw();
@@ -302,36 +329,9 @@ int main(int argc, char* argv[])
             dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("TX", i);
             dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("RX", i);
         }
-        // cSEHTester.TurnOff();
-        // cSEHTester.SetLoad(300, 300);
-        // std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-        // cSEHTester.TurnOn(cRightLoad, cLeftLoad);
-        // std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-        try
-        {
-            cTool.ConfigureHw();
-        }
-        catch(...)
-        {
-            cTool.fBeBoardInterface->setBoard(pBoard->getId());
-            for(int i = 0; i < 8; i++)
-            {
-                std::cout << "###--------------l8---------------###" << std::endl;
-                dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("T", i);
-                dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("V", i);
-                dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("I", i);
-                dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("TX", i);
-                dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("RX", i);
-                std::cout << "###--------------l12--------------###" << std::endl;
-                dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("T", i);
-                dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("V", i);
-                dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("I", i);
-                dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("TX", i);
-                dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("RX", i);
-            }
-            return -1;
-        }
+        return -1;
     }
+    //}
     cTool.fBeBoardInterface->setBoard(pBoard->getId());
     for(int i = 0; i < 8; i++)
     {

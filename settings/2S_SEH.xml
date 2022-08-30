@@ -4,8 +4,8 @@
       OPTICAL FC7 
   ###############-->
   <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
-  <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1" boardReset="1">
-      <connection id="board" uri="ipbusudp-2.0://192.168.0.168:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+  <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="1" boardReset="1">
+      <connection id="board" uri="ipbusudp-2.0://192.168.0.169:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <CDCE configure="0" clockRate="320"/>
     
     <OpticalGroup Id="0" FMCId="0" reset="1">
@@ -329,7 +329,7 @@
 <MonitoringSettings>
 <Monitoring type="2SSEH" enable="0">
     <MonitoringSleepTime> 1000 </MonitoringSleepTime>
-    <MonitoringElement device="LpGBT" register="ADC0" enable="1"/>
+    <MonitoringElement device="LpGBT" register="ADC0" enable="0"/>
     <MonitoringElement device="LpGBT" register="ADC1" enable="0"/>
     <MonitoringElement device="LpGBT" register="ADC2" enable="0"/>
     <MonitoringElement device="LpGBT" register="ADC3" enable="0"/>
@@ -340,8 +340,8 @@
     <MonitoringElement device="LpGBT" register="TEMP" enable="0"/>
     <MonitoringElement device="PowerSupply" register="MyRohdeSchwarz_LV_Module3_Voltage" enable="0"/>
     <MonitoringElement device="PowerSupply" register="MyRohdeSchwarz_LV_Module3_Current" enable="0"/>
-    <MonitoringElement device="PowerSupply" register="IsegSHR4220_HV_Module1_Voltage" enable="0"/>
-    <MonitoringElement device="PowerSupply" register="IsegSHR4220_HV_Module1_Current" enable="0"/>
+    <MonitoringElement device="PowerSupply" register="IsegSHR4220_HV_Module1_Voltage" enable="1"/>
+    <MonitoringElement device="PowerSupply" register="IsegSHR4220_HV_Module1_Current" enable="1"/>
     <MonitoringElement device="TestCard" register="HV_meas" enable="1"/>
 </Monitoring>
 </MonitoringSettings>

@@ -84,15 +84,17 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
     float cVolts = 0;
     float I_SEH;
     float U_SEH;
-    float cVoltages[] = {0.,   0.5,  1.,  1.5, 2., 2.5, 3.,  3.6, 3.8, 4.0, 4.2, 4.4, 4.6, 4.8, 5.,  6.,  7., 8.,  9.,  10., 10.1, 10.2, 10.3,
-                         10.4, 10.5, 10., 9.,  8., 7.,  6.8, 6.6, 6.4, 6.2, 6.0, 5,   4.8, 4.6, 4.4, 4.2, 4., 3.8, 3.6, 3.0, 2.0,  1.0,  0.};
+    float cVoltages[] = {0.,  0.5,  1.,   1.5,  2.,   2.5,  3.,  3.5, 4.0, 4.2, 4.4, 4.6, 4.8, 5.,  5.2, 5.4, 6.,  7.,  8.,  9.,  9.5, 9.6, 9.7, 9.8, 9.9,
+                         10., 10.1, 10.2, 10.3, 10.4, 10.5, 10., 9.,  8.,  7.,  6.8, 6.6, 6.4, 6.2, 6.0, 5,   4.8, 4.6, 4.4, 4.2, 4.,  3.0, 2.0, 1.0, 0.};
     for(auto& voltage: cVoltages)
     // while(cVolts < 10.01)
     {
         std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(voltage) + ",";
         fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
         std::this_thread::sleep_for(std::chrono::milliseconds(1200));
-
+// std::string buffer = fPowerSupplyClient->sendAndReceivePacket("GetStatus");
+// U_SEH              = std::stof(getVariableValue(powerSupplyId + "_" + channelId + "_Voltage", buffer));
+// I_SEH              = std::stof(getVariableValue(powerSupplyId + "_" + channelId + "_Current", buffer));
 #ifdef __TCP_SERVER__
         I_SEH = this->getMeasurement("read_supply:I_SEH");
         U_SEH = this->getMeasurement("read_supply:U_SEH");
@@ -102,7 +104,6 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
 #endif
         cIinValVect.push_back(I_SEH);
         cUinValVect.push_back(U_SEH);
-        cVolts += 0.1;
     }
     cUinIinTree->Fill();
 
@@ -542,6 +543,42 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
 #endif
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     fillSummaryTree("ExternalBiasDone", 1);
+    int                  hv_fail       = 1;
+    std::vector<TGraph>* myGraphs_vec4 = new std::vector<TGraph>();
+    myGraphs_vec4->push_back(*cDACtoVHVJ7Graph);
+    myGraphs_vec4->push_back(*cDACtoVHVJ8Graph);
+    TF1* fit_grading_HV_test = new TF1("fit_grading_HV_test", "pol1", 0, 1000);
+    fit_grading_HV_test->SetParameter(0, 0);
+    fit_grading_HV_test->SetParameter(1, 1);
+    double xval, yval, y_allowed_min, y_allowed_max,yvalConvert = 0;
+    for(int n = 0; n < 2; n++)
+    {
+        for(int i = 0; i < myGraphs_vec4->at(n).GetN(); i++)
+        { // check that every point is within the allowed min/max curves
+            xval = myGraphs_vec4->at(n).GetX()[i];
+            yval = myGraphs_vec4->at(n).GetY()[i];
+            yvalConvert=(yval-1.)*1000.;
+            y_allowed_min = fit_grading_HV_test->Eval(xval) * 0.95 - 20.; // Offset, da bei kleinen Werten der relative Fehler größer sein kann
+            y_allowed_max = fit_grading_HV_test->Eval(xval) * 1.05 + 50.;
+
+            if(yvalConvert < y_allowed_min || yvalConvert > y_allowed_max)
+            {
+                hv_fail = 0;
+                LOG(INFO) << BOLDRED << "WARNING: HV test is bad at HV = " << xval << " V: " << yvalConvert << " V, allowed is " << y_allowed_min << " - " << y_allowed_max << " ." << RESET;
+
+                // cout << "WARNING: HV test is bad at HV = " << xval << " V: " << yval << " V, allowed is " << y_allowed_min << " - " << y_allowed_max << " ." << endl;
+            }
+            else{
+                LOG(DEBUG) << BOLDGREEN << "DEBUG: HV test is good at HV = " << xval << " V: " << yvalConvert << " V, allowed is " << y_allowed_min << " - " << y_allowed_max << " ." << RESET;
+
+            }
+        }
+    }
+    if(hv_fail == 1) { fillSummaryTree("ExternalBiasResult", 1); }
+    else
+    {
+        fillSummaryTree("ExternalBiasResult", 0);
+    }
 }
 void SEHTester::SetLoad(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
 {
