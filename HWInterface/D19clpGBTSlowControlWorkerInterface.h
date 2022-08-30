@@ -12,7 +12,7 @@ const uint8_t SINGLE_BYTE_READ_I2C = 4;
 const uint8_t MULTI_BYTE_WRITE_I2C = 5;
 const uint8_t READ_FE              = 6;
 const uint8_t WRITE_FE             = 7;
-const int     BLOCK_SIZE           = 500;
+const int     BLOCK_SIZE           = 1000;
 
 const std::map<int, std::string> WORKER_FSM_STATE_MAP{{0, "UNDEFINED"},
                                                       {1, "IDLE"},
@@ -23,7 +23,8 @@ const std::map<int, std::string> WORKER_FSM_STATE_MAP{{0, "UNDEFINED"},
                                                       {6, "REQ_FUNCTION_ARG"},
                                                       {7, "GET_FUNCTION_ARG"},
                                                       {8, "PERFORM_TRANSACTION"},
-                                                      {9, "FORWARD_REPLY_PAYLOADN"}};
+                                                      {9, "FORWARD_REPLY_PAYLOADN"},
+                                                      {11, "REQ_FUNCTION_ARG"}};
 
 const std::map<int, std::string> IC_FSM_STATE_MAP{{0, "UNDEFINED"},
                                                   {1, "IDLE"},
@@ -40,34 +41,34 @@ const std::map<int, std::string> IC_FSM_STATE_MAP{{0, "UNDEFINED"},
 
 const std::map<int, std::string> I2C_FSM_STATE_MAP{{0, "UNDEFINED"},
                                                    {1, "IDLE"},
-                                                   {2, "WRITE_I2C_CONF_DATA"},
-                                                   {3, "WRITE_I2C_CONF_CMD"},
-                                                   {4, "WRITE_I2C_SLAVE_ADDR"},
-                                                   {5, "WRITE_I2C_RD_CMD"},
-                                                   {6, "GET_I2C_RD_VALUE"},
-                                                   {7, "FORWARD_I2C_RD_RESULT"},
-                                                   {8, "WRITE_I2C_SLAVE_DATA0"},
-                                                   {9, "WRITE_I2C_SLAVE_DATA1"},
-                                                   {10, "WRITE_I2C_SLAVE_DATA2"},
-                                                   {11, "WRITE_I2C_SLAVE_DATA3"},
-                                                   {12, "WRITE_I2C_WRITE_DATA_CMD"},
-                                                   {13, "WRITE_I2C_WR_CMD"},
-                                                   {14, "FORWARD_I2C_WR_RESULT"},
-                                                   {15, "DELAY_GET_I2C_STAT"},
-                                                   {16, "GET_I2C_STAT"},
-                                                   {17, "CHECK_I2C_STAT"},
-                                                   {18, "WAIT_IC_WR_DONE"},
-                                                   {19, "WAIT_IC_RD_DONE"}};
+                                                   {2, "WRITE_CONF_DATA"},
+                                                   {3, "WRITE_CONF_CMD"},
+                                                   {4, "WRITE_SLAVE_ADDR"},
+                                                   {5, "WRITE_RD_CMD"},
+                                                   {6, "GET_RD_VALUE"},
+                                                   {7, "FINALIZE_RD"},
+                                                   {8, "WRITE_SLAVE_DATA0"},
+                                                   {9, "WRITE_SLAVE_DATA1"},
+                                                   {10, "WRITE_SLAVE_DATA2"},
+                                                   {11, "WRITE_SLAVE_DATA3"},
+                                                   {12, "WRITE_WRITE_DATA_CMD"},
+                                                   {13, "WRITE_WR_CMD"},
+                                                   {14, "FINALIZE_WR"},
+                                                   {15, "GET_STAT"},
+                                                   {16, "CHECK_STAT"},
+                                                   {17, "WAIT_IC_WR_DONE"},
+                                                   {18, "WAIT_IC_RD_DONE"}};
 
 const std::map<int, std::string> FE_FSM_STATE_MAP{{0, "UNDEFINED"},
                                                   {1, "IDLE"},
-                                                  {2, "SEND_FE_RD_REQ"},
-                                                  {3, "GET_FE_RD_VALUE"},
-                                                  {4, "FORWARD_FE_RD_RESULT"},
-                                                  {5, "SEND_FE_WR_REQ"},
-                                                  {6, "FORWARD_FE_WR_RESULT"},
-                                                  {7, "WAIT_I2C_WR_DONE"},
-                                                  {8, "WAIT_I2C_RD_DONE"}};
+                                                  {2, "SEND_RD_REQ"},
+                                                  {3, "GET_RD_VALUE"},
+                                                  {4, "FINALIZE_RD"},
+                                                  {5, "SEND_WR_REQ"},
+                                                  {6, "VERIFY_WR"},
+                                                  {7, "FINALIZE_WR"},
+                                                  {8, "WAIT_I2C_WR_DONE"},
+                                                  {9, "WAIT_I2C_WR_DONE"}};
 } // namespace LpGBTSlowControlWorker
 namespace Ph2_HwInterface
 {

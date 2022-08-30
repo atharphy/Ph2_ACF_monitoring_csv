@@ -88,33 +88,37 @@ D19clpGBTSlowControlWorkerInterface::EncodeCommand(uint8_t pFunctionId, Ph2_HwDe
 void D19clpGBTSlowControlWorkerInterface::PrintStateFSM()
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    uint32_t                              cState                = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
-    uint8_t                               cWorkerState          = (cState & 0xFF);
-    uint8_t                               cFunctionStateIC      = (cState & (0xFF << 8)) >> 8;
-    uint8_t                               cFunctionStateI2C     = (cState & (0xFF << 16)) >> 16;
-    uint8_t                               cFunctionStateFE      = (cState & (0xFF << 24)) >> 24;
-    std::string                           cWorkerStateDesc      = LpGBTSlowControlWorker::WORKER_FSM_STATE_MAP.at(cWorkerState);
-    std::string                           cFunctionStateDescIC  = LpGBTSlowControlWorker::IC_FSM_STATE_MAP.at(cFunctionStateIC);
-    std::string                           cFunctionStateDescI2C = LpGBTSlowControlWorker::I2C_FSM_STATE_MAP.at(cFunctionStateI2C);
-    std::string                           cFunctionStateDescFE  = LpGBTSlowControlWorker::FE_FSM_STATE_MAP.at(cFunctionStateFE);
-    LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite : Tool stuck - Worker state = " << cWorkerStateDesc << " - Function State IC = " << cFunctionStateDescIC
-               << " - Function State I2C = " << cFunctionStateDescI2C << " - Function State FE = " << cFunctionStateDescFE << RESET;
+    uint8_t                               cCommandArbitratorState = ReadReg("fc7_daq_stat.command_processor_block.command_arbitrator_fsm_state");
+    uint8_t                               cReplyArbitratorState   = ReadReg("fc7_daq_stat.command_processor_block.reply_arbitrator_fsm_state");
+    std::string                           cWorkerState      = LpGBTSlowControlWorker::WORKER_FSM_STATE_MAP.at(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.worker_state"));
+    std::string                           cFunctionStateIC  = LpGBTSlowControlWorker::IC_FSM_STATE_MAP.at(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.ic_state"));
+    std::string                           cFunctionStateI2C = LpGBTSlowControlWorker::I2C_FSM_STATE_MAP.at(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.i2c_state"));
+    std::string                           cFunctionStateFE  = LpGBTSlowControlWorker::FE_FSM_STATE_MAP.at(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.fe_state"));
+    LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite : Tool stuck - Command Arbitrator State = " << +cCommandArbitratorState << " - Reply Arbitrator State = " << +cReplyArbitratorState
+               << " - Worker state = " << cWorkerState << " - Function State IC = " << cFunctionStateIC << " - Function State I2C = " << cFunctionStateI2C
+               << " - Function State FE = " << cFunctionStateFE << RESET;
 }
 
 bool D19clpGBTSlowControlWorkerInterface::IsDone(uint8_t pFunctionId)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    uint32_t                              cStatus       = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state");
-    bool                                  cWorkerDone   = (cStatus & 0xFF) == 1;
+    uint8_t                               cState        = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.worker_state");
+    bool                                  cWorkerDone   = (cState == 1);
     bool                                  cFunctionDone = false;
-    if((pFunctionId == LpGBTSlowControlWorker::READ_IC) || (pFunctionId == LpGBTSlowControlWorker::WRITE_IC)) { cFunctionDone = ((cStatus & (0xFF << 8)) >> 8) == 1; }
+    if((pFunctionId == LpGBTSlowControlWorker::READ_IC) || (pFunctionId == LpGBTSlowControlWorker::WRITE_IC))
+    {
+        uint8_t cState = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.ic_state");
+        cFunctionDone  = (cState == 1);
+    }
     else if((pFunctionId == LpGBTSlowControlWorker::SINGLE_BYTE_READ_I2C) || (pFunctionId == LpGBTSlowControlWorker::MULTI_BYTE_WRITE_I2C))
     {
-        cFunctionDone = ((cStatus & (0xFF << 16)) >> 16) == 1;
+        uint8_t cState = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.i2c_state");
+        cFunctionDone  = (cState == 1);
     }
     else if((pFunctionId == LpGBTSlowControlWorker::READ_FE) || (pFunctionId == LpGBTSlowControlWorker::WRITE_FE))
     {
-        cFunctionDone = ((cStatus & (0xFF << 24)) >> 24) == 1;
+        uint8_t cState = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.fe_state");
+        cFunctionDone  = (cState == 1);
     }
     else
     {
@@ -127,16 +131,16 @@ bool D19clpGBTSlowControlWorkerInterface::IsDone(uint8_t pFunctionId)
 uint8_t D19clpGBTSlowControlWorkerInterface::GetTryCntr(uint8_t pFunctionId)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    uint32_t                              cAllCntr = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters");
-    uint8_t                               cCntr    = 255;
-    if((pFunctionId == LpGBTSlowControlWorker::READ_IC) || (pFunctionId == LpGBTSlowControlWorker::WRITE_IC)) { cCntr = (cAllCntr & (0xFF << 0)) >> 0; }
+    uint8_t                               cCntr = 255;
+    if((pFunctionId == LpGBTSlowControlWorker::READ_IC) || (pFunctionId == LpGBTSlowControlWorker::WRITE_IC))
+    { cCntr = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters.ic_tool"); }
     else if((pFunctionId == LpGBTSlowControlWorker::SINGLE_BYTE_READ_I2C) || (pFunctionId == LpGBTSlowControlWorker::MULTI_BYTE_WRITE_I2C))
     {
-        cCntr = (cAllCntr & (0xFF << 8)) >> 8;
+        cCntr = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters.i2c_tool");
     }
     else if((pFunctionId == LpGBTSlowControlWorker::READ_FE) || (pFunctionId == LpGBTSlowControlWorker::WRITE_FE))
     {
-        cCntr = (cAllCntr & (0xFF << 16)) >> 16;
+        cCntr = ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_try_counters.fe_tool");
     }
     else
     {

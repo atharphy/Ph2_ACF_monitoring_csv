@@ -35,7 +35,7 @@ bool D19cOpticalInterface::Read(Chip* pChip, std::vector<ChipRegItem>& pRegister
         {
             auto cCommand = flpGBTSlowControlWorkerInterface->EncodeCommand(cFunctionId, pChip, cRegisterBlock);
             flpGBTSlowControlWorkerInterface->WriteCommand(cCommand);
-            int cWaitCounter = 100000;
+            int cWaitCounter = 10000000;
             while(!flpGBTSlowControlWorkerInterface->IsDone(cFunctionId) && (cWaitCounter != 0))
             {
                 cWaitCounter--;
@@ -57,7 +57,7 @@ bool D19cOpticalInterface::Read(Chip* pChip, std::vector<ChipRegItem>& pRegister
             if(cNWords != cRegisterBlock.size())
             {
                 LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Read -- Corrupted CPB reply" << RESET;
-                throw std::runtime_error("Corrupted CPB reply");
+                throw std::runtime_error("D19cOpticalInterface::Read -- Corrupted CPB reply");
                 return false;
             }
             for(size_t cReplyIdx = 0; cReplyIdx < cReplies.size(); cReplyIdx++)
@@ -99,7 +99,7 @@ bool D19cOpticalInterface::Write(Chip* pChip, std::vector<ChipRegItem>& pRegiste
         {
             auto cCommand = flpGBTSlowControlWorkerInterface->EncodeCommand(cFunctionId, pChip, cRegisterBlock, pVerify);
             flpGBTSlowControlWorkerInterface->WriteCommand(cCommand);
-            int cWaitCounter = 100000;
+            int cWaitCounter = 10000000;
             while(!flpGBTSlowControlWorkerInterface->IsDone(cFunctionId) && (cWaitCounter != 0))
             {
                 cWaitCounter--;
@@ -121,8 +121,7 @@ bool D19cOpticalInterface::Write(Chip* pChip, std::vector<ChipRegItem>& pRegiste
             if(cNWords != cRegisterBlock.size())
             {
                 LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Write -- Corrupted CPB reply" << RESET;
-                throw std::runtime_error("Corrupted CPB reply");
-                return false;
+                throw std::runtime_error("D19cOpticalInterface::Write -- Corrupted CPB reply");
             }
             for(size_t cReplyIdx = 0; cReplyIdx < cReplies.size(); cReplyIdx++)
             {
