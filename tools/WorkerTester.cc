@@ -529,7 +529,7 @@ void WorkerTester::Benchmark(int pNIterations)
                             cRegItems.push_back(cRegItem);
                         }
                     }
-                    bool cSuccess  = cFWInterface->MultiRegisterWriteRead(cChip, cRegItems);
+                    cFWInterface->MultiRegisterWriteRead(cChip, cRegItems);
                     auto cEnd      = std::chrono::system_clock::now();
                     auto cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEnd - cStart);
                     LOG(INFO) << "One FE register write with verification using FE functions takes in average " << (cDuration.count() / (255 * pNIterations)) << " us" << RESET;
