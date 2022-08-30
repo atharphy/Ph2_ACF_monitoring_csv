@@ -22,12 +22,12 @@ void WorkerTester::SetLpGbtVersion(uint8_t pLpGbtVers)
 bool WorkerTester::TestICRead(OpticalGroup* cOpticalGroup)
 {
     D19cFWInterface* cFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    auto cChip = static_cast<Chip*>(cOpticalGroup->flpGBT);
-    ChipRegMap cChipRegMap = cChip->getRegMap();
-    ChipRegItem cRegItem = cChipRegMap["ConfigPins"];
+    auto             cChip        = static_cast<Chip*>(cOpticalGroup->flpGBT);
+    ChipRegMap       cChipRegMap  = cChip->getRegMap();
+    ChipRegItem      cRegItem     = cChipRegMap["ConfigPins"];
     // Reading the ConfigPins which is hard wired
     LOG(INFO) << BOLDMAGENTA << "Testing IC Read on OpticalGroup " << cOpticalGroup->getId() << RESET;
-    uint8_t  cConfigPinsVal = cFWInterface->SingleRegisterRead(cChip, cRegItem);
+    uint8_t cConfigPinsVal = cFWInterface->SingleRegisterRead(cChip, cRegItem);
     LOG(INFO) << YELLOW << "LpGBT Mode = " << WHITE << ((cConfigPinsVal & 0xF0) >> 4) << RESET;
     LOG(INFO) << "----------------------" << RESET;
     return true;
@@ -50,18 +50,18 @@ bool WorkerTester::TestICRead()
 bool WorkerTester::TestICWrite(OpticalGroup* cOpticalGroup)
 {
     D19cFWInterface* cFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    auto cChip = static_cast<Chip*>(cOpticalGroup->flpGBT);
-    ChipRegMap cChipRegMap = cChip->getRegMap();
-    ChipRegItem cRegItem = cChipRegMap["I2CM0Address"];
+    auto             cChip        = static_cast<Chip*>(cOpticalGroup->flpGBT);
+    ChipRegMap       cChipRegMap  = cChip->getRegMap();
+    ChipRegItem      cRegItem     = cChipRegMap["I2CM0Address"];
     // Write to I2C Master 0 slave address register and readback
     LOG(INFO) << BOLDMAGENTA << "Testing IC Write on OpticalGroup " << cOpticalGroup->getId() << RESET;
-    bool     cSuccess         = true;
+    bool cSuccess = true;
     for(uint8_t cIteration = 0; cIteration < 10; cIteration++)
     {
         for(uint8_t i = 0; i < 255; i++)
-        { 
+        {
             cRegItem.fValue = i;
-            cSuccess &= cFWInterface->SingleRegisterWriteRead(cChip, cRegItem); 
+            cSuccess &= cFWInterface->SingleRegisterWriteRead(cChip, cRegItem);
         }
     }
     if(cSuccess) { LOG(INFO) << GREEN << "Successfully written and checked all values" << RESET; }
@@ -89,9 +89,9 @@ bool WorkerTester::TestICWrite()
 void WorkerTester::ResetI2CMasters(OpticalGroup* cOpticalGroup)
 {
     D19cFWInterface* cFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    auto cChip = static_cast<Chip*>(cOpticalGroup->flpGBT);
-    ChipRegMap cChipRegMap = cChip->getRegMap();
-    ChipRegItem cRegItem = cChipRegMap["RST0"];
+    auto             cChip        = static_cast<Chip*>(cOpticalGroup->flpGBT);
+    ChipRegMap       cChipRegMap  = cChip->getRegMap();
+    ChipRegItem      cRegItem     = cChipRegMap["RST0"];
     // reset i2C masters
     LOG(INFO) << GREEN << "Reseting I2C Masters" << RESET;
     std::vector<uint8_t> cBitPosition = {2, 1, 0};
@@ -105,53 +105,53 @@ void WorkerTester::ResetI2CMasters(OpticalGroup* cOpticalGroup)
     cRegItem.fValue = 0;
     cFWInterface->SingleRegisterWriteRead(cChip, cRegItem);
 
-    for(const auto& cMaster: cMasters) 
-    { 
-        cRegItem = cChipRegMap["I2CM" + std::to_string(cMaster) + "Config"];
+    for(const auto& cMaster: cMasters)
+    {
+        cRegItem        = cChipRegMap["I2CM" + std::to_string(cMaster) + "Config"];
         cRegItem.fValue = 1 << 5 | 1 << 3;
-        cFWInterface->SingleRegisterWriteRead(cChip, cRegItem); 
+        cFWInterface->SingleRegisterWriteRead(cChip, cRegItem);
     }
 }
 
 void WorkerTester::SetHybridClocks(OpticalGroup* cOpticalGroup)
 {
     D19cFWInterface* cFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    auto cChip = static_cast<Chip*>(cOpticalGroup->flpGBT);
-    ChipRegMap cChipRegMap = cChip->getRegMap();
+    auto             cChip        = static_cast<Chip*>(cOpticalGroup->flpGBT);
+    ChipRegMap       cChipRegMap  = cChip->getRegMap();
     // enabling CIC clock
     // clk 6
     LOG(INFO) << "Enabling CIC clock" << RESET;
-    uint8_t cInvert = 0, cDriveStr = 7, cFrequency = 4;
+    uint8_t     cInvert = 0, cDriveStr = 7, cFrequency = 4;
     ChipRegItem cRegItem = cChipRegMap["EPCLK6ChnCntrH"];
-    cRegItem.fValue = cInvert << 6 | cDriveStr << 3 | cFrequency;
+    cRegItem.fValue      = cInvert << 6 | cDriveStr << 3 | cFrequency;
     cFWInterface->SingleRegisterWriteRead(cChip, cRegItem);
     //
-    cRegItem = cChipRegMap["EPCLK6ChnCntrL"];
+    cRegItem        = cChipRegMap["EPCLK6ChnCntrL"];
     cRegItem.fValue = 0;
     cFWInterface->SingleRegisterWriteRead(cChip, cRegItem);
     // clk26
-    cRegItem = cChipRegMap["EPCLK26ChnCntrH"];
+    cRegItem        = cChipRegMap["EPCLK26ChnCntrH"];
     cRegItem.fValue = cInvert << 6 | cDriveStr << 3 | cFrequency;
     cFWInterface->SingleRegisterWriteRead(cChip, cRegItem);
     //
-    cRegItem = cChipRegMap["EPCLK26ChnCntrL"];
+    cRegItem        = cChipRegMap["EPCLK26ChnCntrL"];
     cRegItem.fValue = 0;
     cFWInterface->SingleRegisterWriteRead(cChip, cRegItem);
     // clk1
     cInvert = 1, cDriveStr = 7, cFrequency = 4;
-    cRegItem = cChipRegMap["EPCLK1ChnCntrH"];
+    cRegItem        = cChipRegMap["EPCLK1ChnCntrH"];
     cRegItem.fValue = cInvert << 6 | cDriveStr << 3 | cFrequency;
     cFWInterface->SingleRegisterWriteRead(cChip, cRegItem);
     //
-    cRegItem = cChipRegMap["EPCLK1ChnCntrL"];
+    cRegItem        = cChipRegMap["EPCLK1ChnCntrL"];
     cRegItem.fValue = 0;
     cFWInterface->SingleRegisterWriteRead(cChip, cRegItem);
     // clk11
-    cRegItem = cChipRegMap["EPCLK11ChnCntrH"];
+    cRegItem        = cChipRegMap["EPCLK11ChnCntrH"];
     cRegItem.fValue = cInvert << 6 | cDriveStr << 3 | cFrequency;
     cFWInterface->SingleRegisterWriteRead(cChip, cRegItem);
     //
-    cRegItem = cChipRegMap["EPCLK11ChnCntrL"];
+    cRegItem        = cChipRegMap["EPCLK11ChnCntrL"];
     cRegItem.fValue = 0;
     cFWInterface->SingleRegisterWriteRead(cChip, cRegItem);
 }
@@ -159,15 +159,15 @@ void WorkerTester::SetHybridClocks(OpticalGroup* cOpticalGroup)
 void WorkerTester::EnableHybridChips(OpticalGroup* cOpticalGroup)
 {
     D19cFWInterface* cFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    auto cChip = static_cast<Chip*>(cOpticalGroup->flpGBT);
-    ChipRegMap cChipRegMap = cChip->getRegMap();
+    auto             cChip        = static_cast<Chip*>(cOpticalGroup->flpGBT);
+    ChipRegMap       cChipRegMap  = cChip->getRegMap();
 
-    std::vector<uint8_t> cGPIOs       = {0, 1, 3, 6, 9, 12};
+    std::vector<uint8_t> cGPIOs = {0, 1, 3, 6, 9, 12};
     LOG(INFO) << "Setting GPIO direction" << RESET;
     ChipRegItem cRegItem = cChipRegMap["PIODirH"];
-    uint8_t cDirH = cFWInterface->SingleRegisterRead(cChip, cRegItem);
-    cRegItem = cChipRegMap["PIODirL"];
-    uint8_t cDirL = cFWInterface->SingleRegisterRead(cChip, cRegItem);
+    uint8_t     cDirH    = cFWInterface->SingleRegisterRead(cChip, cRegItem);
+    cRegItem             = cChipRegMap["PIODirL"];
+    uint8_t cDirL        = cFWInterface->SingleRegisterRead(cChip, cRegItem);
     for(auto cGPIO: cGPIOs)
     {
         if(cGPIO < 8)
@@ -175,19 +175,19 @@ void WorkerTester::EnableHybridChips(OpticalGroup* cOpticalGroup)
         else
             cDirH = (cDirH & ~(1 << (cGPIO - 8))) | (1 << (cGPIO - 8));
     }
-    cRegItem = cChipRegMap["PIODirH"];
+    cRegItem        = cChipRegMap["PIODirH"];
     cRegItem.fValue = cDirH;
     cFWInterface->SingleRegisterWriteRead(cChip, cRegItem);
-    cRegItem = cChipRegMap["PIODirL"];
+    cRegItem        = cChipRegMap["PIODirL"];
     cRegItem.fValue = cDirL;
     cFWInterface->SingleRegisterWriteRead(cChip, cRegItem);
 
     std::this_thread::sleep_for(std::chrono::microseconds(10));
     // reset toggling
     LOG(INFO) << "Enabling Chips" << RESET;
-    cRegItem = cChipRegMap["PIOOutH"];
+    cRegItem      = cChipRegMap["PIOOutH"];
     uint8_t cOutH = cFWInterface->SingleRegisterRead(cChip, cRegItem);
-    cRegItem = cChipRegMap["PIOOutL"];
+    cRegItem      = cChipRegMap["PIOOutL"];
     uint8_t cOutL = cFWInterface->SingleRegisterRead(cChip, cRegItem);
     for(auto cGPIO: cGPIOs)
     {
@@ -196,10 +196,10 @@ void WorkerTester::EnableHybridChips(OpticalGroup* cOpticalGroup)
         else
             cOutH = (cOutH & ~(1 << (cGPIO - 8))) | (1 << (cGPIO - 8));
     }
-    cRegItem = cChipRegMap["PIOOutH"];
+    cRegItem        = cChipRegMap["PIOOutH"];
     cRegItem.fValue = cOutH;
     cFWInterface->SingleRegisterWriteRead(cChip, cChipRegMap["PIOOutH"]);
-    cRegItem = cChipRegMap["PIOOutL"];
+    cRegItem        = cChipRegMap["PIOOutL"];
     cRegItem.fValue = cOutL;
     cFWInterface->SingleRegisterWriteRead(cChip, cChipRegMap["PIOOutL"]);
     std::this_thread::sleep_for(std::chrono::microseconds(10));
@@ -214,9 +214,9 @@ void WorkerTester::EnableMPAClocks(OpticalGroup* cOpticalGroup)
         for(auto cChip: *cHybrid)
         {
             if(cChip->getFrontEndType() != FrontEndType::SSA) continue;
-            ChipRegMap cChipRegMap = cChip->getRegMap();
-            ChipRegItem cRegItem = cChipRegMap["SLVS_pad_current"];
-            cRegItem.fValue = 0x7;
+            ChipRegMap  cChipRegMap = cChip->getRegMap();
+            ChipRegItem cRegItem    = cChipRegMap["SLVS_pad_current"];
+            cRegItem.fValue         = 0x7;
             cFWInterface->SingleRegisterWrite(cChip, cRegItem, false);
         }
     }
@@ -233,9 +233,9 @@ void WorkerTester::PrepareForTests()
         for(auto cOpticalGroup: *cBoard)
         {
             if(cOpticalGroup->flpGBT == nullptr) throw std::runtime_error("Missing lpGBT");
-            auto cChip = static_cast<Chip*>(cOpticalGroup->flpGBT);
-            ChipRegMap cChipRegMap = cChip->getRegMap();
-            ChipRegItem cRegItem = cChipRegMap["PUSMStatus"];
+            auto        cChip       = static_cast<Chip*>(cOpticalGroup->flpGBT);
+            ChipRegMap  cChipRegMap = cChip->getRegMap();
+            ChipRegItem cRegItem    = cChipRegMap["PUSMStatus"];
             if(cFWInterface->SingleRegisterRead(cChip, cRegItem) != 18) throw std::runtime_error(std::string("lpGBT Power-Up State Machine NOT DONE"));
 
             LOG(INFO) << BOLDGREEN << "lpGBT Configured [READY]" << RESET;
@@ -249,11 +249,10 @@ void WorkerTester::PrepareForTests()
 
 bool WorkerTester::TestI2CRead(OpticalGroup* cOpticalGroup)
 {
-
-    D19cFWInterface* cFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cFWInterface*      cFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     D19cOpticalInterface* cFEInterface = static_cast<D19cOpticalInterface*>(cFWInterface->getFEConfigurationInterface());
-    auto cChip = static_cast<Chip*>(cOpticalGroup->flpGBT);
-    ChipRegMap cChipRegMap = cChip->getRegMap();
+    auto                  cChip        = static_cast<Chip*>(cOpticalGroup->flpGBT);
+    ChipRegMap            cChipRegMap  = cChip->getRegMap();
 
     LOG(INFO) << BOLDMAGENTA << "Testing I2C Read on OpticalGroup " << cOpticalGroup->getId() << RESET;
     std::vector<uint8_t> cMasters          = {2};
@@ -298,10 +297,10 @@ bool WorkerTester::TestI2CRead()
 
 bool WorkerTester::TestI2CWrite(OpticalGroup* cOpticalGroup)
 {
-    D19cFWInterface* cFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cFWInterface*      cFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     D19cOpticalInterface* cFEInterface = static_cast<D19cOpticalInterface*>(cFWInterface->getFEConfigurationInterface());
-    auto cChip = static_cast<Chip*>(cOpticalGroup->flpGBT);
-    ChipRegMap cChipRegMap = cChip->getRegMap();
+    auto                  cChip        = static_cast<Chip*>(cOpticalGroup->flpGBT);
+    ChipRegMap            cChipRegMap  = cChip->getRegMap();
 
     LOG(INFO) << BOLDMAGENTA << "Testing I2C Write on OpticalGroup " << cOpticalGroup->getId() << RESET;
     std::vector<uint8_t> cMasters         = {2};
@@ -353,16 +352,16 @@ bool WorkerTester::TestFERead(OpticalGroup* cOpticalGroup)
     for(auto cHybrid: *cOpticalGroup)
     {
         ChipRegItem cRegItem;
-        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        auto&       cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
         if(cCic != nullptr)
         {
-            ChipRegMap cChipRegMap    = cCic->getRegMap();
-            cRegItem = cChipRegMap["CALIB_PATTERN0"];
+            ChipRegMap cChipRegMap = cCic->getRegMap();
+            cRegItem               = cChipRegMap["CALIB_PATTERN0"];
             uint8_t cRegisterValue = 0xAA;
-            cRegItem.fValue = cRegisterValue;
-            bool       cWriteSuccess  = cFWInterface->SingleRegisterWriteRead(cCic, cRegItem);
-            uint8_t    cReadBack      = cFWInterface->SingleRegisterRead(cCic, cRegItem);
-            bool       cReadSuccess   = (cReadBack == cRegisterValue);
+            cRegItem.fValue        = cRegisterValue;
+            bool    cWriteSuccess  = cFWInterface->SingleRegisterWriteRead(cCic, cRegItem);
+            uint8_t cReadBack      = cFWInterface->SingleRegisterRead(cCic, cRegItem);
+            bool    cReadSuccess   = (cReadBack == cRegisterValue);
             if(cReadSuccess) { LOG(INFO) << GREEN << "FE Read on CIC is SUCCESS " << RESET; }
             else
             {
@@ -377,9 +376,9 @@ bool WorkerTester::TestFERead(OpticalGroup* cOpticalGroup)
 
             if(cChip->getFrontEndType() == FrontEndType::SSA)
             {
-                cRegItem = cChipRegMap["Bias_THDAC"];
+                cRegItem               = cChipRegMap["Bias_THDAC"];
                 uint8_t cRegisterValue = 0xBB;
-                cRegItem.fValue = cRegisterValue;
+                cRegItem.fValue        = cRegisterValue;
                 bool    cWriteSuccess  = cFWInterface->SingleRegisterWriteRead(cChip, cRegItem);
                 uint8_t cReadBack      = cFWInterface->SingleRegisterRead(cChip, cRegItem);
                 bool    cReadSuccess   = (cReadBack == cRegisterValue);
@@ -392,9 +391,9 @@ bool WorkerTester::TestFERead(OpticalGroup* cOpticalGroup)
             }
             else if(cChip->getFrontEndType() == FrontEndType::MPA)
             {
-                cRegItem = cChipRegMap["ThDAC0"];
+                cRegItem               = cChipRegMap["ThDAC0"];
                 uint8_t cRegisterValue = 0xCC;
-                cRegItem.fValue = cRegisterValue;
+                cRegItem.fValue        = cRegisterValue;
                 bool    cWriteSuccess  = cFWInterface->SingleRegisterWriteRead(cChip, cRegItem);
                 uint8_t cReadBack      = cFWInterface->SingleRegisterRead(cChip, cRegItem);
                 bool    cReadSuccess   = (cReadBack == cRegisterValue);
@@ -432,13 +431,13 @@ bool WorkerTester::TestFEWrite(OpticalGroup* cOpticalGroup)
     for(auto cHybrid: *cOpticalGroup)
     {
         ChipRegItem cRegItem;
-        auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+        auto&       cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
         if(cCic != nullptr)
         {
             ChipRegMap cChipRegMap = cCic->getRegMap();
-            cRegItem = cChipRegMap["CALIB_PATTERN0"];
-            cRegItem.fValue = 0x55;
-            bool       cSuccess    = cFWInterface->SingleRegisterWriteRead(cCic, cRegItem);
+            cRegItem               = cChipRegMap["CALIB_PATTERN0"];
+            cRegItem.fValue        = 0x55;
+            bool cSuccess          = cFWInterface->SingleRegisterWriteRead(cCic, cRegItem);
             if(cSuccess) { LOG(INFO) << GREEN << "FE Write with verify on CIC is SUCCESS " << RESET; }
             else
             {
@@ -453,9 +452,9 @@ bool WorkerTester::TestFEWrite(OpticalGroup* cOpticalGroup)
 
             if(cChip->getFrontEndType() == FrontEndType::SSA)
             {
-                cRegItem = cChipRegMap["Bias_THDAC"];
+                cRegItem        = cChipRegMap["Bias_THDAC"];
                 cRegItem.fValue = 0x66;
-                bool cSuccess = cFWInterface->SingleRegisterWriteRead(cChip, cRegItem);
+                bool cSuccess   = cFWInterface->SingleRegisterWriteRead(cChip, cRegItem);
                 if(cSuccess) { LOG(INFO) << GREEN << "FE Write with verify on SSA is SUCCESS " << RESET; }
                 else
                 {
@@ -465,9 +464,9 @@ bool WorkerTester::TestFEWrite(OpticalGroup* cOpticalGroup)
             }
             else if(cChip->getFrontEndType() == FrontEndType::MPA)
             {
-                cRegItem = cChipRegMap["ThDAC0"];
+                cRegItem        = cChipRegMap["ThDAC0"];
                 cRegItem.fValue = 0x77;
-                bool cSuccess = cFWInterface->SingleRegisterWriteRead(cChip, cRegItem);
+                bool cSuccess   = cFWInterface->SingleRegisterWriteRead(cChip, cRegItem);
                 if(cSuccess) { LOG(INFO) << GREEN << "FE Write with verify on MPA is SUCCESS " << RESET; }
                 else
                 {
@@ -500,7 +499,6 @@ void WorkerTester::Benchmark(int pNIterations)
     {
         for(auto cOpticalGroup: *cBoard)
         {
-
             fBeBoardInterface->setBoard(cBoard->getId());
             D19cFWInterface* cFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
             for(auto cHybrid: *cOpticalGroup)
@@ -510,8 +508,8 @@ void WorkerTester::Benchmark(int pNIterations)
                 for(auto cChip: *cHybrid)
                 {
                     // if(cChip->getFrontEndType() == FrontEndType::MPA) continue;
-                    ChipRegMap cChipRegMap = cChip->getRegMap();
-                    uint8_t  cChipId          = ((cChip->getFrontEndType() == FrontEndType::CIC) || (cChip->getFrontEndType() == FrontEndType::CIC2)) ? 0 : cChip->getId();
+                    ChipRegMap  cChipRegMap = cChip->getRegMap();
+                    uint8_t     cChipId     = ((cChip->getFrontEndType() == FrontEndType::CIC) || (cChip->getFrontEndType() == FrontEndType::CIC2)) ? 0 : cChip->getId();
                     ChipRegItem cRegItem;
                     if(cChip->getFrontEndType() == FrontEndType::CIC)
                         cRegItem = cChipRegMap["CALIB_PATTERN0"];
@@ -522,7 +520,7 @@ void WorkerTester::Benchmark(int pNIterations)
 
                     LOG(INFO) << BOLDMAGENTA << "Bencharking " << fChipTypeMap[cChip->getFrontEndType()] << "_" << +cChipId << RESET;
                     std::vector<ChipRegItem> cRegItems;
-                    auto cStart = std::chrono::system_clock::now();
+                    auto                     cStart = std::chrono::system_clock::now();
                     for(int cIteration = 0; cIteration < pNIterations; cIteration++)
                     {
                         for(uint8_t cValue = 0; cValue < 255; cValue++)
@@ -531,7 +529,7 @@ void WorkerTester::Benchmark(int pNIterations)
                             cRegItems.push_back(cRegItem);
                         }
                     }
-                    bool cSuccess = cFWInterface->MultiRegisterWriteRead(cChip, cRegItems);
+                    bool cSuccess  = cFWInterface->MultiRegisterWriteRead(cChip, cRegItems);
                     auto cEnd      = std::chrono::system_clock::now();
                     auto cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEnd - cStart);
                     LOG(INFO) << "One FE register write with verification using FE functions takes in average " << (cDuration.count() / (255 * pNIterations)) << " us" << RESET;
@@ -543,9 +541,9 @@ void WorkerTester::Benchmark(int pNIterations)
 
 void WorkerTester::MeasureIPbusTransaction(int pNIterations)
 {
-    D19cFWInterface* cFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cFWInterface*                     cFWInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
     D19clpGBTSlowControlWorkerInterface* cSlowControlInterface = static_cast<D19clpGBTSlowControlWorkerInterface*>(cFWInterface->getlpGBTSlowControlInterface());
-    uint8_t          pLinkId      = 0;
+    uint8_t                              pLinkId               = 0;
     cFWInterface->WriteReg("fc7_daq_cnfg.command_processor_block.link_select", pLinkId);
     uint8_t               cWorkerId = 16 + pLinkId, cFunctionId = 2;
     uint16_t              pRegisterAddress = 0x0140;

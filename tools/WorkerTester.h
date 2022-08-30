@@ -1,9 +1,9 @@
 #ifndef WorkerTester_h__
 #define WorkerTester_h__
 
-#include "../Utils/Utilities.h"
-#include "../HWInterface/D19clpGBTSlowControlWorkerInterface.h"
 #include "../HWInterface/D19cOpticalInterface.h"
+#include "../HWInterface/D19clpGBTSlowControlWorkerInterface.h"
+#include "../Utils/Utilities.h"
 #include "Tool.h"
 #include <chrono>
 
