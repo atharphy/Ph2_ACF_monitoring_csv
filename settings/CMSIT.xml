@@ -17,7 +17,7 @@
             />
       </lpGBT>
       -->
-      <Hybrid Id="0" Status="1">
+      <Hybrid Id="0" enable="1">
         <RD53_Files path="${PWD}/" />
 
         <!-- Available Comment fields are: 50x50, 25x100origR0C0, 25x100origR1C0, unknown, combined with dual, quad -->
@@ -310,7 +310,7 @@
 
       <MonitoringElement device="LpGBT" register="TEMP"           enable="1"/>
       <MonitoringElement device="LpGBT" register="VDD"            enable="1"/>
-      <MonitoringElement device="LpGBT" register="PUSMStatus"     enable="1"/>
+      <MonitoringElement device="LpGBT" register="PUSMenable"     enable="1"/>
     </Monitoring>
   </MonitoringSettings>
 
