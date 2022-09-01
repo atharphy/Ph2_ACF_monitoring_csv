@@ -70,7 +70,6 @@ void D19cLinkInterface::GeneralLinkReset(const BeBoard* pBoard)
         for(auto cOpticalReadout: *pBoard)
         {
             cAllLocked = cAllLocked && GetLinkStatus(cOpticalReadout->getId());
-            cAttempts++;
         }
     } while(cAttempts < cMaxAttempts && !cAllLocked);
 
