@@ -102,6 +102,23 @@ void D19clpGBTSlowControlWorkerInterface::PrintState()
     LOG(INFO) << BLUE << "FE State = " << BOLDYELLOW << cFEState << RESET;
 }
 
+bool D19clpGBTSlowControlWorkerInterface::WaitDone(uint8_t pFunctionId)
+{
+    int cWaitCounter = 10000000;
+    while(!IsDone(pFunctionId) && (cWaitCounter != 0))
+    {
+        cWaitCounter--;
+        continue;
+    }
+    if(cWaitCounter == 0)
+    {
+        PrintState();
+        Reset();
+        return false;
+    }
+    return true;
+}
+
 bool D19clpGBTSlowControlWorkerInterface::IsDone(uint8_t pFunctionId)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);

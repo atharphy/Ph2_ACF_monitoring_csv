@@ -82,6 +82,7 @@ class D19clpGBTSlowControlWorkerInterface : public D19cCommandProcessorInterface
   public:
     void                  Reset();
     std::vector<uint32_t> EncodeCommand(uint8_t pFunctionId, Ph2_HwDescription::Chip* pChip, const std::vector<Ph2_HwDescription::ChipRegItem>& pRegisterItems, bool pVerify = false);
+    bool                  WaitDone(uint8_t pFunctionId);
     bool                  IsDone(uint8_t pFunctionId);
     uint8_t               GetTryCounter(uint8_t pFunctionId);
     void                  PrintState();
