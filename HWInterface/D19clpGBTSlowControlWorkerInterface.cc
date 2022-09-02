@@ -85,18 +85,21 @@ D19clpGBTSlowControlWorkerInterface::EncodeCommand(uint8_t pFunctionId, Ph2_HwDe
     }
     return cCommand;
 }
-void D19clpGBTSlowControlWorkerInterface::PrintStateFSM()
+void D19clpGBTSlowControlWorkerInterface::PrintState()
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    uint8_t                               cCommandArbitratorState = ReadReg("fc7_daq_stat.command_processor_block.command_arbitrator_fsm_state");
-    uint8_t                               cReplyArbitratorState   = ReadReg("fc7_daq_stat.command_processor_block.reply_arbitrator_fsm_state");
-    std::string                           cWorkerState      = LpGBTSlowControlWorker::WORKER_FSM_STATE_MAP.at(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.worker_state"));
-    std::string                           cFunctionStateIC  = LpGBTSlowControlWorker::IC_FSM_STATE_MAP.at(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.ic_state"));
-    std::string                           cFunctionStateI2C = LpGBTSlowControlWorker::I2C_FSM_STATE_MAP.at(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.i2c_state"));
-    std::string                           cFunctionStateFE  = LpGBTSlowControlWorker::FE_FSM_STATE_MAP.at(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.fe_state"));
-    LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleWrite : Tool stuck - Command Arbitrator State = " << +cCommandArbitratorState << " - Reply Arbitrator State = " << +cReplyArbitratorState
-               << " - Worker state = " << cWorkerState << " - Function State IC = " << cFunctionStateIC << " - Function State I2C = " << cFunctionStateI2C
-               << " - Function State FE = " << cFunctionStateFE << RESET;
+    auto cCommandState = CommandProcessorArbitrators::COMMAND_ARBITRATOR_FSM_STATE_MAP.at(ReadReg("fc7_daq_stat.command_processor_block.command_arbitrator_fsm_state"));
+    auto cReplyState   = CommandProcessorArbitrators::REPLY_ARBITRATOR_FSM_STATE_MAP.at(ReadReg("fc7_daq_stat.command_processor_block.reply_arbitrator_fsm_state"));
+    auto cWorkerState  = LpGBTSlowControlWorker::WORKER_FSM_STATE_MAP.at(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.worker_state"));
+    auto cICState      = LpGBTSlowControlWorker::IC_FSM_STATE_MAP.at(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.ic_state"));
+    auto cI2CState     = LpGBTSlowControlWorker::I2C_FSM_STATE_MAP.at(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.i2c_state"));
+    auto cFEState      = LpGBTSlowControlWorker::FE_FSM_STATE_MAP.at(ReadReg("fc7_daq_stat.command_processor_block.worker.lpgbtsc_fsm_state.fe_state"));
+    LOG(INFO) << BLUE << "Command Arbitrator State = " << BOLDYELLOW << cCommandState << RESET;
+    LOG(INFO) << BLUE << "Reply Arbitrator State = " << BOLDYELLOW << cReplyState << RESET;
+    LOG(INFO) << BLUE << "Worker state = " << BOLDYELLOW << cWorkerState << RESET;
+    LOG(INFO) << BLUE << "IC State = " << BOLDYELLOW << cICState << RESET;
+    LOG(INFO) << BLUE << "I2C State = " << BOLDYELLOW << cI2CState << RESET;
+    LOG(INFO) << BLUE << "FE State = " << BOLDYELLOW << cFEState << RESET;
 }
 
 bool D19clpGBTSlowControlWorkerInterface::IsDone(uint8_t pFunctionId)
@@ -128,7 +131,7 @@ bool D19clpGBTSlowControlWorkerInterface::IsDone(uint8_t pFunctionId)
     return cWorkerDone && cFunctionDone;
 }
 
-uint8_t D19clpGBTSlowControlWorkerInterface::GetTryCntr(uint8_t pFunctionId)
+uint8_t D19clpGBTSlowControlWorkerInterface::GetTryCounter(uint8_t pFunctionId)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     uint8_t                               cCntr = 255;
@@ -144,8 +147,8 @@ uint8_t D19clpGBTSlowControlWorkerInterface::GetTryCntr(uint8_t pFunctionId)
     }
     else
     {
-        LOG(ERROR) << "D19clpGBTSlowControlWorkerInterface::GetTryCntr : LpGBT-SC Worker fuction doesn't exist" << RESET;
-        throw std::runtime_error("D19clpGBTSlowControlWorkerInterface::GetTryCntr failure");
+        LOG(ERROR) << "D19clpGBTSlowControlWorkerInterface::GetTryCounter : LpGBT-SC Worker fuction doesn't exist" << RESET;
+        throw std::runtime_error("D19clpGBTSlowControlWorkerInterface::GetTryCounter failure");
     }
     return cCntr;
 }

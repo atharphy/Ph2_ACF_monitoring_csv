@@ -528,7 +528,7 @@ void WorkerTester::Benchmark(int pNIterations)
                             cRegItems.push_back(cRegItem);
                         }
                     }
-                    auto                     cStart = std::chrono::system_clock::now();
+                    auto cStart = std::chrono::system_clock::now();
                     cFWInterface->MultiRegisterWriteRead(cChip, cRegItems);
                     auto cEnd      = std::chrono::system_clock::now();
                     auto cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEnd - cStart);

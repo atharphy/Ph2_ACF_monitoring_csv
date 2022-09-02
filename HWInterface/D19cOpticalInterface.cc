@@ -43,10 +43,12 @@ bool D19cOpticalInterface::Read(Chip* pChip, std::vector<ChipRegItem>& pRegister
             }
             if(cWaitCounter == 0)
             {
-                flpGBTSlowControlWorkerInterface->PrintStateFSM();
+                LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Read : Tool stuck ... Sending soft reset" << RESET;
+                flpGBTSlowControlWorkerInterface->PrintState();
                 flpGBTSlowControlWorkerInterface->Reset();
+                return false;
             }
-            uint8_t cTryCntr = flpGBTSlowControlWorkerInterface->GetTryCntr(cFunctionId);
+            uint8_t cTryCntr = flpGBTSlowControlWorkerInterface->GetTryCounter(cFunctionId);
             if(cTryCntr > 0)
             {
                 uint8_t cMaxRetry = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? fConfiguration.fMaxRetryIC : fConfiguration.fMaxRetryFE;
@@ -58,7 +60,6 @@ bool D19cOpticalInterface::Read(Chip* pChip, std::vector<ChipRegItem>& pRegister
             {
                 LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Read -- Corrupted CPB reply" << RESET;
                 throw std::runtime_error("D19cOpticalInterface::Read -- Corrupted CPB reply");
-                return false;
             }
             for(size_t cReplyIdx = 0; cReplyIdx < cReplies.size(); cReplyIdx++)
             {
@@ -107,10 +108,12 @@ bool D19cOpticalInterface::Write(Chip* pChip, std::vector<ChipRegItem>& pRegiste
             }
             if(cWaitCounter == 0)
             {
-                flpGBTSlowControlWorkerInterface->PrintStateFSM();
+                LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Write : Tool stuck ... Sending soft reset" << RESET;
+                flpGBTSlowControlWorkerInterface->PrintState();
                 flpGBTSlowControlWorkerInterface->Reset();
+                return false;
             }
-            uint8_t cTryCntr = flpGBTSlowControlWorkerInterface->GetTryCntr(cFunctionId);
+            uint8_t cTryCntr = flpGBTSlowControlWorkerInterface->GetTryCounter(cFunctionId);
             if(cTryCntr > 0)
             {
                 uint8_t cMaxRetry = (pChip->getFrontEndType() == FrontEndType::LpGBT) ? fConfiguration.fMaxRetryIC : fConfiguration.fMaxRetryFE;
@@ -207,11 +210,12 @@ bool D19cOpticalInterface::MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uin
     }
     if(cWaitCounter == 0)
     {
-        flpGBTSlowControlWorkerInterface->PrintStateFSM();
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiByteWriteI2C : Tool stuck ... Sending soft reset" << RESET;
+        flpGBTSlowControlWorkerInterface->PrintState();
         flpGBTSlowControlWorkerInterface->Reset();
         return false;
     }
-    uint8_t cTryCntr = flpGBTSlowControlWorkerInterface->GetTryCntr(cFunctionId);
+    uint8_t cTryCntr = flpGBTSlowControlWorkerInterface->GetTryCounter(cFunctionId);
     if(cTryCntr > 0) { LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiByteWriteI2C : Tried " << +cTryCntr << "/" << +fConfiguration.fMaxRetryI2C << " before success" << RESET; }
     auto    cReply     = flpGBTSlowControlWorkerInterface->ReadReply(1 + 1); // 1 header + 1 word
     uint8_t cErrorCode = (cReply[1] & (0xFF << 8)) >> 8;
@@ -245,11 +249,12 @@ uint8_t D19cOpticalInterface::SingleByteReadI2C(Ph2_HwDescription::Chip* pChip, 
     }
     if(cWaitCounter == 0)
     {
-        flpGBTSlowControlWorkerInterface->PrintStateFSM();
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleByteReadI2C : Tool stuck ... Sending soft reset" << RESET;
+        flpGBTSlowControlWorkerInterface->PrintState();
         flpGBTSlowControlWorkerInterface->Reset();
         return false;
     }
-    uint8_t cTryCntr = flpGBTSlowControlWorkerInterface->GetTryCntr(cFunctionId);
+    uint8_t cTryCntr = flpGBTSlowControlWorkerInterface->GetTryCounter(cFunctionId);
     if(cTryCntr > 0) { LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleByteReadI2C : Tried " << +cTryCntr << "/" << +fConfiguration.fMaxRetryI2C << " before success" << RESET; }
     auto    cReply     = flpGBTSlowControlWorkerInterface->ReadReply(1 + 1); // 1 header + 1 word
     uint8_t cErrorCode = (cReply[1] & (0xFF << 8)) >> 8;
