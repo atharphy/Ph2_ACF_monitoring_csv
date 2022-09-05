@@ -13,7 +13,7 @@ RD53ChannelGroupHandler::RD53ChannelGroupHandler(size_t rowStart, size_t rowStop
     : ChannelGroupHandler(), regionOfInterest(nRows, nCols), groupType(groupType), hitPerCol(hitPerCol), onlyNGroups(onlyNGroups)
 {
     for(auto col = colStart; col <= colStop; col++)
-        for(auto row = rowStart; row <= rowStop; ++row) regionOfInterest.enableChannel(row, col);
+        for(auto row = rowStart; row <= rowStop; row++) regionOfInterest.enableChannel(row, col);
 
     allChannelGroup_ = std::shared_ptr<ChannelGroupBase>(&regionOfInterest, [](auto*) {});
 

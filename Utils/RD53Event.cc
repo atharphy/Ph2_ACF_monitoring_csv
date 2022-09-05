@@ -695,7 +695,7 @@ auto decodeCompressedHitmap(BitView<T>& bits)
                             hits[row][pixel_quad * 4 + pixel_pair * 2 + 1] = pixel_mask & 1;
                         }
                     }
-                    ++current_quad;
+                    current_quad++;
                 }
             }
         }
@@ -840,7 +840,7 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
 
         bits.skip(128 * dummy_size);
         events.push_back(std::move(evt));
-        ++nEvents;
+        nEvents++;
     }
 
     return nEvents;
