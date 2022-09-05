@@ -597,6 +597,13 @@ void RD53FWInterface::ResetBoard()
     RegManager::WriteReg("user.ctrl_regs.reset_reg.aurora_pma_rst", 1);
     RegManager::WriteReg("user.ctrl_regs.reset_reg.aurora_rst", 1);
 
+    // ##############################################
+    // # Reset communication with the frontend chip #
+    // ##############################################
+    // @TMP@
+    // RegManager::WriteReg("user.ctrl_regs.reset_reg.chip_resync", 1);
+    // RegManager::WriteReg("user.ctrl_regs.reset_reg.chip_resync", 0);
+
     // ########
     // # DDR3 #
     // ########

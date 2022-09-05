@@ -21,11 +21,11 @@
       <node id="readout_block_rst"     mask="0x00000200"      permission="rw"      description="Readout Block reset" />
       <node id="enable_sync_word"      mask="0x00000400"      permission="rw"      description="When '1', Sync words are inserted in the cmd stream every 32 commands" />
       <node id="ext_clk_en"            mask="0x00000800"      permission="rw"      description="Enable external clock as main clock input (40MHz)" />
-      <node id="rst_cdce_sync"         mask="0x00001000"      permission="rw"      description=" " />
-      <node id="set_sync_cmd_freq"     mask="0x00002000"      permission="rw"      description=" " />
+      <node id="rst_cdce_sync"         mask="0x00001000"      permission="rw"      description="CDCE chip on FC7 that generates the clocks is forced to resync with the reference clock" />
+      <node id="set_sync_cmd_freq"     mask="0x00002000"      permission="rw"      description="Toggling this bit, forces the values of the registers nb_of_pll_words, nb_of_sync_words and chip_reset_duration to be updated in the firmware" />
       <node id="nb_of_pll_words"       mask="0x000FC000"      permission="rw"      description=" " />
       <node id="nb_of_sync_words"      mask="0x00700000"      permission="rw"      description=" " />
-      <node id="chip_reset_duration"   mask="0xFF800000"      permission="rw"      description=" " />
+      <node id="chip_reset_duration"   mask="0xFF800000"      permission="rw"      description="For this register only the 5 lsb are used and it defines how long will the reset period be during the initialization procedure. The default value in the fw is 100 (x100ns period)" />
     </node>
 
     <!-- Fast Commands Block -->
