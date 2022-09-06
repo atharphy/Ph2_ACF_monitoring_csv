@@ -364,6 +364,6 @@ void ClockDelay::saveChipRegisters(int currentRun)
 void ClockDelay::writeSequence(const Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::ReadoutChip* pChip, uint16_t clk_data_delay)
 {
     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(pChip), "CLK_DATA_DELAY", clk_data_delay, false);
-    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[pBoard->getId()])->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORS, RD53ACmd::RD53ACmdEncoder::SYNC), -1);
+    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[pBoard->getId()])->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS, RD53ACmd::RD53ACmdEncoder::SYNC), -1);
     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(pChip), "CLK_DATA_DELAY", clk_data_delay);
 }

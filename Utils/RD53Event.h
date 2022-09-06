@@ -38,7 +38,8 @@ namespace RD53FWEvtEncoder
 // # Event header #
 // ################
 const uint16_t EVT_HEADER      = 0xFFFF;
-const uint16_t EVT_HEADER_SIZE = 4;  // Number of words in event header
+const uint8_t  NBIT_EVT_WORD   = 32; // Number of bits for event word
+const uint8_t  EVT_HEADER_SIZE = 4;  // Number of words in event header
 const uint8_t  NBIT_EVTHEAD    = 16; // Number of bits for the Error Code
 const uint8_t  NBIT_BLOCKSIZE  = 16; // Number of bits for the Block Size
 const uint8_t  NBIT_TRIGID     = 16; // Number of bits for the TLU Trigger ID
@@ -67,11 +68,11 @@ const uint8_t NBIT_DELAY     = 12; // Number of bits for the Frame Delay
 const uint16_t GOOD       = 0x0000; // Event status Good
 const uint16_t EVSIZE     = 0x0001; // Event status Invalid event size
 const uint16_t EMPTY      = 0x0002; // Event status Empty event
-const uint16_t NOHEADER   = 0x0004; // Event status No event headear found in data
+const uint16_t NOEVHEADER = 0x0004; // Event status No event headear found in data
 const uint16_t INCOMPLETE = 0x0008; // Event status Incomplete event header
 const uint16_t L1A        = 0x0010; // Event status L1A counter mismatch
 const uint16_t FWERR      = 0x0020; // Event status Firmware error
-const uint16_t FRSIZE     = 0x0040; // Event status Invalid frame size
+const uint16_t NOFRHEADER = 0x0040; // Event status No frame header found in data
 const uint16_t MISSCHIP   = 0x0080; // Event status Chip data are missing
 } // namespace RD53FWEvtEncoder
 
@@ -130,15 +131,16 @@ class RD53Event : public Ph2_HwInterface::Event
     // ######################
     // # Specific for RD53A #
     // ######################
-    void        DecodeRD53AEvent(const uint32_t* data, size_t n);
+    void        DecodeRD53AEvent(const uint32_t* data, size_t n32bitsWords);
     static void DecodeRD53AEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& refEventStart, uint16_t& eventStatus);
 
     // ######################
     // # Specific for RD53B #
     // ######################
-    static size_t DecodeRD53BEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const FormatOptions& options = {});
-    static size_t DecodeRD53BEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& refEventStart, const FormatOptions& options = {});
-    static size_t DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>& events, const size_t howMany, const FormatOptions& options = {});
+    static size_t DecodeRD53BEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint16_t& eventStatus, const FormatOptions& options = {});
+    static size_t
+                  DecodeRD53BEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& refEventStart, uint16_t& eventStatus, const FormatOptions& options = {});
+    static size_t DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>& events, const size_t howMany, uint16_t& eventStatus, const FormatOptions& options = {});
 
     void fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup) override;
     void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint16_t hybridId) override;

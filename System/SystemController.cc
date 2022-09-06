@@ -468,10 +468,10 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     for(auto cOpticalGroup: *pBoard)
         for(auto cHybrid: *cOpticalGroup)
         {
-            LOG(INFO) << GREEN << "Initializing chip communication of hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
+            LOG(INFO) << GREEN << "Initializing chip communication of hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
             for(const auto cChip: *cHybrid)
             {
-                LOG(INFO) << GREEN << "Initializing communicationng to/from RD53: " << RESET << BOLDYELLOW << +cChip->getId() << RESET;
+                LOG(INFO) << GREEN << "Initializing communicationng to/from RD53: " << BOLDYELLOW << +cChip->getId() << RESET;
                 static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Uplinks(cChip);
             }
         }
@@ -497,15 +497,16 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)
         {
-            LOG(INFO) << GREEN << "Configuring chip of hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
+            LOG(INFO) << GREEN << "Configuring chip of hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
             for(const auto cChip: *cHybrid)
             {
-                LOG(INFO) << GREEN << "Configuring RD53: " << RESET << BOLDYELLOW << +cChip->getId() << RESET;
+                LOG(INFO) << GREEN << "Configuring RD53: " << BOLDYELLOW << +cChip->getId() << RESET << GREEN " (fused ID " << BOLDYELLOW << +fReadoutChipInterface->ReadChipFuseID(cChip) << RESET
+                          << GREEN << ")" << RESET;
                 if(resetMask == true) static_cast<RD53*>(cChip)->enableAllPixels();
                 if(resetTDAC == true) static_cast<RD53*>(cChip)->resetTDAC();
                 static_cast<RD53*>(cChip)->copyMaskToDefault();
                 static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);
-                LOG(INFO) << GREEN << "Number of masked pixels: " << RESET << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
+                LOG(INFO) << GREEN << "Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
             }
         }
     }
@@ -953,7 +954,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
         fBeBoardInterface->ConfigureBoard(cBoard);
         if(cBoard->getBoardType() == BoardType::D19C)
         {
-            // set board sparisificatio
+            // set board sparisification
             // based on what is configured in the fw register
             // read CIC sparsification setting from fW register
             // make sure board is also set to the same thing
@@ -1084,7 +1085,7 @@ void SystemController::initializeWriteFileHandler()
         fFileHandler = new FileHandler(cFilename, 'w', cHeader);
 
         fBeBoardInterface->SetFileHandler(cBoard, fFileHandler);
-        LOG(INFO) << GREEN << "Saving binary data into: " << RESET << BOLDYELLOW << cFilename << RESET;
+        LOG(INFO) << GREEN << "Saving binary data into: " << BOLDYELLOW << cFilename << RESET;
     }
 }
 

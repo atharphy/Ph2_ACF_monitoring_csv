@@ -51,12 +51,13 @@ class RD53A : public RD53
     static constexpr FrontEnd DIFF = {"DIFF", "VTH1_DIFF", "VFF_DIFF", 31, 264, 399};
     static const FrontEnd*    frontEnds[];
 
+    static void decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::RD53ChipEvent& chipEvent);
+
     RD53A(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
 
     const FrontEnd* getMajorityFE(size_t colStart, size_t colStop) const override;
     size_t          getNRows() const override { return RD53A::NROWS; }
     size_t          getNCols() const override { return RD53A::NCOLS; }
-    void            decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::RD53ChipEvent& chipEvent) const override;
     uint32_t        getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const override;
 };
 

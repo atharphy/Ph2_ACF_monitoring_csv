@@ -35,7 +35,7 @@ const RD53A::FrontEnd* RD53A::getMajorityFE(size_t colStart, size_t colStop) con
     });
 }
 
-void RD53A::decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::RD53ChipEvent& chipEvent) const
+void RD53A::decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::RD53ChipEvent& chipEvent)
 {
     uint32_t header;
 

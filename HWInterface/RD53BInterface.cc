@@ -77,7 +77,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     if(doWriteClkDataDelay == true)
     {
         RD53Interface::WriteChipReg(pChip, nameAndValue.first, nameAndValue.second, false);
-        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORS, RD53BCmd::RD53BCmdEncoder::SYNC), -1);
+        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS, RD53BCmd::RD53BCmdEncoder::SYNC), -1);
         RD53Interface::WriteChipReg(pChip, nameAndValue.first, nameAndValue.second, pVerifLoop);
     }
 
@@ -380,25 +380,25 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
 
 void RD53BInterface::SendChipCommandsWithSync(RD53* pRD53, std::vector<uint16_t>& cmdStream)
 {
-    // Compute number of 16-bit words to which we add 2 sync words every 30:
-    // nWordsPerPacketExclSync + 2 * nWordsPerPacketExclSync / 30 = totaNumb16bitWords ( = 2 * (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO))
-    constexpr size_t nWordsPerPacketExclSync = 2 * ((1 << RD53FWconstants::NBIT_SLOWCMD_FIFO) - 1) / (1 + 2. / 30);
+    const int NSYNC_WORDS = 2;
+    // Compute number of 16-bit words to which we add NSYNC_WORDS sync words every RD53Constants::NWORDS_TO_SYNC:
+    // nWordsPerPacketExclSync + 2 * nWordsPerPacketExclSync / RD53Constants::NWORDS_TO_SYNC = totaNumb16bitWords ( = 2 * (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO))
+    constexpr size_t nWordsPerPacketExclSync = 2 * ((1 << RD53FWconstants::NBIT_SLOWCMD_FIFO) - 1) / (1 + 2. / RD53Constants::NWORDS_TO_SYNC);
     auto             begin                   = cmdStream.begin();
 
     while(begin != cmdStream.end())
     {
         size_t                nWordsThisPacketExclSync = std::min(nWordsPerPacketExclSync, size_t(cmdStream.end() - begin));
         std::vector<uint16_t> cmdPacket;
-        cmdPacket.reserve(std::ceil(nWordsThisPacketExclSync + 2 * nWordsThisPacketExclSync / 30.));
+        cmdPacket.reserve(std::ceil(nWordsThisPacketExclSync + 2. * nWordsThisPacketExclSync / RD53Constants::NWORDS_TO_SYNC));
 
         auto it = begin;
         while(it != begin + nWordsThisPacketExclSync)
         {
-            auto next = std::min(cmdStream.end(), std::min(it + 30, begin + nWordsThisPacketExclSync));
+            auto next = std::min(cmdStream.end(), std::min(it + RD53Constants::NWORDS_TO_SYNC, begin + nWordsThisPacketExclSync));
             std::copy(it, next, std::back_inserter(cmdPacket));
             it = next;
-            serialize(RD53BCmd::Sync{}, cmdPacket);
-            serialize(RD53BCmd::Sync{}, cmdPacket);
+            for(auto i = 0; i < NSYNC_WORDS; i++) serialize(RD53BCmd::Sync{}, cmdPacket);
         }
 
         static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdPacket, pRD53->getHybridId());
