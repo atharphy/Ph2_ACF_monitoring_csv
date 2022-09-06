@@ -319,17 +319,16 @@ void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53
     if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53A)
         RD53Event::DecodeRD53AEvents(data, events, refEventStart, eventStatus);
     else
-        RD53Event::DecodeRD53BEvents(data, events, refEventStart, eventStatus);
-    // else
-    //     try
-    //     {
-    //         RD53Event::DecodeRD53BEvents(data, events, refEventStart, eventStatus);
-    //     }
-    //     catch(std::runtime_error& e)
-    //     {
-    //         LOG(WARNING) << BOLDRED << e.what() << RESET;
-    //         eventStatus = RD53FWEvtEncoder::EMPTY;
-    //     }
+        // RD53Event::DecodeRD53BEvents(data, events, refEventStart, eventStatus);
+        try
+        {
+            RD53Event::DecodeRD53BEvents(data, events, refEventStart, eventStatus);
+        }
+        catch(std::runtime_error& e)
+        {
+            LOG(WARNING) << BOLDRED << e.what() << RESET;
+            eventStatus = RD53FWEvtEncoder::EMPTY;
+        }
 }
 
 void RD53Event::ForkDecodingThreads()
@@ -724,7 +723,7 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
             // #########################
             // # Decode frame preamble #
             // #########################
-            chipEvt.error_code = bits.pop(RD53FWEvtEncoder::NBIT_ERR);
+            chipEvt.error_code = event_bits.pop(RD53FWEvtEncoder::NBIT_ERR);
             chipEvt.hybrid_id  = event_bits.pop(RD53FWEvtEncoder::NBIT_HYBRID);
             chipEvt.chip_lane  = event_bits.pop(RD53FWEvtEncoder::NBIT_CHIPID);
             size_t l1a_size    = event_bits.pop(RD53FWEvtEncoder::NBIT_L1ASIZE);

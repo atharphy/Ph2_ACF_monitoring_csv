@@ -829,7 +829,8 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
 // #  |---------------------------------------------------------------------------| #
 // ##################################################################################
 {
-    const double mainClock = 40e6; // @CONST@
+    const double mainClock      = 40e6; // @CONST@
+    const size_t NbitsInitPrime = 10;   // @CONST@
     enum INJtype
     {
         None,
@@ -857,7 +858,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data  = RD53Shared::firstChip->getCalCmd(1, 2, 10, 0, 0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = RD53Shared::firstChip->getCalCmd(0, 0, 2, 0, 0);
 
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays) % (RD53Shared::setBits(NbitsInitPrime) + 1);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr         = 0;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject      = (injLatency == 0 ? (uint32_t)INJdelay::AfterInjectCal : injLatency);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger     = INJdelay::BeforePrimeCal;
@@ -876,7 +877,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data  = RD53Shared::firstChip->getCalCmd(1, 0, 0, 0, 0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = RD53Shared::firstChip->getCalCmd(0, 0, 1, 0, 0);
 
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays) % (RD53Shared::setBits(NbitsInitPrime) + 1);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr         = 0;
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject      = (injLatency == 0 ? (uint32_t)INJdelay::AfterInjectCal : injLatency);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger     = INJdelay::BeforePrimeCal;
