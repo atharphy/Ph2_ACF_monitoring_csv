@@ -72,8 +72,6 @@ class ClockDelay : public PixelAlive
 
     std::string fileRes;
     int         theCurrentRun;
-    uint16_t    maxClkDelay;
-    uint16_t    maxCmdDelay;
 };
 
 #endif

@@ -39,12 +39,6 @@ void ClockDelay::ConfigureCalibration()
     la.Inherit(this);
     la.localConfigure();
 
-    // ##################
-    // # Register masks #
-    // ##################
-    maxClkDelay = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CLK_DATA_DELAY_CLK"));
-    maxCmdDelay = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CLK_DATA_DELAY_DATA"));
-
     // #######################
     // # Initialize progress #
     // #######################
@@ -152,7 +146,7 @@ void ClockDelay::run()
     ContainerFactory::copyAndInitChip<GenericDataArray<ClkDelaySize>>(*fDetectorContainer, theOccContainer);
 
     // #######################
-    // # Set Initial latency #
+    // # Set initial latency #
     // #######################
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
@@ -160,7 +154,7 @@ void ClockDelay::run()
                 for(const auto cChip: *cHybrid)
                 {
                     auto latency = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), frontEnd->latencyReg);
-                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteChipReg(static_cast<RD53*>(cChip), frontEnd->latencyReg, latency - 1);
+                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), frontEnd->latencyReg, latency - 1);
 
                     for(auto i = 0u; i < ClkDelaySize; i++)
                         theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<ClkDelaySize>>().data[i] = 0;
@@ -350,6 +344,9 @@ void ClockDelay::writeClkDelaySequence(const Ph2_HwDescription::BeBoard* pBoard,
     const size_t maxClkValue  = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CLK_DATA_DELAY_CLK")) + 1;
     const size_t maxDataValue = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CLK_DATA_DELAY_DATA")) + 1;
 
+    // #################################################
+    // # Move data and clock phases of the same amount #
+    // #################################################
     auto clk_delay = pChip->getRegItem("CLK_DATA_DELAY_CLK").fValue;
     auto nameAndValue(static_cast<RD53Interface*>(this->fReadoutChipInterface)->SplitSpecialRegisters("CLK_DATA_DELAY_CLK", value % maxClkValue, RD53Shared::firstChip->getRegMap()));
     pChip->getRegItem("CLK_DATA_DELAY").fValue = nameAndValue.second;
