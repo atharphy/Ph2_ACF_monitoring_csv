@@ -28,7 +28,7 @@ RD53A::RD53A(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHy
     this->setFrontEndType(FrontEndType::RD53A);
 }
 
-const RD53A::FrontEnd* RD53A::getMajorityFE(size_t colStart, size_t colStop) const
+const RD53A::FrontEnd* RD53A::getFEtype(size_t colStart, size_t colStop) const
 {
     return *std::max_element(std::begin(frontEnds), std::end(frontEnds), [&](const FrontEnd* a, const FrontEnd* b) {
         return int(std::min(colStop, a->colStop)) - int(std::max(colStart, a->colStart)) < int(std::min(colStop, b->colStop)) - int(std::max(colStart, b->colStart));
@@ -39,13 +39,11 @@ void RD53A::decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::R
 {
     uint32_t header;
 
-    chipEvent.eventStatus = RD53EvtEncoder::CHIPGOOD;
-
     std::tie(header, chipEvent.trigger_id, chipEvent.trigger_tag, chipEvent.bc_id) =
         bits::unpack<RD53AEvtEncoder::NBIT_HEADER, RD53AEvtEncoder::NBIT_TRIGID, RD53AEvtEncoder::NBIT_TRGTAG, RD53AEvtEncoder::NBIT_BCID>(*data);
     if(header != RD53AEvtEncoder::HEADER) chipEvent.eventStatus |= RD53EvtEncoder::CHIPHEAD;
 
-    const size_t noHitToT = RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT);
+    const size_t noHitToT = RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT * RD53Constants::NPIX_REGION);
 
     for(auto i = 1u; i < size; i++)
     {
@@ -53,14 +51,15 @@ void RD53A::decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::R
         {
             uint32_t core_col, side, row, col, all_tots;
 
-            std::tie(core_col, row, side, all_tots) = bits::unpack<RD53AEvtEncoder::NBIT_CCOL, RD53AEvtEncoder::NBIT_ROW, RD53AEvtEncoder::NBIT_SIDE, RD53AEvtEncoder::NBIT_TOT>(data[i]);
-            col                                     = RD53Constants::NPIX_REGION * bits::pack<RD53AEvtEncoder::NBIT_CCOL, RD53AEvtEncoder::NBIT_SIDE>(core_col, side);
+            std::tie(core_col, row, side, all_tots) =
+                bits::unpack<RD53AEvtEncoder::NBIT_CCOL, RD53AEvtEncoder::NBIT_ROW, RD53AEvtEncoder::NBIT_SIDE, RD53AEvtEncoder::NBIT_TOT * RD53Constants::NPIX_REGION>(data[i]);
+            col = RD53Constants::NPIX_REGION * bits::pack<RD53AEvtEncoder::NBIT_CCOL, RD53AEvtEncoder::NBIT_SIDE>(core_col, side);
 
             uint8_t tots[RD53Constants::NPIX_REGION];
-            bits::RangePacker<RD53AEvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION>::unpack_reverse(all_tots, tots);
+            bits::RangePacker<RD53AEvtEncoder::NBIT_TOT>::unpack_reverse(all_tots, tots);
 
             for(int j = 0; j < RD53Constants::NPIX_REGION; j++)
-                if(tots[j] != RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION)) chipEvent.hit_data.push_back({(uint16_t)row, (uint16_t)(col + j), tots[j]});
+                if(tots[j] != RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT)) chipEvent.hit_data.push_back({(uint16_t)row, (uint16_t)(col + j), tots[j]});
             if((row >= RD53A::NROWS) || (col >= (RD53A::NCOLS - (RD53Constants::NPIX_REGION - 1)))) chipEvent.eventStatus |= RD53EvtEncoder::CHIPPIX;
         }
     }

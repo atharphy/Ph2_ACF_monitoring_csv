@@ -26,7 +26,6 @@
 // #########################
 namespace RD53Constants
 {
-const uint8_t NBIT_TDAC      = 4;    // Number of TDAC bits
 const uint8_t NBIT_MAXREG    = 16;   // Maximum number of bits for a chip register
 const uint8_t NPIX_REGION    = 4;    // Number of pixels in a region (1x4)
 const uint8_t NROW_CORE      = 8;    // Number of rows in a core
@@ -49,6 +48,7 @@ const uint16_t CHIPID    = 0x0200; // Chip event status Found conflicting chip I
 const uint16_t CHIPPIX   = 0x0400; // Chip event status Bad pixel row or column
 const uint16_t CHIPTOT   = 0x0800; // Chip event status Invalid TOT value
 const uint16_t CHIPNOHIT = 0x1000; // Chip event status Hit data are missing
+const uint16_t CHIPFWERR = 0x1000; // Chip event status Firmware error
 } // namespace RD53EvtEncoder
 
 // #####################################################################
@@ -91,14 +91,16 @@ class RD53 : public ReadoutChip
         const char* name;
         const char* thresholdReg;
         const char* gainReg;
+        const char* latencyReg;
         size_t      nTDACvalues;
+        size_t      maxToTvalue;
         size_t      colStart;
         size_t      colStop;
     };
 
     virtual size_t          getNRows() const                                                                                                           = 0;
     virtual size_t          getNCols() const                                                                                                           = 0;
-    virtual const FrontEnd* getMajorityFE(size_t colStart, size_t colStop) const                                                                       = 0;
+    virtual const FrontEnd* getFEtype(size_t colStart, size_t colStop) const                                                                           = 0;
     virtual uint32_t        getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const = 0;
 
     RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);

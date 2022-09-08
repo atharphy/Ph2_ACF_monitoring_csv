@@ -25,9 +25,10 @@ void PixelAliveHistograms::book(TFile* theOutputFile, DetectorContainer& theDete
     // # Retrieve parameters #
     // #######################
     nEvents                = this->findValueInSettings<double>(settingsMap, "nEvents");
-    const size_t ToTsize   = RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) + 1;
+    auto         frontEnd  = RD53Shared::firstChip->getFEtype(nCols / 2, nCols / 2);
+    const size_t ToTsize   = frontEnd->maxToTvalue + 2;
     const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
-    const size_t TrgIDsize = RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID) + 1;
+    const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
 
     auto hOcc1D = CanvasContainer<TH1F>("Occ1D", "Occ1D", nEvents + 1, 0, 1 + 1. / nEvents);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, "Efficiency", "Entries");
@@ -54,7 +55,7 @@ void PixelAliveHistograms::book(TFile* theOutputFile, DetectorContainer& theDete
 bool PixelAliveHistograms::fill(std::vector<char>& dataBuffer)
 {
     const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
-    const size_t TrgIDsize = RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID) + 1;
+    const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
 
     ChannelContainerStream<OccupancyAndPh>                           theOccStreamer("PixelAliveOcc");
     ChipContainerStream<EmptyContainer, GenericDataArray<BCIDsize>>  theBCIDStreamer("PixelAliveBCID");
@@ -160,7 +161,7 @@ void PixelAliveHistograms::fillBCID(const DetectorDataContainer& DataContainer)
 
 void PixelAliveHistograms::fillTrgID(const DetectorDataContainer& DataContainer)
 {
-    const size_t TrgIDsize = RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID) + 1;
+    const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
 
     for(const auto cBoard: DataContainer)
         for(const auto cOpticalGroup: *cBoard)

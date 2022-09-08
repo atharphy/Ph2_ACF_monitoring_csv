@@ -312,7 +312,7 @@ void RD53::resetMask()
     std::fill(fPixelsMask.Enable.begin(), fPixelsMask.Enable.end(), false);
     std::fill(fPixelsMask.HitBus.begin(), fPixelsMask.HitBus.end(), false);
     std::fill(fPixelsMask.InjEn.begin(), fPixelsMask.InjEn.end(), false);
-    std::fill(fPixelsMask.TDAC.begin(), fPixelsMask.TDAC.end(), RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2);
+    std::fill(fPixelsMask.TDAC.begin(), fPixelsMask.TDAC.end(), this->getFEtype(this->getNCols() / 2, this->getNCols() / 2)->nTDACvalues / 2);
 }
 
 void RD53::enableAllPixels()
@@ -337,7 +337,7 @@ void RD53::enablePixel(unsigned int row, unsigned int col, bool enable)
 
 void     RD53::injectPixel(unsigned int row, unsigned int col, bool inject) { fPixelsMask.InjEn[row + this->getNRows() * col] = inject; }
 void     RD53::setTDAC(unsigned int row, unsigned int col, uint8_t TDAC) { fPixelsMask.TDAC[row + this->getNRows() * col] = TDAC; }
-void     RD53::resetTDAC() { std::fill(fPixelsMask.TDAC.begin(), fPixelsMask.TDAC.end(), RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2); }
+void     RD53::resetTDAC() { std::fill(fPixelsMask.TDAC.begin(), fPixelsMask.TDAC.end(), this->getFEtype(this->getNCols() / 2, this->getNCols() / 2)->nTDACvalues / 2); }
 uint8_t  RD53::getTDAC(unsigned int row, unsigned int col) { return fPixelsMask.TDAC[row + this->getNRows() * col]; }
 uint32_t RD53::getNumberOfChannels() const { return this->getNRows() * this->getNCols(); }
 

@@ -75,7 +75,7 @@ void PixelAlive::Running()
 void PixelAlive::sendData()
 {
     const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
-    const size_t TrgIDsize = RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID) + 1;
+    const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
 
     auto theOccStream   = prepareChannelContainerStreamer<OccupancyAndPh>("Occ");
     auto theBCIDStream  = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<BCIDsize>>("BCID");
@@ -176,7 +176,7 @@ void PixelAlive::draw(bool doSaveData)
 std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
 {
     const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
-    const size_t TrgIDsize = RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID) + 1;
+    const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
 
     theBCIDContainer.reset();
     theTrgIDContainer.reset();
@@ -279,7 +279,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                                  ->at(cChip->getIndex())
                                                  ->getSummary<GenericDataVector, OccupancyAndPh>()
                                                  .data1[i - 1];
-                        deltaBCID += (deltaBCID >= 0 ? 0 : RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1);
+                        deltaBCID += (deltaBCID >= 0 ? 0 : BCIDsize);
                         if(deltaBCID >= int(BCIDsize))
                             LOG(ERROR) << BOLDBLUE << "[PixelAlive::analyze] " << BOLDRED << "deltaBCID out of range: " << BOLDYELLOW << deltaBCID << RESET;
                         else
@@ -311,7 +311,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                                   ->at(cChip->getIndex())
                                                   ->getSummary<GenericDataVector, OccupancyAndPh>()
                                                   .data2[i - 1];
-                        deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID) + 1);
+                        deltaTrgID += (deltaTrgID >= 0 ? 0 : TrgIDsize);
                         if(deltaTrgID >= int(TrgIDsize))
                             LOG(ERROR) << BOLDBLUE << "[PixelAlive::analyze] " << BOLDRED << "deltaTrgID out of range: " << BOLDYELLOW << deltaTrgID << RESET;
                         else

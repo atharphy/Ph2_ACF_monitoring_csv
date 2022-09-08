@@ -28,7 +28,6 @@ const uint8_t NBIT_TRGTAG = 8;  // Number of trigger tag bits
 const uint8_t NBIT_BCID   = 11; // Number of bunch crossing ID bits
 const uint8_t NBIT_TOT    = 4;  // Number of ToT bits
 const uint8_t NBIT_CCOL   = 6;  // Number of core column bits
-const uint8_t INVALID_TOT = 15; // Invalid TOT value
 } // namespace RD53BEvtEncoder
 
 namespace RD53BConstants
@@ -46,13 +45,13 @@ class RD53B : public RD53
     static constexpr size_t NROWS = 336; // Total number of rows
     static constexpr size_t NCOLS = 432; // Total number of columns
 
-    static constexpr FrontEnd CROC = {"CROC", "DAC_GDAC_M_LIN", "DAC_KRUM_CURR_LIN", 32, 0, RD53B::NCOLS - 1};
+    static constexpr FrontEnd CROC = {"CROC", "DAC_GDAC_M_LIN", "DAC_KRUM_CURR_LIN", "TriggerConfig", 32, RD53Shared::setBits(RD53BEvtEncoder::NBIT_TOT) - 1, 0, RD53B::NCOLS - 1};
 
     static void decodeChipData(BitView<const uint32_t> bits, Ph2_HwInterface::RD53ChipEvent& e, const Ph2_HwInterface::FormatOptions& options = {});
 
     RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
 
-    const FrontEnd* getMajorityFE(size_t colStart, size_t colStop) const override { return &RD53B::CROC; }
+    const FrontEnd* getFEtype(size_t colStart, size_t colStop) const override { return &RD53B::CROC; }
     size_t          getNRows() const override { return RD53B::NROWS; }
     size_t          getNCols() const override { return RD53B::NCOLS; }
     uint32_t        getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const override;

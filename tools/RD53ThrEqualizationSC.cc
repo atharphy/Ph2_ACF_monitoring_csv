@@ -29,7 +29,7 @@ void ThrEqualizationSC::ConfigureCalibration()
     doDisplay    = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip = this->findValueInSettings<double>("UpdateChipCfg");
 
-    frontEnd = RD53Shared::firstChip->getMajorityFE(SCurve::colStart, SCurve::colStop);
+    frontEnd = RD53Shared::firstChip->getFEtype(SCurve::colStart, SCurve::colStop);
     if(frontEnd == &RD53A::SYNC)
     {
         LOG(ERROR) << BOLDRED << "ThrEqualizationSC cannot be used on the Synchronous FE, please change the selected columns" << RESET;
@@ -142,10 +142,9 @@ void ThrEqualizationSC::run()
     // ##############################
     // # Run threshold equalization #
     // ##############################
-    size_t TDACsize = RD53Shared::setBits(RD53Constants::NBIT_TDAC) + 1;
-    if(frontEnd == &RD53A::DIFF) TDACsize *= 2;
+    size_t TDACsize = frontEnd->nTDACvalues;
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, theTDACcontainer);
-    ThrEqualizationSC::bitWiseScanLocal(frontEnd->name, targetThr);
+    ThrEqualizationSC::bitWiseScanLocal("", targetThr);
 
     // #################################################
     // # Fill TDAC container and mark enabled channels #
@@ -208,7 +207,7 @@ void ThrEqualizationSC::draw()
 void ThrEqualizationSC::analyze()
 {
     const float  maxTDACdistance = 2; // @CONST@
-    const size_t TDACcenter      = RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2;
+    const size_t TDACcenter      = frontEnd->nTDACvalues / 2;
 
     for(const auto cBoard: *fDetectorContainer)
     {

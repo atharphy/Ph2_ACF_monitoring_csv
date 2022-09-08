@@ -218,12 +218,6 @@ bool RD53Event::EvtErrorHandler(uint16_t status)
         isGood = false;
     }
 
-    if(status & RD53FWEvtEncoder::FWERR)
-    {
-        LOG(ERROR) << BOLDRED << "Firmware error " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
-        isGood = false;
-    }
-
     if(status & RD53FWEvtEncoder::NOFRHEADER)
     {
         LOG(ERROR) << BOLDRED << "No frame header found in data " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
@@ -266,7 +260,41 @@ bool RD53Event::EvtErrorHandler(uint16_t status)
         isGood = false;
     }
 
+    if(status & RD53EvtEncoder::CHIPFWERR)
+    {
+        LOG(ERROR) << BOLDRED << "Firmware error " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+    }
+
     return isGood;
+}
+
+bool RD53Event::findEventStarts(const std::vector<uint32_t>& data, std::vector<size_t>& eventStarts, uint16_t& eventStatus)
+{
+    size_t i = 0u;
+    while(i < data.size())
+        if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
+        {
+            eventStarts.push_back(i);
+            size_t block_size;
+            std::tie(block_size) = bits::unpack<RD53FWEvtEncoder::NBIT_BLOCKSIZE>(data[i]);
+            i += NWORDS_DDR3 * block_size;
+        }
+        else
+        {
+            eventStatus |= RD53FWEvtEncoder::EVSIZE;
+            return false;
+        }
+
+    if(eventStarts.size() == 0)
+    {
+        eventStatus |= RD53FWEvtEncoder::NOEVHEADER;
+        return false;
+    }
+
+    eventStarts.push_back(data.size());
+
+    return true;
 }
 
 void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStartExt, uint16_t& eventStatus)
@@ -286,30 +314,7 @@ void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53
     // #####################
     // # Find events start #
     // #####################
-    if(eventStartExt.size() == 0)
-    {
-        size_t i = 0u;
-        while(i < data.size())
-            if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
-            {
-                eventStartLocal.push_back(i);
-                size_t block_size;
-                std::tie(block_size) = bits::unpack<RD53FWEvtEncoder::NBIT_BLOCKSIZE>(data[i]);
-                i += 4 * block_size;
-            }
-            else
-            {
-                eventStatus = RD53FWEvtEncoder::EVSIZE;
-                return;
-            }
-
-        if(eventStartLocal.size() == 0)
-        {
-            eventStatus = RD53FWEvtEncoder::NOEVHEADER;
-            return;
-        }
-        eventStartLocal.push_back(data.size());
-    }
+    if((eventStartExt.size() == 0) && (RD53Event::findEventStarts(data, eventStartLocal, eventStatus) == false)) return;
     const std::vector<size_t>& refEventStart = (eventStartExt.size() == 0 ? const_cast<const std::vector<size_t>&>(eventStartLocal) : eventStartExt);
 
     // #################################
@@ -319,16 +324,7 @@ void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53
     if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53A)
         RD53Event::DecodeRD53AEvents(data, events, refEventStart, eventStatus);
     else
-        // RD53Event::DecodeRD53BEvents(data, events, refEventStart, eventStatus);
-        try
-        {
-            RD53Event::DecodeRD53BEvents(data, events, refEventStart, eventStatus);
-        }
-        catch(std::runtime_error& e)
-        {
-            LOG(WARNING) << BOLDRED << e.what() << RESET;
-            eventStatus = RD53FWEvtEncoder::EMPTY;
-        }
+        RD53Event::DecodeRD53BEvents(data, events, refEventStart, eventStatus);
 }
 
 void RD53Event::ForkDecodingThreads()
@@ -398,32 +394,13 @@ void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std:
     // #####################
     // # Find events start #
     // #####################
-    size_t i = 0u;
-    while(i < data.size())
-        if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
-        {
-            eventStart.push_back(i);
-            size_t block_size;
-            std::tie(block_size) = bits::unpack<RD53FWEvtEncoder::NBIT_BLOCKSIZE>(data[i]);
-            i += 4 * block_size;
-        }
-        else
-        {
-            eventStatus = RD53FWEvtEncoder::EVSIZE;
-            return;
-        }
-
-    if(eventStart.size() == 0)
-    {
-        eventStatus = RD53FWEvtEncoder::NOEVHEADER;
-        return;
-    }
-    const auto nEvents = ceil(static_cast<double>(eventStart.size()) / RD53Shared::NTHREADS);
-    eventStart.push_back(data.size());
+    if(RD53Event::findEventStarts(data, eventStart, eventStatus) == false) return;
+    const auto nEvents = ceil(static_cast<double>(eventStart.size() - 1) / RD53Shared::NTHREADS);
 
     // ######################
     // # Unpack data vector #
     // ######################
+    size_t i = 0u;
     for(i = 0u; RD53Shared::NTHREADS > 1 && i < RD53Shared::NTHREADS - 1; i++)
     {
         auto firstEvent = eventStart.begin() + nEvents * i;
@@ -482,28 +459,8 @@ void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std:
     // #####################
     // # Find events start #
     // #####################
-    size_t i = 0u;
-    while(i < data.size())
-        if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
-        {
-            eventStart.push_back(i);
-            size_t block_size;
-            std::tie(block_size) = bits::unpack<RD53FWEvtEncoder::NBIT_BLOCKSIZE>(data[i]);
-            i += 4 * block_size;
-        }
-        else
-        {
-            eventStatus = RD53FWEvtEncoder::EVSIZE;
-            return;
-        }
-
-    if(eventStart.size() == 0)
-    {
-        eventStatus = RD53FWEvtEncoder::NOEVHEADER;
-        return;
-    }
-    const auto nEvents = ceil(static_cast<double>(eventStart.size()) / omp_get_max_threads());
-    eventStart.push_back(data.size());
+    if(RD53Event::findEventStarts(data, eventStart, eventStatus) == false) return;
+    const auto nEvents = ceil(static_cast<double>(eventStart.size() - 1) / omp_get_max_threads());
 
     // ######################
     // # Unpack data vector #
@@ -537,7 +494,7 @@ void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std:
         }
     }
 }
-  */
+*/
 // ######################
 // # Specific for RD53A #
 // ######################
@@ -556,14 +513,7 @@ void RD53Event::DecodeRD53AEvent(const uint32_t* data, size_t n32bitsWords)
     // ######################
     if(n32bitsWords < RD53FWEvtEncoder::EVT_HEADER_SIZE)
     {
-        eventStatus = RD53FWEvtEncoder::INCOMPLETE;
-        return;
-    }
-
-    std::tie(block_size) = bits::unpack<RD53FWEvtEncoder::NBIT_BLOCKSIZE>(data[0]);
-    if(n32bitsWords != block_size * NWORDS_DDR3)
-    {
-        eventStatus = RD53FWEvtEncoder::EVSIZE;
+        eventStatus |= RD53FWEvtEncoder::INCOMPLETE;
         return;
     }
 
@@ -571,6 +521,7 @@ void RD53Event::DecodeRD53AEvent(const uint32_t* data, size_t n32bitsWords)
     // # Decode event preamble #
     // #########################
     bool dummy_size;
+    std::tie(block_size)                                  = bits::unpack<RD53FWEvtEncoder::NBIT_BLOCKSIZE>(data[0]);
     std::tie(tlu_trigger_id, data_format_ver, dummy_size) = bits::unpack<RD53FWEvtEncoder::NBIT_TRIGID, RD53FWEvtEncoder::NBIT_FMTVER, RD53FWEvtEncoder::NBIT_DUMMY>(data[1]);
     std::tie(tdc, l1a_counter)                            = bits::unpack<RD53FWEvtEncoder::NBIT_TDC, RD53FWEvtEncoder::NBIT_L1ACNT>(data[2]);
     bx_counter                                            = data[3];
@@ -603,22 +554,27 @@ void RD53Event::DecodeRD53AEvent(const uint32_t* data, size_t n32bitsWords)
     // # Decode frame and chip data #
     // ##############################
     chip_events.reserve(event_sizes.size());
-    index = 4;
+    index = RD53FWEvtEncoder::EVT_HEADER_SIZE;
     for(auto size: event_sizes)
     {
-        RD53ChipEvent event;
-        RD53ChipEvent::decodeChipFrame(data[index], data[index + 1], event);
-        RD53A::decodeChipData(&data[index + 2], size - 2, event);
+        RD53ChipEvent chipEvt;
 
-        if(event.error_code != 0)
-        {
-            eventStatus |= RD53FWEvtEncoder::FWERR;
-            chip_events.clear();
-            return;
-        }
+        // #########################
+        // # Decode frame preamble #
+        // #########################
+        RD53ChipEvent::decodeChipFrame(data[index], data[index + 1], chipEvt);
 
-        eventStatus |= event.eventStatus;
-        chip_events.push_back(std::move(event));
+        // ####################
+        // # Decode chip data #
+        // ####################
+        RD53A::decodeChipData(&data[index + 2], size - 2, chipEvt);
+
+        if(chipEvt.error_code != 0)
+            chipEvt.eventStatus |= RD53EvtEncoder::CHIPFWERR;
+        else
+            chip_events.push_back(std::move(chipEvt));
+
+        eventStatus |= chipEvt.eventStatus;
         index += size;
     }
 }
@@ -662,7 +618,6 @@ size_t RD53Event::DecodeRD53BEvents(const std::vector<uint32_t>& data, std::vect
 
 size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>& events, const size_t howMany, uint16_t& eventStatus, const FormatOptions& options)
 {
-    size_t       nEvents      = 0;
     auto         bits         = bit_view(data, 0, howMany);
     const size_t n32bitsWords = bits.size() / RD53FWEvtEncoder::NBIT_EVT_WORD;
     const size_t maxL1Counter = RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID) + 1;
@@ -673,33 +628,20 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
     {
         RD53Event evt;
 
-        if(bits.pop(RD53FWEvtEncoder::NBIT_EVTHEAD) != RD53FWEvtEncoder::EVT_HEADER)
-        {
-            eventStatus |= RD53FWEvtEncoder::NOEVHEADER;
-            bits.skip(RD53FWEvtEncoder::NBIT_EVT_WORD - RD53FWEvtEncoder::NBIT_EVTHEAD);
-            throw std::runtime_error("Invalid event container header"); // @TMP@
-            continue;
-        }
-
         // ######################
         // # Consistency checks #
         // ######################
         if(n32bitsWords < RD53FWEvtEncoder::EVT_HEADER_SIZE)
         {
             eventStatus |= RD53FWEvtEncoder::INCOMPLETE;
-            return nEvents;
-        }
-
-        size_t block_size = bits.pop(RD53FWEvtEncoder::NBIT_BLOCKSIZE);
-        if(n32bitsWords < block_size * NWORDS_DDR3)
-        {
-            eventStatus |= RD53FWEvtEncoder::EVSIZE;
-            return nEvents;
+            break;
         }
 
         // #########################
         // # Decode event preamble #
         // #########################
+        bits.skip(RD53FWEvtEncoder::NBIT_EVTHEAD);
+        size_t block_size  = bits.pop(RD53FWEvtEncoder::NBIT_BLOCKSIZE);
         evt.tlu_trigger_id = bits.pop(RD53FWEvtEncoder::NBIT_TRIGID);
         bits.skip(RD53FWEvtEncoder::NBIT_FMTVER);
         size_t dummy_size = bits.pop(RD53FWEvtEncoder::NBIT_DUMMY);
@@ -707,8 +649,10 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
         evt.l1a_counter   = bits.pop(RD53FWEvtEncoder::NBIT_L1ACNT);
         evt.bx_counter    = bits.pop(RD53FWEvtEncoder::NBIT_BXCNT);
 
+        // ##############################
+        // # Decode frame and chip data #
+        // ##############################
         auto event_bits = bits.pop_slice(NWORDS_DDR3 * RD53FWEvtEncoder::NBIT_EVT_WORD * (block_size - 1 - dummy_size));
-
         while(event_bits.size() != 0)
         {
             if(event_bits.pop(RD53FWEvtEncoder::NBIT_FRAMEHEAD) != RD53FWEvtEncoder::FRAME_HEADER)
@@ -733,21 +677,19 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
 
             if(chipEvt.error_code != 0)
             {
-                evt.eventStatus |= RD53FWEvtEncoder::FWERR;
-                evt.chip_events.clear();
-                break;
+                chipEvt.eventStatus |= RD53EvtEncoder::CHIPFWERR;
+                event_bits.skip(l1a_size * NWORDS_DDR3 * RD53FWEvtEncoder::NBIT_EVT_WORD - 64);
             }
-
-            RD53B::decodeChipData(event_bits.pop_slice(l1a_size * NWORDS_DDR3 * RD53FWEvtEncoder::NBIT_EVT_WORD - 64), chipEvt, options);
-
-            if(chipEvt.eventStatus == RD53FWEvtEncoder::MISSCHIP)
+            else
             {
-                evt.eventStatus |= chipEvt.eventStatus;
-                evt.chip_events.clear();
-                break;
+                // ####################
+                // # Decode chip data #
+                // ####################
+                RD53B::decodeChipData(event_bits.pop_slice(l1a_size * NWORDS_DDR3 * RD53FWEvtEncoder::NBIT_EVT_WORD - 64), chipEvt, options);
+                if(chipEvt.eventStatus != RD53FWEvtEncoder::MISSCHIP) evt.chip_events.push_back(std::move(chipEvt));
             }
 
-            evt.chip_events.push_back(std::move(chipEvt));
+            evt.eventStatus |= chipEvt.eventStatus;
         }
 
         bits.skip(NWORDS_DDR3 * RD53FWEvtEncoder::NBIT_EVT_WORD * dummy_size);
@@ -757,10 +699,9 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
 
         events.push_back(std::move(evt));
         eventStatus |= evt.eventStatus;
-        nEvents++;
     }
 
-    return nEvents;
+    return events.size();
 }
 
 void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Event>& events)

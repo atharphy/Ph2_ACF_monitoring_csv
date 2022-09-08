@@ -30,7 +30,7 @@ void GainOptimization::ConfigureCalibration()
     doDisplay     = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip  = this->findValueInSettings<double>("UpdateChipCfg");
 
-    frontEnd = RD53Shared::firstChip->getMajorityFE(Gain::colStart, Gain::colStop);
+    frontEnd = RD53Shared::firstChip->getFEtype(Gain::colStart, Gain::colStop);
     colStart = std::max(Gain::colStart, frontEnd->colStart);
     colStop  = std::min(Gain::colStop, frontEnd->colStop);
     LOG(INFO) << GREEN << "GainOptimization will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << RESET << BOLDYELLOW << colStart << ", " << colStop
@@ -294,7 +294,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, const float
                         stdDev           = (cnt != 0 ? stdDev / cnt : 0) - avg * avg;
                         stdDev           = (stdDev > 0 ? sqrt(stdDev) : 0);
                         float  newValue  = avg + NSTDEV * stdDev;
-                        size_t targetToT = RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION);
+                        size_t targetToT = frontEnd->maxToTvalue + 1;
 
                         // ########################
                         // # Save best DAC values #

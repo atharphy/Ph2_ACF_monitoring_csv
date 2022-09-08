@@ -24,9 +24,8 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     // #######################################
     // # Programming CLK_DATA_DELAY register #
     // #######################################
-    static const char*               registerClkDataDelayList[] = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK", "CLK_DATA_DELAY_2INV"}; // @CONST@
-    std::pair<std::string, uint16_t> nameAndValue("CLK_DATA_DELAY", pRD53RegMap["CLK_DATA_DELAY"].fValue);
-    bool                             doWriteClkDataDelay = false;
+    static const char* registerClkDataDelayList[] = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK", "CLK_DATA_DELAY_2INV"}; // @CONST@
+    bool               doWriteClkDataDelay        = false;
 
     for(auto i = 0u; i < ArraySize(registerClkDataDelayList); i++)
     {
@@ -35,18 +34,12 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
         {
             doWriteClkDataDelay = true;
 
-            nameAndValue.second |= SplitSpecialRegisters(std::string(cRegItem->first), cRegItem->second.fValue, pRD53RegMap).second;
+            pChip->getRegItem("CLK_DATA_DELAY").fValue = SplitSpecialRegisters(std::string(cRegItem->first), cRegItem->second.fDefValue, pRD53RegMap).second;
 
             if(cRegItem->first == "CLK_DATA_DELAY") break;
         }
     }
-
-    if(doWriteClkDataDelay == true)
-    {
-        RD53Interface::WriteChipReg(pChip, nameAndValue.first, nameAndValue.second, false);
-        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS, RD53ACmd::RD53ACmdEncoder::SYNC), -1);
-        RD53Interface::WriteChipReg(pChip, nameAndValue.first, nameAndValue.second, pVerifLoop);
-    }
+    if(doWriteClkDataDelay == true) RD53AInterface::WriteClokDataDelay(pChip, pChip->getRegItem("CLK_DATA_DELAY").fValue);
 
     // ###############################
     // # Programmig global registers #
@@ -372,6 +365,13 @@ void RD53AInterface::PackWriteBroadcastCommand(const BeBoard* pBoard, const std:
         for(auto cOpticalGroup: *pBoard)
             for(auto cHybrid: *cOpticalGroup)
                 for(auto cChip: *cHybrid) cChip->setReg(regName, data);
+}
+
+void RD53AInterface::WriteClokDataDelay(Chip* pChip, uint16_t value)
+{
+    RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", value, false);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS, RD53ACmd::RD53ACmdEncoder::SYNC), -1);
+    RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", value, true);
 }
 
 } // namespace Ph2_HwInterface

@@ -58,6 +58,9 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
         // LOG(INFO) << BOLDBLUE << "\t--> Succesfully configured chip register " << BOLDYELLOW << regName << RESET; // @TMP@
     }
 
+    // #######################################
+    // # Update both real and fake registers #
+    // #######################################
     pChip->getRegItem(regName).fValue            = data;
     pChip->getRegItem(nameAndValue.first).fValue = nameAndValue.second;
 

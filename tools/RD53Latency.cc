@@ -25,6 +25,7 @@ void Latency::ConfigureCalibration()
     // #######################
     startValue = this->findValueInSettings<double>("LatencyStart");
     stopValue  = this->findValueInSettings<double>("LatencyStop");
+    frontEnd   = RD53Shared::firstChip->getFEtype(PixelAlive::colStart, PixelAlive::colStop);
 
     // ##############################
     // # Initialize dac scan values #
@@ -120,7 +121,7 @@ void Latency::run()
     const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
     ContainerFactory::copyAndInitChip<GenericDataArray<LatencySize>>(*fDetectorContainer, theOccContainer);
-    Latency::scanDac("LATENCY_CONFIG", dacList, &theOccContainer);
+    Latency::scanDac(frontEnd->latencyReg, dacList, &theOccContainer);
 
     // ################
     // # Error report #
@@ -189,7 +190,7 @@ void Latency::analyze()
                     // # Fill latency container and download new DAC values #
                     // ######################################################
                     theLatencyContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
-                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "LATENCY_CONFIG", regVal);
+                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), frontEnd->latencyReg, regVal);
                 }
 }
 

@@ -83,6 +83,10 @@ auto decodeCompressedHitmap(BitView<T>& bits)
     return hits;
 }
 
+// ###########################################
+// # Functions needed for decoding chip data #
+// ###########################################
+
 void decodeStreamHeader(BitView<const uint32_t>& bits, RD53ChipEvent& e, const FormatOptions& options)
 {
     if(options.enableBCID) e.bc_id = bits.pop(RD53BEvtEncoder::NBIT_BCID);
@@ -96,8 +100,8 @@ void decodeChipId(uint8_t chipId, size_t i, RD53ChipEvent& e, size_t nWords)
     else if(e.chip_id_mod4 != chipId)
     {
         e.eventStatus |= RD53EvtEncoder::CHIPID;
-        throw std::runtime_error("Found conflicting chip ID: " + std::to_string(chipId) + " (previously " + std::to_string(e.chip_id_mod4) + ") @ word # " + std::to_string(i) + " / " +
-                                 std::to_string(nWords)); // @TMP@
+        // throw std::runtime_error("Found conflicting chip ID: " + std::to_string(chipId) + " (previously " + std::to_string(e.chip_id_mod4) + ") @ word # " + std::to_string(i) + " / " +
+        //                          std::to_string(nWords));
     }
 }
 
@@ -132,9 +136,7 @@ void RD53B::decodeChipData(BitView<const uint32_t> bits, RD53ChipEvent& e, const
     const auto                                               eventStream     = decodeEventStream(bits, e, options);
     auto                                                     eventStreamView = bit_view(eventStream);
 
-    if(eventStreamView.size() != 0)
-        e.eventStatus = RD53EvtEncoder::CHIPGOOD;
-    else
+    if(eventStreamView.size() == 0)
     {
         e.eventStatus = RD53FWEvtEncoder::MISSCHIP;
         return;
@@ -145,30 +147,23 @@ void RD53B::decodeChipData(BitView<const uint32_t> bits, RD53ChipEvent& e, const
 
     while(true)
     {
+        // ##########################
+        // # End-of-data conditions #
+        // ##########################
         if(eventStreamView.size() < 6) return;
-
         size_t ccol = eventStreamView.pop(RD53BEvtEncoder::NBIT_CCOL);
         if(ccol == 0) return;
 
-        if(RD53Constants::NROW_CORE * (ccol - 1) >= RD53B::NCOLS)
-        {
-            e.eventStatus |= RD53EvtEncoder::CHIPPIX;
-            throw std::runtime_error("Invalid column: " + std::to_string(RD53Constants::NROW_CORE * (ccol - 1))); // @TMP@
-        }
+        if(RD53Constants::NROW_CORE * (ccol - 1) >= RD53B::NCOLS) e.eventStatus |= RD53EvtEncoder::CHIPPIX;
 
         bool isLast = false;
         while(isLast == false)
         {
-            isLast      = eventStreamView.pop(1);
-            size_t qrow = eventStreamView.pop(1) ? last_qrow[ccol - 1] + 1 : eventStreamView.pop(8);
-
-            if(2 * qrow >= RD53B::NROWS)
-            {
-                e.eventStatus |= RD53EvtEncoder::CHIPPIX;
-                throw std::runtime_error("Invalid row: " + std::to_string(2 * qrow)); // @TMP@
-            }
-
+            isLast              = eventStreamView.pop(1);
+            size_t qrow         = eventStreamView.pop(1) ? last_qrow[ccol - 1] + 1 : eventStreamView.pop(8);
             last_qrow[ccol - 1] = qrow;
+
+            if(2 * qrow >= RD53B::NROWS) e.eventStatus |= RD53EvtEncoder::CHIPPIX;
 
             auto hitmap = decodeCompressedHitmap(eventStreamView);
             for(size_t row = 0; row < 2; row++)
@@ -179,11 +174,7 @@ void RD53B::decodeChipData(BitView<const uint32_t> bits, RD53ChipEvent& e, const
                         if(options.enableToT == true)
                         {
                             tot = eventStreamView.pop(RD53BEvtEncoder::NBIT_TOT);
-                            if(tot == RD53BEvtEncoder::INVALID_TOT)
-                            {
-                                e.eventStatus |= RD53EvtEncoder::CHIPTOT;
-                                throw std::runtime_error("Invalid tot value: " + std::to_string(RD53BEvtEncoder::INVALID_TOT)); // @TMP@
-                            }
+                            if(tot == RD53Shared::setBits(RD53BEvtEncoder::NBIT_TOT)) e.eventStatus |= RD53EvtEncoder::CHIPTOT;
                         }
 
                         e.hit_data.emplace_back(qrow * 2 + row, (ccol - 1) * RD53Constants::NROW_CORE + col, tot);

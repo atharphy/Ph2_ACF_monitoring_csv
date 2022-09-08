@@ -421,7 +421,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     auto& theBeBoardFW = this->fBeBoardFWMap[pBoard->getId()];
 
     static_cast<RD53FWInterface*>(theBeBoardFW)
-        ->SetAndConfigureFastCommands(pBoard, nTRIGxEvent, injType, injLatency, nClkDelays, RD53Shared::firstChip->getMajorityFE(colStart, colStart) == &RD53A::SYNC);
+        ->SetAndConfigureFastCommands(pBoard, nTRIGxEvent, injType, injLatency, nClkDelays, RD53Shared::firstChip->getFEtype(colStart, colStart) == &RD53A::SYNC);
     LOG(INFO) << CYAN << "================== Done ==================" << RESET;
 
     // ########################

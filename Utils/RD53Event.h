@@ -71,9 +71,8 @@ const uint16_t EMPTY      = 0x0002; // Event status Empty event
 const uint16_t NOEVHEADER = 0x0004; // Event status No event headear found in data
 const uint16_t INCOMPLETE = 0x0008; // Event status Incomplete event header
 const uint16_t L1A        = 0x0010; // Event status L1A counter mismatch
-const uint16_t FWERR      = 0x0020; // Event status Firmware error
-const uint16_t NOFRHEADER = 0x0040; // Event status No frame header found in data
-const uint16_t MISSCHIP   = 0x0080; // Event status Chip data are missing
+const uint16_t NOFRHEADER = 0x0020; // Event status No frame header found in data
+const uint16_t MISSCHIP   = 0x0040; // Event status Chip data are missing
 } // namespace RD53FWEvtEncoder
 
 namespace Ph2_HwInterface
@@ -147,6 +146,7 @@ class RD53Event : public Ph2_HwInterface::Event
 
     static void clearEventContainer(Ph2_HwDescription::BeBoard& theBoard, DetectorDataContainer& theContainer);
     static void addBoardInfo2Events(const Ph2_HwDescription::BeBoard* pBoard, std::vector<RD53Event>& decodedEvents);
+    static bool findEventStarts(const std::vector<uint32_t>& data, std::vector<size_t>& eventStarts, uint16_t& eventStatus);
     static void ForkDecodingThreads();
     static void JoinDecodingThreads();
     static void DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint16_t& eventStatus);
