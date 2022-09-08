@@ -42,13 +42,13 @@ class RD53Interface : public ReadoutChipInterface
     bool     ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
     bool     MaskAllChannels(Ph2_HwDescription::ReadoutChip* pChip, bool mask, bool pVerifLoop = true) override;
     bool     maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop = false) override;
-    void     producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
+    // #############################
+
     // ##################
     // # PRBS generator #
     // ##################
     void StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip);
     void StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip);
-    // #############################
 
     virtual void Reset(Ph2_HwDescription::ReadoutChip* pChip, const size_t resetType, const size_t duration = 0x4) = 0;
     virtual void ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip);

@@ -359,7 +359,7 @@ void RD53AInterface::PackWriteCommand(Chip* pChip, const std::string& regName, u
 
 void RD53AInterface::PackWriteBroadcastCommand(const BeBoard* pBoard, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg)
 {
-    RD53BCmd::serialize(RD53ACmd::WrReg{RD53AConstants::BROADCAST_CHIPID, RD53Shared::firstChip->getRegItem(regName).fAddress, data}, chipCommandList);
+    RD53ACmd::serialize(RD53ACmd::WrReg{RD53AConstants::BROADCAST_CHIPID, RD53Shared::firstChip->getRegItem(regName).fAddress, data}, chipCommandList);
 
     if(updateReg == true)
         for(auto cOpticalGroup: *pBoard)

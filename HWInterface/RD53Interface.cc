@@ -71,8 +71,8 @@ void RD53Interface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std:
 {
     this->setBoard(pBoard->getId());
 
-    std::pair<std::string, uint16_t> nameAndValue(SplitSpecialRegisters(regName, data, RD53Shared::firstChip->getRegMap()));
-    std::vector<uint16_t>            cmdStream;
+    auto                  nameAndValue(SplitSpecialRegisters(regName, data, RD53Shared::firstChip->getRegMap()));
+    std::vector<uint16_t> cmdStream;
     PackWriteBroadcastCommand(pBoard, nameAndValue.first, nameAndValue.second, cmdStream);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, -1);
 
@@ -138,13 +138,6 @@ bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
     WriteRD53Mask(pRD53, true, false);
 
     return true;
-}
-
-void RD53Interface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
-{
-    StartPRBSpattern(pChip);
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-    StopPRBSpattern(pChip);
 }
 
 void RD53Interface::ChipErrorReport(ReadoutChip* pChip)

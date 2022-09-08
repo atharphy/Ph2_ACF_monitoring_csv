@@ -327,7 +327,7 @@ void RD53::disableAllPixels()
     std::fill(fPixelsMask.HitBus.begin(), fPixelsMask.HitBus.end(), false);
 }
 
-size_t RD53::getNbMaskedPixels() { return std::count(fPixelsMask.Enable.begin(), fPixelsMask.Enable.begin(), 0); }
+size_t RD53::getNbMaskedPixels() { return std::count(fPixelsMask.Enable.begin(), fPixelsMask.Enable.end(), false); }
 
 void RD53::enablePixel(unsigned int row, unsigned int col, bool enable)
 {
