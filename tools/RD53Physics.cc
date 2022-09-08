@@ -272,8 +272,8 @@ void Physics::fillDataContainer(BeBoard& theBoard)
                 for(auto i = 1u; i < cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.size(); i++)
                 {
                     int deltaBCID = cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1[i] - cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1[i - 1];
-                    deltaBCID += (deltaBCID >= 0 ? 0 : BCIDsize);
-                    if(deltaBCID >= int(BCIDsize))
+                    deltaBCID += (deltaBCID >= 0 ? 0 : frontEnd->maxBCIDvalue + 1);
+                    if(deltaBCID >= int(frontEnd->maxBCIDvalue))
                         LOG(ERROR) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaBCID out of range: " << BOLDYELLOW << deltaBCID << RESET;
                     else
                         theBCIDContainer.at(cBoard->getIndex())
@@ -287,8 +287,8 @@ void Physics::fillDataContainer(BeBoard& theBoard)
                 for(auto i = 1u; i < cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.size(); i++)
                 {
                     int deltaTrgID = cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2[i] - cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2[i - 1];
-                    deltaTrgID += (deltaTrgID >= 0 ? 0 : TrgIDsize);
-                    if(deltaTrgID >= int(TrgIDsize))
+                    deltaTrgID += (deltaTrgID >= 0 ? 0 : frontEnd->maxTRIGIDvalue + 1);
+                    if(deltaTrgID >= int(frontEnd->maxTRIGIDvalue))
                         LOG(ERROR) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaTrgID out of range: " << BOLDYELLOW << deltaTrgID << RESET;
                     else
                         theTrgIDContainer.at(cBoard->getIndex())
