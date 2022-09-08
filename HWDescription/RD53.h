@@ -94,6 +94,8 @@ class RD53 : public ReadoutChip
         const char* latencyReg;
         size_t      nTDACvalues;
         size_t      maxToTvalue;
+        size_t      maxBCIDvalue;
+        size_t      maxTRIGIDvalue;
         size_t      colStart;
         size_t      colStop;
     };

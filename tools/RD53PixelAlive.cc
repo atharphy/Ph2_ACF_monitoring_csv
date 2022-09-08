@@ -32,6 +32,7 @@ void PixelAlive::ConfigureCalibration()
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
+    frontEnd       = RD53Shared::firstChip->getFEtype(colStart, colStop);
 
     // ################################
     // # Custom channel group handler #
@@ -279,8 +280,8 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                                  ->at(cChip->getIndex())
                                                  ->getSummary<GenericDataVector, OccupancyAndPh>()
                                                  .data1[i - 1];
-                        deltaBCID += (deltaBCID >= 0 ? 0 : BCIDsize);
-                        if(deltaBCID >= int(BCIDsize))
+                        deltaBCID += (deltaBCID >= 0 ? 0 : frontEnd->maxBCIDvalue + 1);
+                        if(deltaBCID >= int(frontEnd->maxBCIDvalue))
                             LOG(ERROR) << BOLDBLUE << "[PixelAlive::analyze] " << BOLDRED << "deltaBCID out of range: " << BOLDYELLOW << deltaBCID << RESET;
                         else
                             theBCIDContainer.at(cBoard->getIndex())
@@ -311,8 +312,8 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                                   ->at(cChip->getIndex())
                                                   ->getSummary<GenericDataVector, OccupancyAndPh>()
                                                   .data2[i - 1];
-                        deltaTrgID += (deltaTrgID >= 0 ? 0 : TrgIDsize);
-                        if(deltaTrgID >= int(TrgIDsize))
+                        deltaTrgID += (deltaTrgID >= 0 ? 0 : frontEnd->maxTRIGIDvalue + 1);
+                        if(deltaTrgID > int(frontEnd->maxTRIGIDvalue))
                             LOG(ERROR) << BOLDBLUE << "[PixelAlive::analyze] " << BOLDRED << "deltaTrgID out of range: " << BOLDYELLOW << deltaTrgID << RESET;
                         else
                             theTrgIDContainer.at(cBoard->getIndex())

@@ -45,7 +45,16 @@ class RD53B : public RD53
     static constexpr size_t NROWS = 336; // Total number of rows
     static constexpr size_t NCOLS = 432; // Total number of columns
 
-    static constexpr FrontEnd CROC = {"CROC", "DAC_GDAC_M_LIN", "DAC_KRUM_CURR_LIN", "TriggerConfig", 32, RD53Shared::setBits(RD53BEvtEncoder::NBIT_TOT) - 1, 0, RD53B::NCOLS - 1};
+    static constexpr FrontEnd CROC = {"CROC",
+                                      "DAC_GDAC_M_LIN",
+                                      "DAC_KRUM_CURR_LIN",
+                                      "TriggerConfig",
+                                      32,
+                                      RD53Shared::setBits(RD53BEvtEncoder::NBIT_TOT) - 1,
+                                      RD53Shared::setBits(RD53BEvtEncoder::NBIT_BCID),
+                                      RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID),
+                                      0,
+                                      RD53B::NCOLS - 1};
 
     static void decodeChipData(BitView<const uint32_t> bits, Ph2_HwInterface::RD53ChipEvent& e, const Ph2_HwInterface::FormatOptions& options = {});
 
