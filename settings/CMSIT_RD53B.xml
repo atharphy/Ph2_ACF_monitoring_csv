@@ -103,6 +103,9 @@
             EnIsolatedHitRemoval_2   =     "0"
             EnIsolatedHitRemoval_3   =     "0"
 
+            HIT_SAMPLE_MODE          =     "1"
+            EN_SEU_COUNT             =     "0"
+
             LOCKLOSS_CNT             =     "0"
             BITFLIP_WNG_CNT          =     "0"
             BITFLIP_ERR_CNT          =     "0"

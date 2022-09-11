@@ -266,7 +266,10 @@ std::pair<std::string, uint16_t> RD53BInterface::SplitSpecialRegisters(std::stri
 
                                                                                        {"CAL_EDGE_FINE_DELAY", {"CalibrationConfig", 0}},
                                                                                        {"ANALOG_INJ_MODE", {"CalibrationConfig", 6}},
-                                                                                       {"DIGITAL_INJ_EN", {"CalibrationConfig", 7}}};
+                                                                                       {"DIGITAL_INJ_EN", {"CalibrationConfig", 7}},
+
+                                                                                       {"HIT_SAMPLE_MODE", {"PIX_MODE", 3}},
+                                                                                       {"EN_SEU_COUNT", {"PIX_MODE", 4}}};
 
     auto it = specialRegMap.find(regName);
     if(it == specialRegMap.end())

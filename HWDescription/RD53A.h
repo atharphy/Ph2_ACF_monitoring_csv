@@ -34,7 +34,7 @@ const uint8_t NBIT_CCOL   = 6;   // Number of core column bits
 namespace RD53AConstants
 {
 const uint8_t  BROADCAST_CHIPID    = 0x08; // Broadcast chip ID used to send the command to multiple chips
-const uint8_t  AUTO_INCREMENT_MASK = 0x18; // Auto-increment mask bits
+const uint8_t  AUTO_INCREMENT_MASK = 0x08; // Auto-increment mask bits
 const uint16_t GLOBAL_PULSE_ADDR   = 0x2C; // Global Pulse Route regiser address
 } // namespace RD53AConstants
 
