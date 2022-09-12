@@ -348,10 +348,10 @@ void ClockDelay::writeClkDelaySequence(const Ph2_HwDescription::BeBoard* pBoard,
     // # Move data and clock phases of the same amount #
     // #################################################
     auto clk_delay = pChip->getRegItem("CLK_DATA_DELAY_CLK").fValue;
-    auto nameAndValue(static_cast<RD53Interface*>(this->fReadoutChipInterface)->SplitSpecialRegisters("CLK_DATA_DELAY_CLK", value % maxClkValue, RD53Shared::firstChip->getRegMap()));
+    auto nameAndValue(static_cast<RD53Interface*>(this->fReadoutChipInterface)->SetSpecialRegister("CLK_DATA_DELAY_CLK", value % maxClkValue, RD53Shared::firstChip->getRegMap()));
     pChip->getRegItem("CLK_DATA_DELAY").fValue = nameAndValue.second;
     auto data_delay                            = (pChip->getRegItem("CLK_DATA_DELAY_DATA").fValue + (value % maxClkValue) - clk_delay) % maxDataValue; // Apply to data the same shift of the clock
-    nameAndValue                               = static_cast<RD53Interface*>(this->fReadoutChipInterface)->SplitSpecialRegisters("CLK_DATA_DELAY_DATA", data_delay, RD53Shared::firstChip->getRegMap());
+    nameAndValue                               = static_cast<RD53Interface*>(this->fReadoutChipInterface)->SetSpecialRegister("CLK_DATA_DELAY_DATA", data_delay, RD53Shared::firstChip->getRegMap());
 
     pChip->getRegItem("CLK_DATA_DELAY_CLK").fValue  = value % maxClkValue;
     pChip->getRegItem("CLK_DATA_DELAY_DATA").fValue = data_delay;

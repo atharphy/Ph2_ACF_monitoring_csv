@@ -34,7 +34,7 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
         {
             doWriteClkDataDelay = true;
 
-            pChip->getRegItem("CLK_DATA_DELAY").fValue = SplitSpecialRegisters(std::string(cRegItem->first), cRegItem->second.fDefValue, pRD53RegMap).second;
+            pChip->getRegItem("CLK_DATA_DELAY").fValue = SetSpecialRegister(std::string(cRegItem->first), cRegItem->second.fDefValue, pRD53RegMap).second;
 
             if(cRegItem->first == "CLK_DATA_DELAY") break;
         }
@@ -133,51 +133,41 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53AInterface::ReadRD53Reg(ReadoutCh
 {
     this->setBoard(pChip->getBeBoardId());
 
-    RD53Interface::SendCommand(pChip, RD53ACmd::RdReg{pChip->getId(), pChip->getRegItem(regName).fAddress});
+    auto nameAndValue(SetSpecialRegister(regName, 0, RD53Shared::firstChip->getRegMap()));
+    RD53Interface::SendCommand(pChip, RD53ACmd::RdReg{pChip->getId(), pChip->getRegItem(nameAndValue.first).fAddress});
     auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip);
 
     for(auto i = 0u; i < regReadback.size(); i++)
-        // Removing bit related to PIX_PORTAL register identification
-        regReadback[i].first = regReadback[i].first & static_cast<uint16_t>(RD53Shared::setBits(RD53Constants::NBIT_ADDR));
+    {
+        regReadback[i].first  = regReadback[i].first & static_cast<uint16_t>(RD53Shared::setBits(RD53Constants::NBIT_ADDR)); // Removing bit related to PIX_PORTAL register identification
+        regReadback[i].second = RD53AInterface::GetSpecialRegisterValue(regName, regReadback[i].second, RD53Shared::firstChip->getRegMap());
+    }
 
     return regReadback;
 }
 
-std::pair<std::string, uint16_t> RD53AInterface::SplitSpecialRegisters(std::string regName, uint16_t value, ChipRegMap& pRD53RegMap)
+std::pair<std::string, uint16_t> RD53AInterface::SetSpecialRegister(std::string regName, uint16_t value, ChipRegMap& pRD53RegMap)
 {
-    static const std::map<std::string, RD53Interface::SpecialRegInfo> specialRegMap = {{"CDR_CONFIG_SEL_SER_CLK", {"CDR_CONFIG", 0}},
-
-                                                                                       {"CLK_DATA_DELAY_DATA", {"CLK_DATA_DELAY", 0}},
-                                                                                       {"CLK_DATA_DELAY_CLK", {"CLK_DATA_DELAY", 4}},
-                                                                                       {"CLK_DATA_DELAY_2INV", {"CLK_DATA_DELAY", 5}},
-
-                                                                                       {"MONITOR_CONFIG_ADC", {"MONITOR_CONFIG", 0}},
-                                                                                       {"MONITOR_CONFIG_BG", {"MONITOR_CONFIG", 6}},
-
-                                                                                       {"VOLTAGE_TRIM_DIG", {"VOLTAGE_TRIM", 0}},
-                                                                                       {"VOLTAGE_TRIM_ANA", {"VOLTAGE_TRIM", 5}},
-
-                                                                                       {"CML_CONFIG_EN_LANE", {"CML_CONFIG", 0}},
-                                                                                       {"CML_CONFIG_SER_EN_TAP", {"CML_CONFIG", 4}},
-                                                                                       {"CML_CONFIG_SER_INV_TAP", {"CML_CONFIG", 6}},
-
-                                                                                       {"SER_SEL_OUT_0", {"SER_SEL_OUT", 0}},
-                                                                                       {"SER_SEL_OUT_1", {"SER_SEL_OUT", 2}},
-                                                                                       {"SER_SEL_OUT_2", {"SER_SEL_OUT", 4}},
-                                                                                       {"SER_SEL_OUT_3", {"SER_SEL_OUT", 6}},
-
-                                                                                       {"CAL_EDGE_FINE_DELAY", {"INJECTION_SELECT", 0}},
-                                                                                       {"DIGITAL_INJ_EN", {"INJECTION_SELECT", 4}},
-                                                                                       {"ANALOG_INJ_MODE", {"INJECTION_SELECT", 5}}};
-
-    auto it = specialRegMap.find(regName);
-    if(it == specialRegMap.end())
+    auto it = RD53AInterface::specialRegMap.find(regName);
+    if(it == RD53AInterface::specialRegMap.end())
         return {regName, value};
     else
     {
         ChipRegItem& specialReg = pRD53RegMap.at(regName);
         ChipRegItem& Reg        = pRD53RegMap.at(it->second.regName);
         return {it->second.regName, RD53Interface::SetFieldValue(Reg.fValue, value, it->second.start, specialReg.fBitSize)};
+    }
+}
+
+uint16_t RD53AInterface::GetSpecialRegisterValue(std::string regName, uint16_t value, ChipRegMap& pRD53RegMap)
+{
+    auto it = RD53AInterface::specialRegMap.find(regName);
+    if(it == RD53AInterface::specialRegMap.end())
+        return value;
+    else
+    {
+        ChipRegItem& specialReg = pRD53RegMap.at(regName);
+        return RD53Interface::GetFieldValue(value, it->second.start, specialReg.fBitSize);
     }
 }
 

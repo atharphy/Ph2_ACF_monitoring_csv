@@ -19,7 +19,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
 {
     this->setBoard(pChip->getBeBoardId());
 
-    auto                  nameAndValue(SplitSpecialRegisters(regName, data, RD53Shared::firstChip->getRegMap()));
+    auto                  nameAndValue(SetSpecialRegister(regName, data, RD53Shared::firstChip->getRegMap()));
     std::vector<uint16_t> cmdStream;
     PackWriteCommand(pChip, nameAndValue.first, nameAndValue.second, cmdStream, pVerifLoop);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());
@@ -71,7 +71,7 @@ void RD53Interface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std:
 {
     this->setBoard(pBoard->getId());
 
-    auto                  nameAndValue(SplitSpecialRegisters(regName, data, RD53Shared::firstChip->getRegMap()));
+    auto                  nameAndValue(SetSpecialRegister(regName, data, RD53Shared::firstChip->getRegMap()));
     std::vector<uint16_t> cmdStream;
     PackWriteBroadcastCommand(pBoard, nameAndValue.first, nameAndValue.second, cmdStream);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, -1);
@@ -157,8 +157,14 @@ void RD53Interface::ChipErrorReport(ReadoutChip* pChip)
 
 uint16_t RD53Interface::SetFieldValue(uint16_t regValue, uint16_t fieldValue, uint8_t start, uint8_t size)
 {
-    uint16_t mask = ((1 << (size)) - 1) << start;
+    uint16_t mask = ((1 << size) - 1) << start;
     return regValue ^ ((regValue ^ (fieldValue << start)) & mask);
+}
+
+uint16_t RD53Interface::GetFieldValue(uint16_t regValue, uint8_t start, uint8_t size)
+{
+    uint16_t mask = (1 << size) - 1;
+    return (regValue >> start) & mask;
 }
 
 // ##################

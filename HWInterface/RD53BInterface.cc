@@ -67,7 +67,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
         {
             doWriteClkDataDelay = true;
 
-            pChip->getRegItem("CLK_DATA_DELAY").fValue = SplitSpecialRegisters(std::string(cRegItem->first), cRegItem->second.fDefValue, pRD53RegMap).second;
+            pChip->getRegItem("CLK_DATA_DELAY").fValue = SetSpecialRegister(std::string(cRegItem->first), cRegItem->second.fDefValue, pRD53RegMap).second;
 
             if(cRegItem->first == "CLK_DATA_DELAY") break;
         }
@@ -234,51 +234,41 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53BInterface::ReadRD53Reg(ReadoutCh
 {
     this->setBoard(pChip->getBeBoardId());
 
+    auto nameAndValue(SetSpecialRegister(regName, 0, RD53Shared::firstChip->getRegMap()));
     RD53Interface::SendCommand(pChip, RD53BCmd::RdReg{pChip->getId(), pChip->getRegItem(regName).fAddress});
     auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip);
 
     for(auto i = 0u; i < regReadback.size(); i++)
-        // Removing bit related to PIX_PORTAL register identification
-        regReadback[i].first = regReadback[i].first & static_cast<uint16_t>(RD53Shared::setBits(RD53Constants::NBIT_ADDR));
+    {
+        regReadback[i].first  = regReadback[i].first & static_cast<uint16_t>(RD53Shared::setBits(RD53Constants::NBIT_ADDR)); // Removing bit related to PIX_PORTAL register identification
+        regReadback[i].second = RD53BInterface::GetSpecialRegisterValue(regName, regReadback[i].second, RD53Shared::firstChip->getRegMap());
+    }
 
     return regReadback;
 }
 
-std::pair<std::string, uint16_t> RD53BInterface::SplitSpecialRegisters(std::string regName, uint16_t value, ChipRegMap& pRD53RegMap)
+std::pair<std::string, uint16_t> RD53BInterface::SetSpecialRegister(std::string regName, uint16_t value, ChipRegMap& pRD53RegMap)
 {
-    static const std::map<std::string, RD53Interface::SpecialRegInfo> specialRegMap = {{"CDR_CONFIG_SEL_SER_CLK", {"CDR_CONFIG", 0}},
-
-                                                                                       {"CLK_DATA_DELAY_DATA", {"CLK_DATA_DELAY", 0}},
-                                                                                       {"CLK_DATA_DELAY_CLK", {"CLK_DATA_DELAY", 7}},
-
-                                                                                       {"MON_ADC_TRIM", {"MON_ADC", 0}},
-
-                                                                                       {"VOLTAGE_TRIM_DIG", {"VOLTAGE_TRIM", 0}},
-                                                                                       {"VOLTAGE_TRIM_ANA", {"VOLTAGE_TRIM", 4}},
-
-                                                                                       {"CML_CONFIG_SER_EN_TAP", {"CML_CONFIG", 4}},
-                                                                                       {"CML_CONFIG_SER_INV_TAP", {"CML_CONFIG", 6}},
-
-                                                                                       {"SER_SEL_OUT_0", {"SER_SEL_OUT", 0}},
-                                                                                       {"SER_SEL_OUT_1", {"SER_SEL_OUT", 2}},
-                                                                                       {"SER_SEL_OUT_2", {"SER_SEL_OUT", 4}},
-                                                                                       {"SER_SEL_OUT_3", {"SER_SEL_OUT", 6}},
-
-                                                                                       {"CAL_EDGE_FINE_DELAY", {"CalibrationConfig", 0}},
-                                                                                       {"ANALOG_INJ_MODE", {"CalibrationConfig", 6}},
-                                                                                       {"DIGITAL_INJ_EN", {"CalibrationConfig", 7}},
-
-                                                                                       {"HIT_SAMPLE_MODE", {"PIX_MODE", 3}},
-                                                                                       {"EN_SEU_COUNT", {"PIX_MODE", 4}}};
-
-    auto it = specialRegMap.find(regName);
-    if(it == specialRegMap.end())
+    auto it = RD53BInterface::specialRegMap.find(regName);
+    if(it == RD53BInterface::specialRegMap.end())
         return {regName, value};
     else
     {
         ChipRegItem& specialReg = pRD53RegMap.at(regName);
         ChipRegItem& Reg        = pRD53RegMap.at(it->second.regName);
         return {it->second.regName, RD53Interface::SetFieldValue(Reg.fValue, value, it->second.start, specialReg.fBitSize)};
+    }
+}
+
+uint16_t RD53BInterface::GetSpecialRegisterValue(std::string regName, uint16_t value, ChipRegMap& pRD53RegMap)
+{
+    auto it = RD53BInterface::specialRegMap.find(regName);
+    if(it == RD53BInterface::specialRegMap.end())
+        return value;
+    else
+    {
+        ChipRegItem& specialReg = pRD53RegMap.at(regName);
+        return RD53Interface::GetFieldValue(value, it->second.start, specialReg.fBitSize);
     }
 }
 

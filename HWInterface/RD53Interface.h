@@ -64,11 +64,12 @@ class RD53Interface : public ReadoutChipInterface
     void SendHybridCommands(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& hybridCommandList);
 
     // ######################################################################################################
-    // # SplitSpecialRegisters                                                                              #
+    // # SetSpecialRegister                                                                                 #
     // # Receives: any register (real or fake) and a value                                                  #
     // # Returns: real register name together with its value containing the input value in the proper field #
     // ######################################################################################################
-    virtual std::pair<std::string, uint16_t> SplitSpecialRegisters(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) = 0;
+    virtual std::pair<std::string, uint16_t> SetSpecialRegister(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap)      = 0;
+    virtual uint16_t                         GetSpecialRegisterValue(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) = 0;
 
   protected:
     virtual void                                       WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault)   = 0;
@@ -87,6 +88,7 @@ class RD53Interface : public ReadoutChipInterface
     }
 
     uint16_t SetFieldValue(uint16_t regValue, uint16_t fieldValue, uint8_t start, uint8_t size);
+    uint16_t GetFieldValue(uint16_t regValue, uint8_t start, uint8_t size);
     struct SpecialRegInfo
     {
         std::string regName;
