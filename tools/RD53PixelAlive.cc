@@ -241,8 +241,24 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                     static_cast<RD53*>(cChip)->enablePixel(row, col, enable);
                                 else if(enable == false)
                                     static_cast<RD53*>(cChip)->setTDAC(row, col, 0);
-                                if(enable == false) nMaskedPixelsPerCalib++;
+                                if(enable == false)
+                                {
+                                    nMaskedPixelsPerCalib++;
+                                    theOccContainer->at(cBoard->getIndex())
+                                        ->at(cOpticalGroup->getIndex())
+                                        ->at(cHybrid->getIndex())
+                                        ->at(cChip->getIndex())
+                                        ->getChannel<OccupancyAndPh>(row, col)
+                                        .fOccupancy = RD53Shared::ISMASKED;
+                                }
                             }
+                            else
+                                theOccContainer->at(cBoard->getIndex())
+                                    ->at(cOpticalGroup->getIndex())
+                                    ->at(cHybrid->getIndex())
+                                    ->at(cChip->getIndex())
+                                    ->getChannel<OccupancyAndPh>(row, col)
+                                    .fOccupancy = RD53Shared::ISDISABLED;
 
                     if(unstuckPixels == false)
                     {
