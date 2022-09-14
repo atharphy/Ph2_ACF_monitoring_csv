@@ -12,7 +12,7 @@
         <Settings
         />
         </lpGBT>
-        <Hybrid Id="0" Status="1" reset="1">
+        <Hybrid Id="0" enable="1" reset="1">
             <Global>
                 <Settings threshold="560" latency="99"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
@@ -186,7 +186,7 @@
               <Settings
               />
             </lpGBT>
-            <Hybrid Id="0" Status="1" reset="1">
+            <Hybrid Id="0" enable="1" reset="1">
                 <Global>
                     <Settings threshold="100" latency="99"/>
                     <TestPulse enable="1" polarity="0" amplitude="0x60" channelgroup="0" delay="0" groundothers="0"/>
@@ -213,7 +213,7 @@
                 <CIC_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_ModuleOT_Run956/" />
                 <CIC2 Id="8" configfile="BE0_OG0_FE0.txt" />
             </Hybrid>
-            <Hybrid Id="1" Status="1" reset="1" >
+            <Hybrid Id="1" enable="1" reset="1" >
                 <Global>
                     <Settings threshold="500" latency="99"/>
                     <TestPulse enable="1" polarity="0" amplitude="0x60" channelgroup="0" delay="0" groundothers="0"/>

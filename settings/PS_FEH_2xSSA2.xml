@@ -4,7 +4,7 @@
       <!-- B14 crate -->
     <connection id="board" uri="chtcp-2.0://hybridtesting.cern.ch:10203?target=192.168.0.9:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
     <OpticalGroup Id="0" FMCId="0" >
-    <Hybrid Id="0" Status="1" >
+    <Hybrid Id="0" enable="1" >
         <Global>
             <CIC enableBend="1" enableLastLine="1" enableSparsification="0" clockFrequency="320"/>
         </Global>

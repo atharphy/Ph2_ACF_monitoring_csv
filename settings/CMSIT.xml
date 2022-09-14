@@ -17,7 +17,7 @@
             />
       </lpGBT>
       -->
-      <Hybrid Id="0" Status="1">
+      <Hybrid Id="0" enable="1">
         <RD53_Files path="${PWD}/" />
 
         <!-- Available Comment fields are: 50x50, 25x100origR0C0, 25x100origR1C0, unknown, combined with dual, quad -->

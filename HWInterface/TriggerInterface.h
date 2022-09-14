@@ -73,10 +73,11 @@ class TriggerInterface : public RegManager
         return;
     }
 
-    uint8_t getTriggerSource() { return fTriggerConfiguration.fTriggerSource; }
-    uint8_t getTriggerRate() { return fTriggerConfiguration.fTriggerRate; }
-    void    setTimeout(uint32_t pTimeout_us){fTimeout_us = pTimeout_us; }
-    uint32_t getTimeout(){ return fTimeout_us; }
+    uint8_t  getTriggerSource() { return fTriggerConfiguration.fTriggerSource; }
+    uint8_t  getTriggerRate() { return fTriggerConfiguration.fTriggerRate; }
+    void     setTimeout(uint32_t pTimeout_us) { fTimeout_us = pTimeout_us; }
+    uint32_t getTimeout() { return fTimeout_us; }
+
   protected:
     uint32_t             fWait_us{10};
     TriggerConfiguration fTriggerConfiguration;
