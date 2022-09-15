@@ -12,9 +12,9 @@
           <Settings
           />
         </lpGBT>
-        <Hybrid Id="0" Status="1" reset="1">
+        <Hybrid Id="0" enable="1" reset="1">
             <Global>
-                <Settings threshold="560" latency="90"/>
+                <Settings threshold="550" latency="91"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
@@ -36,9 +36,9 @@
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC Id="8" configfile="CIC_default.txt" />
         </Hybrid>
-        <Hybrid Id="1" Status="1" reset="1">
+        <Hybrid Id="1" enable="1" reset="1">
             <Global>
-                <Settings threshold="560" latency="90"/>
+                <Settings threshold="550" latency="91"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
@@ -215,8 +215,8 @@
     <Setting name="StubAlignmentThreshold">590</Setting>
     <Setting name="StubAlignmentScanStart">70</Setting>
 
-    <Setting name="StartLatency">70</Setting>
-    <Setting name="LatencyRange">40</Setting>
+    <Setting name="StartLatency">85</Setting>
+    <Setting name="LatencyRange">10</Setting>
 
     <Setting name="TargetVcth">0x78</Setting>
     <Setting name="TargetOffset">0x50</Setting>

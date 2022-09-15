@@ -115,8 +115,18 @@ void BeamTestCheck::Initialise()
 void BeamTestCheck::Running()
 {
     Initialise();
+    CheckWithExternal();
     fSuccess = true;
     Reset();
+}
+
+void BeamTestCheck::Stop()
+{
+    LOG(INFO) << "Stopping BeamTestCheck";
+    writeObjects();
+    dumpConfigFiles();
+    closeFileHandler();
+    LOG(INFO) << "BeamTestCheck stopped.";
 }
 
 void BeamTestCheck::DisableAllFEs()
@@ -2055,7 +2065,7 @@ void BeamTestCheck::PrepareForExternal(BeBoard* pBoard)
     // send a ReSync
     fBeBoardInterface->ChipReSync(pBoard);
 }
-void BeamTestCheck::Stop() {}
+//void BeamTestCheck::Stop() {}
 
 void BeamTestCheck::Pause() {}
 
