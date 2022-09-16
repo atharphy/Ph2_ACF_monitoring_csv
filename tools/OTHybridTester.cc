@@ -911,7 +911,7 @@ bool OTHybridTester::LpGBTCheckClocks()
     bool cStatus = true;
     for(auto cBoard: *fDetectorContainer)
     {
-	fBeBoardInterface->setBoard(cBoard->getId());
+        fBeBoardInterface->setBoard(cBoard->getId());
         if(cBoard->at(0)->flpGBT != nullptr) continue;
         // clk test
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x1);
@@ -949,30 +949,30 @@ bool OTHybridTester::LpGBTCheckClocks()
                     cStatus &= false;
                 }
 
-                std::string cRegName = "";
-                uint16_t cClkTestCounter = 0, cClkRefCounter = 0;
+                std::string cRegName        = "";
+                uint16_t    cClkTestCounter = 0, cClkRefCounter = 0;
                 if(cMapIterator->first == "320_l_Clk_Test")
                 {
-               	    cClkTestCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_1.fe_for_ps_roh_clk_320_l_test_counter");
-                    cClkRefCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_1.fe_for_ps_roh_clk_320_l_ref_counter");
-		}
-                else if (cMapIterator->first == "320_r_Clk_Test")
-		{
-               	    cClkTestCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_2.fe_for_ps_roh_clk_320_r_test_counter");
-                    cClkRefCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_2.fe_for_ps_roh_clk_320_r_ref_counter");
-		}
-                else if (cMapIterator->first == "640_l_Clk_Test")
-		{
-               	    cClkTestCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_3.fe_for_ps_roh_clk_640_l_test_counter");
-                    cClkRefCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_3.fe_for_ps_roh_clk_640_l_ref_counter");
-		}
-                else if (cMapIterator->first == "640_r_Clk_Test")
-		{
-               	    cClkTestCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_4.fe_for_ps_roh_clk_640_r_test_counter");
-                    cClkRefCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_4.fe_for_ps_roh_clk_640_r_ref_counter");
-		}
+                    cClkTestCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_1.fe_for_ps_roh_clk_320_l_test_counter");
+                    cClkRefCounter  = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_1.fe_for_ps_roh_clk_320_l_ref_counter");
+                }
+                else if(cMapIterator->first == "320_r_Clk_Test")
+                {
+                    cClkTestCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_2.fe_for_ps_roh_clk_320_r_test_counter");
+                    cClkRefCounter  = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_2.fe_for_ps_roh_clk_320_r_ref_counter");
+                }
+                else if(cMapIterator->first == "640_l_Clk_Test")
+                {
+                    cClkTestCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_3.fe_for_ps_roh_clk_640_l_test_counter");
+                    cClkRefCounter  = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_3.fe_for_ps_roh_clk_640_l_ref_counter");
+                }
+                else if(cMapIterator->first == "640_r_Clk_Test")
+                {
+                    cClkTestCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_4.fe_for_ps_roh_clk_640_r_test_counter");
+                    cClkRefCounter  = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_4.fe_for_ps_roh_clk_640_r_ref_counter");
+                }
 
-		LOG(DEBUG) << "\t Test Counter = " << +cClkTestCounter << " --- Ref Counter = " << +cClkRefCounter << RESET;
+                LOG(DEBUG) << "\t Test Counter = " << +cClkTestCounter << " --- Ref Counter = " << +cClkRefCounter << RESET;
                 fillSummaryTree(cMapIterator->first, cClkStat);
             }
             cMapIterator++;
