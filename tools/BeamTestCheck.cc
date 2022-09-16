@@ -115,7 +115,12 @@ void BeamTestCheck::Initialise()
 void BeamTestCheck::Running()
 {
     Initialise();
+
+    uint32_t standardNevent = fNevents;
+    fNevents = findValueInSettings<double>("NeventsBeamTestCheck", 10);
     CheckWithExternal();
+    fNevents = standardNevent;
+
     fSuccess = true;
     Reset();
 }
@@ -300,6 +305,8 @@ void BeamTestCheck::CheckWithExternal(uint8_t pContinousReadout)
     fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
     fDQMHistogrammer.fillStubLatencyPlots(fStubLatencyContainer);
     fDQMHistogrammer.fillTriggerTDCPlots(fTDCContainer);
+    fDQMHistogrammer.fillHitMaps(fHitMap, fStubMap, fHitContainerTDC);
+    //void fillHitMaps(DetectorDataContainer& theHitMap, DetectorDataContainer& theStubMap, DetectorDataContainer& theTDCMap);
 #endif
 
     // validate

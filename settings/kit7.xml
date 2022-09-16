@@ -8,18 +8,18 @@
     <!-- skeleton -->
     <OpticalGroup Id="0" FMCId="0" reset="1">
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-        <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1.txt">
+        <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
           <Settings
           />
         </lpGBT>
         <Hybrid Id="0" enable="1" reset="1">
             <Global>
-                <Settings threshold="550" latency="91"/>
+                <Settings threshold="560" latency="99"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
                 <ChannelMask disable=""/>
-                <CIC enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
 
             </Global>
 
@@ -34,16 +34,16 @@
             <CBC Id="7" configfile="CBC3_default.txt" /> 
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC Id="8" configfile="CIC_default.txt" />
+            <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
-        <Hybrid Id="1" enable="1" reset="1">
+        <Hybrid Id="1" enable="1" reset="1" i2cMaster="1">
             <Global>
-                <Settings threshold="550" latency="91"/>
+                <Settings threshold="560" latency="99"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
                 <ChannelMask disable=""/>
-                <CIC enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+                <CIC2 enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
 
             </Global>
 
@@ -58,7 +58,7 @@
             <CBC Id="7" configfile="CBC3_default.txt" /> 
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
-            <CIC Id="8" configfile="CIC_default.txt" />
+            <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
     </OpticalGroup>
     <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
@@ -171,9 +171,9 @@
                 <Register name="threshold"> 50 </Register>
             </Register>
         <Register name="ch2">
-                <Register name="out_enable"> 0 </Register>
-                <Register name="term_enable"> 1 </Register>
-                <Register name="threshold"> 50 </Register>
+                <Register name="out_enable"> 1 </Register>
+                <Register name="term_enable"> 0 </Register>
+                <Register name="threshold"> 0 </Register>
             </Register>
         <Register name="ch3">
                 <Register name="out_enable"> 1 </Register>
@@ -203,8 +203,7 @@
 
 <Settings>
     <!--PedestalEqualization-->
-    <Setting name="Nevents">100</Setting>
-    <Setting name="NeventsBeamTestCheck">1000</Setting>
+    <Setting name="Nevents">10000</Setting>
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
@@ -217,7 +216,7 @@
     <Setting name="StubAlignmentScanStart">70</Setting>
 
     <Setting name="StartLatency">85</Setting>
-    <Setting name="LatencyRange">10</Setting>
+    <Setting name="LatencyRange">20</Setting>
 
     <Setting name="TargetVcth">0x78</Setting>
     <Setting name="TargetOffset">0x50</Setting>

@@ -34,8 +34,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 {
     // OT calibrations
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization>("calibration", CalibrationList::CALIBRATION);
-    //Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, BeamTestCheck>("takedata", CalibrationList::TAKEDATA);
-    Register<BeamTestCheck>("takedata", CalibrationList::TAKEDATA);
+    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, BeamTestCheck>("takedata", CalibrationList::TAKEDATA);
+    //Register<BeamTestCheck>("takedata", CalibrationList::TAKEDATA);
     Register<LinkAlignmentOT, CicFEAlignment, PedeNoise>("pedenoise", CalibrationList::PEDENOISE);
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise>("calibrationandpedenoise", CalibrationList::CALIBRATIONANDPEDENOISE);
     Register<LinkAlignmentOT, CicFEAlignment, CalibrationExample>("calibrationexample", CalibrationList::CALIBRATIONEXAMPLE);
