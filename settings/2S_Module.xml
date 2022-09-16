@@ -11,7 +11,7 @@
           <Settings
           />
         </lpGBT>
-        <Hybrid Id="0" Status="1" reset="1">
+        <Hybrid Id="0" enable="1" reset="1">
             <Global>
                 <Settings threshold="720" latency="108"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
@@ -34,7 +34,7 @@
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
-        <Hybrid Id="1" Status="1" reset="1" > <!-- i2cMaster="1"> -->
+        <Hybrid Id="1" enable="1" reset="1" > <!-- i2cMaster="1"> -->
             <Global>
                 <Settings threshold="720" latency="108"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
