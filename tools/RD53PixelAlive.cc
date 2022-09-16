@@ -342,8 +342,6 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                 }
     }
 
-    theOccContainer->resetNormalizationStatus();
-    theOccContainer->normalizeAndAverageContainers(fDetectorContainer, this->getChannelGroupHandlerContainer(), 1);
     return theOccContainer;
 }
 
