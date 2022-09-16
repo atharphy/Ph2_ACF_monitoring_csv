@@ -266,6 +266,13 @@ bool RD53Event::EvtErrorHandler(uint16_t status)
         isGood = false;
     }
 
+    if(status & RD53EvtEncoder::CHIPEOS)
+    {
+        LOG(ERROR) << BOLDRED << "End-of-stream error (EOS bit was 1 before the last word of the event stream or EOS bit was 0 in the last word of the event stream) " << BOLDYELLOW << "--> retry"
+                   << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+    }
+
     return isGood;
 }
 
@@ -620,7 +627,7 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
 {
     auto         bits         = bit_view(data, 0, howMany);
     const size_t n32bitsWords = bits.size() / RD53FWEvtEncoder::NBIT_EVT_WORD;
-    const size_t maxL1Counter = RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID) + 1;
+    const size_t maxL1Counter = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
 
     if(howMany == 0) eventStatus = RD53FWEvtEncoder::EMPTY;
 
@@ -679,23 +686,23 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
             {
                 chipEvt.eventStatus |= RD53EvtEncoder::CHIPFWERR;
                 event_bits.skip(l1a_size * NWORDS_DDR3 * RD53FWEvtEncoder::NBIT_EVT_WORD - 64);
-            }
-            else
-            {
-                // ####################
-                // # Decode chip data #
-                // ####################
-                RD53B::decodeChipData(event_bits.pop_slice(l1a_size * NWORDS_DDR3 * RD53FWEvtEncoder::NBIT_EVT_WORD - 64), chipEvt, options);
-                if(chipEvt.eventStatus != RD53FWEvtEncoder::MISSCHIP) evt.chip_events.push_back(std::move(chipEvt));
+                continue;
             }
 
+            // ####################
+            // # Decode chip data #
+            // ####################
+            RD53B::decodeChipData(event_bits.pop_slice(l1a_size * NWORDS_DDR3 * RD53FWEvtEncoder::NBIT_EVT_WORD - 64), chipEvt, options);
             evt.eventStatus |= chipEvt.eventStatus;
+            if(((chipEvt.eventStatus & RD53EvtEncoder::CHIPEOS) == true) || ((chipEvt.eventStatus & RD53FWEvtEncoder::MISSCHIP) == true)) break;
+            evt.chip_events.push_back(std::move(chipEvt));
         }
 
         bits.skip(NWORDS_DDR3 * RD53FWEvtEncoder::NBIT_EVT_WORD * dummy_size);
 
-        for(auto j = 0u; j < evt.chip_events.size(); j++)
-            if(evt.l1a_counter % maxL1Counter != evt.chip_events[j].trigger_id) evt.eventStatus |= RD53FWEvtEncoder::L1A;
+        if(options.enableTriggerId == true)
+            for(auto j = 0u; j < evt.chip_events.size(); j++)
+                if(evt.l1a_counter % maxL1Counter != evt.chip_events[j].trigger_id) evt.eventStatus |= RD53FWEvtEncoder::L1A;
 
         events.push_back(std::move(evt));
         eventStatus |= evt.eventStatus;

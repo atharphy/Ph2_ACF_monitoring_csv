@@ -98,11 +98,7 @@ void decodeChipId(uint8_t chipId, size_t i, RD53ChipEvent& e, size_t nWords)
     if(i == 0)
         e.chip_id_mod4 = chipId;
     else if(e.chip_id_mod4 != chipId)
-    {
         e.eventStatus |= RD53EvtEncoder::CHIPID;
-        // throw std::runtime_error("Found conflicting chip ID: " + std::to_string(chipId) + " (previously " + std::to_string(e.chip_id_mod4) + ") @ word # " + std::to_string(i) + " / " +
-        //                          std::to_string(nWords));
-    }
 }
 
 auto decodeEventStream(BitView<const uint32_t> bits, RD53ChipEvent& e, const FormatOptions& options)
@@ -117,10 +113,17 @@ auto decodeEventStream(BitView<const uint32_t> bits, RD53ChipEvent& e, const For
 
         if(isLast == true)
         {
-            if(i + 2 < nWords) throw std::runtime_error("The end-of-stream bit was 1 before the last word of the event stream");
+            if(i + 2 < nWords)
+            {
+                e.eventStatus |= RD53EvtEncoder::CHIPEOS;
+                break;
+            }
         }
         else if(i == nWords)
-            throw std::runtime_error("The end-of-stream bit was 0 in the last word of the event stream");
+        {
+            e.eventStatus |= RD53EvtEncoder::CHIPEOS;
+            break;
+        }
 
         if(options.enableChipId) decodeChipId(bits.pop(RD53BEvtEncoder::NBIT_CHIPID), i, e, nWords);
 
@@ -141,6 +144,7 @@ void RD53B::decodeChipData(BitView<const uint32_t> bits, RD53ChipEvent& e, const
         e.eventStatus = RD53FWEvtEncoder::MISSCHIP;
         return;
     }
+    if((e.eventStatus & RD53EvtEncoder::CHIPEOS) == true) return;
 
     decodeStreamHeader(eventStreamView, e, options);
     e.trigger_tag = eventStreamView.pop(RD53BEvtEncoder::NBIT_TRGTAG);
@@ -150,9 +154,9 @@ void RD53B::decodeChipData(BitView<const uint32_t> bits, RD53ChipEvent& e, const
         // ##########################
         // # End-of-data conditions #
         // ##########################
-        if(eventStreamView.size() < 6) return;
+        if(eventStreamView.size() < 6) return; // Good end of chip data
         size_t ccol = eventStreamView.pop(RD53BEvtEncoder::NBIT_CCOL);
-        if(ccol == 0) return;
+        if(ccol == 0) return; // Good end of chip data
 
         if(RD53Constants::NROW_CORE * (ccol - 1) >= RD53B::NCOLS) e.eventStatus |= RD53EvtEncoder::CHIPPIX;
 

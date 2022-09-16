@@ -40,7 +40,7 @@
               DAC_GDAC_M_LIN         =  "450"
               DAC_LDAC_LIN           =  "140"
 
-              VCAL_HIGH              =  "600"
+              VCAL_HIGH              = "2000"
               VCAL_MED               =  "100"
 
               GP_LVDS_ROUTE_0        =    "0"
@@ -212,7 +212,7 @@
     <Setting name="LatencyStop">         511 </Setting>
 
     <Setting name="VCalHstart">          100 </Setting>
-    <Setting name="VCalHstop">           600 </Setting>
+    <Setting name="VCalHstop">          1000 </Setting>
     <Setting name="VCalHnsteps">          50 </Setting>
     <Setting name="VCalMED">             100 </Setting>
 

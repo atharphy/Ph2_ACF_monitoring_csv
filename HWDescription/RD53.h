@@ -49,6 +49,7 @@ const uint16_t CHIPPIX   = 0x0400; // Chip event status Bad pixel row or column
 const uint16_t CHIPTOT   = 0x0800; // Chip event status Invalid TOT value
 const uint16_t CHIPNOHIT = 0x1000; // Chip event status Hit data are missing
 const uint16_t CHIPFWERR = 0x1000; // Chip event status Firmware error
+const uint16_t CHIPEOS   = 0x2000; // Chip event status end-of-stream error
 } // namespace RD53EvtEncoder
 
 // #####################################################################
