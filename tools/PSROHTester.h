@@ -45,7 +45,6 @@ class PSROHTester : public OTHybridTester
     void CheckFastCommands(const std::string& sFastCommandPattern, const std::string& userFilename);
     void CheckHybridInputs(std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters);
     void CheckHybridOutputs(std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters);
-    void CheckClocks();
     void ClearBRAM(const std::string& sBRAMToReset = "ref");
     void ReadCheckAddrBRAM(int iCheckBRAMAddr = 0);
     void ReadRefAddrBRAM(int iRefBRAMAddr = 0);
@@ -61,7 +60,6 @@ class PSROHTester : public OTHybridTester
   private:
     bool FastCommandScope(Ph2_HwDescription::BeBoard* pBoard);
     void CheckFastCommands(Ph2_HwDescription::BeBoard* pBoard, const std::string& sFastCommandPattern, const std::string& userFilename);
-    void CheckClocks(Ph2_HwDescription::BeBoard* pBoard);
     void CheckFastCommandsBRAM(Ph2_HwDescription::BeBoard* pBoard, const std::string& sFastCommandLine);
     void WritePatternToBRAM(Ph2_HwDescription::BeBoard* pBoard, const std::string&);
     void ClearRefBRAM(Ph2_HwDescription::BeBoard* pBoard);

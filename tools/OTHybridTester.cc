@@ -247,7 +247,7 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters, in
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT != nullptr) continue;
-        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.fe_data_player.i2c_slave_reset", 0x01);
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.data_player.i2c_slave_reset", 0x01);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         LOG(DEBUG) << BOLDBLUE << "Reset I2C slave in electrical FC7" << RESET;
     }
@@ -909,12 +909,24 @@ void OTHybridTester::LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFi
 bool OTHybridTester::LpGBTCheckClocks()
 {
     bool cStatus = true;
+    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        if(cBoard->at(0)->flpGBT != nullptr) continue;
-        fBeBoardInterface->setBoard(cBoard->getId());
+	fBeBoardInterface->setBoard(cBoard->getId());
+        if(cBoard->at(0)->flpGBT != nullptr){
+	    std::vector<uint8_t> cClocks = {1,11,6,26};
+	    //std::vector<uint8_t> cClocks = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28};
+            clpGBTInterface->ConfigureClocks(cBoard->at(0)->flpGBT, cClocks, 0, 0 ,0, 0, 0, 0);
+            for(auto cClock : cClocks)
+  	    {
+                uint8_t cClockH = clpGBTInterface->ReadChipReg(cBoard->at(0)->flpGBT, "EPCLK" + std::to_string(cClock) + "ChnCntrH");
+	        LOG(INFO) << BOLDYELLOW << "ClockH register for Clock-" << +cClock << " = " << +cClockH << RESET;
+	    }
+	    continue;
+        }
         // clk test
-        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x01);
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x1);
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x0);
         std::map<std::string, std::string> cClockMap;
 #ifdef __SEH_USB__
         cClockMap = f2SSEHClockMap;
@@ -931,27 +943,52 @@ bool OTHybridTester::LpGBTCheckClocks()
         do
         {
             cClkTestDone = (fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second + "_test_done") == 1);
-            LOG(INFO) << "Waiting for clock test";
             while(!cClkTestDone)
             {
+                LOG(INFO) << "Waiting for clock test" << RESET;
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 cClkTestDone = (fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second + "_test_done") == 1);
             }
             if(cClkTestDone)
             {
                 cClkStat = fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second + "_stat");
-
                 if(cClkStat)
                     LOG(INFO) << cMapIterator->first << " test ->" << BOLDGREEN << " PASSED" << RESET;
                 else
                 {
-                    LOG(ERROR) << cMapIterator->first << " test ->" << BOLDRED << " FAILED" << RESET;
+                    LOG(INFO) << cMapIterator->first << " test ->" << BOLDRED << " FAILED" << RESET;
                     cStatus &= false;
                 }
+
+                std::string cRegName = "";
+                uint16_t cClkTestCounter = 0, cClkRefCounter = 0;
+                if(cMapIterator->first == "320_l_Clk_Test")
+                {
+               	    cClkTestCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_1.fe_for_ps_roh_clk_320_l_test_counter");
+                    cClkRefCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_1.fe_for_ps_roh_clk_320_l_ref_counter");
+		}
+                else if (cMapIterator->first == "320_r_Clk_Test")
+		{
+               	    cClkTestCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_2.fe_for_ps_roh_clk_320_r_test_counter");
+                    cClkRefCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_2.fe_for_ps_roh_clk_320_r_ref_counter");
+		}
+                else if (cMapIterator->first == "640_l_Clk_Test")
+		{
+               	    cClkTestCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_3.fe_for_ps_roh_clk_640_l_test_counter");
+                    cClkRefCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_3.fe_for_ps_roh_clk_640_l_ref_counter");
+		}
+                else if (cMapIterator->first == "640_r_Clk_Test")
+		{
+               	    cClkTestCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_4.fe_for_ps_roh_clk_640_r_test_counter");
+                    cClkRefCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_4.fe_for_ps_roh_clk_640_r_ref_counter");
+		}
+
+		LOG(INFO) << "\t Test Counter = " << +cClkTestCounter << " --- Ref Counter = " << +cClkRefCounter << RESET;
                 fillSummaryTree(cMapIterator->first, cClkStat);
             }
             cMapIterator++;
         } while(cMapIterator != cClockMap.end());
+
         LOG(INFO) << GREEN << "============================" << RESET;
     }
     return cStatus;
