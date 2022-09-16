@@ -909,21 +909,10 @@ void OTHybridTester::LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFi
 bool OTHybridTester::LpGBTCheckClocks()
 {
     bool cStatus = true;
-    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
 	fBeBoardInterface->setBoard(cBoard->getId());
-        if(cBoard->at(0)->flpGBT != nullptr){
-	    std::vector<uint8_t> cClocks = {1,11,6,26};
-	    //std::vector<uint8_t> cClocks = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28};
-            clpGBTInterface->ConfigureClocks(cBoard->at(0)->flpGBT, cClocks, 0, 0 ,0, 0, 0, 0);
-            for(auto cClock : cClocks)
-  	    {
-                uint8_t cClockH = clpGBTInterface->ReadChipReg(cBoard->at(0)->flpGBT, "EPCLK" + std::to_string(cClock) + "ChnCntrH");
-	        LOG(INFO) << BOLDYELLOW << "ClockH register for Clock-" << +cClock << " = " << +cClockH << RESET;
-	    }
-	    continue;
-        }
+        if(cBoard->at(0)->flpGBT != nullptr) continue;
         // clk test
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x1);
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_ctrl.physical_interface_block.multiplexing_bp.check_return_clock", 0x0);
@@ -983,7 +972,7 @@ bool OTHybridTester::LpGBTCheckClocks()
                     cClkRefCounter = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.physical_interface_block.clk_test_debug_4.fe_for_ps_roh_clk_640_r_ref_counter");
 		}
 
-		LOG(INFO) << "\t Test Counter = " << +cClkTestCounter << " --- Ref Counter = " << +cClkRefCounter << RESET;
+		LOG(DEBUG) << "\t Test Counter = " << +cClkTestCounter << " --- Ref Counter = " << +cClkRefCounter << RESET;
                 fillSummaryTree(cMapIterator->first, cClkStat);
             }
             cMapIterator++;
