@@ -149,6 +149,9 @@ void RD53B::decodeChipData(BitView<const uint32_t> bits, RD53ChipEvent& e, const
     decodeStreamHeader(eventStreamView, e, options);
     e.trigger_tag = eventStreamView.pop(RD53BEvtEncoder::NBIT_TRGTAG);
 
+    // ##################
+    // # Decode hit map #
+    // ##################
     while(true)
     {
         // ##########################

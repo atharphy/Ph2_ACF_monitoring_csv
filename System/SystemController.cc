@@ -414,8 +414,6 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     size_t injLatency  = SystemController::findValueInSettings<double>("InjLatency");
     size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays");
     size_t colStart    = SystemController::findValueInSettings<double>("COLstart");
-    bool   resetMask   = SystemController::findValueInSettings<double>("ResetMask");
-    bool   resetTDAC   = SystemController::findValueInSettings<double>("ResetTDAC");
     LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
 
     auto& theBeBoardFW = this->fBeBoardFWMap[pBoard->getId()];
@@ -443,7 +441,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
             LOG(INFO) << BOLDBLUE << "\t--> Configured up and down link mapping in firmware" << RESET;
 
             if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
-            // && (static_cast<RD53lpGBTInterface*>(flpGBTInterface)->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, theBeBoardFW, fReadoutChipInterface) == true))
+            // && (static_cast<RD53lpGBTInterface*>(flpGBTInterface)->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, theBeBoardFW, fReadoutChipInterface) == true)) // @TMP@
             {
                 static_cast<RD53lpGBTInterface*>(flpGBTInterface)->PhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, fReadoutChipInterface);
                 LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;
@@ -484,17 +482,25 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     {
         static_cast<RD53FWInterface*>(theBeBoardFW)->CheckChipCommunication(pBoard);
     }
-    catch(...)
+    catch(const std::exception& e)
     {
-        LOG(INFO) << BOLDRED << "===== Abort =====" << RESET;
+        LOG(WARNING) << BOLDRED << "===== Aborting: " << BOLDYELLOW << e.what() << BOLDRED << " =====" << RESET;
     }
+}
+
+void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
+{
+    // ############################
+    // # Configuration parameters #
+    // ############################
+    bool resetMask = SystemController::findValueInSettings<double>("ResetMask");
+    bool resetTDAC = SystemController::findValueInSettings<double>("ResetTDAC");
 
     // ############################
     // # Configure frontend chips #
     // ############################
     LOG(INFO) << CYAN << "===== Configuring frontend chip registers =====" << RESET;
     for(auto cOpticalGroup: *pBoard)
-    {
         for(auto cHybrid: *cOpticalGroup)
         {
             LOG(INFO) << GREEN << "Configuring chip of hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
@@ -509,11 +515,8 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
                 LOG(INFO) << GREEN << "Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
             }
         }
-    }
-    LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
-    LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
 
-    RD53Event::ForkDecodingThreads();
+    LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
 }
 
 // ######################################
@@ -954,7 +957,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
         fBeBoardInterface->ConfigureBoard(cBoard);
         if(cBoard->getBoardType() == BoardType::D19C)
         {
-            // set board sparisification
+            // Set board sparisification
             // based on what is configured in the fw register
             // read CIC sparsification setting from fW register
             // make sure board is also set to the same thing
@@ -1042,9 +1045,21 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
             LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
         }
         else if(cBoard->getBoardType() == BoardType::RD53)
+        {
             ConfigureIT(cBoard);
+            ConfigureFrontendIT(cBoard);
+
+            // ######################################
+            // # Dispatch threads for data decoding #
+            // ######################################
+            LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
+            RD53Event::ForkDecodingThreads();
+        }
     }
 
+    // ####################
+    // # Start monitoring #
+    // ####################
     if(fDetectorMonitor != nullptr)
     {
         LOG(INFO) << GREEN << "Starting monitoring thread" << RESET;

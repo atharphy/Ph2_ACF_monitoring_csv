@@ -211,8 +211,8 @@
     <Setting name="LatencyStart">          0 </Setting>
     <Setting name="LatencyStop">         511 </Setting>
 
-    <Setting name="VCalHstart">          100 </Setting>
-    <Setting name="VCalHstop">          1000 </Setting>
+    <Setting name="VCalHstart">          300 </Setting>
+    <Setting name="VCalHstop">          1300 </Setting>
     <Setting name="VCalHnsteps">          50 </Setting>
     <Setting name="VCalMED">             100 </Setting>
 

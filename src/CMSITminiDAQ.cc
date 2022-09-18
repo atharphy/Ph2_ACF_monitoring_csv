@@ -13,7 +13,6 @@
 #include "../Utils/MiddlewareInterface.h"
 #include "../Utils/RD53Shared.h"
 #include "../Utils/argvparser.h"
-
 #include "../miniDAQ/CombinedCalibrationFactory.h"
 #include "../tools/RD53BERtest.h"
 #include "../tools/RD53ClockDelay.h"
