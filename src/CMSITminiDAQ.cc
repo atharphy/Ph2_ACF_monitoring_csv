@@ -147,6 +147,9 @@ int main(int argc, char** argv)
     cmd.defineOption("reset", "Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("reset", "r");
 
+    cmd.defineOption("dump", "Dump frontend chips register content", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+    cmd.defineOptionAlternative("dump", "d");
+
     cmd.defineOption("capture", "Capture communication with board (extension .bin)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
     cmd.defineOption("replay", "Replay previously captured communication (extension .bin)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
@@ -329,7 +332,6 @@ int main(int argc, char** argv)
             // ######################################
             // # Reset hardware or read binary file #
             // ######################################
-
             std::stringstream outp;
             mySysCntr.InitializeSettings(configFile, outp);
             mySysCntr.InitializeHw(configFile, outp, false);
@@ -348,7 +350,6 @@ int main(int argc, char** argv)
             // #######################
             // # Initialize Hardware #
             // #######################
-
             LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
             mySysCntr.Configure(configFile);
             LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
