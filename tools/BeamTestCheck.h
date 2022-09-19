@@ -55,6 +55,8 @@ class BeamTestCheck : public OTTool
     void DisableAllFEs();
     void ScanStubLatency(uint8_t pContinousReadout);
     void ScanL1Latency(uint8_t pContinousReadout);
+    void TakeL1Data(uint8_t pContinousReadout);
+
 
     void ConfigureScans(uint8_t pStatusL1, uint8_t pStatusStubs)
     {
