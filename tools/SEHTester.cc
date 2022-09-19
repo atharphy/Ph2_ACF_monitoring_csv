@@ -1242,10 +1242,10 @@ void SEHTester::CheckFastCommands(BeBoard* pBoard, const std::string& sFastComma
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.fe_for_ps_roh_fcmd_test.start_pattern", std::stoi(sFastCommand.c_str(), nullptr, 2));
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.physical_interface_block.fe_for_ps_roh.start_fe_for_ps_roh_fcmd_test", 0x01);
 
-    bool cSSAlFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_SSA_l_test_done") == 1);
-    bool cSSArFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_SSA_r_test_done") == 1);
-    bool cCIClFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_CIC_l_test_done") == 1);
-    bool cCICrFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_CIC_r_test_done") == 1);
+    bool cSSAlFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_test.fe_for_ps_roh_fcmd_SSA_l_test_done") == 1);
+    bool cSSArFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_test.fe_for_ps_roh_fcmd_SSA_r_test_done") == 1);
+    bool cCIClFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_test.fe_for_ps_roh_fcmd_CIC_l_test_done") == 1);
+    bool cCICrFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_test.fe_for_ps_roh_fcmd_CIC_r_test_done") == 1);
 
     LOG(INFO) << GREEN << "============================" << RESET;
     LOG(INFO) << BOLDGREEN << "Fast commands test" << RESET;
@@ -1256,12 +1256,12 @@ void SEHTester::CheckFastCommands(BeBoard* pBoard, const std::string& sFastComma
     while(!cSSAlFCMDCheckDone && NTrials < MAXNRETRY)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        cSSAlFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_SSA_l_test_done") == 1);
+        cSSAlFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_test.fe_for_ps_roh_fcmd_SSA_l_test_done") == 1);
         NTrials++;
     }
     if(cSSAlFCMDCheckDone)
     {
-        bool SSAlFCMDStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_SSA_l_stat");
+        bool SSAlFCMDStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_test.fe_for_ps_roh_fcmd_SSA_l_stat");
         if(SSAlFCMDStat) { LOG(INFO) << "SSA l FCMD test ->" << BOLDGREEN << " PASSED" << RESET; }
         else
         {
@@ -1276,12 +1276,12 @@ void SEHTester::CheckFastCommands(BeBoard* pBoard, const std::string& sFastComma
     while(!cSSArFCMDCheckDone && NTrials < MAXNRETRY)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        cSSArFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_SSA_r_test_done") == 1);
+        cSSArFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_test.fe_for_ps_roh_fcmd_SSA_r_test_done") == 1);
         NTrials++;
     }
     if(cSSArFCMDCheckDone)
     {
-        bool SSArFCMDStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_SSA_r_stat");
+        bool SSArFCMDStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_test.fe_for_ps_roh_fcmd_SSA_r_stat");
         if(SSArFCMDStat) { LOG(INFO) << "SSA r FCMD test ->" << BOLDGREEN << " PASSED" << RESET; }
         else
         {
@@ -1296,12 +1296,12 @@ void SEHTester::CheckFastCommands(BeBoard* pBoard, const std::string& sFastComma
     while(!cCIClFCMDCheckDone && NTrials < MAXNRETRY)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        cCIClFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_CIC_l_test_done") == 1);
+        cCIClFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_test.fe_for_ps_roh_fcmd_CIC_l_test_done") == 1);
         NTrials++;
     }
     if(cCIClFCMDCheckDone)
     {
-        bool CIClFCMDStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_CIC_l_stat");
+        bool CIClFCMDStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_test.fe_for_ps_roh_fcmd_CIC_l_stat");
         if(CIClFCMDStat) { LOG(INFO) << "CIC l FCMD test ->" << BOLDGREEN << " PASSED" << RESET; }
         else
         {
@@ -1316,12 +1316,12 @@ void SEHTester::CheckFastCommands(BeBoard* pBoard, const std::string& sFastComma
     while(!cCICrFCMDCheckDone && NTrials < MAXNRETRY)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        cCICrFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_CIC_r_test_done") == 1);
+        cCICrFCMDCheckDone = (fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_test.fe_for_ps_roh_fcmd_CIC_r_test_done") == 1);
         NTrials++;
     }
     if(cCICrFCMDCheckDone)
     {
-        bool CICrFCMDStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_fcmd_CIC_r_stat");
+        bool CICrFCMDStat = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_test.fe_for_ps_roh_fcmd_CIC_r_stat");
         if(CICrFCMDStat) { LOG(INFO) << "CIC r FCMD test ->" << BOLDGREEN << " PASSED" << RESET; }
         else
         {

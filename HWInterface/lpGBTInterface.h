@@ -214,9 +214,6 @@ class lpGBTInterface : public ChipInterface
                                                    {"TEMP", 14},
                                                    {"VREF/2", 15}};
 
-  protected:
-    const float fClockSpeed = 40e6; // 40 MHz clock for the LpGBT
-
     bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerify = true) override;
 
     // #######################################
@@ -266,6 +263,9 @@ class lpGBTInterface : public ChipInterface
     bool     IsBERTDone(Ph2_HwDescription::Chip* pChip);
     bool     IsBERTEmptyData(Ph2_HwDescription::Chip* pChip);
     uint64_t GetBERTErrors(Ph2_HwDescription::Chip* pChip);
+
+  protected:
+    const float fClockSpeed = 40e6; // 40 MHz clock for the LpGBT
 
     // ##############
     // # LpGBT maps #
