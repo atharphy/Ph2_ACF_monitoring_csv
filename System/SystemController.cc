@@ -655,7 +655,7 @@ void SystemController::InitializeOT(BeBoard* pBoard)
 
 void SystemController::ConfigureOT(BeBoard* pBoard)
 {
-    // hard reset Chips on hybrid if lpGBT is there; if no lpGBT this
+    // Hard reset Chips on hybrid if lpGBT is there; if no lpGBT this
     // is already taken care of by ConfigureBoard
     for(auto cOpticalGroup: *pBoard)
     {
@@ -941,7 +941,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
     return cSuccess;
 }
 
-void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
+void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize, bool doAlsoFrontend)
 {
     if(fDetectorContainer == nullptr)
     {
@@ -1047,7 +1047,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
         else if(cBoard->getBoardType() == BoardType::RD53)
         {
             ConfigureIT(cBoard);
-            ConfigureFrontendIT(cBoard);
+            if(doAlsoFrontend == true) ConfigureFrontendIT(cBoard);
 
             // ######################################
             // # Dispatch threads for data decoding #
@@ -1117,14 +1117,14 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
     return cNEventSize32;
 }
 
-void SystemController::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
+void SystemController::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber, bool doAlsoFrontend)
 {
     std::stringstream outp;
 
     InitializeHw(cHWFile, outp, enableStream, DQMportNumber);
     InitializeSettings(cHWFile, outp);
     std::cout << outp.str() << std::endl;
-    ConfigureHw();
+    ConfigureHw(false, true, doAlsoFrontend);
 }
 
 void SystemController::Start(int runNumber)
@@ -1403,6 +1403,14 @@ void SystemController::disableAllChannels()
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid) fReadoutChipInterface->MaskAllChannels(cChip, true);
+}
+
+void SystemController::DumpFrontendRegisters()
+{
+    for(const auto cBoard: *fDetectorContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid) fReadoutChipInterface->DumpChipRegisters(cChip);
 }
 
 } // namespace Ph2_System

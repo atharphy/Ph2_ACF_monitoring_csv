@@ -183,6 +183,7 @@ int main(int argc, char** argv)
     bool        program    = cmd.foundOption("prog") == true ? true : false;
     bool        supervisor = cmd.foundOption("sup") == true ? true : false;
     bool        reset      = cmd.foundOption("reset") == true ? true : false;
+    bool        dumpRegs   = cmd.foundOption("dump") == true ? true : false;
     size_t      runtime    = cmd.foundOption("runtime") == true ? stoi(cmd.optionValue("runtime")) : ARBITRARYDELAY;
     if(cmd.foundOption("capture") == true)
         RegManager::enableCapture(cmd.optionValue("capture").insert(0, std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_"));
@@ -351,7 +352,7 @@ int main(int argc, char** argv)
             // # Initialize Hardware #
             // #######################
             LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
-            mySysCntr.Configure(configFile);
+            mySysCntr.Configure(configFile, false, 60000, !dumpRegs);
             LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
         }
 
@@ -728,6 +729,11 @@ int main(int argc, char** argv)
             LOG(ERROR) << BOLDRED << "Option not recognized: " << BOLDYELLOW << whichCalib << RESET;
             mySysCntr.Destroy();
             exit(EXIT_FAILURE);
+        }
+        else if(dumpRegs == true)
+        {
+            LOG(INFO) << BOLDMAGENTA << "@@@ Dumping frontend registers @@@" << RESET;
+            mySysCntr.DumpFrontendRegisters();
         }
 
         // ###########################

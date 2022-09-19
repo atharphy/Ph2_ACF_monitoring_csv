@@ -140,8 +140,22 @@ bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
     return true;
 }
 
+void RD53Interface::DumpChipRegisters(ReadoutChip* pChip)
+{
+    this->setBoard(pChip->getBeBoardId());
+
+    LOG(INFO) << GREEN << "Chip " << BOLDYELLOW << pChip->getId() << RESET << GREEN << " register content:" << RESET;
+    for(auto& cRegItem: RD53Shared::firstChip->getRegMap())
+    {
+        auto value = RD53Interface::ReadChipReg(pChip, cRegItem.first);
+        std::cout << "\t--> Register " << std::left << std::setfill(' ') << std::setw(24) << cRegItem.first << " = " << std::dec << value << std::hex << " (0x" << value << ")" << std::endl;
+    }
+}
+
 void RD53Interface::ChipErrorReport(ReadoutChip* pChip)
 {
+    this->setBoard(pChip->getBeBoardId());
+
     LOG(INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "LOCKLOSS_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
     LOG(INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
     LOG(INFO) << BOLDBLUE << "BITFLIP_ERR_CNT     = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
