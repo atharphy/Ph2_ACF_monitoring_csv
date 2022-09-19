@@ -699,15 +699,7 @@ bool OTHybridTester::LpGBTTestVTRx()
             // I2CWrite(cLinkID, cMaster, cSlaveAddress, 0x09, 1, cTheI2CWriteCount);
             uint8_t cMasterId = 1, cSlaveAddress = 0x50, cSlaveData = 0x15, cNbyte = 1, cFrequency = 2;
             uint8_t cMasterConfig = (cNbyte << 2) | (cFrequency << 0);
-            // float   U_P1V2_L      = 0;
-            // for(int load = 0; load < 2500; load += 100)
-            // {
-            //     flpGBTInterface->GetExternalController()->getInterface().set_load2(true, false, load);
-            //     std::this_thread::sleep_for(std::chrono::milliseconds(1200));
-            //     flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().U_P1V2_L, U_P1V2_L);
-            //     cRecent = cOpticalInterface->MultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, cSlaveData);
-            // }
-            cRecent = cOpticalInterface->MultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, cSlaveData);
+            cRecent               = cOpticalInterface->MultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, cSlaveData);
             for(int i = 0; i < 5 && !(cRecent); i++) { cRecent = cOpticalInterface->MultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, cSlaveData); }
             cResult                                              = cOpticalInterface->SingleByteReadI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress);
             std::map<uint8_t, uint8_t> cVTRxplusDefaultRegisters = fVTRxplusDefaultRegisters;
@@ -830,11 +822,11 @@ void OTHybridTester::LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect, uint8_
         if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
-            LOG(INFO) << BOLDBLUE << "VDDRX read value = " << +clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "VDDRX") << RESET;
+            LOG(INFO) << MAGENTA << "VDDRX read value = " << +clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "VDDRX") << RESET;
             // uint8_t cEQConfig = (clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "EQConfig") & ~(0x2 << 3)) | (pEQAttenuation << 3);
             // FIXME for now I am forcing to 0x00 EQCap bits of the register
             clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "EQConfig", pEQAttenuation << 3);
-            LOG(INFO) << BOLDBLUE << "EQConfig set to : 0x" << std::hex << +clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "EQConfig") << std::dec << RESET;
+            LOG(INFO) << MAGENTA << "EQConfig set to : 0x" << std::hex << +clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "EQConfig") << std::dec << RESET;
             // ROOT Tree for Eye Diagram from lpGBT Eye Opening Monitor
             auto cEyeDiagramTree = new TTree(Form("tEyeDiagram%i", cOpticalGroup->getOpticalGroupId()), "Eye Diagram form lpGBT Eye Opening Monitor");
             // vectors for Tree
@@ -850,8 +842,6 @@ void OTHybridTester::LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect, uint8_
             auto cObj              = gROOT->FindObject(Form("hEyeDiagram%i", cOpticalGroup->getOpticalGroupId()));
             if(cObj) delete cObj;
             auto cEyeDiagramHist = new TH2I(Form("hEyeDiagram%i", cOpticalGroup->getOpticalGroupId()), "Eye Opening Image", 64, 0, 63, 32, 0, 31);
-            LOG(DEBUG) << BOLDRED << "EQConfig " << +clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "EQConfig") << RESET;
-            ;
             clpGBTInterface->ConfigureEOM(cOpticalGroup->flpGBT, pEndOfCountSelect, false, true);
             for(uint8_t cVoltageStep = 0; cVoltageStep < 31; cVoltageStep++)
             {

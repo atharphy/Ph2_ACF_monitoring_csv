@@ -332,7 +332,7 @@ void PedeNoise::sweepSCurves()
     }
     if(fDisableStubLogic) disableStubLogic();
     if(fWithCBC || fWithSSA) LOG(INFO) << BLUE << "Sweep of Strip S-curves will start at an average threshold of " << cStripStartValue << RESET;
-    if(fWithMPA) LOG(INFO) << BLUE << "Sweep of Pixel S-curves will start at an average threshold of " << cPixelStartValue << RESET;
+    if(fWithMPA) LOG(INFO) << MAGENTA << "Sweep of Pixel S-curves will start at an average threshold of " << cPixelStartValue << RESET;
     measureSCurves(cStripStartValue, cPixelStartValue);
     // if(fDisableStubLogic) reloadStubLogic();
     this->SetTestAllChannels(originalAllChannelFlag);
@@ -441,7 +441,7 @@ void PedeNoise::Validate()
                                 }
                                 message += ";  setting offset to 255";
                             }
-                            LOG(INFO) << RED << message << RESET;
+                            LOG(DEBUG) << RED << message << RESET;
                         }
                     }
 
@@ -505,7 +505,7 @@ void PedeNoise::findPedestal(bool forceAllChannels)
     fMeanStrips = (cNStripChips > 0) ? fMeanStrips / cNStripChips : 0xFF / 2;
     fMeanPixels = (cNPixelChips > 0) ? fMeanPixels / cNPixelChips : 0xFF / 2;
     if(fWithCBC || fWithSSA) LOG(INFO) << BOLDBLUE << "Found Pedestals on Strip ASICs to be around " << fMeanStrips << RESET;
-    if(fWithMPA) LOG(INFO) << BOLDBLUE << "Found Pedestals on Pixel ASICs to be around " << fMeanPixels << RESET;
+    if(fWithMPA) LOG(INFO) << BOLDMAGENTA << "Found Pedestals on Pixel ASICs to be around " << fMeanPixels << RESET;
     setNormalization(cNormalizationOrig);
 }
 
@@ -614,7 +614,7 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
 
             if(fWithCBC || fWithSSA)
             {
-                LOG(INFO) << BOLDMAGENTA << "Strip Threshold =  " << +cStripValue << " -- Occupancy = " << std::setprecision(2) << std::fixed << +cStripGlobalOccupancy
+                LOG(INFO) << BOLDBLUE << "Strip Threshold =  " << +cStripValue << " -- Occupancy = " << std::setprecision(2) << std::fixed << +cStripGlobalOccupancy
                           << " -- Distance from target = " << cStripDistanceFromTarget * 100 << "\t..Incrementing limit found counter "
                           << " -- current value is " << +cStripLimitCounter << RESET;
             }

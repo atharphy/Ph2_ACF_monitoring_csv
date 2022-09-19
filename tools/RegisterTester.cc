@@ -872,8 +872,8 @@ void RegisterTester::RegisterTest()
     //                     for(auto cChip: *cHybrid)
     //                     {
     //                         Registers&        cRegList =
-    //                         cRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>(); const ChipRegMap&
-    //                         cOriginalMap = cChip->getRegMap(); for(auto cMapItem: cOriginalMap) {
+    //                         cRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+    //                         const ChipRegMap& cOriginalMap = cChip->getRegMap(); for(auto cMapItem: cOriginalMap) {
     //                             if( std::find( cRegsToSkip.begin(), cRegsToSkip.end(), cMapItem.first ) != cRegsToSkip.end() ) continue;
     //                             LOG (DEBUG) << BOLDMAGENTA << "Will configure register " << cMapItem.first
     //                                 << " on page " << +cMapItem.second.fPage
@@ -946,7 +946,8 @@ void RegisterTester::RegisterTest()
     //                     for(auto cChip: *cHybrid)
     //                     {
     //                         Registers& cOriginaList =
-    //                         cRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>(); Registers& cList =
+    //                         cRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+    //                         Registers& cList =
     //                         cDefRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
     //                         // set page to that of the first register in the map
     //                         // if( cChip->getFrontEndType() == FrontEndType::CBC3 ) static_cast<CbcInterface*>(fReadoutChipInterface)->ConfigurePage( cChip,
@@ -980,10 +981,8 @@ void RegisterTester::RegisterTest()
     //                     {
     //                         LOG (INFO) << BOLDMAGENTA << "Chip#" << +cChip->getId() << RESET;
     //                         Registers& cListToCnfig =
-    //                         cRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>(); Registers  cCnfgList;
-    //                         size_t     cNPage0Regs, cNPage1Regs = 0;
-    //                         cNPage0Regs = cNPage1Regs;
-    //                         for(auto cItem: cListToCnfig)
+    //                         cRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+    //                         Registers  cCnfgList; size_t     cNPage0Regs, cNPage1Regs = 0; cNPage0Regs = cNPage1Regs; for(auto cItem: cListToCnfig)
     //                         {
     //                             if( std::find( cRegsToSkip.begin(), cRegsToSkip.end(), cItem.first ) != cRegsToSkip.end() ) continue;
 
@@ -997,8 +996,8 @@ void RegisterTester::RegisterTest()
 
     //                         LOG (DEBUG) << BOLDMAGENTA << "Going to test using " << +cNPage0Regs << " register(s) on Page0 and " << +cNPage1Regs << " register(s) on Page1 " << RESET;
     //                         Registers& cExpectedLst =
-    //                         cDefRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>(); Registers
-    //                         cSensitiveRegisters; cSensitiveRegisters.clear(); std::vector<int> cPageToggles(0); std::vector<std::string> cRegistersChecked; cRegistersChecked.clear();
+    //                         cDefRegListContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Registers>();
+    //                         Registers cSensitiveRegisters; cSensitiveRegisters.clear(); std::vector<int> cPageToggles(0); std::vector<std::string> cRegistersChecked; cRegistersChecked.clear();
 
     //                         uint8_t cPage = static_cast<CbcInterface*>(fReadoutChipInterface)->GetLastPage(cChip);
     //                         uint8_t cPreviousPage;
