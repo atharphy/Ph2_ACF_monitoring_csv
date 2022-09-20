@@ -79,7 +79,6 @@
                     <node id="slave_7_config" address="0x007"/>
                     <node id="slave_8_config" address="0x008"/>
                 </node>
-                <node id="link_select"  address="0x020" description="Link select for CPB"/>
             </node>
 
             <node id="fast_command_block"           address="0x2000" description="internal fast signal is generated in the fast_signal_generator module and the settings are here.">
@@ -236,10 +235,8 @@
                         <node id="address"                       mask="0x000000FF"/>
                         <node id="data"                          mask="0x0000FF00"/>
                     </node>
-                    <node id="lpgbt" address = "0x005">
-                        <node id="mux" mask="0x0000000F"/>
-                        <node id="version" mask="0x00000010"/>
-                    </node>
+                    <node id="link_select"  address="0x005" mask="0x0000000F" description="Link select for CPB"/>
+                    <node id="lpgbt_version" address = "0x005" mask="0x000FFFF0"/>
                     <node id="tx_polarity"                              address="0x006">
                         <node id="l8"                           mask="0x000000FF" description="note: default value is 1 for all"/>
                         <node id="l12"                          mask="0x0FFF0000" description="note: default value is 0 for all"/>
@@ -500,13 +497,9 @@
 			<node id="i2c_tool" mask="0x0000ff00"/>
 			<node id="fe_tool" mask="0x00ff0000"/>
 		</node>
-		<node id="lpgbt_version"    address="0x007">
-                        <node id="from_ic" mask="0x00000001"/>
-                        <node id="from_worker" mask="0x00000002"/>
-                </node>
             </node>
-	    <node id="command_arbitrator_fsm_state"    address="0x008" mask="0x000000ff"/>
-	    <node id="reply_arbitrator_fsm_state"    address="0x008" mask="0x0000ff00"/>
+	    <node id="command_arbitrator_fsm_state"    address="0x007" mask="0x000000ff"/>
+	    <node id="reply_arbitrator_fsm_state"    address="0x007" mask="0x0000ff00"/>
         </node>        
 
         <node id="fast_command_block"           address="0x2000">
