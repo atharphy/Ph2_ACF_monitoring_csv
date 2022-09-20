@@ -148,7 +148,7 @@ void RD53Interface::DumpChipRegisters(ReadoutChip* pChip)
     for(auto& cRegItem: RD53Shared::firstChip->getRegMap())
     {
         auto value = RD53Interface::ReadChipReg(pChip, cRegItem.first);
-        std::cout << "\t--> Register " << std::left << std::setfill(' ') << std::setw(24) << cRegItem.first << " = " << std::dec << value << std::hex << " (0x" << value << ")" << std::endl;
+        std::cout << "\t--> Register " << std::left << std::setfill(' ') << std::setw(24) << cRegItem.first << " = " << std::setw(8) << std::dec << value << std::hex << "(0x" << value << ")" << std::endl;
     }
 }
 
