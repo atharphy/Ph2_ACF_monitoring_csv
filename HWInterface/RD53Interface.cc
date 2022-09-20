@@ -236,45 +236,6 @@ void RD53Interface::SendHybridCommands(const BeBoard* pBoard, const std::vector<
 // # Dedicated to monitoring #
 // ###########################
 
-uint32_t RD53Interface::getADCobservable(const std::string& observableName, bool* isCurrentNotVoltage)
-{
-    uint32_t voltageObservable(0), currentObservable(0);
-
-    const std::unordered_map<std::string, uint32_t> currentMultiplexer = {
-        {"Iref", 0x00},          {"IBIASP1_SYNC", 0x01}, {"IBIASP2_SYNC", 0x02},  {"IBIAS_DISC_SYNC", 0x03}, {"IBIAS_SF_SYNC", 0x04},  {"ICTRL_SYNCT_SYNC", 0x05}, {"IBIAS_KRUM_SYNC", 0x06},
-        {"COMP_LIN", 0x07},      {"FC_BIAS_LIN", 0x08},  {"KRUM_CURR_LIN", 0x09}, {"LDAC_LIN", 0x0A},        {"PA_IN_BIAS_LIN", 0x0B}, {"COMP_DIFF", 0x0C},        {"PRECOMP_DIFF", 0x0D},
-        {"FOL_DIFF", 0x0E},      {"PRMP_DIFF", 0x0F},    {"LCC_DIFF", 0x10},      {"VFF_DIFF", 0x11},        {"VTH1_DIFF", 0x12},      {"VTH2_DIFF", 0x13},        {"CDR_CP_IBIAS", 0x14},
-        {"VCO_BUFF_BIAS", 0x15}, {"VCO_IBIAS", 0x16},    {"CML_TAP0_BIAS", 0x17}, {"CML_TAP1_BIAS", 0x18},   {"CML_TAP2_BIAS", 0x19}};
-
-    const std::unordered_map<std::string, uint32_t> voltageMultiplexer = {
-        {"ADCbandgap", 0x00},      {"CAL_MED", 0x01},         {"CAL_HI", 0x02},         {"TEMPSENS_1", 0x03},      {"RADSENS_1", 0x04},       {"TEMPSENS_2", 0x05},      {"RADSENS_2", 0x06},
-        {"TEMPSENS_4", 0x07},      {"RADSENS_4", 0x08},       {"VREF_VDAC", 0x09},      {"VOUT_BG", 0x0A},         {"IMUXoutput", 0x0B},      {"CAL_MED", 0x0C},         {"CAL_HI", 0x0D},
-        {"RADSENS_3", 0x0E},       {"TEMPSENS_3", 0x0F},      {"REF_KRUM_LIN", 0x10},   {"Vthreshold_LIN", 0x11},  {"VTH_SYNC", 0x12},        {"VBL_SYNC", 0x13},        {"VREF_KRUM_SYNC", 0x14},
-        {"VTH_HI_DIFF", 0x15},     {"VTH_LO_DIFF", 0x16},     {"VIN_ana_ShuLDO", 0x17}, {"VOUT_ana_ShuLDO", 0x18}, {"VREF_ana_ShuLDO", 0x19}, {"VOFF_ana_ShuLDO", 0x1A}, {"VIN_dig_ShuLDO", 0x1D},
-        {"VOUT_dig_ShuLDO", 0x1E}, {"VREF_dig_ShuLDO", 0x1F}, {"VOFF_dig_ShuLDO", 0x20}};
-
-    auto search = currentMultiplexer.find(observableName);
-    if(search == currentMultiplexer.end())
-    {
-        if((search = voltageMultiplexer.find(observableName)) == voltageMultiplexer.end())
-        {
-            LOG(ERROR) << BOLDRED << "Wrong observable name: " << observableName << RESET;
-            return -1;
-        }
-        else
-            voltageObservable = search->second;
-        if(isCurrentNotVoltage != nullptr) *isCurrentNotVoltage = false;
-    }
-    else
-    {
-        currentObservable = search->second;
-        voltageObservable = voltageMultiplexer.find("IMUXoutput")->second;
-        if(isCurrentNotVoltage != nullptr) *isCurrentNotVoltage = true;
-    }
-
-    return bits::pack<1, 6, 7>(true, currentObservable, voltageObservable);
-}
-
 float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& observableName)
 {
     this->setBoard(pChip->getBeBoardId());
@@ -284,7 +245,7 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& obse
     bool        isCurrentNotVoltage;
     uint32_t    observable;
 
-    observable = RD53Interface::getADCobservable(observableName, &isCurrentNotVoltage);
+    observable = getADCobservable(observableName, &isCurrentNotVoltage);
 
     if(observableName.find("TEMPSENS") != std::string::npos)
     {
@@ -304,7 +265,7 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& obse
 
 uint32_t RD53Interface::ReadChipADC(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName)
 {
-    uint32_t observable = RD53Interface::getADCobservable(observableName, nullptr);
+    uint32_t observable = getADCobservable(observableName, nullptr);
     return RD53Interface::measureADC(pChip, observable);
 }
 

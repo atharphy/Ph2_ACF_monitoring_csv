@@ -457,4 +457,103 @@ uint32_t RD53BInterface::ReadChipFuseID(Chip* pChip)
     return low | (high << pChip->getNumberOfBits("EfusesReadData0"));
 }
 
+// ###########################
+// # Dedicated to monitoring #
+// ###########################
+
+uint32_t RD53BInterface::getADCobservable(const std::string& observableName, bool* isCurrentNotVoltage)
+{
+    uint32_t voltageObservable(0), currentObservable(0);
+
+    const std::unordered_map<std::string, uint32_t> currentMultiplexer = {{"Iref", 0x00},
+                                                                          {"CDR_VCO_MAIN", 0x01},
+                                                                          {"CDR_VCO_BUFFER", 0x02},
+                                                                          {"CDR_CP_CURR", 0x03},
+                                                                          {"CDR_CP_FD", 0x04},
+                                                                          {"CDR_CP_BUFFER", 0x05},
+                                                                          {"CML_DRIVER_TAP2_BIAS", 0x06},
+                                                                          {"CML_DRIVER_TAP1_BIAS", 0x07},
+                                                                          {"CML_DRIVER_MAIN", 0x08},
+                                                                          {"NTC_CURR", 0x09},
+                                                                          {"CAP_MEASURE_CIRC", 0x0A},
+                                                                          {"CAP_MEASURE_PARASITIC", 0x0B},
+                                                                          {"LIN_FE_PREAMP_MAIN", 0x0C},
+                                                                          {"LIN_FE_COMPS_TAR", 0x0D},
+                                                                          {"LIN_FE_COMPARATOR", 0x0E},
+                                                                          {"LIN_FE_LDAC", 0x0F},
+                                                                          {"LIN_FE_FC", 0x10},
+                                                                          {"LIN_FE_KRUMCURR", 0x11},
+                                                                          {"LIN_FE_PREAMP_LEFT", 0x13},
+                                                                          {"LIN_FE_PREAMP_RIGHT", 0x15},
+                                                                          {"LIN_FE_PREAMP_TOP_LEFT", 0x16},
+                                                                          {"LIN_FE_PREAMP_TOP", 0x18},
+                                                                          {"LIN_FE_PREAMP_TOP_RIGHT", 0x19},
+                                                                          {"ANA_IN_CURR", 0x1C},
+                                                                          {"ANA_SHUNT_CURR", 0x1D},
+                                                                          {"DIG_IN_CURR", 0x1E},
+                                                                          {"DIG_SHUNT_CURR", 0x1F}};
+
+    const std::unordered_map<std::string, uint32_t> voltageMultiplexer = {{"Vref_ADC", 0x00},
+                                                                          {"I_MUX", 0x01},
+                                                                          {"NTC_VOLT", 0x02},
+                                                                          {"Vref_CAL_DAC", 0x03},
+                                                                          {"VDDA_CAPMEASURE", 0x04},
+                                                                          {"TEMPSENS_TOP", 0x05},
+                                                                          {"TEMPSENS_BOTTOM", 0x06},
+                                                                          {"VCAL_HI", 0x07},
+                                                                          {"VCAL_MED", 0x08},
+                                                                          {"LIN_FE_REF_KRUMCURR", 0x09},
+                                                                          {"LIN_FE_GDAC_MAIN", 0x0A},
+                                                                          {"LIN_FE_GDAC_LEFT", 0x0B},
+                                                                          {"LIN_FE_GDAC_RIGHT", 0x0C},
+                                                                          {"RADSENS_ANA_SLDO", 0x0D},
+                                                                          {"TEMPSENS_ANA_SLDO", 0x0E},
+                                                                          {"RADSENS_DIG_SLDO", 0x0F},
+                                                                          {"TEMPSENS_DIG_SLDO", 0x10},
+                                                                          {"RADSENS_CENTER", 0x11},
+                                                                          {"TEMPSENS_CENTER", 0x12},
+                                                                          {"ANA_GND_0", 0x13},
+                                                                          {"ANA_GND_1", 0x14},
+                                                                          {"ANA_GND_2", 0x15},
+                                                                          {"ANA_GND_3", 0x16},
+                                                                          {"ANA_GND_4", 0x17},
+                                                                          {"ANA_GND_5", 0x18},
+                                                                          {"ANA_GND_6", 0x19},
+                                                                          {"ANA_GND_7", 0x1A},
+                                                                          {"ANA_GND_8", 0x1B},
+                                                                          {"ANA_GND_9", 0x1C},
+                                                                          {"ANA_GND_10", 0x1D},
+                                                                          {"ANA_GND_11", 0x1E},
+                                                                          {"Vref_CORE", 0x1F},
+                                                                          {"Vref_PRE", 0x20},
+                                                                          {"VINA", 0x21},
+                                                                          {"VDDA", 0x22},
+                                                                          {"VrefA", 0x23},
+                                                                          {"VOFS", 0x24},
+                                                                          {"VIND", 0x25},
+                                                                          {"VDDD", 0x26},
+                                                                          {"VrefD", 0x27}};
+
+    auto search = currentMultiplexer.find(observableName);
+    if(search == currentMultiplexer.end())
+    {
+        if((search = voltageMultiplexer.find(observableName)) == voltageMultiplexer.end())
+        {
+            LOG(ERROR) << BOLDRED << "Wrong observable name: " << observableName << RESET;
+            return -1;
+        }
+        else
+            voltageObservable = search->second;
+        if(isCurrentNotVoltage != nullptr) *isCurrentNotVoltage = false;
+    }
+    else
+    {
+        currentObservable = search->second;
+        voltageObservable = voltageMultiplexer.find("IMUXoutput")->second;
+        if(isCurrentNotVoltage != nullptr) *isCurrentNotVoltage = true;
+    }
+
+    return bits::pack<1, 6, 7>(true, currentObservable, voltageObservable);
+}
+
 } // namespace Ph2_HwInterface

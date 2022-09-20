@@ -122,6 +122,7 @@ struct FormatOptions
     bool enableToT       = true;
     bool enableBCID      = false;
     bool enableTriggerId = false;
+    bool enableCRC       = false;
 };
 
 class RD53Event : public Ph2_HwInterface::Event

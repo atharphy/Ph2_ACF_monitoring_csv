@@ -70,6 +70,12 @@ class RD53BInterface : public RD53Interface
 
                                                                                 {"HIT_SAMPLE_MODE", {"PIX_MODE", 3}},
                                                                                 {"EN_SEU_COUNT", {"PIX_MODE", 4}}};
+
+    // ###########################
+    // # Dedicated to monitoring #
+    // ###########################
+  protected:
+    uint32_t getADCobservable(const std::string& observableName, bool* isCurrentNotVoltage) override;
 };
 
 } // namespace Ph2_HwInterface

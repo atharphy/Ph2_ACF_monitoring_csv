@@ -64,6 +64,12 @@ class RD53AInterface : public RD53Interface
                                                                                 {"CAL_EDGE_FINE_DELAY", {"INJECTION_SELECT", 0}},
                                                                                 {"DIGITAL_INJ_EN", {"INJECTION_SELECT", 4}},
                                                                                 {"ANALOG_INJ_MODE", {"INJECTION_SELECT", 5}}};
+
+    // ###########################
+    // # Dedicated to monitoring #
+    // ###########################
+  protected:
+    uint32_t getADCobservable(const std::string& observableName, bool* isCurrentNotVoltage) override;
 };
 
 } // namespace Ph2_HwInterface
