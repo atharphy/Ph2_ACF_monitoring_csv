@@ -694,7 +694,7 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
             // ####################
             RD53B::decodeChipData(event_bits.pop_slice(l1a_size * NWORDS_DDR3 * RD53FWEvtEncoder::NBIT_EVT_WORD - 64), chipEvt, options);
             evt.eventStatus |= chipEvt.eventStatus;
-            if(((chipEvt.eventStatus & RD53EvtEncoder::CHIPEOS) == true) || ((chipEvt.eventStatus & RD53FWEvtEncoder::MISSCHIP) == true)) break;
+            if(((chipEvt.eventStatus & RD53EvtEncoder::CHIPEOS) != 0) || ((chipEvt.eventStatus & RD53FWEvtEncoder::MISSCHIP) != 0)) break;
             evt.chip_events.push_back(std::move(chipEvt));
         }
 

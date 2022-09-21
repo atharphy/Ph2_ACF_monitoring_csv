@@ -144,7 +144,7 @@ void RD53B::decodeChipData(BitView<const uint32_t> bits, RD53ChipEvent& e, const
         e.eventStatus = RD53FWEvtEncoder::MISSCHIP;
         return;
     }
-    if((e.eventStatus & RD53EvtEncoder::CHIPEOS) == true) return;
+    if((e.eventStatus & RD53EvtEncoder::CHIPEOS) != 0) return;
 
     decodeStreamHeader(eventStreamView, e, options);
     e.trigger_tag = eventStreamView.pop(RD53BEvtEncoder::NBIT_TRGTAG);
