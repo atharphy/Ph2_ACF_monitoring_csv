@@ -38,6 +38,18 @@ const uint8_t  AUTO_INCREMENT_MASK = 0x08; // Auto-increment mask bits
 const uint16_t GLOBAL_PULSE_ADDR   = 0x2C; // Global Pulse Route regiser address
 } // namespace RD53AConstants
 
+// #####################################################################
+// # Formula: par0/par1 * VCal / electron_charge [C] * capacitance [C] #
+// #####################################################################
+namespace RD53AchargeConvertion
+{
+const float Vref     = 0.9;    // Vref [V]
+const float ADCrange = 4096.0; // VCal total range
+const float cap      = 8.5;    // [fF]
+const float ele      = 1.6;    // [e-19]
+const float offset   = 64;     // Due to VCal_High vs VCal_Med offset difference [e-]
+} // namespace RD53AchargeConvertion
+
 namespace Ph2_HwDescription
 {
 class RD53A : public RD53
@@ -86,6 +98,8 @@ class RD53A : public RD53
     size_t          getNRows() const override { return RD53A::NROWS; }
     size_t          getNCols() const override { return RD53A::NCOLS; }
     uint32_t        getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const override;
+    float           VCal2Charge(float VCal, bool isNoise = false) const override;
+    float           Charge2VCal(float Charge) const override;
 };
 
 } // namespace Ph2_HwDescription

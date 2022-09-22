@@ -69,7 +69,11 @@ class RD53BInterface : public RD53Interface
                                                                                 {"DIGITAL_INJ_EN", {"CalibrationConfig", 7}},
 
                                                                                 {"HIT_SAMPLE_MODE", {"PIX_MODE", 3}},
-                                                                                {"EN_SEU_COUNT", {"PIX_MODE", 4}}};
+                                                                                {"EN_SEU_COUNT", {"PIX_MODE", 4}},
+
+                                                                                {"SEL_CAL_RANGE", {"MEAS_CAP", 0}},
+                                                                                {"EN_INJCAP_MEAS", {"MEAS_CAP", 1}},
+                                                                                {"EN_INJCAP_PAR_MEAS", {"MEAS_CAP", 2}}};
 
     // ###########################
     // # Dedicated to monitoring #

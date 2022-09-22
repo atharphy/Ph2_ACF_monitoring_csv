@@ -77,4 +77,15 @@ uint32_t RD53A::getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_
     return bits::pack<4, 1, 3, 6, 1, 5>(RD53AConstants::BROADCAST_CHIPID, cal_edge_mode, cal_edge_delay, cal_edge_width, cal_aux_mode, cal_aux_delay);
 }
 
+float RD53A::VCal2Charge(float VCal, bool isNoise) const
+{
+    return (RD53AchargeConvertion::Vref / RD53AchargeConvertion::ADCrange) * VCal / RD53AchargeConvertion::ele * RD53AchargeConvertion::cap * 1e4 +
+           (isNoise == false ? RD53AchargeConvertion::offset : 0);
+}
+
+float RD53A::Charge2VCal(float Charge) const
+{
+    return (Charge - RD53AchargeConvertion::offset) / (RD53AchargeConvertion::cap * 1e4) * RD53AchargeConvertion::ele / (RD53AchargeConvertion::Vref / RD53AchargeConvertion::ADCrange);
+}
+
 } // namespace Ph2_HwDescription

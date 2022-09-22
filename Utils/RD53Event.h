@@ -113,15 +113,17 @@ struct RD53ChipEvent
     uint16_t eventStatus = RD53FWEvtEncoder::GOOD;
 };
 
-// ######################
-// # Specific for RD53B #
-// ######################
+// #############################
+// # Options in RD53B protocol #
+// #############################
 struct FormatOptions
 {
     bool enableChipId    = true;
     bool enableToT       = true;
     bool enableBCID      = false;
     bool enableTriggerId = false;
+    bool enableEOSmarker = false;
+    bool enableRawMap    = false;
     bool enableCRC       = false;
 };
 

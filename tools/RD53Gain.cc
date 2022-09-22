@@ -27,7 +27,7 @@ void Gain::ConfigureCalibration()
     nEvents        = this->findValueInSettings<double>("nEvents");
     startValue     = this->findValueInSettings<double>("VCalHstart");
     stopValue      = this->findValueInSettings<double>("VCalHstop");
-    targetCharge   = RD53chargeConverter::Charge2VCal(this->findValueInSettings<double>("TargetCharge"));
+    targetCharge   = RD53Shared::firstChip->Charge2VCal(this->findValueInSettings<double>("TargetCharge"));
     nSteps         = this->findValueInSettings<double>("VCalHnsteps");
     offset         = this->findValueInSettings<double>("VCalMED");
     nHITxCol       = this->findValueInSettings<double>("nHITxCol");
@@ -401,12 +401,12 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                     if(ToTatTarget > frontEnd->maxToTvalue)
                         LOG(INFO) << GREEN << "Average ToT for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                                   << +cChip->getId() << RESET << GREEN << "] at VCal = " << BOLDYELLOW << std::fixed << std::setprecision(2) << targetCharge << RESET << GREEN << " (" << BOLDYELLOW
-                                  << RD53chargeConverter::VCal2Charge(targetCharge) << RESET << GREEN << " electrons) is greater than " << BOLDYELLOW << frontEnd->maxToTvalue << RESET << GREEN
+                                  << RD53Shared::firstChip->VCal2Charge(targetCharge) << RESET << GREEN << " electrons) is greater than " << BOLDYELLOW << frontEnd->maxToTvalue << RESET << GREEN
                                   << " (ToT)" << std::setprecision(-1) << RESET;
                     else
                         LOG(INFO) << GREEN << "Average ToT for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                                   << +cChip->getId() << RESET << GREEN << "] at VCal = " << BOLDYELLOW << std::fixed << std::setprecision(2) << targetCharge << RESET << GREEN << " (" << BOLDYELLOW
-                                  << RD53chargeConverter::VCal2Charge(targetCharge) << RESET << GREEN << " electrons) is " << BOLDYELLOW << ToTatTarget << RESET << GREEN << " (ToT)"
+                                  << RD53Shared::firstChip->VCal2Charge(targetCharge) << RESET << GREEN << " electrons) is " << BOLDYELLOW << ToTatTarget << RESET << GREEN << " (ToT)"
                                   << std::setprecision(-1) << RESET;
 
                     RD53Shared::resetDefaultFloat();

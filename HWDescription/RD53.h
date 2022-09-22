@@ -52,22 +52,6 @@ const uint16_t CHIPFWERR = 0x1000; // Chip event status Firmware error
 const uint16_t CHIPEOS   = 0x2000; // Chip event status end-of-stream error
 } // namespace RD53EvtEncoder
 
-// #####################################################################
-// # Formula: par0/par1 * VCal / electron_charge [C] * capacitance [C] #
-// #####################################################################
-namespace RD53chargeConverter
-{
-constexpr float par0   = 0.9;    // Vref [V]
-constexpr float par1   = 4096.0; // VCal total range
-constexpr float cap    = 8.5;    // [fF]
-constexpr float ele    = 1.6;    // [e-19]
-constexpr float offset = 64;     // Due to VCal_High vs VCal_Med offset difference [e-]
-
-constexpr float VCal2Charge(float VCal, bool isNoise = false) { return (par0 / par1) * VCal / ele * cap * 1e4 + (isNoise == false ? offset : 0); }
-
-constexpr float Charge2VCal(float Charge) { return (Charge - offset) / (cap * 1e4) * ele / (par0 / par1); }
-} // namespace RD53chargeConverter
-
 namespace Ph2_HwDescription
 {
 struct pixelMask
@@ -105,6 +89,8 @@ class RD53 : public ReadoutChip
     virtual size_t          getNCols() const                                                                                                           = 0;
     virtual const FrontEnd* getFEtype(size_t colStart, size_t colStop) const                                                                           = 0;
     virtual uint32_t        getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const = 0;
+    virtual float           VCal2Charge(float VCal, bool isNoise = false) const                                                                        = 0;
+    virtual float           Charge2VCal(float Charge) const                                                                                            = 0;
 
     RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
     RD53(const RD53& chipObj);

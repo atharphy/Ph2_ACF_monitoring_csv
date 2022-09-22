@@ -159,8 +159,8 @@ class DQMHistogramBase
                                                              myPad->GetUymax(),
                                                              myPad->GetUxmax(),
                                                              myPad->GetUymax(),
-                                                             RD53chargeConverter::VCal2Charge(hist->GetXaxis()->GetBinLowEdge(1), isNoise),
-                                                             RD53chargeConverter::VCal2Charge(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins()), isNoise),
+                                                             RD53Shared::firstChip->VCal2Charge(hist->GetXaxis()->GetBinLowEdge(1), isNoise),
+                                                             RD53Shared::firstChip->VCal2Charge(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins()), isNoise),
                                                              510,
                                                              "-"));
 
