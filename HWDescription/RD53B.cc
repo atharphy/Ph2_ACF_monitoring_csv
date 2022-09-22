@@ -101,7 +101,7 @@ void decodeChipId(uint8_t chipId, size_t i, RD53ChipEvent& e, size_t nWords)
         e.eventStatus |= RD53EvtEncoder::CHIPID;
 }
 
-auto decodeEventStream(BitView<const uint32_t> bits, RD53ChipEvent& e, const FormatOptions& options)
+auto decodeEventStream(BitView<const uint32_t>& bits, RD53ChipEvent& e, const FormatOptions& options)
 {
     BitVector<uint32_t> payloadData;
     size_t              nWords = bits.size() / 64;
@@ -136,8 +136,9 @@ auto decodeEventStream(BitView<const uint32_t> bits, RD53ChipEvent& e, const For
 void RD53B::decodeChipData(BitView<const uint32_t> bits, RD53ChipEvent& e, const FormatOptions& options)
 {
     std::array<int, RD53B::NCOLS / RD53Constants::NROW_CORE> last_qrow;
-    const auto                                               eventStream     = decodeEventStream(bits, e, options);
-    auto                                                     eventStreamView = bit_view(eventStream);
+    last_qrow.fill(RD53B::NROWS / 2);
+    const auto eventStream     = decodeEventStream(bits, e, options);
+    auto       eventStreamView = bit_view(eventStream);
 
     if(eventStreamView.size() == 0)
     {
