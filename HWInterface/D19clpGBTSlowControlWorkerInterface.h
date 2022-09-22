@@ -12,7 +12,7 @@ const uint8_t SINGLE_BYTE_READ_I2C = 4;
 const uint8_t MULTI_BYTE_WRITE_I2C = 5;
 const uint8_t READ_FE              = 6;
 const uint8_t WRITE_FE             = 7;
-const int     BLOCK_SIZE           = 1000;
+const int     BLOCK_SIZE           = 16000;
 
 const std::map<int, std::string> WORKER_FSM_STATE_MAP{{0, "UNDEFINED"},
                                                       {1, "IDLE"},

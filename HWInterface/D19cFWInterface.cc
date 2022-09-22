@@ -302,9 +302,9 @@ void D19cFWInterface::configureTxRxPolarities(const Ph2_HwDescription::BeBoard* 
     this->WriteReg("fc7_daq_cnfg.optical_block.tx_polarity.l8", cTxGlobalValueL8);
     this->WriteReg("fc7_daq_cnfg.optical_block.rx_polarity.l8", cRxGlobalValueL8);
 
-    LOG(INFO) << BLUE << "FMC-L12 -- Rx Polarity = " << +this->ReadReg("fc7_daq_cnfg.optical_block.rx_polarity.l12")
+    LOG(INFO) << BOLDBLUE << "FMC-L12 -- Rx Polarity = " << +this->ReadReg("fc7_daq_cnfg.optical_block.rx_polarity.l12")
               << "  -- Tx Polarity = " << +this->ReadReg("fc7_daq_cnfg.optical_block.tx_polarity.l12") << RESET;
-    LOG(INFO) << BLUE << "FMC-L8  -- Rx Polarity = " << +this->ReadReg("fc7_daq_cnfg.optical_block.rx_polarity.l8")
+    LOG(INFO) << BOLDBLUE << "FMC-L8  -- Rx Polarity = " << +this->ReadReg("fc7_daq_cnfg.optical_block.rx_polarity.l8")
               << "  -- Tx Polarity = " << +this->ReadReg("fc7_daq_cnfg.optical_block.tx_polarity.l8") << RESET;
 }
 
@@ -319,7 +319,7 @@ void D19cFWInterface::configureLpGbtVersions(const Ph2_HwDescription::BeBoard* p
         cGlobalValue |= (cLocalValue << cOpticalGroupId);
     }
     this->WriteReg("fc7_daq_cnfg.optical_block.lpgbt_version", cGlobalValue);
-    LOG(INFO) << BLUE << "LpGBT Version = " << +this->ReadReg("fc7_daq_cnfg.optical_block.lpgbt_version") << RESET;
+    LOG(INFO) << BOLDBLUE << "LpGBT Version = " << +this->ReadReg("fc7_daq_cnfg.optical_block.lpgbt_version") << RESET;
 }
 
 void D19cFWInterface::configureCDCE_old(uint16_t pClockRate)
