@@ -43,8 +43,8 @@
               VCAL_HIGH              = "2000"
               VCAL_MED               =  "100"
 
-              GP_LVDS_ROUTE_0        =    "0"
-              GP_LVDS_ROUTE_1        =    "0"
+              GP_LVDS_ROUTE_0        =   "28"
+              GP_LVDS_ROUTE_1        =   "28"
               TriggerConfig          =  "136"
               CLK_DATA_DELAY         =    "0"
               CAL_EDGE_FINE_DELAY    =    "0"
@@ -53,7 +53,7 @@
               VOLTAGE_TRIM_DIG       =    "8"
               VOLTAGE_TRIM_ANA       =    "8"
 
-              CML_CONFIG_SER_EN_TAP  = "0b11"
+              CML_CONFIG_SER_EN_TAP  = "0b00"
               CML_CONFIG_SER_INV_TAP = "0b00"
               DAC_CML_BIAS_0         =  "500"
               DAC_CML_BIAS_1         =    "0"
@@ -83,10 +83,10 @@
             EN_CORE_COL_CAL_2        = "65535"
             EN_CORE_COL_CAL_3        =    "63"
 
-            HITOR_MASK_0             =     "0"
-            HITOR_MASK_1             =     "0"
-            HITOR_MASK_2             =     "0"
-            HITOR_MASK_3             =     "0"
+            HITOR_MASK_0             = "65535"
+            HITOR_MASK_1             = "65535"
+            HITOR_MASK_2             = "65535"
+            HITOR_MASK_3             =    "63"
 
             PrecisionToTEnable_0     =     "0"
             PrecisionToTEnable_1     =     "0"
