@@ -101,9 +101,8 @@ class RD53 : public ReadoutChip
     bool     isDACLocal(const std::string& regName) override;
     uint8_t  getNumberOfBits(const std::string& regName) override;
 
-    std::string getFileName(const std::string& fName2Add) { return RD53Shared::composeFileName(configFileName, fName2Add); }
-    pixelMask&  getPixelsMask() { return fPixelsMask; }
-    pixelMask&  getPixelsMaskDefault() { return fPixelsMaskDefault; }
+    pixelMask& getPixelsMask() { return fPixelsMask; }
+    pixelMask& getPixelsMaskDefault() { return fPixelsMaskDefault; }
 
     void        copyMaskFromDefault();
     void        copyMaskToDefault(const std::string& which = "all");
@@ -141,7 +140,6 @@ class RD53 : public ReadoutChip
     } fLpGBTmap;
     pixelMask   fPixelsMask;
     pixelMask   fPixelsMaskDefault;
-    std::string configFileName;
     std::string myComment;
     uint8_t     myChipLane;
 };
