@@ -88,7 +88,8 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
 
     uint16_t status;
     RD53Event::DecodeEventsMultiThreads(data, decodedEvents, status);
-    LOG(INFO) << GREEN << "Total number of events in binary file: " << BOLDYELLOW << decodedEvents.size() << RESET;
+    LOG(INFO) << GREEN << "Total number of 32-bit words read from binary file: " << BOLDYELLOW << data.size() << RESET;
+    LOG(INFO) << GREEN << "Total number of events decoded from binary file: " << BOLDYELLOW << decodedEvents.size() << RESET;
 
     for(auto i = 0u; i < decodedEvents.size(); i++)
         if(RD53Event::EvtErrorHandler(decodedEvents[i].eventStatus) == false)

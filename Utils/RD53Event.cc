@@ -278,7 +278,9 @@ bool RD53Event::EvtErrorHandler(uint16_t status)
 
 bool RD53Event::findEventStarts(const std::vector<uint32_t>& data, std::vector<size_t>& eventStarts, uint16_t& eventStatus)
 {
-    size_t i = 0u;
+    size_t i               = 0u;
+    bool   firstEventFound = false;
+
     while(i < data.size())
         if(data[i] >> RD53FWEvtEncoder::NBIT_BLOCKSIZE == RD53FWEvtEncoder::EVT_HEADER)
         {
@@ -286,7 +288,10 @@ bool RD53Event::findEventStarts(const std::vector<uint32_t>& data, std::vector<s
             size_t block_size;
             std::tie(block_size) = bits::unpack<RD53FWEvtEncoder::NBIT_BLOCKSIZE>(data[i]);
             i += NWORDS_DDR3 * block_size;
+            firstEventFound = true;
         }
+        else if(firstEventFound == false)
+            i++;
         else
         {
             eventStatus |= RD53FWEvtEncoder::EVSIZE;
