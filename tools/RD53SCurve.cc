@@ -292,13 +292,13 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
                                                                                                                    ->isChannelEnabled(row, col))
                             {
                                 for(auto i = 0u; i < dacList.size(); i++)
-                                    measurements[i] = fabs(detectorContainerVector[i]
-                                                               ->at(cBoard->getIndex())
-                                                               ->at(cOpticalGroup->getIndex())
-                                                               ->at(cHybrid->getIndex())
-                                                               ->at(cChip->getIndex())
-                                                               ->getChannel<OccupancyAndPh>(row, col)
-                                                               .fOccupancy);
+                                    measurements[i] = detectorContainerVector[i]
+                                                          ->at(cBoard->getIndex())
+                                                          ->at(cOpticalGroup->getIndex())
+                                                          ->at(cHybrid->getIndex())
+                                                          ->at(cChip->getIndex())
+                                                          ->getChannel<OccupancyAndPh>(row, col)
+                                                          .fOccupancy;
 
                                 SCurve::computeStats(measurements, offset, nHits, mean, rms);
 
@@ -377,6 +377,7 @@ void SCurve::computeStats(std::vector<float>& measurements, int offset, float& n
     float weight = 0;
     mean         = 0;
 
+    std::for_each(measurements.begin(), measurements.end(), [](float& ele) { return (std::fabs(ele) > 1. ? 1. : std::fabs(ele)); });
     std::reverse(measurements.begin(), measurements.end());
     auto itHigh = measurements.end() - std::max_element(measurements.begin(), measurements.end());
 

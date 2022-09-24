@@ -18,6 +18,8 @@
 #include "../Utils/ThresholdAndNoise.h"
 #include "Tool.h"
 
+#include <algorithm>
+
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53SCurveHistograms.h"
 #include "TApplication.h"
