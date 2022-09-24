@@ -181,7 +181,7 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
             // Use TLU counter
             if(tluTrigId < eudaqProducer->previousTLUTrigId)
             {
-                eudaqProducer->swTrigCnt += 1 << EUDAQ::NBITSTLU;
+                eudaqProducer->swTrigCnt += 1 << EUDAQ::NBIT_TLU;
                 std::cout << "[RD53eudaqProducer::RD53eudaqEvtConverter] Detected TLU trigger ID wrap around" << std::endl;
             }
             ev->SetTriggerN(eudaqProducer->swTrigCnt + tluTrigId);
