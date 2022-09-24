@@ -133,6 +133,7 @@
     <node id="Aurora_block"         address="0x00000010"      permission="rw"      description="">
       <node id="error_cntr_module_addr" mask="0x0000000F"     permission="rw"      description="" />
       <node id="error_cntr_chip_addr"   mask="0x00000070"     permission="rw"      description="" />
+      <node id="event_stream_timeout"   mask="0x007FFF80"     permission="rw"      description="" />
     </node>
 
     <node id="i2c_block"            address="0x00000011"      permission="rw"      description="">

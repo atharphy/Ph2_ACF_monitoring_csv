@@ -215,7 +215,7 @@
     <Setting name="nEvents">             100 </Setting>
     <Setting name="nEvtsBurst">          100 </Setting>
     <!-- For Noise and Threshold Minimization
-    <Setting name="nEvents">        10000000 </Setting>
+    <Setting name="nEvents">         1000000 </Setting>
     <Setting name="nEvtsBurst">        10000 </Setting>
     -->
 

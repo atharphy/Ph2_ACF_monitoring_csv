@@ -26,13 +26,14 @@
 // #######################
 namespace RD53FWconstants
 {
-const uint8_t  NLANE_HYBRID       = 4;    // Number of lanes per hybrid
-const uint8_t  HEADEAR_WRTCMD     = 0xFF; // Header of chip write command sequence
-const uint8_t  NBIT_FWVER         = 16;   // Number of bits for the firmware version
-const uint8_t  IPBUS_FASTDURATION = 1;    // Duration of a fast command in terms of 40 MHz clk cycles
-const uint8_t  AURORA_SPEED       = 0;    // 0 = 1.28 Gbp/s, 1 = 640 Mbp/s
-const uint32_t NBIT_SLOWCMD_FIFO  = 16;   // Slow command FIFO depth 65.536, i.e. 16 bits (in terms of 32-bit words)
-const uint32_t NBIT_DATA_FIFO     = 27;   // Data FIFO depth 134.217.728, i.e. 27 bits (in terms of 32-bit words)
+const uint8_t  NLANE_HYBRID         = 4;    // Number of lanes per hybrid
+const uint8_t  HEADEAR_WRTCMD       = 0xFF; // Header of chip write command sequence
+const uint8_t  NBIT_FWVER           = 16;   // Number of bits for the firmware version
+const uint8_t  IPBUS_FASTDURATION   = 1;    // Duration of a fast command in terms of 40 MHz clk cycles
+const uint8_t  AURORA_SPEED         = 0;    // 0 = 1.28 Gbp/s, 1 = 640 Mbp/s
+const uint32_t NBIT_SLOWCMD_FIFO    = 16;   // Slow command FIFO depth 65.536, i.e. 16 bits (in terms of 32-bit words)
+const uint32_t NBIT_DATA_FIFO       = 27;   // Data FIFO depth 134.217.728, i.e. 27 bits (in terms of 32-bit words)
+const uint32_t EVENT_STREAM_TIMEOUT = 0xFFFF; // Event stream timeout
 
 constexpr float VDDD2Volt(float val) { return (0.968 + val * 0.0115); }
 constexpr float CDR2Freq(float val) { return (140 + val * 5); }

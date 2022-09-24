@@ -89,6 +89,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // #########################
     RegManager::WriteReg("user.ctrl_regs.gtx_drp.aurora_speed", RD53FWconstants::AURORA_SPEED);
     SendBoardCommand("user.ctrl_regs.gtx_drp.set_aurora_speed");
+    RegManager::WriteReg("user.ctrl_regs.Aurora_block.event_stream_timeout", RD53FWconstants::EVENT_STREAM_TIMEOUT);
 
     // ##########
     // # Resets #
