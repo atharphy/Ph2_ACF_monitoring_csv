@@ -96,7 +96,7 @@ class RD53 : public ReadoutChip
     RD53(const RD53& chipObj);
 
     void     loadfRegMap(const std::string& fileName) override;
-    void     saveRegMap(const std::string& fName2Add) override;
+    void     saveRegMap(const std::string& fName2Add /*, std::ostream& os*/) override;
     uint32_t getNumberOfChannels() const override;
     bool     isDACLocal(const std::string& regName) override;
     uint8_t  getNumberOfBits(const std::string& regName) override;

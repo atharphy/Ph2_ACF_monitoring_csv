@@ -101,7 +101,8 @@ bool FileHandler::openFile()
             if(fHeader.fValid == false)
             {
                 fHeaderPresent = false;
-                LOG(WARNING) << BOLDRED << "No valid header found in binary file: " << BOLDYELLOW << fBinaryFileName << BOLDRED << " --> resetting to begin of file and treating as normal data" << RESET;
+                LOG(WARNING) << BOLDRED << "No valid header found in binary file: " << BOLDYELLOW << fBinaryFileName << BOLDRED << " --> resetting to begin of file and treating as normal data"
+                             << RESET;
                 fBinaryFile.clear();
                 fBinaryFile.seekg(0, std::ios::beg);
             }
