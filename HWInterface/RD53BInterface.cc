@@ -181,7 +181,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     // # bits 5-6: SerSelOut2[1:0]
     // # bits 3-4: SerSelOut1[1:0]
     // # bits 1-2: SerSelOut0[1:0]
-    RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 0b1, false);
+    RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 0b1111, false);
     // # bits 7-8: SER_INV_TAP[1:0]
     // # bits 5-6: SER_EN_TAP[1:0]
     // # bits 1-4: SER_EN_LANE[3:0] --> actual output lanes

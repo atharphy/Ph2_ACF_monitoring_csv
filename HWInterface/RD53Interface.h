@@ -22,7 +22,7 @@
 // #############
 // # CONSTANTS #
 // #############
-#define VCALSLEEP 10 // 50000 // [microseconds]
+#define VCALSLEEP 50000 // [microseconds]
 
 namespace Ph2_HwInterface
 {
