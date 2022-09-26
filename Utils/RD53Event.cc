@@ -266,10 +266,17 @@ bool RD53Event::EvtErrorHandler(uint16_t status)
         isGood = false;
     }
 
-    if(status & RD53EvtEncoder::CHIPEOS)
+    if(status & RD53EvtEncoder::CHIPNS_WAS0)
     {
-        LOG(ERROR) << BOLDRED << "End-of-stream error (EOS bit was 1 before the last word of the event stream or EOS bit was 0 in the last word of the event stream) " << BOLDYELLOW << "--> retry"
-                   << std::setfill(' ') << std::setw(8) << "" << RESET;
+        LOG(ERROR) << BOLDRED << "New-stream bit was 0 in the first word of the event stream (it can happen when the FW timeout fires before the chip has sent the full event) " << BOLDYELLOW
+                   << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+    }
+
+    if(status & RD53EvtEncoder::CHIPNS_WAS1)
+    {
+        LOG(ERROR) << BOLDRED << "New-stream bit was 1 before the last word of the event stream (it can indicate a bug in the FW) " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8)
+                   << "" << RESET;
         isGood = false;
     }
 
@@ -699,7 +706,7 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
             // ####################
             RD53B::decodeChipData(event_bits.pop_slice(l1a_size * NWORDS_DDR3 * RD53FWEvtEncoder::NBIT_EVT_WORD - 64), chipEvt, options);
             evt.eventStatus |= chipEvt.eventStatus;
-            if(((chipEvt.eventStatus & RD53EvtEncoder::CHIPEOS) != 0) || ((chipEvt.eventStatus & RD53FWEvtEncoder::MISSCHIP) != 0)) break;
+            if(((chipEvt.eventStatus & (RD53EvtEncoder::CHIPNS_WAS0 | RD53EvtEncoder::CHIPNS_WAS1)) != 0) || ((chipEvt.eventStatus & RD53FWEvtEncoder::MISSCHIP) != 0)) break;
             evt.chip_events.push_back(std::move(chipEvt));
         }
 

@@ -128,13 +128,13 @@ auto decodeEventStream(BitView<const uint32_t>& bits, RD53ChipEvent& e, const Fo
         {
             if(i + 2 < nWords)
             {
-                e.eventStatus |= RD53EvtEncoder::CHIPEOS;
+                e.eventStatus |= RD53EvtEncoder::CHIPNS_WAS1;
                 break;
             }
         }
         else if(i == nWords)
         {
-            e.eventStatus |= RD53EvtEncoder::CHIPEOS;
+            e.eventStatus |= RD53EvtEncoder::CHIPNS_WAS0;
             break;
         }
 
@@ -158,7 +158,7 @@ void RD53B::decodeChipData(BitView<const uint32_t> bits, RD53ChipEvent& e, const
         e.eventStatus = RD53FWEvtEncoder::MISSCHIP;
         return;
     }
-    if((e.eventStatus & RD53EvtEncoder::CHIPEOS) != 0) return;
+    if((e.eventStatus & (RD53EvtEncoder::CHIPNS_WAS0 | RD53EvtEncoder::CHIPNS_WAS1)) != 0) return;
 
     decodeStreamHeader(eventStreamView, e, options);
     e.trigger_tag = eventStreamView.pop(RD53BEvtEncoder::NBIT_TRGTAG);
