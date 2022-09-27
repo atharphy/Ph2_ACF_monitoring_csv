@@ -73,7 +73,9 @@ class FrontEndDescription
 
     void setFrontEndType(FrontEndType pType) { fType = pType; }
 
-    void         setOptical(bool pOptical) { fOptical = pOptical; }
+    void setOptical(bool pOptical) { fOptical = pOptical; }
+    // trying to let Ph2 find the connected link
+    void         setOpticalGroupId(uint8_t opticalGroupId) { fOpticalGroupId = opticalGroupId; }
     bool         isOptical() { return fOptical; }
     FrontEndType getFrontEndType() const { return fType; }
 
