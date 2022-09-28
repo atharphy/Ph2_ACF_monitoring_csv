@@ -721,7 +721,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         // # Error checking #
         // ##################
         RD53Event::decodedEvents.clear();
-        uint16_t status;
+        uint32_t status;
         RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents, status); // Decode events with multiple threads
         // RD53Event::DecodeEvents(pData, RD53Event::decodedEvents, {}, status);         // Decode events with a single thread
         // RD53Event::PrintEvents(RD53Event::decodedEvents, pData);                      // @TMP@

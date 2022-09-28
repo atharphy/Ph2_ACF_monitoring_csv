@@ -122,7 +122,7 @@ std::vector<RD53Event> RD53Event::decodedEvents;
 std::vector<std::thread>            RD53Event::decodingThreads;
 std::vector<std::vector<RD53Event>> RD53Event::vecEvents(RD53Shared::NTHREADS);
 std::vector<std::vector<size_t>>    RD53Event::vecEventStart(RD53Shared::NTHREADS);
-std::vector<uint16_t>               RD53Event::vecEventStatus(RD53Shared::NTHREADS);
+std::vector<uint32_t>               RD53Event::vecEventStatus(RD53Shared::NTHREADS);
 std::vector<std::atomic<bool>>      RD53Event::vecWorkDone(RD53Shared::NTHREADS);
 std::vector<uint32_t>*              RD53Event::theData;
 
@@ -184,7 +184,7 @@ void RD53Event::PrintEvents(const std::vector<RD53Event>& events, const std::vec
     }
 }
 
-bool RD53Event::EvtErrorHandler(uint16_t status)
+bool RD53Event::EvtErrorHandler(uint32_t status)
 {
     bool isGood = true;
 
@@ -280,10 +280,16 @@ bool RD53Event::EvtErrorHandler(uint16_t status)
         isGood = false;
     }
 
+    if(status & RD53EvtEncoder::CHIP_QROW)
+    {
+        LOG(ERROR) << BOLDRED << "Neighbor bit set for the first qrow " << BOLDYELLOW << "--> retry" << std::setfill(' ') << std::setw(8) << "" << RESET;
+        isGood = false;
+    }
+
     return isGood;
 }
 
-bool RD53Event::findEventStarts(const std::vector<uint32_t>& data, std::vector<size_t>& eventStarts, uint16_t& eventStatus)
+bool RD53Event::findEventStarts(const std::vector<uint32_t>& data, std::vector<size_t>& eventStarts, uint32_t& eventStatus)
 {
     size_t i               = 0u;
     bool   firstEventFound = false;
@@ -316,7 +322,7 @@ bool RD53Event::findEventStarts(const std::vector<uint32_t>& data, std::vector<s
     return true;
 }
 
-void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStartExt, uint16_t& eventStatus)
+void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStartExt, uint32_t& eventStatus)
 {
     std::vector<size_t> eventStartLocal;
     eventStatus = RD53FWEvtEncoder::GOOD;
@@ -379,7 +385,7 @@ void RD53Event::JoinDecodingThreads()
         if(thr.joinable() == true) thr.join();
 }
 
-void RD53Event::decoderThread(std::vector<uint32_t>*& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStart, uint16_t& eventStatus, std::atomic<bool>& workDone)
+void RD53Event::decoderThread(std::vector<uint32_t>*& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStart, uint32_t& eventStatus, std::atomic<bool>& workDone)
 {
     while(RD53Event::keepDecodersRunning == true)
     {
@@ -391,7 +397,7 @@ void RD53Event::decoderThread(std::vector<uint32_t>*& data, std::vector<RD53Even
     }
 }
 
-void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint16_t& eventStatus)
+void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint32_t& eventStatus)
 {
     std::vector<size_t> eventStart;
 
@@ -461,7 +467,7 @@ void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std:
 // # Use of OpenMP (compiler flag -fopenmp) #
 // ##########################################
 /*
-void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint16_t& eventStatus)
+void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint32_t& eventStatus)
 {
     std::vector<size_t> eventStart;
     eventStatus = RD53FWEvtEncoder::GOOD;
@@ -598,7 +604,7 @@ void RD53Event::DecodeRD53AEvent(const uint32_t* data, size_t n32bitsWords)
     }
 }
 
-void RD53Event::DecodeRD53AEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& refEventStart, uint16_t& eventStatus)
+void RD53Event::DecodeRD53AEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& refEventStart, uint32_t& eventStatus)
 {
     const size_t maxL1Counter = RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID) + 1;
 
@@ -625,17 +631,17 @@ void RD53Event::DecodeRD53AEvents(const std::vector<uint32_t>& data, std::vector
 // # Specific for RD53B #
 // ######################
 
-size_t RD53Event::DecodeRD53BEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint16_t& eventStatus, const FormatOptions& options)
+size_t RD53Event::DecodeRD53BEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint32_t& eventStatus, const FormatOptions& options)
 {
     return RD53Event::DecodeRD53BEvents(&data[0], events, RD53FWEvtEncoder::NBIT_EVT_WORD * data.size(), eventStatus, options);
 }
 
-size_t RD53Event::DecodeRD53BEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& refEventStart, uint16_t& eventStatus, const FormatOptions& options)
+size_t RD53Event::DecodeRD53BEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& refEventStart, uint32_t& eventStatus, const FormatOptions& options)
 {
     return RD53Event::DecodeRD53BEvents(&data[refEventStart[0]], events, RD53FWEvtEncoder::NBIT_EVT_WORD * (refEventStart.back() - refEventStart[0]), eventStatus, options);
 }
 
-size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>& events, const size_t howMany, uint16_t& eventStatus, const FormatOptions& options)
+size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>& events, const size_t howMany, uint32_t& eventStatus, const FormatOptions& options)
 {
     auto         bits         = bit_view(data, 0, howMany);
     const size_t n32bitsWords = bits.size() / RD53FWEvtEncoder::NBIT_EVT_WORD;

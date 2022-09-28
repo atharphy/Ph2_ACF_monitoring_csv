@@ -1211,7 +1211,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
     // ####################
     if(pType == BoardType::RD53)
     {
-        uint16_t status;
+        uint32_t status;
         fEventList.clear();
         if(RD53Event::decodedEvents.size() == 0) RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents, status);
         RD53Event::addBoardInfo2Events(pBoard, RD53Event::decodedEvents);

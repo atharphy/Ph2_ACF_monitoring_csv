@@ -180,8 +180,15 @@ void RD53B::decodeChipData(BitView<const uint32_t> bits, RD53ChipEvent& e, const
         bool isLast = false;
         while(isLast == false)
         {
-            isLast              = eventStreamView.pop(1);
-            size_t qrow         = eventStreamView.pop(1) ? last_qrow[ccol - 1] + 1 : eventStreamView.pop(8);
+            isLast = eventStreamView.pop(1);
+            size_t qrow;
+            if(eventStreamView.pop(1) == 1)
+            {
+                if(last_qrow[ccol - 1] == RD53B::NROWS / 2) e.eventStatus |= RD53EvtEncoder::CHIP_QROW;
+                qrow = last_qrow[ccol - 1] + 1;
+            }
+            else
+                qrow = eventStreamView.pop(8);
             last_qrow[ccol - 1] = qrow;
 
             if(2 * qrow >= RD53B::NROWS) e.eventStatus |= RD53EvtEncoder::CHIPPIX;
