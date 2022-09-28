@@ -94,6 +94,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
         {
             for(int hybridNumber = 0; hybridNumber < 2; hybridNumber++)
             {
+                auto cHybridId = 2 * cOpticalGroup->getId() + hybridNumber;
                 if(pIsExternal)
                 {
                     clpGBTInterface->ConfigureRxPRBS(cOpticalGroup->flpGBT, {0, 1, 2, 3, 4, 5, 6}, {0, 2}, false);
@@ -105,7 +106,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 do
                 {
                     cFWInterface->selectLink(cOpticalGroup->getId());
-                    cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", hybridNumber);
+                    cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybridId);
 
                     LOG(INFO) << BOLDBLUE << "Stub lines " << RESET;
                     cFWInterface->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable", 0x01);
