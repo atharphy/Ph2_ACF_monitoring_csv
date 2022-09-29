@@ -1651,7 +1651,7 @@ void D19cFWInterface::GetSFPParameter_L8(std::string parameter,int channel)
          else
          timer_sfp++;
 	}
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    //std::this_thread::sleep_for(std::chrono::seconds(1));
     error=this->ReadReg("fc7_daq_stat.sfp_ddmi_status.error_l8");
     if (error) 
     {
@@ -1701,7 +1701,7 @@ void D19cFWInterface::GetSFPParameter_L12(std::string parameter,int channel)
          else
          timer_sfp++;
 	}
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    //std::this_thread::sleep_for(std::chrono::seconds(1));
     error=this->ReadReg("fc7_daq_stat.sfp_ddmi_status.error_l12");
     if (error) 
     {
