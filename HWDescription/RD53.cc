@@ -306,6 +306,14 @@ void RD53::copyMaskToDefault(const std::string& which)
         else if(which == "td")
             fPixelsMaskDefault.TDAC = fPixelsMask.TDAC;
     }
+
+    if((which == "all") || (which == "en"))
+        for(auto col = 0u; col < this->getNCols(); col++)
+            for(auto row = 1u; row < this->getNRows(); row++)
+                if(fPixelsMaskDefault.Enable[row + this->getNRows() * col] == true)
+                    fChipOriginalMask->enableChannel(row, col);
+                else
+                    fChipOriginalMask->disableChannel(row, col);
 }
 
 void RD53::resetMask()
