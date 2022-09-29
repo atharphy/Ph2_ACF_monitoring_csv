@@ -1655,25 +1655,25 @@ void D19cFWInterface::GetSFPParameter_L8(std::string parameter,int channel)
     error=this->ReadReg("fc7_daq_stat.sfp_ddmi_status.error_l8");
     if (error) 
     {
-        LOG(INFO) << "Error occurred during communication with the SFP. The error code is: "<<error;
+        LOG(INFO) << "Error occurred during communication with the SFP. The error code is: "<<error<<RESET;
     }
     else if (error==0 && time_out==true)
     {
-	if (parameter=="T") LOG(INFO) << "Time out in reading the temperature of the SFP for channel " <<channel << ".";
-        if (parameter=="V") LOG(INFO) << "Time out in reading the SFP's voltage for channel " <<channel << ".";
-        if (parameter=="I") LOG(INFO) << "Time out in reading the SFP's bias current for channel " <<channel << ".";
-        if (parameter=="TX")LOG(INFO) << "Time out in reading the SFP's transmited power for channel " <<channel << ".";
-        if (parameter=="RX")LOG(INFO) << "Time out in reading the SFP's received power for channel " <<channel << ".";
+	if (parameter=="T") LOG(INFO) << "Time out in reading the temperature of the SFP for channel " <<channel << "."<<RESET;
+        if (parameter=="V") LOG(INFO) << "Time out in reading the SFP's voltage for channel " <<channel << "."<<RESET;
+        if (parameter=="I") LOG(INFO) << "Time out in reading the SFP's bias current for channel " <<channel << "."<<RESET;
+        if (parameter=="TX")LOG(INFO) << "Time out in reading the SFP's transmited power for channel " <<channel << "."<<RESET;
+        if (parameter=="RX")LOG(INFO) << "Time out in reading the SFP's received power for channel " <<channel << "."<<RESET;
     }
     else
     {
         int result = this->ReadReg("fc7_daq_stat.sfp_ddmi.data_l8");
-        if (parameter=="T") LOG(INFO) << "The temperature of the SFP for channel " <<channel << " is " << result/256.0 <<" Celsius";
-        if (parameter=="V") LOG(INFO) << "The SFP's voltage for channel " <<channel << " is " << result/10.0 <<" miliVolt";
-        if (parameter=="I") LOG(INFO) << "The SFP's bias current for channel " <<channel << " is " << result*0.002 <<" miliAmper";
-        if (parameter=="TX")LOG(INFO) << "The SFP's transmited power for channel " <<channel << " is " << result*0.1 <<" muWatt";
-        if (parameter=="RX")LOG(INFO) << "The SFP's received power for channel " <<channel << " is " << result*0.1 <<" muWatt";
-        if (parameter=="raw")LOG(INFO) << "The SFP's output for channel " <<channel << " is " << result<<"  ";
+        if (parameter=="T") LOG(INFO) << "The temperature of the SFP for channel " <<channel << " is " << result/256.0 <<" Celsius"<<RESET;
+        if (parameter=="V") LOG(INFO) << "The SFP's voltage for channel " <<channel << " is " << result/10.0 <<" miliVolt"<<RESET;
+        if (parameter=="I") LOG(INFO) << "The SFP's bias current for channel " <<channel << " is " << result*0.002 <<" miliAmper"<<RESET;
+        if (parameter=="TX")LOG(INFO) << "The SFP's transmited power for channel " <<channel << " is " << result*0.1 <<" muWatt"<<RESET;
+        if (parameter=="RX")LOG(INFO) << "The SFP's received power for channel " <<channel << " is " << result*0.1 <<" muWatt"<<RESET;
+        if (parameter=="raw")LOG(INFO) << "The SFP's output for channel " <<channel << " is " << result<<RESET;
     }
 }
 void D19cFWInterface::GetSFPParameter_L12(std::string parameter,int channel)
@@ -1705,26 +1705,28 @@ void D19cFWInterface::GetSFPParameter_L12(std::string parameter,int channel)
     error=this->ReadReg("fc7_daq_stat.sfp_ddmi_status.error_l12");
     if (error) 
     {
-        LOG(INFO) << "Error occurred during communication with the SFP. The error code is: "<<error;
+        LOG(INFO) << "Error occurred during communication with the SFP. The error code is: "<<error<<RESET;
     }
     else if (error==0 && time_out==true)
     {
-	if (parameter=="T") LOG(INFO) << "Time out in reading the temperature of the SFP for channel " <<channel << ".";
-        if (parameter=="V") LOG(INFO) << "Time out in reading the SFP's voltage for channel " <<channel << ".";
-        if (parameter=="I") LOG(INFO) << "Time out in reading the SFP's bias current for channel " <<channel << ".";
-        if (parameter=="TX")LOG(INFO) << "Time out in reading the SFP's transmited power for channel " <<channel << ".";
-        if (parameter=="RX")LOG(INFO) << "Time out in reading the SFP's received power for channel " <<channel << ".";
+	if (parameter=="T") LOG(INFO) << "Time out in reading the temperature of the SFP for channel " <<channel << "."<<RESET;
+        if (parameter=="V") LOG(INFO) << "Time out in reading the SFP's voltage for channel " <<channel << "."<<RESET;
+        if (parameter=="I") LOG(INFO) << "Time out in reading the SFP's bias current for channel " <<channel << "."<<RESET;
+        if (parameter=="TX")LOG(INFO) << "Time out in reading the SFP's transmited power for channel " <<channel << "."<<RESET;
+        if (parameter=="RX")LOG(INFO) << "Time out in reading the SFP's received power for channel " <<channel << "."<<RESET;
     }
     else
     {
         int result = this->ReadReg("fc7_daq_stat.sfp_ddmi.data_l12");
-        if (parameter=="T") LOG(INFO) << "The temperature of the SFP for channel " <<channel << " is " << result/256.0 <<" Celsius";
-        if (parameter=="V") LOG(INFO) << "The SFP's voltage for channel " <<channel << " is " << result/10.0 <<" miliVolt";
-        if (parameter=="I") LOG(INFO) << "The SFP's bias current for channel " <<channel << " is " << result*0.002 <<" miliAmper";
-        if (parameter=="TX")LOG(INFO) << "The SFP's transmited power for channel " <<channel << " is " << result*0.1 <<" muWatt";
-        if (parameter=="RX")LOG(INFO) << "The SFP's received power for channel " <<channel << " is " << result*0.1 <<" muWatt";
-        if (parameter=="raw")LOG(INFO) << "The SFP's output for channel " <<channel << " is " << result<<"  ";
+        if (parameter=="T") LOG(INFO) << "The temperature of the SFP for channel " <<channel << " is " << result/256.0 <<" Celsius"<<RESET;
+        if (parameter=="V") LOG(INFO) << "The SFP's voltage for channel " <<channel << " is " << result/10.0 <<" miliVolt"<<RESET;
+        if (parameter=="I") LOG(INFO) << "The SFP's bias current for channel " <<channel << " is " << result*0.002 <<" miliAmper"<<RESET;
+        if (parameter=="TX")LOG(INFO) << "The SFP's transmited power for channel " <<channel << " is " << result*0.1 <<" muWatt"<<RESET;
+        if (parameter=="RX")LOG(INFO) << "The SFP's received power for channel " <<channel << " is " << result*0.1 <<" muWatt"<<RESET;
+        if (parameter=="raw")LOG(INFO) << "The SFP's output for channel " <<channel << " is " << result<<"  "<<RESET;
     }
 }//D19cFWInterface
 
 } // namespace Ph2_HwInterface
+
+
