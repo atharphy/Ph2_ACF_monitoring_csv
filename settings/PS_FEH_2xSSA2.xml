@@ -22,7 +22,7 @@
     </OpticalGroup>
 
         <!--CONFIG-->
-        <Register name="clock_source">3</Register> <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
+        <Register name="clock_source">3</Register> <!-- 3 - default (internal oscillator), 0 - AMC13 -->
         <Register name="fc7_daq_cnfg">
     	<!-- Clock control -->
     	<Register name="clock">
