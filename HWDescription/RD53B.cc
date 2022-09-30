@@ -153,12 +153,12 @@ void RD53B::decodeChipData(BitView<const uint32_t> bits, RD53ChipEvent& e, const
     const auto eventStream     = decodeEventStream(bits, e, options);
     auto       eventStreamView = bit_view(eventStream);
 
+    if((e.eventStatus & (RD53EvtEncoder::CHIPNS_WAS0 | RD53EvtEncoder::CHIPNS_WAS1)) != 0) return;
     if(eventStreamView.size() == 0)
     {
-        e.eventStatus = RD53FWEvtEncoder::MISSCHIP;
+        e.eventStatus |= RD53FWEvtEncoder::MISSCHIP;
         return;
     }
-    if((e.eventStatus & (RD53EvtEncoder::CHIPNS_WAS0 | RD53EvtEncoder::CHIPNS_WAS1)) != 0) return;
 
     decodeStreamHeader(eventStreamView, e, options);
     e.trigger_tag = eventStreamView.pop(RD53BEvtEncoder::NBIT_TRGTAG);
@@ -175,7 +175,11 @@ void RD53B::decodeChipData(BitView<const uint32_t> bits, RD53ChipEvent& e, const
         size_t ccol = eventStreamView.pop(RD53BEvtEncoder::NBIT_CCOL);
         if(ccol == 0) return; // Good end of chip data
 
-        if(RD53Constants::NROW_CORE * (ccol - 1) >= RD53B::NCOLS) e.eventStatus |= RD53EvtEncoder::CHIPPIX;
+        if(RD53Constants::NROW_CORE * (ccol - 1) >= RD53B::NCOLS)
+        {
+            e.eventStatus |= RD53EvtEncoder::CHIPPIX;
+            return;
+        }
 
         bool isLast = false;
         while(isLast == false)

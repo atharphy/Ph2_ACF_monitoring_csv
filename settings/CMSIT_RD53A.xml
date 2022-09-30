@@ -59,7 +59,7 @@
               GP_LVDS_ROUTE          =    "0"
               LATENCY_CONFIG         =  "136"
               CLK_DATA_DELAY         =    "0"
-              CAL_EDGE_FINE_DELAY    =    "0"
+              CAL_EDGE_FINE_DELAY    =    "9"
               ANALOG_INJ_MODE        =    "0"
 
               VOLTAGE_TRIM_DIG       =   "16"

@@ -47,7 +47,7 @@
               GP_LVDS_ROUTE_1        =   "28"
               TriggerConfig          =  "136"
               CLK_DATA_DELAY         =    "0"
-              CAL_EDGE_FINE_DELAY    =    "0"
+              CAL_EDGE_FINE_DELAY    =    "9"
               ANALOG_INJ_MODE        =    "0"
 
               VOLTAGE_TRIM_DIG       =    "8"
