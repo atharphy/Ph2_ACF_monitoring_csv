@@ -188,10 +188,10 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     }
 #endif
 
-    if(fDetectorContainer->size() > 0)
+    if(fDetectorContainer->size() > 0 && fInitializeInterfaces == 1)
     {
         const BeBoard* cFirstBoard = fDetectorContainer->at(0);
-        if(cFirstBoard->getBoardType() != BoardType::RD53 && fInitializeInterfaces == 1)
+        if(cFirstBoard->getBoardType() != BoardType::RD53)
         {
             LOG(INFO) << BOLDBLUE << "Initializing HwInterfaces for OT BeBoards.." << RESET;
             if(cFirstBoard->size() > 0) // # of optical groups connected to Board0

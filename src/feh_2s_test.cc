@@ -6,6 +6,7 @@
 #include "Utils/argvparser.h"
 #include "boost/format.hpp"
 #include "tools/BackEndAlignment.h"
+#include "tools/CheckCbcNeighbors.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
 #include "tools/LatencyScan.h"
@@ -149,7 +150,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("registerTest", "Test I2C registers on Chips", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkL1Timing", "Check L1 timing for hybrid# [please provide hybrid number]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("linkTest", "Check data quality on L1/stub data", ArgvParser::NoOptionAttribute);
-
+    cmd.defineOption("checkSharedStubs", "Check stubs at boundary between chips", ArgvParser::NoOptionAttribute);
     int result = cmd.parse(argc, argv);
 
     if(result != ArgvParser::NoParserError)
@@ -671,6 +672,26 @@ int main(int argc, char* argv[])
         cMemoryChecker.writeObjects();
         cMemoryChecker.resetPointers();
     }
+
+    if(cmd.foundOption("checkSharedStubs"))
+    {
+        LOG(INFO) << BOLDMAGENTA << "Checking stubs across CBC neighbors" << RESET;
+        t.start();
+
+        MemoryCheck2S cMemoryChecker;
+        cMemoryChecker.Inherit(&cTool);
+        cMemoryChecker.Initialise();
+        cMemoryChecker.EvaluatePedeNoise(10); // find pedestal + noise
+        cMemoryChecker.SetThreshold(-2.0);    // set threshold to 3 sigma away from pedestal
+
+        CheckCbcNeighbors cCheckCbcNeighbors;
+        cCheckCbcNeighbors.Inherit(&cTool);
+        cCheckCbcNeighbors.Initialise();
+        cCheckCbcNeighbors.TestCbcNeighbors();
+
+        t.stop();
+        t.show("Time to check stubs on shared channels");
+    }
     if(cCheckData)
     {
         std::string          cArgsStr = cmd.optionValue("checkData");
@@ -711,6 +732,7 @@ int main(int argc, char* argv[])
         cTool.setSameDac("VCth", cThreshold);
         LOG(INFO) << BOLDBLUE << "Threshold for next steps is set to " << +cThreshold << " DAC units." << RESET;
     }
+
     // Inject charge with antenna circuit and look for opens
     if(cFindOpens)
     {

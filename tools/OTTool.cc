@@ -214,7 +214,7 @@ void OTTool::SetBrdRegstoPerserve(std::vector<std::string> pListOfRegs)
     fBrdRegsToPerserve.clear();
     for(const auto& cRegName: pListOfRegs)
     {
-        LOG(INFO) << BOLDBLUE << "Adding " << cRegName << " to list of Brd Regs to perserve..." << RESET;
+        LOG(DEBUG) << BOLDBLUE << "Adding " << cRegName << " to list of Brd Regs to perserve..." << RESET;
         fBrdRegsToPerserve.push_back(cRegName);
     }
 }
@@ -240,7 +240,7 @@ void OTTool::SetChipRegstoPerserve(FrontEndType pType, std::vector<std::string> 
                     cRegsToPerserve.clear();
                     for(const auto& cRegName: pListOfRegs)
                     {
-                        LOG(INFO) << BOLDBLUE << "Adding " << cRegName << " to list of Chip Regs to perserve...Chip#" << +cChip->getId() << RESET;
+                        LOG(DEBUG) << BOLDBLUE << "Adding " << cRegName << " to list of Chip Regs to perserve...Chip#" << +cChip->getId() << RESET;
                         cRegsToPerserve.push_back(cRegName);
                     }
                 } // Chips

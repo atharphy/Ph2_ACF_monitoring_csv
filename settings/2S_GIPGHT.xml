@@ -7,13 +7,12 @@
     
     <!-- skeleton -->
     <OpticalGroup Id="0" FMCId="0" reset="1">
-        <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="./settings/lpGBTFiles/" />
-        <lpGBT Id="0" configfile="CMSOT_lpGBT.txt">
+        <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
           <Settings
           />
         </lpGBT>
-        <Hybrid Id="0" Status="1" reset="1">
+        <Hybrid Id="0" enable="1" reset="1">
             <Global>
                 <Settings threshold="560" latency="99"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
@@ -37,7 +36,7 @@
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
-        <Hybrid Id="1" Status="1" reset="1">
+        <Hybrid Id="1" enable="1" reset="1">
             <Global>
                 <Settings threshold="560" latency="99"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
@@ -62,12 +61,22 @@
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
     </OpticalGroup>
-    <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
-    <Register name="clock_source_u7">3</Register> 
+    <!-- 15 - default (internal oscillator), 0 - AMC13 -->
+    <Register name="clock_source_u7">15</Register> 
     <!-- 3 = 3 = internal oscillator (default), 1 = fmc_l8_clk1, 2 = fmc_l8_clk0, 0 = COAX_IN -->
     <Register name="clock_source_u8">3</Register> 
     <Register name="fc7_daq_cnfg">
 	   <!-- Sync block control -->
+        <Register name="optical_block">
+		<Register name="lpgbt_sc_worker">
+                        <Register name="ic_retry"> 1 </Register>
+                        <Register name="i2c_retry"> 1 </Register>
+                        <Register name="fe_retry"> 1 </Register>
+                        <Register name="max_ic_retry"> 10 </Register>
+                        <Register name="max_i2c_retry"> 10 </Register>
+                        <Register name="max_fe_retry"> 10 </Register>
+		</Register>
+	</Register>
         <Register name="sync_block">
             <Register name="enable"          >0</Register>
             <Register name="is_bc0_enable"   >0</Register>

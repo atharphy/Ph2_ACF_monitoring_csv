@@ -567,9 +567,9 @@ void DPInterface::Configure(BeBoardFWInterface* pInterface, uint32_t pPattern, u
         LOG(INFO) << BOLDBLUE << std::bitset<16>(pPattern) << " pattern to use in PS ROH data player." << RESET;
 
     if(pFrequency == 320) // ConstPatternBRAMs(pInterface, pPatterns, 1);
-        pInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.fe_data_player.pattern_320MHz", pPattern);
+        pInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.data_player.pattern_320MHz", pPattern);
     else // ConstPatternBRAMs(pInterface, pPatterns, 1);
-        pInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.fe_data_player.pattern_640MHz", pPattern);
+        pInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.data_player.pattern_640MHz", pPattern);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
 }
 void DPInterface::ConfigureLine(BeBoardFWInterface* pInterface, uint16_t pPattern, uint8_t pLine)
@@ -598,7 +598,7 @@ void DPInterface::CheckNPatterns(BeBoardFWInterface* pInterface)
 }
 void DPInterface::Start(BeBoardFWInterface* pInterface, uint8_t pType)
 {
-    pInterface->WriteReg("fc7_daq_ctrl.physical_interface_block.fe_data_player.start_data_player", 0x01);
+    pInterface->WriteReg("fc7_daq_ctrl.physical_interface_block.data_player.start_data_player", 0x01);
 
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
     bool cIsRunning = this->IsRunning(pInterface, pType);
@@ -611,15 +611,15 @@ void DPInterface::Start(BeBoardFWInterface* pInterface, uint8_t pType)
 
 bool DPInterface::IsRunning(BeBoardFWInterface* pInterface, uint8_t pType)
 {
-    std::string cRegName = (pType == 0) ? "fc7_daq_stat.physical_interface_block.fe_data_player.stat_feh_data_player" : "fc7_daq_stat.physical_interface_block.fe_data_player.stat_roh_data_player";
-    // std::string cRegName = "fc7_daq_stat.physical_interface_block.fe_data_player.stat_roh_data_player";
+    std::string cRegName = (pType == 0) ? "fc7_daq_stat.physical_interface_block.data_player.stat_feh_data_player" : "fc7_daq_stat.physical_interface_block.data_player.stat_roh_data_player";
+    // std::string cRegName = "fc7_daq_stat.physical_interface_block.data_player.stat_roh_data_player";
     fEmulatorRunning = (pInterface->ReadReg(cRegName) == 1);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     return fEmulatorRunning;
 }
 void DPInterface::Stop(BeBoardFWInterface* pInterface)
 {
-    pInterface->WriteReg("fc7_daq_ctrl.physical_interface_block.fe_data_player.stop_data_player", 0x01);
+    pInterface->WriteReg("fc7_daq_ctrl.physical_interface_block.data_player.stop_data_player", 0x01);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
     LOG(INFO) << BOLDBLUE << "FE data player for PS ROH stopped." << RESET;
 }
