@@ -1515,7 +1515,11 @@ void FileParser::parseGlobalRD53Settings(pugi::xml_node pHybridNode, Hybrid* pHy
             uint16_t    regvalue = convertAnyInt(attr.value());
             os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
 
-            for(auto theChip: *pHybrid) static_cast<ReadoutChip*>(theChip)->setReg(regname, regvalue, true);
+            for(auto theChip: *pHybrid)
+            {
+                static_cast<ReadoutChip*>(theChip)->getRegItem(regname).fDefValue = regvalue;
+                static_cast<ReadoutChip*>(theChip)->getRegItem(regname).fPrmptCfg = true;
+            }
         }
     }
 }
@@ -1532,9 +1536,10 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
 
         for(const pugi::xml_attribute& attr: cLocalChipSettings.attributes())
         {
-            std::string regname  = attr.name();
-            uint16_t    regvalue = convertAnyInt(attr.value());
-            theChip->setReg(regname, regvalue, true);
+            std::string regname                    = attr.name();
+            uint16_t    regvalue                   = convertAnyInt(attr.value());
+            theChip->getRegItem(regname).fDefValue = regvalue;
+            theChip->getRegItem(regname).fPrmptCfg = true;
             os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
         }
     }

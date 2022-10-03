@@ -9,7 +9,6 @@
 */
 
 #include "RD53ThrEqualizationHistograms.h"
-#include "../HWDescription/RD53A.h"
 #include "../Utils/ChannelContainerStream.h"
 
 using namespace Ph2_HwDescription;
@@ -24,13 +23,11 @@ void ThrEqualizationHistograms::book(TFile* theOutputFile, DetectorContainer& th
     // #######################
     // # Retrieve parameters #
     // #######################
-    nEvents         = this->findValueInSettings<double>(settingsMap, "nEvents");
-    size_t TDACsize = RD53Shared::setBits(RD53Constants::NBIT_TDAC) + 1;
-
+    nEvents               = this->findValueInSettings<double>(settingsMap, "nEvents");
     const size_t colStart = this->findValueInSettings<double>(settingsMap, "COLstart");
     const size_t colStop  = this->findValueInSettings<double>(settingsMap, "COLstop");
-    frontEnd              = RD53Shared::firstChip->getMajorityFE(colStart, colStop);
-    if(frontEnd == &RD53A::DIFF) TDACsize *= 2;
+    frontEnd              = RD53Shared::firstChip->getFEtype(colStart, colStop);
+    size_t TDACsize       = frontEnd->nTDACvalues;
 
     auto hThrEqualization = CanvasContainer<TH1F>("ThrEqualization", "ThrEqualization", nEvents + 1, 0, 1 + 1. / nEvents);
     bookImplementer(theOutputFile, theDetectorStructure, ThrEqualization, hThrEqualization, "Efficiency", "Entries");
@@ -90,8 +87,7 @@ void ThrEqualizationHistograms::fillOccupancy(const DetectorDataContainer& Occup
 
 void ThrEqualizationHistograms::fillTDAC(const DetectorDataContainer& TDACContainer)
 {
-    size_t TDACsize = RD53Shared::setBits(RD53Constants::NBIT_TDAC) + 1;
-    if(frontEnd == &RD53A::DIFF) TDACsize *= 2;
+    size_t TDACsize = frontEnd->nTDACvalues;
 
     for(const auto cBoard: TDACContainer)
         for(const auto cOpticalGroup: *cBoard)

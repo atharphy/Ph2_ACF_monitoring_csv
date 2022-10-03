@@ -53,6 +53,8 @@ class Latency : public PixelAlive
 #endif
 
   private:
+    const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
+
     std::vector<uint16_t> dacList;
 
     DetectorDataContainer theOccContainer;

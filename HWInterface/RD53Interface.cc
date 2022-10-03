@@ -19,10 +19,12 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
 {
     this->setBoard(pChip->getBeBoardId());
 
-    auto nameAndValue(SplitSpecialRegisters(regName, data, RD53Shared::firstChip->getRegMap()));
-    RD53Interface::SendCommand(static_cast<RD53*>(pChip), RD53ACmd::WrReg{(uint8_t)pChip->getId(), pChip->getRegItem(nameAndValue.first).fAddress, nameAndValue.second});
+    auto                  nameAndValue(SetSpecialRegister(regName, data, RD53Shared::firstChip->getRegMap()));
+    std::vector<uint16_t> cmdStream;
+    PackWriteCommand(pChip, nameAndValue.first, nameAndValue.second, cmdStream, pVerifLoop);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());
 
-    if((regName == "VCAL_HIGH") || (regName == "VCAL_MED")) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP)); // @TMP@
+    if((regName == "VCAL_HIGH") || (regName == "VCAL_MED")) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP));
 
     bool     status      = true;
     uint16_t actualValue = 0;
@@ -31,7 +33,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
         if(regName == "PIX_PORTAL")
         {
             auto pixMode = RD53Interface::ReadChipReg(pChip, "PIX_MODE");
-            if((pChip->getFrontEndType() == FrontEndType::RD53A ? pixMode & 0x18 : pixMode & 0x1) == 0) // Check only auto-increment bits
+            if((pChip->getFrontEndType() == FrontEndType::RD53A ? pixMode & RD53AConstants::AUTO_INCREMENT_MASK : pixMode & RD53BConstants::AUTO_INCREMENT_MASK) == 0) // Check only auto-increment bits
             {
                 auto regReadback = ReadRD53Reg(static_cast<RD53*>(pChip), regName);
                 actualValue      = regReadback[0].second;
@@ -47,14 +49,20 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
     }
 
     if(status == false)
+    {
         LOG(ERROR) << BOLDRED << "Error when reading back what was written into RD53 reg. " << BOLDYELLOW << regName << BOLDRED << ": wrote = " << BOLDYELLOW << nameAndValue.second << BOLDRED
                    << ", read = " << BOLDYELLOW << actualValue << RESET;
-    // @TMP@
-    // else if((pVerifLoop == true) && (status == true))
-    //     LOG(INFO) << GREEN << "Succesfully configured chip register " << BOLDYELLOW << regName << RESET;
+    }
+    else if((pVerifLoop == true) && (status == true))
+    {
+        // LOG(INFO) << BOLDBLUE << "\t--> Succesfully configured chip register " << BOLDYELLOW << regName << RESET; // @TMP@
+    }
 
-    pChip->setReg(regName, data);
-    pChip->setReg(nameAndValue.first, nameAndValue.second);
+    // #######################################
+    // # Update both real and fake registers #
+    // #######################################
+    pChip->getRegItem(regName).fValue            = data;
+    pChip->getRegItem(nameAndValue.first).fValue = nameAndValue.second;
 
     return status;
 }
@@ -63,11 +71,12 @@ void RD53Interface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std:
 {
     this->setBoard(pBoard->getId());
 
-    std::pair<std::string, uint16_t> nameAndValue(SplitSpecialRegisters(regName, data, RD53Shared::firstChip->getRegMap()));
-    const uint16_t                   address = RD53Shared::firstChip->getRegItem(nameAndValue.first).fAddress;
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialize(RD53ACmd::WrReg{RD53Constants::BROADCAST_CHIPID, address, nameAndValue.second}), -1);
+    auto                  nameAndValue(SetSpecialRegister(regName, data, RD53Shared::firstChip->getRegMap()));
+    std::vector<uint16_t> cmdStream;
+    PackWriteBroadcastCommand(pBoard, nameAndValue.first, nameAndValue.second, cmdStream);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, -1);
 
-    if((regName == "VCAL_HIGH") || (regName == "VCAL_MED")) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP)); // @TMP@
+    if((regName == "VCAL_HIGH") || (regName == "VCAL_MED")) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP));
 }
 
 uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
@@ -131,11 +140,46 @@ bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
     return true;
 }
 
-void RD53Interface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
+void RD53Interface::DumpChipRegisters(ReadoutChip* pChip)
 {
-    StartPRBSpattern(pChip);
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-    StopPRBSpattern(pChip);
+    this->setBoard(pChip->getBeBoardId());
+
+    LOG(INFO) << GREEN << "Chip " << BOLDYELLOW << pChip->getId() << RESET << GREEN << " register content:" << RESET;
+    for(auto& cRegItem: RD53Shared::firstChip->getRegMap())
+    {
+        auto value = RD53Interface::ReadChipReg(pChip, cRegItem.first);
+        std::cout << "\t--> Register " << std::left << std::setfill(' ') << std::setw(24) << cRegItem.first << " = " << std::setw(8) << std::dec << value << std::hex << "(0x" << value << ")"
+                  << std::endl;
+    }
+}
+
+void RD53Interface::ChipErrorReport(ReadoutChip* pChip)
+{
+    this->setBoard(pChip->getBeBoardId());
+
+    LOG(INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "LOCKLOSS_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "BITFLIP_WNG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "BITFLIP_ERR_CNT     = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "BITFLIP_ERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "CMDERR_CNT          = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "CMDERR_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "SKIPPED_TRIGGER_CNT = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "SKIPPED_TRIGGER_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "HITOR_0_CNT         = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "HITOR_0_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "HITOR_1_CNT         = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "HITOR_0_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "HITOR_2_CNT         = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "HITOR_0_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "HITOR_3_CNT         = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "HITOR_0_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "BCID_CNT            = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "BCID_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+    LOG(INFO) << BOLDBLUE << "TRIG_CNT            = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "TRIG_CNT") << std::setfill(' ') << std::setw(8) << "" << RESET;
+}
+
+uint16_t RD53Interface::SetFieldValue(uint16_t regValue, uint16_t fieldValue, uint8_t start, uint8_t size)
+{
+    uint16_t mask = ((1 << size) - 1) << start;
+    return regValue ^ ((regValue ^ (fieldValue << start)) & mask);
+}
+
+uint16_t RD53Interface::GetFieldValue(uint16_t regValue, uint8_t start, uint8_t size)
+{
+    uint16_t mask = (1 << size) - 1;
+    return (regValue >> start) & mask;
 }
 
 // ##################
@@ -193,45 +237,6 @@ void RD53Interface::SendHybridCommands(const BeBoard* pBoard, const std::vector<
 // # Dedicated to monitoring #
 // ###########################
 
-uint32_t RD53Interface::getADCobservable(const std::string& observableName, bool* isCurrentNotVoltage)
-{
-    uint32_t voltageObservable(0), currentObservable(0);
-
-    const std::unordered_map<std::string, uint32_t> currentMultiplexer = {
-        {"Iref", 0x00},          {"IBIASP1_SYNC", 0x01}, {"IBIASP2_SYNC", 0x02},  {"IBIAS_DISC_SYNC", 0x03}, {"IBIAS_SF_SYNC", 0x04},  {"ICTRL_SYNCT_SYNC", 0x05}, {"IBIAS_KRUM_SYNC", 0x06},
-        {"COMP_LIN", 0x07},      {"FC_BIAS_LIN", 0x08},  {"KRUM_CURR_LIN", 0x09}, {"LDAC_LIN", 0x0A},        {"PA_IN_BIAS_LIN", 0x0B}, {"COMP_DIFF", 0x0C},        {"PRECOMP_DIFF", 0x0D},
-        {"FOL_DIFF", 0x0E},      {"PRMP_DIFF", 0x0F},    {"LCC_DIFF", 0x10},      {"VFF_DIFF", 0x11},        {"VTH1_DIFF", 0x12},      {"VTH2_DIFF", 0x13},        {"CDR_CP_IBIAS", 0x14},
-        {"VCO_BUFF_BIAS", 0x15}, {"VCO_IBIAS", 0x16},    {"CML_TAP0_BIAS", 0x17}, {"CML_TAP1_BIAS", 0x18},   {"CML_TAP2_BIAS", 0x19}};
-
-    const std::unordered_map<std::string, uint32_t> voltageMultiplexer = {
-        {"ADCbandgap", 0x00},      {"CAL_MED", 0x01},         {"CAL_HI", 0x02},         {"TEMPSENS_1", 0x03},      {"RADSENS_1", 0x04},       {"TEMPSENS_2", 0x05},      {"RADSENS_2", 0x06},
-        {"TEMPSENS_4", 0x07},      {"RADSENS_4", 0x08},       {"VREF_VDAC", 0x09},      {"VOUT_BG", 0x0A},         {"IMUXoutput", 0x0B},      {"CAL_MED", 0x0C},         {"CAL_HI", 0x0D},
-        {"RADSENS_3", 0x0E},       {"TEMPSENS_3", 0x0F},      {"REF_KRUM_LIN", 0x10},   {"Vthreshold_LIN", 0x11},  {"VTH_SYNC", 0x12},        {"VBL_SYNC", 0x13},        {"VREF_KRUM_SYNC", 0x14},
-        {"VTH_HI_DIFF", 0x15},     {"VTH_LO_DIFF", 0x16},     {"VIN_ana_ShuLDO", 0x17}, {"VOUT_ana_ShuLDO", 0x18}, {"VREF_ana_ShuLDO", 0x19}, {"VOFF_ana_ShuLDO", 0x1A}, {"VIN_dig_ShuLDO", 0x1D},
-        {"VOUT_dig_ShuLDO", 0x1E}, {"VREF_dig_ShuLDO", 0x1F}, {"VOFF_dig_ShuLDO", 0x20}};
-
-    auto search = currentMultiplexer.find(observableName);
-    if(search == currentMultiplexer.end())
-    {
-        if((search = voltageMultiplexer.find(observableName)) == voltageMultiplexer.end())
-        {
-            LOG(ERROR) << BOLDRED << "Wrong observable name: " << observableName << RESET;
-            return -1;
-        }
-        else
-            voltageObservable = search->second;
-        if(isCurrentNotVoltage != nullptr) *isCurrentNotVoltage = false;
-    }
-    else
-    {
-        currentObservable = search->second;
-        voltageObservable = voltageMultiplexer.find("IMUXoutput")->second;
-        if(isCurrentNotVoltage != nullptr) *isCurrentNotVoltage = true;
-    }
-
-    return bits::pack<1, 6, 7>(true, currentObservable, voltageObservable);
-}
-
 float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& observableName)
 {
     this->setBoard(pChip->getBeBoardId());
@@ -241,7 +246,7 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& obse
     bool        isCurrentNotVoltage;
     uint32_t    observable;
 
-    observable = RD53Interface::getADCobservable(observableName, &isCurrentNotVoltage);
+    observable = getADCobservable(observableName, &isCurrentNotVoltage);
 
     if(observableName.find("TEMPSENS") != std::string::npos)
     {
@@ -261,7 +266,7 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& obse
 
 uint32_t RD53Interface::ReadChipADC(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName)
 {
-    uint32_t observable = RD53Interface::getADCobservable(observableName, nullptr);
+    uint32_t observable = getADCobservable(observableName, nullptr);
     return RD53Interface::measureADC(pChip, observable);
 }
 

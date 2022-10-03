@@ -87,21 +87,21 @@ struct Clear
 {
     static constexpr uint16_t cmdCode() { return RD53BCmdEncoder::CLEAR; }
 
-    size_t chip_id;
+    size_t chip_id = 31;
 };
 
 struct GlobalPulse
 {
     static constexpr uint16_t cmdCode() { return RD53BCmdEncoder::GLOB_PULSE; }
 
-    size_t chip_id;
+    size_t chip_id = 31;
 };
 
 struct WrReg
 {
     static constexpr uint16_t cmdCode() { return RD53BCmdEncoder::WRITE; }
 
-    size_t chip_id;
+    size_t chip_id = 31;
     size_t address;
     size_t value;
 };
@@ -112,7 +112,7 @@ struct WrRegLong
 {
     static constexpr uint16_t cmdCode() { return RD53BCmdEncoder::WRITE; }
 
-    size_t                chip_id;
+    size_t                chip_id = 31;
     std::vector<uint16_t> values;
 };
 
@@ -122,7 +122,7 @@ struct RdReg
 {
     static constexpr uint16_t cmdCode() { return RD53BCmdEncoder::READ; }
 
-    size_t chip_id;
+    size_t chip_id = 31;
     size_t address;
 };
 
@@ -132,7 +132,7 @@ struct Cal
 {
     static constexpr uint16_t cmdCode() { return RD53BCmdEncoder::CAL; }
 
-    size_t chip_id;
+    size_t chip_id = 31;
     bool   mode;
     size_t edge_delay;
     size_t edge_duration;

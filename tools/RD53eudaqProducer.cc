@@ -54,6 +54,18 @@ void RD53eudaqProducer::DoStartRun()
     // ev->SetTriggerN(swTrigCnt++);
     // this->MySendEvent(std::move(ev));
 
+    // ######################################
+    // # Add extra information to the event #
+    // ######################################
+    // std::stringstream os;
+    // ev->SetTag("FirmwareVersion", RD53sysCntrPhys.fBeBoardInterface->FWinfo);
+    // for(const auto cBoard: *(RD53sysCntrPhys.fDetectorContainer))
+    //     for(const auto cOpticalGroup: *cBoard)
+    //         for(const auto cHybrid: *cOpticalGroup)
+    //             for(const auto cChip: *cHybrid)
+    //               cChip->saveRegMap("NONE", os);
+    // ev->SetTag("RegisterMapAndMask", os);
+
     // ###################################################
     // # Get configuration directly from EUDAQ framework #
     // ###################################################
@@ -169,7 +181,7 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
             // Use TLU counter
             if(tluTrigId < eudaqProducer->previousTLUTrigId)
             {
-                eudaqProducer->swTrigCnt += 1 << EUDAQ::NBITSTLU;
+                eudaqProducer->swTrigCnt += 1 << EUDAQ::NBIT_TLU;
                 std::cout << "[RD53eudaqProducer::RD53eudaqEvtConverter] Detected TLU trigger ID wrap around" << std::endl;
             }
             ev->SetTriggerN(eudaqProducer->swTrigCnt + tluTrigId);
@@ -186,8 +198,7 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
                         for(const auto& cChip: *cHybrid)
                             if((cHybrid->getId() == event.hybrid_id) && (cChip->getId() == event.chip_id)) chipType = static_cast<Ph2_HwDescription::RD53*>(cChip)->getComment();
 
-                    theEvent.chipData.push_back(
-                        {chipType, event.chip_id, event.chip_lane, event.hybrid_id, event.trigger_id, event.trigger_tag, event.bc_id, {}});
+                    theEvent.chipData.push_back({chipType, event.chip_id, event.chip_lane, event.hybrid_id, event.trigger_id, event.trigger_tag, event.bc_id, {}});
                     for(const auto& hit: event.hit_data) theEvent.chipData.back().hits.push_back({hit.row, hit.col, hit.tot});
                 }
 

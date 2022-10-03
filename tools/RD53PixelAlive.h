@@ -56,6 +56,8 @@ class PixelAlive : public Tool
   private:
     bool unstuckPixels;
 
+    const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
+
     std::shared_ptr<DetectorDataContainer> theOccContainer;
     DetectorDataContainer                  theBCIDContainer;
     DetectorDataContainer                  theTrgIDContainer;
