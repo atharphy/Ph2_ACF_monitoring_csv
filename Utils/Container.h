@@ -29,29 +29,31 @@ class ChipContainer;
 class BaseContainer
 {
   public:
-    BaseContainer(uint16_t id = -1) : id_(id), index_(0), isEnabled_(true) { ; }
+    BaseContainer(uint16_t id = -1) : id_(id), index_(0), globalIndex_(0), isEnabled_(true) { ; }
 
     BaseContainer(const BaseContainer&) = delete;
     BaseContainer(BaseContainer&& theCopyContainer)
     {
-        id_    = theCopyContainer.id_;
-        index_ = theCopyContainer.index_;
+        id_          = theCopyContainer.id_;
+        index_       = theCopyContainer.index_;
+        globalIndex_ = theCopyContainer.globalIndex_;
     }
 
     virtual ~BaseContainer() { ; }
     uint16_t               getId(void) const { return id_; }
     uint16_t               getIndex(void) const { return index_; }
+    uint16_t               getGlobalIndex(void) const { return globalIndex_; }
     virtual void           cleanDataStored(void)            = 0;
     virtual BaseContainer* getElement(uint16_t index) const = 0;
     bool                   isEnabled() const { return isEnabled_; }
     void                   setEnabled(bool enable) { isEnabled_ = enable; }
     virtual void           setEnabledAll(bool enable) = 0;
-
-    void setIndex(uint16_t index) { index_ = index; }
+    void                   setIndex(uint16_t index) { index_ = index; }
+    void                   setGlobalIndex(uint16_t globalIndex) { globalIndex_ = globalIndex; }
 
   private:
     uint16_t id_;
-    uint16_t index_;
+    uint16_t index_, globalIndex_;
     bool     isEnabled_;
 };
 
@@ -114,6 +116,7 @@ class Container
         catch(std::exception& ex)
         {
             object->setIndex(this->size());
+            object->setGlobalIndex(this->size());
             std::vector<T*>::push_back(object);
             Container::idObjectMap_[objectId] = this->back();
             return this->back();

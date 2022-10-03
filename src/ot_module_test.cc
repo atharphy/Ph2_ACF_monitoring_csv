@@ -8,6 +8,7 @@
 #include "tools/BackEndAlignment.h"
 #include "tools/BeamTestCheck.h"
 #include "tools/CBCPulseShape.h"
+#include "tools/CheckCbcNeighbors.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
 #include "tools/LatencyScan.h"
@@ -182,6 +183,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("readMonitors", "Read internal monitors on lpGBT [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("pulseShape", "Scan the threshold and fit for signal Vcth", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("checkSharedStubs", "Check stubs at boundary between chips", ArgvParser::NoOptionAttribute);
 
     int result = cmd.parse(argc, argv);
 
@@ -1055,9 +1057,11 @@ int main(int argc, char* argv[])
             std::vector<uint8_t> cChipsToCheck = getArgs(cArgsStr);
             cMemoryChecker.EvaluatePedeNoise(10); // find pedestal + noise
             cMemoryChecker.SetThreshold(-2.0);    // set threshold to 3 sigma away from pedestal
+
             int cTriggerGap = cTool.findValueInSettings<double>("TriggerSeparation", 500);
             cMemoryChecker.DataCheck(cChipsToCheck, cTriggerGap);
         }
+
         cMemoryChecker.MemoryCheck2SRaw(true);  // all ones
         cMemoryChecker.MemoryCheck2SRaw(false); // all zeros
 
@@ -1127,6 +1131,7 @@ int main(int argc, char* argv[])
         BeamTestCheck cBeamTestCheck;
         cBeamTestCheck.Inherit(&cTool);
         cBeamTestCheck.Initialise();
+
         cBeamTestCheck.ConfigureScans(cScanL1, cScanStubs);
         cBeamTestCheck.ConfigurePrintout(cCng);
         cBeamTestCheck.CheckWithTP();
@@ -1244,6 +1249,27 @@ int main(int argc, char* argv[])
         t.stop();
         t.show("Time for pulseShape plot measurement");
         t.reset();
+    }
+
+    if(!cmd.foundOption("read") && cmd.foundOption("checkSharedStubs"))
+    {
+        LOG(INFO) << BOLDMAGENTA << "Checking stubs across CBC neighbors" << RESET;
+        t.start();
+
+        MemoryCheck2S cMemoryChecker;
+        cMemoryChecker.Inherit(&cTool);
+        cMemoryChecker.Initialise();
+        cMemoryChecker.EvaluatePedeNoise(10); // find pedestal + noise
+        cMemoryChecker.SetThreshold(-2.0);    // set threshold to 3 sigma away from pedestal
+
+        CheckCbcNeighbors cCheckCbcNeighbors;
+        cCheckCbcNeighbors.Inherit(&cTool);
+        cCheckCbcNeighbors.Initialise();
+
+        cCheckCbcNeighbors.TestCbcNeighbors();
+
+        t.stop();
+        t.show("Time to check stubs on shared channels");
     }
 
     cTool.SaveResults();

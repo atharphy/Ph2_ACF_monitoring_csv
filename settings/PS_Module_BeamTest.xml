@@ -9,13 +9,12 @@
     <CDCE configure="0" clockRate="320"/>
     
     <OpticalGroup Id="0" FMCId="0" reset="1">
-        <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-        <lpGBT Id="0" version="0" configfile="lpGBT0.txt">
+        <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
           <Settings
           />
         </lpGBT>
-        <Hybrid Id="0" Status="1" reset="1">
+        <Hybrid Id="0" enable="1" reset="1">
             <Global>
                 <!-- in electrons, file parser will take care of conversion to DAC units for each chip type --> 
                 <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  -->
@@ -24,7 +23,7 @@
                 <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns -->
                 <!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
                 <Latencies       stripLatency="118" pixelLatency="118"/>
-                <Thresholds      stripThreshold="10000" pixelThreshold="10000"/> 
+                <Thresholds      stripThreshold="40" pixelThreshold="40"/> 
                 <StubLogic       mode="0" window="16"/>
                 <HitLogic        stripMode="1" pixelMode="1"/>
                 <HipLogic        stripCut="7" pixelCut="7"/>
@@ -56,7 +55,7 @@
             <CIC Id="8" configfile="CIC_default.txt" />
         </Hybrid>
 
-        <Hybrid Id="1" Status="1" reset="1" i2cMaster="1">
+        <Hybrid Id="1" enable="1" reset="1" i2cMaster="1">
             <Global>
                 <!-- in electrons, file parser will take care of conversion to DAC units for each chip type --> 
                 <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  -->
@@ -65,7 +64,7 @@
                 <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns -->
                 <!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
                 <Latencies       stripLatency="118" pixelLatency="118"/>
-                <Thresholds      stripThreshold="10000" pixelThreshold="10000"/> 
+                <Thresholds      stripThreshold="40" pixelThreshold="40"/> 
                 <StubLogic       mode="0" window="16"/>
                 <HitLogic        stripMode="1" pixelMode="1"/>
                 <HipLogic        stripCut="7" pixelCut="7"/>
@@ -106,14 +105,14 @@
     <Register name="clock_source">3</Register> 
     <Register name="fc7_daq_cnfg">
 	<Register name="optical_block">
-                <Register name="rx_polarity">
-                        <Register name="l8"> 0 </Register>
-                        <Register name="l12"> 0 </Register>
-                </Register>
-                <Register name="tx_polarity">
-                        <Register name="l8"> 0 </Register>
-                        <Register name="l12"> 0 </Register>
-                </Register>
+		<Register name="lpgbt_sc_worker">
+                        <Register name="ic_retry"> 1 </Register>
+                        <Register name="i2c_retry"> 1 </Register>
+                        <Register name="fe_retry"> 1 </Register>
+                        <Register name="max_ic_retry"> 10 </Register>
+                        <Register name="max_i2c_retry"> 10 </Register>
+                        <Register name="max_fe_retry"> 10 </Register>
+		</Register>
         </Register>
     <Register name="sync_block">
         <Register name="enable"          >0</Register>

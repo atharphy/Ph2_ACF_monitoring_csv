@@ -304,8 +304,8 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         uint32_t                      cGoodStubInfo   = (cStubInfoHeader & (0xF << 28)) >> 28;
                         uint32_t                      cStubInfoSize   = (cStubInfoHeader & 0xFFF) * 4;
                         cStatusWord                                   = cStatusWord | (static_cast<uint8_t>(cGoodStubInfo == VALID_STUB_HEADER) << 1);
-                        // LOG(INFO) << BOLDBLUE << "\t\t.. ReadoutChip#" << +cHybrid->getIndex() << "...stub info header " << std::bitset<4>(cGoodStubInfo) << "... " << +cStubInfoSize << " words in
-                        // stub packet."
+                        // LOG(INFO) << BOLDBLUE << "\t\t.. ReadoutChip#" << +cHybrid->getIndex() << "...stub info header " << std::bitset<4>(cGoodStubInfo) << "... " << +cStubInfoSize << "
+                        // words in stub packet."
                         //            << "... status word " << std::bitset<2>(cStatusWord) << RESET;
                         if(cStatusWord == 0x03)
                         {
@@ -1070,7 +1070,7 @@ std::vector<uint32_t> D19cCic2Event::GetHits(uint8_t pHybridId, uint8_t pReadout
                 uint8_t cFirstChannel = 2 * (cCluster.fFirstStrip - 127 * pReadoutChipId) + cCluster.fSensor;
                 LOG(DEBUG) << BOLDMAGENTA << "Hybid#" << +pHybridId << " Chip#" << +pReadoutChipId << " Cluster in sensor " << +cCluster.fSensor << " in strip# " << +cCluster.fFirstStrip
                            << " actual strip " << +(cCluster.fFirstStrip - 127 * pReadoutChipId) << " of width " << +cCluster.fClusterWidth << RESET;
-                for(int cId = 0; cId <= cCluster.fClusterWidth; cId++)
+                for(int cId = 0; cId < cCluster.fClusterWidth; cId++)
                 {
                     LOG(DEBUG) << BOLDMAGENTA << "\t\t.. hit in channel " << +cFirstChannel + 2 * cId << RESET;
                     cHits.push_back(cFirstChannel + cId * 2);
@@ -1217,7 +1217,7 @@ std::vector<Cluster> D19cCic2Event::clusterize(uint8_t pHybridId) const
     std::bitset<NCHANNELS> cBitSet(0);
     for(auto cClusterWord: cClusterWords)
     {
-        uint8_t cChipId       = (cClusterWord & (0x3 << 11)) >> 11;
+        uint8_t cChipId       = (cClusterWord & (0x7 << 11)) >> 11;
         auto    cChipIdMapped = this->getChipIdMapped(pHybridId, cChipId);
         // auto    cChipIdMapped = std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), cChipId));
 
