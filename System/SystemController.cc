@@ -1410,7 +1410,12 @@ void SystemController::DumpFrontendRegisters()
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid) fReadoutChipInterface->DumpChipRegisters(cChip);
+                for(const auto cChip: *cHybrid)
+                {
+                    LOG(INFO) << GREEN << "Readout chip register content for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
+                    fReadoutChipInterface->DumpChipRegisters(cChip);
+                }
 }
 
 } // namespace Ph2_System

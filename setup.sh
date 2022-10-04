@@ -156,4 +156,4 @@ if [[ $1 == "ci" ]]; then
     export UseTCUSBTcpServer=false
 fi
 
-echo "=== DONE ==="
+echo "=== DONE: you can now run cmake ==="

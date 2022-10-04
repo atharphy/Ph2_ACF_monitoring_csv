@@ -144,7 +144,6 @@ void RD53Interface::DumpChipRegisters(ReadoutChip* pChip)
 {
     this->setBoard(pChip->getBeBoardId());
 
-    LOG(INFO) << GREEN << "Chip " << BOLDYELLOW << pChip->getId() << RESET << GREEN << " register content:" << RESET;
     for(auto& cRegItem: RD53Shared::firstChip->getRegMap())
     {
         auto value = RD53Interface::ReadChipReg(pChip, cRegItem.first);
