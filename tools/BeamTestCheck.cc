@@ -282,7 +282,7 @@ void BeamTestCheck::CheckWithExternal(uint8_t pContinousReadout)
 
     if(fScanL1Latency) ScanL1Latency(pContinousReadout);
     if(fScanStubLatency) ScanStubLatency(pContinousReadout);
-    if(true) TakeL1Data(pContinousReadout);
+    if(false) TakeL1Data(pContinousReadout);
 
         /*// print out optimal L1 + stub latencies
         for(auto cBoard: *fDetectorContainer)
@@ -315,27 +315,27 @@ void BeamTestCheck::CheckWithExternal(uint8_t pContinousReadout)
     // validate
     Validate();
 
-    // for(auto cBoard: *fDetectorContainer)
-    // {
-    //     // prepare injection
-    //     PrepareForExternal(cBoard);
-    //     LOG (INFO) << "External check with " << fNevents << " -- continuous readout set to " << +pContinousReadout << RESET;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        // prepare injection
+        PrepareForExternal(cBoard);
+        LOG (INFO) << "External check with " << fNevents << " -- continuous readout set to " << +pContinousReadout << RESET;
 
-    //     // if(pContinousReadout == 1) ContinousReadout(cBoard);
-    //     // else ReadNEvents(cBoard, fNevents);
+        // if(pContinousReadout == 1) ContinousReadout(cBoard);
+        // else ReadNEvents(cBoard, fNevents);
 
-    //     // // process events
-    //     // //ProcessEvents(cBoard);
-    //     // // scan the latency - find best hit latency
-    //     ScanLatency(cBoard, pContinousReadout);
-    //     // scan the threshold, record number of hits; cluster occupancy
-    //     // ScanThreshold(cBoard);
-    // }
-    // #ifdef __USE_ROOT__
-    //     fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
-    //     fDQMHistogrammer.fillStubLatencyPlots(fStubLatencyContainer);
-    //     fDQMHistogrammer.fillTriggerTDCPlots(fTDCContainer);
-    // #endif
+        // // process events
+        // //ProcessEvents(cBoard);
+        // // scan the latency - find best hit latency
+        ScanLatency(cBoard, pContinousReadout);
+        // scan the threshold, record number of hits; cluster occupancy
+        // ScanThreshold(cBoard);
+    }
+    #ifdef __USE_ROOT__
+        fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
+        fDQMHistogrammer.fillStubLatencyPlots(fStubLatencyContainer);
+        fDQMHistogrammer.fillTriggerTDCPlots(fTDCContainer);
+    #endif
 }
 void BeamTestCheck::ValidateExternal()
 {

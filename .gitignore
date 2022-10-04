@@ -15,6 +15,7 @@ Results/**
 ResultsGUI/*
 MonitorResults/**
 RunNumbers.dat
+GoodRunNumbers.dat
 *.log
 core.*
 Results
