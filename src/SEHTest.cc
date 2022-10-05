@@ -164,6 +164,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("LVChannelId", "External low voltage (SEH input voltage) channel ID", ArgvParser::OptionRequiresValue);
     cmd.defineOption("HVPowerSupplyId", "External high voltage (sensor bias voltage) power supply ID", ArgvParser::OptionRequiresValue);
     cmd.defineOption("HVChannelId", "External high voltage (sensor bias voltage) channel ID", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("channelsFromFile", "Extract external power supply information from settings file", ArgvParser::NoOptionAttribute);
+
     //
     cmd.defineOption("USBBus", "USB device bus number", ArgvParser::OptionRequiresValue);
     cmd.defineOption("USBDev", "USB device device number", ArgvParser::OptionRequiresValue);
@@ -205,6 +207,36 @@ int main(int argc, char* argv[])
     uint32_t cUsbBus = (cmd.foundOption("USBBus")) ? (uint32_t)(std::stoi(cmd.optionValue("USBBus"))) : 0; // Default option?
     uint8_t  cUsbDev = (cmd.foundOption("USBDev")) ? (uint32_t)(std::stoi(cmd.optionValue("USBDev"))) : 0; // Default option?
     bool     cGui    = (cmd.foundOption("useGui"));
+
+    pugi::xml_document                        doc;
+    if(!doc.load_file(cHWFile.c_str())) return -1;
+    pugi::xml_node devices = doc.child("Devices");
+
+    for(pugi::xml_node ps = devices.first_child(); ps; ps = ps.next_sibling())
+    {
+        std::string stringID(ps.attribute("ID").value());
+        std::string stringType(ps.attribute("Type").value());
+        if(stringType == "LV")
+        {
+            for(pugi::xml_node channel = ps.child("Channel"); channel; channel = channel.next_sibling("Channel"))
+            {
+                std::string stringChannel(channel.attribute("ID").value());
+                cLVPowerSupplyId       = stringID;
+                cLVChannelId           = stringChannel;
+                LOG(INFO) << BOLDBLUE <<"Identified LV Power Supply "<< stringID <<" and channel "<<  stringChannel << RESET;
+            }
+        }
+        if(stringType == "HV")
+        {
+            for(pugi::xml_node channel = ps.child("Channel"); channel; channel = channel.next_sibling("Channel"))
+            {
+                std::string stringChannel(channel.attribute("ID").value());
+                cHVPowerSupplyId       = stringID;
+                cHVChannelId           = stringChannel;
+                LOG(INFO) << BOLDBLUE <<"Identified HV Power Supply "<< stringID <<" and channel "<<  stringChannel << RESET;
+            }
+        }
+    }
 
     cDirectory += Form("2S_SEH_%s", cHybridId.c_str());
 
