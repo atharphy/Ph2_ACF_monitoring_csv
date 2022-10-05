@@ -171,9 +171,9 @@
                 <Register name="threshold"> 50 </Register>
             </Register>
 	    <Register name="ch2">
-                <Register name="out_enable"> 1 </Register>
-                <Register name="term_enable"> 0 </Register>
-                <Register name="threshold"> 0 </Register>
+                <Register name="out_enable"> 0 </Register>
+                <Register name="term_enable"> 1 </Register>
+                <Register name="threshold"> 50 </Register>
             </Register>
 	    <Register name="ch3">
                 <Register name="out_enable"> 1 </Register>
