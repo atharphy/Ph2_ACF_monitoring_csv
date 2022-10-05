@@ -25,7 +25,6 @@ void Latency::ConfigureCalibration()
     // #######################
     startValue = this->findValueInSettings<double>("LatencyStart");
     stopValue  = this->findValueInSettings<double>("LatencyStop");
-    frontEnd   = RD53Shared::firstChip->getFEtype(PixelAlive::colStart, PixelAlive::colStop);
 
     // ##############################
     // # Initialize dac scan values #
@@ -219,8 +218,6 @@ void Latency::scanDac(const std::string& regName, const std::vector<uint16_t>& d
         // ################
         PixelAlive::run();
         auto output = PixelAlive::analyze();
-        output->resetNormalizationStatus();
-        output->normalizeAndAverageContainers(fDetectorContainer, this->getChannelGroupHandlerContainer(), 1);
 
         // ###############
         // # Save output #
@@ -229,10 +226,8 @@ void Latency::scanDac(const std::string& regName, const std::vector<uint16_t>& d
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
-                    {
-                        float occ = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
-                        theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i] = occ;
-                    }
+                        theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<LatencySize>>().data[i] =
+                            cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
 
         // ##############################################
         // # Send periodic data to monitor the progress #

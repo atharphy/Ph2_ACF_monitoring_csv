@@ -34,7 +34,6 @@ const char     RESULTDIR[]            = "Results";                              
 const double   ISMASKED               = -1.0;                                            // Encoding masked channels
 const double   ISDISABLED             = -2.0;                                            // Encoding disabled channels
 const double   FITERROR               = -3.0;                                            // Encoding fit errors
-const int      NLATENCYBINS           = 2;                                               // Number of latencies spanned
 const int      MAXBITCHIPREG          = 16;                                              // Maximum number of bits of a chp register
 const size_t   NTHREADS               = round(std::thread::hardware_concurrency() / 2.); // Number of potential threads for the current CPU (removing hyper-threading)
 const uint32_t DEEPSLEEP              = 100000;                                          // [microseconds]

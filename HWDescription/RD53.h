@@ -79,6 +79,7 @@ class RD53 : public ReadoutChip
         const char* thresholdReg;
         const char* gainReg;
         const char* latencyReg;
+        size_t      nLatencyBins2Span;
         size_t      nTDACvalues;
         size_t      maxToTvalue;
         size_t      maxBCIDvalue;
@@ -98,7 +99,7 @@ class RD53 : public ReadoutChip
     RD53(const RD53& chipObj);
 
     void     loadfRegMap(const std::string& fileName) override;
-    void     saveRegMap(const std::string& fName2Add /*, std::ostream& os*/) override;
+    void     saveRegMap(const std::string& fName2Add) override;
     uint32_t getNumberOfChannels() const override;
     bool     isDACLocal(const std::string& regName) override;
     uint8_t  getNumberOfBits(const std::string& regName) override;

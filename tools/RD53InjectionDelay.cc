@@ -23,9 +23,9 @@ void InjectionDelay::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    startValue = 0u;
-    stopValue  = RD53Shared::NLATENCYBINS * (RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CAL_EDGE_FINE_DELAY")) + 1) - 1;
     frontEnd   = RD53Shared::firstChip->getFEtype(PixelAlive::colStart, PixelAlive::colStop);
+    startValue = 0u;
+    stopValue  = frontEnd->nLatencyBins2Span * (RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CAL_EDGE_FINE_DELAY")) + 1) - 1;
 
     // ##############################
     // # Initialize dac scan values #
@@ -163,9 +163,10 @@ void InjectionDelay::run()
     // ###############################
     // # Scan two adjacent latencies #
     // ###############################
-    for(auto i = 0; i < 2; i++)
+    for(auto i = 0u; i < frontEnd->nLatencyBins2Span; i++)
     {
-        std::vector<uint16_t> halfDacList(dacList.begin() + i * (dacList.end() - dacList.begin()) / 2, dacList.begin() + (i + 1) * (dacList.end() - dacList.begin()) / 2);
+        std::vector<uint16_t> halfDacList(dacList.begin() + i * (dacList.end() - dacList.begin()) / frontEnd->nLatencyBins2Span,
+                                          dacList.begin() + (i + 1) * (dacList.end() - dacList.begin()) / frontEnd->nLatencyBins2Span);
 
         for(const auto cBoard: *fDetectorContainer)
             for(const auto cOpticalGroup: *cBoard)
@@ -246,12 +247,8 @@ void InjectionDelay::analyze()
                     theInjectionDelayContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = regVal;
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "CAL_EDGE_FINE_DELAY", regVal % maxRegValue);
 
-                    auto latency = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), frontEnd->latencyReg);
-                    if(regVal < maxRegValue)
-                    {
-                        latency--;
-                        this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), frontEnd->latencyReg, latency);
-                    }
+                    auto latency = this->fReadoutChipInterface->ReadChipReg(static_cast<RD53*>(cChip), frontEnd->latencyReg) - frontEnd->nLatencyBins2Span + regVal / maxRegValue + 1;
+                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), frontEnd->latencyReg, latency);
 
                     LOG(INFO) << BOLDMAGENTA << ">>> New latency dac value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
                               << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << latency << BOLDMAGENTA << " <<<" << RESET;
@@ -287,8 +284,6 @@ void InjectionDelay::scanDac(const std::string& regName, const std::vector<uint1
         // ################
         PixelAlive::run();
         auto output = PixelAlive::analyze();
-        output->resetNormalizationStatus();
-        output->normalizeAndAverageContainers(fDetectorContainer, this->getChannelGroupHandlerContainer(), 1);
 
         // ###############
         // # Save output #
@@ -297,15 +292,12 @@ void InjectionDelay::scanDac(const std::string& regName, const std::vector<uint1
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
-                    {
-                        float occ = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
                         theContainer->at(cBoard->getIndex())
                             ->at(cOpticalGroup->getIndex())
                             ->at(cHybrid->getIndex())
                             ->at(cChip->getIndex())
                             ->getSummary<GenericDataArray<InjDelaySize>>()
-                            .data[dacList[i]] = occ;
-                    }
+                            .data[dacList[i]] = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
 
         // ##############################################
         // # Send periodic data to monitor the progress #

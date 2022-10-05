@@ -235,7 +235,7 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53BInterface::ReadRD53Reg(ReadoutCh
     this->setBoard(pChip->getBeBoardId());
 
     auto nameAndValue(SetSpecialRegister(regName, 0, RD53Shared::firstChip->getRegMap()));
-    RD53Interface::SendCommand(pChip, RD53BCmd::RdReg{pChip->getId(), pChip->getRegItem(regName).fAddress});
+    RD53Interface::SendCommand(pChip, RD53BCmd::RdReg{pChip->getId(), pChip->getRegItem(nameAndValue.first).fAddress});
     auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip);
 
     for(auto i = 0u; i < regReadback.size(); i++)

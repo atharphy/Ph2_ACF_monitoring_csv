@@ -389,6 +389,7 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                     index++;
                 }
 
+    theGainContainer->resetNormalizationStatus();
     theGainContainer->normalizeAndAverageContainers(fDetectorContainer, this->getChannelGroupHandlerContainer(), 1);
 
     for(const auto cBoard: *theGainContainer)
