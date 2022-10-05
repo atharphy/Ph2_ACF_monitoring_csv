@@ -211,13 +211,12 @@ void RD53::loadfRegMap(const std::string& fileName)
         throw Exception("[RD53::loadfRegMapd] The RD53 file settings does not exist");
 }
 
-void RD53::saveRegMap(const std::string& fName2Add /*, std::ostream& os*/)
+void RD53::saveRegMap(const std::string& fName2Add)
 {
     const int Nspaces = 26; // @CONST@
 
     std::string   output = this->getFileName(fName2Add);
     std::ofstream file(output.c_str(), std::ios::out | std::ios::trunc);
-    // std::ofstream theStr = (fName2Add != "NONE" ? std::ofstream(output.c_str(), std::ios::out | std::ios::trunc) : os); // @TMP@
 
     if(file)
     {

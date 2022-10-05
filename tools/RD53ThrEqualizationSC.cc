@@ -29,7 +29,6 @@ void ThrEqualizationSC::ConfigureCalibration()
     doDisplay    = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip = this->findValueInSettings<double>("UpdateChipCfg");
 
-    frontEnd = RD53Shared::firstChip->getFEtype(SCurve::colStart, SCurve::colStop);
     if(frontEnd == &RD53A::SYNC)
     {
         LOG(ERROR) << BOLDRED << "ThrEqualizationSC cannot be used on the Synchronous FE, please change the selected columns" << RESET;

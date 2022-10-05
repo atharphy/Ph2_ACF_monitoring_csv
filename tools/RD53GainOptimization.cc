@@ -30,7 +30,6 @@ void GainOptimization::ConfigureCalibration()
     doDisplay     = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip  = this->findValueInSettings<double>("UpdateChipCfg");
 
-    frontEnd = RD53Shared::firstChip->getFEtype(Gain::colStart, Gain::colStop);
     colStart = std::max(Gain::colStart, frontEnd->colStart);
     colStop  = std::min(Gain::colStop, frontEnd->colStop);
     LOG(INFO) << GREEN << "GainOptimization will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << RESET << BOLDYELLOW << colStart << ", " << colStop
@@ -259,8 +258,6 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, const float
         // ################
         Gain::run();
         auto output = Gain::analyze();
-        output->resetNormalizationStatus();
-        output->normalizeAndAverageContainers(fDetectorContainer, this->getChannelGroupHandlerContainer(), 1);
 
         // ##############################################
         // # Send periodic data to monitor the progress #

@@ -31,7 +31,6 @@ void ThrAdjustment::ConfigureCalibration()
     doDisplay       = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
 
-    frontEnd             = RD53Shared::firstChip->getFEtype(PixelAlive::colStart, PixelAlive::colStop);
     PixelAlive::colStart = std::max(PixelAlive::colStart, frontEnd->colStart);
     PixelAlive::colStop  = std::min(PixelAlive::colStop, frontEnd->colStop);
     LOG(INFO) << GREEN << "ThrAdjustment will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << RESET << BOLDYELLOW << colStart << ", " << colStop << RESET
@@ -271,8 +270,6 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, 
         // ################
         PixelAlive::run();
         auto output = PixelAlive::analyze();
-        output->resetNormalizationStatus();
-        output->normalizeAndAverageContainers(fDetectorContainer, this->getChannelGroupHandlerContainer(), 1);
 
         // ##############################################
         // # Send periodic data to monitor the progress #

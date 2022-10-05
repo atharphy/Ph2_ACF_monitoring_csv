@@ -31,6 +31,7 @@ void SCurve::ConfigureCalibration()
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
+    frontEnd       = RD53Shared::firstChip->getFEtype(colStart, colStop);
 
     // ########################
     // # Custom channel group #
@@ -344,6 +345,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
                     index++;
                 }
 
+    theThresholdAndNoiseContainer->resetNormalizationStatus();
     theThresholdAndNoiseContainer->normalizeAndAverageContainers(fDetectorContainer, this->getChannelGroupHandlerContainer(), 1);
 
     for(const auto cBoard: *theThresholdAndNoiseContainer)
