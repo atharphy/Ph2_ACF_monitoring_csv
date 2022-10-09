@@ -77,9 +77,10 @@ int main(int argc, char* argv[])
     cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
 
     std::string cDirectory = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
+    cDirectory += "WorkerTest";
     cTool.CreateResultDirectory(cDirectory, false, false);
 
-    std::string cResultfile = "Worker";
+    std::string cResultfile = "result";
     cTool.InitResultFile(cResultfile);
 
     uint8_t cLpGbtVers = 0;

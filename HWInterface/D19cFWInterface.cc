@@ -277,12 +277,12 @@ void D19cFWInterface::configureTxRxPolarities(const Ph2_HwDescription::BeBoard* 
     uint32_t cTxGlobalValueL12 = 0, cRxGlobalValueL12 = 0;
     for(auto cOpticalGroup: *pBoard)
     {
-        std::string cFMCSlot        = (cOpticalGroup->getFMCId() == 0) ? "FMC-L12" : "FMC-L8";
+        std::string cFMCSlot        = (cOpticalGroup->getFMCId() == 12) ? "FMC-L12" : "FMC-L8";
         auto        cOpticalGroupId = cOpticalGroup->getId();
         auto        clpGbt          = static_cast<lpGBT*>(cOpticalGroup->flpGBT);
-
-        uint32_t cTxLocalValue = 0;
-        uint32_t cRxLocalValue = (clpGbt->getVersion() == 0) ? 0 : 1;
+	
+        uint32_t cTxLocalValue = (cFMCSlot == "FMC-L8") ? 1 : 0;
+        uint32_t cRxLocalValue = ((clpGbt->getVersion() == 1 && cFMCSlot == "FMC-L12") || (clpGbt->getVersion() == 0 && cFMCSlot == "FMC-L8")) ? 1 : 0;
         if(cFMCSlot == "FMC-L12")
         {
             cRxGlobalValueL12 |= (cRxLocalValue << cOpticalGroupId);

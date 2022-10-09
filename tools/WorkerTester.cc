@@ -497,45 +497,82 @@ void WorkerTester::Benchmark(int pNIterations)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            fBeBoardInterface->setBoard(cBoard->getId());
-            D19cFWInterface* cFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                // auto& cChip = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                // if(cChip != nullptr)
-                for(auto cChip: *cHybrid)
-                {
-                    // if(cChip->getFrontEndType() == FrontEndType::MPA) continue;
-                    ChipRegMap  cChipRegMap = cChip->getRegMap();
-                    uint8_t     cChipId     = ((cChip->getFrontEndType() == FrontEndType::CIC) || (cChip->getFrontEndType() == FrontEndType::CIC2)) ? 0 : cChip->getId();
-                    ChipRegItem cRegItem;
-                    if(cChip->getFrontEndType() == FrontEndType::CIC)
-                        cRegItem = cChipRegMap["CALIB_PATTERN0"];
-                    else if(cChip->getFrontEndType() == FrontEndType::MPA)
-                        cRegItem = cChipRegMap["ThDAC0"];
-                    else if(cChip->getFrontEndType() == FrontEndType::SSA)
-                        cRegItem = cChipRegMap["Bias_THDAC"];
+        auto               cResultTree = new TTree("benchmark", "benchmark");
+        int                cSize       = 0;
+        int                cNRegisters = 0;
+        std::vector<int>   cChipIds;
+        std::vector<float> cDurations;
+        cResultTree->Branch("BlockSize", &cSize);
+        cResultTree->Branch("NRegisters", &cNRegisters);
+        cResultTree->Branch("ChipId", &cChipIds);
+        cResultTree->Branch("Durations", &cDurations);
 
-                    LOG(INFO) << BOLDMAGENTA << "Bencharking " << fChipTypeMap[cChip->getFrontEndType()] << "_" << +cChipId << RESET;
-                    std::vector<ChipRegItem> cRegItems;
-                    for(int cIteration = 0; cIteration < pNIterations; cIteration++)
+        fBeBoardInterface->setBoard(cBoard->getId());
+        D19cFWInterface*                     cFWInterface                     = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        D19clpGBTSlowControlWorkerInterface* clpGBTSlowControlWorkerInterface = static_cast<D19clpGBTSlowControlWorkerInterface*>(cFWInterface->getlpGBTSlowControlInterface());
+
+        size_t cBlockSize    = 1;
+        size_t cMaxBlockSize = 16000;
+        while(cBlockSize <= cMaxBlockSize)
+        {
+            cChipIds.clear();
+            cDurations.clear();
+
+            //clpGBTSlowControlWorkerInterface->SetBlockSize(cBlockSize);
+            //LOG(INFO) << BOLDYELLOW << "BlockSize set to " << +clpGBTSlowControlWorkerInterface->GetBlockSize() << RESET;
+            for(auto cOpticalGroup: *cBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    // auto& cChip = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                    // if(cChip != nullptr)
+                    for(auto cChip: *cHybrid)
                     {
-                        for(uint8_t cValue = 0; cValue < 255; cValue++)
+                        // if(cChip->getFrontEndType() == FrontEndType::MPA) continue;
+                        ChipRegMap  cChipRegMap = cChip->getRegMap();
+                        uint8_t     cChipId     = ((cChip->getFrontEndType() == FrontEndType::CIC) || (cChip->getFrontEndType() == FrontEndType::CIC2)) ? 0 : cChip->getId();
+                        ChipRegItem cRegItem;
+                        if(cChip->getFrontEndType() == FrontEndType::CIC)
+                            cRegItem = cChipRegMap["CALIB_PATTERN0"];
+                        else if(cChip->getFrontEndType() == FrontEndType::MPA)
+                            cRegItem = cChipRegMap["ThDAC0"];
+                        else if(cChip->getFrontEndType() == FrontEndType::SSA)
+                            cRegItem = cChipRegMap["Bias_THDAC"];
+
+                        LOG(INFO) << BOLDMAGENTA << "Bencharking " << fChipTypeMap[cChip->getFrontEndType()] << "_" << +cChipId << RESET;
+                        std::vector<ChipRegItem> cRegItems;
+                        for(int cIteration = 1; cIteration < pNIterations; cIteration++)
                         {
-                            cRegItem.fValue = cValue;
-                            cRegItems.push_back(cRegItem);
+                            for(uint8_t cValue = 0; cValue < 255; cValue++)
+                            {
+                                cRegItem.fValue = cValue;
+                                cRegItems.push_back(cRegItem);
+                            }
                         }
+
+                        auto cStart = std::chrono::system_clock::now();
+                        cFWInterface->MultiRegisterWriteRead(cChip, cRegItems);
+                        auto cEnd      = std::chrono::system_clock::now();
+                        auto cDuration = std::chrono::duration_cast<std::chrono::milliseconds>(cEnd - cStart);
+                        LOG(INFO) << BOLDWHITE << "Number of registers = " << +cRegItems.size() << " ---- All register duration = " << +cDuration.count() << " ms ---- Single register duration "
+                                  << +(cDuration.count() / cRegItems.size()) << " ms" << RESET;
+
+                        cNRegisters = (int)cRegItems.size();
+                        cSize       = (int)cBlockSize;
+                        cChipIds.push_back((int)cChip->getId());
+                        cDurations.push_back((float)cDuration.count());
                     }
-                    auto cStart = std::chrono::system_clock::now();
-                    cFWInterface->MultiRegisterWriteRead(cChip, cRegItems);
-                    auto cEnd      = std::chrono::system_clock::now();
-                    auto cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEnd - cStart);
-                    LOG(INFO) << "One FE register write with verification using FE functions takes in average " << (cDuration.count() / (255 * pNIterations)) << " us" << RESET;
                 }
             }
+            cResultTree->Fill();
+            if(cBlockSize >= 500) { cBlockSize += 500; }
+            else
+            {
+                if(cBlockSize == 1) { cBlockSize = 0; }
+                cBlockSize += 10;
+            }
         }
+        cResultTree->Write();
     }
 }
 

@@ -222,7 +222,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
 {
     std::string   cFilePath       = "";
     uint32_t      cOpticalGroupId = pOpticalGroupNode.attribute("Id").as_int();
-    uint32_t      cFMCId          = pOpticalGroupNode.attribute("FMCId").as_int();
+    uint32_t      cFMCId          = (std::string(pOpticalGroupNode.attribute("FMCId").value()) == "L12") ? 12 : 8;
     uint32_t      cBoardId        = pBoard->getId();
     OpticalGroup* theOpticalGroup = pBoard->addOpticalGroupContainer(cOpticalGroupId, new OpticalGroup(cBoardId, cFMCId, cOpticalGroupId));
     theOpticalGroup->setOptical(false);

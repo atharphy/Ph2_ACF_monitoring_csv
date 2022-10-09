@@ -6,7 +6,7 @@
     <CDCE configure="0" clockRate="320"/>
     
     <!-- skeleton -->
-    <OpticalGroup Id="0" FMCId="0" reset="1">
+    <OpticalGroup Id="0" FMCId="L12" reset="1">
         <lpGBT_Files path="./settings/lpGBTFiles/" />
         <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
           <Settings
