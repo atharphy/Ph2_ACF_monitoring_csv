@@ -509,7 +509,7 @@ void WorkerTester::Benchmark(int pNIterations)
 
         fBeBoardInterface->setBoard(cBoard->getId());
         D19cFWInterface*                     cFWInterface                     = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-        D19clpGBTSlowControlWorkerInterface* clpGBTSlowControlWorkerInterface = static_cast<D19clpGBTSlowControlWorkerInterface*>(cFWInterface->getlpGBTSlowControlInterface());
+        //D19clpGBTSlowControlWorkerInterface* clpGBTSlowControlWorkerInterface = static_cast<D19clpGBTSlowControlWorkerInterface*>(cFWInterface->getlpGBTSlowControlInterface());
 
         size_t cBlockSize    = 1;
         size_t cMaxBlockSize = 16000;
