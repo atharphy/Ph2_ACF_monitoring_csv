@@ -144,7 +144,7 @@ bool D19cTriggerInterface::Start()
     }
 
     cTriggerState = GetTriggerState();
-    LOG(DEBUG) << BOLDYELLOW << "D19cTriggerInterface::Start - trigger state is " << cTriggerState << RESET;
+    LOG(DEBUG) << BOLDYELLOW << "D19cTriggerInterface::Start - post-stop trigger state is " << cTriggerState << RESET;
     // this stops triggers  + resets
     this->ResetTriggerFSM();
 
@@ -156,7 +156,29 @@ bool D19cTriggerInterface::Start()
 
     WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-    return true;
+
+    // FIXME Trigger FSM sometimes doesn't start despite the start_trigger assertion
+    // temporary ugly fix to do it one more time in case of failure
+    cTriggerState = GetTriggerState();
+    for(int cTry = 0; cTry < 5; cTry++)
+    {
+        if(cTriggerState != 1)
+        {
+            LOG(ERROR) << BOLDRED << "D19cTriggerInterface::Start - Failed starting trigger FSM ... retrying" << RESET;
+            WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
+            std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+            cTriggerState = GetTriggerState();
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    cTriggerState = GetTriggerState();
+    LOG(DEBUG) << BOLDYELLOW << "D19cTriggerInterface::Start - post-start trigger state is " << cTriggerState << RESET;
+
+    return (cTriggerState == 1);
 
     // // get handshake mode
     // // this changes how I check if I've actually started

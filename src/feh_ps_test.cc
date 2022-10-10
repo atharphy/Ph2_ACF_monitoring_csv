@@ -36,7 +36,6 @@ INITIALIZE_EASYLOGGINGPP
 
 #define CHIPSLAVE 4
 
-
 int main(int argc, char* argv[])
 {
 #if defined(__TCUSB__) && defined(__USE_ROOT__)

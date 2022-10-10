@@ -30,7 +30,6 @@ void DataReadbackOptimization::ConfigureCalibration()
     startValueTAP2 = this->findValueInSettings<double>("TAP2Start");
     stopValueTAP2  = this->findValueInSettings<double>("TAP2Stop");
     invTAP2        = this->findValueInSettings<double>("InvTAP2");
-    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
 
     // ##############################
@@ -159,7 +158,7 @@ void DataReadbackOptimization::draw(bool saveData)
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
-    if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
+    if(BERtest::doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
@@ -171,7 +170,7 @@ void DataReadbackOptimization::draw(bool saveData)
     DataReadbackOptimization::fillHisto();
     histos->process();
 
-    if(doDisplay == true) myApp->Run(true);
+    if(BERtest::doDisplay == true) myApp->Run(true);
 #endif
 }
 
@@ -281,15 +280,28 @@ void DataReadbackOptimization::saveChipRegisters(int currentRun)
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
+        {
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
                     if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-                    std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + this->fDirectoryName);
+                    std::string command("mv " + cChip->getFileName(fileReg) + " " + this->fDirectoryName);
                     system(command.c_str());
                     LOG(INFO) << BOLDBLUE << "\t--> DataReadbackOptimization saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
                               << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
                 }
+
+            if(cOpticalGroup->flpGBT != nullptr)
+            {
+                if(doUpdateChip == true) cOpticalGroup->flpGBT->saveRegMap("");
+                cOpticalGroup->flpGBT->saveRegMap(fileReg);
+                std::string command("mv " + cOpticalGroup->flpGBT->getFileName(fileReg) + " " + this->fDirectoryName);
+                system(command.c_str());
+
+                LOG(INFO) << BOLDBLUE << "\t--> DataReadbackOptimization saved the LpGBT configuration file for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/"
+                          << cOpticalGroup->getId() << RESET << BOLDBLUE << "]" << RESET;
+            }
+        }
 }

@@ -18,27 +18,37 @@ void PixelAliveHistograms::book(TFile* theOutputFile, DetectorContainer& theDete
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
+    nRows = RD53Shared::firstChip->getNRows();
+    nCols = RD53Shared::firstChip->getNCols();
+
     // #######################
     // # Retrieve parameters #
     // #######################
     nEvents                = this->findValueInSettings<double>(settingsMap, "nEvents");
-    const size_t ToTsize   = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION) + 1;
-    const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
-    const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+    auto         frontEnd  = RD53Shared::firstChip->getFEtype(nCols / 2, nCols / 2);
+    const size_t ToTsize   = frontEnd->maxToTvalue + 2;
+    const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
+    const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
 
     auto hOcc1D = CanvasContainer<TH1F>("Occ1D", "Occ1D", nEvents + 1, 0, 1 + 1. / nEvents);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, "Efficiency", "Entries");
 
-    auto hOcc2D = CanvasContainer<TH2F>("PixelAlive", "Pixel Alive", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+    auto hOcc2D = CanvasContainer<TH2F>("PixelAlive", "Pixel Alive", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, "Columns", "Rows");
 
-    auto hErrorReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+    auto hErrorReadOut2D = CanvasContainer<TH2F>("ReadoutErrors", "Readout Errors", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ErrorReadOut2D, hErrorReadOut2D, "Columns", "Rows");
+
+    auto hMask1Dcol = CanvasContainer<TH1F>("Masked1Dcol", "Masked pixels projection", nCols, 0, nCols);
+    bookImplementer(theOutputFile, theDetectorStructure, Mask1Dcol, hMask1Dcol, "Columns", "Entries");
+
+    auto hMask1Drow = CanvasContainer<TH1F>("Masked1Drow", "Masked pixels projection", nRows, 0, nRows);
+    bookImplementer(theOutputFile, theDetectorStructure, Mask1Drow, hMask1Drow, "Rows", "Entries");
 
     auto hToT1D = CanvasContainer<TH1F>("ToT1D", "ToT Distribution", ToTsize, 0, ToTsize);
     bookImplementer(theOutputFile, theDetectorStructure, ToT1D, hToT1D, "ToT", "Entries");
 
-    auto hToT2D = CanvasContainer<TH2F>("ToT2D", "Integrated ToT Map", RD53::nCols, 0, RD53::nCols, RD53::nRows, 0, RD53::nRows);
+    auto hToT2D = CanvasContainer<TH2F>("ToT2D", "Integrated ToT Map", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ToT2D, hToT2D, "Columns", "Rows");
 
     auto hBCID = CanvasContainer<TH1F>("BCID", "BCID", BCIDsize, 1, BCIDsize + 1);
@@ -50,8 +60,8 @@ void PixelAliveHistograms::book(TFile* theOutputFile, DetectorContainer& theDete
 
 bool PixelAliveHistograms::fill(std::vector<char>& dataBuffer)
 {
-    const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
-    const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+    const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
+    const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
 
     ChannelContainerStream<OccupancyAndPh>                           theOccStreamer("PixelAliveOcc");
     ChipContainerStream<EmptyContainer, GenericDataArray<BCIDsize>>  theBCIDStreamer("PixelAliveBCID");
@@ -113,9 +123,21 @@ void PixelAliveHistograms::fill(const DetectorDataContainer& DataContainer)
                         ToT1D.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH1F>>().fTheHistogram;
                     auto* ToT2DHist =
                         ToT2D.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+                    auto* Mask1DcolHist = Mask1Dcol.getObject(cBoard->getId())
+                                              ->getObject(cOpticalGroup->getId())
+                                              ->getObject(cHybrid->getId())
+                                              ->getObject(cChip->getId())
+                                              ->getSummary<CanvasContainer<TH1F>>()
+                                              .fTheHistogram;
+                    auto* Mask1DrowHist = Mask1Drow.getObject(cBoard->getId())
+                                              ->getObject(cOpticalGroup->getId())
+                                              ->getObject(cHybrid->getId())
+                                              ->getObject(cChip->getId())
+                                              ->getSummary<CanvasContainer<TH1F>>()
+                                              .fTheHistogram;
 
-                    for(auto row = 0u; row < RD53::nRows; row++)
-                        for(auto col = 0u; col < RD53::nCols; col++)
+                    for(auto row = 0u; row < nRows; row++)
+                        for(auto col = 0u; col < nCols; col++)
                         {
                             if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy > 0)
                             {
@@ -128,14 +150,20 @@ void PixelAliveHistograms::fill(const DetectorDataContainer& DataContainer)
                                                        sqrt(ToT2DHist->GetBinError(col + 1, row + 1) * ToT2DHist->GetBinError(col + 1, row + 1) +
                                                             cChip->getChannel<OccupancyAndPh>(row, col).fPhError * cChip->getChannel<OccupancyAndPh>(row, col).fPhError));
                             }
+                            else if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy == RD53Shared::ISMASKED)
+                                Mask1DrowHist->Fill(row);
                             if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
                         }
+
+                    for(auto col = 0u; col < nCols; col++)
+                        for(auto row = 0u; row < nRows; row++)
+                            if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy == RD53Shared::ISMASKED) Mask1DcolHist->Fill(col);
                 }
 }
 
 void PixelAliveHistograms::fillBCID(const DetectorDataContainer& DataContainer)
 {
-    const size_t BCIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
+    const size_t BCIDsize = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
 
     for(const auto cBoard: DataContainer)
         for(const auto cOpticalGroup: *cBoard)
@@ -157,7 +185,7 @@ void PixelAliveHistograms::fillBCID(const DetectorDataContainer& DataContainer)
 
 void PixelAliveHistograms::fillTrgID(const DetectorDataContainer& DataContainer)
 {
-    const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+    const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
 
     for(const auto cBoard: DataContainer)
         for(const auto cOpticalGroup: *cBoard)
@@ -186,6 +214,8 @@ void PixelAliveHistograms::process()
     draw<TH1F>(Occupancy1D);
     draw<TH2F>(Occupancy2D, "gcolz");
     draw<TH2F>(ErrorReadOut2D, "gcolz");
+    draw<TH1F>(Mask1Dcol);
+    draw<TH1F>(Mask1Drow);
     draw<TH1F>(ToT1D);
     draw<TH2F>(ToT2D, "gcolz");
     draw<TH1F>(BCID);

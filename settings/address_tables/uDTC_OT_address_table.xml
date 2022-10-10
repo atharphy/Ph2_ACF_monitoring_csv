@@ -6,7 +6,7 @@
         <node id="sysreg" address="0x00000000" module="file://fc7_system_address_table.xml"/>
         <node id="clock_source"     address="0x00000004" mask="0x00030000" description="Clock source switch, values: 3 = internal oscillator (default), 2 = backplane, 0 = AMC13"/>
         <node id="coax_select"      address="0x00000004" mask="0x00000800" description="Coax select, values : 1 = ( select internal oscillator) , 0 = select coax input"/>
-        <node id="clock_source_u7"  address="0x00000004" mask="0x00030000" description="Clock source switch, values: 3 = from clock_source_u8 (default), 2 = backplane, 0 = AMC13"/>
+        <node id="clock_source_u7"  address="0x00000004" mask="0x0003c000" description="Clock source switch, values: 15 = internal (default), 0 = AMC13"/>
         <node id="clock_source_u8"  address="0x00000004" mask="0x00300000" description="Clock source switch, values: 3 = internal oscillator (default), 2 = fmc_l8_clk1, 1 = fmc_l8_clk0, 0 = COAX_IN"/>
     <!-- GLIB user logic registers -->
     <!-- firmware configurations -->
@@ -152,7 +152,7 @@
                     <node id="card_select_tri"                  mask="0x00004000" description="control tri-state buffer"/>
                 </node>
 
-                 <node id="fe_data_player"                    address="0x03A">
+                 <node id="data_player"                    address="0x03A">
                     <node id="pattern_320MHz"                 mask="0x000000ff"/>
                     <node id="pattern_640MHz"                 mask="0x0000ff00"/>
                 </node>
@@ -360,7 +360,7 @@
                 <node id="setup_scan"                  mask="0x00010000"/>
             </node>
 
-            <node id="fe_data_player"              address="0x019">
+            <node id="data_player"              address="0x019">
                 <node id="start_data_player"                  mask="0x00000001"/>
                 <node id="stop_data_player"                 mask="0x00000002"/>
                 <node id="i2c_slave_reset"                mask="0x00000004"/>
@@ -553,17 +553,11 @@
                 <node id="cards_disconnected"                mask="0x80000000" description="cards are disconnected after running            "/>
             </node>
 
-            <node id="fe_data_player"              address="0x00E">
+            <node id="data_player"              address="0x00E">
                 <node id="stat_roh_data_player"                  mask="0x00001000"/>
                 <node id="stat_feh_data_player"                  mask="0x20000000"/>
-                <node id="fe_for_ps_roh_clk_320_l_test_done"                  mask="0x00002000"/>
-                <node id="fe_for_ps_roh_clk_320_r_test_done"                  mask="0x00004000"/>
-                <node id="fe_for_ps_roh_clk_320_l_stat"                  mask="0x00008000"/>
-                <node id="fe_for_ps_roh_clk_320_r_stat"                  mask="0x00010000"/>
-                <node id="fe_for_ps_roh_clk_640_l_test_done"                  mask="0x00020000"/>
-                <node id="fe_for_ps_roh_clk_640_r_test_done"                  mask="0x00040000"/>
-                <node id="fe_for_ps_roh_clk_640_l_stat"                  mask="0x00080000"/>
-                <node id="fe_for_ps_roh_clk_640_r_stat"                  mask="0x00100000"/>
+            </node>
+            <node id="fcmd_test"              address="0x00E">
                 <node id="fe_for_ps_roh_fcmd_SSA_l_test_done"                  mask="0x00200000"/>
                 <node id="fe_for_ps_roh_fcmd_SSA_r_test_done"                  mask="0x00400000"/>
                 <node id="fe_for_ps_roh_fcmd_SSA_l_stat"                  mask="0x00800000"/>
@@ -573,6 +567,34 @@
                 <node id="fe_for_ps_roh_fcmd_CIC_l_stat"                  mask="0x08000000"/>
                 <node id="fe_for_ps_roh_fcmd_CIC_r_stat"                  mask="0x10000000"/>
             </node>
+            <node id="clk_test"              address="0x00E">
+                <node id="fe_for_ps_roh_clk_320_l_test_done"                  mask="0x00002000"/>
+                <node id="fe_for_ps_roh_clk_320_r_test_done"                  mask="0x00004000"/>
+                <node id="fe_for_ps_roh_clk_320_l_stat"                  mask="0x00008000"/>
+                <node id="fe_for_ps_roh_clk_320_r_stat"                  mask="0x00010000"/>
+                <node id="fe_for_ps_roh_clk_640_l_test_done"                  mask="0x00020000"/>
+                <node id="fe_for_ps_roh_clk_640_r_test_done"                  mask="0x00040000"/>
+                <node id="fe_for_ps_roh_clk_640_l_stat"                  mask="0x00080000"/>
+                <node id="fe_for_ps_roh_clk_640_r_stat"                  mask="0x00100000"/>
+            </node>
+
+            <node id="clk_test_debug_1"              address="0x0E1">
+                <node id="fe_for_ps_roh_clk_320_l_test_counter"                  mask="0x0000FFFF"/>
+                <node id="fe_for_ps_roh_clk_320_l_ref_counter"                  mask="0xFFFF0000"/>
+            </node>
+            <node id="clk_test_debug_2"              address="0x0E2">
+                <node id="fe_for_ps_roh_clk_320_r_test_counter"                  mask="0x0000FFFF"/>
+                <node id="fe_for_ps_roh_clk_320_r_ref_counter"                  mask="0xFFFF0000"/>
+            </node>
+            <node id="clk_test_debug_3"              address="0x0E3">
+                <node id="fe_for_ps_roh_clk_640_l_test_counter"                  mask="0x0000FFFF"/>
+                <node id="fe_for_ps_roh_clk_640_l_ref_counter"                  mask="0xFFFF0000"/>
+            </node>
+            <node id="clk_test_debug_4"              address="0x0E4">
+                <node id="fe_for_ps_roh_clk_640_r_test_counter"                  mask="0x0000FFFF"/>
+                <node id="fe_for_ps_roh_clk_640_r_ref_counter"                  mask="0xFFFF0000"/>
+            </node>
+            
 
             <node id="fcmd_debug"              address="0x00E">
                 <node id="ssa_l"                  mask="0xFFFFFFFF"/>

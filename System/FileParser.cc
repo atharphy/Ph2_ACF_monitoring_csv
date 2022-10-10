@@ -3,7 +3,8 @@
 #include "../HWDescription/Cic.h"
 #include "../HWDescription/Hybrid.h"
 #include "../HWDescription/OuterTrackerHybrid.h"
-#include "../HWDescription/RD53.h"
+#include "../HWDescription/RD53A.h"
+#include "../HWDescription/RD53B.h"
 #include "../HWDescription/SSA2.h"
 #include "../HWDescription/lpGBT.h"
 #include "../Utils/Utilities.h"
@@ -175,9 +176,7 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
     {
         if(cBeBoard->getBoardType() == BoardType::D19C) { pBeBoardFWMap[cBeBoard->getId()] = new D19cFWInterface(cId, cUri, cAddressTable); }
         else if(cBeBoard->getBoardType() == BoardType::RD53)
-        {
             pBeBoardFWMap[cBeBoard->getId()] = new RD53FWInterface(cId, cUri, cAddressTable);
-        }
     }
     os << BOLDCYAN << "|"
        << "       "
@@ -212,8 +211,6 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
         if(static_cast<std::string>(pOpticalGroupNode.name()) == "OpticalGroup")
         {
             cBeBoard->setOptical(false);
-            cBeBoard->setUseOpticalLink(false);
-            cBeBoard->setUseCPB(false);
             this->parseOpticalGroupContainer(pOpticalGroupNode, cBeBoard, os);
         }
     }
@@ -228,24 +225,13 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
     uint32_t      cFMCId          = pOpticalGroupNode.attribute("FMCId").as_int();
     uint32_t      cBoardId        = pBoard->getId();
     OpticalGroup* theOpticalGroup = pBoard->addOpticalGroupContainer(cOpticalGroupId, new OpticalGroup(cBoardId, cFMCId, cOpticalGroupId));
-
-    bool cWithOptical = false;
-    for(pugi::xml_node theChild: pOpticalGroupNode.children())
-    {
-        if(static_cast<std::string>(theChild.name()) == "lpGBT_Interface") { cWithOptical = convertAnyInt(theChild.attribute("useOpticalLink").value()); }
-    }
-    pBoard->setOptical(cWithOptical);
-    theOpticalGroup->setOptical(cWithOptical);
+    theOpticalGroup->setOptical(false);
 
     uint8_t cLinkReset = convertAnyInt(pOpticalGroupNode.attribute("reset").value());
     theOpticalGroup->setReset(cLinkReset);
     for(pugi::xml_node theChild: pOpticalGroupNode.children())
     {
         if(static_cast<std::string>(theChild.name()) == "Hybrid") { this->parseHybridContainer(theChild, theOpticalGroup, os, pBoard); }
-        else if(static_cast<std::string>(theChild.name()) == "lpGBT_Interface")
-        {
-            pBoard->setUseCPB(convertAnyInt(theChild.attribute("useCPB").value()));
-        }
         else if(static_cast<std::string>(theChild.name()) == "lpGBT_Files")
         {
             cFilePath = expandEnvironmentVariables(theChild.attribute("path").value());
@@ -257,9 +243,12 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             os << BOLDBLUE << "|\t|----" << theChild.name() << " --> File: " << BOLDYELLOW << fileName << RESET << std::endl;
             uint8_t cChipId      = theChild.attribute("Id").as_int();
             uint8_t cChipVersion = theChild.attribute("version").as_int();
+            bool    cIsOptical   = theChild.attribute("optical").as_int();
             lpGBT*  thelpGBT     = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, cChipId, fileName);
             thelpGBT->setVersion(cChipVersion);
-            thelpGBT->setOptical(pBoard->isOptical());
+            thelpGBT->setOptical(cIsOptical);
+            theOpticalGroup->setOptical(cIsOptical);
+            pBoard->setOptical(cIsOptical);
             theOpticalGroup->addlpGBT(thelpGBT);
 
             // ####################################################
@@ -516,7 +505,7 @@ void FileParser::parseSSASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
             for(auto cChip: *pHybrid)
             {
                 if(cChip->getFrontEndType() != FrontEndType::SSA && cChip->getFrontEndType() != FrontEndType::SSA2) continue;
-                int cThresholdStrps = convertAnyInt(cThresholdNode.attribute("stripThreshold").value()) / 250.;
+                int cThresholdStrps = convertAnyInt(cThresholdNode.attribute("stripThreshold").value());
                 cThresholdStrps     = (cThresholdStrps > 0xFF) ? 0xFF : cThresholdStrps;
 
                 cChip->setReg("Bias_THDAC", cThresholdStrps);
@@ -683,7 +672,7 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
             for(auto cChip: *pHybrid)
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
-                int cThresholdPxls = convertAnyInt(cThresholdNode.attribute("pixelThreshold").value()) / 94.;
+                int cThresholdPxls = convertAnyInt(cThresholdNode.attribute("pixelThreshold").value());
                 cThresholdPxls     = (cThresholdPxls > 0xFF) ? 0xFF : cThresholdPxls;
                 for(size_t cIndx = 0; cIndx < 7; cIndx++)
                 {
@@ -813,13 +802,13 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
 
 void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* pOpticalGroup, std::ostream& os, BeBoard* pBoard)
 {
-    bool cStatus = pHybridNode.attribute("Status").as_bool();
+    bool cEnable = pHybridNode.attribute("enable").as_bool();
 
-    if(cStatus)
+    if(cEnable)
     {
         os << BOLDBLUE << "|       |"
            << "----" << pHybridNode.name() << " --> " << BOLDBLUE << pHybridNode.first_attribute().name() << ": " << BOLDYELLOW << pHybridNode.attribute("Id").value() << BOLDBLUE
-           << ", Status: " << BOLDYELLOW << expandEnvironmentVariables(pHybridNode.attribute("Status").value()) << BOLDBLUE << RESET << std::endl;
+           << ", Enable: " << BOLDYELLOW << expandEnvironmentVariables(pHybridNode.attribute("enable").value()) << BOLDBLUE << RESET << std::endl;
 
         Hybrid* cHybrid;
         if(pBoard->getBoardType() == BoardType::RD53)
@@ -832,15 +821,14 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
         }
         else
         {
+            uint8_t cHybridId = 2 * pOpticalGroup->getId() + pHybridNode.attribute("Id").as_int();
             uint8_t cMasterId;
             if(pHybridNode.attribute("i2cMaster")) { cMasterId = pHybridNode.attribute("i2cMaster").as_int(); } // can overwrite default from xml
             else
-                cMasterId = (pHybridNode.attribute("Id").as_int() % 2 == 0) ? 2 : 0; // default for OT hybrids is that RHS is connected to master 2, LHS connected to master 1
+                cMasterId = (cHybridId % 2 == 0) ? 2 : 0; // default for OT hybrids is that RHS is connected to master 2, LHS connected to master 1
 
             os << BOLDBLUE << "I2C Master Id is " << +cMasterId << RESET;
-            cHybrid = pOpticalGroup->addHybridContainer(
-                pHybridNode.attribute("Id").as_int(),
-                new OuterTrackerHybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pOpticalGroup->getOpticalGroupId(), pHybridNode.attribute("Id").as_int()));
+            cHybrid = pOpticalGroup->addHybridContainer(cHybridId, new OuterTrackerHybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pOpticalGroup->getOpticalGroupId(), cHybridId));
 
             cHybrid->setMasterId(cMasterId);
 
@@ -858,7 +846,8 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("SSA2") != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("MPA") != std::string::npos;
             cIsTrackerASIC             = cIsTrackerASIC || cName.find("CIC") != std::string::npos;
-            cIsTrackerASIC             = cIsTrackerASIC || cName.find("RD53") != std::string::npos;
+            cIsTrackerASIC             = cIsTrackerASIC || cName.find("RD53A") != std::string::npos;
+            cIsTrackerASIC             = cIsTrackerASIC || cName.find("RD53B") != std::string::npos;
 
             if(cIsTrackerASIC)
             {
@@ -870,12 +859,15 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
 
                     if(cName.find("RD53") != std::string::npos)
                     {
-                        pBoard->setFrontEndType(FrontEndType::RD53);
-                        this->parseRD53(cChild, cHybrid, cConfigFileDirectory, os);
+                        cHybrid->setNPixelChips(cHybrid->getNPixelChips() + 1);
+                        auto frontEndType = cName.find("RD53A") != std::string::npos ? FrontEndType::RD53A : FrontEndType::RD53B;
+                        pBoard->setFrontEndType(frontEndType);
+                        this->parseRD53(cChild, cHybrid, cConfigFileDirectory, os, frontEndType);
                         if(cNextName.empty() || cNextName != cName) this->parseGlobalRD53Settings(pHybridNode, cHybrid, os);
                     }
                     else if(cName.find("CBC") != std::string::npos)
                     {
+                        cHybrid->setNStripChips(cHybrid->getNStripChips() + 1);
                         pBoard->setFrontEndType(FrontEndType::CBC3);
                         this->parseCbcContainer(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) this->parseGlobalCbcSettings(pHybridNode, cHybrid, os);
@@ -982,17 +974,20 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                     }
                     else if(cName == "SSA")
                     {
+                        cHybrid->setNStripChips(cHybrid->getNStripChips() + 1);
                         pBoard->setFrontEndType(FrontEndType::SSA);
                         this->parseSSAContainer(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) this->parseSSASettings(pHybridNode, cHybrid, os);
                     }
                     else if(cName == "SSA2")
                     {
+                        cHybrid->setNStripChips(cHybrid->getNStripChips() + 1);
                         pBoard->setFrontEndType(FrontEndType::SSA2);
                         this->parseSSA2Container(cChild, cHybrid, cConfigFileDirectory, os);
                     }
                     else if(cName == "SSA2")
                     {
+                        cHybrid->setNStripChips(cHybrid->getNStripChips() + 1);
                         LOG(INFO) << BOLDBLUE << "Implement for SSA2" << RESET;
                         pBoard->setFrontEndType(FrontEndType::SSA2);
                         this->parseSSA2Container(cChild, cHybrid, cConfigFileDirectory, os);
@@ -1000,6 +995,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                     }
                     else if(cName == "MPA")
                     {
+                        cHybrid->setNPixelChips(cHybrid->getNPixelChips() + 1);
                         pBoard->setFrontEndType(FrontEndType::MPA);
                         this->parseMPAContainer(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) this->parseMPASettings(pHybridNode, cHybrid, os);
@@ -1458,7 +1454,7 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
             std::vector<uint8_t> cTxGroups   = splitToVector(cChild.attribute("TxGroups").value(), ',');
             std::vector<uint8_t> cTxChannels = splitToVector(cChild.attribute("TxChannels").value(), ',');
 
-            // Retrieve groups and channels from CIC node attirbutes and propagate to LpGBT class
+            // Retrieve links, groups and channels from CIC node attirbutes and propagate to LpGBT class
             plpGBT->addRxGroups(cRxGroups);
             plpGBT->addRxChannels(cRxChannels);
             plpGBT->addTxGroups(cTxGroups);
@@ -1477,7 +1473,7 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
 // ########################
 // # RD53 specific parser #
 // ########################
-void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os)
+void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os, const FrontEndType& frontEndType)
 {
     std::string cFileName;
 
@@ -1501,9 +1497,12 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
        << cFileName << BOLDBLUE << ", RxGroup: " << BOLDYELLOW << +cRxGroup << BOLDBLUE << ", RxChannel: " << BOLDYELLOW << +cRxChannel << BOLDBLUE << ", TxGroup: " << BOLDYELLOW << +cTxGroup
        << BOLDBLUE << ", TxChannel: " << BOLDYELLOW << +cTxChannel << BOLDBLUE << ", Comment: " << BOLDYELLOW << cfgComment << RESET << std::endl;
 
-    ReadoutChip* theChip =
-        cHybrid->addChipContainer(chipId, new RD53(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, cFileName, cfgComment));
-    theChip->setNumberOfChannels(RD53::nRows, RD53::nCols);
+    ReadoutChip* theChip;
+    if(frontEndType == FrontEndType::RD53A)
+        theChip = cHybrid->addChipContainer(chipId, new RD53A(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, cFileName, cfgComment));
+    else
+        theChip = cHybrid->addChipContainer(chipId, new RD53B(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, cFileName, cfgComment));
+    theChip->setNumberOfChannels(static_cast<RD53*>(theChip)->getNRows(), static_cast<RD53*>(theChip)->getNCols());
 
     this->parseRD53Settings(theChipNode, theChip, os);
 }
@@ -1521,7 +1520,11 @@ void FileParser::parseGlobalRD53Settings(pugi::xml_node pHybridNode, Hybrid* pHy
             uint16_t    regvalue = convertAnyInt(attr.value());
             os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
 
-            for(auto theChip: *pHybrid) static_cast<ReadoutChip*>(theChip)->setReg(regname, regvalue, true);
+            for(auto theChip: *pHybrid)
+            {
+                static_cast<ReadoutChip*>(theChip)->getRegItem(regname).fDefValue = regvalue;
+                static_cast<ReadoutChip*>(theChip)->getRegItem(regname).fPrmptCfg = true;
+            }
         }
     }
 }
@@ -1531,13 +1534,17 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
     pugi::xml_node cLocalChipSettings = theChipNode.child("Settings");
     if(cLocalChipSettings != nullptr)
     {
-        os << BOLDCYAN << "|\t|\t|----FrontEndType: " << BOLDYELLOW << "RD53" << RESET << std::endl;
+        if(theChip->getFrontEndType() == FrontEndType::RD53A)
+            os << BOLDCYAN << "|\t|\t|----FrontEndType: " << BOLDYELLOW << "RD53A" << RESET << std::endl;
+        else
+            os << BOLDCYAN << "|\t|\t|----FrontEndType: " << BOLDYELLOW << "RD53B" << RESET << std::endl;
 
         for(const pugi::xml_attribute& attr: cLocalChipSettings.attributes())
         {
-            std::string regname  = attr.name();
-            uint16_t    regvalue = convertAnyInt(attr.value());
-            theChip->setReg(regname, regvalue, true);
+            std::string regname                    = attr.name();
+            uint16_t    regvalue                   = convertAnyInt(attr.value());
+            theChip->getRegItem(regname).fDefValue = regvalue;
+            theChip->getRegItem(regname).fPrmptCfg = true;
             os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
         }
     }

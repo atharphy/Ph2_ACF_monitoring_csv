@@ -9,70 +9,48 @@
 
 #include "RD53ChannelGroupHandler.h"
 
-void RD53ChannelGroupHandler::RD53ChannelGroupAll::makeTestGroup(std::shared_ptr<ChannelGroupBase>& currentChannelGroup,
-                                                                 uint32_t                           groupNumber,
-                                                                 uint32_t                           numberOfClustersPerGroup,
-                                                                 uint16_t                           numberOfRowsPerCluster,
-                                                                 uint16_t                           numberOfColsPerCluster) const
+RD53ChannelGroupHandler::RD53ChannelGroupHandler(size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nRows, size_t nCols, uint8_t groupType, size_t hitPerCol, size_t onlyNGroups)
+    : ChannelGroupHandler(), regionOfInterest(nRows, nCols), enabledGroups(nRows, nCols), groupType(groupType), hitPerCol(hitPerCol), onlyNGroups(onlyNGroups)
 {
-    static_cast<ChannelGroup*>(currentChannelGroup.get())->disableAllChannels();
+    for(auto col = colStart; col <= colStop; col++)
+        for(auto row = rowStart; row <= rowStop; row++) regionOfInterest.enableChannel(row, col);
 
-    for(auto row = 0u; row < Ph2_HwDescription::RD53::nRows; row++)
-        for(auto col = 0u; col < Ph2_HwDescription::RD53::nCols; col++)
-            if(isChannelEnabled(row, col)) static_cast<RD53ChannelGroupAll*>(currentChannelGroup.get())->enableChannel(row, col);
-}
+    allChannelGroup_ = std::shared_ptr<ChannelGroupBase>(&enabledGroups, [](auto*) {});
 
-void RD53ChannelGroupHandler::RD53ChannelGroupPattern::makeTestGroup(std::shared_ptr<ChannelGroupBase>& currentChannelGroup,
-                                                                     uint32_t                           groupNumber,
-                                                                     uint32_t                           numberOfClustersPerGroup,
-                                                                     uint16_t                           numberOfRowsPerCluster,
-                                                                     uint16_t                           numberOfColsPerCluster) const
-{
-    static_cast<ChannelGroup*>(currentChannelGroup.get())->disableAllChannels();
-
-    for(auto col = 0u; col < Ph2_HwDescription::RD53::nCols; col++)
-        for(auto i = 0u; i < hitPerCol; i++)
-        {
-            auto row = (RD53Constants::NROW_CORE * col + i * Ph2_HwDescription::RD53::nRows / hitPerCol) % Ph2_HwDescription::RD53::nRows;
-            row += groupNumber;
-            row %= Ph2_HwDescription::RD53::nRows;
-            if(isChannelEnabled(row, col) == true) static_cast<RD53ChannelGroupPattern*>(currentChannelGroup.get())->enableChannel(row, col);
-        }
-}
-
-RD53ChannelGroupHandler::RD53ChannelGroupHandler(ChannelGroup<Ph2_HwDescription::RD53::nRows, Ph2_HwDescription::RD53::nCols>& customChannelGroup,
-                                                 uint8_t                                                                       groupType,
-                                                 uint8_t                                                                       hitPerCol,
-                                                 uint8_t                                                                       onlyNGroups)
-{
     if(groupType == RD53GroupType::AllPixels)
     {
-        allChannelGroup_     = std::make_shared<RD53ChannelGroupAll>();
-        currentChannelGroup_ = std::make_shared<RD53ChannelGroupAll>();
+        numberOfGroups_  = 1;
+        allChannelGroup_ = std::shared_ptr<ChannelGroupBase>(&regionOfInterest, [](auto*) {});
     }
     else
     {
-        allChannelGroup_     = std::make_shared<RD53ChannelGroupPattern>(hitPerCol);
-        currentChannelGroup_ = std::make_shared<RD53ChannelGroupPattern>(hitPerCol);
-    }
-
-    numberOfGroups_ = getNumberOfGroups(groupType, hitPerCol, onlyNGroups);
-
-    // ###############################
-    // # Refine custom channel group #
-    // ###############################
-    this->setCustomChannelGroup(customChannelGroup);
-    customChannelGroup.disableAllChannels();
-
-    for(auto it = 0u; it < numberOfGroups_; it++)
-    {
-        allChannelGroup_->makeTestGroup(currentChannelGroup_, it, 1, 1, 1);
-
-        for(auto row = 0u; row < Ph2_HwDescription::RD53::nRows; row++)
-            for(auto col = 0u; col < Ph2_HwDescription::RD53::nCols; col++)
-                if(static_cast<const ChannelGroup<Ph2_HwDescription::RD53::nRows, Ph2_HwDescription::RD53::nCols>*>(currentChannelGroup_.get())->isChannelEnabled(row, col) == true)
-                    customChannelGroup.enableChannel(row, col);
+        numberOfGroups_  = onlyNGroups == 0 ? (nRows / hitPerCol) : onlyNGroups;
+        allChannelGroup_ = std::shared_ptr<ChannelGroupBase>(&enabledGroups, [](auto*) {});
     }
 }
 
-RD53ChannelGroupHandler::~RD53ChannelGroupHandler() {}
+const std::shared_ptr<ChannelGroupBase> RD53ChannelGroupHandler::getTestGroup(int groupNumber)
+{
+    size_t nRows        = regionOfInterest.getNumberOfRows();
+    size_t nCols        = regionOfInterest.getNumberOfCols();
+    auto   channelGroup = std::make_shared<RD53ChannelGroup>(nRows, nCols);
+
+    if(groupType == RD53GroupType::AllPixels) { *channelGroup = regionOfInterest; }
+    else
+    {
+        for(auto col = 0u; col < nCols; col++)
+            for(auto i = 0u; i < hitPerCol; i++)
+            {
+                auto row = (RD53Constants::NROW_CORE * col + i * nRows / hitPerCol) % nRows;
+                row += groupNumber;
+                row %= nRows;
+                if(regionOfInterest.isChannelEnabled(row, col) == true)
+                {
+                    channelGroup->enableChannel(row, col);
+                    allChannelGroup_->enableChannel(row, col);
+                }
+            }
+    }
+
+    return channelGroup;
+}

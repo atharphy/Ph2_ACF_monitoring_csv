@@ -1,5 +1,5 @@
-#include <fstream>
 #include <cstring>
+#include <fstream>
 #include <ios>
 
 #include "../System/SystemController.h"
@@ -73,7 +73,7 @@ int main(int argc, char** argv)
 
     bool cHardReset    = (cmd.foundOption("hard_reset")) ? true : false;
     bool cDDR3SelfTest = (cmd.foundOption("ddr3test")) ? true : false;
-    bool cSFP_DDMI = (cmd.foundOption("sfp_ddmi")) ? true : false;
+    bool cSFP_DDMI     = (cmd.foundOption("sfp_ddmi")) ? true : false;
 
     bool        cSaveToFile = false;
     std::string cOutputFile;
@@ -130,10 +130,10 @@ int main(int argc, char** argv)
         dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->DDR3SelfTest();
         //(D19cFWInterface*)(cTool.fBeBoardInterface->fBoardFW)->DDR3SelfTest();
     }
-    else if(cSFP_DDMI) 
+    else if(cSFP_DDMI)
     {
         cTool.fBeBoardInterface->setBoard(pBoard->getId());
-        for (int i=0;i<8;i++)
+        for(int i = 0; i < 8; i++)
         {
             std::cout <<"###--------------l8--ch: "<<i<< " -------------###"<< std::endl;
             dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("T",i);

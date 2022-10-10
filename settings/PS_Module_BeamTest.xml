@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="utf-8"?>
+<HwDescription>
+  <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
+  <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1" boardReset="1">
+    <!--<connection id="board" uri="chtcp-2.0://outertracker01.dhcp.fnal.gov:10203?target=192.168.0.9:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />-->
+    <!-- <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.72:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
+    <!--<connection id="board" uri="chtcp-2.0://cmsmoduletest01:10203?target=192.168.1.84:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
+    <connection id="board" uri="chtcp-2.0://192.168.21.100:10203?target=192.168.21.200:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <CDCE configure="0" clockRate="320"/>
+    
+    <OpticalGroup Id="0" FMCId="0" reset="1">
+        <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
+        <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
+          <Settings
+          />
+        </lpGBT>
+        <Hybrid Id="0" enable="1" reset="1">
+            <Global>
+                <!-- in electrons, file parser will take care of conversion to DAC units for each chip type --> 
+                <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  -->
+                <!-- Window in half pixels  -->
+                <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
+                <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns -->
+                <!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
+                <Latencies       stripLatency="118" pixelLatency="118"/>
+                <Thresholds      stripThreshold="40" pixelThreshold="40"/> 
+                <StubLogic       mode="0" window="16"/>
+                <HitLogic        stripMode="1" pixelMode="1"/>
+                <HipLogic        stripCut="7" pixelCut="7"/>
+                <SamplingDelay   stripCoarse="0" stripFine="0" pixelCoarse="0" pixelFine="0"/>
+                <InjectedCharge  stripCharge="0" pixelCharge="0"/> 
+                <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/>
+            </Global>
+            
+            <SSA_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_NoisePS26mm_BeamTest_Run41/" />
+            <SSA Id="0" configfile="BE0_OG0_FE0_Chip0SSA.txt" />
+            <SSA Id="1" configfile="BE0_OG0_FE0_Chip1SSA.txt" />
+            <SSA Id="2" configfile="BE0_OG0_FE0_Chip2SSA.txt" />
+            <SSA Id="4" configfile="BE0_OG0_FE0_Chip4SSA.txt" />
+            <SSA Id="5" configfile="BE0_OG0_FE0_Chip5SSA.txt" />
+            <SSA Id="6" configfile="BE0_OG0_FE0_Chip6SSA.txt" />
+            <SSA Id="7" configfile="BE0_OG0_FE0_Chip7SSA.txt" />
+
+            <MPA_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_NoisePS26mm_BeamTest_Run41/" />
+            <MPA Id="8" configfile="BE0_OG0_FE0_Chip8.txt" />
+            <MPA Id="9" configfile="BE0_OG0_FE0_Chip9.txt" />
+            <MPA Id="10" configfile="BE0_OG0_FE0_Chip10.txt" />
+            <MPA Id="11" configfile="BE0_OG0_FE0_Chip11.txt" />
+            <MPA Id="12" configfile="BE0_OG0_FE0_Chip12.txt" />
+            <MPA Id="13" configfile="BE0_OG0_FE0_Chip13.txt" />
+            <MPA Id="14" configfile="BE0_OG0_FE0_Chip14.txt" />
+            <MPA Id="15" configfile="BE0_OG0_FE0_Chip15.txt" />
+ 
+            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC Id="8" configfile="CIC_default.txt" />
+        </Hybrid>
+
+        <Hybrid Id="1" enable="1" reset="1" i2cMaster="1">
+            <Global>
+                <!-- in electrons, file parser will take care of conversion to DAC units for each chip type --> 
+                <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  -->
+                <!-- Window in half pixels  -->
+                <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
+                <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns -->
+                <!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
+                <Latencies       stripLatency="118" pixelLatency="118"/>
+                <Thresholds      stripThreshold="40" pixelThreshold="40"/> 
+                <StubLogic       mode="0" window="16"/>
+                <HitLogic        stripMode="1" pixelMode="1"/>
+                <HipLogic        stripCut="7" pixelCut="7"/>
+                <SamplingDelay   stripCoarse="0" stripFine="0" pixelCoarse="0" pixelFine="0"/>
+                <InjectedCharge  stripCharge="0" pixelCharge="0"/> 
+                <MaskedStrips SSAId="4" Rows="59,60" />
+                <CIC enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="1"/>
+            </Global>
+            
+            <SSA_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_NoisePS26mm_BeamTest_Run41/" />
+            <SSA Id="0" configfile="BE0_OG0_FE1_Chip0SSA.txt" />
+            <SSA Id="1" configfile="BE0_OG0_FE1_Chip1SSA.txt" />
+            <SSA Id="2" configfile="BE0_OG0_FE1_Chip2SSA.txt" />
+            <SSA Id="4" configfile="BE0_OG0_FE1_Chip4SSA.txt" />
+            <SSA Id="5" configfile="BE0_OG0_FE1_Chip5SSA.txt" />
+            <SSA Id="6" configfile="BE0_OG0_FE1_Chip6SSA.txt" />
+            <SSA Id="7" configfile="BE0_OG0_FE1_Chip7SSA.txt" />
+
+            <MPA_Files path="${PH2ACF_BASE_DIR}/Results/OT_ModuleTest_NoisePS26mm_BeamTest_Run41/" />
+            <MPA Id="8" configfile="BE0_OG0_FE1_Chip8.txt" />
+            <MPA Id="9" configfile="BE0_OG0_FE1_Chip9.txt" />
+            <MPA Id="10" configfile="BE0_OG0_FE1_Chip10.txt" />
+            <MPA Id="11" configfile="BE0_OG0_FE1_Chip11.txt" />
+            <MPA Id="12" configfile="BE0_OG0_FE1_Chip12.txt" />
+            <MPA Id="13" configfile="BE0_OG0_FE1_Chip13.txt" />
+            <MPA Id="14" configfile="BE0_OG0_FE1_Chip14.txt" />
+            <MPA Id="15" configfile="BE0_OG0_FE1_Chip15.txt" />
+
+ 	    <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC Id="8" configfile="CIC_default.txt" />
+        </Hybrid>
+ 
+    </OpticalGroup>
+
+    
+    <!-- CONFIG-->
+    <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13  -->
+    <Register name="clock_source">3</Register> 
+    <Register name="fc7_daq_cnfg">
+	<Register name="optical_block">
+		<Register name="lpgbt_sc_worker">
+                        <Register name="ic_retry"> 1 </Register>
+                        <Register name="i2c_retry"> 1 </Register>
+                        <Register name="fe_retry"> 1 </Register>
+                        <Register name="max_ic_retry"> 10 </Register>
+                        <Register name="max_i2c_retry"> 10 </Register>
+                        <Register name="max_fe_retry"> 10 </Register>
+		</Register>
+        </Register>
+    <Register name="sync_block">
+        <Register name="enable"          >0</Register>
+        <Register name="is_bc0_enable"   >0</Register>
+        <Register name="is_resync_enable">1</Register>
+        <Register name="delay">10000</Register>
+        <Register name="num_triggers"    >99</Register>
+    </Register>
+      
+    <!-- Clock control -->
+    <Register name="clock">
+        <Register name="ext_clk_en"> 0 </Register>
+    </Register>
+        <!-- TTC -->
+        <Register name="ttc">
+            <Register name="ttc_enable"> 0 </Register>
+        </Register>
+        <!-- Fast Command Block -->
+        <Register name="fast_command_block">
+            <Register name="triggers_to_accept"> 0 </Register>
+            <Register name="trigger_source"> 4 </Register>
+            <Register name="user_trigger_frequency"> 100 </Register>
+            <Register name="stubs_mask"> 1 </Register>
+            <!--this is the delay for the stub trigger-->
+            <Register name="stub_trigger_delay_value"> 0 </Register>
+            <Register name="stub_trigger_veto_length"> 0 </Register>
+            <Register name="test_pulse">
+                <Register name="delay_after_fast_reset"> 80 </Register>
+                <Register name="delay_after_test_pulse"> 200 </Register>
+                <Register name="delay_before_next_pulse"> 100 </Register>
+                <Register name="en_fast_reset"> 0 </Register>
+                <Register name="en_test_pulse"> 1 </Register>
+                <Register name="en_l1a"> 1 </Register>
+                <Register name="en_shutter"> 0 </Register>
+            </Register>
+            <Register name="ps_async_delay">
+                <Register name="after_clear_counters"> 200 </Register>
+                <Register name="after_open_shutter"> 1 </Register>
+                <Register name="after_close_shutter"> 200 </Register>
+                <Register name="after_stop_antenna"> 200 </Register>
+            </Register>
+            <Register name="ps_async_en">
+                <Register name="open_shutter"> 1 </Register>
+                <Register name="close_shutter"> 1 </Register>
+                <Register name="cal_pulse"> 1 </Register>
+                <Register name="antenna"> 0 </Register>
+                <Register name="clear_counters"> 0 </Register>
+            </Register>
+            <Register name="ext_trigger_delay_value"> 100 </Register>
+            <Register name="antenna_trigger_delay_value"> 1 </Register>
+            <Register name="delay_between_two_consecutive"> 25 </Register>
+            <Register name="misc">
+                    <Register name="backpressure_enable"> 0 </Register>
+                    <Register name="stubOR"> 1 </Register>
+                    <Register name="initial_fast_reset_enable"> 0 </Register>
+                    <Register name="trigger_timeout_enable"> 0 </Register>
+                   <Register name="trigger_multiplicity"> 0 </Register>
+            </Register>
+        </Register>
+    <!-- I2C manager -->
+        <Register name="command_processor_block">
+    </Register>
+    <!-- Phy Block -->
+    <Register name="physical_interface_block">
+        <Register name="cic">
+            <Register name = "clock_enable"> 1 </Register>
+        </Register>
+        <Register name="stubs">
+            <Register name = "stub_package_delay"> 2 </Register>
+        </Register>
+    </Register>
+    <!-- Readout Block -->
+        <Register name="readout_block">
+            <Register name="packet_nbr"> 999 </Register>
+            <Register name="global">
+                    <Register name="data_handshake_enable"> 0 </Register>
+                    <Register name="int_trig_enable"> 0 </Register>
+                    <Register name="int_trig_rate"> 0 </Register>
+                    <Register name="trigger_type"> 0 </Register>
+                    <Register name="data_type"> 0 </Register>
+                    <!--this is what is commonly known as stub latency-->
+                    <Register name="common_stubdata_delay"> 40 </Register>
+            </Register>
+            <Register name="timeout"> 0 </Register>
+        </Register>
+    <!-- DIO5 Block -->
+    <Register name="dio5_block">
+        <Register name="dio5_en"> 1 </Register>
+            <Register name="ch1">
+                <Register name="out_enable"> 1 </Register>
+                <Register name="term_enable"> 0 </Register>
+                <Register name="threshold"> 0 </Register>
+            </Register>
+        <Register name="ch2">
+                <Register name="out_enable"> 0 </Register>
+                <Register name="term_enable"> 0 </Register>
+                <Register name="threshold"> 50 </Register>
+            </Register>
+        <Register name="ch3">
+                <Register name="out_enable"> 1 </Register>
+                <Register name="term_enable"> 0 </Register>
+                <Register name="threshold"> 0 </Register>
+            </Register>
+        <Register name="ch4">
+                <Register name="out_enable"> 0 </Register>
+                <Register name="term_enable"> 1 </Register>
+                <Register name="threshold"> 50 </Register>
+            </Register>
+        <Register name="ch5">
+                <Register name="out_enable"> 0 </Register>
+                <Register name="term_enable"> 1 </Register>
+                <Register name="threshold"> 50 </Register>
+            </Register>
+    </Register>
+    <!-- TLU Block -->
+    <Register name="tlu_block">
+                <Register name="tlu_enabled"> 1 </Register>
+                <Register name="handshake_mode"> 2 </Register>
+                <Register name="trigger_id_delay"> 1 </Register>
+    </Register>
+    </Register>
+  </BeBoard>
+
+<Settings>
+    <!-- Module parameters for PS alignment -->
+    <Setting name="TxDrive">4</Setting>
+    <Setting name="PreEmph">1</Setting>
+    <Setting name="MinStubPhase">1</Setting>
+    <Setting name="MaxStubPhase">8</Setting>
+
+    <!-- 0 : digital; 1 : analogue --> 
+    <Setting name="InjectionType">1</Setting>
+    <Setting name="TriggerMultiplicity">0</Setting>
+    <Setting name="StubAlignmentScanStart">86</Setting>
+   <!--  <Setting name="StartLatency">290</Setting>
+    <Setting name="LatencyRange">10</Setting>
+    --> 
+    <Setting name="StartLatency">110</Setting>
+    <Setting name="LatencyRange">20</Setting>
+
+    <Setting name="PSmoduleSSAthreshold">10</Setting>
+    <Setting name="PSmoduleMPAthreshold">120</Setting>
+    <Setting name="PSmoduleTriggerLatency">180</Setting>
+    <Setting name="PSmoduleStubWindow">32</Setting>
+
+    <Setting name="SaveRawData">1</Setting>
+    <!--PedestalEqualization-->
+    <Setting name="Nevents">1000</Setting>
+    <Setting name="HoleMode">0</Setting>
+    <Setting name="VerificationLoop">1</Setting>
+    <Setting name="MaskChannelsFromOtherGroups">0</Setting>
+    <Setting name="FitSCurves">0</Setting>
+    <Setting name="PlotSCurves">1</Setting>
+    <Setting name="PedestalEqualizationPulseAmplitude">77</Setting>
+    <Setting name="PedeNoisePulseAmplitude">77</Setting>
+    <Setting name="TriggerRate">10</Setting>
+
+    <Setting name="TargetVcth">0x78</Setting>
+    <Setting name="TargetOffset">0x50</Setting>
+
+    <!--Signal Scan Fit-->
+    <Setting name="InitialVcth">0x78</Setting>
+    <Setting name="SignalScanStep">2</Setting>
+    <Setting name="FitSignal">0</Setting>
+
+    <!--Antenna for Opens -->
+    <Setting name="AntennaPotentiometer">0</Setting>
+    <Setting name="ThresholdForOpens">10</Setting>
+    <Setting name="AntennaTriggerRate">50</Setting>
+
+    <!-- Shorts -->
+    <Setting name="ShortsPulseAmplitude"> 20 </Setting>
+
+    <!--PS hybrid SSA output test -->
+    <!-- number of 10 ms periods to wait for in the case of stubs -->
+    <!-- number of triggers to send in the case of L1A data -->
+    <!-- L1 triggers sent once every 10 ms -->
+    <Setting name="PSHybridDebugDuration">1</Setting>
+
+    <!-- Async Test -->
+    <Setting name="AsyncSweepTh">0</Setting>
+    <Setting name="AsyncThreshold">10</Setting>
+    <Setting name="AsyncCalDac">30</Setting>
+    <Setting name="StartTHDAC">0x40</Setting>
+    <Setting name="StopTHDAC">0x90</Setting>
+    <Setting name="NMsec">0</Setting>
+    <Setting name="NMpulse">3000</Setting>
+    <Setting name="Nlvl">50</Setting>
+    <Setting name="Vfac">0.9</Setting>
+    <Setting name="Mrms">0.6</Setting>
+    <Setting name="TestPulsePotentiometer">0x50</Setting>
+    <Setting name="SyncDebug">0</Setting>
+    <Setting name="TxDrive">0x7</Setting>
+
+    <Setting name="PSOccupancyPulseAmplitude">150</Setting>
+
+    <!-- Sync Test --> 
+    <Setting name="Attempts">1</Setting>
+    <!-- injection configuration, number of MPAs -->
+    <Setting name="ActiveMPAs">1</Setting>
+    <!-- FIFO depth -->
+    <Setting name="FifoDepth">8</Setting>
+    <!-- check for stubs -->
+    <Setting name="CheckForStubs">1</Setting>
+    <Setting name="ScanL1Latency">0</Setting>
+    <Setting name="ScanStubLatency">0</Setting>
+    <!-- injection configuration, fast commands -->
+    <Setting name="DistributeInjections">0</Setting>
+    <Setting name="TestMode">0</Setting>
+    <Setting name="TriggerSeparation">80</Setting>
+    <Setting name="DelayAfterInjection">100</Setting>
+    <!-- injection  configuration clusters/stubs -->
+    <Setting name="Bend">0</Setting>
+    <!-- cluster injection configuration -->
+    <Setting name="MinPclusters">1</Setting>
+    <Setting name="MaxPclusters">3</Setting>
+    <Setting name="MinSclusters">1</Setting>
+    <Setting name="MaxSclusters">1</Setting>
+    <Setting name="MaxStubs">4</Setting>
+    <!-- L1 eye, SLVS drive strength --> 
+    <Setting name="SLVSDrive">3</Setting>
+    <Setting name="MaxOffset">0</Setting>
+    
+    <Setting name="StartTHDAC">0x40</Setting>
+    <Setting name="StopTHDAC">0x90</Setting>
+    <Setting name="NMsec">0</Setting>
+    <Setting name="NMpulse">3000</Setting>
+    <Setting name="Nlvl">50</Setting>
+    <Setting name="Vfac">0.9</Setting>
+    <Setting name="Mrms">0.6</Setting>
+    <Setting name="TestPulsePotentiometer">0x50</Setting>
+    <Setting name="SyncDebug">0</Setting>
+
+    <Setting name="PSOccupancyPulseAmplitude">150</Setting>
+
+</Settings>
+</HwDescription>

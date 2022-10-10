@@ -53,12 +53,6 @@ class ClockDelay : public PixelAlive
 
   private:
     Latency la;
-    size_t  rowStart;
-    size_t  rowStop;
-    size_t  colStart;
-    size_t  colStop;
-    size_t  startValue;
-    size_t  stopValue;
 
     std::vector<uint16_t> dacList;
 
@@ -68,16 +62,14 @@ class ClockDelay : public PixelAlive
     void fillHisto();
     void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer);
     void chipErrorReport() const;
-    void writeSequence(const Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::ReadoutChip* pChip, uint16_t clk_data_delay);
+    void writeClkDelaySequence(const Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::ReadoutChip* pChip, uint16_t value);
 
   protected:
+    size_t startValue;
+    size_t stopValue;
+
     std::string fileRes;
     int         theCurrentRun;
-    uint16_t    maxClkDelay;
-    uint16_t    maxCmdDelay;
-    bool        doUpdateChip;
-    bool        doDisplay;
-    bool        saveBinaryData;
 };
 
 #endif

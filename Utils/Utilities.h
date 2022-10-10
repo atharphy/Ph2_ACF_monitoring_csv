@@ -173,5 +173,4 @@ std::string getHybridString(uint16_t boardId, uint16_t opticalGroupId, uint16_t 
 
 std::string getReadoutChipString(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t readoutChipId);
 
-
 #endif

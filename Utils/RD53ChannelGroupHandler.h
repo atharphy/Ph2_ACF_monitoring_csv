@@ -16,47 +16,54 @@
 namespace RD53GroupType
 {
 constexpr uint8_t AllPixels = 0;
-constexpr uint8_t AllGroups = 1;
-constexpr uint8_t OneGroup  = 2;
+constexpr uint8_t Groups    = 1;
 } // namespace RD53GroupType
+
+class RD53ChannelGroup : public ChannelGroupBase
+{
+  public:
+    RD53ChannelGroup(size_t nRows, size_t nCols, bool initialValue = false) : ChannelGroupBase(nRows, nCols), storage(nRows * nCols, initialValue) {}
+
+    uint32_t getNumberOfEnabledChannels(const std::shared_ptr<ChannelGroupBase> mask) const override { return getNumberOfEnabledChannels(mask.get()); }
+    bool     isChannelEnabled(uint16_t row, uint16_t col) const override { return storage[row + numberOfRows_ * col]; }
+    void     enableChannel(uint16_t row, uint16_t col) override { storage[row + numberOfRows_ * col] = true; }
+    void     disableChannel(uint16_t row, uint16_t col) override { storage[row + numberOfRows_ * col] = false; }
+    void     disableAllChannels(void) override { std::fill(storage.begin(), storage.end(), false); }
+    void     enableAllChannels(void) override { std::fill(storage.begin(), storage.end(), true); }
+    void     flipAllChannels(void) override { std::transform(storage.begin(), storage.end(), storage.begin(), std::logical_not<>{}); }
+    bool     areAllChannelsEnabled(void) const override
+    {
+        return std::all_of(storage.begin(), storage.end(), [](auto x) { return x; });
+    }
+    void                     setCustomPattern(const ChannelGroupBase& customChannelGroupBase) {}
+    const std::vector<bool>& getMask() const { return storage; }
+
+  protected:
+    uint32_t getNumberOfEnabledChannels(const ChannelGroupBase* mask) const override
+    {
+        std::vector<bool> conjuction(storage.size());
+        std::transform(storage.begin(), storage.end(), static_cast<const RD53ChannelGroup*>(mask)->storage.begin(), conjuction.begin(), std::logical_and<>{});
+        return std::count(conjuction.begin(), conjuction.end(), true);
+    }
+
+  private:
+    std::vector<bool> storage;
+};
 
 class RD53ChannelGroupHandler : public ChannelGroupHandler
 {
   public:
-    RD53ChannelGroupHandler(ChannelGroup<Ph2_HwDescription::RD53::nRows, Ph2_HwDescription::RD53::nCols>& customChannelGroup, uint8_t groupType, uint8_t hitPerCol = 1, uint8_t onlyNGroups = 0);
-    ~RD53ChannelGroupHandler();
+    RD53ChannelGroupHandler(size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nRows, size_t nCols, uint8_t groupType, size_t hitPerCol = 1, size_t onlyNGroups = 0);
 
-    static size_t getNumberOfGroups(uint8_t groupType, uint8_t hitPerCol, uint8_t onlyNGroups)
-    {
-        if(groupType == RD53GroupType::AllGroups)
-            return (onlyNGroups == 0 ? Ph2_HwDescription::RD53::nRows : onlyNGroups) / hitPerCol;
-        else
-            return 1;
-    };
+    RD53ChannelGroup&                       getRegionOfInterest() { return regionOfInterest; }
+    const std::shared_ptr<ChannelGroupBase> getTestGroup(int groupNumber) override;
 
   private:
-    class RD53ChannelGroupAll : public ChannelGroup<Ph2_HwDescription::RD53::nRows, Ph2_HwDescription::RD53::nCols>
-    {
-        void makeTestGroup(std::shared_ptr<ChannelGroupBase>& currentChannelGroup,
-                           uint32_t                           groupNumber,
-                           uint32_t                           numberOfClustersPerGroup,
-                           uint16_t                           numberOfRowsPerCluster,
-                           uint16_t                           numberOfColsPerCluster = 1) const override;
-    };
-
-    class RD53ChannelGroupPattern : public ChannelGroup<Ph2_HwDescription::RD53::nRows, Ph2_HwDescription::RD53::nCols>
-    {
-      public:
-        RD53ChannelGroupPattern(uint8_t hitPerCol) : hitPerCol(hitPerCol){};
-
-      private:
-        void    makeTestGroup(std::shared_ptr<ChannelGroupBase>& currentChannelGroup,
-                              uint32_t                           groupNumber,
-                              uint32_t                           numberOfClustersPerGroup,
-                              uint16_t                           numberOfRowsPerCluster,
-                              uint16_t                           numberOfColsPerCluster = 1) const override;
-        uint8_t hitPerCol;
-    };
+    RD53ChannelGroup regionOfInterest;
+    RD53ChannelGroup enabledGroups;
+    uint8_t          groupType;
+    size_t           hitPerCol;
+    size_t           onlyNGroups;
 };
 
 #endif

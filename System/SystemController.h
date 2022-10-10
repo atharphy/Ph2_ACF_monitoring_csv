@@ -12,6 +12,7 @@
 
 #include "../HWDescription/Definition.h"
 #include "../HWDescription/OuterTrackerHybrid.h"
+#include "../HWDescription/RD53A.h"
 #include "../HWInterface/BeBoardFWInterface.h"
 #include "../HWInterface/BeBoardInterface.h"
 #include "../HWInterface/CbcInterface.h"
@@ -21,7 +22,6 @@
 #include "../HWInterface/MPA2Interface.h"
 #include "../HWInterface/MPAInterface.h"
 #include "../HWInterface/PSInterface.h"
-#include "../HWInterface/RD53Interface.h"
 #include "../HWInterface/RD53lpGBTInterface.h"
 #include "../HWInterface/ReadoutChipInterface.h"
 #include "../HWInterface/SSA2Interface.h"
@@ -30,9 +30,10 @@
 #include "../MonitorUtils/DetectorMonitorConfig.h"
 #include "../NetworkUtils/TCPClient.h"
 #include "../NetworkUtils/TCPPublishServer.h"
+#include "../Utils/ChannelGroupHandler.h"
 #include "../Utils/ConsoleColor.h"
 #include "../Utils/Container.h"
-// 2S scc/8CBC3 hybrid tests
+#include "../Utils/ContainerFactory.h"
 #include "../Utils/D19SCEventAS.h"
 #include "../Utils/D19cCbc3Event.h"
 #include "../Utils/D19cCbc3EventZS.h"
@@ -56,7 +57,9 @@
 #include <utility>
 #include <vector>
 
-// librariries for communicating with Hybrid Test Cards
+// ########################################################
+// # Librariries for communicating with Hybrid Test Cards #
+// ########################################################
 #ifdef __TCUSB__
 #include "TCInterface.h"
 #endif
@@ -153,7 +156,7 @@ class SystemController
     /*!
      * \brief Initialize the Hardware via a config file
      * \param pFilename : HW Description file
-     *\param os         : ostream to dump output
+     * \param os        : ostream to dump output
      */
     void InitializeHw(const std::string& pFilename, std::ostream& os = std::cout, bool streamData = false, uint16_t DQMportNumber = 6000, uint16_t monitorDQMportNumber = 7000);
 
@@ -167,14 +170,17 @@ class SystemController
     /*!
      * \brief Configure the Hardware with XML file indicated values
      */
-    void ConfigureHw(bool bIgnoreI2c = false, bool pReInitialize = true);
+    void ConfigureHw(bool bIgnoreI2c = false, bool pReInitialize = true, bool doAlsoFrontend = true);
+
     // IT + OT specific configurations
     /*!
      * \brief Configure the Hardware with XML file indicated values
      */
     void ConfigureIT(Ph2_HwDescription::BeBoard* pBoard);
+    void ConfigureFrontendIT(Ph2_HwDescription::BeBoard* pBoard);
     void InitializeOT(Ph2_HwDescription::BeBoard* pBoard);
     void ConfigureOT(Ph2_HwDescription::BeBoard* pBoard);
+
     // OT specific configurations for 2S + PS modules
     /*!
      * \brief Configure the Hardware with XML file indicated values
@@ -182,6 +188,7 @@ class SystemController
     void ModuleStartUpPS(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     void ModuleStartUp2S(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     bool CicStartUp(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool cStartUpSequence);
+
     /*!
      * \brief Run Bit Error Rate test
      * \param chain2test     : which part of the chain to be tested
@@ -189,7 +196,6 @@ class SystemController
      * \param frames_or_time : time [s] or number of frames
      * \return: none
      */
-
     void RunBERtest(std::string chain2test, bool given_time, double frames_or_time);
 
     /*!
@@ -225,7 +231,7 @@ class SystemController
     virtual void Stop();
     virtual void Pause();
     virtual void Resume();
-    virtual void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000);
+    virtual void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000, bool doAlsoFrontend = true);
 
     void StartBoard(Ph2_HwDescription::BeBoard* pBoard);
     void StopBoard(Ph2_HwDescription::BeBoard* pBoard);
@@ -287,7 +293,7 @@ class SystemController
 
     void PrintRegCount()
     {
-        // print number of I2C transactions
+        // Print number of I2C transactions
         for(auto cBoard: *fDetectorContainer)
         {
             for(auto cOpticalGroup: *cBoard)
@@ -343,6 +349,7 @@ class SystemController
 
     void setInterfaceInitialization(uint8_t pCnfg) { fInitializeInterfaces = pCnfg; }
     void disableAllChannels();
+    void DumpFrontendRegisters();
 
   private:
     void SetFuture(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);

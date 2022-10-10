@@ -257,20 +257,11 @@ double hitProbabilityFunction(double* pStrips, double* pPar)
     return result;
 }
 
-std::string getBoardString(uint16_t boardId)
-{
-    return "Board_" + std::to_string(boardId);
-}
+std::string getBoardString(uint16_t boardId) { return "Board_" + std::to_string(boardId); }
 
-std::string getOpticalGroupString(uint16_t boardId, uint16_t opticalGroupId)
-{
-    return getBoardString(boardId) + "_OpticalGroup_" + std::to_string(opticalGroupId);
-}
+std::string getOpticalGroupString(uint16_t boardId, uint16_t opticalGroupId) { return getBoardString(boardId) + "_OpticalGroup_" + std::to_string(opticalGroupId); }
 
-std::string getHybridString(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId)
-{
-    return getOpticalGroupString(boardId, opticalGroupId) + "_Hybrid_" + std::to_string(hybridId);
-}
+std::string getHybridString(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId) { return getOpticalGroupString(boardId, opticalGroupId) + "_Hybrid_" + std::to_string(hybridId); }
 
 std::string getReadoutChipString(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t readoutChipId)
 {

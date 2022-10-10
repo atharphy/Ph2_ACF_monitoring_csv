@@ -1,10 +1,10 @@
 /*!
   \file                  RD53EyeScanOptimizationHistograms.h
-  \brief                 Header file of data readback optimization histograms
-  \author                Mauro DINARDO
+  \brief                 Header file of EyeScan optimization histograms
+  \author                Sergio Sanchez CRUZ
   \version               1.0
-  \date                  28/06/18
-  Support:               email to mauro.dinardo@cern.ch
+  \date                  28/06/22
+  Support:               email to sergio.sanchez.cruz@cern.ch
 */
 
 #ifndef RD53EyeScanOptimizationHistograms_H

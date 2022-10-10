@@ -17,11 +17,16 @@ void VoltageTuning::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    doDisplay    = this->findValueInSettings<double>("DisplayHisto");
     targetDig    = this->findValueInSettings<double>("VDDDTrimTarget", 1.3);
     targetAna    = this->findValueInSettings<double>("VDDATrimTarget", 1.2);
     toleranceDig = this->findValueInSettings<double>("VDDDTrimTolerance", 0.02);
     toleranceAna = this->findValueInSettings<double>("VDDATrimTolerance", 0.02);
+    doDisplay    = this->findValueInSettings<double>("DisplayHisto");
+
+    // ############################################################
+    // # Create directory for: raw data, config files, histograms #
+    // ############################################################
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "VoltageTuning");
 }
 
 void VoltageTuning::Running()
@@ -70,7 +75,6 @@ void VoltageTuning::localConfigure(const std::string& fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[VoltageTuning::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     VoltageTuning::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "VoltageTuning");
     VoltageTuning::initializeFiles(fileRes_, currentRun);
 }
 
@@ -119,7 +123,7 @@ void VoltageTuning::run()
                         // ##############
 
                         LOG(INFO) << GREEN << "VDDD tuning for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                                  << +cChip->getId() << std::setprecision(3) << RESET << GREEN << "] starts with target value = " << BOLDYELLOW << targetDig_ << RESET << GREEN
+                                  << +cChip->getId() << RESET << GREEN << "] starts with target value = " << BOLDYELLOW << std::setprecision(3) << targetDig_ << RESET << GREEN
                                   << " and tolerance = " << BOLDYELLOW << toleranceDig << RESET;
 
                         std::vector<float> trimVoltageDig;
@@ -226,8 +230,8 @@ void VoltageTuning::run()
                         auto finalVDDA = RD53ChipInterface->ReadChipMonitor(cChip, "VOUT_ana_ShuLDO") * conversionFactor;
 
                         LOG(INFO) << CYAN << "Final voltage readings after tuning" << RESET;
-                        LOG(INFO) << BOLDBLUE << "\t--> Final VDDD reading = " << std::setprecision(3) << BOLDYELLOW << finalVDDD << BOLDYELLOW << " V" << RESET;
-                        LOG(INFO) << BOLDBLUE << "\t--> Final VDDA reading = " << std::setprecision(3) << BOLDYELLOW << finalVDDA << BOLDYELLOW << " V" << RESET;
+                        LOG(INFO) << BOLDBLUE << "\t--> Final VDDD reading = " << std::setprecision(3) << BOLDYELLOW << finalVDDD << BOLDBLUE << " V" << RESET;
+                        LOG(INFO) << BOLDBLUE << "\t--> Final VDDA reading = " << std::setprecision(3) << BOLDYELLOW << finalVDDA << BOLDBLUE << " V" << RESET;
 
                         theDigContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = vdddNewSetting;
                         theAnaContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = vddaNewSetting;
@@ -257,6 +261,68 @@ void VoltageTuning::run()
     }
 
     if((doRepeatDig == true) || (doRepeatAna == true)) LOG(ERROR) << BOLDRED << "The calibration was not able to run successfully on all chips" << RESET;
+
+    // ###################################
+    // # Read analog current consumption #
+    // ###################################
+    for(const auto cBoard: *fDetectorContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    // ###############################
+                    // # Save original configuration #
+                    // ###############################
+
+                    auto memCoreCol0 = RD53ChipInterface->ReadChipReg(cChip, "EN_CORE_COL_0");
+                    auto memCoreCol1 = RD53ChipInterface->ReadChipReg(cChip, "EN_CORE_COL_1");
+                    auto memCoreCol2 = RD53ChipInterface->ReadChipReg(cChip, "EN_CORE_COL_3");
+                    auto memCoreCol3 = RD53ChipInterface->ReadChipReg(cChip, "EN_CORE_COL_3");
+
+                    // ########################
+                    // # Disable all channels #
+                    // ########################
+
+                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_0", 0);
+                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_1", 0);
+                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_2", 0);
+                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_3", 0);
+
+                    RD53ChipInterface->MaskAllChannels(cChip, true);
+
+                    auto allDisabled_current = RD53ChipInterface->ReadChipMonitor(cChip, "ANA_IN_CURRENT");
+
+                    // #######################
+                    // # Enable all channels #
+                    // #######################
+
+                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_0", 65535);
+                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_1", 65535);
+                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_2", 65535);
+                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_3", 63);
+
+                    RD53ChipInterface->MaskAllChannels(cChip, false);
+
+                    auto allEnabled_current = RD53ChipInterface->ReadChipMonitor(cChip, "ANA_IN_CURRENT");
+
+                    // ##################################
+                    // # Restore original configuration #
+                    // ##################################
+
+                    static_cast<RD53*>(cChip)->copyMaskFromDefault();
+                    RD53ChipInterface->ConfigureChipOriginalMask(cChip, false, true);
+
+                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_0", memCoreCol0);
+                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_1", memCoreCol1);
+                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_2", memCoreCol2);
+                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_3", memCoreCol3);
+
+                    LOG(INFO) << GREEN << "Analog current consumption for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t--> Entire chip: " << std::setprecision(3) << BOLDYELLOW << allEnabled_current - allDisabled_current << BOLDBLUE << " A" << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t--> Single pixel cell: " << std::setprecision(3) << BOLDYELLOW
+                              << (allEnabled_current - allDisabled_current) / (RD53Shared::firstChip->getNRows() * RD53Shared::firstChip->getNCols()) << BOLDBLUE << " A" << RESET;
+                }
 
     fDetectorContainer->resetReadoutChipQueryFunction();
     fDetectorContainer->setEnabledAll(true);

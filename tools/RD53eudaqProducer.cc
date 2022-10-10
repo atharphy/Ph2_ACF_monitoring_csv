@@ -54,6 +54,18 @@ void RD53eudaqProducer::DoStartRun()
     // ev->SetTriggerN(swTrigCnt++);
     // this->MySendEvent(std::move(ev));
 
+    // ######################################
+    // # Add extra information to the event #
+    // ######################################
+    // std::stringstream os;
+    // ev->SetTag("FirmwareVersion", RD53sysCntrPhys.fBeBoardInterface->FWinfo);
+    // for(const auto cBoard: *(RD53sysCntrPhys.fDetectorContainer))
+    //     for(const auto cOpticalGroup: *cBoard)
+    //         for(const auto cHybrid: *cOpticalGroup)
+    //             for(const auto cChip: *cHybrid)
+    //               cChip->saveRegMap("NONE", os);
+    // ev->SetTag("RegisterMapAndMask", os);
+
     // ###################################################
     // # Get configuration directly from EUDAQ framework #
     // ###################################################
@@ -169,7 +181,7 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
             // Use TLU counter
             if(tluTrigId < eudaqProducer->previousTLUTrigId)
             {
-                eudaqProducer->swTrigCnt += 1 << EUDAQ::NBITSTLU;
+                eudaqProducer->swTrigCnt += 1 << EUDAQ::NBIT_TLU;
                 std::cout << "[RD53eudaqProducer::RD53eudaqEvtConverter] Detected TLU trigger ID wrap around" << std::endl;
             }
             ev->SetTriggerN(eudaqProducer->swTrigCnt + tluTrigId);
@@ -179,16 +191,15 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
             // ##################################################
             do
             {
-                for(const auto& frame: RD53EvtList[it].chip_frames_events)
+                for(const auto& event: RD53EvtList[it].chip_events)
                 {
                     std::string chipType = "unknown";
                     for(const auto& cHybrid: *(eudaqProducer->RD53sysCntrPhys.fDetectorContainer->at(0)->at(0)))
                         for(const auto& cChip: *cHybrid)
-                            if((cHybrid->getId() == frame.first.hybrid_id) && (cChip->getId() == frame.first.chip_id)) chipType = static_cast<Ph2_HwDescription::RD53*>(cChip)->getComment();
+                            if((cHybrid->getId() == event.hybrid_id) && (cChip->getId() == event.chip_id)) chipType = static_cast<Ph2_HwDescription::RD53*>(cChip)->getComment();
 
-                    theEvent.chipData.push_back(
-                        {chipType, frame.first.chip_id, frame.first.chip_lane, frame.first.hybrid_id, frame.second.trigger_id, frame.second.trigger_tag, frame.second.bc_id, {}});
-                    for(const auto& hit: frame.second.hit_data) theEvent.chipData.back().hits.push_back({hit.row, hit.col, hit.tot});
+                    theEvent.chipData.push_back({chipType, event.chip_id, event.chip_lane, event.hybrid_id, event.trigger_id, event.trigger_tag, event.bc_id, {}});
+                    for(const auto& hit: event.hit_data) theEvent.chipData.back().hits.push_back({hit.row, hit.col, hit.tot});
                 }
 
                 it++;

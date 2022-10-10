@@ -11,40 +11,22 @@
 
 namespace Ph2_HwDescription
 {
-// ########################################
-// # Support for different FrontEnd types #
-// ########################################
-constexpr RD53::FrontEnd RD53::SYNC;
-constexpr RD53::FrontEnd RD53::LIN;
-constexpr RD53::FrontEnd RD53::DIFF;
-const RD53::FrontEnd*    RD53::frontEnds[] = {&RD53::SYNC, &RD53::LIN, &RD53::DIFF};
-
-const RD53::FrontEnd* RD53::getMajorityFE(size_t colStart, size_t colStop)
-{
-    return *std::max_element(std::begin(frontEnds), std::end(frontEnds), [&](const FrontEnd* a, const FrontEnd* b) {
-        return int(std::min(colStop, a->colStop)) - int(std::max(colStart, a->colStart)) < int(std::min(colStop, b->colStop)) - int(std::max(colStart, b->colStart));
-    });
-}
-
 RD53::RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment)
     : ReadoutChip(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id)
 {
-    fMaxRegValue      = RD53Shared::setBits(RD53Constants::NBIT_MAXREG);
-    fChipOriginalMask = std::make_shared<ChannelGroup<nRows, nCols>>();
-    configFileName    = fileName;
-    RD53::loadfRegMap(configFileName);
-    this->setFrontEndType(FrontEndType::RD53);
-    myComment  = cfgComment;
-    myChipLane = pRD53Lane;
+    fMaxRegValue   = RD53Shared::setBits(RD53Constants::NBIT_MAXREG);
+    configFileName = fileName;
+    myComment      = cfgComment;
+    myChipLane     = pRD53Lane;
 }
 
 RD53::RD53(const RD53& chipObj) : ReadoutChip(chipObj) {}
 
 void RD53::loadfRegMap(const std::string& fileName)
 {
-    std::ifstream      file(fileName.c_str(), std::ios::in);
-    std::stringstream  myString;
-    perColumnPixelData pixData;
+    std::stringstream myString;
+    std::ifstream     file(fileName.c_str(), std::ios::in);
+    pixelMask         thePixMask(this->getNRows() * this->getNCols(), false, false, false, 0);
 
     if(file.good() == true)
     {
@@ -62,14 +44,7 @@ void RD53::loadfRegMap(const std::string& fileName)
             {
                 foundPixelConfig = true;
 
-                if(line.find("COL") != std::string::npos)
-                {
-                    pixData.Enable.fill(0);
-                    pixData.HitBus.fill(0);
-                    pixData.InjEn.fill(0);
-                    pixData.TDAC.fill(0);
-                }
-                else if(line.find("ENABLE") != std::string::npos)
+                if(line.find("ENABLE") != std::string::npos)
                 {
                     line.erase(line.find("ENABLE"), 6);
                     myString.str("");
@@ -83,21 +58,19 @@ void RD53::loadfRegMap(const std::string& fileName)
                         readWord.erase(std::remove_if(readWord.begin(), readWord.end(), isspace), readWord.end());
                         if(std::all_of(readWord.begin(), readWord.end(), isdigit))
                         {
-                            pixData.Enable[row] = atoi(readWord.c_str());
-                            if(pixData.Enable[row] == 0) fChipOriginalMask->disableChannel(row, col);
+                            thePixMask.Enable.at(row + this->getNRows() * col) = atoi(readWord.c_str());
+                            if(thePixMask.Enable[row + this->getNRows() * col] == false) fChipOriginalMask->disableChannel(row, col);
                             row++;
                         }
                     }
 
-                    if(row < nRows)
+                    if(row < this->getNRows())
                     {
                         myString.str("");
                         myString.clear();
-                        myString << "[RD53::loadfRegMap] Error, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsMask.size();
+                        myString << "[RD53::loadfRegMap] Error, problem reading RD53 config file: too few rows (" << row << ") for column size " << thePixMask.Enable.size();
                         throw Exception(myString.str().c_str());
                     }
-
-                    col++;
                 }
                 else if(line.find("HITBUS") != std::string::npos)
                 {
@@ -113,16 +86,16 @@ void RD53::loadfRegMap(const std::string& fileName)
                         readWord.erase(std::remove_if(readWord.begin(), readWord.end(), isspace), readWord.end());
                         if(std::all_of(readWord.begin(), readWord.end(), isdigit))
                         {
-                            pixData.HitBus[row] = atoi(readWord.c_str());
+                            thePixMask.HitBus.at(row + this->getNRows() * col) = atoi(readWord.c_str());
                             row++;
                         }
                     }
 
-                    if(row < nRows)
+                    if(row < this->getNRows())
                     {
                         myString.str("");
                         myString.clear();
-                        myString << "[RD53::loadfRegMap] Error, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsMask.size();
+                        myString << "[RD53::loadfRegMap] Error, problem reading RD53 config file: too few rows (" << row << ") for column size " << thePixMask.HitBus.size();
                         throw Exception(myString.str().c_str());
                     }
                 }
@@ -140,16 +113,16 @@ void RD53::loadfRegMap(const std::string& fileName)
                         readWord.erase(std::remove_if(readWord.begin(), readWord.end(), isspace), readWord.end());
                         if(std::all_of(readWord.begin(), readWord.end(), isdigit))
                         {
-                            pixData.InjEn[row] = atoi(readWord.c_str());
+                            thePixMask.InjEn.at(row + this->getNRows() * col) = atoi(readWord.c_str());
                             row++;
                         }
                     }
 
-                    if(row < nRows)
+                    if(row < this->getNRows())
                     {
                         myString.str("");
                         myString.clear();
-                        myString << "[RD53::loadfRegMap] Error, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsMask.size();
+                        myString << "[RD53::loadfRegMap] Error, problem reading RD53 config file: too few rows (" << row << ") for column size " << thePixMask.InjEn.size();
                         throw Exception(myString.str().c_str());
                     }
                 }
@@ -167,20 +140,19 @@ void RD53::loadfRegMap(const std::string& fileName)
                         readWord.erase(std::remove_if(readWord.begin(), readWord.end(), isspace), readWord.end());
                         if(std::all_of(readWord.begin(), readWord.end(), isdigit))
                         {
-                            pixData.TDAC[row] = atoi(readWord.c_str());
+                            thePixMask.TDAC.at(row + this->getNRows() * col) = atoi(readWord.c_str());
                             row++;
                         }
                     }
 
-                    if(row < nRows)
+                    if(row < this->getNRows())
                     {
                         myString.str("");
                         myString.clear();
-                        myString << "[RD53::loadfRegMap] Error, problem reading RD53 config file: too few rows (" << row << ") for column " << fPixelsMask.size();
+                        myString << "[RD53::loadfRegMap] Error, problem reading RD53 config file: too few rows (" << row << ") for column size " << thePixMask.TDAC.size();
                         throw Exception(myString.str().c_str());
                     }
-
-                    fPixelsMask.push_back(pixData);
+                    col++;
                 }
             }
             else
@@ -230,7 +202,9 @@ void RD53::loadfRegMap(const std::string& fileName)
             cLineCounter++;
         }
 
-        fPixelsMaskDefault = fPixelsMask;
+        fPixelsMask        = thePixMask;
+        fPixelsMaskDefault = thePixMask;
+
         file.close();
     }
     else
@@ -241,7 +215,7 @@ void RD53::saveRegMap(const std::string& fName2Add)
 {
     const int Nspaces = 26; // @CONST@
 
-    std::string   output = RD53::getFileName(fName2Add);
+    std::string   output = this->getFileName(fName2Add);
     std::ofstream file(output.c_str(), std::ios::out | std::ios::trunc);
 
     if(file)
@@ -278,24 +252,24 @@ void RD53::saveRegMap(const std::string& fName2Add)
         file << "*-----------------------------------------------------------------------------------------------------"
                 "--"
              << std::endl;
-        for(auto col = 0u; col < fPixelsMask.size(); col++)
+        for(auto col = 0u; col < this->getNCols(); col++)
         {
             file << "COL                  " << std::setfill('0') << std::setw(3) << col << std::endl;
 
-            file << "ENABLE " << +fPixelsMask[col].Enable[0];
-            for(auto row = 1u; row < fPixelsMask[col].Enable.size(); row++) file << "," << +fPixelsMask[col].Enable[row];
+            file << "ENABLE " << +fPixelsMask.Enable[0 + this->getNRows() * col];
+            for(auto row = 1u; row < this->getNRows(); row++) file << "," << +fPixelsMask.Enable[row + this->getNRows() * col];
             file << std::endl;
 
-            file << "HITBUS " << +fPixelsMask[col].HitBus[0];
-            for(auto row = 1u; row < fPixelsMask[col].HitBus.size(); row++) file << "," << +fPixelsMask[col].HitBus[row];
+            file << "HITBUS " << +fPixelsMask.HitBus[0 + this->getNRows() * col];
+            for(auto row = 1u; row < this->getNRows(); row++) file << "," << +fPixelsMask.HitBus[row + this->getNRows() * col];
             file << std::endl;
 
-            file << "INJEN  " << +fPixelsMask[col].InjEn[0];
-            for(auto row = 1u; row < fPixelsMask[col].InjEn.size(); row++) file << "," << +fPixelsMask[col].InjEn[row];
+            file << "INJEN  " << +fPixelsMask.InjEn[0 + this->getNRows() * col];
+            for(auto row = 1u; row < this->getNRows(); row++) file << "," << +fPixelsMask.InjEn[row + this->getNRows() * col];
             file << std::endl;
 
-            file << "TDAC   " << +fPixelsMask[col].TDAC[0];
-            for(auto row = 1u; row < fPixelsMask[col].TDAC.size(); row++) file << "," << +fPixelsMask[col].TDAC[row];
+            file << "TDAC   " << +fPixelsMask.TDAC[0 + this->getNRows() * col];
+            for(auto row = 1u; row < this->getNRows(); row++) file << "," << +fPixelsMask.TDAC[row + this->getNRows() * col];
             file << std::endl;
 
             file << std::endl;
@@ -307,94 +281,75 @@ void RD53::saveRegMap(const std::string& fName2Add)
         LOG(ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << output << RESET;
 }
 
-void RD53::copyMaskFromDefault()
-{
-    for(auto col = 0u; col < fPixelsMask.size(); col++)
-    {
-        fPixelsMask[col].Enable = fPixelsMaskDefault[col].Enable;
-        fPixelsMask[col].HitBus = fPixelsMaskDefault[col].HitBus;
-        fPixelsMask[col].InjEn  = fPixelsMaskDefault[col].InjEn;
-        for(auto row = 0u; row < fPixelsMask[col].TDAC.size(); row++) fPixelsMask[col].TDAC[row] = fPixelsMaskDefault[col].TDAC[row];
-    }
-}
+void RD53::copyMaskFromDefault() { fPixelsMask = fPixelsMaskDefault; }
 
 void RD53::copyMaskToDefault(const std::string& which)
-// ########################
-// # which = all          #
-// # which =  en : Enable #
-// # which =  hb : HitBus #
-// # which =  in : InjEn  #
-// # which =  td : TDAC   #
-// ########################
+// #######################
+// # which = all         #
+// # which = en : Enable #
+// # which = hb : HitBus #
+// # which = in : InjEn  #
+// # which = td : TDAC   #
+// #######################
 {
-    for(auto col = 0u; col < fPixelsMaskDefault.size(); col++)
+    if(which == "all")
+        fPixelsMaskDefault = fPixelsMask;
+    else
     {
-        if((which == "all") || (which == "en")) fPixelsMaskDefault[col].Enable = fPixelsMask[col].Enable;
-        if((which == "all") || (which == "hb")) fPixelsMaskDefault[col].HitBus = fPixelsMask[col].HitBus;
-        if((which == "all") || (which == "in")) fPixelsMaskDefault[col].InjEn = fPixelsMask[col].InjEn;
-        if((which == "all") || (which == "td"))
-            for(auto row = 0u; row < fPixelsMaskDefault[col].TDAC.size(); row++) fPixelsMaskDefault[col].TDAC[row] = fPixelsMask[col].TDAC[row];
+        if(which == "en")
+            fPixelsMaskDefault.Enable = fPixelsMask.Enable;
+        else if(which == "hb")
+            fPixelsMaskDefault.HitBus = fPixelsMask.HitBus;
+        else if(which == "in")
+            fPixelsMaskDefault.InjEn = fPixelsMask.InjEn;
+        else if(which == "td")
+            fPixelsMaskDefault.TDAC = fPixelsMask.TDAC;
     }
+
+    if((which == "all") || (which == "en"))
+        for(auto col = 0u; col < this->getNCols(); col++)
+            for(auto row = 1u; row < this->getNRows(); row++)
+            {
+                if(fPixelsMaskDefault.Enable[row + this->getNRows() * col] == true)
+                    fChipOriginalMask->enableChannel(row, col);
+                else
+                    fChipOriginalMask->disableChannel(row, col);
+            }
 }
 
 void RD53::resetMask()
 {
-    for(auto col = 0u; col < fPixelsMask.size(); col++)
-    {
-        fPixelsMask[col].Enable.fill(0);
-        fPixelsMask[col].HitBus.fill(0);
-        fPixelsMask[col].InjEn.fill(0);
-        fPixelsMask[col].TDAC.fill(RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2);
-    }
+    std::fill(fPixelsMask.Enable.begin(), fPixelsMask.Enable.end(), false);
+    std::fill(fPixelsMask.HitBus.begin(), fPixelsMask.HitBus.end(), false);
+    std::fill(fPixelsMask.InjEn.begin(), fPixelsMask.InjEn.end(), false);
+    std::fill(fPixelsMask.TDAC.begin(), fPixelsMask.TDAC.end(), this->getFEtype(this->getNCols() / 2, this->getNCols() / 2)->nTDACvalues / 2);
 }
 
 void RD53::enableAllPixels()
 {
-    for(auto col = 0u; col < fPixelsMask.size(); col++)
-    {
-        fPixelsMask[col].Enable.fill(1);
-        fPixelsMask[col].HitBus.fill(1);
-    }
+    std::fill(fPixelsMask.Enable.begin(), fPixelsMask.Enable.end(), true);
+    std::fill(fPixelsMask.HitBus.begin(), fPixelsMask.HitBus.end(), true);
 }
 
 void RD53::disableAllPixels()
 {
-    for(auto col = 0u; col < fPixelsMask.size(); col++)
-    {
-        fPixelsMask[col].Enable.fill(0);
-        fPixelsMask[col].HitBus.fill(0);
-    }
+    std::fill(fPixelsMask.Enable.begin(), fPixelsMask.Enable.end(), false);
+    std::fill(fPixelsMask.HitBus.begin(), fPixelsMask.HitBus.end(), false);
 }
 
-size_t RD53::getNbMaskedPixels()
-{
-    size_t cnt = 0;
-
-    for(auto col = 0u; col < fPixelsMask.size(); col++)
-        for(auto row = 0u; row < fPixelsMask[col].Enable.size(); row++)
-            if(fPixelsMask[col].Enable[row] == 0) cnt++;
-
-    return cnt;
-}
+size_t RD53::getNbMaskedPixels() { return std::count(fPixelsMask.Enable.begin(), fPixelsMask.Enable.end(), false); }
 
 void RD53::enablePixel(unsigned int row, unsigned int col, bool enable)
 {
-    fPixelsMask[col].Enable[row] = enable;
-    fPixelsMask[col].HitBus[row] = enable;
+    fPixelsMask.Enable[row + this->getNRows() * col] = enable;
+    fPixelsMask.Enable[row + this->getNRows() * col] = enable;
 }
 
-void RD53::injectPixel(unsigned int row, unsigned int col, bool inject) { fPixelsMask[col].InjEn[row] = inject; }
-
-void RD53::setTDAC(unsigned int row, unsigned int col, uint8_t TDAC) { fPixelsMask[col].TDAC[row] = TDAC; }
-
-void RD53::resetTDAC()
-{
-    for(auto col = 0u; col < fPixelsMask.size(); col++) fPixelsMask[col].TDAC.fill(RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2);
-}
-
-uint8_t RD53::getTDAC(unsigned int row, unsigned int col) { return fPixelsMask[col].TDAC[row]; }
-
-uint32_t RD53::getNumberOfChannels() const { return nRows * nCols; }
+void     RD53::injectPixel(unsigned int row, unsigned int col, bool inject) { fPixelsMask.InjEn[row + this->getNRows() * col] = inject; }
+void     RD53::setTDAC(unsigned int row, unsigned int col, uint8_t TDAC) { fPixelsMask.TDAC[row + this->getNRows() * col] = TDAC; }
+void     RD53::resetTDAC() { std::fill(fPixelsMask.TDAC.begin(), fPixelsMask.TDAC.end(), this->getFEtype(this->getNCols() / 2, this->getNCols() / 2)->nTDACvalues / 2); }
+uint8_t  RD53::getTDAC(unsigned int row, unsigned int col) { return fPixelsMask.TDAC[row + this->getNRows() * col]; }
+uint32_t RD53::getNumberOfChannels() const { return this->getNRows() * this->getNCols(); }
 
 bool RD53::isDACLocal(const std::string& regName)
 {
@@ -409,106 +364,4 @@ uint8_t RD53::getNumberOfBits(const std::string& regName)
     return it->second.fBitSize;
 }
 
-void RD53::Event::DecodeQuad(uint32_t data)
-{
-    uint32_t core_col, side, row, col, all_tots;
-
-    std::tie(core_col, row, side, all_tots) = bits::unpack<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_ROW, RD53EvtEncoder::NBIT_SIDE, RD53EvtEncoder::NBIT_TOT>(data);
-    col                                     = RD53Constants::NPIX_REGION * bits::pack<RD53EvtEncoder::NBIT_CCOL, RD53EvtEncoder::NBIT_SIDE>(core_col, side);
-
-    uint8_t tots[RD53Constants::NPIX_REGION];
-    bits::RangePacker<RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION>::unpack_reverse(all_tots, tots);
-
-    for(int i = 0; i < RD53Constants::NPIX_REGION; i++)
-        if(tots[i] != RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION)) hit_data.emplace_back(row, col + i, tots[i]);
-    if((row >= RD53::nRows) || (col >= (RD53::nCols - (RD53Constants::NPIX_REGION - 1)))) eventStatus |= RD53EvtEncoder::CHIPPIX;
-}
-
-RD53::Event::Event(const uint32_t* data, size_t n)
-{
-    uint32_t header;
-
-    eventStatus = RD53EvtEncoder::CHIPGOOD;
-
-    std::tie(header, trigger_id, trigger_tag, bc_id) = bits::unpack<RD53EvtEncoder::NBIT_HEADER, RD53EvtEncoder::NBIT_TRIGID, RD53EvtEncoder::NBIT_TRGTAG, RD53EvtEncoder::NBIT_BCID>(*data);
-    if(header != RD53EvtEncoder::HEADER) eventStatus |= RD53EvtEncoder::CHIPHEAD;
-
-    const size_t noHitToT = RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT);
-    for(auto i = 1u; i < n; i++)
-        if(data[i] != noHitToT) DecodeQuad(data[i]);
-    // #######################################################
-    // # If the number of 32bit words do not make an integer #
-    // # number of 128bit words, then 0x0000FFFF words are   #
-    // # added to the event                                  #
-    // #######################################################
-    if(n == 1) eventStatus |= RD53EvtEncoder::CHIPNOHIT;
-}
-
-RD53::CalCmd::CalCmd(const uint8_t& cal_edge_mode, const uint8_t& cal_edge_delay, const uint8_t& cal_edge_width, const uint8_t& cal_aux_mode, const uint8_t& cal_aux_delay)
-    : cal_edge_mode(cal_edge_mode), cal_edge_delay(cal_edge_delay), cal_edge_width(cal_edge_width), cal_aux_mode(cal_aux_mode), cal_aux_delay(cal_aux_delay)
-{
-}
-
-void RD53::CalCmd::setCalCmd(const uint8_t& _cal_edge_mode, const uint8_t& _cal_edge_delay, const uint8_t& _cal_edge_width, const uint8_t& _cal_aux_mode, const uint8_t& _cal_aux_delay)
-{
-    cal_edge_mode  = _cal_edge_mode;
-    cal_edge_delay = _cal_edge_delay;
-    cal_edge_width = _cal_edge_width;
-    cal_aux_mode   = _cal_aux_mode;
-    cal_aux_delay  = _cal_aux_delay;
-}
-
-uint32_t RD53::CalCmd::getCalCmd(const uint8_t& chipId) { return bits::pack<4, 1, 3, 6, 1, 5>(chipId, cal_edge_mode, cal_edge_delay, cal_edge_width, cal_aux_mode, cal_aux_delay); }
 } // namespace Ph2_HwDescription
-
-// ###############################
-// # RD53 command base functions #
-// ###############################
-namespace RD53Cmd
-{
-GlobalPulse::GlobalPulse(uint8_t chip_id, uint8_t data)
-{
-    fields[0] = packAndEncode<4, 1>(chip_id, 0);
-    fields[1] = packAndEncode<4, 1>(data, 0);
-}
-
-Cal::Cal(uint8_t chip_id, bool cal_edge_mode, uint8_t cal_edge_delay, uint8_t cal_edge_width, bool cal_aux_mode, uint8_t cal_aux_delay)
-{
-    fields[0] = packAndEncode<4, 1>(chip_id, cal_edge_mode);
-    fields[1] = packAndEncode<3, 2>(cal_edge_delay, cal_edge_width >> 4);
-    fields[2] = packAndEncode<4, 1>(cal_edge_width, cal_aux_mode);
-    fields[3] = packAndEncode<5>(cal_aux_delay);
-}
-
-WrReg::WrReg(uint8_t chip_id, uint16_t address, uint16_t value)
-{
-    fields[0] = packAndEncode<4, 1>(chip_id, 0);
-    fields[1] = packAndEncode<5>(address >> 4);
-    fields[2] = packAndEncode<4, 1>(address, value >> 15);
-    fields[3] = packAndEncode<5>(value >> 10);
-    fields[4] = packAndEncode<5>(value >> 5);
-    fields[5] = packAndEncode<5>(value);
-}
-
-WrRegLong::WrRegLong(uint8_t chip_id, uint16_t address, const std::vector<uint16_t>& values)
-{
-    fields[0] = packAndEncode<4, 1>(chip_id, 1);
-    fields[1] = packAndEncode<5>(address >> 4);
-    fields[2] = packAndEncode<4, 1>(address, values[0] >> 15);
-    fields[3] = packAndEncode<5>(values[0] >> 10);
-    fields[4] = packAndEncode<5>(values[0] >> 5);
-    fields[5] = packAndEncode<5>(values[0]);
-
-    bits::unpack_range<5>(values.begin() + 1, values.end(), fields.begin() + 6);
-    for(auto i = 6u; i < fields.size(); i++) fields[i] = map5to8bit[fields[i]];
-}
-
-RdReg::RdReg(uint8_t chip_id, uint16_t address)
-{
-    fields[0] = packAndEncode<4, 1>(chip_id, 0);
-    fields[1] = packAndEncode<5>(address >> 4);
-    fields[2] = packAndEncode<4, 1>(address, 0);
-    fields[3] = packAndEncode<5>(0);
-}
-
-} // namespace RD53Cmd

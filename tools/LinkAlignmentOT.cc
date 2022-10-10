@@ -23,6 +23,9 @@ bool LinkAlignmentOT::Align()
     LOG(INFO) << BOLDYELLOW << "LinkAlignmentOT::Align ..." << RESET;
     for(const auto cBoard: *fDetectorContainer)
     {
+        // force trigger source to be internal triggers
+        LOG(INFO) << BOLDYELLOW << "Forcing trigger source to internal triggers" << RESET;
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", 3);
         for(auto cOpticalGroup: *cBoard)
         {
             AlignLpGBTInputs(cOpticalGroup);
@@ -144,7 +147,7 @@ bool LinkAlignmentOT::AlignLpGBTInputs(const OpticalGroup* pOpticalGroup)
         for(auto cGrp: cGroups) cEportGroups.push_back(cGrp);
         for(auto cChnl: cChannels) cEportChnls.push_back(cChnl);
     }
-    auto cMode = flpGBTInterface->AutoPhaseAlignRx(clpGBT, cEportGroups, cEportChnls);
+    auto cMode = flpGBTInterface->PhaseAlignRx(clpGBT, cEportGroups, cEportChnls);
     cAligned   = cAligned && (cMode != 15);
     // cMode      = ( cMode > 8 ) ? 5 : cMode;
     for(size_t cIndx = 0; cIndx < cEportGroups.size(); cIndx++) { flpGBTInterface->ConfigureRxPhase(clpGBT, cEportGroups[cIndx], cEportChnls[cIndx], cMode); }
@@ -512,6 +515,7 @@ std::pair<bool, uint8_t> LinkAlignmentOT::PhaseTuneLine(const Chip* pChip, uint8
     cLineStatus.second = cAlignerInterface->GetLineConfiguration().fDelay;
     return cLineStatus;
 }
+
 std::pair<bool, uint8_t> LinkAlignmentOT::WordAlignLine(const Chip* pChip, uint8_t pLineId, uint8_t pAlignmentPattern, uint8_t pPeriod)
 {
     std::pair<bool, uint8_t> cLineStatus;
@@ -667,21 +671,25 @@ bool LinkAlignmentOT::LineTuning(const Chip* pChip, uint8_t pLineId, uint8_t pAl
     std::pair<bool, uint8_t> cPhaseAlignmentStatus, cWordAlignmentStatus;
     do
     {
-        try {
+        try
+        {
             cPhaseAlignmentStatus = PhaseTuneLine(pChip, pLineId);
             cSuccess              = cPhaseAlignmentStatus.first;
-        } 
-        catch( const std::runtime_error& e ) {
-            LOG (ERROR) << "Failed to phase align line " << +pLineId << " of chip " << +pChip->getId() << RESET;
+        }
+        catch(const std::runtime_error& e)
+        {
+            LOG(ERROR) << "Failed to phase align line " << +pLineId << " of chip " << +pChip->getId() << RESET;
             cSuccess = false;
         }
 
-        try {
+        try
+        {
             cWordAlignmentStatus = WordAlignLine(pChip, pLineId, pAlignmentPattern, pPeriod);
             cSuccess             = cWordAlignmentStatus.first && cSuccess;
         }
-        catch( const std::runtime_error& e ) {
-            LOG (ERROR) << "Failed to word align line " << +pLineId << " of chip " << +pChip->getId() << RESET;
+        catch(const std::runtime_error& e)
+        {
+            LOG(ERROR) << "Failed to word align line " << +pLineId << " of chip " << +pChip->getId() << RESET;
             cSuccess = false;
         }
 

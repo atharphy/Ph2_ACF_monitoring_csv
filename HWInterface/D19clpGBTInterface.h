@@ -17,14 +17,14 @@ namespace Ph2_HwInterface
 class D19clpGBTInterface : public lpGBTInterface
 {
   public:
-    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pUseOpticalLink, bool pUseCPB) : lpGBTInterface(pBoardMap), fUseOpticalLink(pUseOpticalLink), fUseCPB(pUseCPB)
+    D19clpGBTInterface(const BeBoardFWMap& pBoardMap, bool pOptical) : lpGBTInterface(pBoardMap)
     {
         LOG(INFO) << BOLDRED << "Constructor D19clpGBTInterface" << RESET;
 #if defined(__TCUSB__)
-        iniitalizeExternalController();
+        InitializeExternalController();
 #endif
         // configure during constructor now when configuring chip
-        SetConfigMode(pUseOpticalLink, pUseCPB);
+        SetConfigMode(pOptical);
     }
     ~D19clpGBTInterface()
     {
@@ -46,7 +46,7 @@ class D19clpGBTInterface : public lpGBTInterface
     bool ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerify = true, uint32_t pBlockSize = 310) override;
 
     // Sets the flag used to select which lpGBT configuration interface to use
-    void SetConfigMode(bool pUseOpticalLink, bool pUseCPB, bool pToggleTC = false);
+    void SetConfigMode(bool pOptical, bool pToggleTC = false);
     // configure PS-ROH
     void ConfigurePSROH(Ph2_HwDescription::Chip* pChip);
     // configure 2S-SEH
@@ -54,6 +54,11 @@ class D19clpGBTInterface : public lpGBTInterface
     std::string getVariableValue(std::string variable, std::string buffer);
     void        ContinuousPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
     void        InitialPhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels);
+    void        PhaseAlignRx(Ph2_HwDescription::Chip*               pChip,
+                             const Ph2_HwDescription::BeBoard*      pBoard,
+                             const Ph2_HwDescription::OpticalGroup* pOpticalGroup,
+                             ReadoutChipInterface*                  pReadoutChipInterface) override{};
+    uint8_t     PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups, const std::vector<uint8_t>& pChannels) override;
     // 0 [RHS], 1 [LHS]
     // active reset functions
     void cicReset(Ph2_HwDescription::Chip* pChip, bool pEnable, uint8_t pSide = 0)
@@ -163,8 +168,7 @@ class D19clpGBTInterface : public lpGBTInterface
     // ###################################
     // # Outer Tracker specific objects  #
     // ###################################
-    bool fUseOpticalLink = true;
-    bool fUseCPB         = true;
+    bool fOptical = true;
 
     // reset
     uint8_t fResetMinPeriod = 100; // ms was 100

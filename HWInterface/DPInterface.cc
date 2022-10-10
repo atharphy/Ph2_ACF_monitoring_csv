@@ -330,12 +330,12 @@ uint16_t DPInterface::LoadL1Data(BeBoardFWInterface* pInterface)
     for(uint16_t cBx = 1; cBx <= cNBxs; cBx++)
     {
         // first data from MPAs
-        char    cBuffer[90];
+        char    cBuffer[100];
         uint8_t cBaseIndex = (cLine / 2) * 2;
         std::sprintf(cBuffer, "fc7_daq_cnfg.physical_interface_block.mpa_to_cic_data_player_line_%01d_%01d.line%d_pattern_7_to_0", cBaseIndex, cBaseIndex + 1, cLine);
         std::string                                   cReg0(cBuffer);
         std::vector<std::pair<std::string, uint32_t>> cRegs;
-        char                                          cTmpBuffer[96];
+        char                                          cTmpBuffer[106];
         std::sprintf(cTmpBuffer, "fc7_daq_cnfg.physical_interface_block.mpa_to_cic_data_player_address_BRAM_line_%01d_%01d.line%01d_address", cBaseIndex, cBaseIndex + 1, cLine);
         std::string cRegAddr(cTmpBuffer);
         // MPA data
@@ -456,7 +456,7 @@ void DPInterface::ConfigureLineBRAM(BeBoardFWInterface* pInterface, uint8_t pLin
     LOG(INFO) << BOLDBLUE << "Playing... " << std::bitset<8>(pPattern) << " for " << +pNumberOfClks << " clock cycles." << RESET;
     // write the same pattern to all BRAMs
     // first - configure pattern
-    char    cBuffer[90];
+    char    cBuffer[100];
     uint8_t cBaseIndex = (pLine / 2) * 2;
     std::sprintf(cBuffer, "fc7_daq_cnfg.physical_interface_block.mpa_to_cic_data_player_line_%01d_%01d.line%d_pattern_7_to_0", cBaseIndex, cBaseIndex + 1, pLine);
     std::string cReg0(cBuffer);
@@ -469,7 +469,7 @@ void DPInterface::ConfigureLineBRAM(BeBoardFWInterface* pInterface, uint8_t pLin
     for(uint16_t cIndx = 0; cIndx < pNumberOfClks; cIndx++)
     {
         if((cIndx) % 100 == 0) LOG(INFO) << BOLDBLUE << "\t... writing entry#" << +cIndx << RESET;
-        char cTmpBuffer[96];
+        char cTmpBuffer[106];
         std::sprintf(cTmpBuffer, "fc7_daq_cnfg.physical_interface_block.mpa_to_cic_data_player_address_BRAM_line_%01d_%01d.line%01d_address", cBaseIndex, cBaseIndex + 1, pLine);
         // select address
         std::string cRegAddr(cTmpBuffer);
@@ -495,7 +495,7 @@ void DPInterface::ConstPatternBRAMs(BeBoardFWInterface* pInterface, std::vector<
         // write the same pattern to all BRAMs
         // first - configure pattern
         // on all lines
-        char    cBuffer[90];
+        char    cBuffer[100];
         uint8_t cBaseIndex = (cLine / 2) * 2;
         std::sprintf(cBuffer, "fc7_daq_cnfg.physical_interface_block.mpa_to_cic_data_player_line_%01d_%01d.line%d_pattern_7_to_0", cBaseIndex, cBaseIndex + 1, cLine);
         std::string cReg0(cBuffer);
@@ -517,7 +517,7 @@ void DPInterface::ConstPatternBRAMs(BeBoardFWInterface* pInterface, std::vector<
         for(uint8_t cLineIndx = 0; cLineIndx < cLine; cLineIndx++)
         {
             uint8_t cBaseIndex = (cLineIndx / 2) * 2;
-            char    cTmpBuffer[96];
+            char    cTmpBuffer[106];
             std::sprintf(cTmpBuffer, "fc7_daq_cnfg.physical_interface_block.mpa_to_cic_data_player_address_BRAM_line_%01d_%01d.line%01d_address", cBaseIndex, cBaseIndex + 1, cLineIndx);
             // select address
             std::string cRegAddr(cTmpBuffer);
@@ -536,14 +536,14 @@ void DPInterface::ConstPatternBRAMs(BeBoardFWInterface* pInterface, std::vector<
     for(uint8_t cLineIndx = 0; cLineIndx < cLine; cLineIndx++)
     {
         uint8_t cBaseIndex = (cLineIndx / 2) * 2;
-        char    cTmpBuffer[96];
+        char    cTmpBuffer[106];
         std::sprintf(cTmpBuffer, "fc7_daq_cnfg.physical_interface_block.mpa_to_cic_data_player_address_BRAM_line_%01d_%01d.line%01d_address", cBaseIndex, cBaseIndex + 1, cLineIndx);
         // select address
         std::string cRegAddr(cTmpBuffer);
         cEnableReg = (cEnableReg) | (1 << cLineIndx);
         cRegs.push_back({cTmpBuffer, 0x00});
 
-        char cBuffer[90];
+        char cBuffer[100];
         std::sprintf(cBuffer, "fc7_daq_cnfg.physical_interface_block.mpa_to_cic_data_player_line_%01d_%01d.line%d_pattern_7_to_0", cBaseIndex, cBaseIndex + 1, cLineIndx);
         std::string cPatternReg(cBuffer);
         cRegs.push_back({cPatternReg, 0x00});
@@ -567,9 +567,9 @@ void DPInterface::Configure(BeBoardFWInterface* pInterface, uint32_t pPattern, u
         LOG(INFO) << BOLDBLUE << std::bitset<16>(pPattern) << " pattern to use in PS ROH data player." << RESET;
 
     if(pFrequency == 320) // ConstPatternBRAMs(pInterface, pPatterns, 1);
-        pInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.fe_data_player.pattern_320MHz", pPattern);
+        pInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.data_player.pattern_320MHz", pPattern);
     else // ConstPatternBRAMs(pInterface, pPatterns, 1);
-        pInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.fe_data_player.pattern_640MHz", pPattern);
+        pInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.data_player.pattern_640MHz", pPattern);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
 }
 void DPInterface::ConfigureLine(BeBoardFWInterface* pInterface, uint16_t pPattern, uint8_t pLine)
@@ -578,7 +578,7 @@ void DPInterface::ConfigureLine(BeBoardFWInterface* pInterface, uint16_t pPatter
     uint8_t cBaseIndex = (pLine / 2) * 2;
     std::sprintf(cBuffer, "fc7_daq_cnfg.physical_interface_block.mpa_to_cic_data_player_line_%01d_%01d", cBaseIndex, cBaseIndex + 1);
 
-    char cBuffer1[20];
+    char cBuffer1[30];
     std::sprintf(cBuffer1, "line%01d_pattern_7_to_0", pLine);
 
     std::string cReg0(cBuffer1);
@@ -598,7 +598,7 @@ void DPInterface::CheckNPatterns(BeBoardFWInterface* pInterface)
 }
 void DPInterface::Start(BeBoardFWInterface* pInterface, uint8_t pType)
 {
-    pInterface->WriteReg("fc7_daq_ctrl.physical_interface_block.fe_data_player.start_data_player", 0x01);
+    pInterface->WriteReg("fc7_daq_ctrl.physical_interface_block.data_player.start_data_player", 0x01);
 
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
     bool cIsRunning = this->IsRunning(pInterface, pType);
@@ -611,15 +611,15 @@ void DPInterface::Start(BeBoardFWInterface* pInterface, uint8_t pType)
 
 bool DPInterface::IsRunning(BeBoardFWInterface* pInterface, uint8_t pType)
 {
-    std::string cRegName = (pType == 0) ? "fc7_daq_stat.physical_interface_block.fe_data_player.stat_feh_data_player" : "fc7_daq_stat.physical_interface_block.fe_data_player.stat_roh_data_player";
-    // std::string cRegName = "fc7_daq_stat.physical_interface_block.fe_data_player.stat_roh_data_player";
+    std::string cRegName = (pType == 0) ? "fc7_daq_stat.physical_interface_block.data_player.stat_feh_data_player" : "fc7_daq_stat.physical_interface_block.data_player.stat_roh_data_player";
+    // std::string cRegName = "fc7_daq_stat.physical_interface_block.data_player.stat_roh_data_player";
     fEmulatorRunning = (pInterface->ReadReg(cRegName) == 1);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     return fEmulatorRunning;
 }
 void DPInterface::Stop(BeBoardFWInterface* pInterface)
 {
-    pInterface->WriteReg("fc7_daq_ctrl.physical_interface_block.fe_data_player.stop_data_player", 0x01);
+    pInterface->WriteReg("fc7_daq_ctrl.physical_interface_block.data_player.stop_data_player", 0x01);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 10));
     LOG(INFO) << BOLDBLUE << "FE data player for PS ROH stopped." << RESET;
 }

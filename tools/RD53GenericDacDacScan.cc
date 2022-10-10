@@ -18,6 +18,8 @@ void GenericDacDacScan::ConfigureCalibration()
     // # Initialize sub-calibration #
     // ##############################
     PixelAlive::ConfigureCalibration();
+    PixelAlive::doDisplay    = false;
+    PixelAlive::doUpdateChip = false;
     RD53RunProgress::total() -= PixelAlive::getNumberIterations();
 
     // #######################
@@ -33,7 +35,6 @@ void GenericDacDacScan::ConfigureCalibration()
     stepDAC2       = this->findValueInSettings<double>("StepDAC2");
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
 
     // ##############################
     // # Initialize dac scan values #
@@ -60,7 +61,7 @@ void GenericDacDacScan::Running()
     theCurrentRun = this->fRunNumber;
     LOG(INFO) << GREEN << "[GenericDacDacScan::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
-    if(saveBinaryData == true)
+    if(PixelAlive::saveBinaryData == true)
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_GenericDacDacScan.raw", 'w');
         this->initializeWriteFileHandler();
@@ -118,7 +119,7 @@ void GenericDacDacScan::initializeFiles(const std::string& fileRes_, int current
 {
     fileRes = fileRes_;
 
-    if((currentRun >= 0) && (saveBinaryData == true))
+    if((currentRun >= 0) && (PixelAlive::saveBinaryData == true))
     {
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_GenericDacDacScan.raw", 'w');
         this->initializeWriteFileHandler();
@@ -302,15 +303,28 @@ void GenericDacDacScan::saveChipRegisters(int currentRun)
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
+        {
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
                     if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-                    std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + this->fDirectoryName);
+                    std::string command("mv " + cChip->getFileName(fileReg) + " " + this->fDirectoryName);
                     system(command.c_str());
                     LOG(INFO) << BOLDBLUE << "\t--> GenericDacDacScan saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
                               << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
                 }
+
+            if(cOpticalGroup->flpGBT != nullptr)
+            {
+                if(doUpdateChip == true) cOpticalGroup->flpGBT->saveRegMap("");
+                cOpticalGroup->flpGBT->saveRegMap(fileReg);
+                std::string command("mv " + cOpticalGroup->flpGBT->getFileName(fileReg) + " " + this->fDirectoryName);
+                system(command.c_str());
+
+                LOG(INFO) << BOLDBLUE << "\t--> GenericDacDacScan saved the LpGBT configuration file for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId()
+                          << RESET << BOLDBLUE << "]" << RESET;
+            }
+        }
 }

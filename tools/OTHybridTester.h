@@ -18,7 +18,9 @@
 #include "D19cDebugFWInterface.h"
 #include "D19cLinkInterface.h"
 #include "D19cOpticalInterface.h"
+#include "D19cTriggerInterface.h"
 #include "L1ReadoutInterface.h"
+#include "LinkAlignmentOT.h"
 #include "Tool.h"
 #include "linearFitter.h"
 
@@ -61,7 +63,7 @@ class OTHybridTester : public Tool
     // Test lpGBT Down Link with internal pattern (Hybrid Fast Command)
     void LpGBTInjectDLInternalPattern(uint8_t pPattern);
     // Test lpGBT I2C Masters
-    bool LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters);
+    bool LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters, int pNTries = 1000);
     // Test lpGBT ADC
     void LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_t pMinDAC, uint32_t pMaxDAC, uint32_t pStep);
     // Set GPIO level
@@ -79,7 +81,8 @@ class OTHybridTester : public Tool
     void LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint32_t pPattern = 0x00000000);
 
     // Phase Alignment
-    void BackEndAlignment(std::vector<std::string> pLines);
+    void                     BackEndAlignment(std::vector<std::string> pLines);
+    std::pair<bool, uint8_t> PhaseTuneLineEleFC7(uint8_t pHybrid, uint8_t pLineId);
 
   private:
     float       getMeasurement(std::string name);
@@ -100,8 +103,8 @@ class OTHybridTester : public Tool
         {"FCMD_CIC_L", "fc7_daq_stat.physical_interface_block.fcmd_debug_cic_l"},
     };
     std::map<std::string, std::string> f2SSEHClockMap = {
-        {"320_r_Clk_Test", "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r"},
-        {"320_l_Clk_Test", "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_l"},
+        {"320_r_Clk_Test", "fc7_daq_stat.physical_interface_block.clk_test.fe_for_ps_roh_clk_320_r"},
+        {"320_l_Clk_Test", "fc7_daq_stat.physical_interface_block.clk_test.fe_for_ps_roh_clk_320_l"},
     };
     std::map<std::string, std::string> fPSROHFCMDLines = {
         {"FCMD_CIC_R", "fc7_daq_stat.physical_interface_block.fcmd_debug_cic_r"},
@@ -110,10 +113,10 @@ class OTHybridTester : public Tool
         {"FCMD_SSA_L", "fc7_daq_stat.physical_interface_block.fcmd_debug_ssa_l"},
     };
     std::map<std::string, std::string> fPSROHClockMap = {
-        {"320_r_Clk_Test", "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_r"},
-        {"320_l_Clk_Test", "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_320_l"},
-        {"640_r_Clk_Test", "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_r"},
-        {"640_l_Clk_Test", "fc7_daq_stat.physical_interface_block.fe_data_player.fe_for_ps_roh_clk_640_l"},
+        {"320_r_Clk_Test", "fc7_daq_stat.physical_interface_block.clk_test.fe_for_ps_roh_clk_320_r"},
+        {"320_l_Clk_Test", "fc7_daq_stat.physical_interface_block.clk_test.fe_for_ps_roh_clk_320_l"},
+        {"640_r_Clk_Test", "fc7_daq_stat.physical_interface_block.clk_test.fe_for_ps_roh_clk_640_r"},
+        {"640_l_Clk_Test", "fc7_daq_stat.physical_interface_block.clk_test.fe_for_ps_roh_clk_640_l"},
     };
     std::map<std::string, TC_2SSEH::resetMeasurement> f2SSEHResetLines = {{"RST_CBC_R", TC_2SSEH::resetMeasurement::RST_CBC_R},
                                                                           {"RST_CIC_R", TC_2SSEH::resetMeasurement::RST_CIC_R},

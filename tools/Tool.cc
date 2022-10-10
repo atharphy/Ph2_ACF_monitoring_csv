@@ -99,15 +99,16 @@ void Tool::waitForRunToBeCompleted()
     while(!GetRunningStatus()) std::this_thread::sleep_for(std::chrono::milliseconds(250));
 }
 
-void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
+void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber, bool doAlsoFrontend)
 {
-    SystemController::Configure(cHWFile, enableStream, DQMportNumber);
+    SystemController::Configure(cHWFile, enableStream, DQMportNumber, doAlsoFrontend);
     ConfigureCalibration();
 }
 
 void Tool::Start(int runNumber)
 {
-    std::string resultDirectory = "Results/OT_ModuleTest_ModuleOT_Run" + std::to_string(runNumber);
+    // std::string resultDirectory = "Results/OT_ModuleTest_ModuleOT_Run" + std::to_string(runNumber); // It should be made more generic
+    std::string resultDirectory = "Results";
     CreateResultDirectory(resultDirectory, false, false);
 #ifdef __USE_ROOT__
     InitResultFile("Hybrid");
@@ -229,8 +230,8 @@ void Tool::SoftDestroy()
 }
 
 #ifdef __USE_ROOT__
-std::string  Tool::fSummaryTreeParameter = "";
-double Tool::fSummaryTreeValue     = 0.0;
+std::string Tool::fSummaryTreeParameter = "";
+double      Tool::fSummaryTreeValue     = 0.0;
 
 /*!
  * \brief Initialize a 'summary' TTree in the ROOT File, with branches 'parameter'(string) and 'value'(double)
@@ -528,7 +529,7 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
 #ifdef __USE_ROOT__
 void Tool::InitResultFile(const std::string& pFilename)
 {
-    if(fResultFile!= nullptr) return;
+    if(fResultFile != nullptr) return;
     if(!fDirectoryName.empty())
     {
         std::string cFilename = fDirectoryName + "/" + pFilename + ".root";
@@ -592,10 +593,7 @@ void Tool::AddMetadata()
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                chipVectorSize += cHybrid->size();
-            }
+            for(auto cHybrid: *cOpticalGroup) { chipVectorSize += cHybrid->size(); }
         }
     }
     chipIds.reserve(chipVectorSize); // Need to be done to avoid jumps of the vector memory that messes with the pointer associated to the branch
@@ -608,7 +606,7 @@ void Tool::AddMetadata()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    std::string label = getReadoutChipString(cBoard->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId()); 
+                    std::string label = getReadoutChipString(cBoard->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId());
 
                     uint32_t value = fReadoutChipInterface->ReadChipFuseID(cChip);
 

@@ -17,7 +17,11 @@ void ThresholdHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
-    const uint16_t rangeThreshold = RD53Shared::setBits(static_cast<RD53*>(theDetectorStructure.at(0)->at(0)->at(0)->at(0))->getNumberOfBits("Vthreshold_LIN")) + 1;
+    // #######################
+    // # Retrieve parameters #
+    // #######################
+    auto           frontEnd       = RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2);
+    const uint16_t rangeThreshold = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits(frontEnd->thresholdReg)) + 1;
 
     auto hThrehsold = CanvasContainer<TH1F>("Threhsold", "Threhsold", rangeThreshold, 0, rangeThreshold);
     bookImplementer(theOutputFile, theDetectorStructure, Threhsold, hThrehsold, "Threhsold", "Entries");

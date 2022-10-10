@@ -127,7 +127,7 @@
                 <node id="card_select_tri"                  mask="0x00004000" description="control tri-state buffer"/>
             </node>
 
-             <node id="fe_data_player"                    address="0x03A">
+             <node id="data_player"                    address="0x03A">
                 <node id="pattern_320MHz"                 mask="0x000000ff"/>
                 <node id="pattern_640MHz"                 mask="0x0000ff00"/>
             </node>
@@ -370,7 +370,7 @@
                 <node id="setup_scan"                       mask="0x00010000"/>
             </node>
 
-            <node id="fe_data_player"              address="0x019">
+            <node id="data_player"              address="0x019">
                 <node id="start_data_player"                  mask="0x00000001"/>
                 <node id="stop_data_player"                 mask="0x00000002"/>
                 <node id="i2c_slave_reset"                mask="0x00000004"/>
@@ -542,7 +542,7 @@
                 <node id="cards_disconnected"                mask="0x80000000" description="cards are disconnected after running            "/>
             </node>
 
-            <node id="fe_data_player"              address="0x00E">
+            <node id="data_player"              address="0x00E">
                 <node id="stat_roh_data_player"                  mask="0x00001000"/>
                 <node id="stat_feh_data_player"                  mask="0x20000000"/>
                 <node id="fe_for_ps_roh_clk_320_l_test_done"                  mask="0x00002000"/>
