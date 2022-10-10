@@ -13,13 +13,13 @@ FEConfigurationInterface::~FEConfigurationInterface() {}
 
 void FEConfigurationInterface::Configure(Configuration pConfiguration)
 {
-    fConfiguration.fRetryIC       = pConfiguration.fRetryIC;
-    fConfiguration.fRetryI2C       = pConfiguration.fRetryI2C;
-    fConfiguration.fRetryFE       = pConfiguration.fRetryFE;
+    fConfiguration.fRetryIC  = pConfiguration.fRetryIC;
+    fConfiguration.fRetryI2C = pConfiguration.fRetryI2C;
+    fConfiguration.fRetryFE  = pConfiguration.fRetryFE;
 
-    fConfiguration.fMaxRetryIC       = pConfiguration.fMaxRetryIC;
-    fConfiguration.fMaxRetryI2C       = pConfiguration.fMaxRetryI2C;
-    fConfiguration.fMaxRetryFE       = pConfiguration.fMaxRetryFE;
+    fConfiguration.fMaxRetryIC  = pConfiguration.fMaxRetryIC;
+    fConfiguration.fMaxRetryI2C = pConfiguration.fMaxRetryI2C;
+    fConfiguration.fMaxRetryFE  = pConfiguration.fMaxRetryFE;
 
     fConfiguration.fRetry       = pConfiguration.fRetry;
     fConfiguration.fVerify      = pConfiguration.fVerify;

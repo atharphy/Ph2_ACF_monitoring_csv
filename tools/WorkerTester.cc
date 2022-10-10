@@ -497,19 +497,19 @@ void WorkerTester::Benchmark(int pNIterations)
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        auto               cResultTree = new TTree("benchmark", "benchmark");
-        int                cSize       = 0;
-        int                cNRegisters = 0;
+        // auto               cResultTree = new TTree("benchmark", "benchmark");
+        // int                cSize       = 0;
+        // int                cNRegisters = 0;
         std::vector<int>   cChipIds;
         std::vector<float> cDurations;
-        cResultTree->Branch("BlockSize", &cSize);
-        cResultTree->Branch("NRegisters", &cNRegisters);
-        cResultTree->Branch("ChipId", &cChipIds);
-        cResultTree->Branch("Durations", &cDurations);
+        // cResultTree->Branch("BlockSize", &cSize);
+        // cResultTree->Branch("NRegisters", &cNRegisters);
+        // cResultTree->Branch("ChipId", &cChipIds);
+        // cResultTree->Branch("Durations", &cDurations);
 
         fBeBoardInterface->setBoard(cBoard->getId());
-        D19cFWInterface*                     cFWInterface                     = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-        //D19clpGBTSlowControlWorkerInterface* clpGBTSlowControlWorkerInterface = static_cast<D19clpGBTSlowControlWorkerInterface*>(cFWInterface->getlpGBTSlowControlInterface());
+        D19cFWInterface* cFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        // D19clpGBTSlowControlWorkerInterface* clpGBTSlowControlWorkerInterface = static_cast<D19clpGBTSlowControlWorkerInterface*>(cFWInterface->getlpGBTSlowControlInterface());
 
         size_t cBlockSize    = 1;
         size_t cMaxBlockSize = 16000;
@@ -518,8 +518,8 @@ void WorkerTester::Benchmark(int pNIterations)
             cChipIds.clear();
             cDurations.clear();
 
-            //clpGBTSlowControlWorkerInterface->SetBlockSize(cBlockSize);
-            //LOG(INFO) << BOLDYELLOW << "BlockSize set to " << +clpGBTSlowControlWorkerInterface->GetBlockSize() << RESET;
+            // clpGBTSlowControlWorkerInterface->SetBlockSize(cBlockSize);
+            // LOG(INFO) << BOLDYELLOW << "BlockSize set to " << +clpGBTSlowControlWorkerInterface->GetBlockSize() << RESET;
             for(auto cOpticalGroup: *cBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
@@ -557,14 +557,14 @@ void WorkerTester::Benchmark(int pNIterations)
                         LOG(INFO) << BOLDWHITE << "Number of registers = " << +cRegItems.size() << " ---- All register duration = " << +cDuration.count() << " ms ---- Single register duration "
                                   << +(cDuration.count() / cRegItems.size()) << " ms" << RESET;
 
-                        cNRegisters = (int)cRegItems.size();
-                        cSize       = (int)cBlockSize;
+                        // cNRegisters = (int)cRegItems.size();
+                        // cSize       = (int)cBlockSize;
                         cChipIds.push_back((int)cChip->getId());
                         cDurations.push_back((float)cDuration.count());
                     }
                 }
             }
-            cResultTree->Fill();
+            // cResultTree->Fill();
             if(cBlockSize >= 500) { cBlockSize += 500; }
             else
             {
@@ -572,7 +572,7 @@ void WorkerTester::Benchmark(int pNIterations)
                 cBlockSize += 10;
             }
         }
-        cResultTree->Write();
+        // cResultTree->Write();
     }
 }
 
