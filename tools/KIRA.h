@@ -47,7 +47,10 @@ class KIRA : public OTTool
     void determineLatency();
     void performKIRATest();
     void initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
-    
+    void Running() override;
+    void Stop() override;
+    void Pause() override;
+    void Resume() override;
 
   private:
     TCPClient* fKiraClient{nullptr};
