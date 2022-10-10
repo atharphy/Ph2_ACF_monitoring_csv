@@ -414,14 +414,12 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     size_t injLatency  = SystemController::findValueInSettings<double>("InjLatency");
     size_t nClkDelays  = SystemController::findValueInSettings<double>("nClkDelays");
     size_t colStart    = SystemController::findValueInSettings<double>("COLstart");
-    bool   resetMask   = SystemController::findValueInSettings<double>("ResetMask");
-    bool   resetTDAC   = SystemController::findValueInSettings<double>("ResetTDAC");
     LOG(INFO) << CYAN << "=== Configuring FSM fast command block ===" << RESET;
 
     auto& theBeBoardFW = this->fBeBoardFWMap[pBoard->getId()];
 
     static_cast<RD53FWInterface*>(theBeBoardFW)
-        ->SetAndConfigureFastCommands(pBoard, nTRIGxEvent, injType, injLatency, nClkDelays, RD53Shared::firstChip->getMajorityFE(colStart, colStart) == &RD53A::SYNC);
+        ->SetAndConfigureFastCommands(pBoard, nTRIGxEvent, injType, injLatency, nClkDelays, RD53Shared::firstChip->getFEtype(colStart, colStart) == &RD53A::SYNC);
     LOG(INFO) << CYAN << "================== Done ==================" << RESET;
 
     // ########################
@@ -443,7 +441,7 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
             LOG(INFO) << BOLDBLUE << "\t--> Configured up and down link mapping in firmware" << RESET;
 
             if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
-            // && (static_cast<RD53lpGBTInterface*>(flpGBTInterface)->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, theBeBoardFW, fReadoutChipInterface) == true))
+            // && (static_cast<RD53lpGBTInterface*>(flpGBTInterface)->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, theBeBoardFW, fReadoutChipInterface) == true)) // @TMP@
             {
                 static_cast<RD53lpGBTInterface*>(flpGBTInterface)->PhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, fReadoutChipInterface);
                 LOG(INFO) << BOLDBLUE << ">>> LpGBT chip configured <<<" << RESET;
@@ -468,10 +466,10 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     for(auto cOpticalGroup: *pBoard)
         for(auto cHybrid: *cOpticalGroup)
         {
-            LOG(INFO) << GREEN << "Initializing chip communication of hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
+            LOG(INFO) << GREEN << "Initializing chip communication of hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
             for(const auto cChip: *cHybrid)
             {
-                LOG(INFO) << GREEN << "Initializing communicationng to/from RD53: " << RESET << BOLDYELLOW << +cChip->getId() << RESET;
+                LOG(INFO) << GREEN << "Initializing communicationng to/from RD53: " << BOLDYELLOW << +cChip->getId() << RESET;
                 static_cast<RD53Interface*>(fReadoutChipInterface)->InitRD53Uplinks(cChip);
             }
         }
@@ -484,35 +482,41 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     {
         static_cast<RD53FWInterface*>(theBeBoardFW)->CheckChipCommunication(pBoard);
     }
-    catch(...)
+    catch(const std::exception& e)
     {
-        LOG(INFO) << BOLDRED << "===== Abort =====" << RESET;
+        LOG(WARNING) << BOLDRED << "===== Aborting: " << BOLDYELLOW << e.what() << BOLDRED << " =====" << RESET;
     }
+}
+
+void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
+{
+    // ############################
+    // # Configuration parameters #
+    // ############################
+    bool resetMask = SystemController::findValueInSettings<double>("ResetMask");
+    bool resetTDAC = SystemController::findValueInSettings<double>("ResetTDAC");
 
     // ############################
     // # Configure frontend chips #
     // ############################
     LOG(INFO) << CYAN << "===== Configuring frontend chip registers =====" << RESET;
     for(auto cOpticalGroup: *pBoard)
-    {
         for(auto cHybrid: *cOpticalGroup)
         {
-            LOG(INFO) << GREEN << "Configuring chip of hybrid: " << RESET << BOLDYELLOW << +cHybrid->getId() << RESET;
+            LOG(INFO) << GREEN << "Configuring chip of hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
             for(const auto cChip: *cHybrid)
             {
-                LOG(INFO) << GREEN << "Configuring RD53: " << RESET << BOLDYELLOW << +cChip->getId() << RESET;
+                LOG(INFO) << GREEN << "Configuring RD53: " << BOLDYELLOW << +cChip->getId() << RESET << GREEN " (fused ID " << BOLDYELLOW << +fReadoutChipInterface->ReadChipFuseID(cChip) << RESET
+                          << GREEN << ")" << RESET;
                 if(resetMask == true) static_cast<RD53*>(cChip)->enableAllPixels();
                 if(resetTDAC == true) static_cast<RD53*>(cChip)->resetTDAC();
                 static_cast<RD53*>(cChip)->copyMaskToDefault();
                 static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);
-                LOG(INFO) << GREEN << "Number of masked pixels: " << RESET << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
+                LOG(INFO) << GREEN << "Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
             }
         }
-    }
-    LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
-    LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
 
-    RD53Event::ForkDecodingThreads();
+    LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
 }
 
 // ######################################
@@ -651,7 +655,7 @@ void SystemController::InitializeOT(BeBoard* pBoard)
 
 void SystemController::ConfigureOT(BeBoard* pBoard)
 {
-    // hard reset Chips on hybrid if lpGBT is there; if no lpGBT this
+    // Hard reset Chips on hybrid if lpGBT is there; if no lpGBT this
     // is already taken care of by ConfigureBoard
     for(auto cOpticalGroup: *pBoard)
     {
@@ -937,7 +941,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
     return cSuccess;
 }
 
-void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
+void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize, bool doAlsoFrontend)
 {
     if(fDetectorContainer == nullptr)
     {
@@ -953,7 +957,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
         fBeBoardInterface->ConfigureBoard(cBoard);
         if(cBoard->getBoardType() == BoardType::D19C)
         {
-            // set board sparisificatio
+            // Set board sparisification
             // based on what is configured in the fw register
             // read CIC sparsification setting from fW register
             // make sure board is also set to the same thing
@@ -1041,9 +1045,21 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
             LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
         }
         else if(cBoard->getBoardType() == BoardType::RD53)
+        {
             ConfigureIT(cBoard);
+            if(doAlsoFrontend == true) ConfigureFrontendIT(cBoard);
+
+            // ######################################
+            // # Dispatch threads for data decoding #
+            // ######################################
+            LOG(INFO) << GREEN << "Using " << BOLDYELLOW << RD53Shared::NTHREADS << RESET << GREEN << " threads for data decoding during running time" << RESET;
+            RD53Event::ForkDecodingThreads();
+        }
     }
 
+    // ####################
+    // # Start monitoring #
+    // ####################
     if(fDetectorMonitor != nullptr)
     {
         LOG(INFO) << GREEN << "Starting monitoring thread" << RESET;
@@ -1084,7 +1100,7 @@ void SystemController::initializeWriteFileHandler()
         fFileHandler = new FileHandler(cFilename, 'w', cHeader);
 
         fBeBoardInterface->SetFileHandler(cBoard, fFileHandler);
-        LOG(INFO) << GREEN << "Saving binary data into: " << RESET << BOLDYELLOW << cFilename << RESET;
+        LOG(INFO) << GREEN << "Saving binary data into: " << BOLDYELLOW << cFilename << RESET;
     }
 }
 
@@ -1101,14 +1117,14 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
     return cNEventSize32;
 }
 
-void SystemController::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
+void SystemController::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber, bool doAlsoFrontend)
 {
     std::stringstream outp;
 
     InitializeHw(cHWFile, outp, enableStream, DQMportNumber);
     InitializeSettings(cHWFile, outp);
     std::cout << outp.str() << std::endl;
-    ConfigureHw();
+    ConfigureHw(false, true, doAlsoFrontend);
 }
 
 void SystemController::Start(int runNumber)
@@ -1182,6 +1198,7 @@ void SystemController::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vect
 // #################
 // # Data decoding #
 // #################
+
 void SystemController::SetFuture(const BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType)
 {
     if(pData.size() != 0) fFuture = std::async(&SystemController::DecodeData, this, pBoard, pData, pNevents, pType);
@@ -1194,7 +1211,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
     // ####################
     if(pType == BoardType::RD53)
     {
-        uint16_t status;
+        uint32_t status;
         fEventList.clear();
         if(RD53Event::decodedEvents.size() == 0) RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents, status);
         RD53Event::addBoardInfo2Events(pBoard, RD53Event::decodedEvents);
@@ -1386,6 +1403,19 @@ void SystemController::disableAllChannels()
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid) fReadoutChipInterface->MaskAllChannels(cChip, true);
+}
+
+void SystemController::DumpFrontendRegisters()
+{
+    for(const auto cBoard: *fDetectorContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    LOG(INFO) << GREEN << "Readout chip register content for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
+                    fReadoutChipInterface->DumpChipRegisters(cChip);
+                }
 }
 
 } // namespace Ph2_System

@@ -58,8 +58,6 @@ class GainOptimization : public Gain
 #endif
 
   private:
-    const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
-
     DetectorDataContainer theKrumCurrContainer;
 
     void fillHisto();

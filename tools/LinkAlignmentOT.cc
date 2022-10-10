@@ -23,9 +23,9 @@ bool LinkAlignmentOT::Align()
     LOG(INFO) << BOLDYELLOW << "LinkAlignmentOT::Align ..." << RESET;
     for(const auto cBoard: *fDetectorContainer)
     {
-	// force trigger source to be internal triggers
-	LOG (INFO) << BOLDYELLOW << "Forcing trigger source to internal triggers" << RESET;
-	fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", 3);	
+        // force trigger source to be internal triggers
+        LOG(INFO) << BOLDYELLOW << "Forcing trigger source to internal triggers" << RESET;
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", 3);
         for(auto cOpticalGroup: *cBoard)
         {
             AlignLpGBTInputs(cOpticalGroup);

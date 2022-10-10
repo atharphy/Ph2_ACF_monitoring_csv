@@ -85,20 +85,20 @@ VCAL_MED                  0x2A          0b000100101100          0b000100101100  
 CH_SYNC_CONF              0x2B          0b001000001000          0b001000001000                     12
 GLOBAL_PULSE_ROUTE        0x2C          0b0000000000000000      0b0000000000000000                 16
 MONITOR_FRAME_SKIP        0x2D          0b00110010              0b00110010                          8
-EN_MACRO_COL_CAL_SYNC_1   0x2E          0b1111111111111111      0b1111111111111111                 16
-EN_MACRO_COL_CAL_SYNC_2   0x2F          0b1111111111111111      0b1111111111111111                 16
-EN_MACRO_COL_CAL_SYNC_3   0x30          0b1111111111111111      0b1111111111111111                 16
-EN_MACRO_COL_CAL_SYNC_4   0x31          0b1111111111111111      0b1111111111111111                 16
-EN_MACRO_COL_CAL_LIN_1    0x32          0b1111111111111111      0b1111111111111111                 16
-EN_MACRO_COL_CAL_LIN_2    0x33          0b1111111111111111      0b1111111111111111                 16
-EN_MACRO_COL_CAL_LIN_3    0x34          0b1111111111111111      0b1111111111111111                 16
-EN_MACRO_COL_CAL_LIN_4    0x35          0b1111111111111111      0b1111111111111111                 16
-EN_MACRO_COL_CAL_LIN_5    0x36          0b1111                  0b1111                              4
-EN_MACRO_COL_CAL_DIFF_1   0x37          0b1111111111111111      0b1111111111111111                 16
-EN_MACRO_COL_CAL_DIFF_2   0x38          0b1111111111111111      0b1111111111111111                 16
-EN_MACRO_COL_CAL_DIFF_3   0x39          0b1111111111111111      0b1111111111111111                 16
-EN_MACRO_COL_CAL_DIFF_4   0x3A          0b1111111111111111      0b1111111111111111                 16
-EN_MACRO_COL_CAL_DIFF_5   0x3B          0b1111                  0b1111                              4
+EN_CORE_COL_CAL_SYNC_1    0x2E          0b1111111111111111      0b1111111111111111                 16
+EN_CORE_COL_CAL_SYNC_2    0x2F          0b1111111111111111      0b1111111111111111                 16
+EN_CORE_COL_CAL_SYNC_3    0x30          0b1111111111111111      0b1111111111111111                 16
+EN_CORE_COL_CAL_SYNC_4    0x31          0b1111111111111111      0b1111111111111111                 16
+EN_CORE_COL_CAL_LIN_1     0x32          0b1111111111111111      0b1111111111111111                 16
+EN_CORE_COL_CAL_LIN_2     0x33          0b1111111111111111      0b1111111111111111                 16
+EN_CORE_COL_CAL_LIN_3     0x34          0b1111111111111111      0b1111111111111111                 16
+EN_CORE_COL_CAL_LIN_4     0x35          0b1111111111111111      0b1111111111111111                 16
+EN_CORE_COL_CAL_LIN_5     0x36          0b1111                  0b1111                              4
+EN_CORE_COL_CAL_DIFF_1    0x37          0b1111111111111111      0b1111111111111111                 16
+EN_CORE_COL_CAL_DIFF_2    0x38          0b1111111111111111      0b1111111111111111                 16
+EN_CORE_COL_CAL_DIFF_3    0x39          0b1111111111111111      0b1111111111111111                 16
+EN_CORE_COL_CAL_DIFF_4    0x3A          0b1111111111111111      0b1111111111111111                 16
+EN_CORE_COL_CAL_DIFF_5    0x3B          0b1111                  0b1111                              4
 
 *-------------------------------------------------------------------------------------------------------
 * I/O
@@ -196,22 +196,24 @@ SELF_TRIGGER_ENABLE       0x89          0b0000                  0b0000          
 * RegName                 Addr          Defval                  Value                           BitSize
 *-------------------------------------------------------------------------------------------------------
 HighGain_LIN              0xA0          0b1                     0b1                                 1
-INJECTION_SELECT_DELAY    0xA1          0b0000                  0b0000                              4
-VOLTAGE_TRIM_DIG          0xA2          0b10000                 0b10000                             5
-VOLTAGE_TRIM_ANA          0xA3          0b10000                 0b10000                             5
-CLK_DATA_DELAY_CMD_DELAY  0xA4          0b0000                  0b0000                              4
-CLK_DATA_DELAY_CLK_DELAY  0xA5          0b0000                  0b0000                              4
-CLK_DATA_DELAY_2INV_DELAY 0xA6          0b0                     0b0                                 1
-MONITOR_CONFIG_ADC        0xA7          0d5                     0d5                                 6
-MONITOR_CONFIG_BG         0xA8          0d12                    0d12                                5
-CML_CONFIG_SER_INV_TAP    0xA9          0b00                    0b00                                2
-CML_CONFIG_SER_EN_TAP     0xAA          0b00                    0b00                                2
-CML_CONFIG_EN_LANE        0xAB          0b1111                  0b1111                              4
-SER_SEL_OUT_0             0xAC          0b1                     0b1                                 2
-SER_SEL_OUT_1             0xAD          0b1                     0b1                                 2
-SER_SEL_OUT_2             0xAE          0b1                     0b1                                 2
-SER_SEL_OUT_3             0xAF          0b1                     0b1                                 2
-CDR_CONFIG_SEL_SER_CLK    0xB0          0b000                   0b000                               3
+CAL_EDGE_FINE_DELAY       0xA1          0b0000                  0b0000                              4
+DIGITAL_INJ_EN            0xA2          0b0                     0b0                                 1
+ANALOG_INJ_MODE           0xA3          0b0                     0b0                                 1
+VOLTAGE_TRIM_DIG          0xA4          0b10000                 0b10000                             5
+VOLTAGE_TRIM_ANA          0xA5          0b10000                 0b10000                             5
+CLK_DATA_DELAY_DATA       0xA6          0b0000                  0b0000                              4
+CLK_DATA_DELAY_CLK        0xA7          0b0000                  0b0000                              4
+CLK_DATA_DELAY_2INV       0xA8          0b0                     0b0                                 1
+MONITOR_CONFIG_ADC        0xA9          0d5                     0d5                                 6
+MONITOR_CONFIG_BG         0xAA          0d12                    0d12                                5
+CML_CONFIG_SER_INV_TAP    0xAB          0b00                    0b00                                2
+CML_CONFIG_SER_EN_TAP     0xAC          0b11                    0b11                                2
+CML_CONFIG_EN_LANE        0xAD          0b1111                  0b1111                              4
+SER_SEL_OUT_0             0xAE          0b1                     0b1                                 2
+SER_SEL_OUT_1             0xAF          0b1                     0b1                                 2
+SER_SEL_OUT_2             0xB0          0b1                     0b1                                 2
+SER_SEL_OUT_3             0xB1          0b1                     0b1                                 2
+CDR_CONFIG_SEL_SER_CLK    0xB2          0b000                   0b000                               3
 
 ADC_OFFSET_VOLT           0xC0          0d63                    0d63                               16
 ADC_MAXIMUM_VOLT          0xC1          0d839                   0d839                              16

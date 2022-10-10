@@ -57,26 +57,26 @@ class BitView
 
     BitView slice(size_t start) const
     {
-        if(start > size()) throw std::runtime_error("BitView::slice: out of range.");
+        if(start > size()) throw std::runtime_error("BitView::slice: out of range");
         return {_data, _start + start, _end};
     }
 
     BitView slice(size_t start, size_t end) const
     {
-        if(start > end || end > size()) { throw std::runtime_error("BitView::slice: out of range."); }
+        if(start > end || end > size()) { throw std::runtime_error("BitView::slice: out of range"); }
         return {_data, _start + start, _start + end};
     }
 
     void skip(size_t n)
     {
-        if(n > size()) throw std::runtime_error("BitView::skip: out of range.");
+        if(n > size()) throw std::runtime_error("BitView::skip: out of range");
         _start += n;
     }
 
     template <class T = size_t>
     T pop(size_t n)
     {
-        if(n > size()) throw std::runtime_error("BitView::pop: out of range.");
+        if(n > size()) throw std::runtime_error("BitView::pop: out of range");
         auto result = BitView{_data, _start, _start + n}.template get<T>();
         _start += n;
         return result;
@@ -84,7 +84,7 @@ class BitView
 
     BitView pop_slice(size_t n)
     {
-        if(n > size()) throw std::runtime_error("BitView::pop_slice: out of range.");
+        if(n > size()) throw std::runtime_error("BitView::pop_slice: out of range");
         size_t start = _start;
         _start += n;
         return {_data, start, start + n};

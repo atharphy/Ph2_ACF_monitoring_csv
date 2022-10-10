@@ -123,17 +123,22 @@ class ReadoutChipInterface : public ChipInterface
 
     virtual void producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10)
     {
-        // LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     }
+
     virtual void produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip)
     {
-        // LOG (ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     }
+
     virtual std::vector<uint8_t> getWordAlignmentPatterns()
     {
         std::vector<uint8_t> cAlignmentPattern{10, 0};
         return cAlignmentPattern;
     }
+
+    virtual void DumpChipRegisters(Ph2_HwDescription::ReadoutChip* pChip) { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
+
     /*!
      * \brief Monitorign memeber functions
      */

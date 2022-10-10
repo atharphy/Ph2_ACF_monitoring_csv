@@ -89,8 +89,7 @@ bool FileHandler::openFile()
             {
                 std::vector<uint32_t> cHeaderVec = fHeader.encodeHeader();
                 fBinaryFile.write((char*)&cHeaderVec.at(0), cHeaderVec.size() * sizeof(uint32_t));
-                LOG(INFO) << GREEN << "Valid file header provided, writing file with it ... expect " << BOLDYELLOW << cHeaderVec.size() * sizeof(uint32_t) << RESET << GREEN << " 32-bit words"
-                          << RESET;
+                LOG(INFO) << GREEN << "Valid file header provided, writing it into the file (" << BOLDYELLOW << cHeaderVec.size() * sizeof(uint32_t) << RESET << GREEN << " 32-bit words)" << RESET;
                 fHeaderPresent = true;
             }
         }
@@ -102,7 +101,8 @@ bool FileHandler::openFile()
             if(fHeader.fValid == false)
             {
                 fHeaderPresent = false;
-                LOG(WARNING) << BOLDRED << "No valid header found in binary file: " << BOLDYELLOW << fBinaryFileName << BOLDRED << " - resetting to begin of file and treating as normal data" << RESET;
+                LOG(WARNING) << BOLDRED << "No valid header found in binary file: " << BOLDYELLOW << fBinaryFileName << BOLDRED << " --> resetting to begin of file and treating as normal data"
+                             << RESET;
                 fBinaryFile.clear();
                 fBinaryFile.seekg(0, std::ios::beg);
             }

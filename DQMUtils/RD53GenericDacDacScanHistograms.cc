@@ -14,8 +14,6 @@ using namespace Ph2_HwDescription;
 
 void GenericDacDacScanHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
 {
-    const std::vector<int> CDRfreq = {140, 145, 150, 155, 160, 165, 170, 176, 180}; // @CONST@
-
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
     // #######################
@@ -125,7 +123,7 @@ void GenericDacDacScanHistograms::fillGenericDacDacScan(const DetectorDataContai
 
 void GenericDacDacScanHistograms::process()
 {
-    draw<TH2F>(Occupancy2D, "gcolz", "frequency", "VDDD (V)");
+    draw<TH2F>(Occupancy2D, "gcolz");
     draw<TH1F>(GenericDac1Scan);
     draw<TH1F>(GenericDac2Scan);
 }
