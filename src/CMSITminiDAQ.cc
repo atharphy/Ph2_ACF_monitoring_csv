@@ -13,7 +13,6 @@
 #include "../Utils/MiddlewareInterface.h"
 #include "../Utils/RD53Shared.h"
 #include "../Utils/argvparser.h"
-
 #include "../miniDAQ/CombinedCalibrationFactory.h"
 #include "../tools/RD53BERtest.h"
 #include "../tools/RD53ClockDelay.h"
@@ -77,8 +76,7 @@ void interruptHandler(int handler)
 
 void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, std::vector<RD53Event>& decodedEvents)
 {
-    const unsigned int    wordDataSize = 32; // @CONST@
-    size_t                errors       = 0;
+    size_t                errors = 0;
     std::vector<uint32_t> data;
 
     RD53Event::ForkDecodingThreads();
@@ -88,9 +86,10 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
     LOG(INFO) << BOLDBLUE << "\t--> Data are being readout from binary file" << RESET;
     mySysCntr.readFile(data, 0);
 
-    uint16_t status;
+    uint32_t status;
     RD53Event::DecodeEventsMultiThreads(data, decodedEvents, status);
-    LOG(INFO) << GREEN << "Total number of events in binary file: " << BOLDYELLOW << decodedEvents.size() << RESET;
+    LOG(INFO) << GREEN << "Total number of 32-bit words read from binary file: " << BOLDYELLOW << data.size() << RESET;
+    LOG(INFO) << GREEN << "Total number of events decoded from binary file: " << BOLDYELLOW << decodedEvents.size() << RESET;
 
     for(auto i = 0u; i < decodedEvents.size(); i++)
         if(RD53Event::EvtErrorHandler(decodedEvents[i].eventStatus) == false)
@@ -104,8 +103,8 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
     {
         LOG(INFO) << GREEN << "Corrupted events: " << BOLDYELLOW << std::setprecision(3) << errors << " (" << 1. * errors / decodedEvents.size() * 100. << "%)" << std::setprecision(-1) << RESET;
         int avgEventSize = data.size() / decodedEvents.size();
-        LOG(INFO) << GREEN << "Average event size is " << BOLDYELLOW << avgEventSize * wordDataSize << RESET << GREEN << " bits over " << BOLDYELLOW << decodedEvents.size() << RESET << GREEN
-                  << " events" << RESET;
+        LOG(INFO) << GREEN << "Average event size is " << BOLDYELLOW << avgEventSize * RD53FWEvtEncoder::NBIT_EVT_WORD << RESET << GREEN << " bits over " << BOLDYELLOW << decodedEvents.size() << RESET
+                  << GREEN << " events" << RESET;
     }
 
     std::string fileName(binaryFile);
@@ -149,6 +148,9 @@ int main(int argc, char** argv)
     cmd.defineOption("reset", "Reset the backend board", CommandLineProcessing::ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("reset", "r");
 
+    cmd.defineOption("dump", "Dump frontend chips register content", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+    cmd.defineOptionAlternative("dump", "d");
+
     cmd.defineOption("capture", "Capture communication with board (extension .bin)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
     cmd.defineOption("replay", "Replay previously captured communication (extension .bin)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
@@ -182,6 +184,7 @@ int main(int argc, char** argv)
     bool        program    = cmd.foundOption("prog") == true ? true : false;
     bool        supervisor = cmd.foundOption("sup") == true ? true : false;
     bool        reset      = cmd.foundOption("reset") == true ? true : false;
+    bool        dumpRegs   = cmd.foundOption("dump") == true ? true : false;
     size_t      runtime    = cmd.foundOption("runtime") == true ? stoi(cmd.optionValue("runtime")) : ARBITRARYDELAY;
     if(cmd.foundOption("capture") == true)
         RegManager::enableCapture(cmd.optionValue("capture").insert(0, std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_"));
@@ -331,7 +334,6 @@ int main(int argc, char** argv)
             // ######################################
             // # Reset hardware or read binary file #
             // ######################################
-
             std::stringstream outp;
             mySysCntr.InitializeSettings(configFile, outp);
             mySysCntr.InitializeHw(configFile, outp, false);
@@ -350,9 +352,8 @@ int main(int argc, char** argv)
             // #######################
             // # Initialize Hardware #
             // #######################
-
             LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
-            mySysCntr.Configure(configFile);
+            mySysCntr.Configure(configFile, false, 60000, !dumpRegs);
             LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
         }
 
@@ -729,6 +730,11 @@ int main(int argc, char** argv)
             LOG(ERROR) << BOLDRED << "Option not recognized: " << BOLDYELLOW << whichCalib << RESET;
             mySysCntr.Destroy();
             exit(EXIT_FAILURE);
+        }
+        else if(dumpRegs == true)
+        {
+            LOG(INFO) << BOLDMAGENTA << "@@@ Dumping frontend registers @@@" << RESET;
+            mySysCntr.DumpFrontendRegisters();
         }
 
         // ###########################
