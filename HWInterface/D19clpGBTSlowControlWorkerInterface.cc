@@ -85,6 +85,28 @@ D19clpGBTSlowControlWorkerInterface::EncodeCommand(uint8_t pFunctionId, Ph2_HwDe
     }
     return cCommand;
 }
+
+std::vector<uint32_t>
+D19clpGBTSlowControlWorkerInterface::EncodeCommandI2C(uint8_t pFunctionId, Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, const std::vector<uint32_t>& pSlaveData)
+{
+    std::vector<uint32_t> cCommand;
+    uint8_t               cWorkerId = LpGBTSlowControlWorker::BASE_ID + pChip->getOpticalGroupId();
+    uint16_t              cNWords   = pSlaveData.size();
+
+    // fill command header
+    cCommand.push_back(cWorkerId << 24 | pFunctionId << 16 | (cNWords + 1) << 0);
+    cCommand.push_back(pMasterId << 30 | pMasterConfig << 22);
+
+    // fill command payload
+    for(auto& cData: pSlaveData)
+    {
+        uint8_t  cSlaveAddress = (cData & (0xFF << 0)) >> 0;
+        uint32_t cSlaveData    = (cData & (0xFFFFFF << 8)) >> 8;
+        cCommand.push_back(cSlaveAddress << 24 | cSlaveData << 0);
+    }
+    return cCommand;
+}
+
 void D19clpGBTSlowControlWorkerInterface::PrintState()
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);

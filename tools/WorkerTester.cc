@@ -255,30 +255,43 @@ bool WorkerTester::TestI2CRead(OpticalGroup* cOpticalGroup)
     ChipRegMap            cChipRegMap  = cChip->getRegMap();
 
     LOG(INFO) << BOLDMAGENTA << "Testing I2C Read on OpticalGroup " << cOpticalGroup->getId() << RESET;
-    std::vector<uint8_t> cMasters          = {2};
-    uint8_t              cSlaveAddress     = 0x60; // CIC
-    uint16_t             cRegisterAddress  = 0x99; // Calibration Pattern 0 : Default = 0xA1
-    uint8_t              cRegisterValue    = 0xCC;
-    int                  cRegisterReadBack = -1;
+    bool                  cSuccess         = true;
+    std::vector<uint8_t>  cMasters         = {2};
+    uint8_t               cSlaveAddress    = 0x60; // CIC
+    uint16_t              cRegisterAddress = 0x99; // Calibration Pattern 0 : Default = 0xA1
+    uint8_t               cRegisterValue   = 0xCC;
+    std::vector<uint16_t> cReadBackData;
     for(auto cMaster: cMasters)
     {
         uint16_t cInvertedRegister = ((cRegisterAddress & (0xFF << 8 * 0)) << 8) | ((cRegisterAddress & (0xFF << 8 * 1)) >> 8);
-        uint32_t cSlaveData        = (cRegisterValue << 16) | cInvertedRegister;
+        uint32_t cData             = (cRegisterValue << 16) | cInvertedRegister;
         LOG(INFO) << BLUE << "Writing value = 0x" << std::hex << +cRegisterValue << std::dec << " to register 0x" << std::hex << +cRegisterAddress << std::dec << RESET;
-        uint8_t cNbytes       = 3;
-        uint8_t cMasterConfig = (cNbytes << 2) | 3;
-        cFEInterface->MultiByteWriteI2C(cChip, cMaster, cMasterConfig, cSlaveAddress, cSlaveData);
+        uint8_t               cNbytes       = 3;
+        uint8_t               cMasterConfig = (cNbytes << 2) | 3;
+        std::vector<uint32_t> cSlaveData;
+        cSlaveData.push_back(cData << 8 | cSlaveAddress << 0);
+        cFEInterface->MultiByteWriteI2C(cChip, cMaster, cMasterConfig, cSlaveData);
+        cSlaveData.clear();
 
-        cSlaveData    = cInvertedRegister;
         cNbytes       = 2;
         cMasterConfig = (cNbytes << 2) | 3;
-        cFEInterface->MultiByteWriteI2C(cChip, cMaster, cMasterConfig, cSlaveAddress, cSlaveData);
-        cNbytes           = 1;
-        cMasterConfig     = (cNbytes << 2) | 3;
-        cRegisterReadBack = cFEInterface->SingleByteReadI2C(cChip, cMaster, cMasterConfig, cSlaveAddress);
-        LOG(INFO) << MAGENTA << "Reading value = 0x" << std::hex << +cRegisterReadBack << std::dec << " from register 0x" << std::hex << +cRegisterAddress << std::dec << RESET;
+        cData         = cInvertedRegister;
+        cSlaveData.push_back(cData << 8 | cSlaveAddress << 0);
+        cFEInterface->MultiByteWriteI2C(cChip, cMaster, cMasterConfig, cSlaveData);
+        cSlaveData.clear();
+
+        cNbytes       = 1;
+        cMasterConfig = (cNbytes << 2) | 3;
+        cSlaveData.push_back(cSlaveAddress << 0);
+        cReadBackData = cFEInterface->SingleByteReadI2C(cChip, cMaster, cMasterConfig, cSlaveData);
+        for(auto cReadBack: cReadBackData)
+        {
+            auto cReadBackValue = cReadBack & 0xFF;
+            cSuccess &= (cReadBackValue == cRegisterValue);
+            LOG(INFO) << MAGENTA << "Reading value = 0x" << std::hex << +cReadBackValue << std::dec << " from register 0x" << std::hex << +cRegisterAddress << std::dec << RESET;
+        }
     }
-    return (cRegisterValue == cRegisterReadBack);
+    return cSuccess;
 }
 
 bool WorkerTester::TestI2CRead()
@@ -311,16 +324,18 @@ bool WorkerTester::TestI2CWrite(OpticalGroup* cOpticalGroup)
     for(auto cMaster: cMasters)
     {
         uint16_t cInvertedRegister = ((cRegisterAddress & (0xFF << 8 * 0)) << 8) | ((cRegisterAddress & (0xFF << 8 * 1)) >> 8);
-        uint32_t cSlaveData        = (cRegisterValue << 16) | cInvertedRegister;
+        uint32_t cData             = (cRegisterValue << 16) | cInvertedRegister;
         uint8_t  cMasterConfig     = (3 << 2) | 3;
         // LOG(INFO) << BLUE << "Writing value = 0x" << std::hex << +cRegisterValue << std::dec << " to register 0x" << std::hex << +cRegisterAddress << std::dec << RESET;
-        cSuccess = cFEInterface->MultiByteWriteI2C(cChip, cMaster, cMasterConfig, cSlaveAddress, cSlaveData);
-        cSuccess &= cFEInterface->MultiByteWriteI2C(cChip, cMaster, cMasterConfig, cSlaveAddress + 1, cSlaveData);
-        cSuccess &= cFEInterface->MultiByteWriteI2C(cChip, cMaster, cMasterConfig, cSlaveAddress + 2, cSlaveData);
-        cSuccess &= cFEInterface->MultiByteWriteI2C(cChip, cMaster, cMasterConfig, cSlaveAddress + 4, cSlaveData);
-        cSuccess &= cFEInterface->MultiByteWriteI2C(cChip, cMaster, cMasterConfig, cSlaveAddress + 5, cSlaveData);
-        cSuccess &= cFEInterface->MultiByteWriteI2C(cChip, cMaster, cMasterConfig, cSlaveAddress + 6, cSlaveData);
-        cSuccess &= cFEInterface->MultiByteWriteI2C(cChip, cMaster, cMasterConfig, cSlaveAddress + 7, cSlaveData);
+        std::vector<uint32_t> cSlaveData;
+        cSlaveData.push_back(cData << 8 | cSlaveAddress << 0);
+        cSlaveData.push_back(cData << 8 | (cSlaveAddress + 1) << 0);
+        cSlaveData.push_back(cData << 8 | (cSlaveAddress + 2) << 0);
+        cSlaveData.push_back(cData << 8 | (cSlaveAddress + 5) << 0);
+        cSlaveData.push_back(cData << 8 | (cSlaveAddress + 6) << 0);
+        cSlaveData.push_back(cData << 8 | (cSlaveAddress + 7) << 0);
+
+        cSuccess = cFEInterface->MultiByteWriteI2C(cChip, cMaster, cMasterConfig, cSlaveData);
         if(cSuccess) { LOG(INFO) << GREEN << "I2C Write status is SUCCESS" << RESET; }
         else
         {

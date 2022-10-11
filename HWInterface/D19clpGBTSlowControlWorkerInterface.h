@@ -14,6 +14,8 @@ const uint8_t READ_FE              = 6;
 const uint8_t WRITE_FE             = 7;
 const int     BLOCK_SIZE           = 16000;
 
+const std::map<uint8_t, std::string> I2C_STATUS_MAP = {{4, "TransactionSucess"}, {8, "SDAPulledLow"}, {32, "InvalidCommand"}, {64, "NotACK"}};
+
 const std::map<int, std::string> WORKER_FSM_STATE_MAP{{0, "UNDEFINED"},
                                                       {1, "IDLE"},
                                                       {2, "GET_COMMAND_HEADER"},
@@ -82,6 +84,7 @@ class D19clpGBTSlowControlWorkerInterface : public D19cCommandProcessorInterface
   public:
     void                  Reset();
     std::vector<uint32_t> EncodeCommand(uint8_t pFunctionId, Ph2_HwDescription::Chip* pChip, const std::vector<Ph2_HwDescription::ChipRegItem>& pRegisterItems, bool pVerify = false);
+    std::vector<uint32_t> EncodeCommandI2C(uint8_t pFunctionId, Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, const std::vector<uint32_t>& pSlaveData);
     bool                  WaitDone(uint8_t pFunctionId);
     bool                  IsDone(uint8_t pFunctionId);
     uint8_t               GetTryCounter(uint8_t pFunctionId);
