@@ -60,6 +60,7 @@ class RD53ChannelGroupHandler : public ChannelGroupHandler
 
   private:
     RD53ChannelGroup regionOfInterest;
+    RD53ChannelGroup enabledGroups;
     uint8_t          groupType;
     size_t           hitPerCol;
     size_t           onlyNGroups;

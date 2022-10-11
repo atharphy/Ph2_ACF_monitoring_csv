@@ -99,9 +99,9 @@ void Tool::waitForRunToBeCompleted()
     while(!GetRunningStatus()) std::this_thread::sleep_for(std::chrono::milliseconds(250));
 }
 
-void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
+void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber, bool doAlsoFrontend)
 {
-    SystemController::Configure(cHWFile, enableStream, DQMportNumber);
+    SystemController::Configure(cHWFile, enableStream, DQMportNumber, doAlsoFrontend);
     ConfigureCalibration();
 }
 

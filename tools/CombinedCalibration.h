@@ -39,8 +39,6 @@ struct CombinedCalibration : public Tool
 
     void Running() { start_impl(std::make_index_sequence<size>()); }
 
-    void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000) override { Tool::Configure(cHWFile, enableStream, DQMportNumber); }
-
     void Stop() override
     {
         Tool::dumpConfigFiles();

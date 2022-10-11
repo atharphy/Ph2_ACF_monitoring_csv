@@ -18,6 +18,7 @@ std::vector<uint8_t> serializeFields(const WrReg& cmd)
 
     fields.reserve(6);
     fields.push_back(packAndEncode<1, 4>(0, cmd.address >> 5));
+    fields.push_back(packAndEncode<5>(cmd.address));
     fields.push_back(packAndEncode<5>(cmd.value >> 11));
     fields.push_back(packAndEncode<5>(cmd.value >> 6));
     fields.push_back(packAndEncode<5>(cmd.value >> 1));
@@ -31,7 +32,7 @@ std::vector<uint8_t> serializeFields(const WrRegLong& cmd)
     std::vector<uint8_t> fields;
 
     fields.reserve(2 + cmd.values.size() * 2);
-    fields.push_back(packAndEncode<1, 0>(1, 0));
+    fields.push_back(packAndEncode<1, 4>(1, 0));
     fields.push_back(packAndEncode<5>(0));
     for(const auto& value: cmd.values)
     {

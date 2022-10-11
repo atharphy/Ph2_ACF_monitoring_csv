@@ -60,8 +60,6 @@ class ThrEqualization : public PixelAlive
 #endif
 
   private:
-    const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
-
     std::shared_ptr<DetectorDataContainer> theOccContainer;
     DetectorDataContainer                  theTDACcontainer;
 
