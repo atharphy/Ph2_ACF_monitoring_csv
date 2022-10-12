@@ -40,13 +40,7 @@ class BaseContainer
     }
 
     virtual ~BaseContainer() { ; }
-    uint16_t getId(void) const { return id_; }
-    // trying to let Ph2 find the connected link
-    void setId(uint16_t id)
-    {
-        id_ = id;
-        return;
-    }
+    uint16_t               getId(void) const { return id_; }
     uint16_t               getIndex(void) const { return index_; }
     uint16_t               getGlobalIndex(void) const { return globalIndex_; }
     virtual void           cleanDataStored(void)            = 0;

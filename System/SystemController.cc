@@ -972,20 +972,15 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
             // make sure board is also set to the same thing
             bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
             cBoard->setSparsification(cSparsified);
-            // trying to let Ph2 find the connected link
-            for(auto cOpticalGroup: *cBoard)
-            {
-                if(cOpticalGroup->flpGBT == nullptr) continue;
-                cOpticalGroup->flpGBT->setOpticalGroupId(cOpticalGroup->getId());
-            }
-            if(pReInitialize) { InitializeOT(cBoard); }
+            if(pReInitialize)
+                InitializeOT(cBoard);
             else // lpGBT + CIC will need to be configured  (and also maybe reset)
             {
                 // lpGBT config
                 for(auto cOpticalGroup: *cBoard)
                 {
                     if(cOpticalGroup->flpGBT == nullptr) continue;
-                    // cOpticalGroup->flpGBT->setOpticalGroupId(cOpticalGroup->getId());
+
                     LOG(INFO) << BOLDBLUE << "Now going to configuring lpGBTs#" << +cOpticalGroup->getId() << " on Board " << +cBoard->getId() << RESET;
                     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
                     if(cOpticalGroup->getReset() == 0)
