@@ -227,6 +227,7 @@ void KIRA::determineLatency()
                     {
                         if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
                         if(cHybrid->getIndex()%2 == 0 && cChip->getIndex() != 7-cLatencyLED) continue;
+                        if(cHybrid->getIndex()%2 == 1 && cChip->getIndex() != cLatencyLED) continue;
                         uint16_t cTmpHits = cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
                         if (cTmpHits >= cHitMaximum)
                         {
