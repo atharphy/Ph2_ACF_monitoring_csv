@@ -60,7 +60,7 @@ class SEHTester : public OTHybridTester
     void Resume();
 
     void SEHInputsDebug();
-    void TurnOn(uint32_t pRightLoadValue = 0, uint32_t pLeftLoadValue = 0);
+    void TurnOn(uint32_t pRightLoadValue = 0, uint32_t pLeftLoadValue = 0, bool setLoad=false);
     void TurnOff();
     void SetLoad(uint32_t pRightLoadValue = 0, uint32_t pLeftLoadValue = 0);
     void RampPowerSupply(std::string powerSupplyId, std::string channelId);

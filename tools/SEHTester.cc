@@ -580,12 +580,12 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
         fillSummaryTree("ExternalBiasResult", 0);
     }
 }
-void SEHTester::SetLoad(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
+void SEHTester::SetLoad(uint32_t pRightLoadValue, uint32_t pLeftLoadValue )
 {
     flpGBTInterface->GetExternalController()->getInterface().set_load2(true, false, pLeftLoadValue);
     flpGBTInterface->GetExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
 }
-void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
+void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue, bool setLoad)
 {
     // workaround to turn on the bPOL2V5 propertly
 
@@ -608,6 +608,7 @@ void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
 
     flpGBTInterface->GetExternalController()->getInterface().set_SehSupply(flpGBTInterface->GetExternalController()->getInterface().sehSupply_On);
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    if (setLoad){
     flpGBTInterface->GetExternalController()->getInterface().set_load2(true, false, pLeftLoadValue);
     flpGBTInterface->GetExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
@@ -620,6 +621,8 @@ void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
     flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().P2V5_VTRx_MON, U_P2V5);
     fillSummaryTree("TurnOnLoadRight", I_P1V2_R);
     fillSummaryTree("TurnOnLoadLeft", I_P1V2_L);
+    fillSummaryTree("SEHInputVoltage", U_SEH);
+    }
 
 #endif
 }
@@ -717,6 +720,9 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 
 void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, uint32_t pStep)
 {
+    fillSummaryTree("efficiencyTest_min_load_dac", pMinLoadValue);
+    fillSummaryTree("efficiencyTest_max_load_dac", pMaxLoadValue);
+    fillSummaryTree("efficiencyTest_step_load_dac", pStep);
     // Create TTree for Iout to Iin conversion in DC/DC
     auto cEfficiencyTree = new TTree("tEfficiency", "DC/DC Efficiency");
     // Create variables for TTree branches

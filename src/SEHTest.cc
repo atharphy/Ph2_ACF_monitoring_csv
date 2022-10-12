@@ -290,13 +290,14 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("measure-input-iv"))
     {
         LOG(INFO) << BOLDYELLOW << "Switching on SEH using remote power supply control and perform I-V scan" << RESET;
-        cSEHTester.TurnOn(cRightLoad, cLeftLoad);
+        cSEHTester.TurnOn(0, 0, false);
         cSEHTester.RampPowerSupply(cLVPowerSupplyId, cLVChannelId);
+        cSEHTester.TurnOn(cRightLoad, cLeftLoad,true);
     }
     else
     {
         LOG(INFO) << BOLDYELLOW << "Switching on SEH without remote power supply control" << RESET;
-        cSEHTester.TurnOn(cRightLoad, cLeftLoad);
+        cSEHTester.TurnOn(cRightLoad, cLeftLoad,true);
     }
     if(cmd.foundOption("test-ext-leak"))
     {
@@ -419,7 +420,10 @@ int main(int argc, char* argv[])
         else if(cmd.foundOption("test-external-pattern"))
         {
             bool cStatus = true;
+            while(true){
             cStatus      = cSEHTester.LpGBTCheckULPattern(true, cExternalPattern);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+            }
 #ifdef __USE_ROOT__
             cTool.fillSummaryTree("status_CicOutTest", (cStatus) ? 1 : 0);
 #endif
@@ -575,7 +579,7 @@ int main(int argc, char* argv[])
     }
 
     int cFmcdCounter = 0;
-    int cFcmdTries   = 10;
+    int cFcmdTries   = 1;
     /*********************/
     /* TEST FAST COMMAND */
     /*********************/
@@ -625,7 +629,7 @@ int main(int argc, char* argv[])
             gui::progress(7 / 10.0);
         }
         LOG(INFO) << BOLDBLUE << "Efficiency Test" << RESET;
-        cSEHTester.TestEfficiency(0, 2500, 500);
+        cSEHTester.TestEfficiency(0, 2502, 417);
     }
 
     cTool.StopMonitoring();
