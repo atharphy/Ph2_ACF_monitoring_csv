@@ -187,7 +187,7 @@ bool D19cOpticalInterface::SingleWriteRead(Chip* pChip, ChipRegItem& pRegisterIt
 
 bool D19cOpticalInterface::MultiWriteRead(Chip* pChip, std::vector<ChipRegItem>& pRegisterItems) { return Write(pChip, pRegisterItems, true); }
 
-bool D19cOpticalInterface::MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, std::vector<uint32_t>& pSlaveData)
+bool D19cOpticalInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, std::vector<uint32_t>& pSlaveData)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     flpGBTSlowControlWorkerInterface->SelectLink(pChip->getOpticalGroupId());
@@ -207,7 +207,7 @@ bool D19cOpticalInterface::MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uin
             // Wait for worker to be done
             if(!flpGBTSlowControlWorkerInterface->WaitDone(cFunctionId))
             {
-                LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiByteWriteI2C : Tool stuck ... Sending soft reset" << RESET;
+                LOG(ERROR) << BOLDRED << "D19cOpticalInterface::WriteI2C : Tool stuck ... Sending soft reset" << RESET;
                 return false;
             }
             // Get replies from worker
@@ -216,8 +216,8 @@ bool D19cOpticalInterface::MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uin
             size_t cNWords = (cReplies[0] & (0xFFFF << 0)) >> 0;
             if(cNWords != cDataBlock.size())
             {
-                LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiByteWriteI2C -- Corrupted CPB reply" << RESET;
-                throw std::runtime_error("D19cOpticalInterface::MultiByteWriteI2C -- Corrupted CPB reply");
+                LOG(ERROR) << BOLDRED << "D19cOpticalInterface::WriteI2C -- Corrupted CPB reply" << RESET;
+                throw std::runtime_error("D19cOpticalInterface::WriteI2C -- Corrupted CPB reply");
             }
             // Decode reply frame and extract data
             for(size_t cReplyIdx = 0; cReplyIdx < cReplies.size(); cReplyIdx++)
@@ -227,8 +227,7 @@ bool D19cOpticalInterface::MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uin
                 uint8_t cReadBack  = (cReplies[cReplyIdx] & (0xFF << 0)) >> 0;
                 if(cErrorCode != 0)
                 {
-                    LOG(ERROR) << BOLDRED << "D19cOpticalInterface::MultiByteWriteI2C -- Error Code : " << +cErrorCode << " -- I2C Status : " << LpGBTSlowControlWorker::I2C_STATUS_MAP.at(cReadBack)
-                               << RESET;
+                    LOG(ERROR) << BOLDRED << "D19cOpticalInterface::WriteI2C -- Error Code : " << +cErrorCode << " -- I2C Status : " << LpGBTSlowControlWorker::I2C_STATUS_MAP.at(cReadBack) << RESET;
                     cSuccess &= false;
                 }
             }
@@ -239,7 +238,7 @@ bool D19cOpticalInterface::MultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uin
     return cSuccess;
 }
 
-std::vector<uint16_t> D19cOpticalInterface::SingleByteReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, std::vector<uint32_t>& pSlaveData)
+std::vector<uint16_t> D19cOpticalInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, std::vector<uint32_t>& pSlaveData)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     flpGBTSlowControlWorkerInterface->SelectLink(pChip->getOpticalGroupId());
@@ -260,7 +259,7 @@ std::vector<uint16_t> D19cOpticalInterface::SingleByteReadI2C(Ph2_HwDescription:
             // Wait for worker to be done
             if(!flpGBTSlowControlWorkerInterface->WaitDone(cFunctionId))
             {
-                LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleByteReadI2C : Tool stuck ... Sending soft reset" << RESET;
+                LOG(ERROR) << BOLDRED << "D19cOpticalInterface::ReadI2C : Tool stuck ... Sending soft reset" << RESET;
                 return {};
             }
             // Get replies from worker
@@ -269,8 +268,8 @@ std::vector<uint16_t> D19cOpticalInterface::SingleByteReadI2C(Ph2_HwDescription:
             size_t cNWords = (cReplies[0] & (0xFFFF << 0)) >> 0;
             if(cNWords != cDataBlock.size())
             {
-                LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleByteReadI2C -- Corrupted CPB reply" << RESET;
-                throw std::runtime_error("D19cOpticalInterface::SingleByteReadI2C -- Corrupted CPB reply");
+                LOG(ERROR) << BOLDRED << "D19cOpticalInterface::ReadI2C -- Corrupted CPB reply" << RESET;
+                throw std::runtime_error("D19cOpticalInterface::ReadI2C -- Corrupted CPB reply");
             }
             // Decode reply frame and extract data
             for(size_t cReplyIdx = 0; cReplyIdx < cReplies.size(); cReplyIdx++)
@@ -280,8 +279,7 @@ std::vector<uint16_t> D19cOpticalInterface::SingleByteReadI2C(Ph2_HwDescription:
                 uint8_t cReadBack  = (cReplies[cReplyIdx] & (0xFF << 0)) >> 0;
                 if(cErrorCode != 0)
                 {
-                    LOG(ERROR) << BOLDRED << "D19cOpticalInterface::SingleByteReadI2C -- Error Code : " << +cErrorCode << " -- I2C Status : " << LpGBTSlowControlWorker::I2C_STATUS_MAP.at(cReadBack)
-                               << RESET;
+                    LOG(ERROR) << BOLDRED << "D19cOpticalInterface::ReadI2C -- Error Code : " << +cErrorCode << " -- I2C Status : " << LpGBTSlowControlWorker::I2C_STATUS_MAP.at(cReadBack) << RESET;
                     cSuccess &= false;
                 }
                 cReadBackData.push_back(cErrorCode | cReadBack << 0);
@@ -292,4 +290,31 @@ std::vector<uint16_t> D19cOpticalInterface::SingleByteReadI2C(Ph2_HwDescription:
     }
     return cReadBackData;
 }
+
+bool D19cOpticalInterface::SingleMultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress, uint8_t pSlaveData)
+{
+    std::vector<uint32_t> cMasterData;
+    cMasterData.push_back(pSlaveData << 8 | pSlaveAddress << 0);
+    return WriteI2C(pChip, pMasterId, pMasterConfig, cMasterData);
+}
+
+bool D19cOpticalInterface::MultiMultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, std::vector<uint32_t>& pSlaveData)
+{
+    return WriteI2C(pChip, pMasterId, pMasterConfig, pSlaveData);
+}
+
+uint8_t D19cOpticalInterface::SingleSingleByteReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress)
+{
+    std::vector<uint32_t> cMasterData;
+    cMasterData.push_back(pSlaveAddress << 0);
+    auto cReadBackData  = ReadI2C(pChip, pMasterId, pMasterConfig, cMasterData);
+    auto cReadBackValue = (cReadBackData[0] & 0xFF);
+    return cReadBackValue;
+}
+
+std::vector<uint16_t> D19cOpticalInterface::MultiSingleByteReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, std::vector<uint32_t>& pSlaveData)
+{
+    return ReadI2C(pChip, pMasterId, pMasterConfig, pSlaveData);
+}
+
 } // namespace Ph2_HwInterface

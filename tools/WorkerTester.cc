@@ -270,20 +270,20 @@ bool WorkerTester::TestI2CRead(OpticalGroup* cOpticalGroup)
         uint8_t               cMasterConfig = (cNbytes << 2) | 3;
         std::vector<uint32_t> cSlaveData;
         cSlaveData.push_back(cData << 8 | cSlaveAddress << 0);
-        cFEInterface->MultiByteWriteI2C(cChip, cMaster, cMasterConfig, cSlaveData);
+        cFEInterface->MultiMultiByteWriteI2C(cChip, cMaster, cMasterConfig, cSlaveData);
         cSlaveData.clear();
 
         cNbytes       = 2;
         cMasterConfig = (cNbytes << 2) | 3;
         cData         = cInvertedRegister;
         cSlaveData.push_back(cData << 8 | cSlaveAddress << 0);
-        cFEInterface->MultiByteWriteI2C(cChip, cMaster, cMasterConfig, cSlaveData);
+        cFEInterface->MultiMultiByteWriteI2C(cChip, cMaster, cMasterConfig, cSlaveData);
         cSlaveData.clear();
 
         cNbytes       = 1;
         cMasterConfig = (cNbytes << 2) | 3;
         cSlaveData.push_back(cSlaveAddress << 0);
-        cReadBackData = cFEInterface->SingleByteReadI2C(cChip, cMaster, cMasterConfig, cSlaveData);
+        cReadBackData = cFEInterface->MultiSingleByteReadI2C(cChip, cMaster, cMasterConfig, cSlaveData);
         for(auto cReadBack: cReadBackData)
         {
             auto cReadBackValue = cReadBack & 0xFF;
@@ -335,7 +335,7 @@ bool WorkerTester::TestI2CWrite(OpticalGroup* cOpticalGroup)
         cSlaveData.push_back(cData << 8 | (cSlaveAddress + 6) << 0);
         cSlaveData.push_back(cData << 8 | (cSlaveAddress + 7) << 0);
 
-        cSuccess = cFEInterface->MultiByteWriteI2C(cChip, cMaster, cMasterConfig, cSlaveData);
+        cSuccess = cFEInterface->MultiMultiByteWriteI2C(cChip, cMaster, cMasterConfig, cSlaveData);
         if(cSuccess) { LOG(INFO) << GREEN << "I2C Write status is SUCCESS" << RESET; }
         else
         {
