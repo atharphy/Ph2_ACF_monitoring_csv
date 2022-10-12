@@ -56,7 +56,9 @@ class KIRA : public OTTool
     TCPClient* fKiraClient{nullptr};
     std::string fKiraId;
     ContainerRecycleBin<Occupancy> fRecycleBin;
+    #ifdef __USE_ROOT__
     DQMHistogramKira fDQMHistogrammer;
+    #endif
     DetectorDataContainer analyseEvents(BeBoard* pBoard, const std::vector<Event*>& pEvents, uint16_t pSensor, uint16_t pLED);
 
 };

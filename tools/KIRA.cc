@@ -75,7 +75,7 @@ void KIRA::Initialise(int pKiraPort, std::string pKiraId)
     fRecycleBin.setDetectorContainer(fDetectorContainer);
 
     #ifdef __USE_ROOT__
-    fDQMHistogrammer.book(fResultFile, *fDetectorContainer, fSettingsMap);
+        fDQMHistogrammer.book(fResultFile, *fDetectorContainer, fSettingsMap);
     #endif
 
     PrepareForExternal(fDetectorContainer->at(0));
