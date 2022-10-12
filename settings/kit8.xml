@@ -289,7 +289,7 @@
 
     <Setting name="KIRA_ID">    abc  </Setting>
     <Setting name="KIRA_Port" > 7010 </Setting>
-    <Setting name="KiraLatencyLed" > 4</Setting>
+    <Setting name="KiraLatencyLed" > 0</Setting>
     <Setting name="KiraLatencySensor" > 0</Setting>
     <Setting name="KiraLatencyIntensity" >30000</Setting>
     <Setting name="KiraIntensity" >30000</Setting>
