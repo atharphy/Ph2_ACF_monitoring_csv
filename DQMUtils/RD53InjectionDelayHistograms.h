@@ -4,7 +4,6 @@
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
-  Support:               email to alkiviadis.papadopoulos@cern.ch
   Support:               email to mauro.dinardo@cern.ch
 */
 

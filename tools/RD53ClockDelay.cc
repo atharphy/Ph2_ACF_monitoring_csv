@@ -139,6 +139,7 @@ void ClockDelay::run()
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid) ClockDelay::writeClkDelaySequence(cBoard, cChip, 0);
+
     la.run();
     la.analyze();
 
@@ -213,6 +214,7 @@ void ClockDelay::analyze()
 {
     const size_t ClkDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
     const size_t maxRegValue  = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CLK_DATA_DELAY_CLK")) + 1;
+    const auto unitTime = 1. / RD53Constants::ACCELERATOR_CLK * 1000 / ((RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CAL_EDGE_FINE_DELAY")) + 1) / (2. / frontEnd->nLatencyBins2Span));
 
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theClockDelayContainer);
 
@@ -221,7 +223,7 @@ void ClockDelay::analyze()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    size_t best   = 0u;
+                    float  best   = 0u;
                     size_t regVal = 0u;
 
                     for(auto i = 0u; i < dacList.size(); i++)
@@ -236,7 +238,8 @@ void ClockDelay::analyze()
                     }
 
                     LOG(INFO) << BOLDMAGENTA << ">>> Best clock delay for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << regVal << BOLDMAGENTA << " (1.5625 ns) computed over two bx <<<" << RESET;
+                              << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << regVal << BOLDMAGENTA << " (" << unitTime << " ns) computed over two bx <<<"
+                              << RESET;
                     LOG(INFO) << BOLDMAGENTA << ">>> New clock delay dac value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
                               << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << regVal % maxRegValue << BOLDMAGENTA << " <<<" << RESET;
 

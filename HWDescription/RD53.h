@@ -26,15 +26,16 @@
 // #########################
 namespace RD53Constants
 {
-const uint8_t NBIT_MAXREG    = 16;   // Maximum number of bits for a chip register
-const uint8_t NPIX_REGION    = 4;    // Number of pixels in a region (1x4)
-const uint8_t NROW_CORE      = 8;    // Number of rows in a core
-const uint8_t NBIT_ADDR      = 9;    // Number of address bits
-const uint8_t NSYNC_WORDS    = 64;   // Number of Sync words for synchronization
-const uint8_t NWORDS_TO_SYNC = 30;   // Number of words beforse send a Sync
-const uint8_t PATTERN_PRBS   = 0xAA; // Start PRBS pattern
-const uint8_t PATTERN_AURORA = 0x55; // Start AURORA pattern
-const uint8_t PATTERN_CLOCK  = 0x00; // Start clock pattern
+const uint8_t ACCELERATOR_CLK = 40;   // Accelerator clock frequency [MHz]
+const uint8_t NBIT_MAXREG     = 16;   // Maximum number of bits for a chip register
+const uint8_t NPIX_REGION     = 4;    // Number of pixels in a region (1x4)
+const uint8_t NROW_CORE       = 8;    // Number of rows in a core
+const uint8_t NBIT_ADDR       = 9;    // Number of address bits
+const uint8_t NSYNC_WORDS     = 64;   // Number of Sync words for synchronization
+const uint8_t NWORDS_TO_SYNC  = 30;   // Number of words beforse send a Sync
+const uint8_t PATTERN_PRBS    = 0xAA; // Start PRBS pattern
+const uint8_t PATTERN_AURORA  = 0x55; // Start AURORA pattern
+const uint8_t PATTERN_CLOCK   = 0x00; // Start clock pattern
 } // namespace RD53Constants
 
 // #####################
