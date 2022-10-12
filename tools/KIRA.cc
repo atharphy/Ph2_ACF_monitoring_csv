@@ -221,6 +221,7 @@ void KIRA::determineLatency()
             // Find earliest maximum latency bin (= largest latency setting with maximum entries)
             for(auto cOpticalGroup: *cBoard)
             {
+                uint16_t cTmpHitsSum = 0;
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     for(auto cChip: *cHybrid)
@@ -229,9 +230,14 @@ void KIRA::determineLatency()
                         if(cHybrid->getIndex()%2 == 0 && cChip->getIndex() != 7-cLatencyLED) continue;
                         if(cHybrid->getIndex()%2 == 1 && cChip->getIndex() != cLatencyLED) continue;
                         uint16_t cTmpHits = cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
-                        if (cTmpHits >= cHitMaximum)
+                        cTmpHitsSum += cTmpHits;
+                        //LOG(INFO)<< "temp: " << cTmpHits << RESET;
+                        //LOG(INFO)<< "temp sum: " << cTmpHitsSum << RESET;
+                        //LOG(INFO)<< "cHitMax: " << cHitMaximum << RESET;
+
+                        if (cTmpHitsSum >= cHitMaximum)
                         {
-                            cHitMaximum = cTmpHits;
+                            cHitMaximum = cTmpHitsSum;
                             cLatencySetting = cLat + cTriggerId; 
                         }
                     }
