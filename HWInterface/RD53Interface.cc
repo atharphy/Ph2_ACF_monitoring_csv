@@ -185,14 +185,7 @@ uint16_t RD53Interface::GetFieldValue(uint16_t regValue, uint8_t start, uint8_t 
 // # PRBS generator #
 // ##################
 
-void RD53Interface::StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip)
-{
-    auto regValue = RD53Constants::PATTERN_PRBS;
-    if((pChip->getRegItem("SER_SEL_OUT").fPrmptCfg == true) || (pChip->getRegItem("SER_SEL_OUT_0").fPrmptCfg == true) || (pChip->getRegItem("SER_SEL_OUT_1").fPrmptCfg == true) ||
-       (pChip->getRegItem("SER_SEL_OUT_2").fPrmptCfg == true) || (pChip->getRegItem("SER_SEL_OUT_3").fPrmptCfg == true))
-        regValue = RD53Constants::PATTERN_PRBS | (pChip->getRegItem("SER_SEL_OUT").fValue & 0xFC); // @TMP@
-    RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", regValue, false);
-}
+void RD53Interface::StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) { RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_PRBS, false); }
 void RD53Interface::StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) { RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false); }
 
 bool RD53Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& regName, ChipContainer& pValue, bool pVerifLoop)
