@@ -31,6 +31,7 @@ const uint8_t NBIT_MAXREG     = 16;   // Maximum number of bits for a chip regis
 const uint8_t NPIX_REGION     = 4;    // Number of pixels in a region (1x4)
 const uint8_t NROW_CORE       = 8;    // Number of rows in a core
 const uint8_t NBIT_ADDR       = 9;    // Number of address bits
+const uint8_t NBIT_TOT        = 4;    // Number of ToT bits
 const uint8_t NSYNC_WORDS     = 64;   // Number of Sync words for synchronization
 const uint8_t NWORDS_TO_SYNC  = 30;   // Number of words beforse send a Sync
 const uint8_t PATTERN_PRBS    = 0xAA; // Start PRBS pattern
@@ -117,7 +118,7 @@ class RD53 : public ReadoutChip
     void        enablePixel(unsigned int row, unsigned int col, bool enable);
     void        injectPixel(unsigned int row, unsigned int col, bool inject);
     void        setTDAC(unsigned int row, unsigned int col, uint8_t TDAC);
-    void        resetTDAC();
+    void        resetTDAC(uint8_t TDAC);
     uint8_t     getTDAC(unsigned int row, unsigned int col);
     uint8_t     getChipLane() const { return myChipLane; }
     std::string getComment() const { return myComment; }

@@ -325,7 +325,7 @@ bool RD53Event::findEventStarts(const std::vector<uint32_t>& data, std::vector<s
 void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStartExt, uint32_t& eventStatus)
 {
     std::vector<size_t> eventStartLocal;
-    eventStatus |= RD53FWEvtEncoder::GOOD;
+    eventStatus = RD53FWEvtEncoder::GOOD;
 
     // #####################
     // # Consistency check #
@@ -641,7 +641,7 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
 {
     auto         bits         = bit_view(data, 0, howMany);
     const size_t n32bitsWords = bits.size() / RD53FWEvtEncoder::NBIT_EVT_WORD;
-    const size_t maxL1Counter = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
+    const size_t maxL1Counter = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID * (options.enableBCID == true ? 1 : 2)) + 1;
 
     if(howMany == 0) eventStatus |= RD53FWEvtEncoder::EMPTY;
 
