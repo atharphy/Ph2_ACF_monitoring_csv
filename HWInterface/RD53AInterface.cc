@@ -373,10 +373,10 @@ uint32_t RD53AInterface::getADCobservable(const std::string& observableName, boo
     uint32_t voltageObservable(0), currentObservable(0);
 
     const std::unordered_map<std::string, uint32_t> currentMultiplexer = {
-        {"Iref", 0x00},          {"IBIASP1_SYNC", 0x01}, {"IBIASP2_SYNC", 0x02},  {"IBIAS_DISC_SYNC", 0x03}, {"IBIAS_SF_SYNC", 0x04},  {"ICTRL_SYNCT_SYNC", 0x05}, {"IBIAS_KRUM_SYNC", 0x06},
-        {"COMP_LIN", 0x07},      {"FC_BIAS_LIN", 0x08},  {"KRUM_CURR_LIN", 0x09}, {"LDAC_LIN", 0x0A},        {"PA_IN_BIAS_LIN", 0x0B}, {"COMP_DIFF", 0x0C},        {"PRECOMP_DIFF", 0x0D},
-        {"FOL_DIFF", 0x0E},      {"PRMP_DIFF", 0x0F},    {"LCC_DIFF", 0x10},      {"VFF_DIFF", 0x11},        {"VTH1_DIFF", 0x12},      {"VTH2_DIFF", 0x13},        {"CDR_CP_IBIAS", 0x14},
-        {"VCO_BUFF_BIAS", 0x15}, {"VCO_IBIAS", 0x16},    {"CML_TAP0_BIAS", 0x17}, {"CML_TAP1_BIAS", 0x18},   {"CML_TAP2_BIAS", 0x19}};
+        {"Iref", 0x00},          {"IBIASP1_SYNC", 0x01}, {"IBIASP2_SYNC", 0x02},   {"IBIAS_DISC_SYNC", 0x03}, {"IBIAS_SF_SYNC", 0x04},  {"ICTRL_SYNCT_SYNC", 0x05}, {"IBIAS_KRUM_SYNC", 0x06},
+        {"COMP_LIN", 0x07},      {"FC_BIAS_LIN", 0x08},  {"KRUM_CURR_LIN", 0x09},  {"LDAC_LIN", 0x0A},        {"PA_IN_BIAS_LIN", 0x0B}, {"COMP_DIFF", 0x0C},        {"PRECOMP_DIFF", 0x0D},
+        {"FOL_DIFF", 0x0E},      {"PRMP_DIFF", 0x0F},    {"LCC_DIFF", 0x10},       {"VFF_DIFF", 0x11},        {"VTH1_DIFF", 0x12},      {"VTH2_DIFF", 0x13},        {"CDR_CP_IBIAS", 0x14},
+        {"VCO_BUFF_BIAS", 0x15}, {"VCO_IBIAS", 0x16},    {"DAC_CML_BIAS_0", 0x17}, {"DAC_CML_BIAS_1", 0x18},  {"DAC_CML_BIAS_2", 0x19}};
 
     const std::unordered_map<std::string, uint32_t> voltageMultiplexer = {
         {"ADCbandgap", 0x00},      {"CAL_MED", 0x01},         {"CAL_HI", 0x02},         {"TEMPSENS_1", 0x03},      {"RADSENS_1", 0x04},       {"TEMPSENS_2", 0x05},      {"RADSENS_2", 0x06},

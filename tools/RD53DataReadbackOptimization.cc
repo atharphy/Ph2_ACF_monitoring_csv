@@ -131,19 +131,19 @@ void DataReadbackOptimization::run()
     ContainerFactory::copyAndInitChip<GenericDataArray<TAPsize>>(*fDetectorContainer, theTAP2scanContainer);
 
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x0);
-    DataReadbackOptimization::scanDac("CML_TAP0_BIAS", dacListTAP0, &theTAP0scanContainer);
-    DataReadbackOptimization::analyze("CML_TAP0_BIAS", dacListTAP0, theTAP0scanContainer, theTAP0Container);
+    DataReadbackOptimization::scanDac("DAC_CML_BIAS_0", dacListTAP0, &theTAP0scanContainer);
+    DataReadbackOptimization::analyze("DAC_CML_BIAS_0", dacListTAP0, theTAP0scanContainer, theTAP0Container);
 
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x1);
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_INV_TAP", invTAP1);
-    DataReadbackOptimization::scanDac("CML_TAP1_BIAS", dacListTAP1, &theTAP1scanContainer);
-    DataReadbackOptimization::analyze("CML_TAP1_BIAS", dacListTAP1, theTAP1scanContainer, theTAP1Container);
+    DataReadbackOptimization::scanDac("DAC_CML_BIAS_1", dacListTAP1, &theTAP1scanContainer);
+    DataReadbackOptimization::analyze("DAC_CML_BIAS_1", dacListTAP1, theTAP1scanContainer, theTAP1Container);
 
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x3);
     for(const auto cBoard: *fDetectorContainer)
         static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_INV_TAP", bits::pack<1, 1>(invTAP2, invTAP1));
-    DataReadbackOptimization::scanDac("CML_TAP2_BIAS", dacListTAP2, &theTAP2scanContainer);
-    DataReadbackOptimization::analyze("CML_TAP2_BIAS", dacListTAP2, theTAP2scanContainer, theTAP2Container);
+    DataReadbackOptimization::scanDac("DAC_CML_BIAS_2", dacListTAP2, &theTAP2scanContainer);
+    DataReadbackOptimization::analyze("DAC_CML_BIAS_2", dacListTAP2, theTAP2scanContainer, theTAP2Container);
 
     // ################
     // # Error report #

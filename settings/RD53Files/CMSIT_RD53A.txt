@@ -115,9 +115,9 @@ CDR_CP_IBIAS              0x42          0b0000110010            0b0000110010    
 CDR_VCO_IBIAS             0x43          0b0111110100            0b0111110100                       10
 SER_SEL_OUT               0x44          0b01010101              0b01010101                          8
 CML_CONFIG                0x45          0b00111111              0b00111111                          8
-CML_TAP0_BIAS             0x46          0b0111110100            0b0111110100                       10
-CML_TAP1_BIAS             0x47          0b0000000000            0b0000000000                       10
-CML_TAP2_BIAS             0x48          0b0000000000            0b0000000000                       10
+DAC_CML_BIAS_0            0x46          0b0111110100            0b0111110100                       10
+DAC_CML_BIAS_1            0x47          0b0000000000            0b0000000000                       10
+DAC_CML_BIAS_2            0x48          0b0000000000            0b0000000000                       10
 AURORA_CC_CONFIG          0x49          0b01100111              0b01100111                          8
 AURORA_CB_CONFIG0         0x4A          0b11110000              0b11110000                          8
 AURORA_CB_CONFIG1         0x4B          0b0000000000001111      0b0000000000001111                 16

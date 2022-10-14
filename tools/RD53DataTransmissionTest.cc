@@ -201,8 +201,8 @@ void DataTransmissionTest::binSearch(DetectorDataContainer* theTAP0scanContainer
     for(auto i = 0u; i < 11u; i++)
     {
         // Setting new TAP0 value
-        LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << "CML_TAP0_BIAS" << BOLDMAGENTA << " value = " << BOLDYELLOW << currentTAP0 << BOLDMAGENTA << " <<<" << RESET;
-        for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, "CML_TAP0_BIAS", currentTAP0);
+        LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << "DAC_CML_BIAS_0" << BOLDMAGENTA << " value = " << BOLDYELLOW << currentTAP0 << BOLDMAGENTA << " <<<" << RESET;
+        for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, "DAC_CML_BIAS_0", currentTAP0);
 
         // Run BER test
         BERtest::run();

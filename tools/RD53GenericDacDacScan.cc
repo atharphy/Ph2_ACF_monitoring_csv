@@ -178,9 +178,9 @@ void GenericDacDacScan::analyze()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    auto best    = 0.;
-                    int  regVal1 = 0;
-                    int  regVal2 = 0;
+                    float  best    = 0u;
+                    size_t regVal1 = 0u;
+                    size_t regVal2 = 0u;
 
                     for(auto i = 0u; i < dac1List.size(); i++)
                         for(auto j = 0u; j < dac2List.size(); j++)

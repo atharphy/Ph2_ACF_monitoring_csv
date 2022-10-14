@@ -162,8 +162,8 @@ void Latency::analyze()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    auto best   = 0.;
-                    int  regVal = 0;
+                    float best   = 0;
+                    int   regVal = 0;
 
                     for(auto i = 0u; i < dacList.size(); i++)
                     {

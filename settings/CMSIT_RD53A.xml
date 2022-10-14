@@ -59,7 +59,7 @@
               GP_LVDS_ROUTE          =    "0"
               LATENCY_CONFIG         =  "136"
               CLK_DATA_DELAY         =    "0"
-              CAL_EDGE_FINE_DELAY    =    "9"
+              CAL_EDGE_FINE_DELAY    =    "0"
               ANALOG_INJ_MODE        =    "0"
 
               VOLTAGE_TRIM_DIG       =   "16"
@@ -67,9 +67,9 @@
 
               CML_CONFIG_SER_EN_TAP  = "0b00"
               CML_CONFIG_SER_INV_TAP = "0b00"
-              CML_TAP0_BIAS          =  "500"
-              CML_TAP1_BIAS          =    "0"
-              CML_TAP2_BIAS          =    "0"
+              DAC_CML_BIAS_0         =  "500"
+              DAC_CML_BIAS_1         =    "0"
+              DAC_CML_BIAS_2         =    "0"
 
               MONITOR_CONFIG_ADC     =    "5"
               MONITOR_CONFIG_BG      =   "12"
