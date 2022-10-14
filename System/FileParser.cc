@@ -1583,4 +1583,5 @@ std::string FileParser::parseMonitor(const std::string& pFilename, DetectorMonit
     if(theDetectorMonitorConfig.getNumberOfMonitoredRegisters() == 0) return "None";
     return theMonitorNode.attribute("type").value();
 }
+
 } // namespace Ph2_System

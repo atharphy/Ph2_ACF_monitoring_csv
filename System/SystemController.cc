@@ -494,7 +494,7 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
     // # Configuration parameters #
     // ############################
     bool resetMask = SystemController::findValueInSettings<double>("ResetMask");
-    bool resetTDAC = SystemController::findValueInSettings<double>("ResetTDAC");
+    int  resetTDAC = SystemController::findValueInSettings<double>("ResetTDAC");
 
     // ############################
     // # Configure frontend chips #
@@ -509,7 +509,7 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
                 LOG(INFO) << GREEN << "Configuring RD53: " << BOLDYELLOW << +cChip->getId() << RESET << GREEN " (fused ID " << BOLDYELLOW << +fReadoutChipInterface->ReadChipFuseID(cChip) << RESET
                           << GREEN << ")" << RESET;
                 if(resetMask == true) static_cast<RD53*>(cChip)->enableAllPixels();
-                if(resetTDAC == true)
+                if(resetTDAC >= 0)
                     static_cast<RD53*>(cChip)->resetTDAC(RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->nTDACvalues / 2);
                 static_cast<RD53*>(cChip)->copyMaskToDefault();
                 static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);

@@ -164,13 +164,13 @@
 
   <Settings>
     <!-- === Calibration parameters ===
-         INJtype               = 0: no injection;                             INJtype               = 1: analog;                                    INJtype = 2: digital
-         ResetMask             = 0: do not enable masked pixels;              ResetMask             = 1: enable all pixels
-         ResetTDAC             = 0: do not reset TDAC;                        ResetTDAC             = 1: reset TDAC to range midpoint
-         DoOnlyNGroups         = 0: do not consider this option;              DoOnlyNGroups         = n: run only on the specified number of groups
-         DisplayHisto          = 0: don't display;                            DisplayHisto          = 1: display
-         UpdateChipCfg         = 0: don't update;                             UpdateChipCfg         = 1: update
-         DisableChannelsAtExit = 0: don't disable all channels at exit        DisableChannelsAtExit = 1: disable all channels at exit
+         INJtype               = 0:  no injection;                       INJtype               = 1: analog;                                     INJtype = 2: digital
+         ResetMask             = 0:  do not enable masked pixels;        ResetMask             = 1: enable all pixels
+         ResetTDAC             = -1: do not reset TDAC;                  ResetTDAC             >=0: reset all TDACs to value
+         DoOnlyNGroups         = 0:  do not consider this option;        DoOnlyNGroups         = n: run only on the specified number of groups
+         DisplayHisto          = 0:  don't display;                      DisplayHisto          = 1: display
+         UpdateChipCfg         = 0:  don't update;                       UpdateChipCfg         = 1: update
+         DisableChannelsAtExit = 0:  don't disable all channels at exit  DisableChannelsAtExit = 1: disable all channels at exit
 
          TargetCharge  (thradj):           average charge (electrons) corresponding to ToT point = max value - 1
          TargetOcc     (thrmin):           average pixel occupancy
@@ -196,7 +196,7 @@
     <Setting name="nTRIGxEvent">          10 </Setting>
     <Setting name="INJtype">               1 </Setting>
     <Setting name="ResetMask">             0 </Setting>
-    <Setting name="ResetTDAC">             0 </Setting>
+    <Setting name="ResetTDAC">            -1 </Setting>
 
     <Setting name="ROWstart">              0 </Setting>
     <Setting name="ROWstop">             335 </Setting>
