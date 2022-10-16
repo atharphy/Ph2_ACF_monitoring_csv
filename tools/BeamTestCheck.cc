@@ -189,23 +189,23 @@ void BeamTestCheck::Validate()
     // read events
     if(fReadoutMode == 0) ContinousReadout();
 
-    // LOG(INFO) << BOLDYELLOW << "Creating root file [hit map] from raw file" << RESET;
-    // for(auto cBoard: *fDetectorContainer)
-    // {
-    //     fBeBoardInterface->setBoard(cBoard->getId());
-    //     const std::vector<Event*>& cEvents              = this->GetEvents();
-    //     float                      cNormalizationFactor = fNevents; // cEvents.size() / (1 + cTriggerMult);
-    //     LOG(INFO) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " events from BeBoard#" << +cBoard->getId() << " - normalization factor for occupancy is " << +cNormalizationFactor << RESET;
-    //     BeBoardRegMap              cRegMap              = cBoard->getBeBoardRegMap();
-    //     std::string                cMultRegName         = "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity";
-    //     size_t                     cTriggerMult         = (fReadoutMode == 0) ? fBeBoardInterface->ReadBoardReg(cBoard, cMultRegName) : cRegMap[cMultRegName];
-    //     for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++) { Count(cEvents, cTriggerId, 1); }
-    // }
-    // #ifdef __USE_ROOT__
-    //     fDQMHistogrammer.fillHitMaps(fHitMap, fStubMap, fHitContainerTDC);
-    //     fDQMHistogrammer.fillBendPlots(fBendMap);
-    //     fDQMHistogrammer.fillCountPlots(fEventSubSet, fStubSubSet);
-    // #endif
+    LOG(INFO) << BOLDYELLOW << "Creating root file [hit map] from raw file" << RESET;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        fBeBoardInterface->setBoard(cBoard->getId());
+        const std::vector<Event*>& cEvents              = this->GetEvents();
+        float                      cNormalizationFactor = fNevents; // cEvents.size() / (1 + cTriggerMult);
+        LOG(INFO) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " events from BeBoard#" << +cBoard->getId() << " - normalization factor for occupancy is " << +cNormalizationFactor << RESET;
+        BeBoardRegMap              cRegMap              = cBoard->getBeBoardRegMap();
+        std::string                cMultRegName         = "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity";
+        size_t                     cTriggerMult         = (fReadoutMode == 0) ? fBeBoardInterface->ReadBoardReg(cBoard, cMultRegName) : cRegMap[cMultRegName];
+        for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++) { Count(cEvents, cTriggerId, 1); }
+    }
+    #ifdef __USE_ROOT__
+        fDQMHistogrammer.fillHitMaps(fHitMap, fStubMap, fHitContainerTDC);
+        fDQMHistogrammer.fillBendPlots(fBendMap);
+        fDQMHistogrammer.fillCountPlots(fEventSubSet, fStubSubSet);
+    #endif
 }
 //
 void BeamTestCheck::CheckWithInternal(uint8_t pContinousReadout)
@@ -1203,7 +1203,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                             bool     cValidCoords = (cRow < cMaxRows && cCol < cMaxCols);
 
                             if(!cValidCoords)
-                                LOG(INFO) << BOLDRED << "\t\t.. Stub in strip# " << +cStub.getPosition() << " Row# " << +cStub.getRow() << " Bend " << +cStub.getBend()
+                                LOG(DEBUG) << BOLDRED << "\t\t.. Stub in strip# " << +cStub.getPosition() << " Row# " << +cStub.getRow() << " Bend " << +cStub.getBend()
                                           << " i.e. seed in Chip channel# [R" << +cRow << ",C" << +cCol << " bend in strips is " << cBend << " bend index is " << cBendIndx << RESET;
                             else
                                 LOG(DEBUG) << BOLDBLUE << "\t\t.. Hybrid#" << +cHybrid->getId() << " Chip#" << +cChip->getId() << " Stub in strip# " << +cStub.getPosition() << " Row# "
