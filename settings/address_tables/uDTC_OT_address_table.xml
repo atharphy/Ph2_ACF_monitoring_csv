@@ -14,7 +14,7 @@
     </node>
 
     <node id="fc7_daq_cnfg" address="0x40010000" permission="rw" > 
-        	<node id="sfp_ddmi"           address="0xA000">
+        	<node id="sfp_ddmi"           address="0xD009">
 	            <node id="enable"                      mask="0x00080000"/>
 	            <node id="channel_number"              mask="0x00070000"/>
 	            <node id="data_wr"                     mask="0x0000ff00"/>
@@ -787,12 +787,12 @@
 
         </node>
             
-        <node id="sfp_ddmi"           address="0xA000">
-            <node id="data_l8"                     mask="0x0000ffff"/>
-            <node id="data_l12"                    mask="0xffff0000"/>
+        <node id="sfp_ddmi"                  address="0xD006">
+            <node id="data_l8"                      mask="0x0000ffff"/>
+            <node id="data_l12"                     mask="0xffff0000"/>
         </node>
         
-        <node id="sfp_ddmi_status"           address="0xA001">
+        <node id="sfp_ddmi_status"           address="0xD007">
             <node id="error_l8"                     mask="0x00000003"/>
             <node id="busy_l8"                      mask="0x00000004"/>
             <node id="error_l12"                    mask="0x00000018"/>
