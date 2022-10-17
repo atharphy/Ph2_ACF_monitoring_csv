@@ -625,6 +625,7 @@ int main(int argc, char* argv[])
         cPedestalEqualization.writeObjects();
         cPedestalEqualization.dumpConfigFiles();
         cPedestalEqualization.resetPointers();
+        t.stop();
         t.show("Time to tune the front-ends on the system: ");
         // // reset
         // cTool.fDetectorContainer->resetReadoutChipQueryFunction();

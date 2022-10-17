@@ -324,6 +324,7 @@ uint16_t MPAInterface::regRow(Chip* pChip, int pBaseRegister, int pRow)
 // Would want  to do a rowwise broadcast -- maybe using col 0  for bit mask?
 bool MPAInterface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify)
 {
+
     auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>>(cChip->getChipOriginalMask());
     auto groupToMask   = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>>(group);
 
@@ -340,7 +341,7 @@ bool MPAInterface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<Ch
     {
         auto shifted = std::bitset<NSSACHANNELS * NMPACOLS>(0x1) << ipix;
         bool bitval  = bool(((cBitset & shifted) >> ipix).to_ulong());
-
+        if (not bitval)LOG(INFO) << BOLDBLUE << "MASKED " <<ipix<< RESET;
         // uint32_t           cPixelIds = ipix;
         // std::ostringstream cRegName;
         // cRegName << "ENFLAGS_P" << std::to_string(cPixelIds+1);
