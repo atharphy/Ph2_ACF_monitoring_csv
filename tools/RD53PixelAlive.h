@@ -72,6 +72,8 @@ class PixelAlive : public Tool
         Digital
     };
 
+    const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
+
     size_t rowStart;
     size_t rowStop;
     size_t colStart;

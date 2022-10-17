@@ -18,6 +18,8 @@
 #include "../Utils/ThresholdAndNoise.h"
 #include "Tool.h"
 
+#include <algorithm>
+
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53SCurveHistograms.h"
 #include "TApplication.h"
@@ -67,6 +69,8 @@ class SCurve : public Tool
     void chipErrorReport() const;
 
   protected:
+    const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
+
     size_t rowStart;
     size_t rowStop;
     size_t colStart;

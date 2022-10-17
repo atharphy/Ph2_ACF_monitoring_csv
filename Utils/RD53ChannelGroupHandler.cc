@@ -10,17 +10,23 @@
 #include "RD53ChannelGroupHandler.h"
 
 RD53ChannelGroupHandler::RD53ChannelGroupHandler(size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nRows, size_t nCols, uint8_t groupType, size_t hitPerCol, size_t onlyNGroups)
-    : ChannelGroupHandler(), regionOfInterest(nRows, nCols), groupType(groupType), hitPerCol(hitPerCol), onlyNGroups(onlyNGroups)
+    : ChannelGroupHandler(), regionOfInterest(nRows, nCols), enabledGroups(nRows, nCols), groupType(groupType), hitPerCol(hitPerCol), onlyNGroups(onlyNGroups)
 {
     for(auto col = colStart; col <= colStop; col++)
-        for(auto row = rowStart; row <= rowStop; ++row) regionOfInterest.enableChannel(row, col);
+        for(auto row = rowStart; row <= rowStop; row++) regionOfInterest.enableChannel(row, col);
 
-    allChannelGroup_ = std::shared_ptr<ChannelGroupBase>(&regionOfInterest, [](auto*) {});
+    allChannelGroup_ = std::shared_ptr<ChannelGroupBase>(&enabledGroups, [](auto*) {});
 
     if(groupType == RD53GroupType::AllPixels)
-        numberOfGroups_ = 1;
+    {
+        numberOfGroups_  = 1;
+        allChannelGroup_ = std::shared_ptr<ChannelGroupBase>(&regionOfInterest, [](auto*) {});
+    }
     else
-        numberOfGroups_ = onlyNGroups == 0 ? (nRows / hitPerCol) : onlyNGroups;
+    {
+        numberOfGroups_  = onlyNGroups == 0 ? (nRows / hitPerCol) : onlyNGroups;
+        allChannelGroup_ = std::shared_ptr<ChannelGroupBase>(&enabledGroups, [](auto*) {});
+    }
 }
 
 const std::shared_ptr<ChannelGroupBase> RD53ChannelGroupHandler::getTestGroup(int groupNumber)
@@ -38,7 +44,11 @@ const std::shared_ptr<ChannelGroupBase> RD53ChannelGroupHandler::getTestGroup(in
                 auto row = (RD53Constants::NROW_CORE * col + i * nRows / hitPerCol) % nRows;
                 row += groupNumber;
                 row %= nRows;
-                if(regionOfInterest.isChannelEnabled(row, col) == true) channelGroup->enableChannel(row, col);
+                if(regionOfInterest.isChannelEnabled(row, col) == true)
+                {
+                    channelGroup->enableChannel(row, col);
+                    allChannelGroup_->enableChannel(row, col);
+                }
             }
     }
 

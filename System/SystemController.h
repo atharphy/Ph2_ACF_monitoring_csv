@@ -162,7 +162,7 @@ class SystemController
     /*!
      * \brief Initialize the Hardware via a config file
      * \param pFilename : HW Description file
-     *\param os         : ostream to dump output
+     * \param os        : ostream to dump output
      */
     void InitializeHw(const std::string& pFilename, std::ostream& os = std::cout, bool streamData = false, uint16_t DQMportNumber = 6000, uint16_t monitorDQMportNumber = 7000);
 
@@ -176,14 +176,17 @@ class SystemController
     /*!
      * \brief Configure the Hardware with XML file indicated values
      */
-    void ConfigureHw(bool bIgnoreI2c = false, bool pReInitialize = true);
+    void ConfigureHw(bool bIgnoreI2c = false, bool pReInitialize = true, bool doAlsoFrontend = true);
+
     // IT + OT specific configurations
     /*!
      * \brief Configure the Hardware with XML file indicated values
      */
     void ConfigureIT(Ph2_HwDescription::BeBoard* pBoard);
+    void ConfigureFrontendIT(Ph2_HwDescription::BeBoard* pBoard);
     void InitializeOT(Ph2_HwDescription::BeBoard* pBoard);
     void ConfigureOT(Ph2_HwDescription::BeBoard* pBoard);
+
     // OT specific configurations for 2S + PS modules
     /*!
      * \brief Configure the Hardware with XML file indicated values
@@ -191,6 +194,7 @@ class SystemController
     void ModuleStartUpPS(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     void ModuleStartUp2S(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     bool CicStartUp(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool cStartUpSequence);
+
     /*!
      * \brief Run Bit Error Rate test
      * \param chain2test     : which part of the chain to be tested
@@ -198,7 +202,6 @@ class SystemController
      * \param frames_or_time : time [s] or number of frames
      * \return: none
      */
-
     void RunBERtest(std::string chain2test, bool given_time, double frames_or_time);
 
     /*!
@@ -234,7 +237,7 @@ class SystemController
     virtual void Stop();
     virtual void Pause();
     virtual void Resume();
-    virtual void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000);
+    virtual void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000, bool doAlsoFrontend = true);
 
     void StartBoard(Ph2_HwDescription::BeBoard* pBoard);
     void StopBoard(Ph2_HwDescription::BeBoard* pBoard);
@@ -352,6 +355,7 @@ class SystemController
 
     void setInterfaceInitialization(uint8_t pCnfg) { fInitializeInterfaces = pCnfg; }
     void disableAllChannels();
+    void DumpFrontendRegisters();
 
   private:
     void SetFuture(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);

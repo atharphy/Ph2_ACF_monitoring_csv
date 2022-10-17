@@ -13,7 +13,6 @@ namespace Ph2_HwDescription
 {
 lpGBT::lpGBT(uint8_t pBeId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChipId, const std::string& fileName) : Chip(pBeId, FMCId, pOpticalGroupId, 0, pChipId)
 {
-    // + pChipId to account for eventually more than one lpGBT for IT systems
     fChipAddress   = 0x70 + pChipId;
     configFileName = fileName;
     phaseRxAligned = false; // @TMP@
@@ -86,17 +85,15 @@ void lpGBT::loadfRegMap(const std::string& fileName)
         file.close();
     }
     else
-    {
-        LOG(ERROR) << BOLDRED << "The lpGBT file settings " << BOLDYELLOW << fileName << BOLDRED << " does not exist" << RESET;
-        exit(EXIT_FAILURE);
-    }
+        throw Exception("[lpGBT::loadfRegMapd] The LpGBT file settings does not exist");
 }
 
-void lpGBT::saveRegMap(const std::string& fileName)
+void lpGBT::saveRegMap(const std::string& fName2Add)
 {
     const int Nspaces = 26;
 
-    std::ofstream file(fileName.c_str(), std::ios::out | std::ios::trunc);
+    std::string   output = this->getFileName(fName2Add);
+    std::ofstream file(output.c_str(), std::ios::out | std::ios::trunc);
 
     if(file)
     {
@@ -127,6 +124,7 @@ void lpGBT::saveRegMap(const std::string& fileName)
         file.close();
     }
     else
-        LOG(ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << fileName << RESET;
+        LOG(ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << output << RESET;
 }
+
 } // namespace Ph2_HwDescription

@@ -110,6 +110,9 @@ export EuDaqFlag='-D__EUDAQ__'
 # Compilation flags #
 #####################
 
+# C++ standard
+export STDCXX="14"
+
 # Stand-alone application, without data streaming
 export CompileForHerd=false
 export CompileForShep=false
@@ -153,4 +156,4 @@ if [[ $1 == "ci" ]]; then
     export UseTCUSBTcpServer=false
 fi
 
-echo "=== DONE ==="
+echo "=== DONE: you can now run cmake ==="

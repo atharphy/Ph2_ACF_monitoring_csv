@@ -53,8 +53,6 @@ class ThrMinimization : public PixelAlive
 #endif
 
   private:
-    const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
-
     DetectorDataContainer theThrContainer;
 
     void fillHisto();
