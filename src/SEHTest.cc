@@ -420,10 +420,10 @@ int main(int argc, char* argv[])
         else if(cmd.foundOption("test-external-pattern"))
         {
             bool cStatus = true;
-            while(true){
+            //while(true){
             cStatus      = cSEHTester.LpGBTCheckULPattern(true, cExternalPattern);
-            std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-            }
+            //std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+            //}
 #ifdef __USE_ROOT__
             cTool.fillSummaryTree("status_CicOutTest", (cStatus) ? 1 : 0);
 #endif
