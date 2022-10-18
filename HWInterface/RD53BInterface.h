@@ -78,8 +78,9 @@ class RD53BInterface : public RD53Interface
     // ###########################
     // # Dedicated to monitoring #
     // ###########################
-  protected:
-    uint32_t getADCobservable(const std::string& observableName, bool* isCurrentNotVoltage) override;
+  private:
+    uint32_t getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage) override;
+    uint32_t measureADC(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data) override;
 };
 
 } // namespace Ph2_HwInterface

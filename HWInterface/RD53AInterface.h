@@ -46,8 +46,8 @@ class RD53AInterface : public RD53Interface
                                                                                 {"CLK_DATA_DELAY_CLK", {"CLK_DATA_DELAY", 4}},
                                                                                 {"CLK_DATA_DELAY_2INV", {"CLK_DATA_DELAY", 5}},
 
-                                                                                {"MONITOR_CONFIG_ADC", {"MONITOR_CONFIG", 0}},
-                                                                                {"MONITOR_CONFIG_BG", {"MONITOR_CONFIG", 6}},
+                                                                                {"MONITOR_CONFIG_ADC", {"MonitorConfig", 0}},
+                                                                                {"MONITOR_CONFIG_BG", {"MonitorConfig", 6}},
 
                                                                                 {"VOLTAGE_TRIM_DIG", {"VOLTAGE_TRIM", 0}},
                                                                                 {"VOLTAGE_TRIM_ANA", {"VOLTAGE_TRIM", 5}},
@@ -68,8 +68,9 @@ class RD53AInterface : public RD53Interface
     // ###########################
     // # Dedicated to monitoring #
     // ###########################
-  protected:
-    uint32_t getADCobservable(const std::string& observableName, bool* isCurrentNotVoltage) override;
+  private:
+    uint32_t getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage) override;
+    uint32_t measureADC(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data) override;
 };
 
 } // namespace Ph2_HwInterface

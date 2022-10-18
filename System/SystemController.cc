@@ -396,8 +396,6 @@ void SystemController::ReadSystemMonitor(BeBoard* pBoard, const std::vector<std:
                               << +cChip->getId() << RESET << GREEN << "]" << RESET;
                     fBeBoardInterface->ReadHybridVoltageMonitor(fReadoutChipInterface, cChip);
                     fBeBoardInterface->ReadHybridTemperatureMonitor(fReadoutChipInterface, cChip);
-                    fBeBoardInterface->ReadChipMonitor(fReadoutChipInterface, cChip, args);
-                    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
                 }
 }
 

@@ -296,9 +296,9 @@
   <MonitoringSettings>
     <Monitoring type="RD53" enable="0">
       <MonitoringSleepTime> 1000 </MonitoringSleepTime>
-      <MonitoringElement device="RD53" register="VIN_ana_ShuLDO"  enable="0"/>
+      <MonitoringElement device="RD53" register="VIN_ana_ShuLDO"  enable="1"/>
       <MonitoringElement device="RD53" register="VOUT_ana_ShuLDO" enable="1"/>
-      <MonitoringElement device="RD53" register="VIN_dig_ShuLDO"  enable="0"/>
+      <MonitoringElement device="RD53" register="VIN_dig_ShuLDO"  enable="1"/>
       <MonitoringElement device="RD53" register="VOUT_dig_ShuLDO" enable="1"/>
       <MonitoringElement device="RD53" register="ADCbandgap"      enable="1"/>
       <MonitoringElement device="RD53" register="Iref"            enable="1"/>

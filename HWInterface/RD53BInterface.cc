@@ -461,7 +461,11 @@ uint32_t RD53BInterface::ReadChipFuseID(Chip* pChip)
 // # Dedicated to monitoring #
 // ###########################
 
-uint32_t RD53BInterface::getADCobservable(const std::string& observableName, bool* isCurrentNotVoltage)
+uint32_t RD53BInterface::getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage)
+// ############################################
+// # Possible observable name values are also #
+// # - INTERNAL_NTC                           #
+// ############################################
 {
     uint32_t voltageObservable(0), currentObservable(0);
 
@@ -535,7 +539,12 @@ uint32_t RD53BInterface::getADCobservable(const std::string& observableName, boo
                                                                           {"VrefD", 0x27}};
 
     auto search = currentMultiplexer.find(observableName);
-    if(search == currentMultiplexer.end())
+    if(observableName == "INTERNAL_NTC")
+    {
+        currentObservable = currentMultiplexer.find("NTC_CURR")->second;
+        voltageObservable = voltageMultiplexer.find("I_MUX")->second;
+    }
+    else if(search == currentMultiplexer.end())
     {
         if((search = voltageMultiplexer.find(observableName)) == voltageMultiplexer.end())
         {
@@ -544,16 +553,29 @@ uint32_t RD53BInterface::getADCobservable(const std::string& observableName, boo
         }
         else
             voltageObservable = search->second;
-        if(isCurrentNotVoltage != nullptr) *isCurrentNotVoltage = false;
+        isCurrentNotVoltage = false;
     }
     else
     {
-        currentObservable = search->second;
-        voltageObservable = voltageMultiplexer.find("IMUXoutput")->second;
-        if(isCurrentNotVoltage != nullptr) *isCurrentNotVoltage = true;
+        currentObservable   = search->second;
+        isCurrentNotVoltage = true;
     }
 
-    return bits::pack<1, 6, 7>(true, currentObservable, voltageObservable);
+    return bits::pack<1, 6, 6>(true, currentObservable, voltageObservable);
+}
+
+uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
+{
+    this->setBoard(pChip->getBeBoardId());
+
+    const uint16_t GlbPulseVal = RD53Interface::ReadChipReg(pChip, "GlobalPulseConf");
+
+    RD53Interface::WriteChipReg(pChip, "MonitorConfig", data, false); // 14 bits: bit 12 enable, bits 6:11 I-Mon, bits 0:5 V-Mon
+    RD53BInterface::SendGlobalPulse(pChip, 0x1000, 0x0004);           // Trigger Monitor Data to start conversion
+    RD53Interface::WriteChipReg(pChip, "MonitorConfig", 0, false);    // Stop monitoring
+    RD53BInterface::SendGlobalPulse(pChip, GlbPulseVal, 0x0004);      // Restore value in Global Pulse Route
+
+    return RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
 }
 
 } // namespace Ph2_HwInterface

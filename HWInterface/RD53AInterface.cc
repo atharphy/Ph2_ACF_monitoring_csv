@@ -368,7 +368,7 @@ void RD53AInterface::WriteClokDataDelay(Chip* pChip, uint16_t value)
 // # Dedicated to monitoring #
 // ###########################
 
-uint32_t RD53AInterface::getADCobservable(const std::string& observableName, bool* isCurrentNotVoltage)
+uint32_t RD53AInterface::getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage)
 {
     uint32_t voltageObservable(0), currentObservable(0);
 
@@ -395,16 +395,42 @@ uint32_t RD53AInterface::getADCobservable(const std::string& observableName, boo
         }
         else
             voltageObservable = search->second;
-        if(isCurrentNotVoltage != nullptr) *isCurrentNotVoltage = false;
+        isCurrentNotVoltage = false;
     }
     else
     {
-        currentObservable = search->second;
-        voltageObservable = voltageMultiplexer.find("IMUXoutput")->second;
-        if(isCurrentNotVoltage != nullptr) *isCurrentNotVoltage = true;
+        currentObservable   = search->second;
+        voltageObservable   = voltageMultiplexer.find("IMUXoutput")->second;
+        isCurrentNotVoltage = true;
     }
 
     return bits::pack<1, 6, 7>(true, currentObservable, voltageObservable);
+}
+
+uint32_t RD53AInterface::measureADC(ReadoutChip* pChip, uint32_t data)
+{
+    this->setBoard(pChip->getBeBoardId());
+
+    const uint16_t GLOBAL_PULSE_ROUTE = pChip->getRegItem("GLOBAL_PULSE_ROUTE").fAddress;
+    const uint8_t  chipID             = pChip->getId();
+    const uint16_t trimADC            = bits::pack<1, 5, 6>(true, pChip->getRegItem("MONITOR_CONFIG_BG").fValue, pChip->getRegItem("MONITOR_CONFIG_ADC").fValue);
+    // [10:6] band-gap trim [5:0] ADC trim. According to wafer probing they should give an average VrefADC of 0.9 V
+    const uint16_t GlbPulseVal = RD53Interface::ReadChipReg(pChip, "GLOBAL_PULSE_ROUTE");
+
+    std::vector<uint16_t> commandList;
+
+    RD53ACmd::serialize(RD53ACmd::WrReg{chipID, pChip->getRegItem("MonitorConfig").fAddress, trimADC}, commandList);
+    RD53ACmd::serialize(RD53ACmd::WrReg{chipID, GLOBAL_PULSE_ROUTE, 0x0040}, commandList); // Reset Monitor Data
+    RD53ACmd::serialize(RD53ACmd::GlobalPulse{pChip->getId(), 0x0004}, commandList);
+    RD53ACmd::serialize(RD53ACmd::WrReg{chipID, GLOBAL_PULSE_ROUTE, 0x0008}, commandList); // Clear Monitor Data
+    RD53ACmd::serialize(RD53ACmd::GlobalPulse{pChip->getId(), 0x0004}, commandList);
+    RD53ACmd::serialize(RD53ACmd::WrReg{chipID, pChip->getRegItem("MONITOR_SELECT").fAddress, data}, commandList); // 14 bits: bit 13 enable, bits 7:12 I-Mon, bits 0:6 V-Mon
+    RD53ACmd::serialize(RD53ACmd::WrReg{chipID, GLOBAL_PULSE_ROUTE, 0x1000}, commandList);                         // Trigger Monitor Data to start conversion
+    RD53ACmd::serialize(RD53ACmd::GlobalPulse{pChip->getId(), 0x0004}, commandList);
+    RD53ACmd::serialize(RD53ACmd::WrReg{chipID, GLOBAL_PULSE_ROUTE, GlbPulseVal}, commandList); // Restore value in Global Pulse Route
+
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pChip->getHybridId());
+    return RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
 }
 
 } // namespace Ph2_HwInterface
