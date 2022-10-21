@@ -1033,6 +1033,46 @@ std::pair<bool, uint8_t> OTHybridTester::PhaseTuneLineEleFC7(uint8_t pHybrid, ui
     return cLineStatus;
 }
 
+void OTHybridTester::freeTest()
+{
+    D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
+    int                 cTrim           = -1;
+    for(auto cBoard: *fDetectorContainer)
+    {
+        if(cBoard->at(0)->flpGBT == nullptr) continue;
+        for(auto cOpticalGroup: *cBoard)
+        {
+            uint16_t offset;
+            uint16_t GNDmVREF;
+            uint16_t VREFmGND;
+            uint16_t VDDmVREF;
+            uint16_t VREFmVDD;
+            // flpGBTInterface->GetExternalController()->getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
+            std::cout << "trim" << "," << "offset" << "," << "GNDmVREF" << ","<< "VREFmGND" << "," << "VDDmVREF" << ","<< "VREFmVDD" << ","<< std::endl;
+
+            for(int trim=0; trim<0xff;trim+=0x1){
+                clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "VREFTUNE",trim);
+                clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "ADCMon", 0);
+                offset = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "VREF/2", "VREF/2");
+                GNDmVREF = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "VDD", "VREF/2");
+                VREFmGND = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "VREF/2", "VDD");
+                clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "ADCMon", 0xff);
+                VDDmVREF = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "VDD", "VREF/2");
+                VREFmVDD = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "VREF/2", "VDD"); 
+                //LOG(INFO) << BOLDBLUE << "Trim value " << +i << RESET;
+
+                // clpGBTInterface->GetADCGain(cOpticalGroup->flpGBT);
+                // cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "ADC1");
+                // LOG(INFO) << BOLDBLUE << "ADC VMON_P1V25 " << +cADCValue << RESET;
+                std::cout<<std::dec << trim << "," << offset << "," << GNDmVREF << ","<< VREFmGND << "," << VDDmVREF << ","<< VREFmVDD << ","<< std::endl;
+            }
+            // for(int i=0; i<0xff;i+=4){
+            //     clpGBTInterface->ReadChipFusedBlock(cOpticalGroup->flpGBT, 0,i);
+            // }
+        }
+    }
+}
+
 #ifdef __TCP_SERVER__
 float OTHybridTester::getMeasurement(std::string name)
 {
