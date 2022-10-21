@@ -580,7 +580,7 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
         fillSummaryTree("ExternalBiasResult", 0);
     }
 }
-void SEHTester::SetLoad(uint32_t pRightLoadValue, uint32_t pLeftLoadValue )
+void SEHTester::SetLoad(uint32_t pRightLoadValue, uint32_t pLeftLoadValue)
 {
     flpGBTInterface->GetExternalController()->getInterface().set_load2(true, false, pLeftLoadValue);
     flpGBTInterface->GetExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
@@ -608,20 +608,21 @@ void SEHTester::TurnOn(uint32_t pRightLoadValue, uint32_t pLeftLoadValue, bool s
 
     flpGBTInterface->GetExternalController()->getInterface().set_SehSupply(flpGBTInterface->GetExternalController()->getInterface().sehSupply_On);
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-    if (setLoad){
-    flpGBTInterface->GetExternalController()->getInterface().set_load2(true, false, pLeftLoadValue);
-    flpGBTInterface->GetExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
-    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-    flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().I_P1V2_R, I_P1V2_R);
-    flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().I_P1V2_L, I_P1V2_L);
-    flpGBTInterface->GetExternalController()->getInterface().read_supply(flpGBTInterface->GetExternalController()->getInterface().I_SEH, I_SEH);
-    flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().U_P1V2_R, U_P1V2_R);
-    flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().U_P1V2_L, U_P1V2_L);
-    flpGBTInterface->GetExternalController()->getInterface().read_supply(flpGBTInterface->GetExternalController()->getInterface().U_SEH, U_SEH);
-    flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().P2V5_VTRx_MON, U_P2V5);
-    fillSummaryTree("TurnOnLoadRight", I_P1V2_R);
-    fillSummaryTree("TurnOnLoadLeft", I_P1V2_L);
-    fillSummaryTree("SEHInputVoltage", U_SEH);
+    if(setLoad)
+    {
+        flpGBTInterface->GetExternalController()->getInterface().set_load2(true, false, pLeftLoadValue);
+        flpGBTInterface->GetExternalController()->getInterface().set_load1(true, false, pRightLoadValue);
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+        flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().I_P1V2_R, I_P1V2_R);
+        flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().I_P1V2_L, I_P1V2_L);
+        flpGBTInterface->GetExternalController()->getInterface().read_supply(flpGBTInterface->GetExternalController()->getInterface().I_SEH, I_SEH);
+        flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().U_P1V2_R, U_P1V2_R);
+        flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().U_P1V2_L, U_P1V2_L);
+        flpGBTInterface->GetExternalController()->getInterface().read_supply(flpGBTInterface->GetExternalController()->getInterface().U_SEH, U_SEH);
+        flpGBTInterface->GetExternalController()->getInterface().read_load(flpGBTInterface->GetExternalController()->getInterface().P2V5_VTRx_MON, U_P2V5);
+        fillSummaryTree("TurnOnLoadRight", I_P1V2_R);
+        fillSummaryTree("TurnOnLoadLeft", I_P1V2_L);
+        fillSummaryTree("SEHInputVoltage", U_SEH);
     }
 
 #endif

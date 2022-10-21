@@ -506,17 +506,16 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
 {
     std::string nDirname;
     if(pDate) nDirname += currentDateTime();
-    
-    if (std::getenv("GIPHT_RESULT_FOLDER"))
+
+    if(std::getenv("GIPHT_RESULT_FOLDER"))
     {
-        LOG (INFO) << "OT Module GUI (GIPHT) result directory environmental variable set: " << std::getenv("GIPHT_RESULT_FOLDER");
+        LOG(INFO) << "OT Module GUI (GIPHT) result directory environmental variable set: " << std::getenv("GIPHT_RESULT_FOLDER");
         nDirname = std::getenv("GIPHT_RESULT_FOLDER");
     }
     else
     {
         nDirname = pDirname;
     }
-
 
     LOG(INFO) << GREEN << whichCalib << " attempting to create directory: " << BOLDYELLOW << nDirname << RESET;
     std::string cCommand = "mkdir -p " + nDirname;
