@@ -37,9 +37,9 @@ const uint8_t  AUTO_INCREMENT_MASK = 0x1;  // Auto-increment mask bits
 const uint16_t GLOBAL_PULSE_ADDR   = 0x3D; // Global Pulse Route regiser address
 } // namespace RD53BConstants
 
-// #####################################################################
-// # Formula: par0/par1 * VCal / electron_charge [C] * capacitance [C] #
-// #####################################################################
+// ####################################################################################
+// # Formula: Vref / ADCrange * VCal / electron_charge [C] * capacitance [F] + offset #
+// ####################################################################################
 namespace RD53BchargeConvertion
 {
 const float Vref     = 0.8;    // Vref [V]
