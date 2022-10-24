@@ -59,9 +59,9 @@ class ThrEqualizationSC : public SCurve
     void bitWiseScanLocal(const std::string& regName, std::shared_ptr<DetectorDataContainer> target);
 
   protected:
-    size_t doNSteps;
-    bool doDisplay;
-    bool doUpdateChip;
+    size_t doNthrequSteps;
+    bool   doDisplay;
+    bool   doUpdateChip;
 
     std::string fileRes;
     int         theCurrentRun;

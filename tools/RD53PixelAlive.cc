@@ -152,7 +152,7 @@ void PixelAlive::run()
 
 void PixelAlive::draw(bool doSaveData)
 {
-    if(doSaveData == true)CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    if(doSaveData == true) CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;

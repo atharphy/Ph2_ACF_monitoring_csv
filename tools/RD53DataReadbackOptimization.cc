@@ -54,7 +54,7 @@ void DataReadbackOptimization::Running()
     LOG(INFO) << GREEN << "[DataReadbackOptimization::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     DataReadbackOptimization::run();
-    CaliBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     DataReadbackOptimization::sendData();
 }
 
@@ -153,7 +153,7 @@ void DataReadbackOptimization::run()
 
 void DataReadbackOptimization::draw(bool saveData)
 {
-    if(saveData == true) CaliBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    if(saveData == true) CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;

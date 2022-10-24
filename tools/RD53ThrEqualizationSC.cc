@@ -26,9 +26,9 @@ void ThrEqualizationSC::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    doNSteps     = this->findValueInSettings<double>("DoNSteps");
-    doDisplay    = this->findValueInSettings<double>("DisplayHisto");
-    doUpdateChip = this->findValueInSettings<double>("UpdateChipCfg");
+    doNthrequSteps = this->findValueInSettings<double>("DoNthrequSteps");
+    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
 
     if(frontEnd == &RD53A::SYNC)
     {
@@ -181,7 +181,7 @@ void ThrEqualizationSC::run()
 
 void ThrEqualizationSC::draw()
 {
-   CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
@@ -290,7 +290,7 @@ void ThrEqualizationSC::bitWiseScanLocal(const std::string& regName, std::shared
                     this->fReadoutChipInterface->ReadChipAllLocalReg(
                         static_cast<RD53*>(cChip), regName, *midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
 
-    for(auto i = 0u; i <= (doNSteps != 0 ? doNSteps : numberOfBits); i++)
+    for(auto i = 0u; i <= (doNthrequSteps != 0 ? doNthrequSteps : numberOfBits); i++)
     {
         // ###########################
         // # Download new DAC values #
@@ -385,21 +385,35 @@ void ThrEqualizationSC::bitWiseScanLocal(const std::string& regName, std::shared
                                                         ->at(cChip->getIndex())
                                                         ->getChannel<uint16_t>(row, col);
 
-                                            if (doNSteps == 0) 
-                                            midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
-                                                (minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) +
-                                                 maxDACcontainer.at(cBoard->getIndex())
-                                                     ->at(cOpticalGroup->getIndex())
-                                                     ->at(cHybrid->getIndex())
-                                                     ->at(cChip->getIndex())
-                                                     ->getChannel<uint16_t>(row, col)) /
-                                                2;
+                                            if(doNthrequSteps == 0)
+                                                midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
+                                                    (minDACcontainer.at(cBoard->getIndex())
+                                                         ->at(cOpticalGroup->getIndex())
+                                                         ->at(cHybrid->getIndex())
+                                                         ->at(cChip->getIndex())
+                                                         ->getChannel<uint16_t>(row, col) +
+                                                     maxDACcontainer.at(cBoard->getIndex())
+                                                         ->at(cOpticalGroup->getIndex())
+                                                         ->at(cHybrid->getIndex())
+                                                         ->at(cChip->getIndex())
+                                                         ->getChannel<uint16_t>(row, col)) /
+                                                    2;
                                             else
                                             {
-                                                auto& midDAC = midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) += (newValue < target ? 1 : -1);
-                                                midDAC += (newValue < target ? 1 : -1);
-                                                if(midDAC < 0) midDAC = 0;
-                                                if(midDAC > (frontEnd->nTDACvalues - 1)) midDAC = frontEnd->nTDACvalues - 1;
+                                                auto& midDAC = midDACcontainer.at(cBoard->getIndex())
+                                                                   ->at(cOpticalGroup->getIndex())
+                                                                   ->at(cHybrid->getIndex())
+                                                                   ->at(cChip->getIndex())
+                                                                   ->getChannel<uint16_t>(row, col);
+                                                if(newValue < theTarget)
+                                                {
+                                                    midDAC += 1;
+                                                    if(midDAC > (frontEnd->nTDACvalues - 1)) midDAC = frontEnd->nTDACvalues - 1;
+                                                }
+                                                else if(midDAC - 1 < 0)
+                                                    midDAC = 0;
+                                                else
+                                                    midDAC -= 1;
                                             }
                                         }
                                 }

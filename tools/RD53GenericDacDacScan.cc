@@ -146,7 +146,7 @@ void GenericDacDacScan::run()
 
 void GenericDacDacScan::draw()
 {
-   CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;

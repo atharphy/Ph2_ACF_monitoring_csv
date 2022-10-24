@@ -10,7 +10,7 @@
 #ifndef RD53VoltageTuning_H
 #define RD53VoltageTuning_H
 
-#include "RD53CaliBase.h"
+#include "RD53CalibBase.h"
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53VoltageTuningHistograms.h"
@@ -20,7 +20,7 @@
 // #############################
 // # Voltage tuning test suite #
 // #############################
-class VoltageTuning : public CaliBase
+class VoltageTuning : public CalibBase
 {
   public:
     ~VoltageTuning()

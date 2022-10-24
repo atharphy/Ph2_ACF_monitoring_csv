@@ -21,11 +21,16 @@
 // ##################################
 class CalibBase : public Tool
 {
-    public:
-        void chipErrorReport() const;
-        void saveChipRegisters(int currentRun, bool doUpdateChip);
-        void downloadNewDACvalues();
-        void saveSCurveORGaindValues(const std::string& name);
+  public:
+    void chipErrorReport() const;
+    void saveChipRegisters(int currentRun, bool doUpdateChip);
+    void downloadNewDACvalues(DetectorDataContainer& DACcontainer, const std::string& regName, bool checkAgaint = false, int value = 0);
+    void saveSCurveOrGaindValues(const std::vector<DetectorDataContainer*>& detectorContainerVector,
+                                 int                                        theCurrentRun,
+                                 const std::vector<uint16_t>&               dacList,
+                                 size_t                                     offset,
+                                 size_t                                     nEvents,
+                                 const std::string&                         name);
 };
 
 #endif

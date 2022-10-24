@@ -70,7 +70,7 @@ void SCurve::Running()
 
     SCurve::run();
     SCurve::analyze();
-    CalibBase::saveChipRegisters(theCurrentRun);
+    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     SCurve::sendData();
 }
 
@@ -188,7 +188,7 @@ void SCurve::run()
 
 void SCurve::draw(bool doSaveData)
 {
-    if(doSaveData == true) CalibBase::saveChipRegisters(theCurrentRun);
+    if(doSaveData == true) CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
@@ -212,8 +212,7 @@ void SCurve::draw(bool doSaveData)
     // #####################
     // # @TMP@ : CalibFile #
     // #####################
-    if(saveBinaryData == true)
-        CaliBase::saveSCurveOrGaindValues("SCurve");
+    if(saveBinaryData == true) CalibBase::saveSCurveOrGaindValues(detectorContainerVector, theCurrentRun, dacList, offset, nEvents, "SCurve");
 }
 
 std::shared_ptr<DetectorDataContainer> SCurve::analyze()

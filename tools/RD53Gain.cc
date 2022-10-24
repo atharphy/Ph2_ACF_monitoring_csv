@@ -192,7 +192,7 @@ void Gain::run()
 
 void Gain::draw(bool doSaveData)
 {
-    if(doSaveData == true)CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    if(doSaveData == true) CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
@@ -216,8 +216,7 @@ void Gain::draw(bool doSaveData)
     // #####################
     // # @TMP@ : CalibFile #
     // #####################
-    if(saveBinaryData == true)
-        CaliBase::saveSCurveOrGaindValues("Gain");
+    if(saveBinaryData == true) CalibBase::saveSCurveOrGaindValues(detectorContainerVector, theCurrentRun, dacList, offset, nEvents, "Gain");
 }
 
 std::shared_ptr<DetectorDataContainer> Gain::analyze()

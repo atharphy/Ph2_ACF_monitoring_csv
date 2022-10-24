@@ -10,7 +10,7 @@
 #ifndef RD53BERtest_H
 #define RD53BERtest_H
 
-#include "RD53CaliBase.h"
+#include "RD53CalibBase.h"
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53BERtestHistograms.h"
@@ -20,7 +20,7 @@
 // ##################
 // # BER test suite #
 // ##################
-class BERtest : public CaliBase
+class BERtest : public CalibBase
 {
   public:
     ~BERtest()

@@ -65,13 +65,14 @@ class ThrEqualization : public PixelAlive
 
     void fillHisto();
     void bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue);
+    void bitWiseScanGlobal_TrimGain(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue);
     void bitWiseScanLocal(const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
     void chipErrorReport() const;
 
   protected:
     size_t startValue;
     size_t stopValue;
-    size_t doNSteps;
+    size_t doNthrequSteps;
     bool   doUpdateChip;
     bool   doDisplay;
 
