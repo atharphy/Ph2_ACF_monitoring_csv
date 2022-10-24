@@ -10,12 +10,9 @@
 #ifndef RD53Gain_H
 #define RD53Gain_H
 
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerRecycleBin.h"
 #include "../Utils/GainFit.h"
-#include "../Utils/RD53ChannelGroupHandler.h"
-#include "Tool.h"
+#include "RD53CalibBase.h"
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53GainHistograms.h"
@@ -30,7 +27,7 @@
 // ###################
 // # Gain test suite #
 // ###################
-class Gain : public Tool
+class Gain : public CalibBase
 {
   public:
     ~Gain()
@@ -53,7 +50,6 @@ class Gain : public Tool
     void                                   draw(bool saveData = true);
     std::shared_ptr<DetectorDataContainer> analyze();
     size_t                                 getNumberIterations() { return theChnGroupHandler->getNumberOfGroups() * nSteps; }
-    void                                   saveChipRegisters(int currentRun);
 
     static float gainFunction(const std::vector<float>& par, float q) { return par[0] + par[1] * q; }
 
@@ -77,7 +73,6 @@ class Gain : public Tool
                       std::vector<float>&       parErr,
                       float&                    chi2,
                       float&                    DoF);
-    void chipErrorReport() const;
 
   protected:
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;

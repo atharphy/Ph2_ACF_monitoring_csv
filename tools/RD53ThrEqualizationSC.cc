@@ -26,6 +26,7 @@ void ThrEqualizationSC::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
+    doNSteps     = this->findValueInSettings<double>("DoNSteps");
     doDisplay    = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip = this->findValueInSettings<double>("UpdateChipCfg");
 
@@ -65,7 +66,7 @@ void ThrEqualizationSC::Running()
 
     ThrEqualizationSC::run();
     ThrEqualizationSC::analyze();
-    ThrEqualizationSC::saveChipRegisters(theCurrentRun);
+    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     ThrEqualizationSC::sendData();
 
     SCurve::sendData();
@@ -175,12 +176,12 @@ void ThrEqualizationSC::run()
     // ################
     // # Error report #
     // ################
-    ThrEqualizationSC::chipErrorReport();
+    CalibBase::chipErrorReport();
 }
 
 void ThrEqualizationSC::draw()
 {
-    ThrEqualizationSC::saveChipRegisters(theCurrentRun);
+   CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
@@ -289,7 +290,7 @@ void ThrEqualizationSC::bitWiseScanLocal(const std::string& regName, std::shared
                     this->fReadoutChipInterface->ReadChipAllLocalReg(
                         static_cast<RD53*>(cChip), regName, *midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
 
-    for(auto i = 0u; i <= numberOfBits; i++)
+    for(auto i = 0u; i <= (doNSteps != 0 ? doNSteps : numberOfBits); i++)
     {
         // ###########################
         // # Download new DAC values #
@@ -384,6 +385,7 @@ void ThrEqualizationSC::bitWiseScanLocal(const std::string& regName, std::shared
                                                         ->at(cChip->getIndex())
                                                         ->getChannel<uint16_t>(row, col);
 
+                                            if (doNSteps == 0) 
                                             midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
                                                 (minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) +
                                                  maxDACcontainer.at(cBoard->getIndex())
@@ -392,6 +394,13 @@ void ThrEqualizationSC::bitWiseScanLocal(const std::string& regName, std::shared
                                                      ->at(cChip->getIndex())
                                                      ->getChannel<uint16_t>(row, col)) /
                                                 2;
+                                            else
+                                            {
+                                                auto& midDAC = midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) += (newValue < target ? 1 : -1);
+                                                midDAC += (newValue < target ? 1 : -1);
+                                                if(midDAC < 0) midDAC = 0;
+                                                if(midDAC > (frontEnd->nTDACvalues - 1)) midDAC = frontEnd->nTDACvalues - 1;
+                                            }
                                         }
                                 }
     }
@@ -414,48 +423,4 @@ void ThrEqualizationSC::bitWiseScanLocal(const std::string& regName, std::shared
     // ################
     SCurve::run();
     SCurve::analyze();
-}
-
-void ThrEqualizationSC::chipErrorReport() const
-{
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
-                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->ChipErrorReport(cChip);
-                }
-}
-
-void ThrEqualizationSC::saveChipRegisters(int currentRun)
-{
-    const std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
-
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-        {
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
-                    static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-                    std::string command("mv " + cChip->getFileName(fileReg) + " " + this->fDirectoryName);
-                    system(command.c_str());
-                    LOG(INFO) << BOLDBLUE << "\t--> ThrEqualizationSC saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
-                              << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
-                }
-
-            if(cOpticalGroup->flpGBT != nullptr)
-            {
-                if(doUpdateChip == true) cOpticalGroup->flpGBT->saveRegMap("");
-                cOpticalGroup->flpGBT->saveRegMap(fileReg);
-                std::string command("mv " + cOpticalGroup->flpGBT->getFileName(fileReg) + " " + this->fDirectoryName);
-                system(command.c_str());
-
-                LOG(INFO) << BOLDBLUE << "\t--> ThrEqualizationSC saved the LpGBT configuration file for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId()
-                          << RESET << BOLDBLUE << "]" << RESET;
-            }
-        }
 }

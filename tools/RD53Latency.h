@@ -46,7 +46,6 @@ class Latency : public PixelAlive
                                                         ? (stopValue - startValue) / nTRIGxEvent + 1
                                                         : RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
     }
-    void saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     LatencyHistograms* histos;
@@ -60,7 +59,6 @@ class Latency : public PixelAlive
 
     void fillHisto();
     void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer);
-    void chipErrorReport() const;
 
   protected:
     size_t startValue;

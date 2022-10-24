@@ -51,7 +51,6 @@ class ThrAdjustment : public PixelAlive
         uint16_t moreIterations = 1;
         return PixelAlive::getNumberIterations() * (nIterationsThr + moreIterations);
     }
-    void saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     ThresholdHistograms* histos;
@@ -62,7 +61,6 @@ class ThrAdjustment : public PixelAlive
 
     void fillHisto();
     void bitWiseScanGlobal(const std::string& regName, float target, uint16_t startValue, uint16_t stopValue);
-    void chipErrorReport() const;
 
   protected:
     float  targetThreshold;

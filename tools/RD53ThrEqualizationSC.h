@@ -47,7 +47,6 @@ class ThrEqualizationSC : public SCurve
         uint16_t moreIterationsTDAC = 1;
         return SCurve::getNumberIterations() * (nIterationsVCal + nIterationsTDAC + moreIterationsTDAC);
     }
-    void saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     ThrEqualizationHistograms* histos;
@@ -58,9 +57,9 @@ class ThrEqualizationSC : public SCurve
 
     void fillHisto();
     void bitWiseScanLocal(const std::string& regName, std::shared_ptr<DetectorDataContainer> target);
-    void chipErrorReport() const;
 
   protected:
+    size_t doNSteps;
     bool doDisplay;
     bool doUpdateChip;
 

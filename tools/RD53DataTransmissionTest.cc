@@ -99,7 +99,7 @@ void DataTransmissionTest::run()
     DataTransmissionTest::binSearch(&theTAP0scanContainer);
     DataTransmissionTest::analyze(theTAP0scanContainer, theTAP0tgtContainer);
 
-    DataTransmissionTest::chipErrorReport();
+    CalibBase::chipErrorReport();
 }
 
 void DataTransmissionTest::draw(bool saveData)
@@ -287,17 +287,4 @@ void DataTransmissionTest::binSearch(DetectorDataContainer* theTAP0scanContainer
             }
         }
     }
-}
-
-void DataTransmissionTest::chipErrorReport() const
-{
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
-                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->ChipErrorReport(cChip);
-                }
 }

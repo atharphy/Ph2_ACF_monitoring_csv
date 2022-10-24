@@ -69,7 +69,7 @@ void PixelAlive::Running()
 
     PixelAlive::run();
     PixelAlive::analyze();
-    PixelAlive::saveChipRegisters(theCurrentRun);
+    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     PixelAlive::sendData();
 }
 
@@ -147,12 +147,12 @@ void PixelAlive::run()
     // ################
     // # Error report #
     // ################
-    PixelAlive::chipErrorReport();
+    CalibBase::chipErrorReport();
 }
 
 void PixelAlive::draw(bool doSaveData)
 {
-    if(doSaveData == true) PixelAlive::saveChipRegisters(theCurrentRun);
+    if(doSaveData == true)CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
@@ -350,49 +350,4 @@ void PixelAlive::fillHisto()
     histos->fillBCID(theBCIDContainer);
     histos->fillTrgID(theTrgIDContainer);
 #endif
-}
-
-void PixelAlive::chipErrorReport() const
-{
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
-                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->ChipErrorReport(cChip);
-                }
-}
-
-void PixelAlive::saveChipRegisters(int currentRun)
-{
-    const std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
-
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-        {
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
-                    static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-                    std::string command("mv " + cChip->getFileName(fileReg) + " " + this->fDirectoryName);
-                    system(command.c_str());
-
-                    LOG(INFO) << BOLDBLUE << "\t--> PixelAlive saved the frontend configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
-                              << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
-                }
-
-            if(cOpticalGroup->flpGBT != nullptr)
-            {
-                if(doUpdateChip == true) cOpticalGroup->flpGBT->saveRegMap("");
-                cOpticalGroup->flpGBT->saveRegMap(fileReg);
-                std::string command("mv " + cOpticalGroup->flpGBT->getFileName(fileReg) + " " + this->fDirectoryName);
-                system(command.c_str());
-
-                LOG(INFO) << BOLDBLUE << "\t--> PixelAlive saved the LpGBT configuration file for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << RESET
-                          << BOLDBLUE << "]" << RESET;
-            }
-        }
 }

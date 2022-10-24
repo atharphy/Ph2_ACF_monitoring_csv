@@ -46,7 +46,6 @@ class DataTransmissionTest : public BERtest
 
     void fillHisto();
     void binSearch(DetectorDataContainer* theTAP0scanContainer);
-    void chipErrorReport() const;
 
   protected:
     double BERtarget;

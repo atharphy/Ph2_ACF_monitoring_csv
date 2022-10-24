@@ -11,12 +11,9 @@
 #define RD53SCurve_H
 
 #include "../HWDescription/RD53.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerRecycleBin.h"
-#include "../Utils/RD53ChannelGroupHandler.h"
 #include "../Utils/ThresholdAndNoise.h"
-#include "Tool.h"
+#include "RD53CalibBase.h"
 
 #include <algorithm>
 
@@ -28,7 +25,7 @@
 // #####################
 // # SCurve test suite #
 // #####################
-class SCurve : public Tool
+class SCurve : public CalibBase
 {
   public:
     ~SCurve()
@@ -51,7 +48,6 @@ class SCurve : public Tool
     void                                   draw(bool doSaveData = true);
     std::shared_ptr<DetectorDataContainer> analyze();
     size_t                                 getNumberIterations() { return theChnGroupHandler->getNumberOfGroups() * nSteps; }
-    void                                   saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     SCurveHistograms* histos;
@@ -66,7 +62,6 @@ class SCurve : public Tool
 
     void fillHisto();
     void computeStats(std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
-    void chipErrorReport() const;
 
   protected:
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;

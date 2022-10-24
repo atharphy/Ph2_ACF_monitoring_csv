@@ -43,7 +43,6 @@ class DataReadbackOptimization : public BERtest
     void draw(bool saveData = true);
     void analyze();
     void analyze(const std::string& regName, const std::vector<uint16_t>& dacListTAP, const DetectorDataContainer& theTAPscanContainer, DetectorDataContainer& theTAPContainer);
-    void saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     DataReadbackOptimizationHistograms* histos;
@@ -63,7 +62,6 @@ class DataReadbackOptimization : public BERtest
 
     void fillHisto();
     void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer);
-    void chipErrorReport() const;
 
   protected:
     size_t startValueTAP0;

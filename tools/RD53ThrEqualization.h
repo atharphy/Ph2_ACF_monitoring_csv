@@ -71,6 +71,7 @@ class ThrEqualization : public PixelAlive
   protected:
     size_t startValue;
     size_t stopValue;
+    size_t doNSteps;
     bool   doUpdateChip;
     bool   doDisplay;
 

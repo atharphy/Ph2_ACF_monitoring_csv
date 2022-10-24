@@ -12,12 +12,9 @@
 
 #include "../HWDescription/RD53ACommands.h"
 #include "../HWInterface/RD53FWInterface.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
 #include "../Utils/GenericDataArray.h"
-#include "../Utils/RD53ChannelGroupHandler.h"
 #include "../Utils/RD53Shared.h"
-#include "Tool.h"
+#include "RD53CalibBase.h"
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53PhysicsHistograms.h"
@@ -27,7 +24,7 @@
 // #######################
 // # Physics data taking #
 // #######################
-class Physics : public Tool
+class Physics : public CalibBase
 {
     using evtConvType = std::function<void(const std::vector<Ph2_HwInterface::RD53Event>&)>;
 
@@ -51,7 +48,6 @@ class Physics : public Tool
     void run();
     void draw();
     void analyze(bool doReadBinary = false);
-    void saveChipRegisters(int currentRun);
     void fillDataContainer(Ph2_HwDescription::BeBoard& cBoard);
 
     void setGenericEvtConverter(evtConvType arg)
@@ -76,7 +72,6 @@ class Physics : public Tool
     DetectorDataContainer                    theTrgIDContainer;
 
     void fillHisto();
-    void chipErrorReport() const;
     void clearContainers(Ph2_HwDescription::BeBoard& cBoard);
 
   protected:

@@ -10,19 +10,17 @@
 #ifndef RD53VoltageTuning_H
 #define RD53VoltageTuning_H
 
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "Tool.h"
+#include "RD53CaliBase.h"
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53VoltageTuningHistograms.h"
 #include "TApplication.h"
 #endif
 
-// ##################
-// # BER test suite #
-// ##################
-class VoltageTuning : public Tool
+// #############################
+// # Voltage tuning test suite #
+// #############################
+class VoltageTuning : public CaliBase
 {
   public:
     ~VoltageTuning()

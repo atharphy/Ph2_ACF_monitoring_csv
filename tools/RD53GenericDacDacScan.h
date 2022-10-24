@@ -41,7 +41,6 @@ class GenericDacDacScan : public PixelAlive
     void   draw();
     void   analyze();
     size_t getNumberIterations() { return PixelAlive::getNumberIterations() * ((stopValueDAC1 - startValueDAC1) / stepDAC1 + 1) * ((stopValueDAC2 - startValueDAC2) / stepDAC2 + 1); }
-    void   saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     GenericDacDacScanHistograms* histos;
@@ -65,7 +64,6 @@ class GenericDacDacScan : public PixelAlive
 
     void fillHisto();
     void scanDacDac(const std::string& regNameDAC1, const std::string& regNameDAC2, const std::vector<uint16_t>& dac1List, const std::vector<uint16_t>& dac2List, DetectorDataContainer* theContainer);
-    void chipErrorReport() const;
 
   protected:
     std::string fileRes;

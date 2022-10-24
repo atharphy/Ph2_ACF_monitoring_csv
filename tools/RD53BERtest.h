@@ -10,9 +10,7 @@
 #ifndef RD53BERtest_H
 #define RD53BERtest_H
 
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "Tool.h"
+#include "RD53CaliBase.h"
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53BERtestHistograms.h"
@@ -22,7 +20,7 @@
 // ##################
 // # BER test suite #
 // ##################
-class BERtest : public Tool
+class BERtest : public CaliBase
 {
   public:
     ~BERtest()

@@ -10,12 +10,8 @@
 #ifndef RD53PixelAlive_H
 #define RD53PixelAlive_H
 
-#include "../HWDescription/RD53.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
 #include "../Utils/GenericDataArray.h"
-#include "../Utils/RD53ChannelGroupHandler.h"
-#include "Tool.h"
+#include "RD53CalibBase.h"
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53PixelAliveHistograms.h"
@@ -25,7 +21,7 @@
 // #########################
 // # PixelAlive test suite #
 // #########################
-class PixelAlive : public Tool
+class PixelAlive : public CalibBase
 {
   public:
     ~PixelAlive()
@@ -47,7 +43,6 @@ class PixelAlive : public Tool
     void                                   draw(bool doSaveData = true);
     std::shared_ptr<DetectorDataContainer> analyze();
     size_t                                 getNumberIterations() { return theChnGroupHandler->getNumberOfGroups() * nEvents / nEvtsBurst; }
-    void                                   saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     PixelAliveHistograms* histos;
@@ -61,7 +56,6 @@ class PixelAlive : public Tool
     DetectorDataContainer                  theTrgIDContainer;
 
     void fillHisto();
-    void chipErrorReport() const;
 
   protected:
     size_t injType;
