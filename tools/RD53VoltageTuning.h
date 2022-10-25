@@ -14,7 +14,6 @@
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53VoltageTuningHistograms.h"
-#include "TApplication.h"
 #endif
 
 // #############################

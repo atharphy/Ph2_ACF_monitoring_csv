@@ -18,7 +18,6 @@
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53PhysicsHistograms.h"
-#include "TApplication.h"
 #endif
 
 // #######################

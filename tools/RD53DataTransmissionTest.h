@@ -14,7 +14,6 @@
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53DataTransmissionTestGraphs.h"
-#include "TApplication.h"
 #endif
 
 // #########################################

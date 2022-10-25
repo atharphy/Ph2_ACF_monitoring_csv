@@ -26,11 +26,11 @@ void ThrEqualization::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    startValue     = this->findValueInSettings<double>("VCalHstart");
-    stopValue      = this->findValueInSettings<double>("VCalHstop");
-    doNthrequSteps = this->findValueInSettings<double>("DoNthrequSteps");
-    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
+    startValue   = this->findValueInSettings<double>("VCalHstart");
+    stopValue    = this->findValueInSettings<double>("VCalHstop");
+    doNSteps     = this->findValueInSettings<double>("DoNSteps");
+    doDisplay    = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip = this->findValueInSettings<double>("UpdateChipCfg");
 
     if(frontEnd == &RD53A::SYNC)
     {
@@ -266,10 +266,10 @@ void ThrEqualization::analyze()
                                      << BOLDRED << " - center > " << BOLDYELLOW << maxTDACdistance << BOLDRED << ") for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
                                      << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << BOLDRED << "]" << std::setprecision(-1) << RESET;
                     }
-                    else if((counterMaxBin == 0) && (counterMinBin == 0) && (counterMaxBin == 0))
+                    else if((counterMaxBin == 0) && (counterMinBin == 0))
                         LOG(WARNING) << BOLDRED << "TDAC distribution is most likely empty for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId()
                                      << "/" << cHybrid->getId() << "/" << +cChip->getId() << BOLDRED << "]" << RESET;
-                    else if((((frontEnd->nTDACvalues - 1) * counterMaxBin / (counterMinBin + counterMaxBin)) - TDACcenter) > maxTDACdistance)
+                    else if(((frontEnd->nTDACvalues * counterMaxBin / (counterMinBin + counterMaxBin)) - TDACcenter) > maxTDACdistance)
                     {
                         LOG(WARNING) << BOLDRED << "Min and Max TDAC bins are not balanced (i.e. low TDAC value with " << std::setprecision(1) << BOLDYELLOW << counterMinBin << BOLDRED
                                      << " entries and high TDAC value with " << BOLDYELLOW << counterMaxBin << BOLDRED << " entries) for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW
@@ -508,7 +508,7 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
                     this->fReadoutChipInterface->ReadChipAllLocalReg(
                         static_cast<RD53*>(cChip), regName, *midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
 
-    for(auto i = 0u; i <= (doNthrequSteps != 0 ? doNthrequSteps : numberOfBits); i++)
+    for(auto i = 0u; i <= (doNSteps != 0 ? doNSteps : numberOfBits); i++)
     {
         // ###########################
         // # Download new DAC values #
@@ -582,7 +582,7 @@ void ThrEqualization::bitWiseScanLocal(const std::string& regName, uint32_t nEve
                                         maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
                                             midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col);
 
-                                    if(doNthrequSteps == 0)
+                                    if(doNSteps == 0)
                                         midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
                                             (minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) +
                                              maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col)) /

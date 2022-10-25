@@ -15,7 +15,6 @@
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53PixelAliveHistograms.h"
-#include "TApplication.h"
 #endif
 
 // #########################

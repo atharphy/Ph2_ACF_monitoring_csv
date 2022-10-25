@@ -15,7 +15,6 @@
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53DataReadbackOptimizationHistograms.h"
-#include "TApplication.h"
 #endif
 
 // #########################################

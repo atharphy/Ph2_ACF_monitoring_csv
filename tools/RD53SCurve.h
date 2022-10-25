@@ -19,7 +19,6 @@
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53SCurveHistograms.h"
-#include "TApplication.h"
 #endif
 
 // #####################

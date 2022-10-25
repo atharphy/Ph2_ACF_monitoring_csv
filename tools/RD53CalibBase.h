@@ -16,6 +16,10 @@
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "Tool.h"
 
+#ifdef __USE_ROOT__
+#include "TApplication.h"
+#endif
+
 // ##################################
 // # Basic class for IT calibration #
 // ##################################

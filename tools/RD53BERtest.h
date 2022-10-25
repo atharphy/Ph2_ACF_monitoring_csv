@@ -14,7 +14,6 @@
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53BERtestHistograms.h"
-#include "TApplication.h"
 #endif
 
 // ##################

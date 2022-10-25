@@ -16,7 +16,6 @@
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53GainHistograms.h"
-#include "TApplication.h"
 #endif
 
 // #############
