@@ -60,6 +60,7 @@ class OTHybridTester : public Tool
     void LpGBTInjectULExternalPattern(bool pStart, uint8_t pPattern);
     // Check Up Link data in backend fc7
     bool LpGBTCheckULPattern(bool pIsExternal = false, uint8_t pPattern = 202);
+    bool LpGBTCheckULPatternv2(bool pIsExternal = false, uint8_t pPattern = 202);
     // Test lpGBT Down Link with internal pattern (Hybrid Fast Command)
     void LpGBTInjectDLInternalPattern(uint8_t pPattern);
     // Test lpGBT I2C Masters

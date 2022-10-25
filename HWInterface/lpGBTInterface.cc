@@ -97,20 +97,24 @@ void lpGBTInterface::ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint8_t 
     {
         cReadBack = ReadChipReg(pChip, "FUSEStatus");
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        LOG(INFO) << BOLDGREEN << "lpgbt FUSEStatus = " << +cReadBack << RESET;
+        LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEStatus = " << +cReadBack << RESET;
     }
     WriteChipReg(pChip, "FUSEBlowAddH", cFuseH);
     WriteChipReg(pChip, "FUSEBlowAddL", cFuseL);
-    LOG(INFO) << BOLDGREEN << "lpgbt FUSEBlowAddH = " << +cFuseH << RESET;
-    LOG(INFO) << BOLDGREEN << "lpgbt FUSEBlowAddL = " << +cFuseL << RESET;
+    LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEBlowAddH = " << +cFuseH << RESET;
+    LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEBlowAddL = " << +cFuseL << RESET;
     cReadBack = ReadChipReg(pChip, "FUSEValuesA");
-    LOG(INFO) << BOLDGREEN << "lpgbt FUSEValuesA = " << +cReadBack << RESET;
+    std::cout << std::hex << "Register 0x" << cFuseL + 0 << " , Value 0x" << cReadBack << std::endl;
+    LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEValuesA = " << +cReadBack << RESET;
     cReadBack = ReadChipReg(pChip, "FUSEValuesB");
-    LOG(INFO) << BOLDGREEN << "lpgbt FUSEValuesB = " << +cReadBack << RESET;
+    std::cout << std::hex << "Register 0x" << cFuseL + 1 << " , Value 0x" << cReadBack << std::endl;
+    LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEValuesB = " << +cReadBack << RESET;
     cReadBack = ReadChipReg(pChip, "FUSEValuesC");
-    LOG(INFO) << BOLDGREEN << "lpgbt FUSEValuesC = " << +cReadBack << RESET;
+    std::cout << std::hex << "Register 0x" << cFuseL + 2 << " , Value 0x" << cReadBack << std::endl;
+    LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEValuesC = " << +cReadBack << RESET;
     cReadBack = ReadChipReg(pChip, "FUSEValuesD");
-    LOG(INFO) << BOLDGREEN << "lpgbt FUSEValuesD = " << +cReadBack << RESET;
+    std::cout << std::hex << "Register 0x" << cFuseL + 3 << " , Value 0x" << cReadBack << std::endl;
+    LOG(DEBUG) << BOLDGREEN << "lpgbt FUSEValuesD = " << +cReadBack << RESET;
     WriteChipReg(pChip, "FUSEControl", 0);
 }
 
@@ -701,10 +705,10 @@ float lpGBTInterface::GetADCGain(Chip* pChip, bool pVerbose)
 {
     float cResult;
     WriteChipReg(pChip, "ADCMon", 0);
-    //Disable resistive divider, so "VDD" is actually GND
+    // Disable resistive divider, so "VDD" is actually GND
     std::this_thread::sleep_for(std::chrono::microseconds(1000));
     uint16_t cMeasurement = ReadADC(pChip, "VDD", "VREF/2");
-    cResult               = ((cMeasurement * 1.) - (GetADCOffset(pChip,pVerbose) * 1.)) / 512. * 2. * -1.;
+    cResult               = ((cMeasurement * 1.) - (GetADCOffset(pChip, pVerbose) * 1.)) / 512. * 2. * -1.;
     if(pVerbose) LOG(INFO) << BLUE << "Reading ADC value " << BOLDYELLOW << +cMeasurement << RESET;
     if(pVerbose) LOG(INFO) << BLUE << "Reading ADC Gain via GND-Vref/2 " << BOLDYELLOW << +cResult << RESET;
     cMeasurement = ReadADC(pChip, "VREF/2", "VDD");

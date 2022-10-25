@@ -208,32 +208,34 @@ int main(int argc, char* argv[])
     uint8_t  cUsbDev = (cmd.foundOption("USBDev")) ? (uint32_t)(std::stoi(cmd.optionValue("USBDev"))) : 0; // Default option?
     bool     cGui    = (cmd.foundOption("useGui"));
 
-    pugi::xml_document                        doc;
+    pugi::xml_document doc;
     if(!doc.load_file(cHWFile.c_str())) return -1;
-    pugi::xml_node devices = doc.child("Devices");
-
-    for(pugi::xml_node ps = devices.first_child(); ps; ps = ps.next_sibling())
+    pugi::xml_node cDescription = doc.child("HwDescription");
+    for(pugi::xml_node devices = cDescription.first_child(); devices; devices = devices.next_sibling())
     {
-        std::string stringID(ps.attribute("ID").value());
-        std::string stringType(ps.attribute("Type").value());
-        if(stringType == "LV")
+        for(pugi::xml_node ps = devices.first_child(); ps; ps = ps.next_sibling())
         {
-            for(pugi::xml_node channel = ps.child("Channel"); channel; channel = channel.next_sibling("Channel"))
+            std::string stringID(ps.attribute("ID").value());
+            std::string stringType(ps.attribute("Type").value());
+            if(stringType == "LV")
             {
-                std::string stringChannel(channel.attribute("ID").value());
-                cLVPowerSupplyId       = stringID;
-                cLVChannelId           = stringChannel;
-                LOG(INFO) << BOLDBLUE <<"Identified LV Power Supply "<< stringID <<" and channel "<<  stringChannel << RESET;
+                for(pugi::xml_node channel = ps.child("Channel"); channel; channel = channel.next_sibling("Channel"))
+                {
+                    std::string stringChannel(channel.attribute("ID").value());
+                    cLVPowerSupplyId = stringID;
+                    cLVChannelId     = stringChannel;
+                    LOG(INFO) << BOLDBLUE << "Identified LV Power Supply " << stringID << " and channel " << stringChannel << RESET;
+                }
             }
-        }
-        if(stringType == "HV")
-        {
-            for(pugi::xml_node channel = ps.child("Channel"); channel; channel = channel.next_sibling("Channel"))
+            if(stringType == "HV")
             {
-                std::string stringChannel(channel.attribute("ID").value());
-                cHVPowerSupplyId       = stringID;
-                cHVChannelId           = stringChannel;
-                LOG(INFO) << BOLDBLUE <<"Identified HV Power Supply "<< stringID <<" and channel "<<  stringChannel << RESET;
+                for(pugi::xml_node channel = ps.child("Channel"); channel; channel = channel.next_sibling("Channel"))
+                {
+                    std::string stringChannel(channel.attribute("ID").value());
+                    cHVPowerSupplyId = stringID;
+                    cHVChannelId     = stringChannel;
+                    LOG(INFO) << BOLDBLUE << "Identified HV Power Supply " << stringID << " and channel " << stringChannel << RESET;
+                }
             }
         }
     }
@@ -292,12 +294,12 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDYELLOW << "Switching on SEH using remote power supply control and perform I-V scan" << RESET;
         cSEHTester.TurnOn(0, 0, false);
         cSEHTester.RampPowerSupply(cLVPowerSupplyId, cLVChannelId);
-        cSEHTester.TurnOn(cRightLoad, cLeftLoad,true);
+        cSEHTester.TurnOn(cRightLoad, cLeftLoad, true);
     }
     else
     {
         LOG(INFO) << BOLDYELLOW << "Switching on SEH without remote power supply control" << RESET;
-        cSEHTester.TurnOn(cRightLoad, cLeftLoad,true);
+        cSEHTester.TurnOn(cRightLoad, cLeftLoad, true);
     }
     if(cmd.foundOption("test-ext-leak"))
     {
@@ -420,9 +422,10 @@ int main(int argc, char* argv[])
         else if(cmd.foundOption("test-external-pattern"))
         {
             bool cStatus = true;
-            //while(true){
-            cStatus      = cSEHTester.LpGBTCheckULPattern(true, cExternalPattern);
-            //std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+            // while(true){
+            cStatus = cSEHTester.LpGBTCheckULPattern(true, cExternalPattern);
+            // cSEHTester.LpGBTCheckULPatternv2(true, cExternalPattern);
+            // std::this_thread::sleep_for(std::chrono::milliseconds(1500));
             //}
 #ifdef __USE_ROOT__
             cTool.fillSummaryTree("status_CicOutTest", (cStatus) ? 1 : 0);
@@ -721,7 +724,7 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDBLUE << "Flushing check BRAM!" << RESET;
         cSEHTester.ClearBRAM(std::string("test"));
     }
-    //cSEHTester.freeTest();
+    // cSEHTester.freeTest();
     cSEHTester.SetLoad(0, 0);
     cSEHTester.LpGBTInjectULExternalPattern(false, 170);
 

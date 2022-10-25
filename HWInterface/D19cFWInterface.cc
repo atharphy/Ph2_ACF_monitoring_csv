@@ -275,7 +275,7 @@ void D19cFWInterface::configureTxRxPolarity(const Ph2_HwDescription::BeBoard* pB
 
         uint32_t cTxLocalValue = (cFMCSlot == "FMC-L8") ? 1 : 0;
         uint32_t cRxLocalValue = ((clpGbt->getVersion() == 1 && cFMCSlot == "FMC-L12") || (clpGbt->getVersion() == 0 && cFMCSlot == "FMC-L8")) ? 1 : 0;
-     
+
         if(cFMCSlot == "FMC-L12")
         {
             cRxGlobalValueL12 |= (cRxLocalValue << cOpticalGroupId);
