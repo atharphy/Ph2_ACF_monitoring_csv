@@ -249,6 +249,7 @@ void ThrEqualization::analyze()
                 for(const auto cChip: *cHybrid)
                 {
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
+
                     float avgTDAC       = 0;
                     int   counter       = 0;
                     int   counterMinBin = 0;
