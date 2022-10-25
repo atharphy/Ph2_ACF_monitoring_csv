@@ -9,7 +9,6 @@
 */
 
 #include "RD53GainHistograms.h"
-#include "../Utils/ChannelContainerStream.h"
 
 using namespace Ph2_HwDescription;
 

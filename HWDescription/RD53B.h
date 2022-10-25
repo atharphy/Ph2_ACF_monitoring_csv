@@ -61,6 +61,7 @@ class RD53B : public RD53
                                       "DAC_GDAC_M_LIN",
                                       "DAC_KRUM_CURR_LIN",
                                       "TriggerConfig",
+                                      "DAC_LDAC_LIN",
                                       1,
                                       32,
                                       RD53Shared::setBits(RD53BEvtEncoder::NBIT_TOT) - 1,

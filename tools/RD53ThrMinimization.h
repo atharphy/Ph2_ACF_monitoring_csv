@@ -55,7 +55,7 @@ class ThrMinimization : public PixelAlive
     DetectorDataContainer theThrContainer;
 
     void fillHisto();
-    void bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue);
+    void bitWiseScanGlobal(const std::string& regName, float target, uint16_t startValue, uint16_t stopValue);
 
   protected:
     float  targetOccupancy;

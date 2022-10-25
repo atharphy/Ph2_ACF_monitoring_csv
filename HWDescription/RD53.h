@@ -81,6 +81,7 @@ class RD53 : public ReadoutChip
         const char* thresholdReg;
         const char* gainReg;
         const char* latencyReg;
+        const char* TDACGainReg;
         size_t      nLatencyBins2Span;
         size_t      nTDACvalues;
         size_t      maxToTvalue;

@@ -189,7 +189,7 @@ void GainOptimization::fillHisto()
 #endif
 }
 
-void GainOptimization::bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue)
+void GainOptimization::bitWiseScanGlobal(const std::string& regName, float target, uint16_t startValue, uint16_t stopValue)
 {
     float    tmp;
     uint16_t init;
@@ -243,9 +243,9 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, const float
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
                     {
-                        // ##############################################
-                        // # Search for maximum and build discriminator #
-                        // ##############################################
+                        // #######################
+                        // # Build discriminator #
+                        // #######################
                         float  avg    = 0;
                         float  stdDev = 0;
                         size_t cnt    = 0;

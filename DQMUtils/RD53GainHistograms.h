@@ -12,8 +12,8 @@
 #define RD53GainHistograms_H
 
 #include "../System/SystemController.h"
+#include "../Utils/ChannelContainerStream.h"
 #include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
 #include "../Utils/GainFit.h"
 #include "../Utils/RD53Shared.h"
 #include "DQMHistogramBase.h"

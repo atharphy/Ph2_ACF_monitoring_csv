@@ -45,13 +45,14 @@ class ThrEqualization : public PixelAlive
     void   run();
     void   draw();
     void   analyze();
+    void   analyzeDuringRun();
     size_t getNumberIterations()
     {
         uint16_t nIterationsVCal    = floor(log2(stopValue - startValue + 1) + 2);
         uint16_t moreIterationsVCal = 1;
-        uint16_t nIterationsTDAC    = (doNSteps != 0 ? doNSteps : floor(log2(frontEnd->nTDACvalues) + 2));
+        uint16_t nIterationsTDAC    = (doNSteps != 0 ? doNSteps + 1 : floor(log2(frontEnd->nTDACvalues) + 2));
         uint16_t moreIterationsTDAC = 1;
-        return PixelAlive::getNumberIterations() * ((nIterationsVCal + moreIterationsVCal) + (nIterationsTDAC + moreIterationsTDAC));
+        return PixelAlive::getNumberIterations() * ((nIterationsVCal + moreIterationsVCal) + (TDACGainNSteps + 1) * (nIterationsTDAC + moreIterationsTDAC));
     }
     void saveChipRegisters(int currentRun);
 
@@ -60,18 +61,25 @@ class ThrEqualization : public PixelAlive
 #endif
 
   private:
+    std::vector<uint16_t> dacList;
+
     std::shared_ptr<DetectorDataContainer> theOccContainer;
-    DetectorDataContainer                  theTDACcontainer;
+    DetectorDataContainer                  theContainer;
+    DetectorDataContainer                  theTDACGainContainer;
+    DetectorDataContainer                  theTDACContainer;
 
     void fillHisto();
-    void bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue);
-    void bitWiseScanGlobal_TrimGain(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue);
-    void bitWiseScanLocal(const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
+    void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer);
+    void bitWiseScanGlobal(const std::string& regName, float target, uint16_t startValue, uint16_t stopValue);
+    void bitWiseScanLocal(float target, bool updateDACs);
     void chipErrorReport() const;
 
   protected:
     size_t startValue;
     size_t stopValue;
+    size_t startTDACGainValue;
+    size_t stopTDACGainValue;
+    size_t TDACGainNSteps;
     size_t doNSteps;
     bool   doUpdateChip;
     bool   doDisplay;

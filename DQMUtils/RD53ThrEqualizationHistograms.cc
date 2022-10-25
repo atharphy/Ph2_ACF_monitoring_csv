@@ -9,7 +9,7 @@
 */
 
 #include "RD53ThrEqualizationHistograms.h"
-#include "../Utils/ChannelContainerStream.h"
+// #include "../Utils/ChannelContainerStream.h"
 
 using namespace Ph2_HwDescription;
 
@@ -23,6 +23,8 @@ void ThrEqualizationHistograms::book(TFile* theOutputFile, DetectorContainer& th
     // #######################
     // # Retrieve parameters #
     // #######################
+    startTDACGainValue    = this->findValueInSettings<double>(settingsMap, "TDACGainStart");
+    stopTDACGainValue     = this->findValueInSettings<double>(settingsMap, "TDACGainStop");
     nEvents               = this->findValueInSettings<double>(settingsMap, "nEvents");
     const size_t colStart = this->findValueInSettings<double>(settingsMap, "COLstart");
     const size_t colStop  = this->findValueInSettings<double>(settingsMap, "COLstop");
@@ -37,12 +39,16 @@ void ThrEqualizationHistograms::book(TFile* theOutputFile, DetectorContainer& th
 
     auto hTDAC2D = CanvasContainer<TH2F>("TDAC2D", "TDAC Map", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, TDAC2D, hTDAC2D, "Column", "Row");
+
+    auto hTDACGain = CanvasContainer<TH1F>("TDACGain", "TDAC Gain", stopTDACGainValue - startTDACGainValue + 1, startTDACGainValue, stopTDACGainValue + 1);
+    bookImplementer(theOutputFile, theDetectorStructure, TDACGain, hTDACGain, "TDAC Gain", "Entries");
 }
 
 bool ThrEqualizationHistograms::fill(std::vector<char>& dataBuffer)
 {
-    ChannelContainerStream<OccupancyAndPh> theOccStreamer("ThrEqualizationOcc");
-    ChannelContainerStream<uint16_t>       theTDACStreamer("ThrEqualizationTDAC");
+    ChannelContainerStream<OccupancyAndPh>        theOccStreamer("ThrEqualizationOcc");
+    ChannelContainerStream<uint16_t>              theTDACStreamer("ThrEqualizationTDAC");
+    ChipContainerStream<EmptyContainer, uint16_t> theTDACGainStreamer("ThrEqualizationTDACGain");
 
     if(theOccStreamer.attachBuffer(&dataBuffer))
     {
@@ -55,6 +61,13 @@ bool ThrEqualizationHistograms::fill(std::vector<char>& dataBuffer)
     {
         theTDACStreamer.decodeChipData(DetectorData);
         ThrEqualizationHistograms::fillTDAC(DetectorData);
+        DetectorData.cleanDataStored();
+        return true;
+    }
+    else if(theTDACGainStreamer.attachBuffer(&dataBuffer))
+    {
+        theTDACGainStreamer.decodeChipData(DetectorData);
+        ThrEqualizationHistograms::fillTDACGain(DetectorData);
         DetectorData.cleanDataStored();
         return true;
     }
@@ -112,9 +125,30 @@ void ThrEqualizationHistograms::fillTDAC(const DetectorDataContainer& TDACContai
                 }
 }
 
+void ThrEqualizationHistograms::fillTDACGain(const DetectorDataContainer& TDACGainContainer)
+{
+    for(const auto cBoard: TDACGainContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    if(cChip->getSummaryContainer<uint16_t>() == nullptr) continue;
+
+                    auto* TDACGainHist = TDACGain.getObject(cBoard->getId())
+                                             ->getObject(cOpticalGroup->getId())
+                                             ->getObject(cHybrid->getId())
+                                             ->getObject(cChip->getId())
+                                             ->getSummary<CanvasContainer<TH1F>>()
+                                             .fTheHistogram;
+
+                    TDACGainHist->Fill(cChip->getSummary<uint16_t>());
+                }
+}
+
 void ThrEqualizationHistograms::process()
 {
     draw<TH1F>(ThrEqualization);
     draw<TH1F>(TDAC1D);
     draw<TH2F>(TDAC2D, "gcolz");
+    draw<TH1F>(TDACGain);
 }

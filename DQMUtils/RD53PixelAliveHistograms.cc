@@ -9,8 +9,6 @@
 */
 
 #include "RD53PixelAliveHistograms.h"
-#include "../Utils/ChannelContainerStream.h"
-#include "../Utils/ChipContainerStream.h"
 
 using namespace Ph2_HwDescription;
 
