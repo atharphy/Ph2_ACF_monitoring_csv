@@ -55,7 +55,7 @@ void ThrEqualization::ConfigureCalibration()
     // # Initialize dac scan values #
     // ##############################
     const float step = (TDACGainNSteps != 0 ? (stopTDACGainValue - startTDACGainValue) / TDACGainNSteps : 0);
-    for(auto i = 0u; i < TDACGainNSteps; i++) dacList.push_back(startValue + step * i);
+    for(auto i = 0u; i < TDACGainNSteps; i++) dacList.push_back(stopTDACGainValue + step * i);
 
     // #######################
     // # Initialize progress #
@@ -90,7 +90,7 @@ void ThrEqualization::sendData()
 
     if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: *theOccContainer.get()) theOccStream->streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: (TDACGainNSteps == 0 ? *theOccContainer.get() : theContainer)) theOccStream->streamAndSendBoard(cBoard, fDQMStreamer);
         for(const auto cBoard: theTDACContainer) theTDACStream->streamAndSendBoard(cBoard, fDQMStreamer);
         for(const auto cBoard: theTDACGainContainer) theTDACGainStream->streamAndSendBoard(cBoard, fDQMStreamer);
     }
@@ -343,7 +343,7 @@ void ThrEqualization::analyzeDuringRun()
 void ThrEqualization::fillHisto()
 {
 #ifdef __USE_ROOT__
-    histos->fillOccupancy(*theOccContainer.get());
+    histos->fillOccupancy(TDACGainNSteps == 0 ? *theOccContainer.get() : theContainer);
     histos->fillTDAC(theTDACContainer);
     histos->fillTDACGain(theTDACGainContainer);
 #endif

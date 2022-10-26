@@ -111,6 +111,11 @@ void decodeStreamHeader(BitView<const uint32_t>& bits, RD53ChipEvent& e, const F
         e.bc_id      = bits.pop(RD53BEvtEncoder::NBIT_BCID);
         e.trigger_id = bits.pop(RD53BEvtEncoder::NBIT_TRIGID);
     }
+    else
+    {
+        e.bc_id      = RD53Shared::setBits(RD53BEvtEncoder::NBIT_BCID);
+        e.trigger_id = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID);
+    }
 }
 
 void decodeChipId(uint8_t chipId, size_t i, RD53ChipEvent& e, size_t nWords)
@@ -145,7 +150,10 @@ auto decodeEventStream(BitView<const uint32_t>& bits, RD53ChipEvent& e, const Fo
             break;
         }
 
-        if(options.enableChipId) decodeChipId(bits.pop(RD53BEvtEncoder::NBIT_CHIPID), i, e, nWords);
+        if(options.enableChipId)
+            decodeChipId(bits.pop(RD53BEvtEncoder::NBIT_CHIPID), i, e, nWords);
+        else
+            e.chip_id_mod4 = RD53Shared::setBits(RD53FWEvtEncoder::NBIT_CHIPID);
 
         payloadData.append(bits.pop_slice(63 - 2 * options.enableChipId));
     }

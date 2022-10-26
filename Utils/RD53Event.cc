@@ -143,9 +143,9 @@ void RD53Event::PrintEvents(const std::vector<RD53Event>& events, const std::vec
             if(j % NWORDS_DDR3 == NWORDS_DDR3 - 1) std::cout << std::endl;
         }
 
-    // ######################
-    // # Print decoded data #
-    // ######################
+    // ############################
+    // # Print decoded event data #
+    // ############################
     for(auto i = 0u; i < events.size(); i++)
     {
         auto& evt = events[i];
@@ -158,6 +158,9 @@ void RD53Event::PrintEvents(const std::vector<RD53Event>& events, const std::vec
         LOG(INFO) << BOLDGREEN << "l1a_counter     = " << evt.l1a_counter << RESET;
         LOG(INFO) << BOLDGREEN << "bx_counter      = " << evt.bx_counter << RESET;
 
+        // ###########################
+        // # Print decoded chip data #
+        // ###########################
         for(auto& event: evt.chip_events)
         {
             LOG(INFO) << CYAN << "------- Chip Header -------" << RESET;
@@ -168,6 +171,7 @@ void RD53Event::PrintEvents(const std::vector<RD53Event>& events, const std::vec
             LOG(INFO) << CYAN << "chip_type       = " << event.chip_type << RESET;
             LOG(INFO) << CYAN << "frame_delay     = " << event.frame_delay << RESET;
 
+            LOG(INFO) << CYAN << "chip_id_mod4    = " << event.chip_id_mod4 << RESET;
             LOG(INFO) << CYAN << "trigger_id      = " << event.trigger_id << RESET;
             LOG(INFO) << CYAN << "trigger_tag     = " << event.trigger_tag << RESET;
             LOG(INFO) << CYAN << "bc_id           = " << event.bc_id << RESET;
@@ -178,6 +182,7 @@ void RD53Event::PrintEvents(const std::vector<RD53Event>& events, const std::vec
                 LOG(INFO) << BOLDYELLOW << "Column: " << std::setw(3) << hit.col << std::setw(-1) << ", Row: " << std::setw(3) << hit.row << std::setw(-1) << ", ToT: " << std::setw(3) << +hit.tot
                           << std::setw(-1) << RESET;
         }
+
         LOG(INFO) << BOLDGREEN << "===========================" << RESET;
         LOG(INFO) << BOLDGREEN << "EVENT STATUS    = " << evt.eventStatus << RESET;
         RD53Event::EvtErrorHandler(evt.eventStatus);
