@@ -344,20 +344,7 @@ void PedeNoise::sweepSCurves()
     if(fDisableStubLogic) disableStubLogic();
     if(fWithCBC || fWithSSA) LOG(INFO) << BLUE << "Sweep of Strip S-curves will start at an average threshold of " << cStripStartValue << RESET;
     if(fWithMPA) LOG(INFO) << MAGENTA << "Sweep of Pixel S-curves will start at an average threshold of " << cPixelStartValue << RESET;
-    setSameGlobalDac("AnalogueAsync", 1);
-    for(auto cBoard: *fDetectorContainer)
-        {
-		for(auto cOpticalGroup: *cBoard)
-		{
-		    for(auto cHybrid: *cOpticalGroup)
-		    {
-		        for(auto cChip: *cHybrid)
-		        {
-				fReadoutChipInterface->maskChannelGroup(cChip,cChip->getChipOriginalMask());
-			}
-		    }
-		}
-        }
+
 	
     measureSCurves(cStripStartValue, cPixelStartValue);
     // if(fDisableStubLogic) reloadStubLogic();
@@ -1014,7 +1001,7 @@ void PedeNoise::maskNoisyChannels(BoardDataContainer* board)
             {
 		LOG(INFO) << BOLDYELLOW << chip->getId() <<RESET; 
 		    auto chipDC=fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex());
-                    auto cType = chipDC->getFrontEndType();
+                    //auto cType = chipDC->getFrontEndType();
 
 
 

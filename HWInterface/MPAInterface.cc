@@ -343,7 +343,8 @@ bool MPAInterface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<Ch
         bool bitval  = bool(((cBitset & shifted) >> ipix).to_ulong());
 
         //if (not bitval)LOG(INFO) << BOLDBLUE << "MASKED " <<ipix<< RESET;
-        if (bitval) continue;//usually this function performs a complete reconfig but here it just masks
+	//usually this function performs a complete reconfig but here it just masks.  See change to ConfigureChipOriginalMask below
+        if (bitval) continue;
 
         // uint32_t           cPixelIds = ipix;
         // std::ostringstream cRegName;
@@ -407,8 +408,9 @@ bool MPAInterface::enablePixelInjection(Chip* pChip, int pPixelNum, uint8_t pInj
 
 bool MPAInterface::ConfigureChipOriginalMask(ReadoutChip* pMPA, bool pVerify, uint32_t pBlockSize)
 {
-
-    auto pixval=readPixel(pMPA, "PixelEnable", 1);//use pix 1 as a proxy. Better to save this as a constant
+    //use pix 1 as a proxy. Better to save this as a constant
+    auto pixval=readPixel(pMPA, "PixelEnable", 1);
+    //write broadcast then mask is much much faster than full config
     configPixel(pMPA, "PixelEnable", 0, pixval);
     auto allChannelEnabledGroup = std::make_shared<ChannelGroup<NSSACHANNELS * NMPACOLS>>();
     return maskChannelGroup(pMPA, allChannelEnabledGroup, pVerify);

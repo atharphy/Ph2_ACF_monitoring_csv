@@ -2,7 +2,7 @@
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="1" boardReset="1">
     <!-- B598 skeleton -->
-    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.1.80:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.13.207:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <CDCE configure="0" clockRate="320"/>
 
     <OpticalGroup Id="0" FMCId="0" reset="1">
@@ -292,7 +292,7 @@
 
 
 <MonitoringSettings>
-<Monitoring type="2S" enable="1">
+<Monitoring type="2S" enable="0">
     <MonitoringSleepTime> 1000 </MonitoringSleepTime>
     <MonitoringElement device="CBC"   register="VCth" enable="1"/>
     <MonitoringElement device="LpGBT" register="ADC0" enable="1"/>

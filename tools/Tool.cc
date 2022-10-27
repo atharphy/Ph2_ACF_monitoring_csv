@@ -1901,7 +1901,20 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     bool cUseReadNEvents = fUseReadNEvents;
     if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::PSAS)
     {
-        //this->setSameGlobalDac("AnalogueAsync", 1);
+        this->setSameGlobalDac("AnalogueAsync", 1);
+        for(auto cBoard: *fDetectorContainer)
+        {
+		for(auto cOpticalGroup: *cBoard)
+		{
+		    for(auto cHybrid: *cOpticalGroup)
+		    {
+		        for(auto cChip: *cHybrid)
+		        {
+				fReadoutChipInterface->maskChannelGroup(cChip,cChip->getChipOriginalMask());
+			}
+		    }
+		}
+        }
         fUseReadNEvents = true;
     }
     doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
