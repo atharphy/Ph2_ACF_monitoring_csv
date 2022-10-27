@@ -341,7 +341,10 @@ bool MPAInterface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<Ch
     {
         auto shifted = std::bitset<NSSACHANNELS * NMPACOLS>(0x1) << ipix;
         bool bitval  = bool(((cBitset & shifted) >> ipix).to_ulong());
-        if (not bitval)LOG(INFO) << BOLDBLUE << "MASKED " <<ipix<< RESET;
+
+        //if (not bitval)LOG(INFO) << BOLDBLUE << "MASKED " <<ipix<< RESET;
+        if (bitval) continue;//usually this function performs a complete reconfig but here it just masks
+
         // uint32_t           cPixelIds = ipix;
         // std::ostringstream cRegName;
         // cRegName << "ENFLAGS_P" << std::to_string(cPixelIds+1);
@@ -351,7 +354,7 @@ bool MPAInterface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<Ch
         // Req.first=cRegName.str();
         // Req.second=regval;
         // pVecReq.push_back(Req);
-
+	
         returnval &= maskPixel(cChip, ipix + 1, (1 - bitval), pVerify); // I  think mask 0 is enable?
     }
     // return this->WriteChipMultReg(cChip, pVecReq);
@@ -402,10 +405,13 @@ bool MPAInterface::enablePixelInjection(Chip* pChip, int pPixelNum, uint8_t pInj
     return this->configPixel(pChip, "PixelEnable", pPixelNum, cNewValue, pVerify);
 }
 
-bool MPAInterface::ConfigureChipOriginalMask(ReadoutChip* pCbc, bool pVerify, uint32_t pBlockSize)
+bool MPAInterface::ConfigureChipOriginalMask(ReadoutChip* pMPA, bool pVerify, uint32_t pBlockSize)
 {
+
+    auto pixval=readPixel(pMPA, "PixelEnable", 1);//use pix 1 as a proxy. Better to save this as a constant
+    configPixel(pMPA, "PixelEnable", 0, pixval);
     auto allChannelEnabledGroup = std::make_shared<ChannelGroup<NSSACHANNELS * NMPACOLS>>();
-    return maskChannelGroup(pCbc, allChannelEnabledGroup, pVerify);
+    return maskChannelGroup(pMPA, allChannelEnabledGroup, pVerify);
 }
 bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_t pValue, bool pVerify)
 {
