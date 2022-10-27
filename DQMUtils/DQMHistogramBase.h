@@ -159,41 +159,10 @@ class DQMHistogramBase
                                                              myPad->GetUymax(),
                                                              myPad->GetUxmax(),
                                                              myPad->GetUymax(),
-                                                             RD53chargeConverter::VCal2Charge(hist->GetXaxis()->GetBinLowEdge(1), isNoise),
-                                                             RD53chargeConverter::VCal2Charge(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins()), isNoise),
+                                                             RD53Shared::firstChip->VCal2Charge(hist->GetXaxis()->GetBinLowEdge(1), isNoise),
+                                                             RD53Shared::firstChip->VCal2Charge(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins()), isNoise),
                                                              510,
                                                              "-"));
-                            else if(additionalAxisType == "frequency") // @TMP@
-                            {
-                                axes.emplace_back(new TGaxis(myPad->GetUxmax(),
-                                                             myPad->GetUymin(),
-                                                             myPad->GetUxmax(),
-                                                             myPad->GetUymax(),
-                                                             RD53FWconstants::CDR2Freq(hist->GetYaxis()->GetBinLowEdge(1)),
-                                                             RD53FWconstants::CDR2Freq(hist->GetYaxis()->GetBinLowEdge(hist->GetYaxis()->GetNbins())),
-                                                             510,
-                                                             "+L"));
-
-                                axes.back()->SetTitle("Frequency (MHz)");
-                                axes.back()->SetTitleOffset(1.4);
-                                axes.back()->SetTitleSize(0.035);
-                                axes.back()->SetTitleFont(40);
-                                axes.back()->SetLabelOffset(0.01);
-                                axes.back()->SetLabelSize(0.035);
-                                axes.back()->SetLabelFont(42);
-                                axes.back()->SetLabelColor(kRed);
-                                axes.back()->SetLineColor(kRed);
-                                axes.back()->Draw();
-
-                                axes.emplace_back(new TGaxis(myPad->GetUxmin(),
-                                                             myPad->GetUymax(),
-                                                             myPad->GetUxmax(),
-                                                             myPad->GetUymax(),
-                                                             RD53FWconstants::VDDD2Volt(hist->GetXaxis()->GetBinLowEdge(1)),
-                                                             RD53FWconstants::VDDD2Volt(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins())),
-                                                             510,
-                                                             "-"));
-                            }
 
                             axes.back()->SetTitle(additionalAxisTitle);
                             axes.back()->SetTitleOffset(1.2);

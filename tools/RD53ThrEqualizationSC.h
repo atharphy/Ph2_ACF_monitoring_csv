@@ -54,8 +54,6 @@ class ThrEqualizationSC : public SCurve
 #endif
 
   private:
-    const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
-
     DetectorDataContainer theTDACcontainer;
 
     void fillHisto();

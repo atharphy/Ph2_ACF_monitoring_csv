@@ -106,7 +106,7 @@ class Tool : public Ph2_System::SystemController
     virtual void Running(){};
     virtual bool GetRunningStatus();
 
-    void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000) override;
+    void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000, bool doAlsoFrontend = true) override;
     void Start(int runNumber) override;
     void Stop() override;
 

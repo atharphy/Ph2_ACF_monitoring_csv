@@ -31,6 +31,7 @@ void SCurve::ConfigureCalibration()
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
+    frontEnd       = RD53Shared::firstChip->getFEtype(colStart, colStop);
 
     // ########################
     // # Custom channel group #
@@ -292,13 +293,13 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
                                                                                                                    ->isChannelEnabled(row, col))
                             {
                                 for(auto i = 0u; i < dacList.size(); i++)
-                                    measurements[i] = fabs(detectorContainerVector[i]
-                                                               ->at(cBoard->getIndex())
-                                                               ->at(cOpticalGroup->getIndex())
-                                                               ->at(cHybrid->getIndex())
-                                                               ->at(cChip->getIndex())
-                                                               ->getChannel<OccupancyAndPh>(row, col)
-                                                               .fOccupancy);
+                                    measurements[i] = detectorContainerVector[i]
+                                                          ->at(cBoard->getIndex())
+                                                          ->at(cOpticalGroup->getIndex())
+                                                          ->at(cHybrid->getIndex())
+                                                          ->at(cChip->getIndex())
+                                                          ->getChannel<OccupancyAndPh>(row, col)
+                                                          .fOccupancy;
 
                                 SCurve::computeStats(measurements, offset, nHits, mean, rms);
 
@@ -344,6 +345,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
                     index++;
                 }
 
+    theThresholdAndNoiseContainer->resetNormalizationStatus();
     theThresholdAndNoiseContainer->normalizeAndAverageContainers(fDetectorContainer, this->getChannelGroupHandlerContainer(), 1);
 
     for(const auto cBoard: *theThresholdAndNoiseContainer)
@@ -377,6 +379,7 @@ void SCurve::computeStats(std::vector<float>& measurements, int offset, float& n
     float weight = 0;
     mean         = 0;
 
+    std::for_each(measurements.begin(), measurements.end(), [](float& ele) { ele = (std::fabs(ele) > 1. ? 1. : std::fabs(ele)); });
     std::reverse(measurements.begin(), measurements.end());
     auto itHigh = measurements.end() - std::max_element(measurements.begin(), measurements.end());
 
@@ -428,15 +431,28 @@ void SCurve::saveChipRegisters(int currentRun)
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
+        {
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
                     if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-                    std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + this->fDirectoryName);
+                    std::string command("mv " + cChip->getFileName(fileReg) + " " + this->fDirectoryName);
                     system(command.c_str());
                     LOG(INFO) << BOLDBLUE << "\t--> SCurve saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
                               << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
                 }
+
+            if(cOpticalGroup->flpGBT != nullptr)
+            {
+                if(doUpdateChip == true) cOpticalGroup->flpGBT->saveRegMap("");
+                cOpticalGroup->flpGBT->saveRegMap(fileReg);
+                std::string command("mv " + cOpticalGroup->flpGBT->getFileName(fileReg) + " " + this->fDirectoryName);
+                system(command.c_str());
+
+                LOG(INFO) << BOLDBLUE << "\t--> SCurve saved the LpGBT configuration file for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << RESET
+                          << BOLDBLUE << "]" << RESET;
+            }
+        }
 }

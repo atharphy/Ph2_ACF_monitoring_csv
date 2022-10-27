@@ -10,7 +10,6 @@
 #ifndef RD53ClockDelay_H
 #define RD53ClockDelay_H
 
-#include "../HWDescription/RD53ACommands.h"
 #include "RD53Latency.h"
 
 #ifdef __USE_ROOT__
@@ -63,7 +62,7 @@ class ClockDelay : public PixelAlive
     void fillHisto();
     void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer);
     void chipErrorReport() const;
-    void writeSequence(const Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::ReadoutChip* pChip, uint16_t clk_data_delay);
+    void writeClkDelaySequence(const Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::ReadoutChip* pChip, uint16_t value);
 
   protected:
     size_t startValue;
@@ -71,8 +70,6 @@ class ClockDelay : public PixelAlive
 
     std::string fileRes;
     int         theCurrentRun;
-    uint16_t    maxClkDelay;
-    uint16_t    maxCmdDelay;
 };
 
 #endif

@@ -55,6 +55,7 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                     }
                     catch(...)
                     {
+                        LOG(WARNING) << BOLDRED << "Register " << BOLDYELLOW << registerName << " is not present in my list of frontend chip registers" << RESET;
                     }
                 }
 
@@ -73,6 +74,13 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
     for(const auto cBoard: *fTheSystemController->fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
         {
+            if(cOpticalGroup->flpGBT == nullptr)
+            {
+                LOG(INFO) << BOLDRED << "[RD53Monitor::runLpGBTRegisterMonitor] No LpGBT chip found for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId()
+                          << BOLDRED << "]" << RESET;
+                continue;
+            }
+
             float registerValue;
             try
             {
@@ -90,6 +98,7 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
             }
             catch(...)
             {
+                LOG(WARNING) << BOLDRED << "Register " << BOLDYELLOW << registerName << " is not present in my list of LpGBT chip registers" << RESET;
                 theRegisterContainer.at(cBoard->getId())->at(cOpticalGroup->getId())->getSummary<std::tuple<time_t, float>>() = std::make_tuple(getTimeStamp(), -1);
             }
         }

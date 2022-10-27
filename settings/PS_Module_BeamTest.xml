@@ -14,7 +14,7 @@
           <Settings
           />
         </lpGBT>
-        <Hybrid Id="0" Status="1" reset="1">
+        <Hybrid Id="0" enable="1" reset="1">
             <Global>
                 <!-- in electrons, file parser will take care of conversion to DAC units for each chip type --> 
                 <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  -->
@@ -55,7 +55,7 @@
             <CIC Id="8" configfile="CIC_default.txt" />
         </Hybrid>
 
-        <Hybrid Id="1" Status="1" reset="1" i2cMaster="1">
+        <Hybrid Id="1" enable="1" reset="1" i2cMaster="1">
             <Global>
                 <!-- in electrons, file parser will take care of conversion to DAC units for each chip type --> 
                 <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  -->
@@ -101,8 +101,11 @@
 
     
     <!-- CONFIG-->
-    <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13  -->
-    <Register name="clock_source">3</Register> 
+    <!-- 15 - default (internal oscillator), 0 - AMC13 -->
+    <Register name="clock_source_u7">15</Register>
+    <!-- 3 = 3 = internal oscillator (default), 1 = fmc_l8_clk1, 2 = fmc_l8_clk0, 0 = COAX_IN -->
+    <Register name="clock_source_u8">3</Register>
+
     <Register name="fc7_daq_cnfg">
 	<Register name="optical_block">
 		<Register name="lpgbt_sc_worker">

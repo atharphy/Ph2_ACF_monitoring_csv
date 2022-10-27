@@ -23,13 +23,15 @@ void GainHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorSt
     // #######################
     // # Retrieve parameters #
     // #######################
-    nEvents    = this->findValueInSettings<double>(settingsMap, "nEvents");
-    nSteps     = this->findValueInSettings<double>(settingsMap, "VCalHnsteps");
-    startValue = this->findValueInSettings<double>(settingsMap, "VCalHstart");
-    stopValue  = this->findValueInSettings<double>(settingsMap, "VCalHstop");
-    offset     = this->findValueInSettings<double>(settingsMap, "VCalMED");
+    nEvents               = this->findValueInSettings<double>(settingsMap, "nEvents");
+    nSteps                = this->findValueInSettings<double>(settingsMap, "VCalHnsteps");
+    startValue            = this->findValueInSettings<double>(settingsMap, "VCalHstart");
+    stopValue             = this->findValueInSettings<double>(settingsMap, "VCalHstop");
+    offset                = this->findValueInSettings<double>(settingsMap, "VCalMED");
+    auto         frontEnd = RD53Shared::firstChip->getFEtype(nCols / 2, nCols / 2);
+    const size_t ToTsize  = frontEnd->maxToTvalue + 1;
 
-    auto hOcc2D = CanvasContainer<TH2F>("Gain", "Gain", nSteps, startValue - offset, stopValue - offset, nEvents, 0, RD53Shared::setBits(RD53EvtEncoder::NBIT_TOT / RD53Constants::NPIX_REGION));
+    auto hOcc2D = CanvasContainer<TH2F>("Gain", "Gain", nSteps, startValue - offset, stopValue - offset, nEvents, 0, ToTsize);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, "#DeltaVCal", "ToT");
 
     auto hOcc3D = CanvasContainer<TH3F>("GainMap", "Gain Map", nCols, 0, nCols, nRows, 0, nRows, nSteps, startValue - offset, stopValue - offset);

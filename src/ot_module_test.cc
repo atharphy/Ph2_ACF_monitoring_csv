@@ -21,6 +21,7 @@
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
+#include "tools/KIRA.h"
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -179,6 +180,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkCICAlignment", "Manually scan CIC input aligner", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkLink", "Check that I can receive constant pattern from link", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("kira", "KIRA scan", ArgvParser::OptionRequiresValue);
     //
     cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("readMonitors", "Read internal monitors on lpGBT [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
@@ -202,6 +204,7 @@ int main(int argc, char* argv[])
     std::string cInjectionSource = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
     std::string cSrcLnkTst       = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
     std::string cModuleId        = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
+    int cKiraPort                = std::stoi((cmd.foundOption("kira")) ? cmd.optionValue("kira") : "7010");
     std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     bool        cPulseShape      = (cmd.foundOption("pulseShape")) ? true : false;
 
@@ -1191,6 +1194,19 @@ int main(int argc, char* argv[])
         cBeamTestCheck.CheckWithTLU();
         cBeamTestCheck.writeObjects();
         cBeamTestCheck.Reset();
+    }
+
+    if(!cmd.foundOption("read") && cmd.foundOption("kira"))
+    {
+        std::ofstream cGoodRuns;
+        cGoodRuns.open("GoodRunNumbers.dat", std::fstream::app);
+        cGoodRuns << cRunNumber << "\n";
+        cGoodRuns.close();
+        KIRA cKira;
+        cKira.Inherit(&cTool);
+        cKira.Initialise(cKiraPort, "MyArduino");
+        cKira.determineLatency();
+        cKira.performKIRATest();
     }
 
     if(!cmd.foundOption("read") && cmd.foundOption("DataMonitor"))

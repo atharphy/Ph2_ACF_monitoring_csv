@@ -802,13 +802,13 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
 
 void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* pOpticalGroup, std::ostream& os, BeBoard* pBoard)
 {
-    bool cStatus = pHybridNode.attribute("Status").as_bool();
+    bool cEnable = pHybridNode.attribute("enable").as_bool();
 
-    if(cStatus)
+    if(cEnable)
     {
         os << BOLDBLUE << "|       |"
            << "----" << pHybridNode.name() << " --> " << BOLDBLUE << pHybridNode.first_attribute().name() << ": " << BOLDYELLOW << pHybridNode.attribute("Id").value() << BOLDBLUE
-           << ", Status: " << BOLDYELLOW << expandEnvironmentVariables(pHybridNode.attribute("Status").value()) << BOLDBLUE << RESET << std::endl;
+           << ", Enable: " << BOLDYELLOW << expandEnvironmentVariables(pHybridNode.attribute("enable").value()) << BOLDBLUE << RESET << std::endl;
 
         Hybrid* cHybrid;
         if(pBoard->getBoardType() == BoardType::RD53)
@@ -821,15 +821,14 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
         }
         else
         {
+            uint8_t cHybridId = 2 * pOpticalGroup->getId() + pHybridNode.attribute("Id").as_int();
             uint8_t cMasterId;
             if(pHybridNode.attribute("i2cMaster")) { cMasterId = pHybridNode.attribute("i2cMaster").as_int(); } // can overwrite default from xml
             else
-                cMasterId = (pHybridNode.attribute("Id").as_int() % 2 == 0) ? 2 : 0; // default for OT hybrids is that RHS is connected to master 2, LHS connected to master 1
+                cMasterId = (cHybridId % 2 == 0) ? 2 : 0; // default for OT hybrids is that RHS is connected to master 2, LHS connected to master 1
 
             os << BOLDBLUE << "I2C Master Id is " << +cMasterId << RESET;
-            cHybrid = pOpticalGroup->addHybridContainer(
-                pHybridNode.attribute("Id").as_int(),
-                new OuterTrackerHybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pOpticalGroup->getOpticalGroupId(), pHybridNode.attribute("Id").as_int()));
+            cHybrid = pOpticalGroup->addHybridContainer(cHybridId, new OuterTrackerHybrid(pOpticalGroup->getBeBoardId(), pOpticalGroup->getFMCId(), pOpticalGroup->getOpticalGroupId(), cHybridId));
 
             cHybrid->setMasterId(cMasterId);
 
@@ -1422,7 +1421,7 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
         for(pugi::xml_node nSetting = nSettings.child("Setting"); nSetting; nSetting = nSetting.next_sibling())
         {
             if((strcmp(nSetting.attribute("name").value(), "RegNameDAC1") == 0) || (strcmp(nSetting.attribute("name").value(), "RegNameDAC2") == 0) ||
-               (strcmp(nSetting.attribute("name").value(), "OutputBinaryDir") == 0))
+               (strcmp(nSetting.attribute("name").value(), "OutputBinaryDir") == 0) || (strcmp(nSetting.attribute("name").value(), "KIRA_ID") == 0))
             {
                 std::string value(nSetting.first_child().value());
                 value.erase(std::remove(value.begin(), value.end(), ' '), value.end());
@@ -1521,7 +1520,11 @@ void FileParser::parseGlobalRD53Settings(pugi::xml_node pHybridNode, Hybrid* pHy
             uint16_t    regvalue = convertAnyInt(attr.value());
             os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
 
-            for(auto theChip: *pHybrid) static_cast<ReadoutChip*>(theChip)->setReg(regname, regvalue, true);
+            for(auto theChip: *pHybrid)
+            {
+                static_cast<ReadoutChip*>(theChip)->getRegItem(regname).fDefValue = regvalue;
+                static_cast<ReadoutChip*>(theChip)->getRegItem(regname).fPrmptCfg = true;
+            }
         }
     }
 }
@@ -1538,9 +1541,10 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
 
         for(const pugi::xml_attribute& attr: cLocalChipSettings.attributes())
         {
-            std::string regname  = attr.name();
-            uint16_t    regvalue = convertAnyInt(attr.value());
-            theChip->setReg(regname, regvalue, true);
+            std::string regname                    = attr.name();
+            uint16_t    regvalue                   = convertAnyInt(attr.value());
+            theChip->getRegItem(regname).fDefValue = regvalue;
+            theChip->getRegItem(regname).fPrmptCfg = true;
             os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
         }
     }
