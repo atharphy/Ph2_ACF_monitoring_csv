@@ -15,6 +15,7 @@
 #include "../Utils/ChannelContainerStream.h"
 #include "../Utils/ChipContainerStream.h"
 #include "../Utils/ContainerFactory.h"
+#include "../Utils/GenericDataArray.h"
 #include "../Utils/RD53Shared.h"
 #include "DQMHistogramBase.h"
 
@@ -31,6 +32,7 @@ class ThrEqualizationHistograms : public DQMHistogramBase
 
     void fillOccupancy(const DetectorDataContainer& OccupancyContainer);
     void fillTDAC(const DetectorDataContainer& TDACContainer);
+    void fillOccupancyScan(const DetectorDataContainer& OccupancyContainer);
     void fillTDACGain(const DetectorDataContainer& TDACGainContainer);
 
   private:
@@ -39,12 +41,13 @@ class ThrEqualizationHistograms : public DQMHistogramBase
     DetectorDataContainer ThrEqualization;
     DetectorDataContainer TDAC1D;
     DetectorDataContainer TDAC2D;
+    DetectorDataContainer Occupancy1D;
     DetectorDataContainer TDACGain;
 
-    size_t startTDACGainValue;
-    size_t stopTDACGainValue;
+    size_t startValue;
+    size_t stopValue;
+    size_t TDACGainNSteps;
     size_t nEvents;
-    size_t VCalHnsteps;
 
     size_t nRows;
     size_t nCols;

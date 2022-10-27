@@ -55,7 +55,7 @@ void ThrEqualization::ConfigureCalibration()
     // # Initialize dac scan values #
     // ##############################
     const float step = (TDACGainNSteps != 0 ? (stopTDACGainValue - startTDACGainValue) / TDACGainNSteps : 0);
-    for(auto i = 0u; i < TDACGainNSteps; i++) dacList.push_back(stopTDACGainValue + step * i);
+    for(auto i = 0u; i <= TDACGainNSteps; i++) dacList.push_back(startTDACGainValue + step * i);
 
     // #######################
     // # Initialize progress #
@@ -84,14 +84,18 @@ void ThrEqualization::Running()
 
 void ThrEqualization::sendData()
 {
+    const size_t TDACGainSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
+
     auto theOccStream      = prepareChannelContainerStreamer<OccupancyAndPh>("Occ");
     auto theTDACStream     = prepareChannelContainerStreamer<uint16_t>("TDAC");
+    auto theOccScanStream  = prepareChannelContainerStreamer<OccupancyAndPh, GenericDataArray<TDACGainSize>>("OccScan");
     auto theTDACGainStream = prepareChannelContainerStreamer<uint16_t>("TDACGain");
 
     if(fDQMStreamerEnabled == true)
     {
-        for(const auto cBoard: (TDACGainNSteps == 0 ? *theOccContainer.get() : theContainer)) theOccStream->streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: *theOccContainer.get()) theOccStream->streamAndSendBoard(cBoard, fDQMStreamer);
         for(const auto cBoard: theTDACContainer) theTDACStream->streamAndSendBoard(cBoard, fDQMStreamer);
+        for(const auto cBoard: theContainer) theOccScanStream->streamAndSendBoard(cBoard, fDQMStreamer);
         for(const auto cBoard: theTDACGainContainer) theTDACGainStream->streamAndSendBoard(cBoard, fDQMStreamer);
     }
 }
@@ -316,14 +320,14 @@ void ThrEqualization::analyzeDuringRun()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    float best   = 0;
+                    float best   = 1;
                     int   regVal = 0;
 
                     for(auto i = 0u; i < dacList.size(); i++)
                     {
                         auto current =
                             theContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TDACGainSize>>().data[i];
-                        if(current > best)
+                        if(current < best)
                         {
                             regVal = dacList[i];
                             best   = current;
@@ -343,8 +347,9 @@ void ThrEqualization::analyzeDuringRun()
 void ThrEqualization::fillHisto()
 {
 #ifdef __USE_ROOT__
-    histos->fillOccupancy(TDACGainNSteps == 0 ? *theOccContainer.get() : theContainer);
+    histos->fillOccupancy(*theOccContainer.get());
     histos->fillTDAC(theTDACContainer);
+    histos->fillOccupancyScan(theContainer);
     histos->fillTDACGain(theTDACGainContainer);
 #endif
 }
@@ -395,7 +400,8 @@ void ThrEqualization::scanDac(const std::string& regName, const std::vector<uint
                                        ->at(cChip->getIndex())
                                        ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
                                        ->allChannelGroup()
-                                       ->isChannelEnabled(row, col))
+                                       ->isChannelEnabled(row, col) &&
+                                   cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy >= 0)
                                 {
                                     float value = cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy;
                                     avg += value;
@@ -409,10 +415,8 @@ void ThrEqualization::scanDac(const std::string& regName, const std::vector<uint
                         // ###############
                         // # Save output #
                         // ###############
-                        for(const auto cBoard: *theContainer)
-                            for(const auto cOpticalGroup: *cBoard)
-                                for(const auto cHybrid: *cOpticalGroup)
-                                    for(const auto cChip: *cHybrid) cChip->getSummary<GenericDataArray<TDACGainSize>>().data[i] = stdDev;
+                        theContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TDACGainSize>>().data[i] =
+                            stdDev;
 
                         // ##############################################
                         // # Send periodic data to monitor the progress #
