@@ -219,6 +219,7 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
         cItem.fValue  = (cRegName == "strip") ? cMaskValue : 0xFF;
         cRegItems.push_back(cItem);
     }
+    //cSuccess = fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerifLoop);
     cSuccess = fBoardFW->MultiRegisterWrite(pChip, cRegItems, false);
     if(!cSuccess)
     {
@@ -245,6 +246,7 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
         // LOG(INFO) << BOLDBLUE << "Setting register " << dacName.str() << " to " << cItem.fValue << RESET;
         cRegItems.push_back(cItem);
     }
+    //cSuccess = cSuccess && fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerifLoop);
     cSuccess = cSuccess && fBoardFW->MultiRegisterWrite(pChip, cRegItems, false);
     // write mask
     cRegItems.clear();
@@ -256,6 +258,7 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
         cItem.fValue  = cMaskValue;
         cRegItems.push_back(cItem);
     }
+    //cSuccess = cSuccess && fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerifLoop);
     cSuccess = cSuccess && fBoardFW->MultiRegisterWrite(pChip, cRegItems, false);
     return cSuccess;
 }

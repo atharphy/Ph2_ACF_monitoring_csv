@@ -332,6 +332,13 @@ bool MPA2Interface::configPeri(Chip* pChip, std::string cReg, uint8_t pValue, bo
     // LOG (INFO) << BOLDRED << PERI_CONFIG_TABLE.size() << " items in peri map." << RESET;
     // for( auto cMapItem : PERI_CONFIG_TABLE )
     //     LOG (INFO) << cMapItem.first << " " << +cMapItem.second << RESET;
+
+    if(cReg == "ReadoutMode")
+    {
+        uint8_t     cBitShift = 0;
+        return this->WriteChipRegBits(pChip, "Control_1", (pValue << cBitShift), "Mask", 0x3, pVerifLoop);
+    }
+
     uint8_t  cRegAddress = (PERI_CONFIG_TABLE.find(cReg))->second.second;
     uint8_t  cBlock      = (PERI_CONFIG_TABLE.find(cReg))->second.first;
     uint16_t cAddress    = this->regPeri(pChip, cBlock, cRegAddress);
@@ -477,7 +484,8 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
 {
     setBoard(pMPA2->getBeBoardId());
 
-    LOG(DEBUG) << BOLDMAGENTA << " MPA2Interface::WriteChipReg writing to " << pRegName << RESET;
+    //LOG(INFO) << BOLDMAGENTA << "MPA2Interface::WriteChipReg writing to " << pRegName << RESET;
+    //LOG(INFO) << BOLDMAGENTA << "VALUE " << pValue << RESET;
 
     // need to or success
     if(pRegName.find("ThDAC_ALL") != std::string::npos || pRegName.find("Threshold") != std::string::npos)
@@ -490,6 +498,12 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     {
         return this->WriteChipSingleReg(pMPA2, "TrimDAC_ALL", pValue, false);
     }
+    else if(pRegName == "ReadoutMode")
+    {
+        uint8_t     cBitShift = 0;
+        return this->WriteChipRegBits(pMPA2, "Control_1", (pValue << cBitShift), "Mask", 0x3, pVerifLoop);
+    }
+
     else if(pRegName == "EnablePhaseAlignmentPattern")
     {
         this->producePhaseAlignmentPattern(static_cast<ReadoutChip*>(pMPA2), pValue);
@@ -502,6 +516,7 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         LOG(DEBUG) << BOLDMAGENTA << "Masking pixel number " << +cPixelNum << " register is " << pRegName << RESET;
         return maskPixel(pMPA2, cPixelNum, pValue, pVerifLoop);
     }
+
     else if(pRegName.find("SelectEdgeT1") != std::string::npos)
     {
         std::string cRegName  = "EdgeSelT1Raw";

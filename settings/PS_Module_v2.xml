@@ -3,7 +3,8 @@
   <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
   <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1" boardReset="1">
     <!-- <connection id="board" uri="chtcp-2.0://cmsmoduletest01:10203?target=192.168.1.84:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" /> -->
-    <connection id="board" uri="chtcp-2.0://outertracker03.dhcp.fnal.gov:10203?target=192.168.0.7:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
+    <!--<connection id="board" uri="chtcp-2.0://outertracker03.dhcp.fnal.gov:10203?target=192.168.0.7:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> -->
+    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.14:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" /> 
     <CDCE configure="0" clockRate="320"/>
     
     <OpticalGroup Id="0" FMCId="0" reset="1">
@@ -31,20 +32,31 @@
             </Global>
             
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
-            <SSA2 Id="0" configfile="SSA2.txt" />
-            <SSA2 Id="1" configfile="SSA2.txt" />
+            <!--<SSA2 Id="0" configfile="SSA2.txt" />
+             <SSA2 Id="1" configfile="SSA2.txt" />
             <SSA2 Id="2" configfile="SSA2.txt" />
             <SSA2 Id="3" configfile="SSA2.txt" />
             <SSA2 Id="4" configfile="SSA2.txt" />
             <SSA2 Id="5" configfile="SSA2.txt" />
             <SSA2 Id="6" configfile="SSA2.txt" />
-            <SSA2 Id="7" configfile="SSA2.txt" />
+            <SSA2 Id="7" configfile="SSA2.txt" /> -->
+
+             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
+            <!--<MPA2 Id="8" configfile="MPA2Default.txt" /> -->
+            <MPA2 Id="9" configfile="MPA2Default.txt" />
+            <!--<MPA2 Id="10" configfile="MPA2Default.txt" />
+            <MPA2 Id="11" configfile="MPA2Default.txt" />
+            <MPA2 Id="12" configfile="MPA2Default.txt" />
+            <MPA2 Id="13" configfile="MPA2Default.txt" />
+            <MPA2 Id="14" configfile="MPA2Default.txt" />
+            <MPA2 Id="15" configfile="MPA2Default.txt" /> -->
+
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
 
-        <Hybrid Id="1" enable="1" reset="1" i2cMaster="0">
+        <Hybrid Id="1" enable="1"  Status="0"  reset="1" i2cMaster="0">
             <Global>
                 <!-- in electrons, file parser will take care of conversion to DAC units for each chip type --> 
                 <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  -->
@@ -63,15 +75,26 @@
                 <!--<MaskedStrips SSAId="4" Rows="58,59" />-->
             </Global>
            
-            <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
+            <!--<SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
             <SSA2 Id="0" configfile="SSA2.txt" />
-            <SSA2 Id="1" configfile="SSA2.txt" />
+             <SSA2 Id="1" configfile="SSA2.txt" />
             <SSA2 Id="2" configfile="SSA2.txt" />
-            <SSA2 Id="3" configfile="SSA2.txt" />
+            <SSA2 Id="3" configfile="SSA2.txt" /> 
             <SSA2 Id="4" configfile="SSA2.txt" />
             <SSA2 Id="5" configfile="SSA2.txt" />
             <SSA2 Id="6" configfile="SSA2.txt" />
-            <SSA2 Id="7" configfile="SSA2.txt" />
+            <SSA2 Id="7" configfile="SSA2.txt" /> -->
+
+            <!--<MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
+            <MPA2 Id="8" configfile="MPA2Default.txt" />
+             <MPA2 Id="9" configfile="MPA.txt" />
+            <MPA2 Id="10" configfile="MPA.txt" />
+            <MPA2 Id="11" configfile="MPA.txt" />
+            <MPA2 Id="12" configfile="MPA.txt" />
+            <MPA2 Id="13" configfile="MPA.txt" />
+            <MPA2 Id="14" configfile="MPA.txt" />
+            <MPA2 Id="15" configfile="MPA.txt" />-->
+
 
 	    <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
@@ -247,9 +270,15 @@
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
     <Setting name="FitSCurves">0</Setting>
     <Setting name="PlotSCurves">1</Setting>
-    <Setting name="PedestalEqualizationPulseAmplitude">77</Setting>
-    <Setting name="PedeNoisePulseAmplitude">77</Setting>
+    <Setting name="PedestalEqualizationPulseAmplitude">40</Setting>
+    <Setting name="PedeNoisePulseAmplitude">40</Setting>
     <Setting name="TriggerRate">10</Setting>
+
+
+    <Setting name="PedeNoiseUseFixRange">1</Setting>
+    <Setting name="PedeNoiseMinThreshold">100</Setting>
+    <Setting name="PedeNoiseMaxThreshold">250</Setting>
+
 
     <Setting name="TargetVcth">0x78</Setting>
     <Setting name="TargetOffset">0x50</Setting>

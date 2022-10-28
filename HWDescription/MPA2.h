@@ -74,7 +74,7 @@ class MPA2 : public ReadoutChip
     uint32_t PNglobal(std::pair<uint32_t, uint32_t> PC) { return (PC.first - 1) * 120 + (PC.second - 1) + 1; }
 };
 
-struct MPARegItemComparer
+struct MPA2RegItemComparer //Irene
 {
     bool operator()(const MPARegPair& pRegItem1, const MPARegPair& pRegItem2) const;
 };

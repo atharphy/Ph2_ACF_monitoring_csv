@@ -139,7 +139,7 @@
         <!-- Fast Command Block -->
         <Register name="fast_command_block">
             <Register name="triggers_to_accept"> 0 </Register>
-            <Register name="trigger_source"> 4 </Register>
+            <Register name="trigger_source"> 3 </Register>
             <Register name="user_trigger_frequency"> 100 </Register>
             <Register name="stubs_mask"> 1 </Register>
             <!--this is the delay for the stub trigger-->
@@ -235,7 +235,7 @@
     </Register>
     <!-- TLU Block -->
     <Register name="tlu_block">
-                <Register name="tlu_enabled"> 1 </Register>
+                <Register name="tlu_enabled"> 0 </Register>
                 <Register name="handshake_mode"> 2 </Register>
                 <Register name="trigger_id_delay"> 1 </Register>
     </Register>
@@ -275,6 +275,10 @@
     <Setting name="PedestalEqualizationPulseAmplitude">77</Setting>
     <Setting name="PedeNoisePulseAmplitude">77</Setting>
     <Setting name="TriggerRate">10</Setting>
+
+    <Setting name="PedeNoiseUseFixRange">1</Setting>
+    <Setting name="PedeNoiseMinThreshold">10</Setting>
+    <Setting name="PedeNoiseMaxThreshold">100</Setting>
 
     <Setting name="TargetVcth">0x78</Setting>
     <Setting name="TargetOffset">0x50</Setting>

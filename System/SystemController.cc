@@ -145,6 +145,9 @@ void SystemController::readFile(std::vector<uint32_t>& pVec, uint32_t pNWords32)
 
 void SystemController::InitializeHw(const std::string& pFilename, std::ostream& os, bool streamData, uint16_t DQMportNumber, uint16_t monitorDQMportNumber)
 {
+
+
+    std::cout<<"TESTETASFSAD"<<std::endl;
     fDQMStreamerEnabled        = streamData;
     fMonitorDQMStreamerEnabled = streamData;
 

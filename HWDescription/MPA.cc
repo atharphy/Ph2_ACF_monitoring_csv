@@ -32,6 +32,7 @@ MPA::MPA(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pH
     fChipOriginalMask->enableAllChannels();
     fPartnerId = pPartnerId;
     loadfRegMap(filename);
+    std::cout<<"SETMPA"<<std::endl;
     setFrontEndType(FrontEndType::MPA);
     for(auto& cMapItem: fRegMap)
     {
