@@ -26,6 +26,7 @@ void ThrEqualization::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
+    resetTDAC          = this->findValueInSettings<double>("VCalHstart");
     startValue         = this->findValueInSettings<double>("VCalHstart");
     stopValue          = this->findValueInSettings<double>("VCalHstop");
     startTDACGainValue = this->findValueInSettings<double>("TDACGainStart");
@@ -245,7 +246,7 @@ void ThrEqualization::draw()
 void ThrEqualization::analyze()
 {
     const float  maxTDACdistance = 2; // @CONST@
-    const size_t TDACcenter      = frontEnd->nTDACvalues / 2;
+    const size_t TDACcenter      = (resetTDAC == 0 ? frontEnd->nTDACvalues / 2 : resetTDAC);
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)

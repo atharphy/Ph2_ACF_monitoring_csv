@@ -75,6 +75,7 @@ class ThrEqualization : public PixelAlive
     void chipErrorReport() const;
 
   protected:
+    int    resetTDAC;
     size_t startValue;
     size_t stopValue;
     size_t startTDACGainValue;
