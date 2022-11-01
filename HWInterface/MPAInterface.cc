@@ -324,6 +324,7 @@ uint16_t MPAInterface::regRow(Chip* pChip, int pBaseRegister, int pRow)
 // Would want  to do a rowwise broadcast -- maybe using col 0  for bit mask?
 bool MPAInterface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify)
 {
+
     auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>>(cChip->getChipOriginalMask());
     auto groupToMask   = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS * NMPACOLS>>(group);
 
@@ -341,6 +342,10 @@ bool MPAInterface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<Ch
         auto shifted = std::bitset<NSSACHANNELS * NMPACOLS>(0x1) << ipix;
         bool bitval  = bool(((cBitset & shifted) >> ipix).to_ulong());
 
+        //if (not bitval)LOG(INFO) << BOLDBLUE << "MASKED " <<ipix<< RESET;
+	//usually this function performs a complete reconfig but here it just masks.  See change to ConfigureChipOriginalMask below
+        if (bitval) continue;
+
         // uint32_t           cPixelIds = ipix;
         // std::ostringstream cRegName;
         // cRegName << "ENFLAGS_P" << std::to_string(cPixelIds+1);
@@ -350,7 +355,7 @@ bool MPAInterface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<Ch
         // Req.first=cRegName.str();
         // Req.second=regval;
         // pVecReq.push_back(Req);
-
+	
         returnval &= maskPixel(cChip, ipix + 1, (1 - bitval), pVerify); // I  think mask 0 is enable?
     }
     // return this->WriteChipMultReg(cChip, pVecReq);
@@ -401,10 +406,14 @@ bool MPAInterface::enablePixelInjection(Chip* pChip, int pPixelNum, uint8_t pInj
     return this->configPixel(pChip, "PixelEnable", pPixelNum, cNewValue, pVerify);
 }
 
-bool MPAInterface::ConfigureChipOriginalMask(ReadoutChip* pCbc, bool pVerify, uint32_t pBlockSize)
+bool MPAInterface::ConfigureChipOriginalMask(ReadoutChip* pMPA, bool pVerify, uint32_t pBlockSize)
 {
+    //use pix 1 as a proxy. Better to save this as a constant
+    auto pixval=readPixel(pMPA, "ENFLAGS", 1);
+    //write broadcast then mask is much much faster than full config
+    configPixel(pMPA, "ENFLAGS", 0, pixval);
     auto allChannelEnabledGroup = std::make_shared<ChannelGroup<NSSACHANNELS * NMPACOLS>>();
-    return maskChannelGroup(pCbc, allChannelEnabledGroup, pVerify);
+    return maskChannelGroup(pMPA, allChannelEnabledGroup, pVerify);
 }
 bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_t pValue, bool pVerify)
 {
@@ -412,7 +421,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
 
     // LOG(INFO) << BOLDRED << "glorpMPA! " << RESET;
 
-    LOG(DEBUG) << BOLDMAGENTA << " MPAInterface::WriteChipReg writing to " << pRegName << RESET;
+    LOG(INFO) << BOLDMAGENTA << " MPAInterface::WriteChipReg writing to " << pRegName << RESET;
 
     // need to or success
     if(pRegName.find("ThDAC_ALL") != std::string::npos || pRegName.find("Threshold") != std::string::npos)

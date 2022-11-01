@@ -20,8 +20,8 @@
       <Hybrid Id="0" enable="1">
         <RD53_Files path="${PWD}/" />
 
-        <!-- Available Comment fields are: 50x50, 25x100origR0C0, 25x100origR1C0, unknown, combined with dual, quad -->
-        <RD53A Id="0" Lane="0" configfile="CMSIT_RD53A.txt" RxGroups="6" RxChannels="0" TxGroups="3" TxChannels="0" Comment="50x50">
+        <!-- Available Comment fields are: 50x50, 25x100origR0C0, 25x100origR1C0, unknown, combined with RD53A, RD53B, dual, quad -->
+        <RD53A Id="0" Lane="0" configfile="CMSIT_RD53A.txt" RxGroups="6" RxChannels="0" TxGroups="3" TxChannels="0" Comment="RD53A 50x50">
           <!-- Overwrite .txt configuration file settings -->
           <Settings
               PA_IN_BIAS_LIN         =  "350"
@@ -59,12 +59,13 @@
               GP_LVDS_ROUTE          =    "0"
               LATENCY_CONFIG         =  "136"
               CLK_DATA_DELAY         =    "0"
-              INJECTION_SELECT       =    "9"
+              CAL_EDGE_FINE_DELAY    =    "9"
+              ANALOG_INJ_MODE        =    "0"
 
               VOLTAGE_TRIM_DIG       =   "16"
               VOLTAGE_TRIM_ANA       =   "16"
 
-              CML_CONFIG_SER_EN_TAP  = "0b00"
+              CML_CONFIG_SER_EN_TAP  = "0b11"
               CML_CONFIG_SER_INV_TAP = "0b00"
               CML_TAP0_BIAS          =  "500"
               CML_TAP1_BIAS          =    "0"
@@ -82,10 +83,6 @@
               ADC_MAXIMUM_VOLT       =  "839"
               TEMPSENS_IDEAL_FACTOR  = "1225"
               />
-          <!--
-              Monitoring: MONITOR_CONFIG_ADC, MONITOR_CONFIG_BG, ADC_OFFSET_VOLT, ADC_MAXIMUM_VOLT, TEMPSENS_IDEAL_FACTOR
-              CLK_DATA_DELAY: [8] clk phase; [7:4] clk delay; [3:0] data delay
-          -->
         </RD53A>
 
         <Global
@@ -95,22 +92,22 @@
             EN_CORE_COL_DIFF_1       =     "0"
             EN_CORE_COL_DIFF_2       =     "0"
 
-            EN_MACRO_COL_CAL_LIN_1   = "65535"
-            EN_MACRO_COL_CAL_LIN_2   = "65535"
-            EN_MACRO_COL_CAL_LIN_3   = "65535"
-            EN_MACRO_COL_CAL_LIN_4   = "65535"
-            EN_MACRO_COL_CAL_LIN_5   =    "15"
+            EN_CORE_COL_CAL_LIN_1    = "65535"
+            EN_CORE_COL_CAL_LIN_2    = "65535"
+            EN_CORE_COL_CAL_LIN_3    = "65535"
+            EN_CORE_COL_CAL_LIN_4    = "65535"
+            EN_CORE_COL_CAL_LIN_5    =    "15"
 
-            EN_MACRO_COL_CAL_SYNC_1  = "65535"
-            EN_MACRO_COL_CAL_SYNC_2  = "65535"
-            EN_MACRO_COL_CAL_SYNC_3  = "65535"
-            EN_MACRO_COL_CAL_SYNC_4  = "65535"
+            EN_CORE_COL_CAL_SYNC_1   = "65535"
+            EN_CORE_COL_CAL_SYNC_2   = "65535"
+            EN_CORE_COL_CAL_SYNC_3   = "65535"
+            EN_CORE_COL_CAL_SYNC_4   = "65535"
 
-            EN_MACRO_COL_CAL_DIFF_1  = "65535"
-            EN_MACRO_COL_CAL_DIFF_2  = "65535"
-            EN_MACRO_COL_CAL_DIFF_3  = "65535"
-            EN_MACRO_COL_CAL_DIFF_4  = "65535"
-            EN_MACRO_COL_CAL_DIFF_5  =    "15"
+            EN_CORE_COL_CAL_DIFF_1   = "65535"
+            EN_CORE_COL_CAL_DIFF_2   = "65535"
+            EN_CORE_COL_CAL_DIFF_3   = "65535"
+            EN_CORE_COL_CAL_DIFF_4   = "65535"
+            EN_CORE_COL_CAL_DIFF_5   =    "15"
 
             HITOR_0_MASK_LIN_0       =     "0"
             HITOR_0_MASK_LIN_1       =     "0"
@@ -144,6 +141,11 @@
             HITOR_1_CNT              =     "0"
             HITOR_2_CNT              =     "0"
             HITOR_3_CNT              =     "0"
+
+            WNGFIFO_FULL_CNT_0       =     "0"
+            WNGFIFO_FULL_CNT_1       =     "0"
+            WNGFIFO_FULL_CNT_2       =     "0"
+            WNGFIFO_FULL_CNT_3       =     "0"
             />
       </Hybrid>
     </OpticalGroup>
@@ -213,7 +215,7 @@
     <Setting name="nEvents">             100 </Setting>
     <Setting name="nEvtsBurst">          100 </Setting>
     <!-- For Noise and Threshold Minimization
-    <Setting name="nEvents">        10000000 </Setting>
+    <Setting name="nEvents">         1000000 </Setting>
     <Setting name="nEvtsBurst">        10000 </Setting>
     -->
 
@@ -308,9 +310,9 @@
       <MonitoringElement device="RD53" register="TEMPSENS_1"      enable="1"/>
       <MonitoringElement device="RD53" register="TEMPSENS_4"      enable="1"/>
 
-      <MonitoringElement device="LpGBT" register="TEMP"           enable="1"/>
-      <MonitoringElement device="LpGBT" register="VDD"            enable="1"/>
-      <MonitoringElement device="LpGBT" register="PUSMStatus"     enable="1"/>
+      <MonitoringElement device="LpGBT" register="TEMP"           enable="0"/>
+      <MonitoringElement device="LpGBT" register="VDD"            enable="0"/>
+      <MonitoringElement device="LpGBT" register="PUSMStatus"     enable="0"/>
     </Monitoring>
   </MonitoringSettings>
 

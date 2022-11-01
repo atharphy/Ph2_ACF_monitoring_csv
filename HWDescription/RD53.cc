@@ -215,7 +215,7 @@ void RD53::saveRegMap(const std::string& fName2Add)
 {
     const int Nspaces = 26; // @CONST@
 
-    std::string   output = RD53::getFileName(fName2Add);
+    std::string   output = this->getFileName(fName2Add);
     std::ofstream file(output.c_str(), std::ios::out | std::ios::trunc);
 
     if(file)
@@ -305,6 +305,16 @@ void RD53::copyMaskToDefault(const std::string& which)
         else if(which == "td")
             fPixelsMaskDefault.TDAC = fPixelsMask.TDAC;
     }
+
+    if((which == "all") || (which == "en"))
+        for(auto col = 0u; col < this->getNCols(); col++)
+            for(auto row = 1u; row < this->getNRows(); row++)
+            {
+                if(fPixelsMaskDefault.Enable[row + this->getNRows() * col] == true)
+                    fChipOriginalMask->enableChannel(row, col);
+                else
+                    fChipOriginalMask->disableChannel(row, col);
+            }
 }
 
 void RD53::resetMask()
@@ -312,7 +322,7 @@ void RD53::resetMask()
     std::fill(fPixelsMask.Enable.begin(), fPixelsMask.Enable.end(), false);
     std::fill(fPixelsMask.HitBus.begin(), fPixelsMask.HitBus.end(), false);
     std::fill(fPixelsMask.InjEn.begin(), fPixelsMask.InjEn.end(), false);
-    std::fill(fPixelsMask.TDAC.begin(), fPixelsMask.TDAC.end(), RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2);
+    std::fill(fPixelsMask.TDAC.begin(), fPixelsMask.TDAC.end(), this->getFEtype(this->getNCols() / 2, this->getNCols() / 2)->nTDACvalues / 2);
 }
 
 void RD53::enableAllPixels()
@@ -327,7 +337,7 @@ void RD53::disableAllPixels()
     std::fill(fPixelsMask.HitBus.begin(), fPixelsMask.HitBus.end(), false);
 }
 
-size_t RD53::getNbMaskedPixels() { return std::count(fPixelsMask.Enable.begin(), fPixelsMask.Enable.begin(), 0); }
+size_t RD53::getNbMaskedPixels() { return std::count(fPixelsMask.Enable.begin(), fPixelsMask.Enable.end(), false); }
 
 void RD53::enablePixel(unsigned int row, unsigned int col, bool enable)
 {
@@ -337,7 +347,7 @@ void RD53::enablePixel(unsigned int row, unsigned int col, bool enable)
 
 void     RD53::injectPixel(unsigned int row, unsigned int col, bool inject) { fPixelsMask.InjEn[row + this->getNRows() * col] = inject; }
 void     RD53::setTDAC(unsigned int row, unsigned int col, uint8_t TDAC) { fPixelsMask.TDAC[row + this->getNRows() * col] = TDAC; }
-void     RD53::resetTDAC() { std::fill(fPixelsMask.TDAC.begin(), fPixelsMask.TDAC.end(), RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2); }
+void     RD53::resetTDAC() { std::fill(fPixelsMask.TDAC.begin(), fPixelsMask.TDAC.end(), this->getFEtype(this->getNCols() / 2, this->getNCols() / 2)->nTDACvalues / 2); }
 uint8_t  RD53::getTDAC(unsigned int row, unsigned int col) { return fPixelsMask.TDAC[row + this->getNRows() * col]; }
 uint32_t RD53::getNumberOfChannels() const { return this->getNRows() * this->getNCols(); }
 
@@ -353,21 +363,5 @@ uint8_t RD53::getNumberOfBits(const std::string& regName)
     if(it == fRegMap.end()) return 0;
     return it->second.fBitSize;
 }
-
-RD53::CalCmd::CalCmd(const uint8_t& cal_edge_mode, const uint8_t& cal_edge_delay, const uint8_t& cal_edge_width, const uint8_t& cal_aux_mode, const uint8_t& cal_aux_delay)
-    : cal_edge_mode(cal_edge_mode), cal_edge_delay(cal_edge_delay), cal_edge_width(cal_edge_width), cal_aux_mode(cal_aux_mode), cal_aux_delay(cal_aux_delay)
-{
-}
-
-void RD53::CalCmd::setCalCmd(const uint8_t& _cal_edge_mode, const uint8_t& _cal_edge_delay, const uint8_t& _cal_edge_width, const uint8_t& _cal_aux_mode, const uint8_t& _cal_aux_delay)
-{
-    cal_edge_mode  = _cal_edge_mode;
-    cal_edge_delay = _cal_edge_delay;
-    cal_edge_width = _cal_edge_width;
-    cal_aux_mode   = _cal_aux_mode;
-    cal_aux_delay  = _cal_aux_delay;
-}
-
-uint32_t RD53::CalCmd::getCalCmd(const uint8_t& chipId) { return bits::pack<4, 1, 3, 6, 1, 5>(chipId, cal_edge_mode, cal_edge_delay, cal_edge_width, cal_aux_mode, cal_aux_delay); }
 
 } // namespace Ph2_HwDescription

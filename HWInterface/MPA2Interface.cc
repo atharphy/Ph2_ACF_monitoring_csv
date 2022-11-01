@@ -161,7 +161,9 @@ void MPA2Interface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pIn
     //     cPixelIds.push_back( (uint32_t)(pInjection.fColumn)*120+(uint32_t)pInjection.fRow );
     // }
     // first make sure all pixels output 0x00
+    LOG(INFO) << BOLDMAGENTA << "MPA2Interface::digiInjection " << RESET;
     this->WriteChipReg(pChip, "DigitalSync", 0x00);
+    LOG(INFO) << BOLDMAGENTA << "DigitalSync 1" << RESET;
     // then .. for pixels I want enable pattern on PixelN
     for(auto pInjection: pInjections)
     {
@@ -171,6 +173,7 @@ void MPA2Interface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pIn
         LOG(DEBUG) << BOLDMAGENTA << "\t... injecting digitally \t... " << cRegName.str() << " -- " << +pPattern << RESET;
         this->WriteChipReg(pChip, cRegName.str(), pPattern);
     } // injections
+    LOG(INFO) << BOLDMAGENTA << "DigitalSync DONE" << RESET;
 }
 std::vector<int> MPA2Interface::decodeBendCode(ReadoutChip* pChip, uint8_t pBendCode)
 {
@@ -326,7 +329,7 @@ bool MPA2Interface::configRow(Chip* pChip, std::string cReg, int pRow, uint8_t p
 }
 bool MPA2Interface::configPeri(Chip* pChip, std::string cReg, uint8_t pValue, bool pVerifLoop) // MPA2 update to add block
 {
-    // LOG(INFO) << BOLDBLUE << "Configuring peri register "
+     LOG(DEBUG) << BOLDBLUE << "Configuring peri register "<< RESET;
     //     << cReg
     //     << " on MPA#"<< +pChip->getId() << " : " << cReg << " writing " << +pValue << RESET;
     // LOG (INFO) << BOLDRED << PERI_CONFIG_TABLE.size() << " items in peri map." << RESET;
@@ -392,6 +395,8 @@ bool MPA2Interface::maskChannelGroup(ReadoutChip* cChip, const std::shared_ptr<C
         auto shifted = std::bitset<NSSACHANNELS * NMPACOLS>(0x1) << ipix;
         bool bitval  = bool(((cBitset & shifted) >> ipix).to_ulong());
 
+        if (bitval) continue;
+	//std::cout<<"MASK "<<ipix<<std::endl;
         // uint32_t           cPixelIds = ipix;
         // std::ostringstream cRegName;
         // cRegName << "ENFLAGS_P" << std::to_string(cPixelIds+1);
@@ -446,18 +451,25 @@ bool MPA2Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
 bool MPA2Interface::enablePixelInjection(Chip* pChip, int pPixelNum, uint8_t pInj, bool pVerifLoop)
 {
     // auto    cRegValue = this->readPixel(pChip, "PixelEnable", pPixelNum);
-    auto    cRegValue = this->readPixel(pChip, "PixelEnable", pPixelNum);
+    auto    cRegValue = this->readPixel(pChip, "ENFLAGS", pPixelNum);
     uint8_t cNewValue = (cRegValue & 0xBF) | (pInj << 6);
 
     LOG(DEBUG) << BOLDBLUE << "Setting Enable to 0x" << std::hex << +cNewValue << std::dec << RESET;
-    return this->configPixel(pChip, "PixelEnable", pPixelNum, cNewValue, pVerifLoop);
+    return this->configPixel(pChip, "ENFLAGS", pPixelNum, cNewValue, pVerifLoop);
 }
 
-bool MPA2Interface::ConfigureChipOriginalMask(ReadoutChip* pCbc, bool pVerifLoop, uint32_t pBlockSize)
+bool MPA2Interface::ConfigureChipOriginalMask(ReadoutChip* pMPA, bool pVerify, uint32_t pBlockSize)
 {
+    //use pix 1 as a proxy. Better to save this as a constant
+    LOG(DEBUG) << BOLDBLUE << "ConfigureChipOriginalMask"<< RESET;
+    auto pixval=readPixel(pMPA, "ENFLAGS", 1);
+    //write broadcast then mask is much much faster than full config
+    configPixel(pMPA, "ENFLAGS", 0, (pixval|0x1));
+    LOG(INFO) << BOLDBLUE << "Broadcasting " << pixval<<" or "<<(pixval|0x1)<< RESET;
     auto allChannelEnabledGroup = std::make_shared<ChannelGroup<NSSACHANNELS * NMPACOLS>>();
-    return maskChannelGroup(pCbc, allChannelEnabledGroup, pVerifLoop);
+    return maskChannelGroup(pMPA, allChannelEnabledGroup, pVerify);
 }
+
 void MPA2Interface::readAllBias(Chip* pChip)
 {
     std::vector<std::string> nameDAC{"A", "B", "C", "D", "E", "ThDAC", "CalDAC"};
@@ -484,8 +496,8 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
 {
     setBoard(pMPA2->getBeBoardId());
 
-    //LOG(INFO) << BOLDMAGENTA << "MPA2Interface::WriteChipReg writing to " << pRegName << RESET;
-    //LOG(INFO) << BOLDMAGENTA << "VALUE " << pValue << RESET;
+    LOG(INFO) << BOLDMAGENTA << "1 MPA2Interface::WriteChipReg writing to " << pRegName << RESET;
+    LOG(INFO) << BOLDMAGENTA << "VALUE " << pValue << RESET;
 
     // need to or success
     if(pRegName.find("ThDAC_ALL") != std::string::npos || pRegName.find("Threshold") != std::string::npos)
@@ -500,8 +512,15 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     }
     else if(pRegName == "ReadoutMode")
     {
-        uint8_t     cBitShift = 0;
-        return this->WriteChipRegBits(pMPA2, "Control_1", (pValue << cBitShift), "Mask", 0x3, pVerifLoop);
+
+        return this->configPeri(pMPA2, "ReadoutMode", pValue);
+    }
+
+    else if(pRegName == "RetimePix") 
+    {
+        uint8_t cBitShift = CONTROL_TABLE.find("RetimePix")->second;
+        uint8_t cRegMask  = (0x7 << cBitShift);
+        return this->WriteChipRegBits(pMPA2, "Control_1",(pValue << cBitShift), "Mask", cRegMask, pVerifLoop);
     }
 
     else if(pRegName == "EnablePhaseAlignmentPattern")
@@ -554,6 +573,37 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         // LOG(INFO) << BOLDMAGENTA << "Setting EdgeSel register for Line" << +cLineId << " to 0x" << std::hex << +cValue << std::dec << RESET;
         // return this->WriteChipSingleReg(pMPA2, cRegName, cValue);
     }
+
+    else if(pRegName.find("OutSetting_0") != std::string::npos)
+    {
+        uint8_t cBitShift = 0;
+	return this->WriteChipRegBits(pMPA2, "OutSetting_1_0", (pValue << cBitShift), "Mask", 0x7, pVerifLoop);
+    }
+    else if(pRegName.find("OutSetting_1") != std::string::npos)
+    {
+        uint8_t cBitShift = 3;
+	return this->WriteChipRegBits(pMPA2, "OutSetting_1_0", (pValue << cBitShift), "Mask", 0x38, pVerifLoop);
+    }
+    else if(pRegName.find("OutSetting_2") != std::string::npos)
+    {
+        uint8_t cBitShift = 0;
+	return this->WriteChipRegBits(pMPA2, "OutSetting_3_2", (pValue << cBitShift), "Mask", 0x7, pVerifLoop);
+    }
+    else if(pRegName.find("OutSetting_3") != std::string::npos)
+    {
+        uint8_t cBitShift = 3;
+	return this->WriteChipRegBits(pMPA2, "OutSetting_3_2", (pValue << cBitShift), "Mask", 0x38, pVerifLoop);
+    }
+    else if(pRegName.find("OutSetting_4") != std::string::npos)
+    {
+        uint8_t cBitShift = 0;
+	return this->WriteChipRegBits(pMPA2, "OutSetting_5_4", (pValue << cBitShift), "Mask", 0x7, pVerifLoop);
+    }
+    else if(pRegName.find("OutSetting_5") != std::string::npos)
+    {
+        uint8_t cBitShift = 3;
+	return this->WriteChipRegBits(pMPA2, "OutSetting_5_4", (pValue << cBitShift), "Mask", 0x38, pVerifLoop);
+    }
     else if(pRegName.find("SLVSDrive") != std::string::npos)
     {
         uint8_t cBitShift = 0;
@@ -596,21 +646,9 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     }
     else if(pRegName == "TriggerLatency")
     {
-        uint8_t cLatencyReg1 = (0x00FF & pValue);
-        uint8_t cLatencyReg2 = (0x0100 & pValue) >> 8;
-
-        bool cConfigReg1 = true;
-        bool cConfigReg2 = true;
-
-        for(uint16_t iCol = 0; iCol < NMPACOLS; ++iCol) // MPA 2 hack for now -- write L1 row by row --  to improve
-        {
-            cConfigReg1 = cConfigReg1 & (this->configRow(pMPA2, "L1Offset_1", 0, cLatencyReg1));
-            cConfigReg2 = cConfigReg2 & (this->configRow(pMPA2, "L1Offset_2", 0, cLatencyReg2));
-        }
-
-        LOG(DEBUG) << BOLDMAGENTA << "Setting TriggerLatency on MPA to " << pValue << RESET;
-
-        return cConfigReg1 && cConfigReg2;
+        uint8_t cBitShift    = 0;
+        return this->WriteChipReg(pMPA2, "MemoryControl_1_ALL", (0x00FF & pValue),pVerifLoop) & this->WriteChipRegBits(pMPA2, "MemoryControl_2_ALL", (((0x0100 & pValue) >> 8) << cBitShift),"Mask_ALL",0x1,pVerifLoop);
+  
     }
 
     else if(pRegName == "StubInputPhase")
@@ -692,6 +730,8 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         uint8_t cReadValue   = 0x00;
         if(pRegName.find("P") != std::string::npos) // single pixel
         {
+
+
             cPixelNumber = std::stoi(pRegName.substr(pRegName.find("P") + 1, pRegName.length()));
             cReadValue   = this->readPixel(pMPA2, "ENFLAGS", cPixelNumber);
         }
@@ -708,6 +748,13 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         bool cConfigPattern = this->configPixel(pMPA2, "DigiPattern", cPixelNumber, pValue, pVerifLoop);
         return cReadoutMode && cEnableDigital && cConfigPattern;
     }
+
+    else if(pRegName == "ModeSel_ALL")
+    {
+        uint8_t cBitShift    = 0;
+        return this->WriteChipRegBits(pMPA2, "PixelControl_ALL", (pValue << cBitShift),"Mask_ALL",0x3,pVerifLoop);
+    }
+
     else if(pRegName == "AnalogueAsync")
     {
         // readout mode 1 -- ASYNC counter
@@ -887,12 +934,26 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerifLoop, uint32_t pBlockS
     std::vector<ChipRegItem> cRegItems;
     std::vector<ChipRegItem> cLocalRegItems;
     cCntrlRegItems.clear();
+
+
+    auto cOriginalMask = static_cast<ReadoutChip*>(pMPA2)->getChipOriginalMask();
+
     for(auto cMapItem: cRegMap)
     {
         if(cMapItem.second.fControlReg)
             cCntrlRegItems.push_back(cMapItem.second);
         else if((cMapItem.first.find("_P") != std::string::npos))
+	    {
             cLocalRegItems.push_back(cMapItem.second);
+	    if (cMapItem.first.find("ENFLAGS") != std::string::npos)
+		{
+	        if ((cMapItem.second.fValue&0x1)==0)
+			{
+			//std::cout<<cMapItem.first<<","<<cMapItem.second.fValue<<" MASK"<<std::endl;
+			cOriginalMask->disableChannel(std::stoi(cMapItem.first.substr(9,cMapItem.first.size()))-1);
+			}
+		}
+	    }
         else
             cRegItems.push_back(cMapItem.second);
     }

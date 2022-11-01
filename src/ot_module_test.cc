@@ -21,6 +21,8 @@
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
+#include "tools/PSBiasCal.h"
+#include "tools/KIRA.h"
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -129,6 +131,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("save", "Save the data to a raw file.  ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("skipAlignment", "Skip the back-end alignment step ", ArgvParser::OptionRequiresValue);
     // general
+    cmd.defineOption("runBias", "Run bias scan", ArgvParser::NoOptionAttribute);
+
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
 
@@ -179,6 +183,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkCICAlignment", "Manually scan CIC input aligner", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkLink", "Check that I can receive constant pattern from link", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("kira", "KIRA scan", ArgvParser::OptionRequiresValue);
     //
     cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("readMonitors", "Read internal monitors on lpGBT [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
@@ -202,6 +207,7 @@ int main(int argc, char* argv[])
     std::string cInjectionSource = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
     std::string cSrcLnkTst       = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
     std::string cModuleId        = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
+    int cKiraPort                = std::stoi((cmd.foundOption("kira")) ? cmd.optionValue("kira") : "7010");
     std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     bool        cPulseShape      = (cmd.foundOption("pulseShape")) ? true : false;
 
@@ -340,6 +346,14 @@ int main(int argc, char* argv[])
                 // static_cast<D19clpGBTInterface*>(cTool.flpGBTInterface)->WriteChipReg(clpGBT,"ADCMon", 0x00 );
             } // configure lpGBT
         }
+    }
+    if(cmd.foundOption("runBias"))
+    {
+        PSBiasCal cPSBiasCal;
+        cPSBiasCal.Inherit(&cTool);
+        cPSBiasCal.Initialise();
+        cPSBiasCal.CalibrateADC();
+        cPSBiasCal.CalibrateBias();
     }
     // read chip ids
     if(cmd.foundOption("readIDs"))
@@ -495,12 +509,15 @@ int main(int argc, char* argv[])
             LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
             return (666);
         }
-
         // align FEs - CIC
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit(&cTool);
+
+	//Doesnt work PSv2
         cCicAligner.Start(cRunNumber);
         cCicAligner.waitForRunToBeCompleted();
+	//\Doesnt work PSv2
+
         cCicAligner.dumpConfigFiles();
 
         // quickly check ReadData
@@ -625,6 +642,7 @@ int main(int argc, char* argv[])
         cPedestalEqualization.writeObjects();
         cPedestalEqualization.dumpConfigFiles();
         cPedestalEqualization.resetPointers();
+        t.stop();
         t.show("Time to tune the front-ends on the system: ");
         // // reset
         // cTool.fDetectorContainer->resetReadoutChipQueryFunction();
@@ -870,8 +888,10 @@ int main(int argc, char* argv[])
                             }
                             if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
                             {
+                LOG(INFO) << BOLDBLUE << "1" << RESET;
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "ModeSel_ALL", cSamplingMPA);
+                LOG(INFO) << BOLDBLUE << "2" << RESET;
                             }
                         }
                     }
@@ -911,11 +931,15 @@ int main(int argc, char* argv[])
                 }
             }
         }
-
+                LOG(INFO) << BOLDBLUE << "3" << RESET;
         LatencyScan cLatencyScan;
+                LOG(INFO) << BOLDBLUE << "4" << RESET;
         cLatencyScan.Inherit(&cTool);
+                LOG(INFO) << BOLDBLUE << "5" << RESET;
         cLatencyScan.Initialize();
+                LOG(INFO) << BOLDBLUE << "6" << RESET;
         cLatencyScan.ScanLatency();
+                LOG(INFO) << BOLDBLUE << "7" << RESET;
     }
     // measure noise on FE chips
     if(cmd.foundOption("measurePedeNoise") && !cmd.foundOption("read"))
@@ -1190,6 +1214,19 @@ int main(int argc, char* argv[])
         cBeamTestCheck.CheckWithTLU();
         cBeamTestCheck.writeObjects();
         cBeamTestCheck.Reset();
+    }
+
+    if(!cmd.foundOption("read") && cmd.foundOption("kira"))
+    {
+        std::ofstream cGoodRuns;
+        cGoodRuns.open("GoodRunNumbers.dat", std::fstream::app);
+        cGoodRuns << cRunNumber << "\n";
+        cGoodRuns.close();
+        KIRA cKira;
+        cKira.Inherit(&cTool);
+        cKira.Initialise(cKiraPort, "MyArduino");
+        cKira.determineLatency();
+        cKira.performKIRATest();
     }
 
     if(!cmd.foundOption("read") && cmd.foundOption("DataMonitor"))

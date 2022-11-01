@@ -38,19 +38,14 @@ class lpGBT : public Chip
     void setTxHSLPolarity(uint8_t pTxHSLPolarity) { fTxHSLPolarity = pTxHSLPolarity; }
 
     void addClocks(const std::vector<uint8_t>& pClocks) { addNoDuplicate<uint8_t>(fClocks, pClocks); }
-
     void setClocksFrequency(uint16_t pClocksFrequency) { fClocksFrequency = pClocksFrequency; }
 
     void addRxGroups(const std::vector<uint8_t>& pRxGroups) { addNoDuplicate<uint8_t>(fRxGroups, pRxGroups); }
-
     void addRxChannels(const std::vector<uint8_t>& pRxChannels) { addNoDuplicate<uint8_t>(fRxChannels, pRxChannels); }
-
     void setRxDataRate(uint16_t pRxDataRate) { fRxDataRate = pRxDataRate; }
 
     void addTxGroups(const std::vector<uint8_t>& pTxGroups) { addNoDuplicate<uint8_t>(fTxGroups, pTxGroups); }
-
     void addTxChannels(const std::vector<uint8_t>& pTxChannels) { addNoDuplicate<uint8_t>(fTxChannels, pTxChannels); }
-
     void setTxDataRate(uint16_t pTxDataRate) { fTxDataRate = pTxDataRate; }
 
     std::vector<uint8_t> getClocks() { return fClocks; }
@@ -73,12 +68,11 @@ class lpGBT : public Chip
     uint32_t getReadCount(uint8_t pMasterId) { return fI2CReads[pMasterId]; }
 
   private:
-    uint8_t              fVersion;
     bool                 phaseRxAligned; // @TMP@
-    std::string          configFileName;
-    std::vector<uint8_t> fClocks, fRxGroups, fRxChannels, fTxGroups, fTxChannels;
+    uint8_t              fVersion;
     uint16_t             fClocksFrequency, fRxDataRate, fTxDataRate, fChipAddress;
     uint8_t              fRxHSLPolarity, fTxHSLPolarity;
+    std::vector<uint8_t> fClocks, fRxGroups, fRxChannels, fTxGroups, fTxChannels;
     // Number of write transactions - one element per master
     std::vector<uint32_t> fI2CWrites{0, 0, 0};
     // Number of read transactions - one element per master

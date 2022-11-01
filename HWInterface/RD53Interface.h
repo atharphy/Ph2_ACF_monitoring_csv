@@ -12,6 +12,8 @@
 
 #include "../HWDescription/ChipRegItem.h"
 #include "../HWDescription/RD53.h"
+#include "../HWDescription/RD53A.h"
+#include "../HWDescription/RD53B.h"
 #include "../Utils/RD53ChannelGroupHandler.h"
 #include "BeBoardFWInterface.h"
 #include "RD53FWInterface.h"
@@ -40,30 +42,39 @@ class RD53Interface : public ReadoutChipInterface
     bool     ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pChip, bool pVerifLoop = true, uint32_t pBlockSize = 310) override;
     bool     MaskAllChannels(Ph2_HwDescription::ReadoutChip* pChip, bool mask, bool pVerifLoop = true) override;
     bool     maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop = false) override;
-    void     producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
+    void     DumpChipRegisters(Ph2_HwDescription::ReadoutChip* pChip) override;
+    // #############################
+
     // ##################
     // # PRBS generator #
     // ##################
     void StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip);
     void StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip);
-    // #############################
 
-    virtual void Reset(Ph2_HwDescription::ReadoutChip* pChip, const size_t resetType) = 0;
-    virtual void ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip)               = 0;
+    virtual void Reset(Ph2_HwDescription::ReadoutChip* pChip, const size_t resetType, const size_t duration = 0x4) = 0;
+    virtual void ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip);
 
-    virtual void InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard)                                                                                                  = 0;
-    virtual void InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1)                                                                                = 0;
-    virtual void PackWriteCommand(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = false) = 0;
+    virtual void InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard)                                                                                                                   = 0;
+    virtual void InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1)                                                                                                 = 0;
+    virtual void PackWriteCommand(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true)                   = 0;
+    virtual void PackWriteBroadcastCommand(const Ph2_HwDescription::BeBoard* board, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true) = 0;
+    virtual void WriteClokDataDelay(Ph2_HwDescription::Chip* pChip, uint16_t value)                                                                                                           = 0;
 
     void SendChipCommands(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint16_t>& chipCommandList, int hybridId);
     void PackHybridCommands(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint16_t>& chipCommandList, int hybridId, std::vector<uint32_t>& hybridCommandList);
     void SendHybridCommands(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& hybridCommandList);
 
+    // ######################################################################################################
+    // # SetSpecialRegister                                                                                 #
+    // # Receives: any register (real or fake) and a value                                                  #
+    // # Returns: real register name together with its value containing the input value in the proper field #
+    // ######################################################################################################
+    virtual std::pair<std::string, uint16_t> SetSpecialRegister(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap)      = 0;
+    virtual uint16_t                         GetSpecialRegisterValue(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) = 0;
+
   protected:
-    virtual void                                       InitRD53UplinkSpeed(Ph2_HwDescription::ReadoutChip* pChip)                                             = 0;
-    virtual std::vector<std::pair<uint16_t, uint16_t>> ReadRD53Reg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName)                         = 0;
-    virtual void                                       WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault)                           = 0;
-    virtual std::pair<std::string, uint16_t>           SplitSpecialRegisters(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) = 0;
+    virtual void                                       WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, bool doSparse, bool doDefault)   = 0;
+    virtual std::vector<std::pair<uint16_t, uint16_t>> ReadRD53Reg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName) = 0;
 
     template <typename T>
     void SendCommand(Ph2_HwDescription::ReadoutChip* pChip, const T& cmd)
@@ -76,6 +87,14 @@ class RD53Interface : public ReadoutChipInterface
     {
         return N;
     }
+
+    uint16_t SetFieldValue(uint16_t regValue, uint16_t fieldValue, uint8_t start, uint8_t size);
+    uint16_t GetFieldValue(uint16_t regValue, uint8_t start, uint8_t size);
+    struct SpecialRegInfo
+    {
+        std::string regName;
+        uint8_t     start; // Bit index at which the special register, i.e. field, starts
+    };
 
     // ###########################
     // # Dedicated to monitoring #
@@ -91,11 +110,13 @@ class RD53Interface : public ReadoutChipInterface
     uint32_t ReadChipADC(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName);
 
   private:
-    uint32_t getADCobservable(const std::string& observableName, bool* isCurrentNotVoltage);
     uint32_t measureADC(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data);
     float    measureVoltageCurrent(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data, bool isCurrentNotVoltage);
     float    measureTemperature(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data);
     float    convertADC2VorI(Ph2_HwDescription::ReadoutChip* pChip, uint32_t value, bool isCurrentNotVoltage = false);
+
+  protected:
+    virtual uint32_t getADCobservable(const std::string& observableName, bool* isCurrentNotVoltage) = 0;
 };
 
 } // namespace Ph2_HwInterface

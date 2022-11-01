@@ -67,7 +67,7 @@ uint16_t PSInterface::ReadChipReg(Chip* pPS, const std::string& pRegName) { retu
 // To generalize
 bool PSInterface::WriteChipReg(Chip* pPS, const std::string& pRegName, uint16_t pValue, bool pVerifLoop)
 {
-    // LOG(INFO) << BOLDRED << "glorp! " << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << " PSInterface::WriteChipReg writing to " << pRegName << RESET;
     return getInterface(pPS)->WriteChipReg(pPS, pRegName, pValue, pVerifLoop);
 }
 
@@ -132,10 +132,13 @@ std::vector<int> PSInterface::decodeBendCode(ReadoutChip* pChip, uint8_t pBendCo
 //
 void PSInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern)
 {
+
+    LOG(INFO) << "PSInterface";
     if(pChip->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->digiInjection(pChip, pInjections, pPattern); }
     // if(pChip->getFrontEndType() == FrontEndType::SSA) { theSSAInterface->digiInjection(pChip, pInjections, pPattern); }
-    if(pChip->getFrontEndType() == FrontEndType::MPA2) { theMPA2Interface->digiInjection(pChip, pInjections, pPattern); }
+    else if(pChip->getFrontEndType() == FrontEndType::MPA2) { theMPA2Interface->digiInjection(pChip, pInjections, pPattern); }
     // if(pChip->getFrontEndType() == FrontEndType::SSA2) { theSSA2Interface->digiInjection(pChip, pInjections, pPattern); }
+    LOG(INFO) << "DOE";
 }
 
 } // namespace Ph2_HwInterface

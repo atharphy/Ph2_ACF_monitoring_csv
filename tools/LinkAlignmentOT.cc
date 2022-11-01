@@ -23,9 +23,9 @@ bool LinkAlignmentOT::Align()
     LOG(INFO) << BOLDYELLOW << "LinkAlignmentOT::Align ..." << RESET;
     for(const auto cBoard: *fDetectorContainer)
     {
-	// force trigger source to be internal triggers
-	LOG (INFO) << BOLDYELLOW << "Forcing trigger source to internal triggers" << RESET;
-	fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", 3);	
+        // force trigger source to be internal triggers
+        LOG(INFO) << BOLDYELLOW << "Forcing trigger source to internal triggers" << RESET;
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", 3);
         for(auto cOpticalGroup: *cBoard)
         {
             AlignLpGBTInputs(cOpticalGroup);
@@ -638,7 +638,7 @@ void LinkAlignmentOT::LegacyAlignmentMPA(const Chip* pChip)
 bool LinkAlignmentOT::LineTuning(const Chip* pChip, uint8_t pLineId, uint8_t pAlignmentPattern, uint8_t pPeriod)
 {
     // For now keep legacy until we can test on MPA SCC
-    if(pChip->getFrontEndType() == FrontEndType::MPA)
+    if(pChip->getFrontEndType() == FrontEndType::MPA or pChip->getFrontEndType() == FrontEndType::MPA2)
     {
         LegacyAlignmentMPA(pChip);
         return true;

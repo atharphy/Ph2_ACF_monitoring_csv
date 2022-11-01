@@ -54,6 +54,18 @@ void RD53eudaqProducer::DoStartRun()
     // ev->SetTriggerN(swTrigCnt++);
     // this->MySendEvent(std::move(ev));
 
+    // ######################################
+    // # Add extra information to the event #
+    // ######################################
+    // std::stringstream os;
+    // ev->SetTag("FirmwareVersion", RD53sysCntrPhys.fBeBoardInterface->FWinfo);
+    // for(const auto cBoard: *(RD53sysCntrPhys.fDetectorContainer))
+    //     for(const auto cOpticalGroup: *cBoard)
+    //         for(const auto cHybrid: *cOpticalGroup)
+    //             for(const auto cChip: *cHybrid)
+    //               cChip->saveRegMap("NONE", os);
+    // ev->SetTag("RegisterMapAndMask", os);
+
     // ###################################################
     // # Get configuration directly from EUDAQ framework #
     // ###################################################
@@ -169,7 +181,7 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
             // Use TLU counter
             if(tluTrigId < eudaqProducer->previousTLUTrigId)
             {
-                eudaqProducer->swTrigCnt += 1 << EUDAQ::NBITSTLU;
+                eudaqProducer->swTrigCnt += 1 << EUDAQ::NBIT_TLU;
                 std::cout << "[RD53eudaqProducer::RD53eudaqEvtConverter] Detected TLU trigger ID wrap around" << std::endl;
             }
             ev->SetTriggerN(eudaqProducer->swTrigCnt + tluTrigId);

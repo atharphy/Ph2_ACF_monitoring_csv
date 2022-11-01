@@ -43,7 +43,7 @@ class MPA2Interface : public ReadoutChipInterface
     uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait);
     void     ReadMPA(Ph2_HwDescription::ReadoutChip* pMPA);
 
-    bool     WriteChipRegBits(Ph2_HwDescription::Chip* pSSA2, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerifLoop = true);
+    bool     WriteChipRegBits(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerifLoop = true);
     bool     WriteChipReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegName, uint16_t pValue, bool pVerifLoop = true) override;
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pMPA, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop = VERIFY_MPA) override;
     bool     WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pMPA, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = VERIFY_MPA) override;
@@ -121,7 +121,7 @@ class MPA2Interface : public ReadoutChipInterface
                                                                                   {"OutSetting_4_3", std::pair<uint8_t, uint8_t>{0x11, 14}}};
 
     // MPA2 row config register map -- some overlap in naming, to find a better way
-    const std::map<std::string, uint8_t> ROW_CONFIG_TABLE = {{"MemoryControl_1", 0}, {"MemoryControl_2", 1}, {"L1Offset_1", 0}, {"L1Offset_2", 1}};
+    const std::map<std::string, uint8_t> ROW_CONFIG_TABLE = {{"MemoryControl_1", 0}, {"MemoryControl_2", 1},{"PixelControl",2},{"Mask",13},{"L1Offset_1", 0}, {"L1Offset_2", 1}};
 
     // MPA2 pixel config register map
     const std::map<std::string, uint8_t> PIXEL_CONFIG_TABLE = {{"ENFLAGS", 0}, {"TrimDAC", 1}, {"DigiPattern", 2}, {"ACCounter_LSB", 4}, {"ACCounter_MSB", 5}};
