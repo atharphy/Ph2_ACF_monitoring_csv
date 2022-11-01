@@ -744,9 +744,21 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
         {
             for(auto cChip: *pHybrid)
             {
-                if(cChip->getFrontEndType() != FrontEndType::MPA) continue;// turn on MPA2
+                if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 uint8_t cMode = static_cast<uint8_t>(convertAnyInt(cHitLogicNode.attribute("pixelMode").value()));
-                cChip->setReg("ModeSel_ALL", cMode); //Irene
+
+
+		if(cChip->getFrontEndType() == FrontEndType::MPA)
+			{
+                	cChip->setReg("ModeSel_ALL", cMode); //Irene
+			}
+		if(cChip->getFrontEndType() == FrontEndType::MPA2)
+			{
+			cChip->setReg("Mask_ALL",0x3); 
+			cChip->setReg("PixelControl_ALL", cMode); //Irene
+			cChip->setReg("Mask_ALL",0xFF); 
+			}
+
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA hit logic settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Hit Mode is  0x" << std::hex << +cMode
                    << std::dec << RESET << std::endl;
 
@@ -787,7 +799,6 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
        	
 		if(cChip->getFrontEndType() == FrontEndType::MPA)
 		{
-    std::cout<<"HUH?"<<std::endl;
 		        cChip->setReg("L1Offset_1_ALL", cLatency & 0xFF); //Irene
 		        cChip->setReg("L1Offset_2_ALL", (cLatency >> 8) & 0xFF); //Irene
 		}
@@ -815,7 +826,7 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
 		if(cChip->getFrontEndType() == FrontEndType::MPA2)
 			{
 			cChip->setReg("Mask_ALL",0xe0); 
-			cChip->setReg("PixelControl_ALL", cCut); //Irene
+			cChip->setReg("PixelControl_ALL", (cCut<<5)); //Irene
 			cChip->setReg("Mask_ALL",0xFF); 
 			}
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA HIP settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- HIP cut is  0x" << std::hex << +cCut << std::dec
@@ -829,11 +840,21 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
         {
             for(auto cChip: *pHybrid)
             {
-                if(cChip->getFrontEndType() != FrontEndType::MPA ) continue;// turn on MPA2
+                if(cChip->getFrontEndType() != FrontEndType::MPA && cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 int cCoarse = convertAnyInt(cSamplingDelay.attribute("pixelCoarse").value());
                 int cFine   = convertAnyInt(cSamplingDelay.attribute("pixelFine").value());
-                cChip->setReg("PhaseShift", cCoarse); //Irene
-                cChip->setReg("ConfDLL", cFine);
+		if(cChip->getFrontEndType() == FrontEndType::MPA)
+		{
+		        cChip->setReg("PhaseShift", cCoarse); //Irene
+
+		}
+		if(cChip->getFrontEndType() == FrontEndType::MPA2)
+			{
+			cChip->setReg("Mask",0x70); 
+			cChip->setReg("Control_1", (cCoarse<<4)); 
+			cChip->setReg("Mask",0xFF); 
+			}
+		cChip->setReg("ConfDLL", cFine);
 
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA Sampling Delay settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Coarse delay will be set to "
                    << cCoarse * 3.125 << " ns " << GREEN << " Fine delay will be set to " << cFine * 0.2 << " ns." << RESET << std::endl;
