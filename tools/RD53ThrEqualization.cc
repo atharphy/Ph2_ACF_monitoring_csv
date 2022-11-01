@@ -153,12 +153,12 @@ void ThrEqualization::initializeFiles(const std::string& fileRes_, int currentRu
 
 void ThrEqualization::run()
 {
-    // #########################
-    // # Find global threshold #
-    // #########################
-    ThrEqualization::bitWiseScanGlobal("VCAL_HIGH", TARGETEFF, startValue, stopValue);
-
-    if(TDACGainNSteps != 0)
+    if(TDACGainNSteps == 0)
+        // #########################
+        // # Find global threshold #
+        // #########################
+        ThrEqualization::bitWiseScanGlobal("VCAL_HIGH", TARGETEFF, startValue, stopValue);
+    else
     {
         // ###########################################
         // # Scan DAC and run threshold equalization #
@@ -367,6 +367,11 @@ void ThrEqualization::scanDac(const std::string& regName, const std::vector<uint
         LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regName << BOLDMAGENTA << " value = " << BOLDYELLOW << dacList[i] << BOLDMAGENTA << " <<<" << RESET;
         for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regName, dacList[i]);
 
+        // #########################
+        // # Find global threshold #
+        // #########################
+        ThrEqualization::bitWiseScanGlobal("VCAL_HIGH", TARGETEFF, startValue, stopValue);
+
         // ##############################
         // # Run threshold equalization #
         // ##############################
@@ -383,7 +388,6 @@ void ThrEqualization::scanDac(const std::string& regName, const std::vector<uint
                         // #######################
                         // # Build discriminator #
                         // #######################
-                        float  avg    = 0;
                         float  stdDev = 0;
                         size_t cnt    = 0;
                         for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
@@ -405,13 +409,10 @@ void ThrEqualization::scanDac(const std::string& regName, const std::vector<uint
                                    cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy >= 0)
                                 {
                                     float value = cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy;
-                                    avg += value;
-                                    stdDev += value * value;
+                                    stdDev += (value - TARGETEFF) * (value - TARGETEFF);
                                     cnt++;
                                 }
-                        avg    = cnt != 0 ? avg / cnt : 0;
-                        stdDev = (cnt != 0 ? stdDev / cnt : 0) - avg * avg;
-                        stdDev = (stdDev > 0 ? sqrt(stdDev) : 0);
+                        stdDev = (cnt != 0 ? sqrt(stdDev / cnt) : 0);
 
                         // ###############
                         // # Save output #
