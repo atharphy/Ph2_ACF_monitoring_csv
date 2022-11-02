@@ -26,7 +26,7 @@ void ThrEqualization::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    resetTDAC          = this->findValueInSettings<double>("VCalHstart");
+    resetTDAC          = this->findValueInSettings<double>("ResetTDAC");
     startValue         = this->findValueInSettings<double>("VCalHstart");
     stopValue          = this->findValueInSettings<double>("VCalHstop");
     startTDACGainValue = this->findValueInSettings<double>("TDACGainStart");
@@ -246,7 +246,7 @@ void ThrEqualization::draw()
 void ThrEqualization::analyze()
 {
     const float  maxTDACdistance = 2; // @CONST@
-    const size_t TDACcenter      = (resetTDAC == 0 ? frontEnd->nTDACvalues / 2 : resetTDAC);
+    const size_t TDACcenter      = (resetTDAC < 0 ? frontEnd->nTDACvalues / 2 : resetTDAC);
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
@@ -364,7 +364,7 @@ void ThrEqualization::scanDac(const std::string& regName, const std::vector<uint
         // ###########################
         // # Download new DAC values #
         // ###########################
-        LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regName << BOLDMAGENTA << " value = " << BOLDYELLOW << dacList[i] << BOLDMAGENTA << " <<<" << RESET;
+        LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regName << BOLDMAGENTA << " broadcast value = " << BOLDYELLOW << dacList[i] << BOLDMAGENTA << " <<<" << RESET;
         for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regName, dacList[i]);
 
         // #########################
@@ -408,7 +408,7 @@ void ThrEqualization::scanDac(const std::string& regName, const std::vector<uint
                                        ->isChannelEnabled(row, col) &&
                                    cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy >= 0)
                                 {
-                                    float value = cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy;
+                                    auto value = cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy;
                                     stdDev += (value - TARGETEFF) * (value - TARGETEFF);
                                     cnt++;
                                 }

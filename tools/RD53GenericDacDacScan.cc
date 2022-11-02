@@ -232,7 +232,7 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
         // ###########################
         // # Download new DAC values #
         // ###########################
-        LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regNameDAC1 << BOLDMAGENTA << " value = " << BOLDYELLOW << dac1List[i] << BOLDMAGENTA << " <<<" << RESET;
+        LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regNameDAC1 << BOLDMAGENTA << " broadcast value = " << BOLDYELLOW << dac1List[i] << BOLDMAGENTA << " <<<" << RESET;
         if(isDAC1ChipReg == true)
             for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regNameDAC1, dac1List[i]);
         else
@@ -245,7 +245,7 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
             // ###########################
             // # Download new DAC values #
             // ###########################
-            LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regNameDAC2 << BOLDMAGENTA << " value = " << BOLDYELLOW << dac2List[j] << BOLDMAGENTA << " <<<" << RESET;
+            LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regNameDAC2 << BOLDMAGENTA << " broadcast value = " << BOLDYELLOW << dac2List[j] << BOLDMAGENTA << " <<<" << RESET;
             if(isDAC2ChipReg == true)
                 for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regNameDAC2, dac2List[j]);
             else
