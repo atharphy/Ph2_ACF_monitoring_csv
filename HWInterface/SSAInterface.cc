@@ -674,7 +674,7 @@ void SSAInterface::Set_threshold(Chip* pSSA, uint32_t th)
     this->WriteChipReg(pSSA, "Bias_THDAC", th);
 }
 
-bool SSAInterface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& dacName, ChipContainer& localRegValues, bool pVerify)
+bool SSAInterface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& dacName, const ChipContainer& localRegValues, bool pVerify)
 {
     setBoard(pChip->getBeBoardId());
     assert(localRegValues.size() == pChip->getNumberOfChannels());

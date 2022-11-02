@@ -429,6 +429,8 @@ void ThrEqualization::scanDac(const std::string& regName, const std::vector<uint
                         // # Reset masks to default values #
                         // #################################
                         static_cast<RD53*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()))->copyMaskFromDefault();
+                        this->fReadoutChipInterface->ConfigureChipOriginalMask(
+                            fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
                     }
     }
 }
