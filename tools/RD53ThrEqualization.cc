@@ -429,8 +429,6 @@ void ThrEqualization::scanDac(const std::string& regName, const std::vector<uint
                         // # Reset masks to default values #
                         // #################################
                         static_cast<RD53*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()))->copyMaskFromDefault();
-                        this->fReadoutChipInterface->ConfigureChipOriginalMask(
-                            fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
                     }
     }
 }
@@ -658,21 +656,18 @@ void ThrEqualization::bitWiseScanLocal(float target, bool updateDACs)
                                 }
     }
 
-    if(updateDACs == true)
-    {
-        // ###########################
-        // # Download new DAC values #
-        // ###########################
-        for(const auto cBoard: *fDetectorContainer)
-            for(const auto cOpticalGroup: *cBoard)
-                for(const auto cHybrid: *cOpticalGroup)
-                    for(const auto cChip: *cHybrid)
-                    {
-                        this->fReadoutChipInterface->WriteChipAllLocalReg(
-                            static_cast<RD53*>(cChip), "", *bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
-                        static_cast<RD53*>(cChip)->copyMaskToDefault("td");
-                    }
-    }
+    // ###########################
+    // # Download new DAC values #
+    // ###########################
+    for(const auto cBoard: *fDetectorContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    this->fReadoutChipInterface->WriteChipAllLocalReg(
+                        static_cast<RD53*>(cChip), "", *bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()));
+                    if(updateDACs == true) static_cast<RD53*>(cChip)->copyMaskToDefault("td");
+                }
 
     // ################
     // # Run analysis #

@@ -257,19 +257,19 @@ void RD53::saveRegMap(const std::string& fName2Add)
             file << "COL                  " << std::setfill('0') << std::setw(3) << col << std::endl;
 
             file << "ENABLE " << +fPixelsMask.Enable[0 + this->getNRows() * col];
-            for(auto row = 1u; row < this->getNRows(); row++) file << "," << +fPixelsMask.Enable[row + this->getNRows() * col];
+            for(auto row = 0u; row < this->getNRows(); row++) file << "," << +fPixelsMask.Enable[row + this->getNRows() * col];
             file << std::endl;
 
             file << "HITBUS " << +fPixelsMask.HitBus[0 + this->getNRows() * col];
-            for(auto row = 1u; row < this->getNRows(); row++) file << "," << +fPixelsMask.HitBus[row + this->getNRows() * col];
+            for(auto row = 0u; row < this->getNRows(); row++) file << "," << +fPixelsMask.HitBus[row + this->getNRows() * col];
             file << std::endl;
 
             file << "INJEN  " << +fPixelsMask.InjEn[0 + this->getNRows() * col];
-            for(auto row = 1u; row < this->getNRows(); row++) file << "," << +fPixelsMask.InjEn[row + this->getNRows() * col];
+            for(auto row = 0u; row < this->getNRows(); row++) file << "," << +fPixelsMask.InjEn[row + this->getNRows() * col];
             file << std::endl;
 
             file << "TDAC   " << +fPixelsMask.TDAC[0 + this->getNRows() * col];
-            for(auto row = 1u; row < this->getNRows(); row++) file << "," << +fPixelsMask.TDAC[row + this->getNRows() * col];
+            for(auto row = 0u; row < this->getNRows(); row++) file << "," << +fPixelsMask.TDAC[row + this->getNRows() * col];
             file << std::endl;
 
             file << std::endl;
@@ -308,7 +308,7 @@ void RD53::copyMaskToDefault(const std::string& which)
 
     if((which == "all") || (which == "en"))
         for(auto col = 0u; col < this->getNCols(); col++)
-            for(auto row = 1u; row < this->getNRows(); row++)
+            for(auto row = 0u; row < this->getNRows(); row++)
             {
                 if(fPixelsMaskDefault.Enable[row + this->getNRows() * col] == true)
                     fChipOriginalMask->enableChannel(row, col);
