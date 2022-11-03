@@ -335,7 +335,7 @@ void ThrEqualization::analyzeDuringRun()
                         }
                     }
                     LOG(INFO) << BOLDMAGENTA << ">>> Best TDAC gain for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
-                              << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << regVal << BOLDMAGENTA << " (n.bx) <<<" << RESET;
+                              << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << regVal << BOLDMAGENTA << " <<<" << RESET;
 
                     // ########################################################
                     // # Fill TDAC gain container and download new DAC values #
