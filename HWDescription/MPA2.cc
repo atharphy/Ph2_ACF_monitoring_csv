@@ -32,6 +32,7 @@ MPA2::MPA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t 
     fChipOriginalMask->enableAllChannels();
     fPartnerId = pPartnerId;
     loadfRegMap(filename);
+    std::cout<<"sETMPA2"<<std::endl;
     setFrontEndType(FrontEndType::MPA2);
     for(auto& cMapItem: fRegMap)
     {
@@ -150,7 +151,8 @@ void MPA2::saveRegMap(const std::string& filename)
         LOG(ERROR) << "Error opening file";
 } // end saveRegMap
 
-bool MPARegItemComparer::operator()(const MPARegPair& pRegItem1, const MPARegPair& pRegItem2) const
+//Irene
+bool MPA2RegItemComparer::operator()(const MPARegPair& pRegItem1, const MPARegPair& pRegItem2) const
 {
     if(pRegItem1.second.fPage != pRegItem2.second.fPage)
         return pRegItem1.second.fPage < pRegItem2.second.fPage;

@@ -1103,8 +1103,16 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
     // TODO -> SEGFAULT!!!!!!!
     measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
 
-    occupanyDirectlyProportionalToDAC =
-        currentStepOccupancyContainer->at(boardIndex)->getSummary<Occupancy, Occupancy>().fOccupancy > previousStepOccupancyContainer->at(boardIndex)->getSummary<Occupancy, Occupancy>().fOccupancy;
+    //This fails sometimes depending on settings, need to make it an option...
+    occupanyDirectlyProportionalToDAC =currentStepOccupancyContainer->at(boardIndex)->getSummary<Occupancy, Occupancy>().fOccupancy > previousStepOccupancyContainer->at(boardIndex)->getSummary<Occupancy, Occupancy>().fOccupancy;
+
+
+    //Hacked solution for PS
+    if ((cReadoutChip->getFrontEndType() == FrontEndType::MPA) or (cReadoutChip->getFrontEndType() == FrontEndType::SSA) or (cReadoutChip->getFrontEndType() == FrontEndType::MPA2) or (cReadoutChip->getFrontEndType() == FrontEndType::SSA2) )
+    {
+	if(localDAC) occupanyDirectlyProportionalToDAC = true;
+	else occupanyDirectlyProportionalToDAC = false;
+    }
 
     if(!occupanyDirectlyProportionalToDAC)
     {
@@ -1230,6 +1238,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                                         .fOccupancy
                                  << "\n";
 
+
                             if(currentStepOccupancyContainer->at(boardIndex)
                                    ->at(cOpticalGroup->getIndex())
                                    ->at(cHybrid->getIndex())
@@ -1307,6 +1316,369 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
 
     return;
 }
+
+// full scan, eed a way to traport 
+void Tool::fullScan(const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst, int32_t startVal, float occCap, bool mask)
+{
+    for(unsigned int boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++) { fullScanBeBoard(boardIndex, dacName, numberOfEvents, targetOccupancy, numberOfEventsPerBurst, startVal, occCap, mask); }
+}
+
+// full scan per BeBoard. Returns untrimmed objects list (channels/chips)
+void Tool::fullScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst, int32_t startVal, float occCap, bool mask)
+{
+    std::vector<uint32_t> returnVec;
+
+    DetectorDataContainer* outputDataContainer = fDetectorDataContainer;
+    ReadoutChip*           cReadoutChip        = fDetectorContainer->at(boardIndex)->at(0)->at(0)->at(0); // assumption: one BeBoard has only one type of chip;
+    bool                   localDAC            = cReadoutChip->isDACLocal(dacName);
+    DetectorDataContainer* previousStepOccupancyContainer = new DetectorDataContainer();
+    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *previousStepOccupancyContainer);
+    DetectorDataContainer* currentStepOccupancyContainer = new DetectorDataContainer();
+    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *currentStepOccupancyContainer);
+
+    DetectorDataContainer* currentDacList  = new DetectorDataContainer();
+    DetectorDataContainer* currentDoneList  = new DetectorDataContainer();
+
+
+
+    // For masking so we dont exclude the outliers.  only works if all chips are identical -- which is the current use case.
+    float occDiff = 0.0;
+    uint16_t NoccDiff = 0;
+
+
+
+    uint16_t allOneRegister  = startVal;
+
+    uint16_t allZeroRegister = 0;
+    uint16_t allFalseRegister = 0;
+
+    if(localDAC)
+    {
+        ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, *currentDacList, allOneRegister);
+        ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, *currentDoneList, allFalseRegister);
+
+    }
+    else
+    {
+        ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *currentDacList, allOneRegister);
+        ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *currentDoneList, allFalseRegister);
+
+    }
+
+
+    for(int iThresh = startVal; iThresh >= allZeroRegister; iThresh--)
+    {
+	bool first = (iThresh == startVal);
+
+	int threshToSet=iThresh;
+        if(localDAC) threshToSet=31-iThresh;
+
+
+	returnVec.clear();
+
+        LOG(INFO) << BOLDBLUE << "Threshold set to " << int(threshToSet) << " for " << dacName << RESET;
+        for(auto cOpticalGroup: *(fDetectorContainer->at(boardIndex)))
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    if(localDAC)
+                    {
+                        for(uint32_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
+                        {
+                                if (not currentDoneList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel))
+                                    {currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel) = threshToSet;
+                                    }
+                        }
+                    }
+                    else
+                    {
+                            if (not currentDoneList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>())
+                            {
+                                currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = threshToSet;
+                            LOG(DEBUG) << BOLDBLUE << "\t.. current setting is "
+                                       << currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << RESET;
+                            }
+                    }
+                }
+            }
+        }
+
+        if(localDAC)
+            setAllLocalDacBeBoard(boardIndex, dacName, *currentDacList);
+        else
+            setAllGlobalDacBeBoard(boardIndex, dacName, *currentDacList);
+
+        Occupancy noOccupancy;
+        ContainerFactory::reinitializeContainer(currentStepOccupancyContainer, noOccupancy);
+        fDetectorDataContainer = currentStepOccupancyContainer;
+        measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
+
+        // Determine if it is better or not
+        for(auto cOpticalGroup: *(fDetectorContainer->at(boardIndex)))
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    std::stringstream cOut;
+                    if(localDAC)
+                    {
+                        for(uint32_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
+                        {
+                            cOut << BOLDBLUE << "localocc "
+                                 << currentStepOccupancyContainer->at(boardIndex)
+                                        ->at(cOpticalGroup->getIndex())
+                                        ->at(cHybrid->getIndex())
+                                        ->at(cChip->getIndex())
+                                        ->getChannel<Occupancy>(iChannel)
+                                        .fOccupancy
+                                 << "\n";
+                            if (not currentDoneList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel))
+                            {
+                              currentStepOccupancyContainer->at(boardIndex)
+                                     ->at(cOpticalGroup->getIndex())
+                                     ->at(cHybrid->getIndex())
+                                     ->at(cChip->getIndex())
+                                     ->getChannel<Occupancy>(iChannel).fOccupancy = std::min(std::max(currentStepOccupancyContainer->at(boardIndex)
+                                         ->at(cOpticalGroup->getIndex())
+                                         ->at(cHybrid->getIndex())
+                                         ->at(cChip->getIndex())
+                                         ->getChannel<Occupancy>(iChannel).fOccupancy,previousStepOccupancyContainer->at(boardIndex)
+                                         ->at(cOpticalGroup->getIndex())
+                                         ->at(cHybrid->getIndex())
+                                         ->at(cChip->getIndex())
+                                         ->getChannel<Occupancy>(iChannel).fOccupancy),float(occCap));
+                         
+
+
+                                if((currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy >= targetOccupancy ) and (previousStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy < targetOccupancy) and (not first))
+                                {
+
+    				occDiff += std::fabs(currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy - previousStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy)/2.0;
+    				NoccDiff += 1;
+
+			        //std::cout<<"occDiff1 "<<currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy<<" occDiff2 "<<previousStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy<<std::endl;
+
+			        //std::cout<<"occDiff "<<occDiff<<" NoccDiff "<<NoccDiff<<std::endl;
+
+				if (std::fabs(currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy - targetOccupancy) > std::fabs(previousStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy -targetOccupancy))
+				{currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel)-=1;}
+
+                                    currentDoneList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(iChannel)=1;
+
+                                }
+
+                                else
+                                {
+				    returnVec.push_back(iChannel);
+                                    previousStepOccupancyContainer->at(boardIndex)
+                                        ->at(cOpticalGroup->getIndex())
+                                        ->at(cHybrid->getIndex())
+                                        ->at(cChip->getIndex())
+                                        ->getChannel<Occupancy>(iChannel)
+                                        .fOccupancy = currentStepOccupancyContainer->at(boardIndex)
+                                                          ->at(cOpticalGroup->getIndex())
+                                                          ->at(cHybrid->getIndex())
+                                                          ->at(cChip->getIndex())
+                                                          ->getChannel<Occupancy>(iChannel)
+                                                          .fOccupancy;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        auto& cCurrentDAC = currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
+                        cOut << "Occupancy Chip#" << +cChip->getId() << "\t[ global] "
+                             << currentStepOccupancyContainer->at(boardIndex)
+                                    ->at(cOpticalGroup->getIndex())
+                                    ->at(cHybrid->getIndex())
+                                    ->at(cChip->getIndex())
+                                    ->getSummary<Occupancy, Occupancy>()
+                                    .fOccupancy
+                             << " for a DAC value of " << cCurrentDAC;
+                      
+                        float chanavg=0.0;
+                        for(uint32_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
+                             {
+
+			
+
+                                 currentStepOccupancyContainer->at(boardIndex)
+                                     ->at(cOpticalGroup->getIndex())
+                                     ->at(cHybrid->getIndex())
+                                     ->at(cChip->getIndex())
+                                     ->getChannel<Occupancy>(iChannel).fOccupancy = std::min(std::max(currentStepOccupancyContainer->at(boardIndex)
+                                         ->at(cOpticalGroup->getIndex())
+                                         ->at(cHybrid->getIndex())
+                                         ->at(cChip->getIndex())
+                                         ->getChannel<Occupancy>(iChannel).fOccupancy,previousStepOccupancyContainer->at(boardIndex)
+                                         ->at(cOpticalGroup->getIndex())
+                                         ->at(cHybrid->getIndex())
+                                         ->at(cChip->getIndex())
+                                         ->getChannel<Occupancy>(iChannel).fOccupancy),float(occCap));
+                                chanavg+=currentStepOccupancyContainer->at(boardIndex)
+                                    ->at(cOpticalGroup->getIndex())
+                                    ->at(cHybrid->getIndex())
+                                    ->at(cChip->getIndex())
+                                    ->getChannel<Occupancy>(iChannel).fOccupancy;
+
+                             }
+                        chanavg/=float(cChip->size());
+                        currentStepOccupancyContainer->at(boardIndex)
+                                          ->at(cOpticalGroup->getIndex())
+                                          ->at(cHybrid->getIndex())
+                                          ->at(cChip->getIndex())
+                                          ->getSummary<Occupancy, Occupancy>()
+                                          .fOccupancy=chanavg;
+
+                        if (not currentDoneList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>())
+                        {
+
+  			LOG(INFO) << BOLDBLUE << "currentStepOccupancyContainer "<<currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy, Occupancy>().fOccupancy << RESET;
+
+		
+                            if(currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy, Occupancy>().fOccupancy >= targetOccupancy and previousStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy, Occupancy>().fOccupancy < targetOccupancy)
+                            {
+
+				if (std::fabs(currentStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy, Occupancy>().fOccupancy - targetOccupancy) > std::fabs(previousStepOccupancyContainer->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<Occupancy, Occupancy>().fOccupancy -targetOccupancy))
+				{currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()+=1;}
+                                currentDoneList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()=1;
+                            }
+                            else
+                            {
+				returnVec.push_back(cChip->getIndex());
+
+                                previousStepOccupancyContainer->at(boardIndex)
+                                    ->at(cOpticalGroup->getIndex())
+                                    ->at(cHybrid->getIndex())
+                                    ->at(cChip->getIndex())
+                                    ->getSummary<Occupancy, Occupancy>()
+                                    .fOccupancy = currentStepOccupancyContainer->at(boardIndex)
+                                                      ->at(cOpticalGroup->getIndex())
+                                                      ->at(cHybrid->getIndex())
+                                                      ->at(cChip->getIndex())
+                                                      ->getSummary<Occupancy, Occupancy>()
+                                                      .fOccupancy;
+
+
+
+                                for(uint32_t iChannel = 0; iChannel < cChip->size(); ++iChannel)
+                                {
+                                    previousStepOccupancyContainer->at(boardIndex)
+                                    ->at(cOpticalGroup->getIndex())
+                                    ->at(cHybrid->getIndex())
+                                    ->at(cChip->getIndex())
+                                    ->getChannel<Occupancy>(iChannel).fOccupancy = currentStepOccupancyContainer->at(boardIndex)
+                                        ->at(cOpticalGroup->getIndex())
+                                        ->at(cHybrid->getIndex())
+                                        ->at(cChip->getIndex())
+                                        ->getChannel<Occupancy>(iChannel).fOccupancy;
+                                }
+
+
+                            }
+                        }
+                    }
+                    LOG(DEBUG) << BOLDYELLOW << cOut.str() << RESET;
+                }
+            }
+        }
+	size_t nRunning=returnVec.size();
+        LOG(INFO) << BOLDYELLOW <<"Pedestals remaining: "<<nRunning<<RESET;
+        if (nRunning==0) break;
+
+    }
+    fDetectorDataContainer = outputDataContainer;
+    measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
+    if (localDAC)
+    {      
+	float maxDiff=(occDiff)/float(NoccDiff);  
+	if (targetOccupancy>1.0) maxDiff=0.0;// hack, does not work well on pedestals.  to do...
+	//LOG(INFO) << BOLDYELLOW << "maxDiff:  " <<maxDiff<<RESET;
+
+	for(auto cOpticalGroup: *(fDetectorContainer->at(boardIndex)))
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+		    auto cOriginalMask = cChip->getChipOriginalMask();
+                    if(localDAC)
+                    {
+                        for(uint32_t iChannel = 0; iChannel < returnVec.size(); ++iChannel)
+                        {
+
+			        //LOG(INFO) << BOLDYELLOW << "Masking Channel:  "<< returnVec[iChannel] <<RESET;
+			        //LOG(INFO) << BOLDYELLOW << "OCC:  "<< currentStepOccupancyContainer->at(boardIndex)
+                                //     ->at(cOpticalGroup->getIndex())
+                                //     ->at(cHybrid->getIndex())
+                                //     ->at(cChip->getIndex())
+                                //     ->getChannel<Occupancy>(returnVec[iChannel]).fOccupancy <<RESET;
+
+				if (currentStepOccupancyContainer->at(boardIndex)
+                                     ->at(cOpticalGroup->getIndex())
+                                     ->at(cHybrid->getIndex())
+                                     ->at(cChip->getIndex())
+                                     ->getChannel<Occupancy>(returnVec[iChannel]).fOccupancy>targetOccupancy)
+				{
+				    currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(returnVec[iChannel])=0;
+
+				    if (mask) 
+				    {
+
+					if ((currentStepOccupancyContainer->at(boardIndex)
+					->at(cOpticalGroup->getIndex())
+					->at(cHybrid->getIndex())
+					->at(cChip->getIndex())
+					->getChannel<Occupancy>(returnVec[iChannel]).fOccupancy-maxDiff)>targetOccupancy) 
+					{
+					cOriginalMask->disableChannel(returnVec[iChannel]);
+			        	//LOG(INFO) << BOLDYELLOW << "MASKHIGH"<<RESET;
+					}
+				    }
+				}
+				else
+				{
+				    currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(returnVec[iChannel])=31;
+				    if (mask) 
+				    {
+				        
+					if ((currentStepOccupancyContainer->at(boardIndex)
+					->at(cOpticalGroup->getIndex())
+					->at(cHybrid->getIndex())
+					->at(cChip->getIndex())
+					->getChannel<Occupancy>(returnVec[iChannel]).fOccupancy+maxDiff)<targetOccupancy) 
+					{
+					cOriginalMask->disableChannel(returnVec[iChannel]);
+			        	//LOG(INFO) << BOLDYELLOW << "MASKLOW"<<RESET;
+					}
+				    }
+				}
+			        //LOG(INFO) << BOLDYELLOW << "DACL:  "<< currentDacList->at(boardIndex)->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(returnVec[iChannel])<<RESET;
+
+			}
+		    }
+		    //else -> probably wont be masking chips
+		    //fReadoutChipInterface->ConfigureChipOriginalMask(cChip);
+		    fReadoutChipInterface->maskChannelGroup(cChip,cOriginalMask);
+		}
+	    }
+	}
+    }
+    if(localDAC)
+	setAllLocalDacBeBoard(boardIndex, dacName, *currentDacList);
+    else
+	setAllGlobalDacBeBoard(boardIndex, dacName, *currentDacList);
+
+    delete previousStepOccupancyContainer;
+    delete currentStepOccupancyContainer;
+    delete currentDacList;
+}
+
+
 
 // set dac and measure occupancy
 void Tool::setDacAndMeasureData(const std::string& dacName, const uint16_t dacValue, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
@@ -1533,6 +1905,19 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::PSAS)
     {
         this->setSameGlobalDac("AnalogueAsync", 1);
+        for(auto cBoard: *fDetectorContainer)
+        {
+		for(auto cOpticalGroup: *cBoard)
+		{
+		    for(auto cHybrid: *cOpticalGroup)
+		    {
+		        for(auto cChip: *cHybrid)
+		        {
+				fReadoutChipInterface->maskChannelGroup(cChip,cChip->getChipOriginalMask());
+			}
+		    }
+		}
+        }
         fUseReadNEvents = true;
     }
     doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);

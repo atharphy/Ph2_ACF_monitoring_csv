@@ -21,6 +21,7 @@
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
+#include "tools/PSBiasCal.h"
 #include "tools/KIRA.h"
 
 #ifdef __POWERSUPPLY__
@@ -130,6 +131,8 @@ int main(int argc, char* argv[])
     cmd.defineOption("save", "Save the data to a raw file.  ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("skipAlignment", "Skip the back-end alignment step ", ArgvParser::OptionRequiresValue);
     // general
+    cmd.defineOption("runBias", "Run bias scan", ArgvParser::NoOptionAttribute);
+
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
 
@@ -344,6 +347,14 @@ int main(int argc, char* argv[])
             } // configure lpGBT
         }
     }
+    if(cmd.foundOption("runBias"))
+    {
+        PSBiasCal cPSBiasCal;
+        cPSBiasCal.Inherit(&cTool);
+        cPSBiasCal.Initialise();
+        cPSBiasCal.CalibrateADC();
+        cPSBiasCal.CalibrateBias();
+    }
     // read chip ids
     if(cmd.foundOption("readIDs"))
     {
@@ -498,13 +509,16 @@ int main(int argc, char* argv[])
             LOG(INFO) << BOLDRED << "Could not align link in the BE... stopping here." << RESET;
             return (666);
         }
-
         // align FEs - CIC
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit(&cTool);
-        cCicAligner.Start(cRunNumber);
-        cCicAligner.waitForRunToBeCompleted();
-        cCicAligner.dumpConfigFiles();
+
+	////Doesnt work PSv2
+        //cCicAligner.Start(cRunNumber);
+        //cCicAligner.waitForRunToBeCompleted();
+	////\Doesnt work PSv2
+
+        //cCicAligner.dumpConfigFiles();
 
         // quickly check ReadData
         // for(const auto cBoard: *cTool.fDetectorContainer)
@@ -628,6 +642,7 @@ int main(int argc, char* argv[])
         cPedestalEqualization.writeObjects();
         cPedestalEqualization.dumpConfigFiles();
         cPedestalEqualization.resetPointers();
+        t.stop();
         t.show("Time to tune the front-ends on the system: ");
         // // reset
         // cTool.fDetectorContainer->resetReadoutChipQueryFunction();
@@ -873,8 +888,10 @@ int main(int argc, char* argv[])
                             }
                             if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
                             {
+                LOG(INFO) << BOLDBLUE << "1" << RESET;
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "ModeSel_ALL", cSamplingMPA);
+                LOG(INFO) << BOLDBLUE << "2" << RESET;
                             }
                         }
                     }
@@ -914,11 +931,15 @@ int main(int argc, char* argv[])
                 }
             }
         }
-
+                LOG(INFO) << BOLDBLUE << "3" << RESET;
         LatencyScan cLatencyScan;
+                LOG(INFO) << BOLDBLUE << "4" << RESET;
         cLatencyScan.Inherit(&cTool);
+                LOG(INFO) << BOLDBLUE << "5" << RESET;
         cLatencyScan.Initialize();
+                LOG(INFO) << BOLDBLUE << "6" << RESET;
         cLatencyScan.ScanLatency();
+                LOG(INFO) << BOLDBLUE << "7" << RESET;
     }
     // measure noise on FE chips
     if(cmd.foundOption("measurePedeNoise") && !cmd.foundOption("read"))

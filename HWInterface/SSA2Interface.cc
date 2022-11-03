@@ -219,7 +219,8 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
         cItem.fValue  = (cRegName == "strip") ? cMaskValue : 0xFF;
         cRegItems.push_back(cItem);
     }
-    cSuccess = fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerifLoop);
+    //cSuccess = fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerifLoop);
+    cSuccess = fBoardFW->MultiRegisterWrite(pChip, cRegItems, false);
     if(!cSuccess)
     {
         LOG(INFO) << BOLDRED << "Failed to write to one of these registers" << RESET;
@@ -245,7 +246,8 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
         // LOG(INFO) << BOLDBLUE << "Setting register " << dacName.str() << " to " << cItem.fValue << RESET;
         cRegItems.push_back(cItem);
     }
-    cSuccess = cSuccess && fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerifLoop);
+    //cSuccess = cSuccess && fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerifLoop);
+    cSuccess = cSuccess && fBoardFW->MultiRegisterWrite(pChip, cRegItems, false);
     // write mask
     cRegItems.clear();
     cMaskValue = 0xFF;
@@ -256,7 +258,8 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
         cItem.fValue  = cMaskValue;
         cRegItems.push_back(cItem);
     }
-    cSuccess = cSuccess && fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerifLoop);
+    //cSuccess = cSuccess && fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerifLoop);
+    cSuccess = cSuccess && fBoardFW->MultiRegisterWrite(pChip, cRegItems, false);
     return cSuccess;
 }
 
@@ -715,7 +718,7 @@ bool SSA2Interface::setInjectionSchema(ReadoutChip* pChip, const std::shared_ptr
         bool     bitval  = bool(((cBitset & shifted) >> cIndx).to_ulong());
         regval           = (regval & 0xEF) | (bitval << 4); // enable injection bit
         cReg.fValue      = regval;
-        LOG(INFO) << BOLDYELLOW << "SSA2 - setting mask on channel#"
+        LOG(DEBUG) << BOLDYELLOW << "SSA2 - setting mask on channel#"
                   << "," << cIndx << "," << bitval << "," << regval << RESET;
         cIndx++;
     }
@@ -726,7 +729,7 @@ bool SSA2Interface::maskChannelGroup(ReadoutChip* pChip, const std::shared_ptr<C
     auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(pChip->getChipOriginalMask());
     auto groupToMask   = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(group);
     auto cBitset       = std::bitset<NSSACHANNELS>(groupToMask->getBitset() & cOriginalMask->getBitset());
-    LOG(INFO) << BOLDYELLOW << "\t... Applying mask to SSA" << +pChip->getId() << " with " << group->getNumberOfEnabledChannels() << " desired mask \t... : " << cBitset
+    LOG(DEBUG) << BOLDYELLOW << "\t... Applying mask to SSA" << +pChip->getId() << " with " << group->getNumberOfEnabledChannels() << " desired mask \t... : " << cBitset
               << " original mask  \t... : " << cOriginalMask << " enabled channels "
               << " original bitset was be \t... " << groupToMask->getBitset() << RESET;
 
@@ -750,7 +753,7 @@ bool SSA2Interface::maskChannelGroup(ReadoutChip* pChip, const std::shared_ptr<C
         bool     bitval  = bool(((cBitset & shifted) >> cIndx).to_ulong());
         regval           = (regval & 0xFE) | (bitval);
         cReg.fValue      = regval;
-        LOG(INFO) << BOLDYELLOW << "SSA2 - setting mask on channel#"
+        LOG(DEBUG) << BOLDYELLOW << "SSA2 - setting mask on channel#"
                   << "," << cIndx << "," << bitval << "," << regval << RESET;
         cIndx++;
     }

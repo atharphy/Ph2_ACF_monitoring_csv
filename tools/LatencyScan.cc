@@ -192,7 +192,6 @@ void LatencyScan::ScanLatency()
             }
             fBeBoardInterface->ChipReSync(cBoard);
         }
-
         uint16_t cOffset = 0;
         for(auto cBoard: *fDetectorContainer)
         {
@@ -228,7 +227,6 @@ void LatencyScan::ScanLatency()
                         } // chip
                     }     // hybrid
                 }         // optical group
-
                 // start at the beginning + trigger id in burst
                 auto cEventIter = cEvents.begin() + cTriggerId;
                 // calculate occupancy for each
@@ -277,17 +275,19 @@ void LatencyScan::ScanLatency()
                                 }
                                 else
                                 {
+
                                     std::vector<PCluster> cPclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetPixelClusters(cHybrid->getId(), cChip->getId());
                                     std::vector<SCluster> cSclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetStripClusters(cHybrid->getId(), cChip->getId());
+
                                     cTotalHitsS0 += cPclstrs.size();
                                     cTotalHitsS1 += cSclstrs.size();
                                     if(cPclstrs.size() > 0 && cSclstrs.size() > 0)
-                                        LOG(DEBUG) << BOLDBLUE << "\t\t\t\t Event#" << (*cEventIter)->GetEventCount() << " Trigger#" << +cTriggerId << " Chip#" << +cChip->getId() % 8 << " "
+                                        LOG(INFO) << BOLDBLUE << "\t\t\t\t Event#" << (*cEventIter)->GetEventCount() << " Trigger#" << +cTriggerId << " Chip#" << +cChip->getId() % 8 << " "
                                                    << +cPclstrs.size() << " P-clusters " << +cSclstrs.size() << " S-clusters." << RESET;
                                     for(auto& cPclstr: cPclstrs)
                                     {
                                         if(cSclstrs.size() > 0)
-                                            LOG(DEBUG) << BOLDBLUE << "\tHit in Pixel ASIC" << +cChip->getId() % 8 << " row " << +cPclstr.fAddress << " col " << +cPclstr.fZpos << " width "
+                                            LOG(INFO) << BOLDBLUE << "\tHit in Pixel ASIC" << +cChip->getId() % 8 << " row " << +cPclstr.fAddress << " col " << +cPclstr.fZpos << " width "
                                                        << +cPclstr.fWidth << RESET;
                                         for(uint8_t cId = 0; cId < (1 + cPclstr.fWidth); cId++)
                                         {
@@ -303,7 +303,7 @@ void LatencyScan::ScanLatency()
                                     for(auto& cSclstr: cSclstrs)
                                     {
                                         if(cPclstrs.size() > 0)
-                                            LOG(DEBUG) << BOLDYELLOW << "\tHit in Strip ASIC" << +cChip->getId() % 8 << " row " << +cSclstr.fAddress << " width " << +cSclstr.fWidth << RESET;
+                                            LOG(INFO) << BOLDYELLOW << "\tHit in Strip ASIC" << +cChip->getId() % 8 << " row " << +cSclstr.fAddress << " width " << +cSclstr.fWidth << RESET;
                                         for(uint8_t cId = 0; cId < (1 + cSclstr.fWidth); cId++)
                                         {
                                             cHitContainer.at(cBoard->getIndex())
@@ -335,11 +335,17 @@ void LatencyScan::ScanLatency()
                     cEventIter += (1 + cTriggerMult);
                     cNEventsThisTriggerId++;
                 } while(cEventIter < cEvents.end());
+
+		//Doesnt work PSv2
                 cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), getChannelGroupHandlerContainer()->getObject(cOccBrd->getId()), cNormalizationFactor);
+		//\Doesnt work PSv2
+
+
                 // float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
                 cTotalHits = cTotalHitsS0 + cTotalHitsS1;
                 if(cTotalHits > 0)
                 {
+
                     if(cTotalHits >= cMaxHits)
                     {
                         LOG(INFO) << BOLDYELLOW << "[!!!! new max !!!!]Latency of " << (cLat + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult)

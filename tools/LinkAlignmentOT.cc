@@ -638,7 +638,7 @@ void LinkAlignmentOT::LegacyAlignmentMPA(const Chip* pChip)
 bool LinkAlignmentOT::LineTuning(const Chip* pChip, uint8_t pLineId, uint8_t pAlignmentPattern, uint8_t pPeriod)
 {
     // For now keep legacy until we can test on MPA SCC
-    if(pChip->getFrontEndType() == FrontEndType::MPA)
+    if(pChip->getFrontEndType() == FrontEndType::MPA or pChip->getFrontEndType() == FrontEndType::MPA2)
     {
         LegacyAlignmentMPA(pChip);
         return true;
