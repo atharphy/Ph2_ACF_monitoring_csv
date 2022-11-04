@@ -153,12 +153,7 @@ void ThrEqualization::initializeFiles(const std::string& fileRes_, int currentRu
 
 void ThrEqualization::run()
 {
-    if(TDACGainNSteps == 0)
-        // #########################
-        // # Find global threshold #
-        // #########################
-        ThrEqualization::bitWiseScanGlobal("VCAL_HIGH", TARGETEFF, startValue, stopValue);
-    else
+    if(TDACGainNSteps != 0)
     {
         // ###########################################
         // # Scan DAC and run threshold equalization #
@@ -172,6 +167,11 @@ void ThrEqualization::run()
         // #######################################
         ThrEqualization::analyzeDuringRun();
     }
+
+    // #########################
+    // # Find global threshold #
+    // #########################
+    ThrEqualization::bitWiseScanGlobal("VCAL_HIGH", TARGETEFF, startValue, stopValue);
 
     // ##############################
     // # Run threshold equalization #
