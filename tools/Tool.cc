@@ -1108,11 +1108,11 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
 
 
     //Hacked solution for PS
-    if ((cReadoutChip->getFrontEndType() == FrontEndType::MPA) or (cReadoutChip->getFrontEndType() == FrontEndType::SSA) or (cReadoutChip->getFrontEndType() == FrontEndType::MPA2) or (cReadoutChip->getFrontEndType() == FrontEndType::SSA2) )
-    {
-	if(localDAC) occupanyDirectlyProportionalToDAC = true;
-	else occupanyDirectlyProportionalToDAC = false;
-    }
+    //if ((cReadoutChip->getFrontEndType() == FrontEndType::MPA) or (cReadoutChip->getFrontEndType() == FrontEndType::SSA) or (cReadoutChip->getFrontEndType() == FrontEndType::MPA2) or (cReadoutChip->getFrontEndType() == FrontEndType::SSA2) )
+    //{
+    //    if(localDAC) occupanyDirectlyProportionalToDAC = true;
+    //    else occupanyDirectlyProportionalToDAC = false;
+    //}
 
     if(!occupanyDirectlyProportionalToDAC)
     {
@@ -1185,7 +1185,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
                         auto&                cDataContainerThisChip = cDataContainerThisFE->at(cChip->getIndex());
                         auto&                cSummary               = cDataContainerThisChip->getSummary<Occupancy, Occupancy>();
                         ChannelGroupHandler* cHandler;
-                        if(cChip->getFrontEndType() == FrontEndType::MPA)
+                        if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
                             cHandler = new MPAChannelGroupHandler();
                         else
                             cHandler = new SSAChannelGroupHandler();
@@ -1905,6 +1905,7 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::PSAS)
     {
         this->setSameGlobalDac("AnalogueAsync", 1);
+/*
         for(auto cBoard: *fDetectorContainer)
         {
 		for(auto cOpticalGroup: *cBoard)
@@ -1918,6 +1919,7 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
 		    }
 		}
         }
+*/
         fUseReadNEvents = true;
     }
     doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
