@@ -243,8 +243,6 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
         RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_PORTAL_ADDR, 0x0}, commandList);
         RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_MODE_ADDR, 0x0}, commandList);
 
-        uint16_t data;
-
         for(auto col = 0u; col < RD53A::NCOLS; col += 2)
         {
             if(std::find(mask.Enable.begin() + (0 + RD53A::NROWS * col), mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * col), true) ==
@@ -257,7 +255,7 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
             {
                 if((mask.Enable[row + RD53A::NROWS * col] == true) || (mask.Enable[row + RD53A::NROWS * (col + 1)] == true))
                 {
-                    data = RD53AInterface::GetPixelConfig(mask, row, col, highGain);
+                    auto data = RD53AInterface::GetPixelConfig(mask, row, col, highGain);
 
                     RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_ROW_ADDR, row}, commandList);
                     RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_PORTAL_ADDR, data}, commandList);
