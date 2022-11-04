@@ -212,10 +212,7 @@ void PedestalEqualization::Reset()
                         if(cMapItem.first.find("Channel") != std::string::npos) continue;
                         if(cMapItem.first.find("TrimDAC") != std::string::npos) continue;
                         if(cMapItem.first.find("THTRIMMING") != std::string::npos) continue;
-                        if(cMapItem.first.find("ENFLAGS") != std::string::npos) 
-				{
-					cMapItem.second.fValue = (cMapItem.second.fValue & 0xfe) + (cValueInMemory & 0x1); 
-				};
+                        if(cMapItem.first.find("ENFLAGS") != std::string::npos) { cMapItem.second.fValue = (cMapItem.second.fValue & 0xfe) + (cValueInMemory & 0x1); };
                         LOG(DEBUG) << BOLDYELLOW << "PedestalEqualization::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
                                    << cMapItem.second.fValue << RESET;
                         cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second.fValue));
@@ -290,11 +287,6 @@ void PedestalEqualization::FindVplus()
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
 
-
-                     
-     
-
-
     if (fFullScan) this->fullScan("Threshold", fEventsPerPoint, fOccupancyAtPedestal, fNEventsPerBurst, fPedestalEqualizationFullScanStart,fPedestalEqualizationFullScanCAP);
     else this->bitWiseScan("Threshold", fEventsPerPoint, fOccupancyAtPedestal, fNEventsPerBurst);
     // dumpConfigFiles();
@@ -342,6 +334,7 @@ void PedestalEqualization::FindVplus()
                     {
                         cNPixelChips += float(ENCHAN) / float(TOTCHAN);
                         cMeanPixelsValue += tmpVthr * (float(ENCHAN) / float(TOTCHAN));
+                        LOG(DEBUG) << "MeanPixelsValue : " << +cMeanPixelsValue << " -- NPixelChips : " << +cNPixelChips << RESET;
                     }
 
                 } // for on chip - end
