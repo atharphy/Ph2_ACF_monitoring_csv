@@ -36,7 +36,7 @@ void SSA2Interface::DumpConfiguration(Chip* pSSA2, std::string filename)
     }
     myfile.close();
 }
-bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockSize)
+bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerify, uint32_t pBlockSize)
 {
     bool cConfigLocalRegs = true;
     pSSA2->setRegisterTracking(0);
@@ -86,12 +86,12 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerifLoop, uint32_t pBlockS
     bool cSuccess = fBoardFW->MultiRegisterWrite(pSSA2, cCntrlRegItems, false);
     if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cCntrlRegItems.size() << " control registers in SSA#" << +pSSA2->getId() << RESET;
 
-    cSuccess = fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, pVerifLoop);
+    cSuccess = fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, pVerify);
     if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cRegItems.size() << " global R/W registers in SSA#" << +pSSA2->getId() << RESET;
 
     if(cConfigLocalRegs)
     {
-        cSuccess = fBoardFW->MultiRegisterWrite(pSSA2, cLocalRegItems, pVerifLoop);
+        cSuccess = fBoardFW->MultiRegisterWrite(pSSA2, cLocalRegItems, pVerify);
         if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cLocalRegItems.size() << " local R/W registers in SSA#" << +pSSA2->getId() << RESET;
     }
 
@@ -174,7 +174,7 @@ uint8_t SSA2Interface::ReadChipId(Chip* pChip)
     return cItem.fValue;
 }
 // WRITE REGISTER (ALL LOCAL):
-bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& dacName, ChipContainer& localRegValues, bool pVerifLoop) // FIXME SSA2
+bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& dacName, ChipContainer& localRegValues, bool pVerify) // FIXME SSA2
 {
     bool cSuccess = true;
     // set board
@@ -198,7 +198,7 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
         cSuccess        = fBoardFW->SingleRegisterWrite(pChip, cRegItem, false);
         cRegName        = (dacName == "GainTrim") ? "StripControl2_S32" : "THTRIMMING_S32";
         auto cRegValue  = fBoardFW->SingleRegisterRead(pChip, cRegMap[cRegName]);
-        LOG(INFO) << BOLDBLUE << cRegName << " set to 0x" << std::hex << +cRegValue << std::dec << RESET;
+        LOG(DEBUG) << BOLDBLUE << cRegName << " set to 0x" << std::hex << +cRegValue << std::dec << RESET;
         cSuccess = (cRegValue == localRegValues.getChannel<uint8_t>(0));
         return cSuccess;
     }
@@ -219,7 +219,7 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
         cItem.fValue  = (cRegName == "strip") ? cMaskValue : 0xFF;
         cRegItems.push_back(cItem);
     }
-    //cSuccess = fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerifLoop);
+    //cSuccess = fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerify);
     cSuccess = fBoardFW->MultiRegisterWrite(pChip, cRegItems, false);
     if(!cSuccess)
     {
@@ -246,7 +246,7 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
         // LOG(INFO) << BOLDBLUE << "Setting register " << dacName.str() << " to " << cItem.fValue << RESET;
         cRegItems.push_back(cItem);
     }
-    //cSuccess = cSuccess && fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerifLoop);
+    //cSuccess = cSuccess && fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerify);
     cSuccess = cSuccess && fBoardFW->MultiRegisterWrite(pChip, cRegItems, false);
     // write mask
     cRegItems.clear();
@@ -258,12 +258,12 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
         cItem.fValue  = cMaskValue;
         cRegItems.push_back(cItem);
     }
-    //cSuccess = cSuccess && fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerifLoop);
+    //cSuccess = cSuccess && fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerify);
     cSuccess = cSuccess && fBoardFW->MultiRegisterWrite(pChip, cRegItems, false);
     return cSuccess;
 }
 
-bool SSA2Interface::WriteChipMultReg(Chip* pSSA2, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop)
+bool SSA2Interface::WriteChipMultReg(Chip* pSSA2, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify)
 {
     setBoard(pSSA2->getBeBoardId());
     auto                     cRegMap = pSSA2->getRegMap();
@@ -281,10 +281,10 @@ bool SSA2Interface::WriteChipMultReg(Chip* pSSA2, const std::vector<std::pair<st
         cItem.fValue      = cReq.second;
         cRegItems.push_back(cItem);
     }
-    return fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, pVerifLoop);
+    return fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, pVerify);
 }
 
-bool SSA2Interface::WriteChipRegBits(Chip* pSSA2, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerifLoop)
+bool SSA2Interface::WriteChipRegBits(Chip* pSSA2, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerify)
 {
     bool cSuccess = true;
     setBoard(pSSA2->getBeBoardId());
@@ -307,7 +307,7 @@ bool SSA2Interface::WriteChipRegBits(Chip* pSSA2, const std::string& pRegNode, u
         LOG(DEBUG) << BOLDYELLOW << "\t..SSA2Interface::WriteChipRegBits Writing 0x" << std::hex << +pValue << " to " << pRegNode << std::dec << RESET;
         auto cRegItem   = cRegMap[pRegNode];
         cRegItem.fValue = pValue;
-        cSuccess        = fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerifLoop);
+        cSuccess        = fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerify);
     }
     // ensure mask is always reset
     cRegItems.clear();
@@ -321,14 +321,14 @@ bool SSA2Interface::WriteChipRegBits(Chip* pSSA2, const std::string& pRegNode, u
     LOG(DEBUG) << BOLDYELLOW << "SSA2Interface::WriteChipRegBits Resetting mask ... writing 0x" << std::hex << +mask << " to " << pMaskReg << std::dec << RESET;
     return cSuccess && fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, false);
 
-    // this->WriteChipSingleReg(pSSA2, pMaskReg, mask, pVerifLoop);
-    // bool cReadoutMode = WriteChipSingleReg(pSSA2, pRegNode, pValue, pVerifLoop);
-    // this->WriteChipSingleReg(pSSA2, pMaskReg, 0xFF, pVerifLoop);
+    // this->WriteChipSingleReg(pSSA2, pMaskReg, mask, pVerify);
+    // bool cReadoutMode = WriteChipSingleReg(pSSA2, pRegNode, pValue, pVerify);
+    // this->WriteChipSingleReg(pSSA2, pMaskReg, 0xFF, pVerify);
     // return cReadoutMode;
 }
 //	// WRITE REGISTER (SINGLE CHIP REG <<main interface for writing>>):
 //////////
-bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint16_t pValue, bool pVerifLoop)
+bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint16_t pValue, bool pVerify)
 {
     setBoard(pSSA2->getBeBoardId());
     // LOG (DEBUG) << BOLDYELLOW << "SSA2Interface::WriteChipReg  writing to " << pRegName << RESET;
@@ -338,7 +338,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     {
         cRegItem        = cRegMap["ENFLAGS"];
         cRegItem.fValue = (pValue << 2) | (1 << 0);
-        return fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerifLoop);
+        return fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerify);
     }
     else if(pRegName == "AmuxHigh")
     {
@@ -383,14 +383,14 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
             cRegItem.fValue = (cRegName == "AsyncRead_StartDel_LSB") ? cLSB : cMSB;
             cRegItems.push_back(cRegItem);
         }
-        return fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, pVerifLoop);
+        return fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, pVerify);
     }
     else if(pRegName == "AnalogueSync")
     {
         uint8_t cReadoutMode = 0x0;
         uint8_t cEdgeSel_T1  = 0x0;
         // readout mode
-        bool cSuccess = this->WriteChipRegBits(pSSA2, "control_1", cReadoutMode, "mask_peri_D", 0x7, pVerifLoop);
+        bool cSuccess = this->WriteChipRegBits(pSSA2, "control_1", cReadoutMode, "mask_peri_D", 0x7, pVerify);
         // edge select
         cSuccess = cSuccess && this->WriteChipRegBits(pSSA2, "control_1", (cEdgeSel_T1 << 3), "mask_peri_D", (0x1 << 3));
         // duration
@@ -563,14 +563,14 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
                                            "Shift_pattern_st_6_st_7"};
         cRegItem        = cRegMap[cRegNames[cLine]];
         cRegItem.fValue = pValue;
-        return fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerifLoop);
+        return fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerify);
     }
     else if(pRegName.find("OutPatternL1Line") != std::string::npos) // Stub Lines
     {
         cRegItem        = cRegMap["Shift_pattern_L1"];
         cRegItem.fValue = pValue;
-        return fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerifLoop);
-        // return this->WriteChipSingleReg(pSSA2, "Shift_pattern_L1", pValue, pVerifLoop);
+        return fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerify);
+        // return this->WriteChipSingleReg(pSSA2, "Shift_pattern_L1", pValue, pVerify);
     }
     else if(pRegName == "CalibrationPattern")
     {
@@ -587,7 +587,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
 
         cRegItem        = cRegMap["DigCalibPattern_L"];
         cRegItem.fValue = pValue;
-        return cSuccess && fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerifLoop);
+        return cSuccess && fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerify);
     }
     else if(pRegName.find("CalibrationPattern") != std::string::npos)
     {
@@ -609,7 +609,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
 
         cRegItem.fAddress = 0x0300 + cChannel;
         cRegItem.fValue   = pValue;
-        return cSuccess && fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerifLoop);
+        return cSuccess && fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerify);
     }
     else if(pRegName == "InjectedCharge")
     {
@@ -617,7 +617,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
                    << " bias calDac to " << +pValue << " on SSA2#" << +pSSA2->getId() << RESET;
         cRegItem        = cRegMap["Bias_CALDAC"];
         cRegItem.fValue = pValue;
-        return fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerifLoop);
+        return fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerify);
     }
     else if(pRegName == "Threshold" || pRegName == "Bias_THDAC")
     {
@@ -636,12 +636,12 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     {
         cRegItem        = cRegMap[pRegName];
         cRegItem.fValue = pValue;
-        return fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerifLoop);
+        return fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerify);
     }
     return true;
 }
 //	// AMUX CONFIGURATION:
-bool SSA2Interface::ConfigureAmux(Chip* pChip, const std::string& pRegister, bool pVerifLoop)
+bool SSA2Interface::ConfigureAmux(Chip* pChip, const std::string& pRegister, bool pVerify)
 {
     setBoard(pChip->getBeBoardId());
     auto        cRegMap = pChip->getRegMap();
@@ -654,7 +654,7 @@ bool SSA2Interface::ConfigureAmux(Chip* pChip, const std::string& pRegister, boo
     {
         cRegItem        = cRegMap[cReg];
         cRegItem.fValue = cHighZValue;
-        bool cSuccess   = fBoardFW->SingleRegisterWrite(pChip, cRegItem, pVerifLoop);
+        bool cSuccess   = fBoardFW->SingleRegisterWrite(pChip, cRegItem, pVerify);
         if(!cSuccess)
             return cSuccess;
         else
@@ -674,7 +674,7 @@ bool SSA2Interface::ConfigureAmux(Chip* pChip, const std::string& pRegister, boo
                 cRegItem          = cRegMap[cReg];
                 cRegItem.fValue   = cRegValue;
 
-                bool cSuccess = fBoardFW->SingleRegisterWrite(pChip, cRegItem, pVerifLoop);
+                bool cSuccess = fBoardFW->SingleRegisterWrite(pChip, cRegItem, pVerify);
                 if(!cSuccess)
                     return cSuccess;
                 else
@@ -690,14 +690,14 @@ bool SSA2Interface::ConfigureAmux(Chip* pChip, const std::string& pRegister, boo
         return true;
 }
 /////////// ALIAS CALLS:
-bool SSA2Interface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerifLoop) { return this->WriteChipReg(pChip, "AnalogueAsync", 1); }
-bool SSA2Interface::setInjectionAmplitude(ReadoutChip* pChip, uint8_t injectionAmplitude, bool pVerifLoop) { return this->WriteChipReg(pChip, "InjectedCharge", injectionAmplitude, pVerifLoop); }
-bool SSA2Interface::setInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop)
+bool SSA2Interface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerify) { return this->WriteChipReg(pChip, "AnalogueAsync", 1); }
+bool SSA2Interface::setInjectionAmplitude(ReadoutChip* pChip, uint8_t injectionAmplitude, bool pVerify) { return this->WriteChipReg(pChip, "InjectedCharge", injectionAmplitude, pVerify); }
+bool SSA2Interface::setInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify)
 {
     auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(pChip->getChipOriginalMask());
     auto groupToMask   = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(group);
     auto cBitset       = std::bitset<NSSACHANNELS>(groupToMask->getBitset() & cOriginalMask->getBitset());
-    LOG(INFO) << BOLDYELLOW << "\t... Applying mask to SSA" << +pChip->getId() << " with " << group->getNumberOfEnabledChannels() << " desired mask \t... : " << cBitset
+    LOG(DEBUG) << BOLDYELLOW << "\t... Applying mask to SSA" << +pChip->getId() << " with " << group->getNumberOfEnabledChannels() << " desired mask \t... : " << cBitset
               << " original mask  \t... : " << cOriginalMask << " enabled channels "
               << " original bitset was be \t... " << groupToMask->getBitset() << RESET;
 
@@ -724,7 +724,7 @@ bool SSA2Interface::setInjectionSchema(ReadoutChip* pChip, const std::shared_ptr
     }
     return fBoardFW->MultiRegisterWrite(pChip, cRegItems, true);
 }
-bool SSA2Interface::maskChannelGroup(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop)
+bool SSA2Interface::maskChannelGroup(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool pVerify)
 {
     auto cOriginalMask = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(pChip->getChipOriginalMask());
     auto groupToMask   = std::static_pointer_cast<const ChannelGroup<NSSACHANNELS>>(group);
@@ -759,14 +759,14 @@ bool SSA2Interface::maskChannelGroup(ReadoutChip* pChip, const std::shared_ptr<C
     }
     return fBoardFW->MultiRegisterWrite(pChip, cRegItems, true);
 }
-bool SSA2Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop)
+bool SSA2Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerify)
 {
     bool success = true;
-    if(mask) success &= maskChannelGroup(pChip, group, pVerifLoop);
-    if(inject) success &= setInjectionSchema(pChip, group, pVerifLoop);
+    if(mask) success &= maskChannelGroup(pChip, group, pVerify);
+    if(inject) success &= setInjectionSchema(pChip, group, pVerify);
 
     return success;
 }
-bool SSA2Interface::ConfigureChipOriginalMask(ReadoutChip* pSSA2, bool pVerifLoop, uint32_t pBlockSize) { return true; }
-bool SSA2Interface::MaskAllChannels(ReadoutChip* pSSA2, bool mask, bool pVerifLoop) { return true; }
+bool SSA2Interface::ConfigureChipOriginalMask(ReadoutChip* pSSA2, bool pVerify, uint32_t pBlockSize) { return true; }
+bool SSA2Interface::MaskAllChannels(ReadoutChip* pSSA2, bool mask, bool pVerify) { return true; }
 } // namespace Ph2_HwInterface
