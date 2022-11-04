@@ -185,7 +185,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     // # bits 7-8: SER_INV_TAP[1:0]
     // # bits 5-6: SER_EN_TAP[1:0]
     // # bits 1-4: SER_EN_LANE[3:0] --> actual output lanes
-    RD53Interface::WriteChipReg(pChip, "AuroraConfig", bits::pack<4, 6, 2>(0b1, 0b011001, 0b11), false);
+    RD53Interface::WriteChipReg(pChip, "AuroraConfig", bits::pack<4, 6, 2>(RD53Shared::setBits(nActiveLanes), 0b011001, 0b11), false);
     // # bit 14:    SendAltOutput
     // # bit 13:    EnablePRBS
     // # bits 9-12: ActiveLanes[3:0] --> internal lanes
