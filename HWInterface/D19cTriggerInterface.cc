@@ -164,7 +164,7 @@ bool D19cTriggerInterface::Start()
     {
         if(cTriggerState != 1)
         {
-            LOG(ERROR) << BOLDRED << "D19cTriggerInterface::Start - Failed starting trigger FSM ... retrying" << RESET;
+            LOG(INFO) << BOLDRED << "D19cTriggerInterface::Start - Failed starting trigger FSM ... retrying" << RESET;
             WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
             std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
             cTriggerState = GetTriggerState();

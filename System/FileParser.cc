@@ -662,7 +662,6 @@ void FileParser::parseMPAContainer(pugi::xml_node pMPANode, Hybrid* pHybrid, std
 //Irene
 void FileParser::parseMPA2Container(pugi::xml_node pMPANode, Hybrid* pHybrid, std::string cFilePrefix, std::ostream& os)
 { // Get ID of MPA then add to the Hybrid!
-    std::cout<<"PARSE"<<std::endl;
     uint32_t    cChipId    = pMPANode.attribute("Id").as_int();
     uint32_t    cPartnerId = pMPANode.attribute("partid").as_int();
     std::string cFileName;
