@@ -89,6 +89,8 @@ class RD53 : public ReadoutChip
         size_t      maxTRIGIDvalue;
         size_t      colStart;
         size_t      colStop;
+        size_t      VCalSleepTime;
+        size_t      AutoIncrementMask;
     };
 
     virtual size_t          getNRows() const                                                                                                           = 0;

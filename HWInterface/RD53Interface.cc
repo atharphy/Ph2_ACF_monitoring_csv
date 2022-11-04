@@ -24,7 +24,8 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
     PackWriteCommand(pChip, nameAndValue.first, nameAndValue.second, cmdStream, pVerifLoop);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());
 
-    if((regName == "VCAL_HIGH") || (regName == "VCAL_MED")) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP));
+    if((regName == "VCAL_HIGH") || (regName == "VCAL_MED"))
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->VCalSleepTime));
 
     bool     status      = true;
     uint16_t actualValue = 0;
@@ -33,7 +34,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
         if(regName == "PIX_PORTAL")
         {
             auto pixMode = RD53Interface::ReadChipReg(pChip, "PIX_MODE");
-            if((pChip->getFrontEndType() == FrontEndType::RD53A ? pixMode & RD53AConstants::AUTO_INCREMENT_MASK : pixMode & RD53BConstants::AUTO_INCREMENT_MASK) == 0) // Check only auto-increment bits
+            if((pixMode & RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->AutoIncrementMask) == 0) // Check only auto-increment bits
             {
                 auto regReadback = ReadRD53Reg(static_cast<RD53*>(pChip), regName);
                 actualValue      = regReadback[0].second;
@@ -76,7 +77,8 @@ void RD53Interface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std:
     PackWriteBroadcastCommand(pBoard, nameAndValue.first, nameAndValue.second, cmdStream);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, -1);
 
-    if((regName == "VCAL_HIGH") || (regName == "VCAL_MED")) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP));
+    if((regName == "VCAL_HIGH") || (regName == "VCAL_MED"))
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->VCalSleepTime));
 }
 
 uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)

@@ -19,11 +19,6 @@
 #include "RD53FWInterface.h"
 #include "ReadoutChipInterface.h"
 
-// #############
-// # CONSTANTS #
-// #############
-#define VCALSLEEP 50000 // [microseconds]
-
 namespace Ph2_HwInterface
 {
 class RD53Interface : public ReadoutChipInterface
