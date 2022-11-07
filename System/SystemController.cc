@@ -732,8 +732,8 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             cClkCnfg.fClkDriveStr     = cSsaClockDrive;
             cClkCnfg.fClkInvert       = 1;
             cClkCnfg.fClkPreEmphWidth = 0;
-            cClkCnfg.fClkPreEmphMode  = 0; // 3;
-            cClkCnfg.fClkPreEmphStr   = 0; // 7;
+            cClkCnfg.fClkPreEmphMode  = 3; // 3;
+            cClkCnfg.fClkPreEmphStr   = 7; // 7;
 
             LOG(INFO) << BOLDBLUE << "Enabling SSA clock [Side == " << +cSide << "]" << RESET;
             static_cast<D19clpGBTInterface*>(flpGBTInterface)->hybridClock(clpGBT, cClkCnfg, cSide);
