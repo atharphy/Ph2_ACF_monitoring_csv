@@ -43,10 +43,8 @@ void DataTransmissionTest::Running()
 
 void DataTransmissionTest::sendData()
 {
-    // Store (TAP0, BER, BERlowErr, BERupErr)
-    auto theStreamTAP0scan = prepareChipContainerStreamer<EmptyContainer, std::array<std::tuple<uint16_t, double, double, double>, 11>>("DataTransmissionTestTAP0scan");
-    // Store TAP0 value that has nearest BER to the target
-    auto theStreamTAP0tgt = prepareChipContainerStreamer<EmptyContainer, uint16_t>("DataTransmissionTestTAP0target");
+    auto theStreamTAP0scan = this->prepareChipContainerStreamer<EmptyContainer, std::array<std::tuple<uint16_t, double, double, double>, 11>>("DataTransmissionTestTAP0scan");
+    auto theStreamTAP0tgt  = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>("DataTransmissionTestTAP0target");
 
     if(fDQMStreamerEnabled == true)
     {

@@ -34,6 +34,7 @@ class Physics : public CalibBase
 #ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
+        delete histos;
 #endif
     }
 
@@ -41,14 +42,14 @@ class Physics : public CalibBase
     void Stop() override;
     void ConfigureCalibration() override;
 
-    void sendBoardData(const BoardContainer* cBoard);
-    void localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
-    void initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
-    void run();
-    void draw();
-    void analyze(bool doReadBinary = false);
-    void fillDataContainer(Ph2_HwDescription::BeBoard& cBoard);
+    void localConfigure(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void initializeFiles(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void run() override;
+    void draw(bool saveData = true) override;
 
+    void analyze(bool doReadBinary = false);
+    void sendBoardData(const BoardContainer* cBoard);
+    void fillDataContainer(Ph2_HwDescription::BeBoard& cBoard);
     void setGenericEvtConverter(evtConvType arg)
     {
         std::lock_guard<std::mutex> theGuard(theMtx);
@@ -57,21 +58,19 @@ class Physics : public CalibBase
 
 #ifdef __USE_ROOT__
     PhysicsHistograms* histos;
-    TApplication*      myApp;
 #endif
 
   private:
-    size_t errors;
+    void fillHisto() override;
 
+    void clearContainers(Ph2_HwDescription::BeBoard& cBoard);
+
+    size_t                                   errors;
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
-
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
     DetectorDataContainer                    theOccContainer;
     DetectorDataContainer                    theBCIDContainer;
     DetectorDataContainer                    theTrgIDContainer;
-
-    void fillHisto();
-    void clearContainers(Ph2_HwDescription::BeBoard& cBoard);
 
   protected:
     struct RD53dummyEvtConverter

@@ -78,9 +78,9 @@ void Physics::sendBoardData(const BoardContainer* cBoard)
     const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
 
-    auto theOccStream   = prepareChannelContainerStreamer<OccupancyAndPh>("Occ");
-    auto theBCIDStream  = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<BCIDsize>>("BCID");
-    auto theTrgIDStream = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TrgIDsize>>("TrgID");
+    auto theOccStream   = this->prepareChannelContainerStreamer<OccupancyAndPh>("Occ");
+    auto theBCIDStream  = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<BCIDsize>>("BCID");
+    auto theTrgIDStream = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TrgIDsize>>("TrgID");
 
     if(fDQMStreamerEnabled == true)
     {
@@ -176,7 +176,7 @@ void Physics::run()
     }
 }
 
-void Physics::draw()
+void Physics::draw(bool saveData)
 {
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 

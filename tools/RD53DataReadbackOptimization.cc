@@ -62,14 +62,14 @@ void DataReadbackOptimization::sendData()
 {
     const size_t TAPsize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-    auto theStreamTAP0scan = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TAPsize>>("TAP0scan");
-    auto theStreamTAP0     = prepareChipContainerStreamer<EmptyContainer, uint16_t>("TAP0");
+    auto theStreamTAP0scan = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TAPsize>>("TAP0scan");
+    auto theStreamTAP0     = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>("TAP0");
 
-    auto theStreamTAP1scan = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TAPsize>>("TAP1scan");
-    auto theStreamTAP1     = prepareChipContainerStreamer<EmptyContainer, uint16_t>("TAP1");
+    auto theStreamTAP1scan = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TAPsize>>("TAP1scan");
+    auto theStreamTAP1     = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>("TAP1");
 
-    auto theStreamTAP2scan = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TAPsize>>("TAP2scan");
-    auto theStreamTAP2     = prepareChipContainerStreamer<EmptyContainer, uint16_t>("TAP2");
+    auto theStreamTAP2scan = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TAPsize>>("TAP2scan");
+    auto theStreamTAP2     = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>("TAP2");
 
     if(fDQMStreamerEnabled == true)
     {

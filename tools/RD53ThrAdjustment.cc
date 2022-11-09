@@ -69,7 +69,7 @@ void ThrAdjustment::Running()
 
 void ThrAdjustment::sendData()
 {
-    auto theThrStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>();
+    auto theThrStream = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>();
 
     if(fDQMStreamerEnabled == true)
         for(const auto cBoard: theThrContainer) theThrStream->streamAndSendBoard(cBoard, fDQMStreamer);
@@ -146,7 +146,7 @@ void ThrAdjustment::run()
     CalibBase::chipErrorReport();
 }
 
-void ThrAdjustment::draw()
+void ThrAdjustment::draw(bool saveData)
 {
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 

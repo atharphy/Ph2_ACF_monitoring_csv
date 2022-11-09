@@ -69,7 +69,7 @@ void ThrMinimization::Running()
 
 void ThrMinimization::sendData()
 {
-    auto theThrStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>();
+    auto theThrStream = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>();
 
     if(fDQMStreamerEnabled == true)
         for(const auto cBoard: theThrContainer) theThrStream->streamAndSendBoard(cBoard, fDQMStreamer);
@@ -146,7 +146,7 @@ void ThrMinimization::run()
     CalibBase::chipErrorReport();
 }
 
-void ThrMinimization::draw()
+void ThrMinimization::draw(bool saveData)
 {
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 

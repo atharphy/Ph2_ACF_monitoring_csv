@@ -69,7 +69,7 @@ void GainOptimization::Running()
 
 void GainOptimization::sendData()
 {
-    auto theKrumStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>();
+    auto theKrumStream = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>();
 
     if(fDQMStreamerEnabled == true)
         for(const auto cBoard: theKrumCurrContainer) theKrumStream->streamAndSendBoard(cBoard, fDQMStreamer);
@@ -147,7 +147,7 @@ void GainOptimization::run()
     CalibBase::chipErrorReport();
 }
 
-void GainOptimization::draw()
+void GainOptimization::draw(bool saveData)
 {
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 

@@ -61,8 +61,8 @@ void Latency::sendData()
 {
     const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-    auto theStream        = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<LatencySize>>("Occ");
-    auto theLatencyStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>("Latency");
+    auto theStream        = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<LatencySize>>("Occ");
+    auto theLatencyStream = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>("Latency");
 
     if(fDQMStreamerEnabled == true)
     {

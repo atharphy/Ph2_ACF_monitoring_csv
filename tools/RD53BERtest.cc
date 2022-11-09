@@ -39,7 +39,7 @@ void BERtest::Running()
 
 void BERtest::sendData()
 {
-    auto theStream = prepareChipContainerStreamer<EmptyContainer, double>("BERtest");
+    auto theStream = this->prepareChipContainerStreamer<EmptyContainer, double>("BERtest");
 
     if(fDQMStreamerEnabled == true)
         for(const auto cBoard: theBERtestContainer) theStream->streamAndSendBoard(cBoard, fDQMStreamer);
@@ -136,7 +136,7 @@ void BERtest::run()
         }
 }
 
-void BERtest::draw()
+void BERtest::draw(bool saveData)
 {
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;

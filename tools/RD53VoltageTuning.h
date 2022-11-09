@@ -27,6 +27,7 @@ class VoltageTuning : public CalibBase
 #ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
+        delete histos;
 #endif
     }
 
@@ -35,10 +36,11 @@ class VoltageTuning : public CalibBase
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
-    void initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
-    void run();
-    void draw();
+    void localConfigure(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void initializeFiles(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void run() override;
+    void draw(bool saveData = true) override;
+
     void analyze();
 
 #ifdef __USE_ROOT__
@@ -46,11 +48,12 @@ class VoltageTuning : public CalibBase
 #endif
 
   private:
+    void fillHisto() override;
+
+    std::vector<int> createScanRange(Ph2_HwDescription::Chip* pChip, const std::string regName, float target, float initial);
+
     DetectorDataContainer theAnaContainer;
     DetectorDataContainer theDigContainer;
-
-    void             fillHisto();
-    std::vector<int> createScanRange(Ph2_HwDescription::Chip* pChip, const std::string regName, float target, float initial);
 
   protected:
     float targetDig;

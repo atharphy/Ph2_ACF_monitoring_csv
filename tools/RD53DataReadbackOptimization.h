@@ -28,6 +28,7 @@ class DataReadbackOptimization : public BERtest
 #ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
+        delete histos;
 #endif
     }
 
@@ -36,11 +37,11 @@ class DataReadbackOptimization : public BERtest
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void localConfigure(const std::string& fileRes_, int currentRun);
-    void initializeFiles(const std::string& fileRes_, int currentRun);
-    void run();
-    void draw(bool saveData = true);
-    void analyze();
+    void localConfigure(const std::string& fileRes_, int currentRun) override;
+    void initializeFiles(const std::string& fileRes_, int currentRun) override;
+    void run() override;
+    void draw(bool saveData = true) override;
+
     void analyze(const std::string& regName, const std::vector<uint16_t>& dacListTAP, const DetectorDataContainer& theTAPscanContainer, DetectorDataContainer& theTAPContainer);
 
 #ifdef __USE_ROOT__
@@ -48,19 +49,19 @@ class DataReadbackOptimization : public BERtest
 #endif
 
   private:
+    void fillHisto() override;
+
+    void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer);
+
     std::vector<uint16_t> dacListTAP0;
     std::vector<uint16_t> dacListTAP1;
     std::vector<uint16_t> dacListTAP2;
-
     DetectorDataContainer theTAP0scanContainer;
     DetectorDataContainer theTAP0Container;
     DetectorDataContainer theTAP1scanContainer;
     DetectorDataContainer theTAP1Container;
     DetectorDataContainer theTAP2scanContainer;
     DetectorDataContainer theTAP2Container;
-
-    void fillHisto();
-    void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer);
 
   protected:
     size_t startValueTAP0;

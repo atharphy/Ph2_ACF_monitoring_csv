@@ -77,8 +77,8 @@ void GenericDacDacScan::sendData()
 {
     const size_t GenericDacDacScanSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-    auto theStream                  = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<GenericDacDacScanSize>>("Occ");
-    auto theGenericDacDacScanStream = prepareChipContainerStreamer<EmptyContainer, std::pair<uint16_t, uint16_t>>("DACDAC");
+    auto theStream                  = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<GenericDacDacScanSize>>("Occ");
+    auto theGenericDacDacScanStream = this->prepareChipContainerStreamer<EmptyContainer, std::pair<uint16_t, uint16_t>>("DACDAC");
 
     if(fDQMStreamerEnabled == true)
     {
@@ -144,7 +144,7 @@ void GenericDacDacScan::run()
     CalibBase::chipErrorReport();
 }
 
-void GenericDacDacScan::draw()
+void GenericDacDacScan::draw(bool saveData)
 {
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 

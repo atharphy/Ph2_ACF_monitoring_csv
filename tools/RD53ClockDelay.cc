@@ -67,8 +67,8 @@ void ClockDelay::sendData()
 {
     const size_t ClkDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-    auto theStream           = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<ClkDelaySize>>("Occ");
-    auto theClockDelayStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>("ClkDelay");
+    auto theStream           = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<ClkDelaySize>>("Occ");
+    auto theClockDelayStream = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>("ClkDelay");
 
     if(fDQMStreamerEnabled == true)
     {
@@ -186,7 +186,7 @@ void ClockDelay::run()
     CalibBase::chipErrorReport();
 }
 
-void ClockDelay::draw()
+void ClockDelay::draw(bool saveData)
 {
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     la.draw(false);

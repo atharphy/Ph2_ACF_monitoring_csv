@@ -80,8 +80,8 @@ void Gain::Running()
 
 void Gain::sendData()
 {
-    auto theOccStream  = prepareChannelContainerStreamer<OccupancyAndPh, uint16_t>("Occ");
-    auto theGainStream = prepareChannelContainerStreamer<GainFit>("Gain");
+    auto theOccStream  = this->prepareChannelContainerStreamer<OccupancyAndPh, uint16_t>("Occ");
+    auto theGainStream = this->prepareChannelContainerStreamer<GainFit>("Gain");
 
     if(fDQMStreamerEnabled == true)
     {

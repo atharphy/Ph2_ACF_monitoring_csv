@@ -32,6 +32,7 @@ class ThrEqualization : public PixelAlive
 #ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
+        delete histos;
 #endif
     }
 
@@ -40,13 +41,11 @@ class ThrEqualization : public PixelAlive
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
-    void   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
-    void   run();
-    void   draw();
-    void   analyze();
-    void   analyzeDuringRun();
-    size_t getNumberIterations()
+    void   localConfigure(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void   run() override;
+    void   draw(bool saveData = true) override;
+    size_t getNumberIterations() override
     {
         uint16_t nIterationsVCal    = floor(log2(stopValue - startValue + 1) + 2);
         uint16_t moreIterationsVCal = 1;
@@ -54,25 +53,27 @@ class ThrEqualization : public PixelAlive
         uint16_t moreIterationsTDAC = 1;
         return PixelAlive::getNumberIterations() * (((TDACGainNSteps == 0 ? 1 : TDACGainNSteps + 2) * ((nIterationsVCal + moreIterationsVCal) + (nIterationsTDAC + moreIterationsTDAC))));
     }
-    void saveChipRegisters(int currentRun);
+
+    void analyze();
+    void analyzeDuringRun();
 
 #ifdef __USE_ROOT__
     ThrEqualizationHistograms* histos;
 #endif
 
   private:
-    std::vector<uint16_t> dacList;
+    void fillHisto() override;
 
-    std::shared_ptr<DetectorDataContainer> theOccContainer;
-    DetectorDataContainer                  theContainer;
-    DetectorDataContainer                  theTDACGainContainer;
-    DetectorDataContainer                  theTDACContainer;
-
-    void fillHisto();
     void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer);
     void bitWiseScanGlobal(const std::string& regName, float target, uint16_t startValue, uint16_t stopValue);
     void bitWiseScanLocal(float target, bool updateDACs);
     void chipErrorReport() const;
+
+    std::vector<uint16_t>                  dacList;
+    std::shared_ptr<DetectorDataContainer> theOccContainer;
+    DetectorDataContainer                  theContainer;
+    DetectorDataContainer                  theTDACGainContainer;
+    DetectorDataContainer                  theTDACContainer;
 
   protected:
     int    resetTDAC;

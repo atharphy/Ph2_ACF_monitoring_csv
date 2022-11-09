@@ -27,6 +27,7 @@ class BERtest : public CalibBase
 #ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
+        delete histos;
 #endif
     }
 
@@ -35,17 +36,17 @@ class BERtest : public CalibBase
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
-    void initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
-    void run();
-    void draw();
+    void localConfigure(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void initializeFiles(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void run() override;
+    void draw(bool saveData = true) override;
 
 #ifdef __USE_ROOT__
     BERtestHistograms* histos;
 #endif
 
   private:
-    void fillHisto();
+    void fillHisto() override;
 
   protected:
     size_t chain2test;

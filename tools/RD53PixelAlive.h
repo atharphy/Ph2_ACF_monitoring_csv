@@ -28,6 +28,7 @@ class PixelAlive : public CalibBase
 #ifdef __USE_ROOT__
         if(saveData == true) this->WriteRootFile();
         this->CloseResultFile();
+        delete histos;
 #endif
     }
 
@@ -36,25 +37,25 @@ class PixelAlive : public CalibBase
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void                                   localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
-    void                                   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
-    void                                   run();
-    void                                   draw(bool doSaveData = true);
+    void   localConfigure(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void   run() override;
+    void   draw(bool doSaveData = true) override;
+    size_t getNumberIterations() override { return theChnGroupHandler->getNumberOfGroups() * nEvents / nEvtsBurst; }
+
     std::shared_ptr<DetectorDataContainer> analyze();
-    size_t                                 getNumberIterations() { return theChnGroupHandler->getNumberOfGroups() * nEvents / nEvtsBurst; }
 
 #ifdef __USE_ROOT__
     PixelAliveHistograms* histos;
 #endif
 
   private:
-    bool unstuckPixels;
+    void fillHisto() override;
 
+    bool                                   unstuckPixels;
     std::shared_ptr<DetectorDataContainer> theOccContainer;
     DetectorDataContainer                  theBCIDContainer;
     DetectorDataContainer                  theTrgIDContainer;
-
-    void fillHisto();
 
   protected:
     size_t injType;

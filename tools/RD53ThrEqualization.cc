@@ -87,10 +87,10 @@ void ThrEqualization::sendData()
 {
     const size_t TDACGainSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-    auto theOccStream      = prepareChannelContainerStreamer<OccupancyAndPh>("Occ");
-    auto theTDACStream     = prepareChannelContainerStreamer<uint16_t>("TDAC");
-    auto theOccScanStream  = prepareChannelContainerStreamer<OccupancyAndPh, GenericDataArray<TDACGainSize>>("OccScan");
-    auto theTDACGainStream = prepareChannelContainerStreamer<uint16_t>("TDACGain");
+    auto theOccStream      = this->prepareChannelContainerStreamer<OccupancyAndPh>("Occ");
+    auto theTDACStream     = this->prepareChannelContainerStreamer<uint16_t>("TDAC");
+    auto theOccScanStream  = this->prepareChannelContainerStreamer<OccupancyAndPh, GenericDataArray<TDACGainSize>>("OccScan");
+    auto theTDACGainStream = this->prepareChannelContainerStreamer<uint16_t>("TDACGain");
 
     if(fDQMStreamerEnabled == true)
     {
@@ -218,7 +218,7 @@ void ThrEqualization::run()
     CalibBase::chipErrorReport();
 }
 
-void ThrEqualization::draw()
+void ThrEqualization::draw(bool saveData)
 {
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 

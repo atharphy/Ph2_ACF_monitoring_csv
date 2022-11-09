@@ -27,24 +27,24 @@ class DataTransmissionTest : public BERtest
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void localConfigure(const std::string& fileRes_, int currentRun);
-    void initializeFiles(const std::string& fileRes_, int currentRun);
-    void run();
-    void draw(bool saveData = true);
-    void analyze();
+    void localConfigure(const std::string& fileRes_, int currentRun) override;
+    void initializeFiles(const std::string& fileRes_, int currentRun) override;
+    void run() override;
+    void draw(bool saveData = true) override;
+
     void analyze(const DetectorDataContainer& theTAP0scanContainer, DetectorDataContainer& theTAP0tgtContainer);
 
 #ifdef __USE_ROOT__
-    //    DataTransmissionTestHistograms* histos;
     DataTransmissionTestGraphs* histos;
 #endif
 
   private:
+    void fillHisto() override;
+
+    void binSearch(DetectorDataContainer* theTAP0scanContainer);
+
     DetectorDataContainer theTAP0scanContainer;
     DetectorDataContainer theTAP0tgtContainer;
-
-    void fillHisto();
-    void binSearch(DetectorDataContainer* theTAP0scanContainer);
 
   protected:
     double BERtarget;

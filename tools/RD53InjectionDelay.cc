@@ -68,8 +68,8 @@ void InjectionDelay::sendData()
 {
     const size_t InjDelaySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-    auto theStream               = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<InjDelaySize>>("Occ");
-    auto theInjectionDelayStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>("InjDelay");
+    auto theStream               = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<InjDelaySize>>("Occ");
+    auto theInjectionDelayStream = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>("InjDelay");
 
     if(fDQMStreamerEnabled == true)
     {
@@ -187,7 +187,7 @@ void InjectionDelay::run()
     CalibBase::chipErrorReport();
 }
 
-void InjectionDelay::draw()
+void InjectionDelay::draw(bool saveData)
 {
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     la.draw(false);

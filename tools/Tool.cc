@@ -828,7 +828,7 @@ void Tool::setFWTestPulse()
             }
             else
             {
-              LOG(INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 12" << RESET;
+                LOG(INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 12" << RESET;
                 // fc7_daq_stat.fast_command_block.general.source
                 cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 12});
                 cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
@@ -1338,10 +1338,10 @@ class ScanBase
     uint32_t                     fNumberOfMSec;
     uint32_t                     fBoardIndex;
     const DetectorDataContainer* fChannelHandlerContainer;
-    uint               fGroupNumber;
-    Tool*              fTool;
-    DetectorContainer* fDetectorContainer;
-    bool               fSameChannelGroupForAllChannels;
+    uint                         fGroupNumber;
+    Tool*                        fTool;
+    DetectorContainer*           fDetectorContainer;
+    bool                         fSameChannelGroupForAllChannels;
 
     inline const std::shared_ptr<ChannelGroupBase> getChannelGroup(int groupNumber, uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId)
     {

@@ -35,6 +35,15 @@ class CalibBase : public Tool
                                  size_t                                     offset,
                                  size_t                                     nEvents,
                                  const std::string&                         name);
+
+    virtual void   localConfigure(const std::string& fileRes_ = "", int currentRun = -1)  = 0;
+    virtual void   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1) = 0;
+    virtual void   run()                                                                  = 0;
+    virtual void   draw(bool doSaveData = true)                                           = 0;
+    virtual size_t getNumberIterations() { return 0; };
+
+  private:
+    virtual void fillHisto() = 0;
 };
 
 #endif

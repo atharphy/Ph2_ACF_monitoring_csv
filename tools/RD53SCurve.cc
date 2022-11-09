@@ -76,8 +76,8 @@ void SCurve::Running()
 
 void SCurve::sendData()
 {
-    auto theOccStream         = prepareChannelContainerStreamer<OccupancyAndPh, uint16_t>("Occ");
-    auto theThrAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>("ThrAndNoise");
+    auto theOccStream         = this->prepareChannelContainerStreamer<OccupancyAndPh, uint16_t>("Occ");
+    auto theThrAndNoiseStream = this->prepareChannelContainerStreamer<ThresholdAndNoise>("ThrAndNoise");
 
     if(fDQMStreamerEnabled == true)
     {
