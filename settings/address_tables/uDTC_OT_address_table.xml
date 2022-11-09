@@ -548,8 +548,8 @@
                 <node id="backplane_valid"                      mask="0x00000020" description="requested backplane configuration is valid      "/>
                 <node id="card_valid"                           mask="0x00000040" description="requested card configuration is valid           "/>
                 <node id="available_backplanes_cards"                  mask="0x0fffff00" description="list of all available backplanes and cards      "/>
-                <node id="backplanes_disconnected"                  mask="0x40000000" description="backplanes are disconnected after running       "/>
-                <node id="cards_disconnected"                mask="0x80000000" description="cards are disconnected after running            "/>
+                <node id="backplanes_disconnected"                  mask="0x20000000" description="backplanes are disconnected after running       "/>
+                <node id="cards_disconnected"                mask="0x40000000" description="cards are disconnected after running            "/>
             </node>
 
             <node id="data_player"              address="0x00E">

@@ -10,7 +10,7 @@
 
         <OpticalGroup Id="0" FMCId="0" reset="1">
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
+            <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1.txt">
                 <!-- <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt"> -->
                 <Settings />
             </lpGBT>
@@ -322,7 +322,7 @@
     </Settings>
 
     <MonitoringSettings>
-        <Monitoring type="2SSEH" enable="0">
+        <Monitoring type="2SSEH" enable="1">
             <MonitoringSleepTime> 1000 </MonitoringSleepTime>
             <MonitoringElement device="LpGBT" register="ADC0" enable="0" />
             <MonitoringElement device="LpGBT" register="ADC1" enable="0" />

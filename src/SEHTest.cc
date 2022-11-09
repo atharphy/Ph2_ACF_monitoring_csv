@@ -303,7 +303,7 @@ int main(int argc, char* argv[])
     }
     if(cmd.foundOption("test-ext-leak"))
     {
-        if(cmd.foundOption("test-hv-parallel"))
+        if(cmd.foundOption("test-leak-parallel"))
         {
             LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply in parallel" << RESET;
             cSEHTester.SetupExternalTestLeakageCurrent(cExtLeakVoltage, cHVPowerSupplyId, cHVChannelId);
@@ -636,7 +636,7 @@ int main(int argc, char* argv[])
     }
 
     cTool.StopMonitoring();
-    if(cmd.foundOption("test-ext-leak") & cmd.foundOption("test-hv-parallel"))
+    if(cmd.foundOption("test-ext-leak") & cmd.foundOption("test-leak-parallel"))
     {
         LOG(INFO) << BOLDBLUE << "Ending leakage current with external power supply in parallel" << RESET;
         cSEHTester.EndExternalTestLeakageCurrent(cHVPowerSupplyId, cHVChannelId);
@@ -647,7 +647,7 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDBLUE << "Measuring leakage current" << RESET;
         cSEHTester.TestLeakageCurrent(cLeakVoltage, 150);
     }
-    if(cmd.foundOption("test-ext-leak") & !cmd.foundOption("test-hv-parallel"))
+    if(cmd.foundOption("test-ext-leak") & !cmd.foundOption("test-leak-parallel"))
     {
         LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply" << RESET;
         cSEHTester.ExternalTestLeakageCurrent(cExtLeakVoltage, 150, cHVPowerSupplyId, cHVChannelId);
