@@ -829,7 +829,6 @@ void Tool::setFWTestPulse()
             else
             {
                 LOG(INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 12" << RESET;
-                // fc7_daq_stat.fast_command_block.general.source
                 cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 12});
                 cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
             }
@@ -891,13 +890,13 @@ std::pair<float, float> Tool::evalNoise(std::vector<float> pData, std::vector<fl
     if(pIgnoreNegative) std::replace_if(cWeights.begin(), cWeights.end(), [](float i) { return std::signbit(i); }, 0);
     float cN            = static_cast<float>(cWeights.size() - std::count(cWeights.begin(), cWeights.end(), 0.));
     float cSumOfWeights = std::accumulate(cWeights.begin(), cWeights.end(), 0.);
-    // weighted sum of scan values to get pedestal
+    // Weighted sum of scan values to get pedestal
     pData.erase(pData.begin(), pData.begin() + 1);
     std::fill(pData.begin(), pData.end(), 0.);
     std::transform(cWeights.begin(), cWeights.end(), pValues.begin(), pData.begin(), std::multiplies<float>());
     float cMean = std::accumulate(pData.begin(), pData.end(), 0.);
     cMean /= cSumOfWeights;
-    // weighted sample variance of scan values to get noise
+    // Weighted sample variance of scan values to get noise
     std::transform(pValues.begin(), pValues.end(), pData.begin(), [&](float el) { return (el - cMean) * (el - cMean); });
     std::transform(cWeights.begin(), cWeights.end(), pData.begin(), pData.begin(), std::multiplies<float>());
     float cCorrection = std::sqrt(cN / (cN - 1.));
@@ -1568,9 +1567,6 @@ class ScanBeBoardDacPerGroup : public MeasureBeBoardDataPerGroup
     std::string                          fDacName;
 };
 
-#define USE_OLD_GROUP_SCAN
-
-#ifndef USE_OLD_GROUP_SCAN
 // One dimensional dac scan per BeBoard
 void Tool::scanBeBoardDac(uint16_t                             boardIndex,
                           const std::string&                   dacName,
@@ -1585,40 +1581,38 @@ void Tool::scanBeBoardDac(uint16_t                             boardIndex,
         abort();
     }
 
-    ScanBeBoardDacPerGroup theScan(this);
-    theScan.setDataContainerVector(&detectorContainerVector);
-    theScan.setDacName(dacName);
-    theScan.setDacList(&dacList);
-
-    doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
-    if(fDetectorContainer->at(boardIndex)->getBoardType() == BoardType::D19C)
-    { numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1); }
-    for(auto container: detectorContainerVector) container->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), numberOfEvents);
-}
-
-#else
-// One dimensional dac scan per BeBoard
-void Tool::scanBeBoardDac(uint16_t                             boardIndex,
-                          const std::string&                   dacName,
-                          const std::vector<uint16_t>&         dacList,
-                          uint32_t                             numberOfEvents,
-                          std::vector<DetectorDataContainer*>& detectorContainerVector,
-                          int32_t                              numberOfEventsPerBurst)
-{
-    if(dacList.size() != detectorContainerVector.size())
+    if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53A) // @TMP@
     {
-        LOG(ERROR) << __PRETTY_FUNCTION__ << " dacList and detector container vector have different sizes, aborting";
-        abort();
-    }
+        // #######################
+        // # Loop over DAC ...   #
+        // # Loop over goups ... #
+        // #######################
 
-    for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt)
+        for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt)
+        {
+            fDetectorDataContainer = detectorContainerVector[dacIt];
+            setDacAndMeasureBeBoardData(boardIndex, dacName, dacList[dacIt], numberOfEvents, numberOfEventsPerBurst);
+            this->sendData();
+        }
+    }
+    else
     {
-        fDetectorDataContainer = detectorContainerVector[dacIt];
-        setDacAndMeasureBeBoardData(boardIndex, dacName, dacList[dacIt], numberOfEvents, numberOfEventsPerBurst);
-        this->sendData();
+        // #######################
+        // # Loop over goups ... #
+        // # Loop over DAC ...   #
+        // #######################
+
+        ScanBeBoardDacPerGroup theScan(this);
+        theScan.setDataContainerVector(&detectorContainerVector);
+        theScan.setDacName(dacName);
+        theScan.setDacList(&dacList);
+
+        doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
+        if(fDetectorContainer->at(boardIndex)->getBoardType() == BoardType::D19C)
+        { numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1); }
+        for(auto container: detectorContainerVector) container->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), numberOfEvents);
     }
 }
-#endif
 
 // Set global DAC for all CBCs in the BeBoard
 void Tool::setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string& dacName, DetectorDataContainer& globalDACContainer)
