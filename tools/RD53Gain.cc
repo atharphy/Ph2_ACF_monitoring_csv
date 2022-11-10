@@ -221,7 +221,7 @@ void Gain::draw(bool doSaveData)
 
 std::shared_ptr<DetectorDataContainer> Gain::analyze()
 {
-    float slope, slopeErr, intercept, interceptErr, lowQslope, lowQslopeErr, lowQintercept, lowQinterceptErr, chi2, DoF;
+    float highQslope, highQslopeErr, highQintercept, highQinterceptErr, lowQslope, lowQslopeErr, lowQintercept, lowQinterceptErr, chi2, DoF;
 
     std::vector<float> par(NGAINPAR, 0);
     std::vector<float> parErr(NGAINPAR, 0);
@@ -283,30 +283,38 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                                 // # Run regression #
                                 // ##################
                                 Gain::computeStats(x, y, e, o, par, parErr, chi2, DoF);
-                                intercept        = par[0];
-                                interceptErr     = parErr[0];
-                                slope            = par[1];
-                                slopeErr         = parErr[1];
-                                lowQintercept    = par[2];
-                                lowQinterceptErr = parErr[2];
-                                lowQslope        = par[3];
-                                lowQslopeErr     = parErr[3];
+                                highQintercept    = par[0];
+                                highQinterceptErr = parErr[0];
+                                highQslope        = par[1];
+                                highQslopeErr     = parErr[1];
+                                lowQintercept     = par[2];
+                                lowQinterceptErr  = parErr[2];
+                                lowQslope         = par[3];
+                                lowQslopeErr      = parErr[3];
 
                                 if(chi2 != 0)
                                 {
-                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fIntercept =
-                                        intercept;
                                     theGainContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
                                         ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
                                         ->getChannel<GainFit>(row, col)
-                                        .fInterceptError = interceptErr;
+                                        .fInterceptHighQ = highQintercept;
+                                    theGainContainer->at(cBoard->getIndex())
+                                        ->at(cOpticalGroup->getIndex())
+                                        ->at(cHybrid->getIndex())
+                                        ->at(cChip->getIndex())
+                                        ->getChannel<GainFit>(row, col)
+                                        .fInterceptHighQError = highQinterceptErr;
 
-                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlope =
-                                        slope;
-                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlopeError =
-                                        slopeErr;
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlopeHighQ =
+                                        highQslope;
+                                    theGainContainer->at(cBoard->getIndex())
+                                        ->at(cOpticalGroup->getIndex())
+                                        ->at(cHybrid->getIndex())
+                                        ->at(cChip->getIndex())
+                                        ->getChannel<GainFit>(row, col)
+                                        .fSlopeHighQError = highQslopeErr;
 
                                     theGainContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
@@ -349,7 +357,7 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    float ToTatTarget = Gain::gainFunction({cChip->getSummary<GainFit, GainFit>().fIntercept, cChip->getSummary<GainFit, GainFit>().fSlope}, targetCharge);
+                    float ToTatTarget = Gain::gainFunction({cChip->getSummary<GainFit, GainFit>().fInterceptHighQ, cChip->getSummary<GainFit, GainFit>().fSlopeHighQ}, targetCharge);
 
                     if(ToTatTarget > frontEnd->maxToTvalue)
                         LOG(INFO) << GREEN << "Average ToT for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
@@ -386,7 +394,8 @@ void Gain::computeStats(const std::vector<float>& x,
                         float&                    DoF)
 // #######################################################
 // # Linear regression with least-square method          #
-// # Model: y = f(x) = [0] + [1]*x + [2]*x^2 + [3]*ln(x) #
+// # Model for low charge range:  y = f(x) = [0] + [1]*x #
+// # Model for high charge range: y = f(x) = [2] + [3]*x #
 // #######################################################
 {
     int nPar  = NGAINPAR - 2; // @TMP@
@@ -454,7 +463,7 @@ void Gain::computeStats(const std::vector<float>& x,
             chi2 = ublas::inner_prod(num, tmpNum);
         }
 
-        if((chi2 == 0) || ((nPar == 4) && (par[3] - parErr[3] < 0))) // @TMP@
+        if(chi2 == 0)
             nPar--;
         else
             break;

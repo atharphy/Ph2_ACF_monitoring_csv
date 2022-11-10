@@ -42,31 +42,31 @@ void GainHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorSt
     auto hErrorFit2D = CanvasContainer<TH2F>("FitErrors", "Fit Errors", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, ErrorFit2D, hErrorFit2D, "Columns", "Rows");
 
-    auto hIntercept1D = CanvasContainer<TH1F>("Intercept1D", "Intercept1D", 100, -INTERCEPT_HALFRANGE, INTERCEPT_HALFRANGE);
-    bookImplementer(theOutputFile, theDetectorStructure, Intercept1D, hIntercept1D, "Intercept (ToT)", "Entries");
+    auto hInterceptHighQ1D = CanvasContainer<TH1F>("InterceptHighQ1D", "Intercept high Q 1D", 100, -INTERCEPT_HALFRANGE, INTERCEPT_HALFRANGE);
+    bookImplementer(theOutputFile, theDetectorStructure, InterceptHighQ1D, hInterceptHighQ1D, "Intercept for high charge range (ToT)", "Entries");
 
-    auto hSlope1D = CanvasContainer<TH1F>("Slope1D", "Slope1D", 100, -SLOPE_HALFRANGE, SLOPE_HALFRANGE);
-    bookImplementer(theOutputFile, theDetectorStructure, Slope1D, hSlope1D, "Slope (ToT/VCal)", "Entries");
+    auto hSlopeHighQ1D = CanvasContainer<TH1F>("SlopeHighQ1D", "Slope high Q 1D", 100, -SLOPE_HALFRANGE, SLOPE_HALFRANGE);
+    bookImplementer(theOutputFile, theDetectorStructure, SlopeHighQ1D, hSlopeHighQ1D, "Slope for high charge range (ToT/VCal)", "Entries");
 
-    auto hInterceptLowQ1D = CanvasContainer<TH1F>("InterceptLowQ1D", "InterceptLowQ1D", 100, -INTERCEPT_HALFRANGE, INTERCEPT_HALFRANGE);
+    auto hInterceptLowQ1D = CanvasContainer<TH1F>("InterceptLowQ1D", "Intercept low Q 1D", 100, -INTERCEPT_HALFRANGE, INTERCEPT_HALFRANGE);
     bookImplementer(theOutputFile, theDetectorStructure, InterceptLowQ1D, hInterceptLowQ1D, "Intercept for low charge range (ToT)", "Entries");
 
-    auto hSlopeLowQ1D = CanvasContainer<TH1F>("SlopeLowQ1D", "SlopeLowQ1D", 100, -SLOPE_HALFRANGE, SLOPE_HALFRANGE);
+    auto hSlopeLowQ1D = CanvasContainer<TH1F>("SlopeLowQ1D", "Slope low Q 1D", 100, -SLOPE_HALFRANGE, SLOPE_HALFRANGE);
     bookImplementer(theOutputFile, theDetectorStructure, SlopeLowQ1D, hSlopeLowQ1D, "Slope for low charge range (ToT/VCal)", "Entries");
 
     auto hChi2DoF1D = CanvasContainer<TH1F>("Chi2DoF1D", "Chi2DoF1D", 100, 0, 2);
     bookImplementer(theOutputFile, theDetectorStructure, Chi2DoF1D, hChi2DoF1D, "#chi^{2}/D.o.F.", "Entries");
 
-    auto hIntercept2D = CanvasContainer<TH2F>("Intercept2D", "Intercept Map", nCols, 0, nCols, nRows, 0, nRows);
-    bookImplementer(theOutputFile, theDetectorStructure, Intercept2D, hIntercept2D, "Column", "Row");
+    auto hInterceptHighQ2D = CanvasContainer<TH2F>("InterceptHighQ2D", "Intercept high Q Map", nCols, 0, nCols, nRows, 0, nRows);
+    bookImplementer(theOutputFile, theDetectorStructure, InterceptHighQ2D, hInterceptHighQ2D, "Column", "Row");
 
-    auto hSlope2D = CanvasContainer<TH2F>("Slope2D", "Slope Map", nCols, 0, nCols, nRows, 0, nRows);
-    bookImplementer(theOutputFile, theDetectorStructure, Slope2D, hSlope2D, "Column", "Row");
+    auto hSlopeHighQ2D = CanvasContainer<TH2F>("SlopeHighQ2D", "Slope high Q Map", nCols, 0, nCols, nRows, 0, nRows);
+    bookImplementer(theOutputFile, theDetectorStructure, SlopeHighQ2D, hSlopeHighQ2D, "Column", "Row");
 
-    auto hInterceptLowQ2D = CanvasContainer<TH2F>("InterceptLowQ2D", "InterceptLowQ Map", nCols, 0, nCols, nRows, 0, nRows);
+    auto hInterceptLowQ2D = CanvasContainer<TH2F>("InterceptLowQ2D", "Intercept low Q Map", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, InterceptLowQ2D, hInterceptLowQ2D, "Column", "Row");
 
-    auto hSlopeLowQ2D = CanvasContainer<TH2F>("SlopeLowQ2D", "SlopeLowQ Map", nCols, 0, nCols, nRows, 0, nRows);
+    auto hSlopeLowQ2D = CanvasContainer<TH2F>("SlopeLowQ2D", "Slope low Q Map", nCols, 0, nCols, nRows, 0, nRows);
     bookImplementer(theOutputFile, theDetectorStructure, SlopeLowQ2D, hSlopeLowQ2D, "Column", "Row");
 
     auto hChi2DoF2D = CanvasContainer<TH2F>("Chi2DoF2D", "Chi2DoF Map", nCols, 0, nCols, nRows, 0, nRows);
@@ -146,18 +146,18 @@ void GainHistograms::fillGain(const DetectorDataContainer& GainContainer)
                 {
                     if(cChip->getChannelContainer<GainFit>() == nullptr) continue;
 
-                    auto* Intercept1DHist = Intercept1D.getObject(cBoard->getId())
-                                                ->getObject(cOpticalGroup->getId())
-                                                ->getObject(cHybrid->getId())
-                                                ->getObject(cChip->getId())
-                                                ->getSummary<CanvasContainer<TH1F>>()
-                                                .fTheHistogram;
-                    auto* Slope1DHist = Slope1D.getObject(cBoard->getId())
-                                            ->getObject(cOpticalGroup->getId())
-                                            ->getObject(cHybrid->getId())
-                                            ->getObject(cChip->getId())
-                                            ->getSummary<CanvasContainer<TH1F>>()
-                                            .fTheHistogram;
+                    auto* InterceptHighQ1DHist = InterceptHighQ1D.getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getSummary<CanvasContainer<TH1F>>()
+                                                     .fTheHistogram;
+                    auto* SlopeHighQ1DHist = SlopeHighQ1D.getObject(cBoard->getId())
+                                                 ->getObject(cOpticalGroup->getId())
+                                                 ->getObject(cHybrid->getId())
+                                                 ->getObject(cChip->getId())
+                                                 ->getSummary<CanvasContainer<TH1F>>()
+                                                 .fTheHistogram;
                     auto* InterceptLowQ1DHist = InterceptLowQ1D.getObject(cBoard->getId())
                                                     ->getObject(cOpticalGroup->getId())
                                                     ->getObject(cHybrid->getId())
@@ -177,18 +177,18 @@ void GainHistograms::fillGain(const DetectorDataContainer& GainContainer)
                                               ->getSummary<CanvasContainer<TH1F>>()
                                               .fTheHistogram;
 
-                    auto* Intercept2DHist = Intercept2D.getObject(cBoard->getId())
-                                                ->getObject(cOpticalGroup->getId())
-                                                ->getObject(cHybrid->getId())
-                                                ->getObject(cChip->getId())
-                                                ->getSummary<CanvasContainer<TH2F>>()
-                                                .fTheHistogram;
-                    auto* Slope2DHist = Slope2D.getObject(cBoard->getId())
-                                            ->getObject(cOpticalGroup->getId())
-                                            ->getObject(cHybrid->getId())
-                                            ->getObject(cChip->getId())
-                                            ->getSummary<CanvasContainer<TH2F>>()
-                                            .fTheHistogram;
+                    auto* InterceptHighQ2DHist = InterceptHighQ2D.getObject(cBoard->getId())
+                                                     ->getObject(cOpticalGroup->getId())
+                                                     ->getObject(cHybrid->getId())
+                                                     ->getObject(cChip->getId())
+                                                     ->getSummary<CanvasContainer<TH2F>>()
+                                                     .fTheHistogram;
+                    auto* SlopeHighQ2DHist = SlopeHighQ2D.getObject(cBoard->getId())
+                                                 ->getObject(cOpticalGroup->getId())
+                                                 ->getObject(cHybrid->getId())
+                                                 ->getObject(cChip->getId())
+                                                 ->getSummary<CanvasContainer<TH2F>>()
+                                                 .fTheHistogram;
                     auto* InterceptLowQ2DHist = InterceptLowQ2D.getObject(cBoard->getId())
                                                     ->getObject(cOpticalGroup->getId())
                                                     ->getObject(cHybrid->getId())
@@ -225,8 +225,8 @@ void GainHistograms::fillGain(const DetectorDataContainer& GainContainer)
                                 // #################
                                 // # 1D histograms #
                                 // #################
-                                Intercept1DHist->Fill(cChip->getChannel<GainFit>(row, col).fIntercept);
-                                Slope1DHist->Fill(cChip->getChannel<GainFit>(row, col).fSlope);
+                                InterceptHighQ1DHist->Fill(cChip->getChannel<GainFit>(row, col).fInterceptHighQ);
+                                SlopeHighQ1DHist->Fill(cChip->getChannel<GainFit>(row, col).fSlopeHighQ);
                                 InterceptLowQ1DHist->Fill(cChip->getChannel<GainFit>(row, col).fInterceptLowQ);
                                 SlopeLowQ1DHist->Fill(cChip->getChannel<GainFit>(row, col).fSlopeLowQ);
                                 Chi2DoF1DHist->Fill(cChip->getChannel<GainFit>(row, col).fChi2 / cChip->getChannel<GainFit>(row, col).fDoF);
@@ -234,10 +234,10 @@ void GainHistograms::fillGain(const DetectorDataContainer& GainContainer)
                                 // #################
                                 // # 2D histograms #
                                 // #################
-                                Slope2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fSlope);
-                                Slope2DHist->SetBinError(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fSlopeError);
-                                Intercept2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fIntercept);
-                                Intercept2DHist->SetBinError(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fInterceptError);
+                                SlopeHighQ2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fSlopeHighQ);
+                                SlopeHighQ2DHist->SetBinError(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fSlopeHighQError);
+                                InterceptHighQ2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fInterceptHighQ);
+                                InterceptHighQ2DHist->SetBinError(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fInterceptHighQError);
                                 InterceptLowQ2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fInterceptLowQ);
                                 InterceptLowQ2DHist->SetBinError(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fInterceptLowQError);
                                 SlopeLowQ2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<GainFit>(row, col).fSlopeLowQ);
@@ -254,14 +254,14 @@ void GainHistograms::process()
     draw<TH2F>(ErrorReadOut2D, "gcolz");
     draw<TH2F>(ErrorFit2D, "gcolz");
 
-    draw<TH1F>(Intercept1D);
-    draw<TH1F>(Slope1D, "", "electron", "Slope (ToT/electrons)");
+    draw<TH1F>(InterceptHighQ1D);
+    draw<TH1F>(SlopeHighQ1D, "", "electron", "Slope for high charge range (ToT/electrons)");
     draw<TH1F>(InterceptLowQ1D);
     draw<TH1F>(SlopeLowQ1D, "", "electron", "Slope for low charge range (ToT/electrons)");
     draw<TH1F>(Chi2DoF1D);
 
-    draw<TH2F>(Intercept2D, "gcolz");
-    draw<TH2F>(Slope2D, "gcolz");
+    draw<TH2F>(InterceptHighQ2D, "gcolz");
+    draw<TH2F>(SlopeHighQ2D, "gcolz");
     draw<TH2F>(InterceptLowQ2D, "gcolz");
     draw<TH2F>(SlopeLowQ2D, "gcolz");
     draw<TH2F>(Chi2DoF2D, "gcolz");

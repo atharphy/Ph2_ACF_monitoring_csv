@@ -47,16 +47,16 @@ class GainHistograms : public DQMHistogramBase
     DetectorDataContainer ErrorReadOut2D;
     DetectorDataContainer ErrorFit2D;
 
-    DetectorDataContainer Intercept1D;
-    DetectorDataContainer Slope1D;
-    DetectorDataContainer InterceptLowQ1D; // @TMP@
-    DetectorDataContainer SlopeLowQ1D;     // @TMP@
+    DetectorDataContainer InterceptHighQ1D;
+    DetectorDataContainer SlopeHighQ1D;
+    DetectorDataContainer InterceptLowQ1D;
+    DetectorDataContainer SlopeLowQ1D;
     DetectorDataContainer Chi2DoF1D;
 
-    DetectorDataContainer Intercept2D;
-    DetectorDataContainer Slope2D;
-    DetectorDataContainer InterceptLowQ2D; // @TMP@
-    DetectorDataContainer SlopeLowQ2D;     // @TMP@
+    DetectorDataContainer InterceptHighQ2D;
+    DetectorDataContainer SlopeHighQ2D;
+    DetectorDataContainer InterceptLowQ2D;
+    DetectorDataContainer SlopeLowQ2D;
     DetectorDataContainer Chi2DoF2D;
 
     size_t nEvents;
