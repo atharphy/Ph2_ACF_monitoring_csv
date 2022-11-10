@@ -22,11 +22,12 @@ class DetectorMonitor
   public:
     DetectorMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig);
     virtual ~DetectorMonitor();
-    void forkMonitor();
-    void operator()();
-    void startMonitoring() { startMonitor = true; }
-    void stopMonitoring() { startMonitor = false; }
-    void stopRunning() { fKeepRunning = false; }
+    void        forkMonitor();
+    void        operator()();
+    void        startMonitoring() { startMonitor = true; }
+    void        stopMonitoring() { startMonitor = false; }
+    void        stopRunning() { fKeepRunning = false; }
+    std::string getMonitorFileName();
 
   protected:
     virtual void                        runMonitor() = 0;
@@ -35,6 +36,7 @@ class DetectorMonitor
 #ifdef __USE_ROOT__
     TFile*              fOutputFile{nullptr};
     MonitorDQMPlotBase* fMonitorPlotDQM{nullptr};
+    std::string         fMonitorFileName = "";
 #endif
     time_t      getTimeStamp();
     std::string getMonitorName();

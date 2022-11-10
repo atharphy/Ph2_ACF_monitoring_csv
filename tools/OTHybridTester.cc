@@ -416,7 +416,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
                           << " +/- " << cReg_Class.b_1_error << RESET;
                 LOG(INFO) << BOLDBLUE << "Using ROOT for ADC " << cADCId << ": Parameter 1  " << cFit->GetParameter(0) << " +/- " << cFit->GetParError(0) << "  Parameter 2   " << cFit->GetParameter(1)
                           << " +/- " << cFit->GetParError(1) << " Chi^2 " << cFit->GetChisquare() << " NDF " << cFit->GetNDF() << RESET;
-                cTrim = clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "VREFCNTR");
+                cTrim = clpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, "VREFTUNE");
                 LOG(INFO) << BOLDBLUE << "Trim value " << cTrim << RESET;
                 // ---Information also included in ROOT file of the fit
                 fillSummaryTree(Form("ADC%i_p0", cADCId), cReg_Class.b_0);

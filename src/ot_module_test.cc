@@ -11,6 +11,7 @@
 #include "tools/CheckCbcNeighbors.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
+#include "tools/KIRA.h"
 #include "tools/LatencyScan.h"
 #include "tools/LinkAlignmentOT.h"
 #include "tools/MemoryCheck2S.h"
@@ -21,7 +22,6 @@
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
-#include "tools/KIRA.h"
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -204,7 +204,7 @@ int main(int argc, char* argv[])
     std::string cInjectionSource = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
     std::string cSrcLnkTst       = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
     std::string cModuleId        = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
-    int cKiraPort                = std::stoi((cmd.foundOption("kira")) ? cmd.optionValue("kira") : "7010");
+    int         cKiraPort        = std::stoi((cmd.foundOption("kira")) ? cmd.optionValue("kira") : "7010");
     std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     bool        cPulseShape      = (cmd.foundOption("pulseShape")) ? true : false;
 

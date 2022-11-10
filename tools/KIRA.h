@@ -11,10 +11,10 @@
 #ifndef KIRA_h__
 #define KIRA_h__
 
-#include "OTTool.h"
 #include "../NetworkUtils/TCPClient.h"
 #include "../NetworkUtils/TCPPublishServer.h"
 #include "../Utils/ContainerRecycleBin.h"
+#include "OTTool.h"
 
 #include <fstream>
 #include <iostream>
@@ -28,7 +28,6 @@
 #ifdef __USE_ROOT__
 #include "../DQMUtils/DQMHistogramKira.h"
 #endif
-
 
 class Occupancy;
 
@@ -53,14 +52,13 @@ class KIRA : public OTTool
     void Resume() override;
 
   private:
-    TCPClient* fKiraClient{nullptr};
-    std::string fKiraId;
+    TCPClient*                     fKiraClient{nullptr};
+    std::string                    fKiraId;
     ContainerRecycleBin<Occupancy> fRecycleBin;
-    #ifdef __USE_ROOT__
+#ifdef __USE_ROOT__
     DQMHistogramKira fDQMHistogrammer;
-    #endif
+#endif
     DetectorDataContainer analyseEvents(BeBoard* pBoard, const std::vector<Event*>& pEvents, uint16_t pSensor, uint16_t pLED);
-
 };
 
 #endif
