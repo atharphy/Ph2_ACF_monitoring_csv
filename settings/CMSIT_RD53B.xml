@@ -61,6 +61,9 @@
 
               MON_ADC_TRIM           =    "5"
 
+              ToT6to4Mapping         =    "0"
+              ToTDualEdgeCount       =    "0"
+
               ADC_OFFSET_VOLT        =   "63"
               ADC_MAXIMUM_VOLT       =  "839"
               TEMPSENS_IDEAL_FACTOR  = "1225"
