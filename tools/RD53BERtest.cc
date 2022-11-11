@@ -39,7 +39,7 @@ void BERtest::Running()
 
 void BERtest::sendData()
 {
-    auto theStream = prepareChipContainerStreamer<EmptyContainer, double>("BERtest");
+    auto theStream = this->prepareChipContainerStreamer<EmptyContainer, double>("BERtest");
 
     if(fDQMStreamerEnabled == true)
         for(const auto cBoard: theBERtestContainer) theStream->streamAndSendBoard(cBoard, fDQMStreamer);
@@ -95,7 +95,7 @@ void BERtest::run()
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                 {
-                    static_cast<D19clpGBTInterface*>(flpGBTInterface)->StartPRBSpattern(cOpticalGroup->flpGBT);
+                    static_cast<lpGBTInterface*>(flpGBTInterface)->StartPRBSpattern(cOpticalGroup->flpGBT);
 
                     auto value = fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, cHybrid->getId(), 0, frontendSpeed); // @TMP@ : fixed chip lane
                     theBERtestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(0)->getSummary<double>() = value;
@@ -104,7 +104,7 @@ void BERtest::run()
                               << "]: " << BOLDYELLOW << (value == 0 ? "PASSED" : "NOT PASSED") << RESET;
 
                     static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Downlink(cBoard);
-                    static_cast<D19clpGBTInterface*>(flpGBTInterface)->StopPRBSpattern(cOpticalGroup->flpGBT);
+                    static_cast<lpGBTInterface*>(flpGBTInterface)->StopPRBSpattern(cOpticalGroup->flpGBT);
                 }
         }
     else
@@ -136,7 +136,7 @@ void BERtest::run()
         }
 }
 
-void BERtest::draw()
+void BERtest::draw(bool saveData)
 {
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;

@@ -11,24 +11,20 @@
 #define RD53SCurve_H
 
 #include "../HWDescription/RD53.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
 #include "../Utils/ContainerRecycleBin.h"
-#include "../Utils/RD53ChannelGroupHandler.h"
 #include "../Utils/ThresholdAndNoise.h"
-#include "Tool.h"
+#include "RD53CalibBase.h"
 
 #include <algorithm>
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53SCurveHistograms.h"
-#include "TApplication.h"
 #endif
 
 // #####################
 // # SCurve test suite #
 // #####################
-class SCurve : public Tool
+class SCurve : public CalibBase
 {
   public:
     ~SCurve()
@@ -37,6 +33,7 @@ class SCurve : public Tool
 #ifdef __USE_ROOT__
         if(saveData == true) this->WriteRootFile();
         this->CloseResultFile();
+        delete histos;
 #endif
     }
 
@@ -45,28 +42,27 @@ class SCurve : public Tool
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void                                   localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
-    void                                   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
-    void                                   run();
-    void                                   draw(bool doSaveData = true);
+    void   localConfigure(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void   run() override;
+    void   draw(bool doSaveData = true) override;
+    size_t getNumberIterations() override { return theChnGroupHandler->getNumberOfGroups() * nSteps; }
+
     std::shared_ptr<DetectorDataContainer> analyze();
-    size_t                                 getNumberIterations() { return theChnGroupHandler->getNumberOfGroups() * nSteps; }
-    void                                   saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     SCurveHistograms* histos;
 #endif
 
   private:
-    std::vector<uint16_t> dacList;
+    void fillHisto() override;
 
+    void computeStats(std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
+
+    std::vector<uint16_t>                  dacList;
     std::vector<DetectorDataContainer*>    detectorContainerVector;
     std::shared_ptr<DetectorDataContainer> theThresholdAndNoiseContainer;
     ContainerRecycleBin<OccupancyAndPh>    theRecyclingBin;
-
-    void fillHisto();
-    void computeStats(std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
-    void chipErrorReport() const;
 
   protected:
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;

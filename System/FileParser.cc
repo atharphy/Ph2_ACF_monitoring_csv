@@ -860,7 +860,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                     if(cName.find("RD53") != std::string::npos)
                     {
                         cHybrid->setNPixelChips(cHybrid->getNPixelChips() + 1);
-                        auto frontEndType = cName.find("RD53A") != std::string::npos ? FrontEndType::RD53A : FrontEndType::RD53B;
+                        const auto frontEndType = cName.find("RD53A") != std::string::npos ? FrontEndType::RD53A : FrontEndType::RD53B;
                         pBoard->setFrontEndType(frontEndType);
                         this->parseRD53(cChild, cHybrid, cConfigFileDirectory, os, frontEndType);
                         if(cNextName.empty() || cNextName != cName) this->parseGlobalRD53Settings(pHybridNode, cHybrid, os);
@@ -1421,7 +1421,7 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
         for(pugi::xml_node nSetting = nSettings.child("Setting"); nSetting; nSetting = nSetting.next_sibling())
         {
             if((strcmp(nSetting.attribute("name").value(), "RegNameDAC1") == 0) || (strcmp(nSetting.attribute("name").value(), "RegNameDAC2") == 0) ||
-               (strcmp(nSetting.attribute("name").value(), "OutputBinaryDir") == 0))
+               (strcmp(nSetting.attribute("name").value(), "OutputBinaryDir") == 0) || (strcmp(nSetting.attribute("name").value(), "KIRA_ID") == 0))
             {
                 std::string value(nSetting.first_child().value());
                 value.erase(std::remove(value.begin(), value.end(), ' '), value.end());
@@ -1583,4 +1583,5 @@ std::string FileParser::parseMonitor(const std::string& pFilename, DetectorMonit
     if(theDetectorMonitorConfig.getNumberOfMonitoredRegisters() == 0) return "None";
     return theMonitorNode.attribute("type").value();
 }
+
 } // namespace Ph2_System

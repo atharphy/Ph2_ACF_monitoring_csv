@@ -11,8 +11,9 @@
 #ifndef RD53PixelAliveHistograms_H
 #define RD53PixelAliveHistograms_H
 
+#include "../Utils/ChannelContainerStream.h"
+#include "../Utils/ChipContainerStream.h"
 #include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
 #include "../Utils/GenericDataArray.h"
 #include "DQMHistogramBase.h"
 

@@ -601,9 +601,8 @@ void RD53FWInterface::ResetBoard()
     // ##############################################
     // # Reset communication with the frontend chip #
     // ##############################################
-    // @TMP@
-    // RegManager::WriteReg("user.ctrl_regs.reset_reg.chip_resync", 1);
-    // RegManager::WriteReg("user.ctrl_regs.reset_reg.chip_resync", 0);
+    RegManager::WriteReg("user.ctrl_regs.reset_reg.chip_resync", 1);
+    RegManager::WriteReg("user.ctrl_regs.reset_reg.chip_resync", 0);
 
     // ########
     // # DDR3 #
@@ -875,7 +874,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         // ######################################
         // # Configuration for analog injection #
         // ######################################
-        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data  = RD53Shared::firstChip->getCalCmd(1, 0, 10, 0, 0);
+        RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.first_cal_data  = RD53Shared::firstChip->getCalCmd(1, 0, 0, 0, 0);
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.second_cal_data = RD53Shared::firstChip->getCalCmd(0, 0, 2, 0, 0);
 
         RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime = (nClkDelays == 0 ? (uint32_t)INJdelay::Loop : nClkDelays) % (RD53Shared::setBits(NbitsInitPrime) + 1);
@@ -1203,7 +1202,7 @@ float RD53FWInterface::ReadHybridTemperature(int hybridId)
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     auto value = calcTemperature(sensor1, sensor2);
-    LOG(INFO) << BOLDBLUE << "\t--> Hybrid temperature: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " C" << std::setprecision(-1) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "Hybrid" << BOLDBLUE << " temperature: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " C" << std::setprecision(-1) << RESET;
 
     return value;
 }
@@ -1218,8 +1217,8 @@ float RD53FWInterface::ReadHybridVoltage(int hybridId)
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     auto value = calcVoltage(senseVDD, senseGND);
-    LOG(INFO) << BOLDBLUE << "\t--> Hybrid voltage: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " V (corresponds to half VOUT_dig_ShuLDO of the chip)" << std::setprecision(-1)
-              << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "Hybrid" << BOLDBLUE " voltage: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE
+              << " V (corresponds to twice VOUT_dig_ShuLDO of the chip)" << std::setprecision(-1) << RESET;
 
     return value;
 }

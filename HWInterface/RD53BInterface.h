@@ -73,13 +73,17 @@ class RD53BInterface : public RD53Interface
 
                                                                                 {"SEL_CAL_RANGE", {"MEAS_CAP", 0}},
                                                                                 {"EN_INJCAP_MEAS", {"MEAS_CAP", 1}},
-                                                                                {"EN_INJCAP_PAR_MEAS", {"MEAS_CAP", 2}}};
+                                                                                {"EN_INJCAP_PAR_MEAS", {"MEAS_CAP", 2}},
+
+                                                                                {"ToT6to4Mapping", {"ToTConfig", 9}},
+                                                                                {"ToTDualEdgeCount", {"ToTConfig", 10}}};
 
     // ###########################
     // # Dedicated to monitoring #
     // ###########################
-  protected:
-    uint32_t getADCobservable(const std::string& observableName, bool* isCurrentNotVoltage) override;
+  private:
+    uint32_t getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage) override;
+    uint32_t measureADC(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data) override;
 };
 
 } // namespace Ph2_HwInterface

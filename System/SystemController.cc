@@ -64,6 +64,19 @@ void SystemController::Inherit(const SystemController* pController)
     fTestcardClient = pController->fTestcardClient;
 #endif
 }
+void SystemController::StopMonitoring()
+{
+    if(fDetectorMonitor != nullptr) { fDetectorMonitor->stopMonitoring(); }
+}
+
+std::string SystemController::GetMonitorFileName()
+{
+    if(fDetectorMonitor != nullptr) { return fDetectorMonitor->getMonitorFileName(); }
+    else
+    {
+        return "";
+    }
+}
 
 void SystemController::Destroy()
 {
@@ -396,8 +409,6 @@ void SystemController::ReadSystemMonitor(BeBoard* pBoard, const std::vector<std:
                               << +cChip->getId() << RESET << GREEN << "]" << RESET;
                     fBeBoardInterface->ReadHybridVoltageMonitor(fReadoutChipInterface, cChip);
                     fBeBoardInterface->ReadHybridTemperatureMonitor(fReadoutChipInterface, cChip);
-                    fBeBoardInterface->ReadChipMonitor(fReadoutChipInterface, cChip, args);
-                    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
                 }
 }
 
@@ -494,7 +505,7 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
     // # Configuration parameters #
     // ############################
     bool resetMask = SystemController::findValueInSettings<double>("ResetMask");
-    bool resetTDAC = SystemController::findValueInSettings<double>("ResetTDAC");
+    int  resetTDAC = SystemController::findValueInSettings<double>("ResetTDAC");
 
     // ############################
     // # Configure frontend chips #
@@ -509,7 +520,8 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
                 LOG(INFO) << GREEN << "Configuring RD53: " << BOLDYELLOW << +cChip->getId() << RESET << GREEN " (fused ID " << BOLDYELLOW << +fReadoutChipInterface->ReadChipFuseID(cChip) << RESET
                           << GREEN << ")" << RESET;
                 if(resetMask == true) static_cast<RD53*>(cChip)->enableAllPixels();
-                if(resetTDAC == true) static_cast<RD53*>(cChip)->resetTDAC();
+                if(resetTDAC >= 0)
+                    static_cast<RD53*>(cChip)->resetTDAC(RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->nTDACvalues / 2);
                 static_cast<RD53*>(cChip)->copyMaskToDefault();
                 static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);
                 LOG(INFO) << GREEN << "Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;

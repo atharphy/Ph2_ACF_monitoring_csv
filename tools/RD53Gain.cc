@@ -74,14 +74,14 @@ void Gain::Running()
 
     Gain::run();
     Gain::analyze();
-    Gain::saveChipRegisters(theCurrentRun);
+    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     Gain::sendData();
 }
 
 void Gain::sendData()
 {
-    auto theOccStream  = prepareChannelContainerStreamer<OccupancyAndPh, uint16_t>("Occ");
-    auto theGainStream = prepareChannelContainerStreamer<GainFit>("Gain");
+    auto theOccStream  = this->prepareChannelContainerStreamer<OccupancyAndPh, uint16_t>("Occ");
+    auto theGainStream = this->prepareChannelContainerStreamer<GainFit>("Gain");
 
     if(fDQMStreamerEnabled == true)
     {
@@ -187,12 +187,12 @@ void Gain::run()
     // ################
     // # Error report #
     // ################
-    Gain::chipErrorReport();
+    CalibBase::chipErrorReport();
 }
 
 void Gain::draw(bool doSaveData)
 {
-    if(doSaveData == true) Gain::saveChipRegisters(theCurrentRun);
+    if(doSaveData == true) CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
@@ -216,62 +216,12 @@ void Gain::draw(bool doSaveData)
     // #####################
     // # @TMP@ : CalibFile #
     // #####################
-    if(saveBinaryData == true)
-    {
-        for(const auto cBoard: *fDetectorContainer)
-            for(const auto cOpticalGroup: *cBoard)
-                for(const auto cHybrid: *cOpticalGroup)
-                    for(const auto cChip: *cHybrid)
-                    {
-                        std::stringstream myString;
-                        myString.clear();
-                        myString.str("");
-                        myString << this->fDirectoryName + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Gain_"
-                                 << "B" << std::setfill('0') << std::setw(2) << +cBoard->getId() << "_"
-                                 << "O" << std::setfill('0') << std::setw(2) << +cOpticalGroup->getId() << "_"
-                                 << "M" << std::setfill('0') << std::setw(2) << +cHybrid->getId() << "_"
-                                 << "C" << std::setfill('0') << std::setw(2) << +cChip->getId() << ".dat";
-                        std::ofstream fileOutID(myString.str(), std::ios::out);
-                        for(auto i = 0u; i < dacList.size(); i++)
-                        {
-                            fileOutID << "Iteration " << i << " --- reg = " << dacList[i] - offset << std::endl;
-                            for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
-                                for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
-                                    if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
-                                                                                                                           ->at(cBoard->getIndex())
-                                                                                                                           ->at(cOpticalGroup->getIndex())
-                                                                                                                           ->at(cHybrid->getIndex())
-                                                                                                                           ->at(cChip->getIndex())
-                                                                                                                           ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
-                                                                                                                           ->allChannelGroup()
-                                                                                                                           ->isChannelEnabled(row, col))
-                                        fileOutID << "r " << row << " c " << col << " h "
-                                                  << detectorContainerVector[i]
-                                                             ->at(cBoard->getIndex())
-                                                             ->at(cOpticalGroup->getIndex())
-                                                             ->at(cHybrid->getIndex())
-                                                             ->at(cChip->getIndex())
-                                                             ->getChannel<OccupancyAndPh>(row, col)
-                                                             .fOccupancy *
-                                                         nEvents
-                                                  << " a "
-                                                  << detectorContainerVector[i]
-                                                         ->at(cBoard->getIndex())
-                                                         ->at(cOpticalGroup->getIndex())
-                                                         ->at(cHybrid->getIndex())
-                                                         ->at(cChip->getIndex())
-                                                         ->getChannel<OccupancyAndPh>(row, col)
-                                                         .fPh
-                                                  << std::endl;
-                        }
-                        fileOutID.close();
-                    }
-    }
+    if(saveBinaryData == true) CalibBase::saveSCurveOrGaindValues(detectorContainerVector, theCurrentRun, dacList, offset, nEvents, "Gain");
 }
 
 std::shared_ptr<DetectorDataContainer> Gain::analyze()
 {
-    float slope, slopeErr, intercept, interceptErr, lowQslope, lowQslopeErr, lowQintercept, lowQinterceptErr, chi2, DoF;
+    float highQslope, highQslopeErr, highQintercept, highQinterceptErr, lowQslope, lowQslopeErr, lowQintercept, lowQinterceptErr, chi2, DoF;
 
     std::vector<float> par(NGAINPAR, 0);
     std::vector<float> parErr(NGAINPAR, 0);
@@ -290,6 +240,8 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
+                    static_cast<RD53*>(cChip)->copyMaskFromDefault();
+
                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                         for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                             if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
@@ -331,30 +283,38 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                                 // # Run regression #
                                 // ##################
                                 Gain::computeStats(x, y, e, o, par, parErr, chi2, DoF);
-                                intercept        = par[0];
-                                interceptErr     = parErr[0];
-                                slope            = par[1];
-                                slopeErr         = parErr[1];
-                                lowQintercept    = par[2];
-                                lowQinterceptErr = parErr[2];
-                                lowQslope        = par[3];
-                                lowQslopeErr     = parErr[3];
+                                highQintercept    = par[0];
+                                highQinterceptErr = parErr[0];
+                                highQslope        = par[1];
+                                highQslopeErr     = parErr[1];
+                                lowQintercept     = par[2];
+                                lowQinterceptErr  = parErr[2];
+                                lowQslope         = par[3];
+                                lowQslopeErr      = parErr[3];
 
                                 if(chi2 != 0)
                                 {
-                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fIntercept =
-                                        intercept;
                                     theGainContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
                                         ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
                                         ->getChannel<GainFit>(row, col)
-                                        .fInterceptError = interceptErr;
+                                        .fInterceptHighQ = highQintercept;
+                                    theGainContainer->at(cBoard->getIndex())
+                                        ->at(cOpticalGroup->getIndex())
+                                        ->at(cHybrid->getIndex())
+                                        ->at(cChip->getIndex())
+                                        ->getChannel<GainFit>(row, col)
+                                        .fInterceptHighQError = highQinterceptErr;
 
-                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlope =
-                                        slope;
-                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlopeError =
-                                        slopeErr;
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fSlopeHighQ =
+                                        highQslope;
+                                    theGainContainer->at(cBoard->getIndex())
+                                        ->at(cOpticalGroup->getIndex())
+                                        ->at(cHybrid->getIndex())
+                                        ->at(cChip->getIndex())
+                                        ->getChannel<GainFit>(row, col)
+                                        .fSlopeHighQError = highQslopeErr;
 
                                     theGainContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
@@ -397,7 +357,7 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    float ToTatTarget = Gain::gainFunction({cChip->getSummary<GainFit, GainFit>().fIntercept, cChip->getSummary<GainFit, GainFit>().fSlope}, targetCharge);
+                    float ToTatTarget = Gain::gainFunction({cChip->getSummary<GainFit, GainFit>().fInterceptHighQ, cChip->getSummary<GainFit, GainFit>().fSlopeHighQ}, targetCharge);
 
                     if(ToTatTarget > frontEnd->maxToTvalue)
                         LOG(INFO) << GREEN << "Average ToT for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
@@ -434,7 +394,8 @@ void Gain::computeStats(const std::vector<float>& x,
                         float&                    DoF)
 // #######################################################
 // # Linear regression with least-square method          #
-// # Model: y = f(x) = [0] + [1]*x + [2]*x^2 + [3]*ln(x) #
+// # Model for low charge range:  y = f(x) = [0] + [1]*x #
+// # Model for high charge range: y = f(x) = [2] + [3]*x #
 // #######################################################
 {
     int nPar  = NGAINPAR - 2; // @TMP@
@@ -502,7 +463,7 @@ void Gain::computeStats(const std::vector<float>& x,
             chi2 = ublas::inner_prod(num, tmpNum);
         }
 
-        if((chi2 == 0) || ((nPar == 4) && (par[3] - parErr[3] < 0))) // @TMP@
+        if(chi2 == 0)
             nPar--;
         else
             break;
@@ -519,49 +480,4 @@ void Gain::computeStats(const std::vector<float>& x,
         par[NGAINPAR - 1] = (y[itHi] - y[itLo]) / (x[itHi] - x[itLo]);
         par[NGAINPAR - 2] = y[itHi] - par[NGAINPAR - 1] * x[itHi];
     }
-}
-
-void Gain::chipErrorReport() const
-{
-    for(const auto cBoard: *fDetectorContainer)
-        for(auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
-                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->ChipErrorReport(cChip);
-                }
-}
-
-void Gain::saveChipRegisters(int currentRun)
-{
-    const std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
-
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-        {
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    static_cast<RD53*>(cChip)->copyMaskFromDefault();
-                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
-                    static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-                    std::string command("mv " + cChip->getFileName(fileReg) + " " + this->fDirectoryName);
-                    system(command.c_str());
-                    LOG(INFO) << BOLDBLUE << "\t--> Gain saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
-                }
-
-            if(cOpticalGroup->flpGBT != nullptr)
-            {
-                if(doUpdateChip == true) cOpticalGroup->flpGBT->saveRegMap("");
-                cOpticalGroup->flpGBT->saveRegMap(fileReg);
-                std::string command("mv " + cOpticalGroup->flpGBT->getFileName(fileReg) + " " + this->fDirectoryName);
-                system(command.c_str());
-
-                LOG(INFO) << BOLDBLUE << "\t--> Gain saved the LpGBT configuration file for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << RESET
-                          << BOLDBLUE << "]" << RESET;
-            }
-        }
 }

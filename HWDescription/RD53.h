@@ -26,15 +26,17 @@
 // #########################
 namespace RD53Constants
 {
-const uint8_t NBIT_MAXREG    = 16;   // Maximum number of bits for a chip register
-const uint8_t NPIX_REGION    = 4;    // Number of pixels in a region (1x4)
-const uint8_t NROW_CORE      = 8;    // Number of rows in a core
-const uint8_t NBIT_ADDR      = 9;    // Number of address bits
-const uint8_t NSYNC_WORDS    = 64;   // Number of Sync words for synchronization
-const uint8_t NWORDS_TO_SYNC = 30;   // Number of words beforse send a Sync
-const uint8_t PATTERN_PRBS   = 0xAA; // Start PRBS pattern
-const uint8_t PATTERN_AURORA = 0x55; // Start AURORA pattern
-const uint8_t PATTERN_CLOCK  = 0x00; // Start clock pattern
+const uint8_t ACCELERATOR_CLK = 40;   // Accelerator clock frequency [MHz]
+const uint8_t NBIT_MAXREG     = 16;   // Maximum number of bits for a chip register
+const uint8_t NPIX_REGION     = 4;    // Number of pixels in a region (1x4)
+const uint8_t NROW_CORE       = 8;    // Number of rows in a core
+const uint8_t NBIT_ADDR       = 9;    // Number of address bits
+const uint8_t NBIT_TOT        = 4;    // Number of ToT bits
+const uint8_t NSYNC_WORDS     = 64;   // Number of Sync words for synchronization
+const uint8_t NWORDS_TO_SYNC  = 30;   // Number of words beforse send a Sync
+const uint8_t PATTERN_PRBS    = 0xAA; // Start PRBS pattern
+const uint8_t PATTERN_AURORA  = 0x55; // Start AURORA pattern
+const uint8_t PATTERN_CLOCK   = 0x00; // Start clock pattern
 } // namespace RD53Constants
 
 // #####################
@@ -79,6 +81,7 @@ class RD53 : public ReadoutChip
         const char* thresholdReg;
         const char* gainReg;
         const char* latencyReg;
+        const char* TDACGainReg;
         size_t      nLatencyBins2Span;
         size_t      nTDACvalues;
         size_t      maxToTvalue;
@@ -86,6 +89,8 @@ class RD53 : public ReadoutChip
         size_t      maxTRIGIDvalue;
         size_t      colStart;
         size_t      colStop;
+        size_t      VCalSleepTime; // [microseconds]
+        size_t      AutoIncrementMask;
     };
 
     virtual size_t          getNRows() const                                                                                                           = 0;
@@ -116,7 +121,7 @@ class RD53 : public ReadoutChip
     void        enablePixel(unsigned int row, unsigned int col, bool enable);
     void        injectPixel(unsigned int row, unsigned int col, bool inject);
     void        setTDAC(unsigned int row, unsigned int col, uint8_t TDAC);
-    void        resetTDAC();
+    void        resetTDAC(uint8_t TDAC);
     uint8_t     getTDAC(unsigned int row, unsigned int col);
     uint8_t     getChipLane() const { return myChipLane; }
     std::string getComment() const { return myComment; }

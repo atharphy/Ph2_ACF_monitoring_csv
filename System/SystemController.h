@@ -123,6 +123,12 @@ class SystemController
     void Destroy();
 
     /*!
+     * \brief Allow tool to act on monitoring dqm
+     */
+    void        StopMonitoring();
+    std::string GetMonitorFileName();
+
+    /*!
      * \brief Create a FileHandler object with
      * \param pFilename : the filename of the binary file
      */

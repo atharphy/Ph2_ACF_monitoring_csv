@@ -20,30 +20,31 @@ void GainFit::makeSummaryAverage(const std::vector<GainFit>* theGainVector, cons
 
     float cnt = 0;
 
-    fSlope              = 0;
-    fSlopeError         = 0;
-    fIntercept          = 0;
-    fInterceptError     = 0;
-    fSlopeLowQ          = 0;
-    fSlopeLowQError     = 0;
-    fInterceptLowQ      = 0;
-    fInterceptLowQError = 0;
-    fChi2               = 0;
-    fDoF                = 0;
+    fSlopeHighQ          = 0;
+    fSlopeHighQError     = 0;
+    fInterceptHighQ      = 0;
+    fInterceptHighQError = 0;
+    fSlopeLowQ           = 0;
+    fSlopeLowQError      = 0;
+    fInterceptLowQ       = 0;
+    fInterceptLowQError  = 0;
+    fChi2                = 0;
+    fDoF                 = 0;
 
     for(size_t iContainer = 0; iContainer < theGainVector->size(); iContainer++)
     {
-        if(theGainVector->at(iContainer).fSlopeError > 0)
+        if(theGainVector->at(iContainer).fSlopeHighQError > 0)
         {
-            fSlope += theGainVector->at(iContainer).fSlope * theNumberOfEnabledChannelsList[iContainer] / (theGainVector->at(iContainer).fSlopeError * theGainVector->at(iContainer).fSlopeError);
-            fSlopeError += theNumberOfEnabledChannelsList[iContainer] / (theGainVector->at(iContainer).fSlopeError * theGainVector->at(iContainer).fSlopeError);
+            fSlopeHighQ += theGainVector->at(iContainer).fSlopeHighQ * theNumberOfEnabledChannelsList[iContainer] /
+                           (theGainVector->at(iContainer).fSlopeHighQError * theGainVector->at(iContainer).fSlopeHighQError);
+            fSlopeHighQError += theNumberOfEnabledChannelsList[iContainer] / (theGainVector->at(iContainer).fSlopeHighQError * theGainVector->at(iContainer).fSlopeHighQError);
         }
 
-        if(theGainVector->at(iContainer).fInterceptError > 0)
+        if(theGainVector->at(iContainer).fInterceptHighQError > 0)
         {
-            fIntercept +=
-                theGainVector->at(iContainer).fIntercept * theNumberOfEnabledChannelsList[iContainer] / (theGainVector->at(iContainer).fInterceptError * theGainVector->at(iContainer).fInterceptError);
-            fInterceptError += theNumberOfEnabledChannelsList[iContainer] / (theGainVector->at(iContainer).fInterceptError * theGainVector->at(iContainer).fInterceptError);
+            fInterceptHighQ += theGainVector->at(iContainer).fInterceptHighQ * theNumberOfEnabledChannelsList[iContainer] /
+                               (theGainVector->at(iContainer).fInterceptHighQError * theGainVector->at(iContainer).fInterceptHighQError);
+            fInterceptHighQError += theNumberOfEnabledChannelsList[iContainer] / (theGainVector->at(iContainer).fInterceptHighQError * theGainVector->at(iContainer).fInterceptHighQError);
         }
 
         if(theGainVector->at(iContainer).fSlopeLowQError > 0)
@@ -66,16 +67,16 @@ void GainFit::makeSummaryAverage(const std::vector<GainFit>* theGainVector, cons
         cnt++;
     }
 
-    if(fSlopeError > 0)
+    if(fSlopeHighQError > 0)
     {
-        fSlope /= fSlopeError;
-        fSlopeError = sqrt(1. / fSlopeError);
+        fSlopeHighQ /= fSlopeHighQError;
+        fSlopeHighQError = sqrt(1. / fSlopeHighQError);
     }
 
-    if(fInterceptError > 0)
+    if(fInterceptHighQError > 0)
     {
-        fIntercept /= fInterceptError;
-        fInterceptError = sqrt(1. / fInterceptError);
+        fInterceptHighQ /= fInterceptHighQError;
+        fInterceptHighQError = sqrt(1. / fInterceptHighQError);
     }
 
     if(fSlopeLowQError > 0)

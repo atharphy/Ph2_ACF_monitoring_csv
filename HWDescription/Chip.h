@@ -213,7 +213,7 @@ class Chip : public FrontEndDescription
     void        setRegisterTracking(uint8_t pEnable) { fTrackRegisters = pEnable; }
     uint8_t     getRegisterTracking() { return fTrackRegisters; }
 
-    std::string getFileName(const std::string& fName2Add)
+    std::string getFileName(const std::string& fName2Add) const
     {
         std::string output = configFileName;
         output.insert(output.find_last_of("/\\") + 1, fName2Add);
