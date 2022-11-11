@@ -112,6 +112,7 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard)
             } // chip loop
         }     // hybrid loop
     }         // board loop
+    //PS_Clear_counters();
 }
 bool D19cPSCounterFWInterface::ReadPSCountersFast(uint8_t pRawMode, size_t pChipId, size_t pHybridId)
 {

@@ -1,12 +1,12 @@
 #include "../miniDAQ/CombinedCalibrationFactory.h"
 
+#include "../tools/BeamTestCheck.h"
 #include "../tools/CBCPulseShape.h"
 #include "../tools/CalibrationExample.h"
 #include "../tools/CombinedCalibration.h"
+#include "../tools/KIRA.h"
 #include "../tools/LatencyScan.h"
 #include "../tools/PedeNoise.h"
-#include "../tools/BeamTestCheck.h"
-#include "../tools/KIRA.h"
 #include "../tools/PedestalEqualization.h"
 #include "../tools/RD53ClockDelay.h"
 #include "../tools/RD53DataTransmissionTest.h"
@@ -37,7 +37,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization>("calibration", CalibrationList::CALIBRATION);
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, BeamTestCheck>("takedata", CalibrationList::TAKEDATA); // will be used in future version of GIPHT
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, KIRA>("calibrationandkira", CalibrationList::CALIBRATIONANDKIRA);
-    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise, KIRA>("calibrationandpedenoiseandkira", CalibrationList::CALIBRATIONANDPEDENOISEANDKIRA); // will be used in future version of GIPHT
+    Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise, KIRA>("calibrationandpedenoiseandkira",
+                                                                                     CalibrationList::CALIBRATIONANDPEDENOISEANDKIRA); // will be used in future version of GIPHT
     Register<LinkAlignmentOT, CicFEAlignment, PedeNoise>("pedenoise", CalibrationList::PEDENOISE);
     Register<LinkAlignmentOT, CicFEAlignment, PedestalEqualization, PedeNoise>("calibrationandpedenoise", CalibrationList::CALIBRATIONANDPEDENOISE);
     Register<LinkAlignmentOT, CicFEAlignment, CalibrationExample>("calibrationexample", CalibrationList::CALIBRATIONEXAMPLE);

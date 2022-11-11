@@ -4,31 +4,30 @@
 #include "../Utils/GenericDataArray.h"
 #include "../Utils/Occupancy.h"
 
-KIRA::KIRA() : OTTool() { }
-KIRA::~KIRA() { }
+KIRA::KIRA() : OTTool() {}
+KIRA::~KIRA() {}
 
 // fKiraClient->sendAndReceivePacket("KIRATriggerFrequency,ArduinoId:" + fKiraId + ",Frequency:124");
-    /*
-    KIRATriggerFrequency,ArduinoId:abc,Frequency:123
-    KIRATrigger,ArduinoId:abc,Value:on/off
-    KIRAPulseLength,ArduinoId:abc,PulseLength:123
-    KIRADacLed,ArduinoId:abc,Value:high/low
-    KIRALed,ArduinoId:abc,LED:led1,Value:on/off
-    KIRALedIntensity,ArduinoId:abc,LED:led1,Intensity:123
-    */
+/*
+KIRATriggerFrequency,ArduinoId:abc,Frequency:123
+KIRATrigger,ArduinoId:abc,Value:on/off
+KIRAPulseLength,ArduinoId:abc,PulseLength:123
+KIRADacLed,ArduinoId:abc,Value:high/low
+KIRALed,ArduinoId:abc,LED:led1,Value:on/off
+KIRALedIntensity,ArduinoId:abc,LED:led1,Intensity:123
+*/
 
 // State machine control functions
 void KIRA::Running()
 {
-
-    auto cKiraPort = fSettingsMap.find("KIRA_Port") ;
+    auto cKiraPort = fSettingsMap.find("KIRA_Port");
     auto cKiraId   = fSettingsMap.find("KIRA_ID");
 
     if(cKiraPort != std::end(fSettingsMap) && cKiraId != std::end(fSettingsMap))
     {
-        uint16_t port = static_cast<uint16_t>(boost::any_cast<double>(cKiraPort->second));
-        std::string id = boost::any_cast<std::string>(cKiraId->second);
-        LOG (INFO) << "KIRA Port: " << port <<" KIRA ID: " << id << RESET;
+        uint16_t    port = static_cast<uint16_t>(boost::any_cast<double>(cKiraPort->second));
+        std::string id   = boost::any_cast<std::string>(cKiraId->second);
+        LOG(INFO) << "KIRA Port: " << port << " KIRA ID: " << id << RESET;
 
         Initialise(port, id);
         determineLatency();
@@ -36,7 +35,7 @@ void KIRA::Running()
     }
     else
     {
-        LOG (INFO) << "KIRA settings not set, abort" << RESET;
+        LOG(INFO) << "KIRA settings not set, abort" << RESET;
     }
 }
 
@@ -46,7 +45,7 @@ void KIRA::Initialise(int pKiraPort, std::string pKiraId)
     SetName("KIRATest");
 
     fKiraClient = new TCPClient("127.0.0.1", pKiraPort);
-    fKiraId = pKiraId;
+    fKiraId     = pKiraId;
     LOG(INFO) << BOLDYELLOW << "Trying to connect to the KIRA Server..." << RESET;
     if(!fKiraClient->connect(1))
     {
@@ -60,26 +59,25 @@ void KIRA::Initialise(int pKiraPort, std::string pKiraId)
     }
 
     // Switch all LEDs off
-    for (int i = 0; i < 8; i++) 
+    for(int i = 0; i < 8; i++)
     {
-        fKiraClient->sendAndReceivePacket("KIRALight,ArduinoId:" + fKiraId + ",LED:Bot" + std::to_string(i) + ",Light:off"); 
-        fKiraClient->sendAndReceivePacket("KIRALight,ArduinoId:" + fKiraId + ",LED:Top" + std::to_string(i) + ",Light:off"); 
+        fKiraClient->sendAndReceivePacket("KIRALight,ArduinoId:" + fKiraId + ",LED:Bot" + std::to_string(i) + ",Light:off");
+        fKiraClient->sendAndReceivePacket("KIRALight,ArduinoId:" + fKiraId + ",LED:Top" + std::to_string(i) + ",Light:off");
     }
     LOG(INFO) << BOLDBLUE << "All KIRA LEDs switched off" << RESET;
-    fKiraClient->sendAndReceivePacket("KIRATriggerFrequency,ArduinoId:" + fKiraId + ",TriggerFrequency:40000"); 
-    fKiraClient->sendAndReceivePacket("KIRATrigger,ArduinoId:" + fKiraId + ",Trigger:on"); 
-    fKiraClient->sendAndReceivePacket("KIRAPulseLength,ArduinoId:" + fKiraId + ",PulseLength:50"); 
+    fKiraClient->sendAndReceivePacket("KIRATriggerFrequency,ArduinoId:" + fKiraId + ",TriggerFrequency:40000");
+    fKiraClient->sendAndReceivePacket("KIRATrigger,ArduinoId:" + fKiraId + ",Trigger:on");
+    fKiraClient->sendAndReceivePacket("KIRAPulseLength,ArduinoId:" + fKiraId + ",PulseLength:50");
 
     LOG(INFO) << BOLDBLUE << "KIRA trigger enabled and set to 40 kHz, 50ns pulse length" << RESET;
 
     fRecycleBin.setDetectorContainer(fDetectorContainer);
 
-    #ifdef __USE_ROOT__
-        fDQMHistogrammer.book(fResultFile, *fDetectorContainer, fSettingsMap);
-    #endif
+#ifdef __USE_ROOT__
+    fDQMHistogrammer.book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
 
     PrepareForExternal(fDetectorContainer->at(0));
-
 }
 
 void KIRA::PrepareForExternal(BeBoard* pBoard)
@@ -89,7 +87,7 @@ void KIRA::PrepareForExternal(BeBoard* pBoard)
     // make sure I am accepting all triggers
     BeBoardRegMap cRegMap = pBoard->getBeBoardRegMap();
     // trigger config
-    uint32_t cTriggerMult    = cRegMap["fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity"];
+    uint32_t cTriggerMult = cRegMap["fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity"];
 
     uint8_t                                       cTriggerSource = 5;
     std::vector<std::string>                      cFcmdRegs{"trigger_source", "triggers_to_accept"};
@@ -123,18 +121,18 @@ void KIRA::PrepareForExternal(BeBoard* pBoard)
 void KIRA::determineLatency()
 {
     auto cBoard = fDetectorContainer->at(0);
-    // initialize latency scan range 
-    uint16_t cLatencyStart = findValueInSettings<double>("StartLatency", 85);
-    uint16_t cLatencyRange = findValueInSettings<double>("LatencyRange", 15);
-    uint16_t cLatencyLED = findValueInSettings<double>("KiraLatencyLed", 4);
+    // initialize latency scan range
+    uint16_t cLatencyStart     = findValueInSettings<double>("StartLatency", 85);
+    uint16_t cLatencyRange     = findValueInSettings<double>("LatencyRange", 15);
+    uint16_t cLatencyLED       = findValueInSettings<double>("KiraLatencyLed", 4);
     uint16_t cLatencyIntensity = findValueInSettings<double>("KiraLatencyIntensity", 30000);
-    uint16_t cLatencySensor = findValueInSettings<double>("KiraLatencySensor",0);
-    bool botSensor = (cLatencySensor == 0);
-    uint16_t cHitMaximum = 0;
-    uint16_t cLatencySetting = 0;
-     
-    LOG(INFO) << "Determine correct latency setting for KIRA operation using top LED " << +cLatencyLED << " with intensity " << cLatencyIntensity<< RESET;
-    if (botSensor)
+    uint16_t cLatencySensor    = findValueInSettings<double>("KiraLatencySensor", 0);
+    bool     botSensor         = (cLatencySensor == 0);
+    uint16_t cHitMaximum       = 0;
+    uint16_t cLatencySetting   = 0;
+
+    LOG(INFO) << "Determine correct latency setting for KIRA operation using top LED " << +cLatencyLED << " with intensity " << cLatencyIntensity << RESET;
+    if(botSensor)
     {
         fKiraClient->sendAndReceivePacket("KIRAIntensity,ArduinoId:" + fKiraId + ",LED:Bot" + std::to_string(cLatencyLED) + ",Intensity:" + std::to_string(cLatencyIntensity));
         fKiraClient->sendAndReceivePacket("KIRALight,ArduinoId:" + fKiraId + ",LED:Bot" + std::to_string(cLatencyLED) + ",Light:on");
@@ -145,15 +143,15 @@ void KIRA::determineLatency()
         fKiraClient->sendAndReceivePacket("KIRALight,ArduinoId:" + fKiraId + ",LED:Top" + std::to_string(cLatencyLED) + ",Light:on");
     }
 
-    for (uint16_t cLat = cLatencyStart; cLat < cLatencyStart + cLatencyRange; cLat++) 
+    for(uint16_t cLat = cLatencyStart; cLat < cLatencyStart + cLatencyRange; cLat++)
     {
         LOG(INFO) << BOLDBLUE << "Set Latency to " << cLat << RESET;
         setSameDacBeBoard(cBoard, "TriggerLatency", cLat);
         fBeBoardInterface->ChipReSync(cBoard);
         ReadNEvents(cBoard, fNevents);
 
-        size_t   cTriggerMult = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-        const std::vector<Event*>& cEvents              = this->GetEvents();
+        size_t                     cTriggerMult = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+        const std::vector<Event*>& cEvents      = this->GetEvents();
         // loop over triggers in the burst
         for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++)
         {
@@ -166,15 +164,9 @@ void KIRA::determineLatency()
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     for(auto cChip: *cHybrid)
-                    {
-                        cHitContainer.at(cBoard->getIndex())
-                            ->at(cOpticalGroup->getIndex())
-                            ->at(cHybrid->getIndex())
-                            ->at(cChip->getIndex())
-                            ->getSummary<uint16_t>() = 0;
-                    } // chip
-                }     // hybrid
-            }         // optical group
+                    { cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = 0; } // chip
+                }                                                                                                                                                        // hybrid
+            }                                                                                                                                                            // optical group
 
             // start at the beginning + trigger id in burst
             auto cEventIter  = cEvents.begin() + cTriggerId;
@@ -189,34 +181,27 @@ void KIRA::determineLatency()
                         for(auto cChip: *cHybrid)
                         {
                             if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
-                            // skip all chips that are not directly illuminated by the LED 
-                            if(cHybrid->getIndex()%2 == 0 && cChip->getIndex() != 7-cLatencyLED) continue;
-                            if(cHybrid->getIndex()%2 == 1 && cChip->getIndex() != cLatencyLED) continue;
+                            // skip all chips that are not directly illuminated by the LED
+                            if(cHybrid->getIndex() % 2 == 0 && cChip->getIndex() != 7 - cLatencyLED) continue;
+                            if(cHybrid->getIndex() % 2 == 1 && cChip->getIndex() != cLatencyLED) continue;
 
                             auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
-                            if (cHits.size() != 0)
-                                LOG(DEBUG) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << "Chip#" << +cChip->getId() % 8 << " " << +cHits.size() << " hits." << RESET;
+                            if(cHits.size() != 0) LOG(DEBUG) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << "Chip#" << +cChip->getId() % 8 << " " << +cHits.size() << " hits." << RESET;
                             for(auto cHit: cHits)
                             {
                                 // monitor only bottom sensor channels
                                 if(cHit % 2 == cLatencySensor)
-                                {
-                                    cHitContainer.at(cBoard->getIndex())
-                                    ->at(cOpticalGroup->getIndex())
-                                    ->at(cHybrid->getIndex())
-                                    ->at(cChip->getIndex())
-                                    ->getSummary<uint16_t>() += 1;
-                                }
+                                { cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() += 1; }
                             }
                         } // chip vector
                     }     // hybrid vector
                 }         // optical group vector
                 cEventIter += (1 + cTriggerMult);
-            } while(cEventIter < cEvents.end()); 
+            } while(cEventIter < cEvents.end());
 
-            #ifdef __USE_ROOT__
-                fDQMHistogrammer.fillLatencyPlots(cLat + cTriggerId, cTriggerId, cHitContainer, fNevents);
-            #endif
+#ifdef __USE_ROOT__
+            fDQMHistogrammer.fillLatencyPlots(cLat + cTriggerId, cTriggerId, cHitContainer, fNevents);
+#endif
 
             // Find earliest maximum latency bin (= largest latency setting with maximum entries)
             for(auto cOpticalGroup: *cBoard)
@@ -227,18 +212,18 @@ void KIRA::determineLatency()
                     for(auto cChip: *cHybrid)
                     {
                         if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
-                        if(cHybrid->getIndex()%2 == 0 && cChip->getIndex() != 7-cLatencyLED) continue;
-                        if(cHybrid->getIndex()%2 == 1 && cChip->getIndex() != cLatencyLED) continue;
+                        if(cHybrid->getIndex() % 2 == 0 && cChip->getIndex() != 7 - cLatencyLED) continue;
+                        if(cHybrid->getIndex() % 2 == 1 && cChip->getIndex() != cLatencyLED) continue;
                         uint16_t cTmpHits = cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
                         cTmpHitsSum += cTmpHits;
-                        //LOG(INFO)<< "temp: " << cTmpHits << RESET;
-                        //LOG(INFO)<< "temp sum: " << cTmpHitsSum << RESET;
-                        //LOG(INFO)<< "cHitMax: " << cHitMaximum << RESET;
+                        // LOG(INFO)<< "temp: " << cTmpHits << RESET;
+                        // LOG(INFO)<< "temp sum: " << cTmpHitsSum << RESET;
+                        // LOG(INFO)<< "cHitMax: " << cHitMaximum << RESET;
 
-                        if (cTmpHitsSum >= cHitMaximum)
+                        if(cTmpHitsSum >= cHitMaximum)
                         {
-                            cHitMaximum = cTmpHitsSum;
-                            cLatencySetting = cLat + cTriggerId; 
+                            cHitMaximum     = cTmpHitsSum;
+                            cLatencySetting = cLat + cTriggerId;
                         }
                     }
                 }
@@ -251,51 +236,48 @@ void KIRA::determineLatency()
     setSameDacBeBoard(cBoard, "TriggerLatency", cLatencySetting);
     fBeBoardInterface->ChipReSync(cBoard);
     // Switch LED off again
-    if (botSensor)
+    if(botSensor)
         fKiraClient->sendAndReceivePacket("KIRALight,ArduinoId:" + fKiraId + ",LED:Bot" + std::to_string(cLatencyLED) + ",Value:off");
     else
         fKiraClient->sendAndReceivePacket("KIRALight,ArduinoId:" + fKiraId + ",LED:Top" + std::to_string(cLatencyLED) + ",Value:off");
-
 }
 
 void KIRA::performKIRATest()
 {
     LOG(INFO) << BOLDRED << "Starting KIRA Test" << RESET;
-    auto cBoard = fDetectorContainer->at(0);
+    auto     cBoard     = fDetectorContainer->at(0);
     uint16_t cIntensity = findValueInSettings<double>("KiraIntensity", 30000);
 
-    for (uint16_t cLED = 0; cLED < 8; cLED++)
+    for(uint16_t cLED = 0; cLED < 8; cLED++)
     {
-        
-        LOG(INFO) << BOLDYELLOW << "Test with bottom LED " << cLED << " - Intensity set to " << cIntensity<< RESET;
-        // Start with bottom LED 
+        LOG(INFO) << BOLDYELLOW << "Test with bottom LED " << cLED << " - Intensity set to " << cIntensity << RESET;
+        // Start with bottom LED
         fKiraClient->sendAndReceivePacket("KIRAIntensity,ArduinoId:" + fKiraId + ",LED:Bot" + std::to_string(cLED) + ",Intensity:" + std::to_string(cIntensity));
         fKiraClient->sendAndReceivePacket("KIRALight,ArduinoId:" + fKiraId + ",LED:Bot" + std::to_string(cLED) + ",Light:on");
-        
+
         ReadNEvents(cBoard, fNevents);
-        const std::vector<Event*>& cEvents              = this->GetEvents();
-        DetectorDataContainer cHitContainer = analyseEvents(cBoard, cEvents, 0, cLED);
-        #ifdef __USE_ROOT__
-            fDQMHistogrammer.fillBottomSensorPlots(cHitContainer, fNevents, cLED);
-        #endif
+        const std::vector<Event*>& cEvents       = this->GetEvents();
+        DetectorDataContainer      cHitContainer = analyseEvents(cBoard, cEvents, 0, cLED);
+#ifdef __USE_ROOT__
+        fDQMHistogrammer.fillBottomSensorPlots(cHitContainer, fNevents, cLED);
+#endif
         // Switch off LED
         fKiraClient->sendAndReceivePacket("KIRALight,ArduinoId:" + fKiraId + ",LED:Bot" + std::to_string(cLED) + ",Light:off");
-        
+
         LOG(INFO) << BOLDYELLOW << "Test with top LED " << cLED << " - Intensity set to " << cIntensity << RESET;
-        // Start top LED 
+        // Start top LED
         fKiraClient->sendAndReceivePacket("KIRAIntensity,ArduinoId:" + fKiraId + ",LED:Top" + std::to_string(cLED) + ",Intensity:" + std::to_string(cIntensity));
         fKiraClient->sendAndReceivePacket("KIRALight,ArduinoId:" + fKiraId + ",LED:Top" + std::to_string(cLED) + ",Light:on");
 
         fBeBoardInterface->ChipReSync(cBoard);
         ReadNEvents(cBoard, fNevents);
-        const std::vector<Event*>& cEvents2              = this->GetEvents();
-        DetectorDataContainer cHitContainer2 = analyseEvents(cBoard, cEvents2, 1, cLED);
-        #ifdef __USE_ROOT__
-            fDQMHistogrammer.fillTopSensorPlots(cHitContainer2, fNevents, cLED);
-        #endif
+        const std::vector<Event*>& cEvents2       = this->GetEvents();
+        DetectorDataContainer      cHitContainer2 = analyseEvents(cBoard, cEvents2, 1, cLED);
+#ifdef __USE_ROOT__
+        fDQMHistogrammer.fillTopSensorPlots(cHitContainer2, fNevents, cLED);
+#endif
         // Switch off LED
         fKiraClient->sendAndReceivePacket("KIRALight,ArduinoId:" + fKiraId + ",LED:Top" + std::to_string(cLED) + ",Light:off");
-        
     }
 }
 
@@ -318,32 +300,31 @@ DetectorDataContainer KIRA::analyseEvents(BeBoard* pBoard, const std::vector<Eve
                 for(auto cChip: *cHybrid)
                 {
                     if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
-                    // skip all chips that are not directly illuminated by the LED 
-                    if(cHybrid->getIndex()%2 == 0 && cChip->getIndex() != 7-pLED) continue;
-                    if(cHybrid->getIndex()%2 == 1 && cChip->getIndex() != pLED) continue;
+                    // skip all chips that are not directly illuminated by the LED
+                    if(cHybrid->getIndex() % 2 == 0 && cChip->getIndex() != 7 - pLED) continue;
+                    if(cHybrid->getIndex() % 2 == 1 && cChip->getIndex() != pLED) continue;
 
                     auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
-                    if (cHits.size() != 0)
-                        LOG(DEBUG) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << "Chip#" << +cChip->getId() % 8 << " " << +cHits.size() << " hits." << RESET;
+                    if(cHits.size() != 0) LOG(DEBUG) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << "Chip#" << +cChip->getId() % 8 << " " << +cHits.size() << " hits." << RESET;
                     for(auto cHit: cHits)
                     {
-                        LOG (DEBUG) << "Hit: " << cHit << RESET;
+                        LOG(DEBUG) << "Hit: " << cHit << RESET;
                         // Fill hits in Data Container for bottom sensor
                         if(cHit % 2 == pSensor)
                         {
-                            LOG (DEBUG) << "Hit: " << cHit <<" Sensor: " << pSensor << RESET;
+                            LOG(DEBUG) << "Hit: " << cHit << " Sensor: " << pSensor << RESET;
                             cHitContainer.at(pBoard->getIndex())
-                            ->at(cOpticalGroup->getIndex())
-                            ->at(cHybrid->getIndex())
-                            ->at(cChip->getIndex())
-                            ->getSummary<GenericDataArray<VECSIZE, float>>()[int(cHit/2)] += 1; 
+                                ->at(cOpticalGroup->getIndex())
+                                ->at(cHybrid->getIndex())
+                                ->at(cChip->getIndex())
+                                ->getSummary<GenericDataArray<VECSIZE, float>>()[int(cHit / 2)] += 1;
                         }
                     }
                 } // chip vector
             }     // hybrid vector
         }         // optical group vector
         cEventIter += 1;
-    } while(cEventIter < pEvents.end()); 
+    } while(cEventIter < pEvents.end());
     return cHitContainer;
 }
 
