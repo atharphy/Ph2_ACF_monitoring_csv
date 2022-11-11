@@ -107,7 +107,7 @@ void ThrEqualizationHistograms::fillOccupancy(const DetectorDataContainer& Occup
                     for(auto row = 0u; row < nRows; row++)
                         for(auto col = 0u; col < nCols; col++)
                             if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != RD53Shared::ISDISABLED)
-                                hThrEqualization->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy + hThrEqualization->GetBinWidth(0) / 2);
+                                hThrEqualization->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy + hThrEqualization->GetBinWidth(1) / 2);
                 }
 }
 
