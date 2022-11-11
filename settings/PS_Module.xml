@@ -97,8 +97,11 @@
 
     
     <!-- CONFIG-->
-    <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13  -->
-    <Register name="clock_source">3</Register> 
+    <!-- 15 - default (internal oscillator), 0 - AMC13 -->
+    <Register name="clock_source_u7">15</Register>
+    <!-- 3 = 3 = internal oscillator (default), 1 = fmc_l8_clk1, 2 = fmc_l8_clk0, 0 = COAX_IN -->
+    <Register name="clock_source_u8">3</Register>
+
     <Register name="fc7_daq_cnfg">
 	<Register name="optical_block">
 		<Register name="lpgbt_sc_worker">
@@ -165,7 +168,7 @@
                     <Register name="stubOR"> 1 </Register>
                     <Register name="initial_fast_reset_enable"> 0 </Register>
                     <Register name="trigger_timeout_enable"> 0 </Register>
-                   <Register name="trigger_multiplicity"> 3 </Register>
+                   <Register name="trigger_multiplicity"> 0 </Register>
             </Register>
         </Register>
     <!-- I2C manager -->
@@ -343,6 +346,32 @@
     <Setting name="SyncDebug">0</Setting>
 
     <Setting name="PSOccupancyPulseAmplitude">150</Setting>
+
+
+    <!--Bin search trim settings-->
+    <Setting name="PedestalEqualizationOccupancy">0.56</Setting>
+    <Setting name="PedestalEqualizationPulseAmplitude">77</Setting>
+    <Setting name="PedeNoisePulseAmplitude">77</Setting>
+
+
+    <!--Full search settings (pedestal) -->
+     <!--SSA-->
+    <!--<Setting name="PedestalEqualizationOccupancy">15.</Setting>-->
+     <!--MPA-->
+    <!--<Setting name="PedestalEqualizationOccupancy">2.5</Setting>
+    <Setting name="PedestalEqualizationFullScanStart">80</Setting>
+    <Setting name="Nevents">150</Setting>
+    <Setting name="FullScan">1</Setting>
+    <Setting name="PedestalEqualizationFullScanCAP">9999.</Setting>
+    <Setting name="PedestalEqualizationPulseAmplitude">1</Setting>
+    <Setting name="PedeNoisePulseAmplitude">1</Setting>
+    <Setting name="PedeNoiseLimit">4.5</Setting>
+    <Setting name="PedeNoiseMask">0</Setting>
+    <Setting name="PedeNoiseMaskUntrimmed">0</Setting>
+    <Setting name="PedeNoiseUntrimmedLimit">999.</Setting>-->
+
+
+
 
 </Settings>
 </HwDescription>

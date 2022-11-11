@@ -64,6 +64,19 @@ void SystemController::Inherit(const SystemController* pController)
     fTestcardClient = pController->fTestcardClient;
 #endif
 }
+void SystemController::StopMonitoring()
+{
+    if(fDetectorMonitor != nullptr) { fDetectorMonitor->stopMonitoring(); }
+}
+
+std::string SystemController::GetMonitorFileName()
+{
+    if(fDetectorMonitor != nullptr) { return fDetectorMonitor->getMonitorFileName(); }
+    else
+    {
+        return "";
+    }
+}
 
 void SystemController::Destroy()
 {
