@@ -22,7 +22,7 @@ void PhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetecto
     // # Retrieve parameters #
     // #######################
     auto         frontEnd  = RD53Shared::firstChip->getFEtype(nCols / 2, nCols / 2);
-    const size_t ToTsize   = frontEnd->maxToTvalue + 2;
+    const size_t ToTsize   = frontEnd->maxToTvalue + 1;
     const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
 

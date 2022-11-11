@@ -262,7 +262,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, float targe
                         stdDev           = (cnt != 0 ? stdDev / cnt : 0) - avg * avg;
                         stdDev           = (stdDev > 0 ? sqrt(stdDev) : 0);
                         float  newValue  = avg + NSTDEV * stdDev;
-                        size_t targetToT = frontEnd->maxToTvalue + 1;
+                        size_t targetToT = frontEnd->maxToTvalue;
 
                         // ########################
                         // # Save best DAC values #

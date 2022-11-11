@@ -26,7 +26,7 @@
 // # CONSTANTS #
 // #############
 #define INTERCEPT_HALFRANGE 15 // [ToT]
-#define SLOPE_HALFRANGE 9e-2   // [ToT / VCal]
+#define SLOPE_RANGE 8e-2       // [ToT / VCal]
 
 class GainHistograms : public DQMHistogramBase
 {

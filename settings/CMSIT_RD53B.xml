@@ -212,7 +212,7 @@
 
     <Setting name="TargetCharge">      10000 </Setting>
     <Setting name="KrumCurrStart">         0 </Setting>
-    <Setting name="KrumCurrStop">        127 </Setting>
+    <Setting name="KrumCurrStop">        210 </Setting>
 
     <Setting name="TDACGainStart">       140 </Setting>
     <Setting name="TDACGainStop">        140 </Setting>
