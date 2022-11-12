@@ -57,14 +57,19 @@ void RD53eudaqProducer::DoStartRun()
     // ######################################
     // # Add extra information to the event #
     // ######################################
-    // std::stringstream os;
-    // ev->SetTag("FirmwareVersion", RD53sysCntrPhys.fBeBoardInterface->FWinfo);
+    // ev->SetTag("Firmware version", RD53sysCntrPhys.fBeBoardInterface->FWinfo);
+    // ev->SetTag("Configuration file", RD53sysCntrPhys.fParsedFile);
     // for(const auto cBoard: *(RD53sysCntrPhys.fDetectorContainer))
     //     for(const auto cOpticalGroup: *cBoard)
     //         for(const auto cHybrid: *cOpticalGroup)
     //             for(const auto cChip: *cHybrid)
-    //               cChip->saveRegMap("NONE", os);
-    // ev->SetTag("RegisterMapAndMask", os);
+    //             {
+    //                 std::stringstream header;
+    //                 std::stringstream chipData;
+    //                 cChip->saveRegMap("NONE", chipData);
+    //                 header << "Register map and mask: B" << cBoard->getId() << "_O" << stdcOpticalGroup->getId() << "_H" << cHybrid->getId() << "_C" << +cChip->getId();
+    //                 ev->SetTag(hedear.str().c_str(), chipData);
+    //             }
 
     // ###################################################
     // # Get configuration directly from EUDAQ framework #
