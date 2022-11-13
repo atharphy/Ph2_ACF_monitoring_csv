@@ -92,6 +92,7 @@ class SystemController
     SettingsMap        fSettingsMap;
     FileHandler*       fFileHandler;
     std::string        fRawFileName;
+    std::stringstream  fParsedFile;
     bool               fWriteHandlerEnabled;
     bool               fDQMStreamerEnabled;
     bool               fMonitorDQMStreamerEnabled;

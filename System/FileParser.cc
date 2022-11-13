@@ -56,7 +56,7 @@ void FileParser::parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWM
 void FileParser::openHWconfig(const std::string& pFilename, pugi::xml_document& doc)
 {
     pugi::xml_parse_result result = doc.load_file(pFilename.c_str());
-    if(!result) // try if it is not a a file, but a string containing the full xml
+    if(!result) // Try if it is not a file, but a string containing the full xml
         result = doc.load_string(pFilename.c_str());
 
     if(!result)
@@ -83,6 +83,7 @@ std::map<uint16_t, RegManager> FileParser::getRegManagerList(const std::string& 
         std::string cAddressTable = expandEnvironmentVariables(cBeBoardConnectionNode.attribute("address_table").value());
         theRegManagerMap.insert(std::pair<uint16_t, Ph2_HwInterface::RegManager>(cBeBoardNode.attribute("Id").as_int(), std::move(RegManager(cId, cUri, cAddressTable))));
     }
+
     return theRegManagerMap;
 }
 

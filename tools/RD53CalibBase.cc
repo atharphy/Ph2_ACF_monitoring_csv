@@ -35,7 +35,7 @@ void CalibBase::saveChipRegisters(int currentRun, bool doUpdateChip)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
+                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap();
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
                     std::string command("mv " + cChip->getFileName(fileReg) + " " + this->fDirectoryName);
                     system(command.c_str());
@@ -45,7 +45,7 @@ void CalibBase::saveChipRegisters(int currentRun, bool doUpdateChip)
 
             if(cOpticalGroup->flpGBT != nullptr)
             {
-                if(doUpdateChip == true) cOpticalGroup->flpGBT->saveRegMap("");
+                if(doUpdateChip == true) cOpticalGroup->flpGBT->saveRegMap();
                 cOpticalGroup->flpGBT->saveRegMap(fileReg);
                 std::string command("mv " + cOpticalGroup->flpGBT->getFileName(fileReg) + " " + this->fDirectoryName);
                 system(command.c_str());

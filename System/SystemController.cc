@@ -1131,11 +1131,9 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
 
 void SystemController::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber, bool doAlsoFrontend)
 {
-    std::stringstream outp;
-
-    InitializeHw(cHWFile, outp, enableStream, DQMportNumber);
-    InitializeSettings(cHWFile, outp);
-    std::cout << outp.str() << std::endl;
+    InitializeHw(cHWFile, fParsedFile, enableStream, DQMportNumber);
+    InitializeSettings(cHWFile, fParsedFile);
+    std::cout << fParsedFile.str() << std::endl;
     ConfigureHw(false, true, doAlsoFrontend);
 }
 

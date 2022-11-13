@@ -103,11 +103,11 @@ class RD53 : public ReadoutChip
     RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
     RD53(const RD53& chipObj);
 
-    void     loadfRegMap(const std::string& fileName) override;
-    void     saveRegMap(const std::string& fName2Add) override;
-    uint32_t getNumberOfChannels() const override;
-    bool     isDACLocal(const std::string& regName) override;
-    uint8_t  getNumberOfBits(const std::string& regName) override;
+    void              loadfRegMap(const std::string& fileName) override;
+    std::stringstream saveRegMap(const std::string& fName2Add = "") override;
+    uint32_t          getNumberOfChannels() const override;
+    bool              isDACLocal(const std::string& regName) override;
+    uint8_t           getNumberOfBits(const std::string& regName) override;
 
     pixelMask& getPixelsMask() { return fPixelsMask; }
     pixelMask& getPixelsMaskDefault() { return fPixelsMaskDefault; }

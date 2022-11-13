@@ -211,74 +211,83 @@ void RD53::loadfRegMap(const std::string& fileName)
         throw Exception("[RD53::loadfRegMapd] The RD53 file settings does not exist");
 }
 
-void RD53::saveRegMap(const std::string& fName2Add)
+std::stringstream RD53::saveRegMap(const std::string& fName2Add)
 {
     const int Nspaces = 26; // @CONST@
 
-    std::string   output = this->getFileName(fName2Add);
-    std::ofstream file(output.c_str(), std::ios::out | std::ios::trunc);
+    std::stringstream theStream;
+    std::ofstream     file;
+    std::string       fileName = this->getFileName(fName2Add);
 
-    if(file)
+    std::set<ChipRegPair, RegItemComparer> fSetRegItem;
+    for(const auto& it: fRegMap) fSetRegItem.insert({it.first, it.second});
+
+    int cLineCounter = 0;
+    for(const auto& v: fSetRegItem)
     {
-        std::set<ChipRegPair, RegItemComparer> fSetRegItem;
-        for(const auto& it: fRegMap) fSetRegItem.insert({it.first, it.second});
-
-        int cLineCounter = 0;
-        for(const auto& v: fSetRegItem)
+        while(fCommentMap.find(cLineCounter) != std::end(fCommentMap))
         {
-            while(fCommentMap.find(cLineCounter) != std::end(fCommentMap))
-            {
-                auto cComment = fCommentMap.find(cLineCounter);
+            auto cComment = fCommentMap.find(cLineCounter);
 
-                file << cComment->second << std::endl;
-                cLineCounter++;
-            }
-
-            file << v.first;
-            for(auto j = 0; j < Nspaces; j++) file << " ";
-            file.seekp(-v.first.size(), std::ios_base::cur);
-            file << "0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fAddress) << "          0x" << std::setfill('0') << std::setw(4) << std::hex
-                 << std::uppercase << int(v.second.fDefValue) << "                  0x" << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << int(v.second.fValue)
-                 << "                             " << std::setfill('0') << std::setw(2) << std::dec << std::uppercase << int(v.second.fBitSize) << std::endl;
-
+            theStream << cComment->second << std::endl;
             cLineCounter++;
         }
 
-        file << std::dec << std::endl;
-        file << "*-----------------------------------------------------------------------------------------------------"
-                "--"
-             << std::endl;
-        file << "PIXELCONFIGURATION" << std::endl;
-        file << "*-----------------------------------------------------------------------------------------------------"
-                "--"
-             << std::endl;
-        for(auto col = 0u; col < this->getNCols(); col++)
-        {
-            file << "COL                  " << std::setfill('0') << std::setw(3) << col << std::endl;
+        theStream << v.first;
+        for(auto j = 0; j < Nspaces; j++) theStream << " ";
+        theStream.seekp(-v.first.size(), std::ios_base::cur);
+        theStream << "0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fAddress) << "          0x" << std::setfill('0') << std::setw(4) << std::hex
+                  << std::uppercase << int(v.second.fDefValue) << "                  0x" << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << int(v.second.fValue)
+                  << "                             " << std::setfill('0') << std::setw(2) << std::dec << std::uppercase << int(v.second.fBitSize) << std::endl;
 
-            file << "ENABLE " << +fPixelsMask.Enable[0 + this->getNRows() * col];
-            for(auto row = 1u; row < this->getNRows(); row++) file << "," << +fPixelsMask.Enable[row + this->getNRows() * col];
-            file << std::endl;
-
-            file << "HITBUS " << +fPixelsMask.HitBus[0 + this->getNRows() * col];
-            for(auto row = 1u; row < this->getNRows(); row++) file << "," << +fPixelsMask.HitBus[row + this->getNRows() * col];
-            file << std::endl;
-
-            file << "INJEN  " << +fPixelsMask.InjEn[0 + this->getNRows() * col];
-            for(auto row = 1u; row < this->getNRows(); row++) file << "," << +fPixelsMask.InjEn[row + this->getNRows() * col];
-            file << std::endl;
-
-            file << "TDAC   " << +fPixelsMask.TDAC[0 + this->getNRows() * col];
-            for(auto row = 1u; row < this->getNRows(); row++) file << "," << +fPixelsMask.TDAC[row + this->getNRows() * col];
-            file << std::endl;
-
-            file << std::endl;
-        }
-
-        file.close();
+        cLineCounter++;
     }
-    else
-        LOG(ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << output << RESET;
+
+    theStream << std::dec << std::endl;
+    theStream << "*-----------------------------------------------------------------------------------------------------"
+                 "--"
+              << std::endl;
+    theStream << "PIXELCONFIGURATION" << std::endl;
+    theStream << "*-----------------------------------------------------------------------------------------------------"
+                 "--"
+              << std::endl;
+    for(auto col = 0u; col < this->getNCols(); col++)
+    {
+        theStream << "COL                  " << std::setfill('0') << std::setw(3) << col << std::endl;
+
+        theStream << "ENABLE " << +fPixelsMask.Enable[0 + this->getNRows() * col];
+        for(auto row = 1u; row < this->getNRows(); row++) theStream << "," << +fPixelsMask.Enable[row + this->getNRows() * col];
+        theStream << std::endl;
+
+        theStream << "HITBUS " << +fPixelsMask.HitBus[0 + this->getNRows() * col];
+        for(auto row = 1u; row < this->getNRows(); row++) theStream << "," << +fPixelsMask.HitBus[row + this->getNRows() * col];
+        theStream << std::endl;
+
+        theStream << "INJEN  " << +fPixelsMask.InjEn[0 + this->getNRows() * col];
+        for(auto row = 1u; row < this->getNRows(); row++) theStream << "," << +fPixelsMask.InjEn[row + this->getNRows() * col];
+        theStream << std::endl;
+
+        theStream << "TDAC   " << +fPixelsMask.TDAC[0 + this->getNRows() * col];
+        for(auto row = 1u; row < this->getNRows(); row++) theStream << "," << +fPixelsMask.TDAC[row + this->getNRows() * col];
+        theStream << std::endl;
+
+        theStream << std::endl;
+    }
+
+    if(fName2Add != "ONSTREAM")
+    {
+        file.open(fileName.c_str(), std::ios::out | std::ios::trunc);
+
+        if(file)
+        {
+            file << theStream.str();
+            file.close();
+        }
+        else
+            LOG(ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << fileName << RESET;
+    }
+
+    return theStream;
 }
 
 void RD53::copyMaskFromDefault() { fPixelsMask = fPixelsMaskDefault; }
