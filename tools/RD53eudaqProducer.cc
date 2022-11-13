@@ -65,8 +65,7 @@ void RD53eudaqProducer::DoStartRun()
     //             for(const auto cChip: *cHybrid)
     //             {
     //                 std::stringstream header;
-    //                 std::stringstream chipData;
-    //                 cChip->saveRegMap("NONE", chipData);
+    //                 std::stringstream chipData = cChip->saveRegMap("ONSTREAM");
     //                 header << "Register map and mask: B" << cBoard->getId() << "_O" << stdcOpticalGroup->getId() << "_H" << cHybrid->getId() << "_C" << +cChip->getId();
     //                 ev->SetTag(hedear.str().c_str(), chipData);
     //             }

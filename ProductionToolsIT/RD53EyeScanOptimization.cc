@@ -258,7 +258,7 @@ void EyeScanOptimization::saveChipRegisters(int currentRun)
                 for(const auto cChip: *cHybrid)
                 {
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
-                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
+                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap();
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
                     std::string command("mv " + cChip->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
                     system(command.c_str());
