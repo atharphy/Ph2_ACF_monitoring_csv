@@ -39,8 +39,8 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     // # bit 9:      EnOutputDataChipId
     // # bit 8:      EnGatingDataMergeClk1280
     // # bit 7:      SelDataMergeClk
-    // # bits 3-6:   EnDataMergeLane[3:0]
-    // # bit 2:      MergeChBonding
+    // # bits 3-6:   EnDataMergeLane[3:0] --> Input internl lanes
+    // # bit 2:      MergeChBonding       --> Input channel bonding
     // # bit 1:      DataMergingGpoSel
     RD53Interface::WriteChipReg(pChip, "DataConcentratorConf", 0, false); // To be consistent with RD53B event decoder
     // # bit 12:   EnCRC
@@ -188,7 +188,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     RD53Interface::WriteChipReg(pChip, "AuroraConfig", bits::pack<4, 6, 2>(RD53Shared::setBits(nActiveLanes), 0b011001, 0b11), false);
     // # bit 14:    SendAltOutput
     // # bit 13:    EnablePRBS
-    // # bits 9-12: ActiveLanes[3:0] --> internal lanes
+    // # bits 9-12: ActiveLanes[3:0] --> Output internal lanes
     // # bits 3-8:  CCWait[5:0]
     // # bits 1-2:  CCSend[1:0]
     uint16_t val;
@@ -199,10 +199,12 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     else
         val = bits::pack<2, 2, 2, 2, 2, 2, 2, 2>(3, 2, 1, 0, 3, 2, 1, 0);
     RD53Interface::WriteChipReg(pChip, "DataMergingMux", val, false); // Mux selection for Input and Output Lane mapping
+    // # Internal inputs mapped to external inputs with 2 bits
     // # bits 15-16: DataMergingInMux_3[1:0]
     // # bits 13-14: DataMergingInMux_2[1:0]
     // # bits 11-12: DataMergingInMux_1[1:0]
     // # bits 9-10:  DataMergingInMux_0[1:0]
+    // # Internal outputs mapped to external outputs with 2 bits
     // # bits 7-8:   DataMergingOutMux_3[1:0]
     // # bits 5-6:   DataMergingOutMux_2[1:0]
     // # bits 3-4:   DataMergingOutMux_1[1:0]
