@@ -1417,6 +1417,25 @@ void SystemController::disableAllChannels()
 
 void SystemController::DumpFrontendRegisters()
 {
+    // #################################################
+    // # Dump firmware register content for all boards #
+    // #################################################
+    for(const auto cBoard: *fDetectorContainer)
+    {
+        auto& theBeBoardFW = this->fBeBoardFWMap[cBoard->getId()];
+        LOG(INFO) << GREEN << "Firmware register content for [board = " << BOLDYELLOW << cBoard->getId() << GREEN << "]" << RESET;
+
+        for(const auto& it: cBoard->getBeBoardRegMap())
+        {
+            auto value = static_cast<RD53FWInterface*>(theBeBoardFW)->ReadArbitraryRegister(it.first);
+            std::cout << "\t--> Register " << std::left << std::setfill(' ') << std::setw(48) << it.first << " = " << std::setw(8) << std::dec << value << std::hex << "(0x" << value << ")"
+                      << std::endl;
+        }
+    }
+
+    // ##################################################
+    // # Dump frontend registers of the entire detector #
+    // ##################################################
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)

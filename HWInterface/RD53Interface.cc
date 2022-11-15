@@ -92,6 +92,7 @@ uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
         if(regReadback.size() == 0)
         {
             LOG(WARNING) << BLUE << "Empty register readback, attempt n. " << YELLOW << attempt + 1 << BLUE << "/" << YELLOW << nAttempts << RESET;
+            static_cast<RD53FWInterface*>(fBoardFW)->ResetReadBkFIFO(); // @TMP@ : temporary fix
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
         }
         else

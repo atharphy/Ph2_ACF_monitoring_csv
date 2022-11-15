@@ -88,6 +88,10 @@ class RD53FWInterface : public BeBoardFWInterface
                                     const bool                        doReset               = false);
     uint32_t ReadArbitraryRegister(const std::string& regName);
     void     ResetBoard();
+    void     ResetFastCmdBlk();
+    void     ResetSlowCmdFIFO();
+    void     ResetReadBkFIFO();
+    void     ResetReadoutBlk();
 
     // ####################################
     // # Check AURORA lock on data stream #
@@ -208,12 +212,10 @@ class RD53FWInterface : public BeBoardFWInterface
     void                  PrintFWstatus();
     void                  TurnOffFMC();
     void                  TurnOnFMC();
-    void                  ResetFastCmdBlk();
-    void                  ResetSlowCmdBlk();
-    void                  ResetReadoutBlk();
     void                  ConfigureFastCommands(const FastCommandsConfig* config = nullptr);
     void                  ConfigureDIO5(const DIO5Config* config);
-    void                  SendBoardCommand(const std::string& cmd_reg);
+    void                  SendBoardCommandWithStrobe(const std::string& cmdReg);
+    void                  SendBoardCommand(const std::string& cmdReg);
     void                  InitHybridByHybrid(const Ph2_HwDescription::BeBoard* pBoard);
     std::vector<uint16_t> GetInitSequence(const unsigned int type);
     uint32_t              GetHybridEnabledChips(const Ph2_HwDescription::Hybrid* pHybrid);
