@@ -160,12 +160,11 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    std::string       cHWFile    = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/D19CDescription_ROH_OFC7.xml";
-    bool              batchMode  = (cmd.foundOption("batch")) ? true : false;
-    const std::string cSSAPair   = (cmd.foundOption("ssapair")) ? cmd.optionValue("ssapair") : "";
-    std::string       cDirectory = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
-    std::string       cHybridId  = (cmd.foundOption("hybridId")) ? cmd.optionValue("hybridId") : "xxxx";
-    bool              cDebug     = (cmd.foundOption("debug"));
+    std::string cHWFile    = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/D19CDescription_ROH_OFC7.xml";
+    bool        batchMode  = (cmd.foundOption("batch")) ? true : false;
+    std::string cDirectory = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
+    std::string cHybridId  = (cmd.foundOption("hybridId")) ? cmd.optionValue("hybridId") : "xxxx";
+    bool        cDebug     = (cmd.foundOption("debug"));
     // Test to perform
     bool        cFCMDTest             = (cmd.foundOption("fmcd-test")) ? true : false;
     std::string cFCMDTestStartPattern = (cmd.foundOption("fcmd-test-start-pattern")) ? cmd.optionValue("fcmd-test-start-pattern") : "11000001";

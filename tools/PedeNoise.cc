@@ -112,10 +112,10 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fPlotSCurves                 = findValueInSettings<double>("PlotSCurves", 0);
     fFitSCurves                  = findValueInSettings<double>("FitSCurves", 0);
     fPulseAmplitude              = findValueInSettings<double>("PedeNoisePulseAmplitude", 0);
-    fPedeNoiseLimit             = findValueInSettings<double>("PedeNoiseLimit", 10);
-    fPedeNoiseMask              = findValueInSettings<double>("PedeNoiseMask", 0);
-    fPedeNoiseMaskUntrimmed              = findValueInSettings<double>("PedeNoiseMaskUntrimmed", 0);
-    fPedeNoiseUntrimmedLimit              = findValueInSettings<double>("PedeNoiseUntrimmedLimit", 0.0);
+    fPedeNoiseLimit              = findValueInSettings<double>("PedeNoiseLimit", 10);
+    fPedeNoiseMask               = findValueInSettings<double>("PedeNoiseMask", 0);
+    fPedeNoiseMaskUntrimmed      = findValueInSettings<double>("PedeNoiseMaskUntrimmed", 0);
+    fPedeNoiseUntrimmedLimit     = findValueInSettings<double>("PedeNoiseUntrimmedLimit", 0.0);
     fEventsPerPoint              = findValueInSettings<double>("Nevents", 10);
     fUseFixRange                 = findValueInSettings<double>("PedeNoiseUseFixRange", 0);
     fMinThreshold                = findValueInSettings<double>("PedeNoiseMinThreshold", 0);
@@ -154,7 +154,6 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
                 {
                     chip->setRegisterTracking(1);
                     chip->ClearModifiedRegisterMap();
-		
                 }
             }
         }
@@ -212,15 +211,12 @@ void PedeNoise::Reset()
                     for(auto cMapItem: cModMap)
                     {
                         auto cValueInMemory = cChip->getReg(cMapItem.first);
-			if (cMapItem.second.fValue ==cValueInMemory) continue;
+                        if(cMapItem.second.fValue == cValueInMemory) continue;
                         // don't reconfigure the offsets .. whole point of this excercise
                         if(cMapItem.first.find("VCth") != std::string::npos) continue;
                         if(cMapItem.first.find("ThDAC") != std::string::npos) continue;
                         if(cMapItem.first.find("Bias_THDAC") != std::string::npos) continue;
-                        if(cMapItem.first.find("ENFLAGS") != std::string::npos) 
-				{
-					cMapItem.second.fValue = (cMapItem.second.fValue & 0xfe) + (cValueInMemory & 0x1); 
-				};
+                        if(cMapItem.first.find("ENFLAGS") != std::string::npos) { cMapItem.second.fValue = (cMapItem.second.fValue & 0xfe) + (cValueInMemory & 0x1); };
                         LOG(DEBUG) << BOLDYELLOW << "PedestalEqualization::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
                                    << cMapItem.second.fValue << RESET;
                         cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second.fValue));
@@ -319,8 +315,6 @@ void PedeNoise::sweepSCurves()
     {
         LOG(INFO) << BOLDYELLOW << "Enabled test pulse. " << RESET;
         this->enableTestPulse(true);
-
-
     }
     else
     {
@@ -345,7 +339,6 @@ void PedeNoise::sweepSCurves()
     if(fWithCBC || fWithSSA) LOG(INFO) << BLUE << "Sweep of Strip S-curves will start at an average threshold of " << cStripStartValue << RESET;
     if(fWithMPA) LOG(INFO) << MAGENTA << "Sweep of Pixel S-curves will start at an average threshold of " << cPixelStartValue << RESET;
 
-	
     measureSCurves(cStripStartValue, cPixelStartValue);
     // if(fDisableStubLogic) reloadStubLogic();
     this->SetTestAllChannels(originalAllChannelFlag);
@@ -374,12 +367,7 @@ void PedeNoise::Validate()
         setThresholdtoNSigma(cBoard, 5);
     }
 
-
-    for(auto board: *fThresholdAndNoiseContainer)
-    {
-        maskNoisyChannels(board);
-    }
-
+    for(auto board: *fThresholdAndNoiseContainer) { maskNoisyChannels(board); }
 
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
@@ -989,8 +977,6 @@ void PedeNoise::setThresholdtoNSigma(BoardContainer* board, float pNSigma)
     }
 }
 
-
-
 void PedeNoise::maskNoisyChannels(BoardDataContainer* board)
 {
     for(auto opticalGroup: *board)
@@ -999,60 +985,56 @@ void PedeNoise::maskNoisyChannels(BoardDataContainer* board)
         {
             for(auto chip: *hybrid)
             {
-		LOG(INFO) << BOLDYELLOW << chip->getId() <<RESET; 
-		    auto chipDC=fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex());
-                    //auto cType = chipDC->getFrontEndType();
+                LOG(INFO) << BOLDYELLOW << chip->getId() << RESET;
+                auto chipDC = fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex());
+                // auto cType = chipDC->getFrontEndType();
 
+                // uint32_t       NCH = NCHANNELS;
+                // if(cType == FrontEndType::CBC3)
+                //   NCH = NCHANNELS;
+                // else if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
+                //  NCH = NSSACHANNELS;
+                // else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                //  NCH = NMPACHANNELS;
 
+                /*float fMean=1.0;
+                        if(cType == FrontEndType::MPA or  cType == FrontEndType::MPA2)
+                     fMean=2.7;
+                        if(cType == FrontEndType::SSA or  cType == FrontEndType::SSA2)
+                     fMean=4.2;*/
+                auto cOriginalMask = chipDC->getChipOriginalMask();
 
-                    //uint32_t       NCH = NCHANNELS;
-                    //if(cType == FrontEndType::CBC3)
-                     //   NCH = NCHANNELS;
-                    //else if(cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
-                      //  NCH = NSSACHANNELS;
-                    //else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-                      //  NCH = NMPACHANNELS;
-
-
-
-		    /*float fMean=1.0;
-                    if(cType == FrontEndType::MPA or  cType == FrontEndType::MPA2)
-		         fMean=2.7;
-                    if(cType == FrontEndType::SSA or  cType == FrontEndType::SSA2)
-		         fMean=4.2;*/
-                    auto cOriginalMask = chipDC->getChipOriginalMask();
-
-
-                    for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
+                for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
+                {
+                    float cPedestal = chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold;
+                    // float cNoise = chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fNoise;
+                    // LOG(INFO) << BOLDYELLOW << "CHECK "<<iChannel <<", "<<chip->getChannel<ThresholdAndNoise>(iChannel).fNoise<<" "<<fPedeNoiseLimit*fMean<<RESET;
+                    // LOG(INFO) << BOLDYELLOW << "CHECK "<<iChannel <<", "<<std::fabs(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold -cPedestal)<<" "<<fPedeNoiseUntrimmedLimit<<RESET;
+                    if(fPedeNoiseMask and (chip->getChannel<ThresholdAndNoise>(iChannel).fNoise > fPedeNoiseLimit))
                     {
-                         float cPedestal = chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold;
-                         //float cNoise = chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fNoise;
-                         //LOG(INFO) << BOLDYELLOW << "CHECK "<<iChannel <<", "<<chip->getChannel<ThresholdAndNoise>(iChannel).fNoise<<" "<<fPedeNoiseLimit*fMean<<RESET;
-                         //LOG(INFO) << BOLDYELLOW << "CHECK "<<iChannel <<", "<<std::fabs(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold -cPedestal)<<" "<<fPedeNoiseUntrimmedLimit<<RESET;
-			 if (fPedeNoiseMask and (chip->getChannel<ThresholdAndNoise>(iChannel).fNoise>fPedeNoiseLimit))
-				{
-                         	LOG(INFO) << BOLDYELLOW << "Masking Channel: "<<iChannel <<" with a noise of "<<chip->getChannel<ThresholdAndNoise>(iChannel).fNoise<<", which is over the limit of "<<fPedeNoiseLimit<<RESET;
-				cOriginalMask->disableChannel(iChannel);
-				}
-			 if (fPedeNoiseMaskUntrimmed and std::fabs(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold -cPedestal)>fPedeNoiseUntrimmedLimit)
-				{
-                         	LOG(INFO) << BOLDYELLOW << "Masking Channel:  "<<iChannel <<" with a pedestal difference of "<<std::fabs(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold -cPedestal)<<", which is over the limit of "<<fPedeNoiseUntrimmedLimit<<RESET;
-				cOriginalMask->disableChannel(iChannel);
-				}
-				
-                         //LOG(INFO) << BOLDYELLOW << "snorp SUMMARY TH "<<cPedestal <<RESET;
-                         //LOG(INFO) << BOLDYELLOW << "snorp SUMMARY NOI "<<cNoise <<RESET;
-                         //LOG(INFO) << BOLDYELLOW << "fPedeNoiseLimit "<<fPedeNoiseLimit<< " fPedeNoiseMask "<<fPedeNoiseMask <<RESET;
-                         //LOG(INFO) << BOLDYELLOW << "Noise "<<iChannel<< ": "<<chip->getChannel<ThresholdAndNoise>(iChannel).fNoise <<RESET;
-                         //LOG(INFO) << BOLDYELLOW << "Thresh "<<iChannel<< ": "<<chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold  <<RESET;
-		    }
-		    //fReadoutChipInterface->maskChannelGroup(chipDC,cOriginalMask);
-		    fReadoutChipInterface->ConfigureChipOriginalMask(chipDC);
+                        LOG(INFO) << BOLDYELLOW << "Masking Channel: " << iChannel << " with a noise of " << chip->getChannel<ThresholdAndNoise>(iChannel).fNoise << ", which is over the limit of "
+                                  << fPedeNoiseLimit << RESET;
+                        cOriginalMask->disableChannel(iChannel);
+                    }
+                    if(fPedeNoiseMaskUntrimmed and std::fabs(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold - cPedestal) > fPedeNoiseUntrimmedLimit)
+                    {
+                        LOG(INFO) << BOLDYELLOW << "Masking Channel:  " << iChannel << " with a pedestal difference of "
+                                  << std::fabs(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold - cPedestal) << ", which is over the limit of " << fPedeNoiseUntrimmedLimit << RESET;
+                        cOriginalMask->disableChannel(iChannel);
+                    }
+
+                    // LOG(INFO) << BOLDYELLOW << "snorp SUMMARY TH "<<cPedestal <<RESET;
+                    // LOG(INFO) << BOLDYELLOW << "snorp SUMMARY NOI "<<cNoise <<RESET;
+                    // LOG(INFO) << BOLDYELLOW << "fPedeNoiseLimit "<<fPedeNoiseLimit<< " fPedeNoiseMask "<<fPedeNoiseMask <<RESET;
+                    // LOG(INFO) << BOLDYELLOW << "Noise "<<iChannel<< ": "<<chip->getChannel<ThresholdAndNoise>(iChannel).fNoise <<RESET;
+                    // LOG(INFO) << BOLDYELLOW << "Thresh "<<iChannel<< ": "<<chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold  <<RESET;
+                }
+                // fReadoutChipInterface->maskChannelGroup(chipDC,cOriginalMask);
+                fReadoutChipInterface->ConfigureChipOriginalMask(chipDC);
             }
         }
     }
 }
-
 
 void PedeNoise::writeObjects()
 {

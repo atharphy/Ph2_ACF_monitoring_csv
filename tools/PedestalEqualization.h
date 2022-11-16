@@ -47,7 +47,7 @@ class PedestalEqualization : public Tool
     // Settings
     bool     fTestPulse{false};
     uint8_t  fTestPulseAmplitude{0};
-    bool  fFullScan{false};
+    bool     fFullScan{false};
     uint32_t fEventsPerPoint{10};
     uint16_t fStripTargetVcth{0x0};
     uint16_t fPixelTargetVcth{0x0};
@@ -61,9 +61,7 @@ class PedestalEqualization : public Tool
     float    fOccupancyAtPedestal{0.56};
     uint8_t  fUseMean{1};
     uint32_t fPedestalEqualizationFullScanStart{110};
-    float fPedestalEqualizationFullScanCAP{1.0};
-
-
+    float    fPedestalEqualizationFullScanCAP{1.0};
 
     // to hold the original register values
     // DetectorDataContainer fStubLogicCointainer;
