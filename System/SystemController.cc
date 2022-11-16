@@ -1415,7 +1415,7 @@ void SystemController::disableAllChannels()
                     for(const auto cChip: *cHybrid) fReadoutChipInterface->MaskAllChannels(cChip, true);
 }
 
-void SystemController::DumpFrontendRegisters()
+void SystemController::DumpRegisters()
 {
     // #################################################
     // # Dump firmware register content for all boards #
