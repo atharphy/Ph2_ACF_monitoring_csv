@@ -953,7 +953,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
     return cSuccess;
 }
 
-void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize, bool doAlsoFrontend)
+void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
 {
     if(fDetectorContainer == nullptr)
     {
@@ -1059,7 +1059,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize, bool doA
         else if(cBoard->getBoardType() == BoardType::RD53)
         {
             ConfigureIT(cBoard);
-            if(doAlsoFrontend == true) ConfigureFrontendIT(cBoard);
+            ConfigureFrontendIT(cBoard);
 
             // ######################################
             // # Dispatch threads for data decoding #
@@ -1129,12 +1129,12 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
     return cNEventSize32;
 }
 
-void SystemController::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber, bool doAlsoFrontend)
+void SystemController::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
 {
     InitializeHw(cHWFile, fParsedFile, enableStream, DQMportNumber);
     InitializeSettings(cHWFile, fParsedFile);
     std::cout << fParsedFile.str() << std::endl;
-    ConfigureHw(false, true, doAlsoFrontend);
+    ConfigureHw(false, true);
 }
 
 void SystemController::Start(int runNumber)
@@ -1422,14 +1422,21 @@ void SystemController::DumpFrontendRegisters()
     // #################################################
     for(const auto cBoard: *fDetectorContainer)
     {
-        auto& theBeBoardFW = this->fBeBoardFWMap[cBoard->getId()];
         LOG(INFO) << GREEN << "Firmware register content for [board = " << BOLDYELLOW << cBoard->getId() << GREEN << "]" << RESET;
 
-        for(const auto& it: cBoard->getBeBoardRegMap())
+        const auto theBeBoardFW = static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()]);
+        const auto hwInterface  = theBeBoardFW->getHardwareInterface();
+
+        for(const auto& path: hwInterface->getNodes("user.+"))
         {
-            auto value = static_cast<RD53FWInterface*>(theBeBoardFW)->ReadArbitraryRegister(it.first);
-            std::cout << "\t--> Register " << std::left << std::setfill(' ') << std::setw(48) << it.first << " = " << std::setw(8) << std::dec << value << std::hex << "(0x" << value << ")"
-                      << std::endl;
+            auto& node = hwInterface->getNode(path);
+
+            if((node.getMode() == uhal::defs::BlockReadWriteMode::SINGLE) && ((int)node.getPermission() & true) && (++node.begin() == node.end()))
+            {
+                auto value = static_cast<RD53FWInterface*>(theBeBoardFW)->ReadArbitraryRegister(path);
+                std::cout << "\t--> Register " << std::left << std::setfill(' ') << std::setw(56) << path << " = " << std::setw(8) << std::dec << value << std::hex << "(0x" << value << ")"
+                          << std::endl;
+            }
         }
     }
 

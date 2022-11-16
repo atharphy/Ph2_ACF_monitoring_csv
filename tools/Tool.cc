@@ -99,15 +99,14 @@ void Tool::waitForRunToBeCompleted()
     while(!GetRunningStatus()) std::this_thread::sleep_for(std::chrono::milliseconds(250));
 }
 
-void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber, bool doAlsoFrontend)
+void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
 {
-    SystemController::Configure(cHWFile, enableStream, DQMportNumber, doAlsoFrontend);
+    SystemController::Configure(cHWFile, enableStream, DQMportNumber);
     ConfigureCalibration();
 }
 
 void Tool::Start(int runNumber)
 {
-    // std::string resultDirectory = "Results/OT_ModuleTest_ModuleOT_Run" + std::to_string(runNumber); // It should be made more generic
     std::string resultDirectory = "Results";
     CreateResultDirectory(resultDirectory, false, false);
 #ifdef __USE_ROOT__
