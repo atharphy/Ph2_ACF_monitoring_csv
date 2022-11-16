@@ -161,9 +161,7 @@ void MPA2Interface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pIn
     //     cPixelIds.push_back( (uint32_t)(pInjection.fColumn)*120+(uint32_t)pInjection.fRow );
     // }
     // first make sure all pixels output 0x00
-    LOG(INFO) << BOLDMAGENTA << "MPA2Interface::digiInjection " << RESET;
     this->WriteChipReg(pChip, "DigitalSync", 0x00);
-    LOG(INFO) << BOLDMAGENTA << "DigitalSync 1" << RESET;
     // then .. for pixels I want enable pattern on PixelN
     for(auto pInjection: pInjections)
     {
@@ -192,8 +190,8 @@ std::vector<int> MPA2Interface::decodeBendCode(ReadoutChip* pChip, uint8_t pBend
     }
     return cBends;
 }
-std::vector<uint8_t> MPA2Interface::readLUT(ReadoutChip* pChip) // Only changed to CodeDM8 reg address
-{
+std::vector<uint8_t> MPA2Interface::readLUT(ReadoutChip* pChip, uint8_t pMode) // Only changed to CodeDM8 reg address
+{ 
     std::vector<uint8_t> cBendCodes(0);
 
     float cStartValue = -7.0 / 2.;
@@ -523,6 +521,21 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         return this->WriteChipRegBits(pMPA2, "Control_1",(pValue << cBitShift), "Mask", cRegMask, pVerify);
     }
 
+    else if(pRegName == "ClusterCut_ALL")
+    {
+        LOG(INFO) << BOLDMAGENTA << "ClusterCut_ALL" << RESET;
+        uint8_t cBitShift    = 2;
+        return this->WriteChipRegBits(pMPA2, "PixelControl_ALL", (pValue << cBitShift),"Mask_ALL",0x1C, false);
+    }
+
+    else if(pRegName == "SSAOffset") // should work with MPA2 address table
+    {
+        uint8_t cBitShift    = 0;
+        return this->WriteChipReg(pMPA2, "SSAOffset_1", (0x00FF & pValue),false) & this->WriteChipRegBits(pMPA2, "SSAOffset_2", (((0x0100 & pValue) >> 8) << cBitShift),"Mask",0x1,false);
+
+    }
+
+
     else if(pRegName == "EnablePhaseAlignmentPattern")
     {
         this->producePhaseAlignmentPattern(static_cast<ReadoutChip*>(pMPA2), pValue);
@@ -542,7 +555,7 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         uint8_t     cBitShift = 1;
 
         uint8_t cRegMask = (0x1 << cBitShift); //
-        cRegMask         = ~(cRegMask);
+        //cRegMask         = ~(cRegMask);
 
         return this->WriteChipRegBits(pMPA2, cRegName, (pValue << cBitShift), "Mask", cRegMask, pVerify);
 
@@ -561,10 +574,11 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         // uint8_t     cBitShift = (cLineId == 0) ? cLineId : cLineId - 1;
 
         std::string cRegName  = "EdgeSelTrig";
-        uint8_t     cBitShift = cLineId - 1;
+        //uint8_t     cBitShift = cLineId - 1;
+        uint8_t     cBitShift = cLineId;
 
         uint8_t cRegMask = (0x1 << cBitShift); //
-        cRegMask         = ~(cRegMask);
+        //cRegMask         = ~(cRegMask);
 
         return this->WriteChipRegBits(pMPA2, cRegName, (pValue << cBitShift), "Mask", cRegMask, pVerify);
 
@@ -608,7 +622,7 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     {
         uint8_t cBitShift = 0;
         uint8_t cRegMask  = (0x7 << cBitShift); //
-        cRegMask          = ~(cRegMask);
+        //cRegMask          = ~(cRegMask);
 
         return this->WriteChipRegBits(pMPA2, "ConfSLVS", (pValue << cBitShift), "Mask", cRegMask, pVerify);
 
@@ -633,7 +647,7 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         int     cNibble      = (cBendHalfStrips + 9) % 2;
         uint8_t cBitShift    = 3 * (1 - cNibble);
         uint8_t cRegMask     = (0x7 << cBitShift); //
-        cRegMask             = ~(cRegMask);
+        //cRegMask             = ~(cRegMask);
         uint16_t cRegAddress = this->regPeri(pMPA2, 0x11, 5 + cIndex);
         uint16_t cRegValue   = MPA2Interface::ReadReg(pMPA2, cRegAddress);
         uint8_t  cValue      = (cRegValue & cRegMask) | (pValue << cBitShift);
@@ -655,7 +669,7 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     {
         uint8_t cBitShift = 3;
         uint8_t cRegMask  = (0x7 << cBitShift); //
-        cRegMask          = ~(cRegMask);
+        //cRegMask          = ~(cRegMask);
 
         return this->WriteChipRegBits(pMPA2, "LatencyRx320", (pValue << cBitShift), "Mask", cRegMask, pVerify);
 
@@ -668,7 +682,7 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     {
         uint8_t cBitShift = 0;
         uint8_t cRegMask  = (0x7 << cBitShift); //
-        cRegMask          = ~(cRegMask);
+        //cRegMask          = ~(cRegMask);
 
         return this->WriteChipRegBits(pMPA2, "LatencyRx320", (pValue << cBitShift), "Mask", cRegMask, pVerify);
 
@@ -681,7 +695,7 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     {
         uint8_t cBitShift = ECM_TABLE.find("StubMode")->second;
         uint8_t cRegMask  = (0x3 << cBitShift); //
-        cRegMask          = ~(cRegMask);
+        //cRegMask          = ~(cRegMask);
 
         return this->WriteChipRegBits(pMPA2, "ECM", (pValue << cBitShift), "Mask", cRegMask, pVerify);
 
@@ -693,7 +707,7 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     {
         uint8_t cBitShift = ECM_TABLE.find("StubWindow")->second;
         uint8_t cRegMask  = (0x3F << cBitShift); // FIX ME _ AUTOMATE THIS
-        cRegMask          = ~(cRegMask);
+        //cRegMask          = ~(cRegMask);
 
         return this->WriteChipRegBits(pMPA2, "ECM", (pValue << cBitShift), "Mask", cRegMask, pVerify);
 
@@ -718,7 +732,7 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         std::vector<uint8_t>     cPixelVals{cFEEnable, cEnableDigi};
         uint8_t                  cRegMask = 0x00;
         for(auto cPixelReg: cPixelRegs) cRegMask = cRegMask | (1 << PIXEL_ENABLE_TABLE.find(cPixelReg)->second);
-        cRegMask       = ~(cRegMask);
+        //cRegMask       = ~(cRegMask);
         uint8_t cValue = 0x00;
         size_t  cIndx  = 0;
         for(auto cVal: cPixelVals)
@@ -957,6 +971,10 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
         else
             cRegItems.push_back(cMapItem.second);
     }
+    this->WriteChipReg(pMPA2, "Mask", 0xFF, false);
+    this->WriteChipReg(pMPA2, "Mask_ALL", 0xFF, false);
+
+
     // cntrl
     bool cSuccess = fBoardFW->MultiRegisterWrite(pMPA2, cCntrlRegItems, false);
     if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cCntrlRegItems.size() << " control registers in" << cOutput.str() << "#" << +pMPA2->getId() << RESET;

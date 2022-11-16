@@ -69,7 +69,7 @@ class PSInterface : public ReadoutChipInterface
     void                 produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;
     std::vector<uint8_t> getWordAlignmentPatterns() override { return fWordAlignmentPatterns; }
 
-    void             digiInjection(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern = 0xFF);
+    void             digiInjection(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern = 0x01);
     std::vector<int> decodeBendCode(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pBendCode);
     bool             enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = true);
 

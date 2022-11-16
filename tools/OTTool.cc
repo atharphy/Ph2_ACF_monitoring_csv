@@ -848,7 +848,7 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                 if(cChip->getId() % 8 != pChipId && pChipId > 0) continue;
                 LOG(DEBUG) << BOLDMAGENTA << "Injecting patterns in Chip#" << +cChip->getId() << RESET;
                 // make sure L1 latency is configured
-                if(cChip->getFrontEndType() == FrontEndType::MPA)
+                if(cChip->getFrontEndType() == FrontEndType::MPA or cChip->getFrontEndType() == FrontEndType::MPA2 )
                 {
                     if(fInjectionType == 0)
                     {
@@ -875,10 +875,11 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                     // for digi injection .. explicity disable all other strips
                     if(pInjections.size() > 0 && fInjectionType == 0)
                     {
-                        fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
-                        fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", 0x00);
-                        fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_H_ALL", 0x00);
+                        fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS", 0x0);
+                        fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L", 0x00);
+                        fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_H", 0x00);
                         fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
+
                     }
                     for(auto cInjection: pInjections)
                     {

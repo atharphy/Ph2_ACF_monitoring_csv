@@ -513,10 +513,8 @@ int main(int argc, char* argv[])
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit(&cTool);
 
-	////Doesnt work PSv2
-        //cCicAligner.Start(cRunNumber);
-        //cCicAligner.waitForRunToBeCompleted();
-	////\Doesnt work PSv2
+        cCicAligner.Start(cRunNumber);
+        cCicAligner.waitForRunToBeCompleted();
 
         //cCicAligner.dumpConfigFiles();
 
@@ -778,7 +776,7 @@ int main(int argc, char* argv[])
                             // and that readout mode is set
                             // make sure L1 latency is configured
                             if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
-                            { (static_cast<PSInterface*>(cTool.fReadoutChipInterface))->digiInjection(cChip, cInjections, 0x01); }
+                            { (static_cast<PSInterface*>(cTool.fReadoutChipInterface))->digiInjection(cChip, cInjections); }
                             if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);

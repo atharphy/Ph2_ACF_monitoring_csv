@@ -47,6 +47,7 @@ std::vector<uint8_t> PSInterface::readLUT(ReadoutChip* pPS, uint8_t pMode)
 {
     std::vector<uint8_t> cLUT(0);
     if(pPS->getFrontEndType() == FrontEndType::MPA) { cLUT = theMPAInterface->readLUT(pPS, pMode); }
+    if(pPS->getFrontEndType() == FrontEndType::MPA2) { cLUT = theMPA2Interface->readLUT(pPS, pMode); }
     return cLUT;
 }
 bool PSInterface::setInjectionSchema(ReadoutChip* pPS, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop) { return getInterface(pPS)->setInjectionSchema(pPS, group, pVerifLoop); }
@@ -85,7 +86,8 @@ bool PSInterface::ConfigureChip(Chip* pPS, bool pVerifLoop, uint32_t pBlockSize)
 void PSInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait_ms)
 {
     if(pChip->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->producePhaseAlignmentPattern(pChip, pWait_ms); }
-    else if(pChip->getFrontEndType() == FrontEndType::SSA)
+    else if(pChip->getFrontEndType() == FrontEndType::MPA2) { theMPA2Interface->producePhaseAlignmentPattern(pChip, pWait_ms); }
+    else if(pChip->getFrontEndType() == FrontEndType::SSA or pChip->getFrontEndType() == FrontEndType::SSA2)
     {
         LOG(INFO) << BOLDMAGENTA << "No need to generate phase alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET;
     }
@@ -93,7 +95,8 @@ void PSInterface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWait
 void PSInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
 {
     if(pChip->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->produceWordAlignmentPattern(pChip); }
-    else if(pChip->getFrontEndType() == FrontEndType::SSA)
+    else if(pChip->getFrontEndType() == FrontEndType::MPA2) { theMPA2Interface->produceWordAlignmentPattern(pChip); }
+    else if(pChip->getFrontEndType() == FrontEndType::SSA or pChip->getFrontEndType() == FrontEndType::SSA2)
     {
         LOG(INFO) << BOLDMAGENTA << "No need to generate word alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET;
     }
@@ -132,13 +135,9 @@ std::vector<int> PSInterface::decodeBendCode(ReadoutChip* pChip, uint8_t pBendCo
 //
 void PSInterface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern)
 {
-
-    LOG(INFO) << "PSInterface";
     if(pChip->getFrontEndType() == FrontEndType::MPA) { theMPAInterface->digiInjection(pChip, pInjections, pPattern); }
-    // if(pChip->getFrontEndType() == FrontEndType::SSA) { theSSAInterface->digiInjection(pChip, pInjections, pPattern); }
     else if(pChip->getFrontEndType() == FrontEndType::MPA2) { theMPA2Interface->digiInjection(pChip, pInjections, pPattern); }
-    // if(pChip->getFrontEndType() == FrontEndType::SSA2) { theSSA2Interface->digiInjection(pChip, pInjections, pPattern); }
-    LOG(INFO) << "DOE";
+    else if(pChip->getFrontEndType() == FrontEndType::SSA2 or pChip->getFrontEndType() == FrontEndType::SSA) {LOG(ERROR) << "No digiInjection for SSA for some reason";}
 }
 
 } // namespace Ph2_HwInterface

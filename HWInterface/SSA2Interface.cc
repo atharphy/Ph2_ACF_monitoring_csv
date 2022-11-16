@@ -334,44 +334,54 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     // LOG (DEBUG) << BOLDYELLOW << "SSA2Interface::WriteChipReg  writing to " << pRegName << RESET;
     auto        cRegMap = pSSA2->getRegMap();
     ChipRegItem cRegItem;
-    if(pRegName == "CountingMode")
+
+    std::string pRegNameMod=pRegName;
+    if(pRegName.find("_ALL") != std::string::npos)  
+    {
+	std::cout<<pRegNameMod<<std::endl;
+	pRegNameMod.erase(pRegName.length()-4);  
+	std::cout<<pRegNameMod<<std::endl;
+    }
+
+
+    if(pRegNameMod == "CountingMode")
     {
         cRegItem        = cRegMap["ENFLAGS"];
         cRegItem.fValue = (pValue << 2) | (1 << 0);
         return fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerify);
     }
-    else if(pRegName == "AmuxHigh")
+    else if(pRegNameMod == "AmuxHigh")
     {
         return this->ConfigureAmux(pSSA2, "HighZ");
     }
     // need to re-name threshold here..
-    // else if(fAmuxMap.find(pRegName) != fAmuxMap.end())
+    // else if(fAmuxMap.find(pRegNameMod) != fAmuxMap.end())
     // {
-    //     return this->ConfigureAmux(pSSA2, pRegName);
+    //     return this->ConfigureAmux(pSSA2, pRegNameMod);
     // }
-    else if(pRegName == "MonitorBandgap")
+    else if(pRegNameMod == "MonitorBandgap")
     {
         return this->ConfigureAmux(pSSA2, "Bandgap");
     }
-    else if(pRegName == "MonitorGround")
+    else if(pRegNameMod == "MonitorGround")
     {
         return this->ConfigureAmux(pSSA2, "GND");
     }
-    else if(pRegName == "ReadoutMode")
+    else if(pRegNameMod == "ReadoutMode")
     {
         return this->WriteChipRegBits(pSSA2, "control_1", pValue, "mask_peri_D", 7);
     }
-    else if(pRegName == "SamplingMode")
+    else if(pRegNameMod == "SamplingMode")
     {
         return this->WriteChipRegBits(pSSA2, "control_1", pValue << 5, "mask_strip", 0x60);
     }
-    else if(pRegName == "TriggerLatency")
+    else if(pRegNameMod == "TriggerLatency")
     {
         bool cSuccess = this->WriteChipRegBits(pSSA2, "control_3", pValue & 0xFF, "mask_peri_D", 0xFF);
-        cSuccess &= this->WriteChipRegBits(pSSA2, "control_1", (pValue & 0x100 >> 8), "mask_peri_D", 0x10);
+        cSuccess &= this->WriteChipRegBits(pSSA2, "control_1", ((pValue & 0x100) >> 4), "mask_peri_D", 0x10);
         return cSuccess;
     }
-    else if(pRegName == "AsyncDelay")
+    else if(pRegNameMod == "AsyncDelay")
     {
         uint8_t                  cLSB = pValue & 0xFF;
         uint8_t                  cMSB = (pValue << 8);
@@ -385,7 +395,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         }
         return fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, pVerify);
     }
-    else if(pRegName == "AnalogueSync")
+    else if(pRegNameMod == "AnalogueSync")
     {
         uint8_t cReadoutMode = 0x0;
         uint8_t cEdgeSel_T1  = 0x0;
@@ -416,7 +426,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         LOG(DEBUG) << BOLDBLUE << "StripControl1 set to 0x" << std::hex << cRegValue << std::dec << RESET;
         return cSuccess;
     }
-    else if(pRegName == "AnalogueAsync")
+    else if(pRegNameMod == "AnalogueAsync")
     {
         uint8_t cReadoutMode = 0x1;
         uint8_t cEdgeSel_T1  = 0x0;
@@ -441,7 +451,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         // LOG(INFO) << BOLDYELLOW  << "ENFLAGS_S1 set to 0x" << std::hex << +cRegValue << std::dec << RESET;
         return cSuccess;
     }
-    else if(pRegName == "Sync")
+    else if(pRegNameMod == "Sync")
     {
         uint8_t cMask         = 1;
         uint8_t cPolarity     = 0;
@@ -455,7 +465,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         // LOG(INFO) << BOLDYELLOW  << "ENFLAGS_S1 set to 0x" << std::hex << +cRegValue << std::dec << RESET;
         return cSuccess && this->WriteChipRegBits(pSSA2, "control_1", (1 - pValue), "mask_peri_D", 0x7);
     }
-    else if(pRegName == "DigitalAsync")
+    else if(pRegNameMod == "DigitalAsync")
     {
         uint8_t cReadoutMode = 0x1;
         uint8_t cEdgeSel_T1  = 0x0;
@@ -489,7 +499,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
 
         return cSuccess;
     }
-    else if(pRegName == "DigitalSync")
+    else if(pRegNameMod == "DigitalSync")
     {
         this->WriteChipReg(pSSA2, "ReadoutMode", 0);
         // configure for injection with the strip register
@@ -505,24 +515,24 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         LOG(INFO) << BOLDYELLOW << "ENFLAGS_S1 set to 0x" << std::hex << +cRegValue << std::dec << RESET;
         return cSuccess;
     }
-    else if(pRegName == "PulseDuration")
+    else if(pRegNameMod == "PulseDuration")
     {
         // edge select
         return this->WriteChipRegBits(pSSA2, "control_2", (pValue << 4), "mask_peri_D", (0xF << 4));
     }
-    else if(pRegName == "EdgeSel")
+    else if(pRegNameMod == "EdgeSel")
     {
         // edge select
         return this->WriteChipRegBits(pSSA2, "control_1", (pValue << 3), "mask_peri_D", (0x1 << 3));
     }
-    else if(pRegName.find("DigitalSync") != std::string::npos)
+    else if(pRegNameMod.find("DigitalSync") != std::string::npos)
     {
         this->WriteChipReg(pSSA2, "ReadoutMode", 0);
 
         int               cStripId = 0;
         std::stringstream cRegName;
-        std::sscanf(pRegName.c_str(), "DigitalSync_S%d", &cStripId);
-        cRegName << "ENFLAGS_S" << (1 + cStripId);
+        std::sscanf(pRegNameMod.c_str(), "DigitalSync_S%d", &cStripId);
+        cRegName << "ENFLAGS_S" << (cStripId);
         // LOG (INFO) << BOLDYELLOW << "Digital injection on Strip#" << +cStripId << "\t" << cRegName.str() << RESET;
 
         // configure for injection with the strip register
@@ -539,20 +549,20 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         LOG(INFO) << BOLDYELLOW << cRegName.str() << " set to 0x" << std::hex << +cRegValue << std::dec << RESET;
         return cSuccess;
     }
-    else if(pRegName == "DigitalDuration")
+    else if(pRegNameMod == "DigitalDuration")
     {
-        bool cCalDuration = this->WriteChipRegBits(pSSA2, "control_2", (0xF << 4), "mask_peri_D", (0xF << 4));
+        bool cCalDuration = this->WriteChipRegBits(pSSA2, "control_2", (pValue << 4), "mask_peri_D", (0xF << 4));
         return cCalDuration;
     }
-    else if(pRegName == "EnableSLVSTestOutput")
+    else if(pRegNameMod == "EnableSLVSTestOutput")
     {
         LOG(INFO) << BOLDBLUE << "Enabling SLVS test output on SSA2#" << +pSSA2->getId() << RESET;
-        return this->WriteChipRegBits(pSSA2, "control_1", pValue << 1, "mask_peri_D", 2);
+        return this->WriteChipRegBits(pSSA2, "control_1", pValue << 1, "mask_peri_D", 0x2);
     }
-    else if(pRegName.find("OutPatternStubLine") != std::string::npos) // Stub Lines
+    else if(pRegNameMod.find("OutPatternStubLine") != std::string::npos) // Stub Lines
     {
         int cLine;
-        std::sscanf(pRegName.c_str(), "OutPatternStubLine%d", &cLine);
+        std::sscanf(pRegNameMod.c_str(), "OutPatternStubLine%d", &cLine);
         std::vector<std::string> cRegNames{"Shift_pattern_st_0",
                                            "Shift_pattern_st_1",
                                            "Shift_pattern_st_2",
@@ -565,14 +575,14 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         cRegItem.fValue = pValue;
         return fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerify);
     }
-    else if(pRegName.find("OutPatternL1Line") != std::string::npos) // Stub Lines
+    else if(pRegNameMod.find("OutPatternL1Line") != std::string::npos) // Stub Lines
     {
         cRegItem        = cRegMap["Shift_pattern_L1"];
         cRegItem.fValue = pValue;
         return fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerify);
         // return this->WriteChipSingleReg(pSSA2, "Shift_pattern_L1", pValue, pVerify);
     }
-    else if(pRegName == "CalibrationPattern")
+    else if(pRegNameMod == "CalibrationPattern")
     {
         // configure for injection with the strip register
         uint8_t cMask         = 0;
@@ -589,10 +599,10 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         cRegItem.fValue = pValue;
         return cSuccess && fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerify);
     }
-    else if(pRegName.find("CalibrationPattern") != std::string::npos)
+    else if(pRegNameMod.find("CalibrationPattern") != std::string::npos)
     {
         int cChannel;
-        std::sscanf(pRegName.c_str(), "CalibrationPatternS%d", &cChannel);
+        std::sscanf(pRegNameMod.c_str(), "CalibrationPatternS%d", &cChannel);
         uint16_t cAddress = 0x0300 + cChannel;
         LOG(DEBUG) << BOLDBLUE << "Configuring register 0x" << std::hex << cAddress << std::dec << " to 0x" << std::hex << pValue << std::dec << " for channel " << +cChannel << RESET;
 
@@ -611,7 +621,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         cRegItem.fValue   = pValue;
         return cSuccess && fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerify);
     }
-    else if(pRegName == "InjectedCharge")
+    else if(pRegNameMod == "InjectedCharge")
     {
         LOG(DEBUG) << BOLDBLUE << "Setting "
                    << " bias calDac to " << +pValue << " on SSA2#" << +pSSA2->getId() << RESET;
@@ -619,22 +629,22 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         cRegItem.fValue = pValue;
         return fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerify);
     }
-    else if(pRegName == "Threshold" || pRegName == "Bias_THDAC")
+    else if(pRegNameMod == "Threshold" || pRegNameMod == "Bias_THDAC")
     {
-        // LOG (INFO) << BOLDYELLOW << "!!! Writing to " << pRegName << RESET;
+        // LOG (INFO) << BOLDYELLOW << "!!! Writing to " << pRegNameMod << RESET;
         return this->WriteChipRegBits(pSSA2, "Bias_THDAC", pValue, "mask_peri_A", 0xFF);
     }
-    else if(pRegName == "LateralRX_L_PhaseData")
+    else if(pRegNameMod == "LateralRX_L_PhaseData")
     {
         return this->WriteChipRegBits(pSSA2, "LateralRX_sampling", pValue, "mask_peri_A", 0x07);
     }
-    else if(pRegName == "LateralRX_R_PhaseData")
+    else if(pRegNameMod == "LateralRX_R_PhaseData")
     {
         return this->WriteChipRegBits(pSSA2, "LateralRX_sampling", (pValue << 4), "mask_peri_A", (0x7 << 4));
     }
     else
     {
-        cRegItem        = cRegMap[pRegName];
+        cRegItem        = cRegMap[pRegNameMod];
         cRegItem.fValue = pValue;
         return fBoardFW->SingleRegisterWrite(pSSA2, cRegItem, pVerify);
     }

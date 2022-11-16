@@ -235,9 +235,10 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
 {
     uint32_t cNevents   = 10;
     auto     cSetting   = fSettingsMap.find("StubAlignmentThreshold");
-    uint32_t cThreshold = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 530;
-    cSetting            = fSettingsMap.find("StubAlignmentScanStart");
-    uint32_t cScanStart = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 100;
+    uint32_t cThreshold = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 120;
+    auto    cSetting1            = fSettingsMap.find("StubAlignmentScanStart");
+    uint32_t cScanStart = (cSetting1 != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting1->second) : 100;
+
 
     // sparsification of
     bool cSparsified = pBoard->getSparsification();
@@ -337,7 +338,8 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
             // for PS - first digital injection in MPAs
             for(auto cChip: *cHybrid) // for each chip (makes sense)
             {
-                if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
+                if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
+
 
                 std::vector<Injection> cInjections(0);
                 for(size_t cIndx = 0; cIndx < cRows.size(); cIndx++)
@@ -355,7 +357,8 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 fReadoutChipInterface->WriteChipReg(cChip, "StubMode", cMode);
                 fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", cStubWindow);
                 cReTime = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix");
-                (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cInjections);
+
+                (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cInjections,0x01);
             } // PS chips  - MPAs
 
             // for PS - digital injection in SSAs
@@ -386,9 +389,9 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
     // find correct hit latency
     bool     cFoundCorrectHitLatency = false;
     uint16_t cHitLatency             = 0;
-    int      cExpectedOffset         = -2;
+    int      cExpectedOffset         = -6;
     float    cFraction               = (cWithPS) ? 0.5 * (1.0 / (1 + cMult)) : 0.5;
-    for(int cOffset = cExpectedOffset; cOffset < cExpectedOffset + 10; cOffset++)
+    for(int cOffset = cExpectedOffset; cOffset < cExpectedOffset + 20; cOffset++)
     {
         if(cFoundCorrectHitLatency) continue;
 
@@ -404,7 +407,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
                     if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
-                        fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cLatency - 1);
+                        fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cLatency + 1);
                     else
                         fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cLatency);
                 } // Chip - only MPAs and CBCs for this test since I'm eihter in p=p mode or 2S
