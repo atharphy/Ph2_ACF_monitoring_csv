@@ -510,6 +510,7 @@
                 <node id="antenna_async_done"               mask="0x00000400"/>
             </node>
             <node id="trigger_in_counter"               address="0x001" mask="0xffffffff"/>
+            <node id="running_time"                     address="0x003" mask="0xffffffff"/>
         </node>
 
         <node id="physical_interface_block"     address="0x3000">

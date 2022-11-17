@@ -304,6 +304,42 @@ void RegManager::StackReg(const std::string& pRegNode, const uint32_t& pVal, boo
 
 const uhal::Node& RegManager::getUhalNode(const std::string& pStrPath) { return fBoard->getNode(pStrPath); }
 
+bool RegManager::pollRegister(const std::string& pRegisterName, uint32_t pValue, float pMaxWaitTime_s, bool pDebugOut)
+{
+    float cElapsedTime_s  = 0;
+    auto  startTimeUTC_us = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    bool  cStopCondition  = false;
+    while(!cStopCondition)
+    {
+        auto cRegValue            = ReadReg(pRegisterName);
+        cStopCondition            = (pMaxWaitTime_s == 0) ? (cRegValue == pValue && cElapsedTime_s >= pMaxWaitTime_s) : (cRegValue >= pValue);
+        auto currentTimeUTC_us    = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        cElapsedTime_s            = (float)(currentTimeUTC_us - startTimeUTC_us) * 1e-6;
+        int cElapedTime_nearest_s = std::floor(cElapsedTime_s);
+        if(!pDebugOut) continue;
+
+        int   barWidth   = 70;
+        float percentage = (pMaxWaitTime_s == 0) ? (float)cRegValue / pValue : cElapedTime_nearest_s / pMaxWaitTime_s;
+        int   pos        = barWidth * percentage;
+        std::cout << BOLDCYAN << "Polling " << pRegisterName << " [ ";
+        for(int i = 0; i < barWidth; ++i)
+        {
+            if(i < pos)
+                std::cout << "=";
+            else if(i == pos)
+                std::cout << ">";
+            else
+                std::cout << " ";
+        }
+        if(pMaxWaitTime_s != 0)
+            std::cout << " " << cElapedTime_nearest_s << "/" << pMaxWaitTime_s << " seconds]\r" << RESET;
+        else
+            std::cout << " " << cRegValue << "/" << pValue << " ]\r" << RESET;
+        std::cout.flush();
+    }
+    return cStopCondition;
+}
+
 // ##############################################
 // # Capure and replay data stream to/from FPGA #
 // ##############################################

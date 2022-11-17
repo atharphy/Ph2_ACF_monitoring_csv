@@ -177,6 +177,12 @@ class RegManager
     const uhal::Node& getUhalNode(const std::string& pStrPath);
 
     // ##############################################
+    // # Wait until Register from FPGA is a certian value
+    // ##############################################
+    bool pollRegister(const std::string& pRegisterName, uint32_t pValue, float pMaxWaitTime_s, bool pDebugOut = false);
+
+
+    // ##############################################
     // # Capure and replay data stream to/from FPGA #
     // ##############################################
     static void enableCapture(const std::string& filename);
