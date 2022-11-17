@@ -31,8 +31,7 @@ std::string D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint)
     auto cNTriggersRxd = this->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
     auto cStartTime = std::chrono::high_resolution_clock::now(), cEndTime = cStartTime;
     auto cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
-    do
-    {
+    do {
         cEndTime      = std::chrono::high_resolution_clock::now();
         cDuration     = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
         cNTriggersRxd = this->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
@@ -90,8 +89,7 @@ std::vector<std::string> D19cDebugFWInterface::StubDebug(bool pWithTestPulse, ui
 
     std::vector<std::string> cLines(0);
     size_t                   cLine = 0;
-    do
-    {
+    do {
         std::vector<std::string> cOutputWords(0);
         for(size_t cIndex = 0; cIndex < 5; cIndex++)
         {
@@ -140,8 +138,7 @@ std::vector<std::string> D19cDebugFWInterface::ScopeStubLines(bool pWithTestPuls
     size_t                   cLine   = 0;
     size_t                   cNlines = 6;
     // int cStrLength=0;
-    do
-    {
+    do {
         std::vector<std::string> cOutputWords(0);
         for(size_t cIndex = 0; cIndex < cNlines; cIndex++)
         {

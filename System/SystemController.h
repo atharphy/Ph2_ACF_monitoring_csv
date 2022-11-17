@@ -323,9 +323,12 @@ class SystemController
         }
     }
 
-    void setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, std::function<bool(const ChipContainer*)> theQueryFunction = [](const ChipContainer*) { return true; });
-    void setChannelGroupHandler(std::shared_ptr<ChannelGroupHandler>      theChannelGroupHandlerPointer,
-                                std::function<bool(const ChipContainer*)> theQueryFunction = [](const ChipContainer*) { return true; });
+    void setChannelGroupHandler(
+        ChannelGroupHandler&                      theChannelGroupHandler,
+        std::function<bool(const ChipContainer*)> theQueryFunction = [](const ChipContainer*) { return true; });
+    void setChannelGroupHandler(
+        std::shared_ptr<ChannelGroupHandler>      theChannelGroupHandlerPointer,
+        std::function<bool(const ChipContainer*)> theQueryFunction = [](const ChipContainer*) { return true; });
     void setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, FrontEndType theFrontEndType);
     void setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, std::vector<FrontEndType> theFrontEndType);
 

@@ -152,7 +152,7 @@ void MPA2::saveRegMap(const std::string& filename)
         LOG(ERROR) << "Error opening file";
 } // end saveRegMap
 
-//Irene
+// Irene
 bool MPA2RegItemComparer::operator()(const MPARegPair& pRegItem1, const MPARegPair& pRegItem2) const
 {
     if(pRegItem1.second.fPage != pRegItem2.second.fPage)

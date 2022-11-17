@@ -181,7 +181,6 @@ class RegManager
     // ##############################################
     bool pollRegister(const std::string& pRegisterName, uint32_t pValue, float pMaxWaitTime_s, bool pDebugOut = false);
 
-
     // ##############################################
     // # Capure and replay data stream to/from FPGA #
     // ##############################################

@@ -236,9 +236,8 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
     uint32_t cNevents   = 10;
     auto     cSetting   = fSettingsMap.find("StubAlignmentThreshold");
     uint32_t cThreshold = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 120;
-    auto    cSetting1            = fSettingsMap.find("StubAlignmentScanStart");
+    auto     cSetting1  = fSettingsMap.find("StubAlignmentScanStart");
     uint32_t cScanStart = (cSetting1 != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting1->second) : 100;
-
 
     // sparsification of
     bool cSparsified = pBoard->getSparsification();
@@ -340,7 +339,6 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
 
-
                 std::vector<Injection> cInjections(0);
                 for(size_t cIndx = 0; cIndx < cRows.size(); cIndx++)
                 {
@@ -358,7 +356,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", cStubWindow);
                 cReTime = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix");
 
-                (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cInjections,0x01);
+                (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cInjections, 0x01);
             } // PS chips  - MPAs
 
             // for PS - digital injection in SSAs
@@ -428,8 +426,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
             auto cEventIter   = cEvents.begin() + cTriggerId;
             cNEventsMatched   = 0;
             size_t cAllEvents = 0;
-            do
-            {
+            do {
                 if(cEventIter >= cEvents.end()) break;
                 size_t cNHits = 0;
                 for(auto cOpticalReadout: *pBoard)

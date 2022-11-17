@@ -13,7 +13,7 @@
         </lpGBT>
         <Hybrid Id="0" enable="1" reset="1">
             <Global>
-                <Settings threshold="720" latency="108"/>
+                <Settings threshold="120" latency="108"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
@@ -36,7 +36,7 @@
         </Hybrid>
         <Hybrid Id="1" enable="1" reset="1" > <!-- i2cMaster="1"> -->
             <Global>
-                <Settings threshold="720" latency="108"/>
+                <Settings threshold="120" latency="108"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>

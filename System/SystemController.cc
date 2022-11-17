@@ -145,9 +145,7 @@ void SystemController::readFile(std::vector<uint32_t>& pVec, uint32_t pNWords32)
 
 void SystemController::InitializeHw(const std::string& pFilename, std::ostream& os, bool streamData, uint16_t DQMportNumber, uint16_t monitorDQMportNumber)
 {
-
-
-    std::cout<<"TESTETASFSAD"<<std::endl;
+    std::cout << "TESTETASFSAD" << std::endl;
     fDQMStreamerEnabled        = streamData;
     fMonitorDQMStreamerEnabled = streamData;
 
@@ -240,7 +238,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     bool cWithMPA2 = (std::find_if(cFirstHybrid->begin(), cFirstHybrid->end(), [&cType](Ph2_HwDescription::Chip* x) { return x->getFrontEndType() == cType; }) != cFirstHybrid->end());
                     bool cMPAtype  = cWithMPA2 | cWithMPA;
                     bool cSSAtype  = cWithSSA2 | cWithSSA;
-                    LOG(INFO) << BOLDBLUE << "cMPAtype "<<  cMPAtype << " cSSAtype " <<  cSSAtype <<" cWithLpGBT "<<cWithLpGBT<<  RESET;
+                    LOG(INFO) << BOLDBLUE << "cMPAtype " << cMPAtype << " cSSAtype " << cSSAtype << " cWithLpGBT " << cWithLpGBT << RESET;
                     if(cWithCBC)
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for CBC(s)" << RESET;
@@ -771,7 +769,7 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             for(uint8_t cSSAId = 0; cSSAId < 8; cSSAId++)
             {
                 if(cSkipSSA3 && cSSAId == 3) continue;
-		continue;
+                continue;
                 SSA*    cSSA          = new SSA(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), cSSAId, 0, 0, "./settings/SSAFiles/SSA.txt");
                 uint8_t cSLVSdriveSSA = cSSA->getReg("SLVS_pad_current");
                 cSSA->setOptical(cHybrid->isOptical());
@@ -1258,8 +1256,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
 
                 size_t cEventIndex    = 0;
                 auto   cEventIterator = pData.begin();
-                do
-                {
+                do {
                     uint32_t cHeader = (0xFFFF0000 & (*cEventIterator)) >> 16;
                     if(cHeader != 0xFFFF)
                     {
@@ -1336,9 +1333,8 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
 
 void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, std::vector<FrontEndType> cFrontEndTypes)
 {
-    auto selectChipFlavourFunction = [cFrontEndTypes](const ChipContainer* theChip) {
-        return (std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), static_cast<const ReadoutChip*>(theChip)->getFrontEndType()) != cFrontEndTypes.end());
-    };
+    auto selectChipFlavourFunction = [cFrontEndTypes](const ChipContainer* theChip)
+    { return (std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), static_cast<const ReadoutChip*>(theChip)->getFrontEndType()) != cFrontEndTypes.end()); };
     setChannelGroupHandler(theChannelGroupHandler, selectChipFlavourFunction);
 }
 

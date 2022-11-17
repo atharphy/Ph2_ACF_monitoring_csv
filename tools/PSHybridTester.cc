@@ -172,8 +172,7 @@ void PSHybridTester::SSAOutputsPogoDebug(BeBoard* pBoard, bool pTrigger)
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.physical_interface_block.debug_blk.start_input", 1);
     // send N triggers
     uint8_t cTriggerCounter = 0;
-    do
-    {
+    do {
         if(pTrigger) fBeBoardInterface->ChipTrigger(pBoard);
         // fBeBoardInterface->ChipTestPulse(pBoard);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -181,15 +180,13 @@ void PSHybridTester::SSAOutputsPogoDebug(BeBoard* pBoard, bool pTrigger)
     } while(cTriggerCounter < cNtriggers);
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_ctrl.physical_interface_block.debug_blk.stop_input", 1);
     auto cDebugDone = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.input_lines_debug_done");
-    do
-    {
+    do {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         cDebugDone = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.input_lines_debug_done");
     } while(cDebugDone != 0xFFFFFFFF);
     LOG(INFO) << BOLDBLUE << "Input lines debug done: 0x" << std::hex << cDebugDone << std::dec << RESET;
     auto cMapIterator = fInputDebugMap.begin();
-    do
-    {
+    do {
         auto cRegisterName = cMapIterator->first;
         // only print out registers that are of interest
         bool cPrintMapItem = (cRegisterName.find("ssa") != std::string::npos);
@@ -407,8 +404,7 @@ void PSHybridTester::MPATest(BeBoard* pBoard)
                         LOG(INFO) << "Tuning lines for PhyPort " << +cPhyPort << RESET;
                         cAlignmentStatus = true;
                         bool cFirstRun   = true;
-                        do
-                        {
+                        do {
                             for(uint8_t cLineId = 1; cLineId < 5; cLineId++)
                             {
                                 // auto cPhaseTuneLineOutput = PhaseTuneLine(cCic, cLineId);
@@ -1244,8 +1240,7 @@ void PSHybridTester::CheckI2C(BeBoard* pBoard)
     int total = 0;
     int value = 0;
     int bad   = 0;
-    do
-    {
+    do {
         for(int i = 0; i < 256; i++)
         {
             for(auto cOpticalReadout: *pBoard)
@@ -1619,7 +1614,9 @@ void PSHybridTester::CalibrateSSABias(BeBoard* pBoard)
                     while(!cCalibrated && iterations < 25)
                     {
                         if(result - ground > cAdjustmentTarget + 1)
-                        { fReadoutChipInterface->WriteChipReg(cReadoutChip, cAdjustmentRegister, fReadoutChipInterface->ReadChipReg(cReadoutChip, cAdjustmentRegister) - 1); }
+                        {
+                            fReadoutChipInterface->WriteChipReg(cReadoutChip, cAdjustmentRegister, fReadoutChipInterface->ReadChipReg(cReadoutChip, cAdjustmentRegister) - 1);
+                        }
                         else if(result - ground < cAdjustmentTarget - 1)
                         {
                             fReadoutChipInterface->WriteChipReg(cReadoutChip, cAdjustmentRegister, fReadoutChipInterface->ReadChipReg(cReadoutChip, cAdjustmentRegister) + 1);

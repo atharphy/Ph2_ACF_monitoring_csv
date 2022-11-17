@@ -71,21 +71,21 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
 
     this->fAllChan = pAllChan;
 
-    fSkipMaskedChannels          = findValueInSettings<double>("SkipMaskedChannels", 0);
-    fMaskChannelsFromOtherGroups = findValueInSettings<double>("MaskChannelsFromOtherGroups", 1);
-    fCheckLoop                   = findValueInSettings<double>("VerificationLoop", 1);
-    fPedestalEqualizationMaskUntrimmed                   = findValueInSettings<double>("PedestalEqualizationMaskUntrimmed", 0);
-    fFullScan                    = findValueInSettings<double>("FullScan", 0);
+    fSkipMaskedChannels                = findValueInSettings<double>("SkipMaskedChannels", 0);
+    fMaskChannelsFromOtherGroups       = findValueInSettings<double>("MaskChannelsFromOtherGroups", 1);
+    fCheckLoop                         = findValueInSettings<double>("VerificationLoop", 1);
+    fPedestalEqualizationMaskUntrimmed = findValueInSettings<double>("PedestalEqualizationMaskUntrimmed", 0);
+    fFullScan                          = findValueInSettings<double>("FullScan", 0);
 
-    fPedestalEqualizationFullScanStart                    = findValueInSettings<double>("PedestalEqualizationFullScanStart", 110);
-    fPedestalEqualizationFullScanCAP                    = findValueInSettings<double>("PedestalEqualizationFullScanCAP", 1.0);
+    fPedestalEqualizationFullScanStart = findValueInSettings<double>("PedestalEqualizationFullScanStart", 110);
+    fPedestalEqualizationFullScanCAP   = findValueInSettings<double>("PedestalEqualizationFullScanCAP", 1.0);
 
-    fTestPulseAmplitude          = findValueInSettings<double>("PedestalEqualizationPulseAmplitude", 0);
-    fEventsPerPoint              = findValueInSettings<double>("Nevents", 10);
-    fNEventsPerBurst             = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
-    fOccupancyAtPedestal         = findValueInSettings<double>("PedestalEqualizationOccupancy", 0.56);
-    uint8_t cDefTargetOffset     = (fWithCBC) ? 0x7F : 0xF;
-    fTargetOffset                = findValueInSettings<double>("PedestalEqualizationTargetOffset", cDefTargetOffset);
+    fTestPulseAmplitude      = findValueInSettings<double>("PedestalEqualizationPulseAmplitude", 0);
+    fEventsPerPoint          = findValueInSettings<double>("Nevents", 10);
+    fNEventsPerBurst         = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
+    fOccupancyAtPedestal     = findValueInSettings<double>("PedestalEqualizationOccupancy", 0.56);
+    uint8_t cDefTargetOffset = (fWithCBC) ? 0x7F : 0xF;
+    fTargetOffset            = findValueInSettings<double>("PedestalEqualizationTargetOffset", cDefTargetOffset);
     // uint8_t cEnableFastCounterReadout = (uint8_t)findValueInSettings<double>("EnableFastCounterReadout", 0);
     // uint8_t cEnablePairSelect         = (uint8_t)findValueInSettings<double>("EnablePairSelect", 0);
 
@@ -207,7 +207,7 @@ void PedestalEqualization::Reset()
                     for(auto cMapItem: cModMap)
                     {
                         auto cValueInMemory = cChip->getReg(cMapItem.first);
-			if (cMapItem.second.fValue ==cValueInMemory) continue;
+                        if(cMapItem.second.fValue == cValueInMemory) continue;
                         // don't reconfigure the offsets .. whole point of this excercise
                         if(cMapItem.first.find("Channel") != std::string::npos) continue;
                         if(cMapItem.first.find("TrimDAC") != std::string::npos) continue;
@@ -287,8 +287,10 @@ void PedestalEqualization::FindVplus()
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
 
-    if (fFullScan) this->fullScan("Threshold", fEventsPerPoint, fOccupancyAtPedestal, fNEventsPerBurst, fPedestalEqualizationFullScanStart,fPedestalEqualizationFullScanCAP);
-    else this->bitWiseScan("Threshold", fEventsPerPoint, fOccupancyAtPedestal, fNEventsPerBurst);
+    if(fFullScan)
+        this->fullScan("Threshold", fEventsPerPoint, fOccupancyAtPedestal, fNEventsPerBurst, fPedestalEqualizationFullScanStart, fPedestalEqualizationFullScanCAP);
+    else
+        this->bitWiseScan("Threshold", fEventsPerPoint, fOccupancyAtPedestal, fNEventsPerBurst);
     // dumpConfigFiles();
 
     // LOG(INFO) << BOLDBLUE << "Setting threshold trim registers to max value..." << RESET;
@@ -423,16 +425,13 @@ void PedestalEqualization::FindOffsets()
 
     if(fWithCBC) this->bitWiseScan("ChannelOffset", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst);
 
-    if(fWithSSA or fWithMPA) 
+    if(fWithSSA or fWithMPA)
     {
-    	if (fFullScan)
-	{
-
-	    this->fullScan("ThresholdTrim", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst, 31, fPedestalEqualizationFullScanCAP, fPedestalEqualizationMaskUntrimmed);
-	}
-	else this->bitWiseScan("ThresholdTrim", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst);
+        if(fFullScan) { this->fullScan("ThresholdTrim", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst, 31, fPedestalEqualizationFullScanCAP, fPedestalEqualizationMaskUntrimmed); }
+        else
+            this->bitWiseScan("ThresholdTrim", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst);
     }
-	
+
     dumpConfigFiles();
     DetectorDataContainer theOffsetsCointainer;
     ContainerFactory::copyAndInitChannel<uint8_t>(*fDetectorContainer, theOffsetsCointainer);
