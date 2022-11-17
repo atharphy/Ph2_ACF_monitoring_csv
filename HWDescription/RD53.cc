@@ -11,6 +11,55 @@
 
 namespace Ph2_HwDescription
 {
+LaneConfig::LaneConfig(bool isPrimary, const std::array<uint8_t, 4>& outputLanes, const std::array<bool, 4>& signleChannelInputLanes, const std::array<bool, 4>& dualChannelInputLanes)
+    : outputLaneMapping({0, 1, 2, 3}), inputLaneMapping({0, 1, 2, 3}), internalLanesEnabled({0, 0, 0, 0, 0}), nOutputLanes(1), isPrimary(isPrimary)
+{
+    // ################
+    // # nOutputLanes #
+    // ################
+    nOutputLanes = std::count_if(outputLanes.begin(), outputLanes.end(), [](auto x) { return x > 0; });
+
+    // #####################
+    // # outputLaneMapping #
+    // #####################
+    for(auto i = 0u; i < 4; i++)
+    {
+        if(outputLanes[3 - i] > 0)
+            outputLaneMapping[i] = outputLanes[3 - i] - 1;
+        else
+            outputLaneMapping[i] = nOutputLanes;
+    }
+
+    // ########################
+    // # internalLanesEnabled #
+    // ########################
+    size_t nBondedChannels = std::count(dualChannelInputLanes.begin(), dualChannelInputLanes.end(), true);
+    if(nBondedChannels > 0)
+    {
+        internalLanesEnabled[0] = true;
+        auto it                 = std::find(dualChannelInputLanes.rbegin(), dualChannelInputLanes.rend(), true);
+        inputLaneMapping[0]     = it - dualChannelInputLanes.rbegin();
+        it                      = std::find(it + 1, dualChannelInputLanes.rend(), true);
+        inputLaneMapping[1]     = it - dualChannelInputLanes.rbegin();
+    }
+
+    // #############################################
+    // # inputLaneMapping and internalLanesEnabled #
+    // #############################################
+    size_t nSingleChannels = std::count(signleChannelInputLanes.begin(), signleChannelInputLanes.end(), true);
+    if(nSingleChannels > 0)
+    {
+        size_t j = nBondedChannels + 1;
+        for(auto i = 0u; i < 4; i++)
+            if(signleChannelInputLanes[3 - i])
+            {
+                inputLaneMapping[j - 1] = i;
+                internalLanesEnabled[j] = true;
+                j++;
+            }
+    }
+}
+
 RD53::RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment)
     : ReadoutChip(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id)
 {

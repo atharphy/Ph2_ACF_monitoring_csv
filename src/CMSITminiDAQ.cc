@@ -328,14 +328,15 @@ int main(int argc, char** argv)
     {
         SystemController mySysCntr;
 
-        if((reset == true) || (binaryFile != ""))
+        if((reset == true) || (dumpRegs == true) || (binaryFile != ""))
         {
-            // ######################################
-            // # Reset hardware or read binary file #
-            // ######################################
             std::stringstream outp;
             mySysCntr.InitializeSettings(configFile, outp);
             mySysCntr.InitializeHw(configFile, outp, false);
+
+            // ##################
+            // # Reset hardware #
+            // ##################
             if(reset == true)
             {
                 if(mySysCntr.fDetectorContainer->at(0)->at(0)->flpGBT == nullptr)
@@ -344,7 +345,21 @@ int main(int argc, char** argv)
                     static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[mySysCntr.fDetectorContainer->at(0)->getId()])->ResetSequence("320");
                 exit(EXIT_SUCCESS);
             }
-            if(binaryFile != "") readBinaryData(binaryFile, mySysCntr, RD53Event::decodedEvents);
+
+            // ##########################################
+            // # Dump FW and frontend registers content #
+            // ##########################################
+            else if(dumpRegs == true)
+            {
+                LOG(INFO) << BOLDMAGENTA << "@@@ Dumping frontend registers @@@" << RESET;
+                mySysCntr.DumpRegisters();
+            }
+
+            // ####################
+            // # Read binary file #
+            // ####################
+            else if(binaryFile != "")
+                readBinaryData(binaryFile, mySysCntr, RD53Event::decodedEvents);
         }
         else if(binaryFile == "")
         {
@@ -352,7 +367,7 @@ int main(int argc, char** argv)
             // # Initialize Hardware #
             // #######################
             LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
-            mySysCntr.Configure(configFile, false, 60000, !dumpRegs);
+            mySysCntr.Configure(configFile, false, 60000);
             LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
         }
 
@@ -716,11 +731,6 @@ int main(int argc, char** argv)
             LOG(ERROR) << BOLDRED << "Option not recognized: " << BOLDYELLOW << whichCalib << RESET;
             mySysCntr.Destroy();
             exit(EXIT_FAILURE);
-        }
-        else if(dumpRegs == true)
-        {
-            LOG(INFO) << BOLDMAGENTA << "@@@ Dumping frontend registers @@@" << RESET;
-            mySysCntr.DumpFrontendRegisters();
         }
 
         // ###########################

@@ -26,7 +26,7 @@ class RD53BInterface : public RD53Interface
     void     Reset(Ph2_HwDescription::ReadoutChip* pChip, const size_t resetType, const size_t duration = 0x4) override;
     void     ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip) override;
     void     InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard) override;
-    void     InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1) override;
+    void     InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip) override;
     void     PackWriteCommand(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true) override;
     void     PackWriteBroadcastCommand(const Ph2_HwDescription::BeBoard* pBoard, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true) override;
     void     WriteClokDataDelay(Ph2_HwDescription::Chip* pChip, uint16_t value) override;

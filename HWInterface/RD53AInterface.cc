@@ -80,9 +80,10 @@ void RD53AInterface::InitRD53Downlink(const BeBoard* pBoard)
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
 
-void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
+void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip)
 {
     this->setBoard(pChip->getBeBoardId());
+    auto pRD53 = static_cast<RD53*>(pChip);
 
     // ##############################
     // # 1 Autora active lane       #
@@ -99,7 +100,7 @@ void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     // ##############################
 
     LOG(INFO) << GREEN << "Configuring up-link lanes and monitoring..." << RESET;
-    RD53Interface::WriteChipReg(pChip, "OUTPUT_CONFIG", RD53Shared::setBits(nActiveLanes) << 2, false); // Number of active lanes [5:2]
+    RD53Interface::WriteChipReg(pChip, "OUTPUT_CONFIG", RD53Shared::setBits(pRD53->laneConfig.nOutputLanes) << 2, false); // Number of active lanes [5:2]
     // bits [8:7]: number of 40 MHz clocks +2 for data transfer out of pixel matrix
     // Default 0 means 2 clocks, may need higher value in case of large propagation
     // delays, for example at low VDDD voltage after irradiation

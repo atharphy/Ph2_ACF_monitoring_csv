@@ -87,7 +87,7 @@ void RD53eudaqProducer::DoStartRun()
     RD53sysCntrPhys.Start(theRunNumber);
 
     doExit = false;
-    }
+}
 
 void RD53eudaqProducer::DoStopRun()
 {
