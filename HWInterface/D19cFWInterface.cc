@@ -262,14 +262,22 @@ uint32_t D19cFWInterface::getBoardInfo()
     return cVersionWord;
 }
 
-void D19cFWInterface::configureTxRxPolarity(const Ph2_HwDescription::BeBoard* pBoard)
+void D19cFWInterface::configureLinks(const Ph2_HwDescription::BeBoard* pBoard)
+{
+    // Configuring polarities according to lpGBT version
+    configureTxRxPolarities(pBoard);
+    // Configuring optical link lpGBT IC core and lpGBT Slow Control Worker according to lpGBT version
+    configureLpGbtVersions(pBoard);
+}
+
+void D19cFWInterface::configureTxRxPolarities(const Ph2_HwDescription::BeBoard* pBoard)
 {
     LOG(INFO) << BOLDYELLOW << "Configuring Tx/Rx polarity" << RESET;
     uint32_t cTxGlobalValueL8 = 0, cRxGlobalValueL8 = 0;
     uint32_t cTxGlobalValueL12 = 0, cRxGlobalValueL12 = 0;
     for(auto cOpticalGroup: *pBoard)
     {
-        std::string cFMCSlot        = (cOpticalGroup->getFMCId() == 0) ? "FMC-L12" : "FMC-L8";
+        std::string cFMCSlot        = (cOpticalGroup->getFMCId() == 12) ? "FMC-L12" : "FMC-L8";
         auto        cOpticalGroupId = cOpticalGroup->getId();
         auto        clpGbt          = static_cast<lpGBT*>(cOpticalGroup->flpGBT);
 
@@ -295,10 +303,24 @@ void D19cFWInterface::configureTxRxPolarity(const Ph2_HwDescription::BeBoard* pB
     this->WriteReg("fc7_daq_cnfg.optical_block.tx_polarity.l8", cTxGlobalValueL8);
     this->WriteReg("fc7_daq_cnfg.optical_block.rx_polarity.l8", cRxGlobalValueL8);
 
-    LOG(INFO) << BLUE << "FMC-L12 -- Rx Polarity = " << +this->ReadReg("fc7_daq_cnfg.optical_block.rx_polarity.l12")
+    LOG(INFO) << BOLDBLUE << "FMC-L12 -- Rx Polarity = " << +this->ReadReg("fc7_daq_cnfg.optical_block.rx_polarity.l12")
               << "  -- Tx Polarity = " << +this->ReadReg("fc7_daq_cnfg.optical_block.tx_polarity.l12") << RESET;
-    LOG(INFO) << BLUE << "FMC-L8  -- Rx Polarity = " << +this->ReadReg("fc7_daq_cnfg.optical_block.rx_polarity.l8")
+    LOG(INFO) << BOLDBLUE << "FMC-L8  -- Rx Polarity = " << +this->ReadReg("fc7_daq_cnfg.optical_block.rx_polarity.l8")
               << "  -- Tx Polarity = " << +this->ReadReg("fc7_daq_cnfg.optical_block.tx_polarity.l8") << RESET;
+}
+
+void D19cFWInterface::configureLpGbtVersions(const Ph2_HwDescription::BeBoard* pBoard)
+{
+    LOG(INFO) << BOLDYELLOW << "Configuring lpGBT versions" << RESET;
+    uint16_t cGlobalValue = 0;
+    for(auto cOpticalGroup: *pBoard)
+    {
+        uint16_t cLocalValue     = cOpticalGroup->flpGBT->getVersion();
+        uint8_t  cOpticalGroupId = cOpticalGroup->getId();
+        cGlobalValue |= (cLocalValue << cOpticalGroupId);
+    }
+    this->WriteReg("fc7_daq_cnfg.optical_block.lpgbt_version", cGlobalValue);
+    LOG(INFO) << BOLDBLUE << "LpGBT Version = " << +this->ReadReg("fc7_daq_cnfg.optical_block.lpgbt_version") << RESET;
 }
 
 void D19cFWInterface::configureCDCE_old(uint16_t pClockRate)
@@ -715,11 +737,8 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     // if optical readout .. then configure links
     if(pBoard->isOptical() && cWithlpGBT)
     {
-        bool    cSkip         = (pBoard->getLinkReset() == 0);
-        uint8_t cLpGbtVersion = static_cast<lpGBT*>(pBoard->at(0)->flpGBT)->getVersion();
-        this->WriteReg("fc7_daq_cnfg.optical_block.lpgbt.version", cLpGbtVersion);
-        LOG(INFO) << BOLDYELLOW << "Setting firmware lpGBT version to lpGBT-v" << +this->ReadReg("fc7_daq_cnfg.optical_block.lpgbt.version") << RESET;
-        configureTxRxPolarity(pBoard);
+        bool cSkip = (pBoard->getLinkReset() == 0);
+        configureLinks(pBoard);
         if(!cSkip)
         {
             LOG(INFO) << BOLDMAGENTA << "Resetting lpGBT-FPGA core on BeBoard#" << +pBoard->getId() << RESET;
