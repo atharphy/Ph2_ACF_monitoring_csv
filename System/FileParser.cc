@@ -1565,9 +1565,8 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
 
         static_cast<RD53*>(theChip)->laneConfig = LaneConfig(isPrimary, outputLanesEnabled, singleChannelInputs, dualChannelInput);
 
-        os << GREEN << "|\t|\t|\t|----Lanes configuration --> primary: " << BOLDYELLOW << isPrimary << RESET << GREEN << " - output lanes configuration: " << BOLDYELLOW << outputLanesConfig << RESET
-           << GREEN << " - single channel inputs configuration: " << BOLDYELLOW << singleChannelInputsConfig << RESET << GREEN << " - dual channel input configuration: " << BOLDYELLOW
-           << dualChannelInputConfig << RESET << std::endl;
+        os << BOLDBLUE << "|\t|\t|\t|----Lanes configuration --> primary: " << BOLDYELLOW << isPrimary << BOLDBLUE << " - output lanes: " << BOLDYELLOW << outputLanesConfig << BOLDBLUE
+           << " - single channel inputs: " << BOLDYELLOW << singleChannelInputsConfig << BOLDBLUE << " - dual channel input: " << BOLDYELLOW << dualChannelInputConfig << RESET << std::endl;
     }
 
     // ########################################
