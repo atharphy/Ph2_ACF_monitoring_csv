@@ -58,6 +58,9 @@ const uint32_t CHIP_QROW   = 0x01000000; // Chip event status neighbor bit set f
 
 namespace Ph2_HwDescription
 {
+// ############################################
+// # Data structure describing the chip masks #
+// ############################################
 struct pixelMask
 {
     pixelMask() = default;
@@ -67,6 +70,29 @@ struct pixelMask
     std::vector<bool>    HitBus;
     std::vector<bool>    InjEn;
     std::vector<uint8_t> TDAC;
+};
+
+// ###################################################
+// # Data structure describing the chip lane mapping #
+// ###################################################
+struct LaneConfig
+{
+    LaneConfig() : outputLaneMapping({0, 1, 2, 3}), inputLaneMapping({0, 1, 2, 3}), internalLanesEnabled({0, 0, 0, 0, 0}), nOutputLanes(1), isPrimary(true) {}
+    LaneConfig(bool isPrimary, const std::array<uint8_t, 4>& outputLanes, const std::array<bool, 4>& signleChannelInputLanes, const std::array<bool, 4>& dualChannelInputLanes);
+
+    template <typename T, size_t N, size_t S>
+    auto serializeBits(std::array<T, N> arr)
+    {
+        uint16_t val = 0;
+        for(auto i = 0u; i < N; i++) val |= arr[i] << (S * i);
+        return val;
+    }
+
+    std::array<uint8_t, 4> outputLaneMapping;
+    std::array<uint8_t, 4> inputLaneMapping;
+    std::array<bool, 5>    internalLanesEnabled;
+    uint8_t                nOutputLanes;
+    bool                   isPrimary;
 };
 
 class RD53 : public ReadoutChip
@@ -92,6 +118,11 @@ class RD53 : public ReadoutChip
         size_t      VCalSleepTime; // [microseconds]
         size_t      AutoIncrementMask;
     };
+
+    // ####################################
+    // # Input&Output lanes configuration #
+    // ####################################
+    LaneConfig laneConfig;
 
     virtual size_t          getNRows() const                                                                                                           = 0;
     virtual size_t          getNCols() const                                                                                                           = 0;

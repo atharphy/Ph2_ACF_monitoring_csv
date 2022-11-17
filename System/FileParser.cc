@@ -1474,6 +1474,14 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
 // ########################
 // # RD53 specific parser #
 // ########################
+template <class T, size_t N>
+auto parseString(const std::string& data)
+{
+    std::array<T, N> result;
+    std::transform(data.begin(), data.end(), result.begin(), [](char c) { return c - '0'; });
+    return result;
+}
+
 void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os, const FrontEndType& frontEndType)
 {
     std::string cFileName;
@@ -1510,6 +1518,9 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
 
 void FileParser::parseGlobalRD53Settings(pugi::xml_node pHybridNode, Hybrid* pHybrid, std::ostream& os)
 {
+    // ###############################################
+    // # Load frontend chip global register settings #
+    // ###############################################
     pugi::xml_node cGlobalChipSettings = pHybridNode.child("Global");
     if(cGlobalChipSettings != nullptr)
     {
@@ -1532,6 +1543,36 @@ void FileParser::parseGlobalRD53Settings(pugi::xml_node pHybridNode, Hybrid* pHy
 
 void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theChip, std::ostream& os)
 {
+    // #########################################
+    // # Load frontend chip lane configuration #
+    // #########################################
+    pugi::xml_node laneConfigNode = theChipNode.child("LaneConfig");
+    if(laneConfigNode != nullptr)
+    {
+        bool isPrimary = laneConfigNode.attribute("primary").as_bool(true);
+
+        std::string outputLanesConfig = laneConfigNode.attribute("outputLanes").as_string("0001");
+        if(outputLanesConfig.size() != 4) throw std::runtime_error("The \"outputLanes\" attribute of LaneConfig should contain 4 characters ('0' up to '4').");
+        auto outputLanesEnabled = parseString<uint8_t, 4>(outputLanesConfig);
+
+        std::string singleChannelInputsConfig = laneConfigNode.attribute("singleChannelInputs").as_string("0000");
+        if(singleChannelInputsConfig.size() != 4) throw std::runtime_error("The \"singleChannelInputs\" attribute of LaneConfig should contain 4 characters ('0' or '1').");
+        auto singleChannelInputs = parseString<bool, 4>(singleChannelInputsConfig);
+
+        std::string dualChannelInputConfig = laneConfigNode.attribute("dualChannelInput").as_string("0000");
+        if(dualChannelInputConfig.size() != 4) throw std::runtime_error("The \"dualChannelInput\" attribute of LaneConfig should contain 4 characters ('0' or '1').");
+        auto dualChannelInput = parseString<bool, 4>(dualChannelInputConfig);
+
+        static_cast<RD53*>(theChip)->laneConfig = LaneConfig(isPrimary, outputLanesEnabled, singleChannelInputs, dualChannelInput);
+
+        os << GREEN << "|\t|\t|\t|----Lanes configuration --> primary: " << BOLDYELLOW << isPrimary << RESET << GREEN << " - output lanes configuration: " << BOLDYELLOW << outputLanesConfig << RESET
+           << GREEN << " - single channel inputs configuration: " << BOLDYELLOW << singleChannelInputsConfig << RESET << GREEN << " - dual channel input configuration: " << BOLDYELLOW
+           << dualChannelInputConfig << RESET << std::endl;
+    }
+
+    // ########################################
+    // # Load frontend chip register settings #
+    // ########################################
     pugi::xml_node cLocalChipSettings = theChipNode.child("Settings");
     if(cLocalChipSettings != nullptr)
     {
@@ -1546,6 +1587,7 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
             uint16_t    regvalue                   = convertAnyInt(attr.value());
             theChip->getRegItem(regname).fDefValue = regvalue;
             theChip->getRegItem(regname).fPrmptCfg = true;
+
             os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
         }
     }

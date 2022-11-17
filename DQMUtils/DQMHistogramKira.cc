@@ -145,7 +145,7 @@ void DQMHistogramKira::fillLatencyPlots(uint16_t pLatency, uint16_t pTriggerId, 
         {
             for(auto hybrid: *opticalGroup)
             {
-                TH1F* cHist = fLatencyHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                // TH1F* cHist = fLatencyHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 for(auto chip: *hybrid)
                 {
                     TH1F* cLatencyTDC =
