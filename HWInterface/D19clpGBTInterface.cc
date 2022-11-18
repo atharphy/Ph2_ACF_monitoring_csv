@@ -30,7 +30,8 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     uint16_t cIter = 0, cMaxIter = 200;
     for(auto& ele: fPUSMStatusMap[cChipVersion]) revertedPUSMStatusMap[ele.second] = ele.first;
     uint8_t cPUSMState = 0;
-    do {
+    do
+    {
         cPUSMState = GetPUSMStatus(pChip);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         cIter++;
@@ -246,7 +247,8 @@ uint8_t D19clpGBTInterface::PhaseAlignRx(Chip* pChip, const std::vector<uint8_t>
             bool        cContinue    = (cLock == 0);
             uint8_t     cMaxIters    = 10;
             uint8_t     cIter        = 0;
-            do {
+            do
+            {
                 std::this_thread::sleep_for(std::chrono::milliseconds(lpGBTconstants::SUPERDEEPSLEEP));
                 cLock     = (ReadChipReg(pChip, cRXLockedReg) & (1 << cLockShift)) >> cLockShift;
                 cContinue = cLock == 0;

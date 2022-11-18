@@ -164,16 +164,15 @@ void KIRA::determineLatency()
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     for(auto cChip: *cHybrid)
-                    {
-                        cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = 0;
-                    } // chip
-                }     // hybrid
-            }         // optical group
+                    { cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() = 0; } // chip
+                }                                                                                                                                                        // hybrid
+            }                                                                                                                                                            // optical group
 
             // start at the beginning + trigger id in burst
             auto cEventIter  = cEvents.begin() + cTriggerId;
             fNReadbackEvents = cEvents.size();
-            do {
+            do
+            {
                 if(cEventIter >= cEvents.end()) break;
                 for(auto cOpticalGroup: *cBoard)
                 {
@@ -192,9 +191,7 @@ void KIRA::determineLatency()
                             {
                                 // monitor only bottom sensor channels
                                 if(cHit % 2 == cLatencySensor)
-                                {
-                                    cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() += 1;
-                                }
+                                { cHitContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() += 1; }
                             }
                         } // chip vector
                     }     // hybrid vector
@@ -293,7 +290,8 @@ DetectorDataContainer KIRA::analyseEvents(BeBoard* pBoard, const std::vector<Eve
     // start at the beginning + trigger id in burst
     auto cEventIter  = pEvents.begin();
     fNReadbackEvents = pEvents.size();
-    do {
+    do
+    {
         if(cEventIter >= pEvents.end()) break;
         for(auto cOpticalGroup: *pBoard)
         {

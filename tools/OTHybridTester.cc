@@ -103,7 +103,8 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
                 }
 
                 size_t cLine = 0;
-                do {
+                do
+                {
                     cFWInterface->selectLink(cOpticalGroup->getId());
                     cFWInterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybridId);
 
@@ -497,7 +498,8 @@ bool OTHybridTester::LpGBTTestFixedADCs()
 #elif __SEH_USB__
             flpGBTInterface->GetExternalController()->getInterface().set_AMUX(3500, 3500);
 #endif
-            do {
+            do
+            {
                 cADCValueVect.clear();
                 cADCNameString = cADCsMapIterator->first;
                 cADCHistogram->GetXaxis()->SetBinLabel(cBinCount, cADCsMapIterator->first.c_str());
@@ -589,7 +591,8 @@ bool OTHybridTester::LpGBTTestResetLines()
 #endif
         auto cMapIterator = cResetLines.begin();
         bool cStatus      = true;
-        do {
+        do
+        {
 #ifdef __ROH_USB__
             flpGBTInterface->GetExternalController()->getInterface().adc_get(cMapIterator->second, cMeasurement);
             float cDifference_mV = std::fabs((cLevel.second * 1200) - cMeasurement);
@@ -697,14 +700,13 @@ bool OTHybridTester::LpGBTTestVTRx()
             }
 
             auto cMapIterator = cVTRxplusDefaultRegisters.begin();
-            do {
+            do
+            {
                 cRecent        = cOpticalInterface->SingleMultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, cMapIterator->first);
                 cReadBackValue = cOpticalInterface->SingleSingleByteReadI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress);
                 cSuccess       = cSuccess && cRecent && (cReadBackValue == cMapIterator->second);
                 if(cRecent && (cReadBackValue == cMapIterator->second))
-                {
-                    LOG(INFO) << BOLDGREEN << "VTRx+ register " << +(cMapIterator->first) << " contains the default value " << +cReadBackValue << " ." << RESET;
-                }
+                { LOG(INFO) << BOLDGREEN << "VTRx+ register " << +(cMapIterator->first) << " contains the default value " << +cReadBackValue << " ." << RESET; }
                 else
                 {
                     LOG(INFO) << BOLDRED << "Error in VTRx+ register " << +(cMapIterator->first) << " ." << RESET;
@@ -759,7 +761,8 @@ bool OTHybridTester::LpGBTFastCommandChecker(uint8_t pPattern)
         auto cMapIterator = fFCMDLines.begin();
         LOG(INFO) << BOLDBLUE << "Checking against : " << std::bitset<8>(pPattern) << RESET;
         res = true;
-        do {
+        do
+        {
             uint32_t cFCMDOutput = fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second);
             LOG(INFO) << BOLDBLUE << "Scoped output on " << cMapIterator->first << ": " << std::bitset<32>(cFCMDOutput) << RESET;
 
@@ -922,7 +925,8 @@ bool OTHybridTester::LpGBTCheckClocks()
         LOG(INFO) << GREEN << "============================" << RESET;
         LOG(INFO) << BOLDGREEN << "Clock test" << RESET;
 
-        do {
+        do
+        {
             cClkTestDone = (fBeBoardInterface->ReadBoardReg(cBoard, cMapIterator->second + "_test_done") == 1);
             while(!cClkTestDone)
             {

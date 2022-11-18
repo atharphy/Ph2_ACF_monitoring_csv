@@ -336,9 +336,7 @@ bool SSAInterface::WriteChipReg(Chip* pSSA, const std::string& pRegName, uint16_
         bool              cReadoutMode = fBoardFW->SingleRegisterWrite(pSSA, cRegItem, pVerify);
         std::stringstream cRegName;
         if(pRegName.find("S") != std::string::npos) // global
-        {
-            cRegName << "ENFLAGS_ALL";
-        }
+        { cRegName << "ENFLAGS_ALL"; }
         else // single row
         {
             int cStripNumber = std::stoi(pRegName.substr(pRegName.find("R") + 1, pRegName.length()));

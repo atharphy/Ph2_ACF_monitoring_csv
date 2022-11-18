@@ -201,13 +201,15 @@ void StubSweep::SweepStubs(uint32_t pNEvents)
                             std::vector<Event*> cEvents;
                             std::stringstream   outp;
 
-                            do {
+                            do
+                            {
                                 cEvents.clear();
                                 ReadNEvents(theBoard, pNEvents);
                                 cEvents        = GetEvents();
                                 unsigned int j = 0;
 
-                                do {
+                                do
+                                {
                                     outp.str("");
                                     outp << *cEvents[j];
 
