@@ -286,8 +286,8 @@ void D19cFWInterface::configureTxRxPolarities(const Ph2_HwDescription::BeBoard* 
 
         if(cFMCSlot == "FMC-L12")
         {
-            cRxGlobalValueL12 |= (cRxLocalValue << cOpticalGroupId);
-            cTxGlobalValueL12 |= (cTxLocalValue << cOpticalGroupId);
+            cRxGlobalValueL12 |= (cRxLocalValue << (cOpticalGroupId - (4 % cOpticalGroupId)));
+            cTxGlobalValueL12 |= (cTxLocalValue << (cOpticalGroupId - (4 % cOpticalGroupId)));
         }
         else
         {
