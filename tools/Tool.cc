@@ -99,15 +99,14 @@ void Tool::waitForRunToBeCompleted()
     while(!GetRunningStatus()) std::this_thread::sleep_for(std::chrono::milliseconds(250));
 }
 
-void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber, bool doAlsoFrontend)
+void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
 {
-    SystemController::Configure(cHWFile, enableStream, DQMportNumber, doAlsoFrontend);
+    SystemController::Configure(cHWFile, enableStream, DQMportNumber);
     ConfigureCalibration();
 }
 
 void Tool::Start(int runNumber)
 {
-    // std::string resultDirectory = "Results/OT_ModuleTest_ModuleOT_Run" + std::to_string(runNumber); // It should be made more generic
     std::string resultDirectory = "Results";
     CreateResultDirectory(resultDirectory, false, false);
 #ifdef __USE_ROOT__
@@ -127,8 +126,6 @@ void Tool::Stop()
 
 void Tool::Inherit(const Tool* pTool)
 {
-    // WE SHOULD ONLY KEEP IN HERE ONLY THINGS THAT ARE NOT CALIBRATION SPECIFIC
-
     SystemController::Inherit(pTool);
 
 #ifdef __USE_ROOT__
@@ -236,7 +233,7 @@ double      Tool::fSummaryTreeValue     = 0.0;
 /*!
  * \brief Initialize a 'summary' TTree in the ROOT File, with branches 'parameter'(string) and 'value'(double)
  */
-void Tool::bookSummaryTree() // MINE
+void Tool::bookSummaryTree()
 {
     fResultFile->cd();
     fSummaryTreeParameter = "";
@@ -279,7 +276,7 @@ void Tool::bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObje
     TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
     if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
 
-    // find or create map<string,TOBject> for specific CBC
+    // Find or create map<string,TOBject> for specific CBC
     auto cChipHistMap = fChipHistMap.find(pChip);
 
     if(cChipHistMap == std::end(fChipHistMap))
@@ -292,7 +289,7 @@ void Tool::bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObje
         cChipHistMap        = fChipHistMap.find(pChip);
     }
 
-    // find histogram with given name: if it exists, delete the object, if not create
+    // Find histogram with given name: if it exists, delete the object, if not create
     auto cHisto = cChipHistMap->second.find(pName);
 
     if(cHisto != std::end(cChipHistMap->second)) cChipHistMap->second.erase(cHisto);
@@ -309,7 +306,7 @@ void Tool::bookHistogram(HybridContainer* pHybrid, std::string pName, TObject* p
     TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
     if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
 
-    // find or create map<string,TOBject> for specific CBC
+    // Find or create map<string,TOBject> for specific CBC
     auto cHybridHistMap = fHybridHistMap.find(pHybrid);
 
     if(cHybridHistMap == std::end(fHybridHistMap))
@@ -321,7 +318,7 @@ void Tool::bookHistogram(HybridContainer* pHybrid, std::string pName, TObject* p
         cHybridHistMap          = fHybridHistMap.find(pHybrid);
     }
 
-    // find histogram with given name: if it exists, delete the object, if not create
+    // Find histogram with given name: if it exists, delete the object, if not create
     auto cHisto = cHybridHistMap->second.find(pName);
 
     if(cHisto != std::end(cHybridHistMap->second)) cHybridHistMap->second.erase(cHisto);
@@ -337,7 +334,7 @@ void Tool::bookHistogram(BoardContainer* pBeBoard, std::string pName, TObject* p
     TH1* tmpHistogramPointer = dynamic_cast<TH1*>(pObject);
     if(tmpHistogramPointer != nullptr) tmpHistogramPointer->SetDirectory(0);
 
-    // find or create map<string,TOBject> for specific CBC
+    // Find or create map<string,TOBject> for specific CBC
     auto cBeBoardHistMap = fBeBoardHistMap.find(pBeBoard);
 
     if(cBeBoardHistMap == std::end(fBeBoardHistMap))
@@ -349,7 +346,7 @@ void Tool::bookHistogram(BoardContainer* pBeBoard, std::string pName, TObject* p
         cBeBoardHistMap           = fBeBoardHistMap.find(pBeBoard);
     }
 
-    // find histogram with given name: if it exists, delete the object, if not create
+    // Find histogram with given name: if it exists, delete the object, if not create
     auto cHisto = cBeBoardHistMap->second.find(pName);
 
     if(cHisto != std::end(cBeBoardHistMap->second)) cBeBoardHistMap->second.erase(cHisto);
@@ -574,7 +571,6 @@ void Tool::CloseResultFile()
 }
 
 #ifdef __USE_ROOT__
-// add username, chip IDs to a metadata tree
 void Tool::AddMetadata()
 {
     fResultFile->cd();
@@ -653,7 +649,7 @@ void Tool::StartHttpServer(const int pPort, bool pReadonly)
         fHttpServer->SetTimer(0, kTRUE);
         fHttpServer->SetJSROOT("https://root.cern.ch/js/latest/");
 
-        // configure the server
+        // Configure the server
         // see: https://root.cern.ch/gitweb/?p=root.git;a=blob_plain;f=tutorials/http/httpcontrol.C;hb=HEAD
         fHttpServer->SetItemField("/", "_monitoring", "5000");
         fHttpServer->SetItemField("/", "_layout", "grid2x2");
@@ -841,8 +837,7 @@ void Tool::setFWTestPulse()
             }
             else
             {
-                LOG(INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 12" << RESET; // Should be 12 for us!?
-                // fc7_daq_stat.fast_command_block.general.source
+                LOG(INFO) << BOLDBLUE << "Since I'm in ASYNC mode .. set trigger source to 12" << RESET;
                 cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 12});
                 cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
             }
@@ -904,13 +899,13 @@ std::pair<float, float> Tool::evalNoise(std::vector<float> pData, std::vector<fl
     if(pIgnoreNegative) std::replace_if(cWeights.begin(), cWeights.end(), [](float i) { return std::signbit(i); }, 0);
     float cN            = static_cast<float>(cWeights.size() - std::count(cWeights.begin(), cWeights.end(), 0.));
     float cSumOfWeights = std::accumulate(cWeights.begin(), cWeights.end(), 0.);
-    // weighted sum of scan values to get pedestal
+    // Weighted sum of scan values to get pedestal
     pData.erase(pData.begin(), pData.begin() + 1);
     std::fill(pData.begin(), pData.end(), 0.);
     std::transform(cWeights.begin(), cWeights.end(), pValues.begin(), pData.begin(), std::multiplies<float>());
     float cMean = std::accumulate(pData.begin(), pData.end(), 0.);
     cMean /= cSumOfWeights;
-    // weighted sample variance of scan values to get noise
+    // Weighted sample variance of scan values to get noise
     std::transform(pValues.begin(), pValues.end(), pData.begin(), [&](float el) { return (el - cMean) * (el - cMean); });
     std::transform(cWeights.begin(), cWeights.end(), pData.begin(), pData.begin(), std::multiplies<float>());
     float cCorrection = std::sqrt(cN / (cN - 1.));
@@ -920,12 +915,12 @@ std::pair<float, float> Tool::evalNoise(std::vector<float> pData, std::vector<fl
     return std::make_pair(cMean, cNoise * cCorrection);
 }
 
-// then a method to un-mask pairs of channels on a given CBC
+// Then a method to un-mask pairs of channels on a given CBC
 void Tool::unmaskPair(Chip* cChip, std::pair<uint8_t, uint8_t> pPair)
 {
     // Fabio: CBC specific but not used by common scans - BEGIN
 
-    // get ready to mask/un-mask channels in pairs...
+    // Get ready to mask/un-mask channels in pairs...
     MaskedChannelsList cMaskedList;
     MaskedChannels     cMaskedChannels;
     cMaskedChannels.clear();
@@ -1099,7 +1094,6 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
 
     fDetectorDataContainer = currentStepOccupancyContainer;
     LOG(INFO) << BOLDBLUE << "\t\t... measuring occupancy...." << RESET;
-    // TODO -> SEGFAULT!!!!!!!
     measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
 
     // This fails sometimes depending on settings, need to make it an option...
@@ -1318,14 +1312,13 @@ void Tool::bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, u
     return;
 }
 
-// full scan, eed a way to traport
 void Tool::fullScan(const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst, int32_t startVal, float occCap, bool mask)
 {
     for(unsigned int boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++)
     { fullScanBeBoard(boardIndex, dacName, numberOfEvents, targetOccupancy, numberOfEventsPerBurst, startVal, occCap, mask); }
 }
 
-// full scan per BeBoard. Returns untrimmed objects list (channels/chips)
+// Full scan per BeBoard. Returns untrimmed objects list (channels/chips)
 void Tool::fullScanBeBoard(uint16_t           boardIndex,
                            const std::string& dacName,
                            uint32_t           numberOfEvents,
@@ -1645,8 +1638,7 @@ void Tool::fullScanBeBoard(uint16_t           boardIndex,
     if(localDAC)
     {
         float maxDiff = (occDiff) / float(NoccDiff);
-        if(targetOccupancy > 1.0) maxDiff = 0.0; // hack, does not work well on pedestals.  to do...
-        // LOG(INFO) << BOLDYELLOW << "maxDiff:  " <<maxDiff<<RESET;
+        if(targetOccupancy > 1.0) maxDiff = 0.0; // Hack, does not work well on pedestals. To do...
 
         for(auto cOpticalGroup: *(fDetectorContainer->at(boardIndex)))
         {
@@ -1659,13 +1651,6 @@ void Tool::fullScanBeBoard(uint16_t           boardIndex,
                     {
                         for(uint32_t iChannel = 0; iChannel < returnVec.size(); ++iChannel)
                         {
-                            // LOG(INFO) << BOLDYELLOW << "Masking Channel:  "<< returnVec[iChannel] <<RESET;
-                            // LOG(INFO) << BOLDYELLOW << "OCC:  "<< currentStepOccupancyContainer->at(boardIndex)
-                            //     ->at(cOpticalGroup->getIndex())
-                            //     ->at(cHybrid->getIndex())
-                            //     ->at(cChip->getIndex())
-                            //     ->getChannel<Occupancy>(returnVec[iChannel]).fOccupancy <<RESET;
-
                             if(currentStepOccupancyContainer->at(boardIndex)
                                    ->at(cOpticalGroup->getIndex())
                                    ->at(cHybrid->getIndex())
@@ -1684,10 +1669,7 @@ void Tool::fullScanBeBoard(uint16_t           boardIndex,
                                             ->getChannel<Occupancy>(returnVec[iChannel])
                                             .fOccupancy -
                                         maxDiff) > targetOccupancy)
-                                    {
                                         cOriginalMask->disableChannel(returnVec[iChannel]);
-                                        // LOG(INFO) << BOLDYELLOW << "MASKHIGH"<<RESET;
-                                    }
                                 }
                             }
                             else
@@ -1729,20 +1711,20 @@ void Tool::fullScanBeBoard(uint16_t           boardIndex,
     delete currentDacList;
 }
 
-// set dac and measure occupancy
+// Set dac and measure occupancy
 void Tool::setDacAndMeasureData(const std::string& dacName, const uint16_t dacValue, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
 {
     for(uint16_t boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++) { setDacAndMeasureBeBoardData(boardIndex, dacName, dacValue, numberOfEvents, numberOfEventsPerBurst); }
 }
 
-// set dac and measure occupancy per BeBoard
+// Set dac and measure occupancy per BeBoard
 void Tool::setDacAndMeasureBeBoardData(uint16_t boardIndex, const std::string& dacName, const uint16_t dacValue, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
 {
     setSameDacBeBoard(fDetectorContainer->at(boardIndex), dacName, dacValue);
     measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
 }
 
-// measure occupancy
+// Measure occupancy
 void Tool::measureData(uint32_t numberOfEvents, int32_t numberOfEventsPerBurst)
 {
     for(unsigned int boardIndex = 0; boardIndex < fDetectorContainer->size(); boardIndex++) measureBeBoardData(boardIndex, numberOfEvents, numberOfEventsPerBurst);
@@ -1774,11 +1756,10 @@ class ScanBase
     uint32_t                     fNumberOfMSec;
     uint32_t                     fBoardIndex;
     const DetectorDataContainer* fChannelHandlerContainer;
-    // const ChannelGroupBase* fTestChannelGroup;
-    uint               fGroupNumber;
-    Tool*              fTool;
-    DetectorContainer* fDetectorContainer;
-    bool               fSameChannelGroupForAllChannels;
+    uint                         fGroupNumber;
+    Tool*                        fTool;
+    DetectorContainer*           fDetectorContainer;
+    bool                         fSameChannelGroupForAllChannels;
 
     inline const std::shared_ptr<ChannelGroupBase> getChannelGroup(int groupNumber, uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId)
     {
@@ -1845,7 +1826,7 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardIndex, uint32_t numberOfEvents
             // this->sendData();
         }
 
-        if(fMaskChannelsFromOtherGroups) // re-enable all the channels and evaluate
+        if(fMaskChannelsFromOtherGroups) // Re-enable all the channels and evaluate
         {
             for(auto cOpticalGroup: *(fDetectorContainer->at(boardIndex)))
             {
@@ -1968,7 +1949,7 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     }
     doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
 
-    // if in async mode normalization is a little different ..
+    // If in async mode normalization is a little different ..
     // normalize by the number of triggers to accept
     // if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::PSAS)
     // {
@@ -2015,9 +1996,6 @@ class ScanBeBoardDacPerGroup : public MeasureBeBoardDataPerGroup
     std::string                          fDacName;
 };
 
-#define USE_OLD_GROUP_SCAN
-
-#ifndef USE_OLD_GROUP_SCAN
 // One dimensional dac scan per BeBoard
 void Tool::scanBeBoardDac(uint16_t                             boardIndex,
                           const std::string&                   dacName,
@@ -2032,40 +2010,38 @@ void Tool::scanBeBoardDac(uint16_t                             boardIndex,
         abort();
     }
 
-    ScanBeBoardDacPerGroup theScan(this);
-    theScan.setDataContainerVector(&detectorContainerVector);
-    theScan.setDacName(dacName);
-    theScan.setDacList(&dacList);
-
-    doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
-    if(fDetectorContainer->at(boardIndex)->getBoardType() == BoardType::D19C)
-    { numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1); }
-    for(auto container: detectorContainerVector) container->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), numberOfEvents);
-}
-
-#else
-// One dimensional dac scan per BeBoard
-void Tool::scanBeBoardDac(uint16_t                             boardIndex,
-                          const std::string&                   dacName,
-                          const std::vector<uint16_t>&         dacList,
-                          uint32_t                             numberOfEvents,
-                          std::vector<DetectorDataContainer*>& detectorContainerVector,
-                          int32_t                              numberOfEventsPerBurst)
-{
-    if(dacList.size() != detectorContainerVector.size())
+    if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53A) // @TMP@
     {
-        LOG(ERROR) << __PRETTY_FUNCTION__ << " dacList and detector container vector have different sizes, aborting";
-        abort();
-    }
+        // #######################
+        // # Loop over DAC ...   #
+        // # Loop over goups ... #
+        // #######################
 
-    for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt)
+        for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt)
+        {
+            fDetectorDataContainer = detectorContainerVector[dacIt];
+            setDacAndMeasureBeBoardData(boardIndex, dacName, dacList[dacIt], numberOfEvents, numberOfEventsPerBurst);
+            this->sendData();
+        }
+    }
+    else
     {
-        fDetectorDataContainer = detectorContainerVector[dacIt];
-        setDacAndMeasureBeBoardData(boardIndex, dacName, dacList[dacIt], numberOfEvents, numberOfEventsPerBurst);
-        this->sendData();
+        // #######################
+        // # Loop over goups ... #
+        // # Loop over DAC ...   #
+        // #######################
+
+        ScanBeBoardDacPerGroup theScan(this);
+        theScan.setDataContainerVector(&detectorContainerVector);
+        theScan.setDacName(dacName);
+        theScan.setDacList(&dacList);
+
+        doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
+        if(fDetectorContainer->at(boardIndex)->getBoardType() == BoardType::D19C)
+        { numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->at(boardIndex), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1); }
+        for(auto container: detectorContainerVector) container->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), numberOfEvents);
     }
 }
-#endif
 
 // Set global DAC for all CBCs in the BeBoard
 void Tool::setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string& dacName, DetectorDataContainer& globalDACContainer)
@@ -2083,7 +2059,7 @@ void Tool::setAllGlobalDacBeBoard(uint16_t boardIndex, const std::string& dacNam
     }
 }
 
-// set local dac per BeBoard
+// Set local dac per BeBoard
 void Tool::setAllLocalDacBeBoard(uint16_t boardIndex, const std::string& dacName, DetectorDataContainer& globalDACContainer)
 {
     for(auto cOpticalGroup: *(fDetectorContainer->at(boardIndex)))
@@ -2112,7 +2088,7 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string& dacName, 
         fReadoutChipInterface->WriteBoardBroadcastChipReg(pBoard, dacName, dacValue);
 }
 
-// set same local dac for all BeBoard
+// Set same local dac for all BeBoard
 void Tool::setSameLocalDac(const std::string& dacName, const uint16_t dacValue)
 {
     LOG(INFO) << BOLDMAGENTA << "Setting local dac [ " << dacName << " ] to " << dacValue << RESET;
@@ -2121,7 +2097,7 @@ void Tool::setSameLocalDac(const std::string& dacName, const uint16_t dacValue)
     return;
 }
 
-// set same local dac per BeBoard
+// Set same local dac per BeBoard
 void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string& dacName, const uint16_t dacValue)
 {
     for(auto cOpticalGroup: *pBoard)

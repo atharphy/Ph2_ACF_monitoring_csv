@@ -24,7 +24,8 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
     PackWriteCommand(pChip, nameAndValue.first, nameAndValue.second, cmdStream, pVerifLoop);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());
 
-    if((regName == "VCAL_HIGH") || (regName == "VCAL_MED")) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP));
+    if((regName == "VCAL_HIGH") || (regName == "VCAL_MED"))
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->VCalSleepTime));
 
     bool     status      = true;
     uint16_t actualValue = 0;
@@ -33,7 +34,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
         if(regName == "PIX_PORTAL")
         {
             auto pixMode = RD53Interface::ReadChipReg(pChip, "PIX_MODE");
-            if((pChip->getFrontEndType() == FrontEndType::RD53A ? pixMode & RD53AConstants::AUTO_INCREMENT_MASK : pixMode & RD53BConstants::AUTO_INCREMENT_MASK) == 0) // Check only auto-increment bits
+            if((pixMode & RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->AutoIncrementMask) == 0) // Check only auto-increment bits
             {
                 auto regReadback = ReadRD53Reg(static_cast<RD53*>(pChip), regName);
                 actualValue      = regReadback[0].second;
@@ -76,7 +77,8 @@ void RD53Interface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std:
     PackWriteBroadcastCommand(pBoard, nameAndValue.first, nameAndValue.second, cmdStream);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, -1);
 
-    if((regName == "VCAL_HIGH") || (regName == "VCAL_MED")) std::this_thread::sleep_for(std::chrono::microseconds(VCALSLEEP));
+    if((regName == "VCAL_HIGH") || (regName == "VCAL_MED"))
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->VCalSleepTime));
 }
 
 uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
@@ -90,13 +92,14 @@ uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
         if(regReadback.size() == 0)
         {
             LOG(WARNING) << BLUE << "Empty register readback, attempt n. " << YELLOW << attempt + 1 << BLUE << "/" << YELLOW << nAttempts << RESET;
+            static_cast<RD53FWInterface*>(fBoardFW)->ResetReadBkFIFO(); // @TMP@ : temporary fix
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
         }
         else
             return regReadback[0].second;
     }
 
-    LOG(ERROR) << BOLDRED << "Empty register readback FIFO after " << BOLDYELLOW << nAttempts << BOLDRED " attempts" << RESET;
+    LOG(ERROR) << BOLDRED << "Empty register (" << BOLDYELLOW << regName << BOLDRED << ") readback FIFO after " << BOLDYELLOW << nAttempts << BOLDRED " attempts" << RESET;
 
     return 0;
 }
@@ -185,17 +188,10 @@ uint16_t RD53Interface::GetFieldValue(uint16_t regValue, uint8_t start, uint8_t 
 // # PRBS generator #
 // ##################
 
-void RD53Interface::StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip)
-{
-    auto regValue = RD53Constants::PATTERN_PRBS;
-    if((pChip->getRegItem("SER_SEL_OUT").fPrmptCfg == true) || (pChip->getRegItem("SER_SEL_OUT_0").fPrmptCfg == true) || (pChip->getRegItem("SER_SEL_OUT_1").fPrmptCfg == true) ||
-       (pChip->getRegItem("SER_SEL_OUT_2").fPrmptCfg == true) || (pChip->getRegItem("SER_SEL_OUT_3").fPrmptCfg == true))
-        regValue = RD53Constants::PATTERN_PRBS | (pChip->getRegItem("SER_SEL_OUT").fValue & 0xFC); // @TMP@
-    RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", regValue, false);
-}
+void RD53Interface::StartPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) { RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_PRBS, false); }
 void RD53Interface::StopPRBSpattern(Ph2_HwDescription::ReadoutChip* pChip) { RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false); }
 
-bool RD53Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& regName, ChipContainer& pValue, bool pVerifLoop)
+bool RD53Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& regName, const ChipContainer& pValue, bool pVerifLoop)
 {
     RD53* pRD53 = static_cast<RD53*>(pChip);
 
@@ -240,12 +236,12 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& obse
 {
     this->setBoard(pChip->getBeBoardId());
 
-    const float measError = 4.0; // Current or Voltage measurement error due to MONITOR_CONFIG resolution [%]
+    const float measError = 4.0; // Current or Voltage measurement error due to MonitorConfig resolution [%]
     float       value;
     bool        isCurrentNotVoltage;
     uint32_t    observable;
 
-    observable = getADCobservable(observableName, &isCurrentNotVoltage);
+    observable = getADCobservable(observableName, isCurrentNotVoltage);
 
     if(observableName.find("TEMPSENS") != std::string::npos)
     {
@@ -265,42 +261,18 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& obse
 
 uint32_t RD53Interface::ReadChipADC(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName)
 {
-    uint32_t observable = getADCobservable(observableName, nullptr);
-    return RD53Interface::measureADC(pChip, observable);
-}
+    bool     isCurrentNotVoltage;
+    uint32_t observable = getADCobservable(observableName, isCurrentNotVoltage);
 
-uint32_t RD53Interface::measureADC(ReadoutChip* pChip, uint32_t data)
-{
-    this->setBoard(pChip->getBeBoardId());
-
-    const uint16_t GLOBAL_PULSE_ROUTE = pChip->getRegItem("GLOBAL_PULSE_ROUTE").fAddress;
-    const uint8_t  chipID             = pChip->getId();
-    const uint16_t trimADC            = bits::pack<1, 5, 6>(true, pChip->getRegItem("MONITOR_CONFIG_BG").fValue, pChip->getRegItem("MONITOR_CONFIG_ADC").fValue);
-    // [10:6] band-gap trim [5:0] ADC trim. According to wafer probing they should give an average VrefADC of 0.9 V
-    const uint16_t GlbPulseVal = RD53Interface::ReadChipReg(pChip, "GLOBAL_PULSE_ROUTE");
-
-    std::vector<uint16_t> commandList;
-
-    RD53ACmd::serialize(RD53ACmd::WrReg{chipID, pChip->getRegItem("MONITOR_CONFIG").fAddress, trimADC}, commandList);
-    RD53ACmd::serialize(RD53ACmd::WrReg{chipID, GLOBAL_PULSE_ROUTE, 0x0040}, commandList); // Reset Monitor Data
-    RD53ACmd::serialize(RD53ACmd::GlobalPulse{pChip->getId(), 0x0004}, commandList);
-    RD53ACmd::serialize(RD53ACmd::WrReg{chipID, GLOBAL_PULSE_ROUTE, 0x0008}, commandList); // Clear Monitor Data
-    RD53ACmd::serialize(RD53ACmd::GlobalPulse{pChip->getId(), 0x0004}, commandList);
-    RD53ACmd::serialize(RD53ACmd::WrReg{chipID, pChip->getRegItem("MONITOR_SELECT").fAddress, data}, commandList); // 14 bits: bit 13 enable, bits 7:12 I-Mon, bits 0:6 V-Mon
-    RD53ACmd::serialize(RD53ACmd::WrReg{chipID, GLOBAL_PULSE_ROUTE, 0x1000}, commandList);                         // Trigger Monitor Data to start conversion
-    RD53ACmd::serialize(RD53ACmd::GlobalPulse{pChip->getId(), 0x0004}, commandList);
-    RD53ACmd::serialize(RD53ACmd::WrReg{chipID, GLOBAL_PULSE_ROUTE, GlbPulseVal}, commandList); // Restore value in Global Pulse Route
-
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pChip->getHybridId());
-    return RD53Interface::ReadChipReg(pChip, "MONITORING_DATA_ADC");
+    return measureADC(pChip, observable);
 }
 
 float RD53Interface::measureVoltageCurrent(ReadoutChip* pChip, uint32_t data, bool isCurrentNotVoltage)
 {
     const float safetyMargin = 0.9; // @CONST@
 
-    auto ADC = RD53Interface::measureADC(pChip, data);
-    if(ADC > (RD53Shared::setBits(pChip->getNumberOfBits("MONITORING_DATA_ADC")) + 1.) * safetyMargin)
+    auto ADC = measureADC(pChip, data);
+    if(ADC > (RD53Shared::setBits(pChip->getNumberOfBits("MonitoringDataADC")) + 1.) * safetyMargin)
         LOG(WARNING) << BOLDRED << "\t\t--> ADC measurement in saturation (ADC = " << BOLDYELLOW << ADC << BOLDRED
                      << "): likely the IMUX resistor, that converts the current into a voltage, is not connected" << RESET;
 
@@ -331,13 +303,13 @@ float RD53Interface::measureTemperature(ReadoutChip* pChip, uint32_t data)
     sensorConfigData = bits::pack<1, 4, 1, 1, 4, 1>(true, sensorDEM, 0, true, sensorDEM, 0);
     RD53Interface::WriteChipReg(pChip, "SENSOR_CONFIG_0", sensorConfigData);
     RD53Interface::WriteChipReg(pChip, "SENSOR_CONFIG_1", sensorConfigData);
-    auto valueLow = RD53Interface::convertADC2VorI(pChip, RD53Interface::measureADC(pChip, data));
+    auto valueLow = RD53Interface::convertADC2VorI(pChip, measureADC(pChip, data));
 
     // Get low bias voltage
     sensorConfigData = bits::pack<1, 4, 1, 1, 4, 1>(true, sensorDEM, 1, true, sensorDEM, 1);
     RD53Interface::WriteChipReg(pChip, "SENSOR_CONFIG_0", sensorConfigData);
     RD53Interface::WriteChipReg(pChip, "SENSOR_CONFIG_1", sensorConfigData);
-    auto valueHigh = RD53Interface::convertADC2VorI(pChip, RD53Interface::measureADC(pChip, data));
+    auto valueHigh = RD53Interface::convertADC2VorI(pChip, measureADC(pChip, data));
 
     return e / (idealityFactor * kb * log(R)) * (valueHigh - valueLow) - T0C;
 }
@@ -348,12 +320,14 @@ float RD53Interface::convertADC2VorI(ReadoutChip* pChip, uint32_t value, bool is
     // # ADCoffset     =  63 [1/10mV] Offset due to ground shift           #
     // # actualVrefADC = 839 [mV]     Lower than VrefADC due to parasitics #
     // #####################################################################
+
     const float resistorI2V   = 0.01; // [MOhm]
     const float ADCoffset     = pChip->getRegItem("ADC_OFFSET_VOLT").fValue / 1e4;
     const float actualVrefADC = pChip->getRegItem("ADC_MAXIMUM_VOLT").fValue / 1e3;
 
-    const float ADCslope = (actualVrefADC - ADCoffset) / (RD53Shared::setBits(pChip->getNumberOfBits("MONITORING_DATA_ADC")) + 1); // [V/ADC]
+    const float ADCslope = (actualVrefADC - ADCoffset) / (RD53Shared::setBits(pChip->getNumberOfBits("MonitoringDataADC")) + 1); // [V/ADC]
     const float voltage  = ADCoffset + ADCslope * value;
+
     return voltage / (isCurrentNotVoltage == true ? resistorI2V : 1);
 }
 

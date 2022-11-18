@@ -106,7 +106,7 @@ class Tool : public Ph2_System::SystemController
     virtual void Running(){};
     virtual bool GetRunningStatus();
 
-    void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000, bool doAlsoFrontend = true) override;
+    void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000) override;
     void Start(int runNumber) override;
     void Stop() override;
 
@@ -370,9 +370,9 @@ class Tool : public Ph2_System::SystemController
     StatsSum SummarizeStats(std::vector<T> cData)
     {
         T cInitVal = (T)(0);
-        // remove NANs
+        // Remove NANs
         cData.erase(std::remove_if(cData.begin(), cData.end(), [](T x) { return std::isnan(x); }), cData.end());
-        // calculate stats
+        // Calculate stats
         StatsSum cStatsSum;
         cStatsSum.fSum      = std::accumulate(cData.begin(), cData.end(), cInitVal);
         cStatsSum.fMean     = cStatsSum.fSum / cData.size();

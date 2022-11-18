@@ -708,7 +708,7 @@ bool MPAInterface::WriteChipMultReg(Chip* pMPA, const std::vector<std::pair<std:
     return fBoardFW->MultiRegisterWrite(pMPA, cRegItems, pVerify);
 }
 
-bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& dacName, ChipContainer& localRegValues, bool pVerify)
+bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& dacName, const ChipContainer& localRegValues, bool pVerify)
 {
     setBoard(pMPA->getBeBoardId());
     assert(localRegValues.size() == pMPA->getNumberOfChannels());

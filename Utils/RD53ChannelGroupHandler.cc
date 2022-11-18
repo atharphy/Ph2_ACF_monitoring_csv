@@ -24,7 +24,7 @@ RD53ChannelGroupHandler::RD53ChannelGroupHandler(size_t rowStart, size_t rowStop
     }
     else
     {
-        numberOfGroups_  = onlyNGroups == 0 ? (nRows / hitPerCol) : onlyNGroups;
+        numberOfGroups_  = (onlyNGroups == 0 ? nRows / hitPerCol : onlyNGroups);
         allChannelGroup_ = std::shared_ptr<ChannelGroupBase>(&enabledGroups, [](auto*) {});
     }
 }

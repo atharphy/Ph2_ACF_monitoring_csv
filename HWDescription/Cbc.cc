@@ -48,7 +48,6 @@ Cbc::Cbc(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pH
 }
 
 // load fRegMap from file
-
 void Cbc::loadfRegMap(const std::string& filename)
 {
     std::ifstream file(filename.c_str(), std::ios::in);
@@ -116,10 +115,11 @@ void Cbc::loadfRegMap(const std::string& filename)
         exit(1);
     }
 }
+
 // Write RegValues in a file
-void Cbc::saveRegMap(const std::string& filename)
+std::stringstream Cbc::saveRegMap(const std::string& fName2Add)
 {
-    std::ofstream file(filename.c_str(), std::ios::out | std::ios::trunc);
+    std::ofstream file(this->getFileName(fName2Add), std::ios::out | std::ios::trunc);
 
     if(file)
     {
@@ -156,6 +156,8 @@ void Cbc::saveRegMap(const std::string& filename)
     }
     else
         LOG(ERROR) << "Error opening file";
+
+    return std::stringstream("");
 }
 
 } // namespace Ph2_HwDescription

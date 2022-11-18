@@ -10,19 +10,16 @@
 #ifndef RD53BERtest_H
 #define RD53BERtest_H
 
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "Tool.h"
+#include "RD53CalibBase.h"
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53BERtestHistograms.h"
-#include "TApplication.h"
 #endif
 
 // ##################
 // # BER test suite #
 // ##################
-class BERtest : public Tool
+class BERtest : public CalibBase
 {
   public:
     ~BERtest()
@@ -30,6 +27,7 @@ class BERtest : public Tool
 #ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
+        delete histos;
 #endif
     }
 
@@ -38,17 +36,17 @@ class BERtest : public Tool
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
-    void initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
-    void run();
-    void draw();
+    void localConfigure(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void initializeFiles(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void run() override;
+    void draw(bool saveData = true) override;
 
 #ifdef __USE_ROOT__
     BERtestHistograms* histos;
 #endif
 
   private:
-    void fillHisto();
+    void fillHisto() override;
 
   protected:
     size_t chain2test;
