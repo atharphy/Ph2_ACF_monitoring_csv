@@ -724,7 +724,7 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDBLUE << "Flushing check BRAM!" << RESET;
         cSEHTester.ClearBRAM(std::string("test"));
     }
-    // cSEHTester.freeTest();
+    cSEHTester.freeTest();
     cSEHTester.SetLoad(0, 0);
     cSEHTester.LpGBTInjectULExternalPattern(false, 170);
 

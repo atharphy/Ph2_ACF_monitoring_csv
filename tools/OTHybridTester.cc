@@ -1058,12 +1058,42 @@ std::pair<bool, uint8_t> OTHybridTester::PhaseTuneLineEleFC7(uint8_t pHybrid, ui
 
 void OTHybridTester::freeTest()
 {
+    float cTestCard1V25= 0;
+    float cGain=0;
+    uint16_t cOffset=0;
+    uint16_t cADC1V25=0;
+    uint16_t cADCTempp=0;
+
+    flpGBTInterface->GetExternalController()->getInterface().read_supply(TC_2SSEH::supplyMeasurement::U_P1V25, cTestCard1V25);
+    flpGBTInterface->GetExternalController()->getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
+    std::cout << "trim" << "," << "offset" << "," << "gain" << ","<< "cADC1V25" << "," << "cTestCard1V25" << "," << "cVref" << std::endl;
+
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
         for(auto cOpticalGroup: *cBoard)
         {
+            /* for(int trim=0; trim<0xff;trim+=0x1){
+            clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "VREFTUNE",trim);
+
+            cGain=clpGBTInterface->GetADCGain(cOpticalGroup->flpGBT,false);
+            cOffset=clpGBTInterface->GetADCOffset(cOpticalGroup->flpGBT,false);
+            cADC1V25=clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "ADC1", "VREF/2");
+            float cVref=cTestCard1V25*200./310.*cGain*512/(cADC1V25-cOffset*(1-cGain/2.));
+            std::cout<<std::dec << trim << "," << cOffset << "," << cGain << ","<< cADC1V25 << "," << cTestCard1V25 << "," << cVref << std::endl;
+
+            } */
+            clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "VREFTUNE",132); //optimal tune
+            cGain=clpGBTInterface->GetADCGain(cOpticalGroup->flpGBT,false);
+            cOffset=clpGBTInterface->GetADCOffset(cOpticalGroup->flpGBT,false);
+            for(int cDAC=0; cDAC<0xff;cDAC+=0x1) {
+                clpGBTInterface->ConfigureCurrentDAC(cOpticalGroup->flpGBT, std::vector<std::string>{"ADC4"}, cDAC);
+                cADCTempp = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "ADC4", "VREF/2");
+                float cTemppVoltage = 1./cGain/512.*(cADCTempp-cOffset*(1.-cGain/2.))
+                float cCurrent = cTemppVoltage/5000.*1e6
+                std::cout<<std::dec << cDAC << "," << cADCTempp << "," << cTemppVoltage <<"," << cCurrent << std::endl;
+            }
             //######################################
             // uint16_t offset;
             // uint16_t GNDmVREF;
@@ -1091,7 +1121,9 @@ void OTHybridTester::freeTest()
             // }
             //######################################
 
+            //##########
             for(int i = 0; i < 0xff; i += 4) { clpGBTInterface->ReadChipFusedBlock(cOpticalGroup->flpGBT, 0, i); }
+            //##########
         }
     }
 }
