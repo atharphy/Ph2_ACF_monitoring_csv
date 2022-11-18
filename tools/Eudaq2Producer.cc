@@ -452,9 +452,9 @@ void Eudaq2Producer::DoTerminate()
 {
     LOG(INFO) << "[CMS-OT Producer] Terminating Run..." << RESET;
     fExitRun = true, fConfigured = false;
-    if(fThreadRun.joinable()) { fThreadRun.join(); }
     LOG(INFO) << "[CMS-OT Producer] Terminated Run" << RESET;
     EUDAQ_INFO("[CMS-OT Producer] SUCESS : Terminated Run");
+    if(fThreadRun.joinable()) { fThreadRun.join(); }
 }
 
 // ReadoutLoop has been modified in order to allow for the acquisition of multiple events by a single trigger signal.
@@ -595,8 +595,8 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
         {
             uint8_t cOpticalGroupId = cOpticalGroup->getId();
             // Assign an Id to each sensor
-            uint8_t cPixelSensorId = 2 * cOpticalGroupId;
-            uint8_t cStripSensorId = 2 * cOpticalGroupId + 1;
+            uint8_t cPixelSensorId = 0;
+            uint8_t cStripSensorId = 1;
             // Data containers
             uint16_t             cNPixelHit = 0, cNStripHit = 0;
             uint16_t             cPixelDataOffset = 0, cStripDataOffset = 0;
