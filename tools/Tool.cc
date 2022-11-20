@@ -1961,6 +1961,7 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::PSAS)
     {
         this->setSameGlobalDac("AnalogueAsync", 1);
+/*
         for(auto cBoard: *fDetectorContainer)
         {
             for(auto cOpticalGroup: *cBoard)
@@ -1971,6 +1972,7 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
                 }
             }
         }
+*/
         fUseReadNEvents = true;
     }
     doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
