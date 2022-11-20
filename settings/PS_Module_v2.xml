@@ -2,11 +2,11 @@
 <HwDescription>
   <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
   <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1" boardReset="1">
-    <!--<connection id="board" uri="chtcp-2.0://cmsmoduletest01:10203?target=192.168.1.84:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />-->
-    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.14:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://cmsmoduletest01:10203?target=192.168.1.84:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
+    <!--<connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.14:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />-->
     <CDCE configure="0" clockRate="320"/>
     
-    <OpticalGroup Id="0" FMCId="L12" reset="1">
+    <OpticalGroup Id="1" FMCId="L12" reset="1">
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
         <lpGBT Id="0" version="1" optical="1" configfile="lpGBT_v1.txt">
           <Settings
@@ -32,9 +32,63 @@
             
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
             <SSA2 Id="0" configfile="SSA2.txt" />
+            <SSA2 Id="1" configfile="SSA2.txt" />
+            <SSA2 Id="2" configfile="SSA2.txt" />
+            <SSA2 Id="5" configfile="SSA2.txt" />
+            <SSA2 Id="6" configfile="SSA2.txt" />
+            <SSA2 Id="7" configfile="SSA2.txt" />
       
             <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
-            <MPA2 Id="8" configfile="MPA2Default.txt" /> 
+            <MPA2 Id="8" configfile="MPA2_Default.txt" /> 
+            <MPA2 Id="9" configfile="MPA2_Default.txt" /> 
+            <MPA2 Id="10" configfile="MPA2_Default.txt" /> 
+            <MPA2 Id="11" configfile="MPA2_Default.txt" /> 
+            <MPA2 Id="12" configfile="MPA2_Default.txt" /> 
+            <MPA2 Id="13" configfile="MPA2_Default.txt" /> 
+            <MPA2 Id="14" configfile="MPA2_Default.txt" /> 
+            <MPA2 Id="15" configfile="MPA2_Default.txt" /> 
+
+            <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
+            <CIC2 Id="8" configfile="CIC2_default.txt" />
+        </Hybrid>
+
+        <Hybrid Id="1" enable="1" reset="1">
+            <Global>
+                <!-- in electrons, file parser will take care of conversion to DAC units for each chip type --> 
+                <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  -->
+                <!-- Window in half pixels  -->
+                <!-- (0) edge, (1) level, (2) OR, (3) XOR  -->
+                <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns -->
+                <!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
+                <Latencies       stripLatency="122" pixelLatency="122"/>
+                <Thresholds      stripThreshold="80" pixelThreshold="80"/> 
+                <StubLogic       mode="3" window="2"/>
+                <HitLogic        stripMode="1" pixelMode="1"/>
+                <HipLogic        stripCut="7" pixelCut="7"/>
+                <SamplingDelay   stripCoarse="1" stripFine="0" pixelCoarse="2" pixelFine="0"/>
+                <InjectedCharge  stripCharge="0" pixelCharge="0"/> 
+                <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
+            </Global>
+            
+            <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
+            <SSA2 Id="0" configfile="SSA2.txt" />
+            <SSA2 Id="1" configfile="SSA2.txt" />
+            <SSA2 Id="2" configfile="SSA2.txt" />
+            <SSA2 Id="3" configfile="SSA2.txt" />
+            <SSA2 Id="4" configfile="SSA2.txt" />
+            <SSA2 Id="5" configfile="SSA2.txt" />
+            <SSA2 Id="6" configfile="SSA2.txt" />
+            <SSA2 Id="7" configfile="SSA2.txt" />
+      
+            <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
+            <MPA2 Id="8" configfile="MPA2_Default.txt" /> 
+            <MPA2 Id="9" configfile="MPA2_Default.txt" /> 
+            <MPA2 Id="10" configfile="MPA2_Default.txt" /> 
+            <MPA2 Id="11" configfile="MPA2_Default.txt" /> 
+            <MPA2 Id="12" configfile="MPA2_Default.txt" /> 
+            <MPA2 Id="13" configfile="MPA2_Default.txt" /> 
+            <MPA2 Id="14" configfile="MPA2_Default.txt" /> 
+            <MPA2 Id="15" configfile="MPA2_Default.txt" /> 
 
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
@@ -78,15 +132,15 @@
         <Register name="fast_command_block">
             <Register name="triggers_to_accept"> 0 </Register>
             <Register name="trigger_source"> 3 </Register>
-            <Register name="user_trigger_frequency"> 500 </Register>
+            <Register name="user_trigger_frequency"> 1000 </Register>
             <Register name="stubs_mask"> 1 </Register>
             <!--this is the delay for the stub trigger-->
             <Register name="stub_trigger_delay_value"> 0 </Register>
             <Register name="stub_trigger_veto_length"> 0 </Register>
             <Register name="test_pulse">
-                <Register name="delay_after_fast_reset"> 100 </Register>
-                <Register name="delay_after_test_pulse"> 300 </Register>
-                <Register name="delay_before_next_pulse"> 400 </Register>
+                <Register name="delay_after_fast_reset"> 80 </Register>
+                <Register name="delay_after_test_pulse"> 200 </Register>
+                <Register name="delay_before_next_pulse"> 100 </Register>
                 <Register name="en_fast_reset"> 0 </Register>
                 <Register name="en_test_pulse"> 1 </Register>
                 <Register name="en_l1a"> 1 </Register>
@@ -113,7 +167,7 @@
                     <Register name="stubOR"> 1 </Register>
                     <Register name="initial_fast_reset_enable"> 0 </Register>
                     <Register name="trigger_timeout_enable"> 0 </Register>
-                   <Register name="trigger_multiplicity"> 2 </Register>
+                   <Register name="trigger_multiplicity"> 0 </Register>
             </Register>
         </Register>
     <!-- I2C manager -->
@@ -184,7 +238,7 @@
 
     <!-- 0 : digital; 1 : analogue --> 
     <Setting name="InjectionType">1</Setting>
-    <Setting name="TriggerMultiplicity">2</Setting>
+    <Setting name="TriggerMultiplicity">0</Setting>
 
 
 
