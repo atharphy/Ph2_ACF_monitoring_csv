@@ -963,13 +963,13 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
         {
             for(auto cChip: *cHybrid)
             {
-                if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                if(cChip->getFrontEndType() == FrontEndType::MPA)
                 {
                     auto cMode = cChip->getReg("ModeSel_ALL");
                     fReadoutChipInterface->WriteChipReg(cChip, "ModeSel_ALL", cMode);
                     LOG(INFO) << BOLDMAGENTA << "Setting HitLogicMode register on Chip#" << +cChip->getId() << " to " << cMode << RESET;
                 }
-                else if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
+                else if(cChip->getFrontEndType() == FrontEndType::SSA)
                 {
                     auto cMode = cChip->getReg("SAMPLINGMODE_ALL");
                     fReadoutChipInterface->WriteChipReg(cChip, "SAMPLINGMODE_ALL", cMode);
@@ -1009,10 +1009,11 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
         {
             for(auto cChip: *cHybrid)
             {
+		if(cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::MPA2) continue;
                 uint16_t cLatency = 0;
-                if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                if(cChip->getFrontEndType() == FrontEndType::MPA)
                 { cLatency = cChip->getReg("L1Offset_2_ALL") << 8 | cChip->getReg("L1Offset_1_ALL"); }
-                else if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
+                else if(cChip->getFrontEndType() == FrontEndType::SSA)
                 {
                     cLatency = cChip->getReg("L1-Latency_MSB") << 8 | cChip->getReg("L1-Latency_LSB");
                 }
@@ -1034,14 +1035,15 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
         {
             for(auto cChip: *cHybrid)
             {
+		if(cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::MPA2) continue;
                 uint16_t    cCut = 0;
                 std::string cRegName;
-                if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+                if(cChip->getFrontEndType() == FrontEndType::MPA)
                 {
                     cRegName = "HipCut_ALL";
                     cCut     = cChip->getReg(cRegName);
                 }
-                else if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
+                else if(cChip->getFrontEndType() == FrontEndType::SSA)
                 {
                     cRegName = "HIPCUT_ALL";
                     cCut     = cChip->getReg(cRegName);
@@ -1062,7 +1064,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
         {
             for(auto cChip: *cHybrid)
             {
-                if(cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::SSA2)
+                if(cChip->getFrontEndType() == FrontEndType::SSA)
                 {
                     std::vector<std::string> cRegNames{"PhaseShiftClock", "ClockDeskewing"};
                     for(auto cRegName: cRegNames)
@@ -1071,9 +1073,27 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                         fReadoutChipInterface->WriteChipReg(cChip, cRegName, cValueInMemory);
                     }
                 }
-                else if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
+		//if(cChip->getFrontEndType() == FrontEndType::SSA2)
+                //{
+                //    std::vector<std::string> cRegNames{"PhaseShiftClock", "ClockDeskewing"};
+                //    for(auto cRegName: cRegNames)
+                //    {
+                //        auto cValueInMemory = cChip->getReg(cRegName);
+                //        fReadoutChipInterface->WriteChipReg(cChip, cRegName, cValueInMemory);
+                //    }
+                //}
+                else if(cChip->getFrontEndType() == FrontEndType::MPA)
                 {
                     std::vector<std::string> cRegNames{"PhaseShift", "ConfDLL"};
+                    for(auto cRegName: cRegNames)
+                    {
+                        auto cValueInMemory = cChip->getReg(cRegName);
+                        fReadoutChipInterface->WriteChipReg(cChip, cRegName, cValueInMemory);
+                    }
+                }
+		else if(cChip->getFrontEndType() == FrontEndType::MPA2)
+                {
+                    std::vector<std::string> cRegNames{"ConfDLL"};
                     for(auto cRegName: cRegNames)
                     {
                         auto cValueInMemory = cChip->getReg(cRegName);
