@@ -32,11 +32,11 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 25/07/2022
++ Last change made to this section: 21/11/2022
 ```
 
 **Suggested software and firmware versions:**
-- Software git branch / tag : `Dev` / `v4-06`
+- Software git branch / tag : `Dev` / `v4-07`
 - Firmware tag: `4.5`
 
 **Important webpages:**
