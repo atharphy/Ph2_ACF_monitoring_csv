@@ -261,6 +261,9 @@ void RD53::loadfRegMap(const std::string& fileName)
 }
 
 std::stringstream RD53::saveRegMap(const std::string& fName2Add)
+// #################################################################
+// # If fName2Add != STREAMON --> then data are also saved on file #
+// #################################################################
 {
     const int Nspaces = 26; // @CONST@
 
@@ -323,7 +326,7 @@ std::stringstream RD53::saveRegMap(const std::string& fName2Add)
         theStream << std::endl;
     }
 
-    if(fName2Add != "ONSTREAM")
+    if(fName2Add != "STREAMON")
     {
         file.open(fileName.c_str(), std::ios::out | std::ios::trunc);
 
