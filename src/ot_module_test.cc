@@ -11,18 +11,18 @@
 #include "tools/CheckCbcNeighbors.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
+#include "tools/KIRA.h"
 #include "tools/LatencyScan.h"
 #include "tools/LinkAlignmentOT.h"
 #include "tools/MemoryCheck2S.h"
 #include "tools/OTCMNoise.h"
 #include "tools/OTTemperature.h"
 #include "tools/PSAlignment.h"
+#include "tools/PSBiasCal.h"
 #include "tools/PedeNoise.h"
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
-#include "tools/PSBiasCal.h"
-#include "tools/KIRA.h"
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -207,7 +207,7 @@ int main(int argc, char* argv[])
     std::string cInjectionSource = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
     std::string cSrcLnkTst       = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
     std::string cModuleId        = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
-    int cKiraPort                = std::stoi((cmd.foundOption("kira")) ? cmd.optionValue("kira") : "7010");
+    int         cKiraPort        = std::stoi((cmd.foundOption("kira")) ? cmd.optionValue("kira") : "7010");
     std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     bool        cPulseShape      = (cmd.foundOption("pulseShape")) ? true : false;
 
@@ -516,7 +516,7 @@ int main(int argc, char* argv[])
         cCicAligner.Start(cRunNumber);
         cCicAligner.waitForRunToBeCompleted();
 
-        //cCicAligner.dumpConfigFiles();
+        // cCicAligner.dumpConfigFiles();
 
         // quickly check ReadData
         // for(const auto cBoard: *cTool.fDetectorContainer)
@@ -886,10 +886,10 @@ int main(int argc, char* argv[])
                             }
                             if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
                             {
-                LOG(INFO) << BOLDBLUE << "1" << RESET;
+                                LOG(INFO) << BOLDBLUE << "1" << RESET;
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "ModeSel_ALL", cSamplingMPA);
-                LOG(INFO) << BOLDBLUE << "2" << RESET;
+                                LOG(INFO) << BOLDBLUE << "2" << RESET;
                             }
                         }
                     }
@@ -929,15 +929,15 @@ int main(int argc, char* argv[])
                 }
             }
         }
-                LOG(INFO) << BOLDBLUE << "3" << RESET;
+        LOG(INFO) << BOLDBLUE << "3" << RESET;
         LatencyScan cLatencyScan;
-                LOG(INFO) << BOLDBLUE << "4" << RESET;
+        LOG(INFO) << BOLDBLUE << "4" << RESET;
         cLatencyScan.Inherit(&cTool);
-                LOG(INFO) << BOLDBLUE << "5" << RESET;
+        LOG(INFO) << BOLDBLUE << "5" << RESET;
         cLatencyScan.Initialize();
-                LOG(INFO) << BOLDBLUE << "6" << RESET;
+        LOG(INFO) << BOLDBLUE << "6" << RESET;
         cLatencyScan.ScanLatency();
-                LOG(INFO) << BOLDBLUE << "7" << RESET;
+        LOG(INFO) << BOLDBLUE << "7" << RESET;
     }
     // measure noise on FE chips
     if(cmd.foundOption("measurePedeNoise") && !cmd.foundOption("read"))

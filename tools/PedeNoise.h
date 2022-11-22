@@ -56,12 +56,12 @@ class PedeNoise : public Tool
     void cleanContainerVector();
     void initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
 
-    uint8_t  fPulseAmplitude{0};
+    uint8_t fPulseAmplitude{0};
 
     float fPedeNoiseLimit{0.0};
-    bool fPedeNoiseMask{false};
+    bool  fPedeNoiseMask{false};
     float fPedeNoiseUntrimmedLimit{0.0};
-    bool fPedeNoiseMaskUntrimmed{false};
+    bool  fPedeNoiseMaskUntrimmed{false};
 
     uint32_t fEventsPerPoint{0};
     uint32_t fMaxNevents{65535};

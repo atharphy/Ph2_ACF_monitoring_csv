@@ -72,11 +72,11 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard)
 
                         cBaseRegisterLSB = ((cRowNumber << 11) | (9 << 7) | cPixelNumber);
                         cBaseRegisterMSB = ((cRowNumber << 11) | (10 << 7) | cPixelNumber);
-			if(cChip->getFrontEndType() == FrontEndType::MPA2) 
-			{
-			    cBaseRegisterLSB-=0x280;
-			    cBaseRegisterMSB-=0x280;
-			}
+                        if(cChip->getFrontEndType() == FrontEndType::MPA2)
+                        {
+                            cBaseRegisterLSB -= 0x280;
+                            cBaseRegisterMSB -= 0x280;
+                        }
                     }
                     if(cChip->getFrontEndType() == FrontEndType::SSA)
                     {
@@ -117,7 +117,7 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard)
             } // chip loop
         }     // hybrid loop
     }         // board loop
-    //PS_Clear_counters();
+    // PS_Clear_counters();
 }
 bool D19cPSCounterFWInterface::ReadPSCountersFast(uint8_t pRawMode, size_t pChipId, size_t pHybridId)
 {

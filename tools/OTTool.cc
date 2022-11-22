@@ -72,8 +72,8 @@ void OTTool::Reset()
                 for(auto cChip: *cHybrid)
                 {
                     std::vector<std::string> cRegsToSkip{"mask_strip", "mask_peri_A", "mask_peri_D"};
-                    auto& cChipRegsToPreserveThisChip = cChipRegsToPreserveThisHybrd->at(cChip->getIndex());
-                    auto& cRegsToPerserve             = cChipRegsToPreserveThisChip->getSummary<std::vector<std::string>>();
+                    auto&                    cChipRegsToPreserveThisChip = cChipRegsToPreserveThisHybrd->at(cChip->getIndex());
+                    auto&                    cRegsToPerserve             = cChipRegsToPreserveThisChip->getSummary<std::vector<std::string>>();
                     // reset registers
                     auto cModMap = cChip->GetModifiedRegisterMap();
                     LOG(DEBUG) << BOLDYELLOW << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
@@ -848,7 +848,7 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                 if(cChip->getId() % 8 != pChipId && pChipId > 0) continue;
                 LOG(DEBUG) << BOLDMAGENTA << "Injecting patterns in Chip#" << +cChip->getId() << RESET;
                 // make sure L1 latency is configured
-                if(cChip->getFrontEndType() == FrontEndType::MPA or cChip->getFrontEndType() == FrontEndType::MPA2 )
+                if(cChip->getFrontEndType() == FrontEndType::MPA or cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
                     if(fInjectionType == 0)
                     {
@@ -879,7 +879,6 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                         fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L", 0x00);
                         fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_H", 0x00);
                         fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
-
                     }
                     for(auto cInjection: pInjections)
                     {

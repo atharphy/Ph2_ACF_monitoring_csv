@@ -46,7 +46,8 @@ void BackEndAlignment::Initialise()
                 cEnabled                = 0;
                 for(auto cChip: *cHybrid)
                 {
-		    if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2 ||  cChip->getFrontEndType() == FrontEndType::CBC3) cEnabled = cEnabled | (1 << cChip->getId());
+                    if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2 || cChip->getFrontEndType() == FrontEndType::CBC3)
+                        cEnabled = cEnabled | (1 << cChip->getId());
                 }
             }
         }
@@ -538,7 +539,7 @@ bool BackEndAlignment::Align()
         bool cWithSSA          = false;
         bool cWithSSA2         = false;
         bool cWithMPA          = false;
-        bool cWithMPA2          = false;
+        bool cWithMPA2         = false;
 
         for(auto cOpticalReadout: *cBoard)
         {

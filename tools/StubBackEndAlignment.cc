@@ -236,9 +236,8 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
     uint32_t cNevents   = 10;
     auto     cSetting   = fSettingsMap.find("StubAlignmentThreshold");
     uint32_t cThreshold = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 120;
-    auto    cSetting1            = fSettingsMap.find("StubAlignmentScanStart");
+    auto     cSetting1  = fSettingsMap.find("StubAlignmentScanStart");
     uint32_t cScanStart = (cSetting1 != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting1->second) : 100;
-
 
     // sparsification of
     bool cSparsified = pBoard->getSparsification();
@@ -257,8 +256,8 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
     // reconfigure fast commands
     // fast command config
     // if PS module want trigger multiplicty to be 3
-    //uint8_t                  cMult            = (cWithPS) ? 2 : 0;
-    uint8_t                  cMult            =  0;
+    // uint8_t                  cMult            = (cWithPS) ? 2 : 0;
+    uint8_t                  cMult            = 0;
     uint8_t                  cTriggerSource   = 6;
     uint16_t                 cDelayAfterReset = 100;
     uint16_t                 cDelayAfterTP    = 200;
@@ -341,7 +340,6 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
 
-
                 std::vector<Injection> cInjections(0);
                 for(size_t cIndx = 0; cIndx < cRows.size(); cIndx++)
                 {
@@ -359,7 +357,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                 fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", cStubWindow);
                 cReTime = fReadoutChipInterface->ReadChipReg(cChip, "RetimePix");
 
-                (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cInjections,0x01);
+                (static_cast<PSInterface*>(fReadoutChipInterface))->digiInjection(cChip, cInjections, 0x01);
             } // PS chips  - MPAs
 
             // for PS - digital injection in SSAs
