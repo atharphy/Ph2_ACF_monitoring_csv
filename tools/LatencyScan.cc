@@ -275,7 +275,6 @@ void LatencyScan::ScanLatency()
                                 }
                                 else
                                 {
-
                                     std::vector<PCluster> cPclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetPixelClusters(cHybrid->getId(), cChip->getId());
                                     std::vector<SCluster> cSclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetStripClusters(cHybrid->getId(), cChip->getId());
 
@@ -283,12 +282,12 @@ void LatencyScan::ScanLatency()
                                     cTotalHitsS1 += cSclstrs.size();
                                     if(cPclstrs.size() > 0 && cSclstrs.size() > 0)
                                         LOG(INFO) << BOLDBLUE << "\t\t\t\t Event#" << (*cEventIter)->GetEventCount() << " Trigger#" << +cTriggerId << " Chip#" << +cChip->getId() % 8 << " "
-                                                   << +cPclstrs.size() << " P-clusters " << +cSclstrs.size() << " S-clusters." << RESET;
+                                                  << +cPclstrs.size() << " P-clusters " << +cSclstrs.size() << " S-clusters." << RESET;
                                     for(auto& cPclstr: cPclstrs)
                                     {
                                         if(cSclstrs.size() > 0)
                                             LOG(INFO) << BOLDBLUE << "\tHit in Pixel ASIC" << +cChip->getId() % 8 << " row " << +cPclstr.fAddress << " col " << +cPclstr.fZpos << " width "
-                                                       << +cPclstr.fWidth << RESET;
+                                                      << +cPclstr.fWidth << RESET;
                                         for(uint8_t cId = 0; cId < (1 + cPclstr.fWidth); cId++)
                                         {
                                             cHitContainer.at(cBoard->getIndex())
@@ -336,16 +335,14 @@ void LatencyScan::ScanLatency()
                     cNEventsThisTriggerId++;
                 } while(cEventIter < cEvents.end());
 
-		//Doesnt work PSv2 -- tofix
-                //cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), getChannelGroupHandlerContainer()->getObject(cOccBrd->getId()), cNormalizationFactor);
-		//\Doesnt work PSv2
-
+                // Doesnt work PSv2 -- tofix
+                // cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), getChannelGroupHandlerContainer()->getObject(cOccBrd->getId()), cNormalizationFactor);
+                //\Doesnt work PSv2
 
                 // float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
                 cTotalHits = cTotalHitsS0 + cTotalHitsS1;
                 if(cTotalHits > 0)
                 {
-
                     if(cTotalHits >= cMaxHits)
                     {
                         LOG(INFO) << BOLDYELLOW << "[!!!! new max !!!!]Latency of " << (cLat + cTriggerId) << " - trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult)
@@ -566,9 +563,9 @@ void LatencyScan::StubLatencyScan()
                                 else if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
                                 {
                                     auto cStubs = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
-                                    auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
+                                    auto cHits  = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
                                     cNStubs     = cStubs.size();
-                                    LOG(INFO) << BOLDGREEN << "cNStubs"<<cNStubs<<","<<cHits.size() << " hits in this event... " << RESET;
+                                    LOG(INFO) << BOLDGREEN << "cNStubs" << cNStubs << "," << cHits.size() << " hits in this event... " << RESET;
                                 }
 
                             } // chip

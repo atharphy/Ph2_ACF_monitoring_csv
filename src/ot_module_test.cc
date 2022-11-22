@@ -11,18 +11,18 @@
 #include "tools/CheckCbcNeighbors.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
+#include "tools/KIRA.h"
 #include "tools/LatencyScan.h"
 #include "tools/LinkAlignmentOT.h"
 #include "tools/MemoryCheck2S.h"
 #include "tools/OTCMNoise.h"
 #include "tools/OTTemperature.h"
 #include "tools/PSAlignment.h"
+#include "tools/PSBiasCal.h"
 #include "tools/PedeNoise.h"
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
-#include "tools/PSBiasCal.h"
-#include "tools/KIRA.h"
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -207,7 +207,7 @@ int main(int argc, char* argv[])
     std::string cInjectionSource = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
     std::string cSrcLnkTst       = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
     std::string cModuleId        = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
-    int cKiraPort                = std::stoi((cmd.foundOption("kira")) ? cmd.optionValue("kira") : "7010");
+    int         cKiraPort        = std::stoi((cmd.foundOption("kira")) ? cmd.optionValue("kira") : "7010");
     std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     bool        cPulseShape      = (cmd.foundOption("pulseShape")) ? true : false;
 
@@ -490,7 +490,7 @@ int main(int argc, char* argv[])
         cPSAlignment.MapMPAOutputs();
         cPSAlignment.ConfigureDefaultAlignmentParameters();
         cPSAlignment.Reset();
-            LOG(INFO) << BOLDRED << "LinkAlignmentOT" << RESET;
+        LOG(INFO) << BOLDRED << "LinkAlignmentOT" << RESET;
         LinkAlignmentOT cLinkAlignment;
         cLinkAlignment.Inherit(&cTool);
         try
@@ -510,14 +510,14 @@ int main(int argc, char* argv[])
             return (666);
         }
         // align FEs - CIC
-            LOG(INFO) << BOLDRED << "CicFEAlignment" << RESET;
+        LOG(INFO) << BOLDRED << "CicFEAlignment" << RESET;
         CicFEAlignment cCicAligner;
         cCicAligner.Inherit(&cTool);
 
-	//Doesnt work PSv2
+        // Doesnt work PSv2
         cCicAligner.Start(cRunNumber);
         cCicAligner.waitForRunToBeCompleted();
-	//\Doesnt work PSv2
+        //\Doesnt work PSv2
 
         cCicAligner.dumpConfigFiles();
 
@@ -567,8 +567,6 @@ int main(int argc, char* argv[])
     }
     if(!cmd.foundOption("read") && cmd.foundOption("realign"))
     {
-
-
         // re-align stub package
         bool cSkipStubPkg = (cmd.foundOption("skipAlignment")) && (cSkip.find("all") != std::string::npos || cSkip.find("stubPackage") != std::string::npos);
         if(cSkipStubPkg)
@@ -595,7 +593,7 @@ int main(int argc, char* argv[])
             cStubBackEndAligner.Start(cRunNumber);
             cStubBackEndAligner.waitForRunToBeCompleted();
         }
-            LOG(INFO) << BOLDRED << "PSAlignment " << RESET;
+        LOG(INFO) << BOLDRED << "PSAlignment " << RESET;
         // now align data between SSA-MPA
         bool cSkipMPAin = (cmd.foundOption("skipAlignment")) && (cSkip.find("all") != std::string::npos || cSkip.find("mpaInputs") != std::string::npos);
         if(cSkipMPAin)
@@ -893,10 +891,10 @@ int main(int argc, char* argv[])
                             }
                             if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
                             {
-                LOG(INFO) << BOLDBLUE << "1" << RESET;
+                                LOG(INFO) << BOLDBLUE << "1" << RESET;
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "ModeSel_ALL", cSamplingMPA);
-                LOG(INFO) << BOLDBLUE << "2" << RESET;
+                                LOG(INFO) << BOLDBLUE << "2" << RESET;
                             }
                         }
                     }

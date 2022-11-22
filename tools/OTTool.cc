@@ -838,7 +838,7 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
     bool cInjectAll = false;
     LOG(DEBUG) << BOLDMAGENTA << "Injecting " << +pInjections.size() << " in PS module.." << RESET;
     // inject pixel clusters
-    bool cLastFive=true;
+    bool cLastFive = true;
     for(auto cOpticalReadout: *pBoard)
     {
         for(auto cHybrid: *cOpticalReadout)
@@ -859,17 +859,17 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                     }
                     else
                     {
-			int inj=0;
+                        int inj = 0;
                         for(auto cInjection: pInjections)
                         {
-			    if (pInjections.size()-inj>5 and cLastFive) continue;
+                            if(pInjections.size() - inj > 5 and cLastFive) continue;
                             if(cInjectAll) continue;
                             auto cPxl = cInjection.fColumn * NSSACHANNELS + (uint32_t)cInjection.fRow;
                             LOG(INFO) << BOLDBLUE << " Injecting in pixel " << +cPxl << " column " << +cInjection.fColumn << " row " << +cInjection.fRow << RESET;
                             std::stringstream cRegName;
                             cRegName << "ENFLAGS_P" << +cPxl;
                             fReadoutChipInterface->WriteChipReg(cChip, cRegName.str(), 0x5F, false);
-			    inj+=1;
+                            inj += 1;
                         }
                         if(cInjectAll) fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x5F);
                     }
@@ -1013,10 +1013,9 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
         {
             for(auto cChip: *cHybrid)
             {
-		if(cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::MPA2) continue;
+                if(cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::MPA2) continue;
                 uint16_t cLatency = 0;
-                if(cChip->getFrontEndType() == FrontEndType::MPA)
-                { cLatency = cChip->getReg("L1Offset_2_ALL") << 8 | cChip->getReg("L1Offset_1_ALL"); }
+                if(cChip->getFrontEndType() == FrontEndType::MPA) { cLatency = cChip->getReg("L1Offset_2_ALL") << 8 | cChip->getReg("L1Offset_1_ALL"); }
                 else if(cChip->getFrontEndType() == FrontEndType::SSA)
                 {
                     cLatency = cChip->getReg("L1-Latency_MSB") << 8 | cChip->getReg("L1-Latency_LSB");
@@ -1039,7 +1038,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
         {
             for(auto cChip: *cHybrid)
             {
-		if(cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::MPA2) continue;
+                if(cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::MPA2) continue;
                 uint16_t    cCut = 0;
                 std::string cRegName;
                 if(cChip->getFrontEndType() == FrontEndType::MPA)
@@ -1077,7 +1076,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                         fReadoutChipInterface->WriteChipReg(cChip, cRegName, cValueInMemory);
                     }
                 }
-		//if(cChip->getFrontEndType() == FrontEndType::SSA2)
+                // if(cChip->getFrontEndType() == FrontEndType::SSA2)
                 //{
                 //    std::vector<std::string> cRegNames{"PhaseShiftClock", "ClockDeskewing"};
                 //    for(auto cRegName: cRegNames)
@@ -1095,7 +1094,7 @@ void OTTool::UpdateFromRegMap(BeBoard* pBoard)
                         fReadoutChipInterface->WriteChipReg(cChip, cRegName, cValueInMemory);
                     }
                 }
-		else if(cChip->getFrontEndType() == FrontEndType::MPA2)
+                else if(cChip->getFrontEndType() == FrontEndType::MPA2)
                 {
                     std::vector<std::string> cRegNames{"ConfDLL"};
                     for(auto cRegName: cRegNames)
