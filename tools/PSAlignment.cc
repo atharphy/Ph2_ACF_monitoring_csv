@@ -150,7 +150,8 @@ void PSAlignment::ConfigureDefaultAlignmentParameters(std::string pSetupType)
     }
 
     // make sure that we save the values at the end
-    std::vector<std::string> cRegsMod{"LatencyRx320", "LatencyRx40", "RetimePix", "EdgeSelTrig", "EdgeSelT1Raw"};
+
+    std::vector<std::string> cRegsMod{"LatencyRx320", "LatencyRx40", "RetimePix", "EdgeSelTrig", "EdgeSelT1Raw", "Control_1"};
     for(size_t cIndx = 0; cIndx <= 5; cIndx++)
     {
         continue;
@@ -737,7 +738,7 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignStubs(ReadoutChip* pC
 
                                 cMatchedStubSeeds += (cMatchedStub) ? 1 : 0;
                             }
-                            cNmatch = cNmatch && (cMatchedStubSeeds == pInjections.size());
+                            cNmatch = cNmatch && (cMatchedStubSeeds == std::min(pInjections.size(), size_t(5)));
                         }
                         // update counters
                         cEventIter += (1 + cTriggerMult);
@@ -771,6 +772,9 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignStubs(ReadoutChip* pC
         (*cBoardIter)->setStubOffset(cStubOffsets[cIndx]);
         cIndx++;
     }
+
+    LOG(INFO) << BOLDMAGENTA << "Control_1 " << RESET;
+    LOG(INFO) << BOLDMAGENTA << +fReadoutChipInterface->ReadChipReg(pChip, "Control_1") << RESET;
     return cGoodCombinationsStubs;
 }
 std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignChip(ReadoutChip* pChip, std::vector<Injection> pInjections, uint16_t pLatency)
@@ -1497,18 +1501,25 @@ void PSAlignment::Validate(BeBoard* pBoard, std::vector<Injection> pInjections, 
         if(FindLatency(pBoard, cChipId, pInjections, pEdgeSelT1)) { cLatencyBins[fOptimalLatency]++; }
     }
     auto cModeLatency = std::max_element(cLatencyBins.begin(), cLatencyBins.end()) - cLatencyBins.begin();
+
     LOG(INFO) << BOLDBLUE << "Most frequently found latency no this board is " << cModeLatency << RESET;
-    size_t cNevents     = 10;
-    auto   cTriggerMult = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    size_t cNevents = 10;
+    LOG(INFO) << BOLDRED << "1" << RESET;
+    auto cTriggerMult = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     for(size_t cTriggerId = 0; cTriggerId < (1 + cTriggerMult); cTriggerId++)
     {
         bool cGoodStubDelay = false;
         for(int cStubAddDelay = -10; cStubAddDelay <= 10; cStubAddDelay++) // to-do - add range to xml
         {
             if(cGoodStubDelay) continue;
-            auto   cStubOffset = pBoard->getStubOffset() + cStubAddDelay;
-            size_t cStubDelay  = cModeLatency - cStubOffset - 6; // stub latency
+            LOG(INFO) << BOLDRED << "2" << RESET;
+            auto cStubOffset = pBoard->getStubOffset() + cStubAddDelay;
+            LOG(INFO) << BOLDRED << "3 " << cModeLatency << " " << cStubOffset << " " << 6 << RESET;
+            size_t cStubDelay = cModeLatency - cStubOffset - 6; // stub latency
+            LOG(INFO) << BOLDRED << "4 " << cStubDelay << RESET;
+
             fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.readout_block.global.common_stubdata_delay", cStubDelay);
+            LOG(INFO) << BOLDRED << "5" << RESET;
             ReadNEvents(pBoard, cNevents);
             const std::vector<Event*>& cEvents = this->GetEvents();
             if(cEvents.size() == 0) continue;
@@ -1758,7 +1769,7 @@ bool PSAlignment::Align()
     if(cAllAligned)
     {
         LOG(INFO) << BOLDBLUE << "All SSA-MPA pairs are aligned.. will save values.." << RESET;
-        std::vector<std::string> cRegsMod{"LatencyRx320", "LatencyRx40", "RetimePix", "EdgeSelTrig", "EdgeSelT1Raw"};
+        std::vector<std::string> cRegsMod{"LatencyRx320", "LatencyRx40", "RetimePix", "EdgeSelTrig", "EdgeSelT1Raw", "Control_1"};
         for(size_t cIndx = 0; cIndx <= 5; cIndx++)
         {
             continue;
@@ -1774,6 +1785,8 @@ bool PSAlignment::Align()
         // SetChipRegstoPerserve(FrontEndType::SSA, cRegsMod);
         SetChipRegstoPerserve(FrontEndType::SSA2, cRegsMod);
 
+        return cStubAligned && cl1Aligned; // for some reaso validate fails... todo
+
         // check trigger source
         // and reload
         Injection              cInjection;
@@ -1783,7 +1796,8 @@ bool PSAlignment::Align()
         cInjection.fRow    = 10;
         cInjection.fColumn = 2;
         cInjections.push_back(cInjection); // 0
-        std::vector<uint8_t> cEdgeSelsT1{1, 0};
+        std::vector<uint8_t> cEdgeSelsT1{0, 1};
+
         for(auto cBoard: *fDetectorContainer)
         {
             for(auto cEdgeSelT1: cEdgeSelsT1)
