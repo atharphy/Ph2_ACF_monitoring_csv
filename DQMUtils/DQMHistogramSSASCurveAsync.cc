@@ -39,7 +39,9 @@ void DQMHistogramSSASCurveAsync::book(TFile* theOutputFile, DetectorContainer& t
             for(auto hybrid: *opticalGroup) // for on hybrid - begin
             {
                 for(auto chip: *hybrid) // for on chip - begin
-                { chans = chip->size(); }
+                {
+                    chans = chip->size();
+                }
             }
         }
     }

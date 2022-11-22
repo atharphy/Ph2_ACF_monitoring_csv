@@ -795,8 +795,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
 
             std::map<int, std::vector<Injection>> cInjectionScheme;
             cInjectionScheme.clear();
-            do
-            {
+            do {
                 cInjectionScheme[cAttempt] = this->GeneratePSInjections(cMaxNstubs);
                 LOG(INFO) << BOLDMAGENTA << "Injection#" << +cAttempt << "\t\t..." << RESET;
                 std::sort(std::begin(cInjectionScheme[cAttempt]), std::end(cInjectionScheme[cAttempt]), [](Injection a, Injection b) { return a.fRow < b.fRow; });
@@ -883,8 +882,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                     auto&  cNtriggersInit = cTrgCntBrd->getSummary<uint32_t>();
                     auto   cNtriggers     = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
                     size_t cIter          = 0;
-                    do
-                    {
+                    do {
                         std::this_thread::sleep_for(std::chrono::microseconds(100));
                         // auto cNWords    = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
                         cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
@@ -926,8 +924,7 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                 size_t cTriggerMult      = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 1;
                 size_t cInjectionCounter = 0;
                 auto   cEventIter        = cPh2Events.begin();
-                do
-                {
+                do {
                     auto cInjections = cInjectionScheme[cInjectionCounter];
                     LOG(INFO) << BOLDMAGENTA << "Checking result for injection#" << cInjectionCounter << RESET;
                     for(auto cInj: cInjections) { LOG(INFO) << BOLDYELLOW << "\t\t.. injecting in row " << +cInj.fRow << " columnn " << +cInj.fColumn << RESET; }
@@ -966,9 +963,13 @@ void DataChecker::AnaInjectionTestPS(uint32_t pMaxTriggersToAccept)
                                         LOG(INFO) << BOLDGREEN << "Trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult) << " MPA" << +cChip->getId() << " found " << fPSevent.fNPclusters
                                                   << " P clusters, " << fPSevent.fNSclusters << " S clusters, and " << fPSevent.fStubSize << " stubs" << RESET;
                                         for(auto cCluster: cPclstrs)
-                                        { LOG(INFO) << BOLDYELLOW << "P-cluster in row " << +cCluster.fAddress << " column " << +cCluster.fZpos << " width is " << +cCluster.fWidth << RESET; }
+                                        {
+                                            LOG(INFO) << BOLDYELLOW << "P-cluster in row " << +cCluster.fAddress << " column " << +cCluster.fZpos << " width is " << +cCluster.fWidth << RESET;
+                                        }
                                         for(auto cCluster: cSclstrs)
-                                        { LOG(INFO) << BOLDCYAN << "S-cluster in row " << +cCluster.fAddress << " column " << (0) << " width is " << +cCluster.fWidth << RESET; }
+                                        {
+                                            LOG(INFO) << BOLDCYAN << "S-cluster in row " << +cCluster.fAddress << " column " << (0) << " width is " << +cCluster.fWidth << RESET;
+                                        }
                                         if(fPSevent.fStubSize != 0)
                                         {
                                             std::sort(std::begin(cStubs), std::end(cStubs), [](Stub a, Stub b) { return a.getRow() < b.getRow(); });
@@ -1243,8 +1244,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
 
             std::map<int, std::vector<Injection>> cInjectionScheme;
             cInjectionScheme.clear();
-            do
-            {
+            do {
                 cInjectionScheme[cAttempt] = this->GeneratePSInjections(cMaxNstubs);
                 LOG(INFO) << BOLDMAGENTA << "Injection#" << +cAttempt << "\t\t..." << RESET;
                 std::sort(std::begin(cInjectionScheme[cAttempt]), std::end(cInjectionScheme[cAttempt]), [](Injection a, Injection b) { return a.fRow < b.fRow; });
@@ -1342,8 +1342,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                     auto&  cNtriggersInit = cTrgCntBrd->getSummary<uint32_t>();
                     auto   cNtriggers     = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
                     size_t cIter          = 0;
-                    do
-                    {
+                    do {
                         std::this_thread::sleep_for(std::chrono::microseconds(100));
                         // auto cNWords    = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
                         cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
@@ -1384,8 +1383,7 @@ void DataChecker::InjectionTestPS(uint32_t pMaxTriggersToAccept)
                 size_t cInjectionCounter = 0;
                 auto   cEventIter        = cPh2Events.begin();
                 size_t cMatchCounter     = 0;
-                do
-                {
+                do {
                     auto cInjections = cInjectionScheme[cInjectionCounter];
                     LOG(INFO) << BOLDMAGENTA << "Checking result for injection#" << cInjectionCounter << RESET;
                     // for( auto cInj : cInjections)
@@ -1502,8 +1500,7 @@ void DataChecker::ReadDataTestPS(BeBoard* pBoard, uint32_t pNevents)
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNevents);
     fBeBoardInterface->Start(pBoard);
     bool cAllTriggersSent = false;
-    do
-    {
+    do {
         auto cNtriggersRxd = fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
         if((int)(std::floor((float)cNtriggersRxd / 10.)) % (pNevents / 100) == 0) LOG(INFO) << BOLDMAGENTA << "\t\t..." << cNtriggersRxd << " triggers received..." << RESET;
         cAllTriggersSent = cNtriggersRxd >= pNevents;
@@ -2109,7 +2106,9 @@ void DataChecker::CheckPSData(BeBoard* pBoard, std::vector<Injection> pInjection
                         bool     cFound       = (std::find(cPixelIds.begin(), cPixelIds.end(), cPixelId) != cPixelIds.end());
                         cMatchedStubs         = cMatchedStubs && cFound;
                         if(std::find(cPixelIds.begin(), cPixelIds.end(), cPixelId) == cPixelIds.end())
-                        { LOG(DEBUG) << BOLDRED << "\t Event# " << +cEventIndx << " BxId#" << +cBxId << " un-expected Stub in event.... Address " << +cStubAddress << " row " << +cRow << RESET; }
+                        {
+                            LOG(DEBUG) << BOLDRED << "\t Event# " << +cEventIndx << " BxId#" << +cBxId << " un-expected Stub in event.... Address " << +cStubAddress << " row " << +cRow << RESET;
+                        }
                     }
                     if((cStubs.size()) == 0)
                         LOG(DEBUG) << BOLDRED << "Event#" << +cEventIndx << " BxId#" << +cBxId << " has no stubs!" << RESET;
@@ -2149,8 +2148,10 @@ void DataChecker::CheckPSData(BeBoard* pBoard, std::vector<Injection> pInjection
                             LOG(INFO) << BOLDRED << "\t Event# " << +cEventIndx << " BxId#" << +cBxId << " classified as an event type " << +cClass << " un-expected Stub in event.... Address "
                                       << +cStubAddress << " row " << +cRow << RESET;
                             for(auto cInjection: pInjections)
-                            { LOG(INFO) << BOLDRED << "\t\t.. expected stub address : " << +(cInjection.fRow) * 2 << " and row " << +cInjection.fColumn << RESET; } // injections
-                        }                                                                                                                                           // stubs
+                            {
+                                LOG(INFO) << BOLDRED << "\t\t.. expected stub address : " << +(cInjection.fRow) * 2 << " and row " << +cInjection.fColumn << RESET;
+                            } // injections
+                        }     // stubs
                     }
                     else if(cMatchedPCluster && cMatchedStubs)
                     {
@@ -2169,8 +2170,10 @@ void DataChecker::CheckPSData(BeBoard* pBoard, std::vector<Injection> pInjection
                                               << " instead I see BxId#" << +cBxId << " classified as an event type " << +cClass << " un-expected Stub in event.... Address " << +cStubAddress << " row "
                                               << +cRow << RESET;
                                     for(auto cInjection: pInjections)
-                                    { LOG(INFO) << BOLDRED << "\t\t.. expected stub address : " << +(cInjection.fRow) * 2 << " and row " << +cInjection.fColumn << RESET; } // injections
-                                }                                                                                                                                           // stubs
+                                    {
+                                        LOG(INFO) << BOLDRED << "\t\t.. expected stub address : " << +(cInjection.fRow) * 2 << " and row " << +cInjection.fColumn << RESET;
+                                    } // injections
+                                }     // stubs
                             }
                         } // check number of Bxs
                     }
@@ -2432,8 +2435,7 @@ bool DataChecker::GenericFastCommands()
             // wait until all triggers have been sent
             uint32_t cCounter = 0;
             uint32_t cNWords  = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
-            do
-            {
+            do {
                 std::this_thread::sleep_for(std::chrono::microseconds(10));
                 cNWords    = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
                 cNtriggers = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
@@ -2445,8 +2447,7 @@ bool DataChecker::GenericFastCommands()
             // now wait until number of words have stopped increasing
             uint32_t cNWordsPrev = 0;
             cCounter             = 0;
-            do
-            {
+            do {
                 std::this_thread::sleep_for(std::chrono::microseconds(10));
                 cNWordsPrev = (cCounter == 0) ? 0 : cNWords;
                 cNWords     = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.words_cnt");
@@ -2514,8 +2515,7 @@ std::vector<int> DataChecker::GenerateIds()
     size_t                             cNFEs = cDist(cGen);
     std::vector<int>                   cIds;
     cIds.clear();
-    do
-    {
+    do {
         int cId = cIdDist(cGen);
         if(std::find(cIds.begin(), cIds.end(), cId) == cIds.end()) { cIds.push_back(cId); }
 
@@ -2543,8 +2543,7 @@ std::vector<Injection> DataChecker::GenerateInjections(int pMaxClusters, int pMa
 
     int                   cTotalNumberOfClusters = 0;
     std::vector<uint32_t> cPixelIds(0); // these will be used to generate stubs
-    do
-    {
+    do {
         Injection cInjection;
         cInjection.fColumn = (cFlatDistCols(cGen));
         cInjection.fRow    = (cFlatDistRows(cGen));
@@ -2597,8 +2596,7 @@ std::vector<Injection> DataChecker::GeneratePSInjections(int pMaxNstubs)
     //                     << +cStubs
     //                     << " stubs... "
     //                     << RESET;
-    do
-    {
+    do {
         // Seed
         Injection cInjection;
         cInjection.fColumn = 1 + cPixelIds.size();        //(cFlatDistSeeds(cGen));
@@ -2686,8 +2684,7 @@ std::vector<uint8_t> DataChecker::GeneratePSstrpClusters(int pMaxNSclusters)
     // generate injections in this MPA
     std::uniform_int_distribution<int> cFlatDistStrips(5, 110);
     std::vector<uint8_t>               cRows(0); // 20 , 30};
-    do
-    {
+    do {
         // Seed
         uint8_t cRow = (cFlatDistStrips(cGen));
         // nothing yet .. so .. add
@@ -2733,8 +2730,7 @@ std::vector<Injection> DataChecker::GeneratePSpxlClusters(int pMaxNPclusters)
     std::vector<uint8_t>  cColumns(0);  // 5 , 10 };
     std::vector<uint8_t>  cRows(0);     // 20 , 30};
     std::vector<uint32_t> cPixelIds(0); // these will be used to generate stubs
-    do
-    {
+    do {
         // Seed
         Injection cInjection;
         cInjection.fColumn = (cFlatDistSeeds(cGen));
@@ -4109,8 +4105,7 @@ void DataChecker::PSNominal()
                         size_t           cNMPAs            = cMPAsDist(cGen);
                         std::vector<int> cMPAs;
                         cMPAs.clear();
-                        do
-                        {
+                        do {
                             int cMPA = cMPAIdDist(cGen);
                             if(std::find(cMPAs.begin(), cMPAs.end(), cMPA) == cMPAs.end()) { cMPAs.push_back(cMPA); }
 
@@ -4143,8 +4138,7 @@ void DataChecker::PSNominal()
 
                                 std::vector<uint32_t> cPixelIds(0); // these will be used to generate stubs
                                 auto&                 cSummaryInj = cInjChp->getSummary<std::vector<Injection>>();
-                                do
-                                {
+                                do {
                                     Injection cInjection;
                                     cInjection.fColumn = (cFlatDistCols(cGen));
                                     cInjection.fRow    = (cFlatDistRows(cGen));
@@ -5546,8 +5540,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                 // start triggers
                 fBeBoardInterface->Start(theBoard);
                 auto cNtriggers = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
-                do
-                {
+                do {
                     std::this_thread::sleep_for(std::chrono::milliseconds(10));
                     cNtriggers = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.fast_command_block.trigger_in_counter");
                 } while(cNtriggers < 100);
@@ -5606,8 +5599,7 @@ void DataChecker::TestPulse(std::vector<uint8_t> pChipIds)
                                         int    cLatency_eq = cLatencyDAC - (cPipeline - cPipeline_first);
                                         double cTime_ns    = -1 * (cLatency_eq - fTPconfig.tpDelay) * 25 + cDelayDAC;
                                         auto   cIterator   = cExpectedHits.begin();
-                                        do
-                                        {
+                                        do {
                                             bool cMatchFound = std::find(cHits.begin(), cHits.end(), *cIterator) != cHits.end();
                                             cHitMatches[std::distance(cExpectedHits.begin(), cIterator)] += cMatchFound;
                                             cMatched += cMatchFound;
