@@ -845,15 +845,16 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
 		if(cChip->getFrontEndType() == FrontEndType::MPA)
 		{
 		        cChip->setReg("PhaseShift", cCoarse); //Irene
+			cChip->setReg("ConfDLL", cFine);
 
 		}
 		if(cChip->getFrontEndType() == FrontEndType::MPA2)
 			{
-			cChip->setReg("Mask",0x70); 
-			cChip->setReg("Control_1", (cCoarse<<4)); 
+			cChip->setReg("Mask",0x30); 
+			cChip->setReg("Control_1", (cCoarse<<5)); 
 			cChip->setReg("Mask",0xFF); 
 			}
-		cChip->setReg("ConfDLL", cFine);
+
 
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA Sampling Delay settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Coarse delay will be set to "
                    << cCoarse * 3.125 << " ns " << GREEN << " Fine delay will be set to " << cFine * 0.2 << " ns." << RESET << std::endl;

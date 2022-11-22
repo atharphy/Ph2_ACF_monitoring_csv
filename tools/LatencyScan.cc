@@ -565,10 +565,12 @@ void LatencyScan::StubLatencyScan()
                                 }
                                 else if(cChip->getFrontEndType() == FrontEndType::MPA || cChip->getFrontEndType() == FrontEndType::MPA2)
                                 {
-                                    auto cHits  = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
                                     auto cStubs = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
-                                    cNStubs += cStubs.size();
+                                    auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
+                                    cNStubs     = cStubs.size();
+                                    LOG(INFO) << BOLDGREEN << "cNStubs"<<cNStubs<<","<<cHits.size() << " hits in this event... " << RESET;
                                 }
+
                             } // chip
                             // LOG (INFO) << BOLDMAGENTA << "\t\t.. Event#" << +cEventCount << " found " << +cNStubsThisCIC << " in CIC#" << +cHybrid->getIndex() << RESET;
                             // theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE,

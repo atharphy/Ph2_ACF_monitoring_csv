@@ -257,10 +257,11 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
     // reconfigure fast commands
     // fast command config
     // if PS module want trigger multiplicty to be 3
-    uint8_t                  cMult            = (cWithPS) ? 2 : 0;
+    //uint8_t                  cMult            = (cWithPS) ? 2 : 0;
+    uint8_t                  cMult            =  0;
     uint8_t                  cTriggerSource   = 6;
     uint16_t                 cDelayAfterReset = 100;
-    uint16_t                 cDelayAfterTP    = 300;
+    uint16_t                 cDelayAfterTP    = 200;
     uint16_t                 cDelayTillNext   = 400;
     std::vector<std::string> cFcmdRegs{"trigger_source", "test_pulse.delay_after_fast_reset", "test_pulse.delay_after_test_pulse", "test_pulse.delay_before_next_pulse", "misc.trigger_multiplicity"};
     std::vector<uint16_t>    cFcmdRegVals{cTriggerSource, cDelayAfterReset, cDelayAfterTP, cDelayTillNext, cMult};

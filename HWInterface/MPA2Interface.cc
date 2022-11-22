@@ -552,40 +552,40 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     else if(pRegName.find("SelectEdgeT1") != std::string::npos)
     {
         std::string cRegName  = "EdgeSelT1Raw";
-        uint8_t     cBitShift = 1;
+        uint8_t     cBitShift = 1;//Not sure about the bits here
 
-        uint8_t cRegMask = (0x1 << cBitShift); //
-        //cRegMask         = ~(cRegMask);
+        uint8_t cRegMask = (0x1 << cBitShift); 
 
         return this->WriteChipRegBits(pMPA2, cRegName, (pValue << cBitShift), "Mask", cRegMask, pVerify);
 
-        // LOG(INFO) << BOLDMAGENTA << "Setting EdgeSel register for T1 to 0x" << std::hex << +cValue << std::dec << RESET;
-
-        // auto        cRegValue = this->ReadChipReg(pMPA2, cRegName);
-        // uint8_t cValue        = (cRegValue & cRegMask) | (pValue << cBitShift);
-        // return this->WriteChipSingleReg(pMPA2, cRegName, cValue);
     }
     else if(pRegName.find("SelectEdgeL") != std::string::npos)
     {
         std::string cToken  = "SelectEdgeL";
         auto        cLineId = std::atoi(pRegName.substr(pRegName.find(cToken) + cToken.length(), 1).c_str());
+	if (cLineId == 8)
+	{
+		std::string cRegName  = "EdgeSelT1Raw";
+		uint8_t     cBitShift = 0;//Not sure about the bits here
 
-        // std::string cRegName  = (cLineId == 0) ? "EdgeSelT1Raw" : "EdgeSelTrig";//MPA1 issue?  -- to check
-        // uint8_t     cBitShift = (cLineId == 0) ? cLineId : cLineId - 1;
+		uint8_t cRegMask = (0x1 << cBitShift); 
 
-        std::string cRegName  = "EdgeSelTrig";
-        //uint8_t     cBitShift = cLineId - 1;
-        uint8_t     cBitShift = cLineId;
+		return this->WriteChipRegBits(pMPA2, cRegName, (pValue << cBitShift), "Mask", cRegMask, pVerify);
+	}
+	else	
+	{
+		std::string cRegName  = "EdgeSelTrig";
+		uint8_t     cBitShift = cLineId;
 
-        uint8_t cRegMask = (0x1 << cBitShift); //
-        //cRegMask         = ~(cRegMask);
+		uint8_t cRegMask = (0x1 << cBitShift); //
 
-        return this->WriteChipRegBits(pMPA2, cRegName, (pValue << cBitShift), "Mask", cRegMask, pVerify);
+		return this->WriteChipRegBits(pMPA2, cRegName, (pValue << cBitShift), "Mask", cRegMask, pVerify);
 
-        // uint8_t cValue        = (cRegValue & cRegMask) | (pValue << cBitShift);
-        // auto        cRegValue = this->ReadChipReg(pMPA2, cRegName);
-        // LOG(INFO) << BOLDMAGENTA << "Setting EdgeSel register for Line" << +cLineId << " to 0x" << std::hex << +cValue << std::dec << RESET;
-        // return this->WriteChipSingleReg(pMPA2, cRegName, cValue);
+	}
+
+	return false;
+
+
     }
 
     else if(pRegName.find("OutSetting_0") != std::string::npos)
