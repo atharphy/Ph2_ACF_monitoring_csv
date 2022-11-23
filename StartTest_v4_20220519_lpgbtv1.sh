@@ -20,7 +20,8 @@ then
     exit -1
 fi
 
-cd /home/DAQUser/testcardDev/Ph2_ACF
+cd /home/Felix/Ph2_ACF
+source setup.sh 
 
 TIME=`date +"%Y-%m-%d_%H-%M-%S"`
 mkdir Results/SEH_${hybridID}_${TIME}
