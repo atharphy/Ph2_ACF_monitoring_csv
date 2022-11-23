@@ -274,63 +274,58 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters, in
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
-        auto                  clpGBT            = cBoard->at(0)->flpGBT;
         D19cFWInterface*      pInterface        = static_cast<D19cFWInterface*>(fBeBoardFWMap.find(cBoard->getId())->second);
         D19cOpticalInterface* cOpticalInterface = static_cast<D19cOpticalInterface*>(pInterface->getFEConfigurationInterface());
 
         for(auto cOpticalGroup: *cBoard)
         {
-            clpGBTInterface->ResetI2C(cOpticalGroup->flpGBT, {0, 1, 2});
+            auto clpGBT = cOpticalGroup->flpGBT;
+            clpGBTInterface->ResetI2C(clpGBT, {0, 1, 2});
             std::this_thread::sleep_for(std::chrono::milliseconds(30));
-            for(const auto cMaster: pMasters)
+            for(const auto cMasterId: pMasters)
             {
-                // clpGBTInterface->ResetI2C(cOpticalGroup->flpGBT, {0, 1, 2});
                 bool                 cMasterSuccess = true;
                 std::vector<uint8_t> cI2CStatusVect;
                 struct timeval       stop, start;
                 gettimeofday(&start, NULL);
                 // do stuff
-                uint8_t failureIter   = 0;
-                uint8_t cFrequency    = (cMaster == 1) ? 2 : 3;
+                uint8_t cFailCntr     = 0;
+                uint8_t cFrequency    = (cMasterId == 1) ? 2 : 3;
                 uint8_t cSlaveAddress = 0x60;
-                for(int j = 0; j < pNTries; j++)
-                // int j = 0;
-                // while(true)
+                for(int cTryCntr = 0; cTryCntr < pNTries; cTryCntr++)
                 {
-                    uint8_t i2cstatus = 4; // clpGBTInterface->GetI2CStatus(cOpticalGroup->flpGBT, cMaster);
+                    uint8_t cI2CStatus = 4; // clpGBTInterface->GetI2CStatus(cOpticalGroup->flpGBT, cMaster);
                     uint8_t cNbyte = 1, cSlaveData = 0x9;
                     uint8_t cMasterConfig = (cNbyte << 2) | (cFrequency << 0);
-                    bool    cSuccess      = cOpticalInterface->MultiByteWriteI2C(clpGBT, cMaster, cMasterConfig, cSlaveAddress, cSlaveData);
+                    bool    cSuccess      = cOpticalInterface->SingleMultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, cSlaveData);
                     if(cSuccess)
                     {
-                        LOG(DEBUG) << BOLDGREEN << "I2C Master " << +cMaster << " PASSED" << RESET;
-                        failureIter = 0;
-                        // j++;
-                        // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                        LOG(DEBUG) << BOLDGREEN << "I2C Master " << +cMasterId << " PASSED" << RESET;
+                        cFailCntr = 0;
                     }
                     else
                     {
-                        i2cstatus = clpGBTInterface->GetI2CStatus(cOpticalGroup->flpGBT, cMaster);
-                        LOG(INFO) << GREEN << "I2C Master " << +cMaster << " -- Status : " << fI2CStatusMap[i2cstatus] << RESET;
-                        LOG(INFO) << BOLDRED << "I2C Master " << +cMaster << " FAILED" << RESET;
-                        LOG(INFO) << BOLDBLUE << "I2C test number " << BOLDRED << +j << " failed" << RESET;
-                        failureIter++;
-                        if(failureIter >= 5)
+                        cI2CStatus = clpGBTInterface->GetI2CStatus(clpGBT, cMasterId);
+                        LOG(INFO) << GREEN << "I2C Master " << +cMasterId << " -- Status : " << fI2CStatusMap[cI2CStatus] << RESET;
+                        LOG(INFO) << BOLDRED << "I2C Master " << +cMasterId << " FAILED" << RESET;
+                        LOG(INFO) << BOLDBLUE << "I2C test number " << BOLDRED << +cTryCntr << " failed" << RESET;
+                        cFailCntr++;
+                        if(cFailCntr >= 5)
                         {
-                            cI2CStatusVect.push_back(i2cstatus);
+                            cI2CStatusVect.push_back(cI2CStatus);
                             cMasterSuccess &= cSuccess;
                             break;
                         }
                     }
-                    cI2CStatusVect.push_back(i2cstatus);
+                    cI2CStatusVect.push_back(cI2CStatus);
                     cMasterSuccess &= cSuccess;
                 }
-                if(cMasterSuccess) { LOG(INFO) << BOLDGREEN << "I2C Master " << +cMaster << " PASSED the Test Card Test" << RESET; }
+                if(cMasterSuccess) { LOG(INFO) << BOLDGREEN << "I2C Master " << +cMasterId << " PASSED the Test Card Test" << RESET; }
                 else
                 {
-                    LOG(INFO) << BOLDRED << "I2C Master " << +cMaster << " FAILED the Test Card Test" << RESET;
+                    LOG(INFO) << BOLDRED << "I2C Master " << +cMasterId << " FAILED the Test Card Test" << RESET;
                 }
-                fillSummaryTree(Form("i2cmaster%i", cMaster), cMasterSuccess);
+                fillSummaryTree(Form("i2cmaster%i", cMasterId), cMasterSuccess);
                 gettimeofday(&stop, NULL);
                 LOG(INFO) << BOLDBLUE << "Duration " << std::to_string((stop.tv_sec - start.tv_sec) * 1000000 + stop.tv_usec - start.tv_usec) << RESET;
                 cTestSuccess &= cMasterSuccess;
@@ -340,9 +335,9 @@ bool OTHybridTester::LpGBTTestI2CMaster(const std::vector<uint8_t>& pMasters, in
     }
 
     int index = 0;
-    for(const auto cMaster: pMasters)
+    for(const auto cMasterId: pMasters)
     {
-        auto cI2CTree = new TTree(Form("tI2CMaster%i", cMaster), Form("I2C Master %i Test Tree", cMaster));
+        auto cI2CTree = new TTree(Form("tI2CMaster%i", cMasterId), Form("I2C Master %i Test Tree", cMasterId));
         cI2CTree->Branch("I2C_Master_status", &cI2CStatusVectVect[index]);
         cI2CTree->Fill();
         fResultFile->cd();
@@ -453,17 +448,6 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
             // dieLegende->AddEntry("pol1","Fit x","lpf");
             cDACtoADCCanvas->Write();
             // cDACtoADCMultiGraph->Write();
-            // uint16_t cADCValue;
-            // flpGBTInterface->GetExternalController()->getInterface().set_P1V25_L_Sense(TC_2SSEH::P1V25SenseState::P1V25SenseState_On);
-
-            // for(int i=0; i<0xff;i+=0x1a){
-            //     clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "VREFTUNE",i);
-            //     LOG(INFO) << BOLDBLUE << "Trim value " << +i << RESET;
-
-            //     clpGBTInterface->GetADCGain(cOpticalGroup->flpGBT);
-            //     cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "ADC1");
-            //     LOG(INFO) << BOLDBLUE << "ADC VMON_P1V25 " << +cADCValue << RESET;
-            // }
         }
     }
 }
@@ -700,27 +684,26 @@ bool OTHybridTester::LpGBTTestVTRx()
 {
     bool                cSuccess = true;
     bool                cRecent;
-    uint32_t            cResult         = 0;
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
         if(cBoard->at(0)->flpGBT == nullptr) continue;
         D19cFWInterface*      pInterface        = static_cast<D19cFWInterface*>(fBeBoardFWMap.find(cBoard->getId())->second);
         D19cOpticalInterface* cOpticalInterface = static_cast<D19cOpticalInterface*>(pInterface->getFEConfigurationInterface());
-        auto                  clpGBT            = cBoard->at(0)->flpGBT;
         for(auto cOpticalGroup: *cBoard)
         {
-            clpGBTInterface->ResetI2C(cOpticalGroup->flpGBT, {0, 1, 2});
+            auto clpGBT = cOpticalGroup->flpGBT;
+            clpGBTInterface->ResetI2C(clpGBT, {0, 1, 2});
             std::this_thread::sleep_for(std::chrono::milliseconds(30));
-            clpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "I2CM1Config", 8);
-            // I2CWrite(cLinkID, cMaster, cSlaveAddress, 0x09, 1, cTheI2CWriteCount);
+            clpGBTInterface->WriteChipReg(clpGBT, "I2CM1Config", 8);
+
             uint8_t cMasterId = 1, cSlaveAddress = 0x50, cSlaveData = 0x15, cNbyte = 1, cFrequency = 2;
             uint8_t cMasterConfig = (cNbyte << 2) | (cFrequency << 0);
-            cRecent               = cOpticalInterface->MultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, cSlaveData);
-            for(int i = 0; i < 5 && !(cRecent); i++) { cRecent = cOpticalInterface->MultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, cSlaveData); }
-            cResult                                              = cOpticalInterface->SingleByteReadI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress);
+            cRecent               = cOpticalInterface->SingleMultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, cSlaveData);
+            for(int i = 0; i < 5 && !(cRecent); i++) { cRecent = cOpticalInterface->SingleMultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, cSlaveData); }
+            auto                       cReadBackValue            = cOpticalInterface->SingleSingleByteReadI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress);
             std::map<uint8_t, uint8_t> cVTRxplusDefaultRegisters = fVTRxplusDefaultRegisters;
-            if(cResult == 0x15)
+            if(cReadBackValue == 0x15)
             {
                 cVTRxplusDefaultRegisters = fVTRxplusDefaultRegistersV13;
                 LOG(INFO) << BOLDGREEN << "VTRx+ register map for version 1.3 is used!" << RESET;
@@ -731,18 +714,19 @@ bool OTHybridTester::LpGBTTestVTRx()
                 LOG(INFO) << BOLDGREEN << "VTRx+ register map for version 1.2 is used!" << RESET;
                 fillSummaryTree("vtrxplusversion", 1.2);
             }
+
             auto cMapIterator = cVTRxplusDefaultRegisters.begin();
             do
             {
-                cRecent  = cOpticalInterface->MultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, cMapIterator->first);
-                cResult  = cOpticalInterface->SingleByteReadI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress);
-                cSuccess = cSuccess && cRecent && (cResult == cMapIterator->second);
-                if(cRecent && (cResult == cMapIterator->second))
-                { LOG(INFO) << BOLDGREEN << "VTRx+ register " << +(cMapIterator->first) << " contains the default value " << +cResult << " ." << RESET; }
+                cRecent        = cOpticalInterface->SingleMultiByteWriteI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress, cMapIterator->first);
+                cReadBackValue = cOpticalInterface->SingleSingleByteReadI2C(clpGBT, cMasterId, cMasterConfig, cSlaveAddress);
+                cSuccess       = cSuccess && cRecent && (cReadBackValue == cMapIterator->second);
+                if(cRecent && (cReadBackValue == cMapIterator->second))
+                { LOG(INFO) << BOLDGREEN << "VTRx+ register " << +(cMapIterator->first) << " contains the default value " << +cReadBackValue << " ." << RESET; }
                 else
                 {
                     LOG(INFO) << BOLDRED << "Error in VTRx+ register " << +(cMapIterator->first) << " ." << RESET;
-                    LOG(INFO) << BOLDRED << "value " << +(cResult) << " ." << RESET;
+                    LOG(INFO) << BOLDRED << "value " << +(cReadBackValue) << " ." << RESET;
                 }
 
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));

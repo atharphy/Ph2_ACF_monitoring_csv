@@ -26,15 +26,17 @@
 // #########################
 namespace RD53Constants
 {
-const uint8_t NBIT_MAXREG    = 16;   // Maximum number of bits for a chip register
-const uint8_t NPIX_REGION    = 4;    // Number of pixels in a region (1x4)
-const uint8_t NROW_CORE      = 8;    // Number of rows in a core
-const uint8_t NBIT_ADDR      = 9;    // Number of address bits
-const uint8_t NSYNC_WORDS    = 64;   // Number of Sync words for synchronization
-const uint8_t NWORDS_TO_SYNC = 30;   // Number of words beforse send a Sync
-const uint8_t PATTERN_PRBS   = 0xAA; // Start PRBS pattern
-const uint8_t PATTERN_AURORA = 0x55; // Start AURORA pattern
-const uint8_t PATTERN_CLOCK  = 0x00; // Start clock pattern
+const uint8_t ACCELERATOR_CLK = 40;   // Accelerator clock frequency [MHz]
+const uint8_t NBIT_MAXREG     = 16;   // Maximum number of bits for a chip register
+const uint8_t NPIX_REGION     = 4;    // Number of pixels in a region (1x4)
+const uint8_t NROW_CORE       = 8;    // Number of rows in a core
+const uint8_t NBIT_ADDR       = 9;    // Number of address bits
+const uint8_t NBIT_TOT        = 4;    // Number of ToT bits
+const uint8_t NSYNC_WORDS     = 64;   // Number of Sync words for synchronization
+const uint8_t NWORDS_TO_SYNC  = 30;   // Number of words beforse send a Sync
+const uint8_t PATTERN_PRBS    = 0xAA; // Start PRBS pattern
+const uint8_t PATTERN_AURORA  = 0x55; // Start AURORA pattern
+const uint8_t PATTERN_CLOCK   = 0x00; // Start clock pattern
 } // namespace RD53Constants
 
 // #####################
@@ -56,6 +58,9 @@ const uint32_t CHIP_QROW   = 0x01000000; // Chip event status neighbor bit set f
 
 namespace Ph2_HwDescription
 {
+// ############################################
+// # Data structure describing the chip masks #
+// ############################################
 struct pixelMask
 {
     pixelMask() = default;
@@ -65,6 +70,29 @@ struct pixelMask
     std::vector<bool>    HitBus;
     std::vector<bool>    InjEn;
     std::vector<uint8_t> TDAC;
+};
+
+// ###################################################
+// # Data structure describing the chip lane mapping #
+// ###################################################
+struct LaneConfig
+{
+    LaneConfig() : outputLaneMapping({0, 1, 2, 3}), inputLaneMapping({0, 1, 2, 3}), internalLanesEnabled({0, 0, 0, 0, 0}), nOutputLanes(1), isPrimary(true) {}
+    LaneConfig(bool isPrimary, const std::array<uint8_t, 4>& outputLanes, const std::array<bool, 4>& signleChannelInputLanes, const std::array<bool, 4>& dualChannelInputLanes);
+
+    template <typename T, size_t N, size_t S>
+    auto serializeBits(std::array<T, N> arr)
+    {
+        uint16_t val = 0;
+        for(auto i = 0u; i < N; i++) val |= arr[i] << (S * i);
+        return val;
+    }
+
+    std::array<uint8_t, 4> outputLaneMapping;
+    std::array<uint8_t, 4> inputLaneMapping;
+    std::array<bool, 5>    internalLanesEnabled;
+    uint8_t                nOutputLanes;
+    bool                   isPrimary;
 };
 
 class RD53 : public ReadoutChip
@@ -79,6 +107,7 @@ class RD53 : public ReadoutChip
         const char* thresholdReg;
         const char* gainReg;
         const char* latencyReg;
+        const char* TDACGainReg;
         size_t      nLatencyBins2Span;
         size_t      nTDACvalues;
         size_t      maxToTvalue;
@@ -86,7 +115,14 @@ class RD53 : public ReadoutChip
         size_t      maxTRIGIDvalue;
         size_t      colStart;
         size_t      colStop;
+        size_t      VCalSleepTime; // [microseconds]
+        size_t      AutoIncrementMask;
     };
+
+    // ####################################
+    // # Input&Output lanes configuration #
+    // ####################################
+    LaneConfig laneConfig;
 
     virtual size_t          getNRows() const                                                                                                           = 0;
     virtual size_t          getNCols() const                                                                                                           = 0;
@@ -98,11 +134,11 @@ class RD53 : public ReadoutChip
     RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
     RD53(const RD53& chipObj);
 
-    void     loadfRegMap(const std::string& fileName) override;
-    void     saveRegMap(const std::string& fName2Add) override;
-    uint32_t getNumberOfChannels() const override;
-    bool     isDACLocal(const std::string& regName) override;
-    uint8_t  getNumberOfBits(const std::string& regName) override;
+    void              loadfRegMap(const std::string& fileName) override;
+    std::stringstream saveRegMap(const std::string& fName2Add = "") override;
+    uint32_t          getNumberOfChannels() const override;
+    bool              isDACLocal(const std::string& regName) override;
+    uint8_t           getNumberOfBits(const std::string& regName) override;
 
     pixelMask& getPixelsMask() { return fPixelsMask; }
     pixelMask& getPixelsMaskDefault() { return fPixelsMaskDefault; }
@@ -116,7 +152,7 @@ class RD53 : public ReadoutChip
     void        enablePixel(unsigned int row, unsigned int col, bool enable);
     void        injectPixel(unsigned int row, unsigned int col, bool inject);
     void        setTDAC(unsigned int row, unsigned int col, uint8_t TDAC);
-    void        resetTDAC();
+    void        resetTDAC(uint8_t TDAC);
     uint8_t     getTDAC(unsigned int row, unsigned int col);
     uint8_t     getChipLane() const { return myChipLane; }
     std::string getComment() const { return myComment; }

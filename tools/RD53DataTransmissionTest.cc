@@ -43,10 +43,8 @@ void DataTransmissionTest::Running()
 
 void DataTransmissionTest::sendData()
 {
-    // Store (TAP0, BER, BERlowErr, BERupErr)
-    auto theStreamTAP0scan = prepareChipContainerStreamer<EmptyContainer, std::array<std::tuple<uint16_t, double, double, double>, 11>>("DataTransmissionTestTAP0scan");
-    // Store TAP0 value that has nearest BER to the target
-    auto theStreamTAP0tgt = prepareChipContainerStreamer<EmptyContainer, uint16_t>("DataTransmissionTestTAP0target");
+    auto theStreamTAP0scan = this->prepareChipContainerStreamer<EmptyContainer, std::array<std::tuple<uint16_t, double, double, double>, 11>>("DataTransmissionTestTAP0scan");
+    auto theStreamTAP0tgt  = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>("DataTransmissionTestTAP0target");
 
     if(fDQMStreamerEnabled == true)
     {
@@ -99,7 +97,7 @@ void DataTransmissionTest::run()
     DataTransmissionTest::binSearch(&theTAP0scanContainer);
     DataTransmissionTest::analyze(theTAP0scanContainer, theTAP0tgtContainer);
 
-    DataTransmissionTest::chipErrorReport();
+    CalibBase::chipErrorReport();
 }
 
 void DataTransmissionTest::draw(bool saveData)
@@ -201,8 +199,8 @@ void DataTransmissionTest::binSearch(DetectorDataContainer* theTAP0scanContainer
     for(auto i = 0u; i < 11u; i++)
     {
         // Setting new TAP0 value
-        LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << "CML_TAP0_BIAS" << BOLDMAGENTA << " value = " << BOLDYELLOW << currentTAP0 << BOLDMAGENTA << " <<<" << RESET;
-        for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, "CML_TAP0_BIAS", currentTAP0);
+        LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << "DAC_CML_BIAS_0" << BOLDMAGENTA << " broadcast value = " << BOLDYELLOW << currentTAP0 << BOLDMAGENTA << " <<<" << RESET;
+        for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, "DAC_CML_BIAS_0", currentTAP0);
 
         // Run BER test
         BERtest::run();
@@ -287,17 +285,4 @@ void DataTransmissionTest::binSearch(DetectorDataContainer* theTAP0scanContainer
             }
         }
     }
-}
-
-void DataTransmissionTest::chipErrorReport() const
-{
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
-                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->ChipErrorReport(cChip);
-                }
 }

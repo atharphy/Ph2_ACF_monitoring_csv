@@ -12,22 +12,18 @@
 
 #include "../HWDescription/RD53ACommands.h"
 #include "../HWInterface/RD53FWInterface.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
 #include "../Utils/GenericDataArray.h"
-#include "../Utils/RD53ChannelGroupHandler.h"
 #include "../Utils/RD53Shared.h"
-#include "Tool.h"
+#include "RD53CalibBase.h"
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53PhysicsHistograms.h"
-#include "TApplication.h"
 #endif
 
 // #######################
 // # Physics data taking #
 // #######################
-class Physics : public Tool
+class Physics : public CalibBase
 {
     using evtConvType = std::function<void(const std::vector<Ph2_HwInterface::RD53Event>&)>;
 
@@ -38,6 +34,7 @@ class Physics : public Tool
 #ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
+        delete histos;
 #endif
     }
 
@@ -45,15 +42,14 @@ class Physics : public Tool
     void Stop() override;
     void ConfigureCalibration() override;
 
-    void sendBoardData(const BoardContainer* cBoard);
-    void localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
-    void initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
-    void run();
-    void draw();
-    void analyze(bool doReadBinary = false);
-    void saveChipRegisters(int currentRun);
-    void fillDataContainer(Ph2_HwDescription::BeBoard& cBoard);
+    void localConfigure(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void initializeFiles(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void run() override;
+    void draw(bool saveData = true) override;
 
+    void analyze(bool doReadBinary = false);
+    void sendBoardData(const BoardContainer* cBoard);
+    void fillDataContainer(Ph2_HwDescription::BeBoard& cBoard);
     void setGenericEvtConverter(evtConvType arg)
     {
         std::lock_guard<std::mutex> theGuard(theMtx);
@@ -62,22 +58,19 @@ class Physics : public Tool
 
 #ifdef __USE_ROOT__
     PhysicsHistograms* histos;
-    TApplication*      myApp;
 #endif
 
   private:
-    size_t errors;
+    void fillHisto() override;
 
+    void clearContainers(Ph2_HwDescription::BeBoard& cBoard);
+
+    size_t                                   errors;
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
-
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
     DetectorDataContainer                    theOccContainer;
     DetectorDataContainer                    theBCIDContainer;
     DetectorDataContainer                    theTrgIDContainer;
-
-    void fillHisto();
-    void chipErrorReport() const;
-    void clearContainers(Ph2_HwDescription::BeBoard& cBoard);
 
   protected:
     struct RD53dummyEvtConverter

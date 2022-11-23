@@ -1071,13 +1071,19 @@ void lpGBTInterface::ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<
 void lpGBTInterface::ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode)
 {
     // First let's write configuration data into the I2C Master Data register
-    std::string cI2CCntrlReg = "I2CM" + std::to_string(pMaster) + "Data0";
-    uint8_t     cValueCntrl  = (pFreq << 0) | (pNBytes << 2) | (pSCLDriveMode << 7);
-    WriteChipReg(pChip, cI2CCntrlReg, cValueCntrl);
+    std::string cI2CDataReg = "I2CM" + std::to_string(pMaster) + "Data0";
+    uint8_t     cValueData  = (pFreq << 0) | (pNBytes << 2) | (pSCLDriveMode << 7);
+    WriteChipReg(pChip, cI2CDataReg, cValueData);
 
     // Now let's write Command (0x00) to the Command register to tranfer Configuration to the I2C Master Control register
     std::string cI2CCmdReg = "I2CM" + std::to_string(pMaster) + "Cmd";
     WriteChipReg(pChip, cI2CCmdReg, 0x00);
+}
+
+uint8_t lpGBTInterface::GetI2CConfiguration(Ph2_HwDescription::Chip* pChip, uint8_t pMaster)
+{
+    std::string cI2CCntrlReg = "I2CM" + std::to_string(pMaster) + "Ctrl";
+    return ReadChipReg(pChip, cI2CCntrlReg);
 }
 
 bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes, uint8_t pFreq)
@@ -1196,6 +1202,8 @@ uint8_t lpGBTInterface::GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMa
     LOG(DEBUG) << GREEN << "I2C Master " << +pMaster << " -- Status : " << lpGBTInterface::fI2CStatusMap[cStatus] << RESET;
     return cStatus;
 }
+
+std::string lpGBTInterface::GetI2CState(Ph2_HwDescription::Chip* pChip, uint8_t pStatus) { return fI2CStatusMap[pStatus]; }
 
 bool lpGBTInterface::IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster) { return (lpGBTInterface::GetI2CStatus(pChip, pMaster) == 4); }
 

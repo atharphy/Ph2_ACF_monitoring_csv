@@ -12,6 +12,7 @@
 
 #include "../user/CMSIT/module/include/CMSITEventData.hh"
 #include "RD53Physics.h"
+
 #include "eudaq/Producer.hh"
 #include "eudaq/RawEvent.hh"
 

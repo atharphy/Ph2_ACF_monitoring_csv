@@ -12,8 +12,8 @@
 #define RD53SCurveHistograms_H
 
 #include "../System/SystemController.h"
+#include "../Utils/ChannelContainerStream.h"
 #include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
 #include "../Utils/RD53Shared.h"
 #include "../Utils/ThresholdAndNoise.h"
 #include "DQMHistogramBase.h"

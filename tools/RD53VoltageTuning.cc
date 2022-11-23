@@ -41,8 +41,8 @@ void VoltageTuning::Running()
 
 void VoltageTuning::sendData()
 {
-    auto theDigStreamer = prepareChipContainerStreamer<EmptyContainer, double>("VoltageDig");
-    auto theAnaStreamer = prepareChipContainerStreamer<EmptyContainer, double>("VoltageAna");
+    auto theDigStreamer = this->prepareChipContainerStreamer<EmptyContainer, double>("VoltageDig");
+    auto theAnaStreamer = this->prepareChipContainerStreamer<EmptyContainer, double>("VoltageAna");
 
     if(fDQMStreamerEnabled == true)
     {
@@ -328,7 +328,7 @@ void VoltageTuning::run()
     fDetectorContainer->setEnabledAll(true);
 }
 
-void VoltageTuning::draw()
+void VoltageTuning::draw(bool saveData)
 {
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;

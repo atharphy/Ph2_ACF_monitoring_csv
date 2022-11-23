@@ -39,7 +39,7 @@ class SSA2Interface : public ReadoutChipInterface
     bool     MaskAllChannels(Ph2_HwDescription::ReadoutChip* pSSA2, bool mask, bool pVerifLoop = true) override;                                                                               // FIXME
     bool     WriteChipReg(Ph2_HwDescription::Chip* pSSA2, const std::string& pRegNode, uint16_t pValue, bool pVerifLoop = true) override;                                                      // FIXME
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pSSA2, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop = true) override;                                  // FIXME
-    bool     WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pSSA2, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = true) override;                                  // FIXME
+    bool     WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pSSA2, const std::string& dacName, const ChipContainer& pValue, bool pVerifLoop = true) override;                            // FIXME
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pSSA2, const std::string& pRegNode) override;
     uint16_t ReadADC(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pInput);
 

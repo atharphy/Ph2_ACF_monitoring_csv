@@ -80,7 +80,7 @@ class OTHybridTester : public Tool
     void LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect, uint8_t pEQAttenuation = 3);
     // Run Bit Error Rate Test
     void LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint32_t pPattern = 0x00000000);
-    void freeTest();
+
     // Phase Alignment
     void                     BackEndAlignment(std::vector<std::string> pLines);
     std::pair<bool, uint8_t> PhaseTuneLineEleFC7(uint8_t pHybrid, uint8_t pLineId);
