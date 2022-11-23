@@ -797,6 +797,9 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
             cReadoutMode = configPeri(pMPA2, "ReadoutMode", 0x00);
             LOG(DEBUG) << BOLDBLUE << "Disabling readout of I2C counters on MPA by setting register ReadoutMode to 0x" << std::hex << +pValue << std::dec << RESET;
         }
+
+
+	maskChannelGroup(static_cast<ReadoutChip*>(pMPA2),static_cast<ReadoutChip*>(pMPA2)->getChipOriginalMask());
         return cEnableAnalogue && cReadoutMode;
     }
     else if(pRegName == "AnalogueSync")
