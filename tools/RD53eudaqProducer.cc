@@ -46,7 +46,7 @@ void RD53eudaqProducer::DoStartRun()
     // # Send a BORE event #
     // #####################
     auto ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
-    // ev->SetBORE();
+    ev->SetBORE();
     // RD53eudaqProducer::MySendEvent(std::move(ev));
 
     // #############################
