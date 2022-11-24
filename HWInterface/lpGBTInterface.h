@@ -34,6 +34,7 @@ const uint8_t  rxPhaseTracking   = 2;      // Rx phase tracking mode [0 = no-tra
 const uint8_t  SUPERDEEPSLEEP    = 10;     // [milliseconds]
 const uint32_t DEEPSLEEP         = 100000; // [microseconds]
 const uint8_t  MAXATTEMPTS       = 40;     // Maximum number of attempts
+const float    ACCELERATOR_CLK   = 40e6;   // Accelerator clock frequency [Hz]
 } // namespace lpGBTconstants
 
 namespace Ph2_HwInterface
@@ -267,8 +268,6 @@ class lpGBTInterface : public ChipInterface
     uint64_t GetBERTErrors(Ph2_HwDescription::Chip* pChip);
 
   protected:
-    const float fClockSpeed = 40e6; // 40 MHz clock for the LpGBT
-
     // ##############
     // # LpGBT maps #
     // ##############
