@@ -171,8 +171,7 @@ void LatencyScan::ScanLatency()
 
     uint16_t cLat     = fStartLatency;
     float    cMaxHits = 0;
-    do
-    {
+    do {
         // setSameDac("TriggerLatency", cLat);
         // SSA latency -1 all other chips
         for(auto cBoard: *fDetectorContainer)
@@ -240,8 +239,7 @@ void LatencyScan::ScanLatency()
                 int    cTotalHitsS0                          = 0;
                 int    cTotalHitsS1                          = 0;
                 size_t cNEventsThisTriggerId                 = 0;
-                do
-                {
+                do {
                     if(cEventIter >= cEvents.end()) break;
                     uint8_t cTDCVal = (*cEventIter)->GetTDC();
                     for(auto cOpticalGroup: *cBoard)
@@ -426,7 +424,9 @@ void LatencyScan::StubLatencyScan()
             for(auto cHybrid: *cOpticalGroup)
             {
                 for(uint16_t cIndx = 0; cIndx < fLatencyRange; cIndx++)
-                { theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx] = 0; }
+                {
+                    theStubContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cIndx] = 0;
+                }
             } // hybrid
         }     //
     }
@@ -456,8 +456,7 @@ void LatencyScan::StubLatencyScan()
 
     // int cDebugOut = 5;
     uint16_t cLat = cLowerLimit;
-    do
-    {
+    do {
         uint16_t cOffset = 0;
         for(auto cBoard: *fDetectorContainer)
         {
@@ -478,8 +477,7 @@ void LatencyScan::StubLatencyScan()
                 size_t cAnyHits   = 0;
                 LOG(INFO) << BOLDMAGENTA << "\t..Looking at trigger#" << +cTriggerId << " in burst of " << (cTriggerMult + 1) << RESET;
                 size_t cMatchedStubs = 0;
-                do
-                {
+                do {
                     if(cEventIter >= cEvents.end()) break;
                     auto cEventCount = (*cEventIter)->GetEventCount();
                     for(auto cOpticalGroup: *cBoard)
@@ -770,8 +768,7 @@ void LatencyScan::ScanLatency2D()
                 uint32_t cNEvents_wStub = 0;
                 uint32_t cNEvents_wBoth = 0;
                 fBeBoardInterface->Start(theBoard);
-                do
-                {
+                do {
                     uint32_t cNeventsReadBack = ReadData(theBoard);
                     if(cNeventsReadBack == 0)
                     {

@@ -132,8 +132,7 @@ int main(int argc, char* argv[])
                     auto   cEventIter   = cEvents.begin() + cTriggerId;
                     bool   cEventMatch  = true;
                     size_t cTriggerNmbr = 0;
-                    do
-                    {
+                    do {
                         for(auto opticalGroup: *cBeBoard)
                         {
                             for(auto hybrid: *opticalGroup)

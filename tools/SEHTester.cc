@@ -333,8 +333,7 @@ void SEHTester::ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTi
     cLeakTree->Branch("Time", &cTimeValVect);
 
     double time_taken;
-    do
-    {
+    do {
         float ILeak = 0;
         float HvMea = 0;
         float IMea  = 0;
@@ -657,8 +656,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     cLeakTree->Branch("Time", &cTimeValVect);
 
     double time_taken;
-    do
-    {
+    do {
         float ILeak = 0;
         float UMon  = 0;
         clock_gettime(CLOCK_MONOTONIC, &timer);
@@ -928,8 +926,7 @@ void SEHTester::TestCardVoltages()
 {
     float k;
     auto  c2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
-    do
-    {
+    do {
 #ifdef __TCP_SERVER__
         k = this->getMeasurement("read_supply:" + c2SSEHMapIterator->first);
 #else
@@ -942,8 +939,7 @@ void SEHTester::TestCardVoltages()
     // flpGBTInterface->GetExternalController()->getInterface().set_SehSupply(flpGBTInterface->GetExternalController()->getInterface().sehSupply_On);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     auto d2SSEHMapIterator = f2SSEHSupplyMeasurements.begin();
-    do
-    {
+    do {
 #ifdef __TCP_SERVER__
         k = this->getMeasurement("read_supply:" + d2SSEHMapIterator->first);
 #else
@@ -969,8 +965,7 @@ void SEHTester::DCDCOutputEvaluation()
     auto cStackedHistogramm = new THStack("cDCDCOutput", "DC/DC Output Voltages");
     int  cIt                = 0;
     // auto gRandom            = new TRandom3();
-    do
-    {
+    do {
         cDCDCOutputTree->Branch(cDCDCMapIterator->first.c_str(), &cDCDCValueVect);
         auto cHistogramm = new TH1F(cDCDCMapIterator->first.c_str(), cDCDCMapIterator->first.c_str(), 30, 0, 3);
         cHistogramm->SetFillColor(cIt + 1);

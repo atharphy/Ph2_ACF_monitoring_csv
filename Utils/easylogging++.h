@@ -3432,7 +3432,9 @@ class DefaultPerformanceTrackingCallback : public PerformanceTrackingCallback
         m_data = data;
         base::type::stringstream_t ss;
         if(m_data->dataType() == PerformanceTrackingData::DataType::Complete)
-        { ss << ELPP_LITERAL("Executed [") << m_data->blockName()->c_str() << ELPP_LITERAL("] in [") << *m_data->formattedTimeTaken() << ELPP_LITERAL("]"); }
+        {
+            ss << ELPP_LITERAL("Executed [") << m_data->blockName()->c_str() << ELPP_LITERAL("] in [") << *m_data->formattedTimeTaken() << ELPP_LITERAL("]");
+        }
         else
         {
             ss << ELPP_LITERAL("Performance checkpoint");
@@ -3793,7 +3795,8 @@ class VersionInfo : base::StaticClass
 #define TIMED_SCOPE_IF(obj, blockname, condition) el::base::type::PerformanceTrackerPtr obj(condition ? new el::base::PerformanceTracker(blockname, ELPP_MIN_UNIT) : nullptr)
 #define TIMED_SCOPE(obj, blockname) TIMED_SCOPE_IF(obj, blockname, true)
 #define TIMED_BLOCK(obj, blockName)                                                                                                                                                                    \
-    for(struct {                                                                                                                                                                                       \
+    for(struct                                                                                                                                                                                         \
+        {                                                                                                                                                                                              \
             int                                   i;                                                                                                                                                   \
             el::base::type::PerformanceTrackerPtr timer;                                                                                                                                               \
         } obj = {0, el::base::type::PerformanceTrackerPtr(new el::base::PerformanceTracker(blockName, ELPP_MIN_UNIT))};                                                                                \
