@@ -104,7 +104,6 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
             if(cRegItem.first == "CDR_CONFIG")
             {
                 RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{});
-                RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{});
                 std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
             }
 
@@ -163,7 +162,6 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
     // # bit 10:   RingOscBEnLVT
     // # bit 9:    RingOscAClear
     // # bits 1:8: RingOscAEnable[7:0]
-    RD53BInterface::SendGlobalPulseBroadcast(pBoard, 0x100, 0xFF); // ResetEfuses
 
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
@@ -223,6 +221,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
         pChip, "CDR_CONFIG_SEL_SER_CLK", (pRD53->laneConfig.isPrimary == false ? RD53FWconstants::ReadoutSpeed::x320 : static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed()), false);
 
     RD53BInterface::SendGlobalPulse(pChip, 0b110000, 0xFF); // ResetAurora, ResetSerializer
+
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     RD53Interface::SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
 
