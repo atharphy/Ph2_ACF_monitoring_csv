@@ -9,6 +9,8 @@
 
 #include "RD53eudaqProducer.h"
 
+using namespace Ph2_HwInterface;
+
 void RD53eudaqProducer::DoReset()
 {
     RD53sysCntrPhys.Stop();
@@ -43,7 +45,7 @@ void RD53eudaqProducer::DoStartRun()
     // #####################
     // # Send a BORE event #
     // #####################
-    // auto ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
+    auto ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
     // ev->SetBORE();
     // RD53eudaqProducer::MySendEvent(std::move(ev));
 
@@ -52,19 +54,30 @@ void RD53eudaqProducer::DoStartRun()
     // #############################
     // ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
     // ev->SetTriggerN(swTrigCnt++);
-    // this->MySendEvent(std::move(ev));
+    // RD53eudaqProducer::MySendEvent(std::move(ev));
 
     // ######################################
     // # Add extra information to the event #
     // ######################################
-    // std::stringstream os;
-    // ev->SetTag("FirmwareVersion", RD53sysCntrPhys.fBeBoardInterface->FWinfo);
-    // for(const auto cBoard: *(RD53sysCntrPhys.fDetectorContainer))
-    //     for(const auto cOpticalGroup: *cBoard)
-    //         for(const auto cHybrid: *cOpticalGroup)
-    //             for(const auto cChip: *cHybrid)
-    //               cChip->saveRegMap("NONE", os);
-    // ev->SetTag("RegisterMapAndMask", os);
+    ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
+    ev->SetTag("Configuration file", RD53sysCntrPhys.fParsedFile.str());
+    for(const auto cBoard: *(RD53sysCntrPhys.fDetectorContainer))
+    {
+        std::stringstream header;
+        header << "Firmware version: B" << cBoard->getId();
+        ev->SetTag(header.str().c_str(), static_cast<RD53FWInterface*>(RD53sysCntrPhys.fBeBoardFWMap[cBoard->getId()])->getBoardInfo());
+
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    std::stringstream header;
+                    std::stringstream chipData = cChip->saveRegMap("ONSTREAM");
+                    header << "Register map and mask: B" << cBoard->getId() << "_O" << cOpticalGroup->getId() << "_H" << cHybrid->getId() << "_C" << +cChip->getId();
+                    ev->SetTag(header.str().c_str(), chipData.str());
+                }
+    }
+    RD53eudaqProducer::MySendEvent(std::move(ev));
 
     // ###################################################
     // # Get configuration directly from EUDAQ framework #
@@ -189,8 +202,7 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
             // ##################################################
             // # Collect all hits that have same TLU trigger ID #
             // ##################################################
-            do
-            {
+            do {
                 for(const auto& event: RD53EvtList[it].chip_events)
                 {
                     std::string chipType = "unknown";

@@ -54,9 +54,10 @@ class Cic : public Chip
 
     /*!
      * \brief Write the registers of the Map in a file
-     * \param filename
+     * \param fName2Add
+     * \return std::stringstream
      */
-    void saveRegMap(const std::string& filename) override;
+    std::stringstream saveRegMap(const std::string& fName2Add = "") override;
 
     virtual uint8_t getNumberOfBits(const std::string& dacName) { return 8; };
 

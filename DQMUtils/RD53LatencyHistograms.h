@@ -12,8 +12,8 @@
 #define RD53LatencyHistograms_H
 
 #include "../System/SystemController.h"
+#include "../Utils/ChipContainerStream.h"
 #include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
 #include "../Utils/GenericDataArray.h"
 #include "../Utils/RD53Shared.h"
 #include "DQMHistogramBase.h"

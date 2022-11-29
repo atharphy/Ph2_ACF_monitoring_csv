@@ -9,7 +9,6 @@
 */
 
 #include "RD53ThresholdHistograms.h"
-#include "../Utils/ChipContainerStream.h"
 
 using namespace Ph2_HwDescription;
 

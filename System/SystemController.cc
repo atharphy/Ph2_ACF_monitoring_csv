@@ -409,8 +409,6 @@ void SystemController::ReadSystemMonitor(BeBoard* pBoard, const std::vector<std:
                               << +cChip->getId() << RESET << GREEN << "]" << RESET;
                     fBeBoardInterface->ReadHybridVoltageMonitor(fReadoutChipInterface, cChip);
                     fBeBoardInterface->ReadHybridTemperatureMonitor(fReadoutChipInterface, cChip);
-                    fBeBoardInterface->ReadChipMonitor(fReadoutChipInterface, cChip, args);
-                    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
                 }
 }
 
@@ -507,7 +505,7 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
     // # Configuration parameters #
     // ############################
     bool resetMask = SystemController::findValueInSettings<double>("ResetMask");
-    bool resetTDAC = SystemController::findValueInSettings<double>("ResetTDAC");
+    int  resetTDAC = SystemController::findValueInSettings<double>("ResetTDAC");
 
     // ############################
     // # Configure frontend chips #
@@ -522,7 +520,8 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
                 LOG(INFO) << GREEN << "Configuring RD53: " << BOLDYELLOW << +cChip->getId() << RESET << GREEN " (fused ID " << BOLDYELLOW << +fReadoutChipInterface->ReadChipFuseID(cChip) << RESET
                           << GREEN << ")" << RESET;
                 if(resetMask == true) static_cast<RD53*>(cChip)->enableAllPixels();
-                if(resetTDAC == true) static_cast<RD53*>(cChip)->resetTDAC();
+                if(resetTDAC >= 0)
+                    static_cast<RD53*>(cChip)->resetTDAC(RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->nTDACvalues / 2);
                 static_cast<RD53*>(cChip)->copyMaskToDefault();
                 static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);
                 LOG(INFO) << GREEN << "Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
@@ -954,7 +953,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
     return cSuccess;
 }
 
-void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize, bool doAlsoFrontend)
+void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize)
 {
     if(fDetectorContainer == nullptr)
     {
@@ -1060,7 +1059,7 @@ void SystemController::ConfigureHw(bool bIgnoreI2c, bool pReInitialize, bool doA
         else if(cBoard->getBoardType() == BoardType::RD53)
         {
             ConfigureIT(cBoard);
-            if(doAlsoFrontend == true) ConfigureFrontendIT(cBoard);
+            ConfigureFrontendIT(cBoard);
 
             // ######################################
             // # Dispatch threads for data decoding #
@@ -1130,14 +1129,12 @@ uint32_t SystemController::computeEventSize32(const BeBoard* pBoard)
     return cNEventSize32;
 }
 
-void SystemController::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber, bool doAlsoFrontend)
+void SystemController::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
 {
-    std::stringstream outp;
-
-    InitializeHw(cHWFile, outp, enableStream, DQMportNumber);
-    InitializeSettings(cHWFile, outp);
-    std::cout << outp.str() << std::endl;
-    ConfigureHw(false, true, doAlsoFrontend);
+    InitializeHw(cHWFile, fParsedFile, enableStream, DQMportNumber);
+    InitializeSettings(cHWFile, fParsedFile);
+    std::cout << fParsedFile.str() << std::endl;
+    ConfigureHw(false, true);
 }
 
 void SystemController::Start(int runNumber)
@@ -1268,8 +1265,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
 
                 size_t cEventIndex    = 0;
                 auto   cEventIterator = pData.begin();
-                do
-                {
+                do {
                     uint32_t cHeader = (0xFFFF0000 & (*cEventIterator)) >> 16;
                     if(cHeader != 0xFFFF)
                     {
@@ -1346,9 +1342,8 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
 
 void SystemController::setChannelGroupHandler(ChannelGroupHandler& theChannelGroupHandler, std::vector<FrontEndType> cFrontEndTypes)
 {
-    auto selectChipFlavourFunction = [cFrontEndTypes](const ChipContainer* theChip) {
-        return (std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), static_cast<const ReadoutChip*>(theChip)->getFrontEndType()) != cFrontEndTypes.end());
-    };
+    auto selectChipFlavourFunction = [cFrontEndTypes](const ChipContainer* theChip)
+    { return (std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), static_cast<const ReadoutChip*>(theChip)->getFrontEndType()) != cFrontEndTypes.end()); };
     setChannelGroupHandler(theChannelGroupHandler, selectChipFlavourFunction);
 }
 
@@ -1418,8 +1413,34 @@ void SystemController::disableAllChannels()
                     for(const auto cChip: *cHybrid) fReadoutChipInterface->MaskAllChannels(cChip, true);
 }
 
-void SystemController::DumpFrontendRegisters()
+void SystemController::DumpRegisters()
 {
+    // #################################################
+    // # Dump firmware register content for all boards #
+    // #################################################
+    for(const auto cBoard: *fDetectorContainer)
+    {
+        LOG(INFO) << GREEN << "Firmware register content for [board = " << BOLDYELLOW << cBoard->getId() << GREEN << "]" << RESET;
+
+        const auto theBeBoardFW = static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()]);
+        const auto hwInterface  = theBeBoardFW->getHardwareInterface();
+
+        for(const auto& path: hwInterface->getNodes("user.+"))
+        {
+            auto& node = hwInterface->getNode(path);
+
+            if((node.getMode() == uhal::defs::BlockReadWriteMode::SINGLE) && ((int)node.getPermission() & true) && (++node.begin() == node.end()))
+            {
+                auto value = static_cast<RD53FWInterface*>(theBeBoardFW)->ReadArbitraryRegister(path);
+                std::cout << "\t--> Register " << std::left << std::setfill(' ') << std::setw(56) << path << " = " << std::setw(8) << std::dec << value << std::hex << "(0x" << value << ")"
+                          << std::endl;
+            }
+        }
+    }
+
+    // ##################################################
+    // # Dump frontend registers of the entire detector #
+    // ##################################################
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)

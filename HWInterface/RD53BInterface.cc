@@ -34,13 +34,13 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     // ######################
     RD53BInterface::ResetCoreColumns(pRD53);
 
-    RD53Interface::WriteChipReg(pChip, "DataMerging", 0b0000110000001, false);
+    RD53Interface::WriteChipReg(pChip, "DataMerging", bits::pack<4, 1, 1, 1, 5, 1>(0, 1, 0, 0, pRD53->laneConfig.serializeBits<bool, 5, 1>(pRD53->laneConfig.internalLanesEnabled), 1), false);
     // # bits 10-13: DataMergingInputPolarityInvert[3:0]
     // # bit 9:      EnOutputDataChipId
     // # bit 8:      EnGatingDataMergeClk1280
     // # bit 7:      SelDataMergeClk
-    // # bits 3-6:   EnDataMergeLane[3:0]
-    // # bit 2:      MergeChBonding
+    // # bits 3-6:   EnDataMergeLane[3:0] --> Internal input lanes
+    // # bit 2:      MergeChBonding       --> Channel bonding
     // # bit 1:      DataMergingGpoSel
     RD53Interface::WriteChipReg(pChip, "DataConcentratorConf", 0, false); // To be consistent with RD53B event decoder
     // # bit 12:   EnCRC
@@ -169,9 +169,10 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
 
-void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
+void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
 {
     this->setBoard(pChip->getBeBoardId());
+    auto pRD53 = static_cast<RD53*>(pChip);
 
     LOG(INFO) << GREEN << "Configuring up-link lanes and monitoring..." << RESET;
 
@@ -184,25 +185,22 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 0b1111, false);
     // # bits 7-8: SER_INV_TAP[1:0]
     // # bits 5-6: SER_EN_TAP[1:0]
-    // # bits 1-4: SER_EN_LANE[3:0] --> actual output lanes
-    RD53Interface::WriteChipReg(pChip, "AuroraConfig", bits::pack<4, 6, 2>(0b1, 0b011001, 0b11), false);
+    // # bits 1-4: SER_EN_LANE[3:0] --> External output lanes
+    RD53Interface::WriteChipReg(pChip, "AuroraConfig", bits::pack<4, 6, 2>(RD53Shared::setBits(pRD53->laneConfig.nOutputLanes), 0b011001, 0b11), false);
     // # bit 14:    SendAltOutput
     // # bit 13:    EnablePRBS
-    // # bits 9-12: ActiveLanes[3:0] --> internal lanes
+    // # bits 9-12: ActiveLanes[3:0] --> Internal output lanes
     // # bits 3-8:  CCWait[5:0]
     // # bits 1-2:  CCSend[1:0]
-    uint16_t val;
-    // @TMP@ : Display ports 3 and 4 in Kansas FMC have reverted mapping
-    size_t hybridId = pChip->getHybridId();
-    if(hybridId >= 2)
-        val = bits::pack<2, 2, 2, 2, 2, 2, 2, 2>(0, 1, 2, 3, 0, 1, 2, 3);
-    else
-        val = bits::pack<2, 2, 2, 2, 2, 2, 2, 2>(3, 2, 1, 0, 3, 2, 1, 0);
-    RD53Interface::WriteChipReg(pChip, "DataMergingMux", val, false); // Mux selection for Input and Output Lane mapping
+    uint16_t val =
+        bits::pack<8, 8>(pRD53->laneConfig.serializeBits<uint8_t, 4, 2>(pRD53->laneConfig.inputLaneMapping), pRD53->laneConfig.serializeBits<uint8_t, 4, 2>(pRD53->laneConfig.outputLaneMapping));
+    RD53Interface::WriteChipReg(pChip, "DataMergingMux", val, false); // Mux selection for input and output internal lane mapping to external lanes
+    // # Internal inputs mapped to external inputs with 2 bits
     // # bits 15-16: DataMergingInMux_3[1:0]
     // # bits 13-14: DataMergingInMux_2[1:0]
     // # bits 11-12: DataMergingInMux_1[1:0]
     // # bits 9-10:  DataMergingInMux_0[1:0]
+    // # Internal outputs mapped to external outputs with 2 bits
     // # bits 7-8:   DataMergingOutMux_3[1:0]
     // # bits 5-6:   DataMergingOutMux_2[1:0]
     // # bits 3-4:   DataMergingOutMux_1[1:0]
@@ -221,7 +219,8 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip, int nActiveLanes)
     // ##############
     // # Link speed #
     // ##############
-    RD53Interface::WriteChipReg(pChip, "CDR_CONFIG_SEL_SER_CLK", static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed() == RD53FWconstants::ReadoutSpeed::x1280 ? 0 : 1, false);
+    RD53Interface::WriteChipReg(
+        pChip, "CDR_CONFIG_SEL_SER_CLK", (pRD53->laneConfig.isPrimary == false ? RD53FWconstants::ReadoutSpeed::x320 : static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed()), false);
 
     RD53BInterface::SendGlobalPulse(pChip, 0b110000, 0xFF); // ResetAurora, ResetSerializer
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
@@ -324,6 +323,7 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
     const uint16_t        REGION_COL_ADDR = pRD53->getRegItem("REGION_COL").fAddress;
     const uint16_t        REGION_ROW_ADDR = pRD53->getRegItem("REGION_ROW").fAddress;
     const uint16_t        PIX_MODE_ADDR   = pRD53->getRegItem("PIX_MODE").fAddress;
+    const uint16_t        PIX_PORTAL_ADDR = pRD53->getRegItem("PIX_PORTAL").fAddress;
     const uint8_t         chipID          = pRD53->getId();
     auto&                 mask            = doDefault == true ? pRD53->getPixelsMaskDefault() : pRD53->getPixelsMask();
 
@@ -332,35 +332,66 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
     // ############
     // bit[0]: enable auto-row
     // bit[1]: select mask(0) or TDAC(1)
+    // bit[2]: enable broadcast
 
     auto pixMode = RD53Interface::ReadChipReg(pRD53, "PIX_MODE");
 
-    for(auto col = 0u; col < RD53B::NCOLS; col += 2)
+    doSparse = false; // @TMP@ : not working for RD53B-v1
+    if(doSparse == true)
     {
-        RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
+        RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x4}, commandList);
+        RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_PORTAL_ADDR, 0x0}, commandList);
+        RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x0}, commandList);
 
-        // ####################
-        // # Send pixels mask #
-        // ####################
-        std::vector<uint16_t> dColConfigMask;
-        RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, 0x0}, commandList);
-        for(auto row = 0u; row < RD53B::NROWS; row++) dColConfigMask.push_back(RD53BInterface::GetPixelConfigMask(mask, row, col));
+        for(auto col = 0u; col < RD53B::NCOLS; col += 2)
+        {
+            if(std::find(mask.Enable.begin() + (0 + RD53B::NROWS * col), mask.Enable.begin() + (RD53B::NROWS + RD53B::NROWS * col), true) ==
+               (mask.Enable.begin() + (RD53B::NROWS + RD53B::NROWS * col)))
+                continue;
 
-        RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x1}, commandList);
-        RD53BCmd::serialize(RD53BCmd::WrRegLong{chipID, std::move(dColConfigMask)}, commandList);
+            RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
 
-        // ####################
-        // # Send pixels TDAC #
-        // ####################
-        std::vector<uint16_t> dColConfigTDAC;
-        RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, 0x0}, commandList);
-        for(auto row = 0u; row < RD53B::NROWS; row++) dColConfigTDAC.push_back(RD53BInterface::GetPixelConfigTDAC(mask, row, col));
+            for(auto row = 0u; row < RD53B::NROWS; row++)
+            {
+                if((mask.Enable[row + RD53B::NROWS * col] == true) || (mask.Enable[row + RD53B::NROWS * (col + 1)] == true))
+                {
+                    auto data = RD53BInterface::GetPixelConfig(mask, row, col);
 
-        RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x3}, commandList);
-        RD53BCmd::serialize(RD53BCmd::WrRegLong{chipID, std::move(dColConfigTDAC)}, commandList);
+                    RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, row}, commandList);
+                    RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_PORTAL_ADDR, data}, commandList);
+                }
+            }
+        }
     }
-    RD53BInterface::SendChipCommandsWithSync(pRD53, commandList);
+    else
+    {
+        for(auto col = 0u; col < RD53B::NCOLS; col += 2)
+        {
+            RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
 
+            // ####################
+            // # Send pixels mask #
+            // ####################
+            std::vector<uint16_t> dColConfigMask;
+            RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, 0x0}, commandList);
+            for(auto row = 0u; row < RD53B::NROWS; row++) dColConfigMask.push_back(RD53BInterface::GetPixelConfigMask(mask, row, col));
+
+            RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x1}, commandList);
+            RD53BCmd::serialize(RD53BCmd::WrRegLong{chipID, std::move(dColConfigMask)}, commandList);
+
+            // ####################
+            // # Send pixels TDAC #
+            // ####################
+            std::vector<uint16_t> dColConfigTDAC;
+            RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, 0x0}, commandList);
+            for(auto row = 0u; row < RD53B::NROWS; row++) dColConfigTDAC.push_back(RD53BInterface::GetPixelConfigTDAC(mask, row, col));
+
+            RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x3}, commandList);
+            RD53BCmd::serialize(RD53BCmd::WrRegLong{chipID, std::move(dColConfigTDAC)}, commandList);
+        }
+    }
+
+    RD53BInterface::SendChipCommandsWithSync(pRD53, commandList);
     RD53Interface::WriteChipReg(pRD53, "PIX_MODE", pixMode);
 }
 
@@ -461,7 +492,11 @@ uint32_t RD53BInterface::ReadChipFuseID(Chip* pChip)
 // # Dedicated to monitoring #
 // ###########################
 
-uint32_t RD53BInterface::getADCobservable(const std::string& observableName, bool* isCurrentNotVoltage)
+uint32_t RD53BInterface::getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage)
+// ############################################
+// # Possible observable name values are also #
+// # - INTERNAL_NTC                           #
+// ############################################
 {
     uint32_t voltageObservable(0), currentObservable(0);
 
@@ -535,7 +570,12 @@ uint32_t RD53BInterface::getADCobservable(const std::string& observableName, boo
                                                                           {"VrefD", 0x27}};
 
     auto search = currentMultiplexer.find(observableName);
-    if(search == currentMultiplexer.end())
+    if(observableName == "INTERNAL_NTC")
+    {
+        currentObservable = currentMultiplexer.find("NTC_CURR")->second;
+        voltageObservable = voltageMultiplexer.find("I_MUX")->second;
+    }
+    else if(search == currentMultiplexer.end())
     {
         if((search = voltageMultiplexer.find(observableName)) == voltageMultiplexer.end())
         {
@@ -544,16 +584,29 @@ uint32_t RD53BInterface::getADCobservable(const std::string& observableName, boo
         }
         else
             voltageObservable = search->second;
-        if(isCurrentNotVoltage != nullptr) *isCurrentNotVoltage = false;
+        isCurrentNotVoltage = false;
     }
     else
     {
-        currentObservable = search->second;
-        voltageObservable = voltageMultiplexer.find("IMUXoutput")->second;
-        if(isCurrentNotVoltage != nullptr) *isCurrentNotVoltage = true;
+        currentObservable   = search->second;
+        isCurrentNotVoltage = true;
     }
 
-    return bits::pack<1, 6, 7>(true, currentObservable, voltageObservable);
+    return bits::pack<1, 6, 6>(true, currentObservable, voltageObservable);
+}
+
+uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
+{
+    this->setBoard(pChip->getBeBoardId());
+
+    const uint16_t GlbPulseVal = RD53Interface::ReadChipReg(pChip, "GlobalPulseConf");
+
+    RD53Interface::WriteChipReg(pChip, "MonitorConfig", data, false); // 14 bits: bit 12 enable, bits 6:11 I-Mon, bits 0:5 V-Mon
+    RD53BInterface::SendGlobalPulse(pChip, 0x1000, 0x0004);           // Trigger Monitor Data to start conversion
+    RD53Interface::WriteChipReg(pChip, "MonitorConfig", 0, false);    // Stop monitoring
+    RD53BInterface::SendGlobalPulse(pChip, GlbPulseVal, 0x0004);      // Restore value in Global Pulse Route
+
+    return RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
 }
 
 } // namespace Ph2_HwInterface

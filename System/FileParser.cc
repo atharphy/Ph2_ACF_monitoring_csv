@@ -56,7 +56,7 @@ void FileParser::parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWM
 void FileParser::openHWconfig(const std::string& pFilename, pugi::xml_document& doc)
 {
     pugi::xml_parse_result result = doc.load_file(pFilename.c_str());
-    if(!result) // try if it is not a a file, but a string containing the full xml
+    if(!result) // Try if it is not a file, but a string containing the full xml
         result = doc.load_string(pFilename.c_str());
 
     if(!result)
@@ -83,6 +83,7 @@ std::map<uint16_t, RegManager> FileParser::getRegManagerList(const std::string& 
         std::string cAddressTable = expandEnvironmentVariables(cBeBoardConnectionNode.attribute("address_table").value());
         theRegManagerMap.insert(std::pair<uint16_t, Ph2_HwInterface::RegManager>(cBeBoardNode.attribute("Id").as_int(), std::move(RegManager(cId, cUri, cAddressTable))));
     }
+
     return theRegManagerMap;
 }
 
@@ -860,7 +861,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                     if(cName.find("RD53") != std::string::npos)
                     {
                         cHybrid->setNPixelChips(cHybrid->getNPixelChips() + 1);
-                        auto frontEndType = cName.find("RD53A") != std::string::npos ? FrontEndType::RD53A : FrontEndType::RD53B;
+                        const auto frontEndType = cName.find("RD53A") != std::string::npos ? FrontEndType::RD53A : FrontEndType::RD53B;
                         pBoard->setFrontEndType(frontEndType);
                         this->parseRD53(cChild, cHybrid, cConfigFileDirectory, os, frontEndType);
                         if(cNextName.empty() || cNextName != cName) this->parseGlobalRD53Settings(pHybridNode, cHybrid, os);
@@ -1473,6 +1474,14 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
 // ########################
 // # RD53 specific parser #
 // ########################
+template <class T, size_t N>
+auto parseString(const std::string& data)
+{
+    std::array<T, N> result;
+    std::transform(data.begin(), data.end(), result.begin(), [](char c) { return c - '0'; });
+    return result;
+}
+
 void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os, const FrontEndType& frontEndType)
 {
     std::string cFileName;
@@ -1509,6 +1518,9 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
 
 void FileParser::parseGlobalRD53Settings(pugi::xml_node pHybridNode, Hybrid* pHybrid, std::ostream& os)
 {
+    // ###############################################
+    // # Load frontend chip global register settings #
+    // ###############################################
     pugi::xml_node cGlobalChipSettings = pHybridNode.child("Global");
     if(cGlobalChipSettings != nullptr)
     {
@@ -1531,6 +1543,35 @@ void FileParser::parseGlobalRD53Settings(pugi::xml_node pHybridNode, Hybrid* pHy
 
 void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theChip, std::ostream& os)
 {
+    // #########################################
+    // # Load frontend chip lane configuration #
+    // #########################################
+    pugi::xml_node laneConfigNode = theChipNode.child("LaneConfig");
+    if(laneConfigNode != nullptr)
+    {
+        bool isPrimary = laneConfigNode.attribute("primary").as_bool(true);
+
+        std::string outputLanesConfig = laneConfigNode.attribute("outputLanes").as_string("0001");
+        if(outputLanesConfig.size() != 4) throw std::runtime_error("The \"outputLanes\" attribute of LaneConfig should contain 4 characters ('0' up to '4').");
+        auto outputLanesEnabled = parseString<uint8_t, 4>(outputLanesConfig);
+
+        std::string singleChannelInputsConfig = laneConfigNode.attribute("singleChannelInputs").as_string("0000");
+        if(singleChannelInputsConfig.size() != 4) throw std::runtime_error("The \"singleChannelInputs\" attribute of LaneConfig should contain 4 characters ('0' or '1').");
+        auto singleChannelInputs = parseString<bool, 4>(singleChannelInputsConfig);
+
+        std::string dualChannelInputConfig = laneConfigNode.attribute("dualChannelInput").as_string("0000");
+        if(dualChannelInputConfig.size() != 4) throw std::runtime_error("The \"dualChannelInput\" attribute of LaneConfig should contain 4 characters ('0' or '1').");
+        auto dualChannelInput = parseString<bool, 4>(dualChannelInputConfig);
+
+        static_cast<RD53*>(theChip)->laneConfig = LaneConfig(isPrimary, outputLanesEnabled, singleChannelInputs, dualChannelInput);
+
+        os << BOLDBLUE << "|\t|\t|\t|----Lanes configuration --> primary: " << BOLDYELLOW << isPrimary << BOLDBLUE << " - output lanes: " << BOLDYELLOW << outputLanesConfig << BOLDBLUE
+           << " - single channel inputs: " << BOLDYELLOW << singleChannelInputsConfig << BOLDBLUE << " - dual channel input: " << BOLDYELLOW << dualChannelInputConfig << RESET << std::endl;
+    }
+
+    // ########################################
+    // # Load frontend chip register settings #
+    // ########################################
     pugi::xml_node cLocalChipSettings = theChipNode.child("Settings");
     if(cLocalChipSettings != nullptr)
     {
@@ -1545,6 +1586,7 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
             uint16_t    regvalue                   = convertAnyInt(attr.value());
             theChip->getRegItem(regname).fDefValue = regvalue;
             theChip->getRegItem(regname).fPrmptCfg = true;
+
             os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
         }
     }
@@ -1583,4 +1625,5 @@ std::string FileParser::parseMonitor(const std::string& pFilename, DetectorMonit
     if(theDetectorMonitorConfig.getNumberOfMonitoredRegisters() == 0) return "None";
     return theMonitorNode.attribute("type").value();
 }
+
 } // namespace Ph2_System

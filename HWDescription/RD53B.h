@@ -32,14 +32,13 @@ const uint8_t NBIT_CCOL   = 6;  // Number of core column bits
 
 namespace RD53BConstants
 {
-const uint8_t  BROADCAST_CHIPID    = 31;   // Broadcast chip ID used to send the command to multiple chips
-const uint8_t  AUTO_INCREMENT_MASK = 0x1;  // Auto-increment mask bits
-const uint16_t GLOBAL_PULSE_ADDR   = 0x3D; // Global Pulse Route regiser address
+const uint8_t  BROADCAST_CHIPID  = 31;   // Broadcast chip ID used to send the command to multiple chips
+const uint16_t GLOBAL_PULSE_ADDR = 0x3D; // Global Pulse Route regiser address
 } // namespace RD53BConstants
 
-// #####################################################################
-// # Formula: par0/par1 * VCal / electron_charge [C] * capacitance [C] #
-// #####################################################################
+// ####################################################################################
+// # Formula: Vref / ADCrange * VCal / electron_charge [C] * capacitance [F] + offset #
+// ####################################################################################
 namespace RD53BchargeConvertion
 {
 const float Vref     = 0.8;    // Vref [V]
@@ -61,13 +60,16 @@ class RD53B : public RD53
                                       "DAC_GDAC_M_LIN",
                                       "DAC_KRUM_CURR_LIN",
                                       "TriggerConfig",
+                                      "DAC_LDAC_LIN",
                                       1,
                                       32,
                                       RD53Shared::setBits(RD53BEvtEncoder::NBIT_TOT) - 1,
                                       RD53Shared::setBits(RD53BEvtEncoder::NBIT_BCID),
                                       RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID),
                                       0,
-                                      RD53B::NCOLS - 1};
+                                      RD53B::NCOLS - 1,
+                                      0,
+                                      0x01};
 
     static void decodeChipData(BitView<const uint32_t> bits, Ph2_HwInterface::RD53ChipEvent& e, const Ph2_HwInterface::FormatOptions& options = {});
 

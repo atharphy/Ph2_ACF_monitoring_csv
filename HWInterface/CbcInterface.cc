@@ -632,7 +632,7 @@ bool CbcInterface::WriteChipMultReg(Chip* pCbc, const std::vector<std::pair<std:
 
     return true;
 }
-bool CbcInterface::WriteChipAllLocalReg(ReadoutChip* pCbc, const std::string& dacName, ChipContainer& localRegValues, bool pVerify)
+bool CbcInterface::WriteChipAllLocalReg(ReadoutChip* pCbc, const std::string& dacName, const ChipContainer& localRegValues, bool pVerify)
 {
     setBoard(pCbc->getBeBoardId());
     assert(localRegValues.size() == pCbc->getNumberOfChannels());

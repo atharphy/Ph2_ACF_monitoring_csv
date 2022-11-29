@@ -8,7 +8,6 @@
 */
 
 #include "RD53ClockDelayHistograms.h"
-#include "../Utils/ChipContainerStream.h"
 
 using namespace Ph2_HwDescription;
 
@@ -19,15 +18,18 @@ void ClockDelayHistograms::book(TFile* theOutputFile, DetectorContainer& theDete
     // #######################
     // # Retrieve parameters #
     // #######################
-    auto frontEnd = RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNRows() / 2, RD53Shared::firstChip->getNCols() / 2);
-    startValue    = 0;
-    stopValue     = frontEnd->nLatencyBins2Span * (RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CLK_DATA_DELAY_CLK")) + 1) - 1;
+    const auto frontEnd = RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNRows() / 2, RD53Shared::firstChip->getNCols() / 2);
+    startValue          = 0;
+    stopValue           = frontEnd->nLatencyBins2Span * (RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CLK_DATA_DELAY_CLK")) + 1) - 1;
+    const auto unitTime = 1. / RD53Constants::ACCELERATOR_CLK * 1000 / ((RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CAL_EDGE_FINE_DELAY")) + 1) / (2. / frontEnd->nLatencyBins2Span));
+    std::stringstream title;
+    title << "Clock Delay (" << unitTime << " ns)";
 
     auto hClockDelay = CanvasContainer<TH1F>("ClockDelay", "Clock Delay", stopValue - startValue + 1, startValue, stopValue + 1);
-    bookImplementer(theOutputFile, theDetectorStructure, ClockDelay, hClockDelay, "Clock Delay (1.5625 ns)", "Entries");
+    bookImplementer(theOutputFile, theDetectorStructure, ClockDelay, hClockDelay, title.str().c_str(), "Entries");
 
     auto hOcc1D = CanvasContainer<TH1F>("ClkDelayScan", "Clock Delay Scan", stopValue - startValue + 1, startValue, stopValue + 1);
-    bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, "Clock Delay (1.5625 ns)", "Efficiency");
+    bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, title.str().c_str(), "Efficiency");
 }
 
 bool ClockDelayHistograms::fill(std::vector<char>& dataBuffer)

@@ -74,7 +74,7 @@ bool PSInterface::WriteChipReg(Chip* pPS, const std::string& pRegName, uint16_t 
 bool PSInterface::WriteChipMultReg(Chip* pPS, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop) { return getInterface(pPS)->WriteChipMultReg(pPS, pVecReq, pVerifLoop); }
 
 // To generalize
-bool PSInterface::WriteChipAllLocalReg(ReadoutChip* pPS, const std::string& dacName, ChipContainer& localRegValues, bool pVerifLoop)
+bool PSInterface::WriteChipAllLocalReg(ReadoutChip* pPS, const std::string& dacName, const ChipContainer& localRegValues, bool pVerifLoop)
 {
     return getInterface(pPS)->WriteChipAllLocalReg(pPS, dacName, localRegValues, pVerifLoop);
 }
