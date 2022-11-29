@@ -222,8 +222,8 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, 
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_HIGH", vcal_high_setting, true);
 
                     LOG(INFO) << GREEN << "The target threshold is " << std::setprecision(1) << BOLDYELLOW << target << RESET << GREEN << " electrons" << RESET;
-                    LOG(INFO) << BOLDBLUE << "\t--> Closest charge setting is " << BOLDYELLOW << "VCAL_HIGH" << RESET << GREEN << " = " << BOLDYELLOW << vcal_high_setting << RESET << GREEN << " for "
-                              << BOLDYELLOW << "VCAL_MED" << RESET << GREEN << " = " << BOLDYELLOW << vcal_med_setting << std::setprecision(-1) << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t--> Closest charge setting is " << BOLDYELLOW << "VCAL_HIGH" << BOLDBLUE << " = " << BOLDYELLOW << vcal_high_setting << BOLDBLUE << " for "
+                              << BOLDYELLOW << "VCAL_MED" << BOLDBLUE << " = " << BOLDYELLOW << vcal_med_setting << std::setprecision(-1) << RESET;
                 }
 
     for(auto i = 0u; i <= numberOfBits; i++)
