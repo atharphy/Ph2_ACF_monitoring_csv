@@ -91,8 +91,7 @@ class BitView
     }
 
     template <class T>
-    union U
-    {
+    union U {
         T                                   val;
         std::array<std::uint8_t, sizeof(T)> raw;
     };

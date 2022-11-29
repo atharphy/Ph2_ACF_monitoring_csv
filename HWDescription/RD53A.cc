@@ -30,10 +30,9 @@ RD53A::RD53A(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHy
 
 const RD53A::FrontEnd* RD53A::getFEtype(size_t colStart, size_t colStop) const
 {
-    return *std::max_element(std::begin(frontEnds),
-                             std::end(frontEnds),
-                             [&](const FrontEnd* a, const FrontEnd* b)
-                             { return int(std::min(colStop, a->colStop)) - int(std::max(colStart, a->colStart)) < int(std::min(colStop, b->colStop)) - int(std::max(colStart, b->colStart)); });
+    return *std::max_element(std::begin(frontEnds), std::end(frontEnds), [&](const FrontEnd* a, const FrontEnd* b) {
+        return int(std::min(colStop, a->colStop)) - int(std::max(colStart, a->colStart)) < int(std::min(colStop, b->colStop)) - int(std::max(colStart, b->colStart));
+    });
 }
 
 void RD53A::decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::RD53ChipEvent& chipEvent)

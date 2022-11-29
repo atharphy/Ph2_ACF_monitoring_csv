@@ -88,7 +88,8 @@ bool LinkTestOT::TestL1ALine(BeBoard* pBoard, bool pAlign, size_t pAttempts)
                 size_t                cPosCopy = std::string::npos;
                 auto                  cFound   = cBuffer.find("111111111111111111111110", cPos);
                 std::vector<uint16_t> cL1Ids(0);
-                do {
+                do
+                {
                     auto cHeader       = cBuffer.substr(cFound - 8, 32);
                     auto cStatus       = cBuffer.substr(cFound - 8 + 32, 9);
                     auto cL1Id         = cBuffer.substr(cFound - 8 + 32 + 9, 9);
@@ -130,7 +131,8 @@ bool LinkTestOT::TestL1ALine(BeBoard* pBoard, bool pAlign, size_t pAttempts)
 
                 auto cIter = cL1Ids.begin() + 1;
                 // count good L1Ids
-                do {
+                do
+                {
                     int cPrevious = *(cIter - 1);
                     if(cPrevious == 511) cPrevious = -1;
                     int cDiff = *(cIter)-cPrevious;

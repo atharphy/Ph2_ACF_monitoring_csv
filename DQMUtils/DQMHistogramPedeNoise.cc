@@ -53,10 +53,12 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
 
     std::vector<FrontEndType> cStripTypes             = {FrontEndType::CBC3, FrontEndType::SSA, FrontEndType::SSA2};
     std::vector<FrontEndType> cPixelTypes             = {FrontEndType::MPA, FrontEndType::MPA2};
-    auto                      selectStripChipFunction = [cStripTypes](const ChipContainer* pChip)
-    { return (std::find(cStripTypes.begin(), cStripTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cStripTypes.end()); };
-    auto selectPixelChipFunction = [cPixelTypes](const ChipContainer* pChip)
-    { return (std::find(cPixelTypes.begin(), cPixelTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cPixelTypes.end()); };
+    auto                      selectStripChipFunction = [cStripTypes](const ChipContainer* pChip) {
+        return (std::find(cStripTypes.begin(), cStripTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cStripTypes.end());
+    };
+    auto selectPixelChipFunction = [cPixelTypes](const ChipContainer* pChip) {
+        return (std::find(cPixelTypes.begin(), cPixelTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cPixelTypes.end());
+    };
 
     // find maximum number of channels
     std::vector<size_t> cNPixelChannels(0), cNStripChannels(0);
@@ -736,9 +738,7 @@ void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& the
                             }
                         }
                         if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-                        {
-                            cChannel2DPixelNoiseHistogram->SetBinContent(int(cChannelNumber % 120) + 1, int(cChannelNumber / 120) + 1, cNoise);
-                        }
+                        { cChannel2DPixelNoiseHistogram->SetBinContent(int(cChannelNumber % 120) + 1, int(cChannelNumber / 120) + 1, cNoise); }
                         ++cChannelNumber;
                     }
                 }
