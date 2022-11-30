@@ -433,7 +433,7 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
 
         if(chips_en & ~channel_up)
         {
-            LOG(INFO) << BOLDBLUE << "\t--> Some data lanes are enabled but inactive --> retry" << RESET;
+            LOG(INFO) << BOLDBLUE << "\t--> Some data lanes are enabled but inactive" << BOLDYELLOW << " -- > retry " << RESET;
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
             nAttempts++;
         }
