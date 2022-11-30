@@ -34,14 +34,9 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     // ######################
     RD53BInterface::ResetCoreColumns(pRD53);
 
-    RD53Interface::WriteChipReg(pChip, "DataMerging", bits::pack<4, 1, 1, 1, 5, 1>(0, 1, 0, 0, pRD53->laneConfig.serializeBits<bool, 5, 1>(pRD53->laneConfig.internalLanesEnabled), 1), false);
-    // # bits 10-13: DataMergingInputPolarityInvert[3:0]
-    // # bit 9:      EnOutputDataChipId
-    // # bit 8:      EnGatingDataMergeClk1280
-    // # bit 7:      SelDataMergeClk
-    // # bits 3-6:   EnDataMergeLane[3:0] --> Internal input lanes
-    // # bit 2:      MergeChBonding       --> Channel bonding
-    // # bit 1:      DataMergingGpoSel
+    // ##############
+    // # Field data #
+    // ##############
     RD53Interface::WriteChipReg(pChip, "DataConcentratorConf", 0, false); // To be consistent with RD53B event decoder
     // # bit 12:   EnCRC
     // # bit 11:   EnBCId
@@ -152,6 +147,10 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
     // # Resets #
     // ##########
     RD53BInterface::SendGlobalPulseBroadcast(pBoard, 0b111, 0xFF); // ResetChannelSynchronizer, ResetCommandDecoder, ResetGlobalConfiguration
+
+    // ###################
+    // # Ring oscillator #
+    // ###################
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "RingOscConfig", 0b111111111111111);
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "RingOscConfig", 0b101111011111111);
     // # bit 15:   RingOscBClear
@@ -183,12 +182,32 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // # bits 7-8: SER_INV_TAP[1:0]
     // # bits 5-6: SER_EN_TAP[1:0]
     // # bits 1-4: SER_EN_LANE[3:0] --> External output lanes
+
+    // ##############
+    // # Link speed #
+    // ##############
+    RD53Interface::WriteChipReg(
+        pChip, "CDR_CONFIG_SEL_SER_CLK", (pRD53->laneConfig.isPrimary == false ? RD53FWconstants::ReadoutSpeed::x320 : static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed()), false);
+    RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{});
+
     RD53Interface::WriteChipReg(pChip, "AuroraConfig", bits::pack<4, 6, 2>(RD53Shared::setBits(pRD53->laneConfig.nOutputLanes), 0b011001, 0b11), false);
     // # bit 14:    SendAltOutput
     // # bit 13:    EnablePRBS
     // # bits 9-12: ActiveLanes[3:0] --> Internal output lanes
     // # bits 3-8:  CCWait[5:0]
     // # bits 1-2:  CCSend[1:0]
+
+    // ################
+    // # Data merging #
+    // ################
+    RD53Interface::WriteChipReg(pChip, "DataMerging", bits::pack<4, 1, 1, 1, 5, 1>(0, 1, 0, 0, pRD53->laneConfig.serializeBits<bool, 5, 1>(pRD53->laneConfig.internalLanesEnabled), 1), false);
+    // # bits 10-13: DataMergingInputPolarityInvert[3:0]
+    // # bit 9:      EnOutputDataChipId
+    // # bit 8:      EnGatingDataMergeClk1280
+    // # bit 7:      SelDataMergeClk
+    // # bits 3-6:   EnDataMergeLane[3:0] --> Internal input lanes
+    // # bit 2:      MergeChBonding       --> Channel bonding
+    // # bit 1:      DataMergingGpoSel
     uint16_t val =
         bits::pack<8, 8>(pRD53->laneConfig.serializeBits<uint8_t, 4, 2>(pRD53->laneConfig.inputLaneMapping), pRD53->laneConfig.serializeBits<uint8_t, 4, 2>(pRD53->laneConfig.outputLaneMapping));
     RD53Interface::WriteChipReg(pChip, "DataMergingMux", val, false); // Mux selection for input and output internal lane mapping to external lanes
@@ -211,16 +230,10 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG1", 0x00, false);
     // # bits 1-8: CBWait[19:12]
 
+    // ##########
+    // # Resets #
+    // ##########
     RD53BInterface::SendGlobalPulse(pChip, 0b110000, 0xFF); // ResetAurora, ResetSerializer
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-
-    // ##############
-    // # Link speed #
-    // ##############
-    RD53Interface::WriteChipReg(
-        pChip, "CDR_CONFIG_SEL_SER_CLK", (pRD53->laneConfig.isPrimary == false ? RD53FWconstants::ReadoutSpeed::x320 : static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed()), false);
-    RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{});
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
