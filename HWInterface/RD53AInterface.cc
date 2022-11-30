@@ -115,7 +115,7 @@ void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // ##############################
     RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false);
 
-    // ##A#############################################################
+    // ###############################################################
     // # Enable monitoring (needed for AutoRead register monitoring) #
     // ###############################################################
     RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x100, false); // 0x100 = start monitoring
@@ -126,6 +126,7 @@ void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // # Link speed #
     // ##############
     RD53Interface::WriteChipReg(pChip, "CDR_CONFIG_SEL_SER_CLK", static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed() == RD53FWconstants::ReadoutSpeed::x1280 ? 0 : 1, false);
+    RD53Interface::SendCommand(pRD53, RD53ACmd::ECR{});
 
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }

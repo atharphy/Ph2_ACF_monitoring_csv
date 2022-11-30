@@ -35,9 +35,6 @@ const uint32_t NBIT_SLOWCMD_FIFO    = 16;     // Slow command FIFO depth 65.536,
 const uint32_t NBIT_DATA_FIFO       = 27;     // Data FIFO depth 134.217.728, i.e. 27 bits (in terms of 32-bit words)
 const uint32_t EVENT_STREAM_TIMEOUT = 0xFFFF; // Event stream timeout
 
-constexpr float VDDD2Volt(float val) { return (0.968 + val * 0.0115); }
-constexpr float CDR2Freq(float val) { return (140 + val * 5); }
-
 enum ReadoutSpeed : uint8_t
 {
     x1280,

@@ -175,7 +175,6 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     LOG(INFO) << GREEN << "Configuring up-link lanes and monitoring..." << RESET;
 
     RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false);
-    // 0 = CK/2, 1 = AURORA, 2 = PRBS7, 3 = 0
     // # bits 7-8: SerSelOut3[1:0]
     // # bits 5-6: SerSelOut2[1:0]
     // # bits 3-4: SerSelOut1[1:0]
@@ -212,6 +211,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG1", 0x00, false);
     // # bits 1-8: CBWait[19:12]
 
+    RD53BInterface::SendGlobalPulse(pChip, 0b110000, 0xFF); // ResetAurora, ResetSerializer
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     // ##############
@@ -219,11 +219,8 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // ##############
     RD53Interface::WriteChipReg(
         pChip, "CDR_CONFIG_SEL_SER_CLK", (pRD53->laneConfig.isPrimary == false ? RD53FWconstants::ReadoutSpeed::x320 : static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed()), false);
-
-    RD53BInterface::SendGlobalPulse(pChip, 0b110000, 0xFF); // ResetAurora, ResetSerializer
-
+    RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{});
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-    RD53Interface::SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
 
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
