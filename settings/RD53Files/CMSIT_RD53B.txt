@@ -317,13 +317,14 @@ SER_SEL_OUT_1             0x10D         0b1                     0b1             
 SER_SEL_OUT_2             0x10E         0b1                     0b1                                 2
 SER_SEL_OUT_3             0x10F         0b1                     0b1                                 2
 CDR_CONFIG_SEL_SER_CLK    0x110         0b000                   0b000                               3
-HIT_SAMPLE_MODE           0x111         0b1                     0b1                                 1
-EN_SEU_COUNT              0x112         0b0                     0b0                                 1
-SEL_CAL_RANGE             0x113         0b0                     0b0                                 1
-EN_INJCAP_MEAS            0x114         0b0                     0b0                                 1
-EN_INJCAP_PAR_MEAS        0x115         0b0                     0b0                                 1
-ToT6to4Mapping            0x116         0b0                     0b0                                 1
-ToTDualEdgeCount          0x117         0b0                     0b0                                 1
+CDR_CONFIG_SEL_PD         0x111         0b1                     0b1                                 1
+HIT_SAMPLE_MODE           0x112         0b1                     0b1                                 1
+EN_SEU_COUNT              0x113         0b0                     0b0                                 1
+SEL_CAL_RANGE             0x114         0b0                     0b0                                 1
+EN_INJCAP_MEAS            0x115         0b0                     0b0                                 1
+EN_INJCAP_PAR_MEAS        0x116         0b0                     0b0                                 1
+ToT6to4Mapping            0x117         0b0                     0b0                                 1
+ToTDualEdgeCount          0x118         0b0                     0b0                                 1
 
 ADC_OFFSET_VOLT           0x1A0         0d63                    0d63                               16
 ADC_MAXIMUM_VOLT          0x1A1         0d839                   0d839                              16

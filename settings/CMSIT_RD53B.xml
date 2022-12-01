@@ -104,6 +104,7 @@
 
             HIT_SAMPLE_MODE          =     "1"
             EN_SEU_COUNT             =     "0"
+            CDR_CONFIG_SEL_PD        =     "0"
 
             LOCKLOSS_CNT             =     "0"
             BITFLIP_WNG_CNT          =     "0"
