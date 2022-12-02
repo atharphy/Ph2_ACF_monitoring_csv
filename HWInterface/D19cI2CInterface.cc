@@ -69,10 +69,10 @@ void D19cI2CInterface::ConfigureI2CMap(const BeBoard* pBoard)
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        cNBytes            = (cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::MPA ||
+                        cNBytes = (cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::MPA ||
                                    cChip->getFrontEndType() == FrontEndType::MPA2)
-                                                 ? 2
-                                                 : 1;
+                                      ? 2
+                                      : 1;
                         uint8_t cLastValue = 1;
                         if(fI2CSlaveMap.find(cChip->getId()) == fI2CSlaveMap.end())
                         {
@@ -94,10 +94,10 @@ void D19cI2CInterface::ConfigureI2CMap(const BeBoard* pBoard)
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        cNBytes            = (cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::MPA ||
+                        cNBytes = (cChip->getFrontEndType() == FrontEndType::SSA2 || cChip->getFrontEndType() == FrontEndType::SSA || cChip->getFrontEndType() == FrontEndType::MPA ||
                                    cChip->getFrontEndType() == FrontEndType::MPA2)
-                                                 ? 2
-                                                 : 1;
+                                      ? 2
+                                      : 1;
                         uint8_t cLastValue = 1;
                         LOG(INFO) << BOLDBLUE << "Adding slave with I2C address 0x" << std::hex << +cChip->getChipAddress() << std::dec << RESET;
 
@@ -209,7 +209,8 @@ bool D19cI2CInterface::MultiWriteRead(Chip* pChip, std::vector<ChipRegItem>& pWr
     // until it works or you've tried
     // too many times
     bool cSuccess = false;
-    do {
+    do
+    {
         if(MultiWrite(pChip, pWriteRegs))
         {
             std::this_thread::sleep_for(std::chrono::microseconds(100000)); // need this pause for SSA I2C to work .. why?

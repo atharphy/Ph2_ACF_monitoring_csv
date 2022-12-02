@@ -341,7 +341,8 @@ int main(int argc, char* argv[])
             size_t                cNcorrect = 0;
             size_t                cNfound   = 0;
             std::vector<uint16_t> cL1Ids(0);
-            do {
+            do
+            {
                 cSearch      = cBuffer.find("111111111111111111111110", cPos);
                 auto cHeader = cBuffer.substr(cSearch - 8, 32);
                 cNfound++;
@@ -361,7 +362,8 @@ int main(int argc, char* argv[])
             LOG(INFO) << BOLDBLUE << "\t " << cL1DataHeaders.str() << RESET;
             LOG(INFO) << BOLDBLUE << "\t\t Found " << cNcorrect << " correct headers out of " << cNfound << RESET;
             auto cIter = cL1Ids.begin() + 1;
-            do {
+            do
+            {
                 if(*(cIter - 1) != 511) // don't compare after 511
                 {
                     uint16_t cXor = *(cIter - 1) ^ (*cIter);
@@ -398,7 +400,8 @@ int main(int argc, char* argv[])
                 uint32_t cNevents = 0;
                 bool     cBreak   = false;
                 bool     cWait    = false;
-                do {
+                do
+                {
                     std::this_thread::sleep_for(std::chrono::microseconds(cReadoutPause));
                     std::vector<uint32_t> cData(0);
                     cNevents += cTool.ReadData(cBeBoard, cData, cWait);
@@ -453,7 +456,8 @@ int main(int argc, char* argv[])
 
                     // try to only readout once I know I have enough events
                     size_t cCounter = 0;
-                    do {
+                    do
+                    {
                         std::this_thread::sleep_for(std::chrono::microseconds(10));
                         cBreak = (cTool.fBeBoardInterface->getFirmwareInterface()->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter") >= pEventsperVcth);
                         if(cCounter % 1000 == 0)
@@ -476,7 +480,8 @@ int main(int argc, char* argv[])
 
                         size_t cCurrentDataSize = 0;
                         size_t cDataSize        = cCompleteData.size();
-                        do {
+                        do
+                        {
                             cCurrentDataSize = cCompleteData.size();
                             std::this_thread::sleep_for(std::chrono::milliseconds(1));
                             std::vector<uint32_t> cData(0);

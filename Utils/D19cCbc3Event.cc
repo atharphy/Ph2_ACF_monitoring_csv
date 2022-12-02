@@ -69,7 +69,8 @@ void D19cCbc3Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
     fEventCount        = 0x00FFFFFF & *(cEventIterator + 2);
     fBunch             = 0xFFFFFFFF & *(cEventIterator + 3);
 
-    do {
+    do
+    {
         uint32_t cHeader     = (0xFFFF0000 & (*cEventIterator)) >> 16;
         uint32_t cEventSize  = (0x0000FFFF & (*cEventIterator)) * 4; // event size is given in 128 bit words
         uint32_t cDummyCount = (0xFF & (*(cEventIterator + 1))) * 4;
@@ -158,7 +159,8 @@ void D19cCbc3Event::SetEvent(const BeBoard* pBoard, uint32_t pNbCbc, const std::
 
     auto cIterator = list.begin() + D19C_EVENT_HEADER1_SIZE_32_CBC3;
     LOG(INFO) << BOLDBLUE << "Event" << +fEventCount << " has " << +list.size() << " 32 bit words [ of which " << +fDummySize << " words are dummy]" << RESET;
-    do {
+    do
+    {
         // L1
         uint32_t cL1Header = *cIterator;
         uint8_t  cHeader   = (cL1Header & 0xF0000000) >> 28;

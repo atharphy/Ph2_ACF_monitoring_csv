@@ -100,7 +100,8 @@ int main(int argc, char** argv)
     Antenna cAntenna;
     cAntenna.initializeAntenna();
     uint16_t cIter = 0;
-    do {
+    do
+    {
         float cTemp    = cAntenna.GetHybridTemperature(4);
         float cCurrent = cAntenna.GetHybridCurrent(4);
         LOG(INFO) << BOLDBLUE << "Temperature on the hybrid is " << cTemp << " degrees ..... current on the hybrid is " << cCurrent << " mA." << RESET;
