@@ -260,10 +260,8 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& obse
 
 uint32_t RD53Interface::ReadChipADC(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName)
 {
-    bool     isCurrentNotVoltage;
-    uint32_t observable = getADCobservable(observableName, isCurrentNotVoltage);
-
-    return measureADC(pChip, observable);
+    bool isCurrentNotVoltage;
+    return measureADC(pChip, getADCobservable(observableName, isCurrentNotVoltage));
 }
 
 float RD53Interface::measureVoltageCurrent(ReadoutChip* pChip, uint32_t data, bool isCurrentNotVoltage)

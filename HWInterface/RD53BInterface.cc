@@ -611,9 +611,9 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     const uint16_t GlbPulseVal = RD53Interface::ReadChipReg(pChip, "GlobalPulseConf");
 
     RD53Interface::WriteChipReg(pChip, "MonitorConfig", data, false); // 14 bits: bit 12 enable, bits 6:11 I-Mon, bits 0:5 V-Mon
-    RD53BInterface::SendGlobalPulse(pChip, 0x1000, 0x0004);           // Trigger Monitor Data to start conversion
+    RD53BInterface::SendGlobalPulse(pChip, 0x1000, 0xFF);             // Trigger Monitor Data to start conversion
     RD53Interface::WriteChipReg(pChip, "MonitorConfig", 0, false);    // Stop monitoring
-    RD53BInterface::SendGlobalPulse(pChip, GlbPulseVal, 0x0004);      // Restore value in Global Pulse Route
+    RD53BInterface::SendGlobalPulse(pChip, GlbPulseVal, 0xFF);        // Restore value in Global Pulse Route
 
     return RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
 }

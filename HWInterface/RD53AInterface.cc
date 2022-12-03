@@ -107,7 +107,7 @@ void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // bits [5:2]: Aurora lanes. Default 0001 means single lane mode
     RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 0x0F, false);                    // CML_EN_LANE[3:0]: the actual number of lanes is determined by OUTPUT_CONFIG
     RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, false);            // 0x30 = reset Aurora AND Serializer
-    RD53Interface::SendCommand(pChip, RD53ACmd::GlobalPulse{pChip->getId(), 0x0001}); // Reset Channel Synchronizer
+    RD53Interface::SendCommand(pChip, RD53ACmd::GlobalPulse{pChip->getId(), 0x04}); // Reset Channel Synchronizer
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     // ##############################
@@ -119,7 +119,7 @@ void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // # Enable monitoring (needed for AutoRead register monitoring) #
     // ###############################################################
     RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x100, false); // 0x100 = start monitoring
-    RD53Interface::SendCommand(pChip, RD53ACmd::GlobalPulse{pChip->getId(), 0x0004});
+    RD53Interface::SendCommand(pChip, RD53ACmd::GlobalPulse{pChip->getId(), 0x04});
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     // ##############
@@ -421,12 +421,12 @@ uint32_t RD53AInterface::measureADC(ReadoutChip* pChip, uint32_t data)
 
     RD53ACmd::serialize(RD53ACmd::WrReg{chipID, pChip->getRegItem("MonitorConfig").fAddress, trimADC}, commandList);
     RD53ACmd::serialize(RD53ACmd::WrReg{chipID, GLOBAL_PULSE_ROUTE, 0x0040}, commandList); // Reset Monitor Data
-    RD53ACmd::serialize(RD53ACmd::GlobalPulse{pChip->getId(), 0x0004}, commandList);
+    RD53ACmd::serialize(RD53ACmd::GlobalPulse{pChip->getId(), 0x04}, commandList);
     RD53ACmd::serialize(RD53ACmd::WrReg{chipID, GLOBAL_PULSE_ROUTE, 0x0008}, commandList); // Clear Monitor Data
-    RD53ACmd::serialize(RD53ACmd::GlobalPulse{pChip->getId(), 0x0004}, commandList);
+    RD53ACmd::serialize(RD53ACmd::GlobalPulse{pChip->getId(), 0x04}, commandList);
     RD53ACmd::serialize(RD53ACmd::WrReg{chipID, pChip->getRegItem("MONITOR_SELECT").fAddress, data}, commandList); // 14 bits: bit 13 enable, bits 7:12 I-Mon, bits 0:6 V-Mon
     RD53ACmd::serialize(RD53ACmd::WrReg{chipID, GLOBAL_PULSE_ROUTE, 0x1000}, commandList);                         // Trigger Monitor Data to start conversion
-    RD53ACmd::serialize(RD53ACmd::GlobalPulse{pChip->getId(), 0x0004}, commandList);
+    RD53ACmd::serialize(RD53ACmd::GlobalPulse{pChip->getId(), 0x04}, commandList);
     RD53ACmd::serialize(RD53ACmd::WrReg{chipID, GLOBAL_PULSE_ROUTE, GlbPulseVal}, commandList); // Restore value in Global Pulse Route
 
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pChip->getHybridId());
