@@ -55,7 +55,7 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                     }
                     catch(...)
                     {
-                        LOG(WARNING) << BOLDRED << "Register " << BOLDYELLOW << registerName << BOLDRED << " is not present in my list of frontend chip registers" << RESET;
+                        return;
                     }
                 }
 
@@ -98,8 +98,8 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
             }
             catch(...)
             {
-                LOG(WARNING) << BOLDRED << "Register " << BOLDYELLOW << registerName << BOLDRED << " is not present in my list of LpGBT chip registers" << RESET;
                 theRegisterContainer.at(cBoard->getId())->at(cOpticalGroup->getId())->getSummary<std::tuple<time_t, float>>() = std::make_tuple(getTimeStamp(), -1);
+                return;
             }
         }
 
