@@ -38,14 +38,14 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     // # Field data #
     // ##############
     RD53Interface::WriteChipReg(pChip, "DataConcentratorConf", 0, false); // To be consistent with RD53B event decoder
-    // # bit 12:   EnCRC         --> Mapped in FormatOptions: enableCRC
-    // # bit 11:   EnBCId        --> Mapped in FormatOptions: enableBCID
-    // # bit 10:   EnLv1Id       --> Mapped in FormatOptions: enableTriggerId
-    // # bit 9:    EnEoS         --> Mapped in FormatOptions: enableEOSmarker
+    // # bit 12:   EnCRC         --> Map in FormatOptions: enableCRC
+    // # bit 11:   EnBCId        --> Map in FormatOptions: enableBCID
+    // # bit 10:   EnLv1Id       --> Map in FormatOptions: enableTriggerId
+    // # bit 9:    EnEoS         --> Map in FormatOptions: enableEOSmarker
     // # bits 1-8: NumOfEventsInStream[7:0]
     RD53Interface::WriteChipReg(pChip, "CoreColEncoderConf", 0, false);
-    // # bit9:     BinaryReadOut --> Mapped in FormatOptions: enableToT
-    // # bit8:     RawData       --> Mapped in FormatOptions: enableRawMap
+    // # bit9:     BinaryReadOut --> Map in FormatOptions: enableToT
+    // # bit8:     RawData       --> Map in FormatOptions: enableRawMap
     // # bits 4-7: MaxHits[3:0]
     // # bits 1-3: MaxToT[2:0]
 
@@ -202,7 +202,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // ################
     RD53Interface::WriteChipReg(pChip, "DataMerging", bits::pack<4, 1, 1, 1, 5, 1>(0, 1, 0, 0, pRD53->laneConfig.serializeBits<bool, 5, 1>(pRD53->laneConfig.internalLanesEnabled), 1), false);
     // # bits 10-13: DataMergingInputPolarityInvert[3:0]
-    // # bit 9:      EnOutputDataChipId   --> Mapped in FormatOptions: enableChipId
+    // # bit 9:      EnOutputDataChipId   --> Map in FormatOptions: enableChipId
     // # bit 8:      EnGatingDataMergeClk1280
     // # bit 7:      SelDataMergeClk
     // # bits 3-6:   EnDataMergeLane[3:0] --> Internal input lanes
