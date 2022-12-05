@@ -542,8 +542,8 @@ uint32_t RD53BInterface::getADCobservable(const std::string& observableName, boo
                                                                           {"NTC_VOLT", 0x02},
                                                                           {"Vref_CAL_DAC", 0x03},
                                                                           {"VDDA_CAPMEASURE", 0x04},
-                                                                          {"TEMPSENS_TOP", 0x05},
-                                                                          {"TEMPSENS_BOTTOM", 0x06},
+                                                                          {"POLY_TEMPSENS_TOP", 0x05},
+                                                                          {"POLY_TEMPSENS_BOTTOM", 0x06},
                                                                           {"VCAL_HI", 0x07},
                                                                           {"VCAL_MED", 0x08},
                                                                           {"LIN_FE_REF_KRUMCURR", 0x09},
@@ -616,6 +616,59 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     RD53BInterface::SendGlobalPulse(pChip, GlbPulseVal, 0xFF);        // Restore value in Global Pulse Route
 
     return RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
+}
+
+float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, const std::string& type)
+// ####################
+// # type == "POLY"   #
+// # type == "ANA"    #
+// # type == "DIG"    #
+// # type == "CENTER" #
+// ####################
+{
+    // ################################################################################################
+    // # Temperature measurement is done by measuring twice, once with high bias, once with low bias  #
+    // # Temperature is calculated based on the difference of the two, with the formula on the bottom #
+    // # idealityFactor = 5000 [1/1000] for Poly Sens Bottom                                          #
+    // # idealityFactor = 2000 [1/1000] for Poly Sens Top                                             #
+    // # idealityFactor = 1225 [1/1000] for the rest                                                  #
+    // ################################################################################################
+
+    // #####################
+    // # Natural constants #
+    // #####################
+    const float       T0C            = 273.15;         // [Kelvin]
+    const float       kb             = 1.38064852e-23; // [J/K]
+    const float       e              = 1.6021766208e-19;
+    const float       R              = 15;   // By circuit design
+    const uint8_t     sensorDEM      = 0x07; // Sensor Dynamic Element Matching bits needed to trim the thermistors
+    const float       idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR").fValue / 1e3;
+    const std::string regName        = (type == "CENTER" ? "MON_SENS_ACB" : "MON_SENS_SLDO");
+
+    uint16_t sensorConfigData; // Enable[5], DEM[4:1], SEL_BIAS[0] (x2 ... 10 bit in total for the sensors in each sensor config register)
+    float    valueLow  = 0;
+    float    valueHigh = 0;
+
+    if(type != "POLY")
+    {
+        // Get high bias voltage
+        sensorConfigData = bits::pack<1, 4, 1>(true, sensorDEM, 0) << (type == "DIG" ? 6 : 1);
+        RD53Interface::WriteChipReg(pChip, regName, sensorConfigData);
+        valueLow = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data));
+
+        // Get low bias voltage
+        sensorConfigData = bits::pack<1, 4, 1>(true, sensorDEM, 1) << (type == "DIG" ? 6 : 1);
+        RD53Interface::WriteChipReg(pChip, regName, sensorConfigData);
+    }
+    valueHigh = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data));
+
+    // ####################
+    // # Turn off sensing #
+    // ####################
+    RD53Interface::WriteChipReg(pChip, "MON_SENS_ACB", 0);
+    RD53Interface::WriteChipReg(pChip, "MON_SENS_SLDO", 0);
+
+    return e / (idealityFactor * kb * log(R)) * (valueHigh - valueLow) - T0C;
 }
 
 } // namespace Ph2_HwInterface

@@ -105,8 +105,8 @@ void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // Default 0 means 2 clocks, may need higher value in case of large propagation
     // delays, for example at low VDDD voltage after irradiation
     // bits [5:2]: Aurora lanes. Default 0001 means single lane mode
-    RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 0x0F, false);                    // CML_EN_LANE[3:0]: the actual number of lanes is determined by OUTPUT_CONFIG
-    RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, false);            // 0x30 = reset Aurora AND Serializer
+    RD53Interface::WriteChipReg(pChip, "CML_CONFIG", 0x0F, false);                  // CML_EN_LANE[3:0]: the actual number of lanes is determined by OUTPUT_CONFIG
+    RD53Interface::WriteChipReg(pChip, "GLOBAL_PULSE_ROUTE", 0x30, false);          // 0x30 = reset Aurora AND Serializer
     RD53Interface::SendCommand(pChip, RD53ACmd::GlobalPulse{pChip->getId(), 0x04}); // Reset Channel Synchronizer
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
@@ -431,6 +431,41 @@ uint32_t RD53AInterface::measureADC(ReadoutChip* pChip, uint32_t data)
 
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pChip->getHybridId());
     return RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
+}
+
+float RD53AInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, const std::string& type)
+{
+    // ################################################################################################
+    // # Temperature measurement is done by measuring twice, once with high bias, once with low bias  #
+    // # Temperature is calculated based on the difference of the two, with the formula on the bottom #
+    // # idealityFactor = 1225 [1/1000]                                                               #
+    // ################################################################################################
+
+    // #####################
+    // # Natural constants #
+    // #####################
+    const float   T0C            = 273.15;         // [Kelvin]
+    const float   kb             = 1.38064852e-23; // [J/K]
+    const float   e              = 1.6021766208e-19;
+    const float   R              = 15;   // By circuit design
+    const uint8_t sensorDEM      = 0x0E; // Sensor Dynamic Element Matching bits needed to trim the thermistors
+    const float   idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR").fValue / 1e3;
+
+    uint16_t sensorConfigData; // Enable[5], DEM[4:1], SEL_BIAS[0]
+
+    // Get high bias voltage
+    sensorConfigData = bits::pack<1, 4, 1, 1, 4, 1>(true, sensorDEM, 0, true, sensorDEM, 0);
+    RD53Interface::WriteChipReg(pChip, "SENSOR_CONFIG_0", sensorConfigData);
+    RD53Interface::WriteChipReg(pChip, "SENSOR_CONFIG_1", sensorConfigData);
+    auto valueLow = RD53Interface::convertADC2VorI(pChip, RD53AInterface::measureADC(pChip, data));
+
+    // Get low bias voltage
+    sensorConfigData = bits::pack<1, 4, 1, 1, 4, 1>(true, sensorDEM, 1, true, sensorDEM, 1);
+    RD53Interface::WriteChipReg(pChip, "SENSOR_CONFIG_0", sensorConfigData);
+    RD53Interface::WriteChipReg(pChip, "SENSOR_CONFIG_1", sensorConfigData);
+    auto valueHigh = RD53Interface::convertADC2VorI(pChip, RD53AInterface::measureADC(pChip, data));
+
+    return e / (idealityFactor * kb * log(R)) * (valueHigh - valueLow) - T0C;
 }
 
 } // namespace Ph2_HwInterface

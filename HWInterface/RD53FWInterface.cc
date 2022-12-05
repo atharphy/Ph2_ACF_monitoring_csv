@@ -1200,7 +1200,7 @@ float RD53FWInterface::calcTemperature(uint32_t sensor1, uint32_t sensor2, int b
     // ###################
     const float  safetyMargin       = 0.9;
     const float  minimumTemperature = -35;                                               // [Celsius]
-    const size_t numberOfBits       = 11;                                                // Related to the ADC on the FMC
+    const size_t numberOfBits       = 12;                                                // Related to the ADC on the FMC
     const float  VrefADC            = 2.048;                                             // FMC's ADC refence voltage [V]
     const float  ADC_LSB            = VrefADC / (RD53Shared::setBits(numberOfBits) + 1); // [V/ADC]
 
@@ -1236,7 +1236,7 @@ float RD53FWInterface::calcVoltage(uint32_t senseVDD, uint32_t senseGND)
     // ###################
     // # Voltage per LSB #
     // ###################
-    const size_t numberOfBits = 11;                                                 // Related to the ADC on the FMC
+    const size_t numberOfBits = 12;                                                 // Related to the ADC on the FMC
     const float  VrefADC      = 2.048;                                              // FMC's ADC refence voltage [V]
     const float  ADC_LSB      = VrefADC / (RD53Shared::setBits(numberOfBits) + 1.); // [V/ADC]
 
