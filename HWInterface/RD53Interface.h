@@ -106,9 +106,9 @@ class RD53Interface : public ReadoutChipInterface
     float    convertADC2VorI(Ph2_HwDescription::ReadoutChip* pChip, uint32_t value, bool isCurrentNotVoltage = false);
 
   private:
-    virtual uint32_t getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage)                         = 0;
-    virtual uint32_t measureADC(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data)                                       = 0;
-    virtual float    measureTemperature(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data, const std::string& type = "") = 0;
+    virtual uint32_t getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage)                                          = 0;
+    virtual uint32_t measureADC(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data)                                                        = 0;
+    virtual float    measureTemperature(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data, const std::string& type = "", int beta = 3435) = 0;
     float            measureVoltageCurrent(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data, bool isCurrentNotVoltage);
 };
 

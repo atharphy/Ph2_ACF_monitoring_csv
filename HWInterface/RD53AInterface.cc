@@ -433,7 +433,7 @@ uint32_t RD53AInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     return RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
 }
 
-float RD53AInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, const std::string& type)
+float RD53AInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, const std::string& type, int beta)
 {
     // ################################################################################################
     // # Temperature measurement is done by measuring twice, once with high bias, once with low bias  #

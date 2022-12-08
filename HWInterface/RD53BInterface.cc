@@ -505,6 +505,7 @@ uint32_t RD53BInterface::getADCobservable(const std::string& observableName, boo
 // ############################################
 // # Possible observable name values are also #
 // # - INTERNAL_NTC                           #
+// # - INTERNAL_NTC_VOLT                      #
 // ############################################
 {
     uint32_t voltageObservable(0), currentObservable(0);
@@ -581,8 +582,14 @@ uint32_t RD53BInterface::getADCobservable(const std::string& observableName, boo
     auto search = currentMultiplexer.find(observableName);
     if(observableName == "INTERNAL_NTC")
     {
-        currentObservable = currentMultiplexer.find("NTC_CURR")->second;
-        voltageObservable = voltageMultiplexer.find("I_MUX")->second;
+        currentObservable   = currentMultiplexer.find("NTC_CURR")->second;
+        voltageObservable   = voltageMultiplexer.find("I_MUX")->second;
+        isCurrentNotVoltage = true;
+    }
+    else if(observableName == "INTERNAL_NTC_VOLT")
+    {
+        voltageObservable   = voltageMultiplexer.find("NTC_VOLT")->second;
+        isCurrentNotVoltage = false;
     }
     else if(search == currentMultiplexer.end())
     {
@@ -618,13 +625,14 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     return RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
 }
 
-float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, const std::string& type)
-// ####################
-// # type == "POLY"   #
-// # type == "ANA"    #
-// # type == "DIG"    #
-// # type == "CENTER" #
-// ####################
+float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, const std::string& type, int beta)
+// #####################
+// # type == "POLY"    #
+// # type == "ANA"     #
+// # type == "DIG"     #
+// # type == "CENTER"  #
+// # type == "INT_NTC" #
+// #####################
 {
     // ################################################################################################
     // # Temperature measurement is done by measuring twice, once with high bias, once with low bias  #
@@ -638,6 +646,8 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     // # Natural constants #
     // #####################
     const float       T0C            = 273.15;         // [Kelvin]
+    const float       T25C           = 298.15;         // [Kelvin]
+    const float       R25C           = 10;             // [kOhm]
     const float       kb             = 1.38064852e-23; // [J/K]
     const float       e              = 1.6021766208e-19;
     const float       R              = 15;   // By circuit design
@@ -649,7 +659,22 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     float    valueLow  = 0;
     float    valueHigh = 0;
 
-    if(type != "POLY")
+    if(type == "INT_NTC")
+    {
+        bool     isCurrentNotVoltage;
+        uint32_t observable = RD53BInterface::getADCobservable("INTERNAL_NTC_VOLT", isCurrentNotVoltage);
+        float    voltage    = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, observable));
+        float    current    = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data), true);
+
+        // ###############################################
+        // # Calculate temperature with NTC Beta formula #
+        // ###############################################
+        float resistance  = 1e-3 * voltage / current;                               // [kOhm]
+        float temperature = 1. / (1. / T25C + log(resistance / R25C) / beta) - T0C; // [Celsius]
+
+        return temperature;
+    }
+    else if(type != "POLY")
     {
         // Get high bias voltage
         sensorConfigData = bits::pack<1, 4, 1>(true, sensorDEM, 0) << (type == "DIG" ? 6 : 1);

@@ -239,11 +239,9 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& obse
     const float measError = 4.0; // Current or Voltage measurement error due to MonitorConfig resolution [%]
     float       value;
     bool        isCurrentNotVoltage;
-    uint32_t    observable;
+    uint32_t    observable = getADCobservable(observableName, isCurrentNotVoltage);
 
-    observable = getADCobservable(observableName, isCurrentNotVoltage);
-
-    if((observableName.find("TEMPSENS") != std::string::npos) || (observableName.find("RADSENS") != std::string::npos))
+    if((observableName.find("TEMPSENS") != std::string::npos) || (observableName.find("RADSENS") != std::string::npos) || (observableName.find("INTERNAL_NTC") != std::string::npos))
     {
         std::string type = "CENTER";
         if(observableName.find("POLY") != std::string::npos)
@@ -252,6 +250,8 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& obse
             type = "ANA";
         else if(observableName.find("DIG") != std::string::npos)
             type = "DIG";
+        else if(observableName.find("INTERNAL_NTC") != std::string::npos)
+            type = "INT_NTC";
         else
             type = "CENTER";
 

@@ -1172,8 +1172,7 @@ float RD53FWInterface::ReadHybridVoltage(int hybridId)
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     auto value = calcVoltage(senseVDD, senseGND);
-    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "Hybrid" << BOLDBLUE " voltage: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE
-              << " V (corresponds to twice VOUT_dig_ShuLDO of the chip)" << std::setprecision(-1) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "Hybrid" << BOLDBLUE " voltage: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " V" << std::setprecision(-1) << RESET;
 
     return value;
 }
