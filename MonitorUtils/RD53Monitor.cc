@@ -47,6 +47,9 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                     {
                         registerValue = fTheSystemController->fBeBoardInterface->ReadChipMonitor(fTheSystemController->fReadoutChipInterface, cChip, registerName);
 
+			LOG(INFO) << GREEN << "Reading monitored data for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+				  << +cChip->getId() << RESET << GREEN << "]" << RESET;
+			
                         theRegisterContainer.getObject(cBoard->getId())
                             ->getObject(cOpticalGroup->getId())
                             ->getObject(cHybrid->getId())
@@ -84,6 +87,8 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
             float registerValue;
             try
             {
+	        LOG(INFO) << GREEN << "Reading monitored data for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << RESET << GREEN << "]" << RESET;
+
                 if(fTheSystemController->flpGBTInterface->fADCInputMap.find(registerName) != fTheSystemController->flpGBTInterface->fADCInputMap.end())
                 {
                     if(registerName.find("TEMP") != std::string::npos)
