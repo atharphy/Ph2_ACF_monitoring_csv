@@ -677,12 +677,12 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     else if(type != "POLY")
     {
         // Get high bias voltage
-        sensorConfigData = bits::pack<1, 4, 1>(true, sensorDEM, 0) << (type == "DIG" ? 6 : 1);
+        sensorConfigData = bits::pack<1, 4, 1>(true, sensorDEM, 0) << (type == "DIG" ? 6 : 0);
         RD53Interface::WriteChipReg(pChip, regName, sensorConfigData);
         valueLow = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data));
 
         // Get low bias voltage
-        sensorConfigData = bits::pack<1, 4, 1>(true, sensorDEM, 1) << (type == "DIG" ? 6 : 1);
+        sensorConfigData = bits::pack<1, 4, 1>(true, sensorDEM, 1) << (type == "DIG" ? 6 : 0);
         RD53Interface::WriteChipReg(pChip, regName, sensorConfigData);
     }
     valueHigh = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data));
