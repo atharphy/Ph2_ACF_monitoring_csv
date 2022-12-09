@@ -436,7 +436,17 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
             LOG(INFO) << BOLDBLUE << "\t--> Some data lanes are enabled but inactive" << BOLDYELLOW << " -- > retry " << RESET;
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
             nAttempts++;
-        }
+
+	    std::vector<uint16_t> initSequence;
+	    for(unsigned int i = 0; i < 500; i++) initSequence.push_back(0x0000);  // 0000 0000
+	    for(unsigned int i = 0; i < 2000; i++) initSequence.push_back(0xCCCC); // 1100 1100 
+	    for(const auto cOpticalGroup: *pBoard)
+	      for(const auto cHybrid: *cOpticalGroup)
+		{
+		  const uint32_t hybrid_id         = cHybrid->getId();
+		  RD53FWInterface::WriteChipCommand(initSequence, hybrid_id);
+		}
+       }
         else
             break;
     }
