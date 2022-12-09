@@ -435,8 +435,6 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
         if(chips_en & ~channel_up)
         {
             LOG(INFO) << BOLDBLUE << "\t--> Some data lanes are enabled but inactive" << BOLDYELLOW << " -- > retry " << RESET;
-            std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-            nAttempts++;
 
             // ###############################################
             // # Send sequence to help frontend chip to lock #
@@ -444,6 +442,9 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
             if(initSequence.size() != 0)
                 for(const auto cOpticalGroup: *pBoard)
                     for(const auto cHybrid: *cOpticalGroup) RD53FWInterface::WriteChipCommand(initSequence, cHybrid->getId());
+
+            std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+            nAttempts++;
         }
         else
             break;
