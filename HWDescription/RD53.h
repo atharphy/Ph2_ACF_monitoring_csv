@@ -108,11 +108,15 @@ class RD53 : public ReadoutChip
         const char* gainReg;
         const char* latencyReg;
         const char* TDACGainReg;
+        const char* VDDDreadReg;
+        const char* VDDAreadReg;
         size_t      nLatencyBins2Span;
         size_t      nTDACvalues;
         size_t      maxToTvalue;
         size_t      maxBCIDvalue;
         size_t      maxTRIGIDvalue;
+        size_t      nBitTrimDig;
+        size_t      nBitTrimAna;
         size_t      colStart;
         size_t      colStop;
         size_t      VCalSleepTime; // [microseconds]

@@ -56,11 +56,13 @@ class VoltageTuning : public CalibBase
     DetectorDataContainer theDigContainer;
 
   protected:
-    float targetDig;
-    float targetAna;
-    float toleranceDig;
-    float toleranceAna;
-    bool  doDisplay;
+    size_t colStart;
+    size_t colStop;
+    float  targetDig;
+    float  targetAna;
+    float  toleranceDig;
+    float  toleranceAna;
+    bool   doDisplay;
 
     std::string fileRes;
     int         theCurrentRun;
