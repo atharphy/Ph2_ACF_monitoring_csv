@@ -425,7 +425,7 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
               << BOLDYELLOW << std::bitset<20>(chips_en) << RESET;
 
     int                   nAttempts = 0;
-    std::vector<uint16_t> initSequence(RD53Shared::firstChip->getLaneUpInitSequence());
+    std::vector<uint16_t> initSequence(std::move(RD53Shared::firstChip->getLaneUpInitSequence()));
     while(nAttempts < RD53Shared::MAXATTEMPTS)
     {
         channel_up = RegManager::ReadReg("user.stat_regs.aurora_rx_channel_up");
