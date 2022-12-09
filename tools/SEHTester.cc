@@ -32,6 +32,7 @@ void SEHTester::Initialise()
             clpGBTInterface->hybridClock(cOpticalGroup->flpGBT, cClkCnfg, 1);
         }
     }
+    LOG(INFO) << BOLDRED << "DONE: Initialise  SEHTester" << RESET;
 }
 
 void SEHTester::readTestParameters(std::string file)

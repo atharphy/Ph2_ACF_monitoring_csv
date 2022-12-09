@@ -278,7 +278,7 @@ int main(int argc, char* argv[])
     cTool.InitializeSettings(cHWFile, outp);
     LOG(INFO) << outp.str();
     outp.str("");
-    cTool.CreateResultDirectory(cDirectory);
+    cTool.CreateResultDirectory(cDirectory, true, true);
     cTool.InitResultFile(cResultfile);
     cTool.bookSummaryTree();
 
@@ -342,31 +342,8 @@ int main(int argc, char* argv[])
     //     // std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     //     // cSEHTester.TurnOn(cRightLoad, cLeftLoad);
     //     // std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-    try
-    {
-        cTool.ConfigureHw();
-    }
-    catch(...)
-    {
-        cTool.fBeBoardInterface->setBoard(pBoard->getId());
-        for(int i = 0; i < 8; i++)
-        {
-            std::cout << "###--------------l8---------------###" << std::endl;
-            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("T", i);
-            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("V", i);
-            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("I", i);
-            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("TX", i);
-            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("RX", i);
-            std::cout << "###--------------l12--------------###" << std::endl;
-            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("T", i);
-            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("V", i);
-            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("I", i);
-            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("TX", i);
-            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("RX", i);
-        }
-        return -1;
-    }
-    //}
+    cTool.ConfigureHw();
+
     cTool.fBeBoardInterface->setBoard(pBoard->getId());
     for(int i = 0; i < 8; i++)
     {
@@ -526,9 +503,9 @@ int main(int argc, char* argv[])
             gui::status("Testing ADC lines on the lpGBT");
             gui::progress(5 / 10.0);
         }
-        cSEHTester.LpGBTTestFixedADCs();
         std::vector<std::string> cADCs = {"ADC0", "ADC3"};
         cSEHTester.LpGBTTestADC(cADCs, 0, 3720, 300); // DAC *should* be 16 bit with 1V reference, ROH is 12 bit something, needs to be included somewhere
+        cSEHTester.LpGBTTestFixedADCs();
     }
 
     /********************/
@@ -724,7 +701,7 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDBLUE << "Flushing check BRAM!" << RESET;
         cSEHTester.ClearBRAM(std::string("test"));
     }
-    cSEHTester.freeTest();
+    // cSEHTester.calibrateADC();
     cSEHTester.SetLoad(0, 0);
     cSEHTester.LpGBTInjectULExternalPattern(false, 170);
 
