@@ -38,7 +38,7 @@ const int      MAXBITCHIPREG          = 16;                                     
 const size_t   NTHREADS               = round(std::thread::hardware_concurrency() / 2.); // Number of potential threads for the current CPU (removing hyper-threading)
 const uint32_t DEEPSLEEP              = 100000;                                          // [microseconds]
 const uint8_t  READOUTSLEEP           = 50;                                              // [microseconds]
-const uint8_t  MAXATTEMPTS            = 40;                                              // Maximum number of attempts
+const uint8_t  MAXATTEMPTS            = 100;                                             // Maximum number of attempts
 const uint16_t MAXATTEMPTSCMDDISPATCH = 500;                                             // Maximum number of attempts to dispatch a command
 const int      MAXSTEPS               = 10;                                              // Maximum number of steps for a scan
 

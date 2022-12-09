@@ -424,7 +424,8 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
     LOG(INFO) << BOLDBLUE << "\t--> Total number of " << BOLDYELLOW << "required" << BOLDBLUE << " data lanes: " << BOLDYELLOW << RD53Shared::countBitsOne(chips_en) << BOLDBLUE << " i.e. "
               << BOLDYELLOW << std::bitset<20>(chips_en) << RESET;
 
-    int nAttempts = 0;
+    int                   nAttempts = 0;
+    std::vector<uint16_t> initSequence(RD53Shared::firstChip->getLaneUpInitSequence());
     while(nAttempts < RD53Shared::MAXATTEMPTS)
     {
         channel_up = RegManager::ReadReg("user.stat_regs.aurora_rx_channel_up");
@@ -437,16 +438,13 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
             nAttempts++;
 
-	    std::vector<uint16_t> initSequence;
-	    for(unsigned int i = 0; i < 500; i++) initSequence.push_back(0x0000);  // 0000 0000
-	    for(unsigned int i = 0; i < 2000; i++) initSequence.push_back(0xCCCC); // 1100 1100 
-	    for(const auto cOpticalGroup: *pBoard)
-	      for(const auto cHybrid: *cOpticalGroup)
-		{
-		  const uint32_t hybrid_id         = cHybrid->getId();
-		  RD53FWInterface::WriteChipCommand(initSequence, hybrid_id);
-		}
-       }
+            // ###############################################
+            // # Send sequence to help frontend chip to lock #
+            // ###############################################
+            if(initSequence.size() != 0)
+                for(const auto cOpticalGroup: *pBoard)
+                    for(const auto cHybrid: *cOpticalGroup) RD53FWInterface::WriteChipCommand(initSequence, cHybrid->getId());
+        }
         else
             break;
     }
