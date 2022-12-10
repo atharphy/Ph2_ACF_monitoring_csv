@@ -286,7 +286,7 @@ float RD53Interface::convertADC2VorI(ReadoutChip* pChip, uint32_t value, bool is
     // # actualVrefADC = 839 [mV]      Lower than VrefADC due to parasitics #
     // ######################################################################
 
-    const float resistorI2V   = 0.01; // [MOhm]
+    const float resistorI2V   = 0.00499; // 0.01; // [MOhm] // @TMP@
     const float ADCoffset     = pChip->getRegItem("ADC_OFFSET_VOLT").fValue / 1e4;
     const float actualVrefADC = pChip->getRegItem("ADC_MAXIMUM_VOLT").fValue / 1e3;
 

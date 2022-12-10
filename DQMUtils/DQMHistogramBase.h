@@ -78,7 +78,7 @@ class DQMHistogramBase
     /*!
      * constructor
      */
-    DQMHistogramBase() { ; }
+    DQMHistogramBase() { gStyle->SetPalette(kRainBow); }
 
     /*!
      * destructor
