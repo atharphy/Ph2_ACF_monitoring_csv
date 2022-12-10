@@ -26,6 +26,7 @@
 #include <TFile.h>
 #include <TGaxis.h>
 #include <TPad.h>
+#include <TStyle.h>
 
 class DetectorDataContainer;
 class DetectorContainer;

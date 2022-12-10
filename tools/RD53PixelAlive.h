@@ -76,7 +76,7 @@ class PixelAlive : public CalibBase
     size_t nEvtsBurst;
     size_t nTRIGxEvent;
     size_t nHITxCol;
-    float  thrOccupancy;
+    float  occPerPixel;
     size_t doOnlyNGroups;
     bool   doDisplay;
     bool   doUpdateChip;

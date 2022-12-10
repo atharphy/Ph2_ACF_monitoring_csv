@@ -456,7 +456,7 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
         throw Exception("[RD53FWInterface::CheckChipCommunication] Some data lanes are enabled but inactive");
     }
 
-    LOG(INFO) << BOLDBLUE << "All enabled data lanes are active" << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> All enabled data lanes are active" << RESET;
     return true;
 }
 

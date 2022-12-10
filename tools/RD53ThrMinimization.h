@@ -56,12 +56,13 @@ class ThrMinimization : public PixelAlive
   private:
     void fillHisto() override;
 
-    void bitWiseScanGlobal(const std::string& regName, float target, uint16_t startValue, uint16_t stopValue);
+    void bitWiseScanGlobal(const std::string& regName, float target, float threshold, uint16_t startValue, uint16_t stopValue);
 
     DetectorDataContainer theThrContainer;
 
   protected:
     float  targetOccupancy;
+    float  maxMaskedPixels;
     size_t startValue;
     size_t stopValue;
     bool   doDisplay;

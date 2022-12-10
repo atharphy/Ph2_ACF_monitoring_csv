@@ -27,7 +27,7 @@ void PixelAlive::ConfigureCalibration()
     injType        = this->findValueInSettings<double>("INJtype");
     nHITxCol       = this->findValueInSettings<double>("nHITxCol");
     doOnlyNGroups  = this->findValueInSettings<double>("DoOnlyNGroups");
-    thrOccupancy   = this->findValueInSettings<double>("TargetOcc");
+    occPerPixel    = this->findValueInSettings<double>("OccPerPixel");
     unstuckPixels  = this->findValueInSettings<double>("UnstuckPixels");
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
@@ -235,7 +235,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                                       ->at(cChip->getIndex())
                                                       ->getChannel<OccupancyAndPh>(row, col)
                                                       .fOccupancy;
-                                bool enable = (injType == INJtype::None ? occupancy <= thrOccupancy : occupancy >= thrOccupancy);
+                                bool enable = (injType == INJtype::None ? occupancy <= occPerPixel : occupancy >= occPerPixel);
                                 if(unstuckPixels == false)
                                     static_cast<RD53*>(cChip)->enablePixel(row, col, enable);
                                 else if(enable == false)
