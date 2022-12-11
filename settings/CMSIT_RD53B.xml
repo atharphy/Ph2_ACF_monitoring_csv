@@ -177,14 +177,15 @@
          UpdateChipCfg         = 0:  don't update;                       UpdateChipCfg         = 1: update
          DisableChannelsAtExit = 0:  don't disable all channels at exit  DisableChannelsAtExit = 1: disable all channels at exit
 
-         DoNSteps      (threqu):           if != 0 then run threqu with step of 1 for only DoNSteps times
-         TargetCharge  (thradj):           average charge (electrons) corresponding to ToT point = max value - 1
-         TargetOcc     (thrmin):           average pixel occupancy
-         TargetOcc     (pixelalive,noise): per pixel occupancy threshold below/above which pixels are masked
-         UnstuckPixels (pixelalive) = 0: do not try to unstuck pixels; UnstuckPixels = 1: set TDAC to 0 to unstuck pixels
-         chain2Test    (bertest,datarbopt) = 0: BE-FE; chain2Test = 1: BE-LPGBT; chain2Test = 2: LPGBT-FE
-         byTime        (bertest,datarbopt) = 0: give n. frames; byTime = 1: give time in [s]
-         framesORtime  (bertest,datarbopt):time in [s] or number of frames
+         DoNSteps        (threqu):           if != 0 then run threqu with step of 1 for only DoNSteps times
+         TargetCharge    (thradj):           average charge (electrons) corresponding to ToT point = max value - 1
+         TargetOcc       (thrmin):           average pixel occupancy
+         MaxMaskedPixels (thrmin):           percentage of masked pixels
+         OccPerPixel     (pixelalive,noise): per pixel occupancy threshold below/above which pixels are masked
+         UnstuckPixels   (pixelalive) = 0: do not try to unstuck pixels; UnstuckPixels = 1: set TDAC to 0 to unstuck pixels
+         chain2Test      (bertest,datarbopt) = 0: BE-FE; chain2Test = 1: BE-LPGBT; chain2Test = 2: LPGBT-FE
+         byTime          (bertest,datarbopt) = 0: give n. frames; byTime = 1: give time in [s]
+         framesORtime    (bertest,datarbopt):time in [s] or number of frames
     -->
     <Setting name="nEvents">             100 </Setting>
     <Setting name="nEvtsBurst">          100 </Setting>
