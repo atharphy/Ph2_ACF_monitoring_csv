@@ -97,7 +97,9 @@ float RD53A::VCal2Charge(float VCal, bool isNoise) const
 
 float RD53A::Charge2VCal(float Charge) const
 {
-    return (Charge - RD53AchargeConvertion::offset) / (RD53AchargeConvertion::cap * 1e4) * RD53AchargeConvertion::ele / (RD53AchargeConvertion::Vref / RD53AchargeConvertion::ADCrange);
+    const float conversion = 100; // @CONST@ : Conversion from [10 mV] to [V]
+    return (Charge - RD53AchargeConvertion::offset) / (RD53AchargeConvertion::cap * 1e4) * RD53AchargeConvertion::ele /
+           (this->getRegItem("VREF_ADC").fValue / conversion / RD53AchargeConvertion::ADCrange);
 }
 
 } // namespace Ph2_HwDescription
