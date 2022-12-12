@@ -95,7 +95,8 @@ void InjectionDelay::Stop()
 void InjectionDelay::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
-    histos = nullptr;
+    histos             = nullptr;
+    PixelAlive::histos = nullptr;
 #endif
 
     if(currentRun >= 0)

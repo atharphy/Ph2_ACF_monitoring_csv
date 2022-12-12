@@ -99,7 +99,8 @@ void DataReadbackOptimization::Stop()
 void DataReadbackOptimization::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
-    histos = nullptr;
+    histos          = nullptr;
+    BERtest::histos = nullptr;
 #endif
 
     if(currentRun >= 0)
