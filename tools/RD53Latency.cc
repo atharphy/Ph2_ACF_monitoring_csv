@@ -18,6 +18,9 @@ void Latency::ConfigureCalibration()
     // # Initialize sub-calibration #
     // ##############################
     PixelAlive::ConfigureCalibration();
+    PixelAlive::doDisplay    = false;
+    PixelAlive::doUpdateChip = false;
+    PixelAlive::saveData     = false;
     RD53RunProgress::total() -= PixelAlive::getNumberIterations();
 
     // #######################
