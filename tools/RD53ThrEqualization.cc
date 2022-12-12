@@ -326,14 +326,21 @@ void ThrEqualization::analyzeDuringRun()
 
                     for(auto i = 0u; i < dacList.size(); i++)
                     {
-                        auto current =
-                            theContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TDACGainSize>>().data[i];
+                        auto current = round(theContainer.at(cBoard->getIndex())
+                                                 ->at(cOpticalGroup->getIndex())
+                                                 ->at(cHybrid->getIndex())
+                                                 ->at(cChip->getIndex())
+                                                 ->getSummary<GenericDataArray<TDACGainSize>>()
+                                                 .data[i] /
+                                             RD53Shared::PRECISION) *
+                                       RD53Shared::PRECISION;
                         if(current < best)
                         {
                             regVal = dacList[i];
                             best   = current;
                         }
                     }
+
                     LOG(INFO) << BOLDMAGENTA << ">>> Best TDAC gain for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
                               << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << regVal << BOLDMAGENTA << " <<<" << RESET;
 

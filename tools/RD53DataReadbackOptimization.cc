@@ -193,8 +193,14 @@ void DataReadbackOptimization::analyze(const std::string& regName, const std::ve
 
                     for(auto i = 1u; i < dacListTAP.size(); i++)
                     {
-                        auto current =
-                            theTAPscanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data[i];
+                        auto current = round(theTAPscanContainer.at(cBoard->getIndex())
+                                                 ->at(cOpticalGroup->getIndex())
+                                                 ->at(cHybrid->getIndex())
+                                                 ->at(cChip->getIndex())
+                                                 ->getSummary<GenericDataArray<TAPsize>>()
+                                                 .data[i] /
+                                             RD53Shared::PRECISION) *
+                                       RD53Shared::PRECISION;
                         if((current >= 0) && (current < best))
                         {
                             regVal = dacListTAP[i];
