@@ -31,6 +31,7 @@ namespace RD53Shared
 extern Ph2_HwDescription::RD53* firstChip;
 
 const char     RESULTDIR[]            = "Results";                                       // Directory containing the results
+const double   PRECISION              = 1e-2;                                            // Resolution on computing observables
 const double   ISMASKED               = -1.0;                                            // Encoding masked channels
 const double   ISDISABLED             = -2.0;                                            // Encoding disabled channels
 const double   FITERROR               = -3.0;                                            // Encoding fit errors
