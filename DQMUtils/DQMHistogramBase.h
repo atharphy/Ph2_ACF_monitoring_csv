@@ -79,7 +79,19 @@ class DQMHistogramBase
     /*!
      * constructor
      */
-    DQMHistogramBase() { gStyle->SetPalette(kRainBow); }
+    DQMHistogramBase()
+    {
+        const int NRGBs = 5;
+        const int NCont = 255;
+
+        double stops[NRGBs] = {0.00, 0.34, 0.61, 0.84, 1.00};
+        double red[NRGBs]   = {0.00, 0.00, 0.87, 1.00, 0.51};
+        double green[NRGBs] = {0.00, 0.81, 1.00, 0.20, 0.00};
+        double blue[NRGBs]  = {0.51, 1.00, 0.12, 0.00, 0.00};
+
+        TColor::CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont);
+        gStyle->SetNumberContours(NCont);
+    }
 
     /*!
      * destructor
@@ -142,8 +154,8 @@ class DQMHistogramBase
                 for(auto cHybrid: *cOpticalGroup)
                     for(auto cChip: *cHybrid)
                     {
-                        TCanvas* canvas = cChip->getSummary<CanvasContainer<Hist>>().fCanvas;
-                        Hist*    hist   = cChip->getSummary<CanvasContainer<Hist>>().fTheHistogram;
+                        auto canvas = cChip->getSummary<CanvasContainer<Hist>>().fCanvas;
+                        auto hist   = cChip->getSummary<CanvasContainer<Hist>>().fTheHistogram;
 
                         canvas->cd();
                         hist->Draw(opt);
@@ -152,7 +164,7 @@ class DQMHistogramBase
 
                         if(additionalAxisType != "")
                         {
-                            TPad* myPad = static_cast<TPad*>(canvas->GetPad(0));
+                            auto myPad = static_cast<TPad*>(canvas->GetPad(0));
                             myPad->SetTopMargin(0.16);
 
                             if(additionalAxisType == "electron")
