@@ -51,6 +51,12 @@ void        resetDefaultFloat();
 constexpr size_t setBits(size_t nBit2Set) { return (1L << nBit2Set) - 1; }
 
 template <typename T>
+static void setFirstChip(T& theDetectorContainer)
+{
+    firstChip = static_cast<Ph2_HwDescription::RD53*>(theDetectorContainer.at(0)->at(0)->at(0)->at(0));
+}
+
+template <typename T>
 inline void myMove(std::vector<T> source, std::vector<T>& destination)
 {
     destination.insert(destination.end(), std::make_move_iterator(source.begin()), std::make_move_iterator(source.end()));

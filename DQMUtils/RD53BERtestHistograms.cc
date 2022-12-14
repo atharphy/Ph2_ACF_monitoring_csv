@@ -13,6 +13,7 @@ using namespace Ph2_HwDescription;
 void BERtestHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    RD53Shared::setFirstChip(theDetectorStructure);
 
     auto hBERtest = CanvasContainer<TH1F>("BERtest", "BERtest", 1, 0, 1);
     bookImplementer(theOutputFile, theDetectorStructure, BERtest, hBERtest, "N.A.", "Bit Error Rate value");
