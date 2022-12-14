@@ -52,7 +52,6 @@ class PixelAlive : public CalibBase
   private:
     void fillHisto() override;
 
-    bool                                   unstuckPixels;
     std::shared_ptr<DetectorDataContainer> theOccContainer;
     DetectorDataContainer                  theBCIDContainer;
     DetectorDataContainer                  theTrgIDContainer;
@@ -77,6 +76,7 @@ class PixelAlive : public CalibBase
     size_t nTRIGxEvent;
     size_t nHITxCol;
     float  occPerPixel;
+    bool   unstuckPixels;
     size_t doOnlyNGroups;
     bool   doDisplay;
     bool   doUpdateChip;
