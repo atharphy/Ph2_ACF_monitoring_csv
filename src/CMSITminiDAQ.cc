@@ -7,13 +7,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "../DQMUtils/DQMInterface.h"
-#include "../MonitorDQM/MonitorDQMInterface.h"
 #include "../System/SystemController.h"
-#include "../Utils/MiddlewareInterface.h"
-#include "../Utils/RD53Shared.h"
 #include "../Utils/argvparser.h"
-#include "../miniDAQ/CombinedCalibrationFactory.h"
 #include "../tools/RD53BERtest.h"
 #include "../tools/RD53ClockDelay.h"
 #include "../tools/RD53DataReadbackOptimization.h"
@@ -30,10 +25,6 @@
 #include "../tools/RD53ThrEqualization.h"
 #include "../tools/RD53ThrMinimization.h"
 #include "../tools/RD53VoltageTuning.h"
-
-#include <chrono>
-#include <sys/wait.h>
-#include <thread>
 
 #ifdef __EUDAQ__
 #include "../tools/RD53eudaqProducer.h"
@@ -54,20 +45,6 @@ INITIALIZE_EASYLOGGINGPP
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
-
-pid_t runControllerPid    = -1;
-int   runControllerStatus = 0;
-
-void interruptHandler(int handler)
-{
-    if((runControllerStatus != 0) && (runControllerPid > 0))
-    {
-        LOG(INFO) << BOLDBLUE << "Killing run controller pid: " << runControllerPid << " status: " << runControllerStatus << RESET;
-        kill(runControllerPid, SIGKILL);
-    }
-
-    exit(EXIT_FAILURE);
-}
 
 void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, std::vector<RD53Event>& decodedEvents)
 {
