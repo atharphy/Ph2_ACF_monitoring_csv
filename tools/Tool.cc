@@ -1935,16 +1935,20 @@ void Tool::measureBeBoardData(uint16_t boardIndex, uint32_t numberOfEvents, int3
     if(fDetectorContainer->at(boardIndex)->getEventType() == EventType::PSAS)
     {
         this->setSameGlobalDac("AnalogueAsync", 1);
-        for(auto cBoard: *fDetectorContainer)
-        {
-            for(auto cOpticalGroup: *cBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup)
+        //#FIXME the commented block bellow throws "virtual bool Ph2_HwInterface::ReadoutChipInterface::maskChannelGroup(Ph2_HwDescription::ReadoutChip*, std::shared_ptr<ChannelGroupBase>, bool)
+        // Error: implementation of virtual member function is absent"
+        /*
+                for(auto cBoard: *fDetectorContainer)
                 {
-                    for(auto cChip: *cHybrid) { fReadoutChipInterface->maskChannelGroup(cChip, cChip->getChipOriginalMask()); }
+                    for(auto cOpticalGroup: *cBoard)
+                    {
+                        for(auto cHybrid: *cOpticalGroup)
+                        {
+                            for(auto cChip: *cHybrid) { fReadoutChipInterface->maskChannelGroup(cChip, cChip->getChipOriginalMask()); }
+                        }
+                    }
                 }
-            }
-        }
+        */
         fUseReadNEvents = true;
     }
     doScanOnAllGroupsBeBoard(boardIndex, numberOfEvents, numberOfEventsPerBurst, &theScan);
