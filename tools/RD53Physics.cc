@@ -50,12 +50,12 @@ void Physics::Running()
     theCurrentRun = this->fRunNumber;
     LOG(INFO) << GREEN << "[Physics::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
-    if(saveBinaryData == true)
-    {
-        if(outputBinaryDir != "") this->fDirectoryName = outputBinaryDir;
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Physics.raw", 'w');
-        this->initializeWriteFileHandler();
-    }
+    // if(saveBinaryData == true)
+    // {
+    //     if(outputBinaryDir != "") this->fDirectoryName = outputBinaryDir;
+    //     this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Physics.raw", 'w');
+    //     this->initializeWriteFileHandler();
+    // }
 
     // ##############################
     // # Download mask to the chips #
@@ -181,20 +181,20 @@ void Physics::draw(bool saveData)
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 
 #ifdef __USE_ROOT__
-    TApplication* myApp = nullptr;
+    // TApplication* myApp = nullptr;
 
-    if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
+    // if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    LOG(INFO) << BOLDBLUE << "\t--> Physics saving histograms..." << RESET;
+    // LOG(INFO) << BOLDBLUE << "\t--> Physics saving histograms..." << RESET;
 
-    if(fileRes != "")
-    {
-        Physics::fillHisto();
-        histos->process();
-        this->WriteRootFile();
-    }
+    // if(fileRes != "")
+    // {
+    //     Physics::fillHisto();
+    //     histos->process();
+    //     this->WriteRootFile();
+    // }
 
-    if(doDisplay == true) myApp->Run(true);
+    // if(doDisplay == true) myApp->Run(true);
 #endif
 }
 
@@ -205,7 +205,9 @@ void Physics::analyze(bool doReadBinary)
         size_t dataSize = 0;
 
         if(doReadBinary == false)
+          {
             dataSize = SystemController::ReadData(cBoard, true);
+          }
         else
         {
             dataSize = 1;
@@ -215,7 +217,7 @@ void Physics::analyze(bool doReadBinary)
         if(dataSize != 0)
         {
 #ifdef __USE_ROOT__
-            Physics::fillHisto();
+            // Physics::fillHisto();
 #endif
             Physics::fillDataContainer(*cBoard);
             Physics::sendBoardData(cBoard);

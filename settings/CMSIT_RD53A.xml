@@ -77,7 +77,7 @@
               ADC_OFFSET_VOLT        =    "63"
               ADC_MAXIMUM_VOLT       =   "839"
               TEMPSENS_IDEAL_FACTOR  =  "1225"
-              VREF_ADC               =   "800"
+              VREF_ADC               =   "900"
               />
         </RD53A>
 
