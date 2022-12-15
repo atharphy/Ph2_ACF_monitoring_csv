@@ -61,7 +61,7 @@ void FileParser::openHWconfig(const std::string& pFilename, pugi::xml_document& 
 
     if(!result)
     {
-        LOG(ERROR) << BOLDRED << "ERROR :\n Unable to open the file : " << RESET << pFilename << std::endl;
+        LOG(ERROR) << BOLDRED << "ERROR : Unable to open the file : " << RESET << pFilename << std::endl;
         LOG(ERROR) << BOLDRED << "Error description : " << RED << result.description() << RESET << std::endl;
         throw Exception("Unable to parse XML source!");
     }

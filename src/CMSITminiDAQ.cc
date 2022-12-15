@@ -215,7 +215,7 @@ int main(int argc, char** argv)
         // # Initialize Hardware #
         // #######################
         LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
-        mySysCntr.Configure(configFile, false, 60000);
+        mySysCntr.Configure(configFile, false);
         LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
     }
 
