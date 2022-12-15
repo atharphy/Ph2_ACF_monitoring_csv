@@ -26,8 +26,6 @@
 #include "../tools/RD53ThrMinimization.h"
 #include "../tools/RD53VoltageTuning.h"
 
-#include "../tools/CombinedCalibration.h"
-
 #ifdef __EUDAQ__
 #include "../tools/RD53eudaqProducer.h"
 #include "TROOT.h"
@@ -217,7 +215,7 @@ int main(int argc, char** argv)
         // # Initialize Hardware #
         // #######################
         LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
-        // mySysCntr.Configure(configFile, false);
+        mySysCntr.Configure(configFile, false);
         LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
     }
 
@@ -515,20 +513,16 @@ int main(int argc, char** argv)
         // ###############
         LOG(INFO) << BOLDMAGENTA << "@@@ Performing Physics data taking @@@" << RESET;
 
-        // Physics ph;
-        CombinedCalibration<Physics> ph;
+        Physics ph;
         ph.Inherit(&mySysCntr);
         if(binaryFile == "")
         {
             std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Physics");
 
-            ph.Configure(configFile);
-            // ph.localConfigure(fileName, -1);
+            ph.localConfigure(fileName, -1);
             ph.Start(runNumber);
             std::this_thread::sleep_for(std::chrono::seconds(runtime));
-            std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
             ph.Stop();
-            std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
         }
         else
         {
@@ -538,9 +532,9 @@ int main(int argc, char** argv)
             runNumber = atof(fileName.substr(fileName.find("Run") + 3, 6).c_str());
             ph.setValueInSettings<double>("SaveBinaryData", false);
 
-            // ph.localConfigure(fileName, runNumber);
-            // ph.analyze(true);
-            // ph.draw();
+            ph.localConfigure(fileName, runNumber);
+            ph.analyze(true);
+            ph.draw();
         }
     }
     else if(whichCalib == "eudaq")
