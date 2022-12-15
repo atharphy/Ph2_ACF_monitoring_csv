@@ -184,7 +184,7 @@ void RD53Event::PrintEvents(const std::vector<RD53Event>& events, const std::vec
         }
 
         LOG(INFO) << BOLDGREEN << "===========================" << RESET;
-        LOG(INFO) << BOLDGREEN << "EVENT STATUS    = " << evt.eventStatus << RESET;
+        LOG(INFO) << BOLDGREEN << "EVENT STATUS^   = " << evt.eventStatus << RESET;
         RD53Event::EvtErrorHandler(evt.eventStatus);
     }
 }
