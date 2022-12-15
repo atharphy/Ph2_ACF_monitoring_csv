@@ -41,11 +41,10 @@ struct CombinedCalibration : public Tool
 
     void Stop() override
     {
-        /* Tool::dumpConfigFiles(); */
-        /* Tool::SaveResults(); */
-        /* Tool::WriteRootFile(); */
-        /* Tool::CloseResultFile(); */
-      Tool::Stop();
+        Tool::dumpConfigFiles();
+        Tool::SaveResults();
+        Tool::WriteRootFile();
+        Tool::CloseResultFile();
     }
 
   private:
