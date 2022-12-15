@@ -619,7 +619,7 @@ uint32_t RD53FWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     // # Read DDR3 #
     // #############
     std::vector<uint32_t> theData;
-    auto                  FIFOsize = (1 << RD53FWconstants::NBIT_DATA_FIFO);
+    const auto            FIFOsize = (1 << RD53FWconstants::NBIT_DATA_FIFO);
 
     if(nWordsInMemory > (FIFOsize - ddr3Offset))
     {
