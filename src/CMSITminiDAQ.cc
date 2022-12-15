@@ -521,6 +521,10 @@ int main(int argc, char** argv)
 
             ph.localConfigure(fileName, -1);
             ph.Start(runNumber);
+            do
+            {
+                LOG(INFO) << BOLDBLUE << "\t--> Press '" << BOLDYELLOW << "Enter" << BOLDBLUE << "' key to stop the run ..." << RESET;
+            } while(std::cin.get() != '\n');
             std::this_thread::sleep_for(std::chrono::seconds(runtime));
             ph.Stop();
         }
