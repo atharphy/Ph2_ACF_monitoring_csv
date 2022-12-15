@@ -112,6 +112,7 @@ void Physics::Stop()
 
 void Physics::localConfigure(const std::string& fileRes_, int currentRun)
 {
+    errors = 0;
 #ifdef __USE_ROOT__
     histos = nullptr;
 #endif
