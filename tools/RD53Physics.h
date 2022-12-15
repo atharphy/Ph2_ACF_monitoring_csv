@@ -32,9 +32,9 @@ class Physics : public CalibBase
     ~Physics()
     {
 #ifdef __USE_ROOT__
-        /* this->WriteRootFile(); */
-        /* this->CloseResultFile(); */
-        /* delete histos; */
+        this->WriteRootFile();
+        this->CloseResultFile();
+        delete histos;
 #endif
     }
 
