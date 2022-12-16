@@ -67,20 +67,21 @@ class PixelAlive : public CalibBase
 
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
-    size_t rowStart;
-    size_t rowStop;
-    size_t colStart;
-    size_t colStop;
-    size_t nEvents;
-    size_t nEvtsBurst;
-    size_t nTRIGxEvent;
-    size_t nHITxCol;
-    float  occPerPixel;
-    bool   unstuckPixels;
-    size_t doOnlyNGroups;
-    bool   doDisplay;
-    bool   doUpdateChip;
-    bool   saveBinaryData;
+    size_t      rowStart;
+    size_t      rowStop;
+    size_t      colStart;
+    size_t      colStop;
+    size_t      nEvents;
+    size_t      nEvtsBurst;
+    size_t      nTRIGxEvent;
+    size_t      nHITxCol;
+    float       occPerPixel;
+    bool        unstuckPixels;
+    size_t      doOnlyNGroups;
+    bool        doDisplay;
+    bool        doUpdateChip;
+    bool        saveBinaryData;
+    std::string dataOutputDir;
 
     std::string fileRes;
     int         theCurrentRun;

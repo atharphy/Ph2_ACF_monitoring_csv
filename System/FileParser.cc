@@ -1422,7 +1422,7 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
         for(pugi::xml_node nSetting = nSettings.child("Setting"); nSetting; nSetting = nSetting.next_sibling())
         {
             if((strcmp(nSetting.attribute("name").value(), "RegNameDAC1") == 0) || (strcmp(nSetting.attribute("name").value(), "RegNameDAC2") == 0) ||
-               (strcmp(nSetting.attribute("name").value(), "OutputBinaryDir") == 0) || (strcmp(nSetting.attribute("name").value(), "KIRA_ID") == 0))
+               (strcmp(nSetting.attribute("name").value(), "DataOutputDir") == 0) || (strcmp(nSetting.attribute("name").value(), "KIRA_ID") == 0))
             {
                 std::string value(nSetting.first_child().value());
                 value.erase(std::remove(value.begin(), value.end(), ' '), value.end());

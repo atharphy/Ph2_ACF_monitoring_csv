@@ -21,6 +21,7 @@ void BERtest::ConfigureCalibration()
     given_time     = this->findValueInSettings<double>("byTime");
     frames_or_time = this->findValueInSettings<double>("framesORtime");
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
+    dataOutputDir  = this->findValueInSettings<std::string>("DataOutputDir", "");
 
     // ##########################################################################################
     // # Select BER counter meaning: number of frames with errors or number of bits with errors #
@@ -69,7 +70,7 @@ void BERtest::localConfigure(const std::string& fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[BERtest::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     BERtest::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "BERtest");
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "BERtest");
     BERtest::initializeFiles(fileRes_, currentRun);
 }
 

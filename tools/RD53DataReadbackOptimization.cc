@@ -109,7 +109,7 @@ void DataReadbackOptimization::localConfigure(const std::string& fileRes_, int c
         LOG(INFO) << GREEN << "[DataReadbackOptimization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     DataReadbackOptimization::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "DataReadbackOptimization");
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "DataReadbackOptimization");
     DataReadbackOptimization::initializeFiles(fileRes_, currentRun);
 }
 

@@ -286,13 +286,13 @@
     <Setting name="DisableChannelsAtExit"> 1 </Setting>
 
     <!-- === Expert settings ===
-         OutputBinaryDir: set the output directory for binary data for "Physics" data taking. If not specified files will be saved in ./Results/
+         DataOutputDir:   set the output directory for all data. If not specified files will be saved in ./Results/
          SaveBinaryData = 0: do not save raw data in binary format; SaveBinaryData = 1: save raw data in binary format
          nHITxCol:        number of simultaneously injected pixels per column (it must be a divider of chip rows)
          InjLatency:      controls the latency of the injection in terms of 100ns period (up to 4095)
          nClkDelays:      controls the delay between two consecutive injections in terms of 100ns period (up to 4095)
     -->
-    <Setting name="OutputBinaryDir">         </Setting>
+    <Setting name="DataOutputDir">           </Setting>
     <Setting name="SaveBinaryData">        0 </Setting>
     <Setting name="nHITxCol">              1 </Setting>
     <Setting name="InjLatency">           32 </Setting>

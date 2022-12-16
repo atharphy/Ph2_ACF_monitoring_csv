@@ -17,18 +17,19 @@ void VoltageTuning::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    colStart     = this->findValueInSettings<double>("COLstart");
-    colStop      = this->findValueInSettings<double>("COLstop");
-    targetDig    = this->findValueInSettings<double>("VDDDTrimTarget", 1.3);
-    targetAna    = this->findValueInSettings<double>("VDDATrimTarget", 1.2);
-    toleranceDig = this->findValueInSettings<double>("VDDDTrimTolerance", 0.02);
-    toleranceAna = this->findValueInSettings<double>("VDDATrimTolerance", 0.02);
-    doDisplay    = this->findValueInSettings<double>("DisplayHisto");
+    colStart      = this->findValueInSettings<double>("COLstart");
+    colStop       = this->findValueInSettings<double>("COLstop");
+    targetDig     = this->findValueInSettings<double>("VDDDTrimTarget", 1.3);
+    targetAna     = this->findValueInSettings<double>("VDDATrimTarget", 1.2);
+    toleranceDig  = this->findValueInSettings<double>("VDDDTrimTolerance", 0.02);
+    toleranceAna  = this->findValueInSettings<double>("VDDATrimTolerance", 0.02);
+    doDisplay     = this->findValueInSettings<double>("DisplayHisto");
+    dataOutputDir = this->findValueInSettings<std::string>("DataOutputDir", "");
 
     // ############################################################
     // # Create directory for: raw data, config files, histograms #
     // ############################################################
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "VoltageTuning");
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "VoltageTuning");
 }
 
 void VoltageTuning::Running()

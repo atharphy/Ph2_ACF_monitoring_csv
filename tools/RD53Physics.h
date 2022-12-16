@@ -86,7 +86,7 @@ class Physics : public CalibBase
     bool        doDisplay;
     bool        doUpdateChip;
     bool        saveBinaryData;
-    std::string outputBinaryDir;
+    std::string dataOutputDir;
 
     std::string          fileRes;
     int                  theCurrentRun;

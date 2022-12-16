@@ -55,6 +55,7 @@ void GainOptimization::Running()
 
     if(Gain::saveBinaryData == true)
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_GainOptimization.raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -101,7 +102,7 @@ void GainOptimization::localConfigure(const std::string& fileRes_, int currentRu
         LOG(INFO) << GREEN << "[GainOptimization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     GainOptimization::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "GainOptimization");
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "GainOptimization");
     GainOptimization::initializeFiles(fileRes_, currentRun);
 }
 
@@ -116,6 +117,7 @@ void GainOptimization::initializeFiles(const std::string& fileRes_, int currentR
 
     if((currentRun >= 0) && (Gain::saveBinaryData == true))
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_GainOptimization.raw", 'w');
         this->initializeWriteFileHandler();
     }

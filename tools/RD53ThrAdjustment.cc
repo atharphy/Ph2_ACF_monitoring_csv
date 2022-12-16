@@ -55,6 +55,7 @@ void ThrAdjustment::Running()
 
     if(PixelAlive::saveBinaryData == true)
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_ThrAdjustment.raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -100,7 +101,7 @@ void ThrAdjustment::localConfigure(const std::string& fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[ThrAdjustment::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     ThrAdjustment::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "ThrAdjustment");
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "ThrAdjustment");
     ThrAdjustment::initializeFiles(fileRes_, currentRun);
 }
 
@@ -115,6 +116,7 @@ void ThrAdjustment::initializeFiles(const std::string& fileRes_, int currentRun)
 
     if((currentRun >= 0) && (PixelAlive::saveBinaryData == true))
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrAdjustment.raw", 'w');
         this->initializeWriteFileHandler();
     }
