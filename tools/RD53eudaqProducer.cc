@@ -129,7 +129,7 @@ void RD53eudaqProducer::DoTerminate()
 
 void RD53eudaqProducer::RunLoop()
 {
-    std::unique_lock<std::mutex> theGuard(theMtx);
+    std::unique_lock<std::recursive_mutex> theGuard(theMtx);
     wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 

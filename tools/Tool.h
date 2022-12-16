@@ -424,24 +424,24 @@ class Tool : public Ph2_System::SystemController
     THttpServer* fHttpServer;
 #endif
 
-    int               fRunNumber;
-    bool              doExit;
-    std::atomic<bool> fKeepRunning;
-    std::thread       fRunningThread;
-    std::condition_variable wakeUp;
-    std::mutex              theMtx;
+    int                         fRunNumber;
+    bool                        doExit;
+    std::atomic<bool>           fKeepRunning;
+    std::thread                 fRunningThread;
+    std::condition_variable_any wakeUp;
+    std::recursive_mutex        theMtx;
 
-    bool              fSkipMaskedChannels;
-    bool              fAllChan;
-    bool              fMaskChannelsFromOtherGroups;
-    bool              fTestPulse;
-    bool              fDoBoardBroadcast;
-    bool              fDoHybridBroadcast;
-    bool              fUseReadNEvents{1};
-    int               fWait_ms{100};
-    size_t            fNReadbackEvents{0};
-    uint8_t           fNormalize{1};
-    std::string       getCalibrationName();
+    bool        fSkipMaskedChannels;
+    bool        fAllChan;
+    bool        fMaskChannelsFromOtherGroups;
+    bool        fTestPulse;
+    bool        fDoBoardBroadcast;
+    bool        fDoHybridBroadcast;
+    bool        fUseReadNEvents{1};
+    int         fWait_ms{100};
+    size_t      fNReadbackEvents{0};
+    uint8_t     fNormalize{1};
+    std::string getCalibrationName();
 };
 
 #endif

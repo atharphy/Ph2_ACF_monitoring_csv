@@ -77,7 +77,7 @@ Tool::~Tool() {}
 
 void Tool::waitForRunToBeCompleted()
 {
-    std::unique_lock<std::mutex> theGuard(theMtx);
+    std::unique_lock<std::recursive_mutex> theGuard(theMtx);
     wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 
@@ -101,7 +101,7 @@ void Tool::Start(int runNumber)
 
 void Tool::InformImDone()
 {
-    std::unique_lock<std::mutex> theGuard(theMtx);
+    std::unique_lock<std::recursive_mutex> theGuard(theMtx);
     doExit = true;
     theGuard.unlock();
     wakeUp.notify_one();
