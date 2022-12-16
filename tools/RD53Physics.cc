@@ -112,6 +112,7 @@ void Physics::Stop()
 
 void Physics::localConfigure(const std::string& fileRes_, int currentRun)
 {
+    errors = 0;
 #ifdef __USE_ROOT__
     histos = nullptr;
 #endif
@@ -150,7 +151,7 @@ void Physics::initializeFiles(const std::string& fileRes_, int currentRun)
 
 void Physics::run()
 {
-    std::unique_lock<std::mutex> theGuard(theMtx, std::defer_lock);
+    std::unique_lock<std::recursive_mutex> theGuard(theMtx, std::defer_lock);
     while(this->fKeepRunning == true)
     {
         RD53Event::decodedEvents.clear();
