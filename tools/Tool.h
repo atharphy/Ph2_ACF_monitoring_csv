@@ -104,7 +104,7 @@ class Tool : public Ph2_System::SystemController
     virtual void sendData(){};
     virtual void ConfigureCalibration(){};
     virtual void Running(){};
-    virtual bool GetRunningStatus();
+    virtual bool GetRunningStatus() { return fKeepRunning; }
 
     void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000) override;
     void Start(int runNumber) override;
@@ -424,13 +424,12 @@ class Tool : public Ph2_System::SystemController
     THttpServer* fHttpServer;
 #endif
 
-    std::atomic<bool> fKeepRunning;
     int               fRunNumber;
     bool              doExit;
-    std::thread       fRunningFuture;
+    std::atomic<bool> fKeepRunning;
+    std::thread       fRunningThread;
     std::condition_variable wakeUp;
     std::mutex              theMtx;
-    /* std::future<void> fRunningFuture; */
 
     bool              fSkipMaskedChannels;
     bool              fAllChan;

@@ -152,6 +152,7 @@ void Physics::initializeFiles(const std::string& fileRes_, int currentRun)
 void Physics::run()
 {
     std::unique_lock<std::recursive_mutex> theGuard(theMtx, std::defer_lock);
+
     while(this->fKeepRunning == true)
     {
         RD53Event::decodedEvents.clear();
@@ -175,6 +176,8 @@ void Physics::run()
         theGuard.unlock();
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
     }
+
+    Tool::InformImDone();
 }
 
 void Physics::draw(bool saveData)

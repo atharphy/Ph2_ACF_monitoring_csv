@@ -75,29 +75,10 @@ Tool::Tool(const Tool& pTool) { this->Inherit(&pTool); }
 
 Tool::~Tool() {}
 
-bool Tool::GetRunningStatus()
-{
-    // std::future_status runningStatus = fRunningFuture.wait_for(std::chrono::milliseconds(500u));
-    // if(runningStatus == std::future_status::ready || runningStatus == std::future_status::deferred)
-    // {
-    //     try
-    //     {
-    //         if(fRunningFuture.valid()) { fRunningFuture.get(); }
-    //     }
-    //     catch(const std::exception& e)
-    //     {
-    //         throw std::runtime_error(e.what());
-    //     }
-    //     return true;
-    // }
-    // else
-    //     return false;
-  return true;
-}
-
 void Tool::waitForRunToBeCompleted()
 {
-    while(!GetRunningStatus()) std::this_thread::sleep_for(std::chrono::milliseconds(250));
+    std::unique_lock<std::mutex> theGuard(theMtx);
+    wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 
 void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
@@ -115,8 +96,7 @@ void Tool::Start(int runNumber)
 #endif
     fKeepRunning   = true;
     fRunNumber     = runNumber;
-    // fRunningFuture = std::async(std::launch::async, &Tool::Running, this);
-    fRunningFuture = std::thread(&Tool::Running, this);
+    fRunningThread = std::thread(&Tool::Running, this);
 }
 
 void Tool::InformImDone()
@@ -130,9 +110,8 @@ void Tool::InformImDone()
 void Tool::Stop()
 {
     fKeepRunning = false;
-    std::unique_lock<std::mutex> theGuard(theMtx);
-    wakeUp.wait(theGuard, [this]() { return doExit; });
-    // waitForRunToBeCompleted();
+    Tool::waitForRunToBeCompleted();
+    if(fRunningThread.joinable() == true) fRunningThread.join();
     SystemController::Stop();
 }
 
