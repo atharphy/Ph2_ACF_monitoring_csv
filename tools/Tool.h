@@ -108,6 +108,7 @@ class Tool : public Ph2_System::SystemController
 
     void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000) override;
     void Start(int runNumber) override;
+    void InformImDone();
     void Stop() override;
 
     void waitForRunToBeCompleted();
@@ -425,7 +426,12 @@ class Tool : public Ph2_System::SystemController
 
     std::atomic<bool> fKeepRunning;
     int               fRunNumber;
-    std::future<void> fRunningFuture;
+    bool              doExit;
+    std::thread       fRunningFuture;
+    std::condition_variable wakeUp;
+    std::mutex              theMtx;
+    /* std::future<void> fRunningFuture; */
+
     bool              fSkipMaskedChannels;
     bool              fAllChan;
     bool              fMaskChannelsFromOtherGroups;

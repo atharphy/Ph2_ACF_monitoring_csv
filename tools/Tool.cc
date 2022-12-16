@@ -77,21 +77,22 @@ Tool::~Tool() {}
 
 bool Tool::GetRunningStatus()
 {
-    std::future_status runningStatus = fRunningFuture.wait_for(std::chrono::milliseconds(500u));
-    if(runningStatus == std::future_status::ready || runningStatus == std::future_status::deferred)
-    {
-        try
-        {
-            if(fRunningFuture.valid()) { fRunningFuture.get(); }
-        }
-        catch(const std::exception& e)
-        {
-            throw std::runtime_error(e.what());
-        }
-        return true;
-    }
-    else
-        return false;
+    // std::future_status runningStatus = fRunningFuture.wait_for(std::chrono::milliseconds(500u));
+    // if(runningStatus == std::future_status::ready || runningStatus == std::future_status::deferred)
+    // {
+    //     try
+    //     {
+    //         if(fRunningFuture.valid()) { fRunningFuture.get(); }
+    //     }
+    //     catch(const std::exception& e)
+    //     {
+    //         throw std::runtime_error(e.what());
+    //     }
+    //     return true;
+    // }
+    // else
+    //     return false;
+  return true;
 }
 
 void Tool::waitForRunToBeCompleted()
@@ -114,13 +115,24 @@ void Tool::Start(int runNumber)
 #endif
     fKeepRunning   = true;
     fRunNumber     = runNumber;
-    fRunningFuture = std::async(std::launch::async, &Tool::Running, this);
+    // fRunningFuture = std::async(std::launch::async, &Tool::Running, this);
+    fRunningFuture = std::thread(&Tool::Running, this);
+}
+
+void Tool::InformImDone()
+{
+    std::unique_lock<std::mutex> theGuard(theMtx);
+    doExit = true;
+    theGuard.unlock();
+    wakeUp.notify_one();
 }
 
 void Tool::Stop()
 {
     fKeepRunning = false;
-    waitForRunToBeCompleted();
+    std::unique_lock<std::mutex> theGuard(theMtx);
+    wakeUp.wait(theGuard, [this]() { return doExit; });
+    // waitForRunToBeCompleted();
     SystemController::Stop();
 }
 
