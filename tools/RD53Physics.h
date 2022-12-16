@@ -52,7 +52,7 @@ class Physics : public CalibBase
     void fillDataContainer(Ph2_HwDescription::BeBoard& cBoard);
     void setGenericEvtConverter(evtConvType arg)
     {
-        std::lock_guard<std::mutex> theGuard(theMtx);
+        std::lock_guard<std::recursive_mutex> theGuard(theMtx);
         genericEvtConverter = std::move(arg);
     }
 
@@ -88,11 +88,11 @@ class Physics : public CalibBase
     bool        saveBinaryData;
     std::string outputBinaryDir;
 
-    std::string fileRes;
-    int         theCurrentRun;
-    size_t      numberOfEventsPerRun;
-    std::mutex  theMtx;
-    evtConvType genericEvtConverter;
+    std::string          fileRes;
+    int                  theCurrentRun;
+    size_t               numberOfEventsPerRun;
+    std::recursive_mutex theMtx;
+    evtConvType          genericEvtConverter;
 };
 
 #endif
