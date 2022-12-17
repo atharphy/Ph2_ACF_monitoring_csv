@@ -104,7 +104,7 @@ Through `CMSITminiDAQ`, and with the right command line option, you can run the 
 16. Physics
 ```
 
-It might be useful to create one `CMSIT.xml` file for each "set" of calibrations, for instance `noise`, `gain`, "the rest".
+It might be useful to create one `CMSIT.xml` file for each "set" of calibrations, for instance `noise`, `gain`, and "the rest".
 ### ~=-=~ End of Inner-Tracker section ~=-=~
 
 
