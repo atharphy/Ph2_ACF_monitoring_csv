@@ -27,7 +27,6 @@ If you installed the command `pv` (`sudo yum install -y pv`), then the best way 
 ```bash
 pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 ```
-<hr>
 
 
 ## Middleware for the Inner-Tracker (IT) system
@@ -107,7 +106,6 @@ Through `CMSITminiDAQ`, and with the right command line option, you can run the 
 
 It might be useful to create one `CMSIT.xml` file for each "set" of calibrations, for instance `noise`, `gain`, "the rest".
 ### ~=-=~ End of Inner-Tracker section ~=-=~
-<hr>
 
 
 ### Setup
