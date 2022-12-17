@@ -115,6 +115,7 @@ class RD53A : public RD53
 
     static void decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::RD53ChipEvent& chipEvent);
 
+    RD53A() {}
     RD53A(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
 
     const FrontEnd*       getFEtype(size_t colStart, size_t colStop) const override;

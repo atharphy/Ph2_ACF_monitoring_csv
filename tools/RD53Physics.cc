@@ -175,6 +175,7 @@ void Physics::run()
         genericEvtConverter(RD53Event::decodedEvents);
         numberOfEventsPerRun += RD53Event::decodedEvents.size();
         theGuard.unlock();
+        // if(RD53Event::decodedEvents.size() != 0) LOG(INFO) << BOLDBLUE << "\t--> Recorded " << BOLDYELLOW << RD53Event::decodedEvents.size() << BOLDBLUE << " events" << RESET; // @TMP@
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
     }
 

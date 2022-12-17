@@ -136,6 +136,7 @@ class RD53 : public ReadoutChip
     virtual float                 VCal2Charge(float VCal, bool isNoise = false) const                                                                        = 0;
     virtual float                 Charge2VCal(float Charge) const                                                                                            = 0;
 
+    RD53() : ReadoutChip(0, 0, 0, 0, 0) {}
     RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
     RD53(const RD53& chipObj);
 

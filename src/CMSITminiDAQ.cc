@@ -52,6 +52,7 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
     std::vector<uint32_t> data;
 
     RD53Event::ForkDecodingThreads();
+    RD53Shared::resetDefaultFloat();
 
     LOG(INFO) << BOLDMAGENTA << "@@@ Decoding binary data file @@@" << RESET;
     mySysCntr.addFileHandler(binaryFile, 'r');
