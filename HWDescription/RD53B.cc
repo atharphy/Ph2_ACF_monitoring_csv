@@ -34,17 +34,16 @@ uint32_t RD53B::getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_
 
 float RD53B::VCal2Charge(float VCal, bool isNoise) const
 {
-    auto VrefDivider = (this->getRegItem("SEL_CAL_RANGE").fValue == 0 ? 2 : 1);
-    return ((this->getRegItem("VREF_ADC").fValue / VrefDivider) / RD53BchargeConvertion::ADCrange) * VCal / RD53BchargeConvertion::ele * RD53BchargeConvertion::cap * 1e4 +
-           (isNoise == false ? RD53BchargeConvertion::offset : 0);
+    const auto Vref        = this->getRegItem("VREF_ADC").fValue / 100; // @CONST@ : Conversion from [10 mV] to [V]
+    const auto VrefDivider = (this->getRegItem("SEL_CAL_RANGE").fValue == 0 ? 2 : 1);
+    return (Vref / VrefDivider / RD53BchargeConvertion::ADCrange) * VCal / RD53BchargeConvertion::ele * (RD53BchargeConvertion::cap * 1e4) + (isNoise == false ? RD53BchargeConvertion::offset : 0);
 }
 
 float RD53B::Charge2VCal(float Charge) const
 {
-    const float conversion  = 100; // @CONST@ : Conversion from [10 mV] to [V]
-    auto        VrefDivider = (this->getRegItem("SEL_CAL_RANGE").fValue == 0 ? 2 : 1);
-    return (Charge - RD53BchargeConvertion::offset) / (RD53BchargeConvertion::cap * 1e4) * RD53BchargeConvertion::ele /
-           (this->getRegItem("VREF_ADC").fValue / conversion / VrefDivider / RD53BchargeConvertion::ADCrange);
+    const auto Vref        = this->getRegItem("VREF_ADC").fValue / 100; // @CONST@ : Conversion from [10 mV] to [V]
+    const auto VrefDivider = (this->getRegItem("SEL_CAL_RANGE").fValue == 0 ? 2 : 1);
+    return (Charge - RD53BchargeConvertion::offset) / (RD53BchargeConvertion::cap * 1e4) * RD53BchargeConvertion::ele / (Vref / VrefDivider / RD53BchargeConvertion::ADCrange);
 }
 
 template <class T>
