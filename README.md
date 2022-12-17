@@ -208,10 +208,10 @@ For more information on the firmware, please check the doc directory of https://
 
 
 ### The Ph2_ACF software
-Follow these instructions to install and compile the libraries:
-(provided you installed the latest version of gcc, µHal,  mentioned above).
+Follow these instructions to install and compile the libraries (provided you installed the latest version of gcc, µHal,  mentioned above):
 
 1. Clone the GitHub repo and run cmake
+
         $> git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git # N.B. to syncrhonize only the submodule: `git submodule sync; git submodule update --init --recursive --remote`
         $> cd Ph2_ACF
         $> source setup.sh
@@ -227,13 +227,13 @@ Follow these instructions to install and compile the libraries:
 
         $> systemtest --help
 
-    command if you want to test the parsing of the HWDescription.xml file.
+    to test the parsing of the HWDescription.xml file.
 
 5. Launch
 
         $> datatest --help
 
-    command if you want to test if you can correctly read data
+    to test if you can correctly read data
 
 6. Launch
 
