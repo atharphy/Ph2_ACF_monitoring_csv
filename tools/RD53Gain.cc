@@ -360,7 +360,11 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    float ToTatTarget = Gain::gainFunction({cChip->getSummary<GainFit, GainFit>().fInterceptHighQ, cChip->getSummary<GainFit, GainFit>().fSlopeHighQ}, targetCharge);
+                    float ToTatTarget = Gain::gainFunction({cChip->getSummary<GainFit, GainFit>().fInterceptLowQ,
+                                                            cChip->getSummary<GainFit, GainFit>().fSlopeLowQ,
+                                                            cChip->getSummary<GainFit, GainFit>().fInterceptHighQ,
+                                                            cChip->getSummary<GainFit, GainFit>().fSlopeHighQ},
+                                                           targetCharge);
 
                     if(ToTatTarget > frontEnd->maxToTvalue)
                         LOG(INFO) << GREEN << "Average ToT for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
