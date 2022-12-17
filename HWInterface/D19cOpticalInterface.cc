@@ -139,6 +139,8 @@ bool D19cOpticalInterface::Write(Chip* pChip, std::vector<ChipRegItem>& pRegiste
                                << +pRegisterItems.at(cBlockId * LpGBTSlowControlWorker::BLOCK_SIZE + cReplyIdx - 1).fAddress << std::dec << RESET;
                     cSuccess &= false;
                 }
+                else
+                    pChip->UpdateModifiedRegMap(pRegisterItems.at(cBlockId * LpGBTSlowControlWorker::BLOCK_SIZE + cReplyIdx - 1));
                 if(pVerify)
                 {
                     if(cReadBack != pRegisterItems.at(cBlockId * LpGBTSlowControlWorker::BLOCK_SIZE + cReplyIdx - 1).fValue)
