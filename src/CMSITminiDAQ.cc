@@ -74,7 +74,8 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
 
     if(decodedEvents.size() != 0)
     {
-        LOG(INFO) << GREEN << "Corrupted events: " << BOLDYELLOW << std::setprecision(3) << errors << " (" << 1. * errors / decodedEvents.size() * 100. << "%)" << std::setprecision(-1) << RESET;
+        LOG(INFO) << GREEN << "Corrupted events: " << BOLDYELLOW << std::fixed << std::setprecision(3) << errors << " (" << 1. * errors / decodedEvents.size() * 100. << "%)" << std::setprecision(-1)
+                  << RESET;
         int avgEventSize = data.size() / decodedEvents.size();
         LOG(INFO) << GREEN << "Average event size is " << BOLDYELLOW << avgEventSize * RD53FWEvtEncoder::NBIT_EVT_WORD << RESET << GREEN << " bits over " << BOLDYELLOW << decodedEvents.size() << RESET
                   << GREEN << " events" << RESET;
