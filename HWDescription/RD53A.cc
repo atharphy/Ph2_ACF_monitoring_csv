@@ -28,6 +28,18 @@ RD53A::RD53A(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHy
     this->setFrontEndType(FrontEndType::RD53A);
 }
 
+std::vector<uint16_t> RD53A::getLaneUpInitSequence() const
+{
+    const int             nWordsRest     = 500;  // @CONST@
+    const int             nWordsSequence = 2000; // @CONST@
+    std::vector<uint16_t> initSequence;
+
+    for(auto i = 0u; i < nWordsRest; i++) initSequence.push_back(0x0000);     // 0000 0000
+    for(auto i = 0u; i < nWordsSequence; i++) initSequence.push_back(0xCCCC); // 1100 1100
+
+    return initSequence;
+}
+
 const RD53A::FrontEnd* RD53A::getFEtype(size_t colStart, size_t colStop) const
 {
     return *std::max_element(std::begin(frontEnds), std::end(frontEnds), [&](const FrontEnd* a, const FrontEnd* b) {
@@ -85,7 +97,9 @@ float RD53A::VCal2Charge(float VCal, bool isNoise) const
 
 float RD53A::Charge2VCal(float Charge) const
 {
-    return (Charge - RD53AchargeConvertion::offset) / (RD53AchargeConvertion::cap * 1e4) * RD53AchargeConvertion::ele / (RD53AchargeConvertion::Vref / RD53AchargeConvertion::ADCrange);
+    const float conversion = 100; // @CONST@ : Conversion from [10 mV] to [V]
+    return (Charge - RD53AchargeConvertion::offset) / (RD53AchargeConvertion::cap * 1e4) * RD53AchargeConvertion::ele /
+           (this->getRegItem("VREF_ADC").fValue / conversion / RD53AchargeConvertion::ADCrange);
 }
 
 } // namespace Ph2_HwDescription

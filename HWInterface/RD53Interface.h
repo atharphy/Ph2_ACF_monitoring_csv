@@ -100,16 +100,16 @@ class RD53Interface : public ReadoutChipInterface
         for(const auto& arg: args) ReadChipMonitor(pChip, arg);
     }
     float    ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName);
+    uint32_t ReadChipADC(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName);
     float    ReadHybridTemperature(Ph2_HwDescription::ReadoutChip* pChip);
     float    ReadHybridVoltage(Ph2_HwDescription::ReadoutChip* pChip);
-    uint32_t ReadChipADC(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName);
+    float    convertADC2VorI(Ph2_HwDescription::ReadoutChip* pChip, uint32_t value, bool isCurrentNotVoltage = false);
 
   private:
-    virtual uint32_t getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage) = 0;
-    virtual uint32_t measureADC(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data)               = 0;
+    virtual uint32_t getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage)                                          = 0;
+    virtual uint32_t measureADC(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data)                                                        = 0;
+    virtual float    measureTemperature(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data, const std::string& type = "", int beta = 3435) = 0;
     float            measureVoltageCurrent(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data, bool isCurrentNotVoltage);
-    float            measureTemperature(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data);
-    float            convertADC2VorI(Ph2_HwDescription::ReadoutChip* pChip, uint32_t value, bool isCurrentNotVoltage = false);
 };
 
 } // namespace Ph2_HwInterface

@@ -99,7 +99,8 @@ void DataReadbackOptimization::Stop()
 void DataReadbackOptimization::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
-    histos = nullptr;
+    histos          = nullptr;
+    BERtest::histos = nullptr;
 #endif
 
     if(currentRun >= 0)
@@ -108,7 +109,7 @@ void DataReadbackOptimization::localConfigure(const std::string& fileRes_, int c
         LOG(INFO) << GREEN << "[DataReadbackOptimization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     DataReadbackOptimization::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "DataReadbackOptimization");
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "DataReadbackOptimization");
     DataReadbackOptimization::initializeFiles(fileRes_, currentRun);
 }
 
@@ -193,8 +194,14 @@ void DataReadbackOptimization::analyze(const std::string& regName, const std::ve
 
                     for(auto i = 1u; i < dacListTAP.size(); i++)
                     {
-                        auto current =
-                            theTAPscanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data[i];
+                        auto current = round(theTAPscanContainer.at(cBoard->getIndex())
+                                                 ->at(cOpticalGroup->getIndex())
+                                                 ->at(cHybrid->getIndex())
+                                                 ->at(cChip->getIndex())
+                                                 ->getSummary<GenericDataArray<TAPsize>>()
+                                                 .data[i] /
+                                             RD53Shared::PRECISION) *
+                                       RD53Shared::PRECISION;
                         if((current >= 0) && (current < best))
                         {
                             regVal = dacListTAP[i];

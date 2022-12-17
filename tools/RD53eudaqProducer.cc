@@ -46,7 +46,7 @@ void RD53eudaqProducer::DoStartRun()
     // # Send a BORE event #
     // #####################
     auto ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
-    // ev->SetBORE();
+    ev->SetBORE();
     // RD53eudaqProducer::MySendEvent(std::move(ev));
 
     // #############################
@@ -72,7 +72,7 @@ void RD53eudaqProducer::DoStartRun()
                 for(const auto cChip: *cHybrid)
                 {
                     std::stringstream header;
-                    std::stringstream chipData = cChip->saveRegMap("ONSTREAM");
+                    std::stringstream chipData = cChip->saveRegMap("STREAMON");
                     header << "Register map and mask: B" << cBoard->getId() << "_O" << cOpticalGroup->getId() << "_H" << cHybrid->getId() << "_C" << +cChip->getId();
                     ev->SetTag(header.str().c_str(), chipData.str());
                 }
@@ -129,7 +129,7 @@ void RD53eudaqProducer::DoTerminate()
 
 void RD53eudaqProducer::RunLoop()
 {
-    std::unique_lock<std::mutex> theGuard(theMtx);
+    std::unique_lock<std::recursive_mutex> theGuard(theMtx);
     wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 

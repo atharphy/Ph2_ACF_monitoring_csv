@@ -31,6 +31,7 @@ namespace RD53Shared
 extern Ph2_HwDescription::RD53* firstChip;
 
 const char     RESULTDIR[]            = "Results";                                       // Directory containing the results
+const double   PRECISION              = 1e-2;                                            // Resolution on computing observables
 const double   ISMASKED               = -1.0;                                            // Encoding masked channels
 const double   ISDISABLED             = -2.0;                                            // Encoding disabled channels
 const double   FITERROR               = -3.0;                                            // Encoding fit errors
@@ -38,7 +39,7 @@ const int      MAXBITCHIPREG          = 16;                                     
 const size_t   NTHREADS               = round(std::thread::hardware_concurrency() / 2.); // Number of potential threads for the current CPU (removing hyper-threading)
 const uint32_t DEEPSLEEP              = 100000;                                          // [microseconds]
 const uint8_t  READOUTSLEEP           = 50;                                              // [microseconds]
-const uint8_t  MAXATTEMPTS            = 40;                                              // Maximum number of attempts
+const uint8_t  MAXATTEMPTS            = 100;                                             // Maximum number of attempts
 const uint16_t MAXATTEMPTSCMDDISPATCH = 500;                                             // Maximum number of attempts to dispatch a command
 const int      MAXSTEPS               = 10;                                              // Maximum number of steps for a scan
 
@@ -48,6 +49,12 @@ size_t      countBitsOne(size_t num);
 void        resetDefaultFloat();
 
 constexpr size_t setBits(size_t nBit2Set) { return (1L << nBit2Set) - 1; }
+
+template <typename T>
+static void setFirstChip(T& theDetectorContainer)
+{
+    firstChip = static_cast<Ph2_HwDescription::RD53*>(theDetectorContainer.at(0)->at(0)->at(0)->at(0));
+}
 
 template <typename T>
 inline void myMove(std::vector<T> source, std::vector<T>& destination)

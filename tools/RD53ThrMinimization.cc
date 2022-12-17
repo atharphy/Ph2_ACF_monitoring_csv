@@ -26,6 +26,7 @@ void ThrMinimization::ConfigureCalibration()
     // # Retrieve parameters #
     // #######################
     targetOccupancy = this->findValueInSettings<double>("TargetOcc");
+    maxMaskedPixels = this->findValueInSettings<double>("MaxMaskedPixels");
     startValue      = this->findValueInSettings<double>("ThrStart");
     stopValue       = this->findValueInSettings<double>("ThrStop");
     doDisplay       = this->findValueInSettings<double>("DisplayHisto");
@@ -55,6 +56,7 @@ void ThrMinimization::Running()
 
     if(PixelAlive::saveBinaryData == true)
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_ThrMinimization.raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -100,7 +102,7 @@ void ThrMinimization::localConfigure(const std::string& fileRes_, int currentRun
         LOG(INFO) << GREEN << "[ThrMinimization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     ThrMinimization::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "ThrMinimization");
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "ThrMinimization");
     ThrMinimization::initializeFiles(fileRes_, currentRun);
 }
 
@@ -115,6 +117,7 @@ void ThrMinimization::initializeFiles(const std::string& fileRes_, int currentRu
 
     if((currentRun >= 0) && (PixelAlive::saveBinaryData == true))
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_ThrMinimization.raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -127,7 +130,7 @@ void ThrMinimization::initializeFiles(const std::string& fileRes_, int currentRu
 
 void ThrMinimization::run()
 {
-    ThrMinimization::bitWiseScanGlobal(frontEnd->thresholdReg, targetOccupancy, startValue, stopValue);
+    ThrMinimization::bitWiseScanGlobal(frontEnd->thresholdReg, targetOccupancy, maxMaskedPixels, startValue, stopValue);
 
     // ############################
     // # Fill threshold container #
@@ -188,10 +191,11 @@ void ThrMinimization::fillHisto()
 #endif
 }
 
-void ThrMinimization::bitWiseScanGlobal(const std::string& regName, float target, uint16_t startValue, uint16_t stopValue)
+void ThrMinimization::bitWiseScanGlobal(const std::string& regName, float target, float threshold, uint16_t startValue, uint16_t stopValue)
 {
     float    tmp;
     uint16_t init;
+    size_t   totalPixels  = RD53Shared::firstChip->getNRows() * RD53Shared::firstChip->getNCols();
     uint16_t numberOfBits = floor(log2(stopValue - startValue + 1) + 1);
 
     DetectorDataContainer minDACcontainer;
@@ -248,6 +252,15 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, float target
                         float newValue = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
                         // float newValue = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancyMedian; // @TMP@
 
+                        // #######################
+                        // # Build discriminator #
+                        // #######################
+                        size_t maskedPixels = 0;
+                        for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
+                            for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
+                                if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy == RD53Shared::ISMASKED) maskedPixels++;
+                        maskedPixels = maskedPixels / totalPixels * 100;
+
                         // ########################
                         // # Save best DAC values #
                         // ########################
@@ -261,7 +274,7 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, float target
                                 midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();
                         }
 
-                        if(newValue < target)
+                        if((newValue < target) && (maskedPixels < threshold))
 
                             maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
                                 midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>();

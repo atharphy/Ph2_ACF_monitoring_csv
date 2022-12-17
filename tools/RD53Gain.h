@@ -76,21 +76,22 @@ class Gain : public CalibBase
   protected:
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
-    size_t rowStart;
-    size_t rowStop;
-    size_t colStart;
-    size_t colStop;
-    size_t nEvents;
-    size_t startValue;
-    size_t stopValue;
-    float  targetCharge;
-    size_t nSteps;
-    size_t offset;
-    size_t nHITxCol;
-    size_t doOnlyNGroups;
-    bool   doDisplay;
-    bool   doUpdateChip;
-    bool   saveBinaryData;
+    size_t      rowStart;
+    size_t      rowStop;
+    size_t      colStart;
+    size_t      colStop;
+    size_t      nEvents;
+    size_t      startValue;
+    size_t      stopValue;
+    float       targetCharge;
+    size_t      nSteps;
+    size_t      offset;
+    size_t      nHITxCol;
+    size_t      doOnlyNGroups;
+    bool        doDisplay;
+    bool        doUpdateChip;
+    bool        saveBinaryData;
+    std::string dataOutputDir;
 
     std::string fileRes;
     int         theCurrentRun;

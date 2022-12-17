@@ -47,6 +47,7 @@ class RD53BInterface : public RD53Interface
     void     ResetCoreColumns(Ph2_HwDescription::RD53* pRD53);
 
     const std::map<std::string, RD53Interface::SpecialRegInfo> specialRegMap = {{"CDR_CONFIG_SEL_SER_CLK", {"CDR_CONFIG", 0}},
+                                                                                {"CDR_CONFIG_SEL_PD", {"CDR_CONFIG", 3}},
 
                                                                                 {"CLK_DATA_DELAY_DATA", {"CLK_DATA_DELAY", 0}},
                                                                                 {"CLK_DATA_DELAY_CLK", {"CLK_DATA_DELAY", 7}},
@@ -84,6 +85,7 @@ class RD53BInterface : public RD53Interface
   private:
     uint32_t getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage) override;
     uint32_t measureADC(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data) override;
+    float    measureTemperature(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data, const std::string& type = "", int beta = 3435) override;
 };
 
 } // namespace Ph2_HwInterface

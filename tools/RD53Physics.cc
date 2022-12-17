@@ -17,16 +17,16 @@ void Physics::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart        = this->findValueInSettings<double>("ROWstart");
-    rowStop         = this->findValueInSettings<double>("ROWstop");
-    colStart        = this->findValueInSettings<double>("COLstart");
-    colStop         = this->findValueInSettings<double>("COLstop");
-    nTRIGxEvent     = this->findValueInSettings<double>("nTRIGxEvent");
-    doDisplay       = this->findValueInSettings<double>("DisplayHisto");
-    doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
-    saveBinaryData  = this->findValueInSettings<double>("SaveBinaryData");
-    outputBinaryDir = this->findValueInSettings<std::string>("OutputBinaryDir", "");
-    frontEnd        = RD53Shared::firstChip->getFEtype(colStart, colStop);
+    rowStart       = this->findValueInSettings<double>("ROWstart");
+    rowStop        = this->findValueInSettings<double>("ROWstop");
+    colStart       = this->findValueInSettings<double>("COLstart");
+    colStop        = this->findValueInSettings<double>("COLstop");
+    nTRIGxEvent    = this->findValueInSettings<double>("nTRIGxEvent");
+    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
+    dataOutputDir  = this->findValueInSettings<std::string>("DataOutputDir", "");
+    frontEnd       = RD53Shared::firstChip->getFEtype(colStart, colStop);
 
     // ################################
     // # Custom channel group handler #
@@ -52,7 +52,7 @@ void Physics::Running()
 
     if(saveBinaryData == true)
     {
-        if(outputBinaryDir != "") this->fDirectoryName = outputBinaryDir;
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Physics.raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -104,14 +104,15 @@ void Physics::Stop()
     Physics::draw();
     this->closeFileHandler();
     LOG(INFO) << GREEN << "[Physics::Stop] Stopped" << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded events: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Total number of received triggers: " << BOLDYELLOW << numberOfEventsPerRun / nTRIGxEvent << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Total number of corrupted events: " << BOLDYELLOW << std::setprecision(3) << errors << " (" << 1. * errors / numberOfEventsPerRun * 100. << "%)"
+    LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded bunch crossings: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Total number of received triggers (i.e. events): " << BOLDYELLOW << numberOfEventsPerRun / nTRIGxEvent << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Total number of corrupted bunch crossings: " << BOLDYELLOW << std::setprecision(3) << errors << " (" << 1. * errors / numberOfEventsPerRun * 100. << "%)"
               << std::setprecision(-1) << RESET;
 }
 
 void Physics::localConfigure(const std::string& fileRes_, int currentRun)
 {
+    errors = 0;
 #ifdef __USE_ROOT__
     histos = nullptr;
 #endif
@@ -122,7 +123,7 @@ void Physics::localConfigure(const std::string& fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[Physics::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     Physics::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "Physics");
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "Physics");
     Physics::initializeFiles(fileRes_, currentRun);
 }
 
@@ -132,6 +133,7 @@ void Physics::initializeFiles(const std::string& fileRes_, int currentRun)
 
     if((currentRun >= 0) && (saveBinaryData == true))
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Physics.raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -150,7 +152,8 @@ void Physics::initializeFiles(const std::string& fileRes_, int currentRun)
 
 void Physics::run()
 {
-    std::unique_lock<std::mutex> theGuard(theMtx, std::defer_lock);
+    std::unique_lock<std::recursive_mutex> theGuard(theMtx, std::defer_lock);
+
     while(this->fKeepRunning == true)
     {
         RD53Event::decodedEvents.clear();
@@ -172,8 +175,11 @@ void Physics::run()
         genericEvtConverter(RD53Event::decodedEvents);
         numberOfEventsPerRun += RD53Event::decodedEvents.size();
         theGuard.unlock();
+        // if(RD53Event::decodedEvents.size() != 0) LOG(INFO) << BOLDBLUE << "\t--> Recorded " << BOLDYELLOW << RD53Event::decodedEvents.size() << BOLDBLUE << " events" << RESET; // @TMP@
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
     }
+
+    Tool::InformImDone();
 }
 
 void Physics::draw(bool saveData)

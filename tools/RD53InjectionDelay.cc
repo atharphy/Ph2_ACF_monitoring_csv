@@ -18,12 +18,14 @@ void InjectionDelay::ConfigureCalibration()
     // # Initialize sub-calibration #
     // ##############################
     PixelAlive::ConfigureCalibration();
+    PixelAlive::doDisplay    = false;
+    PixelAlive::doUpdateChip = false;
+    PixelAlive::saveData     = false;
     RD53RunProgress::total() -= PixelAlive::getNumberIterations();
 
     // #######################
     // # Retrieve parameters #
     // #######################
-    frontEnd   = RD53Shared::firstChip->getFEtype(PixelAlive::colStart, PixelAlive::colStop);
     startValue = 0u;
     stopValue  = frontEnd->nLatencyBins2Span * (RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CAL_EDGE_FINE_DELAY")) + 1) - 1;
 
@@ -52,6 +54,7 @@ void InjectionDelay::Running()
 
     if(PixelAlive::saveBinaryData == true)
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_InjectionDelay.raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -93,7 +96,8 @@ void InjectionDelay::Stop()
 void InjectionDelay::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
-    histos = nullptr;
+    histos             = nullptr;
+    PixelAlive::histos = nullptr;
 #endif
 
     if(currentRun >= 0)
@@ -102,7 +106,7 @@ void InjectionDelay::localConfigure(const std::string& fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[InjectionDelay::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     InjectionDelay::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "InjectionDelay");
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "InjectionDelay");
     InjectionDelay::initializeFiles(fileRes_, currentRun);
 }
 
@@ -112,6 +116,7 @@ void InjectionDelay::initializeFiles(const std::string& fileRes_, int currentRun
 
     if((currentRun >= 0) && (PixelAlive::saveBinaryData == true))
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_InjectionDelay.raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -136,10 +141,7 @@ void InjectionDelay::run()
     // ###############
     // # Run Latency #
     // ###############
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid) this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "CAL_EDGE_FINE_DELAY", 0);
+    for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, "CAL_EDGE_FINE_DELAY", 0);
 
     la.run();
     la.analyze();
@@ -229,8 +231,14 @@ void InjectionDelay::analyze()
 
                     for(auto i = 0u; i < dacList.size(); i++)
                     {
-                        auto current =
-                            theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<InjDelaySize>>().data[i];
+                        auto current = round(theOccContainer.at(cBoard->getIndex())
+                                                 ->at(cOpticalGroup->getIndex())
+                                                 ->at(cHybrid->getIndex())
+                                                 ->at(cChip->getIndex())
+                                                 ->getSummary<GenericDataArray<InjDelaySize>>()
+                                                 .data[i] /
+                                             RD53Shared::PRECISION) *
+                                       RD53Shared::PRECISION;
                         if(current > best)
                         {
                             regVal = dacList[i];
@@ -277,10 +285,7 @@ void InjectionDelay::scanDac(const std::string& regName, const std::vector<uint1
         // # Download new DAC values #
         // ###########################
         LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regName << BOLDMAGENTA << " value = " << BOLDYELLOW << dacList[i] << BOLDMAGENTA << " <<<" << RESET;
-        for(const auto cBoard: *fDetectorContainer)
-            for(const auto cOpticalGroup: *cBoard)
-                for(const auto cHybrid: *cOpticalGroup)
-                    for(const auto cChip: *cHybrid) this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), regName, dacList[i] % maxRegValue);
+        for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regName, dacList[i] % maxRegValue);
 
         // ################
         // # Run analysis #

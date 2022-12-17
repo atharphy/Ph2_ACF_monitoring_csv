@@ -17,16 +17,19 @@ void VoltageTuning::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    targetDig    = this->findValueInSettings<double>("VDDDTrimTarget", 1.3);
-    targetAna    = this->findValueInSettings<double>("VDDATrimTarget", 1.2);
-    toleranceDig = this->findValueInSettings<double>("VDDDTrimTolerance", 0.02);
-    toleranceAna = this->findValueInSettings<double>("VDDATrimTolerance", 0.02);
-    doDisplay    = this->findValueInSettings<double>("DisplayHisto");
+    colStart      = this->findValueInSettings<double>("COLstart");
+    colStop       = this->findValueInSettings<double>("COLstop");
+    targetDig     = this->findValueInSettings<double>("VDDDTrimTarget", 1.3);
+    targetAna     = this->findValueInSettings<double>("VDDATrimTarget", 1.2);
+    toleranceDig  = this->findValueInSettings<double>("VDDDTrimTolerance", 0.02);
+    toleranceAna  = this->findValueInSettings<double>("VDDATrimTolerance", 0.02);
+    doDisplay     = this->findValueInSettings<double>("DisplayHisto");
+    dataOutputDir = this->findValueInSettings<std::string>("DataOutputDir", "");
 
     // ############################################################
     // # Create directory for: raw data, config files, histograms #
     // ############################################################
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "VoltageTuning");
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "VoltageTuning");
 }
 
 void VoltageTuning::Running()
@@ -90,12 +93,16 @@ void VoltageTuning::initializeFiles(const std::string& fileRes_, int currentRun)
 
 void VoltageTuning::run()
 {
-    const int conversionFactor = 2; // @CONST@
-    const int NSIGMA           = 2; // @CONST@
-    bool      doRepeatDig;
-    bool      doRepeatAna;
-    float     targetDig_ = targetDig;
-    float     targetAna_ = targetAna;
+    const int         conversionFactor = 2; // @CONST@
+    const int         NSIGMA           = 2; // @CONST@
+    const size_t      nBitsDig         = RD53Shared::firstChip->getFEtype(colStart, colStop)->nBitTrimDig;
+    const size_t      nBitsAna         = RD53Shared::firstChip->getFEtype(colStart, colStop)->nBitTrimAna;
+    const std::string VDDDreg          = RD53Shared::firstChip->getFEtype(colStart, colStop)->VDDDreadReg;
+    const std::string VDDAreg          = RD53Shared::firstChip->getFEtype(colStart, colStop)->VDDAreadReg;
+    float             targetDig_       = targetDig;
+    float             targetAna_       = targetAna;
+    bool              doRepeatDig;
+    bool              doRepeatAna;
 
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theDigContainer);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theAnaContainer);
@@ -129,9 +136,9 @@ void VoltageTuning::run()
                         std::vector<float> trimVoltageDig;
                         std::vector<int>   trimVoltageDigIndex;
 
-                        auto defaultDig = bits::pack<5, 5>(16, 16);
+                        auto defaultDig = ((RD53Shared::setBits(nBitsAna) / 2) << nBitsDig) | (RD53Shared::setBits(nBitsDig) / 2);
                         RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", defaultDig);
-                        float initDig = RD53ChipInterface->ReadChipMonitor(cChip, "VOUT_dig_ShuLDO") * conversionFactor;
+                        float initDig = RD53ChipInterface->ReadChipMonitor(cChip, VDDDreg) * conversionFactor;
 
                         std::vector<int> scanrangeDig = VoltageTuning::createScanRange(cChip, "VOLTAGE_TRIM_DIG", targetDig_, initDig);
                         bool             isUpward     = false;
@@ -143,7 +150,7 @@ void VoltageTuning::run()
                             auto vTrimDecimal = bits::pack<5, 5>(16, scanrangeDig[it]);
 
                             RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", vTrimDecimal);
-                            float readingDig = RD53ChipInterface->ReadChipMonitor(cChip, "VOUT_dig_ShuLDO") * conversionFactor;
+                            float readingDig = RD53ChipInterface->ReadChipMonitor(cChip, VDDDreg) * conversionFactor;
                             float diff       = fabs(readingDig - targetDig_);
 
                             trimVoltageDig.push_back(diff);
@@ -179,9 +186,9 @@ void VoltageTuning::run()
                         std::vector<float> trimVoltageAna;
                         std::vector<int>   trimVoltageAnaIndex;
 
-                        auto defaultAna = bits::pack<5, 5>(16, vdddNewSetting);
+                        auto defaultAna = ((RD53Shared::setBits(nBitsAna) / 2) << nBitsDig) | vdddNewSetting;
                         RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", defaultAna);
-                        float initAna = RD53ChipInterface->ReadChipMonitor(cChip, "VOUT_ana_ShuLDO") * conversionFactor;
+                        float initAna = RD53ChipInterface->ReadChipMonitor(cChip, VDDAreg) * conversionFactor;
 
                         std::vector<int> scanrangeAna = VoltageTuning::createScanRange(cChip, "VOLTAGE_TRIM_ANA", targetAna_, initAna);
                         isUpward                      = false;
@@ -193,7 +200,7 @@ void VoltageTuning::run()
                             auto vTrimDecimal = bits::pack<5, 5>(scanrangeAna[it], vdddNewSetting);
 
                             RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", vTrimDecimal);
-                            float readingAna = RD53ChipInterface->ReadChipMonitor(cChip, "VOUT_ana_ShuLDO") * conversionFactor;
+                            float readingAna = RD53ChipInterface->ReadChipMonitor(cChip, VDDAreg) * conversionFactor;
                             float diff       = fabs(readingAna - targetAna_);
 
                             trimVoltageAna.push_back(diff);
@@ -226,8 +233,8 @@ void VoltageTuning::run()
 
                         RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", finalDecimal);
 
-                        auto finalVDDD = RD53ChipInterface->ReadChipMonitor(cChip, "VOUT_dig_ShuLDO") * conversionFactor;
-                        auto finalVDDA = RD53ChipInterface->ReadChipMonitor(cChip, "VOUT_ana_ShuLDO") * conversionFactor;
+                        auto finalVDDD = RD53ChipInterface->ReadChipMonitor(cChip, VDDDreg) * conversionFactor;
+                        auto finalVDDA = RD53ChipInterface->ReadChipMonitor(cChip, VDDAreg) * conversionFactor;
 
                         LOG(INFO) << CYAN << "Final voltage readings after tuning" << RESET;
                         LOG(INFO) << BOLDBLUE << "\t--> Final VDDD reading = " << std::setprecision(3) << BOLDYELLOW << finalVDDD << BOLDBLUE << " V" << RESET;

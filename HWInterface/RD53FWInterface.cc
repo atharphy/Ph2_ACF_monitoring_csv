@@ -207,10 +207,10 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     uint32_t gtxClk   = RegManager::ReadReg("user.stat_regs.gtx_refclk_rate");
     LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "Input clock frequency (could be either internal or external, should be ~40 MHz): " << BOLDYELLOW << inputClk / 1000. << " MHz"
               << std::setprecision(-1) << RESET;
-    if(fabs(inputClk / 1000. - 40) > 1) LOG(ERROR) << BOLDRED << "Input clock frequency not nominal" << std::endl;
+    if(fabs(inputClk / 1000. - 40) > 1) LOG(ERROR) << BOLDRED << "Input clock frequency not nominal" << RESET;
     LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "GTX receiver clock frequency (~160 MHz (~320 MHz) for electrical (optical) readout): " << BOLDYELLOW << gtxClk / 1000. << " MHz"
               << std::setprecision(-1) << RESET;
-    if(!((fabs(gtxClk / 1000. - 160) < 1) || (fabs(gtxClk / 1000. - 320) < 1))) LOG(ERROR) << BOLDRED << "GTX receiver clock frequency not nominal" << std::endl;
+    if(!((fabs(gtxClk / 1000. - 160) < 1) || (fabs(gtxClk / 1000. - 320) < 1))) LOG(ERROR) << BOLDRED << "GTX receiver clock frequency not nominal" << RESET;
 }
 
 void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
@@ -279,6 +279,7 @@ void RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
         if(RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_full") == true) LOG(ERROR) << BOLDRED << "Write-command FIFO full" << RESET;
 
         nAttempts++;
+        // RD53FWInterface::ResetSlowCmdFIFO(); // @TMP@ : temporary fix untill FIRO error FW fix
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
     }
     if(nAttempts == RD53Shared::MAXATTEMPTS)
@@ -346,7 +347,7 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(Re
         if(chipAddress == chipLane) regReadback.emplace_back(regAddress, regValue);
     }
 
-    if(regReadback.size() == 0) LOG(ERROR) << BOLDRED << "Read-command FIFO empty" << RESET;
+    // if(regReadback.size() == 0) LOG(ERROR) << BOLDRED << "Read-command FIFO empty" << RESET; // @TMP@ : temporary fix untill FIRO error FW fix
 
     return regReadback;
 }
@@ -424,7 +425,8 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
     LOG(INFO) << BOLDBLUE << "\t--> Total number of " << BOLDYELLOW << "required" << BOLDBLUE << " data lanes: " << BOLDYELLOW << RD53Shared::countBitsOne(chips_en) << BOLDBLUE << " i.e. "
               << BOLDYELLOW << std::bitset<20>(chips_en) << RESET;
 
-    int nAttempts = 0;
+    int                   nAttempts = 0;
+    std::vector<uint16_t> initSequence(std::move(RD53Shared::firstChip->getLaneUpInitSequence()));
     while(nAttempts < RD53Shared::MAXATTEMPTS)
     {
         channel_up = RegManager::ReadReg("user.stat_regs.aurora_rx_channel_up");
@@ -433,7 +435,15 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
 
         if(chips_en & ~channel_up)
         {
-            LOG(INFO) << BOLDBLUE << "\t--> Some data lanes are enabled but inactive --> retry" << RESET;
+            LOG(INFO) << BOLDBLUE << "\t--> Some data lanes are enabled but inactive" << BOLDYELLOW << " -- > retry " << RESET;
+
+            // ###############################################
+            // # Send sequence to help frontend chip to lock #
+            // ###############################################
+            if(initSequence.size() != 0)
+                for(const auto cOpticalGroup: *pBoard)
+                    for(const auto cHybrid: *cOpticalGroup) RD53FWInterface::WriteChipCommand(initSequence, cHybrid->getId());
+
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
             nAttempts++;
         }
@@ -447,7 +457,7 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
         throw Exception("[RD53FWInterface::CheckChipCommunication] Some data lanes are enabled but inactive");
     }
 
-    LOG(INFO) << BOLDBLUE << "All enabled data lanes are active" << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> All enabled data lanes are active" << RESET;
     return true;
 }
 
@@ -610,7 +620,7 @@ uint32_t RD53FWInterface::ReadData(BeBoard* pBoard, bool pBreakTrigger, std::vec
     // # Read DDR3 #
     // #############
     std::vector<uint32_t> theData;
-    auto                  FIFOsize = (1 << RD53FWconstants::NBIT_DATA_FIFO);
+    const auto            FIFOsize = (1 << RD53FWconstants::NBIT_DATA_FIFO);
 
     if(nWordsInMemory > (FIFOsize - ddr3Offset))
     {
@@ -683,8 +693,8 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
 
         if(RD53Event::decodedEvents.size() != RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration))
         {
-            LOG(ERROR) << BOLDRED << "Sent " << RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration) << " triggers, but collected "
-                       << RD53Event::decodedEvents.size() << " events" << BOLDYELLOW << " --> retry" << RESET;
+            LOG(ERROR) << BOLDRED << "Sent " << BOLDYELLOW << RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration) << BOLDRED
+                       << " triggers, but collected " << BOLDYELLOW << RD53Event::decodedEvents.size() << BOLDRED << " events" << BOLDYELLOW << " --> retry" << RESET;
             retry = true;
             continue;
         }
@@ -780,8 +790,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
 // #  |---------------------------------------------------------------------------| #
 // ##################################################################################
 {
-    const double mainClock      = 40e6; // @CONST@
-    const size_t NbitsInitPrime = 10;   // @CONST@
+    const size_t NbitsInitPrime = 10; // @CONST@
     enum INJtype
     {
         None,
@@ -791,7 +800,7 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
     enum INJdelay
     {
         AfterInjectCal = 32,
-        BeforePrimeCal = 8,
+        BeforePrimeCal = 1,
         Loop           = 460
     };
 
@@ -875,9 +884,14 @@ void RD53FWInterface::SetAndConfigureFastCommands(const BeBoard* pBoard,
         RD53FWInterface::localCfgFastCmd.autozero_source = AutozeroSource::Disabled;
 
     LOG(INFO) << GREEN << "Internal trigger frequency (if enabled): " << BOLDYELLOW << std::fixed << std::setprecision(0)
-              << mainClock / ((RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr + 1) * 4 - 1 + (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject + 1) * 4 + 7 +
-                              (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger + 1) * 4 - 1 + (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime + 1) * 4 + 7 +
-                              RD53FWInterface::localCfgFastCmd.trigger_duration)
+              << RD53Constants::ACCELERATOR_CLK * 1e6 /
+                     static_cast<float>(
+
+                         // (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_first_prime + 1) * 4 + 7 +
+
+                         (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_ecr + 1) * 4 - 1 + (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_inject + 1) * 4 + 7 +
+                         (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_trigger + 1) * 4 - 1 + (RD53FWInterface::localCfgFastCmd.fast_cmd_fsm.delay_after_prime + 1) * 4 + 7 +
+                         RD53FWInterface::localCfgFastCmd.trigger_duration)
               << std::setprecision(-1) << " Hz" << RESET;
     RD53Shared::resetDefaultFloat();
 
@@ -961,7 +975,7 @@ bool RD53FWInterface::WriteOptoLinkRegister(const Chip* pChip, const uint32_t pA
     // OptoChip ID
     RD53FWInterface::selectLink(pChip->getOpticalGroupId());
 
-    // Config
+    // Configure
     RegManager::WriteStackReg(
         {{"user.ctrl_regs.lpgbt_1.ic_tx_fifo_din", pData}, {"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", pChip->getChipAddress()}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
 
@@ -990,7 +1004,7 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(const Chip* pChip, const uint32_t
     // OptoChip ID
     RD53FWInterface::selectLink(pChip->getOpticalGroupId());
 
-    // Config
+    // Configure
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_chip_addr_tx", pChip->getChipAddress()}, {"user.ctrl_regs.lpgbt_2.ic_reg_addr_tx", pAddress}});
 
     // Perform operation
@@ -1168,8 +1182,7 @@ float RD53FWInterface::ReadHybridVoltage(int hybridId)
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     auto value = calcVoltage(senseVDD, senseGND);
-    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "Hybrid" << BOLDBLUE " voltage: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE
-              << " V (corresponds to twice VOUT_dig_ShuLDO of the chip)" << std::setprecision(-1) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "Hybrid" << BOLDBLUE " voltage: " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " V" << std::setprecision(-1) << RESET;
 
     return value;
 }
@@ -1196,7 +1209,7 @@ float RD53FWInterface::calcTemperature(uint32_t sensor1, uint32_t sensor2, int b
     // ###################
     const float  safetyMargin       = 0.9;
     const float  minimumTemperature = -35;                                               // [Celsius]
-    const size_t numberOfBits       = 11;                                                // Related to the ADC on the FMC
+    const size_t numberOfBits       = 12;                                                // Related to the ADC on the FMC
     const float  VrefADC            = 2.048;                                             // FMC's ADC refence voltage [V]
     const float  ADC_LSB            = VrefADC / (RD53Shared::setBits(numberOfBits) + 1); // [V/ADC]
 
@@ -1232,7 +1245,7 @@ float RD53FWInterface::calcVoltage(uint32_t senseVDD, uint32_t senseGND)
     // ###################
     // # Voltage per LSB #
     // ###################
-    const size_t numberOfBits = 11;                                                 // Related to the ADC on the FMC
+    const size_t numberOfBits = 12;                                                 // Related to the ADC on the FMC
     const float  VrefADC      = 2.048;                                              // FMC's ADC refence voltage [V]
     const float  ADC_LSB      = VrefADC / (RD53Shared::setBits(numberOfBits) + 1.); // [V/ADC]
 
@@ -1289,7 +1302,9 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
                    {"user.ctrl_regs.PRBS_checker.reset_cntr", 1},
                    {"user.ctrl_regs.PRBS_checker.reset_cntr", 0}});
 
-    // Set PRBS frames to run
+    // ##########################
+    // # Set PRBS frames to run #
+    // ##########################
     uint32_t lowFrames, highFrames;
     std::tie(highFrames, lowFrames) = bits::unpack<32, 32>(static_cast<long long>(frames2run));
     WriteStackReg({{"user.ctrl_regs.prbs_frames_to_run_low", lowFrames}, {"user.ctrl_regs.prbs_frames_to_run_high", highFrames}});
@@ -1308,7 +1323,9 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     {
         std::this_thread::sleep_for(std::chrono::seconds(static_cast<unsigned int>(time_per_step)));
 
-        // Read frame counters to check progress
+        // #########################################
+        // # Read frame counters to check progress #
+        // #########################################
         cntr_lo = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
         cntr_hi = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
         if(bits::pack<32, 32>(cntr_hi, cntr_lo) == frameCounter)
@@ -1335,7 +1352,9 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     // ########
     WriteStackReg({{"user.ctrl_regs.PRBS_checker.stop_checker", 1}, {"user.ctrl_regs.PRBS_checker.stop_checker", 0}});
 
-    // Read PRBS frame counter
+    // ###########################
+    // # Read PRBS frame counter #
+    // ###########################
     cntr_lo      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
     cntr_hi      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
     frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);

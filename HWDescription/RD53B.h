@@ -61,11 +61,15 @@ class RD53B : public RD53
                                       "DAC_KRUM_CURR_LIN",
                                       "TriggerConfig",
                                       "DAC_LDAC_LIN",
+                                      "VDDD",
+                                      "VDDA",
                                       1,
                                       32,
                                       RD53Shared::setBits(RD53BEvtEncoder::NBIT_TOT) - 1,
                                       RD53Shared::setBits(RD53BEvtEncoder::NBIT_BCID),
                                       RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID),
+                                      4,
+                                      4,
                                       0,
                                       RD53B::NCOLS - 1,
                                       0,
@@ -73,14 +77,16 @@ class RD53B : public RD53
 
     static void decodeChipData(BitView<const uint32_t> bits, Ph2_HwInterface::RD53ChipEvent& e, const Ph2_HwInterface::FormatOptions& options = {});
 
+    RD53B() {}
     RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
 
-    const FrontEnd* getFEtype(size_t colStart, size_t colStop) const override { return &RD53B::CROC; }
-    size_t          getNRows() const override { return RD53B::NROWS; }
-    size_t          getNCols() const override { return RD53B::NCOLS; }
-    uint32_t        getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const override;
-    float           VCal2Charge(float VCal, bool isNoise = false) const override;
-    float           Charge2VCal(float Charge) const override;
+    const FrontEnd*       getFEtype(size_t colStart, size_t colStop) const override { return &RD53B::CROC; }
+    size_t                getNRows() const override { return RD53B::NROWS; }
+    size_t                getNCols() const override { return RD53B::NCOLS; }
+    std::vector<uint16_t> getLaneUpInitSequence() const override { return {}; }
+    uint32_t              getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const override;
+    float                 VCal2Charge(float VCal, bool isNoise = false) const override;
+    float                 Charge2VCal(float Charge) const override;
 };
 
 } // namespace Ph2_HwDescription

@@ -104,10 +104,11 @@ class Tool : public Ph2_System::SystemController
     virtual void sendData(){};
     virtual void ConfigureCalibration(){};
     virtual void Running(){};
-    virtual bool GetRunningStatus();
+    virtual bool GetRunningStatus() { return fKeepRunning; }
 
     void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000) override;
     void Start(int runNumber) override;
+    void InformImDone();
     void Stop() override;
 
     void waitForRunToBeCompleted();
@@ -423,20 +424,24 @@ class Tool : public Ph2_System::SystemController
     THttpServer* fHttpServer;
 #endif
 
-    std::atomic<bool> fKeepRunning;
-    int               fRunNumber;
-    std::future<void> fRunningFuture;
-    bool              fSkipMaskedChannels;
-    bool              fAllChan;
-    bool              fMaskChannelsFromOtherGroups;
-    bool              fTestPulse;
-    bool              fDoBoardBroadcast;
-    bool              fDoHybridBroadcast;
-    bool              fUseReadNEvents{1};
-    int               fWait_ms{100};
-    size_t            fNReadbackEvents{0};
-    uint8_t           fNormalize{1};
-    std::string       getCalibrationName();
+    int                         fRunNumber;
+    bool                        doExit;
+    std::atomic<bool>           fKeepRunning;
+    std::thread                 fRunningThread;
+    std::condition_variable_any wakeUp;
+    std::recursive_mutex        theMtx;
+
+    bool        fSkipMaskedChannels;
+    bool        fAllChan;
+    bool        fMaskChannelsFromOtherGroups;
+    bool        fTestPulse;
+    bool        fDoBoardBroadcast;
+    bool        fDoHybridBroadcast;
+    bool        fUseReadNEvents{1};
+    int         fWait_ms{100};
+    size_t      fNReadbackEvents{0};
+    uint8_t     fNormalize{1};
+    std::string getCalibrationName();
 };
 
 #endif

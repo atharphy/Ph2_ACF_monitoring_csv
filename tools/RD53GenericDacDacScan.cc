@@ -63,6 +63,7 @@ void GenericDacDacScan::Running()
 
     if(PixelAlive::saveBinaryData == true)
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_GenericDacDacScan.raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -102,7 +103,8 @@ void GenericDacDacScan::Stop()
 void GenericDacDacScan::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
-    histos = nullptr;
+    histos             = nullptr;
+    PixelAlive::histos = nullptr;
 #endif
 
     if(currentRun >= 0)
@@ -111,7 +113,7 @@ void GenericDacDacScan::localConfigure(const std::string& fileRes_, int currentR
         LOG(INFO) << GREEN << "[GenericDacDacScan::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     GenericDacDacScan::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "GenericDacDacScan");
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "GenericDacDacScan");
     GenericDacDacScan::initializeFiles(fileRes_, currentRun);
 }
 
@@ -121,6 +123,7 @@ void GenericDacDacScan::initializeFiles(const std::string& fileRes_, int current
 
     if((currentRun >= 0) && (PixelAlive::saveBinaryData == true))
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_GenericDacDacScan.raw", 'w');
         this->initializeWriteFileHandler();
     }

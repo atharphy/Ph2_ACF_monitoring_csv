@@ -41,8 +41,10 @@ float RD53B::VCal2Charge(float VCal, bool isNoise) const
 
 float RD53B::Charge2VCal(float Charge) const
 {
-    auto VrefDivider = (this->getRegItem("SEL_CAL_RANGE").fValue == 0 ? 2 : 1);
-    return (Charge - RD53BchargeConvertion::offset) / (RD53BchargeConvertion::cap * 1e4) * RD53BchargeConvertion::ele / ((RD53BchargeConvertion::Vref) / VrefDivider / RD53BchargeConvertion::ADCrange);
+    const float conversion  = 100; // @CONST@ : Conversion from [10 mV] to [V]
+    auto        VrefDivider = (this->getRegItem("SEL_CAL_RANGE").fValue == 0 ? 2 : 1);
+    return (Charge - RD53BchargeConvertion::offset) / (RD53BchargeConvertion::cap * 1e4) * RD53BchargeConvertion::ele /
+           (this->getRegItem("VREF_ADC").fValue / conversion / VrefDivider / RD53BchargeConvertion::ADCrange);
 }
 
 template <class T>

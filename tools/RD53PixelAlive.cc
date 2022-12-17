@@ -27,11 +27,12 @@ void PixelAlive::ConfigureCalibration()
     injType        = this->findValueInSettings<double>("INJtype");
     nHITxCol       = this->findValueInSettings<double>("nHITxCol");
     doOnlyNGroups  = this->findValueInSettings<double>("DoOnlyNGroups");
-    thrOccupancy   = this->findValueInSettings<double>("TargetOcc");
+    occPerPixel    = this->findValueInSettings<double>("OccPerPixel");
     unstuckPixels  = this->findValueInSettings<double>("UnstuckPixels");
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
+    dataOutputDir  = this->findValueInSettings<std::string>("DataOutputDir", "");
     frontEnd       = RD53Shared::firstChip->getFEtype(colStart, colStop);
 
     // ################################
@@ -45,10 +46,7 @@ void PixelAlive::ConfigureCalibration()
     // ######################
     // # Set injection type #
     // ######################
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid) this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "DIGITAL_INJ_EN", injType == INJtype::Digital);
+    for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, "DIGITAL_INJ_EN", injType == INJtype::Digital);
 
     // #######################
     // # Initialize progress #
@@ -63,6 +61,7 @@ void PixelAlive::Running()
 
     if(saveBinaryData == true)
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_PixelAlive.raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -114,7 +113,7 @@ void PixelAlive::localConfigure(const std::string& fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[PixelAlive::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     PixelAlive::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "PixelAlive");
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "PixelAlive");
     PixelAlive::initializeFiles(fileRes_, currentRun);
 }
 
@@ -124,6 +123,7 @@ void PixelAlive::initializeFiles(const std::string& fileRes_, int currentRun)
 
     if((currentRun >= 0) && (saveBinaryData == true))
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_PixelAlive.raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -235,7 +235,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                                       ->at(cChip->getIndex())
                                                       ->getChannel<OccupancyAndPh>(row, col)
                                                       .fOccupancy;
-                                bool enable = (injType == INJtype::None ? occupancy <= thrOccupancy : occupancy >= thrOccupancy);
+                                bool enable = (injType == INJtype::None ? occupancy <= occPerPixel : occupancy >= occPerPixel);
                                 if(unstuckPixels == false)
                                     static_cast<RD53*>(cChip)->enablePixel(row, col, enable);
                                 else if(enable == false)

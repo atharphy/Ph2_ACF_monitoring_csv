@@ -35,6 +35,7 @@ void Gain::ConfigureCalibration()
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
+    dataOutputDir  = this->findValueInSettings<std::string>("DataOutputDir", "");
     frontEnd       = RD53Shared::firstChip->getFEtype(colStart, colStop);
 
     // ########################
@@ -68,6 +69,7 @@ void Gain::Running()
 
     if(saveBinaryData == true)
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Gain.raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -122,7 +124,7 @@ void Gain::localConfigure(const std::string& fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[Gain::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     Gain::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "Gain");
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "Gain");
     Gain::initializeFiles(fileRes_, currentRun);
 }
 
@@ -132,6 +134,7 @@ void Gain::initializeFiles(const std::string& fileRes_, int currentRun)
 
     if((currentRun >= 0) && (saveBinaryData == true))
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Gain.raw", 'w');
         this->initializeWriteFileHandler();
     }

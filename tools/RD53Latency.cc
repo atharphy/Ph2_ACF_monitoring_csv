@@ -18,6 +18,9 @@ void Latency::ConfigureCalibration()
     // # Initialize sub-calibration #
     // ##############################
     PixelAlive::ConfigureCalibration();
+    PixelAlive::doDisplay    = false;
+    PixelAlive::doUpdateChip = false;
+    PixelAlive::saveData     = false;
     RD53RunProgress::total() -= PixelAlive::getNumberIterations();
 
     // #######################
@@ -47,6 +50,7 @@ void Latency::Running()
 
     if(PixelAlive::saveBinaryData == true)
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Latency.raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -86,7 +90,8 @@ void Latency::Stop()
 void Latency::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
-    histos = nullptr;
+    histos             = nullptr;
+    PixelAlive::histos = nullptr;
 #endif
 
     if(currentRun >= 0)
@@ -95,7 +100,7 @@ void Latency::localConfigure(const std::string& fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[Latency::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     Latency::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "Latency");
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "Latency");
     Latency::initializeFiles(fileRes_, currentRun);
 }
 
@@ -105,6 +110,7 @@ void Latency::initializeFiles(const std::string& fileRes_, int currentRun)
 
     if((currentRun >= 0) && (PixelAlive::saveBinaryData == true))
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Latency.raw", 'w');
         this->initializeWriteFileHandler();
     }

@@ -49,10 +49,11 @@ class BERtest : public CalibBase
     void fillHisto() override;
 
   protected:
-    size_t chain2test;
-    bool   given_time;
-    double frames_or_time;
-    bool   doDisplay;
+    size_t      chain2test;
+    bool        given_time;
+    double      frames_or_time;
+    bool        doDisplay;
+    std::string dataOutputDir;
 
     std::string fileRes;
     int         theCurrentRun;

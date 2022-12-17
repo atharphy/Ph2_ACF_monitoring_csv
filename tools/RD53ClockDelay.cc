@@ -18,6 +18,9 @@ void ClockDelay::ConfigureCalibration()
     // # Initialize sub-calibration #
     // ##############################
     PixelAlive::ConfigureCalibration();
+    PixelAlive::doDisplay    = false;
+    PixelAlive::doUpdateChip = false;
+    PixelAlive::saveData     = false;
     RD53RunProgress::total() -= PixelAlive::getNumberIterations();
 
     // #######################
@@ -51,6 +54,7 @@ void ClockDelay::Running()
 
     if(PixelAlive::saveBinaryData == true)
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_ClockDelay.raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -92,7 +96,8 @@ void ClockDelay::Stop()
 void ClockDelay::localConfigure(const std::string& fileRes_, int currentRun)
 {
 #ifdef __USE_ROOT__
-    histos = nullptr;
+    histos             = nullptr;
+    PixelAlive::histos = nullptr;
 #endif
 
     if(currentRun >= 0)
@@ -101,7 +106,7 @@ void ClockDelay::localConfigure(const std::string& fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[ClockDelay::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     ClockDelay::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "ClockDelay");
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "ClockDelay");
     ClockDelay::initializeFiles(fileRes_, currentRun);
 }
 
@@ -111,6 +116,7 @@ void ClockDelay::initializeFiles(const std::string& fileRes_, int currentRun)
 
     if((currentRun >= 0) && (PixelAlive::saveBinaryData == true))
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ClockDelay.raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -228,8 +234,14 @@ void ClockDelay::analyze()
 
                     for(auto i = 0u; i < dacList.size(); i++)
                     {
-                        auto current =
-                            theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<ClkDelaySize>>().data[i];
+                        auto current = round(theOccContainer.at(cBoard->getIndex())
+                                                 ->at(cOpticalGroup->getIndex())
+                                                 ->at(cHybrid->getIndex())
+                                                 ->at(cChip->getIndex())
+                                                 ->getSummary<GenericDataArray<ClkDelaySize>>()
+                                                 .data[i] /
+                                             RD53Shared::PRECISION) *
+                                       RD53Shared::PRECISION;
                         if(current > best)
                         {
                             regVal = dacList[i];
