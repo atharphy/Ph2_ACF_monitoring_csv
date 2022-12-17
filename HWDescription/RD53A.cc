@@ -91,7 +91,7 @@ uint32_t RD53A::getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_
 
 float RD53A::VCal2Charge(float VCal, bool isNoise) const
 {
-    return (RD53AchargeConvertion::Vref / RD53AchargeConvertion::ADCrange) * VCal / RD53AchargeConvertion::ele * RD53AchargeConvertion::cap * 1e4 +
+    return (this->getRegItem("VREF_ADC").fValue / RD53AchargeConvertion::ADCrange) * VCal / RD53AchargeConvertion::ele * RD53AchargeConvertion::cap * 1e4 +
            (isNoise == false ? RD53AchargeConvertion::offset : 0);
 }
 

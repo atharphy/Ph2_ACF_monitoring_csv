@@ -41,7 +41,6 @@ const uint16_t GLOBAL_PULSE_ADDR = 0x3D; // Global Pulse Route regiser address
 // ####################################################################################
 namespace RD53BchargeConvertion
 {
-const float Vref     = 0.8;    // Vref [V]
 const float ADCrange = 4096.0; // VCal total range
 const float cap      = 8.0;    // [fF]
 const float ele      = 1.6;    // [e-19]
