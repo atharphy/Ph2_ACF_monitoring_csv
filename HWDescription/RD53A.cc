@@ -91,13 +91,13 @@ uint32_t RD53A::getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_
 
 float RD53A::VCal2Charge(float VCal, bool isNoise) const
 {
-    const auto Vref = this->getRegItem("VREF_ADC").fValue / 100; // @CONST@ : Conversion from [10 mV] to [V]
+    const auto Vref = this->getRegItem("VREF_ADC").fValue / 100.; // @CONST@ : Conversion from [10 mV] to [V]
     return (Vref / RD53AchargeConvertion::ADCrange) * VCal / RD53AchargeConvertion::ele * (RD53AchargeConvertion::cap * 1e4) + (isNoise == false ? RD53AchargeConvertion::offset : 0);
 }
 
 float RD53A::Charge2VCal(float Charge) const
 {
-    const auto Vref = this->getRegItem("VREF_ADC").fValue / 100; // @CONST@ : Conversion from [10 mV] to [V]
+    const auto Vref = this->getRegItem("VREF_ADC").fValue / 100.; // @CONST@ : Conversion from [10 mV] to [V]
     return (Charge - RD53AchargeConvertion::offset) / (RD53AchargeConvertion::cap * 1e4) * RD53AchargeConvertion::ele / (Vref / RD53AchargeConvertion::ADCrange);
 }
 
