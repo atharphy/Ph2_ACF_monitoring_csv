@@ -94,6 +94,7 @@ void Tool::Start(int runNumber)
 #ifdef __USE_ROOT__
     InitResultFile("Hybrid");
 #endif
+    doExit         = false;
     fKeepRunning   = true;
     fRunNumber     = runNumber;
     fRunningThread = std::thread(&Tool::Running, this);
