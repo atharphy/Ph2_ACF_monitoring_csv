@@ -113,6 +113,7 @@ class RD53 : public ReadoutChip
         size_t      nLatencyBins2Span;
         size_t      nTDACvalues;
         size_t      maxToTvalue;
+        size_t      splitToTvalue;
         size_t      maxBCIDvalue;
         size_t      maxTRIGIDvalue;
         size_t      nBitTrimDig;
@@ -135,6 +136,7 @@ class RD53 : public ReadoutChip
     virtual uint32_t              getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const = 0;
     virtual float                 VCal2Charge(float VCal, bool isNoise = false) const                                                                        = 0;
     virtual float                 Charge2VCal(float Charge) const                                                                                            = 0;
+    virtual bool                  getUseGainDualSlope() const                                                                                                = 0;
 
     RD53() : ReadoutChip(0, 0, 0, 0, 0) {}
     RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);

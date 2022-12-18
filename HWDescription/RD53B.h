@@ -65,6 +65,7 @@ class RD53B : public RD53
                                       1,
                                       32,
                                       RD53Shared::setBits(RD53BEvtEncoder::NBIT_TOT) - 1,
+                                      8,
                                       RD53Shared::setBits(RD53BEvtEncoder::NBIT_BCID),
                                       RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID),
                                       4,
@@ -86,6 +87,7 @@ class RD53B : public RD53
     uint32_t              getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const override;
     float                 VCal2Charge(float VCal, bool isNoise = false) const override;
     float                 Charge2VCal(float Charge) const override;
+    bool                  getUseGainDualSlope() const override { return this->getRegItem("ToT6to4Mapping").fValue == 0 ? false : true; };
 };
 
 } // namespace Ph2_HwDescription
