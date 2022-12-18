@@ -402,6 +402,7 @@ void Gain::fillHisto()
 
 float Gain::gainFunction(const std::vector<float>& par, float q, const Ph2_HwDescription::RD53::FrontEnd* frontEnd)
 {
+    // Given an input charge returns the corresponding ToT value
     if(RD53Shared::firstChip->getUseGainDualSlope() == false)
         return par[0] + par[1] * q;
     else
@@ -410,6 +411,20 @@ float Gain::gainFunction(const std::vector<float>& par, float q, const Ph2_HwDes
             return par[0] + par[1] * q;
         else
             return par[2] + par[3] * q;
+    }
+}
+
+float Gain::gainInverseFunction(const std::vector<float>& par, float ToT, const Ph2_HwDescription::RD53::FrontEnd* frontEnd)
+{
+    // Given an input ToT returns the corresponding charge
+    if(ToT <= frontEnd->splitToTvalue)
+        return (ToT - par[0]) / par[1];
+    else
+    {
+        if(RD53Shared::firstChip->getUseGainDualSlope() == false)
+            return (ToT - par[0]) / par[1];
+        else
+            return (ToT - par[2]) / par[3];
     }
 }
 

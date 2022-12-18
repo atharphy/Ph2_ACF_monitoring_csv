@@ -52,6 +52,7 @@ class Gain : public CalibBase
 
     std::shared_ptr<DetectorDataContainer> analyze();
     static float                           gainFunction(const std::vector<float>& par, float q, const Ph2_HwDescription::RD53::FrontEnd* frontEnd);
+    static float                           gainInverseFunction(const std::vector<float>& par, float ToT, const Ph2_HwDescription::RD53::FrontEnd* frontEnd);
 
 #ifdef __USE_ROOT__
     GainHistograms* histos;
