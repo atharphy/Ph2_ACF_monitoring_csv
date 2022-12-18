@@ -131,7 +131,7 @@ class RD53 : public ReadoutChip
     virtual size_t                getNRows() const                                                                                                           = 0;
     virtual size_t                getNCols() const                                                                                                           = 0;
     virtual std::vector<uint16_t> getLaneUpInitSequence() const                                                                                              = 0;
-    virtual const FrontEnd*       getFEtype(size_t colStart, size_t colStop) const                                                                           = 0;
+    virtual const FrontEnd*       getFEtype(const size_t colStart, const size_t colStop) const                                                               = 0;
     virtual uint32_t              getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const = 0;
     virtual float                 VCal2Charge(float VCal, bool isNoise = false) const                                                                        = 0;
     virtual float                 Charge2VCal(float Charge) const                                                                                            = 0;

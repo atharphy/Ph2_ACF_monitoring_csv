@@ -40,7 +40,7 @@ std::vector<uint16_t> RD53A::getLaneUpInitSequence() const
     return initSequence;
 }
 
-const RD53A::FrontEnd* RD53A::getFEtype(size_t colStart, size_t colStop) const
+const RD53A::FrontEnd* RD53A::getFEtype(const size_t colStart, const size_t colStop) const
 {
     return *std::max_element(std::begin(frontEnds), std::end(frontEnds), [&](const FrontEnd* a, const FrontEnd* b) {
         return int(std::min(colStop, a->colStop)) - int(std::max(colStart, a->colStart)) < int(std::min(colStop, b->colStop)) - int(std::max(colStart, b->colStart));

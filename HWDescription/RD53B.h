@@ -79,7 +79,7 @@ class RD53B : public RD53
     RD53B() {}
     RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
 
-    const FrontEnd*       getFEtype(size_t colStart, size_t colStop) const override { return &RD53B::CROC; }
+    const FrontEnd*       getFEtype(const size_t colStart, const size_t colStop) const override { return &RD53B::CROC; }
     size_t                getNRows() const override { return RD53B::NROWS; }
     size_t                getNCols() const override { return RD53B::NCOLS; }
     std::vector<uint16_t> getLaneUpInitSequence() const override { return {}; }
