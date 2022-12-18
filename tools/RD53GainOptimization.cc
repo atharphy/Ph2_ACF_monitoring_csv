@@ -255,7 +255,12 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, float targe
                             for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                                 if(cChip->getChannel<GainFit>(row, col).fChi2 > 0)
                                 {
-                                    auto ToTatTarget = Gain::gainFunction({cChip->getChannel<GainFit>(row, col).fInterceptHighQ, cChip->getChannel<GainFit>(row, col).fSlopeHighQ}, target);
+                                    auto ToTatTarget = Gain::gainFunction({cChip->getChannel<GainFit>(row, col).fInterceptLowQ,
+                                                                           cChip->getChannel<GainFit>(row, col).fSlopeLowQ,
+                                                                           cChip->getChannel<GainFit>(row, col).fInterceptHighQ,
+                                                                           cChip->getChannel<GainFit>(row, col).fSlopeHighQ},
+                                                                          target,
+                                                                          frontEnd);
                                     avg += ToTatTarget;
                                     stdDev += ToTatTarget * ToTatTarget;
                                     cnt++;
