@@ -241,14 +241,19 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
 
     if(doSparse == true)
     {
+        // ############################
+        // # Clear whole pixel matrix #
+        // ############################
         RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_MODE_ADDR, 0x27}, commandList);
         RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_PORTAL_ADDR, 0x0}, commandList);
         RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_MODE_ADDR, 0x0}, commandList);
 
         for(auto col = 0u; col < RD53A::NCOLS; col += 2)
         {
-            if(std::find(mask.Enable.begin() + (0 + RD53A::NROWS * col), mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * col), true) ==
-               (mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * col)))
+            if((std::find(mask.Enable.begin() + (0 + RD53A::NROWS * col), mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * col), true) ==
+                (mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * col))) &&
+               (std::find(mask.Enable.begin() + (0 + RD53A::NROWS * (col + 1)), mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * (col + 1)), true) ==
+                (mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * (col + 1)))))
                 continue;
 
             RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
@@ -274,12 +279,18 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
     }
     else
     {
+        // #####################
+        // # Set autoincrement #
+        // #####################
         RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_MODE_ADDR, 0x8}, commandList);
 
         RD53ACmd::WrRegLong wrRegLongCmd{chipID, PIX_PORTAL_ADDR, {}};
 
         for(auto col = 0u; col < RD53A::NCOLS; col += 2)
         {
+            // #################
+            // # Starting cell #
+            // #################
             RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
             RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_ROW_ADDR, 0x0}, commandList);
 
