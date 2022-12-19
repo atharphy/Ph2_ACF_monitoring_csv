@@ -419,7 +419,7 @@ size_t RD53::getNbMaskedPixels() { return std::count(fPixelsMask.Enable.begin(),
 void RD53::enablePixel(unsigned int row, unsigned int col, bool enable)
 {
     fPixelsMask.Enable[row + this->getNRows() * col] = enable;
-    fPixelsMask.Enable[row + this->getNRows() * col] = enable;
+    fPixelsMask.HitBus[row + this->getNRows() * col] = enable;
 }
 
 void     RD53::injectPixel(unsigned int row, unsigned int col, bool inject) { fPixelsMask.InjEn[row + this->getNRows() * col] = inject; }
