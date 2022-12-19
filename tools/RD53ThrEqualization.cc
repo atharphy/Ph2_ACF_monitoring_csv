@@ -252,8 +252,7 @@ void ThrEqualization::draw(bool saveData)
 
 void ThrEqualization::analyze()
 {
-    const float  maxTDACdistance = 2; // @CONST@
-    const size_t TDACcenter      = (resetTDAC < 0 ? frontEnd->nTDACvalues / 2 : resetTDAC);
+    const size_t TDACcenter = (resetTDAC < 0 ? frontEnd->nTDACvalues / 2 : resetTDAC);
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
@@ -297,16 +296,16 @@ void ThrEqualization::analyze()
                     // ###########################
                     // # Check TDAC distribution #
                     // ###########################
-                    if(fabs(avgTDAC - TDACcenter) > maxTDACdistance)
+                    if(fabs(avgTDAC - TDACcenter) > MAXtdacDISTANCE)
                     {
                         LOG(WARNING) << BOLDRED << "Average TDAC distribution not centered around " << BOLDYELLOW << TDACcenter << BOLDRED << " (i.e. " << std::setprecision(1) << BOLDYELLOW << avgTDAC
-                                     << BOLDRED << " - center > " << BOLDYELLOW << maxTDACdistance << BOLDRED << ") for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
+                                     << BOLDRED << " - center > " << BOLDYELLOW << MAXtdacDISTANCE << BOLDRED << ") for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
                                      << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << BOLDRED << "]" << std::setprecision(-1) << RESET;
                     }
                     else if((counterMaxBin == 0) && (counterMinBin == 0))
                         LOG(WARNING) << BOLDRED << "TDAC distribution is most likely empty for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId()
                                      << "/" << cHybrid->getId() << "/" << +cChip->getId() << BOLDRED << "]" << RESET;
-                    else if(((frontEnd->nTDACvalues * counterMaxBin / (counterMinBin + counterMaxBin)) - TDACcenter) > maxTDACdistance)
+                    else if(((frontEnd->nTDACvalues * counterMaxBin / (counterMinBin + counterMaxBin)) - TDACcenter) > MAXtdacDISTANCE)
                     {
                         LOG(WARNING) << BOLDRED << "Min and Max TDAC bins are not balanced (i.e. low TDAC value with " << std::setprecision(1) << BOLDYELLOW << counterMinBin << BOLDRED
                                      << " entries and high TDAC value with " << BOLDYELLOW << counterMaxBin << BOLDRED << " entries) for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW

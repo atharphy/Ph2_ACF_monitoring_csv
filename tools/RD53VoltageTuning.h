@@ -5,6 +5,7 @@
   \version               1.0
   \date                  03/05/21
   Support:               email to Yuta.Takahashi@cern.ch
+  Support:               email to mauro.dinardo@cern.ch
 */
 
 #ifndef RD53VoltageTuning_H
@@ -15,6 +16,12 @@
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53VoltageTuningHistograms.h"
 #endif
+
+// #############
+// # CONSTANTS #
+// #############
+#define CONVERSIONfactor 2 // Conversion factor from DAC voltage to actual voltage
+#define NSIGMA 2           // Number of sigmas for voltage tolerance
 
 // #############################
 // # Voltage tuning test suite #

@@ -19,7 +19,8 @@
 // #############
 // # CONSTANTS #
 // #############
-#define TARGETEFF 0.50 // Target efficiency for optimization algorithm
+#define TARGETEFF 0.50    // Target efficiency for optimization algorithm
+#define MAXtdacDISTANCE 2 // Max TDAC average distribution distance from TDAC range center
 
 // #####################################
 // # Threshold equalization test suite #

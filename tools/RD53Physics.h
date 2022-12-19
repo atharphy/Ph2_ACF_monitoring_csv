@@ -20,6 +20,11 @@
 #include "../DQMUtils/RD53PhysicsHistograms.h"
 #endif
 
+// #############
+// # CONSTANTS #
+// #############
+#define PRINTeventsEVERY 100 // Number of recorded events before printing
+
 // #######################
 // # Physics data taking #
 // #######################
