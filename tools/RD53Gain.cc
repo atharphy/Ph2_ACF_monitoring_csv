@@ -17,12 +17,6 @@ using namespace boost::numeric;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
-// Struct used in computeStats
-struct ScanOutput
-{
-    float x, y, e, o;
-};
-
 void Gain::ConfigureCalibration()
 {
     // #######################
@@ -400,23 +394,23 @@ void Gain::fillHisto()
 #endif
 }
 
-float Gain::gainFunction(const std::vector<float>& par, float q, const Ph2_HwDescription::RD53::FrontEnd* frontEnd)
+float Gain::gainFunction(const std::vector<float>& par, float VCal, const Ph2_HwDescription::RD53::FrontEnd* frontEnd)
 {
-    // Given an input charge returns the corresponding ToT value
+    // Given the input VCal returns the corresponding ToT value
     if(RD53Shared::firstChip->getUseGainDualSlope() == false)
-        return par[0] + par[1] * q;
+        return par[0] + par[1] * VCal;
     else
     {
-        if(q <= ((frontEnd->splitToTvalue - par[0]) / par[1]))
-            return par[0] + par[1] * q;
+        if(VCal <= ((frontEnd->splitToTvalue - par[0]) / par[1]))
+            return par[0] + par[1] * VCal;
         else
-            return par[2] + par[3] * q;
+            return par[2] + par[3] * VCal;
     }
 }
 
 float Gain::gainInverseFunction(const std::vector<float>& par, float ToT, const Ph2_HwDescription::RD53::FrontEnd* frontEnd)
 {
-    // Given an input ToT returns the corresponding charge
+    // Given the input ToT returns the corresponding VCal value
     if(ToT <= frontEnd->splitToTvalue)
         return (ToT - par[0]) / par[1];
     else
@@ -442,24 +436,29 @@ void Gain::computeStats(const std::vector<float>& x,
 // # Model for high charge range: y = f(x) = [2] + [3]*x #
 // #######################################################
 {
+    // Define and initialize needed variable
     int limitToT = (RD53Shared::firstChip->getUseGainDualSlope() == true ? frontEnd->splitToTvalue : frontEnd->maxToTvalue);
-    int nPar     = NGAINPAR;
     chi2         = 0;
+
+    // Struct for ordering the vectors together
+    struct ScanOutput
+    {
+        float x, y, e, o;
+    };
 
     // Order x, y, e and o together according to y values
     std::vector<ScanOutput> scanOutputs;
-
     for(auto i = 0u; i < x.size(); i++)
         if((e[i] != 0) && (o[i] == 1)) scanOutputs.push_back({x[i], y[i], e[i], o[i]});
     std::sort(scanOutputs.begin(), scanOutputs.end(), [&](ScanOutput i, ScanOutput j) { return i.y < j.y; });
 
-    int nData = scanOutputs.size();
-    DoF       = nData - nPar;
+    size_t nData = scanOutputs.size();
+    DoF          = nData - NGAINPAR;
 
-    for(auto c = 0; c < NGAINPAR; c++)
+    for(auto i = 0; i < NGAINPAR; i++)
     {
-        par[c]    = 0;
-        parErr[c] = 0;
+        par[i]    = 0;
+        parErr[i] = 0;
     }
     if(DoF < 1) return;
 
@@ -470,20 +469,20 @@ void Gain::computeStats(const std::vector<float>& x,
     ordered_x.reserve(nData);
     ordered_y.reserve(nData);
     ordered_e.reserve(nData);
-    for(auto it = std::make_move_iterator(scanOutputs.begin()), end = std::make_move_iterator(scanOutputs.end()); it != end; ++it)
+    for(auto& ele: scanOutputs)
     {
-        ordered_x.push_back(std::move(it->x));
-        ordered_y.push_back(std::move(it->y));
-        ordered_e.push_back(std::move(it->e));
+        ordered_x.push_back(ele.x);
+        ordered_y.push_back(ele.y);
+        ordered_e.push_back(ele.e);
     }
 
-    // Find first y-element larger than 8:
-    // 8 is the last true ToT value where the gain slope does not changes for the 6-to-4 bit compression
-    auto it      = std::find_if(ordered_y.begin(), ordered_y.end(), [&](float val) { return val > limitToT; });
-    int  DSIndex = it - ordered_y.begin();
+    // Find first y-element larger than limitToT which is the last true-ToT
+    // value where the gain slope does not change for the 6-to-4 bit compression
+    auto   it            = std::find_if(ordered_y.begin(), ordered_y.end(), [&](float val) { return val > limitToT; });
+    size_t limitToTindex = it - ordered_y.begin();
 
     // Declare matrices and vector for minimization
-    ublas::matrix<double> H(nData, nPar, 0);
+    ublas::matrix<double> H(nData, NGAINPAR, 0);
     ublas::matrix<double> V(nData, nData, 0);
     ublas::vector<double> myY(nData);
 
@@ -495,10 +494,10 @@ void Gain::computeStats(const std::vector<float>& x,
 
     // Fill columns of H
     std::vector<double> ones(nData, 1);
-    std::copy(ones.begin(), ones.begin() + DSIndex, col0.begin());
-    std::copy(ordered_x.begin(), ordered_x.begin() + DSIndex, col1.begin());
-    std::copy(ones.begin() + DSIndex, ones.end(), col2.begin() + DSIndex);
-    std::copy(ordered_x.begin() + DSIndex, ordered_x.end(), col3.begin() + DSIndex);
+    std::copy(ones.begin(), ones.begin() + limitToTindex, col0.begin());
+    std::copy(ordered_x.begin(), ordered_x.begin() + limitToTindex, col1.begin());
+    std::copy(ones.begin() + limitToTindex, ones.end(), col2.begin() + limitToTindex);
+    std::copy(ordered_x.begin() + limitToTindex, ordered_x.end(), col3.begin() + limitToTindex);
 
     // Compose H
     column(H, 0) = col0;
@@ -507,7 +506,7 @@ void Gain::computeStats(const std::vector<float>& x,
     column(H, 3) = col3;
 
     // If single-gain slope, remove last two (empty) columns of H
-    if(DSIndex >= nData) H = ublas::project(H, ublas::range(0, nData), ublas::range(0, 2));
+    if(limitToTindex >= nData) H = ublas::project(H, ublas::range(0, nData), ublas::range(0, 2));
 
     // Compose V
     ublas::identity_matrix<double> identityMatrix(nData);
@@ -522,7 +521,7 @@ void Gain::computeStats(const std::vector<float>& x,
 
     // Minimization
     auto invV(V);
-    for(auto r = 0; r < nData; r++) invV(r, r) = 1 / V(r, r);
+    for(auto i = 0u; i < nData; i++) invV(i, i) = 1 / V(i, i);
 
     ublas::matrix<double> tmpMtx(ublas::prod(invV, H));
     ublas::matrix<double> invParCov(ublas::prod(ublas::trans(H), tmpMtx));
@@ -536,7 +535,7 @@ void Gain::computeStats(const std::vector<float>& x,
         ublas::vector<double> myPar(ublas::prod(parCov, tmpVec2));
 
         std::copy(myPar.begin(), myPar.end(), par.begin());
-        for(auto c = 0; c < nPar; c++) parErr[c] = (DSIndex >= nData) && (c >= 2) ? 0.0 : sqrt(parCov(c, c));
+        for(auto i = 0; i < NGAINPAR; i++) parErr[i] = (limitToTindex >= nData) && (i >= 2) ? 0.0 : sqrt(parCov(i, i));
 
         // ################
         // # Compute chi2 #
