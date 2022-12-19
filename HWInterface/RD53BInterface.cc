@@ -348,14 +348,19 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
     doSparse = false; // @TMP@ : not working for RD53B-v1
     if(doSparse == true)
     {
+        // ############################
+        // # Clear whole pixel matrix #
+        // ############################
         RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x4}, commandList);
         RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_PORTAL_ADDR, 0x0}, commandList);
         RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x0}, commandList);
 
         for(auto col = 0u; col < RD53B::NCOLS; col += 2)
         {
-            if(std::find(mask.Enable.begin() + (0 + RD53B::NROWS * col), mask.Enable.begin() + (RD53B::NROWS + RD53B::NROWS * col), true) ==
-               (mask.Enable.begin() + (RD53B::NROWS + RD53B::NROWS * col)))
+            if((std::find(mask.Enable.begin() + (0 + RD53A::NROWS * col), mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * col), true) ==
+                (mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * col))) &&
+               (std::find(mask.Enable.begin() + (0 + RD53A::NROWS * (col + 1)), mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * (col + 1)), true) ==
+                (mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * (col + 1)))))
                 continue;
 
             RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
