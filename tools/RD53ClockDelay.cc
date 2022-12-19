@@ -186,6 +186,11 @@ void ClockDelay::run()
         ClockDelay::scanDac("CLK_DATA_DELAY", halfDacList, &theOccContainer);
     }
 
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in");
+
     // ################
     // # Error report #
     // ################

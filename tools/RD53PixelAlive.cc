@@ -144,6 +144,11 @@ void PixelAlive::run()
     this->fMaskChannelsFromOtherGroups = true;
     this->measureData(nEvents, nEvtsBurst);
 
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in");
+
     // ################
     // # Error report #
     // ################
@@ -207,8 +212,6 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                      ->getSummary<GenericDataVector, OccupancyAndPh>()
                                      .fOccupancy
                               << RESET;
-
-                    static_cast<RD53*>(cChip)->copyMaskFromDefault();
 
                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                         for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)

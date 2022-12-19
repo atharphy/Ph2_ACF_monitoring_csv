@@ -214,6 +214,11 @@ void ThrEqualization::run()
                             }
                 }
 
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in td");
+
     // ################
     // # Error report #
     // ################
@@ -255,8 +260,6 @@ void ThrEqualization::analyze()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    static_cast<RD53*>(cChip)->copyMaskFromDefault();
-
                     float avgTDAC       = 0;
                     int   counter       = 0;
                     int   counterMinBin = 0;

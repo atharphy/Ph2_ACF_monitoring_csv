@@ -27,6 +27,7 @@ class CalibBase : public Tool
 {
   public:
     void chipErrorReport() const;
+    void copyMaskFromDefault(const std::string& which = "all") const;
     void saveChipRegisters(int currentRun, bool doUpdateChip);
     void downloadNewDACvalues(DetectorDataContainer& DACcontainer, const std::string& regName, bool checkAgaint = false, int value = 0);
     void saveSCurveOrGaindValues(const std::vector<DetectorDataContainer*>& detectorContainerVector,

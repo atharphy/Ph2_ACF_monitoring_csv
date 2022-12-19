@@ -344,7 +344,25 @@ std::stringstream RD53::saveRegMap(const std::string& fName2Add)
     return theStream;
 }
 
-void RD53::copyMaskFromDefault() { fPixelsMask = fPixelsMaskDefault; }
+void RD53::copyMaskFromDefault(const std::string& which)
+// #######################
+// # which = all         #
+// # which = en : Enable #
+// # which = hb : HitBus #
+// # which = in : InjEn  #
+// # which = td : TDAC   #
+// #######################
+{
+    if(which.find("all") != std::string::npos)
+        fPixelsMask = fPixelsMaskDefault;
+    else
+    {
+        if(which.find("en") != std::string::npos) fPixelsMask.Enable = fPixelsMaskDefault.Enable;
+        if(which.find("hb") != std::string::npos) fPixelsMask.HitBus = fPixelsMaskDefault.HitBus;
+        if(which.find("in") != std::string::npos) fPixelsMask.InjEn = fPixelsMaskDefault.InjEn;
+        if(which.find("td") != std::string::npos) fPixelsMask.TDAC = fPixelsMaskDefault.TDAC;
+    }
+}
 
 void RD53::copyMaskToDefault(const std::string& which)
 // #######################
@@ -355,21 +373,17 @@ void RD53::copyMaskToDefault(const std::string& which)
 // # which = td : TDAC   #
 // #######################
 {
-    if(which == "all")
+    if(which.find("all") != std::string::npos)
         fPixelsMaskDefault = fPixelsMask;
     else
     {
-        if(which == "en")
-            fPixelsMaskDefault.Enable = fPixelsMask.Enable;
-        else if(which == "hb")
-            fPixelsMaskDefault.HitBus = fPixelsMask.HitBus;
-        else if(which == "in")
-            fPixelsMaskDefault.InjEn = fPixelsMask.InjEn;
-        else if(which == "td")
-            fPixelsMaskDefault.TDAC = fPixelsMask.TDAC;
+        if(which.find("en") != std::string::npos) fPixelsMaskDefault.Enable = fPixelsMask.Enable;
+        if(which.find("hb") != std::string::npos) fPixelsMaskDefault.HitBus = fPixelsMask.HitBus;
+        if(which.find("in") != std::string::npos) fPixelsMaskDefault.InjEn = fPixelsMask.InjEn;
+        if(which.find("td") != std::string::npos) fPixelsMaskDefault.TDAC = fPixelsMask.TDAC;
     }
 
-    if((which == "all") || (which == "en"))
+    if((which.find("all") != std::string::npos) || (which.find("en") != std::string::npos))
         for(auto col = 0u; col < this->getNCols(); col++)
             for(auto row = 0u; row < this->getNRows(); row++)
             {

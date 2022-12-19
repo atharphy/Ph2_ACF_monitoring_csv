@@ -183,6 +183,11 @@ void InjectionDelay::run()
         InjectionDelay::scanDac("CAL_EDGE_FINE_DELAY", halfDacList, &theOccContainer);
     }
 
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in");
+
     // ################
     // # Error report #
     // ################

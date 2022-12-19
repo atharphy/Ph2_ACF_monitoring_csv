@@ -187,6 +187,11 @@ void Gain::run()
                                         ->getChannel<OccupancyAndPh>(row, col)
                                         .fOccupancy = RD53Shared::ISDISABLED;
 
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in");
+
     // ################
     // # Error report #
     // ################
@@ -243,8 +248,6 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    static_cast<RD53*>(cChip)->copyMaskFromDefault();
-
                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                         for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                             if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()

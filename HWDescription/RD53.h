@@ -149,7 +149,7 @@ class RD53 : public ReadoutChip
     pixelMask& getPixelsMask() { return fPixelsMask; }
     pixelMask& getPixelsMaskDefault() { return fPixelsMaskDefault; }
 
-    void        copyMaskFromDefault();
+    void        copyMaskFromDefault(const std::string& which = "all");
     void        copyMaskToDefault(const std::string& which = "all");
     void        resetMask();
     void        enableAllPixels();
