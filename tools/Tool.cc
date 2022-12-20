@@ -506,7 +506,6 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
         nDirname = pDirname;
     }
 
-    LOG(INFO) << GREEN << whichCalib << " attempting to create directory: " << BOLDYELLOW << nDirname << RESET;
     std::string cCommand = "mkdir -p " + nDirname;
 
     try

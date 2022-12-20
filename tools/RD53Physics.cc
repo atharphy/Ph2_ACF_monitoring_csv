@@ -177,7 +177,7 @@ void Physics::run()
         theGuard.unlock();
 
         if((RD53Event::decodedEvents.size() != 0) && (numberOfEventsPerRun % PRINTeventsEVERY == 0))
-            LOG(INFO) << BOLDBLUE << "\t--> Total number of recoorded events up to now: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
+            LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded bunch crossings up to now: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
 
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
     }

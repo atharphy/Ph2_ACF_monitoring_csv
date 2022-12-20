@@ -61,23 +61,23 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
     uint32_t status;
     RD53Event::DecodeEventsMultiThreads(data, decodedEvents, status);
     LOG(INFO) << GREEN << "Total number of 32-bit words read from binary file: " << BOLDYELLOW << data.size() << RESET;
-    LOG(INFO) << GREEN << "Total number of events decoded from binary file: " << BOLDYELLOW << decodedEvents.size() << RESET;
+    LOG(INFO) << GREEN << "Total number of events (i.e. bunch crossings) decoded from binary file: " << BOLDYELLOW << decodedEvents.size() << RESET;
 
     for(auto i = 0u; i < decodedEvents.size(); i++)
         if(RD53Event::EvtErrorHandler(decodedEvents[i].eventStatus) == false)
         {
-            LOG(ERROR) << BOLDBLUE << "\t--> Corrupted event n. " << BOLDYELLOW << i << RESET;
+            LOG(ERROR) << BOLDBLUE << "\t--> Corrupted bunch crossing n. " << BOLDYELLOW << i << RESET;
             errors++;
             RD53Event::PrintEvents({decodedEvents[i]});
         }
 
     if(decodedEvents.size() != 0)
     {
-        LOG(INFO) << GREEN << "Corrupted events: " << BOLDYELLOW << std::fixed << std::setprecision(3) << errors << " (" << 1. * errors / decodedEvents.size() * 100. << "%)" << std::setprecision(-1)
-                  << RESET;
+        LOG(INFO) << GREEN << "Corrupted bunch crossings: " << BOLDYELLOW << std::fixed << std::setprecision(3) << errors << " (" << 1. * errors / decodedEvents.size() * 100. << "%)"
+                  << std::setprecision(-1) << RESET;
         int avgEventSize = data.size() / decodedEvents.size();
-        LOG(INFO) << GREEN << "Average event size is " << BOLDYELLOW << avgEventSize * RD53FWEvtEncoder::NBIT_EVT_WORD << RESET << GREEN << " bits over " << BOLDYELLOW << decodedEvents.size() << RESET
-                  << GREEN << " events" << RESET;
+        LOG(INFO) << GREEN << "Average bunch crossing size is " << BOLDYELLOW << avgEventSize * RD53FWEvtEncoder::NBIT_EVT_WORD << RESET << GREEN << " bits over " << BOLDYELLOW << decodedEvents.size()
+                  << RESET << GREEN << " events" << RESET;
     }
 
     std::string fileName(binaryFile);
