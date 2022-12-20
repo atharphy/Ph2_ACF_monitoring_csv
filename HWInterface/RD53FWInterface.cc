@@ -279,7 +279,7 @@ void RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
         if(RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_full") == true) LOG(ERROR) << BOLDRED << "Write-command FIFO full" << RESET;
 
         nAttempts++;
-        // RD53FWInterface::ResetSlowCmdFIFO(); // @TMP@ : temporary fix untill FIRO error FW fix
+        // RD53FWInterface::ResetSlowCmdFIFO(); // @TMP@ : temporary fix untill FIFO error FW fix
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
     }
     if(nAttempts == RD53Shared::MAXATTEMPTS)
