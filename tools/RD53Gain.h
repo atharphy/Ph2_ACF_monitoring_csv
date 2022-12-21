@@ -51,7 +51,8 @@ class Gain : public CalibBase
     size_t getNumberIterations() override { return theChnGroupHandler->getNumberOfGroups() * nSteps; }
 
     std::shared_ptr<DetectorDataContainer> analyze();
-    static float                           gainFunction(const std::vector<float>& par, float q) { return par[0] + par[1] * q; }
+    static float                           gainFunction(const std::vector<float>& par, float q, const Ph2_HwDescription::RD53::FrontEnd* frontEnd);
+    static float                           gainInverseFunction(const std::vector<float>& par, float ToT, const Ph2_HwDescription::RD53::FrontEnd* frontEnd);
 
 #ifdef __USE_ROOT__
     GainHistograms* histos;

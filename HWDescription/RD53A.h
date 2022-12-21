@@ -66,6 +66,7 @@ class RD53A : public RD53
                                       2,
                                       0,
                                       RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
+                                      RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
                                       RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID),
                                       RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID),
                                       5,
@@ -83,6 +84,7 @@ class RD53A : public RD53
                                      "VOUT_ana_ShuLDO",
                                      2,
                                      16,
+                                     RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
                                      RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
                                      RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID),
                                      RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID),
@@ -102,6 +104,7 @@ class RD53A : public RD53
                                       2,
                                       31,
                                       RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
+                                      RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
                                       RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID),
                                       RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID),
                                       5,
@@ -117,13 +120,14 @@ class RD53A : public RD53
     RD53A() {}
     RD53A(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
 
-    const FrontEnd*       getFEtype(size_t colStart, size_t colStop) const override;
+    const FrontEnd*       getFEtype(const size_t colStart, const size_t colStop) const override;
     size_t                getNRows() const override { return RD53A::NROWS; }
     size_t                getNCols() const override { return RD53A::NCOLS; }
     std::vector<uint16_t> getLaneUpInitSequence() const override;
     uint32_t              getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const override;
     float                 VCal2Charge(float VCal, bool isNoise = false) const override;
     float                 Charge2VCal(float Charge) const override;
+    bool                  getUseGainDualSlope() const override { return false; }
 };
 
 } // namespace Ph2_HwDescription
