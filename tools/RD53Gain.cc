@@ -443,13 +443,17 @@ void Gain::computeStats(const std::vector<float>& x,
     int limitToT = (RD53Shared::firstChip->getUseGainDualSlope() == true ? frontEnd->splitToTvalue : frontEnd->maxToTvalue);
     chi2         = 0;
 
-    // Struct for ordering the vectors together
+    // ############################################
+    // # Struct for ordering the vectors together #
+    // ############################################
     struct ScanOutput
     {
         float x, y, e, o;
     };
 
-    // Order x, y, e and o together according to y values
+    // ######################################################
+    // # Order x, y, e and o together according to y values #
+    // ######################################################
     std::vector<ScanOutput> scanOutputs;
     for(auto i = 0u; i < x.size(); i++)
         if((e[i] != 0) && (o[i] == 1)) scanOutputs.push_back({x[i], y[i], e[i], o[i]});
@@ -465,7 +469,9 @@ void Gain::computeStats(const std::vector<float>& x,
     }
     if(DoF < 1) return;
 
-    // Retreive oredered vectors for x, y and e
+    // ############################################
+    // # Retreive oredered vectors for x, y and e #
+    // ############################################
     std::vector<float> ordered_x;
     std::vector<float> ordered_y;
     std::vector<float> ordered_e;
@@ -479,39 +485,53 @@ void Gain::computeStats(const std::vector<float>& x,
         ordered_e.push_back(ele.e);
     }
 
-    // Find first y-element larger than limitToT which is the last true-ToT
-    // value where the gain slope does not change for the 6-to-4 bit compression
+    // #############################################################################
+    // # Find first y-element larger than limitToT which is the last true-ToT      #
+    // # value where the gain slope does not change for the 6-to-4 bit compression #
+    // #############################################################################
     auto   it            = std::find_if(ordered_y.begin(), ordered_y.end(), [&](float val) { return val > limitToT; });
     size_t limitToTindex = it - ordered_y.begin();
 
-    // Declare matrices and vector for minimization
+    // ################################################
+    // # Declare matrices and vector for minimization #
+    // ################################################
     ublas::matrix<double> H(nData, NGAINPAR, 0);
     ublas::matrix<double> V(nData, nData, 0);
     ublas::vector<double> myY(nData);
 
-    // Declare columns of H
+    // ########################
+    // # Declare columns of H #
+    // ########################
     ublas::vector<double> col0(nData, 0);
     ublas::vector<double> col1(nData, 0);
     ublas::vector<double> col2(nData, 0);
     ublas::vector<double> col3(nData, 0);
 
-    // Fill columns of H
+    // #####################
+    // # Fill columns of H #
+    // #####################
     std::vector<double> ones(nData, 1);
     std::copy(ones.begin(), ones.begin() + limitToTindex, col0.begin());
     std::copy(ordered_x.begin(), ordered_x.begin() + limitToTindex, col1.begin());
     std::copy(ones.begin() + limitToTindex, ones.end(), col2.begin() + limitToTindex);
     std::copy(ordered_x.begin() + limitToTindex, ordered_x.end(), col3.begin() + limitToTindex);
 
-    // Compose H
+    // #############
+    // # Compose H #
+    // #############
     column(H, 0) = col0;
     column(H, 1) = col1;
     column(H, 2) = col2;
     column(H, 3) = col3;
 
-    // If single-gain slope, remove last two (empty) columns of H
-    if(limitToTindex >= nData) H = ublas::project(H, ublas::range(0, nData), ublas::range(0, 2));
+    // ##############################################################
+    // # If single-gain slope, remove last two (empty) columns of H #
+    // ##############################################################
+    if(limitToTindex >= nData) H = ublas::project(H, ublas::range(0, nData), ublas::range(0, NGAINPAR / 2));
 
-    // Compose V
+    // #############
+    // # Compose V #
+    // #############
     ublas::identity_matrix<double> identityMatrix(nData);
     ublas::vector<double>          identityVector(nData, 1);
     ublas::vector<double>          e2(ordered_e.size());
@@ -519,10 +539,14 @@ void Gain::computeStats(const std::vector<float>& x,
     std::transform(e2.begin(), e2.end(), e2.begin(), [](double x) { return x * x; });
     V = ublas::element_prod(ublas::outer_prod(identityVector, e2), identityMatrix);
 
-    // Fill myY
+    // ############
+    // # Fill myY #
+    // ############
     std::copy(ordered_y.begin(), ordered_y.end(), myY.begin());
 
-    // Minimization
+    // ################
+    // # Minimization #
+    // ################
     auto invV(V);
     for(auto i = 0u; i < nData; i++) invV(i, i) = 1 / V(i, i);
 
@@ -538,7 +562,7 @@ void Gain::computeStats(const std::vector<float>& x,
         ublas::vector<double> myPar(ublas::prod(parCov, tmpVec2));
 
         std::copy(myPar.begin(), myPar.end(), par.begin());
-        for(auto i = 0; i < NGAINPAR; i++) parErr[i] = (limitToTindex >= nData) && (i >= 2) ? 0.0 : sqrt(parCov(i, i));
+        for(auto i = 0; i < NGAINPAR; i++) parErr[i] = (limitToTindex >= nData) && (i >= NGAINPAR / 2) ? 0.0 : sqrt(parCov(i, i));
 
         // ################
         // # Compute chi2 #
