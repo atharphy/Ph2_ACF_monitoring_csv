@@ -441,11 +441,14 @@ void Gain::computeStats(const std::vector<float>& x,
 // # Linear regression with least-square method          #
 // # Model for low charge range:  y = f(x) = [0] + [1]*x #
 // # Model for high charge range: y = f(x) = [2] + [3]*x #
+// # if chi2 = -1 --> fit problems                       #
 // #######################################################
 {
-    // Define and initialize needed variable
-    int limitToT = (RD53Shared::firstChip->getUseGainDualSlope() == true ? frontEnd->splitToTvalue : frontEnd->maxToTvalue);
-    chi2         = 0;
+    // ##########################################
+    // # Define and initialize needed variables #
+    // ##########################################
+    const int limitToT = (RD53Shared::firstChip->getUseGainDualSlope() == true ? frontEnd->splitToTvalue : frontEnd->maxToTvalue);
+    chi2               = -1;
 
     // ############################################
     // # Struct for ordering the vectors together #
@@ -463,8 +466,8 @@ void Gain::computeStats(const std::vector<float>& x,
         if((e[i] != 0) && (o[i] == 1)) scanOutputs.push_back({x[i], y[i], e[i], o[i]});
     std::sort(scanOutputs.begin(), scanOutputs.end(), [&](ScanOutput i, ScanOutput j) { return i.y < j.y; });
 
-    size_t nData = scanOutputs.size();
-    DoF          = nData - NGAINPAR;
+    const size_t nData = scanOutputs.size();
+    DoF                = nData - NGAINPAR;
 
     for(auto i = 0; i < NGAINPAR; i++)
     {
