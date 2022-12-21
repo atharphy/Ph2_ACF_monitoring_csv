@@ -398,8 +398,10 @@ void Gain::fillHisto()
 }
 
 float Gain::gainFunction(const std::vector<float>& par, float VCal, const Ph2_HwDescription::RD53::FrontEnd* frontEnd)
+// ############################################################
+// # Given the input VCal returns the corresponding ToT value #
+// ############################################################
 {
-    // Given the input VCal returns the corresponding ToT value
     if(RD53Shared::firstChip->getUseGainDualSlope() == false)
         return par[0] + par[1] * VCal;
     else
@@ -412,8 +414,10 @@ float Gain::gainFunction(const std::vector<float>& par, float VCal, const Ph2_Hw
 }
 
 float Gain::gainInverseFunction(const std::vector<float>& par, float ToT, const Ph2_HwDescription::RD53::FrontEnd* frontEnd)
+// ############################################################
+// # Given the input ToT returns the corresponding VCal value #
+// ############################################################
 {
-    // Given the input ToT returns the corresponding VCal value
     if(ToT <= frontEnd->splitToTvalue)
         return (ToT - par[0]) / par[1];
     else
