@@ -336,5 +336,5 @@ void ClockDelay::writeClkDelaySequence(const Ph2_HwDescription::BeBoard* pBoard,
     pChip->getRegItem("CLK_DATA_DELAY_CLK").fValue  = value % maxClkValue;
     pChip->getRegItem("CLK_DATA_DELAY_DATA").fValue = data_delay;
 
-    static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteClokDataDelay(pChip, nameAndValue.second);
+    static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteClockDataDelay(pChip, nameAndValue.second);
 }

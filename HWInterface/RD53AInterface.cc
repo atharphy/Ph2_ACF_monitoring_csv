@@ -39,7 +39,7 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
             if(cRegItem->first == "CLK_DATA_DELAY") break;
         }
     }
-    if(doWriteClkDataDelay == true) RD53AInterface::WriteClokDataDelay(pChip, pChip->getRegItem("CLK_DATA_DELAY").fValue);
+    if(doWriteClkDataDelay == true) RD53AInterface::WriteClockDataDelay(pChip, pChip->getRegItem("CLK_DATA_DELAY").fValue);
 
     // ###############################
     // # Programmig global registers #
@@ -368,7 +368,7 @@ void RD53AInterface::PackWriteBroadcastCommand(const BeBoard* pBoard, const std:
                 for(auto cChip: *cHybrid) cChip->setReg(regName, data);
 }
 
-void RD53AInterface::WriteClokDataDelay(Chip* pChip, uint16_t value)
+void RD53AInterface::WriteClockDataDelay(Chip* pChip, uint16_t value)
 {
     RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", value, false);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS, RD53ACmd::RD53ACmdEncoder::SYNC), -1);
