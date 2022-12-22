@@ -110,41 +110,50 @@ void Physics::Stop()
               << std::setprecision(-1) << RESET;
 }
 
-void Physics::localConfigure(const std::string& fileRes_, int currentRun)
+void Physics::localConfigure(const std::string& histoFileName, int currentRun)
 {
     errors = 0;
 #ifdef __USE_ROOT__
     histos = nullptr;
 #endif
 
-    if(currentRun >= 0)
-    {
-        theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[Physics::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
-    }
+    theCurrentRun = currentRun;
+    LOG(INFO) << GREEN << "[Physics::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
+    // ##########################
+    // # Initialize calibration #
+    // ##########################
     Physics::ConfigureCalibration();
-    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "Physics");
-    Physics::initializeFiles(fileRes_, currentRun);
+
+    // #########################################
+    // # Initialize histogram and binary files #
+    // #########################################
+    Physics::initializeFiles(histoFileName, "Physics", currentRun, saveBinaryData);
 }
 
-void Physics::initializeFiles(const std::string& fileRes_, int currentRun)
+void Physics::initializeFiles(const std::string& histoFileName, const std::string& calibName, int currentRun, bool saveBinaryData)
 {
-    fileRes = fileRes_;
+    theHistoFileName = histoFileName;
 
-    if((currentRun >= 0) && (saveBinaryData == true))
+    if(saveBinaryData == true)
     {
         this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Physics.raw", 'w');
+        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_" + calibName + ".raw", 'w');
         this->initializeWriteFileHandler();
     }
 
 #ifdef __USE_ROOT__
     if(this->fResultFile != nullptr) this->fResultFile->Close();
     delete histos;
-    if(fileRes != "")
+    if(theHistoFileName != "")
     {
         histos = new PhysicsHistograms;
-        this->InitResultFile(fileRes);
+        this->InitResultFile(theHistoFileName);
         histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     }
 #endif
@@ -196,7 +205,7 @@ void Physics::draw(bool saveData)
 
     LOG(INFO) << BOLDBLUE << "\t--> Physics saving histograms..." << RESET;
 
-    if(fileRes != "")
+    if(CalibBase::theHistoFileName != "")
     {
         Physics::fillHisto();
         histos->process();

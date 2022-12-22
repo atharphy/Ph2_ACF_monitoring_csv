@@ -15,6 +15,8 @@
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53VoltageTuningHistograms.h"
+#else
+typedef bool VoltageTuningHistograms;
 #endif
 
 // #############
@@ -43,16 +45,13 @@ class VoltageTuning : public CalibBase
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void localConfigure(const std::string& fileRes_ = "", int currentRun = -1) override;
-    void initializeFiles(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
     void run() override;
     void draw(bool saveData = true) override;
 
     void analyze();
 
-#ifdef __USE_ROOT__
     VoltageTuningHistograms* histos;
-#endif
 
   private:
     void fillHisto() override;
@@ -72,8 +71,7 @@ class VoltageTuning : public CalibBase
     bool        doDisplay;
     std::string dataOutputDir;
 
-    std::string fileRes;
-    int         theCurrentRun;
+    int theCurrentRun;
 };
 
 #endif

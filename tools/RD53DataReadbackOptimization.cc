@@ -96,31 +96,30 @@ void DataReadbackOptimization::Stop()
     RD53RunProgress::reset();
 }
 
-void DataReadbackOptimization::localConfigure(const std::string& fileRes_, int currentRun)
+void DataReadbackOptimization::localConfigure(const std::string& histoFileName, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos          = nullptr;
     BERtest::histos = nullptr;
 #endif
 
-    if(currentRun >= 0)
-    {
-        theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[DataReadbackOptimization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
-    }
+    theCurrentRun = currentRun;
+    LOG(INFO) << GREEN << "[DataReadbackOptimization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
+    // ##########################
+    // # Initialize calibration #
+    // ##########################
     DataReadbackOptimization::ConfigureCalibration();
-    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "DataReadbackOptimization");
-    DataReadbackOptimization::initializeFiles(fileRes_, currentRun);
-}
 
-void DataReadbackOptimization::initializeFiles(const std::string& fileRes_, int currentRun)
-{
-    fileRes = fileRes_;
-
-#ifdef __USE_ROOT__
-    delete histos;
-    histos = new DataReadbackOptimizationHistograms;
-#endif
+    // #########################################
+    // # Initialize histogram and binary files #
+    // #########################################
+    CalibBase::initializeFiles<DataReadbackOptimizationHistograms>(histoFileName, "DataReadbackOptimization", histos);
 }
 
 void DataReadbackOptimization::run()
@@ -163,7 +162,7 @@ void DataReadbackOptimization::draw(bool saveData)
 
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
-        this->InitResultFile(fileRes);
+        this->InitResultFile(CalibBase::theHistoFileName);
         LOG(INFO) << BOLDBLUE << "\t--> DataReadbackOptimization saving histograms..." << RESET;
     }
 

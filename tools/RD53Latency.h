@@ -14,6 +14,8 @@
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53LatencyHistograms.h"
+#else
+typedef bool LatencyHistograms;
 #endif
 
 // ######################
@@ -36,8 +38,7 @@ class Latency : public PixelAlive
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string& fileRes_ = "", int currentRun = -1) override;
-    void   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void   localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
     void   run() override;
     void   draw(bool saveData = true) override;
     size_t getNumberIterations() override
@@ -49,9 +50,7 @@ class Latency : public PixelAlive
 
     void analyze();
 
-#ifdef __USE_ROOT__
     LatencyHistograms* histos;
-#endif
 
   private:
     void fillHisto() override;
@@ -65,10 +64,9 @@ class Latency : public PixelAlive
   protected:
     size_t startValue;
     size_t stopValue;
+    bool   doUpdateChip;
 
-    std::string fileRes;
-    int         theCurrentRun;
-    bool        doUpdateChip;
+    int theCurrentRun;
 };
 
 #endif

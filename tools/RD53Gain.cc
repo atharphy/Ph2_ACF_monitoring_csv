@@ -114,7 +114,7 @@ void Gain::Stop()
     RD53RunProgress::reset();
 }
 
-void Gain::localConfigure(const std::string& fileRes_, int currentRun)
+void Gain::localConfigure(const std::string& histoFileName, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos = nullptr;
@@ -125,26 +125,21 @@ void Gain::localConfigure(const std::string& fileRes_, int currentRun)
         theCurrentRun = currentRun;
         LOG(INFO) << GREEN << "[Gain::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
+    // ##########################
+    // # Initialize calibration #
+    // ##########################
     Gain::ConfigureCalibration();
-    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "Gain");
-    Gain::initializeFiles(fileRes_, currentRun);
-}
 
-void Gain::initializeFiles(const std::string& fileRes_, int currentRun)
-{
-    fileRes = fileRes_;
-
-    if((currentRun >= 0) && (saveBinaryData == true))
-    {
-        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Gain.raw", 'w');
-        this->initializeWriteFileHandler();
-    }
-
-#ifdef __USE_ROOT__
-    delete histos;
-    histos = new GainHistograms;
-#endif
+    // #########################################
+    // # Initialize histogram and binary files #
+    // #########################################
+    CalibBase::initializeFiles<GainHistograms>(histoFileName, "Gain", histos, currentRun, saveBinaryData);
 }
 
 void Gain::run()
@@ -200,25 +195,25 @@ void Gain::run()
     CalibBase::chipErrorReport();
 }
 
-void Gain::draw(bool doSaveData)
+void Gain::draw(bool saveData)
 {
-    if(doSaveData == true) CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    if(saveData == true) CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((doSaveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
+    if((saveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
     {
-        this->InitResultFile(fileRes);
+        this->InitResultFile(CalibBase::theHistoFileName);
         LOG(INFO) << BOLDBLUE << "\t--> Gain saving histograms..." << RESET;
     }
 
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     Gain::fillHisto();
     histos->process();
-    saveData = doSaveData;
+    doSaveData = saveData;
 
     if(doDisplay == true) myApp->Run(true);
 #endif

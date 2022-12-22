@@ -14,6 +14,8 @@
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53InjectionDelayHistograms.h"
+#else
+typedef bool InjectionDelayHistograms;
 #endif
 
 // ##############################
@@ -36,8 +38,7 @@ class InjectionDelay : public PixelAlive
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string& fileRes_ = "", int currentRun = -1) override;
-    void   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void   localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
     void   run() override;
     void   draw(bool saveData = true) override;
     size_t getNumberIterations() override
@@ -48,9 +49,7 @@ class InjectionDelay : public PixelAlive
 
     void analyze();
 
-#ifdef __USE_ROOT__
     InjectionDelayHistograms* histos;
-#endif
 
   private:
     void fillHisto() override;
@@ -66,10 +65,7 @@ class InjectionDelay : public PixelAlive
     size_t startValue;
     size_t stopValue;
 
-    std::string fileRes;
-    int         theCurrentRun;
-    size_t      saveInjection;
-    size_t      maxDelay;
+    int theCurrentRun;
 };
 
 #endif

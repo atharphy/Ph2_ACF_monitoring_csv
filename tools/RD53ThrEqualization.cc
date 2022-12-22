@@ -114,43 +114,31 @@ void ThrEqualization::Stop()
     RD53RunProgress::reset();
 }
 
-void ThrEqualization::localConfigure(const std::string& fileRes_, int currentRun)
+void ThrEqualization::localConfigure(const std::string& histoFileName, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos             = nullptr;
     PixelAlive::histos = nullptr;
 #endif
 
-    if(currentRun >= 0)
-    {
-        theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[ThrEqualization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
-    }
+    theCurrentRun = currentRun;
+    LOG(INFO) << GREEN << "[ThrEqualization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
+    // ##########################
+    // # Initialize calibration #
+    // ##########################
     ThrEqualization::ConfigureCalibration();
-    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "ThrEqualization");
-    ThrEqualization::initializeFiles(fileRes_, currentRun);
-}
 
-void ThrEqualization::initializeFiles(const std::string& fileRes_, int currentRun)
-{
-    // ##############################
-    // # Initialize sub-calibration #
-    // ##############################
-    PixelAlive::initializeFiles("", -1);
-
-    fileRes = fileRes_;
-
-    if((currentRun >= 0) && (PixelAlive::saveBinaryData == true))
-    {
-        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrEqualization.raw", 'w');
-        this->initializeWriteFileHandler();
-    }
-
-#ifdef __USE_ROOT__
-    delete histos;
-    histos = new ThrEqualizationHistograms;
-#endif
+    // #########################################
+    // # Initialize histogram and binary files #
+    // #########################################
+    CalibBase::initializeFiles<ThrEqualizationHistograms>(histoFileName, "ThrEqualization", histos, currentRun, PixelAlive::saveBinaryData);
+    CalibBase::initializeFiles<PixelAliveHistograms>(histoFileName, "PixelAlive", PixelAlive::histos);
 }
 
 void ThrEqualization::run()
@@ -236,7 +224,7 @@ void ThrEqualization::draw(bool saveData)
 
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
-        this->InitResultFile(fileRes);
+        this->InitResultFile(CalibBase::theHistoFileName);
         LOG(INFO) << BOLDBLUE << "\t--> ThrEqualization saving histograms..." << RESET;
     }
 

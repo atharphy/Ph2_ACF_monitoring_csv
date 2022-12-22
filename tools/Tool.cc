@@ -491,7 +491,7 @@ void Tool::SaveResults()
 #endif
 }
 
-void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool pDate, const std::string& whichCalib)
+void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool pDate)
 {
     std::string nDirname;
     if(pDate) nDirname += currentDateTime();
@@ -544,7 +544,7 @@ void Tool::InitResultFile(const std::string& pFilename)
         }
     }
     else
-        LOG(INFO) << RED << "ERROR: " << RESET << "No Result Directory initialized - not saving results!";
+        LOG(INFO) << RED << "ERROR: " << RESET << "No result directory initialized - not saving results!";
 }
 #endif
 
@@ -553,7 +553,7 @@ void Tool::CloseResultFile()
 #ifdef __USE_ROOT__
     if(fResultFile != nullptr)
     {
-        LOG(INFO) << GREEN << "Closing result file" << RESET;
+        LOG(INFO) << GREEN << "Closing result file: " << BOLDYELLOW << fResultFileName << RESET;
         fResultFile->Close();
         delete fResultFile;
         fResultFile = nullptr;

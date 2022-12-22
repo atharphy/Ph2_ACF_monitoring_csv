@@ -108,37 +108,29 @@ void SCurve::Stop()
     RD53RunProgress::reset();
 }
 
-void SCurve::localConfigure(const std::string& fileRes_, int currentRun)
+void SCurve::localConfigure(const std::string& histoFileName, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos = nullptr;
 #endif
 
-    if(currentRun >= 0)
-    {
-        theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[SCurve::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
-    }
+    theCurrentRun = currentRun;
+    LOG(INFO) << GREEN << "[SCurve::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
+    // ##########################
+    // # Initialize calibration #
+    // ##########################
     SCurve::ConfigureCalibration();
-    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "SCurve");
-    SCurve::initializeFiles(fileRes_, currentRun);
-}
 
-void SCurve::initializeFiles(const std::string& fileRes_, int currentRun)
-{
-    fileRes = fileRes_;
-
-    if((currentRun >= 0) && (saveBinaryData == true))
-    {
-        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_SCurve.raw", 'w');
-        this->initializeWriteFileHandler();
-    }
-
-#ifdef __USE_ROOT__
-    delete histos;
-    histos = new SCurveHistograms;
-#endif
+    // #########################################
+    // # Initialize histogram and binary files #
+    // #########################################
+    CalibBase::initializeFiles<SCurveHistograms>(histoFileName, "SCurve", histos, currentRun, saveBinaryData);
 }
 
 void SCurve::run()
@@ -194,25 +186,25 @@ void SCurve::run()
     CalibBase::chipErrorReport();
 }
 
-void SCurve::draw(bool doSaveData)
+void SCurve::draw(bool saveData)
 {
-    if(doSaveData == true) CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    if(saveData == true) CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((doSaveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
+    if((saveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
     {
-        this->InitResultFile(fileRes);
+        this->InitResultFile(CalibBase::theHistoFileName);
         LOG(INFO) << BOLDBLUE << "\t--> SCurve saving histograms..." << RESET;
     }
 
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     SCurve::fillHisto();
     histos->process();
-    saveData = doSaveData;
+    doSaveData = saveData;
 
     if(doDisplay == true) myApp->Run(true);
 #endif

@@ -49,8 +49,7 @@ void GainOptimization::ConfigureCalibration()
 
 void GainOptimization::Running()
 {
-    theCurrentRun       = this->fRunNumber;
-    Gain::theCurrentRun = this->fRunNumber;
+    theCurrentRun = this->fRunNumber;
     LOG(INFO) << GREEN << "[GainOptimization::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     if(Gain::saveBinaryData == true)
@@ -88,44 +87,31 @@ void GainOptimization::Stop()
     RD53RunProgress::reset();
 }
 
-void GainOptimization::localConfigure(const std::string& fileRes_, int currentRun)
+void GainOptimization::localConfigure(const std::string& histoFileName, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos       = nullptr;
     Gain::histos = nullptr;
 #endif
 
-    if(currentRun >= 0)
-    {
-        theCurrentRun       = currentRun;
-        Gain::theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[GainOptimization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
-    }
+    theCurrentRun = currentRun;
+    LOG(INFO) << GREEN << "[GainOptimization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
+    // ##########################
+    // # Initialize calibration #
+    // ##########################
     GainOptimization::ConfigureCalibration();
-    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "GainOptimization");
-    GainOptimization::initializeFiles(fileRes_, currentRun);
-}
 
-void GainOptimization::initializeFiles(const std::string& fileRes_, int currentRun)
-{
-    // ##############################
-    // # Initialize sub-calibration #
-    // ##############################
-    Gain::initializeFiles("", -1);
-
-    fileRes = fileRes_;
-
-    if((currentRun >= 0) && (Gain::saveBinaryData == true))
-    {
-        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_GainOptimization.raw", 'w');
-        this->initializeWriteFileHandler();
-    }
-
-#ifdef __USE_ROOT__
-    delete histos;
-    histos = new GainOptimizationHistograms;
-#endif
+    // #########################################
+    // # Initialize histogram and binary files #
+    // #########################################
+    CalibBase::initializeFiles<GainOptimizationHistograms>(histoFileName, "GainOptimization", histos, currentRun, Gain::saveBinaryData);
+    CalibBase::initializeFiles<GainHistograms>(histoFileName, "Gain", Gain::histos);
 }
 
 void GainOptimization::run()
@@ -160,15 +146,15 @@ void GainOptimization::draw(bool saveData)
 
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
-        this->InitResultFile(fileRes);
+        this->InitResultFile(CalibBase::theHistoFileName);
         LOG(INFO) << BOLDBLUE << "\t--> GainOptimization saving histograms..." << RESET;
     }
-
-    Gain::draw(false);
 
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     GainOptimization::fillHisto();
     histos->process();
+
+    Gain::draw(false);
 
     if(doDisplay == true) myApp->Run(true);
 #endif

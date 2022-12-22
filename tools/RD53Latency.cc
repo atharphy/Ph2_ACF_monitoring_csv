@@ -20,7 +20,7 @@ void Latency::ConfigureCalibration()
     PixelAlive::ConfigureCalibration();
     PixelAlive::doDisplay    = false;
     PixelAlive::doUpdateChip = false;
-    PixelAlive::saveData     = false;
+    PixelAlive::doSaveData   = false;
     RD53RunProgress::total() -= PixelAlive::getNumberIterations();
 
     // #######################
@@ -87,38 +87,30 @@ void Latency::Stop()
     RD53RunProgress::reset();
 }
 
-void Latency::localConfigure(const std::string& fileRes_, int currentRun)
+void Latency::localConfigure(const std::string& histoFileName, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos             = nullptr;
     PixelAlive::histos = nullptr;
 #endif
 
-    if(currentRun >= 0)
-    {
-        theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[Latency::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
-    }
+    theCurrentRun = currentRun;
+    LOG(INFO) << GREEN << "[Latency::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+
+    // ##########################
+    // # Initialize calibration #
+    // ##########################
     Latency::ConfigureCalibration();
-    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "Latency");
-    Latency::initializeFiles(fileRes_, currentRun);
-}
 
-void Latency::initializeFiles(const std::string& fileRes_, int currentRun)
-{
-    fileRes = fileRes_;
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
 
-    if((currentRun >= 0) && (PixelAlive::saveBinaryData == true))
-    {
-        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Latency.raw", 'w');
-        this->initializeWriteFileHandler();
-    }
-
-#ifdef __USE_ROOT__
-    delete histos;
-    histos = new LatencyHistograms;
-#endif
+    // #########################################
+    // # Initialize histogram and binary files #
+    // #########################################
+    CalibBase::initializeFiles<LatencyHistograms>(histoFileName, "Latency", histos, currentRun, PixelAlive::saveBinaryData);
 }
 
 void Latency::run()
@@ -150,7 +142,7 @@ void Latency::draw(bool saveData)
 
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
-        this->InitResultFile(fileRes);
+        this->InitResultFile(CalibBase::theHistoFileName);
         LOG(INFO) << BOLDBLUE << "\t--> Latency saving histograms..." << RESET;
     }
 

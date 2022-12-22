@@ -25,11 +25,6 @@ void VoltageTuning::ConfigureCalibration()
     toleranceAna  = this->findValueInSettings<double>("VDDATrimTolerance", 0.02);
     doDisplay     = this->findValueInSettings<double>("DisplayHisto");
     dataOutputDir = this->findValueInSettings<std::string>("DataOutputDir", "");
-
-    // ############################################################
-    // # Create directory for: raw data, config files, histograms #
-    // ############################################################
-    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "VoltageTuning");
 }
 
 void VoltageTuning::Running()
@@ -66,29 +61,29 @@ void VoltageTuning::Stop()
     RD53RunProgress::reset();
 }
 
-void VoltageTuning::localConfigure(const std::string& fileRes_, int currentRun)
+void VoltageTuning::localConfigure(const std::string& histoFileName, int currentRun)
 {
 #ifdef __USE_ROOT__
     histos = nullptr;
 #endif
 
-    if(currentRun >= 0)
-    {
-        theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[VoltageTuning::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
-    }
+    theCurrentRun = currentRun;
+    LOG(INFO) << GREEN << "[VoltageTuning::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
+    // ##########################
+    // # Initialize calibration #
+    // ##########################
     VoltageTuning::ConfigureCalibration();
-    VoltageTuning::initializeFiles(fileRes_, currentRun);
-}
 
-void VoltageTuning::initializeFiles(const std::string& fileRes_, int currentRun)
-{
-    fileRes = fileRes_;
-
-#ifdef __USE_ROOT__
-    delete histos;
-    histos = new VoltageTuningHistograms;
-#endif
+    // #########################################
+    // # Initialize histogram and binary files #
+    // #########################################
+    CalibBase::initializeFiles<VoltageTuningHistograms>(histoFileName, "VoltageTuning", histos);
 }
 
 void VoltageTuning::run()
@@ -340,7 +335,7 @@ void VoltageTuning::draw(bool saveData)
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    this->InitResultFile(fileRes);
+    this->InitResultFile(CalibBase::theHistoFileName);
     LOG(INFO) << BOLDBLUE << "\t--> VoltageTuning saving histograms..." << RESET;
 
     histos->book(fResultFile, *fDetectorContainer, fSettingsMap);

@@ -85,7 +85,7 @@ void EyeDiag::localConfigure(const std::string fileRes_, int currentRun)
         LOG(INFO) << GREEN << "[EyeDiag::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
     }
     EyeDiag::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "EyeDiag");
+    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false);
     EyeDiag::initializeFiles(fileRes_, currentRun);
 }
 

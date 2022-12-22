@@ -15,6 +15,8 @@
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53DataReadbackOptimizationHistograms.h"
+#else
+typedef bool DataReadbackOptimizationHistograms;
 #endif
 
 // #########################################
@@ -37,16 +39,13 @@ class DataReadbackOptimization : public BERtest
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void localConfigure(const std::string& fileRes_, int currentRun) override;
-    void initializeFiles(const std::string& fileRes_, int currentRun) override;
+    void localConfigure(const std::string& hstoFileName, int currentRun) override;
     void run() override;
     void draw(bool saveData = true) override;
 
     void analyze(const std::string& regName, const std::vector<uint16_t>& dacListTAP, const DetectorDataContainer& theTAPscanContainer, DetectorDataContainer& theTAPContainer);
 
-#ifdef __USE_ROOT__
     DataReadbackOptimizationHistograms* histos;
-#endif
 
   private:
     void fillHisto() override;
@@ -74,8 +73,7 @@ class DataReadbackOptimization : public BERtest
     bool   invTAP2;
     bool   doUpdateChip;
 
-    std::string fileRes;
-    int         theCurrentRun;
+    int theCurrentRun;
 };
 
 #endif
