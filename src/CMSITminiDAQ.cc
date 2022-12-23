@@ -520,7 +520,7 @@ int main(int argc, char** argv)
         {
             std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Physics");
 
-            ph.localConfigure(fileName, -1);
+            ph.localConfigure(fileName, runNumber);
             ph.Start(runNumber);
             do
             {

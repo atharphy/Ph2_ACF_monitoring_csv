@@ -50,7 +50,6 @@ class Physics : public CalibBase
     void ConfigureCalibration() override;
 
     void localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
-    void initializeFiles(const std::string& histoFileName, const std::string& calibName, int currentRun, bool saveBinaryData = false);
     void run() override;
     void draw(bool saveData = true) override;
 

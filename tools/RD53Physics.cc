@@ -103,6 +103,7 @@ void Physics::Stop()
 
     Physics::draw();
     this->closeFileHandler();
+
     LOG(INFO) << GREEN << "[Physics::Stop] Stopped" << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded bunch crossings: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Total number of received triggers (i.e. events): " << BOLDYELLOW << numberOfEventsPerRun / nTRIGxEvent << RESET;
@@ -133,30 +134,9 @@ void Physics::localConfigure(const std::string& histoFileName, int currentRun)
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    Physics::initializeFiles(histoFileName, "Physics", currentRun, saveBinaryData);
-}
-
-void Physics::initializeFiles(const std::string& histoFileName, const std::string& calibName, int currentRun, bool saveBinaryData)
-{
-    theHistoFileName = histoFileName;
-
-    if(saveBinaryData == true)
-    {
-        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_" + calibName + ".raw", 'w');
-        this->initializeWriteFileHandler();
-    }
-
-#ifdef __USE_ROOT__
+    CalibBase::initializeFiles<PhysicsHistograms>(histoFileName, "Physics", histos, currentRun);
     if(this->fResultFile != nullptr) this->fResultFile->Close();
-    delete histos;
-    if(theHistoFileName != "")
-    {
-        histos = new PhysicsHistograms;
-        this->InitResultFile(theHistoFileName);
-        histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
-    }
-#endif
+    this->InitResultFile(CalibBase::theHistoFileName);
 }
 
 void Physics::run()
@@ -203,14 +183,15 @@ void Physics::draw(bool saveData)
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    LOG(INFO) << BOLDBLUE << "\t--> Physics saving histograms..." << RESET;
-
-    if(CalibBase::theHistoFileName != "")
+    if((saveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
     {
-        Physics::fillHisto();
-        histos->process();
-        this->WriteRootFile();
+        this->InitResultFile(CalibBase::theHistoFileName);
+        LOG(INFO) << BOLDBLUE << "\t--> Physics saving histograms..." << RESET;
     }
+
+    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    Physics::fillHisto();
+    histos->process();
 
     if(doDisplay == true) myApp->Run(true);
 #endif
@@ -232,9 +213,6 @@ void Physics::analyze(bool doReadBinary)
 
         if(dataSize != 0)
         {
-#ifdef __USE_ROOT__
-            Physics::fillHisto();
-#endif
             Physics::fillDataContainer(*cBoard);
             Physics::sendBoardData(cBoard);
         }
