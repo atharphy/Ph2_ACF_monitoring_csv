@@ -135,8 +135,10 @@ void Physics::localConfigure(const std::string& histoFileName, int currentRun)
     // # Initialize histogram and binary files #
     // #########################################
     CalibBase::initializeFiles<PhysicsHistograms>(histoFileName, "Physics", histos, currentRun);
+#ifdef __USE_ROOT__
     if(this->fResultFile != nullptr) this->fResultFile->Close();
     this->InitResultFile(CalibBase::theHistoFileName);
+#endif
 }
 
 void Physics::run()
