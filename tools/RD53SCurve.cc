@@ -110,11 +110,9 @@ void SCurve::Stop()
 
 void SCurve::localConfigure(const std::string& histoFileName, int currentRun)
 {
-#ifdef __USE_ROOT__
-    histos = nullptr;
-#endif
-
+    histos        = nullptr;
     theCurrentRun = currentRun;
+
     LOG(INFO) << GREEN << "[SCurve::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     // ###############################

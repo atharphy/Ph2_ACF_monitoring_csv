@@ -26,11 +26,9 @@ class GenericDacDacScan : public PixelAlive
   public:
     ~GenericDacDacScan()
     {
-#ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
         delete histos;
-#endif
     }
 
     void Running() override;

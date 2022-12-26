@@ -26,11 +26,9 @@ class Latency : public PixelAlive
   public:
     ~Latency()
     {
-#ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
         delete histos;
-#endif
     }
 
     void Running() override;

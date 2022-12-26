@@ -33,11 +33,9 @@ class VoltageTuning : public CalibBase
   public:
     ~VoltageTuning()
     {
-#ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
         delete histos;
-#endif
     }
 
     void Running() override;

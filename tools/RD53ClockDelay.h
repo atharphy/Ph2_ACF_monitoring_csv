@@ -26,11 +26,9 @@ class ClockDelay : public PixelAlive
   public:
     ~ClockDelay()
     {
-#ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
         delete histos;
-#endif
     }
 
     void Running() override;

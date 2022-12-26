@@ -113,12 +113,10 @@ void Physics::Stop()
 
 void Physics::localConfigure(const std::string& histoFileName, int currentRun)
 {
-    errors = 0;
-#ifdef __USE_ROOT__
-    histos = nullptr;
-#endif
-
+    errors        = 0;
+    histos        = nullptr;
     theCurrentRun = currentRun;
+
     LOG(INFO) << GREEN << "[Physics::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     // ###############################

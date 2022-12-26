@@ -66,11 +66,9 @@ void DataTransmissionTest::Stop()
 
 void DataTransmissionTest::localConfigure(const std::string& histoFileName, int currentRun)
 {
-#ifdef __USE_ROOT__
-    histos = nullptr;
-#endif
-
+    histos        = nullptr;
     theCurrentRun = currentRun;
+
     LOG(INFO) << GREEN << "[DataTransmissionTest::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     // ##########################

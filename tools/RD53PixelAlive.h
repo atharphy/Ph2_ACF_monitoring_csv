@@ -27,11 +27,9 @@ class PixelAlive : public CalibBase
   public:
     ~PixelAlive()
     {
-#ifdef __USE_ROOT__
         if(doSaveData == true) this->WriteRootFile();
         this->CloseResultFile();
         delete histos;
-#endif
     }
 
     void Running() override;

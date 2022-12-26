@@ -38,11 +38,9 @@ class Physics : public CalibBase
     Physics() { Physics::setGenericEvtConverter(RD53dummyEvtConverter()); }
     ~Physics()
     {
-#ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
         delete histos;
-#endif
     }
 
     void Running() override;

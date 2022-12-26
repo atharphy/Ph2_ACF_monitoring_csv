@@ -103,11 +103,9 @@ void PixelAlive::Stop()
 
 void PixelAlive::localConfigure(const std::string& histoFileName, int currentRun)
 {
-#ifdef __USE_ROOT__
-    histos = nullptr;
-#endif
-
+    histos        = nullptr;
     theCurrentRun = currentRun;
+
     LOG(INFO) << GREEN << "[PixelAlive::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     // ###############################

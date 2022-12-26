@@ -98,12 +98,10 @@ void DataReadbackOptimization::Stop()
 
 void DataReadbackOptimization::localConfigure(const std::string& histoFileName, int currentRun)
 {
-#ifdef __USE_ROOT__
     histos          = nullptr;
     BERtest::histos = nullptr;
-#endif
+    theCurrentRun   = currentRun;
 
-    theCurrentRun = currentRun;
     LOG(INFO) << GREEN << "[DataReadbackOptimization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     // ###############################

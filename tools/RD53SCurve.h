@@ -32,11 +32,9 @@ class SCurve : public CalibBase
     ~SCurve()
     {
         for(auto container: detectorContainerVector) theRecyclingBin.free(container);
-#ifdef __USE_ROOT__
         if(doSaveData == true) this->WriteRootFile();
         this->CloseResultFile();
         delete histos;
-#endif
     }
 
     void Running() override;

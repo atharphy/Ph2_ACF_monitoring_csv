@@ -91,12 +91,10 @@ void ThrMinimization::Stop()
 
 void ThrMinimization::localConfigure(const std::string& histoFileName, int currentRun)
 {
-#ifdef __USE_ROOT__
     histos             = nullptr;
     PixelAlive::histos = nullptr;
-#endif
+    theCurrentRun      = currentRun;
 
-    theCurrentRun = currentRun;
     LOG(INFO) << GREEN << "[ThrMinimization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     // ###############################

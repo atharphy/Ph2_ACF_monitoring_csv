@@ -31,11 +31,9 @@ class GainOptimization : public Gain
   public:
     ~GainOptimization()
     {
-#ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
         delete histos;
-#endif
     }
 
     void Running() override;

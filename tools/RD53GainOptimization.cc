@@ -89,12 +89,10 @@ void GainOptimization::Stop()
 
 void GainOptimization::localConfigure(const std::string& histoFileName, int currentRun)
 {
-#ifdef __USE_ROOT__
-    histos       = nullptr;
-    Gain::histos = nullptr;
-#endif
-
+    histos        = nullptr;
+    Gain::histos  = nullptr;
     theCurrentRun = currentRun;
+
     LOG(INFO) << GREEN << "[GainOptimization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     // ###############################

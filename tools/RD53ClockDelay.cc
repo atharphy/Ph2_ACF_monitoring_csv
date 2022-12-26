@@ -95,14 +95,12 @@ void ClockDelay::Stop()
 
 void ClockDelay::localConfigure(const std::string& histoFileName, int currentRun)
 {
-#ifdef __USE_ROOT__
     histos                = nullptr;
     la.histos             = nullptr;
     la.PixelAlive::histos = nullptr;
     PixelAlive::histos    = nullptr;
-#endif
+    theCurrentRun         = currentRun;
 
-    theCurrentRun = currentRun;
     LOG(INFO) << GREEN << "[ClockDelay::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     // ###############################

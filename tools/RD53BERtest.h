@@ -26,11 +26,9 @@ class BERtest : public CalibBase
   public:
     ~BERtest()
     {
-#ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
         delete histos;
-#endif
     }
 
     void Running() override;

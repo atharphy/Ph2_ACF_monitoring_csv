@@ -54,10 +54,8 @@ class CalibBase : public Tool
             this->initializeWriteFileHandler();
         }
 
-#ifdef __USE_ROOT__
         delete histos;
         histos = new T;
-#endif
     }
 
   protected:
