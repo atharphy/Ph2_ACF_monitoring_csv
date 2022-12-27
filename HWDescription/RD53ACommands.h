@@ -143,7 +143,7 @@ struct WrRegLong
 
     size_t                  chip_id = 8;
     size_t                  address;
-    std::array<uint16_t, 9> values;
+    std::array<uint16_t, 6> values;
 };
 
 std::array<uint8_t, WrRegLong::nFields()> serializeFields(const WrRegLong& cmd);
