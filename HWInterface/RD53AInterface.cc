@@ -241,7 +241,7 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
     // bit[1]: broadcast to LIN FE
     // bit[0]: broadcast to DIFF FE
 
-    doSparse = false; // @TMP@
+    // doSparse = false; // @TMP@
     if(doSparse == true)
     {
         // ############################
@@ -283,15 +283,15 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
     }
     else
     {
-        // #####################
-        // # Set autoincrement #
-        // #####################
-        RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_MODE_ADDR, 0x8}, commandList);
-
         RD53ACmd::WrRegLong wrRegLongCmd{chipID, PIX_PORTAL_ADDR, {}};
 
         for(auto col = 0u; col < RD53A::NCOLS; col += 2)
         {
+            // #####################
+            // # Set autoincrement #
+            // #####################
+            RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_MODE_ADDR, 0x8}, commandList);
+
             // #################
             // # Starting cell #
             // #################
@@ -307,6 +307,9 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
                 RD53ACmd::serialize(wrRegLongCmd, commandList);
             }
 
+            // ########################
+            // # Remove autoincrement #
+            // ########################
             RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_MODE_ADDR, 0x0}, commandList);
 
             for(auto row = nValuesLongCmd * nLongCommands; row < RD53A::NROWS; row++)
@@ -315,7 +318,7 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
             // ###################################
             // # Write commands to frontend chip #
             // ###################################
-            auto n16bitWords = commandList.size() + nValuesLongCmd * nLongCommands * n16bitWordsWrtLong + ((RD53A::NROWS - nValuesLongCmd * nLongCommands) + 3) * n16bitWordsWrt;
+            auto n16bitWords = commandList.size() + nLongCommands * n16bitWordsWrtLong + (RD53A::NROWS - nValuesLongCmd * nLongCommands + 4) * n16bitWordsWrt;
             if((n16bitWords / 2 + n16bitWords % 2) > (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO))
             {
                 static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
