@@ -159,6 +159,12 @@ struct RdReg
 
 std::array<uint8_t, RdReg::nFields()> serializeFields(const RdReg& cmd);
 
+template <class CmdType>
+size_t getN16bitWords()
+{
+    return 1 + CmdType::nFields() / 2;
+}
+
 template <int... Sizes, class... Args>
 uint8_t packAndEncode(Args&&... args)
 {
@@ -169,7 +175,7 @@ template <class CmdType>
 void serialize(const CmdType& cmd, std::vector<uint16_t>& cmdStream)
 {
     auto fields = serializeFields(cmd);
-    cmdStream.reserve(cmdStream.size() + 1 + fields.size() / 2);
+    cmdStream.reserve(cmdStream.size() + getN16bitWords<CmdType>());
 
     // Insert command code
     cmdStream.push_back(CmdType::cmdCode());
