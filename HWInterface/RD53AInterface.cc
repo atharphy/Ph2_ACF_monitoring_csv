@@ -223,8 +223,8 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
     const uint8_t         highGain           = pRD53->getRegItem("HighGain_LIN").fValue;
     const uint8_t         chipID             = pRD53->getId();
     auto&                 mask               = doDefault == true ? pRD53->getPixelsMaskDefault() : pRD53->getPixelsMask();
-    auto                  n16bitWordsWrt     = RD53ACmd::getN16bitWords<RD53ACmd::WrReg>();
-    auto                  n16bitWordsWrtLong = RD53ACmd::getN16bitWords<RD53ACmd::WrRegLong>();
+    const auto            n16bitWordsWrt     = RD53ACmd::getN16bitWords<RD53ACmd::WrReg>();
+    const auto            n16bitWordsWrtLong = RD53ACmd::getN16bitWords<RD53ACmd::WrRegLong>();
 
     // ##########################
     // # Disable default config #
@@ -288,6 +288,8 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
         RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_MODE_ADDR, 0x8}, commandList);
 
         RD53ACmd::WrRegLong wrRegLongCmd{chipID, PIX_PORTAL_ADDR, {}};
+        const size_t        nValuesLongCmd = wrRegLongCmd.values.size();
+        const size_t        nLongCommands  = RD53A::NROWS / nValuesLongCmd;
 
         for(auto col = 0u; col < RD53A::NCOLS; col += 2)
         {
@@ -296,9 +298,6 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
             // #################
             RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
             RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_ROW_ADDR, 0x0}, commandList);
-
-            size_t nValuesLongCmd = wrRegLongCmd.values.size();
-            size_t nLongCommands  = RD53A::NROWS / nValuesLongCmd;
 
             for(auto longCmdId = 0u; longCmdId < nLongCommands; longCmdId++)
             {

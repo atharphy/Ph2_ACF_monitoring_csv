@@ -486,8 +486,8 @@ void Gain::computeStats(const std::vector<float>& x,
     // # Find first y-element larger than limitToT which is the last true-ToT      #
     // # value where the gain slope does not change for the 6-to-4 bit compression #
     // #############################################################################
-    auto   it            = std::find_if(ordered_y.begin(), ordered_y.end(), [&](float val) { return val > limitToT; });
-    size_t limitToTindex = it - ordered_y.begin();
+    auto         it            = std::find_if(ordered_y.begin(), ordered_y.end(), [&](float val) { return val > limitToT; });
+    const size_t limitToTindex = it - ordered_y.begin();
 
     // ################################################
     // # Declare matrices and vector for minimization #
@@ -559,7 +559,7 @@ void Gain::computeStats(const std::vector<float>& x,
         ublas::vector<double> myPar(ublas::prod(parCov, tmpVec2));
 
         std::copy(myPar.begin(), myPar.end(), par.begin());
-        for(auto i = 0; i < NGAINPAR; i++) parErr[i] = (limitToTindex >= nData) && (i >= NGAINPAR / 2) ? 0.0 : sqrt(parCov(i, i));
+        for(auto i = 0u; i < NGAINPAR; i++) parErr[i] = (limitToTindex >= nData) && (i >= NGAINPAR / 2) ? 0.0 : sqrt(parCov(i, i));
 
         // ################
         // # Compute chi2 #
