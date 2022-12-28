@@ -329,12 +329,12 @@ void SCurve::computeStats(std::vector<float>& measurements, int offset, float& n
 
     std::for_each(measurements.begin(), measurements.end(), [](float& ele) { ele = (std::fabs(ele) > 1. ? 1. : std::fabs(ele)); });
     std::reverse(measurements.begin(), measurements.end());
-    auto itHigh = measurements.end() - std::max_element(measurements.begin(), measurements.end());
+    const auto itHigh = measurements.end() - std::max_element(measurements.begin(), measurements.end());
 
     std::reverse(measurements.begin(), measurements.end());
-    auto itLow = std::max_element(measurements.begin(), measurements.end()) - measurements.begin();
+    const auto itLow = std::max_element(measurements.begin(), measurements.end()) - measurements.begin();
 
-    auto stop = std::min<int>((itHigh + itLow) / 2, dacList.size() - 1);
+    const auto stop = std::min<int>((itHigh + itLow) / 2, dacList.size() - 1);
 
     for(auto i = 0; i < stop; i++)
     {
