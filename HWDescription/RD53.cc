@@ -110,7 +110,10 @@ void RD53::loadfRegMap(const std::string& fileName)
                         if(std::all_of(readWord.begin(), readWord.end(), isdigit))
                         {
                             thePixMask.Enable.at(row + this->getNRows() * col) = atoi(readWord.c_str());
-                            if(thePixMask.Enable[row + this->getNRows() * col] == false) fChipOriginalMask->disableChannel(row, col);
+                            if(thePixMask.Enable[row + this->getNRows() * col] == false)
+                                fChipOriginalMask->disableChannel(row, col);
+                            else
+                                fChipOriginalMask->enableChannel(row, col);
                             row++;
                         }
                     }

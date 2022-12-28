@@ -200,11 +200,6 @@ void ThrEqualization::run()
                             }
                 }
 
-    // #################################
-    // # Reset masks to default values #
-    // #################################
-    CalibBase::copyMaskFromDefault("en in td");
-
     // ################
     // # Error report #
     // ################
@@ -421,11 +416,6 @@ void ThrEqualization::scanDac(const std::string& regName, const std::vector<uint
                         // # Send periodic data to monitor the progress #
                         // ##############################################
                         ThrEqualization::sendData();
-
-                        // #################################
-                        // # Reset masks to default values #
-                        // #################################
-                        static_cast<RD53*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()))->copyMaskFromDefault();
                     }
     }
 }

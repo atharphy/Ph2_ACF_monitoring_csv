@@ -118,11 +118,6 @@ void Latency::run()
     ContainerFactory::copyAndInitChip<GenericDataArray<LatencySize>>(*fDetectorContainer, theOccContainer);
     Latency::scanDac(frontEnd->latencyReg, dacList, &theOccContainer);
 
-    // #################################
-    // # Reset masks to default values #
-    // #################################
-    CalibBase::copyMaskFromDefault("en in");
-
     // ################
     // # Error report #
     // ################
