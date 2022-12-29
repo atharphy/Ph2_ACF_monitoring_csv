@@ -2005,7 +2005,7 @@ void Tool::scanBeBoardDac(uint16_t                             boardIndex,
         abort();
     }
 
-    if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53A) // @TMP@
+    if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53A)
     {
         // #######################
         // # Loop over DAC ...   #
