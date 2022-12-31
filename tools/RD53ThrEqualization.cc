@@ -164,7 +164,6 @@ void ThrEqualization::run()
     // ##############################
     // # Run threshold equalization #
     // ##############################
-    const size_t TDACsize = frontEnd->nTDACvalues;
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, theTDACContainer);
     ThrEqualization::bitWiseScanLocal(TARGETEFF, true);
 
@@ -196,14 +195,9 @@ void ThrEqualization::run()
                                     ->at(cChip->getIndex())
                                     ->getChannel<OccupancyAndPh>(row, col)
                                     .fOccupancy = RD53Shared::ISDISABLED;
-                                theTDACContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) = TDACsize;
+                                theTDACContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) = frontEnd->nTDACvalues;
                             }
                 }
-
-    // #################################
-    // # Reset masks to default values #
-    // #################################
-    CalibBase::copyMaskFromDefault("en in td");
 
     // ################
     // # Error report #
@@ -421,11 +415,6 @@ void ThrEqualization::scanDac(const std::string& regName, const std::vector<uint
                         // # Send periodic data to monitor the progress #
                         // ##############################################
                         ThrEqualization::sendData();
-
-                        // #################################
-                        // # Reset masks to default values #
-                        // #################################
-                        static_cast<RD53*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()))->copyMaskFromDefault();
                     }
     }
 }
@@ -520,11 +509,10 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, float target
     // ###########################
     CalibBase::downloadNewDACvalues(bestDACcontainer, regName, true, 0);
 
-    // ################
-    // # Run analysis #
-    // ################
-    PixelAlive::run();
-    PixelAlive::analyze();
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in");
 }
 
 void ThrEqualization::bitWiseScanLocal(float target, bool updateDACs)
@@ -671,4 +659,9 @@ void ThrEqualization::bitWiseScanLocal(float target, bool updateDACs)
     // ################
     PixelAlive::run();
     theOccContainer = PixelAlive::analyze();
+
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in td");
 }

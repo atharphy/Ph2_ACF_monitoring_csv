@@ -177,11 +177,6 @@ void ClockDelay::run()
         ClockDelay::scanDac("CLK_DATA_DELAY", halfDacList, &theOccContainer);
     }
 
-    // #################################
-    // # Reset masks to default values #
-    // #################################
-    CalibBase::copyMaskFromDefault("en in");
-
     // ################
     // # Error report #
     // ################
@@ -308,6 +303,11 @@ void ClockDelay::scanDac(const std::string& regName, const std::vector<uint16_t>
         // ##############################################
         ClockDelay::sendData();
     }
+
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in");
 }
 
 void ClockDelay::writeClkDelaySequence(const Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::ReadoutChip* pChip, uint16_t value)

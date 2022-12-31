@@ -293,9 +293,9 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
 
         for(auto col = 0u; col < RD53A::NCOLS; col += 2)
         {
-            // #################
-            // # Starting cell #
-            // #################
+            // #######################
+            // # Starting pixel cell #
+            // #######################
             RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
             RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_ROW_ADDR, 0x0}, commandList);
 

@@ -131,11 +131,6 @@ void GenericDacDacScan::run()
     ContainerFactory::copyAndInitChip<GenericDataArray<GenericDacDacScanSize>>(*fDetectorContainer, theOccContainer);
     GenericDacDacScan::scanDacDac(regNameDAC1, regNameDAC2, dac1List, dac2List, &theOccContainer);
 
-    // #################################
-    // # Reset masks to default values #
-    // #################################
-    CalibBase::copyMaskFromDefault("en in");
-
     // ################
     // # Error report #
     // ################
@@ -280,4 +275,9 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
             GenericDacDacScan::sendData();
         }
     }
+
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in");
 }

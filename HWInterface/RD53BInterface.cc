@@ -379,6 +379,9 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
     {
         for(auto col = 0u; col < RD53B::NCOLS; col += 2)
         {
+            // #######################
+            // # Starting pixel cell #
+            // #######################
             RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
 
             // ####################

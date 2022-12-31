@@ -128,11 +128,6 @@ void ThrAdjustment::run()
                     theThrContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
                         static_cast<RD53*>(cChip)->getReg(frontEnd->thresholdReg);
 
-    // #################################
-    // # Reset masks to default values #
-    // #################################
-    CalibBase::copyMaskFromDefault("en in");
-
     // ################
     // # Error report #
     // ################
@@ -293,4 +288,9 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, 
     // ################
     PixelAlive::run();
     PixelAlive::analyze();
+
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in");
 }

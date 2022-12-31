@@ -433,8 +433,8 @@ uint32_t RD53::getNumberOfChannels() const { return this->getNRows() * this->get
 
 bool RD53::isDACLocal(const std::string& regName)
 {
-    if(regName != "PIX_PORTAL") return false;
-    return true;
+    if(regName == "PIX_PORTAL") return true;
+    return false;
 }
 
 uint8_t RD53::getNumberOfBits(const std::string& regName)

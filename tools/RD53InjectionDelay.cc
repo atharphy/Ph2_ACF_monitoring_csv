@@ -174,11 +174,6 @@ void InjectionDelay::run()
         InjectionDelay::scanDac("CAL_EDGE_FINE_DELAY", halfDacList, &theOccContainer);
     }
 
-    // #################################
-    // # Reset masks to default values #
-    // #################################
-    CalibBase::copyMaskFromDefault("en in");
-
     // ################
     // # Error report #
     // ################
@@ -308,4 +303,9 @@ void InjectionDelay::scanDac(const std::string& regName, const std::vector<uint1
         // ##############################################
         InjectionDelay::sendData();
     }
+
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in");
 }
