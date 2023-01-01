@@ -128,7 +128,7 @@ void GainHistograms::fillOccupancy(const DetectorDataContainer& OccupancyContain
                     for(auto row = 0u; row < nRows; row++)
                         for(auto col = 0u; col < nCols; col++)
                         {
-                            if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != RD53Shared::ISDISABLED)
+                            if(cChip->getChannel<OccupancyAndPh>(row, col).fStatus == RD53Shared::ISGOOD)
                             {
                                 hOcc2D->Fill(DELTA_VCAL, cChip->getChannel<OccupancyAndPh>(row, col).fPh);
                                 hOcc3D->SetBinContent(col + 1, row + 1, hOcc3D->GetZaxis()->FindBin(DELTA_VCAL), cChip->getChannel<OccupancyAndPh>(row, col).fPh);
@@ -219,7 +219,7 @@ void GainHistograms::fillGain(const DetectorDataContainer& GainContainer)
 
                     for(auto row = 0u; row < nRows; row++)
                         for(auto col = 0u; col < nCols; col++)
-                            if(cChip->getChannel<GainFit>(row, col).fChi2 == RD53Shared::FITERROR)
+                            if(cChip->getChannel<GainFit>(row, col).fChi2 == RD53Shared::ISFITERROR)
                                 ErrorFit2DHist->Fill(col + 1, row + 1);
                             else if(cChip->getChannel<GainFit>(row, col).fChi2 != 0)
                             {

@@ -194,7 +194,7 @@ void ThrEqualization::run()
                                     ->at(cHybrid->getIndex())
                                     ->at(cChip->getIndex())
                                     ->getChannel<OccupancyAndPh>(row, col)
-                                    .fOccupancy = RD53Shared::ISDISABLED;
+                                    .fStatus = RD53Shared::ISDISABLED;
                                 theTDACContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) = frontEnd->nTDACvalues;
                             }
                 }

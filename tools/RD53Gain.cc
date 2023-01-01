@@ -177,7 +177,7 @@ void Gain::run()
                                         ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
                                         ->getChannel<OccupancyAndPh>(row, col)
-                                        .fOccupancy = RD53Shared::ISDISABLED;
+                                        .fStatus = RD53Shared::ISDISABLED;
 
     // #################################
     // # Reset masks to default values #
@@ -341,7 +341,7 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                                 }
                                 else
                                     theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fChi2 =
-                                        RD53Shared::FITERROR;
+                                        RD53Shared::ISFITERROR;
                             }
 
                     index++;

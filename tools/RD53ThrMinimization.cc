@@ -244,7 +244,7 @@ void ThrMinimization::bitWiseScanGlobal(const std::string& regName, float target
                         size_t maskedPixels = 0;
                         for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                             for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
-                                if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy == RD53Shared::ISMASKED) maskedPixels++;
+                                if(cChip->getChannel<OccupancyAndPh>(row, col).fStatus == RD53Shared::ISMASKED) maskedPixels++;
                         maskedPixels = maskedPixels / totalPixels * 100;
 
                         // ########################

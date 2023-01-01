@@ -241,7 +241,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                         ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
                                         ->getChannel<OccupancyAndPh>(row, col)
-                                        .fOccupancy = RD53Shared::ISMASKED;
+                                        .fStatus = RD53Shared::ISMASKED;
                                 }
                             }
                             else
@@ -250,7 +250,7 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                     ->at(cHybrid->getIndex())
                                     ->at(cChip->getIndex())
                                     ->getChannel<OccupancyAndPh>(row, col)
-                                    .fOccupancy = RD53Shared::ISDISABLED;
+                                    .fStatus = RD53Shared::ISDISABLED;
 
                     if(unstuckPixels == false)
                     {

@@ -37,7 +37,7 @@
 #define RUNNUMBER 0
 #define FILERUNNUMBER "./RunNumber.txt"
 #define BASEDIR "PH2ACF_BASE_DIR"
-#define ARBITRARYDELAY 2 // [seconds]
+#define DELAYAFTERPHYSICS 2 // [seconds]
 #define TESTSUBDETECTOR false
 
 INITIALIZE_EASYLOGGINGPP
@@ -154,7 +154,7 @@ int main(int argc, char** argv)
     bool        program    = cmd.foundOption("prog") == true ? true : false;
     bool        reset      = cmd.foundOption("reset") == true ? true : false;
     bool        dumpRegs   = cmd.foundOption("dump") == true ? true : false;
-    size_t      runtime    = cmd.foundOption("runtime") == true ? stoi(cmd.optionValue("runtime")) : ARBITRARYDELAY;
+    size_t      runtime    = cmd.foundOption("runtime") == true ? stoi(cmd.optionValue("runtime")) : DELAYAFTERPHYSICS;
     if(cmd.foundOption("capture") == true)
         RegManager::enableCapture(cmd.optionValue("capture").insert(0, std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_"));
     else if(cmd.foundOption("replay") == true)

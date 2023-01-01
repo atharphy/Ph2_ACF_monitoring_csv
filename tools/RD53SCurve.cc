@@ -171,7 +171,7 @@ void SCurve::run()
                                         ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
                                         ->getChannel<OccupancyAndPh>(row, col)
-                                        .fOccupancy = RD53Shared::ISDISABLED;
+                                        .fStatus = RD53Shared::ISDISABLED;
 
     // #################################
     // # Reset masks to default values #
@@ -287,7 +287,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
                                         ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
                                         ->getChannel<ThresholdAndNoise>(row, col)
-                                        .fNoise = RD53Shared::FITERROR;
+                                        .fNoise = RD53Shared::ISFITERROR;
                             }
 
                     index++;
