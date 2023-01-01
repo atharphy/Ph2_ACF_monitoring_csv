@@ -14,6 +14,8 @@
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53ThresholdHistograms.h"
+#else
+typedef bool ThresholdHistograms;
 #endif
 
 // #############
@@ -29,11 +31,9 @@ class ThrAdjustment : public PixelAlive
   public:
     ~ThrAdjustment()
     {
-#ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
         delete histos;
-#endif
     }
 
     void Running() override;
@@ -41,8 +41,7 @@ class ThrAdjustment : public PixelAlive
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string& fileRes_ = "", int currentRun = -1) override;
-    void   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void   localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
     void   run() override;
     void   draw(bool saveData = true) override;
     size_t getNumberIterations() override
@@ -54,9 +53,7 @@ class ThrAdjustment : public PixelAlive
 
     void analyze();
 
-#ifdef __USE_ROOT__
     ThresholdHistograms* histos;
-#endif
 
   private:
     void fillHisto() override;
@@ -72,8 +69,7 @@ class ThrAdjustment : public PixelAlive
     bool   doUpdateChip;
     bool   doDisplay;
 
-    std::string fileRes;
-    int         theCurrentRun;
+    int theCurrentRun;
 };
 
 #endif

@@ -37,7 +37,7 @@
 #define RUNNUMBER 0
 #define FILERUNNUMBER "./RunNumber.txt"
 #define BASEDIR "PH2ACF_BASE_DIR"
-#define ARBITRARYDELAY 2 // [seconds]
+#define DELAYAFTERPHYSICS 2 // [seconds]
 #define TESTSUBDETECTOR false
 
 INITIALIZE_EASYLOGGINGPP
@@ -61,23 +61,23 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
     uint32_t status;
     RD53Event::DecodeEventsMultiThreads(data, decodedEvents, status);
     LOG(INFO) << GREEN << "Total number of 32-bit words read from binary file: " << BOLDYELLOW << data.size() << RESET;
-    LOG(INFO) << GREEN << "Total number of events decoded from binary file: " << BOLDYELLOW << decodedEvents.size() << RESET;
+    LOG(INFO) << GREEN << "Total number of events (i.e. bunch crossings) decoded from binary file: " << BOLDYELLOW << decodedEvents.size() << RESET;
 
     for(auto i = 0u; i < decodedEvents.size(); i++)
         if(RD53Event::EvtErrorHandler(decodedEvents[i].eventStatus) == false)
         {
-            LOG(ERROR) << BOLDBLUE << "\t--> Corrupted event n. " << BOLDYELLOW << i << RESET;
+            LOG(ERROR) << BOLDBLUE << "\t--> Corrupted bunch crossing n. " << BOLDYELLOW << i << RESET;
             errors++;
             RD53Event::PrintEvents({decodedEvents[i]});
         }
 
     if(decodedEvents.size() != 0)
     {
-        LOG(INFO) << GREEN << "Corrupted events: " << BOLDYELLOW << std::fixed << std::setprecision(3) << errors << " (" << 1. * errors / decodedEvents.size() * 100. << "%)" << std::setprecision(-1)
-                  << RESET;
+        LOG(INFO) << GREEN << "Corrupted bunch crossings: " << BOLDYELLOW << std::fixed << std::setprecision(3) << errors << " (" << 1. * errors / decodedEvents.size() * 100. << "%)"
+                  << std::setprecision(-1) << RESET;
         int avgEventSize = data.size() / decodedEvents.size();
-        LOG(INFO) << GREEN << "Average event size is " << BOLDYELLOW << avgEventSize * RD53FWEvtEncoder::NBIT_EVT_WORD << RESET << GREEN << " bits over " << BOLDYELLOW << decodedEvents.size() << RESET
-                  << GREEN << " events" << RESET;
+        LOG(INFO) << GREEN << "Average bunch crossing size is " << BOLDYELLOW << avgEventSize * RD53FWEvtEncoder::NBIT_EVT_WORD << RESET << GREEN << " bits over " << BOLDYELLOW << decodedEvents.size()
+                  << RESET << GREEN << " events" << RESET;
     }
 
     std::string fileName(binaryFile);
@@ -154,7 +154,7 @@ int main(int argc, char** argv)
     bool        program    = cmd.foundOption("prog") == true ? true : false;
     bool        reset      = cmd.foundOption("reset") == true ? true : false;
     bool        dumpRegs   = cmd.foundOption("dump") == true ? true : false;
-    size_t      runtime    = cmd.foundOption("runtime") == true ? stoi(cmd.optionValue("runtime")) : ARBITRARYDELAY;
+    size_t      runtime    = cmd.foundOption("runtime") == true ? stoi(cmd.optionValue("runtime")) : DELAYAFTERPHYSICS;
     if(cmd.foundOption("capture") == true)
         RegManager::enableCapture(cmd.optionValue("capture").insert(0, std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_"));
     else if(cmd.foundOption("replay") == true)
@@ -520,7 +520,7 @@ int main(int argc, char** argv)
         {
             std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Physics");
 
-            ph.localConfigure(fileName, -1);
+            ph.localConfigure(fileName, runNumber);
             ph.Start(runNumber);
             do
             {

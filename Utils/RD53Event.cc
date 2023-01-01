@@ -770,7 +770,7 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
     theTree.Branch("FW_frame_event_chip_type", &FW_frame_event_chip_type);
     theTree.Branch("FW_frame_event_frame_delay", &FW_frame_event_frame_delay);
 
-    theTree.Branch("RD53_frame_event_trigger_id", &RD53_frame_event_chip_id_mod4);
+    theTree.Branch("RD53_frame_event_chip_id_mod4", &RD53_frame_event_chip_id_mod4);
     theTree.Branch("RD53_frame_event_trigger_id", &RD53_frame_event_trigger_id);
     theTree.Branch("RD53_frame_event_trigger_tag", &RD53_frame_event_trigger_tag);
     theTree.Branch("RD53_frame_event_bc_id", &RD53_frame_event_bc_id);

@@ -15,6 +15,8 @@
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53PixelAliveHistograms.h"
+#else
+typedef bool PixelAliveHistograms;
 #endif
 
 // #########################
@@ -25,11 +27,9 @@ class PixelAlive : public CalibBase
   public:
     ~PixelAlive()
     {
-#ifdef __USE_ROOT__
-        if(saveData == true) this->WriteRootFile();
+        if(doSaveData == true) this->WriteRootFile();
         this->CloseResultFile();
         delete histos;
-#endif
     }
 
     void Running() override;
@@ -37,17 +37,14 @@ class PixelAlive : public CalibBase
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string& fileRes_ = "", int currentRun = -1) override;
-    void   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void   localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
     void   run() override;
-    void   draw(bool doSaveData = true) override;
+    void   draw(bool saveData = true) override;
     size_t getNumberIterations() override { return theChnGroupHandler->getNumberOfGroups() * nEvents / nEvtsBurst; }
 
     std::shared_ptr<DetectorDataContainer> analyze();
 
-#ifdef __USE_ROOT__
     PixelAliveHistograms* histos;
-#endif
 
   private:
     void fillHisto() override;
@@ -67,25 +64,23 @@ class PixelAlive : public CalibBase
 
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
-    size_t      rowStart;
-    size_t      rowStop;
-    size_t      colStart;
-    size_t      colStop;
-    size_t      nEvents;
-    size_t      nEvtsBurst;
-    size_t      nTRIGxEvent;
-    size_t      nHITxCol;
-    float       occPerPixel;
-    bool        unstuckPixels;
-    size_t      doOnlyNGroups;
-    bool        doDisplay;
-    bool        doUpdateChip;
-    bool        saveBinaryData;
-    std::string dataOutputDir;
+    size_t rowStart;
+    size_t rowStop;
+    size_t colStart;
+    size_t colStop;
+    size_t nEvents;
+    size_t nEvtsBurst;
+    size_t nTRIGxEvent;
+    size_t nHITxCol;
+    float  occPerPixel;
+    bool   unstuckPixels;
+    size_t doOnlyNGroups;
+    bool   doDisplay;
+    bool   doUpdateChip;
+    bool   saveBinaryData;
 
-    std::string fileRes;
-    int         theCurrentRun;
-    bool        saveData;
+    int  theCurrentRun;
+    bool doSaveData;
 
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
 };

@@ -30,12 +30,11 @@ void ThrEqualizationHistograms::book(TFile* theOutputFile, DetectorContainer& th
     const size_t colStart = this->findValueInSettings<double>(settingsMap, "COLstart");
     const size_t colStop  = this->findValueInSettings<double>(settingsMap, "COLstop");
     frontEnd              = RD53Shared::firstChip->getFEtype(colStart, colStop);
-    size_t TDACsize       = frontEnd->nTDACvalues;
 
     auto hThrEqualization = CanvasContainer<TH1F>("ThrEqualization", "ThrEqualization", nEvents + 1, 0, 1 + 1. / nEvents);
     bookImplementer(theOutputFile, theDetectorStructure, ThrEqualization, hThrEqualization, "Efficiency", "Entries");
 
-    auto hTDAC1D = CanvasContainer<TH1F>("TDAC1D", "TDAC Distribution", TDACsize, 0, TDACsize);
+    auto hTDAC1D = CanvasContainer<TH1F>("TDAC1D", "TDAC Distribution", frontEnd->nTDACvalues, 0, frontEnd->nTDACvalues);
     bookImplementer(theOutputFile, theDetectorStructure, TDAC1D, hTDAC1D, "TDAC", "Entries");
 
     auto hTDAC2D = CanvasContainer<TH2F>("TDAC2D", "TDAC Map", nCols, 0, nCols, nRows, 0, nRows);
@@ -107,15 +106,13 @@ void ThrEqualizationHistograms::fillOccupancy(const DetectorDataContainer& Occup
 
                     for(auto row = 0u; row < nRows; row++)
                         for(auto col = 0u; col < nCols; col++)
-                            if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != RD53Shared::ISDISABLED)
+                            if(cChip->getChannel<OccupancyAndPh>(row, col).fStatus == RD53Shared::ISGOOD)
                                 hThrEqualization->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy + hThrEqualization->GetBinWidth(1) / 2);
                 }
 }
 
 void ThrEqualizationHistograms::fillTDAC(const DetectorDataContainer& TDACContainer)
 {
-    size_t TDACsize = frontEnd->nTDACvalues;
-
     for(const auto cBoard: TDACContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
@@ -131,7 +128,7 @@ void ThrEqualizationHistograms::fillTDAC(const DetectorDataContainer& TDACContai
 
                     for(auto row = 0u; row < nRows; row++)
                         for(auto col = 0u; col < nCols; col++)
-                            if(cChip->getChannel<uint16_t>(row, col) != TDACsize)
+                            if(cChip->getChannel<uint16_t>(row, col) != frontEnd->nTDACvalues)
                             {
                                 hTDAC1D->Fill(cChip->getChannel<uint16_t>(row, col));
                                 hTDAC2D->SetBinContent(col + 1, row + 1, cChip->getChannel<uint16_t>(row, col));

@@ -20,7 +20,7 @@ void InjectionDelay::ConfigureCalibration()
     PixelAlive::ConfigureCalibration();
     PixelAlive::doDisplay    = false;
     PixelAlive::doUpdateChip = false;
-    PixelAlive::saveData     = false;
+    PixelAlive::doSaveData   = false;
     RD53RunProgress::total() -= PixelAlive::getNumberIterations();
 
     // #######################
@@ -39,7 +39,7 @@ void InjectionDelay::ConfigureCalibration()
     // # Initialize Latency #
     // ######################
     la.Inherit(this);
-    la.localConfigure();
+    la.ConfigureCalibration();
 
     // #######################
     // # Initialize progress #
@@ -93,45 +93,36 @@ void InjectionDelay::Stop()
     RD53RunProgress::reset();
 }
 
-void InjectionDelay::localConfigure(const std::string& fileRes_, int currentRun)
+void InjectionDelay::localConfigure(const std::string& histoFileName, int currentRun)
 {
-#ifdef __USE_ROOT__
-    histos             = nullptr;
-    PixelAlive::histos = nullptr;
-#endif
+    histos                = nullptr;
+    la.histos             = nullptr;
+    la.PixelAlive::histos = nullptr;
+    PixelAlive::histos    = nullptr;
+    theCurrentRun         = currentRun;
 
-    if(currentRun >= 0)
-    {
-        theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[InjectionDelay::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
-    }
+    LOG(INFO) << GREEN << "[InjectionDelay::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
+    // ##########################
+    // # Initialize calibration #
+    // ##########################
     InjectionDelay::ConfigureCalibration();
-    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "InjectionDelay");
-    InjectionDelay::initializeFiles(fileRes_, currentRun);
-}
 
-void InjectionDelay::initializeFiles(const std::string& fileRes_, int currentRun)
-{
-    fileRes = fileRes_;
-
-    if((currentRun >= 0) && (PixelAlive::saveBinaryData == true))
-    {
-        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_InjectionDelay.raw", 'w');
-        this->initializeWriteFileHandler();
-    }
-
-#ifdef __USE_ROOT__
-    delete histos;
-    histos = new InjectionDelayHistograms;
-#endif
-
+    // #########################################
+    // # Initialize histogram and binary files #
+    // #########################################
+    CalibBase::initializeFiles<InjectionDelayHistograms>(histoFileName, "InjectionDelay", histos, currentRun, PixelAlive::saveBinaryData);
     // ######################
     // # Initialize Latency #
     // ######################
-    std::string fileName = fileRes;
-    fileName.replace(fileRes.find("_InjectionDelay"), 15, "_Latency");
-    la.initializeFiles(fileName);
+    std::string fileName = histoFileName;
+    fileName.replace(fileName.find("_InjectionDelay"), 15, "_Latency");
+    la.initializeFiles<LatencyHistograms>(fileName, "Latency", la.histos);
 }
 
 void InjectionDelay::run()
@@ -201,7 +192,7 @@ void InjectionDelay::draw(bool saveData)
 
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
-        this->InitResultFile(fileRes);
+        this->InitResultFile(CalibBase::theHistoFileName);
         LOG(INFO) << BOLDBLUE << "\t--> InjectionDelay saving histograms..." << RESET;
     }
 
@@ -312,4 +303,9 @@ void InjectionDelay::scanDac(const std::string& regName, const std::vector<uint1
         // ##############################################
         InjectionDelay::sendData();
     }
+
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in");
 }

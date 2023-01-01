@@ -40,7 +40,7 @@ std::vector<uint16_t> RD53A::getLaneUpInitSequence() const
     return initSequence;
 }
 
-const RD53A::FrontEnd* RD53A::getFEtype(size_t colStart, size_t colStop) const
+const RD53A::FrontEnd* RD53A::getFEtype(const size_t colStart, const size_t colStop) const
 {
     return *std::max_element(std::begin(frontEnds), std::end(frontEnds), [&](const FrontEnd* a, const FrontEnd* b) {
         return int(std::min(colStop, a->colStop)) - int(std::max(colStart, a->colStart)) < int(std::min(colStop, b->colStop)) - int(std::max(colStart, b->colStart));
@@ -91,15 +91,14 @@ uint32_t RD53A::getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_
 
 float RD53A::VCal2Charge(float VCal, bool isNoise) const
 {
-    return (RD53AchargeConvertion::Vref / RD53AchargeConvertion::ADCrange) * VCal / RD53AchargeConvertion::ele * RD53AchargeConvertion::cap * 1e4 +
-           (isNoise == false ? RD53AchargeConvertion::offset : 0);
+    const auto Vref = this->getRegItem("VREF_ADC").fValue / 1000.; // @CONST@ : Conversion from [mV] to [V]
+    return (Vref / RD53AchargeConvertion::ADCrange) * VCal / RD53AchargeConvertion::ele * (RD53AchargeConvertion::cap * 1e4) + (isNoise == false ? RD53AchargeConvertion::offset : 0);
 }
 
 float RD53A::Charge2VCal(float Charge) const
 {
-    const float conversion = 100; // @CONST@ : Conversion from [10 mV] to [V]
-    return (Charge - RD53AchargeConvertion::offset) / (RD53AchargeConvertion::cap * 1e4) * RD53AchargeConvertion::ele /
-           (this->getRegItem("VREF_ADC").fValue / conversion / RD53AchargeConvertion::ADCrange);
+    const auto Vref = this->getRegItem("VREF_ADC").fValue / 1000.; // @CONST@ : Conversion from [mV] to [V]
+    return (Charge - RD53AchargeConvertion::offset) / (RD53AchargeConvertion::cap * 1e4) * RD53AchargeConvertion::ele / (Vref / RD53AchargeConvertion::ADCrange);
 }
 
 } // namespace Ph2_HwDescription

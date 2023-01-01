@@ -29,7 +29,7 @@ void DataTransmissionTest::ConfigureCalibration()
     // ############################################################
     // # Create directory for: raw data, config files, histograms #
     // ############################################################
-    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "DataTransmissionTest");
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
 }
 
 void DataTransmissionTest::Running()
@@ -64,29 +64,22 @@ void DataTransmissionTest::Stop()
     RD53RunProgress::reset();
 }
 
-void DataTransmissionTest::localConfigure(const std::string& fileRes_, int currentRun)
+void DataTransmissionTest::localConfigure(const std::string& histoFileName, int currentRun)
 {
-#ifdef __USE_ROOT__
-    histos = nullptr;
-#endif
+    histos        = nullptr;
+    theCurrentRun = currentRun;
 
-    if(currentRun >= 0)
-    {
-        theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[DataTransmissionTest::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
-    }
+    LOG(INFO) << GREEN << "[DataTransmissionTest::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+
+    // ##########################
+    // # Initialize calibration #
+    // ##########################
     DataTransmissionTest::ConfigureCalibration();
-    DataTransmissionTest::initializeFiles(fileRes_, currentRun);
-}
 
-void DataTransmissionTest::initializeFiles(const std::string& fileRes_, int currentRun)
-{
-    fileRes = fileRes_;
-
-#ifdef __USE_ROOT__
-    delete histos;
-    histos = new DataTransmissionTestGraphs;
-#endif
+    // #########################################
+    // # Initialize histogram and binary files #
+    // #########################################
+    CalibBase::initializeFiles<DataTransmissionTestGraphs>(histoFileName, "DataTransmissionTest", histos);
 }
 
 void DataTransmissionTest::run()
@@ -107,7 +100,7 @@ void DataTransmissionTest::draw(bool saveData)
 
     if(BERtest::doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    this->InitResultFile(fileRes);
+    this->InitResultFile(CalibBase::theHistoFileName);
     LOG(INFO) << BOLDBLUE << "\t--> DataTransmissionTest saving histograms..." << RESET;
 
     histos->book(fResultFile, *fDetectorContainer, fSettingsMap);

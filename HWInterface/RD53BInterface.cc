@@ -67,7 +67,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
             if(cRegItem->first == "CLK_DATA_DELAY") break;
         }
     }
-    if(doWriteClkDataDelay == true) RD53BInterface::WriteClokDataDelay(pChip, pChip->getRegItem("CLK_DATA_DELAY").fValue);
+    if(doWriteClkDataDelay == true) RD53BInterface::WriteClockDataDelay(pChip, pChip->getRegItem("CLK_DATA_DELAY").fValue);
 
     // ###############################
     // # Programmig global registers #
@@ -348,20 +348,24 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
     doSparse = false; // @TMP@ : not working for RD53B-v1
     if(doSparse == true)
     {
+        // ############################
+        // # Clear whole pixel matrix #
+        // ############################
         RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x4}, commandList);
         RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_PORTAL_ADDR, 0x0}, commandList);
         RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x0}, commandList);
 
         for(auto col = 0u; col < RD53B::NCOLS; col += 2)
         {
-            if(std::find(mask.Enable.begin() + (0 + RD53B::NROWS * col), mask.Enable.begin() + (RD53B::NROWS + RD53B::NROWS * col), true) ==
-               (mask.Enable.begin() + (RD53B::NROWS + RD53B::NROWS * col)))
+            if((std::find(mask.Enable.begin() + (0 + RD53A::NROWS * col), mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * col), true) ==
+                (mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * col))) &&
+               (std::find(mask.Enable.begin() + (0 + RD53A::NROWS * (col + 1)), mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * (col + 1)), true) ==
+                (mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * (col + 1)))))
                 continue;
 
             RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
 
             for(auto row = 0u; row < RD53B::NROWS; row++)
-            {
                 if((mask.Enable[row + RD53B::NROWS * col] == true) || (mask.Enable[row + RD53B::NROWS * (col + 1)] == true))
                 {
                     auto data = RD53BInterface::GetPixelConfig(mask, row, col);
@@ -369,13 +373,15 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
                     RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, row}, commandList);
                     RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_PORTAL_ADDR, data}, commandList);
                 }
-            }
         }
     }
     else
     {
         for(auto col = 0u; col < RD53B::NCOLS; col += 2)
         {
+            // #######################
+            // # Starting pixel cell #
+            // #######################
             RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
 
             // ####################
@@ -483,7 +489,7 @@ void RD53BInterface::PackWriteBroadcastCommand(const BeBoard* pBoard, const std:
                 for(auto cChip: *cHybrid) cChip->setReg(regName, data);
 }
 
-void RD53BInterface::WriteClokDataDelay(Chip* pChip, uint16_t value)
+void RD53BInterface::WriteClockDataDelay(Chip* pChip, uint16_t value)
 {
     RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", value, false);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS, RD53BCmd::RD53BCmdEncoder::SYNC), -1);

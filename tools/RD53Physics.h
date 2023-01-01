@@ -18,7 +18,14 @@
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53PhysicsHistograms.h"
+#else
+typedef bool PhysicsHistograms;
 #endif
+
+// #############
+// # CONSTANTS #
+// #############
+#define PRINTeventsEVERY 100 // Number of recorded events before printing
 
 // #######################
 // # Physics data taking #
@@ -31,19 +38,16 @@ class Physics : public CalibBase
     Physics() { Physics::setGenericEvtConverter(RD53dummyEvtConverter()); }
     ~Physics()
     {
-#ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
         delete histos;
-#endif
     }
 
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
 
-    void localConfigure(const std::string& fileRes_ = "", int currentRun = -1) override;
-    void initializeFiles(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
     void run() override;
     void draw(bool saveData = true) override;
 
@@ -56,9 +60,7 @@ class Physics : public CalibBase
         genericEvtConverter = std::move(arg);
     }
 
-#ifdef __USE_ROOT__
     PhysicsHistograms* histos;
-#endif
 
   private:
     void fillHisto() override;
@@ -88,7 +90,6 @@ class Physics : public CalibBase
     bool        saveBinaryData;
     std::string dataOutputDir;
 
-    std::string          fileRes;
     int                  theCurrentRun;
     size_t               numberOfEventsPerRun;
     std::recursive_mutex theMtx;

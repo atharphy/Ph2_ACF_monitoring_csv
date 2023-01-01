@@ -11,6 +11,7 @@
 #define RD53Monitor_H
 
 #include "../Utils/CharArray.h"
+#include "../Utils/ChipContainerStream.h"
 #include "../Utils/ContainerFactory.h"
 #include "DetectorMonitor.h"
 

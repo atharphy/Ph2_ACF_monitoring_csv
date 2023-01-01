@@ -27,6 +27,7 @@
 // #############
 #define INTERCEPT_HALFRANGE 15 // [ToT]
 #define SLOPE_RANGE 8e-2       // [ToT / VCal]
+#define NBINS 100              // Number of histogram bins
 
 class GainHistograms : public DQMHistogramBase
 {

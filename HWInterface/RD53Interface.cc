@@ -56,7 +56,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
     }
     else if((pVerifLoop == true) && (status == true))
     {
-        // LOG(INFO) << BOLDBLUE << "\t--> Succesfully configured chip register " << BOLDYELLOW << regName << RESET; // @TMP@
+        LOG(DEBUG) << BOLDBLUE << "\t--> Succesfully configured chip register " << BOLDYELLOW << regName << RESET;
     }
 
     // #######################################

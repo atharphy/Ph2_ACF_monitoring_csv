@@ -120,7 +120,7 @@ class Tool : public Ph2_System::SystemController
      * \param pDirectoryname : the name of the directory to create
      * \param pDate : apend the current date and time to the directoryname
      */
-    void CreateResultDirectory(const std::string& pDirname, bool pMode = true, bool pDate = true, const std::string& whichCalib = "");
+    void CreateResultDirectory(const std::string& pDirname, bool pMode = true, bool pDate = true);
 
 /*!
  * \brief Initialize the result Root file

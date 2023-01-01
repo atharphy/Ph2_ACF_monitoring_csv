@@ -29,7 +29,7 @@ class RD53BInterface : public RD53Interface
     void     InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip) override;
     void     PackWriteCommand(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true) override;
     void     PackWriteBroadcastCommand(const Ph2_HwDescription::BeBoard* pBoard, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true) override;
-    void     WriteClokDataDelay(Ph2_HwDescription::Chip* pChip, uint16_t value) override;
+    void     WriteClockDataDelay(Ph2_HwDescription::Chip* pChip, uint16_t value) override;
     uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip) override;
 
   private:
@@ -50,7 +50,7 @@ class RD53BInterface : public RD53Interface
                                                                                 {"CDR_CONFIG_SEL_PD", {"CDR_CONFIG", 3}},
 
                                                                                 {"CLK_DATA_DELAY_DATA", {"CLK_DATA_DELAY", 0}},
-                                                                                {"CLK_DATA_DELAY_CLK", {"CLK_DATA_DELAY", 7}},
+                                                                                {"CLK_DATA_DELAY_CLK", {"CLK_DATA_DELAY", 6}},
 
                                                                                 {"MON_ADC_TRIM", {"MON_ADC", 0}},
 

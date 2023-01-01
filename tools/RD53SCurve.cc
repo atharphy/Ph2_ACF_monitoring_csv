@@ -108,37 +108,27 @@ void SCurve::Stop()
     RD53RunProgress::reset();
 }
 
-void SCurve::localConfigure(const std::string& fileRes_, int currentRun)
+void SCurve::localConfigure(const std::string& histoFileName, int currentRun)
 {
-#ifdef __USE_ROOT__
-    histos = nullptr;
-#endif
+    histos        = nullptr;
+    theCurrentRun = currentRun;
 
-    if(currentRun >= 0)
-    {
-        theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[SCurve::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
-    }
+    LOG(INFO) << GREEN << "[SCurve::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
+    // ##########################
+    // # Initialize calibration #
+    // ##########################
     SCurve::ConfigureCalibration();
-    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false, "SCurve");
-    SCurve::initializeFiles(fileRes_, currentRun);
-}
 
-void SCurve::initializeFiles(const std::string& fileRes_, int currentRun)
-{
-    fileRes = fileRes_;
-
-    if((currentRun >= 0) && (saveBinaryData == true))
-    {
-        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_SCurve.raw", 'w');
-        this->initializeWriteFileHandler();
-    }
-
-#ifdef __USE_ROOT__
-    delete histos;
-    histos = new SCurveHistograms;
-#endif
+    // #########################################
+    // # Initialize histogram and binary files #
+    // #########################################
+    CalibBase::initializeFiles<SCurveHistograms>(histoFileName, "SCurve", histos, currentRun, saveBinaryData);
 }
 
 void SCurve::run()
@@ -181,7 +171,12 @@ void SCurve::run()
                                         ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
                                         ->getChannel<OccupancyAndPh>(row, col)
-                                        .fOccupancy = RD53Shared::ISDISABLED;
+                                        .fStatus = RD53Shared::ISDISABLED;
+
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in");
 
     // ################
     // # Error report #
@@ -189,25 +184,25 @@ void SCurve::run()
     CalibBase::chipErrorReport();
 }
 
-void SCurve::draw(bool doSaveData)
+void SCurve::draw(bool saveData)
 {
-    if(doSaveData == true) CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    if(saveData == true) CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((doSaveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
+    if((saveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
     {
-        this->InitResultFile(fileRes);
+        this->InitResultFile(CalibBase::theHistoFileName);
         LOG(INFO) << BOLDBLUE << "\t--> SCurve saving histograms..." << RESET;
     }
 
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     SCurve::fillHisto();
     histos->process();
-    saveData = doSaveData;
+    doSaveData = saveData;
 
     if(doDisplay == true) myApp->Run(true);
 #endif
@@ -234,8 +229,6 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    static_cast<RD53*>(cChip)->copyMaskFromDefault();
-
                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                         for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                             if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
@@ -294,7 +287,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
                                         ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
                                         ->getChannel<ThresholdAndNoise>(row, col)
-                                        .fNoise = RD53Shared::FITERROR;
+                                        .fNoise = RD53Shared::ISFITERROR;
                             }
 
                     index++;
@@ -336,12 +329,12 @@ void SCurve::computeStats(std::vector<float>& measurements, int offset, float& n
 
     std::for_each(measurements.begin(), measurements.end(), [](float& ele) { ele = (std::fabs(ele) > 1. ? 1. : std::fabs(ele)); });
     std::reverse(measurements.begin(), measurements.end());
-    auto itHigh = measurements.end() - std::max_element(measurements.begin(), measurements.end());
+    const auto itHigh = measurements.end() - std::max_element(measurements.begin(), measurements.end());
 
     std::reverse(measurements.begin(), measurements.end());
-    auto itLow = std::max_element(measurements.begin(), measurements.end()) - measurements.begin();
+    const auto itLow = std::max_element(measurements.begin(), measurements.end()) - measurements.begin();
 
-    auto stop = std::min<int>((itHigh + itLow) / 2, dacList.size() - 1);
+    const auto stop = std::min<int>((itHigh + itLow) / 2, dacList.size() - 1);
 
     for(auto i = 0; i < stop; i++)
     {
