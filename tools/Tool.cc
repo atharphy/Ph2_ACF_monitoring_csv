@@ -75,10 +75,36 @@ Tool::Tool(const Tool& pTool) { this->Inherit(&pTool); }
 
 Tool::~Tool() {}
 
+void Tool::privateRunning(std::promise<int>&& thePromise)
+{
+    Running();
+    std::cout << "done" << std::endl;
+    thePromise.set_value(0);
+}
+
+bool Tool::GetRunningStatus()
+{
+    std::future_status runningStatus = fRunningFuture.wait_for(std::chrono::milliseconds(500u));
+    if(runningStatus == std::future_status::ready || runningStatus == std::future_status::deferred)
+    {
+        try
+        {
+            if(fRunningFuture.valid()) { fRunningFuture.get(); }
+        }
+        catch(const std::exception& e)
+        {
+            throw std::runtime_error(e.what());
+        }
+        return true;
+    }
+    else
+        return false;
+}
+
 void Tool::waitForRunToBeCompleted()
 {
-    std::unique_lock<std::recursive_mutex> theGuard(theMtx);
-    wakeUp.wait(theGuard, [this]() { return doExit; });
+    while(!GetRunningStatus()) std::this_thread::sleep_for(std::chrono::milliseconds(250));
+    if(fRunningThread.joinable() == true) fRunningThread.join();
 }
 
 void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
@@ -94,25 +120,17 @@ void Tool::Start(int runNumber)
 #ifdef __USE_ROOT__
     InitResultFile("Hybrid");
 #endif
-    doExit         = false;
     fKeepRunning   = true;
     fRunNumber     = runNumber;
-    fRunningThread = std::thread(&Tool::Running, this);
-}
-
-void Tool::InformImDone()
-{
-    std::unique_lock<std::recursive_mutex> theGuard(theMtx);
-    doExit = true;
-    theGuard.unlock();
-    wakeUp.notify_one();
+    std::promise<int> thePromise;
+    fRunningFuture = thePromise.get_future();
+    fRunningThread = std::thread(&Tool::privateRunning, this, std::move(thePromise));
 }
 
 void Tool::Stop()
 {
     fKeepRunning = false;
-    Tool::waitForRunToBeCompleted();
-    if(fRunningThread.joinable() == true) fRunningThread.join();
+    waitForRunToBeCompleted();
     SystemController::Stop();
 }
 
