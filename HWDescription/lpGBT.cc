@@ -13,7 +13,6 @@ namespace Ph2_HwDescription
 {
 lpGBT::lpGBT(uint8_t pBeId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChipId, const std::string& fileName) : Chip(pBeId, FMCId, pOpticalGroupId, 0, pChipId)
 {
-    // + pChipId to account for eventually more than one lpGBT for IT systems
     fChipAddress   = 0x70 + pChipId;
     configFileName = fileName;
     phaseRxAligned = false; // @TMP@
@@ -86,47 +85,55 @@ void lpGBT::loadfRegMap(const std::string& fileName)
         file.close();
     }
     else
-    {
-        LOG(ERROR) << BOLDRED << "The lpGBT file settings " << BOLDYELLOW << fileName << BOLDRED << " does not exist" << RESET;
-        exit(EXIT_FAILURE);
-    }
+        throw Exception("[lpGBT::loadfRegMapd] The LpGBT file settings does not exist");
 }
 
-void lpGBT::saveRegMap(const std::string& fileName)
+std::stringstream lpGBT::saveRegMap(const std::string& fName2Add)
 {
     const int Nspaces = 26;
 
-    std::ofstream file(fileName.c_str(), std::ios::out | std::ios::trunc);
+    std::stringstream theStream;
+    std::ofstream     file;
+    std::string       fileName = this->getFileName(fName2Add);
 
-    if(file)
+    std::set<ChipRegPair, RegItemComparer> fSetRegItem;
+    for(const auto& it: fRegMap) fSetRegItem.insert({it.first, it.second});
+
+    int cLineCounter = 0;
+    for(const auto& v: fSetRegItem)
     {
-        std::set<ChipRegPair, RegItemComparer> fSetRegItem;
-        for(const auto& it: fRegMap) fSetRegItem.insert({it.first, it.second});
-
-        int cLineCounter = 0;
-        for(const auto& v: fSetRegItem)
+        while(fCommentMap.find(cLineCounter) != std::end(fCommentMap))
         {
-            while(fCommentMap.find(cLineCounter) != std::end(fCommentMap))
-            {
-                auto cComment = fCommentMap.find(cLineCounter);
+            auto cComment = fCommentMap.find(cLineCounter);
 
-                file << cComment->second << std::endl;
-                cLineCounter++;
-            }
-
-            file << v.first;
-            for(auto j = 0; j < Nspaces; j++) file << " ";
-            file.seekp(-v.first.size(), std::ios_base::cur);
-            file << "0x" << std::setfill('0') << std::setw(3) << std::hex << std::uppercase << int(v.second.fAddress) << "          0x" << std::setfill('0') << std::setw(2) << std::hex
-                 << std::uppercase << int(v.second.fDefValue) << "                  0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fValue)
-                 << "                             " << std::setfill('0') << std::setw(1) << std::dec << std::uppercase << int(v.second.fBitSize) << std::endl;
-
+            theStream << cComment->second << std::endl;
             cLineCounter++;
         }
 
-        file.close();
+        theStream << v.first;
+        for(auto j = 0; j < Nspaces; j++) theStream << " ";
+        theStream.seekp(-v.first.size(), std::ios_base::cur);
+        theStream << "0x" << std::setfill('0') << std::setw(3) << std::hex << std::uppercase << int(v.second.fAddress) << "          0x" << std::setfill('0') << std::setw(2) << std::hex
+                  << std::uppercase << int(v.second.fDefValue) << "                  0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fValue)
+                  << "                             " << std::setfill('0') << std::setw(1) << std::dec << std::uppercase << int(v.second.fBitSize) << std::endl;
+
+        cLineCounter++;
     }
-    else
-        LOG(ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << fileName << RESET;
+
+    if(fName2Add != "ONSTREAM")
+    {
+        file.open(fileName.c_str(), std::ios::out | std::ios::trunc);
+
+        if(file)
+        {
+            file << theStream.str();
+            file.close();
+        }
+        else
+            LOG(ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << fileName << RESET;
+    }
+
+    return theStream;
 }
+
 } // namespace Ph2_HwDescription

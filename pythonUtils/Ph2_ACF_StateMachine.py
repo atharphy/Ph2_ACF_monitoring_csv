@@ -126,6 +126,8 @@ class StateMachine(object):
     def runCalibration(self):
         while(self.status_ != "DONE"):
             self.switch(self.status_)
+        if self.calibrationResult_ == "SUCCESS":
+            self.status_ = "HALTED"
         return self.calibrationResult_
 
     def isSuccess(self):

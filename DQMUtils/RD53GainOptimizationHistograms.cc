@@ -9,7 +9,6 @@
 */
 
 #include "RD53GainOptimizationHistograms.h"
-#include "../Utils/ChipContainerStream.h"
 
 using namespace Ph2_HwDescription;
 
@@ -17,7 +16,11 @@ void GainOptimizationHistograms::book(TFile* theOutputFile, DetectorContainer& t
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 
-    const uint16_t rangeKrumCurr = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("KRUM_CURR_LIN")) + 1;
+    // #######################
+    // # Retrieve parameters #
+    // #######################
+    auto           frontEnd      = RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2);
+    const uint16_t rangeKrumCurr = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits(frontEnd->gainReg)) + 1;
 
     auto hKrumCurr = CanvasContainer<TH1F>("KrumCurr", "KrumCurr", rangeKrumCurr, 0, rangeKrumCurr);
     bookImplementer(theOutputFile, theDetectorStructure, KrumCurr, hKrumCurr, "Krummenacher Current", "Entries");

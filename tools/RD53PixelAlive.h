@@ -10,22 +10,17 @@
 #ifndef RD53PixelAlive_H
 #define RD53PixelAlive_H
 
-#include "../HWDescription/RD53.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
 #include "../Utils/GenericDataArray.h"
-#include "../Utils/RD53ChannelGroupHandler.h"
-#include "Tool.h"
+#include "RD53CalibBase.h"
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53PixelAliveHistograms.h"
-#include "TApplication.h"
 #endif
 
 // #########################
 // # PixelAlive test suite #
 // #########################
-class PixelAlive : public Tool
+class PixelAlive : public CalibBase
 {
   public:
     ~PixelAlive()
@@ -33,6 +28,7 @@ class PixelAlive : public Tool
 #ifdef __USE_ROOT__
         if(saveData == true) this->WriteRootFile();
         this->CloseResultFile();
+        delete histos;
 #endif
     }
 
@@ -41,27 +37,25 @@ class PixelAlive : public Tool
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void                                   localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
-    void                                   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
-    void                                   run();
-    void                                   draw(bool doSaveData = true);
+    void   localConfigure(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void   run() override;
+    void   draw(bool doSaveData = true) override;
+    size_t getNumberIterations() override { return theChnGroupHandler->getNumberOfGroups() * nEvents / nEvtsBurst; }
+
     std::shared_ptr<DetectorDataContainer> analyze();
-    size_t                                 getNumberIterations() { return theChnGroupHandler->getNumberOfGroups() * nEvents / nEvtsBurst; }
-    void                                   saveChipRegisters(int currentRun);
 
 #ifdef __USE_ROOT__
     PixelAliveHistograms* histos;
 #endif
 
   private:
-    bool unstuckPixels;
+    void fillHisto() override;
 
+    bool                                   unstuckPixels;
     std::shared_ptr<DetectorDataContainer> theOccContainer;
     DetectorDataContainer                  theBCIDContainer;
     DetectorDataContainer                  theTrgIDContainer;
-
-    void fillHisto();
-    void chipErrorReport() const;
 
   protected:
     size_t injType;
@@ -71,6 +65,8 @@ class PixelAlive : public Tool
         Analog,
         Digital
     };
+
+    const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
 
     size_t rowStart;
     size_t rowStop;

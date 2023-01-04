@@ -690,6 +690,31 @@ float lpGBTInterface::ReadResistance(Chip* pChip, const std::string& pADC, const
     return cLSQResistance;
 }
 
+uint16_t lpGBTInterface::GetADCOffset(Chip* pChip, bool pVerbose)
+{
+    uint16_t cMeasurement = ReadADC(pChip, "VREF/2", "VREF/2");
+    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC Offset " << BOLDYELLOW << +cMeasurement << RESET;
+    return cMeasurement;
+}
+
+float lpGBTInterface::GetADCGain(Chip* pChip, bool pVerbose)
+{
+    float cResult;
+    WriteChipReg(pChip, "ADCMon", 0);
+    // Disable resistive divider, so "VDD" is actually GND
+    std::this_thread::sleep_for(std::chrono::microseconds(1000));
+    uint16_t cMeasurement = ReadADC(pChip, "VDD", "VREF/2");
+    cResult               = ((cMeasurement * 1.) - (GetADCOffset(pChip, pVerbose) * 1.)) / 512. * 2. * -1.;
+    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC value " << BOLDYELLOW << +cMeasurement << RESET;
+    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC Gain via GND-Vref/2 " << BOLDYELLOW << +cResult << RESET;
+    cMeasurement = ReadADC(pChip, "VREF/2", "VDD");
+    cResult      = ((cMeasurement * 1.) - (GetADCOffset(pChip, pVerbose) * 1.)) / 512. * 2.;
+    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC value " << BOLDYELLOW << +cMeasurement << RESET;
+    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC Gain via Vref/2-GND " << BOLDYELLOW << +cResult << RESET;
+
+    return cResult;
+}
+
 uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain)
 {
     // Read differential (converted) data on two ADC inputs
@@ -922,8 +947,8 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
         time2run = frames_or_time;
     else
         time2run = frames_or_time / fps;
-    size_t BERTMeasTime   = (log2(time2run * mainClock) - 5) / 2.;
-    frames2run            = fBERTMeasTimeMap[BERTMeasTime];
+    size_t BERTMeasTime = (log2(time2run * mainClock) - 5) / 2.;
+    frames2run          = fBERTMeasTimeMap[BERTMeasTime];
 
     // Configure number of printouts and calculate the frequency of printouts
     double time_per_step = std::min(std::max(time2run / n_prints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
@@ -1042,13 +1067,19 @@ void lpGBTInterface::ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<
 void lpGBTInterface::ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode)
 {
     // First let's write configuration data into the I2C Master Data register
-    std::string cI2CCntrlReg = "I2CM" + std::to_string(pMaster) + "Data0";
-    uint8_t     cValueCntrl  = (pFreq << 0) | (pNBytes << 2) | (pSCLDriveMode << 7);
-    WriteChipReg(pChip, cI2CCntrlReg, cValueCntrl);
+    std::string cI2CDataReg = "I2CM" + std::to_string(pMaster) + "Data0";
+    uint8_t     cValueData  = (pFreq << 0) | (pNBytes << 2) | (pSCLDriveMode << 7);
+    WriteChipReg(pChip, cI2CDataReg, cValueData);
 
     // Now let's write Command (0x00) to the Command register to tranfer Configuration to the I2C Master Control register
     std::string cI2CCmdReg = "I2CM" + std::to_string(pMaster) + "Cmd";
     WriteChipReg(pChip, cI2CCmdReg, 0x00);
+}
+
+uint8_t lpGBTInterface::GetI2CConfiguration(Ph2_HwDescription::Chip* pChip, uint8_t pMaster)
+{
+    std::string cI2CCntrlReg = "I2CM" + std::to_string(pMaster) + "Ctrl";
+    return ReadChipReg(pChip, cI2CCntrlReg);
 }
 
 bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes, uint8_t pFreq)
@@ -1167,6 +1198,8 @@ uint8_t lpGBTInterface::GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMa
     LOG(DEBUG) << GREEN << "I2C Master " << +pMaster << " -- Status : " << lpGBTInterface::fI2CStatusMap[cStatus] << RESET;
     return cStatus;
 }
+
+std::string lpGBTInterface::GetI2CState(Ph2_HwDescription::Chip* pChip, uint8_t pStatus) { return fI2CStatusMap[pStatus]; }
 
 bool lpGBTInterface::IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster) { return (lpGBTInterface::GetI2CStatus(pChip, pMaster) == 4); }
 

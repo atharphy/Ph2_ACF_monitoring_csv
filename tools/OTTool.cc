@@ -75,7 +75,7 @@ void OTTool::Reset()
                     auto& cRegsToPerserve             = cChipRegsToPreserveThisChip->getSummary<std::vector<std::string>>();
                     // reset registers
                     auto cModMap = cChip->GetModifiedRegisterMap();
-                    LOG(DEBUG) << BOLDYELLOW << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
+                    LOG(INFO) << BOLDYELLOW << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
                     std::vector<std::pair<std::string, uint16_t>> cRegList;
                     for(auto cMapItem: cModMap)
                     {
@@ -214,7 +214,7 @@ void OTTool::SetBrdRegstoPerserve(std::vector<std::string> pListOfRegs)
     fBrdRegsToPerserve.clear();
     for(const auto& cRegName: pListOfRegs)
     {
-        LOG(INFO) << BOLDBLUE << "Adding " << cRegName << " to list of Brd Regs to perserve..." << RESET;
+        LOG(DEBUG) << BOLDBLUE << "Adding " << cRegName << " to list of Brd Regs to perserve..." << RESET;
         fBrdRegsToPerserve.push_back(cRegName);
     }
 }
@@ -240,7 +240,7 @@ void OTTool::SetChipRegstoPerserve(FrontEndType pType, std::vector<std::string> 
                     cRegsToPerserve.clear();
                     for(const auto& cRegName: pListOfRegs)
                     {
-                        LOG(INFO) << BOLDBLUE << "Adding " << cRegName << " to list of Chip Regs to perserve...Chip#" << +cChip->getId() << RESET;
+                        LOG(DEBUG) << BOLDBLUE << "Adding " << cRegName << " to list of Chip Regs to perserve...Chip#" << +cChip->getId() << RESET;
                         cRegsToPerserve.push_back(cRegName);
                     }
                 } // Chips

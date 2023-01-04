@@ -8,8 +8,10 @@
 #include "tools/BackEndAlignment.h"
 #include "tools/BeamTestCheck.h"
 #include "tools/CBCPulseShape.h"
+#include "tools/CheckCbcNeighbors.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
+#include "tools/KIRA.h"
 #include "tools/LatencyScan.h"
 #include "tools/LinkAlignmentOT.h"
 #include "tools/MemoryCheck2S.h"
@@ -20,8 +22,6 @@
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
-#include "tools/CheckCbcNeighbors.h"
-
 
 #ifdef __POWERSUPPLY__
 // Libraries
@@ -180,6 +180,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("limitTriggers", "Only accept exactly the correct number of triggers", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkCICAlignment", "Manually scan CIC input aligner", ArgvParser::NoOptionAttribute);
     cmd.defineOption("checkLink", "Check that I can receive constant pattern from link", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("kira", "KIRA scan", ArgvParser::OptionRequiresValue);
     //
     cmd.defineOption("readTemperatures", "Read temperature sensors available on module [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
     cmd.defineOption("readMonitors", "Read internal monitors on lpGBT [lpGBT internal; sensor thermistory]", ArgvParser::OptionRequiresValue);
@@ -203,6 +204,7 @@ int main(int argc, char* argv[])
     std::string cInjectionSource = (cmd.foundOption("injectionTest")) ? cmd.optionValue("injectionTest") : "digital";
     std::string cSrcLnkTst       = (cmd.foundOption("linkTest")) ? cmd.optionValue("linkTest") : "lpGBT";
     std::string cModuleId        = (cmd.foundOption("moduleId")) ? cmd.optionValue("moduleId") : "ModuleOT";
+    int         cKiraPort        = std::stoi((cmd.foundOption("kira")) ? cmd.optionValue("kira") : "7010");
     std::string cDirectory       = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     bool        cPulseShape      = (cmd.foundOption("pulseShape")) ? true : false;
 
@@ -626,6 +628,7 @@ int main(int argc, char* argv[])
         cPedestalEqualization.writeObjects();
         cPedestalEqualization.dumpConfigFiles();
         cPedestalEqualization.resetPointers();
+        t.stop();
         t.show("Time to tune the front-ends on the system: ");
         // // reset
         // cTool.fDetectorContainer->resetReadoutChipQueryFunction();
@@ -1193,6 +1196,19 @@ int main(int argc, char* argv[])
         cBeamTestCheck.Reset();
     }
 
+    if(!cmd.foundOption("read") && cmd.foundOption("kira"))
+    {
+        std::ofstream cGoodRuns;
+        cGoodRuns.open("GoodRunNumbers.dat", std::fstream::app);
+        cGoodRuns << cRunNumber << "\n";
+        cGoodRuns.close();
+        KIRA cKira;
+        cKira.Inherit(&cTool);
+        cKira.Initialise(cKiraPort, "MyArduino");
+        cKira.determineLatency();
+        cKira.performKIRATest();
+    }
+
     if(!cmd.foundOption("read") && cmd.foundOption("DataMonitor"))
     {
         std::ofstream cGoodRuns;
@@ -1269,11 +1285,9 @@ int main(int argc, char* argv[])
 
         cCheckCbcNeighbors.TestCbcNeighbors();
 
-
         t.stop();
         t.show("Time to check stubs on shared channels");
     }
-
 
     cTool.SaveResults();
     cTool.WriteRootFile();

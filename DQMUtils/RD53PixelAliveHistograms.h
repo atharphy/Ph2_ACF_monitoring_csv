@@ -11,8 +11,9 @@
 #ifndef RD53PixelAliveHistograms_H
 #define RD53PixelAliveHistograms_H
 
+#include "../Utils/ChannelContainerStream.h"
+#include "../Utils/ChipContainerStream.h"
 #include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
 #include "../Utils/GenericDataArray.h"
 #include "DQMHistogramBase.h"
 
@@ -37,6 +38,8 @@ class PixelAliveHistograms : public DQMHistogramBase
     DetectorDataContainer Occupancy1D;
     DetectorDataContainer Occupancy2D;
     DetectorDataContainer ErrorReadOut2D;
+    DetectorDataContainer Mask1Dcol;
+    DetectorDataContainer Mask1Drow;
     DetectorDataContainer ToT1D;
     DetectorDataContainer ToT2D;
     DetectorDataContainer BCID;

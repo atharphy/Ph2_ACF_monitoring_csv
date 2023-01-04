@@ -11,6 +11,55 @@
 
 namespace Ph2_HwDescription
 {
+LaneConfig::LaneConfig(bool isPrimary, const std::array<uint8_t, 4>& outputLanes, const std::array<bool, 4>& signleChannelInputLanes, const std::array<bool, 4>& dualChannelInputLanes)
+    : outputLaneMapping({0, 1, 2, 3}), inputLaneMapping({0, 1, 2, 3}), internalLanesEnabled({0, 0, 0, 0, 0}), nOutputLanes(1), isPrimary(isPrimary)
+{
+    // ################
+    // # nOutputLanes #
+    // ################
+    nOutputLanes = std::count_if(outputLanes.begin(), outputLanes.end(), [](auto x) { return x > 0; });
+
+    // #####################
+    // # outputLaneMapping #
+    // #####################
+    for(auto i = 0u; i < 4; i++)
+    {
+        if(outputLanes[3 - i] > 0)
+            outputLaneMapping[i] = outputLanes[3 - i] - 1;
+        else
+            outputLaneMapping[i] = nOutputLanes;
+    }
+
+    // ########################
+    // # internalLanesEnabled #
+    // ########################
+    size_t nBondedChannels = std::count(dualChannelInputLanes.begin(), dualChannelInputLanes.end(), true);
+    if(nBondedChannels > 0)
+    {
+        internalLanesEnabled[0] = true;
+        auto it                 = std::find(dualChannelInputLanes.rbegin(), dualChannelInputLanes.rend(), true);
+        inputLaneMapping[0]     = it - dualChannelInputLanes.rbegin();
+        it                      = std::find(it + 1, dualChannelInputLanes.rend(), true);
+        inputLaneMapping[1]     = it - dualChannelInputLanes.rbegin();
+    }
+
+    // #############################################
+    // # inputLaneMapping and internalLanesEnabled #
+    // #############################################
+    size_t nSingleChannels = std::count(signleChannelInputLanes.begin(), signleChannelInputLanes.end(), true);
+    if(nSingleChannels > 0)
+    {
+        size_t j = nBondedChannels + 1;
+        for(auto i = 0u; i < 4; i++)
+            if(signleChannelInputLanes[3 - i])
+            {
+                inputLaneMapping[j - 1] = i;
+                internalLanesEnabled[j] = true;
+                j++;
+            }
+    }
+}
+
 RD53::RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment)
     : ReadoutChip(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id)
 {
@@ -211,74 +260,83 @@ void RD53::loadfRegMap(const std::string& fileName)
         throw Exception("[RD53::loadfRegMapd] The RD53 file settings does not exist");
 }
 
-void RD53::saveRegMap(const std::string& fName2Add)
+std::stringstream RD53::saveRegMap(const std::string& fName2Add)
 {
     const int Nspaces = 26; // @CONST@
 
-    std::string   output = RD53::getFileName(fName2Add);
-    std::ofstream file(output.c_str(), std::ios::out | std::ios::trunc);
+    std::stringstream theStream;
+    std::ofstream     file;
+    std::string       fileName = this->getFileName(fName2Add);
 
-    if(file)
+    std::set<ChipRegPair, RegItemComparer> fSetRegItem;
+    for(const auto& it: fRegMap) fSetRegItem.insert({it.first, it.second});
+
+    int cLineCounter = 0;
+    for(const auto& v: fSetRegItem)
     {
-        std::set<ChipRegPair, RegItemComparer> fSetRegItem;
-        for(const auto& it: fRegMap) fSetRegItem.insert({it.first, it.second});
-
-        int cLineCounter = 0;
-        for(const auto& v: fSetRegItem)
+        while(fCommentMap.find(cLineCounter) != std::end(fCommentMap))
         {
-            while(fCommentMap.find(cLineCounter) != std::end(fCommentMap))
-            {
-                auto cComment = fCommentMap.find(cLineCounter);
+            auto cComment = fCommentMap.find(cLineCounter);
 
-                file << cComment->second << std::endl;
-                cLineCounter++;
-            }
-
-            file << v.first;
-            for(auto j = 0; j < Nspaces; j++) file << " ";
-            file.seekp(-v.first.size(), std::ios_base::cur);
-            file << "0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fAddress) << "          0x" << std::setfill('0') << std::setw(4) << std::hex
-                 << std::uppercase << int(v.second.fDefValue) << "                  0x" << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << int(v.second.fValue)
-                 << "                             " << std::setfill('0') << std::setw(2) << std::dec << std::uppercase << int(v.second.fBitSize) << std::endl;
-
+            theStream << cComment->second << std::endl;
             cLineCounter++;
         }
 
-        file << std::dec << std::endl;
-        file << "*-----------------------------------------------------------------------------------------------------"
-                "--"
-             << std::endl;
-        file << "PIXELCONFIGURATION" << std::endl;
-        file << "*-----------------------------------------------------------------------------------------------------"
-                "--"
-             << std::endl;
-        for(auto col = 0u; col < this->getNCols(); col++)
-        {
-            file << "COL                  " << std::setfill('0') << std::setw(3) << col << std::endl;
+        theStream << v.first;
+        for(auto j = 0; j < Nspaces; j++) theStream << " ";
+        theStream.seekp(-v.first.size(), std::ios_base::cur);
+        theStream << "0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fAddress) << "          0x" << std::setfill('0') << std::setw(4) << std::hex
+                  << std::uppercase << int(v.second.fDefValue) << "                  0x" << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << int(v.second.fValue)
+                  << "                             " << std::setfill('0') << std::setw(2) << std::dec << std::uppercase << int(v.second.fBitSize) << std::endl;
 
-            file << "ENABLE " << +fPixelsMask.Enable[0 + this->getNRows() * col];
-            for(auto row = 1u; row < this->getNRows(); row++) file << "," << +fPixelsMask.Enable[row + this->getNRows() * col];
-            file << std::endl;
-
-            file << "HITBUS " << +fPixelsMask.HitBus[0 + this->getNRows() * col];
-            for(auto row = 1u; row < this->getNRows(); row++) file << "," << +fPixelsMask.HitBus[row + this->getNRows() * col];
-            file << std::endl;
-
-            file << "INJEN  " << +fPixelsMask.InjEn[0 + this->getNRows() * col];
-            for(auto row = 1u; row < this->getNRows(); row++) file << "," << +fPixelsMask.InjEn[row + this->getNRows() * col];
-            file << std::endl;
-
-            file << "TDAC   " << +fPixelsMask.TDAC[0 + this->getNRows() * col];
-            for(auto row = 1u; row < this->getNRows(); row++) file << "," << +fPixelsMask.TDAC[row + this->getNRows() * col];
-            file << std::endl;
-
-            file << std::endl;
-        }
-
-        file.close();
+        cLineCounter++;
     }
-    else
-        LOG(ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << output << RESET;
+
+    theStream << std::dec << std::endl;
+    theStream << "*-----------------------------------------------------------------------------------------------------"
+                 "--"
+              << std::endl;
+    theStream << "PIXELCONFIGURATION" << std::endl;
+    theStream << "*-----------------------------------------------------------------------------------------------------"
+                 "--"
+              << std::endl;
+    for(auto col = 0u; col < this->getNCols(); col++)
+    {
+        theStream << "COL                  " << std::setfill('0') << std::setw(3) << col << std::endl;
+
+        theStream << "ENABLE " << +fPixelsMask.Enable[0 + this->getNRows() * col];
+        for(auto row = 1u; row < this->getNRows(); row++) theStream << "," << +fPixelsMask.Enable[row + this->getNRows() * col];
+        theStream << std::endl;
+
+        theStream << "HITBUS " << +fPixelsMask.HitBus[0 + this->getNRows() * col];
+        for(auto row = 1u; row < this->getNRows(); row++) theStream << "," << +fPixelsMask.HitBus[row + this->getNRows() * col];
+        theStream << std::endl;
+
+        theStream << "INJEN  " << +fPixelsMask.InjEn[0 + this->getNRows() * col];
+        for(auto row = 1u; row < this->getNRows(); row++) theStream << "," << +fPixelsMask.InjEn[row + this->getNRows() * col];
+        theStream << std::endl;
+
+        theStream << "TDAC   " << +fPixelsMask.TDAC[0 + this->getNRows() * col];
+        for(auto row = 1u; row < this->getNRows(); row++) theStream << "," << +fPixelsMask.TDAC[row + this->getNRows() * col];
+        theStream << std::endl;
+
+        theStream << std::endl;
+    }
+
+    if(fName2Add != "ONSTREAM")
+    {
+        file.open(fileName.c_str(), std::ios::out | std::ios::trunc);
+
+        if(file)
+        {
+            file << theStream.str();
+            file.close();
+        }
+        else
+            LOG(ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << fileName << RESET;
+    }
+
+    return theStream;
 }
 
 void RD53::copyMaskFromDefault() { fPixelsMask = fPixelsMaskDefault; }
@@ -305,6 +363,16 @@ void RD53::copyMaskToDefault(const std::string& which)
         else if(which == "td")
             fPixelsMaskDefault.TDAC = fPixelsMask.TDAC;
     }
+
+    if((which == "all") || (which == "en"))
+        for(auto col = 0u; col < this->getNCols(); col++)
+            for(auto row = 0u; row < this->getNRows(); row++)
+            {
+                if(fPixelsMaskDefault.Enable[row + this->getNRows() * col] == true)
+                    fChipOriginalMask->enableChannel(row, col);
+                else
+                    fChipOriginalMask->disableChannel(row, col);
+            }
 }
 
 void RD53::resetMask()
@@ -312,7 +380,7 @@ void RD53::resetMask()
     std::fill(fPixelsMask.Enable.begin(), fPixelsMask.Enable.end(), false);
     std::fill(fPixelsMask.HitBus.begin(), fPixelsMask.HitBus.end(), false);
     std::fill(fPixelsMask.InjEn.begin(), fPixelsMask.InjEn.end(), false);
-    std::fill(fPixelsMask.TDAC.begin(), fPixelsMask.TDAC.end(), RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2);
+    std::fill(fPixelsMask.TDAC.begin(), fPixelsMask.TDAC.end(), this->getFEtype(this->getNCols() / 2, this->getNCols() / 2)->nTDACvalues / 2);
 }
 
 void RD53::enableAllPixels()
@@ -327,7 +395,7 @@ void RD53::disableAllPixels()
     std::fill(fPixelsMask.HitBus.begin(), fPixelsMask.HitBus.end(), false);
 }
 
-size_t RD53::getNbMaskedPixels() { return std::count(fPixelsMask.Enable.begin(), fPixelsMask.Enable.begin(), 0); }
+size_t RD53::getNbMaskedPixels() { return std::count(fPixelsMask.Enable.begin(), fPixelsMask.Enable.end(), false); }
 
 void RD53::enablePixel(unsigned int row, unsigned int col, bool enable)
 {
@@ -337,7 +405,7 @@ void RD53::enablePixel(unsigned int row, unsigned int col, bool enable)
 
 void     RD53::injectPixel(unsigned int row, unsigned int col, bool inject) { fPixelsMask.InjEn[row + this->getNRows() * col] = inject; }
 void     RD53::setTDAC(unsigned int row, unsigned int col, uint8_t TDAC) { fPixelsMask.TDAC[row + this->getNRows() * col] = TDAC; }
-void     RD53::resetTDAC() { std::fill(fPixelsMask.TDAC.begin(), fPixelsMask.TDAC.end(), RD53Shared::setBits(RD53Constants::NBIT_TDAC) / 2); }
+void     RD53::resetTDAC(uint8_t TDAC) { std::fill(fPixelsMask.TDAC.begin(), fPixelsMask.TDAC.end(), TDAC); }
 uint8_t  RD53::getTDAC(unsigned int row, unsigned int col) { return fPixelsMask.TDAC[row + this->getNRows() * col]; }
 uint32_t RD53::getNumberOfChannels() const { return this->getNRows() * this->getNCols(); }
 
@@ -353,21 +421,5 @@ uint8_t RD53::getNumberOfBits(const std::string& regName)
     if(it == fRegMap.end()) return 0;
     return it->second.fBitSize;
 }
-
-RD53::CalCmd::CalCmd(const uint8_t& cal_edge_mode, const uint8_t& cal_edge_delay, const uint8_t& cal_edge_width, const uint8_t& cal_aux_mode, const uint8_t& cal_aux_delay)
-    : cal_edge_mode(cal_edge_mode), cal_edge_delay(cal_edge_delay), cal_edge_width(cal_edge_width), cal_aux_mode(cal_aux_mode), cal_aux_delay(cal_aux_delay)
-{
-}
-
-void RD53::CalCmd::setCalCmd(const uint8_t& _cal_edge_mode, const uint8_t& _cal_edge_delay, const uint8_t& _cal_edge_width, const uint8_t& _cal_aux_mode, const uint8_t& _cal_aux_delay)
-{
-    cal_edge_mode  = _cal_edge_mode;
-    cal_edge_delay = _cal_edge_delay;
-    cal_edge_width = _cal_edge_width;
-    cal_aux_mode   = _cal_aux_mode;
-    cal_aux_delay  = _cal_aux_delay;
-}
-
-uint32_t RD53::CalCmd::getCalCmd(const uint8_t& chipId) { return bits::pack<4, 1, 3, 6, 1, 5>(chipId, cal_edge_mode, cal_edge_delay, cal_edge_width, cal_aux_mode, cal_aux_delay); }
 
 } // namespace Ph2_HwDescription

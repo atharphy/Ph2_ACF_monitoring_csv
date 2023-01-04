@@ -319,13 +319,13 @@ void D19clpGBTInterface::ConfigurePSROH(Ph2_HwDescription::Chip* pChip)
     // Clocks
     std::vector<uint8_t> cClocks = {fClock_LHS_Hybrid, fClock_LHS_CIC, fClock_RHS_Hybrid, fClock_RHS_CIC};
     // clock frequency set to 0 to disable it at first and only later configure what is needed
-    uint8_t cClkFreq = 0, cClkDriveStr = 1, cClkInvert = 1;
+    uint8_t cClkFreq = 0, cClkDriveStr = 0, cClkInvert = 0;
     uint8_t cClkPreEmphWidth = 0, cClkPreEmphMode = 0, cClkPreEmphStr = 0;
     ConfigureClocks(pChip, cClocks, cClkFreq, cClkDriveStr, cClkInvert, cClkPreEmphWidth, cClkPreEmphMode, cClkPreEmphStr);
     // Tx Groups and Channels
     std::vector<uint8_t> cTxGroups = {0, 1, 2, 3}, cTxChannels = {0};
     // uint8_t              cTxDataRate = 3, cTxDriveStr = 4  , cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
-    uint8_t cTxDataRate = 3, cTxDriveStr = 4, cTxPreEmphMode = 1, cTxPreEmphStr = 4, cTxPreEmphWidth = 0, cTxInvert = 0;
+    uint8_t cTxDataRate = 3, cTxDriveStr = 7, cTxPreEmphMode = 0, cTxPreEmphStr = 0, cTxPreEmphWidth = 0, cTxInvert = 0;
     ConfigureTxGroups(pChip, cTxGroups, cTxChannels, cTxDataRate);
     for(const auto& cGroup: cTxGroups)
     {

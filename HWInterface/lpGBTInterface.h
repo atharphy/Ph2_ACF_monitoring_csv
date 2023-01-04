@@ -24,14 +24,14 @@
 // ##########################
 namespace lpGBTconstants
 {
-const uint8_t  PATTERN_PRBS      = 0x1; // Start PRBS pattern
-const uint8_t  PATTERN_NORMAL    = 0x0; // Start normal-mode pattern
-const uint8_t  PATTERN_CONST     = 0x4; // Constant pattern set by DP pattern
-const uint8_t  PATTERN_CONST_INV = 0x5; // Inverted constant pattern
-const uint8_t  fictitiousGroup   = 6;   // Fictitious group used when no need to speficy frontend chip
-const uint8_t  fictitiousChannel = 0;   // Fictitious channel used when no need to speficy frontend chip
-const uint8_t  rxPhaseTracking   = 2;   // Rx phase tracking mode [0 = no-tracking, 2 = automatic-tracking]
-const uint8_t  SUPERDEEPSLEEP    = 10;  // [milliseconds]
+const uint8_t  PATTERN_PRBS      = 0x1;    // Start PRBS pattern
+const uint8_t  PATTERN_NORMAL    = 0x0;    // Start normal-mode pattern
+const uint8_t  PATTERN_CONST     = 0x4;    // Constant pattern set by DP pattern
+const uint8_t  PATTERN_CONST_INV = 0x5;    // Inverted constant pattern
+const uint8_t  fictitiousGroup   = 6;      // Fictitious group used when no need to speficy frontend chip
+const uint8_t  fictitiousChannel = 0;      // Fictitious channel used when no need to speficy frontend chip
+const uint8_t  rxPhaseTracking   = 2;      // Rx phase tracking mode [0 = no-tracking, 2 = automatic-tracking]
+const uint8_t  SUPERDEEPSLEEP    = 10;     // [milliseconds]
 const uint32_t DEEPSLEEP         = 100000; // [microseconds]
 const uint8_t  MAXATTEMPTS       = 40;     // Maximum number of attempts
 } // namespace lpGBTconstants
@@ -126,6 +126,9 @@ class lpGBTInterface : public ChipInterface
     // ###########################
     // # LpGBT ADC-DAC functions #
     // ###########################
+    uint16_t GetADCOffset(Ph2_HwDescription::Chip* pChip, bool pVerbose = true);
+    float    GetADCGain(Ph2_HwDescription::Chip* pChip, bool pVerbose = true);
+
     uint16_t ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN = "VREF/2", uint8_t pGain = 0);
     void     ConfigureInternalMonitoring(Ph2_HwDescription::Chip* pChip, uint8_t pEnable);
 
@@ -157,12 +160,14 @@ class lpGBTInterface : public ChipInterface
     // ##############################################
     // # LpGBT I2C Masters functions (Slow Control) #
     // ##############################################
-    void     ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pMasters);
-    void     ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode);
-    bool     WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes, uint8_t pFreq = 3 /* 3   1 MHz */);
-    uint32_t ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes, uint8_t pFreq = 3 /* 3   1 MHz */);
-    uint8_t  GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
-    bool     IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
+    void        ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pMasters);
+    void        ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode);
+    uint8_t     GetI2CConfiguration(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
+    bool        WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes, uint8_t pFreq = 3 /* 3   1 MHz */);
+    uint32_t    ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes, uint8_t pFreq = 3 /* 3   1 MHz */);
+    uint8_t     GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
+    std::string GetI2CState(Ph2_HwDescription::Chip* pChip, uint8_t pStatus);
+    bool        IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
 
     // ###########################
     // # LpGBT ADC-DAC functions #
@@ -210,9 +215,6 @@ class lpGBTInterface : public ChipInterface
                                                    {"VDDA", 13},
                                                    {"TEMP", 14},
                                                    {"VREF/2", 15}};
-
-  protected:
-    const float fClockSpeed = 40e6; // 40 MHz clock for the LpGBT
 
     bool WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerify = true) override;
 
@@ -263,6 +265,9 @@ class lpGBTInterface : public ChipInterface
     bool     IsBERTDone(Ph2_HwDescription::Chip* pChip);
     bool     IsBERTEmptyData(Ph2_HwDescription::Chip* pChip);
     uint64_t GetBERTErrors(Ph2_HwDescription::Chip* pChip);
+
+  protected:
+    const float fClockSpeed = 40e6; // 40 MHz clock for the LpGBT
 
     // ##############
     // # LpGBT maps #

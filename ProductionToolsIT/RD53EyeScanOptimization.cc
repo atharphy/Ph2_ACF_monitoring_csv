@@ -131,14 +131,14 @@ void EyeScanOptimization::run()
     ContainerFactory::copyAndInitChip<GenericDataArray<TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>(*fDetectorContainer, theTAP2scanContainer);
 
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x0);
-    EyeScanOptimization::scanDac("CML_TAP0_BIAS", dacListTAP0, nEvents, &theTAP0scanContainer);
+    EyeScanOptimization::scanDac("DAC_CML_BIAS_0", dacListTAP0, nEvents, &theTAP0scanContainer);
 
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x1);
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_INV_TAP", 0x1);
-    EyeScanOptimization::scanDac("CML_TAP1_BIAS", dacListTAP1, nEvents, &theTAP1scanContainer);
+    EyeScanOptimization::scanDac("DAC_CML_BIAS_1", dacListTAP1, nEvents, &theTAP1scanContainer);
 
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x2);
-    EyeScanOptimization::scanDac("CML_TAP2_BIAS", dacListTAP2, nEvents, &theTAP2scanContainer);
+    EyeScanOptimization::scanDac("DAC_CML_BIAS_2", dacListTAP2, nEvents, &theTAP2scanContainer);
 }
 
 void EyeScanOptimization::run2d()
@@ -150,12 +150,12 @@ void EyeScanOptimization::run2d()
     const size_t TAPsize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
     ContainerFactory::copyAndInitChip<GenericDataArray<TAPsize * TAPsize * TAPsize, std::unordered_map<std::string, std::array<float, 7>>>>(*fDetectorContainer, the3DContainer);
-    EyeScanOptimization::scanDac3D("CML_TAP0_BIAS", "CML_TAP1_BIAS", "CML_TAP2_BIAS", dacListTAP0, dacListTAP1, dacListTAP2, nEvents, &the3DContainer);
+    EyeScanOptimization::scanDac3D("DAC_CML_BIAS_0", "DAC_CML_BIAS_1", "DAC_CML_BIAS_2", dacListTAP0, dacListTAP1, dacListTAP2, nEvents, &the3DContainer);
 
     // for (auto tap0 : dacListTAP0){
-    //   LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << "CML_TAP0_BIAS" << BOLDMAGENTA << " value = " << BOLDYELLOW << tap0 << BOLDMAGENTA << " <<<" << RESET;
-    //   for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, "CML_TAP0_BIAS", tap0);
-    //   EyeScanOptimization::scanDac2D("CML_TAP1_BIAS", "CML_TAP2_BIAS", dacListTAP1, dacListTAP2, nEvents, &theTAP1scanContainer, "TAP0_"+std::to_string(tap0));
+    //   LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << "DAC_CML_BIAS_0" << BOLDMAGENTA << " value = " << BOLDYELLOW << tap0 << BOLDMAGENTA << " <<<" << RESET;
+    //   for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, "DAC_CML_BIAS_0", tap0);
+    //   EyeScanOptimization::scanDac2D("DAC_CML_BIAS_1", "DAC_CML_BIAS_2", dacListTAP1, dacListTAP2, nEvents, &theTAP1scanContainer, "TAP0_"+std::to_string(tap0));
     // }
 }
 
@@ -258,9 +258,9 @@ void EyeScanOptimization::saveChipRegisters(int currentRun)
                 for(const auto cChip: *cHybrid)
                 {
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
-                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
+                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap();
                     static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-                    std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
+                    std::string command("mv " + cChip->getFileName(fileReg) + " " + RD53Shared::RESULTDIR);
                     system(command.c_str());
                     LOG(INFO) << BOLDBLUE << "\t--> EyeScanOptimization saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
                               << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;

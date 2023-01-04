@@ -26,7 +26,7 @@ void Physics::ConfigureCalibration()
     doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData  = this->findValueInSettings<double>("SaveBinaryData");
     outputBinaryDir = this->findValueInSettings<std::string>("OutputBinaryDir", "");
-    frontEnd        = RD53Shared::firstChip->getMajorityFE(colStart, colStop);
+    frontEnd        = RD53Shared::firstChip->getFEtype(colStart, colStop);
 
     // ################################
     // # Custom channel group handler #
@@ -38,8 +38,8 @@ void Physics::ConfigureCalibration()
     // ##############################
     // # Initialize data containers #
     // ##############################
-    const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
-    const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+    const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
+    const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
     ContainerFactory::copyAndInitStructure<OccupancyAndPh, GenericDataVector>(*fDetectorContainer, theOccContainer);
     ContainerFactory::copyAndInitChip<GenericDataArray<BCIDsize>>(*fDetectorContainer, theBCIDContainer);
     ContainerFactory::copyAndInitChip<GenericDataArray<TrgIDsize>>(*fDetectorContainer, theTrgIDContainer);
@@ -75,12 +75,12 @@ void Physics::Running()
 
 void Physics::sendBoardData(const BoardContainer* cBoard)
 {
-    const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
-    const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+    const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
+    const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
 
-    auto theOccStream   = prepareChannelContainerStreamer<OccupancyAndPh>("Occ");
-    auto theBCIDStream  = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<BCIDsize>>("BCID");
-    auto theTrgIDStream = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TrgIDsize>>("TrgID");
+    auto theOccStream   = this->prepareChannelContainerStreamer<OccupancyAndPh>("Occ");
+    auto theBCIDStream  = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<BCIDsize>>("BCID");
+    auto theTrgIDStream = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<TrgIDsize>>("TrgID");
 
     if(fDQMStreamerEnabled == true)
     {
@@ -156,12 +156,13 @@ void Physics::run()
         RD53Event::decodedEvents.clear();
         Physics::analyze();
 
+        // @TMP@
         if(strcmp(frontEnd->name, "SYNC") == 0)
             for(const auto cBoard: *fDetectorContainer)
             {
                 static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])
-                    ->WriteChipCommand(serialize(RD53ACmd::WrReg{RD53Constants::BROADCAST_CHIPID, RD53Constants::GLOBAL_PULSE_ADDR, 1 << 14}), -1);
-                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommand(serialize(RD53ACmd::GlobalPulse{RD53Constants::BROADCAST_CHIPID, 0x6}), -1);
+                    ->WriteChipCommand(serialize(RD53ACmd::WrReg{RD53AConstants::BROADCAST_CHIPID, RD53AConstants::GLOBAL_PULSE_ADDR, 1 << 14}), -1);
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommand(serialize(RD53ACmd::GlobalPulse{RD53AConstants::BROADCAST_CHIPID, 0x6}), -1);
                 std::this_thread::sleep_for(std::chrono::microseconds(10));
                 static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommand(serialize(RD53ACmd::ECR{}), -1);
                 std::this_thread::sleep_for(std::chrono::microseconds(20));
@@ -175,9 +176,9 @@ void Physics::run()
     }
 }
 
-void Physics::draw()
+void Physics::draw(bool saveData)
 {
-    Physics::saveChipRegisters(theCurrentRun);
+    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
@@ -233,8 +234,8 @@ void Physics::fillHisto()
 
 void Physics::fillDataContainer(BeBoard& theBoard)
 {
-    const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
-    const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+    const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
+    const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
     const auto   cBoard    = theOccContainer.at(theBoard.getIndex());
 
     // ###################
@@ -271,8 +272,8 @@ void Physics::fillDataContainer(BeBoard& theBoard)
                 for(auto i = 1u; i < cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1.size(); i++)
                 {
                     int deltaBCID = cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1[i] - cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1[i - 1];
-                    deltaBCID += (deltaBCID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1);
-                    if(deltaBCID >= int(BCIDsize))
+                    deltaBCID += (deltaBCID >= 0 ? 0 : frontEnd->maxBCIDvalue + 1);
+                    if(deltaBCID >= int(frontEnd->maxBCIDvalue))
                         LOG(ERROR) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaBCID out of range: " << BOLDYELLOW << deltaBCID << RESET;
                     else
                         theBCIDContainer.at(cBoard->getIndex())
@@ -286,8 +287,8 @@ void Physics::fillDataContainer(BeBoard& theBoard)
                 for(auto i = 1u; i < cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2.size(); i++)
                 {
                     int deltaTrgID = cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2[i] - cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2[i - 1];
-                    deltaTrgID += (deltaTrgID >= 0 ? 0 : RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1);
-                    if(deltaTrgID >= int(TrgIDsize))
+                    deltaTrgID += (deltaTrgID >= 0 ? 0 : frontEnd->maxTRIGIDvalue + 1);
+                    if(deltaTrgID >= int(frontEnd->maxTRIGIDvalue))
                         LOG(ERROR) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaTrgID out of range: " << BOLDYELLOW << deltaTrgID << RESET;
                     else
                         theTrgIDContainer.at(cBoard->getIndex())
@@ -309,44 +310,12 @@ void Physics::fillDataContainer(BeBoard& theBoard)
                     for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++) cChip->getChannel<OccupancyAndPh>(row, col).normalize(events.size(), true);
 }
 
-void Physics::chipErrorReport() const
-{
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
-                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->ChipErrorReport(cChip);
-                }
-}
-
-void Physics::saveChipRegisters(int currentRun)
-{
-    const std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
-
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    static_cast<RD53*>(cChip)->copyMaskFromDefault();
-                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
-                    static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-                    std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + this->fDirectoryName);
-                    system(command.c_str());
-                    LOG(INFO) << BOLDBLUE << "\t--> Physics saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId()
-                              << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
-                }
-}
-
 void Physics::clearContainers(BeBoard& theBoard)
 {
     RD53Event::clearEventContainer(theBoard, theOccContainer);
 
-    const size_t BCIDsize  = RD53Shared::setBits(RD53EvtEncoder::NBIT_BCID) + 1;
-    const size_t TrgIDsize = RD53Shared::setBits(RD53EvtEncoder::NBIT_TRIGID) + 1;
+    const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
+    const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
     const auto   cBoard    = theOccContainer.at(theBoard.getIndex());
 
     // ####################

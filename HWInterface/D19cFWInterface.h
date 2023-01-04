@@ -315,6 +315,9 @@ class D19cFWInterface : public BeBoardFWInterface
     // consecutive triggers FSM
     void ConfigureAntennaFSM(uint16_t pNtriggers = 1, uint16_t pTriggerRate = 1, uint16_t pL1Delay = 100);
 
+    void configureLinks(const Ph2_HwDescription::BeBoard* pBoard);
+    void configureTxRxPolarities(const Ph2_HwDescription::BeBoard* pBoard);
+    void configureLpGbtVersions(const Ph2_HwDescription::BeBoard* pBoard);
     void setRxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fRxPolarity.insert({pLinkId, pPolarity}); };
     void setTxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fTxPolarity.insert({pLinkId, pPolarity}); };
 

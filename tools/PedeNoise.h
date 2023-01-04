@@ -56,7 +56,13 @@ class PedeNoise : public Tool
     void cleanContainerVector();
     void initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
 
-    uint8_t  fPulseAmplitude{0};
+    uint8_t fPulseAmplitude{0};
+
+    float fPedeNoiseLimit{0.0};
+    bool  fPedeNoiseMask{false};
+    float fPedeNoiseUntrimmedLimit{0.0};
+    bool  fPedeNoiseMaskUntrimmed{false};
+
     uint32_t fEventsPerPoint{0};
     uint32_t fMaxNevents{65535};
     int      fNEventsPerBurst{-1};
@@ -93,7 +99,7 @@ class PedeNoise : public Tool
 
     // for validation
     void setThresholdtoNSigma(BoardContainer* board, float pNSigma);
-
+    void maskNoisyChannels(BoardDataContainer* board);
     // helpers for SCurve measurement
 
     ContainerRecycleBin<Occupancy> fRecycleBin;

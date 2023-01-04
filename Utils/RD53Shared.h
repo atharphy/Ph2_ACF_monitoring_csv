@@ -30,16 +30,17 @@ namespace RD53Shared
 {
 extern Ph2_HwDescription::RD53* firstChip;
 
-const char     RESULTDIR[]   = "Results";                                       // Directory containing the results
-const double   ISDISABLED    = -1.0;                                            // Encoding disabled channels
-const double   FITERROR      = -2.0;                                            // Encoding fit errors
-const int      NLATENCYBINS  = 2;                                               // Number of latencies spanned
-const int      MAXBITCHIPREG = 16;                                              // Maximum number of bits of a chp register
-const size_t   NTHREADS      = round(std::thread::hardware_concurrency() / 2.); // Number of potential threads for the current CPU (removing hyper-threading)
-const uint32_t DEEPSLEEP     = 100000;                                          // [microseconds]
-const uint8_t  READOUTSLEEP  = 50;                                              // [microseconds]
-const uint8_t  MAXATTEMPTS   = 40;                                              // Maximum number of attempts
-const int      MAXSTEPS      = 10;                                              // Maximum number of steps for a scan
+const char     RESULTDIR[]            = "Results";                                       // Directory containing the results
+const double   ISMASKED               = -1.0;                                            // Encoding masked channels
+const double   ISDISABLED             = -2.0;                                            // Encoding disabled channels
+const double   FITERROR               = -3.0;                                            // Encoding fit errors
+const int      MAXBITCHIPREG          = 16;                                              // Maximum number of bits of a chp register
+const size_t   NTHREADS               = round(std::thread::hardware_concurrency() / 2.); // Number of potential threads for the current CPU (removing hyper-threading)
+const uint32_t DEEPSLEEP              = 100000;                                          // [microseconds]
+const uint8_t  READOUTSLEEP           = 50;                                              // [microseconds]
+const uint8_t  MAXATTEMPTS            = 40;                                              // Maximum number of attempts
+const uint16_t MAXATTEMPTSCMDDISPATCH = 500;                                             // Maximum number of attempts to dispatch a command
+const int      MAXSTEPS               = 10;                                              // Maximum number of steps for a scan
 
 std::string fromInt2Str(int val);
 std::string composeFileName(const std::string& configFileName, const std::string& fName2Add);

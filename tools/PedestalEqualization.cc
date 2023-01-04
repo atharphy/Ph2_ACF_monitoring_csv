@@ -71,15 +71,21 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
 
     this->fAllChan = pAllChan;
 
-    fSkipMaskedChannels          = findValueInSettings<double>("SkipMaskedChannels", 0);
-    fMaskChannelsFromOtherGroups = findValueInSettings<double>("MaskChannelsFromOtherGroups", 1);
-    fCheckLoop                   = findValueInSettings<double>("VerificationLoop", 1);
-    fTestPulseAmplitude          = findValueInSettings<double>("PedestalEqualizationPulseAmplitude", 0);
-    fEventsPerPoint              = findValueInSettings<double>("Nevents", 10);
-    fNEventsPerBurst             = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
-    fOccupancyAtPedestal         = findValueInSettings<double>("PedestalEqualizationOccupancy", 0.56);
-    uint8_t cDefTargetOffset     = (fWithCBC) ? 0x7F : 0xF;
-    fTargetOffset                = findValueInSettings<double>("PedestalEqualizationTargetOffset", cDefTargetOffset);
+    fSkipMaskedChannels                = findValueInSettings<double>("SkipMaskedChannels", 0);
+    fMaskChannelsFromOtherGroups       = findValueInSettings<double>("MaskChannelsFromOtherGroups", 1);
+    fCheckLoop                         = findValueInSettings<double>("VerificationLoop", 1);
+    fPedestalEqualizationMaskUntrimmed = findValueInSettings<double>("PedestalEqualizationMaskUntrimmed", 0);
+    fFullScan                          = findValueInSettings<double>("FullScan", 0);
+
+    fPedestalEqualizationFullScanStart = findValueInSettings<double>("PedestalEqualizationFullScanStart", 110);
+    fPedestalEqualizationFullScanCAP   = findValueInSettings<double>("PedestalEqualizationFullScanCAP", 1.0);
+
+    fTestPulseAmplitude      = findValueInSettings<double>("PedestalEqualizationPulseAmplitude", 0);
+    fEventsPerPoint          = findValueInSettings<double>("Nevents", 10);
+    fNEventsPerBurst         = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
+    fOccupancyAtPedestal     = findValueInSettings<double>("PedestalEqualizationOccupancy", 0.56);
+    uint8_t cDefTargetOffset = (fWithCBC) ? 0x7F : 0xF;
+    fTargetOffset            = findValueInSettings<double>("PedestalEqualizationTargetOffset", cDefTargetOffset);
     // uint8_t cEnableFastCounterReadout = (uint8_t)findValueInSettings<double>("EnableFastCounterReadout", 0);
     // uint8_t cEnablePairSelect         = (uint8_t)findValueInSettings<double>("EnablePairSelect", 0);
 
@@ -159,7 +165,8 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
                             // fStubLogicCointainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<uint8_t>() =
                             //     fReadoutChipInterface->ReadChipReg(theChip, "Pipe&StubInpSel&Ptwidth");
                             // uint8_t value = fReadoutChipInterface->ReadChipReg(theChip, "HIP&TestMode");
-                            // fHIPCountCointainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<uint8_t>() = value;
+                            // fHIPCountCointainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<uint8_t>() =
+                            // value;
                             static_cast<CbcInterface*>(fReadoutChipInterface)->enableHipSuppression(theChip, false, true, 0);
                         }
                     }
@@ -200,11 +207,12 @@ void PedestalEqualization::Reset()
                     for(auto cMapItem: cModMap)
                     {
                         auto cValueInMemory = cChip->getReg(cMapItem.first);
+                        if(cMapItem.second.fValue == cValueInMemory) continue;
                         // don't reconfigure the offsets .. whole point of this excercise
                         if(cMapItem.first.find("Channel") != std::string::npos) continue;
                         if(cMapItem.first.find("TrimDAC") != std::string::npos) continue;
                         if(cMapItem.first.find("THTRIMMING") != std::string::npos) continue;
-
+                        if(cMapItem.first.find("ENFLAGS") != std::string::npos) { cMapItem.second.fValue = (cMapItem.second.fValue & 0xfe) + (cValueInMemory & 0x1); };
                         LOG(DEBUG) << BOLDYELLOW << "PedestalEqualization::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
                                    << cMapItem.second.fValue << RESET;
                         cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second.fValue));
@@ -278,8 +286,11 @@ void PedestalEqualization::FindVplus()
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-    this->bitWiseScan("Threshold", fEventsPerPoint, fOccupancyAtPedestal, fNEventsPerBurst);
 
+    if(fFullScan)
+        this->fullScan("Threshold", fEventsPerPoint, fOccupancyAtPedestal, fNEventsPerBurst, fPedestalEqualizationFullScanStart, fPedestalEqualizationFullScanCAP);
+    else
+        this->bitWiseScan("Threshold", fEventsPerPoint, fOccupancyAtPedestal, fNEventsPerBurst);
     // dumpConfigFiles();
 
     // LOG(INFO) << BOLDBLUE << "Setting threshold trim registers to max value..." << RESET;
@@ -412,7 +423,14 @@ void PedestalEqualization::FindOffsets()
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
 
     if(fWithCBC) this->bitWiseScan("ChannelOffset", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst);
-    if(fWithSSA or fWithMPA) this->bitWiseScan("ThresholdTrim", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst);
+
+    if(fWithSSA or fWithMPA)
+    {
+        if(fFullScan) { this->fullScan("ThresholdTrim", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst, 31, fPedestalEqualizationFullScanCAP, fPedestalEqualizationMaskUntrimmed); }
+        else
+            this->bitWiseScan("ThresholdTrim", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst);
+    }
+
     dumpConfigFiles();
     DetectorDataContainer theOffsetsCointainer;
     ContainerFactory::copyAndInitChannel<uint8_t>(*fDetectorContainer, theOffsetsCointainer);
@@ -427,12 +445,15 @@ void PedestalEqualization::FindOffsets()
                 {
                     // if(fDisableStubLogic and fWithCBC)
                     // {
-                    //     ReadoutChip* theChip = static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
+                    //     ReadoutChip* theChip =
+                    //     static_cast<ReadoutChip*>(fDetectorContainer->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex()));
 
-                    //     uint8_t stubLogicValue = fStubLogicCointainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<uint8_t>();
+                    //     uint8_t stubLogicValue =
+                    //     fStubLogicCointainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<uint8_t>();
                     //     fReadoutChipInterface->WriteChipReg(theChip, "Pipe&StubInpSel&Ptwidth", stubLogicValue);
 
-                    //     uint8_t HIPCountValue = fHIPCountCointainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<uint8_t>();
+                    //     uint8_t HIPCountValue =
+                    //     fHIPCountCointainer.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<uint8_t>();
                     //     fReadoutChipInterface->WriteChipReg(theChip, "HIP&TestMode", HIPCountValue);
                     // }
 

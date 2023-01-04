@@ -32,6 +32,7 @@ class GainOptimization : public Gain
 #ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
+        delete histos;
 #endif
     }
 
@@ -40,31 +41,29 @@ class GainOptimization : public Gain
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
-    void   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
-    void   run();
-    void   analyze();
-    void   draw();
-    size_t getNumberIterations()
+    void   localConfigure(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void   run() override;
+    void   draw(bool saveData = true) override;
+    size_t getNumberIterations() override
     {
         uint16_t nIterationsKrumCurr = floor(log2(KrumCurrStop - KrumCurrStart + 1) + 2);
         uint16_t moreIterations      = 1;
         return Gain::getNumberIterations() * (nIterationsKrumCurr + moreIterations);
     }
-    void saveChipRegisters(int currentRun);
+
+    void analyze();
 
 #ifdef __USE_ROOT__
     GainOptimizationHistograms* histos;
 #endif
 
   private:
-    const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
+    void fillHisto() override;
+
+    void bitWiseScanGlobal(const std::string& regName, float target, uint16_t startValue, uint16_t stopValue);
 
     DetectorDataContainer theKrumCurrContainer;
-
-    void fillHisto();
-    void bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue);
-    void chipErrorReport() const;
 
   protected:
     size_t KrumCurrStart;

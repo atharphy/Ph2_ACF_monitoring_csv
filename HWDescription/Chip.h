@@ -93,16 +93,17 @@ class Chip : public FrontEndDescription
     /*!
      * \brief Get any registeritem of the Map
      * \param pReg
-     * \return  RegItem
+     * \return RegItem
      */
     const ChipRegItem& getRegItem(const std::string& pReg) const;
     ChipRegItem&       getRegItem(const std::string& pReg);
 
     /*!
      * \brief Write the registers of the Map in a file
-     * \param filename
+     * \param fName2Add
+     * \return std::stringstream
      */
-    virtual void saveRegMap(const std::string& filename) = 0;
+    virtual std::stringstream saveRegMap(const std::string& fName2Add = "") = 0;
 
     /*!
      * \brief Get the Map of the registers
@@ -154,6 +155,7 @@ class Chip : public FrontEndDescription
      * \param cClkFrequency
      */
     void setClockFrequency(uint16_t cClkFrequency) { fClockFrequency = cClkFrequency; }
+
     /*!
      * \brief Get the clock frequency
      * \return the clock frequency
@@ -171,7 +173,7 @@ class Chip : public FrontEndDescription
         if(fType == FrontEndType::CIC2) os << "FrontEndType\t--> CIC2";
     }
 
-    // set some of the bits in register , leave others untouched
+    // Set some of the bits in register , leave others untouched
     void setRegBits(const std::string& pReg, ChipRegMask pMask, uint16_t pValue)
     {
         uint16_t cMask = 0x00;
@@ -190,7 +192,8 @@ class Chip : public FrontEndDescription
         // std::cout << "\t\t\t Value is 0x" << std::hex << getReg(pReg) <<  std::dec << " Mask is 0x" << std::hex << cRegMask << std::dec << " value is " << +cValue << "\n";
         return cValue;
     }
-    // update write count
+
+    // Update write count
     void     updateWriteCount(uint32_t fIncrement = 1) { fI2CWrites += fIncrement; }
     void     updateReadCount(uint32_t fIncrement = 1) { fI2Reads += fIncrement; }
     void     updateRBMismatchCount(uint32_t fIncrement = 1) { fI2CReadMismatches += fIncrement; }
@@ -202,8 +205,7 @@ class Chip : public FrontEndDescription
     uint32_t getRegWriteCount() { return fRegWrites; }
     uint32_t getRegReadCount() { return fRegReads; }
 
-    // register maps
-
+    // Register maps
     void        UpdateModifiedRegMap(ChipRegItem pRegItem);
     void        UpdateModifiedRegMap(uint16_t pRegisterAddress, uint8_t pPage);
     void        UpdateModifiedRegMap(const std::string& pReg);
@@ -212,16 +214,24 @@ class Chip : public FrontEndDescription
     void        setRegisterTracking(uint8_t pEnable) { fTrackRegisters = pEnable; }
     uint8_t     getRegisterTracking() { return fTrackRegisters; }
 
+    std::string getFileName(const std::string& fName2Add) const
+    {
+        std::string output = configFileName;
+        output.insert(output.find_last_of("/\\") + 1, fName2Add);
+        return output;
+    }
+
   protected:
-    uint8_t    fChipCode;
-    uint8_t    fChipId;
-    uint8_t    fChipAddress; // I2C addess of chip
-    uint16_t   fMaxRegValue;
-    uint16_t   fClockFrequency;
-    uint8_t    fMasterId;
-    ChipRegMap fRegMap;
-    ChipRegMap fModifiedRegs;
-    CommentMap fCommentMap;
+    std::string configFileName;
+    uint8_t     fChipCode;
+    uint8_t     fChipId;
+    uint8_t     fChipAddress; // I2C addess of chip
+    uint16_t    fMaxRegValue;
+    uint16_t    fClockFrequency;
+    uint8_t     fMasterId;
+    ChipRegMap  fRegMap;
+    ChipRegMap  fModifiedRegs;
+    CommentMap  fCommentMap;
 
   private:
     uint32_t fI2CWrites         = 0;
@@ -249,6 +259,7 @@ struct RegItemComparer
 {
     bool operator()(const ChipRegPair& pRegItem1, const ChipRegPair& pRegItem2) const;
 };
+
 } // namespace Ph2_HwDescription
 
 #endif

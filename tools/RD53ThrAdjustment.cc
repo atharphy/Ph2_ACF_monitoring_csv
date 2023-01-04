@@ -31,7 +31,6 @@ void ThrAdjustment::ConfigureCalibration()
     doDisplay       = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
 
-    frontEnd             = RD53Shared::firstChip->getMajorityFE(PixelAlive::colStart, PixelAlive::colStop);
     PixelAlive::colStart = std::max(PixelAlive::colStart, frontEnd->colStart);
     PixelAlive::colStop  = std::min(PixelAlive::colStop, frontEnd->colStop);
     LOG(INFO) << GREEN << "ThrAdjustment will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << RESET << BOLDYELLOW << colStart << ", " << colStop << RESET
@@ -62,7 +61,7 @@ void ThrAdjustment::Running()
 
     ThrAdjustment::run();
     ThrAdjustment::analyze();
-    ThrAdjustment::saveChipRegisters(theCurrentRun);
+    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     ThrAdjustment::sendData();
 
     PixelAlive::sendData();
@@ -70,7 +69,7 @@ void ThrAdjustment::Running()
 
 void ThrAdjustment::sendData()
 {
-    auto theThrStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>();
+    auto theThrStream = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>();
 
     if(fDQMStreamerEnabled == true)
         for(const auto cBoard: theThrContainer) theThrStream->streamAndSendBoard(cBoard, fDQMStreamer);
@@ -144,12 +143,12 @@ void ThrAdjustment::run()
     // ################
     // # Error report #
     // ################
-    ThrAdjustment::chipErrorReport();
+    CalibBase::chipErrorReport();
 }
 
-void ThrAdjustment::draw()
+void ThrAdjustment::draw(bool saveData)
 {
-    ThrAdjustment::saveChipRegisters(theCurrentRun);
+    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
@@ -191,9 +190,6 @@ void ThrAdjustment::fillHisto()
 
 void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, uint16_t startValue, uint16_t stopValue)
 {
-    std::vector<uint16_t> chipCommandList;
-    std::vector<uint32_t> hybridCommandList;
-
     float    tmp;
     uint16_t init;
     uint16_t numberOfBits = floor(log2(stopValue - startValue + 1) + 1);
@@ -212,6 +208,24 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, 
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, bestDACcontainer, init = 0);
     ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer, tmp = 0);
 
+    // #########################################
+    // # Set VCAL_HIGH to get target threshold #
+    // #########################################
+    for(const auto cBoard: *fDetectorContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    uint16_t vcal_med_setting =
+                        static_cast<RD53*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()))->getReg("VCAL_MED");
+                    uint16_t vcal_high_setting = round(RD53Shared::firstChip->Charge2VCal(target)) + vcal_med_setting;
+                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_HIGH", vcal_high_setting, true);
+
+                    LOG(INFO) << GREEN << "The target threshold is " << std::setprecision(1) << BOLDYELLOW << target << RESET << GREEN << " electrons" << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t--> Closest charge setting is " << BOLDYELLOW << "VCAL_HIGH" << RESET << GREEN << " = " << BOLDYELLOW << vcal_high_setting << RESET << GREEN << " for "
+                              << BOLDYELLOW << "VCAL_MED" << RESET << GREEN << " = " << BOLDYELLOW << vcal_med_setting << std::setprecision(-1) << RESET;
+                }
+
     for(auto i = 0u; i <= numberOfBits; i++)
     {
         // ###########################
@@ -219,60 +233,19 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, 
         // ###########################
         for(const auto cBoard: *fDetectorContainer)
             for(const auto cOpticalGroup: *cBoard)
-            {
-                hybridCommandList.clear();
-
                 for(const auto cHybrid: *cOpticalGroup)
-                {
-                    chipCommandList.clear();
-                    int hybridId = cHybrid->getId();
-
                     for(const auto cChip: *cHybrid)
-                    {
-                        // #########################################
-                        // # Set VCAL_HIGH to get target threshold #
-                        // #########################################
-                        uint16_t vcal_med_setting =
-                            static_cast<RD53*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()))->getReg("VCAL_MED");
-                        uint16_t vcal_high_setting = round(RD53chargeConverter::Charge2VCal(target)) + vcal_med_setting;
-
-                        static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackWriteCommand(cChip, "VCAL_HIGH", vcal_high_setting, chipCommandList, true);
-
-                        LOG(INFO) << GREEN << "The target threshold is " << std::setprecision(1) << BOLDYELLOW << target << RESET << GREEN << " electrons" << RESET;
-                        LOG(INFO) << BOLDBLUE << "\t--> Closest charge setting is " << BOLDYELLOW << "VCAL_HIGH" << RESET << GREEN << " = " << BOLDYELLOW << vcal_high_setting << RESET << GREEN
-                                  << " for " << BOLDYELLOW << "VCAL_MED" << RESET << GREEN << " = " << BOLDYELLOW << vcal_med_setting << std::setprecision(-1) << RESET;
-
                         midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() =
                             (minDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() +
                              maxDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>()) /
                             2;
-
-                        static_cast<RD53Interface*>(this->fReadoutChipInterface)
-                            ->PackWriteCommand(cChip,
-                                               regName,
-                                               midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
-                                               chipCommandList,
-                                               true);
-
-                        LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regName << BOLDMAGENTA << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
-                                  << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDMAGENTA << "] = " << RESET << BOLDYELLOW
-                                  << midDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << BOLDMAGENTA
-                                  << " <<<" << RESET;
-                    }
-
-                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(cBoard, chipCommandList, hybridId, hybridCommandList);
-                }
-
-                static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendHybridCommands(cBoard, hybridCommandList);
-            }
+        CalibBase::downloadNewDACvalues(midDACcontainer, regName);
 
         // ################
         // # Run analysis #
         // ################
         PixelAlive::run();
         auto output = PixelAlive::analyze();
-        output->resetNormalizationStatus();
-        output->normalizeAndAverageContainers(fDetectorContainer, this->getChannelGroupHandlerContainer(), 1);
 
         // ##############################################
         // # Send periodic data to monitor the progress #
@@ -320,76 +293,11 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, 
     // ###########################
     // # Download new DAC values #
     // ###########################
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-        {
-            hybridCommandList.clear();
-
-            for(const auto cHybrid: *cOpticalGroup)
-            {
-                chipCommandList.clear();
-                int hybridId = cHybrid->getId();
-
-                for(const auto cChip: *cHybrid)
-                    if(bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() != 0)
-                    {
-                        static_cast<RD53Interface*>(this->fReadoutChipInterface)
-                            ->PackWriteCommand(cChip,
-                                               regName,
-                                               bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>(),
-                                               chipCommandList,
-                                               true);
-
-                        LOG(INFO) << BOLDMAGENTA << ">>> Best " << BOLDYELLOW << regName << BOLDMAGENTA << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
-                                  << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] = " << BOLDYELLOW
-                                  << bestDACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << BOLDMAGENTA
-                                  << " <<<" << RESET;
-                    }
-                    else
-                        LOG(WARNING) << BOLDRED << ">>> Best " << BOLDYELLOW << regName << BOLDRED << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
-                                     << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << BOLDRED << "] was not found <<<" << RESET;
-
-                static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(cBoard, chipCommandList, hybridId, hybridCommandList);
-            }
-
-            static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendHybridCommands(cBoard, hybridCommandList);
-        }
+    CalibBase::downloadNewDACvalues(bestDACcontainer, regName, true, 0);
 
     // ################
     // # Run analysis #
     // ################
     PixelAlive::run();
     PixelAlive::analyze();
-}
-
-void ThrAdjustment::chipErrorReport() const
-{
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
-                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->ChipErrorReport(cChip);
-                }
-}
-
-void ThrAdjustment::saveChipRegisters(int currentRun)
-{
-    const std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
-
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    static_cast<RD53*>(cChip)->copyMaskFromDefault();
-                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
-                    static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-                    std::string command("mv " + static_cast<RD53*>(cChip)->getFileName(fileReg) + " " + this->fDirectoryName);
-                    system(command.c_str());
-                    LOG(INFO) << BOLDBLUE << "\t--> ThrAdjustment saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId()
-                              << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
-                }
 }

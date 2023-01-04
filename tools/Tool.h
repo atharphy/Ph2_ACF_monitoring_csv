@@ -273,6 +273,19 @@ class Tool : public Ph2_System::SystemController
     void bitWiseScan(const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst = -1);
     // Bit wise scan per BeBoard
     void bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst = -1);
+    // Full scan
+    void
+    fullScan(const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst = -1, int32_t startVal = 110, float occCap = 1.0, bool mask = false);
+    // Full scan per BeBoard
+    void fullScanBeBoard(uint16_t           boardIndex,
+                         const std::string& dacName,
+                         uint32_t           numberOfEvents,
+                         const float&       targetOccupancy,
+                         int32_t            numberOfEventsPerBurst = -1,
+                         int32_t            startVal               = 110,
+                         float              occCap                 = 1.0,
+                         bool               mask                   = false);
+
     // Set dac and measure data
     void setDacAndMeasureData(const std::string& dacName, const uint16_t dacValue, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst = -1);
     // Set dac and measure data per BeBoard
@@ -357,9 +370,9 @@ class Tool : public Ph2_System::SystemController
     StatsSum SummarizeStats(std::vector<T> cData)
     {
         T cInitVal = (T)(0);
-        // remove NANs
+        // Remove NANs
         cData.erase(std::remove_if(cData.begin(), cData.end(), [](T x) { return std::isnan(x); }), cData.end());
-        // calculate stats
+        // Calculate stats
         StatsSum cStatsSum;
         cStatsSum.fSum      = std::accumulate(cData.begin(), cData.end(), cInitVal);
         cStatsSum.fMean     = cStatsSum.fSum / cData.size();

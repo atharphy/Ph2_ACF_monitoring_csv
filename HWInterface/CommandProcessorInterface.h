@@ -24,7 +24,7 @@ class CommandProcessorInterface : public RegManager
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function CommandProcessorInterface::WriteCommand is absent" << RESET;
     }
 
-    virtual std::vector<uint32_t> ReadReply(uint8_t pNWords)
+    virtual std::vector<uint32_t> ReadReply(int pNWords)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function CommandProcessorInterface::ReadReply is absent" << RESET;
         return {};
