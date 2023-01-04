@@ -15,6 +15,7 @@ using namespace Ph2_HwDescription;
 void PixelAliveHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    RD53Shared::setFirstChip(theDetectorStructure);
 
     nRows = RD53Shared::firstChip->getNRows();
     nCols = RD53Shared::firstChip->getNCols();
@@ -148,14 +149,14 @@ void PixelAliveHistograms::fill(const DetectorDataContainer& DataContainer)
                                                        sqrt(ToT2DHist->GetBinError(col + 1, row + 1) * ToT2DHist->GetBinError(col + 1, row + 1) +
                                                             cChip->getChannel<OccupancyAndPh>(row, col).fPhError * cChip->getChannel<OccupancyAndPh>(row, col).fPhError));
                             }
-                            else if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy == RD53Shared::ISMASKED)
+                            else if(cChip->getChannel<OccupancyAndPh>(row, col).fStatus == RD53Shared::ISMASKED)
                                 Mask1DrowHist->Fill(row);
                             if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
                         }
 
                     for(auto col = 0u; col < nCols; col++)
                         for(auto row = 0u; row < nRows; row++)
-                            if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy == RD53Shared::ISMASKED) Mask1DcolHist->Fill(col);
+                            if(cChip->getChannel<OccupancyAndPh>(row, col).fStatus == RD53Shared::ISMASKED) Mask1DcolHist->Fill(col);
                 }
 }
 

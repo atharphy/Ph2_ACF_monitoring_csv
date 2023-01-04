@@ -8,7 +8,6 @@
 */
 
 #include "RD53Monitor.h"
-#include "../Utils/ChipContainerStream.h"
 
 RD53Monitor::RD53Monitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {
@@ -47,6 +46,9 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                     {
                         registerValue = fTheSystemController->fBeBoardInterface->ReadChipMonitor(fTheSystemController->fReadoutChipInterface, cChip, registerName);
 
+                        LOG(INFO) << GREEN << "Reading monitored data for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                                  << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
+
                         theRegisterContainer.getObject(cBoard->getId())
                             ->getObject(cOpticalGroup->getId())
                             ->getObject(cHybrid->getId())
@@ -55,7 +57,7 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                     }
                     catch(...)
                     {
-                        LOG(WARNING) << BOLDRED << "Register " << BOLDYELLOW << registerName << BOLDRED << " is not present in my list of frontend chip registers" << RESET;
+                        return;
                     }
                 }
 
@@ -84,6 +86,8 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
             float registerValue;
             try
             {
+                LOG(INFO) << GREEN << "Reading monitored data for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << RESET << GREEN << "]" << RESET;
+
                 if(fTheSystemController->flpGBTInterface->fADCInputMap.find(registerName) != fTheSystemController->flpGBTInterface->fADCInputMap.end())
                 {
                     if(registerName.find("TEMP") != std::string::npos)
@@ -98,8 +102,8 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
             }
             catch(...)
             {
-                LOG(WARNING) << BOLDRED << "Register " << BOLDYELLOW << registerName << BOLDRED << " is not present in my list of LpGBT chip registers" << RESET;
                 theRegisterContainer.at(cBoard->getId())->at(cOpticalGroup->getId())->getSummary<std::tuple<time_t, float>>() = std::make_tuple(getTimeStamp(), -1);
+                return;
             }
         }
 

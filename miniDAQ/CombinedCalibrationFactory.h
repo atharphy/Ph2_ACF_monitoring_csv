@@ -8,9 +8,6 @@
 #include <map>
 #include <string>
 
-template <typename... Args>
-class CombineCalibration;
-
 class BaseCreator
 {
   public:

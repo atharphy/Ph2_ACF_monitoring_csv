@@ -14,6 +14,8 @@ namespace Ph2_HwDescription
 LaneConfig::LaneConfig(bool isPrimary, const std::array<uint8_t, 4>& outputLanes, const std::array<bool, 4>& signleChannelInputLanes, const std::array<bool, 4>& dualChannelInputLanes)
     : outputLaneMapping({0, 1, 2, 3}), inputLaneMapping({0, 1, 2, 3}), internalLanesEnabled({0, 0, 0, 0, 0}), nOutputLanes(1), isPrimary(isPrimary)
 {
+    const int nLanes = 4; // @CONST@
+
     // ################
     // # nOutputLanes #
     // ################
@@ -22,10 +24,10 @@ LaneConfig::LaneConfig(bool isPrimary, const std::array<uint8_t, 4>& outputLanes
     // #####################
     // # outputLaneMapping #
     // #####################
-    for(auto i = 0u; i < 4; i++)
+    for(auto i = 0u; i < nLanes; i++)
     {
-        if(outputLanes[3 - i] > 0)
-            outputLaneMapping[i] = outputLanes[3 - i] - 1;
+        if(outputLanes[nLanes - 1 - i] > 0)
+            outputLaneMapping[i] = outputLanes[nLanes - 1 - i] - 1;
         else
             outputLaneMapping[i] = nOutputLanes;
     }
@@ -50,8 +52,8 @@ LaneConfig::LaneConfig(bool isPrimary, const std::array<uint8_t, 4>& outputLanes
     if(nSingleChannels > 0)
     {
         size_t j = nBondedChannels + 1;
-        for(auto i = 0u; i < 4; i++)
-            if(signleChannelInputLanes[3 - i])
+        for(auto i = 0u; i < nLanes; i++)
+            if(signleChannelInputLanes[nLanes - 1 - i])
             {
                 inputLaneMapping[j - 1] = i;
                 internalLanesEnabled[j] = true;
@@ -108,7 +110,10 @@ void RD53::loadfRegMap(const std::string& fileName)
                         if(std::all_of(readWord.begin(), readWord.end(), isdigit))
                         {
                             thePixMask.Enable.at(row + this->getNRows() * col) = atoi(readWord.c_str());
-                            if(thePixMask.Enable[row + this->getNRows() * col] == false) fChipOriginalMask->disableChannel(row, col);
+                            if(thePixMask.Enable[row + this->getNRows() * col] == false)
+                                fChipOriginalMask->disableChannel(row, col);
+                            else
+                                fChipOriginalMask->enableChannel(row, col);
                             row++;
                         }
                     }
@@ -261,6 +266,9 @@ void RD53::loadfRegMap(const std::string& fileName)
 }
 
 std::stringstream RD53::saveRegMap(const std::string& fName2Add)
+// #################################################################
+// # If fName2Add != STREAMON --> then data are also saved on file #
+// #################################################################
 {
     const int Nspaces = 26; // @CONST@
 
@@ -323,7 +331,7 @@ std::stringstream RD53::saveRegMap(const std::string& fName2Add)
         theStream << std::endl;
     }
 
-    if(fName2Add != "ONSTREAM")
+    if(fName2Add != "STREAMON")
     {
         file.open(fileName.c_str(), std::ios::out | std::ios::trunc);
 
@@ -339,7 +347,25 @@ std::stringstream RD53::saveRegMap(const std::string& fName2Add)
     return theStream;
 }
 
-void RD53::copyMaskFromDefault() { fPixelsMask = fPixelsMaskDefault; }
+void RD53::copyMaskFromDefault(const std::string& which)
+// #######################
+// # which = all         #
+// # which = en : Enable #
+// # which = hb : HitBus #
+// # which = in : InjEn  #
+// # which = td : TDAC   #
+// #######################
+{
+    if(which.find("all") != std::string::npos)
+        fPixelsMask = fPixelsMaskDefault;
+    else
+    {
+        if(which.find("en") != std::string::npos) fPixelsMask.Enable = fPixelsMaskDefault.Enable;
+        if(which.find("hb") != std::string::npos) fPixelsMask.HitBus = fPixelsMaskDefault.HitBus;
+        if(which.find("in") != std::string::npos) fPixelsMask.InjEn = fPixelsMaskDefault.InjEn;
+        if(which.find("td") != std::string::npos) fPixelsMask.TDAC = fPixelsMaskDefault.TDAC;
+    }
+}
 
 void RD53::copyMaskToDefault(const std::string& which)
 // #######################
@@ -350,21 +376,17 @@ void RD53::copyMaskToDefault(const std::string& which)
 // # which = td : TDAC   #
 // #######################
 {
-    if(which == "all")
+    if(which.find("all") != std::string::npos)
         fPixelsMaskDefault = fPixelsMask;
     else
     {
-        if(which == "en")
-            fPixelsMaskDefault.Enable = fPixelsMask.Enable;
-        else if(which == "hb")
-            fPixelsMaskDefault.HitBus = fPixelsMask.HitBus;
-        else if(which == "in")
-            fPixelsMaskDefault.InjEn = fPixelsMask.InjEn;
-        else if(which == "td")
-            fPixelsMaskDefault.TDAC = fPixelsMask.TDAC;
+        if(which.find("en") != std::string::npos) fPixelsMaskDefault.Enable = fPixelsMask.Enable;
+        if(which.find("hb") != std::string::npos) fPixelsMaskDefault.HitBus = fPixelsMask.HitBus;
+        if(which.find("in") != std::string::npos) fPixelsMaskDefault.InjEn = fPixelsMask.InjEn;
+        if(which.find("td") != std::string::npos) fPixelsMaskDefault.TDAC = fPixelsMask.TDAC;
     }
 
-    if((which == "all") || (which == "en"))
+    if((which.find("all") != std::string::npos) || (which.find("en") != std::string::npos))
         for(auto col = 0u; col < this->getNCols(); col++)
             for(auto row = 0u; row < this->getNRows(); row++)
             {
@@ -400,7 +422,7 @@ size_t RD53::getNbMaskedPixels() { return std::count(fPixelsMask.Enable.begin(),
 void RD53::enablePixel(unsigned int row, unsigned int col, bool enable)
 {
     fPixelsMask.Enable[row + this->getNRows() * col] = enable;
-    fPixelsMask.Enable[row + this->getNRows() * col] = enable;
+    fPixelsMask.HitBus[row + this->getNRows() * col] = enable;
 }
 
 void     RD53::injectPixel(unsigned int row, unsigned int col, bool inject) { fPixelsMask.InjEn[row + this->getNRows() * col] = inject; }
@@ -411,8 +433,8 @@ uint32_t RD53::getNumberOfChannels() const { return this->getNRows() * this->get
 
 bool RD53::isDACLocal(const std::string& regName)
 {
-    if(regName != "PIX_PORTAL") return false;
-    return true;
+    if(regName == "PIX_PORTAL") return true;
+    return false;
 }
 
 uint8_t RD53::getNumberOfBits(const std::string& regName)

@@ -19,6 +19,8 @@
 
 #ifdef __USE_ROOT__
 #include "../DQMUtils/RD53SCurveHistograms.h"
+#else
+typedef bool SCurveHistograms;
 #endif
 
 // #####################
@@ -30,11 +32,9 @@ class SCurve : public CalibBase
     ~SCurve()
     {
         for(auto container: detectorContainerVector) theRecyclingBin.free(container);
-#ifdef __USE_ROOT__
-        if(saveData == true) this->WriteRootFile();
+        if(doSaveData == true) this->WriteRootFile();
         this->CloseResultFile();
         delete histos;
-#endif
     }
 
     void Running() override;
@@ -42,17 +42,14 @@ class SCurve : public CalibBase
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string& fileRes_ = "", int currentRun = -1) override;
-    void   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void   localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
     void   run() override;
-    void   draw(bool doSaveData = true) override;
+    void   draw(bool saveData = true) override;
     size_t getNumberIterations() override { return theChnGroupHandler->getNumberOfGroups() * nSteps; }
 
     std::shared_ptr<DetectorDataContainer> analyze();
 
-#ifdef __USE_ROOT__
     SCurveHistograms* histos;
-#endif
 
   private:
     void fillHisto() override;
@@ -82,9 +79,8 @@ class SCurve : public CalibBase
     bool   doUpdateChip;
     bool   saveBinaryData;
 
-    std::string fileRes;
-    int         theCurrentRun;
-    bool        saveData;
+    int  theCurrentRun;
+    bool doSaveData;
 
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
 };

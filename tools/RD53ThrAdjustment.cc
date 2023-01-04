@@ -55,6 +55,7 @@ void ThrAdjustment::Running()
 
     if(PixelAlive::saveBinaryData == true)
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_ThrAdjustment.raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -87,42 +88,29 @@ void ThrAdjustment::Stop()
     RD53RunProgress::reset();
 }
 
-void ThrAdjustment::localConfigure(const std::string& fileRes_, int currentRun)
+void ThrAdjustment::localConfigure(const std::string& histoFileName, int currentRun)
 {
-#ifdef __USE_ROOT__
     histos             = nullptr;
     PixelAlive::histos = nullptr;
-#endif
+    theCurrentRun      = currentRun;
 
-    if(currentRun >= 0)
-    {
-        theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[ThrAdjustment::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
-    }
+    LOG(INFO) << GREEN << "[ThrAdjustment::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
+    // ##########################
+    // # Initialize calibration #
+    // ##########################
     ThrAdjustment::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "ThrAdjustment");
-    ThrAdjustment::initializeFiles(fileRes_, currentRun);
-}
 
-void ThrAdjustment::initializeFiles(const std::string& fileRes_, int currentRun)
-{
-    // ##############################
-    // # Initialize sub-calibration #
-    // ##############################
-    PixelAlive::initializeFiles("", -1);
-
-    fileRes = fileRes_;
-
-    if((currentRun >= 0) && (PixelAlive::saveBinaryData == true))
-    {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrAdjustment.raw", 'w');
-        this->initializeWriteFileHandler();
-    }
-
-#ifdef __USE_ROOT__
-    delete histos;
-    histos = new ThresholdHistograms;
-#endif
+    // #########################################
+    // # Initialize histogram and binary files #
+    // #########################################
+    CalibBase::initializeFiles<ThresholdHistograms>(histoFileName, "ThrAdjustment", histos, currentRun, PixelAlive::saveBinaryData);
+    CalibBase::initializeFiles<PixelAliveHistograms>(histoFileName, "PixelAlive", PixelAlive::histos);
 }
 
 void ThrAdjustment::run()
@@ -157,7 +145,7 @@ void ThrAdjustment::draw(bool saveData)
 
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
-        this->InitResultFile(fileRes);
+        this->InitResultFile(CalibBase::theHistoFileName);
         LOG(INFO) << BOLDBLUE << "\t--> ThrAdjustment saving histograms..." << RESET;
     }
 
@@ -222,8 +210,8 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, 
                     this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_HIGH", vcal_high_setting, true);
 
                     LOG(INFO) << GREEN << "The target threshold is " << std::setprecision(1) << BOLDYELLOW << target << RESET << GREEN << " electrons" << RESET;
-                    LOG(INFO) << BOLDBLUE << "\t--> Closest charge setting is " << BOLDYELLOW << "VCAL_HIGH" << RESET << GREEN << " = " << BOLDYELLOW << vcal_high_setting << RESET << GREEN << " for "
-                              << BOLDYELLOW << "VCAL_MED" << RESET << GREEN << " = " << BOLDYELLOW << vcal_med_setting << std::setprecision(-1) << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t--> Closest charge setting is " << BOLDYELLOW << "VCAL_HIGH" << BOLDBLUE << " = " << BOLDYELLOW << vcal_high_setting << BOLDBLUE << " for "
+                              << BOLDYELLOW << "VCAL_MED" << BOLDBLUE << " = " << BOLDYELLOW << vcal_med_setting << std::setprecision(-1) << RESET;
                 }
 
     for(auto i = 0u; i <= numberOfBits; i++)
@@ -300,4 +288,9 @@ void ThrAdjustment::bitWiseScanGlobal(const std::string& regName, float target, 
     // ################
     PixelAlive::run();
     PixelAlive::analyze();
+
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in");
 }

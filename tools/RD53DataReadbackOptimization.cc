@@ -96,30 +96,28 @@ void DataReadbackOptimization::Stop()
     RD53RunProgress::reset();
 }
 
-void DataReadbackOptimization::localConfigure(const std::string& fileRes_, int currentRun)
+void DataReadbackOptimization::localConfigure(const std::string& histoFileName, int currentRun)
 {
-#ifdef __USE_ROOT__
-    histos = nullptr;
-#endif
+    histos          = nullptr;
+    BERtest::histos = nullptr;
+    theCurrentRun   = currentRun;
 
-    if(currentRun >= 0)
-    {
-        theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[DataReadbackOptimization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
-    }
+    LOG(INFO) << GREEN << "[DataReadbackOptimization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
+    // ##########################
+    // # Initialize calibration #
+    // ##########################
     DataReadbackOptimization::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "DataReadbackOptimization");
-    DataReadbackOptimization::initializeFiles(fileRes_, currentRun);
-}
 
-void DataReadbackOptimization::initializeFiles(const std::string& fileRes_, int currentRun)
-{
-    fileRes = fileRes_;
-
-#ifdef __USE_ROOT__
-    delete histos;
-    histos = new DataReadbackOptimizationHistograms;
-#endif
+    // #########################################
+    // # Initialize histogram and binary files #
+    // #########################################
+    CalibBase::initializeFiles<DataReadbackOptimizationHistograms>(histoFileName, "DataReadbackOptimization", histos);
 }
 
 void DataReadbackOptimization::run()
@@ -162,7 +160,7 @@ void DataReadbackOptimization::draw(bool saveData)
 
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
-        this->InitResultFile(fileRes);
+        this->InitResultFile(CalibBase::theHistoFileName);
         LOG(INFO) << BOLDBLUE << "\t--> DataReadbackOptimization saving histograms..." << RESET;
     }
 
@@ -193,8 +191,14 @@ void DataReadbackOptimization::analyze(const std::string& regName, const std::ve
 
                     for(auto i = 1u; i < dacListTAP.size(); i++)
                     {
-                        auto current =
-                            theTAPscanContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TAPsize>>().data[i];
+                        auto current = round(theTAPscanContainer.at(cBoard->getIndex())
+                                                 ->at(cOpticalGroup->getIndex())
+                                                 ->at(cHybrid->getIndex())
+                                                 ->at(cChip->getIndex())
+                                                 ->getSummary<GenericDataArray<TAPsize>>()
+                                                 .data[i] /
+                                             RD53Shared::PRECISION) *
+                                       RD53Shared::PRECISION;
                         if((current >= 0) && (current < best))
                         {
                             regVal = dacListTAP[i];

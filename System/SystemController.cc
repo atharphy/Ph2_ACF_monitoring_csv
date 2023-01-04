@@ -318,7 +318,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 fReadoutChipInterface = new RD53AInterface(fBeBoardFWMap);
             else
                 fReadoutChipInterface = new RD53BInterface(fBeBoardFWMap);
-            RD53Shared::firstChip = static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
+            RD53Shared::setFirstChip(*fDetectorContainer);
         }
     } // if there is something to create an interface for
 

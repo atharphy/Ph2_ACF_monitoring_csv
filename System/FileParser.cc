@@ -61,7 +61,7 @@ void FileParser::openHWconfig(const std::string& pFilename, pugi::xml_document& 
 
     if(!result)
     {
-        LOG(ERROR) << BOLDRED << "ERROR :\n Unable to open the file : " << RESET << pFilename << std::endl;
+        LOG(ERROR) << BOLDRED << "ERROR : Unable to open the file : " << RESET << pFilename << std::endl;
         LOG(ERROR) << BOLDRED << "Error description : " << RED << result.description() << RESET << std::endl;
         throw Exception("Unable to parse XML source!");
     }
@@ -1422,7 +1422,7 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
         for(pugi::xml_node nSetting = nSettings.child("Setting"); nSetting; nSetting = nSetting.next_sibling())
         {
             if((strcmp(nSetting.attribute("name").value(), "RegNameDAC1") == 0) || (strcmp(nSetting.attribute("name").value(), "RegNameDAC2") == 0) ||
-               (strcmp(nSetting.attribute("name").value(), "OutputBinaryDir") == 0) || (strcmp(nSetting.attribute("name").value(), "KIRA_ID") == 0))
+               (strcmp(nSetting.attribute("name").value(), "DataOutputDir") == 0) || (strcmp(nSetting.attribute("name").value(), "KIRA_ID") == 0))
             {
                 std::string value(nSetting.first_child().value());
                 value.erase(std::remove(value.begin(), value.end(), ' '), value.end());

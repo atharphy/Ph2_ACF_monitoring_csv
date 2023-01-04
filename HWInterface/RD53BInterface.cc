@@ -34,23 +34,18 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     // ######################
     RD53BInterface::ResetCoreColumns(pRD53);
 
-    RD53Interface::WriteChipReg(pChip, "DataMerging", bits::pack<4, 1, 1, 1, 5, 1>(0, 1, 0, 0, pRD53->laneConfig.serializeBits<bool, 5, 1>(pRD53->laneConfig.internalLanesEnabled), 1), false);
-    // # bits 10-13: DataMergingInputPolarityInvert[3:0]
-    // # bit 9:      EnOutputDataChipId
-    // # bit 8:      EnGatingDataMergeClk1280
-    // # bit 7:      SelDataMergeClk
-    // # bits 3-6:   EnDataMergeLane[3:0] --> Internal input lanes
-    // # bit 2:      MergeChBonding       --> Channel bonding
-    // # bit 1:      DataMergingGpoSel
+    // ##############
+    // # Field data #
+    // ##############
     RD53Interface::WriteChipReg(pChip, "DataConcentratorConf", 0, false); // To be consistent with RD53B event decoder
-    // # bit 12:   EnCRC
-    // # bit 11:   EnBCId
-    // # bit 10:   EnLv1Id
-    // # bit 9:    EnEoS
+    // # bit 12:   EnCRC         --> Map in FormatOptions: enableCRC
+    // # bit 11:   EnBCId        --> Map in FormatOptions: enableBCID
+    // # bit 10:   EnLv1Id       --> Map in FormatOptions: enableTriggerId
+    // # bit 9:    EnEoS         --> Map in FormatOptions: enableEOSmarker
     // # bits 1-8: NumOfEventsInStream[7:0]
     RD53Interface::WriteChipReg(pChip, "CoreColEncoderConf", 0, false);
-    // # bit9:     BinaryReadOut
-    // # bit8:     RawData
+    // # bit9:     BinaryReadOut --> Map in FormatOptions: enableToT
+    // # bit8:     RawData       --> Map in FormatOptions: enableRawMap
     // # bits 4-7: MaxHits[3:0]
     // # bits 1-3: MaxToT[2:0]
 
@@ -72,12 +67,12 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
             if(cRegItem->first == "CLK_DATA_DELAY") break;
         }
     }
-    if(doWriteClkDataDelay == true) RD53BInterface::WriteClokDataDelay(pChip, pChip->getRegItem("CLK_DATA_DELAY").fValue);
+    if(doWriteClkDataDelay == true) RD53BInterface::WriteClockDataDelay(pChip, pChip->getRegItem("CLK_DATA_DELAY").fValue);
 
     // ###############################
     // # Programmig global registers #
     // ###############################
-    static const std::set<std::string> registerBlackList = {"ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"};
+    static const std::set<std::string> registerBlackList = {"ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "VREF_ADC", "CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"};
 
     // ################################################
     // # Programming global registers from white list #
@@ -103,7 +98,6 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
         {
             if(cRegItem.first == "CDR_CONFIG")
             {
-                RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{});
                 RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{});
                 std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
             }
@@ -153,6 +147,10 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
     // # Resets #
     // ##########
     RD53BInterface::SendGlobalPulseBroadcast(pBoard, 0b111, 0xFF); // ResetChannelSynchronizer, ResetCommandDecoder, ResetGlobalConfiguration
+
+    // ###################
+    // # Ring oscillator #
+    // ###################
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "RingOscConfig", 0b111111111111111);
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "RingOscConfig", 0b101111011111111);
     // # bit 15:   RingOscBClear
@@ -163,7 +161,6 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
     // # bit 10:   RingOscBEnLVT
     // # bit 9:    RingOscAClear
     // # bits 1:8: RingOscAEnable[7:0]
-    RD53BInterface::SendGlobalPulseBroadcast(pBoard, 0x100, 0xFF); // ResetEfuses
 
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
@@ -177,7 +174,6 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     LOG(INFO) << GREEN << "Configuring up-link lanes and monitoring..." << RESET;
 
     RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false);
-    // 0 = CK/2, 1 = AURORA, 2 = PRBS7, 3 = 0
     // # bits 7-8: SerSelOut3[1:0]
     // # bits 5-6: SerSelOut2[1:0]
     // # bits 3-4: SerSelOut1[1:0]
@@ -186,12 +182,32 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     // # bits 7-8: SER_INV_TAP[1:0]
     // # bits 5-6: SER_EN_TAP[1:0]
     // # bits 1-4: SER_EN_LANE[3:0] --> External output lanes
+
+    // ##############
+    // # Link speed #
+    // ##############
+    RD53Interface::WriteChipReg(
+        pChip, "CDR_CONFIG_SEL_SER_CLK", (pRD53->laneConfig.isPrimary == false ? RD53FWconstants::ReadoutSpeed::x320 : static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed()), false);
+    RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{});
+
     RD53Interface::WriteChipReg(pChip, "AuroraConfig", bits::pack<4, 6, 2>(RD53Shared::setBits(pRD53->laneConfig.nOutputLanes), 0b011001, 0b11), false);
     // # bit 14:    SendAltOutput
     // # bit 13:    EnablePRBS
     // # bits 9-12: ActiveLanes[3:0] --> Internal output lanes
     // # bits 3-8:  CCWait[5:0]
     // # bits 1-2:  CCSend[1:0]
+
+    // ################
+    // # Data merging #
+    // ################
+    RD53Interface::WriteChipReg(pChip, "DataMerging", bits::pack<4, 1, 1, 1, 5, 1>(0, 1, 0, 0, pRD53->laneConfig.serializeBits<bool, 5, 1>(pRD53->laneConfig.internalLanesEnabled), 1), false);
+    // # bits 10-13: DataMergingInputPolarityInvert[3:0]
+    // # bit 9:      EnOutputDataChipId   --> Map in FormatOptions: enableChipId
+    // # bit 8:      EnGatingDataMergeClk1280
+    // # bit 7:      SelDataMergeClk
+    // # bits 3-6:   EnDataMergeLane[3:0] --> Internal input lanes
+    // # bit 2:      MergeChBonding       --> Channel bonding
+    // # bit 1:      DataMergingGpoSel
     uint16_t val =
         bits::pack<8, 8>(pRD53->laneConfig.serializeBits<uint8_t, 4, 2>(pRD53->laneConfig.inputLaneMapping), pRD53->laneConfig.serializeBits<uint8_t, 4, 2>(pRD53->laneConfig.outputLaneMapping));
     RD53Interface::WriteChipReg(pChip, "DataMergingMux", val, false); // Mux selection for input and output internal lane mapping to external lanes
@@ -214,17 +230,10 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
     RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG1", 0x00, false);
     // # bits 1-8: CBWait[19:12]
 
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-
-    // ##############
-    // # Link speed #
-    // ##############
-    RD53Interface::WriteChipReg(
-        pChip, "CDR_CONFIG_SEL_SER_CLK", (pRD53->laneConfig.isPrimary == false ? RD53FWconstants::ReadoutSpeed::x320 : static_cast<RD53FWInterface*>(fBoardFW)->ReadoutSpeed()), false);
-
+    // ##########
+    // # Resets #
+    // ##########
     RD53BInterface::SendGlobalPulse(pChip, 0b110000, 0xFF); // ResetAurora, ResetSerializer
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-    RD53Interface::SendCommand(pChip, RD53BCmd::Clear{pChip->getId()});
 
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
@@ -339,20 +348,24 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
     doSparse = false; // @TMP@ : not working for RD53B-v1
     if(doSparse == true)
     {
+        // ############################
+        // # Clear whole pixel matrix #
+        // ############################
         RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x4}, commandList);
         RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_PORTAL_ADDR, 0x0}, commandList);
         RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x0}, commandList);
 
         for(auto col = 0u; col < RD53B::NCOLS; col += 2)
         {
-            if(std::find(mask.Enable.begin() + (0 + RD53B::NROWS * col), mask.Enable.begin() + (RD53B::NROWS + RD53B::NROWS * col), true) ==
-               (mask.Enable.begin() + (RD53B::NROWS + RD53B::NROWS * col)))
+            if((std::find(mask.Enable.begin() + (0 + RD53A::NROWS * col), mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * col), true) ==
+                (mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * col))) &&
+               (std::find(mask.Enable.begin() + (0 + RD53A::NROWS * (col + 1)), mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * (col + 1)), true) ==
+                (mask.Enable.begin() + (RD53A::NROWS + RD53A::NROWS * (col + 1)))))
                 continue;
 
             RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
 
             for(auto row = 0u; row < RD53B::NROWS; row++)
-            {
                 if((mask.Enable[row + RD53B::NROWS * col] == true) || (mask.Enable[row + RD53B::NROWS * (col + 1)] == true))
                 {
                     auto data = RD53BInterface::GetPixelConfig(mask, row, col);
@@ -360,13 +373,15 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
                     RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, row}, commandList);
                     RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_PORTAL_ADDR, data}, commandList);
                 }
-            }
         }
     }
     else
     {
         for(auto col = 0u; col < RD53B::NCOLS; col += 2)
         {
+            // #######################
+            // # Starting pixel cell #
+            // #######################
             RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
 
             // ####################
@@ -474,7 +489,7 @@ void RD53BInterface::PackWriteBroadcastCommand(const BeBoard* pBoard, const std:
                 for(auto cChip: *cHybrid) cChip->setReg(regName, data);
 }
 
-void RD53BInterface::WriteClokDataDelay(Chip* pChip, uint16_t value)
+void RD53BInterface::WriteClockDataDelay(Chip* pChip, uint16_t value)
 {
     RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", value, false);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS, RD53BCmd::RD53BCmdEncoder::SYNC), -1);
@@ -496,6 +511,7 @@ uint32_t RD53BInterface::getADCobservable(const std::string& observableName, boo
 // ############################################
 // # Possible observable name values are also #
 // # - INTERNAL_NTC                           #
+// # - INTERNAL_NTC_VOLT                      #
 // ############################################
 {
     uint32_t voltageObservable(0), currentObservable(0);
@@ -533,8 +549,8 @@ uint32_t RD53BInterface::getADCobservable(const std::string& observableName, boo
                                                                           {"NTC_VOLT", 0x02},
                                                                           {"Vref_CAL_DAC", 0x03},
                                                                           {"VDDA_CAPMEASURE", 0x04},
-                                                                          {"TEMPSENS_TOP", 0x05},
-                                                                          {"TEMPSENS_BOTTOM", 0x06},
+                                                                          {"POLY_TEMPSENS_TOP", 0x05},
+                                                                          {"POLY_TEMPSENS_BOTTOM", 0x06},
                                                                           {"VCAL_HI", 0x07},
                                                                           {"VCAL_MED", 0x08},
                                                                           {"LIN_FE_REF_KRUMCURR", 0x09},
@@ -572,8 +588,14 @@ uint32_t RD53BInterface::getADCobservable(const std::string& observableName, boo
     auto search = currentMultiplexer.find(observableName);
     if(observableName == "INTERNAL_NTC")
     {
-        currentObservable = currentMultiplexer.find("NTC_CURR")->second;
-        voltageObservable = voltageMultiplexer.find("I_MUX")->second;
+        currentObservable   = currentMultiplexer.find("NTC_CURR")->second;
+        voltageObservable   = voltageMultiplexer.find("I_MUX")->second;
+        isCurrentNotVoltage = true;
+    }
+    else if(observableName == "INTERNAL_NTC_VOLT")
+    {
+        voltageObservable   = voltageMultiplexer.find("NTC_VOLT")->second;
+        isCurrentNotVoltage = false;
     }
     else if(search == currentMultiplexer.end())
     {
@@ -602,11 +624,82 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     const uint16_t GlbPulseVal = RD53Interface::ReadChipReg(pChip, "GlobalPulseConf");
 
     RD53Interface::WriteChipReg(pChip, "MonitorConfig", data, false); // 14 bits: bit 12 enable, bits 6:11 I-Mon, bits 0:5 V-Mon
-    RD53BInterface::SendGlobalPulse(pChip, 0x1000, 0x0004);           // Trigger Monitor Data to start conversion
+    RD53BInterface::SendGlobalPulse(pChip, 0x1000, 0xFF);             // Trigger Monitor Data to start conversion
     RD53Interface::WriteChipReg(pChip, "MonitorConfig", 0, false);    // Stop monitoring
-    RD53BInterface::SendGlobalPulse(pChip, GlbPulseVal, 0x0004);      // Restore value in Global Pulse Route
+    RD53BInterface::SendGlobalPulse(pChip, GlbPulseVal, 0xFF);        // Restore value in Global Pulse Route
 
     return RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
+}
+
+float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, const std::string& type, int beta)
+// #####################
+// # type == "POLY"    #
+// # type == "ANA"     #
+// # type == "DIG"     #
+// # type == "CENTER"  #
+// # type == "INT_NTC" #
+// #####################
+{
+    // ################################################################################################
+    // # Temperature measurement is done by measuring twice, once with high bias, once with low bias  #
+    // # Temperature is calculated based on the difference of the two, with the formula on the bottom #
+    // # idealityFactor = 5000 [1/1000] for Poly Sens Bottom                                          #
+    // # idealityFactor = 2000 [1/1000] for Poly Sens Top                                             #
+    // # idealityFactor = 1225 [1/1000] for the rest                                                  #
+    // ################################################################################################
+
+    // #####################
+    // # Natural constants #
+    // #####################
+    const float       T0C            = 273.15;         // [Kelvin]
+    const float       T25C           = 298.15;         // [Kelvin]
+    const float       R25C           = 10;             // [kOhm]
+    const float       kb             = 1.38064852e-23; // [J/K]
+    const float       e              = 1.6021766208e-19;
+    const float       R              = 15;   // By circuit design
+    const uint8_t     sensorDEM      = 0x07; // Sensor Dynamic Element Matching bits needed to trim the thermistors
+    const float       idealityFactor = pChip->getRegItem("TEMPSENS_IDEAL_FACTOR").fValue / 1e3;
+    const std::string regName        = (type == "CENTER" ? "MON_SENS_ACB" : "MON_SENS_SLDO");
+
+    uint16_t sensorConfigData; // Enable[5], DEM[4:1], SEL_BIAS[0] (x2 ... 10 bit in total for the sensors in each sensor config register)
+    float    valueLow  = 0;
+    float    valueHigh = 0;
+
+    if(type == "INT_NTC")
+    {
+        bool     isCurrentNotVoltage;
+        uint32_t observable = RD53BInterface::getADCobservable("INTERNAL_NTC_VOLT", isCurrentNotVoltage);
+        float    voltage    = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, observable));
+        float    current    = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data), true);
+
+        // ###############################################
+        // # Calculate temperature with NTC Beta formula #
+        // ###############################################
+        float resistance  = 1e-3 * voltage / current;                               // [kOhm]
+        float temperature = 1. / (1. / T25C + log(resistance / R25C) / beta) - T0C; // [Celsius]
+
+        return temperature;
+    }
+    else if(type != "POLY")
+    {
+        // Get high bias voltage
+        sensorConfigData = bits::pack<1, 4, 1>(true, sensorDEM, 0) << (type == "DIG" ? 6 : 0);
+        RD53Interface::WriteChipReg(pChip, regName, sensorConfigData);
+        valueLow = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data));
+
+        // Get low bias voltage
+        sensorConfigData = bits::pack<1, 4, 1>(true, sensorDEM, 1) << (type == "DIG" ? 6 : 0);
+        RD53Interface::WriteChipReg(pChip, regName, sensorConfigData);
+    }
+    valueHigh = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data));
+
+    // ####################
+    // # Turn off sensing #
+    // ####################
+    RD53Interface::WriteChipReg(pChip, "MON_SENS_ACB", 0);
+    RD53Interface::WriteChipReg(pChip, "MON_SENS_SLDO", 0);
+
+    return e / (idealityFactor * kb * log(R)) * (valueHigh - valueLow) - T0C;
 }
 
 } // namespace Ph2_HwInterface

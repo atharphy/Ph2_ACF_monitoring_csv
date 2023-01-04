@@ -89,6 +89,9 @@ void lpGBT::loadfRegMap(const std::string& fileName)
 }
 
 std::stringstream lpGBT::saveRegMap(const std::string& fName2Add)
+// #################################################################
+// # If fName2Add != STREAMON --> then data are also saved on file #
+// #################################################################
 {
     const int Nspaces = 26;
 
@@ -120,7 +123,7 @@ std::stringstream lpGBT::saveRegMap(const std::string& fName2Add)
         cLineCounter++;
     }
 
-    if(fName2Add != "ONSTREAM")
+    if(fName2Add != "STREAMON")
     {
         file.open(fileName.c_str(), std::ios::out | std::ios::trunc);
 

@@ -75,28 +75,10 @@ Tool::Tool(const Tool& pTool) { this->Inherit(&pTool); }
 
 Tool::~Tool() {}
 
-bool Tool::GetRunningStatus()
-{
-    std::future_status runningStatus = fRunningFuture.wait_for(std::chrono::milliseconds(500u));
-    if(runningStatus == std::future_status::ready || runningStatus == std::future_status::deferred)
-    {
-        try
-        {
-            if(fRunningFuture.valid()) { fRunningFuture.get(); }
-        }
-        catch(const std::exception& e)
-        {
-            throw std::runtime_error(e.what());
-        }
-        return true;
-    }
-    else
-        return false;
-}
-
 void Tool::waitForRunToBeCompleted()
 {
-    while(!GetRunningStatus()) std::this_thread::sleep_for(std::chrono::milliseconds(250));
+    std::unique_lock<std::recursive_mutex> theGuard(theMtx);
+    wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 
 void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
@@ -112,15 +94,25 @@ void Tool::Start(int runNumber)
 #ifdef __USE_ROOT__
     InitResultFile("Hybrid");
 #endif
+    doExit         = false;
     fKeepRunning   = true;
     fRunNumber     = runNumber;
-    fRunningFuture = std::async(std::launch::async, &Tool::Running, this);
+    fRunningThread = std::thread(&Tool::Running, this);
+}
+
+void Tool::InformImDone()
+{
+    std::unique_lock<std::recursive_mutex> theGuard(theMtx);
+    doExit = true;
+    theGuard.unlock();
+    wakeUp.notify_one();
 }
 
 void Tool::Stop()
 {
     fKeepRunning = false;
-    waitForRunToBeCompleted();
+    Tool::waitForRunToBeCompleted();
+    if(fRunningThread.joinable() == true) fRunningThread.join();
     SystemController::Stop();
 }
 
@@ -499,7 +491,7 @@ void Tool::SaveResults()
 #endif
 }
 
-void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool pDate, const std::string& whichCalib)
+void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool pDate)
 {
     std::string nDirname;
     if(pDate) nDirname += currentDateTime();
@@ -514,7 +506,6 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
         nDirname = pDirname;
     }
 
-    LOG(INFO) << GREEN << whichCalib << " attempting to create directory: " << BOLDYELLOW << nDirname << RESET;
     std::string cCommand = "mkdir -p " + nDirname;
 
     try
@@ -553,7 +544,7 @@ void Tool::InitResultFile(const std::string& pFilename)
         }
     }
     else
-        LOG(INFO) << RED << "ERROR: " << RESET << "No Result Directory initialized - not saving results!";
+        LOG(INFO) << RED << "ERROR: " << RESET << "No result directory initialized - not saving results!";
 }
 #endif
 
@@ -562,7 +553,7 @@ void Tool::CloseResultFile()
 #ifdef __USE_ROOT__
     if(fResultFile != nullptr)
     {
-        LOG(INFO) << GREEN << "Closing result file" << RESET;
+        LOG(INFO) << GREEN << "Closing result file: " << BOLDYELLOW << fResultFileName << RESET;
         fResultFile->Close();
         delete fResultFile;
         fResultFile = nullptr;
@@ -2014,7 +2005,7 @@ void Tool::scanBeBoardDac(uint16_t                             boardIndex,
         abort();
     }
 
-    if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53A) // @TMP@
+    if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53A)
     {
         // #######################
         // # Loop over DAC ...   #

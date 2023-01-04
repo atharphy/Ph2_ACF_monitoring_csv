@@ -155,7 +155,7 @@ uint16_t lpGBTInterface::GetRxDataRate(Chip* pChip, uint8_t pGroup)
     std::string cRXCntrlReg = "EPRX" + std::to_string(pGroup) + "Control";
     auto        cRegValue   = ReadChipReg(pChip, cRXCntrlReg);
     uint16_t    cValue      = (cRegValue & 0xC);
-    return (cChipRate / 5.) * (int)cValue * (float)fClockSpeed / 1e6;
+    return (cChipRate / 5.) * (int)cValue * (float)lpGBTconstants::ACCELERATOR_CLK / 1e6;
 }
 
 void lpGBTInterface::ConfigureRxChannels(Chip*                       pChip,
@@ -877,7 +877,7 @@ double lpGBTInterface::BERtestCL(Chip* pChip, uint8_t pGroup, uint8_t pChannel, 
     double    bitsRxd  = (given_time) ? time2run * cRxRate : bits_or_time;
     LOG(INFO) << GREEN << "Running BERT for ~" << BOLDYELLOW << std::fixed << std::setprecision(0) << time2run << RESET << GREEN << "s will test  " << BOLDYELLOW << bitsRxd << RESET << GREEN
               << " received bits." << RESET;
-    uint32_t BERTMeasTime = (log2(time2run * fClockSpeed) - 5) / 2.;
+    uint32_t BERTMeasTime = (log2(time2run * lpGBTconstants::ACCELERATOR_CLK) - 5) / 2.;
     // Configure number of printouts and calculate the frequency of printouts
     double time_per_step = std::min(std::max(time2run / n_prints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
 
@@ -936,7 +936,6 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
 // # 320 Mbit/s   = 2 #
 // ####################
 {
-    const double   mainClock       = 40e6;                             // @CONST@
     const uint32_t nBitInClkPeriod = 32. * std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
     const double   fps             = 1.28e9 / nBitInClkPeriod;         // Frames per second
     const int      n_prints        = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
@@ -947,7 +946,7 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
         time2run = frames_or_time;
     else
         time2run = frames_or_time / fps;
-    size_t BERTMeasTime = (log2(time2run * mainClock) - 5) / 2.;
+    size_t BERTMeasTime = (log2(time2run * lpGBTconstants::ACCELERATOR_CLK) - 5) / 2.;
     frames2run          = fBERTMeasTimeMap[BERTMeasTime];
 
     // Configure number of printouts and calculate the frequency of printouts

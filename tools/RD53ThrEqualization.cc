@@ -71,6 +71,7 @@ void ThrEqualization::Running()
 
     if(PixelAlive::saveBinaryData == true)
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_ThrEqualization.raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -113,42 +114,29 @@ void ThrEqualization::Stop()
     RD53RunProgress::reset();
 }
 
-void ThrEqualization::localConfigure(const std::string& fileRes_, int currentRun)
+void ThrEqualization::localConfigure(const std::string& histoFileName, int currentRun)
 {
-#ifdef __USE_ROOT__
     histos             = nullptr;
     PixelAlive::histos = nullptr;
-#endif
+    theCurrentRun      = currentRun;
 
-    if(currentRun >= 0)
-    {
-        theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[ThrEqualization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
-    }
+    LOG(INFO) << GREEN << "[ThrEqualization::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
+    // ##########################
+    // # Initialize calibration #
+    // ##########################
     ThrEqualization::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "ThrEqualization");
-    ThrEqualization::initializeFiles(fileRes_, currentRun);
-}
 
-void ThrEqualization::initializeFiles(const std::string& fileRes_, int currentRun)
-{
-    // ##############################
-    // # Initialize sub-calibration #
-    // ##############################
-    PixelAlive::initializeFiles("", -1);
-
-    fileRes = fileRes_;
-
-    if((currentRun >= 0) && (PixelAlive::saveBinaryData == true))
-    {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ThrEqualization.raw", 'w');
-        this->initializeWriteFileHandler();
-    }
-
-#ifdef __USE_ROOT__
-    delete histos;
-    histos = new ThrEqualizationHistograms;
-#endif
+    // #########################################
+    // # Initialize histogram and binary files #
+    // #########################################
+    CalibBase::initializeFiles<ThrEqualizationHistograms>(histoFileName, "ThrEqualization", histos, currentRun, PixelAlive::saveBinaryData);
+    CalibBase::initializeFiles<PixelAliveHistograms>(histoFileName, "PixelAlive", PixelAlive::histos);
 }
 
 void ThrEqualization::run()
@@ -176,7 +164,6 @@ void ThrEqualization::run()
     // ##############################
     // # Run threshold equalization #
     // ##############################
-    const size_t TDACsize = frontEnd->nTDACvalues;
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, theTDACContainer);
     ThrEqualization::bitWiseScanLocal(TARGETEFF, true);
 
@@ -207,8 +194,8 @@ void ThrEqualization::run()
                                     ->at(cHybrid->getIndex())
                                     ->at(cChip->getIndex())
                                     ->getChannel<OccupancyAndPh>(row, col)
-                                    .fOccupancy = RD53Shared::ISDISABLED;
-                                theTDACContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) = TDACsize;
+                                    .fStatus = RD53Shared::ISDISABLED;
+                                theTDACContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) = frontEnd->nTDACvalues;
                             }
                 }
 
@@ -229,7 +216,7 @@ void ThrEqualization::draw(bool saveData)
 
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
-        this->InitResultFile(fileRes);
+        this->InitResultFile(CalibBase::theHistoFileName);
         LOG(INFO) << BOLDBLUE << "\t--> ThrEqualization saving histograms..." << RESET;
     }
 
@@ -245,16 +232,13 @@ void ThrEqualization::draw(bool saveData)
 
 void ThrEqualization::analyze()
 {
-    const float  maxTDACdistance = 2; // @CONST@
-    const size_t TDACcenter      = (resetTDAC < 0 ? frontEnd->nTDACvalues / 2 : resetTDAC);
+    const size_t TDACcenter = (resetTDAC < 0 ? frontEnd->nTDACvalues / 2 : resetTDAC);
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    static_cast<RD53*>(cChip)->copyMaskFromDefault();
-
                     float avgTDAC       = 0;
                     int   counter       = 0;
                     int   counterMinBin = 0;
@@ -292,16 +276,16 @@ void ThrEqualization::analyze()
                     // ###########################
                     // # Check TDAC distribution #
                     // ###########################
-                    if(fabs(avgTDAC - TDACcenter) > maxTDACdistance)
+                    if(fabs(avgTDAC - TDACcenter) > MAXtdacDISTANCE)
                     {
                         LOG(WARNING) << BOLDRED << "Average TDAC distribution not centered around " << BOLDYELLOW << TDACcenter << BOLDRED << " (i.e. " << std::setprecision(1) << BOLDYELLOW << avgTDAC
-                                     << BOLDRED << " - center > " << BOLDYELLOW << maxTDACdistance << BOLDRED << ") for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
+                                     << BOLDRED << " - center > " << BOLDYELLOW << MAXtdacDISTANCE << BOLDRED << ") for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
                                      << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << BOLDRED << "]" << std::setprecision(-1) << RESET;
                     }
                     else if((counterMaxBin == 0) && (counterMinBin == 0))
                         LOG(WARNING) << BOLDRED << "TDAC distribution is most likely empty for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId()
                                      << "/" << cHybrid->getId() << "/" << +cChip->getId() << BOLDRED << "]" << RESET;
-                    else if(((frontEnd->nTDACvalues * counterMaxBin / (counterMinBin + counterMaxBin)) - TDACcenter) > maxTDACdistance)
+                    else if(((frontEnd->nTDACvalues * counterMaxBin / (counterMinBin + counterMaxBin)) - TDACcenter) > MAXtdacDISTANCE)
                     {
                         LOG(WARNING) << BOLDRED << "Min and Max TDAC bins are not balanced (i.e. low TDAC value with " << std::setprecision(1) << BOLDYELLOW << counterMinBin << BOLDRED
                                      << " entries and high TDAC value with " << BOLDYELLOW << counterMaxBin << BOLDRED << " entries) for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW
@@ -326,14 +310,21 @@ void ThrEqualization::analyzeDuringRun()
 
                     for(auto i = 0u; i < dacList.size(); i++)
                     {
-                        auto current =
-                            theContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<TDACGainSize>>().data[i];
+                        auto current = round(theContainer.at(cBoard->getIndex())
+                                                 ->at(cOpticalGroup->getIndex())
+                                                 ->at(cHybrid->getIndex())
+                                                 ->at(cChip->getIndex())
+                                                 ->getSummary<GenericDataArray<TDACGainSize>>()
+                                                 .data[i] /
+                                             RD53Shared::PRECISION) *
+                                       RD53Shared::PRECISION;
                         if(current < best)
                         {
                             regVal = dacList[i];
                             best   = current;
                         }
                     }
+
                     LOG(INFO) << BOLDMAGENTA << ">>> Best TDAC gain for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
                               << "/" << +cChip->getId() << BOLDMAGENTA << "] is " << BOLDYELLOW << regVal << BOLDMAGENTA << " <<<" << RESET;
 
@@ -424,11 +415,6 @@ void ThrEqualization::scanDac(const std::string& regName, const std::vector<uint
                         // # Send periodic data to monitor the progress #
                         // ##############################################
                         ThrEqualization::sendData();
-
-                        // #################################
-                        // # Reset masks to default values #
-                        // #################################
-                        static_cast<RD53*>(fDetectorContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex()))->copyMaskFromDefault();
                     }
     }
 }
@@ -523,11 +509,10 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, float target
     // ###########################
     CalibBase::downloadNewDACvalues(bestDACcontainer, regName, true, 0);
 
-    // ################
-    // # Run analysis #
-    // ################
-    PixelAlive::run();
-    PixelAlive::analyze();
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in");
 }
 
 void ThrEqualization::bitWiseScanLocal(float target, bool updateDACs)
@@ -674,4 +659,9 @@ void ThrEqualization::bitWiseScanLocal(float target, bool updateDACs)
     // ################
     PixelAlive::run();
     theOccContainer = PixelAlive::analyze();
+
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in td");
 }

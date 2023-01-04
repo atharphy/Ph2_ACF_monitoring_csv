@@ -17,16 +17,16 @@ void Physics::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart        = this->findValueInSettings<double>("ROWstart");
-    rowStop         = this->findValueInSettings<double>("ROWstop");
-    colStart        = this->findValueInSettings<double>("COLstart");
-    colStop         = this->findValueInSettings<double>("COLstop");
-    nTRIGxEvent     = this->findValueInSettings<double>("nTRIGxEvent");
-    doDisplay       = this->findValueInSettings<double>("DisplayHisto");
-    doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
-    saveBinaryData  = this->findValueInSettings<double>("SaveBinaryData");
-    outputBinaryDir = this->findValueInSettings<std::string>("OutputBinaryDir", "");
-    frontEnd        = RD53Shared::firstChip->getFEtype(colStart, colStop);
+    rowStart       = this->findValueInSettings<double>("ROWstart");
+    rowStop        = this->findValueInSettings<double>("ROWstop");
+    colStart       = this->findValueInSettings<double>("COLstart");
+    colStop        = this->findValueInSettings<double>("COLstop");
+    nTRIGxEvent    = this->findValueInSettings<double>("nTRIGxEvent");
+    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
+    dataOutputDir  = this->findValueInSettings<std::string>("DataOutputDir", "");
+    frontEnd       = RD53Shared::firstChip->getFEtype(colStart, colStop);
 
     // ################################
     // # Custom channel group handler #
@@ -52,7 +52,7 @@ void Physics::Running()
 
     if(saveBinaryData == true)
     {
-        if(outputBinaryDir != "") this->fDirectoryName = outputBinaryDir;
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Physics.raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -103,54 +103,46 @@ void Physics::Stop()
 
     Physics::draw();
     this->closeFileHandler();
+
     LOG(INFO) << GREEN << "[Physics::Stop] Stopped" << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded events: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Total number of received triggers: " << BOLDYELLOW << numberOfEventsPerRun / nTRIGxEvent << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Total number of corrupted events: " << BOLDYELLOW << std::setprecision(3) << errors << " (" << 1. * errors / numberOfEventsPerRun * 100. << "%)"
+    LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded bunch crossings: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Total number of received triggers (i.e. events): " << BOLDYELLOW << numberOfEventsPerRun / nTRIGxEvent << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Total number of corrupted bunch crossings: " << BOLDYELLOW << std::setprecision(3) << errors << " (" << 1. * errors / numberOfEventsPerRun * 100. << "%)"
               << std::setprecision(-1) << RESET;
 }
 
-void Physics::localConfigure(const std::string& fileRes_, int currentRun)
+void Physics::localConfigure(const std::string& histoFileName, int currentRun)
 {
-#ifdef __USE_ROOT__
-    histos = nullptr;
-#endif
+    errors        = 0;
+    histos        = nullptr;
+    theCurrentRun = currentRun;
 
-    if(currentRun >= 0)
-    {
-        theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[Physics::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
-    }
+    LOG(INFO) << GREEN << "[Physics::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
+    // ##########################
+    // # Initialize calibration #
+    // ##########################
     Physics::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "Physics");
-    Physics::initializeFiles(fileRes_, currentRun);
-}
 
-void Physics::initializeFiles(const std::string& fileRes_, int currentRun)
-{
-    fileRes = fileRes_;
-
-    if((currentRun >= 0) && (saveBinaryData == true))
-    {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Physics.raw", 'w');
-        this->initializeWriteFileHandler();
-    }
-
+    // #########################################
+    // # Initialize histogram and binary files #
+    // #########################################
+    CalibBase::initializeFiles<PhysicsHistograms>(histoFileName, "Physics", histos, currentRun);
 #ifdef __USE_ROOT__
     if(this->fResultFile != nullptr) this->fResultFile->Close();
-    delete histos;
-    if(fileRes != "")
-    {
-        histos = new PhysicsHistograms;
-        this->InitResultFile(fileRes);
-        histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
-    }
+    this->InitResultFile(CalibBase::theHistoFileName);
 #endif
 }
 
 void Physics::run()
 {
-    std::unique_lock<std::mutex> theGuard(theMtx, std::defer_lock);
+    std::unique_lock<std::recursive_mutex> theGuard(theMtx, std::defer_lock);
+
     while(this->fKeepRunning == true)
     {
         RD53Event::decodedEvents.clear();
@@ -172,8 +164,14 @@ void Physics::run()
         genericEvtConverter(RD53Event::decodedEvents);
         numberOfEventsPerRun += RD53Event::decodedEvents.size();
         theGuard.unlock();
+
+        if((RD53Event::decodedEvents.size() != 0) && (numberOfEventsPerRun % PRINTeventsEVERY == 0))
+            LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded bunch crossings up to now: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
+
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
     }
+
+    Tool::InformImDone();
 }
 
 void Physics::draw(bool saveData)
@@ -185,14 +183,15 @@ void Physics::draw(bool saveData)
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    LOG(INFO) << BOLDBLUE << "\t--> Physics saving histograms..." << RESET;
-
-    if(fileRes != "")
+    if((saveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
     {
-        Physics::fillHisto();
-        histos->process();
-        this->WriteRootFile();
+        this->InitResultFile(CalibBase::theHistoFileName);
+        LOG(INFO) << BOLDBLUE << "\t--> Physics saving histograms..." << RESET;
     }
+
+    histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
+    Physics::fillHisto();
+    histos->process();
 
     if(doDisplay == true) myApp->Run(true);
 #endif
@@ -214,9 +213,6 @@ void Physics::analyze(bool doReadBinary)
 
         if(dataSize != 0)
         {
-#ifdef __USE_ROOT__
-            Physics::fillHisto();
-#endif
             Physics::fillDataContainer(*cBoard);
             Physics::sendBoardData(cBoard);
         }
@@ -274,7 +270,7 @@ void Physics::fillDataContainer(BeBoard& theBoard)
                     int deltaBCID = cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1[i] - cChip->getSummary<GenericDataVector, OccupancyAndPh>().data1[i - 1];
                     deltaBCID += (deltaBCID >= 0 ? 0 : frontEnd->maxBCIDvalue + 1);
                     if(deltaBCID >= int(frontEnd->maxBCIDvalue))
-                        LOG(ERROR) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaBCID out of range: " << BOLDYELLOW << deltaBCID << RESET;
+                        LOG(DEBUG) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaBCID out of range: " << BOLDYELLOW << deltaBCID << RESET;
                     else
                         theBCIDContainer.at(cBoard->getIndex())
                             ->at(cOpticalGroup->getIndex())
@@ -289,7 +285,7 @@ void Physics::fillDataContainer(BeBoard& theBoard)
                     int deltaTrgID = cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2[i] - cChip->getSummary<GenericDataVector, OccupancyAndPh>().data2[i - 1];
                     deltaTrgID += (deltaTrgID >= 0 ? 0 : frontEnd->maxTRIGIDvalue + 1);
                     if(deltaTrgID >= int(frontEnd->maxTRIGIDvalue))
-                        LOG(ERROR) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaTrgID out of range: " << BOLDYELLOW << deltaTrgID << RESET;
+                        LOG(DEBUG) << BOLDBLUE << "[Physics::fillDataContainer] " << BOLDRED << "deltaTrgID out of range: " << BOLDYELLOW << deltaTrgID << RESET;
                     else
                         theTrgIDContainer.at(cBoard->getIndex())
                             ->at(cOpticalGroup->getIndex())
