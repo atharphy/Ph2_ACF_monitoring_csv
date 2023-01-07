@@ -189,13 +189,10 @@ void ThrEqualization::run()
                                                                                                                      ->allChannelGroup()
                                                                                                                      ->isChannelEnabled(row, col))
                             {
-                                theOccContainer->at(cBoard->getIndex())
-                                    ->at(cOpticalGroup->getIndex())
-                                    ->at(cHybrid->getIndex())
-                                    ->at(cChip->getIndex())
-                                    ->getChannel<OccupancyAndPh>(row, col)
-                                    .fStatus = RD53Shared::ISDISABLED;
-                                theTDACContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) = frontEnd->nTDACvalues;
+                                theOccContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row, col).fStatus =
+                                    RD53Shared::ISDISABLED;
+                                theTDACContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<uint16_t>(row, col) =
+                                    frontEnd->nTDACvalues;
                             }
                 }
 

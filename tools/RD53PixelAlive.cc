@@ -245,12 +245,8 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
                                 }
                             }
                             else
-                                theOccContainer->at(cBoard->getIndex())
-                                    ->at(cOpticalGroup->getIndex())
-                                    ->at(cHybrid->getIndex())
-                                    ->at(cChip->getIndex())
-                                    ->getChannel<OccupancyAndPh>(row, col)
-                                    .fStatus = RD53Shared::ISDISABLED;
+                                theOccContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<OccupancyAndPh>(row, col).fStatus =
+                                    RD53Shared::ISDISABLED;
 
                     if(unstuckPixels == false)
                     {
