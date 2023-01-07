@@ -282,6 +282,54 @@ Follow these instructions to install and compile the libraries (provided you ins
     to run the DQM code from the June '15 beamtest
 
 
+### Setup on CentOs8
+The following procedure will install (in order):
+1. the `boost` and `pugixml` libraries
+2. the `cactus` libraries for ipBus (using [these instructions](https://ipbus.web.cern.ch/doc/user/html/software/install/yum.html))
+3. `root` with all its needed libraries
+4. `cmake`, tools for clang, including `clang-format` and `git-extras`
+
+```bash
+# Libraries needed by Ph2_ACF
+sudo yum install -y boost-devel pugixml-devel json-devel
+
+# uHAL libraries (cactus)
+sudo curl https://ipbus.web.cern.ch/doc/user/html/_downloads/ipbus-sw.centos8.x86_64.repo \
+  -o /etc/yum.repos.d/ipbus-sw.repo
+sudo yum-config-manager --enable powertools
+sudo yum clean all
+sudo yum groupinstall uhal
+
+# ROOT
+sudo yum install -y root root-net-http root-net-httpsniff root-graf3d-gl root-physics \
+  root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
+
+# Build tools and some nice git extras
+sudo yum install -y cmake3
+sudo yum install -y clang-tools-extra
+sudo yum install -y git-extras
+```
+
+Install devtoolset 10
+
+        $> sudo yum makecache --refresh
+        $> sudo yum -y install gcc-toolset-10-gcc
+
+Install python3
+
+        $> sudo yum install -y python3 python3-devel
+
+Install protobuf:
+
+        Follow instructions to install protobuf from (Just install section is needed)
+        https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
+
+Install pybind11 (if installed in the same directoory when you plan to install the Ph2_ACF, the setup.sh will point to the correct location)
+
+        $> wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
+        $> tar zxvf v2.9.2.tar.gz
+
+
 ### Nota Bene
 When you write a register in the Glib or the Cbc, the corresponding map of the HWDescription object in memory is also updated, so that you always have an exact replica of the HW Status in the memory.
 
