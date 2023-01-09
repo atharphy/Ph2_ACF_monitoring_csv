@@ -847,6 +847,11 @@ void FileParser::parseMPASettings(pugi::xml_node pHybridNode, Hybrid* pHybrid, s
                     cChip->setReg("Mask", 0x30);
                     cChip->setReg("Control_1", (cCoarse << 5));
                     cChip->setReg("Mask", 0xFF);
+
+                    cChip->setReg("Mask", 0x0F);
+                    cChip->setReg("ConfDLL", (cFine));
+                    cChip->setReg("Mask", 0xFF);
+
                 }
 
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA Sampling Delay settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Coarse delay will be set to "

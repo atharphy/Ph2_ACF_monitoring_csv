@@ -275,7 +275,7 @@ class Tool : public Ph2_System::SystemController
     void bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst = -1);
     // Full scan
     void
-    fullScan(const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst = -1, int32_t startVal = 110, float occCap = 1.0, bool mask = false);
+    fullScan(const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst = -1, int32_t startVal = 110, bool mask = false);
     // Full scan per BeBoard
     void fullScanBeBoard(uint16_t           boardIndex,
                          const std::string& dacName,
@@ -283,7 +283,6 @@ class Tool : public Ph2_System::SystemController
                          const float&       targetOccupancy,
                          int32_t            numberOfEventsPerBurst = -1,
                          int32_t            startVal               = 110,
-                         float              occCap                 = 1.0,
                          bool               mask                   = false);
 
     // Set dac and measure data

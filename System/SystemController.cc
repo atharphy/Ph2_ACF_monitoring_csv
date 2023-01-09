@@ -245,7 +245,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                         fReadoutChipInterface = new CbcInterface(fBeBoardFWMap);
                     }
 
-                    if(cSSAtype && !cMPAtype) // SSA boards?
+                    /*if(cSSAtype && !cMPAtype) // SSA boards?
                     {
                         if(cWithSSA)
                         {
@@ -271,8 +271,8 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                             LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for MPA2(s)" << RESET;
                             fReadoutChipInterface = new MPA2Interface(fBeBoardFWMap);
                         }
-                    }
-                    if((cMPAtype && cSSAtype) && cWithLpGBT)
+                    }*/
+                    if((cMPAtype || cSSAtype) && cWithLpGBT)
                     {
                         LOG(INFO) << BOLDBLUE << "\t\t\t\t.. Initializing HwInterface(s) for PS module(s)" << RESET;
                         fReadoutChipInterface = new PSInterface(fBeBoardFWMap);
@@ -281,7 +281,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     {
                         bool cFoundLpgbt = fReadoutChipInterface->lpGBTCheck(cFirstBoard);
                         if(cFoundLpgbt) LOG(INFO) << BOLDGREEN << "\t\t\t\t\t.. Readout chip interface aware of the lpGBT connected to this board ... " << RESET;
-                        if(cWithMPA && cWithSSA) static_cast<PSInterface*>(fReadoutChipInterface)->SetOptical();
+                        if(cWithMPA || cWithSSA) static_cast<PSInterface*>(fReadoutChipInterface)->SetOptical();
                     }
                 } // creat Chip interfaces
 

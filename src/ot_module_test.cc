@@ -347,14 +347,7 @@ int main(int argc, char* argv[])
             } // configure lpGBT
         }
     }
-    if(cmd.foundOption("runBias"))
-    {
-        PSBiasCal cPSBiasCal;
-        cPSBiasCal.Inherit(&cTool);
-        cPSBiasCal.Initialise();
-        cPSBiasCal.CalibrateADC();
-        cPSBiasCal.CalibrateBias();
-    }
+
     // read chip ids
     if(cmd.foundOption("readIDs"))
     {
@@ -491,6 +484,8 @@ int main(int argc, char* argv[])
         cPSAlignment.ConfigureDefaultAlignmentParameters();
         cPSAlignment.Reset();
 
+
+
         LinkAlignmentOT cLinkAlignment;
         cLinkAlignment.Inherit(&cTool);
         try
@@ -528,6 +523,7 @@ int main(int argc, char* argv[])
         //     cTool.ReadData(cBoard, cData, cWait);
         //     cTool.fBeBoardInterface->Stop(cBoard);
         // }
+
     }
     // reload settings on-to FE chips
     if(!cmd.foundOption("read") && cmd.foundOption("reload"))
@@ -625,6 +621,16 @@ int main(int argc, char* argv[])
     // cStubBackEndAligner.waitForRunToBeCompleted();
 
     // equalize thresholds on readout chips
+
+    if(cmd.foundOption("runBias") && !cmd.foundOption("read"))
+    {
+        PSBiasCal cPSBiasCal;
+        cPSBiasCal.Inherit(&cTool);
+        cPSBiasCal.Initialise();
+        //cPSBiasCal.CalibrateADC();
+        cPSBiasCal.CalibrateBias();
+    }
+
     if(cmd.foundOption("tuneOffsets") && !cmd.foundOption("read"))
     {
         bool cAllChan = (cmd.foundOption("allChan")) ? true : false;
@@ -929,15 +935,10 @@ int main(int argc, char* argv[])
                 }
             }
         }
-        LOG(INFO) << BOLDBLUE << "3" << RESET;
         LatencyScan cLatencyScan;
-        LOG(INFO) << BOLDBLUE << "4" << RESET;
         cLatencyScan.Inherit(&cTool);
-        LOG(INFO) << BOLDBLUE << "5" << RESET;
         cLatencyScan.Initialize();
-        LOG(INFO) << BOLDBLUE << "6" << RESET;
         cLatencyScan.ScanLatency();
-        LOG(INFO) << BOLDBLUE << "7" << RESET;
     }
     // measure noise on FE chips
     if(cmd.foundOption("measurePedeNoise") && !cmd.foundOption("read"))

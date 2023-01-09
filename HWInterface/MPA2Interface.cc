@@ -112,6 +112,12 @@ uint16_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
     {
         return this->ReadChipReg(pMPA2, "ThDAC0");
     }
+    else if(pRegNode == "ADC_output")
+    {
+	//std::cout<<(this->ReadChipReg(pMPA2, "ADC_output_LSB")&0xFF)<<","<<((this->ReadChipReg(pMPA2, "ADC_output_MSB")&0xF)<<8)<<std::endl;
+	//std::cout<<(this->ReadChipReg(pMPA2, "ADC_output_LSB")&0xFF)+((this->ReadChipReg(pMPA2, "ADC_output_MSB")&0xF)<<8)<<std::endl;
+        return (this->ReadChipReg(pMPA2, "ADC_output_LSB")&0xFF)+((this->ReadChipReg(pMPA2, "ADC_output_MSB")&0xF)<<8);
+    }
     else if(pRegNode == "TriggerLatency")
     {
         uint8_t cLatencyReg1 = pMPA2->getRegItem("MemoryControl_1").fValue;
@@ -684,6 +690,18 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         // LOG(INFO) << BOLDBLUE << "Writing " << std::bitset<8>(+cValue) << " mask is " << std::bitset<8>(cReg & cRegMask) << RESET; //"  "<<(pValue <<  cBitShift )<< std::dec << RESET;
         // return this->WriteChipSingleReg(pMPA2, "LatencyRx320", cValue);
     }
+    else if(pRegName == "SamplePhaseShift")
+    {
+        uint8_t cBitShift = 0;
+        uint8_t cRegMask  = (0xF << cBitShift); //
+
+
+        return this->WriteChipRegBits(pMPA2, "ConfDLL", (pValue << cBitShift), "Mask", cRegMask, pVerify);
+    }
+
+
+
+
     else if(pRegName == "StubMode")
     {
         uint8_t cBitShift = ECM_TABLE.find("StubMode")->second;
@@ -944,7 +962,7 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
     cCntrlRegItems.clear();
 
     auto cOriginalMask = static_cast<ReadoutChip*>(pMPA2)->getChipOriginalMask();
-
+    //std::vector<std::string>
     for(auto cMapItem: cRegMap)
     {
         if(cMapItem.second.fControlReg)
@@ -973,6 +991,9 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
     // glbl
     cSuccess = fBoardFW->MultiRegisterWrite(pMPA2, cRegItems, false);
     if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cRegItems.size() << " R/W registers in" << cOutput.str() << "#" << +pMPA2->getId() << RESET;
+
+
+
     // lcl
     if(cConfigLocalRegs)
     {
@@ -980,6 +1001,7 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
         if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cLocalRegItems.size() << " local R/W registers in" << cOutput.str() << "#" << +pMPA2->getId() << RESET;
     }
     pMPA2->setRegisterTracking(1);
+    this->readFuseID(pMPA2);
     return cSuccess;
 }
 
@@ -1073,6 +1095,148 @@ bool MPA2Interface::Set_threshold(Chip* pMPA2, uint32_t th)
     success      = success & (this->WriteChipReg(pMPA2, "ThDAC6", th));
     return success;
 }
+
+float MPA2Interface::ADCMeasure(Chip* pMPA2, uint32_t nreads)
+{
+
+        uint32_t ADCReadsAve=0;
+        for(uint32_t i = 0; i < nreads; i++)
+        {
+            this->WriteChipRegBits(pMPA2, "ADCcontrol", (0x7<<5), "Mask", (0x7<<5));
+            this->WriteChipRegBits(pMPA2, "ADCcontrol", (0x6<<5), "Mask", (0x7<<5));
+            std::this_thread::sleep_for(std::chrono::microseconds(1000));
+	    uint16_t ADCRead=this->ReadChipReg(pMPA2, "ADC_output");
+            ADCReadsAve += ADCRead;
+	    //std::cout<<"ADCRead "<<+ADCRead<<std::endl;
+        }
+	//std::cout<<"ADCReadAVE "<<float(ADCReadsAve)/float(nreads)<<std::endl;
+	return float(ADCReadsAve)/float(nreads);
+}
+
+float MPA2Interface::calculateADCLSB(Chip* pMPA2, float vrefExp)
+{
+        this->selectBlock(pMPA2,1, 7 ,0);
+        float offset = this->ADCMeasure(pMPA2);
+
+
+        //LOG(INFO) << BOLDMAGENTA << "ADCLSB "<<vrefExp/(4095.0 - offset) << RESET;
+        return vrefExp/(4095.0 - offset);
+}
+
+
+bool MPA2Interface::selectBlock(Chip* pMPA2, uint8_t block, uint8_t testPoint, uint8_t swEn)
+{
+        return this->WriteChipReg(pMPA2, "ADC_TEST_selection", ((swEn << 7)  + (testPoint << 4) + block), true);
+}
+
+float MPA2Interface::measureGnd(Chip* pMPA2)
+{
+	this->WriteChipReg(pMPA2, "ADC_TEST_selection", 0, true);
+        uint32_t sumData = 0;
+        for(uint32_t iBlock = 0; iBlock < 7; iBlock++)
+	{
+            this->selectBlock(pMPA2,iBlock+1, 7, 1);
+	    sumData+=this->ADCMeasure(pMPA2);//maybe??
+	}
+        this->WriteChipReg(pMPA2, "ADC_TEST_selection", 0, true);
+        return float(sumData)/7.0;
+}
+float MPA2Interface::measureBg(Chip* pMPA2)
+{
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
+        this->WriteChipReg(pMPA2, "ADC_TEST_selection", 0, true);
+        this->selectBlock(pMPA2,8, 7, 1) ;
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
+        float data = this->ADCMeasure(pMPA2);//maybe??
+        this->WriteChipReg(pMPA2, "ADC_TEST_selection", 0, true);
+        return data;
+}
+
+
+
+void MPA2Interface::readFuseID(Chip* pMPA2)
+{
+        this->WriteChipReg(pMPA2, "EfuseMode", 0x0);
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
+        this->WriteChipReg(pMPA2, "EfuseMode", 0xF);
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
+        this->WriteChipReg(pMPA2, "EfuseMode", 0x0);
+
+        uint32_t val = (this->ReadChipReg(pMPA2,"EfuseValue3")<<24) | (this->ReadChipReg(pMPA2,"EfuseValue2")<<16) | (this->ReadChipReg(pMPA2,"EfuseValue1")<<8) | (this->ReadChipReg(pMPA2,"EfuseValue0")<<0);
+	pMPA2->pChipFuseID.SetId(val);
+
+	LOG(INFO) << GREEN << "FuseID from MPA2#" << +pMPA2->getId()
+	<< " Pos " << +pMPA2->pChipFuseID.Pos() 
+	<< " Wafer " << +pMPA2->pChipFuseID.Wafer()
+	<< " Lot " <<+pMPA2->pChipFuseID.Lot()
+	<< " Status " <<+pMPA2->pChipFuseID.Status()
+	<< " Process " <<+pMPA2->pChipFuseID.Process()
+	<< " ADCRef " <<+pMPA2->pChipFuseID.ADCRef()
+	<< RESET;
+
+}
+
+void MPA2Interface::loadVref(Chip* pMPA2)
+{
+    // Set the Vref from the fuse
+    this->WriteChipRegBits(pMPA2, "ADCcontrol", pMPA2->pChipFuseID.ADCRef(), "Mask", (0x1F));
+}
+
+
+
+//This is done at probe?
+    /*def calibrate_vref(self, vref_exp, lin_pts, plot = 0, verbose = 0):
+ 
+        self.mpa.ctrl_base.disable_test()
+        self.mpa.ctrl_base.set_peri_mask()
+        self.i2c.peri_write("ADCtrimming", 0b01000000) # Bit 7 "trim_sel" to 1 selects I2C ctrl of VREF DAC
+        self.select_block(10, 0 ,1)
+        self.mpa.ctrl_base.set_peri_mask(0b00011111)
+        if lin_pts < 1:
+            lin_pts = 1
+        elif lin_pts > 32:
+            lin_pts = 32
+        vref_dac_vals = np.zeros((2, lin_pts))
+        iterable = np.ndenumerate(np.around(np.linspace(0, 31, lin_pts),0))
+        # step through all DAC values, measure and capture VREF
+        for index, dac_val in iterable:
+            self.i2c.peri_write("ADCcontrol", int(dac_val))
+            vref_val = self.multimeter.measure()
+            vref_dac_vals[0:,index[0]] = (dac_val, vref_val)
+            if verbose:
+                print(f"VREF DAC val {int(dac_val)} : {round(vref_val, 4)}V")
+
+        # linear regression, commented out because because not always the most accurate :/
+        #slope = round(stats.linregress(vref_dac_vals)[0], 5) # return first value of linregress, which is the calculated slope
+        # slope from two points
+        #slope = (vref_val - vref_dac_vals[1].flat[0]) / 31
+        # calculate new DAC value
+        #offset = vref_dac_vals[1].flat[0]
+        #vref_dac_new = int(round((vref_exp - offset) / slope,0))
+
+        # choose DAC value based on closest to expected value
+        diff = [(vref_exp - i)**2 for i in vref_dac_vals[1]]
+        index_min = np.argmin(diff)
+        vref_dac_new = vref_dac_vals[0][index_min]
+        if (vref_dac_new > 31): vref_dac_new = 31
+        # measure corrected VREF
+        self.i2c.peri_write("ADCcontrol", int(vref_dac_new))
+        vref_act = self.multimeter.measure()
+        if (vref_act < (vref_exp + vref_exp*0.01)) & (vref_act > (vref_exp - vref_exp*0.01)):
+            utils.print_good(f"Calibration of VREF DAC --> Done ({vref_act} V for {vref_dac_new} DAC)")
+            ret = 1
+        else:
+            utils.print_error(f"Calibration of VREF DAC --> Failed ({vref_act} V for {vref_dac_new} DAC)")
+            ret =0
+        if verbose:
+            print(f"vref_dac_new = {vref_dac_new}, VREF = {round(vref_act, 4)}V")
+        self.mpa.ctrl_base.set_peri_mask()
+        if plot:
+            plt.plot(vref_dac_vals[0], vref_dac_vals[1])
+            plt.xlabel('VREF code [LSB]'); plt.ylabel('VREF value [mV]'); plt.show()
+        return ret, vref_dac_new, vref_dac_vals, vref_act*/
+
+
 
 void MPA2Interface::ReadASEvent(ReadoutChip* pMPA2, std::vector<uint32_t>& pData, std::pair<uint32_t, uint32_t> pSRange)
 {

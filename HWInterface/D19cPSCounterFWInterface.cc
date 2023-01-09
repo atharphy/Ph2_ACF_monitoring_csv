@@ -19,12 +19,12 @@ D19cPSCounterFWInterface::D19cPSCounterFWInterface(const std::string& puHalConfi
 }
 D19cPSCounterFWInterface::~D19cPSCounterFWInterface() {}
 
-void D19cPSCounterFWInterface::PS_Open_shutter() { fFastCommandInterface->SendGlobalL1A(); }
+void D19cPSCounterFWInterface::PS_Open_shutter() { for(uint16_t numit = 0; numit < fFCDupe; numit++)  fFastCommandInterface->SendGlobalL1A(); }
 
-void D19cPSCounterFWInterface::PS_Close_shutter() { fFastCommandInterface->SendGlobalCounterReset(); }
-void D19cPSCounterFWInterface::PS_Clear_counters() { fFastCommandInterface->SendGlobalCounterResetL1A(); }
-void D19cPSCounterFWInterface::PS_Inject() { fFastCommandInterface->SendGlobalCalPulse(); }
-void D19cPSCounterFWInterface::PS_Start_counters_read() { fFastCommandInterface->SendGlobalCounterResetResync(); }
+void D19cPSCounterFWInterface::PS_Close_shutter() { for(uint16_t numit = 0; numit < fFCDupe; numit++) fFastCommandInterface->SendGlobalCounterReset(); }
+void D19cPSCounterFWInterface::PS_Clear_counters() { for(uint16_t numit = 0; numit < fFCDupe; numit++) fFastCommandInterface->SendGlobalCounterResetL1A(); }
+void D19cPSCounterFWInterface::PS_Inject() { for(uint16_t numit = 0; numit < fFCDupe; numit++) fFastCommandInterface->SendGlobalCalPulse(); }
+void D19cPSCounterFWInterface::PS_Start_counters_read() { for(uint16_t numit = 0; numit < fFCDupe; numit++) fFastCommandInterface->SendGlobalCounterResetResync(); }
 void D19cPSCounterFWInterface::PS_Send_pulses(uint32_t pNtriggers, bool manual)
 {
     if(manual)
@@ -110,9 +110,11 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard)
                     auto cMSB = (*cIter).fValue;
                     auto cLSB = (*(cIter + 1)).fValue;
                     if(fPSCounterData[cId].size() < 10)
-                        LOG(DEBUG) << BOLDYELLOW << "\t.. Counter#" << fPSCounterData[cId].size() << " MSBs " << +cMSB << " LSBs " << +cLSB << std::hex << " : 0x" << ((cMSB << 8) | cLSB) << std::dec
+                        LOG(DEBUG) << BOLDYELLOW << "\t.. Counter#" << fPSCounterData[cId].size() << " MSBs " << +cMSB << " LSBs " << +cLSB  << " : " << ((cMSB << 8) | cLSB) 
                                    << RESET;
+
                     fPSCounterData[cId].push_back((cMSB << 8) | cLSB);
+
                 }
             } // chip loop
         }     // hybrid loop
@@ -327,18 +329,24 @@ bool D19cPSCounterFWInterface::WaitForNTriggers()
     // fTriggerInterface->ResetTriggerFSM();
     // make sure counters have been cleared and reset
     // not sure its needed but.. to be safe
-    PS_Close_shutter();
-    fFastCommandInterface->SendGlobalReSync();
-    PS_Clear_counters();
+
 
     // PS_Open_shutter();
     // for(size_t cIndx=0; cIndx < fNEvents; cIndx++) PS_Inject();
     // PS_Close_shutter();
     // return true;
 
+    //fData.clear();
+    //auto cMultiplicity = ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+    //fNEvents           = fNEvents * (cMultiplicity + 1);
+    //fTriggerInterface->SetNTriggersToAccept(fNEvents);
+
+
+
     // // wait for trigger state machine to send all triggers
     auto cTriggerSource = this->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
     LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData After resetting trigger FSM.. trigger source is " << cTriggerSource << RESET;
+
     if(cTriggerSource == 10 || cTriggerSource == 12)
     {
         LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData Running Trigger FSM ..." << RESET;
@@ -359,24 +367,132 @@ bool D19cPSCounterFWInterface::PollReadoutData(const Ph2_HwDescription::BeBoard*
 }
 bool D19cPSCounterFWInterface::ReadEvents(const BeBoard* pBoard)
 {
+
     // clear data vector
     fData.clear();
     // make sure trigger mult is taken into account
     auto cMultiplicity = ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     fNEvents           = fNEvents * (cMultiplicity + 1);
+
     fTriggerInterface->SetNTriggersToAccept(fNEvents);
+
     // make sure handshake is configured
     WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", fHandshake);
-    if(WaitForNTriggers())
+    bool byrow=false;
+    bool bypixel=false;
+    bool success=true;
+    // fTriggerInterface->ResetTriggerFSM();
+    // make sure counters have been cleared and reset
+    // not sure its needed but.. to be safe
+    PS_Close_shutter();
+    fFastCommandInterface->SendGlobalReSync();
+    PS_Clear_counters();
+    
+    if (byrow or bypixel) 
     {
-        LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::ReadEvents triggers succesfully sent" << RESET;
+
+
+            for(auto cOpticalGroup: *pBoard)
+            {
+		for(auto cHybrid: *cOpticalGroup)
+		{
+		    for(auto cChip: *cHybrid)
+		    {
+		        if( cChip->getFrontEndType() == FrontEndType::MPA or cChip->getFrontEndType() == FrontEndType::MPA2 )
+		        {
+
+			
+			    ChipRegItem cReg_maskall;
+			    cReg_maskall.fPage    = 0x00;
+			    cReg_maskall.fAddress = 0x00;
+			    cReg_maskall.fValue   = 0x00;
+
+
+			    ChipRegItem cReg_unmaskall;
+			    cReg_unmaskall.fPage    = 0x00;
+			    cReg_unmaskall.fAddress = 0x801;
+			    cReg_unmaskall.fValue   = 0x00;
+
+
+			    fFEConfigurationInterface->SingleRead(cChip, cReg_unmaskall);
+
+			    cReg_unmaskall.fAddress = 0x00;
+			    cReg_maskall.fValue = (cReg_unmaskall.fValue & 0x9E);
+
+
+
+
+			    for(size_t cRow = 1; cRow < 17; cRow++)
+			    {
+
+			        if (byrow)
+			        {
+
+			     	    std::vector<ChipRegItem> cRegItems{cReg_maskall};
+
+			     	    ChipRegItem cReg_unmaskrow;
+			     	    cReg_unmaskrow.fPage    = 0x00;
+			     	    cReg_unmaskrow.fAddress = (cRow<<11);
+			     	    cReg_unmaskrow.fValue   = cReg_unmaskall.fValue;
+
+			     	    //LOG(INFO) << BOLDRED << "NEW ROW " <<int(cRow)<< RESET;
+
+			     	    cRegItems.push_back(cReg_unmaskrow);
+			     	    fFEConfigurationInterface->MultiWrite(cChip, cRegItems);
+			     	    WaitForNTriggers();
+
+
+			     	    fFEConfigurationInterface->SingleWrite(cChip, cReg_unmaskall);
+			        }
+			        else if (bypixel)
+			        {
+			     	    for(size_t cCol = 1; cCol < 121; cCol++)
+				    {
+
+					    //fReadoutChipInterface->maskPixel(0,0);
+					    //fReadoutChipInterface->maskRowCol(cRow,0,1);
+		        		    std::vector<ChipRegItem> cRegItems{cReg_maskall};
+
+					    ChipRegItem cReg_unmaskrow;
+					    cReg_unmaskrow.fPage    = 0x00;
+					    cReg_unmaskrow.fAddress = (cRow<<11)+cCol;
+					    cReg_unmaskrow.fValue   = cReg_unmaskall.fValue;
+
+					    //LOG(INFO) << BOLDRED << "NEW ROW " <<int(cRow)<< " NEW COL " <<int(cCol)<< RESET;
+					    //LOG(INFO) << BOLDRED << "ADDR " <<cReg_unmaskrow.fAddress<<" VAL "<<+cReg_unmaskall.fValue<< RESET;
+
+					    cRegItems.push_back(cReg_unmaskrow);
+		        		    fFEConfigurationInterface->MultiWrite(cChip, cRegItems);
+					    WaitForNTriggers();
+
+					    //LOG(INFO) << BOLDRED << "Done NEW TRIGs " << RESET;
+
+					    fFEConfigurationInterface->SingleWrite(cChip, cReg_unmaskall);
+				    }
+				}
+		            }
+			   
+		        }
+		    }
+		}
+	    }
+
+
+    }
+    else WaitForNTriggers();
+    if(success)
+    {
+
+        LOG(INFO) << BOLDYELLOW << "D19cPSCounterFWInterface::ReadEvents triggers succesfully sent" << RESET;
         GetCounterData(pBoard);
+
         FillData();
-        LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::ReadEvents filled data vector with " << fData.size() << " 32-bit words" << RESET;
+        LOG(INFO) << BOLDYELLOW << "D19cPSCounterFWInterface::ReadEvents filled data vector with " << fData.size() << " 32-bit words" << RESET;
         return (fData.size() > 0);
     }
     else
         LOG(INFO) << BOLDRED << "D19cPSCounterFWInterface::ReadEvents did not receive all triggers..." << RESET;
+	
     return false;
 }
 bool D19cPSCounterFWInterface::CheckStartPattern()

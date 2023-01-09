@@ -81,6 +81,10 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     fPedestalEqualizationFullScanCAP   = findValueInSettings<double>("PedestalEqualizationFullScanCAP", 1.0);
 
     fTestPulseAmplitude      = findValueInSettings<double>("PedestalEqualizationPulseAmplitude", 0);
+    fTestPulseAmplitudePix      = findValueInSettings<double>("PedestalEqualizationPulseAmplitudePix", fTestPulseAmplitude);
+  
+
+
     fEventsPerPoint          = findValueInSettings<double>("Nevents", 10);
     fNEventsPerBurst         = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
     fOccupancyAtPedestal     = findValueInSettings<double>("PedestalEqualizationOccupancy", 0.56);
@@ -263,8 +267,26 @@ void PedestalEqualization::FindVplus()
         this->enableTestPulse(true);
         for(auto cBoard: *fDetectorContainer)
         {
+	    //Allow for different SSA and MPA injection amplitudes
+            //setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fTestPulseAmplitude);
             if(fWithSSA or fWithMPA)
-                setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fTestPulseAmplitude);
+		for(auto cOpticalGroup: *cBoard)
+		{
+		        for(auto cHybrid: *cOpticalGroup)
+		        {
+		            for(auto cChip: *cHybrid)
+		            {
+                    		auto         cType   = cChip->getFrontEndType();
+				if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+					fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fTestPulseAmplitudePix);
+				else
+					fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fTestPulseAmplitude);
+			    }
+			}
+		    
+		}
+
+
             else
                 setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fTestPulseAmplitude);
         }
@@ -288,7 +310,7 @@ void PedestalEqualization::FindVplus()
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
 
     if(fFullScan)
-        this->fullScan("Threshold", fEventsPerPoint, fOccupancyAtPedestal, fNEventsPerBurst, fPedestalEqualizationFullScanStart, fPedestalEqualizationFullScanCAP);
+        this->fullScan("Threshold", fEventsPerPoint, fOccupancyAtPedestal, fNEventsPerBurst, fPedestalEqualizationFullScanStart);
     else
         this->bitWiseScan("Threshold", fEventsPerPoint, fOccupancyAtPedestal, fNEventsPerBurst);
     // dumpConfigFiles();
@@ -427,7 +449,7 @@ void PedestalEqualization::FindOffsets()
 
     if(fWithSSA or fWithMPA)
     {
-        if(fFullScan) { this->fullScan("ThresholdTrim", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst, 31, fPedestalEqualizationFullScanCAP, fPedestalEqualizationMaskUntrimmed); }
+        if(fFullScan) { this->fullScan("ThresholdTrim", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst, 31, fPedestalEqualizationMaskUntrimmed); }
         else
             this->bitWiseScan("ThresholdTrim", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst);
     }

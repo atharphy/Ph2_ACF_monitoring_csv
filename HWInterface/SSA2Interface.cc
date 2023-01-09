@@ -198,7 +198,7 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
         cSuccess        = fBoardFW->SingleRegisterWrite(pChip, cRegItem, false);
         cRegName        = (dacName == "GainTrim") ? "StripControl2_S32" : "THTRIMMING_S32";
         auto cRegValue  = fBoardFW->SingleRegisterRead(pChip, cRegMap[cRegName]);
-        LOG(DEBUG) << BOLDBLUE << cRegName << " set to 0x" << std::hex << +cRegValue << std::dec << RESET;
+        LOG(INFO) << BOLDBLUE << cRegName << " set to 0x" << std::hex << +cRegValue << std::dec << RESET;
         cSuccess = (cRegValue == localRegValues.getChannel<uint8_t>(0));
         return cSuccess;
     }
@@ -630,7 +630,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     }
     else if(pRegNameMod == "Threshold" || pRegNameMod == "Bias_THDAC")
     {
-        // LOG (INFO) << BOLDYELLOW << "!!! Writing to " << pRegNameMod << RESET;
+       LOG (DEBUG) << BOLDYELLOW << "!!! Writing to " << pRegNameMod <<","<<pValue<< RESET;
         return this->WriteChipRegBits(pSSA2, "Bias_THDAC", pValue, "mask_peri_A", 0xFF);
     }
     else if(pRegNameMod == "LateralRX_L_PhaseData")

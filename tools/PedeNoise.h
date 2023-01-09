@@ -57,6 +57,7 @@ class PedeNoise : public Tool
     void initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
 
     uint8_t fPulseAmplitude{0};
+    uint8_t fPulseAmplitudePix{0};
 
     float fPedeNoiseLimit{0.0};
     bool  fPedeNoiseMask{false};

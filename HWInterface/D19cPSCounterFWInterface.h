@@ -52,6 +52,7 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
   private:
     FEConfigurationInterface* fFEConfigurationInterface;
 
+    uint32_t fFCDupe{4};
     uint32_t fWait_us{100};
     uint32_t fPSCounterDelay{29};
     uint8_t  fPSCounterFast{0};
