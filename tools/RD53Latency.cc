@@ -56,10 +56,10 @@ void Latency::Running()
     }
 
     Latency::run();
-    Tool::InformImDone();
     Latency::analyze();
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     Latency::sendData();
+    Tool::InformImDone();
 }
 
 void Latency::sendData()

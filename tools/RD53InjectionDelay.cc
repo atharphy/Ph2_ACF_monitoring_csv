@@ -60,12 +60,11 @@ void InjectionDelay::Running()
     }
 
     InjectionDelay::run();
-    Tool::InformImDone();
     InjectionDelay::analyze();
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     InjectionDelay::sendData();
-
     la.sendData();
+    Tool::InformImDone();
 }
 
 void InjectionDelay::sendData()

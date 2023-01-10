@@ -70,6 +70,7 @@ void Physics::Running()
 
     numberOfEventsPerRun = 0;
     errors               = 0;
+
     Physics::run();
     Tool::InformImDone();
 }

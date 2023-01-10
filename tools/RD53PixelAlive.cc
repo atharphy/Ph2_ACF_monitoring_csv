@@ -67,10 +67,10 @@ void PixelAlive::Running()
     }
 
     PixelAlive::run();
-    Tool::InformImDone();
     PixelAlive::analyze();
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     PixelAlive::sendData();
+    Tool::InformImDone();
 }
 
 void PixelAlive::sendData()

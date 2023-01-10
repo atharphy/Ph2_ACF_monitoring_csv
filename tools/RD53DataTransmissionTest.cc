@@ -38,8 +38,8 @@ void DataTransmissionTest::Running()
     LOG(INFO) << GREEN << "[DataTransmissionTest::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     DataTransmissionTest::run();
-    Tool::InformImDone();
     DataTransmissionTest::sendData();
+    Tool::InformImDone();
 }
 
 void DataTransmissionTest::sendData()

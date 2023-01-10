@@ -33,9 +33,9 @@ void VoltageTuning::Running()
     LOG(INFO) << GREEN << "[VoltageTuning::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     VoltageTuning::run();
-    Tool::InformImDone();
     VoltageTuning::analyze();
     VoltageTuning::sendData();
+    Tool::InformImDone();
 }
 
 void VoltageTuning::sendData()

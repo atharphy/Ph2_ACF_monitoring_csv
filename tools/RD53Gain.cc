@@ -77,10 +77,10 @@ void Gain::Running()
     }
 
     Gain::run();
-    Tool::InformImDone();
     Gain::analyze();
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     Gain::sendData();
+    Tool::InformImDone();
 }
 
 void Gain::sendData()

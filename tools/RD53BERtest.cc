@@ -35,8 +35,8 @@ void BERtest::Running()
     LOG(INFO) << GREEN << "[BERtest::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     BERtest::run();
-    Tool::InformImDone();
     BERtest::sendData();
+    Tool::InformImDone();
 }
 
 void BERtest::sendData()
