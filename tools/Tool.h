@@ -108,7 +108,6 @@ class Tool : public Ph2_System::SystemController
 
     void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000) override;
     void Start(int runNumber) override;
-    void InformImDone();
     void Stop() override;
 
     void waitForRunToBeCompleted();
