@@ -36,7 +36,6 @@ void BERtest::Running()
 
     BERtest::run();
     BERtest::sendData();
-    Tool::InformImDone();
 }
 
 void BERtest::sendData()

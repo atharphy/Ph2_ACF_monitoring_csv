@@ -35,7 +35,6 @@ void VoltageTuning::Running()
     VoltageTuning::run();
     VoltageTuning::analyze();
     VoltageTuning::sendData();
-    Tool::InformImDone();
 }
 
 void VoltageTuning::sendData()

@@ -39,7 +39,6 @@ void DataTransmissionTest::Running()
 
     DataTransmissionTest::run();
     DataTransmissionTest::sendData();
-    Tool::InformImDone();
 }
 
 void DataTransmissionTest::sendData()

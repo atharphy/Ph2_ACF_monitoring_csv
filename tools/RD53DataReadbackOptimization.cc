@@ -56,7 +56,6 @@ void DataReadbackOptimization::Running()
     DataReadbackOptimization::run();
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     DataReadbackOptimization::sendData();
-    Tool::InformImDone();
 }
 
 void DataReadbackOptimization::sendData()

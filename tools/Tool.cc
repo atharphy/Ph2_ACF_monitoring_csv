@@ -75,6 +75,21 @@ Tool::Tool(const Tool& pTool) { this->Inherit(&pTool); }
 
 Tool::~Tool() {}
 
+void Tool::privateRunning(std::promise<int>&& thePromise)
+{
+    try
+    {
+        Running();
+        Tool::InformImDone();
+        thePromise.set_value(0);
+    }
+    catch(...)
+    {
+        Tool::InformImDone();
+        thePromise.set_exception(std::current_exception());
+    }
+}
+
 void Tool::waitForRunToBeCompleted()
 {
     std::unique_lock<std::recursive_mutex> theGuard(theMtx);
@@ -94,10 +109,12 @@ void Tool::Start(int runNumber)
 #ifdef __USE_ROOT__
     InitResultFile("Hybrid");
 #endif
-    doExit         = false;
-    fKeepRunning   = true;
-    fRunNumber     = runNumber;
-    fRunningThread = std::thread(&Tool::Running, this);
+    doExit       = false;
+    fKeepRunning = true;
+    fRunNumber   = runNumber;
+    std::promise<int> thePromise;
+    fRunningFuture = thePromise.get_future();
+    fRunningThread = std::thread(&Tool::privateRunning, this, std::move(thePromise));
 }
 
 void Tool::InformImDone()
@@ -113,6 +130,14 @@ void Tool::Stop()
     fKeepRunning = false;
     Tool::waitForRunToBeCompleted();
     if(fRunningThread.joinable() == true) fRunningThread.join();
+    try
+    {
+        fRunningFuture.get();
+    }
+    catch(const std::exception& e)
+    {
+        throw std::runtime_error(e.what());
+    }
     SystemController::Stop();
 }
 

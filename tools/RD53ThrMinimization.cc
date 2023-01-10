@@ -66,7 +66,6 @@ void ThrMinimization::Running()
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     ThrMinimization::sendData();
     PixelAlive::sendData();
-    Tool::InformImDone();
 }
 
 void ThrMinimization::sendData()

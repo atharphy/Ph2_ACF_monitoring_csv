@@ -112,6 +112,7 @@ class Tool : public Ph2_System::SystemController
     void Stop() override;
 
     void waitForRunToBeCompleted();
+    void privateRunning(std::promise<int>&& thePromise);
     void SaveResults();
     void CloseResultFile();
 
@@ -428,6 +429,7 @@ class Tool : public Ph2_System::SystemController
     bool                        doExit;
     std::atomic<bool>           fKeepRunning;
     std::thread                 fRunningThread;
+    std::future<int>            fRunningFuture;
     std::condition_variable_any wakeUp;
     std::recursive_mutex        theMtx;
 

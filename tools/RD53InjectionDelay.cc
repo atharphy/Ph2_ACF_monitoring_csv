@@ -64,7 +64,6 @@ void InjectionDelay::Running()
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     InjectionDelay::sendData();
     la.sendData();
-    Tool::InformImDone();
 }
 
 void InjectionDelay::sendData()
