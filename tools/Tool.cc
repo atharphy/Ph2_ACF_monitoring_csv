@@ -90,6 +90,25 @@ void Tool::privateRunning(std::promise<int>&& thePromise)
     }
 }
 
+bool Tool::GetRunningStatus()
+{
+    std::future_status runningStatus = fRunningFuture.wait_for(std::chrono::milliseconds(500u));
+    if(runningStatus == std::future_status::ready || runningStatus == std::future_status::deferred)
+    {
+        try
+        {
+            if(fRunningFuture.valid()) fRunningFuture.get();
+        }
+        catch(const std::exception& e)
+        {
+            throw std::runtime_error(e.what());
+        }
+        return true;
+    }
+    else
+        return false;
+}
+
 void Tool::waitForRunToBeCompleted()
 {
     std::unique_lock<std::recursive_mutex> theGuard(theMtx);
