@@ -274,8 +274,7 @@ class Tool : public Ph2_System::SystemController
     // Bit wise scan per BeBoard
     void bitWiseScanBeBoard(uint16_t boardIndex, const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst = -1);
     // Full scan
-    void
-    fullScan(const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst = -1, int32_t startVal = 110, bool mask = false);
+    void fullScan(const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst = -1, int32_t startVal = 110, bool mask = false);
     // Full scan per BeBoard
     void fullScanBeBoard(uint16_t           boardIndex,
                          const std::string& dacName,

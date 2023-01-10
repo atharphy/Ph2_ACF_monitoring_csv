@@ -32,9 +32,6 @@ class ChannelGroupBase;
  * \brief Namespace regrouping all the hardware description
  */
 
-
-
-
 namespace Ph2_HwDescription
 {
 struct ChipRegMask
@@ -42,18 +39,18 @@ struct ChipRegMask
     uint8_t fBitShift;
     uint8_t fNbits;
 };
-class ChipFuseID//I think this makes sennse in chip?
+class ChipFuseID // I think this makes sennse in chip?
 {
     uint32_t fVal;
-    public :
-    	uint8_t Pos()  {return (fVal & 0xFF);}
-	uint8_t Wafer()  {return (fVal >> 8) & 0x1F;}
- 	uint8_t Lot()  {return (fVal >> 13) & 0x7F;}
-	uint8_t Status()  {return (fVal >> 20) & 0x3;}
-	uint8_t Process()  {return (fVal >> 22) & 0x1F;}
-	uint8_t ADCRef()  {return (fVal >> 27) & 0x1F;}
-	void SetId(uint32_t fID) {fVal=fID;} ;
-    	
+
+  public:
+    uint8_t Pos() { return (fVal & 0xFF); }
+    uint8_t Wafer() { return (fVal >> 8) & 0x1F; }
+    uint8_t Lot() { return (fVal >> 13) & 0x7F; }
+    uint8_t Status() { return (fVal >> 20) & 0x3; }
+    uint8_t Process() { return (fVal >> 22) & 0x1F; }
+    uint8_t ADCRef() { return (fVal >> 27) & 0x1F; }
+    void    SetId(uint32_t fID) { fVal = fID; };
 };
 
 using ChipRegMap  = std::unordered_map<std::string, ChipRegItem>;

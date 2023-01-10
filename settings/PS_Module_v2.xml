@@ -35,8 +35,8 @@
             <SSA2 Id="7" configfile="SSA2.txt" />-->
 
              <MPA_Files path="${PH2ACF_BASE_DIR}/settings/MPAFiles/" />
-            <!--   <MPA2 Id="8" configfile="MPA2_Default.txt" />
-          <MPA2 Id="9" configfile="MPA2_Default.txt" />
+              <MPA2 Id="8" configfile="MPA2_Default.txt" />
+         <!--  <MPA2 Id="9" configfile="MPA2_Default.txt" />
             <MPA2 Id="10" configfile="MPA2_Default.txt" />
              <MPA2 Id="12" configfile="MPA2Default.txt" />
             <MPA2 Id="13" configfile="MPA2Default.txt" />

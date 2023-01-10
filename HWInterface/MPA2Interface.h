@@ -102,16 +102,15 @@ class MPA2Interface : public ReadoutChipInterface
     bool                 configRow(Ph2_HwDescription::Chip* pChip, std::string cReg, int pRowNum, uint8_t pValue, bool pVerify = false);
     bool                 configPeri(Ph2_HwDescription::Chip* pChip, std::string cReg, uint8_t pValue, bool pVerify = false);
     uint16_t             readPeri(Ph2_HwDescription::Chip* pChip, std::string cReg);
-    void 		 loadVref(Ph2_HwDescription::Chip* pMPA2);
-    float ADCMeasure(Ph2_HwDescription::Chip* pMPA2, uint32_t nreads=5);
-    bool selectBlock(Ph2_HwDescription::Chip* pMPA2, uint8_t block, uint8_t testPoint = 0, uint8_t swEn = 0);
-    float measureGnd(Ph2_HwDescription::Chip* pMPA2);
-    float measureBg(Ph2_HwDescription::Chip* pMPA2);
+    void                 loadVref(Ph2_HwDescription::Chip* pMPA2);
+    float                ADCMeasure(Ph2_HwDescription::Chip* pMPA2, uint32_t nreads = 5);
+    bool                 selectBlock(Ph2_HwDescription::Chip* pMPA2, uint8_t block, uint8_t testPoint = 0, uint8_t swEn = 0);
+    float                measureGnd(Ph2_HwDescription::Chip* pMPA2);
+    float                measureBg(Ph2_HwDescription::Chip* pMPA2);
 
-    float calculateADCLSB(Ph2_HwDescription::Chip* pMPA2, float vrefExp=0.850);
+    float calculateADCLSB(Ph2_HwDescription::Chip* pMPA2, float vrefExp = 0.850);
 
   private:
-
     // pixelEnable bits
     const std::map<std::string, uint8_t> PIXEL_ENABLE_TABLE =
         {{"PixelMask", 0}, {"Polarity", 1}, {"EnEdgeBR", 2}, {"EnLvlBR", 3}, {"CounterEnable", 4}, {"DigitalInjection", 5}, {"AnalogueInjection", 6}, {"BrClk", 7}};
@@ -133,13 +132,9 @@ class MPA2Interface : public ReadoutChipInterface
 
     // MPA2 pixel config register map
     const std::map<std::string, uint8_t> PIXEL_CONFIG_TABLE = {{"ENFLAGS", 0}, {"TrimDAC", 1}, {"DigiPattern", 2}, {"ACCounter_LSB", 4}, {"ACCounter_MSB", 5}};
-    void readFuseID(Ph2_HwDescription::Chip* pMPA2);
-    std::map<uint16_t, std::string> fMap;
-    std::vector<uint8_t>            fWordAlignmentPatterns = {0x7A, 0x7A, 0x7A, 0x7A, 0x7A, 0x7A};
-
-
-
-
+    void                                 readFuseID(Ph2_HwDescription::Chip* pMPA2);
+    std::map<uint16_t, std::string>      fMap;
+    std::vector<uint8_t>                 fWordAlignmentPatterns = {0x7A, 0x7A, 0x7A, 0x7A, 0x7A, 0x7A};
 
     bool     WriteReg(Ph2_HwDescription::Chip* pMPA, uint16_t pRegisterAddress, uint16_t pRegisterValue, bool pVerify = false);
     bool     WriteRegs(Ph2_HwDescription::Chip* pMPA, const std::vector<std::pair<uint16_t, uint16_t>> pRegs, bool pVerify = false);

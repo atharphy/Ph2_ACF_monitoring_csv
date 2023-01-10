@@ -630,7 +630,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     }
     else if(pRegNameMod == "Threshold" || pRegNameMod == "Bias_THDAC")
     {
-       LOG (DEBUG) << BOLDYELLOW << "!!! Writing to " << pRegNameMod <<","<<pValue<< RESET;
+        LOG(DEBUG) << BOLDYELLOW << "!!! Writing to " << pRegNameMod << "," << pValue << RESET;
         return this->WriteChipRegBits(pSSA2, "Bias_THDAC", pValue, "mask_peri_A", 0xFF);
     }
     else if(pRegNameMod == "LateralRX_L_PhaseData")

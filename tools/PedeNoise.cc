@@ -112,18 +112,18 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fPlotSCurves                 = findValueInSettings<double>("PlotSCurves", 0);
     fFitSCurves                  = findValueInSettings<double>("FitSCurves", 0);
     fPulseAmplitude              = findValueInSettings<double>("PedeNoisePulseAmplitude", 0);
-    fPulseAmplitudePix              = findValueInSettings<double>("PedeNoisePulseAmplitudePix", fPulseAmplitude);
-    std::cout<<+fPulseAmplitudePix<<std::endl;
-    fPedeNoiseLimit              = findValueInSettings<double>("PedeNoiseLimit", 10);
-    fPedeNoiseMask               = findValueInSettings<double>("PedeNoiseMask", 0);
-    fPedeNoiseMaskUntrimmed      = findValueInSettings<double>("PedeNoiseMaskUntrimmed", 0);
-    fPedeNoiseUntrimmedLimit     = findValueInSettings<double>("PedeNoiseUntrimmedLimit", 0.0);
-    fEventsPerPoint              = findValueInSettings<double>("Nevents", 10);
-    fUseFixRange                 = findValueInSettings<double>("PedeNoiseUseFixRange", 0);
-    fMinThreshold                = findValueInSettings<double>("PedeNoiseMinThreshold", 0);
-    fMaxThreshold                = findValueInSettings<double>("PedeNoiseMaxThreshold", 0);
-    fNeventsForValidation        = findValueInSettings<double>("NeventsForValidation", 10000);
-    fMaskingThreshold            = findValueInSettings<double>("MaskingThreshold", 0.001);
+    fPulseAmplitudePix           = findValueInSettings<double>("PedeNoisePulseAmplitudePix", fPulseAmplitude);
+    std::cout << +fPulseAmplitudePix << std::endl;
+    fPedeNoiseLimit          = findValueInSettings<double>("PedeNoiseLimit", 10);
+    fPedeNoiseMask           = findValueInSettings<double>("PedeNoiseMask", 0);
+    fPedeNoiseMaskUntrimmed  = findValueInSettings<double>("PedeNoiseMaskUntrimmed", 0);
+    fPedeNoiseUntrimmedLimit = findValueInSettings<double>("PedeNoiseUntrimmedLimit", 0.0);
+    fEventsPerPoint          = findValueInSettings<double>("Nevents", 10);
+    fUseFixRange             = findValueInSettings<double>("PedeNoiseUseFixRange", 0);
+    fMinThreshold            = findValueInSettings<double>("PedeNoiseMinThreshold", 0);
+    fMaxThreshold            = findValueInSettings<double>("PedeNoiseMaxThreshold", 0);
+    fNeventsForValidation    = findValueInSettings<double>("NeventsForValidation", 10000);
+    fMaskingThreshold        = findValueInSettings<double>("MaskingThreshold", 0.001);
     // if you forget to use the PedeNoiseUseFixRange setting but instead declare
     // min and max threshold ... will still work
     if(!fUseFixRange && fMinThreshold != fMaxThreshold) { fUseFixRange = true; }
@@ -307,26 +307,26 @@ void PedeNoise::sweepSCurves()
     for(auto cBoard: *fDetectorContainer)
     {
         if(fWithSSA || fWithMPA)
-	{
-	    //Allow for different SSA and MPA injection amplitudes
-            //setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fTestPulseAmplitude);
-	    for(auto cOpticalGroup: *cBoard)
-		    {
-		        for(auto cHybrid: *cOpticalGroup)
-		        {
-		            for(auto cChip: *cHybrid)
-		            {
-                    		auto         cType   = cChip->getFrontEndType();
+        {
+            // Allow for different SSA and MPA injection amplitudes
+            // setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fTestPulseAmplitude);
+            for(auto cOpticalGroup: *cBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    for(auto cChip: *cHybrid)
+                    {
+                        auto cType = cChip->getFrontEndType();
 
-				if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-					fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fPulseAmplitudePix);
-				else
-					fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fPulseAmplitude);
-			    }
-			}
-		    }
-	}
-		
+                        if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                            fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fPulseAmplitudePix);
+                        else
+                            fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fPulseAmplitude);
+                    }
+                }
+            }
+        }
+
         else
             setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fPulseAmplitude);
     }
@@ -715,14 +715,10 @@ void PedeNoise::extractPedeNoise()
     fThresholdAndNoiseContainer = new DetectorDataContainer();
     ContainerFactory::copyAndInitStructure<ThresholdAndNoise>(*fDetectorContainer, *fThresholdAndNoiseContainer);
 
-
-
     std::map<uint16_t, DetectorDataContainer*>::reverse_iterator previousStripIterator = fSCurveStripOccupancyMap.rend();
     std::map<uint16_t, DetectorDataContainer*>::reverse_iterator previousPixelIterator = fSCurvePixelOccupancyMap.rend();
 
-    uint16_t                                                     counter               = 0;
-
-
+    uint16_t counter = 0;
 
     for(std::map<uint16_t, DetectorDataContainer*>::reverse_iterator mStripIt = fSCurveStripOccupancyMap.rbegin(), mPixelIt = fSCurvePixelOccupancyMap.rbegin();
         mStripIt != fSCurveStripOccupancyMap.rend(), mPixelIt != fSCurvePixelOccupancyMap.rend();
@@ -804,9 +800,8 @@ void PedeNoise::extractPedeNoise()
                                 currentOccupancy =
                                     mPixelIt->second->at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getChannel<Occupancy>(iChannel).fOccupancy;
                                 binCenter = (mPixelIt->first + (previousPixelIterator)->first) / 2.;
-				if (previousOccupancy>currentOccupancy) {continue;}
+                                if(previousOccupancy > currentOccupancy) { continue; }
                             }
-
 
                             fThresholdAndNoiseContainer->at(board->getIndex())
                                 ->at(opticalGroup->getIndex())
@@ -815,15 +810,13 @@ void PedeNoise::extractPedeNoise()
                                 ->getChannel<ThresholdAndNoise>(iChannel)
                                 .fThreshold += binCenter * (previousOccupancy - currentOccupancy);
 
-
-
-			    //if (iChannel>1800){
+                            // if (iChannel>1800){
                             fThresholdAndNoiseContainer->at(board->getIndex())
                                 ->at(opticalGroup->getIndex())
                                 ->at(hybrid->getIndex())
                                 ->at(chip->getIndex())
                                 ->getChannel<ThresholdAndNoise>(iChannel)
-                                .fNoise += binCenter * binCenter * (previousOccupancy - currentOccupancy);//}
+                                .fNoise += binCenter * binCenter * (previousOccupancy - currentOccupancy); //}
 
                             fThresholdAndNoiseContainer->at(board->getIndex())
                                 ->at(opticalGroup->getIndex())
@@ -831,8 +824,6 @@ void PedeNoise::extractPedeNoise()
                                 ->at(chip->getIndex())
                                 ->getChannel<ThresholdAndNoise>(iChannel)
                                 .fThresholdError += previousOccupancy - currentOccupancy;
-
-
                         }
                     }
                 }
@@ -1037,8 +1028,8 @@ void PedeNoise::maskNoisyChannels(BoardDataContainer* board)
                      fMean=2.7;
                         if(cType == FrontEndType::SSA or  cType == FrontEndType::SSA2)
                      fMean=4.2;*/
-                auto cOriginalMask = chipDC->getChipOriginalMask();
-		uint32_t nMask=0;
+                auto     cOriginalMask = chipDC->getChipOriginalMask();
+                uint32_t nMask         = 0;
                 for(uint16_t iChannel = 0; iChannel < chip->size(); ++iChannel)
                 {
                     float cPedestal = chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold;
@@ -1047,18 +1038,19 @@ void PedeNoise::maskNoisyChannels(BoardDataContainer* board)
                     // LOG(INFO) << BOLDYELLOW << "CHECK "<<iChannel <<", "<<std::fabs(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold -cPedestal)<<" "<<fPedeNoiseUntrimmedLimit<<RESET;
                     if(fPedeNoiseMask and (chip->getChannel<ThresholdAndNoise>(iChannel).fNoise > fPedeNoiseLimit))
                     {
-			nMask+=1;
+                        nMask += 1;
                         LOG(INFO) << BOLDYELLOW << "Masking Channel: " << iChannel << " with a noise of " << chip->getChannel<ThresholdAndNoise>(iChannel).fNoise << ", which is over the limit of "
                                   << fPedeNoiseLimit << RESET;
                         cOriginalMask->disableChannel(iChannel);
                     }
                     if(fPedeNoiseMaskUntrimmed and std::fabs(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold - cPedestal) > fPedeNoiseUntrimmedLimit)
                     {
-			uint8_t thetrim = fReadoutChipInterface->ReadChipReg(static_cast<ReadoutChip*>(chipDC), "TrimDAC_P" + std::to_string(iChannel + 1));
+                        uint8_t thetrim = fReadoutChipInterface->ReadChipReg(static_cast<ReadoutChip*>(chipDC), "TrimDAC_P" + std::to_string(iChannel + 1));
 
-			nMask+=1;
+                        nMask += 1;
                         LOG(INFO) << BOLDYELLOW << "Masking Channel:  " << iChannel << " with a pedestal difference of "
-                                  << std::fabs(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold - cPedestal) << ", which is over the limit of " << fPedeNoiseUntrimmedLimit << " trimval: "<<+thetrim<<RESET;
+                                  << std::fabs(chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold - cPedestal) << ", which is over the limit of " << fPedeNoiseUntrimmedLimit
+                                  << " trimval: " << +thetrim << RESET;
                         cOriginalMask->disableChannel(iChannel);
                     }
 
@@ -1069,7 +1061,7 @@ void PedeNoise::maskNoisyChannels(BoardDataContainer* board)
                     // LOG(INFO) << BOLDYELLOW << "Thresh "<<iChannel<< ": "<<chip->getChannel<ThresholdAndNoise>(iChannel).fThreshold  <<RESET;
                 }
                 // fReadoutChipInterface->maskChannelGroup(chipDC,cOriginalMask);
-		if (nMask>0)LOG(INFO) << BOLDYELLOW << "PedeNoise masked "<<nMask<<" channels..." <<RESET;
+                if(nMask > 0) LOG(INFO) << BOLDYELLOW << "PedeNoise masked " << nMask << " channels..." << RESET;
                 fReadoutChipInterface->ConfigureChipOriginalMask(chipDC);
             }
         }

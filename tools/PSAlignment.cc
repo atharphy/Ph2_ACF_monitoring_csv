@@ -1102,7 +1102,7 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
     cInjections.push_back(cInjection); // 3
     cInjection.fRow    = 50;
     cInjection.fColumn = 6;
-    /*cInjections.push_back(cInjection); // 4
+    cInjections.push_back(cInjection); // 4
     cInjection.fRow    = 60;
     cInjection.fColumn = 7;
     cInjections.push_back(cInjection); // 5
@@ -1111,7 +1111,7 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
     cInjections.push_back(cInjection); // 6
     cInjection.fRow    = 80;
     cInjection.fColumn = 9;
-    cInjections.push_back(cInjection); // 7*/
+    cInjections.push_back(cInjection); // 7
 
     // check trigger source
     // and reload

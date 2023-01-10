@@ -80,10 +80,8 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     fPedestalEqualizationFullScanStart = findValueInSettings<double>("PedestalEqualizationFullScanStart", 110);
     fPedestalEqualizationFullScanCAP   = findValueInSettings<double>("PedestalEqualizationFullScanCAP", 1.0);
 
-    fTestPulseAmplitude      = findValueInSettings<double>("PedestalEqualizationPulseAmplitude", 0);
-    fTestPulseAmplitudePix      = findValueInSettings<double>("PedestalEqualizationPulseAmplitudePix", fTestPulseAmplitude);
-  
-
+    fTestPulseAmplitude    = findValueInSettings<double>("PedestalEqualizationPulseAmplitude", 0);
+    fTestPulseAmplitudePix = findValueInSettings<double>("PedestalEqualizationPulseAmplitudePix", fTestPulseAmplitude);
 
     fEventsPerPoint          = findValueInSettings<double>("Nevents", 10);
     fNEventsPerBurst         = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
@@ -206,19 +204,19 @@ void PedestalEqualization::Reset()
                 for(auto cChip: *cHybrid)
                 {
                     auto cModMap = cChip->GetModifiedRegisterMap();
-                    LOG(DEBUG) << BOLDYELLOW << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
+                    LOG(INFO) << BOLDYELLOW << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
                     std::vector<std::pair<std::string, uint16_t>> cRegList;
                     for(auto cMapItem: cModMap)
                     {
                         auto cValueInMemory = cChip->getReg(cMapItem.first);
-                        if(cMapItem.second.fValue == cValueInMemory) continue;
+                        // if(cMapItem.second.fValue == cValueInMemory) continue;
                         // don't reconfigure the offsets .. whole point of this excercise
                         if(cMapItem.first.find("Channel") != std::string::npos) continue;
                         if(cMapItem.first.find("TrimDAC") != std::string::npos) continue;
                         if(cMapItem.first.find("THTRIMMING") != std::string::npos) continue;
-                        if(cMapItem.first.find("ENFLAGS") != std::string::npos) { cMapItem.second.fValue = (cMapItem.second.fValue & 0xfe) + (cValueInMemory & 0x1); };
-                        LOG(DEBUG) << BOLDYELLOW << "PedestalEqualization::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
-                                   << cMapItem.second.fValue << RESET;
+                        // if(cMapItem.first.find("ENFLAGS") != std::string::npos) { cMapItem.second.fValue = (cMapItem.second.fValue & 0xfe) + (cValueInMemory & 0x1); };
+                        LOG(INFO) << BOLDYELLOW << "PedestalEqualization::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
+                                  << cMapItem.second.fValue << RESET;
                         cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second.fValue));
                     }
                     fReadoutChipInterface->WriteChipMultReg(cChip, cRegList, false);
@@ -267,25 +265,23 @@ void PedestalEqualization::FindVplus()
         this->enableTestPulse(true);
         for(auto cBoard: *fDetectorContainer)
         {
-	    //Allow for different SSA and MPA injection amplitudes
-            //setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fTestPulseAmplitude);
+            // Allow for different SSA and MPA injection amplitudes
+            // setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fTestPulseAmplitude);
             if(fWithSSA or fWithMPA)
-		for(auto cOpticalGroup: *cBoard)
-		{
-		        for(auto cHybrid: *cOpticalGroup)
-		        {
-		            for(auto cChip: *cHybrid)
-		            {
-                    		auto         cType   = cChip->getFrontEndType();
-				if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
-					fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fTestPulseAmplitudePix);
-				else
-					fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fTestPulseAmplitude);
-			    }
-			}
-		    
-		}
-
+                for(auto cOpticalGroup: *cBoard)
+                {
+                    for(auto cHybrid: *cOpticalGroup)
+                    {
+                        for(auto cChip: *cHybrid)
+                        {
+                            auto cType = cChip->getFrontEndType();
+                            if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
+                                fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fTestPulseAmplitudePix);
+                            else
+                                fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fTestPulseAmplitude);
+                        }
+                    }
+                }
 
             else
                 setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "TestPulsePotNodeSel", fTestPulseAmplitude);
