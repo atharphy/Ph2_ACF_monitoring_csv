@@ -111,8 +111,8 @@ bool Tool::GetRunningStatus()
 
 void Tool::waitForRunToBeCompleted()
 {
-    while(!GetRunningStatus()) std::this_thread::sleep_for(std::chrono::milliseconds(250));
-    if(fRunningThread.joinable() == true) fRunningThread.join();
+    std::unique_lock<std::recursive_mutex> theGuard(theMtx);
+    wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 
 void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
