@@ -60,6 +60,7 @@ void ClockDelay::Running()
     }
 
     ClockDelay::run();
+    Tool::InformImDone();
     ClockDelay::analyze();
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     ClockDelay::sendData();

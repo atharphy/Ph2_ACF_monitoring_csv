@@ -77,6 +77,7 @@ void ThrEqualization::Running()
     }
 
     ThrEqualization::run();
+    Tool::InformImDone();
     ThrEqualization::analyze();
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     ThrEqualization::sendData();

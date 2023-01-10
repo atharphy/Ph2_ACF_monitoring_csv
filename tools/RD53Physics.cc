@@ -71,6 +71,7 @@ void Physics::Running()
     numberOfEventsPerRun = 0;
     errors               = 0;
     Physics::run();
+    Tool::InformImDone();
 }
 
 void Physics::sendBoardData(const BoardContainer* cBoard)
@@ -170,8 +171,6 @@ void Physics::run()
 
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
     }
-
-    Tool::InformImDone();
 }
 
 void Physics::draw(bool saveData)

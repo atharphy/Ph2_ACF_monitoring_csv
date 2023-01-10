@@ -69,6 +69,7 @@ void GenericDacDacScan::Running()
     }
 
     GenericDacDacScan::run();
+    Tool::InformImDone();
     GenericDacDacScan::analyze();
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     GenericDacDacScan::sendData();

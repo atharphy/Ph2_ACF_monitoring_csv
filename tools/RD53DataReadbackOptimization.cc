@@ -54,6 +54,7 @@ void DataReadbackOptimization::Running()
     LOG(INFO) << GREEN << "[DataReadbackOptimization::Running] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
 
     DataReadbackOptimization::run();
+    Tool::InformImDone();
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     DataReadbackOptimization::sendData();
 }

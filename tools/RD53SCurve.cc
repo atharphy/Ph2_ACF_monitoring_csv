@@ -71,6 +71,7 @@ void SCurve::Running()
     }
 
     SCurve::run();
+    Tool::InformImDone();
     SCurve::analyze();
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     SCurve::sendData();

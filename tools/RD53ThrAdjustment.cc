@@ -61,6 +61,7 @@ void ThrAdjustment::Running()
     }
 
     ThrAdjustment::run();
+    Tool::InformImDone();
     ThrAdjustment::analyze();
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     ThrAdjustment::sendData();

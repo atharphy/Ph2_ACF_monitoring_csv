@@ -60,6 +60,7 @@ void GainOptimization::Running()
     }
 
     GainOptimization::run();
+    Tool::InformImDone();
     GainOptimization::analyze();
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     GainOptimization::sendData();
