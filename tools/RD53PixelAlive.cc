@@ -146,7 +146,6 @@ void PixelAlive::run()
     CalibBase::chipErrorReport();
 }
 
-
 void PixelAlive::draw(bool saveData)
 {
     if(saveData == true) CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
