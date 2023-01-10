@@ -80,7 +80,6 @@ void ThrEqualization::Running()
     ThrEqualization::analyze();
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     ThrEqualization::sendData();
-
     PixelAlive::sendData();
 }
 

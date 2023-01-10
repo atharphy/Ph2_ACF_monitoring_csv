@@ -64,7 +64,6 @@ void ThrAdjustment::Running()
     ThrAdjustment::analyze();
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     ThrAdjustment::sendData();
-
     PixelAlive::sendData();
 }
 
