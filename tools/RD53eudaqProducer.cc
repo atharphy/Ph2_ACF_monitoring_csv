@@ -83,7 +83,7 @@ void RD53eudaqProducer::DoStartRun()
     // # Get configuration directly from EUDAQ framework #
     // ###################################################
     std::string fileName("Run" + RD53Shared::fromInt2Str(theRunNumber) + "_Physics");
-    RD53sysCntrPhys.initializeFiles(fileName);
+    RD53sysCntrPhys.initializeFiles<PhysicsHistograms>(fileName, "Physics", RD53sysCntrPhys.histos, theRunNumber);
     RD53sysCntrPhys.Start(theRunNumber);
 
     doExit = false;
@@ -121,7 +121,7 @@ void RD53eudaqProducer::DoStopRun()
 
 void RD53eudaqProducer::DoTerminate()
 {
-    std::unique_lock<std::mutex> theGuard(theMtx);
+    std::unique_lock<std::recursive_mutex> theGuard(theMtx);
     doExit = true;
     theGuard.unlock();
     wakeUp.notify_one();

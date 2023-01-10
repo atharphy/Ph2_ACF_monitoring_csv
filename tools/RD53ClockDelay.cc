@@ -63,7 +63,6 @@ void ClockDelay::Running()
     ClockDelay::analyze();
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     ClockDelay::sendData();
-
     la.sendData();
 }
 

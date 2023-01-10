@@ -424,10 +424,13 @@ class Tool : public Ph2_System::SystemController
     THttpServer* fHttpServer;
 #endif
 
-    int               fRunNumber;
-    std::atomic<bool> fKeepRunning;
-    std::future<int> fRunningFuture;
-    std::thread       fRunningThread;
+    int                         fRunNumber;
+    bool                        doExit;
+    std::atomic<bool>           fKeepRunning;
+    std::thread                 fRunningThread;
+    std::future<int>            fRunningFuture;
+    std::condition_variable_any wakeUp;
+    std::recursive_mutex        theMtx;
 
     bool        fSkipMaskedChannels;
     bool        fAllChan;
