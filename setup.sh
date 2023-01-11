@@ -131,7 +131,7 @@ export CompileForShep=false
 # export CompileForShep=true
 
 # Compile with EUDAQ libraries
-export CompileWithEUDAQ=true
+export CompileWithEUDAQ=false
 
 # Compile with TC_USB library
 export CompileWithTCUSB=false

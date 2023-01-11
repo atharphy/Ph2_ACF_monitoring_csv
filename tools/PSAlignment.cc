@@ -207,11 +207,14 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
                 }
                 if(cChip->getFrontEndType() == FrontEndType::SSA or cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
-                    fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS", 0x0);
+                    if(cChip->getFrontEndType() == FrontEndType::SSA2)
+                    	fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency + 1);
+                    if(cChip->getFrontEndType() == FrontEndType::SSA)
+                    	fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency - 1);
+                    fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                     fReadoutChipInterface->WriteChipReg(cChip, "Threshold", 150);
-                    fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency + 1);
-                    fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L", 0x01);
-                    fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_H", 0x01);
+                    fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", 0x01);
+                    fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_H_ALL", 0x01);
                     fReadoutChipInterface->WriteChipReg(cChip, "DigitalSync_S" + std::to_string(cCol), 0x1);
                 }
             } // chip
@@ -368,10 +371,13 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
 
                 if(cChip->getFrontEndType() == FrontEndType::SSA or cChip->getFrontEndType() == FrontEndType::SSA2)
                 {
-                    fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency + 1);
-                    fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L", 0x01);
-                    fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_H", 0x01);
-                    fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS", 0x0);
+                    if(cChip->getFrontEndType() == FrontEndType::SSA )
+                    	fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency - 1);
+                    if( cChip->getFrontEndType() == FrontEndType::SSA2)
+                    	fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatency + 1);
+                    fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", 0x01);
+                    fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_H_ALL", 0x01);
+                    fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                     fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cCol), 0x9);
                     fReadoutChipInterface->WriteChipReg(cChip, "Threshold", 150);
                 }
@@ -985,7 +991,9 @@ bool PSAlignment::FindLatency(BeBoard* pBoard, uint8_t pChipId, std::vector<Inje
                 {
                     if(cChip->getId() % 8 != pChipId) continue;
 
-                    if(cChip->getFrontEndType() == FrontEndType::SSA or cChip->getFrontEndType() == FrontEndType::SSA2)
+                    if(cChip->getFrontEndType() == FrontEndType::SSA )
+                        fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cHitLatency - 1);
+                    if(cChip->getFrontEndType() == FrontEndType::SSA2)
                         fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cHitLatency + 1);
                     else
                     {

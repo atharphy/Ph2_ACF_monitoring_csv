@@ -26,9 +26,9 @@
             
             
             <SSA_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
-           <SSA2 Id="1" configfile="SSA2.txt" />
-          <SSA2 Id="2" configfile="SSA2.txt" />
-            <!--   <SSA2 Id="2" configfile="SSA2.txt" />
+           <SSA2 Id="0" configfile="SSA2.txt" />
+          <!-- <SSA2 Id="2" configfile="SSA2.txt" />
+              <SSA2 Id="2" configfile="SSA2.txt" />
              <SSA2 Id="4" configfile="SSA2.txt" />
             <SSA2 Id="5" configfile="SSA2.txt" />
             <SSA2 Id="6" configfile="SSA2.txt" />
