@@ -187,13 +187,12 @@ void LatencyScan::ScanLatency()
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        if(cChip->getFrontEndType() == FrontEndType::SSA )
+                        if(cChip->getFrontEndType() == FrontEndType::SSA)
                             fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLat - 1);
                         else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                             fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLat + 1);
                         else
                             fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLat);
-                        
                     }
                 }
             }
@@ -291,12 +290,12 @@ void LatencyScan::ScanLatency()
                                     cTotalHitsS1 += cSclstrs.size();
                                     if(cPclstrs.size() > 0 && cSclstrs.size() > 0)
                                         LOG(DEBUG) << BOLDBLUE << "\t\t\t\t Event#" << (*cEventIter)->GetEventCount() << " Trigger#" << +cTriggerId << " Chip#" << +cChip->getId() % 8 << " "
-                                                  << +cPclstrs.size() << " P-clusters " << +cSclstrs.size() << " S-clusters." << RESET;
+                                                   << +cPclstrs.size() << " P-clusters " << +cSclstrs.size() << " S-clusters." << RESET;
                                     for(auto& cPclstr: cPclstrs)
                                     {
                                         if(cSclstrs.size() > 0)
                                             LOG(DEBUG) << BOLDBLUE << "\tHit in Pixel ASIC" << +cChip->getId() % 8 << " row " << +cPclstr.fAddress << " col " << +cPclstr.fZpos << " width "
-                                                      << +cPclstr.fWidth << RESET;
+                                                       << +cPclstr.fWidth << RESET;
                                         for(uint8_t cId = 0; cId < (1 + cPclstr.fWidth); cId++)
                                         {
                                             cHitContainer.at(cBoard->getIndex())

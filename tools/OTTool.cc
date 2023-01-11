@@ -96,7 +96,7 @@ void OTTool::Reset()
 
                         cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second.fValue));
                     }
-                    fReadoutChipInterface->WriteChipMultReg(cChip, cRegList);
+                    fReadoutChipInterface->WriteChipMultReg(cChip, cRegList, false);//false because _All regs
 
                     // then clear modified register map
                     // and also disable register tracking for this chip

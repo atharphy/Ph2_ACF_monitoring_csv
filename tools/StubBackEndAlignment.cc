@@ -405,9 +405,8 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
             {
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::SSA)
-                        fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cLatency - 1);
-                    if( cChip->getFrontEndType() == FrontEndType::SSA2)
+                    if(cChip->getFrontEndType() == FrontEndType::SSA) fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cLatency - 1);
+                    if(cChip->getFrontEndType() == FrontEndType::SSA2)
                         fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cLatency + 1);
                     else
                         fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cLatency);
