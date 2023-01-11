@@ -338,9 +338,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     std::string pRegNameMod = pRegName;
     if(pRegName.find("_ALL") != std::string::npos)
     {
-        std::cout << pRegNameMod << std::endl;
         pRegNameMod.erase(pRegName.length() - 4);
-        std::cout << pRegNameMod << std::endl;
     }
 
     if(pRegNameMod == "CountingMode")

@@ -58,6 +58,7 @@ void PSAlignment::Initialise()
                 auto& cStubAlParsThisHybrd = cStubAlParsThisOG->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
+                    if(cChip->getFrontEndType() == FrontEndType::MPA2) PSv2=true;
                     if(cChip->getFrontEndType() == FrontEndType::MPA or cChip->getFrontEndType() == FrontEndType::MPA2)
                     {
                         auto& cAlParsThisChip = cAlParsThisHybrd->at(cChip->getIndex());
@@ -184,7 +185,8 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
     uint16_t cDelay   = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
-    uint16_t cLatency = cDelay - 3;
+    uint16_t cLatency = cDelay - 1;
+    if (PSv2) cLatency -= 2;
     LOG(INFO) << BOLDMAGENTA << "Expect correct L1 latency to be " << +cLatency << RESET;
 
     // configure SSA to inject digitally
@@ -348,7 +350,8 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
     uint16_t cDelay   = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
-    uint16_t cLatency = cDelay - 3; // for MPA2!
+    uint16_t cLatency = cDelay - 1; // for MPA2! to genneralize if function used
+    if (PSv2) cLatency -= 2;
     LOG(INFO) << BOLDMAGENTA << "Expect correct L1 latency to be " << +cLatency << RESET;
 
     for(auto cOpticalReadout: *pBoard)
@@ -661,7 +664,7 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignStubs(ReadoutChip* pC
     bool                  cCheckL1   = true;
     std::vector<uint16_t> cStubOffsets(0);
 
-    for(uint8_t cRetime = 4; cRetime >= 4; cRetime--) // to-do - add range to xml
+    for(uint8_t cRetime = 6; cRetime >= 4; cRetime--) // to-do - add range to xml
     {
         if(cOnlyFirst && cGoodCombinationsStubs.size() > 0) continue;
         for(uint8_t cPhase = cStartPhase; cPhase < cEndPhase; cPhase++) // to-do - add range to xml
@@ -968,7 +971,8 @@ bool PSAlignment::FindLatency(BeBoard* pBoard, uint8_t pChipId, std::vector<Inje
     uint16_t cHitLatency    = 0;
     uint16_t cDelay         = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
     auto     cTriggerMult   = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-    int      cOptimalOffset = -3 + (2 * (cTriggerMult > 1)); // want triggered event to be in trigger#2 of the burst
+    int      cOptimalOffset = -1 + (2 * (cTriggerMult > 1)); // want triggered event to be in trigger#2 of the burst
+    if (PSv2) cOptimalOffset -= 2;
 
     bool cFoundCorrectHitLatency = false;
     for(int cOffset = (cOptimalOffset - 5); cOffset < cOptimalOffset + 5; cOffset++)
@@ -1136,7 +1140,8 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
 
     auto     cTriggerMult   = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     uint16_t cDelay         = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
-    int      cOptimalOffset = -3 + (2 * (cTriggerMult > 1)); // want triggered event to be in trigger#2 of the burst
+    int      cOptimalOffset = -1 + (2 * (cTriggerMult > 1)); // want triggered event to be in trigger#2 of the burst
+    if (PSv2) cOptimalOffset -= 2;
     // int      cOptimalOffset = 1 + (2*(cTriggerMult > 1)); // want triggered event to be in trigger#2 of the burst
     // int      cOptimalOffset = 1 + (cTriggerMult > 1); // want triggered event to be in trigger#2 of the burst
     uint16_t cLatency = cDelay + cOptimalOffset;

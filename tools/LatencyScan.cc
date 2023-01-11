@@ -225,7 +225,6 @@ void LatencyScan::ScanLatency()
                         {
                             for(uint16_t cIndx = 0; cIndx < fTDCBins; cIndx++)
                             {
-                                LOG(INFO) << BOLDBLUE << "THETDC " << cIndx << RESET;
                                 cHitContainer.at(cBoard->getIndex())
                                     ->at(cOpticalGroup->getIndex())
                                     ->at(cHybrid->getIndex())
@@ -250,8 +249,6 @@ void LatencyScan::ScanLatency()
                 {
                     if(cEventIter >= cEvents.end()) break;
                     uint8_t cTDCVal = (*cEventIter)->GetTDC();
-                    LOG(INFO) << BOLDBLUE << "cTDCVal? " << +cTDCVal << RESET;
-                    // LOG(INFO) << BOLDBLUE << "cPhase? " << cPhase<< RESET;
                     for(auto cOpticalGroup: *cBoard)
                     {
                         auto& cOccOG = cOccBrd->at(cOpticalGroup->getIndex());
@@ -293,12 +290,12 @@ void LatencyScan::ScanLatency()
                                     cTotalHitsS0 += cPclstrs.size();
                                     cTotalHitsS1 += cSclstrs.size();
                                     if(cPclstrs.size() > 0 && cSclstrs.size() > 0)
-                                        LOG(INFO) << BOLDBLUE << "\t\t\t\t Event#" << (*cEventIter)->GetEventCount() << " Trigger#" << +cTriggerId << " Chip#" << +cChip->getId() % 8 << " "
+                                        LOG(DEBUG) << BOLDBLUE << "\t\t\t\t Event#" << (*cEventIter)->GetEventCount() << " Trigger#" << +cTriggerId << " Chip#" << +cChip->getId() % 8 << " "
                                                   << +cPclstrs.size() << " P-clusters " << +cSclstrs.size() << " S-clusters." << RESET;
                                     for(auto& cPclstr: cPclstrs)
                                     {
                                         if(cSclstrs.size() > 0)
-                                            LOG(INFO) << BOLDBLUE << "\tHit in Pixel ASIC" << +cChip->getId() % 8 << " row " << +cPclstr.fAddress << " col " << +cPclstr.fZpos << " width "
+                                            LOG(DEBUG) << BOLDBLUE << "\tHit in Pixel ASIC" << +cChip->getId() % 8 << " row " << +cPclstr.fAddress << " col " << +cPclstr.fZpos << " width "
                                                       << +cPclstr.fWidth << RESET;
                                         for(uint8_t cId = 0; cId < (1 + cPclstr.fWidth); cId++)
                                         {
@@ -314,7 +311,7 @@ void LatencyScan::ScanLatency()
                                     for(auto& cSclstr: cSclstrs)
                                     {
                                         if(cPclstrs.size() > 0)
-                                            LOG(INFO) << BOLDYELLOW << "\tHit in Strip ASIC" << +cChip->getId() % 8 << " row " << +cSclstr.fAddress << " width " << +cSclstr.fWidth << RESET;
+                                            LOG(DEBUG) << BOLDYELLOW << "\tHit in Strip ASIC" << +cChip->getId() % 8 << " row " << +cSclstr.fAddress << " width " << +cSclstr.fWidth << RESET;
                                         for(uint8_t cId = 0; cId < (1 + cSclstr.fWidth); cId++)
                                         {
                                             cHitContainer.at(cBoard->getIndex())
@@ -578,7 +575,7 @@ void LatencyScan::StubLatencyScan()
                                     auto cStubs = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
                                     auto cHits  = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
                                     cNStubs     = cStubs.size();
-                                    LOG(INFO) << BOLDGREEN << "cNStubs" << cNStubs << "," << cHits.size() << " hits in this event... " << RESET;
+                                    LOG(DEBUG) << BOLDGREEN << "cNStubs" << cNStubs << "," << cHits.size() << " hits in this event... " << RESET;
                                 }
 
                             } // chip

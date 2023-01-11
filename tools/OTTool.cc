@@ -879,9 +879,9 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                     // for digi injection .. explicity disable all other strips
                     if(pInjections.size() > 0 && fInjectionType == 0)
                     {
-                        fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS", 0x0);
-                        fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L", 0x00);
-                        fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_H", 0x00);
+                        fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
+                        fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", 0x00);
+                        fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_H_ALL", 0x00);
                         fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
                     }
                     for(auto cInjection: pInjections)
