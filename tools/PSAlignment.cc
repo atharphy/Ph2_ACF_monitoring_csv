@@ -58,7 +58,8 @@ void PSAlignment::Initialise()
                 auto& cStubAlParsThisHybrd = cStubAlParsThisOG->at(cHybrid->getIndex());
                 for(auto cChip: *cHybrid)
                 {
-                    if(cChip->getFrontEndType() == FrontEndType::MPA2) PSv2=true;
+                    if(cChip->getFrontEndType() == FrontEndType::MPA2) 
+			PSv2=true;
                     if(cChip->getFrontEndType() == FrontEndType::MPA or cChip->getFrontEndType() == FrontEndType::MPA2)
                     {
                         auto& cAlParsThisChip = cAlParsThisHybrd->at(cChip->getIndex());
