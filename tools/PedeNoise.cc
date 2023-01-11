@@ -777,6 +777,11 @@ void PedeNoise::extractPedeNoise()
                             auto  cType = chip->getFrontEndType();
                             if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
                             {
+				if(mStripIt == fSCurveStripOccupancyMap.rend())
+				{
+					mStripIt--;
+					continue;
+				}
                                 previousOccupancy = (previousStripIterator)
                                                         ->second->at(board->getIndex())
                                                         ->at(opticalGroup->getIndex())
@@ -790,6 +795,11 @@ void PedeNoise::extractPedeNoise()
                             }
                             else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
                             {
+				if(mPixelIt == fSCurvePixelOccupancyMap.rend())
+				{
+					mPixelIt--;
+					continue;
+				}
                                 previousOccupancy = (previousPixelIterator)
                                                         ->second->at(board->getIndex())
                                                         ->at(opticalGroup->getIndex())
