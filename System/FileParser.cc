@@ -1071,7 +1071,6 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                     else if(cName == "MPA")
                     {
                         cHybrid->setNPixelChips(cHybrid->getNPixelChips() + 1);
-                        std::cout << "ISMPA" << std::endl;
                         pBoard->setFrontEndType(FrontEndType::MPA);
                         this->parseMPAContainer(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) this->parseMPASettings(pHybridNode, cHybrid, os);
@@ -1134,7 +1133,6 @@ void FileParser::parseGlobalHybridMask(pugi::xml_node pHybridNode, Hybrid* pHybr
                         std::vector<uint16_t> cMskedChnls;
                         cMapOfMaks[cItem]  = cMskedChnls;
                         FrontEndType cType = FrontEndType::CBC3;
-                        std::cout << "cAttrName " << cAttrName << std::endl;
                         if(cAttrName.find("MPA") != std::string::npos) cType = FrontEndType::MPA;
                         if(cAttrName.find("MPA2") != std::string::npos) cType = FrontEndType::MPA2;
                         if(cAttrName.find("SSA") != std::string::npos) cType = FrontEndType::SSA;

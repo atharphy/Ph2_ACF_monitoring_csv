@@ -897,10 +897,8 @@ int main(int argc, char* argv[])
                             }
                             if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
                             {
-                                LOG(INFO) << BOLDBLUE << "1" << RESET;
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleMPAth);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "ModeSel_ALL", cSamplingMPA);
-                                LOG(INFO) << BOLDBLUE << "2" << RESET;
                             }
                         }
                     }
