@@ -63,7 +63,6 @@ void InjectionDelay::Running()
     InjectionDelay::analyze();
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     InjectionDelay::sendData();
-
     la.sendData();
 }
 

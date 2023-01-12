@@ -77,9 +77,17 @@ Tool::~Tool() {}
 
 void Tool::privateRunning(std::promise<int>&& thePromise)
 {
-    Running();
-    std::cout << "done" << std::endl;
-    thePromise.set_value(0);
+    try
+    {
+        Running();
+        Tool::InformImDone();
+        thePromise.set_value(0);
+    }
+    catch(...)
+    {
+        Tool::InformImDone();
+        thePromise.set_exception(std::current_exception());
+    }
 }
 
 bool Tool::GetRunningStatus()
@@ -89,7 +97,7 @@ bool Tool::GetRunningStatus()
     {
         try
         {
-            if(fRunningFuture.valid()) { fRunningFuture.get(); }
+            if(fRunningFuture.valid()) fRunningFuture.get();
         }
         catch(const std::exception& e)
         {
@@ -103,8 +111,8 @@ bool Tool::GetRunningStatus()
 
 void Tool::waitForRunToBeCompleted()
 {
-    while(!GetRunningStatus()) std::this_thread::sleep_for(std::chrono::milliseconds(250));
-    if(fRunningThread.joinable() == true) fRunningThread.join();
+    std::unique_lock<std::recursive_mutex> theGuard(theMtx);
+    wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 
 void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
@@ -120,17 +128,35 @@ void Tool::Start(int runNumber)
 #ifdef __USE_ROOT__
     InitResultFile("Hybrid");
 #endif
-    fKeepRunning   = true;
-    fRunNumber     = runNumber;
+    doExit       = false;
+    fKeepRunning = true;
+    fRunNumber   = runNumber;
     std::promise<int> thePromise;
     fRunningFuture = thePromise.get_future();
     fRunningThread = std::thread(&Tool::privateRunning, this, std::move(thePromise));
 }
 
+void Tool::InformImDone()
+{
+    std::unique_lock<std::recursive_mutex> theGuard(theMtx);
+    doExit = true;
+    theGuard.unlock();
+    wakeUp.notify_one();
+}
+
 void Tool::Stop()
 {
     fKeepRunning = false;
-    waitForRunToBeCompleted();
+    Tool::waitForRunToBeCompleted();
+    if(fRunningThread.joinable() == true) fRunningThread.join();
+    try
+    {
+        fRunningFuture.get();
+    }
+    catch(const std::exception& e)
+    {
+        throw std::runtime_error(e.what());
+    }
     SystemController::Stop();
 }
 
