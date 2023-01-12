@@ -1,14 +1,14 @@
-#include "../DQMUtils/DQMInterface.h"
-#include "../HWDescription/BeBoard.h"
-#include "../HWDescription/Chip.h"
-#include "../HWDescription/Definition.h"
-#include "../HWDescription/Hybrid.h"
-#include "../HWInterface/BeBoardInterface.h"
-#include "../HWInterface/ChipInterface.h"
-#include "../MonitorDQM/MonitorDQMInterface.h"
-#include "../Utils/MiddlewareInterface.h"
-#include "../Utils/argvparser.h"
-#include "../miniDAQ/CombinedCalibrationFactory.h"
+#include "DQMUtils/DQMInterface.h"
+#include "HWDescription/BeBoard.h"
+#include "HWDescription/Chip.h"
+#include "HWDescription/Definition.h"
+#include "HWDescription/Hybrid.h"
+#include "HWInterface/BeBoardInterface.h"
+#include "HWInterface/ChipInterface.h"
+#include "MonitorDQM/MonitorDQMInterface.h"
+#include "Utils/MiddlewareInterface.h"
+#include "Utils/argvparser.h"
+#include "miniDAQ/CombinedCalibrationFactory.h"
 
 #include <cstring>
 #include <errno.h>
@@ -21,7 +21,7 @@
 
 #include <TApplication.h>
 
-#include "../Utils/easylogging++.h"
+#include "Utils/easylogging++.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -268,8 +268,7 @@ int main(int argc, char* argv[])
                     std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Configure!!!" << std::endl;
                     std::string                                               calibrationName   = cmd.optionValue("calibration");
                     std::string                                               configurationFile = cmd.optionValue("file");
-                    const MessageUtils::CalibrationList::CalibrationNameEnum& calibrationEnum   = theCombinedCalibrationFactory.getCalibrationEnum(calibrationName);
-                    theMiddlewareInterface.configure(calibrationEnum, configurationFile);
+                    theMiddlewareInterface.configure(calibrationName, configurationFile);
                     theDQMInterface.configure(calibrationName, configurationFile);
                     theMonitorDQMInterface.configure(configurationFile);
                     stateMachineStatus = CONFIGURED;

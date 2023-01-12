@@ -1,8 +1,8 @@
 #include <cstring>
 
-#include "../Utils/Utilities.h"
-#include "../Utils/argvparser.h"
-#include "../tools/PulseShape.h"
+#include "Utils/Utilities.h"
+#include "Utils/argvparser.h"
+#include "tools/PulseShape.h"
 #include "TROOT.h"
 #include <TApplication.h>
 

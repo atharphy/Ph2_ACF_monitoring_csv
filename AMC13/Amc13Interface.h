@@ -1,8 +1,8 @@
 #ifndef _AMC13_INTERFACE_H__
 #define _AMC13_INTERFACE_H__
 
-#include "../Utils/ConsoleColor.h"
-#include "../Utils/easylogging++.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/easylogging++.h"
 #include "Amc13Description.h"
 #include "amc13/AMC13.hh"
 #include "uhal/uhal.hpp"

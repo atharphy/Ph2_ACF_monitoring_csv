@@ -16,11 +16,11 @@
 #include <unistd.h>
 #include <vector>
 
-#include "../MonitorUtils/DetectorMonitorConfig.h"
-#include "../RootUtils/GraphContainer.h"
-#include "../RootUtils/RootContainerFactory.h"
-#include "../System/SystemController.h"
-#include "../Utils/Container.h"
+#include "Parser/DetectorMonitorConfig.h"
+#include "RootUtils/GraphContainer.h"
+#include "RootUtils/RootContainerFactory.h"
+#include "Utils/Container.h"
+#include "Parser/FileParser.h"
 
 #include <TAxis.h>
 #include <TDatime.h>
@@ -71,7 +71,7 @@ class MonitorDQMPlotBase
      */
     virtual void reset(void) = 0;
 
-    double findValueInSettings(const Ph2_System::SettingsMap& settingsMap, const std::string name, double defaultValue = 0.) const
+    double findValueInSettings(const Ph2_Parser::SettingsMap& settingsMap, const std::string name, double defaultValue = 0.) const
     {
         auto setting = settingsMap.find(name);
         return (setting != std::end(settingsMap) ? boost::any_cast<double>(setting->second) : defaultValue);

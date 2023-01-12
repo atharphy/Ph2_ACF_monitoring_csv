@@ -1,10 +1,10 @@
-#include "../DQMUtils/DQMHistogramOTCMNoise.h"
-#include "../RootUtils/RootContainerFactory.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/GenericDataArray.h"
-#include "../Utils/OpticalGroupContainerStream.h"
-#include "../Utils/Utilities.h"
+#include "DQMUtils/DQMHistogramOTCMNoise.h"
+#include "RootUtils/RootContainerFactory.h"
+#include "Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/GenericDataArray.h"
+#include "Utils/OpticalGroupContainerStream.h"
+#include "Utils/Utilities.h"
 #include "TCanvas.h"
 #include "TF1.h"
 #include "TFile.h"
@@ -18,7 +18,7 @@ DQMHistogramOTCMNoise::DQMHistogramOTCMNoise() {}
 DQMHistogramOTCMNoise::~DQMHistogramOTCMNoise() {}
 
 //========================================================================================================================
-void DQMHistogramOTCMNoise::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramOTCMNoise::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
 {
     // SoC utilities only - BEGIN
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC

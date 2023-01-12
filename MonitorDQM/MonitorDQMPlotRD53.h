@@ -10,11 +10,11 @@
 #ifndef MonitorDQMPlotRD53_H
 #define MonitorDQMPlotRD53_H
 
-#include "../MonitorDQM/MonitorDQMPlotBase.h"
-#include "../RootUtils/GraphContainer.h"
-#include "../Utils/CharArray.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
+#include "MonitorDQM/MonitorDQMPlotBase.h"
+#include "RootUtils/GraphContainer.h"
+#include "Utils/CharArray.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/ContainerStream.h"
 
 class MonitorDQMPlotRD53 : public MonitorDQMPlotBase
 {

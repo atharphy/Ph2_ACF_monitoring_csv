@@ -182,7 +182,7 @@ class StateMachine(object):
         self.queryFirmware("DELETE", configurationFile, boardId, firmwareName)
 
     def queryCalibrationList(self):
-        print(Common.CalibrationList.CALIBRATIONANDPEDENOISE)
+        print(Common.CalibrationList.calibrationandpedenoise)
         print(Common.CalibrationList)
         calibrationListQuery = Query.QueryMessage()
         calibrationListQuery.query_type.type = Query.QueryType.CALIBRATION

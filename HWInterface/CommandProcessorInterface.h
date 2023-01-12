@@ -1,10 +1,10 @@
 #ifndef _CommandProcessorInterface_H__
 #define _CommandProcessorInterface_H__
 
-#include "../Utils/Utilities.h"
-#include "../Utils/easylogging++.h"
-#include "BeBoard.h"
-#include "RegManager.h"
+#include "Utils/Utilities.h"
+#include "Utils/easylogging++.h"
+#include "HWDescription/BeBoard.h"
+#include "HWInterface/RegManager.h"
 #include <string>
 
 namespace Ph2_HwInterface

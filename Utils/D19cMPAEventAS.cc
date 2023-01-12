@@ -1,9 +1,9 @@
-#include "../Utils/D19cMPAEventAS.h"
-#include "../HWDescription/Definition.h"
-#include "../Utils/ChannelGroupHandler.h"
-#include "../Utils/DataContainer.h"
-#include "../Utils/EmptyContainer.h"
-#include "../Utils/Occupancy.h"
+#include "Utils/D19cMPAEventAS.h"
+#include "HWDescription/Definition.h"
+#include "Utils/ChannelGroupHandler.h"
+#include "Utils/DataContainer.h"
+#include "Utils/EmptyContainer.h"
+#include "Utils/Occupancy.h"
 #include <numeric>
 
 using namespace Ph2_HwDescription;

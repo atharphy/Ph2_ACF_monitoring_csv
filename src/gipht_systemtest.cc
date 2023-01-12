@@ -1,7 +1,7 @@
-#include "../System/SystemController.h"
-#include "../Utils/CommonVisitors.h"
-#include "../Utils/Timer.h"
-#include "../Utils/argvparser.h"
+#include "System/SystemController.h"
+#include "Utils/CommonVisitors.h"
+#include "Utils/Timer.h"
+#include "Utils/argvparser.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

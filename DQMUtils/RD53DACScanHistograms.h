@@ -10,9 +10,9 @@
 #ifndef RD53DACScanHistograms_H
 #define RD53DACScanHistograms_H
 
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
-#include "../Utils/GenericDataArray.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/ContainerStream.h"
+#include "Utils/GenericDataArray.h"
 #include "DQMHistogramBase.h"
 
 #include "TApplication.h"

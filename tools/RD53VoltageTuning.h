@@ -14,7 +14,7 @@
 #include "RD53CalibBase.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53VoltageTuningHistograms.h"
+#include "DQMUtils/RD53VoltageTuningHistograms.h"
 #else
 typedef bool VoltageTuningHistograms;
 #endif

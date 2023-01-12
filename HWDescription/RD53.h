@@ -10,12 +10,12 @@
 #ifndef RD53_H
 #define RD53_H
 
-#include "../Utils/BitMaster/bit_packing.h"
-#include "../Utils/ConsoleColor.h"
-#include "../Utils/Container.h"
-#include "../Utils/RD53Event.h"
-#include "../Utils/RD53Shared.h"
-#include "../Utils/easylogging++.h"
+#include "Utils/BitMaster/bit_packing.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/Container.h"
+#include "Utils/RD53Event.h"
+#include "Utils/RD53Shared.h"
+#include "Utils/easylogging++.h"
 #include "BeBoard.h"
 #include "ReadoutChip.h"
 

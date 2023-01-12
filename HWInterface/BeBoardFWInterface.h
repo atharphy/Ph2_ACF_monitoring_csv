@@ -10,20 +10,20 @@ Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pier
 #ifndef BEBOARDFWINTERFACE_H
 #define BEBOARDFWINTERFACE_H
 
-#include "../HWDescription/BeBoard.h"
-#include "../HWDescription/Chip.h"
-#include "../HWDescription/ChipRegItem.h"
-#include "../HWDescription/Definition.h"
-#include "../HWDescription/Hybrid.h"
-#include "../HWDescription/MPA.h"
-#include "../HWDescription/ReadoutChip.h"
-#include "../HWDescription/SSA.h"
-#include "../NetworkUtils/TCPClient.h"
-#include "../Utils/Exception.h"
-#include "../Utils/FileHandler.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/easylogging++.h"
-#include "RegManager.h"
+#include "HWDescription/BeBoard.h"
+#include "HWDescription/Chip.h"
+#include "HWDescription/ChipRegItem.h"
+#include "HWDescription/Definition.h"
+#include "HWDescription/Hybrid.h"
+#include "HWDescription/MPA.h"
+#include "HWDescription/ReadoutChip.h"
+#include "HWDescription/SSA.h"
+#include "NetworkUtils/TCPClient.h"
+#include "Utils/Exception.h"
+#include "Utils/FileHandler.h"
+#include "Utils/Utilities.h"
+#include "Utils/easylogging++.h"
+#include "HWInterface/RegManager.h"
 
 #include <uhal/uhal.hpp>
 

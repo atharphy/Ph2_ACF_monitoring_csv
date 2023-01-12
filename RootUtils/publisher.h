@@ -1,4 +1,4 @@
-#include "../RootWeb/include/rootweb.hh"
+#include "RootWeb/include/rootweb.hh"
 #include <string>
 class TH1D;
 namespace RootWeb

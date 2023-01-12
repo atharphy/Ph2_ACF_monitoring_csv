@@ -1,11 +1,12 @@
-#include "PedestalEqualization.h"
-#include "../HWDescription/ReadoutChip.h"
-#include "../Utils/CBCChannelGroupHandler.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/DataContainer.h"
-#include "../Utils/MPAChannelGroupHandler.h"
-#include "../Utils/Occupancy.h"
-#include "../Utils/SSAChannelGroupHandler.h"
+#include "tools/PedestalEqualization.h"
+#include "HWInterface/D19cFWInterface.h"
+#include "HWDescription/ReadoutChip.h"
+#include "Utils/CBCChannelGroupHandler.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/DataContainer.h"
+#include "Utils/MPAChannelGroupHandler.h"
+#include "Utils/Occupancy.h"
+#include "Utils/SSAChannelGroupHandler.h"
 
 // initialize the static member
 

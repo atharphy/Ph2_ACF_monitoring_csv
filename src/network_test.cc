@@ -1,12 +1,12 @@
 //#include <cstring>
-//#include "../HWDescription/Chip.h"
-//#include "../HWDescription/Hybrid.h"
-//#include "../HWDescription/BeBoard.h"
-//#include "../HWInterface/ChipInterface.h"
-//#include "../HWInterface/BeBoardInterface.h"
-//#include "../HWDescription/Definition.h"
-//#include "../Utils/argvparser.h"
-#include "../Utils/easylogging++.h"
+//#include "HWDescription/Chip.h"
+//#include "HWDescription/Hybrid.h"
+//#include "HWDescription/BeBoard.h"
+//#include "HWInterface/ChipInterface.h"
+//#include "HWInterface/BeBoardInterface.h"
+//#include "HWDescription/Definition.h"
+//#include "Utils/argvparser.h"
+#include "Utils/easylogging++.h"
 #include <chrono>
 #include <errno.h>
 #include <iostream>
@@ -18,8 +18,8 @@
 #include <thread>
 #include <unistd.h>
 
-//#include "../Utils/MiddlewareInterface.h"
-//#include "../DQMUtils/DQMInterface.h"
+//#include "Utils/MiddlewareInterface.h"
+//#include "DQMUtils/DQMInterface.h"
 //#include <TApplication.h>
 
 // using namespace Ph2_HwDescription;

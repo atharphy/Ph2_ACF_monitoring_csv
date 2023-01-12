@@ -1,4 +1,4 @@
-#include "LinkInterface.h"
+#include "HWInterface/LinkInterface.h"
 
 using namespace Ph2_HwDescription;
 

@@ -13,11 +13,11 @@
 #ifndef BeamTestCheck_h__
 #define BeamTestCheck_h__
 
-#include "../Utils/ContainerRecycleBin.h"
+#include "Utils/ContainerRecycleBin.h"
 #include "OTTool.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/DQMHistogramBeamTestCheck.h"
+#include "DQMUtils/DQMHistogramBeamTestCheck.h"
 #include "TH1.h"
 #endif
 

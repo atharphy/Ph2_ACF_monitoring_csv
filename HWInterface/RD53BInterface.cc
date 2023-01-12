@@ -8,7 +8,7 @@
   Support:               email to alkiviadis.papadopoulos@cern.ch
 */
 
-#include "RD53BInterface.h"
+#include "HWInterface/RD53BInterface.h"
 
 using namespace Ph2_HwDescription;
 

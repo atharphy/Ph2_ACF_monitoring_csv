@@ -1,8 +1,9 @@
-#include "LinkTestOT.h"
+#include "tools/LinkTestOT.h"
 
-#include "../HWInterface/D19cDebugFWInterface.h"
-#include "../Utils/CBCChannelGroupHandler.h"
-#include "../Utils/ContainerFactory.h"
+#include "HWInterface/D19cDebugFWInterface.h"
+#include "Utils/CBCChannelGroupHandler.h"
+#include "Utils/ContainerFactory.h"
+#include "HWInterface/D19cFWInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

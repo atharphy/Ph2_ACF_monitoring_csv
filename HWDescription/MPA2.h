@@ -12,9 +12,9 @@
 #ifndef MPA2_h__
 #define MPA2_h__
 
-#include "../Utils/Exception.h"
-#include "../Utils/Visitor.h"
-#include "../Utils/easylogging++.h"
+#include "Utils/Exception.h"
+#include "Utils/Visitor.h"
+#include "Utils/easylogging++.h"
 #include "ChipRegItem.h"
 #include "FrontEndDescription.h"
 #include "ReadoutChip.h"

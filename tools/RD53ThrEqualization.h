@@ -13,7 +13,7 @@
 #include "RD53PixelAlive.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53ThrEqualizationHistograms.h"
+#include "DQMUtils/RD53ThrEqualizationHistograms.h"
 #else
 typedef bool ThrEqualizationHistograms;
 #endif

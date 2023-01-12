@@ -1,9 +1,9 @@
-#include "../miniDAQ/MiddlewareStateMachine.h"
-#include "../HWInterface/FC7FpgaConfig.h"
-#include "../System/FileParser.h"
-#include "../tools/Tool.h"
+#include "miniDAQ/MiddlewareStateMachine.h"
+#include "HWInterface/FC7FpgaConfig.h"
+#include "Parser/FileParser.h"
+#include "tools/Tool.h"
 
-using namespace Ph2_System;
+using namespace Ph2_Parser;
 using namespace Ph2_HwInterface;
 
 MiddlewareStateMachine::MiddlewareStateMachine() {}
@@ -88,11 +88,12 @@ MiddlewareStateMachine::Status MiddlewareStateMachine::status() { return fTheToo
 FC7FpgaConfig MiddlewareStateMachine::getFpgaConfig(const std::string& configurationFile, uint16_t boardId)
 {
     FileParser                     theFileParser;
-    std::map<uint16_t, RegManager> theRegManagerList = theFileParser.getRegManagerList(configurationFile);
+    const std::map<uint16_t, std::tuple<std::string, std::string, std::string>> theRegManagerInfoList = theFileParser.getRegManagerInfoList(configurationFile);
 
     try
     {
-        return FC7FpgaConfig(std::move(theRegManagerList.at(boardId)));
+        const auto& theRegManagerInfo = theRegManagerInfoList.at(boardId);
+        return FC7FpgaConfig(RegManager(std::get<0>(theRegManagerInfo), std::get<1>(theRegManagerInfo), std::get<2>(theRegManagerInfo)));
     }
     catch(const std::exception& e)
     {

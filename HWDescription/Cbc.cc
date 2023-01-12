@@ -10,7 +10,7 @@
  */
 
 #include "Cbc.h"
-#include "../Utils/ChannelGroupHandler.h"
+#include "Utils/ChannelGroupHandler.h"
 #include "Definition.h"
 #include <cstdio>
 #include <fstream>

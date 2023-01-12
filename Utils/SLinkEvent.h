@@ -8,7 +8,7 @@
 #include <set>
 #include <vector>
 
-#include "../HWDescription/Definition.h"
+#include "HWDescription/Definition.h"
 #include "CRCCalculator.h"
 #include "ConditionDataSet.h"
 #include "ConsoleColor.h"

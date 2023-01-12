@@ -10,7 +10,7 @@
 #ifndef RD53eudaqProducer_H
 #define RD53eudaqProducer_H
 
-#include "../user/CMSIT/module/include/CMSITEventData.hh"
+#include "user/CMSIT/module/include/CMSITEventData.hh"
 #include "RD53Physics.h"
 
 #include "eudaq/Producer.hh"

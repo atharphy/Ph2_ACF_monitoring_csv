@@ -98,7 +98,7 @@ set(LIBS ${LIBS} ${Boost_IOSTREAMS_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_S
 add_subdirectory($ENV{PYBIND11} subproject/pybind11)
 
 pybind11_add_module(Ph2_ACF_PythonInterface PythonMiddlewareMessageHandler.cc)
-target_link_libraries(Ph2_ACF_PythonInterface PRIVATE ${LIBS} Ph2_Tools Ph2_System Ph2_miniDAQ MessageUtils)
+target_link_libraries(Ph2_ACF_PythonInterface PRIVATE ${LIBS} Ph2_Tools Ph2_Parser Ph2_System Ph2_miniDAQ MessageUtils)
 
 ###############
 # EXECUTABLES #

@@ -12,7 +12,7 @@
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
-void DataTransmissionTestGraphs::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
+void DataTransmissionTestGraphs::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
     RD53Shared::setFirstChip(theDetectorStructure);

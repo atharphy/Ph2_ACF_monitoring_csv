@@ -8,7 +8,7 @@
 */
 
 #include "RD53EyeDiag.h"
-#include "../Utils/ContainerFactory.h"
+#include "Utils/ContainerFactory.h"
 #ifdef __POWERSUPPLY__
 // Libraries
 #include "Scope.h"

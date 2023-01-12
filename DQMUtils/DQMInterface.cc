@@ -1,7 +1,6 @@
-#include "../NetworkUtils/TCPSubscribeClient.h"
-#include "../System/FileParser.h"
-#include "../System/SystemController.h"
-#include "../Utils/ObjectStream.h"
+#include "NetworkUtils/TCPSubscribeClient.h"
+#include "Parser/FileParser.h"
+#include "Utils/ObjectStream.h"
 
 #include "CBCHistogramPulseShape.h"
 #include "DQMHistogramCalibrationExample.h"
@@ -81,12 +80,11 @@ void DQMInterface::configure(std::string const& calibrationName, std::string con
     }
     LOG(INFO) << __PRETTY_FUNCTION__ << " DQM connected" << RESET;
 
-    Ph2_System::FileParser                                   fParser;
-    std::map<uint16_t, Ph2_HwInterface::BeBoardFWInterface*> fBeBoardFWMap;
+    Ph2_Parser::FileParser                                   fParser;
     std::stringstream                                        out;
-    Ph2_System::SettingsMap                                  pSettingsMap;
+    Ph2_Parser::SettingsMap                                  pSettingsMap;
 
-    fParser.parseHW(configurationFilePath, fBeBoardFWMap, &fDetectorStructure, out);
+    fParser.parseHW(configurationFilePath, &fDetectorStructure, out);
     fParser.parseSettings(configurationFilePath, pSettingsMap, out);
 
     if(calibrationName == "pedenoise")

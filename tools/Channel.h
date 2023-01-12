@@ -14,9 +14,9 @@
 
 #ifdef __USE_ROOT__
 
-#include "../Utils/ConsoleColor.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/easylogging++.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/Utilities.h"
+#include "Utils/easylogging++.h"
 #include "TCanvas.h"
 #include "TF1.h"
 #include "TFile.h"

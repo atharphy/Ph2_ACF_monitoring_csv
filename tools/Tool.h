@@ -12,12 +12,12 @@
 #ifndef __TOOL_H__
 #define __TOOL_H__
 
-#include "../System/SystemController.h"
-#include "../Utils/BoardContainerStream.h"
-#include "../Utils/ChannelContainerStream.h"
-#include "../Utils/ChipContainerStream.h"
-#include "../Utils/HybridContainerStream.h"
-#include "../Utils/OpticalGroupContainerStream.h"
+#include "System/SystemController.h"
+#include "Utils/BoardContainerStream.h"
+#include "Utils/ChannelContainerStream.h"
+#include "Utils/ChipContainerStream.h"
+#include "Utils/HybridContainerStream.h"
+#include "Utils/OpticalGroupContainerStream.h"
 
 #ifdef __USE_ROOT__
 #include "TCanvas.h"

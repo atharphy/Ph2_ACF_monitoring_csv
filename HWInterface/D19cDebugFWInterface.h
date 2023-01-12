@@ -1,10 +1,10 @@
 #ifndef _D19cDebugFWInterface_H__
 #define __D19cDebugFWInterface_H__
 
-#include "../HWDescription/BeBoard.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/easylogging++.h"
-#include "RegManager.h"
+#include "HWDescription/BeBoard.h"
+#include "Utils/Utilities.h"
+#include "Utils/easylogging++.h"
+#include "HWInterface/RegManager.h"
 #include <string>
 
 namespace Ph2_HwInterface

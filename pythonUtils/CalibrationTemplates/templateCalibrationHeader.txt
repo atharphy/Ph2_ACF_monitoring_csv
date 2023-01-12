@@ -14,7 +14,7 @@
 #include <map>
 #ifdef __USE_ROOT__
 // Calibration is not running on the SoC: I need to instantiate the DQM histrgrammer here
-#include "../DQMUtils/DQMHistogramCLASS_NAME_TEMPLATE.h"
+#include "DQMUtils/DQMHistogramCLASS_NAME_TEMPLATE.h"
 #endif
 
 class CLASS_NAME_TEMPLATE : public Tool

@@ -10,10 +10,10 @@
 #ifndef RD53CalibBase_H
 #define RD53CalibBase_H
 
-#include "../HWDescription/RD53.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/RD53ChannelGroupHandler.h"
+#include "HWDescription/RD53.h"
+#include "Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/RD53ChannelGroupHandler.h"
 #include "Tool.h"
 
 #ifdef __USE_ROOT__

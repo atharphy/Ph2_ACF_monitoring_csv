@@ -13,7 +13,7 @@
 #include "RD53Gain.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53GainOptimizationHistograms.h"
+#include "DQMUtils/RD53GainOptimizationHistograms.h"
 #else
 typedef bool GainOptimizationHistograms;
 #endif

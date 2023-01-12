@@ -1,11 +1,11 @@
 #include <cstring>
 
-#include "DPInterface.h"
-#include "OpenFinder.h"
-#include "PSHybridTester.h"
-#include "PedeNoise.h"
-#include "PedestalEqualization.h"
-#include "ShortFinder.h"
+#include "HWInterface/DPInterface.h"
+#include "tools/OpenFinder.h"
+#include "tools/PSHybridTester.h"
+#include "tools/PedeNoise.h"
+#include "tools/PedestalEqualization.h"
+#include "tools/ShortFinder.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
@@ -13,8 +13,9 @@
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
 #include "tools/PSAlignment.h"
+#include "HWInterface/D19cFWInterface.h"
 
-#include "../tools/Channel.h"
+#include "tools/Channel.h"
 // #ifdef __POWERSUPPLY__
 // // Libraries
 // #include "DeviceHandler.h"
@@ -30,7 +31,7 @@
 #define __NAMEDPIPE__
 
 #ifdef __NAMEDPIPE__
-#include "gui_logger.h"
+#include "Utils/gui_logger.h"
 #endif
 
 using namespace Ph2_HwDescription;

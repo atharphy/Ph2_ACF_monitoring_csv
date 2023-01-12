@@ -13,7 +13,7 @@
 #ifndef OTTool_h__
 #define OTTool_h__
 
-#include "Tool.h"
+#include "tools/Tool.h"
 #include <signal.h>
 using namespace Ph2_HwDescription;
 

@@ -7,17 +7,17 @@
         Support :            mail to : fabio.ravera@cern.ch
  */
 
-#include "../DQMUtils/DQMHistogramLatencyScan.h"
-#include "../RootUtils/RootContainerFactory.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
-#include "../Utils/EmptyContainer.h"
-#include "../Utils/GenericDataArray.h"
-#include "../Utils/HybridContainerStream.h"
-#include "../Utils/Occupancy.h"
-#include "../Utils/ThresholdAndNoise.h"
-#include "../Utils/Utilities.h"
+#include "DQMUtils/DQMHistogramLatencyScan.h"
+#include "RootUtils/RootContainerFactory.h"
+#include "Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/ContainerStream.h"
+#include "Utils/EmptyContainer.h"
+#include "Utils/GenericDataArray.h"
+#include "Utils/HybridContainerStream.h"
+#include "Utils/Occupancy.h"
+#include "Utils/ThresholdAndNoise.h"
+#include "Utils/Utilities.h"
 #include "TCanvas.h"
 #include "TF1.h"
 #include "TFile.h"
@@ -35,7 +35,7 @@ DQMHistogramLatencyScan::DQMHistogramLatencyScan()
 DQMHistogramLatencyScan::~DQMHistogramLatencyScan() {}
 
 //========================================================================================================================
-void DQMHistogramLatencyScan::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramLatencyScan::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
 {
     uint32_t cNCh = 0;
     for(auto board: theDetectorStructure)
@@ -422,7 +422,7 @@ void DQMHistogramLatencyScan::fillTriggerTDCPlots(DetectorDataContainer& theTrig
     }
 }
 
-void DQMHistogramLatencyScan::parseSettings(const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramLatencyScan::parseSettings(const Ph2_Parser::SettingsMap& pSettingsMap)
 {
     auto cSetting = pSettingsMap.find("StartLatency");
     if(cSetting != std::end(pSettingsMap))

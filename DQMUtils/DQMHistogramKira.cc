@@ -7,17 +7,17 @@
         Support :            mail to : rkoppenh@cern.ch
  */
 
-#include "../DQMUtils/DQMHistogramKira.h"
-#include "../RootUtils/RootContainerFactory.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
-#include "../Utils/EmptyContainer.h"
-#include "../Utils/GenericDataArray.h"
-#include "../Utils/HybridContainerStream.h"
-#include "../Utils/Occupancy.h"
-#include "../Utils/ThresholdAndNoise.h"
-#include "../Utils/Utilities.h"
+#include "DQMUtils/DQMHistogramKira.h"
+#include "RootUtils/RootContainerFactory.h"
+#include "Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/ContainerStream.h"
+#include "Utils/EmptyContainer.h"
+#include "Utils/GenericDataArray.h"
+#include "Utils/HybridContainerStream.h"
+#include "Utils/Occupancy.h"
+#include "Utils/ThresholdAndNoise.h"
+#include "Utils/Utilities.h"
 #include "TCanvas.h"
 #include "TF1.h"
 #include "TFile.h"
@@ -35,7 +35,7 @@ DQMHistogramKira::DQMHistogramKira()
 DQMHistogramKira::~DQMHistogramKira() {}
 
 //========================================================================================================================
-void DQMHistogramKira::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramKira::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
 {
     uint32_t cNCh         = 0;
     uint32_t cNSeedChsS0  = 0;
@@ -208,7 +208,7 @@ void DQMHistogramKira::fillTopSensorPlots(DetectorDataContainer& pHitContainer, 
     }
 }
 
-void DQMHistogramKira::parseSettings(const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramKira::parseSettings(const Ph2_Parser::SettingsMap& pSettingsMap)
 {
     auto cSetting = pSettingsMap.find("StartLatency");
     if(cSetting != std::end(pSettingsMap))

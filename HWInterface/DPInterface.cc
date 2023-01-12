@@ -1,5 +1,5 @@
-#include "DPInterface.h"
-#include "BeBoardFWInterface.h"
+#include "HWInterface/DPInterface.h"
+#include "HWInterface/BeBoardFWInterface.h"
 #include <bitset>
 using namespace Ph2_HwDescription;
 

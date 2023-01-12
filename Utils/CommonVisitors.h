@@ -1,13 +1,13 @@
 #ifndef COMMONVISITORS_H__
 #define COMMONVISITORS_H__
 
-#include "../HWDescription/Definition.h"
-#include "../HWInterface/BeBoardFWInterface.h"
-#include "../HWInterface/BeBoardInterface.h"
-#include "../HWInterface/ChipInterface.h"
-#include "../HWInterface/ReadoutChipInterface.h"
-#include "../Utils/ConsoleColor.h"
-#include "../Utils/Visitor.h"
+#include "HWDescription/Definition.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/BeBoardInterface.h"
+#include "HWInterface/ChipInterface.h"
+#include "HWInterface/ReadoutChipInterface.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/Visitor.h"
 
 #include <iostream>
 #include <stdlib.h>

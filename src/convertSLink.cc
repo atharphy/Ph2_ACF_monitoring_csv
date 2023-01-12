@@ -1,7 +1,7 @@
-#include "../Utils/Timer.h"
-#include "../Utils/argvparser.h"
-#include "../tools/StubQuickCheck.h"
-#include "../tools/Tool.h"
+#include "Utils/Timer.h"
+#include "Utils/argvparser.h"
+#include "tools/StubQuickCheck.h"
+#include "tools/Tool.h"
 #include "TApplication.h"
 #include "TROOT.h"
 #include <boost/filesystem.hpp>

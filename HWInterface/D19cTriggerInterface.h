@@ -1,7 +1,7 @@
 #ifndef _D19cTriggerInterface_H__
 #define _D19cTriggerInterface_H__
 
-#include "TriggerInterface.h"
+#include "HWInterface/TriggerInterface.h"
 
 namespace Ph2_HwInterface
 {

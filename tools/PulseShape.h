@@ -14,9 +14,9 @@
 
 #include "Tool.h"
 #ifdef __USE_ROOT__
-#include "../Utils/CommonVisitors.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/Visitor.h"
+#include "Utils/CommonVisitors.h"
+#include "Utils/Utilities.h"
+#include "Utils/Visitor.h"
 #include "Channel.h"
 #include "TCanvas.h"
 #include "TF1.h"

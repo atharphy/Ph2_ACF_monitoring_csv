@@ -1,5 +1,5 @@
-#include "../HWDescription/Definition.h"
-#include "../Utils/ChannelGroupHandler.h"
+#include "HWDescription/Definition.h"
+#include "Utils/ChannelGroupHandler.h"
 
 #ifndef SSA2ChannelGroupHandler_h
 #define SSA2ChannelGroupHandler_h

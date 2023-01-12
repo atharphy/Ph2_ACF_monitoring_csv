@@ -6,14 +6,7 @@ MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [$
 MESSAGE(STATUS " ")
 
 # Includes
-include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
-include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
-include_directories(${UHAL_LOG_INCLUDE_PREFIX})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
-include_directories(${PROJECT_SOURCE_DIR}/SystemController)
-include_directories(${PROJECT_SOURCE_DIR}/RootUtils)
-include_directories(${PROJECT_SOURCE_DIR}/Utils)
+include_directories(${PROJECT_SOURCE_DIR})
 
 # Boost also needs to be linked
 include_directories(${Boost_INCLUDE_DIRS})
@@ -35,7 +28,7 @@ if(${ROOT_FOUND})
     endif()
 endif()
 
-set(LIBS ${LIBS} Ph2_Utils Ph2_System Ph2_RootUtils)
+set(LIBS ${LIBS} Ph2_Utils Ph2_RootUtils Ph2_Parser)
 
 # Find source files
 file(GLOB SOURCES *.cc)
@@ -56,10 +49,6 @@ MESSAGE(STATUS "    ${BoldBlue}=================================================
 MESSAGE(STATUS " ")
 
 else()
-
-include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/uhal/include)
-include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/log/include)
-include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
 
 cet_set_compiler_flags(
  EXTRA_FLAGS -Wno-reorder -Wl,--undefined -D__OTSDAQ__

@@ -13,7 +13,7 @@
 #include "RD53PixelAlive.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53ThresholdHistograms.h"
+#include "DQMUtils/RD53ThresholdHistograms.h"
 #else
 typedef bool ThresholdHistograms;
 #endif

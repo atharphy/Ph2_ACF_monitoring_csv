@@ -13,7 +13,7 @@
 #include "RD53PixelAlive.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53LatencyHistograms.h"
+#include "DQMUtils/RD53LatencyHistograms.h"
 #else
 typedef bool LatencyHistograms;
 #endif

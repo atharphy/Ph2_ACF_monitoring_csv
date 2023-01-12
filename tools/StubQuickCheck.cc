@@ -1,11 +1,11 @@
 #include "StubQuickCheck.h"
 #ifdef __USE_ROOT__
-#include "../Utils/CBCChannelGroupHandler.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/Occupancy.h"
+#include "Utils/CBCChannelGroupHandler.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/Occupancy.h"
 // temporary fix until we address event which is compatible for IT  + OT
-#include "../Utils/CommonVisitors.h"
-#include "../Utils/Visitor.h"
+#include "Utils/CommonVisitors.h"
+#include "Utils/Visitor.h"
 #include "Channel.h"
 
 #include <map>

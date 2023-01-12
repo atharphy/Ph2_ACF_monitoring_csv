@@ -1,7 +1,8 @@
-#include "../Utils/Timer.h"
-#include "../Utils/argvparser.h"
-#include "../tools/CicFEAlignment.h"
-#include "../tools/PedeNoise.h"
+#include "HWInterface/D19cFWInterface.h"
+#include "Utils/Timer.h"
+#include "Utils/argvparser.h"
+#include "tools/CicFEAlignment.h"
+#include "tools/PedeNoise.h"
 #include "TApplication.h"
 #include "TROOT.h"
 #include <cstring>

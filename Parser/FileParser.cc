@@ -1,20 +1,20 @@
-#include "FileParser.h"
-#include "../HWDescription/Cbc.h"
-#include "../HWDescription/Cic.h"
-#include "../HWDescription/Hybrid.h"
-#include "../HWDescription/OuterTrackerHybrid.h"
-#include "../HWDescription/RD53A.h"
-#include "../HWDescription/RD53B.h"
-#include "../HWDescription/SSA2.h"
-#include "../HWDescription/lpGBT.h"
-#include "../Utils/Utilities.h"
+#include "Parser/FileParser.h"
+#include "HWDescription/Cbc.h"
+#include "HWDescription/Cic.h"
+#include "HWDescription/Hybrid.h"
+#include "HWDescription/OuterTrackerHybrid.h"
+#include "HWDescription/RD53A.h"
+#include "HWDescription/RD53B.h"
+#include "HWDescription/SSA2.h"
+#include "HWDescription/lpGBT.h"
+#include "Utils/Utilities.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
-namespace Ph2_System
+namespace Ph2_Parser
 {
-void FileParser::parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os)
+void FileParser::parseHW(const std::string& pFilename, DetectorContainer* pDetectorContainer, std::ostream& os)
 {
     int i, j;
 
@@ -37,7 +37,7 @@ void FileParser::parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWM
     // ##################################
     for(pugi::xml_node cBeBoardNode = doc.child("HwDescription").child("BeBoard"); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling())
     {
-        if(static_cast<std::string>(cBeBoardNode.name()) == "BeBoard") { this->parseBeBoard(cBeBoardNode, pBeBoardFWMap, pDetectorContainer, os); }
+        if(static_cast<std::string>(cBeBoardNode.name()) == "BeBoard") { this->parseBeBoard(cBeBoardNode, pDetectorContainer, os); }
     }
 
     for(i = 0; i < 80; i++) os << "*";
@@ -67,12 +67,12 @@ void FileParser::openHWconfig(const std::string& pFilename, pugi::xml_document& 
     }
 }
 
-std::map<uint16_t, RegManager> FileParser::getRegManagerList(const std::string& pFilename)
+std::map<uint16_t, std::tuple<std::string, std::string, std::string>> FileParser::getRegManagerInfoList(const std::string& pFilename)
 {
     pugi::xml_document doc;
     openHWconfig(pFilename, doc);
 
-    std::map<uint16_t, Ph2_HwInterface::RegManager> theRegManagerMap;
+    std::map<uint16_t, std::tuple<std::string, std::string, std::string>> theRegManagerMap;
     for(pugi::xml_node cBeBoardNode = doc.child("HwDescription").child("BeBoard"); cBeBoardNode; cBeBoardNode = cBeBoardNode.next_sibling())
     {
         if(static_cast<std::string>(cBeBoardNode.name()) != "BeBoard") continue;
@@ -81,13 +81,13 @@ std::map<uint16_t, RegManager> FileParser::getRegManagerList(const std::string& 
         std::string cId           = cBeBoardConnectionNode.attribute("id").value();
         std::string cUri          = cBeBoardConnectionNode.attribute("uri").value();
         std::string cAddressTable = expandEnvironmentVariables(cBeBoardConnectionNode.attribute("address_table").value());
-        theRegManagerMap.insert(std::pair<uint16_t, Ph2_HwInterface::RegManager>(cBeBoardNode.attribute("Id").as_int(), std::move(RegManager(cId, cUri, cAddressTable))));
+        theRegManagerMap[cBeBoardNode.attribute("Id").as_int()] = std::tuple<std::string, std::string, std::string>(cId, cUri, cAddressTable);
     }
 
     return theRegManagerMap;
 }
 
-void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os)
+void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDetectorContainer, std::ostream& os)
 {
     uint32_t cBeId    = pBeBordNode.attribute("Id").as_int();
     BeBoard* cBeBoard = pDetectorContainer->addBoardContainer(cBeId, new BeBoard(cBeId)); // FIX Change it to Reference!!!!
@@ -173,12 +173,10 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoard
     std::string cUri          = cBeBoardConnectionNode.attribute("uri").value();
     std::string cAddressTable = expandEnvironmentVariables(cBeBoardConnectionNode.attribute("address_table").value());
 
-    if(fEnableInterfaces)
-    {
-        if(cBeBoard->getBoardType() == BoardType::D19C) { pBeBoardFWMap[cBeBoard->getId()] = new D19cFWInterface(cId, cUri, cAddressTable); }
-        else if(cBeBoard->getBoardType() == BoardType::RD53)
-            pBeBoardFWMap[cBeBoard->getId()] = new RD53FWInterface(cId, cUri, cAddressTable);
-    }
+    cBeBoard->setConnectionId(cId);
+    cBeBoard->setConnectionUri(cUri);
+    cBeBoard->setAddressTable(cAddressTable);
+
     os << BOLDCYAN << "|"
        << "       "
        << "|"

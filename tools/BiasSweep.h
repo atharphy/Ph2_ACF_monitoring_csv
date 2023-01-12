@@ -12,10 +12,10 @@
 
 #ifdef __USE_ROOT__
 
-#include "../HWDescription/ReadoutChip.h"
-#include "../Utils/CommonVisitors.h"
-#include "../Utils/Container.h"
-#include "../Utils/DataContainer.h"
+#include "HWDescription/ReadoutChip.h"
+#include "Utils/CommonVisitors.h"
+#include "Utils/Container.h"
+#include "Utils/DataContainer.h"
 #include "TAxis.h"
 #include "TGraph.h"
 #include "TObject.h"

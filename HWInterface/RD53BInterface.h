@@ -11,9 +11,9 @@
 #ifndef RD53BInterface_H
 #define RD53BInterface_H
 
-#include "../HWDescription/RD53B.h"
-#include "../HWDescription/RD53BCommands.h"
-#include "RD53Interface.h"
+#include "HWDescription/RD53B.h"
+#include "HWDescription/RD53BCommands.h"
+#include "HWInterface/RD53Interface.h"
 
 namespace Ph2_HwInterface
 {

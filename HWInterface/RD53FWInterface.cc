@@ -7,8 +7,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "RD53FWInterface.h"
-#include "RD53Interface.h"
+#include "HWInterface/RD53FWInterface.h"
+#include "HWInterface/RD53Interface.h"
 
 using namespace Ph2_HwDescription;
 

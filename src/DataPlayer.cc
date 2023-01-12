@@ -1,7 +1,7 @@
-#include "../Utils/Timer.h"
-#include "../Utils/argvparser.h"
-#include "../tools/Tool.h"
-#include "DPInterface.h"
+#include "Utils/Timer.h"
+#include "Utils/argvparser.h"
+#include "tools/Tool.h"
+#include "HWInterface/DPInterface.h"
 #include <csignal>
 
 using namespace Ph2_HwDescription;

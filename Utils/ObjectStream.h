@@ -12,7 +12,7 @@
 #ifndef __OBJECTSTREAM_H__
 #define __OBJECTSTREAM_H__
 // pointers to base class
-#include "../NetworkUtils/TCPPublishServer.h"
+#include "NetworkUtils/TCPPublishServer.h"
 #include <cmath>
 #include <cstdint>
 #include <cstring>

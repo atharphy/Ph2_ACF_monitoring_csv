@@ -5,16 +5,16 @@
         \date                17/1/20
         Support :            mail to : fabio.ravera@cern.ch
 */
-#include "../DQMUtils/CBCHistogramPulseShape.h"
-#include "../RootUtils/HistContainer.h"
-#include "../RootUtils/RootContainerFactory.h"
-#include "../Utils/ChannelContainerStream.h"
-#include "../Utils/ChipContainerStream.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
-#include "../Utils/Occupancy.h"
-#include "../Utils/ThresholdAndNoise.h"
+#include "DQMUtils/CBCHistogramPulseShape.h"
+#include "RootUtils/HistContainer.h"
+#include "RootUtils/RootContainerFactory.h"
+#include "Utils/ChannelContainerStream.h"
+#include "Utils/ChipContainerStream.h"
+#include "Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/ContainerStream.h"
+#include "Utils/Occupancy.h"
+#include "Utils/ThresholdAndNoise.h"
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TH2F.h"
@@ -26,7 +26,7 @@ CBCHistogramPulseShape::CBCHistogramPulseShape() {}
 CBCHistogramPulseShape::~CBCHistogramPulseShape() {}
 
 //========================================================================================================================
-void CBCHistogramPulseShape::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
+void CBCHistogramPulseShape::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
 {
     // SoC utilities only - BEGIN
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC

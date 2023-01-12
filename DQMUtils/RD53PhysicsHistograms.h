@@ -10,10 +10,10 @@
 #ifndef RD53PhysicsHistograms_H
 #define RD53PhysicsHistograms_H
 
-#include "../Utils/ChannelContainerStream.h"
-#include "../Utils/ChipContainerStream.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/GenericDataArray.h"
+#include "Utils/ChannelContainerStream.h"
+#include "Utils/ChipContainerStream.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/GenericDataArray.h"
 #include "DQMHistogramBase.h"
 
 #include <TH1F.h>
@@ -22,7 +22,7 @@
 class PhysicsHistograms : public DQMHistogramBase
 {
   public:
-    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap) override;
+    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap) override;
     void process() override;
     bool fill(std::vector<char>& dataBuffer) override;
     void reset() override{};

@@ -1,4 +1,4 @@
-#include "FEConfigurationInterface.h"
+#include "HWInterface/FEConfigurationInterface.h"
 
 using namespace Ph2_HwDescription;
 

@@ -13,10 +13,10 @@
 
 #ifdef __USE_ROOT__
 
-#include "../HWInterface/BeBoardFWInterface.h"
-#include "../Utils/CommonVisitors.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/Visitor.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "Utils/CommonVisitors.h"
+#include "Utils/Utilities.h"
+#include "Utils/Visitor.h"
 #include "Channel.h"
 #include "Tool.h"
 

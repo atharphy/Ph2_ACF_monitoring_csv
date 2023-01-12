@@ -7,15 +7,15 @@
         Support :            mail to : fabio.ravera@cern.ch
  */
 
-#include "../DQMUtils/DQMHistogramTPCalibration.h"
-#include "../RootUtils/RootContainerFactory.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
-#include "../Utils/EmptyContainer.h"
-#include "../Utils/Occupancy.h"
-#include "../Utils/ThresholdAndNoise.h"
-#include "../Utils/Utilities.h"
+#include "DQMUtils/DQMHistogramTPCalibration.h"
+#include "RootUtils/RootContainerFactory.h"
+#include "Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/ContainerStream.h"
+#include "Utils/EmptyContainer.h"
+#include "Utils/Occupancy.h"
+#include "Utils/ThresholdAndNoise.h"
+#include "Utils/Utilities.h"
 #include "TCanvas.h"
 #include "TF1.h"
 #include "TFile.h"
@@ -27,7 +27,7 @@ DQMHistogramTPCalibration::DQMHistogramTPCalibration() {}
 DQMHistogramTPCalibration::~DQMHistogramTPCalibration() {}
 
 //========================================================================================================================
-void DQMHistogramTPCalibration::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramTPCalibration::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
 }

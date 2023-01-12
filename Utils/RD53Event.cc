@@ -8,8 +8,8 @@
 */
 
 #include "RD53Event.h"
-#include "../HWDescription/RD53A.h"
-#include "../HWDescription/RD53B.h"
+#include "HWDescription/RD53A.h"
+#include "HWDescription/RD53B.h"
 
 #ifdef __USE_ROOT__
 #include "TFile.h"

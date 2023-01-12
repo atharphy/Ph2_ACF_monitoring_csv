@@ -11,7 +11,7 @@
 #ifndef CanvasContainer_H
 #define CanvasContainer_H
 
-#include "../Utils/Container.h"
+#include "Utils/Container.h"
 #include "PlotContainer.h"
 
 #include <TCanvas.h>

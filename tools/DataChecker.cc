@@ -1,14 +1,15 @@
-#include "DataChecker.h"
+#include "tools/DataChecker.h"
 #ifdef __USE_ROOT__
 
-#include "../Utils/CBCChannelGroupHandler.h"
-#include "../Utils/ChannelGroupHandler.h"
-#include "../Utils/ContainerFactory.h"
-#include "BackEndAlignment.h"
-#include "D19cDebugFWInterface.h"
-#include "L1ReadoutInterface.h"
-#include "Occupancy.h"
-#include "TriggerInterface.h"
+#include "Utils/CBCChannelGroupHandler.h"
+#include "Utils/ChannelGroupHandler.h"
+#include "Utils/ContainerFactory.h"
+#include "tools/BackEndAlignment.h"
+#include "HWInterface/D19cDebugFWInterface.h"
+#include "HWInterface/L1ReadoutInterface.h"
+#include "Utils/Occupancy.h"
+#include "HWInterface/TriggerInterface.h"
+#include "HWInterface/D19cFWInterface.h"
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;

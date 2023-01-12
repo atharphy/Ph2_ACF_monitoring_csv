@@ -7,15 +7,15 @@
  *
  */
 
-#include "BackEndAlignment.h"
-#include "CBCChannelGroupHandler.h"
-#include "Channel.h"
-#include "CicFEAlignment.h"
-#include "ContainerFactory.h"
-#include "L1ReadoutInterface.h"
-#include "Occupancy.h"
-#include "PSAlignment.h"
-#include "StubBackEndAlignment.h"
+#include "tools/BackEndAlignment.h"
+#include "Utils/CBCChannelGroupHandler.h"
+#include "tools/Channel.h"
+#include "tools/CicFEAlignment.h"
+#include "Utils/ContainerFactory.h"
+#include "HWInterface/L1ReadoutInterface.cc"
+#include "Utils/Occupancy.h"
+#include "tools/PSAlignment.h"
+#include "tools/StubBackEndAlignment.h"
 #include <boost/algorithm/string.hpp>
 
 #include <fstream>

@@ -9,7 +9,7 @@
 #ifndef _FC7FpgaConfig_H_
 #define _FC7FpgaConfig_H_
 
-#include "../HWInterface/FpgaConfig.h"
+#include "HWInterface/FpgaConfig.h"
 #include <vector>
 
 namespace Ph2_HwInterface

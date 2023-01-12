@@ -7,15 +7,16 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "PSPhysics.h"
-#include "../Utils/GenericDataArray.h"
-#include "../Utils/MPAChannelGroupHandler.h"
-#include "../Utils/Occupancy.h"
-#include "../Utils/PSSync.h"
-#include "../Utils/SSAChannelGroupHandler.h"
-#include "BackEndAlignment.h"
-#include "CicFEAlignment.h"
-#include "PSAlignment.h"
+#include "tools/PSPhysics.h"
+#include "HWInterface/D19cFWInterface.h"
+#include "Utils/GenericDataArray.h"
+#include "Utils/MPAChannelGroupHandler.h"
+#include "Utils/Occupancy.h"
+#include "Utils/PSSync.h"
+#include "Utils/SSAChannelGroupHandler.h"
+#include "tools/BackEndAlignment.h"
+#include "tools/CicFEAlignment.h"
+#include "tools/PSAlignment.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

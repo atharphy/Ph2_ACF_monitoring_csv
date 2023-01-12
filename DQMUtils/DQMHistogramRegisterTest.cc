@@ -7,14 +7,14 @@
         Support :            mail to : fabio.ravera@cern.ch
  */
 
-#include "../DQMUtils/DQMHistogramRegisterTest.h"
-#include "../RootUtils/RootContainerFactory.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
-#include "../Utils/EmptyContainer.h"
-#include "../Utils/GenericDataArray.h"
-#include "../Utils/Utilities.h"
+#include "DQMUtils/DQMHistogramRegisterTest.h"
+#include "RootUtils/RootContainerFactory.h"
+#include "Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/ContainerStream.h"
+#include "Utils/EmptyContainer.h"
+#include "Utils/GenericDataArray.h"
+#include "Utils/Utilities.h"
 #include "TCanvas.h"
 #include "TF1.h"
 #include "TFile.h"
@@ -28,7 +28,7 @@ DQMHistogramRegisterTest::DQMHistogramRegisterTest() {}
 DQMHistogramRegisterTest::~DQMHistogramRegisterTest() {}
 
 //========================================================================================================================
-void DQMHistogramRegisterTest::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramRegisterTest::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
 {
     // need to get settings from settings map
     parseSettings(pSettingsMap);
@@ -460,7 +460,7 @@ void DQMHistogramRegisterTest::fillRegisterWriteCounts(DetectorDataContainer& pW
         }
     }
 }
-void DQMHistogramRegisterTest::parseSettings(const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramRegisterTest::parseSettings(const Ph2_Parser::SettingsMap& pSettingsMap)
 {
     // auto cSetting = pSettingsMap.find("StartLatency");
     // if(cSetting != std::end(pSettingsMap))

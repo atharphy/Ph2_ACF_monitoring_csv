@@ -1,6 +1,6 @@
-#include "../Utils/Timer.h"
-#include "../Utils/argvparser.h"
-#include "../tools/StubTool.h"
+#include "Utils/Timer.h"
+#include "Utils/argvparser.h"
+#include "tools/StubTool.h"
 #include "TApplication.h"
 #include "TROOT.h"
 

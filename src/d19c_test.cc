@@ -2,13 +2,14 @@
 #include <fstream>
 #include <ios>
 
-#include "../System/SystemController.h"
-#include "../Utils/CommonVisitors.h"
-#include "../Utils/Timer.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/argvparser.h"
-#include "../tools/Tool.h"
-#include "FC7FpgaConfig.h"
+#include "System/SystemController.h"
+#include "Utils/CommonVisitors.h"
+#include "Utils/Timer.h"
+#include "Utils/Utilities.h"
+#include "Utils/argvparser.h"
+#include "tools/Tool.h"
+#include "HWInterface/FC7FpgaConfig.h"
+#include "HWInterface/D19cFWInterface.h"
 #include "TApplication.h"
 #include "TROOT.h"
 #ifdef __ANTENNA__

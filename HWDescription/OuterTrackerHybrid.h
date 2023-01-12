@@ -12,9 +12,9 @@
 #ifndef OuterTrackerHybrid_h__
 #define OuterTrackerHybrid_h__
 
-#include "../Utils/Container.h"
-#include "../Utils/Visitor.h"
-#include "../Utils/easylogging++.h"
+#include "Utils/Container.h"
+#include "Utils/Visitor.h"
+#include "Utils/easylogging++.h"
 #include "Cic.h"
 #include "FrontEndDescription.h"
 #include "Hybrid.h"

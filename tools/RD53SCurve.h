@@ -10,15 +10,15 @@
 #ifndef RD53SCurve_H
 #define RD53SCurve_H
 
-#include "../HWDescription/RD53.h"
-#include "../Utils/ContainerRecycleBin.h"
-#include "../Utils/ThresholdAndNoise.h"
+#include "HWDescription/RD53.h"
+#include "Utils/ContainerRecycleBin.h"
+#include "Utils/ThresholdAndNoise.h"
 #include "RD53CalibBase.h"
 
 #include <algorithm>
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53SCurveHistograms.h"
+#include "DQMUtils/RD53SCurveHistograms.h"
 #else
 typedef bool SCurveHistograms;
 #endif

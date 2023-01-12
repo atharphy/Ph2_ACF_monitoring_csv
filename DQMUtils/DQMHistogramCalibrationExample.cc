@@ -6,13 +6,13 @@
         Support :            mail to : fabio.ravera@cern.ch
 */
 
-#include "../DQMUtils/DQMHistogramCalibrationExample.h"
-#include "../RootUtils/HistContainer.h"
-#include "../RootUtils/RootContainerFactory.h"
-#include "../Utils/ChannelContainerStream.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
+#include "DQMUtils/DQMHistogramCalibrationExample.h"
+#include "RootUtils/HistContainer.h"
+#include "RootUtils/RootContainerFactory.h"
+#include "Utils/ChannelContainerStream.h"
+#include "Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/ContainerStream.h"
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TH1F.h"
@@ -24,7 +24,7 @@ DQMHistogramCalibrationExample::DQMHistogramCalibrationExample() {}
 DQMHistogramCalibrationExample::~DQMHistogramCalibrationExample() {}
 
 //========================================================================================================================
-void DQMHistogramCalibrationExample::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramCalibrationExample::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
 {
     // SoC utilities only - BEGIN
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC

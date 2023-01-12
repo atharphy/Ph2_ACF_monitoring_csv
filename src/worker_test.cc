@@ -1,4 +1,4 @@
-#include "../tools/WorkerTester.h"
+#include "tools/WorkerTester.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
 #include <cstring>
