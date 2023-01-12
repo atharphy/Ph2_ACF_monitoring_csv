@@ -22,7 +22,6 @@ void PSAlignment::Initialise()
     std::vector<std::string> cRegsMod; //{"LatencyRx320", "LatencyRx40", "RetimePix", "EdgeSelTrig", "EdgeSelT1Raw"};
     for(size_t cIndx = 0; cIndx <= 5; cIndx++)
     {
-        continue;
         std::stringstream cRegName;
         cRegName << "OutSetting_" << +cIndx;
         cRegsMod.push_back(cRegName.str());
@@ -110,7 +109,7 @@ void PSAlignment::MapMPAOutputs(std::string pSetupType)
                 // map MPA outputs
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
-                    if(cChip->getFrontEndType() != FrontEndType::MPA and cChip->getFrontEndType() != FrontEndType::MPA2) continue;
+                    if(cChip->getFrontEndType() != FrontEndType::MPA) continue;
 
                     // mapping for PS module
                     // mapping for probe station/etc. can be different
@@ -119,7 +118,6 @@ void PSAlignment::MapMPAOutputs(std::string pSetupType)
                         std::vector<int> cMappedTo{1, 2, 3, 4, 5, 0};
                         for(size_t cIndx = 0; cIndx < cMappedTo.size(); cIndx++)
                         {
-                            continue;
                             LOG(DEBUG) << BOLDBLUE << "Configuring MPA output register [mapping between output bits and output pads] .... Output# " << +cIndx << RESET;
                             std::ostringstream cRegName;
                             cRegName << "OutSetting_" << cIndx;
@@ -164,7 +162,6 @@ void PSAlignment::ConfigureDefaultAlignmentParameters(std::string pSetupType)
     std::vector<std::string> cRegsMod{"LatencyRx320", "LatencyRx40", "RetimePix", "EdgeSelTrig", "EdgeSelT1Raw", "Control_1"};
     for(size_t cIndx = 0; cIndx <= 5; cIndx++)
     {
-        continue;
         std::stringstream cRegName;
         cRegName << "OutSetting_" << +cIndx;
         cRegsMod.push_back(cRegName.str());
@@ -525,7 +522,7 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignL1(ReadoutChip* pChip
     auto     cTriggerMult = fBeBoardInterface->ReadBoardReg(*cBoardIter, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     uint32_t cNevents     = 10;
 
-    uint8_t cStartPhaseL1 = 6; // to-do - set from xml
+    uint8_t cStartPhaseL1 = 3; // to-do - set from xml
     uint8_t cStopPhaseL1  = 8; // to-do - set from xml
     bool    cOnlyFirst    = false;
     for(uint8_t cPhase = cStartPhaseL1; cPhase < cStopPhaseL1; cPhase++)
@@ -786,9 +783,6 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignStubs(ReadoutChip* pC
         (*cBoardIter)->setStubOffset(cStubOffsets[cIndx]);
         cIndx++;
     }
-
-    LOG(INFO) << BOLDMAGENTA << "Control_1 " << RESET;
-    LOG(INFO) << BOLDMAGENTA << +fReadoutChipInterface->ReadChipReg(pChip, "Control_1") << RESET;
     return cGoodCombinationsStubs;
 }
 std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignChip(ReadoutChip* pChip, std::vector<Injection> pInjections, uint16_t pLatency)
@@ -1000,8 +994,9 @@ bool PSAlignment::FindLatency(BeBoard* pBoard, uint8_t pChipId, std::vector<Inje
                 {
                     if(cChip->getId() % 8 != pChipId) continue;
 
-                    if(cChip->getFrontEndType() == FrontEndType::SSA) fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cHitLatency - 1);
-                    if(cChip->getFrontEndType() == FrontEndType::SSA2)
+                    if(cChip->getFrontEndType() == FrontEndType::SSA) 
+			fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cHitLatency - 1);
+                    else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                         fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cHitLatency + 1);
                     else
                     {
@@ -1789,7 +1784,6 @@ bool PSAlignment::Align()
         std::vector<std::string> cRegsMod{"LatencyRx320", "LatencyRx40", "RetimePix", "EdgeSelTrig", "EdgeSelT1Raw", "Control_1"};
         for(size_t cIndx = 0; cIndx <= 5; cIndx++)
         {
-            continue;
             std::stringstream cRegName;
             cRegName << "OutSetting_" << +cIndx;
             cRegsMod.push_back(cRegName.str());
