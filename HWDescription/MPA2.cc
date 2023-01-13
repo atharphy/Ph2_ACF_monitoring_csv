@@ -110,10 +110,9 @@ void MPA2::loadfRegMap(const std::string& filename)
 
 } // end loadfRegMap
 
-void MPA2::saveRegMap(const std::string& filename)
+std::stringstream MPA2::saveRegMap(const std::string& fName2Add)
 { // start saveRegMap
-
-    std::ofstream file(filename.c_str(), std::ios::out | std::ios::trunc);
+    std::ofstream file(this->getFileName(fName2Add), std::ios::out | std::ios::trunc);
 
     if(file)
     {
@@ -150,6 +149,8 @@ void MPA2::saveRegMap(const std::string& filename)
     }
     else
         LOG(ERROR) << "Error opening file";
+
+    return std::stringstream("");
 } // end saveRegMap
 
 // Irene

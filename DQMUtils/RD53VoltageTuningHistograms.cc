@@ -8,7 +8,6 @@
 */
 
 #include "RD53VoltageTuningHistograms.h"
-#include "../Utils/ChipContainerStream.h"
 
 using namespace Ph2_HwDescription;
 

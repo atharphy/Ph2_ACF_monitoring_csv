@@ -102,8 +102,20 @@ auto decodeCompressedHitmap(BitView<T>& bits)
 
 void decodeStreamHeader(BitView<const uint32_t>& bits, RD53ChipEvent& e, const FormatOptions& options)
 {
-    if(options.enableBCID) e.bc_id = bits.pop(RD53BEvtEncoder::NBIT_BCID);
-    if(options.enableTriggerId) e.trigger_id = bits.pop(RD53BEvtEncoder::NBIT_TRIGID);
+    if((options.enableBCID == true) && (options.enableTriggerId == false))
+        e.bc_id = bits.pop(RD53BEvtEncoder::NBIT_BCID * 2);
+    else if((options.enableBCID == false) && (options.enableTriggerId == true))
+        e.trigger_id = bits.pop(RD53BEvtEncoder::NBIT_TRIGID * 2);
+    else if((options.enableBCID == true) && (options.enableTriggerId == true))
+    {
+        e.bc_id      = bits.pop(RD53BEvtEncoder::NBIT_BCID);
+        e.trigger_id = bits.pop(RD53BEvtEncoder::NBIT_TRIGID);
+    }
+    else
+    {
+        e.bc_id      = RD53Shared::setBits(RD53BEvtEncoder::NBIT_BCID);
+        e.trigger_id = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID);
+    }
 }
 
 void decodeChipId(uint8_t chipId, size_t i, RD53ChipEvent& e, size_t nWords)
@@ -138,7 +150,10 @@ auto decodeEventStream(BitView<const uint32_t>& bits, RD53ChipEvent& e, const Fo
             break;
         }
 
-        if(options.enableChipId) decodeChipId(bits.pop(RD53BEvtEncoder::NBIT_CHIPID), i, e, nWords);
+        if(options.enableChipId)
+            decodeChipId(bits.pop(RD53BEvtEncoder::NBIT_CHIPID), i, e, nWords);
+        else
+            e.chip_id_mod4 = RD53Shared::setBits(RD53FWEvtEncoder::NBIT_CHIPID);
 
         payloadData.append(bits.pop_slice(63 - 2 * options.enableChipId));
     }
@@ -160,8 +175,8 @@ void RD53B::decodeChipData(BitView<const uint32_t> bits, RD53ChipEvent& e, const
         return;
     }
 
-    decodeStreamHeader(eventStreamView, e, options);
     e.trigger_tag = eventStreamView.pop(RD53BEvtEncoder::NBIT_TRGTAG);
+    decodeStreamHeader(eventStreamView, e, options);
 
     // ##################
     // # Decode hit map #

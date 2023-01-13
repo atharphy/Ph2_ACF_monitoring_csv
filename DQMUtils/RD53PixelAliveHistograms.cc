@@ -9,8 +9,6 @@
 */
 
 #include "RD53PixelAliveHistograms.h"
-#include "../Utils/ChannelContainerStream.h"
-#include "../Utils/ChipContainerStream.h"
 
 using namespace Ph2_HwDescription;
 
@@ -26,7 +24,7 @@ void PixelAliveHistograms::book(TFile* theOutputFile, DetectorContainer& theDete
     // #######################
     nEvents                = this->findValueInSettings<double>(settingsMap, "nEvents");
     auto         frontEnd  = RD53Shared::firstChip->getFEtype(nCols / 2, nCols / 2);
-    const size_t ToTsize   = frontEnd->maxToTvalue + 2;
+    const size_t ToTsize   = frontEnd->maxToTvalue + 1;
     const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
 
@@ -141,7 +139,7 @@ void PixelAliveHistograms::fill(const DetectorDataContainer& DataContainer)
                         {
                             if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy > 0)
                             {
-                                Occupancy1DHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy + Occupancy1DHist->GetBinWidth(0) / 2);
+                                Occupancy1DHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy + Occupancy1DHist->GetBinWidth(1) / 2);
                                 Occupancy2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
                                 ToT1DHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fPh);
                                 ToT2DHist->SetBinContent(col + 1, row + 1, ToT2DHist->GetBinContent(col + 1, row + 1) + cChip->getChannel<OccupancyAndPh>(row, col).fPh);

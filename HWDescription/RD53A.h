@@ -33,14 +33,13 @@ const uint8_t NBIT_CCOL   = 6;   // Number of core column bits
 
 namespace RD53AConstants
 {
-const uint8_t  BROADCAST_CHIPID    = 0x08; // Broadcast chip ID used to send the command to multiple chips
-const uint8_t  AUTO_INCREMENT_MASK = 0x08; // Auto-increment mask bits
-const uint16_t GLOBAL_PULSE_ADDR   = 0x2C; // Global Pulse Route regiser address
+const uint8_t  BROADCAST_CHIPID  = 0x08; // Broadcast chip ID used to send the command to multiple chips
+const uint16_t GLOBAL_PULSE_ADDR = 0x2C; // Global Pulse Route regiser address
 } // namespace RD53AConstants
 
-// #####################################################################
-// # Formula: par0/par1 * VCal / electron_charge [C] * capacitance [C] #
-// #####################################################################
+// ####################################################################################
+// # Formula: Vref / ADCrange * VCal / electron_charge [C] * capacitance [F] + offset #
+// ####################################################################################
 namespace RD53AchargeConvertion
 {
 const float Vref     = 0.9;    // Vref [V]
@@ -62,35 +61,44 @@ class RD53A : public RD53
                                       "VTH_SYNC",
                                       "IBIAS_KRUM_SYNC",
                                       "LATENCY_CONFIG",
+                                      "",
                                       2,
                                       0,
                                       RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
                                       RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID),
                                       RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID),
                                       0,
-                                      127};
+                                      127,
+                                      50000,
+                                      0x08};
     static constexpr FrontEnd LIN  = {"LIN",
                                      "Vthreshold_LIN",
                                      "KRUM_CURR_LIN",
                                      "LATENCY_CONFIG",
+                                     "LDAC_LIN",
                                      2,
                                      16,
                                      RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
                                      RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID),
                                      RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID),
                                      128,
-                                     263};
+                                     263,
+                                     50000,
+                                     0x08};
     static constexpr FrontEnd DIFF = {"DIFF",
                                       "VTH1_DIFF",
                                       "VFF_DIFF",
                                       "LATENCY_CONFIG",
+                                      "",
                                       2,
                                       31,
                                       RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
                                       RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID),
                                       RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID),
                                       264,
-                                      399};
+                                      399,
+                                      50000,
+                                      0x08};
     static const FrontEnd*    frontEnds[];
 
     static void decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::RD53ChipEvent& chipEvent);

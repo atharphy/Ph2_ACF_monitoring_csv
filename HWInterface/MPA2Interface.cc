@@ -882,7 +882,8 @@ bool MPA2Interface::WriteChipMultReg(Chip* pMPA2, const std::vector<std::pair<st
     return fBoardFW->MultiRegisterWrite(pMPA2, cRegItems, pVerify);
 }
 
-bool MPA2Interface::WriteChipAllLocalReg(ReadoutChip* pMPA2, const std::string& dacName, ChipContainer& localRegValues, bool pVerify) // unchanged from MPA1 -- to check
+bool MPA2Interface::WriteChipAllLocalReg(ReadoutChip* pMPA2, const std::string& dacName, const ChipContainer& localRegValues, bool pVerify) // unchanged from MPA1 -- to check
+
 {
     setBoard(pMPA2->getBeBoardId());
     assert(localRegValues.size() == pMPA2->getNumberOfChannels());

@@ -256,23 +256,23 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
     for(auto cOpticalGroup: *pBoard) // TODO: Need a PSv2 Flag
     {
         for(auto cHybrid: *cOpticalGroup)
-	{
-            for(auto cChip: *cHybrid) 
+        {
+            for(auto cChip: *cHybrid)
             {
-                if(cChip->getFrontEndType() == FrontEndType::MPA2)  
-		{
-		    cWithPS = false;
-		    break;
-		}
-	    }
-	}
+                if(cChip->getFrontEndType() == FrontEndType::MPA2)
+                {
+                    cWithPS = false;
+                    break;
+                }
+            }
+        }
     }
 
     // reconfigure fast commands
     // fast command config
     // if PS module want trigger multiplicty to be 3
-    uint8_t                  cMult            = (cWithPS) ? 2 : 0;
-    //uint8_t                  cMult            = 0;
+    uint8_t cMult = (cWithPS) ? 2 : 0;
+    // uint8_t                  cMult            = 0;
     uint8_t                  cTriggerSource   = 6;
     uint16_t                 cDelayAfterReset = 100;
     uint16_t                 cDelayAfterTP    = 200;

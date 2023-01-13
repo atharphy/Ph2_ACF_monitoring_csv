@@ -18,8 +18,8 @@ DetectorMonitor::DetectorMonitor(const Ph2_System::SystemController* theSystemCo
         LOG(ERROR) << "Exceptin when trying to create MonitorResults directory: " << e.what();
     }
 
-    std::string monitorOutputFileName = monitorOutputDir + "/" + "MonitorDQM" + currentDateTime() + ".root";
-    fOutputFile                       = new TFile(monitorOutputFileName.c_str(), "RECREATE");
+    fMonitorFileName = monitorOutputDir + "/" + "MonitorDQM" + currentDateTime() + ".root";
+    fOutputFile      = new TFile(fMonitorFileName.c_str(), "RECREATE");
 #endif
 
     fTheSystemController = theSystemController;
@@ -32,7 +32,7 @@ DetectorMonitor::~DetectorMonitor()
     LOG(INFO) << BOLDRED << ">>> Destroying monitoring <<<" << RESET;
     DetectorMonitor::stopRunning();
     while(fMonitorFuture.wait_for(std::chrono::milliseconds(fDetectorMonitorConfig.fSleepTimeMs)) != std::future_status::ready)
-    { LOG(INFO) << GREEN << "\t-->Waiting for monitoring to be completed..." << RESET; }
+    { LOG(INFO) << GREEN << "\t--> Waiting for monitoring to be completed..." << RESET; }
 #ifdef __USE_ROOT__
     fOutputFile->Write();
     // fOutputFile->Close();
@@ -72,4 +72,12 @@ std::string DetectorMonitor::getMonitorName()
         found = className.find(emptyTemplate);
     }
     return className;
+}
+std::string DetectorMonitor::getMonitorFileName()
+{
+#ifdef __USE_ROOT__
+    return fMonitorFileName;
+#else
+    return "";
+#endif
 }

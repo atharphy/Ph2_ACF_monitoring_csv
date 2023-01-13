@@ -102,8 +102,7 @@ class ReadoutChipInterface : public ChipInterface
      * \param pRegNode : Node of the register to write
      * \param pValue : Value to write
      */
-    virtual bool WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue, bool pVerify = true) = 0;
-
+    virtual bool WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pChp, const std::string& dacName, const ChipContainer& pValue, bool pVerify = true) = 0;
     /*!
      * \brief Read all Local registers on Chip and Chip Config File (able to recognize local parameter names)
      * \param pCbc

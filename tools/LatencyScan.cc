@@ -23,7 +23,7 @@ void LatencyScan::Initialize()
 
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
     bool         cWithCBC          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-    bool         cWithPS          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA || cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
+    bool         cWithPS           = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA || cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
     bool         cWithPSv2         = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA2 || cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA2);
 
     if(cWithCBC)
@@ -34,22 +34,16 @@ void LatencyScan::Initialize()
     }
     else if(cWithPS)
     {
-
-
         MPAChannelGroupHandler theChannelGroupHandlerMPA;
         theChannelGroupHandlerMPA.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
         setChannelGroupHandler(theChannelGroupHandlerMPA, FrontEndType::MPA);
 
-
         SSAChannelGroupHandler theChannelGroupHandlerSSA;
         theChannelGroupHandlerSSA.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
         setChannelGroupHandler(theChannelGroupHandlerSSA, FrontEndType::SSA);
-
     }
     else if(cWithPSv2)
     {
-
-
         MPAChannelGroupHandler theChannelGroupHandlerMPA;
         theChannelGroupHandlerMPA.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
         setChannelGroupHandler(theChannelGroupHandlerMPA, FrontEndType::MPA2);
@@ -355,7 +349,6 @@ void LatencyScan::ScanLatency()
                     cNEventsThisTriggerId++;
                 } while(cEventIter < cEvents.end());
                 cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), getChannelGroupHandlerContainer()->getObject(cOccBrd->getId()), cNormalizationFactor);
-
 
                 // float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
                 cTotalHits = cTotalHitsS0 + cTotalHitsS1;
