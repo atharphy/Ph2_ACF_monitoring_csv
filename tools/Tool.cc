@@ -502,7 +502,6 @@ void Tool::SaveResults()
 void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool pDate, const std::string& whichCalib)
 {
     std::string nDirname;
-    if(pDate) nDirname += currentDateTime();
 
     if(std::getenv("GIPHT_RESULT_FOLDER"))
     {
@@ -513,6 +512,7 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
     {
         nDirname = pDirname;
     }
+    if(pDate) nDirname += currentDateTime();
 
     LOG(INFO) << GREEN << whichCalib << " attempting to create directory: " << BOLDYELLOW << nDirname << RESET;
     std::string cCommand = "mkdir -p " + nDirname;
