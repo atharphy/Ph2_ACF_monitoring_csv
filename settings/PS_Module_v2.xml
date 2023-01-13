@@ -269,7 +269,7 @@
 
 
     <!--Full search settings (lowcal) MPA-->
-    <Setting name="Nevents">1500</Setting>
+    <Setting name="Nevents">500</Setting>
     <Setting name="PedestalEqualizationFullScanStart">220</Setting>
     <Setting name="PedestalEqualizationOccupancy">0.5</Setting>
     <Setting name="PedestalEqualizationPulseAmplitude">1</Setting>

@@ -343,9 +343,9 @@ void LatencyScan::ScanLatency()
                     cNEventsThisTriggerId++;
                 } while(cEventIter < cEvents.end());
 
-                // Doesnt work PSv2 -- tofix
-                // cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), getChannelGroupHandlerContainer()->getObject(cOccBrd->getId()), cNormalizationFactor);
-                //\Doesnt work PSv2
+
+                cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), getChannelGroupHandlerContainer()->getObject(cOccBrd->getId()), cNormalizationFactor);
+
 
                 // float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
                 cTotalHits = cTotalHitsS0 + cTotalHitsS1;
