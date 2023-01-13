@@ -385,7 +385,9 @@ int main(int argc, char* argv[])
             gui::progress(1 / 10.0);
 
             gui::data("ResultsDirectory", cSEHTester.getDirectoryName().c_str());
-            gui::data("MonitoringFile", cTool.GetMonitorFileName().c_str());
+            // gui::data("MonitoringFile", cTool.GetMonitorFileName().c_str());
+            LOG(DEBUG) << BOLDBLUE << cSEHTester.getDirectoryName().c_str() << RESET;
+            LOG(DEBUG) << BOLDBLUE << cTool.GetMonitorFileName().c_str() << RESET;
         }
         /* INTERNALLY GENERATED PATTERN */
         if(cmd.foundOption("test-internal-pattern"))
@@ -504,7 +506,7 @@ int main(int argc, char* argv[])
             gui::progress(5 / 10.0);
         }
         std::vector<std::string> cADCs = {"ADC0", "ADC3"};
-        cSEHTester.LpGBTTestADC(cADCs, 0, 3720, 300); // DAC *should* be 16 bit with 1V reference, ROH is 12 bit something, needs to be included somewhere
+        cSEHTester.LpGBTTestADC(cADCs, 0, 3720, 600); // DAC *should* be 16 bit with 1V reference, ROH is 12 bit something, needs to be included somewhere
         cSEHTester.LpGBTTestFixedADCs();
     }
 
@@ -613,6 +615,9 @@ int main(int argc, char* argv[])
     }
 
     cTool.StopMonitoring();
+    std::string MonitorFileName = cTool.GetMonitorFileName().c_str();
+    std::string DirectoryName   = cSEHTester.getDirectoryName().c_str();
+
     if(cmd.foundOption("test-ext-leak") & cmd.foundOption("test-leak-parallel"))
     {
         LOG(INFO) << BOLDBLUE << "Ending leakage current with external power supply in parallel" << RESET;
@@ -627,7 +632,7 @@ int main(int argc, char* argv[])
     if(cmd.foundOption("test-ext-leak") & !cmd.foundOption("test-leak-parallel"))
     {
         LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply" << RESET;
-        cSEHTester.ExternalTestLeakageCurrent(cExtLeakVoltage, 150, cHVPowerSupplyId, cHVChannelId);
+        cSEHTester.ExternalTestLeakageCurrent(cExtLeakVoltage, 30, cHVPowerSupplyId, cHVChannelId);
     }
 
     /*********************/
@@ -717,6 +722,35 @@ int main(int argc, char* argv[])
     cTool.CloseResultFile();
     // Destroy Tools
     cTool.Destroy();
+    if(!MonitorFileName.empty())
+    {
+        LOG(INFO) << GREEN << "Attempting to copy monitoring file : " << BOLDYELLOW << MonitorFileName << RESET;
+
+        std::string cCommand = "cp " + MonitorFileName + " " + DirectoryName + "/Monitoring.root";
+        try
+        {
+            system(cCommand.c_str());
+        }
+        catch(std::exception& e)
+        {
+            LOG(ERROR) << BOLDRED << "Exceptin when trying to move Monitoring File to Directory: " << DirectoryName << RESET;
+        }
+    }
+    // if(!MonitorFileName.empty())
+    // {
+    //     LOG(INFO) << GREEN << "Attempting to merge monitoring file : " << BOLDYELLOW << MonitorFileName << RESET;
+
+    //     std::string cCommand = "hadd " + DirectoryName + "/test.root " + DirectoryName + "/Hybrid.root " + DirectoryName + "/Monitoring.root";
+    //     try
+    //     {
+    //         system(cCommand.c_str());
+    //     }
+    //     catch(std::exception& e)
+    //     {
+    //         LOG(ERROR) << BOLDRED << "Exceptin when trying to merge Monitoring File" << RESET;
+    //     }
+    // }
+
     runCompleted = 1;
 
     if(!batchMode) cApp.Run();

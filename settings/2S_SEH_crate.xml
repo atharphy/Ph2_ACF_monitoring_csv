@@ -323,7 +323,7 @@
 
     <MonitoringSettings>
         <Monitoring type="2SSEH" enable="0">
-            <MonitoringSleepTime> 1000 </MonitoringSleepTime>
+            <MonitoringSleepTime> 1500 </MonitoringSleepTime>
             <MonitoringElement device="LpGBT" register="ADC0" enable="0" />
             <MonitoringElement device="LpGBT" register="ADC1" enable="0" />
             <MonitoringElement device="LpGBT" register="ADC2" enable="0" />
@@ -337,17 +337,13 @@
             <MonitoringElement device="PowerSupply" register="MyRohdeSchwarz_LV_Module3_Current" enable="0" />
             <MonitoringElement device="PowerSupply" register="IsegSHR4220_HV_Module1_Voltage" enable="1" />
             <MonitoringElement device="PowerSupply" register="IsegSHR4220_HV_Module1_Current" enable="1" />
+            <!-- <MonitoringElement device="PowerSupply" register="MyKeithley_HV_Rear_Voltage" enable="1" />
+            <MonitoringElement device="PowerSupply" register="MyKeithley_HV_Rear_Current" enable="1" /> -->
+            <!-- High voltage monitoring element needs to contain "_HV_" and end with "Voltage" or "Current!" -->
+
             <MonitoringElement device="TestCard" register="HV_meas" enable="1" />
         </Monitoring>
     </MonitoringSettings>
-    <!-- <MonitoringSettings>
-<Monitoring type="2SSEH" enable="1">
-    <MonitoringSleepTime> 1000 </MonitoringSleepTime>
-    
-    <MonitoringElement device="Board" register="I_SEH" enable="1"/>
-</Monitoring>
-</MonitoringSettings> -->
-
     <Devices>
         <PowerSupply
             ID="MyRohdeSchwarz"
@@ -355,11 +351,17 @@
         >
             <Channel ID="LV_Module3" Channel="3" InUse="Yes" />
         </PowerSupply>
-        <PowerSupply
+        <!-- <PowerSupply
             ID="MyIsegSHR4220"
             Type="HV"
         >
             <Channel ID="HV_Module1" Channel="1" InUse="Yes" />
+        </PowerSupply> -->
+        <PowerSupply
+            ID="MyKeithley"
+            Type="HV"
+        >
+            <Channel ID="HV_Rear" Channel="REAR" InUse="Yes" />
         </PowerSupply>
     </Devices>
 </HwDescription>
