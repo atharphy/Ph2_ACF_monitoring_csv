@@ -542,7 +542,6 @@ void Tool::SaveResults()
 void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool pDate)
 {
     std::string nDirname;
-    if(pDate) nDirname += currentDateTime();
 
     if(std::getenv("GIPHT_RESULT_FOLDER"))
     {
@@ -553,6 +552,7 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
     {
         nDirname = pDirname;
     }
+    if(pDate) nDirname += currentDateTime();
 
     std::string cCommand = "mkdir -p " + nDirname;
 
