@@ -115,7 +115,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
 
     # Initial set of libraries
-    set(LIBS ${LIBS} Ph2_Description Ph2_Utils Ph2_RootUtils Ph2_DQMUtils Ph2_MonitorDQM NetworkUtils MessageUtils ${Protobuf_LIBRARIES})
+    set(LIBS ${LIBS} Ph2_Description Ph2_Utils Ph2_Parser Ph2_RootUtils Ph2_DQMUtils Ph2_MonitorDQM NetworkUtils MessageUtils ${Protobuf_LIBRARIES})
     
     message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")
 
@@ -127,6 +127,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     elseif(CompileForShep)
         list(REMOVE_ITEM BINARIES *.cc)
         file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src testShep.cc)
+        set(LIBS ${LIBS} Ph2_Parser boost_regex)
     else()
         list(REMOVE_ITEM BINARIES supervisor.cc testShep.cc)
         set(LIBS ${LIBS} Ph2_Interface Ph2_System Ph2_Tools Ph2_MonitorUtils Ph2_ProductionToolsIT Ph2_miniDAQ)

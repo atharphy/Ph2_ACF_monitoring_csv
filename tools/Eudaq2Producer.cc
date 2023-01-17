@@ -17,6 +17,7 @@
 #include "tools/PSAlignment.h"
 #include "tools/StubBackEndAlignment.h"
 #include <boost/algorithm/string.hpp>
+#include "HWInterface/D19cFWInterface.h"
 
 #include <fstream>
 #include <iostream>
