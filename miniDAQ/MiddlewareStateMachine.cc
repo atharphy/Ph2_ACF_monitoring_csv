@@ -10,8 +10,11 @@ MiddlewareStateMachine::MiddlewareStateMachine() {}
 
 MiddlewareStateMachine::~MiddlewareStateMachine()
 {
-    delete fTheTool;
-    fTheTool = nullptr;
+    if(fTheTool != nullptr)
+    {
+        delete fTheTool;
+        fTheTool = nullptr;
+    }
 }
 
 void MiddlewareStateMachine::initialize()
@@ -52,15 +55,6 @@ void MiddlewareStateMachine::stop()
 
 void MiddlewareStateMachine::halt()
 {
-    try
-    {
-        stop();
-    }
-    catch(const std::exception& e)
-    {
-        LOG(WARNING) << "Could not stop the run, going to call Destroy anyway" << RESET;
-    }
-
     fTheTool->Destroy();
     LOG(INFO) << "Halted" << RESET;
 }
