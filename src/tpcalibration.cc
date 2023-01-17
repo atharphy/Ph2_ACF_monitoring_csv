@@ -9,9 +9,9 @@
 #include "tools/TPCalibration.h"
 #include "tools/Tool.h"
 
-#include "Utils/argvparser.h"
 #include "TApplication.h"
 #include "TROOT.h"
+#include "Utils/argvparser.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

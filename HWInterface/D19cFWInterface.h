@@ -14,10 +14,10 @@
 #ifndef _D19CFWINTERFACE_H__
 #define _D19CFWINTERFACE_H__
 
+#include "HWInterface/BeBoardFWInterface.h"
 #include "Utils/DataContainer.h"
 #include "Utils/Event.h"
 #include "Utils/easylogging++.h"
-#include "HWInterface/BeBoardFWInterface.h"
 
 #include <limits.h>
 #include <map>

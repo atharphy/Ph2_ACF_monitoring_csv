@@ -1,9 +1,9 @@
 #ifndef _L1ReadoutInterface_H__
 #define _L1ReadoutInterface_H__
 
+#include "HWInterface/RegManager.h"
 #include "Utils/Utilities.h"
 #include "Utils/easylogging++.h"
-#include "HWInterface/RegManager.h"
 #include <string>
 
 #include "HWInterface/FastCommandInterface.h"

@@ -39,8 +39,8 @@ class RegManager;
 }
 namespace Ph2_Parser
 {
-using BeBoardVec   = std::vector<Ph2_HwDescription::BeBoard*>;                 /*!< Vector of Board pointers */
-using SettingsMap  = std::unordered_map<std::string, boost::any>;              /*!< Maps the settings */
+using BeBoardVec  = std::vector<Ph2_HwDescription::BeBoard*>;    /*!< Vector of Board pointers */
+using SettingsMap = std::unordered_map<std::string, boost::any>; /*!< Maps the settings */
 
 /*!
  * \class FileParser
@@ -52,10 +52,10 @@ class FileParser
     FileParser() {}
     ~FileParser() {}
 
-    void                                            parseHW(const std::string& pFilename, DetectorContainer* pDetectorContainer, std::ostream& os);
-    void                                            parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os);
-    std::string                                     parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os);
-    void                                            openHWconfig(const std::string& pFilename, pugi::xml_document& doc);
+    void                                                                  parseHW(const std::string& pFilename, DetectorContainer* pDetectorContainer, std::ostream& os);
+    void                                                                  parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os);
+    std::string                                                           parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os);
+    void                                                                  openHWconfig(const std::string& pFilename, pugi::xml_document& doc);
     std::map<uint16_t, std::tuple<std::string, std::string, std::string>> getRegManagerInfoList(const std::string& pFilename);
 
   protected:
@@ -118,6 +118,6 @@ class FileParser
         {24, "MaskChannel-200-to-193"}, {25, "MaskChannel-208-to-201"}, {26, "MaskChannel-216-to-209"}, {27, "MaskChannel-224-to-217"}, {28, "MaskChannel-232-to-225"}, {29, "MaskChannel-240-to-233"},
         {30, "MaskChannel-248-to-241"}, {31, "MaskChannel-254-to-249"}};
 };
-} // namespace Ph2_System
+} // namespace Ph2_Parser
 
 #endif

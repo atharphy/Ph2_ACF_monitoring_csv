@@ -10,10 +10,10 @@
 #ifndef RD53Monitor_H
 #define RD53Monitor_H
 
+#include "MonitorUtils/DetectorMonitor.h"
 #include "Utils/CharArray.h"
 #include "Utils/ChipContainerStream.h"
 #include "Utils/ContainerFactory.h"
-#include "MonitorUtils/DetectorMonitor.h"
 
 #ifdef __USE_ROOT__
 #include "MonitorDQM/MonitorDQMPlotRD53.h"

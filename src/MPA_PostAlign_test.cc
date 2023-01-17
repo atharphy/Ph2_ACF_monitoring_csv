@@ -7,10 +7,13 @@
 #include "HWDescription/MPA.h"
 //#include "HWDescription/OuterTrackerModule.h"
 #include "HWDescription/ReadoutChip.h"
+#include "HWInterface//L1ReadoutInterface.h"
 #include "HWInterface/BeBoardInterface.h"
 #include "HWInterface/D19cFWInterface.h"
 #include "HWInterface/MPAInterface.h"
 #include "System/SystemController.h"
+#include "TCanvas.h"
+#include "TH1.h"
 #include "Utils/CommonVisitors.h"
 #include "Utils/ConsoleColor.h"
 #include "Utils/D19cMPAEvent.h"
@@ -18,12 +21,9 @@
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
 #include "tools/BackEndAlignment.h"
-#include "tools/Tool.h"
-#include "HWInterface//L1ReadoutInterface.h"
-#include "TCanvas.h"
-#include "TH1.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/PSAlignment.h"
+#include "tools/Tool.h"
 #include <cstring>
 #include <fstream>
 #include <inttypes.h>

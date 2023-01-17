@@ -12,12 +12,12 @@
 
 #include "HWDescription/RD53.h"
 #include "HWDescription/RD53ACommands.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/RD53lpGBTInterface.h"
 #include "Utils/RD53Event.h"
 #include "Utils/RD53RunProgress.h"
 #include "Utils/RD53Shared.h"
 #include "Utils/easylogging++.h"
-#include "HWInterface/BeBoardFWInterface.h"
-#include "HWInterface/RD53lpGBTInterface.h"
 
 #include <uhal/uhal.hpp>
 

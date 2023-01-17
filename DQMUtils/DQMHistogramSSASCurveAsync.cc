@@ -5,13 +5,13 @@
 #include "DQMHistogramSSASCurveAsync.h"
 #include "RootUtils/HistContainer.h"
 #include "RootUtils/RootContainerFactory.h"
+#include "TCanvas.h"
+#include "TFile.h"
+#include "TH2F.h"
 #include "Utils/ChannelContainerStream.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerStream.h"
-#include "TCanvas.h"
-#include "TFile.h"
-#include "TH2F.h"
 
 //========================================================================================================================
 DQMHistogramSSASCurveAsync::DQMHistogramSSASCurveAsync() {}

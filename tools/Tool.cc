@@ -131,13 +131,12 @@ void Tool::Start(int runNumber)
     InitResultFile("Hybrid");
 #endif
     // doExit       = false;
-    fKeepRunning = true;
-    fRunNumber   = runNumber;
+    fKeepRunning   = true;
+    fRunNumber     = runNumber;
     fRunningFuture = std::async(std::launch::async, &Tool::Running, this);
     // std::promise<int> thePromise;
     // fRunningFuture = thePromise.get_future();
     // fRunningThread = std::thread(&Tool::privateRunning, this, std::move(thePromise));
-
 }
 
 // void Tool::InformImDone()

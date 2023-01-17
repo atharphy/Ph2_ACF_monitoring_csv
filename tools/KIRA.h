@@ -13,8 +13,8 @@
 
 #include "NetworkUtils/TCPClient.h"
 #include "NetworkUtils/TCPPublishServer.h"
-#include "Utils/ContainerRecycleBin.h"
 #include "OTTool.h"
+#include "Utils/ContainerRecycleBin.h"
 
 #include <fstream>
 #include <iostream>

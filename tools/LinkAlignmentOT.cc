@@ -2,9 +2,9 @@
 
 #include "HWInterface/D19cBackendAlignmentFWInterface.h"
 #include "HWInterface/D19cDebugFWInterface.h"
+#include "HWInterface/D19cFWInterface.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/ContainerFactory.h"
-#include "HWInterface/D19cFWInterface.h"
 
 //#include "boost/format.hpp"
 

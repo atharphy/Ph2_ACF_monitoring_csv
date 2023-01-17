@@ -12,9 +12,9 @@
 
 #include "HWDescription/RD53ACommands.h"
 #include "HWInterface/RD53FWInterface.h"
+#include "RD53CalibBase.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/RD53Shared.h"
-#include "RD53CalibBase.h"
 
 #ifdef __USE_ROOT__
 #include "DQMUtils/RD53PhysicsHistograms.h"

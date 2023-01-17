@@ -1,20 +1,20 @@
 #include <cstring>
 
 //#include "Utils/easylogging++.h"
+#include "TApplication.h"
+#include "TROOT.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
 #include "tools/AntennaTester.h"
+#include "tools/BackEndAlignment.h"
 #include "tools/CBCPulseShape.h"
+#include "tools/CicFEAlignment.h"
 #include "tools/LatencyScan.h"
+#include "tools/PSAlignment.h"
 #include "tools/PedeNoise.h"
 #include "tools/SignalScan.h"
 #include "tools/SignalScanFit.h"
-#include "TApplication.h"
-#include "TROOT.h"
-#include "tools/BackEndAlignment.h"
-#include "tools/CicFEAlignment.h"
-#include "tools/PSAlignment.h"
 #include "tools/StubBackEndAlignment.h"
 
 using namespace Ph2_HwDescription;

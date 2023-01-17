@@ -9,9 +9,9 @@
 #ifndef RD53BERtestHistograms_H
 #define RD53BERtestHistograms_H
 
+#include "DQMHistogramBase.h"
 #include "Utils/ChipContainerStream.h"
 #include "Utils/ContainerFactory.h"
-#include "DQMHistogramBase.h"
 
 #include <TH1F.h>
 

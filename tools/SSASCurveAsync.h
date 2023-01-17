@@ -10,11 +10,11 @@
 #ifndef SSASCurve_h__
 #define SSASCurve_h__
 
+#include "Tool.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerRecycleBin.h"
 #include "Utils/ThresholdAndNoise.h"
-#include "Tool.h"
 
 #ifdef __USE_ROOT__
 #include "DQMUtils/DQMHistogramSSASCurveAsync.h"

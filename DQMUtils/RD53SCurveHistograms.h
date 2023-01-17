@@ -11,11 +11,11 @@
 #ifndef RD53SCurveHistograms_H
 #define RD53SCurveHistograms_H
 
+#include "DQMHistogramBase.h"
 #include "Utils/ChannelContainerStream.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/RD53Shared.h"
 #include "Utils/ThresholdAndNoise.h"
-#include "DQMHistogramBase.h"
 
 #include <TH1F.h>
 #include <TH2F.h>

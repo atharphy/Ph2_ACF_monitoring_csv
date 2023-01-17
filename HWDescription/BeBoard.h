@@ -10,12 +10,12 @@
 #ifndef _BeBoard_h__
 #define _BeBoard_h__
 
+#include "Definition.h"
+#include "OpticalGroup.h"
 #include "Utils/ConditionDataSet.h"
 #include "Utils/Container.h"
 #include "Utils/Visitor.h"
 #include "Utils/easylogging++.h"
-#include "Definition.h"
-#include "OpticalGroup.h"
 #include <map>
 #include <stdint.h>
 #include <vector>
@@ -155,14 +155,14 @@ class BeBoard : public BoardContainer
     void    setReset(uint8_t pReset) { fReset = pReset; }
     uint8_t getReset() const { return fReset; }
 
-    void        setConnectionId(std::string theConnectionId) {fConnectionId = theConnectionId;}
-    std::string getConnectionId() const {return fConnectionId;}
+    void        setConnectionId(std::string theConnectionId) { fConnectionId = theConnectionId; }
+    std::string getConnectionId() const { return fConnectionId; }
 
-    void        setConnectionUri(std::string theConnectionUri) {fConnectionUri = theConnectionUri;}
-    std::string getConnectionUri() const {return fConnectionUri;}
+    void        setConnectionUri(std::string theConnectionUri) { fConnectionUri = theConnectionUri; }
+    std::string getConnectionUri() const { return fConnectionUri; }
 
-    void        setAddressTable(std::string theAddressTable) {fAddressTable = theAddressTable;}
-    std::string getAddressTable() const {return fAddressTable;}
+    void        setAddressTable(std::string theAddressTable) { fAddressTable = theAddressTable; }
+    std::string getAddressTable() const { return fAddressTable; }
 
     std::vector<FrontEndType> connectedFrontEndTypes() const;
     int                       dummyValue_ = 1989;

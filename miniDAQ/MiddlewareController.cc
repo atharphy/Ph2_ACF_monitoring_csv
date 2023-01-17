@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include "MiddlewareController.h"
 #include "tools/CBCPulseShape.h"
 #include "tools/CalibrationExample.h"
 #include "tools/CombinedCalibration.h"
@@ -21,7 +22,6 @@
 #include "tools/RD53ThrEqualization.h"
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
-#include "MiddlewareController.h"
 //#include "tools/SSAPhysics.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/LinkAlignmentOT.h"

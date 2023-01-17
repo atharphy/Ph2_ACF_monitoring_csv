@@ -81,7 +81,7 @@ MiddlewareStateMachine::Status MiddlewareStateMachine::status() { return fTheToo
 
 FC7FpgaConfig MiddlewareStateMachine::getFpgaConfig(const std::string& configurationFile, uint16_t boardId)
 {
-    FileParser                     theFileParser;
+    FileParser                                                                  theFileParser;
     const std::map<uint16_t, std::tuple<std::string, std::string, std::string>> theRegManagerInfoList = theFileParser.getRegManagerInfoList(configurationFile);
 
     try

@@ -14,10 +14,10 @@
 
 #include "FrontEndDescription.h"
 // #include "RD53.h"
+#include "ReadoutChip.h"
 #include "Utils/Container.h"
 #include "Utils/Visitor.h"
 #include "Utils/easylogging++.h"
-#include "ReadoutChip.h"
 #include <stdint.h>
 #include <vector>
 

@@ -29,6 +29,8 @@
 #include "HWInterface/lpGBTInterface.h"
 #include "NetworkUtils/TCPClient.h"
 #include "NetworkUtils/TCPPublishServer.h"
+#include "Parser/DetectorMonitorConfig.h"
+#include "Parser/FileParser.h"
 #include "Utils/ChannelGroupHandler.h"
 #include "Utils/ConsoleColor.h"
 #include "Utils/Container.h"
@@ -45,8 +47,6 @@
 #include "Utils/FileHandler.h"
 #include "Utils/Utilities.h"
 #include "Utils/easylogging++.h"
-#include "Parser/DetectorMonitorConfig.h"
-#include "Parser/FileParser.h"
 
 #include <boost/any.hpp>
 #include <future>

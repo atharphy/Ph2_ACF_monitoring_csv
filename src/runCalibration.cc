@@ -1,11 +1,11 @@
 #include <cstring>
 
-#include "Utils/easylogging++.h"
-#include "miniDAQ/MiddlewareStateMachine.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
+#include "Utils/easylogging++.h"
 #include "boost/format.hpp"
+#include "miniDAQ/MiddlewareStateMachine.h"
 
 #include "TApplication.h"
 #include "TROOT.h"

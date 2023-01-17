@@ -1267,7 +1267,6 @@ void OTHybridTester::freeTest()
     }
 }
 
-
 #ifdef __TCP_SERVER__
 float OTHybridTester::getMeasurement(std::string name)
 {

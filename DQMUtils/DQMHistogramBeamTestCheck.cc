@@ -9,6 +9,11 @@
 
 #include "DQMUtils/DQMHistogramBeamTestCheck.h"
 #include "RootUtils/RootContainerFactory.h"
+#include "TCanvas.h"
+#include "TF1.h"
+#include "TFile.h"
+#include "TH1F.h"
+#include "TH2F.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerStream.h"
@@ -18,11 +23,6 @@
 #include "Utils/Occupancy.h"
 #include "Utils/ThresholdAndNoise.h"
 #include "Utils/Utilities.h"
-#include "TCanvas.h"
-#include "TF1.h"
-#include "TFile.h"
-#include "TH1F.h"
-#include "TH2F.h"
 
 //========================================================================================================================
 DQMHistogramBeamTestCheck::DQMHistogramBeamTestCheck()

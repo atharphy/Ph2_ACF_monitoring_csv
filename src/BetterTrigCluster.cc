@@ -6,6 +6,7 @@
 #include "HWDescription/ReadoutChip.h"
 #include "HWInterface/BeBoardInterface.h"
 #include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/L1ReadoutInterface.h"
 #include "System/SystemController.h"
 #include "Utils/CommonVisitors.h"
 #include "Utils/ConsoleColor.h"
@@ -15,12 +16,11 @@
 #include "tools/BackEndAlignment.h"
 #include "tools/CalibrationExample.h"
 #include "tools/Tool.h"
-#include "HWInterface/L1ReadoutInterface.h"
 
-#include "tools/PedeNoise.h"
-#include "tools/PedestalEqualization.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
+#include "tools/PedeNoise.h"
+#include "tools/PedestalEqualization.h"
 
 #include "TApplication.h"
 #include "TCanvas.h"

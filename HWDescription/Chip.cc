@@ -8,8 +8,8 @@
 */
 
 #include "Chip.h"
-#include "Utils/ChannelGroupHandler.h"
 #include "Definition.h"
+#include "Utils/ChannelGroupHandler.h"
 #include <cstdio>
 #include <fstream>
 #include <iomanip>

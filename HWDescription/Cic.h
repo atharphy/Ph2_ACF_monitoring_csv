@@ -7,12 +7,12 @@
 #ifndef Cic_h__
 #define Cic_h__
 
+#include "Chip.h"
+#include "FrontEndDescription.h"
 #include "Utils/ConsoleColor.h"
 #include "Utils/Exception.h"
 #include "Utils/Visitor.h"
 #include "Utils/easylogging++.h"
-#include "Chip.h"
-#include "FrontEndDescription.h"
 
 #include <iostream>
 #include <set>

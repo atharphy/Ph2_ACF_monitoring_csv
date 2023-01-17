@@ -1,8 +1,8 @@
 #ifndef RD53EyeScanOptimization_H
 #define RD53EyeScanOptimization_H
 
-#include "Utils/GenericDataArray.h"
 #include "RD53EyeDiag.h"
+#include "Utils/GenericDataArray.h"
 #include <array>
 
 #ifdef __USE_ROOT__

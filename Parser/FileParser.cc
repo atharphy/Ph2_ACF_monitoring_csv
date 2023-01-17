@@ -78,9 +78,9 @@ std::map<uint16_t, std::tuple<std::string, std::string, std::string>> FileParser
         if(static_cast<std::string>(cBeBoardNode.name()) != "BeBoard") continue;
         pugi::xml_node cBeBoardConnectionNode = cBeBoardNode.child("connection");
 
-        std::string cId           = cBeBoardConnectionNode.attribute("id").value();
-        std::string cUri          = cBeBoardConnectionNode.attribute("uri").value();
-        std::string cAddressTable = expandEnvironmentVariables(cBeBoardConnectionNode.attribute("address_table").value());
+        std::string cId                                         = cBeBoardConnectionNode.attribute("id").value();
+        std::string cUri                                        = cBeBoardConnectionNode.attribute("uri").value();
+        std::string cAddressTable                               = expandEnvironmentVariables(cBeBoardConnectionNode.attribute("address_table").value());
         theRegManagerMap[cBeBoardNode.attribute("Id").as_int()] = std::tuple<std::string, std::string, std::string>(cId, cUri, cAddressTable);
     }
 
@@ -1624,4 +1624,4 @@ std::string FileParser::parseMonitor(const std::string& pFilename, DetectorMonit
     return theMonitorNode.attribute("type").value();
 }
 
-} // namespace Ph2_System
+} // namespace Ph2_Parser

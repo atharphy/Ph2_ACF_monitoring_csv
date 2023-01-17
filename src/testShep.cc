@@ -21,7 +21,7 @@ using namespace CommandLineProcessing;
 
 INITIALIZE_EASYLOGGINGPP
 
-static bool  controlC            = false;
+static bool controlC = false;
 
 void interruptHandler(int handler)
 {
@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("file", "Hw Description File", ArgvParser::OptionRequiresValue | ArgvParser::OptionRequired);
     cmd.defineOptionAlternative("file", "f");
 
-    std::string                calibrationHelpMessage = "Calibration to run. List of available calibrations:\n";
+    std::string calibrationHelpMessage = "Calibration to run. List of available calibrations:\n";
     // CombinedCalibrationFactory theCombinedCalibrationFactory;
     // for(const auto& calibration: theCombinedCalibrationFactory.getAvailableCalibrations()) calibrationHelpMessage += (calibration + "\n");
 
@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
     MonitorDQMInterface theMonitorDQMInterface;
 
     stateMachineStatus = HALTED;
-    
+
     bool done = false;
     while(!done)
     {
@@ -134,8 +134,8 @@ int main(int argc, char* argv[])
             case HALTED:
             {
                 std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Configure!!!" << std::endl;
-                std::string                                               calibrationName   = cmd.optionValue("calibration");
-                std::string                                               configurationFile = cmd.optionValue("file");
+                std::string calibrationName   = cmd.optionValue("calibration");
+                std::string configurationFile = cmd.optionValue("file");
                 theMiddlewareInterface.configure(calibrationName, configurationFile);
                 theDQMInterface.configure(calibrationName, configurationFile);
                 theMonitorDQMInterface.configure(configurationFile);

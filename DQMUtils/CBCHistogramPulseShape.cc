@@ -8,6 +8,9 @@
 #include "DQMUtils/CBCHistogramPulseShape.h"
 #include "RootUtils/HistContainer.h"
 #include "RootUtils/RootContainerFactory.h"
+#include "TCanvas.h"
+#include "TFile.h"
+#include "TH2F.h"
 #include "Utils/ChannelContainerStream.h"
 #include "Utils/ChipContainerStream.h"
 #include "Utils/Container.h"
@@ -15,9 +18,6 @@
 #include "Utils/ContainerStream.h"
 #include "Utils/Occupancy.h"
 #include "Utils/ThresholdAndNoise.h"
-#include "TCanvas.h"
-#include "TFile.h"
-#include "TH2F.h"
 
 //========================================================================================================================
 CBCHistogramPulseShape::CBCHistogramPulseShape() {}

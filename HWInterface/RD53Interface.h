@@ -14,10 +14,10 @@
 #include "HWDescription/RD53.h"
 #include "HWDescription/RD53A.h"
 #include "HWDescription/RD53B.h"
-#include "Utils/RD53ChannelGroupHandler.h"
 #include "HWInterface/BeBoardFWInterface.h"
 #include "HWInterface/RD53FWInterface.h"
 #include "HWInterface/ReadoutChipInterface.h"
+#include "Utils/RD53ChannelGroupHandler.h"
 
 namespace Ph2_HwInterface
 {

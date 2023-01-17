@@ -16,13 +16,13 @@
 #include <string>
 #include <vector>
 
+#include "HWDescription/RD53.h"
+#include "Parser/FileParser.h"
 #include "RootUtils/CanvasContainer.h"
 #include "RootUtils/HistContainer.h"
 #include "RootUtils/RootContainerFactory.h"
-#include "Parser/FileParser.h"
 #include "Utils/Container.h"
 #include "Utils/RD53Shared.h"
-#include "HWDescription/RD53.h"
 
 #include <TCanvas.h>
 #include <TFile.h>

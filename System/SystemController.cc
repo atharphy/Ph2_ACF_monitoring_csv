@@ -8,16 +8,16 @@
 */
 
 #include "System/SystemController.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/D19cFWInterface.h"
 #include "HWInterface/LinkInterface.h"
 #include "HWInterface/RD53AInterface.h"
 #include "HWInterface/RD53BInterface.h"
+#include "HWInterface/RD53FWInterface.h"
 #include "MonitorUtils/CBCMonitor.h"
 #include "MonitorUtils/DetectorMonitor.h"
 #include "MonitorUtils/RD53Monitor.h"
 #include "MonitorUtils/SEHMonitor.h"
-#include "HWInterface/BeBoardFWInterface.h"
-#include "HWInterface/D19cFWInterface.h"
-#include "HWInterface/RD53FWInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -177,10 +177,10 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     fDetectorContainer = new DetectorContainer;
     this->fParser.parseHW(pFilename, fDetectorContainer, os);
 
-    for(const auto theBoard : *fDetectorContainer)
+    for(const auto theBoard: *fDetectorContainer)
     {
-        std::string cId = theBoard->getConnectionId();
-        std::string cUri = theBoard->getConnectionUri();
+        std::string cId           = theBoard->getConnectionId();
+        std::string cUri          = theBoard->getConnectionUri();
         std::string cAddressTable = theBoard->getAddressTable();
         if(theBoard->getBoardType() == BoardType::D19C) { fBeBoardFWMap[theBoard->getId()] = new D19cFWInterface(cId, cUri, cAddressTable); }
         else if(theBoard->getBoardType() == BoardType::RD53)

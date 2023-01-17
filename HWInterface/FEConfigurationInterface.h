@@ -4,9 +4,9 @@
 #include "HWDescription/BeBoard.h"
 #include "HWDescription/Chip.h"
 #include "HWDescription/ChipRegItem.h"
+#include "HWInterface/RegManager.h"
 #include "Utils/Utilities.h"
 #include "Utils/easylogging++.h"
-#include "HWInterface/RegManager.h"
 #include <string>
 
 namespace Ph2_HwInterface

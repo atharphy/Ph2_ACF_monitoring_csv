@@ -5,12 +5,12 @@
 #include "HWInterface/BeBoardInterface.h"
 #include "HWInterface/ChipInterface.h"
 #include "HWInterface/ReadoutChipInterface.h"
-#include "Utils/Timer.h"
-#include "Utils/argvparser.h"
-#include "tools/SSALatencyScan.h"
 #include "TApplication.h"
 #include "TROOT.h"
+#include "Utils/Timer.h"
+#include "Utils/argvparser.h"
 #include "tools/BackEndAlignment.h"
+#include "tools/SSALatencyScan.h"
 #include <cstring>
 
 using namespace Ph2_HwDescription;

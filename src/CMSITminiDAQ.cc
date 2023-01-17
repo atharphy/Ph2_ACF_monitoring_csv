@@ -27,8 +27,8 @@
 #include "tools/RD53VoltageTuning.h"
 
 #ifdef __EUDAQ__
-#include "tools/RD53eudaqProducer.h"
 #include "TROOT.h"
+#include "tools/RD53eudaqProducer.h"
 #endif
 
 // ##################

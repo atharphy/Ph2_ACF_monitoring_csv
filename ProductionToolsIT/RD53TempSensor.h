@@ -10,8 +10,8 @@
 #ifndef RD53TempSensor_H
 #define RD53TempSensor_H
 
-#include "tools/Tool.h"
 #include "ITchipTestingInterface.h"
+#include "tools/Tool.h"
 
 // #ifdef __POWERSUPPLY__
 // #include "DeviceHandler.h"

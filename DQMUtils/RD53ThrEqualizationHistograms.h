@@ -11,12 +11,12 @@
 #ifndef RD53ThrEqualizationHistograms_H
 #define RD53ThrEqualizationHistograms_H
 
+#include "DQMHistogramBase.h"
 #include "Utils/ChannelContainerStream.h"
 #include "Utils/ChipContainerStream.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/RD53Shared.h"
-#include "DQMHistogramBase.h"
 
 #include <TH1F.h>
 #include <TH2F.h>

@@ -80,9 +80,9 @@ void DQMInterface::configure(std::string const& calibrationName, std::string con
     }
     LOG(INFO) << __PRETTY_FUNCTION__ << " DQM connected" << RESET;
 
-    Ph2_Parser::FileParser                                   fParser;
-    std::stringstream                                        out;
-    Ph2_Parser::SettingsMap                                  pSettingsMap;
+    Ph2_Parser::FileParser  fParser;
+    std::stringstream       out;
+    Ph2_Parser::SettingsMap pSettingsMap;
 
     fParser.parseHW(configurationFilePath, &fDetectorStructure, out);
     fParser.parseSettings(configurationFilePath, pSettingsMap, out);

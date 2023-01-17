@@ -4,8 +4,8 @@
 #include "pybind11/pybind11.h"
 #pragma GCC diagnostic pop
 #include "Utils/easylogging++.h"
-#include "miniDAQ/MiddlewareMessageHandler.cc"
 #include "iostream"
+#include "miniDAQ/MiddlewareMessageHandler.cc"
 #include "string"
 
 INITIALIZE_EASYLOGGINGPP

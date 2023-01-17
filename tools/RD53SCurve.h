@@ -11,9 +11,9 @@
 #define RD53SCurve_H
 
 #include "HWDescription/RD53.h"
+#include "RD53CalibBase.h"
 #include "Utils/ContainerRecycleBin.h"
 #include "Utils/ThresholdAndNoise.h"
-#include "RD53CalibBase.h"
 
 #include <algorithm>
 

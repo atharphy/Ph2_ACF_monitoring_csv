@@ -1,6 +1,6 @@
 #include "tools/PedestalEqualization.h"
-#include "HWInterface/D19cFWInterface.h"
 #include "HWDescription/ReadoutChip.h"
+#include "HWInterface/D19cFWInterface.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/DataContainer.h"

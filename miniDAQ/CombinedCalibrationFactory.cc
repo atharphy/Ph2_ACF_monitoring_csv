@@ -1,5 +1,6 @@
 #include "miniDAQ/CombinedCalibrationFactory.h"
 
+#include "MiddlewareController.h"
 #include "tools/BeamTestCheck.h"
 #include "tools/CBCPulseShape.h"
 #include "tools/CalibrationExample.h"
@@ -21,7 +22,6 @@
 #include "tools/RD53ThrEqualization.h"
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
-#include "MiddlewareController.h"
 //#include "tools/SSAPhysics.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/LinkAlignmentOT.h"
@@ -29,7 +29,7 @@
 #include "tools/Physics2S.h"
 #include "tools/StubBackEndAlignment.h"
 
-#define CALIBRATION_NAME(x) #x,  CalibrationList::x
+#define CALIBRATION_NAME(x) #x, CalibrationList::x
 
 using namespace MessageUtils;
 

@@ -2,8 +2,8 @@
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
-#include "tools/Tool.h"
 #include "tools/BackEndAlignment.h"
+#include "tools/Tool.h"
 
 #include "tools/PSROHTester.h"
 

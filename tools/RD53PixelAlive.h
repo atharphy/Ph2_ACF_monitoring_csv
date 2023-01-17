@@ -10,8 +10,8 @@
 #ifndef RD53PixelAlive_H
 #define RD53PixelAlive_H
 
-#include "Utils/GenericDataArray.h"
 #include "RD53CalibBase.h"
+#include "Utils/GenericDataArray.h"
 
 #ifdef __USE_ROOT__
 #include "DQMUtils/RD53PixelAliveHistograms.h"

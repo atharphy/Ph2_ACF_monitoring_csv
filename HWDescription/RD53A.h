@@ -11,9 +11,9 @@
 #ifndef RD53A_H
 #define RD53A_H
 
-#include "Utils/RD53ChannelGroupHandler.h"
 #include "RD53.h"
 #include "RD53ACommands.h"
+#include "Utils/RD53ChannelGroupHandler.h"
 
 // ############################
 // # Chip event configuration #

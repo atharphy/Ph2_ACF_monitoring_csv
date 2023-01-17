@@ -1,7 +1,7 @@
 #include "tools/PedeNoise.h"
-#include "HWInterface/D19cFWInterface.h"
 #include "HWDescription/Cbc.h"
 #include "HWDescription/SSA.h"
+#include "HWInterface/D19cFWInterface.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"

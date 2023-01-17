@@ -1,17 +1,17 @@
 #include <cstring>
 
 #include "HWInterface/DPInterface.h"
-#include "tools/OpenFinder.h"
-#include "tools/PSHybridTester.h"
-#include "tools/PedeNoise.h"
-#include "tools/PedestalEqualization.h"
-#include "tools/ShortFinder.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
 #include "tools/BackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/DataChecker.h"
+#include "tools/OpenFinder.h"
+#include "tools/PSHybridTester.h"
+#include "tools/PedeNoise.h"
+#include "tools/PedestalEqualization.h"
+#include "tools/ShortFinder.h"
 
 #if defined(__USE_ROOT__)
 #include "TApplication.h"

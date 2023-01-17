@@ -18,12 +18,12 @@ Support :                        mail to : lorenzo.bidegain@gmail.com, nico.pier
 #include "HWDescription/MPA.h"
 #include "HWDescription/ReadoutChip.h"
 #include "HWDescription/SSA.h"
+#include "HWInterface/RegManager.h"
 #include "NetworkUtils/TCPClient.h"
 #include "Utils/Exception.h"
 #include "Utils/FileHandler.h"
 #include "Utils/Utilities.h"
 #include "Utils/easylogging++.h"
-#include "HWInterface/RegManager.h"
 
 #include <uhal/uhal.hpp>
 

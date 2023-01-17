@@ -1,10 +1,10 @@
 #ifndef _LinkInterface_H__
 #define _LinkInterface_H__
 
-#include "Utils/Utilities.h"
-#include "Utils/easylogging++.h"
 #include "HWDescription/BeBoard.h"
 #include "HWInterface/RegManager.h"
+#include "Utils/Utilities.h"
+#include "Utils/easylogging++.h"
 #include <string>
 
 namespace Ph2_HwInterface

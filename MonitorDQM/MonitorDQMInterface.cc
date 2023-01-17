@@ -3,9 +3,9 @@
 #include "Utils/Container.h"
 #include "Utils/ObjectStream.h"
 
-#include "Parser/DetectorMonitorConfig.h"
 #include "MonitorDQM/MonitorDQMInterface.h"
 #include "MonitorDQM/MonitorDQMPlotCBC.h"
+#include "Parser/DetectorMonitorConfig.h"
 
 #include "TFile.h"
 
@@ -65,9 +65,9 @@ void MonitorDQMInterface::configure(std::string const& configurationFilePath)
     }
     LOG(INFO) << __PRETTY_FUNCTION__ << " DQM connected" << RESET;
 
-    Ph2_Parser::FileParser                                   fParser;
-    std::stringstream                                        out;
-    DetectorContainer                                        fDetectorStructure;
+    Ph2_Parser::FileParser fParser;
+    std::stringstream      out;
+    DetectorContainer      fDetectorStructure;
 
     fParser.parseHW(configurationFilePath, &fDetectorStructure, out);
 

@@ -14,9 +14,6 @@
 
 #ifdef __USE_ROOT__
 
-#include "Utils/ConsoleColor.h"
-#include "Utils/Utilities.h"
-#include "Utils/easylogging++.h"
 #include "TCanvas.h"
 #include "TF1.h"
 #include "TFile.h"
@@ -25,6 +22,9 @@
 #include "THStack.h"
 #include "TROOT.h"
 #include "TString.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/Utilities.h"
+#include "Utils/easylogging++.h"
 #include <map>
 #include <vector>
 

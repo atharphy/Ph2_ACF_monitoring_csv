@@ -9,6 +9,11 @@
 #include "HWInterface/BeBoardInterface.h"
 #include "HWInterface/D19cFWInterface.h"
 #include "System/SystemController.h"
+#include "TApplication.h"
+#include "TCanvas.h"
+#include "TH1.h"
+#include "TH2.h"
+#include "TROOT.h"
 #include "Utils/CommonVisitors.h"
 #include "Utils/ConsoleColor.h"
 #include "Utils/Timer.h"
@@ -18,11 +23,6 @@
 #include "tools/CalibrationExample.h"
 #include "tools/SSASCurveAsync.h"
 #include "tools/Tool.h"
-#include "TApplication.h"
-#include "TCanvas.h"
-#include "TH1.h"
-#include "TH2.h"
-#include "TROOT.h"
 #include <cstring>
 #include <fstream>
 #include <inttypes.h>

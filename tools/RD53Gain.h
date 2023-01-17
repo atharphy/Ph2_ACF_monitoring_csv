@@ -10,9 +10,9 @@
 #ifndef RD53Gain_H
 #define RD53Gain_H
 
+#include "RD53CalibBase.h"
 #include "Utils/ContainerRecycleBin.h"
 #include "Utils/GainFit.h"
-#include "RD53CalibBase.h"
 
 #ifdef __USE_ROOT__
 #include "DQMUtils/RD53GainHistograms.h"

@@ -1,13 +1,13 @@
 #ifndef DETECTOR_MONITOR_H
 #define DETECTOR_MONITOR_H
 
+#include "Parser/DetectorMonitorConfig.h"
 #include "System/SystemController.h"
 #include "Utils/BoardContainerStream.h"
 #include "Utils/ChannelContainerStream.h"
 #include "Utils/ChipContainerStream.h"
 #include "Utils/HybridContainerStream.h"
 #include "Utils/OpticalGroupContainerStream.h"
-#include "Parser/DetectorMonitorConfig.h"
 
 #include "chrono"
 #include "thread"

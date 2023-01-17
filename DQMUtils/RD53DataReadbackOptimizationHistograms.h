@@ -10,11 +10,11 @@
 #ifndef RD53DataReadbackOptimizationHistograms_H
 #define RD53DataReadbackOptimizationHistograms_H
 
+#include "DQMHistogramBase.h"
 #include "Utils/ChipContainerStream.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/RD53Shared.h"
-#include "DQMHistogramBase.h"
 
 #include <TH1F.h>
 

@@ -1,8 +1,8 @@
+#include "TApplication.h"
+#include "TROOT.h"
 #include "Utils/Timer.h"
 #include "Utils/argvparser.h"
 #include "tools/CalibrationExample.h"
-#include "TApplication.h"
-#include "TROOT.h"
 #include <cstring>
 
 using namespace Ph2_HwDescription;

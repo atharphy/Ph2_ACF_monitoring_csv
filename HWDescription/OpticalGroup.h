@@ -10,10 +10,10 @@
 #ifndef OpticalGroup_H
 #define OpticalGroup_H
 
-#include "Utils/Container.h"
-#include "Utils/Visitor.h"
 #include "FrontEndDescription.h"
 #include "Hybrid.h"
+#include "Utils/Container.h"
+#include "Utils/Visitor.h"
 #include "lpGBT.h"
 
 #include <vector>

@@ -10,13 +10,13 @@
 #ifndef Chip_H
 #define Chip_H
 
+#include "ChipRegItem.h"
+#include "FrontEndDescription.h"
 #include "Utils/ConsoleColor.h"
 #include "Utils/Container.h"
 #include "Utils/Exception.h"
 #include "Utils/Visitor.h"
 #include "Utils/easylogging++.h"
-#include "ChipRegItem.h"
-#include "FrontEndDescription.h"
 
 #include <iostream>
 #include <set>

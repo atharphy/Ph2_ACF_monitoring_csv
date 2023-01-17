@@ -8,11 +8,11 @@
 #include <set>
 #include <vector>
 
-#include "HWDescription/Definition.h"
 #include "CRCCalculator.h"
 #include "ConditionDataSet.h"
 #include "ConsoleColor.h"
 #include "GenericPayload.h"
+#include "HWDescription/Definition.h"
 #include "easylogging++.h"
 
 #define BOE_1 0x5

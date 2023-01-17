@@ -4,9 +4,9 @@
 #include "Utils/ContainerFactory.h"
 #include "Utils/Occupancy.h"
 // temporary fix until we address event which is compatible for IT  + OT
+#include "Channel.h"
 #include "Utils/CommonVisitors.h"
 #include "Utils/Visitor.h"
-#include "Channel.h"
 
 #include <map>
 

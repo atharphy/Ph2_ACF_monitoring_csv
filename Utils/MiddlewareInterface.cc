@@ -45,7 +45,7 @@ void MiddlewareInterface::initialize(void)
 void MiddlewareInterface::configure(std::string const& calibrationName, std::string const& configurationFilePath)
 {
     const google::protobuf::EnumDescriptor* fCalibrationEnumDescriptor = MessageUtils::CalibrationList_CalibrationNameEnum_descriptor();
-    const auto theCalibrationEnum = static_cast<MessageUtils::CalibrationList::CalibrationNameEnum>(fCalibrationEnumDescriptor->FindValueByName(calibrationName)->number());
+    const auto           theCalibrationEnum = static_cast<MessageUtils::CalibrationList::CalibrationNameEnum>(fCalibrationEnumDescriptor->FindValueByName(calibrationName)->number());
     ConfigurationMessage theQuery;
     theQuery.mutable_query_type()->set_type(QueryType::CONFIGURE);
     theQuery.mutable_data()->mutable_calibration()->set_calibration_name(theCalibrationEnum);

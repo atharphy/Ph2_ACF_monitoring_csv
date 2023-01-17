@@ -14,11 +14,11 @@
 
 #if defined(__TCUSB__) && defined(__USE_ROOT__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
 
-#include "HWInterface/DPInterface.h"
 #include "D19cDebugFWInterface.h"
 #include "D19cLinkInterface.h"
 #include "D19cOpticalInterface.h"
 #include "D19cTriggerInterface.h"
+#include "HWInterface/DPInterface.h"
 #include "L1ReadoutInterface.h"
 #include "LinkAlignmentOT.h"
 #include "Tool.h"

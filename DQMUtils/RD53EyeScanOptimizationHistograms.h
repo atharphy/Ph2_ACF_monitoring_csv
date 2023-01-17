@@ -10,11 +10,11 @@
 #ifndef RD53EyeScanOptimizationHistograms_H
 #define RD53EyeScanOptimizationHistograms_H
 
+#include "DQMHistogramBase.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerStream.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/RD53Shared.h"
-#include "DQMHistogramBase.h"
 
 #include <TH1F.h>
 #include <TH3F.h>

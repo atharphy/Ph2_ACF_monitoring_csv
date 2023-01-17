@@ -10,12 +10,12 @@
 #ifndef __EVENT_H__
 #define __EVENT_H__
 
+#include "ConsoleColor.h"
 #include "HWDescription/BeBoard.h"
 #include "HWDescription/Definition.h"
+#include "SLinkEvent.h"
 #include "Utils/DataContainer.h"
 #include "Utils/easylogging++.h"
-#include "ConsoleColor.h"
-#include "SLinkEvent.h"
 #include <bitset>
 #include <cstring>
 #include <iomanip>

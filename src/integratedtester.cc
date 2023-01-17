@@ -18,6 +18,8 @@
 #include "HWDescription/Hybrid.h"
 #include "HWInterface/BeBoardInterface.h"
 #include "HWInterface/ChipInterface.h"
+#include "TApplication.h"
+#include "TROOT.h"
 #include "Utils/Timer.h"
 #include "Utils/argvparser.h"
 #include "tools/AntennaTester.h"
@@ -26,8 +28,6 @@
 #include "tools/PedestalEqualization.h"
 #include "tools/RegisterTester.h"
 #include "tools/ShortFinder.h"
-#include "TApplication.h"
-#include "TROOT.h"
 
 #ifdef __USBINST__
 #include "../Ph2_USBInstDriver/HMP4040/HMP4040Client.h"
