@@ -9,7 +9,7 @@
 
 #include "DQMEvent.h"
 
-#include "../Utils/SLinkEvent.h"
+#include "Utils/SLinkEvent.h"
 #include <boost/dynamic_bitset.hpp>
 
 DQMEvent::DQMEvent(SLinkEvent* rptr)

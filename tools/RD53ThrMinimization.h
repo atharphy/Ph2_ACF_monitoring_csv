@@ -13,7 +13,9 @@
 #include "RD53PixelAlive.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53ThresholdHistograms.h"
+#include "DQMUtils/RD53ThresholdHistograms.h"
+#else
+typedef bool ThresholdHistograms;
 #endif
 
 // #####################################
@@ -24,11 +26,9 @@ class ThrMinimization : public PixelAlive
   public:
     ~ThrMinimization()
     {
-#ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
         delete histos;
-#endif
     }
 
     void Running() override;
@@ -36,8 +36,7 @@ class ThrMinimization : public PixelAlive
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string& fileRes_ = "", int currentRun = -1) override;
-    void   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void   localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
     void   run() override;
     void   draw(bool saveData = true) override;
     size_t getNumberIterations() override
@@ -49,26 +48,24 @@ class ThrMinimization : public PixelAlive
 
     void analyze();
 
-#ifdef __USE_ROOT__
     ThresholdHistograms* histos;
-#endif
 
   private:
     void fillHisto() override;
 
-    void bitWiseScanGlobal(const std::string& regName, float target, uint16_t startValue, uint16_t stopValue);
+    void bitWiseScanGlobal(const std::string& regName, float target, float threshold, uint16_t startValue, uint16_t stopValue);
 
     DetectorDataContainer theThrContainer;
 
   protected:
     float  targetOccupancy;
+    float  maxMaskedPixels;
     size_t startValue;
     size_t stopValue;
     bool   doDisplay;
     bool   doUpdateChip;
 
-    std::string fileRes;
-    int         theCurrentRun;
+    int theCurrentRun;
 };
 
 #endif

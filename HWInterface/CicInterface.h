@@ -8,8 +8,8 @@
 
 #ifndef __CICINTERFACE_H__
 #define __CICINTERFACE_H__
-#include "ChipInterface.h"
-#include "D19clpGBTInterface.h"
+#include "HWInterface/ChipInterface.h"
+#include "HWInterface/D19clpGBTInterface.h"
 
 /*!
  * \namespace Ph2_HwInterface

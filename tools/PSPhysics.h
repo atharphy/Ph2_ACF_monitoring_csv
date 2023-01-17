@@ -10,15 +10,12 @@
 #ifndef PSPhysics_H
 #define PSPhysics_H
 
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/Event.h"
-#include "Tool.h"
-// #include "../Utils/PSSharedConstants.h"
-// #include "../HWInterface/PSFWInterface.h"
-
+#include "Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/Event.h"
+#include "tools/Tool.h"
 #ifdef __USE_ROOT__
-#include "../DQMUtils/PSPhysicsHistograms.h"
+#include "DQMUtils/PSPhysicsHistograms.h"
 #include "TApplication.h"
 #endif
 

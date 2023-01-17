@@ -1,8 +1,8 @@
 #ifndef _D19cOpticalInterface_H__
 #define __D19cOpticalInterface_H__
 
-#include "D19clpGBTSlowControlWorkerInterface.h"
-#include "FEConfigurationInterface.h"
+#include "HWInterface/D19clpGBTSlowControlWorkerInterface.h"
+#include "HWInterface/FEConfigurationInterface.h"
 
 namespace Ph2_HwInterface
 {

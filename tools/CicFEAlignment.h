@@ -34,7 +34,7 @@ typedef std::pair<uint32_t, std::string> SlvsLineStatus;
 #endif
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/DQMHistogramCicFEAlignment.h"
+#include "DQMUtils/DQMHistogramCicFEAlignment.h"
 #include "TH1.h"
 #endif
 

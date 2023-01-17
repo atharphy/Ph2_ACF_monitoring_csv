@@ -10,14 +10,14 @@
 #ifndef RD53FWInterface_H
 #define RD53FWInterface_H
 
-#include "../HWDescription/RD53.h"
-#include "../HWDescription/RD53ACommands.h"
-#include "../Utils/RD53Event.h"
-#include "../Utils/RD53RunProgress.h"
-#include "../Utils/RD53Shared.h"
-#include "../Utils/easylogging++.h"
-#include "BeBoardFWInterface.h"
-#include "RD53lpGBTInterface.h"
+#include "HWDescription/RD53.h"
+#include "HWDescription/RD53ACommands.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/RD53lpGBTInterface.h"
+#include "Utils/RD53Event.h"
+#include "Utils/RD53RunProgress.h"
+#include "Utils/RD53Shared.h"
+#include "Utils/easylogging++.h"
 
 #include <uhal/uhal.hpp>
 
@@ -34,9 +34,6 @@ const uint8_t  AURORA_SPEED         = 0;      // 0 = 1.28 Gbps, 1 = 640 Mbps, 2 
 const uint32_t NBIT_SLOWCMD_FIFO    = 16;     // Slow command FIFO depth 65.536, i.e. 16 bits (in terms of 32-bit words)
 const uint32_t NBIT_DATA_FIFO       = 27;     // Data FIFO depth 134.217.728, i.e. 27 bits (in terms of 32-bit words)
 const uint32_t EVENT_STREAM_TIMEOUT = 0xFFFF; // Event stream timeout
-
-constexpr float VDDD2Volt(float val) { return (0.968 + val * 0.0115); }
-constexpr float CDR2Freq(float val) { return (140 + val * 5); }
 
 enum ReadoutSpeed : uint8_t
 {

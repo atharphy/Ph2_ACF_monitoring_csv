@@ -1,5 +1,4 @@
-#include "D19cPSCounterFWInterface.h"
-// #include "FEConfigurationInterface.h"
+#include "HWInterface/D19cPSCounterFWInterface.h"
 
 using namespace Ph2_HwDescription;
 

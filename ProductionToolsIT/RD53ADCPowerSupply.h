@@ -10,8 +10,8 @@
 #ifndef RD53ADCPowerSupply_H
 #define RD53ADCPowerSupply_H
 
-#include "../tools/Tool.h"
 #include "ITchipTestingInterface.h"
+#include "tools/Tool.h"
 
 // #ifdef __POWERSUPPLY__
 // #include "DeviceHandler.h"

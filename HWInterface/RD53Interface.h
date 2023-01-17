@@ -10,14 +10,14 @@
 #ifndef RD53Interface_H
 #define RD53Interface_H
 
-#include "../HWDescription/ChipRegItem.h"
-#include "../HWDescription/RD53.h"
-#include "../HWDescription/RD53A.h"
-#include "../HWDescription/RD53B.h"
-#include "../Utils/RD53ChannelGroupHandler.h"
-#include "BeBoardFWInterface.h"
-#include "RD53FWInterface.h"
-#include "ReadoutChipInterface.h"
+#include "HWDescription/ChipRegItem.h"
+#include "HWDescription/RD53.h"
+#include "HWDescription/RD53A.h"
+#include "HWDescription/RD53B.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/RD53FWInterface.h"
+#include "HWInterface/ReadoutChipInterface.h"
+#include "Utils/RD53ChannelGroupHandler.h"
 
 namespace Ph2_HwInterface
 {
@@ -53,7 +53,7 @@ class RD53Interface : public ReadoutChipInterface
     virtual void InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip)                                                                                                                       = 0;
     virtual void PackWriteCommand(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true)                   = 0;
     virtual void PackWriteBroadcastCommand(const Ph2_HwDescription::BeBoard* board, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true) = 0;
-    virtual void WriteClokDataDelay(Ph2_HwDescription::Chip* pChip, uint16_t value)                                                                                                           = 0;
+    virtual void WriteClockDataDelay(Ph2_HwDescription::Chip* pChip, uint16_t value)                                                                                                          = 0;
 
     void SendChipCommands(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint16_t>& chipCommandList, int hybridId);
     void PackHybridCommands(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint16_t>& chipCommandList, int hybridId, std::vector<uint32_t>& hybridCommandList);
@@ -100,16 +100,16 @@ class RD53Interface : public ReadoutChipInterface
         for(const auto& arg: args) ReadChipMonitor(pChip, arg);
     }
     float    ReadChipMonitor(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName);
+    uint32_t ReadChipADC(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName);
     float    ReadHybridTemperature(Ph2_HwDescription::ReadoutChip* pChip);
     float    ReadHybridVoltage(Ph2_HwDescription::ReadoutChip* pChip);
-    uint32_t ReadChipADC(Ph2_HwDescription::ReadoutChip* pChip, const std::string& observableName);
+    float    convertADC2VorI(Ph2_HwDescription::ReadoutChip* pChip, uint32_t value, bool isCurrentNotVoltage = false);
 
   private:
-    virtual uint32_t getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage) = 0;
-    virtual uint32_t measureADC(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data)               = 0;
+    virtual uint32_t getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage)                                          = 0;
+    virtual uint32_t measureADC(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data)                                                        = 0;
+    virtual float    measureTemperature(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data, const std::string& type = "", int beta = 3435) = 0;
     float            measureVoltageCurrent(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data, bool isCurrentNotVoltage);
-    float            measureTemperature(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data);
-    float            convertADC2VorI(Ph2_HwDescription::ReadoutChip* pChip, uint32_t value, bool isCurrentNotVoltage = false);
 };
 
 } // namespace Ph2_HwInterface

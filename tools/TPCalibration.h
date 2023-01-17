@@ -5,7 +5,7 @@
 #ifdef __USE_ROOT__
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/DQMHistogramTPCalibration.h"
+#include "DQMUtils/DQMHistogramTPCalibration.h"
 #endif
 
 #include "TCanvas.h"

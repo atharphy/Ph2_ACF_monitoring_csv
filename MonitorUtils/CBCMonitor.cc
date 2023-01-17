@@ -1,9 +1,9 @@
-#include "CBCMonitor.h"
-#include "../HWDescription/Definition.h"
-#include "../HWDescription/OuterTrackerHybrid.h"
-#include "../HWInterface/D19clpGBTInterface.h"
-#include "../Utils/CharArray.h"
-#include "../Utils/ContainerFactory.h"
+#include "MonitorUtils/CBCMonitor.h"
+#include "HWDescription/Definition.h"
+#include "HWDescription/OuterTrackerHybrid.h"
+#include "HWInterface/D19clpGBTInterface.h"
+#include "Utils/CharArray.h"
+#include "Utils/ContainerFactory.h"
 
 #ifdef __USE_ROOT__
 #include "TFile.h"

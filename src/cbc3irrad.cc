@@ -1,14 +1,14 @@
-#include "CommonVisitors.h"
-#include "Timer.h"
-#include "UsbUtilities.h"
-#include "Watchdog.h"
-#include "argvparser.h"
+#include "Utils/CommonVisitors.h"
+#include "Utils/Timer.h"
+#include "Utils/UsbUtilities.h"
+#include "Utils/Watchdog.h"
+#include "Utils/argvparser.h"
 #include <iostream>
 
-#include "BiasSweep.h"
-#include "PedeNoise.h"
-#include "PedestalEqualization.h"
-#include "StubSweep.h"
+#include "tools/BiasSweep.h"
+#include "tools/PedeNoise.h"
+#include "tools/PedestalEqualization.h"
+#include "tools/StubSweep.h"
 
 #include "TApplication.h"
 #include "TROOT.h"

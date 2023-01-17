@@ -9,10 +9,10 @@
 
  */
 
-#include "SSAInterface.h"
-#include "../Utils/ChannelGroupHandler.h"
-#include "../Utils/ConsoleColor.h"
-#include "../Utils/Container.h"
+#include "HWInterface/SSAInterface.h"
+#include "Utils/ChannelGroupHandler.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/Container.h"
 #include <bitset>
 #include <numeric>
 

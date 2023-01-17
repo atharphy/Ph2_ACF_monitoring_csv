@@ -7,8 +7,8 @@
         Support :                    mail to : fabio.ravera@cern.ch
  */
 
-#include "ChipInterface.h"
-#include "../Utils/ConsoleColor.h"
+#include "HWInterface/ChipInterface.h"
+#include "Utils/ConsoleColor.h"
 
 #define DEV_FLAG 0
 

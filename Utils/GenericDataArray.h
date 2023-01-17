@@ -10,8 +10,8 @@
 #ifndef GenericDataArray_H
 #define GenericDataArray_H
 
-#include "../Utils/ConsoleColor.h"
-#include "../Utils/easylogging++.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/easylogging++.h"
 #include <iostream>
 #include <vector>
 

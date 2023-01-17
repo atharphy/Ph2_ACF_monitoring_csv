@@ -1,7 +1,7 @@
 #ifndef _D19cI2CInterface_H__
 #define __D19cI2CInterface_H__
 
-#include "FEConfigurationInterface.h"
+#include "HWInterface/FEConfigurationInterface.h"
 
 namespace Ph2_HwInterface
 {

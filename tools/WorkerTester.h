@@ -1,10 +1,10 @@
 #ifndef WorkerTester_h__
 #define WorkerTester_h__
 
-#include "../HWInterface/D19cOpticalInterface.h"
-#include "../HWInterface/D19clpGBTSlowControlWorkerInterface.h"
-#include "../Utils/Utilities.h"
-#include "Tool.h"
+#include "HWInterface/D19cOpticalInterface.h"
+#include "HWInterface/D19clpGBTSlowControlWorkerInterface.h"
+#include "Utils/Utilities.h"
+#include "tools/Tool.h"
 #include <chrono>
 
 using namespace Ph2_HwDescription;

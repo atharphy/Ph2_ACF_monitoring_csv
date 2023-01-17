@@ -10,6 +10,8 @@
 #include "RD53Gain.h"
 
 #include <boost/multiprecision/number.hpp>
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/matrix_proxy.hpp>
 
 using namespace boost::numeric;
 using namespace Ph2_HwDescription;
@@ -35,6 +37,7 @@ void Gain::ConfigureCalibration()
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
+    dataOutputDir  = this->findValueInSettings<std::string>("DataOutputDir", "");
     frontEnd       = RD53Shared::firstChip->getFEtype(colStart, colStop);
 
     // ########################
@@ -68,6 +71,7 @@ void Gain::Running()
 
     if(saveBinaryData == true)
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Gain.raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -110,36 +114,27 @@ void Gain::Stop()
     RD53RunProgress::reset();
 }
 
-void Gain::localConfigure(const std::string& fileRes_, int currentRun)
+void Gain::localConfigure(const std::string& histoFileName, int currentRun)
 {
-#ifdef __USE_ROOT__
-    histos = nullptr;
-#endif
+    histos        = nullptr;
+    theCurrentRun = currentRun;
 
-    if(currentRun >= 0)
-    {
-        theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[Gain::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
-    }
+    LOG(INFO) << GREEN << "[Gain::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
+    // ##########################
+    // # Initialize calibration #
+    // ##########################
     Gain::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "Gain");
-    Gain::initializeFiles(fileRes_, currentRun);
-}
 
-void Gain::initializeFiles(const std::string& fileRes_, int currentRun)
-{
-    fileRes = fileRes_;
-
-    if((currentRun >= 0) && (saveBinaryData == true))
-    {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Gain.raw", 'w');
-        this->initializeWriteFileHandler();
-    }
-
-#ifdef __USE_ROOT__
-    delete histos;
-    histos = new GainHistograms;
-#endif
+    // #########################################
+    // # Initialize histogram and binary files #
+    // #########################################
+    CalibBase::initializeFiles<GainHistograms>(histoFileName, "Gain", histos, currentRun, saveBinaryData);
 }
 
 void Gain::run()
@@ -182,7 +177,12 @@ void Gain::run()
                                         ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
                                         ->getChannel<OccupancyAndPh>(row, col)
-                                        .fOccupancy = RD53Shared::ISDISABLED;
+                                        .fStatus = RD53Shared::ISDISABLED;
+
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in");
 
     // ################
     // # Error report #
@@ -190,25 +190,25 @@ void Gain::run()
     CalibBase::chipErrorReport();
 }
 
-void Gain::draw(bool doSaveData)
+void Gain::draw(bool saveData)
 {
-    if(doSaveData == true) CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
+    if(saveData == true) CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((doSaveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
+    if((saveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
     {
-        this->InitResultFile(fileRes);
+        this->InitResultFile(CalibBase::theHistoFileName);
         LOG(INFO) << BOLDBLUE << "\t--> Gain saving histograms..." << RESET;
     }
 
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     Gain::fillHisto();
     histos->process();
-    saveData = doSaveData;
+    doSaveData = saveData;
 
     if(doDisplay == true) myApp->Run(true);
 #endif
@@ -240,8 +240,6 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    static_cast<RD53*>(cChip)->copyMaskFromDefault();
-
                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                         for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
                             if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
@@ -283,14 +281,14 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                                 // # Run regression #
                                 // ##################
                                 Gain::computeStats(x, y, e, o, par, parErr, chi2, DoF);
-                                highQintercept    = par[0];
-                                highQinterceptErr = parErr[0];
-                                highQslope        = par[1];
-                                highQslopeErr     = parErr[1];
-                                lowQintercept     = par[2];
-                                lowQinterceptErr  = parErr[2];
-                                lowQslope         = par[3];
-                                lowQslopeErr      = parErr[3];
+                                lowQintercept     = par[0];
+                                lowQinterceptErr  = parErr[0];
+                                lowQslope         = par[1];
+                                lowQslopeErr      = parErr[1];
+                                highQintercept    = par[2];
+                                highQinterceptErr = parErr[2];
+                                highQslope        = par[3];
+                                highQslopeErr     = parErr[3];
 
                                 if(chi2 != 0)
                                 {
@@ -343,7 +341,7 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                                 }
                                 else
                                     theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fChi2 =
-                                        RD53Shared::FITERROR;
+                                        RD53Shared::ISFITERROR;
                             }
 
                     index++;
@@ -357,7 +355,12 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    float ToTatTarget = Gain::gainFunction({cChip->getSummary<GainFit, GainFit>().fInterceptHighQ, cChip->getSummary<GainFit, GainFit>().fSlopeHighQ}, targetCharge);
+                    float ToTatTarget = Gain::gainFunction({cChip->getSummary<GainFit, GainFit>().fInterceptLowQ,
+                                                            cChip->getSummary<GainFit, GainFit>().fSlopeLowQ,
+                                                            cChip->getSummary<GainFit, GainFit>().fInterceptHighQ,
+                                                            cChip->getSummary<GainFit, GainFit>().fSlopeHighQ},
+                                                           targetCharge,
+                                                           frontEnd);
 
                     if(ToTatTarget > frontEnd->maxToTvalue)
                         LOG(INFO) << GREEN << "Average ToT for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
@@ -384,6 +387,38 @@ void Gain::fillHisto()
 #endif
 }
 
+float Gain::gainFunction(const std::vector<float>& par, float VCal, const Ph2_HwDescription::RD53::FrontEnd* frontEnd)
+// ############################################################
+// # Given the input VCal returns the corresponding ToT value #
+// ############################################################
+{
+    if(RD53Shared::firstChip->getUseGainDualSlope() == false)
+        return par[0] + par[1] * VCal;
+    else
+    {
+        if(VCal <= ((frontEnd->splitToTvalue - par[0]) / par[1]))
+            return par[0] + par[1] * VCal;
+        else
+            return par[2] + par[3] * VCal;
+    }
+}
+
+float Gain::gainInverseFunction(const std::vector<float>& par, float ToT, const Ph2_HwDescription::RD53::FrontEnd* frontEnd)
+// ############################################################
+// # Given the input ToT returns the corresponding VCal value #
+// ############################################################
+{
+    if(ToT <= frontEnd->splitToTvalue)
+        return (ToT - par[0]) / par[1];
+    else
+    {
+        if(RD53Shared::firstChip->getUseGainDualSlope() == false)
+            return (ToT - par[0]) / par[1];
+        else
+            return (ToT - par[2]) / par[3];
+    }
+}
+
 void Gain::computeStats(const std::vector<float>& x,
                         const std::vector<float>& y,
                         const std::vector<float>& e,
@@ -396,88 +431,141 @@ void Gain::computeStats(const std::vector<float>& x,
 // # Linear regression with least-square method          #
 // # Model for low charge range:  y = f(x) = [0] + [1]*x #
 // # Model for high charge range: y = f(x) = [2] + [3]*x #
+// # if chi2 = -1 --> fit problems                       #
 // #######################################################
 {
-    int nPar  = NGAINPAR - 2; // @TMP@
-    int nData = 0;
+    // ##########################################
+    // # Define and initialize needed variables #
+    // ##########################################
+    const int limitToT = (RD53Shared::firstChip->getUseGainDualSlope() == true ? frontEnd->splitToTvalue : frontEnd->maxToTvalue);
+    chi2               = -1;
 
+    // ############################################
+    // # Struct for ordering the vectors together #
+    // ############################################
+    struct ScanOutput
+    {
+        float x, y, e, o;
+    };
+
+    // ######################################################
+    // # Order x, y, e and o together according to y values #
+    // ######################################################
+    std::vector<ScanOutput> scanOutputs;
     for(auto i = 0u; i < x.size(); i++)
-        if((e[i] != 0) && (o[i] == 1)) nData++;
+        if((e[i] != 0) && (o[i] == 1)) scanOutputs.push_back({x[i], y[i], e[i], o[i]});
+    std::sort(scanOutputs.begin(), scanOutputs.end(), [&](ScanOutput i, ScanOutput j) { return i.y < j.y; });
 
-    do
+    const size_t nData = scanOutputs.size();
+    DoF                = nData - NGAINPAR;
+
+    for(auto i = 0; i < NGAINPAR; i++)
     {
-        chi2 = 0;
-        DoF  = nData - nPar;
-        for(auto c = 0; c < NGAINPAR; c++)
-        {
-            par[c]    = 0;
-            parErr[c] = 0;
-        }
-        if(DoF < 1) return;
+        par[i]    = 0;
+        parErr[i] = 0;
+    }
+    if(DoF < 1) return;
 
-        ublas::matrix<double> H(nData, nPar);
-        ublas::matrix<double> V(nData, nData);
-        ublas::vector<double> myY(nData);
-
-        for(auto c = 0u; c < V.size2(); c++)
-            for(auto r = 0u; r < V.size1(); r++) V(r, c) = 0;
-
-        int r = 0;
-        for(auto i = 0u; i < x.size(); i++)
-            if((e[i] != 0) && (o[i] == 1))
-            {
-                H(r, 0) = 1;
-                H(r, 1) = x[i];
-                // @TMP@
-                // if(H.size2() > 2) H(r, 2) = x[i] * x[i];
-                // if(H.size2() > 3) H(r, 3) = log(x[i]);
-
-                V(r, r) = e[i] * e[i];
-                myY[r]  = y[i];
-
-                r++;
-            }
-
-        auto invV(V);
-        for(r = 0; r < nData; r++) invV(r, r) = 1 / V(r, r);
-
-        ublas::matrix<double> tmpMtx(ublas::prod(invV, H));
-        ublas::matrix<double> invParCov(ublas::prod(ublas::trans(H), tmpMtx));
-        auto                  parCov(invParCov);
-
-        auto det = RD53Shared::mtxInversion<double>(invParCov, parCov);
-        if((isnan(det) == false) && (det != 0))
-        {
-            ublas::vector<double> tmpVec1(ublas::prod(invV, myY));
-            ublas::vector<double> tmpVec2(ublas::prod(ublas::trans(H), tmpVec1));
-            ublas::vector<double> myPar(ublas::prod(parCov, tmpVec2));
-
-            std::copy(myPar.begin(), myPar.end(), par.begin());
-            for(auto c = 0; c < nPar; c++) parErr[c] = sqrt(parCov(c, c));
-
-            // ################
-            // # Compute chi2 #
-            // ################
-            ublas::vector<double> num(myY - ublas::prod(H, myPar));
-            ublas::vector<double> tmpNum(ublas::prod(invV, num));
-            chi2 = ublas::inner_prod(num, tmpNum);
-        }
-
-        if(chi2 == 0)
-            nPar--;
-        else
-            break;
-
-    } while(nPar > 1);
-
-    // #############################################
-    // # Extract best estimate of low-charge range # // @TMP@
-    // #############################################
-    auto itHi = std::find_if(o.begin(), o.end(), [&](double val) { return val == 1.0; }) - o.begin();
-    auto itLo = std::find_if(o.begin(), o.end(), [&](double val) { return val >= 0.1; }) - o.begin();
-    if((itHi != itLo) && (itHi != static_cast<int>(o.size())) && (itLo != static_cast<int>(o.size())) && ((x[itHi] - x[itLo]) != 0))
+    // ############################################
+    // # Retreive oredered vectors for x, y and e #
+    // ############################################
+    std::vector<float> ordered_x;
+    std::vector<float> ordered_y;
+    std::vector<float> ordered_e;
+    ordered_x.reserve(nData);
+    ordered_y.reserve(nData);
+    ordered_e.reserve(nData);
+    for(auto& ele: scanOutputs)
     {
-        par[NGAINPAR - 1] = (y[itHi] - y[itLo]) / (x[itHi] - x[itLo]);
-        par[NGAINPAR - 2] = y[itHi] - par[NGAINPAR - 1] * x[itHi];
+        ordered_x.push_back(ele.x);
+        ordered_y.push_back(ele.y);
+        ordered_e.push_back(ele.e);
+    }
+
+    // #############################################################################
+    // # Find first y-element larger than limitToT which is the last true-ToT      #
+    // # value where the gain slope does not change for the 6-to-4 bit compression #
+    // #############################################################################
+    auto         it            = std::find_if(ordered_y.begin(), ordered_y.end(), [&](float val) { return val > limitToT; });
+    const size_t limitToTindex = it - ordered_y.begin();
+
+    // ################################################
+    // # Declare matrices and vector for minimization #
+    // ################################################
+    ublas::matrix<double> H(nData, NGAINPAR, 0);
+    ublas::matrix<double> V(nData, nData, 0);
+    ublas::vector<double> myY(nData);
+
+    // ########################
+    // # Declare columns of H #
+    // ########################
+    ublas::vector<double> col0(nData, 0);
+    ublas::vector<double> col1(nData, 0);
+    ublas::vector<double> col2(nData, 0);
+    ublas::vector<double> col3(nData, 0);
+
+    // #####################
+    // # Fill columns of H #
+    // #####################
+    std::vector<double> ones(nData, 1);
+    std::copy(ones.begin(), ones.begin() + limitToTindex, col0.begin());
+    std::copy(ordered_x.begin(), ordered_x.begin() + limitToTindex, col1.begin());
+    std::copy(ones.begin() + limitToTindex, ones.end(), col2.begin() + limitToTindex);
+    std::copy(ordered_x.begin() + limitToTindex, ordered_x.end(), col3.begin() + limitToTindex);
+
+    // #############
+    // # Compose H #
+    // #############
+    column(H, 0) = col0;
+    column(H, 1) = col1;
+    column(H, 2) = col2;
+    column(H, 3) = col3;
+
+    // ##############################################################
+    // # If single-gain slope, remove last two (empty) columns of H #
+    // ##############################################################
+    if(limitToTindex >= nData) H = ublas::project(H, ublas::range(0, nData), ublas::range(0, NGAINPAR / 2));
+
+    // #############
+    // # Compose V #
+    // #############
+    ublas::identity_matrix<double> identityMatrix(nData);
+    ublas::vector<double>          identityVector(nData, 1);
+    ublas::vector<double>          e2(ordered_e.size());
+    std::copy(ordered_e.begin(), ordered_e.end(), e2.begin());
+    std::transform(e2.begin(), e2.end(), e2.begin(), [](double x) { return x * x; });
+    V = ublas::element_prod(ublas::outer_prod(identityVector, e2), identityMatrix);
+
+    // ############
+    // # Fill myY #
+    // ############
+    std::copy(ordered_y.begin(), ordered_y.end(), myY.begin());
+
+    // ################
+    // # Minimization #
+    // ################
+    auto invV(V);
+    for(auto i = 0u; i < nData; i++) invV(i, i) = 1 / V(i, i);
+
+    ublas::matrix<double> tmpMtx(ublas::prod(invV, H));
+    ublas::matrix<double> invParCov(ublas::prod(ublas::trans(H), tmpMtx));
+    auto                  parCov(invParCov);
+
+    auto det = RD53Shared::mtxInversion<double>(invParCov, parCov);
+    if((isnan(det) == false) && (det != 0))
+    {
+        ublas::vector<double> tmpVec1(ublas::prod(invV, myY));
+        ublas::vector<double> tmpVec2(ublas::prod(ublas::trans(H), tmpVec1));
+        ublas::vector<double> myPar(ublas::prod(parCov, tmpVec2));
+
+        std::copy(myPar.begin(), myPar.end(), par.begin());
+        for(auto i = 0u; i < NGAINPAR; i++) parErr[i] = (limitToTindex >= nData) && (i >= NGAINPAR / 2) ? 0.0 : sqrt(parCov(i, i));
+
+        // ################
+        // # Compute chi2 #
+        // ################
+        ublas::vector<double> num(myY - ublas::prod(H, myPar));
+        ublas::vector<double> tmpNum(ublas::prod(invV, num));
+        chi2 = ublas::inner_prod(num, tmpNum);
     }
 }

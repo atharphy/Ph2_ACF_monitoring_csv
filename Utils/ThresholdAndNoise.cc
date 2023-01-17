@@ -1,4 +1,4 @@
-#include "../Utils/ThresholdAndNoise.h"
+#include "Utils/ThresholdAndNoise.h"
 
 void ThresholdAndNoise::makeSummaryAverage(const std::vector<ThresholdAndNoise>* theThresholdAndNoiseVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents)
 {

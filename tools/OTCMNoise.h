@@ -13,12 +13,12 @@
 
 #include "Tool.h"
 
-#include "../Utils/CommonVisitors.h"
+#include "Utils/CommonVisitors.h"
 
 // ROOT
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/DQMHistogramOTCMNoise.h"
+#include "DQMUtils/DQMHistogramOTCMNoise.h"
 #endif
 
 #include <math.h>

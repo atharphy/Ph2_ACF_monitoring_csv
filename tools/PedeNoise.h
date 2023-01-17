@@ -12,12 +12,12 @@
 #ifndef PedeNoise_h__
 #define PedeNoise_h__
 
-#include "../Utils/CommonVisitors.h"
-#include "../Utils/ContainerRecycleBin.h"
-#include "../Utils/Visitor.h"
-#include "Tool.h"
+#include "Utils/CommonVisitors.h"
+#include "Utils/ContainerRecycleBin.h"
+#include "Utils/Visitor.h"
+#include "tools/Tool.h"
 #ifdef __USE_ROOT__
-#include "../DQMUtils/DQMHistogramPedeNoise.h"
+#include "DQMUtils/DQMHistogramPedeNoise.h"
 #endif
 
 #include <map>

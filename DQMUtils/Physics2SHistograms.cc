@@ -8,18 +8,18 @@
 */
 
 #include "Physics2SHistograms.h"
-#include "../HWDescription/Definition.h"
-#include "../Utils/ChannelContainerStream.h"
-#include "../Utils/ChipContainerStream.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
+#include "HWDescription/Definition.h"
+#include "Utils/ChannelContainerStream.h"
+#include "Utils/ChipContainerStream.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/ContainerStream.h"
 
-#include "../Utils/Data2S.h"
-#include "../Utils/Occupancy.h"
+#include "Utils/Data2S.h"
+#include "Utils/Occupancy.h"
 
 using namespace Ph2_HwDescription;
 
-void Physics2SHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
+void Physics2SHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
     HistContainer<TH1F> theTopSensorOccupancyHistogram    = HistContainer<TH1F>("TopSensorOccupancy", "Top Sensor Occupancy", NCHANNELS / 2, -0.5, float(NCHANNELS / 2.) - 0.5);

@@ -12,10 +12,11 @@
 #ifndef __ROOTCONTAINERFACTORY_H__
 #define __ROOTCONTAINERFACTORY_H__
 
-#include "../HWDescription/ReadoutChip.h"
-#include "../RootUtils/PlotContainer.h"
-#include "../Utils/Container.h"
-#include "../Utils/DataContainer.h"
+#include "HWDescription/BeBoard.h"
+#include "HWDescription/ReadoutChip.h"
+#include "RootUtils/PlotContainer.h"
+#include "Utils/Container.h"
+#include "Utils/DataContainer.h"
 
 #include "TFile.h"
 #include <iostream>
@@ -107,7 +108,7 @@ void bookHistogramsFromStructure(TFile*                   theOutputFile,
     copy.getSummary<SD, SB>() = std::move(theDetectorSummary);
 
     // Boards
-    for(const BoardContainer* board: original)
+    for(const auto board: original)
     {
         std::string boardFolder     = "/Board_" + std::to_string(board->getId());
         std::string fullBoardFolder = detectorFolder + boardFolder;
@@ -124,7 +125,7 @@ void bookHistogramsFromStructure(TFile*                   theOutputFile,
         copyBoard->getSummary<SB, SO>() = std::move(theBoardSummary);
 
         // OpticalGroups
-        for(const OpticalGroupContainer* opticalGroup: *board)
+        for(const auto opticalGroup: *board)
         {
             std::string opticalGroupFolder     = "/OpticalGroup_" + std::to_string(opticalGroup->getId());
             std::string fullOpticalGroupFolder = detectorFolder + boardFolder + opticalGroupFolder;
@@ -141,7 +142,7 @@ void bookHistogramsFromStructure(TFile*                   theOutputFile,
             copyOpticalGroup->getSummary<SO, SM>() = std::move(theOpticalGroupSummary);
 
             // Hybrids
-            for(const HybridContainer* hybrid: *opticalGroup)
+            for(const auto hybrid: *opticalGroup)
             {
                 std::string hybridFolder     = "/Hybrid_" + std::to_string(hybrid->getId());
                 std::string fullHybridFolder = detectorFolder + boardFolder + opticalGroupFolder + hybridFolder;

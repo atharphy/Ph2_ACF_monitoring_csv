@@ -1,4 +1,4 @@
-#include "D19cL1ReadoutInterface.h"
+#include "HWInterface/D19cL1ReadoutInterface.h"
 
 using namespace Ph2_HwDescription;
 

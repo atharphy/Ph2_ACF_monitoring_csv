@@ -1,7 +1,7 @@
 #if defined(__TCUSB__) && defined(__USE_ROOT__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
 
 #include "OTHybridTester.h"
-#include "../HWInterface/D19cBackendAlignmentFWInterface.h"
+#include "HWInterface/D19cBackendAlignmentFWInterface.h"
 
 OTHybridTester::OTHybridTester() : Tool()
 {
@@ -1266,7 +1266,6 @@ void OTHybridTester::freeTest()
         }
     }
 }
-
 
 #ifdef __TCP_SERVER__
 float OTHybridTester::getMeasurement(std::string name)

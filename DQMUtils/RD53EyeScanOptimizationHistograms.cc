@@ -8,11 +8,11 @@
 */
 
 #include "RD53EyeScanOptimizationHistograms.h"
-#include "../Utils/ChipContainerStream.h"
+#include "Utils/ChipContainerStream.h"
 
 using namespace Ph2_HwDescription;
 
-void EyeScanOptimizationHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
+void EyeScanOptimizationHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
 

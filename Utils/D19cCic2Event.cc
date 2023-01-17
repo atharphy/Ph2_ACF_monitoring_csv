@@ -9,14 +9,14 @@
 
  */
 
-#include "../Utils/D19cCic2Event.h"
-#include "../HWDescription/BeBoard.h"
-#include "../HWDescription/Definition.h"
-#include "../HWDescription/OuterTrackerHybrid.h"
-#include "../Utils/ChannelGroupHandler.h"
-#include "../Utils/DataContainer.h"
-#include "../Utils/EmptyContainer.h"
-#include "../Utils/Occupancy.h"
+#include "Utils/D19cCic2Event.h"
+#include "HWDescription/BeBoard.h"
+#include "HWDescription/Definition.h"
+#include "HWDescription/OuterTrackerHybrid.h"
+#include "Utils/ChannelGroupHandler.h"
+#include "Utils/DataContainer.h"
+#include "Utils/EmptyContainer.h"
+#include "Utils/Occupancy.h"
 
 using namespace Ph2_HwDescription;
 

@@ -8,15 +8,15 @@
 */
 
 #include "SSAPhysicsHistograms.h"
-#include "../HWDescription/Definition.h"
-#include "../Utils/ChannelContainerStream.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
-#include "../Utils/Occupancy.h"
+#include "HWDescription/Definition.h"
+#include "Utils/ChannelContainerStream.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/ContainerStream.h"
+#include "Utils/Occupancy.h"
 
 using namespace Ph2_HwDescription;
 
-void SSAPhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
+void SSAPhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
 

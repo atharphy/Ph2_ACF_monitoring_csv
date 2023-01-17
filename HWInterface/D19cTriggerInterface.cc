@@ -1,4 +1,4 @@
-#include "D19cTriggerInterface.h"
+#include "HWInterface/D19cTriggerInterface.h"
 
 using namespace Ph2_HwDescription;
 
