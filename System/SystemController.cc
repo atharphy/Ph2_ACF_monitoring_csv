@@ -7,17 +7,21 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "SystemController.h"
-#include "../HWInterface/LinkInterface.h"
-#include "../HWInterface/RD53AInterface.h"
-#include "../HWInterface/RD53BInterface.h"
-#include "../MonitorUtils/CBCMonitor.h"
-#include "../MonitorUtils/DetectorMonitor.h"
-#include "../MonitorUtils/RD53Monitor.h"
-#include "../MonitorUtils/SEHMonitor.h"
+#include "System/SystemController.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/LinkInterface.h"
+#include "HWInterface/RD53AInterface.h"
+#include "HWInterface/RD53BInterface.h"
+#include "HWInterface/RD53FWInterface.h"
+#include "MonitorUtils/CBCMonitor.h"
+#include "MonitorUtils/DetectorMonitor.h"
+#include "MonitorUtils/RD53Monitor.h"
+#include "MonitorUtils/SEHMonitor.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
+using namespace Ph2_Parser;
 bool cBrokenPS = false;
 
 namespace Ph2_System
@@ -171,7 +175,18 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     }
 
     fDetectorContainer = new DetectorContainer;
-    this->fParser.parseHW(pFilename, fBeBoardFWMap, fDetectorContainer, os);
+    this->fParser.parseHW(pFilename, fDetectorContainer, os);
+
+    for(const auto theBoard: *fDetectorContainer)
+    {
+        std::string cId           = theBoard->getConnectionId();
+        std::string cUri          = theBoard->getConnectionUri();
+        std::string cAddressTable = theBoard->getAddressTable();
+        if(theBoard->getBoardType() == BoardType::D19C) { fBeBoardFWMap[theBoard->getId()] = new D19cFWInterface(cId, cUri, cAddressTable); }
+        else if(theBoard->getBoardType() == BoardType::RD53)
+            fBeBoardFWMap[theBoard->getId()] = new RD53FWInterface(cId, cUri, cAddressTable);
+    }
+
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
     fBeBoardInterface->setBoard(0);
 
@@ -183,7 +198,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     if(!fPowerSupplyClient->connect(1))
     {
         LOG(INFO) << BOLDYELLOW << "Cannot connect to the Power Supply Server, power supplies will need to be controlled manually" << RESET;
-        delete fPowerSupplyClient;
+        //FIX ME!! delete fPowerSupplyClient;
         fPowerSupplyClient = nullptr;
     }
     else
@@ -318,7 +333,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 fReadoutChipInterface = new RD53AInterface(fBeBoardFWMap);
             else
                 fReadoutChipInterface = new RD53BInterface(fBeBoardFWMap);
-            RD53Shared::firstChip = static_cast<RD53*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
+            RD53Shared::setFirstChip(*fDetectorContainer);
         }
     } // if there is something to create an interface for
 

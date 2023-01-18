@@ -115,8 +115,8 @@ export EuDaqFlag='-D__EUDAQ__'
 export STDCXX="14"
 
 # Stand-alone application, without data streaming
-export CompileForHerd=false
-export CompileForShep=false
+# export CompileForHerd=false
+# export CompileForShep=false
 
 # Stand-alone application, with data streaming
 # export CompileForHerd=true
@@ -127,8 +127,8 @@ export CompileForShep=false
 # export CompileForShep=false
 
 # Shep application
-# export CompileForHerd=false
-# export CompileForShep=true
+export CompileForHerd=false
+export CompileForShep=false
 
 # Compile with EUDAQ libraries
 export CompileWithEUDAQ=false
