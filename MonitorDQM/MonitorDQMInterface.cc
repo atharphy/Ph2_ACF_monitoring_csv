@@ -1,11 +1,11 @@
-#include "../NetworkUtils/TCPSubscribeClient.h"
-#include "../System/FileParser.h"
-#include "../Utils/Container.h"
-#include "../Utils/ObjectStream.h"
+#include "NetworkUtils/TCPSubscribeClient.h"
+#include "Parser/FileParser.h"
+#include "Utils/Container.h"
+#include "Utils/ObjectStream.h"
 
-#include "../MonitorUtils/DetectorMonitorConfig.h"
-#include "MonitorDQMInterface.h"
-#include "MonitorDQMPlotCBC.h"
+#include "MonitorDQM/MonitorDQMInterface.h"
+#include "MonitorDQM/MonitorDQMPlotCBC.h"
+#include "Parser/DetectorMonitorConfig.h"
 
 #include "TFile.h"
 
@@ -65,12 +65,11 @@ void MonitorDQMInterface::configure(std::string const& configurationFilePath)
     }
     LOG(INFO) << __PRETTY_FUNCTION__ << " DQM connected" << RESET;
 
-    Ph2_System::FileParser                                   fParser;
-    std::map<uint16_t, Ph2_HwInterface::BeBoardFWInterface*> fBeBoardFWMap;
-    std::stringstream                                        out;
-    DetectorContainer                                        fDetectorStructure;
+    Ph2_Parser::FileParser fParser;
+    std::stringstream      out;
+    DetectorContainer      fDetectorStructure;
 
-    fParser.parseHW(configurationFilePath, fBeBoardFWMap, &fDetectorStructure, out);
+    fParser.parseHW(configurationFilePath, &fDetectorStructure, out);
 
     DetectorMonitorConfig theDetectorMonitorConfig;
     std::string           monitoringType = fParser.parseMonitor(configurationFilePath, theDetectorMonitorConfig, out);

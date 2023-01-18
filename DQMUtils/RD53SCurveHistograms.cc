@@ -12,9 +12,10 @@
 
 using namespace Ph2_HwDescription;
 
-void SCurveHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
+void SCurveHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    RD53Shared::setFirstChip(theDetectorStructure);
 
     nRows = RD53Shared::firstChip->getNRows();
     nCols = RD53Shared::firstChip->getNCols();
@@ -112,7 +113,7 @@ void SCurveHistograms::fillOccupancy(const DetectorDataContainer& OccupancyConta
                     for(auto row = 0u; row < nRows; row++)
                         for(auto col = 0u; col < nCols; col++)
                         {
-                            if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy != RD53Shared::ISDISABLED)
+                            if(cChip->getChannel<OccupancyAndPh>(row, col).fStatus == RD53Shared::ISGOOD)
                             {
                                 hOcc2D->Fill(DELTA_VCAL, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy + hOcc2D->GetYaxis()->GetBinWidth(1) / 2.);
                                 hOcc3D->SetBinContent(col + 1, row + 1, hOcc3D->GetZaxis()->FindBin(DELTA_VCAL), cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
@@ -171,7 +172,7 @@ void SCurveHistograms::fillThrAndNoise(const DetectorDataContainer& ThrAndNoiseC
 
                     for(auto row = 0u; row < nRows; row++)
                         for(auto col = 0u; col < nCols; col++)
-                            if(cChip->getChannel<ThresholdAndNoise>(row, col).fNoise == RD53Shared::FITERROR)
+                            if(cChip->getChannel<ThresholdAndNoise>(row, col).fNoise == RD53Shared::ISFITERROR)
                                 ErrorFit2DHist->Fill(col + 1, row + 1);
                             else if(cChip->getChannel<ThresholdAndNoise>(row, col).fNoise != 0)
                             {

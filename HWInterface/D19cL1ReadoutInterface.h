@@ -1,7 +1,7 @@
 #ifndef _D19cL1ReadoutInterface_H__
 #define __D19cL1ReadoutInterface_H__
 
-#include "L1ReadoutInterface.h"
+#include "HWInterface/L1ReadoutInterface.h"
 
 namespace D19cL1EvntEncoder
 {

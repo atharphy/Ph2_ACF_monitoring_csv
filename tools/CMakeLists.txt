@@ -9,12 +9,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
     include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
     include_directories(${UHAL_LOG_INCLUDE_PREFIX})
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-    include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
-    include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
-    include_directories(${PROJECT_SOURCE_DIR}/Utils)
-    include_directories(${PROJECT_SOURCE_DIR}/DQMUtils)
-    include_directories(${PROJECT_SOURCE_DIR}/System)
     include_directories(${PROJECT_SOURCE_DIR})
 
     # Library dirs

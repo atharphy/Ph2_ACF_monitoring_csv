@@ -10,15 +10,15 @@
 #ifndef SSAPhysics_H
 #define SSAPhysics_H
 
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/SSAChannelGroupHandler.h"
-#include "Tool.h"
-// #include "../Utils/SSASharedConstants.h"
-// #include "../HWInterface/SSAFWInterface.h"
+#include "Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/SSAChannelGroupHandler.h"
+#include "tools/Tool.h"
+// #include "Utils/SSASharedConstants.h"
+// #include "HWInterface/SSAFWInterface.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/SSAPhysicsHistograms.h"
+#include "DQMUtils/SSAPhysicsHistograms.h"
 #include "TApplication.h"
 #endif
 

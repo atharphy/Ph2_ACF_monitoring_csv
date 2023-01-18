@@ -7,13 +7,14 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "Physics2S.h"
-#include "../Utils/CBCChannelGroupHandler.h"
-#include "../Utils/Data2S.h"
-#include "../Utils/GenericDataArray.h"
-#include "../Utils/Occupancy.h"
-#include "BackEndAlignment.h"
-#include "CicFEAlignment.h"
+#include "tools/Physics2S.h"
+#include "HWInterface/D19cFWInterface.h"
+#include "Utils/CBCChannelGroupHandler.h"
+#include "Utils/Data2S.h"
+#include "Utils/GenericDataArray.h"
+#include "Utils/Occupancy.h"
+#include "tools/BackEndAlignment.h"
+#include "tools/CicFEAlignment.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

@@ -10,8 +10,8 @@
 #ifndef RD53ChannelGroupHandler_H
 #define RD53ChannelGroupHandler_H
 
-#include "../HWDescription/RD53.h"
 #include "ChannelGroupHandler.h"
+#include "HWDescription/RD53.h"
 
 namespace RD53GroupType
 {

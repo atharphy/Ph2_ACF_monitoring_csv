@@ -1,4 +1,4 @@
-#include "L1ReadoutInterface.h"
+#include "HWInterface/L1ReadoutInterface.h"
 
 using namespace Ph2_HwDescription;
 

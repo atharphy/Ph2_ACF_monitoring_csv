@@ -1,7 +1,7 @@
-#include "../tools/CalibrationExample.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
+#include "tools/CalibrationExample.h"
+#include "Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/ContainerStream.h"
 
 #include <boost/any.hpp>
 #include <math.h>

@@ -1,9 +1,9 @@
 #ifndef SEH_MONITOR_H
 #define SEH_MONITOR_H
-#include "../NetworkUtils/TCPClient.h"
-#include "../Utils/EmptyContainer.h"
-#include "../Utils/OpticalGroupContainerStream.h"
-#include "DetectorMonitor.h"
+#include "MonitorUtils/DetectorMonitor.h"
+#include "NetworkUtils/TCPClient.h"
+#include "Utils/EmptyContainer.h"
+#include "Utils/OpticalGroupContainerStream.h"
 #ifdef __USE_ROOT__
 #include "MonitorDQM/MonitorDQMPlotCBC.h"
 #include "MonitorDQM/MonitorDQMPlotSEH.h"

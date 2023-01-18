@@ -1,4 +1,4 @@
-#include "D19cCommandProcessorInterface.h"
+#include "HWInterface/D19cCommandProcessorInterface.h"
 
 namespace Ph2_HwInterface
 {

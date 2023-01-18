@@ -1,18 +1,18 @@
 #include "Tool.h"
 #include <numeric>
 
-#include "../HWDescription/Chip.h"
-#include "../Utils/ChannelGroupHandler.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
-#include "../Utils/DataContainer.h"
-#include "../Utils/EmptyContainer.h"
-#include "../Utils/Occupancy.h"
+#include "HWDescription/Chip.h"
+#include "Utils/ChannelGroupHandler.h"
+#include "Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/ContainerStream.h"
+#include "Utils/DataContainer.h"
+#include "Utils/EmptyContainer.h"
+#include "Utils/Occupancy.h"
 #include <future>
 
-#include "../Utils/MPAChannelGroupHandler.h"
-#include "../Utils/SSAChannelGroupHandler.h"
+#include "Utils/MPAChannelGroupHandler.h"
+#include "Utils/SSAChannelGroupHandler.h"
 
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
@@ -75,6 +75,22 @@ Tool::Tool(const Tool& pTool) { this->Inherit(&pTool); }
 
 Tool::~Tool() {}
 
+// void Tool::privateRunning(std::promise<int>&& thePromise)
+// {
+//     try
+//     {
+//         Running();
+//         Tool::InformImDone();
+//         thePromise.set_value(0);
+//     }
+//     catch(...)
+//     {
+//         Tool::InformImDone();
+//         thePromise.set_value(99);
+//         thePromise.set_exception(std::current_exception());
+//     }
+// }
+
 bool Tool::GetRunningStatus()
 {
     std::future_status runningStatus = fRunningFuture.wait_for(std::chrono::milliseconds(500u));
@@ -82,7 +98,7 @@ bool Tool::GetRunningStatus()
     {
         try
         {
-            if(fRunningFuture.valid()) { fRunningFuture.get(); }
+            if(fRunningFuture.valid()) fRunningFuture.get();
         }
         catch(const std::exception& e)
         {
@@ -96,7 +112,9 @@ bool Tool::GetRunningStatus()
 
 void Tool::waitForRunToBeCompleted()
 {
-    while(!GetRunningStatus()) std::this_thread::sleep_for(std::chrono::milliseconds(250));
+    fRunningFuture.wait();
+    // std::unique_lock<std::recursive_mutex> theGuard(theMtx);
+    // wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 
 void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
@@ -112,15 +130,36 @@ void Tool::Start(int runNumber)
 #ifdef __USE_ROOT__
     InitResultFile("Hybrid");
 #endif
+    // doExit       = false;
     fKeepRunning   = true;
     fRunNumber     = runNumber;
     fRunningFuture = std::async(std::launch::async, &Tool::Running, this);
+    // std::promise<int> thePromise;
+    // fRunningFuture = thePromise.get_future();
+    // fRunningThread = std::thread(&Tool::privateRunning, this, std::move(thePromise));
 }
+
+// void Tool::InformImDone()
+// {
+//     std::unique_lock<std::recursive_mutex> theGuard(theMtx);
+//     doExit = true;
+//     theGuard.unlock();
+//     wakeUp.notify_one();
+// }
 
 void Tool::Stop()
 {
     fKeepRunning = false;
-    waitForRunToBeCompleted();
+    Tool::waitForRunToBeCompleted();
+    // if(fRunningThread.joinable() == true) fRunningThread.join();
+    try
+    {
+        fRunningFuture.get();
+    }
+    catch(const std::exception& e)
+    {
+        throw std::runtime_error(e.what());
+    }
     SystemController::Stop();
 }
 
@@ -499,7 +538,7 @@ void Tool::SaveResults()
 #endif
 }
 
-void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool pDate, const std::string& whichCalib)
+void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool pDate)
 {
     std::string nDirname;
 
@@ -514,7 +553,6 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
     }
     if(pDate) nDirname += currentDateTime();
 
-    LOG(INFO) << GREEN << whichCalib << " attempting to create directory: " << BOLDYELLOW << nDirname << RESET;
     std::string cCommand = "mkdir -p " + nDirname;
 
     try
@@ -553,7 +591,7 @@ void Tool::InitResultFile(const std::string& pFilename)
         }
     }
     else
-        LOG(INFO) << RED << "ERROR: " << RESET << "No Result Directory initialized - not saving results!";
+        LOG(INFO) << RED << "ERROR: " << RESET << "No result directory initialized - not saving results!";
 }
 #endif
 
@@ -562,7 +600,7 @@ void Tool::CloseResultFile()
 #ifdef __USE_ROOT__
     if(fResultFile != nullptr)
     {
-        LOG(INFO) << GREEN << "Closing result file" << RESET;
+        LOG(INFO) << GREEN << "Closing result file: " << BOLDYELLOW << fResultFileName << RESET;
         fResultFile->Close();
         delete fResultFile;
         fResultFile = nullptr;
@@ -2014,7 +2052,7 @@ void Tool::scanBeBoardDac(uint16_t                             boardIndex,
         abort();
     }
 
-    if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53A) // @TMP@
+    if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53A)
     {
         // #######################
         // # Loop over DAC ...   #

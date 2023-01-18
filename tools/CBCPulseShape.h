@@ -16,7 +16,7 @@
 #include <map>
 #ifdef __USE_ROOT__
 // Calibration is not running on the SoC: I need to instantiate the DQM histrgrammer here
-#include "../DQMUtils/CBCHistogramPulseShape.h"
+#include "DQMUtils/CBCHistogramPulseShape.h"
 #endif
 
 class CBCPulseShape : public PedeNoise

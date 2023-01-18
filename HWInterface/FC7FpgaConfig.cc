@@ -18,10 +18,10 @@
    Support :        mail to : christian.bonnin@iphc.cnrs.fr
 */
 
-#include "FC7FpgaConfig.h"
-#include "Firmware.h"
-#include "MmcPipeInterface.h"
-#include "RegManager.h"
+#include "HWInterface/FC7FpgaConfig.h"
+#include "HWInterface/Firmware.h"
+#include "HWInterface/MmcPipeInterface.h"
+#include "HWInterface/RegManager.h"
 #include <fstream>
 
 using namespace std;

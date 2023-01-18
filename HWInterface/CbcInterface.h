@@ -12,8 +12,8 @@
 #ifndef __CBCINTERFACE_H__
 #define __CBCINTERFACE_H__
 
-#include "BeBoardFWInterface.h"
-#include "ReadoutChipInterface.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/ReadoutChipInterface.h"
 
 #include <vector>
 

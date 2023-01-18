@@ -1,9 +1,9 @@
 #ifndef _D19cPSCounterFWInterface_H__
 #define __D19cPSCounterFWInterface_H__
 
-#include "FEConfigurationInterface.h"
-#include "FastCommandInterface.h"
-#include "L1ReadoutInterface.h"
+#include "HWInterface/FEConfigurationInterface.h"
+#include "HWInterface/FastCommandInterface.h"
+#include "HWInterface/L1ReadoutInterface.h"
 
 namespace Ph2_HwInterface
 {

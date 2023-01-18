@@ -10,8 +10,8 @@
 #ifndef RD53TempSensor_H
 #define RD53TempSensor_H
 
-#include "../tools/Tool.h"
 #include "ITchipTestingInterface.h"
+#include "tools/Tool.h"
 
 // #ifdef __POWERSUPPLY__
 // #include "DeviceHandler.h"
@@ -22,12 +22,12 @@
 
 #include <cmath>
 
-#include "../HWInterface/BeBoardFWInterface.h"
-#include "../HWInterface/RD53FWInterface.h"
-#include "../HWInterface/ReadoutChipInterface.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/RD53FWInterface.h"
+#include "HWInterface/ReadoutChipInterface.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53TempSensorHistograms.h"
+#include "DQMUtils/RD53TempSensorHistograms.h"
 #endif
 
 // #########################

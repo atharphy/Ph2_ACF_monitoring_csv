@@ -9,9 +9,9 @@
 
 #ifndef __DQMHISTOGRAMTPCALIBRATION_H__
 #define __DQMHISTOGRAMTPCALIBRATION_H__
-#include "../DQMUtils/DQMHistogramBase.h"
-#include "../Utils/Container.h"
-#include "../Utils/DataContainer.h"
+#include "DQMUtils/DQMHistogramBase.h"
+#include "Utils/Container.h"
+#include "Utils/DataContainer.h"
 
 class TFile;
 
@@ -35,7 +35,7 @@ class DQMHistogramTPCalibration : public DQMHistogramBase
     /*!
      * Book histograms
      */
-    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;
+    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap) override;
 
     /*!
      * Fill histogram

@@ -1,7 +1,7 @@
 #ifndef __CHAR_ARRAY_H__
 #define __CHAR_ARRAY_H__
 
-#include "../HWDescription/Definition.h"
+#include "HWDescription/Definition.h"
 
 class CharArray //: public streammable
 {

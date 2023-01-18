@@ -10,7 +10,7 @@
 #ifndef _FPGACONFIG_H_
 #define _FPGACONFIG_H_
 
-#include "RegManager.h"
+#include "HWInterface/RegManager.h"
 #include <string>
 
 namespace Ph2_HwInterface

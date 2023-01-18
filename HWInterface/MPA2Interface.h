@@ -12,10 +12,10 @@
 #ifndef __MPA2INTERFACE_H__
 #define __MPA2INTERFACE_H__
 
-#include "BeBoardFWInterface.h"
-#include "D19clpGBTInterface.h"
-#include "MPAInterface.h"
-#include "ReadoutChipInterface.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/D19clpGBTInterface.h"
+#include "HWInterface/MPAInterface.h"
+#include "HWInterface/ReadoutChipInterface.h"
 #include "pugixml.hpp"
 #include <vector>
 

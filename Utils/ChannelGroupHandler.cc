@@ -1,4 +1,4 @@
-#include "../Utils/ChannelGroupHandler.h"
+#include "Utils/ChannelGroupHandler.h"
 
 void ChannelGroupHandler::setChannelGroupParameters(uint32_t numberOfClustersPerGroup, uint32_t numberOfRowsPerCluster, uint32_t numberOfColsPerCluster)
 {

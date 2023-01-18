@@ -4,7 +4,7 @@
 #include <iostream>
 #include <vector>
 
-#include "../HWDescription/Definition.h"
+#include "HWDescription/Definition.h"
 
 struct CondDataItem
 {

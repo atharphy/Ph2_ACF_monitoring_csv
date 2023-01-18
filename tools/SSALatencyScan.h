@@ -14,11 +14,11 @@
 
 #include "Tool.h"
 
-#include "../Utils/CommonVisitors.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerRecycleBin.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/Visitor.h"
+#include "Utils/CommonVisitors.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/ContainerRecycleBin.h"
+#include "Utils/Utilities.h"
+#include "Utils/Visitor.h"
 
 #ifdef __USE_ROOT__
 #include "TCanvas.h"

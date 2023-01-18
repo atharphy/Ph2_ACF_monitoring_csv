@@ -13,7 +13,9 @@
 #include "RD53BERtest.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53DataTransmissionTestGraphs.h"
+#include "DQMUtils/RD53DataTransmissionTestGraphs.h"
+#else
+typedef bool DataTransmissionTestGraphs;
 #endif
 
 // #########################################
@@ -27,16 +29,13 @@ class DataTransmissionTest : public BERtest
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void localConfigure(const std::string& fileRes_, int currentRun) override;
-    void initializeFiles(const std::string& fileRes_, int currentRun) override;
+    void localConfigure(const std::string& histoFileName, int currentRun) override;
     void run() override;
     void draw(bool saveData = true) override;
 
     void analyze(const DetectorDataContainer& theTAP0scanContainer, DetectorDataContainer& theTAP0tgtContainer);
 
-#ifdef __USE_ROOT__
     DataTransmissionTestGraphs* histos;
-#endif
 
   private:
     void fillHisto() override;
@@ -51,8 +50,7 @@ class DataTransmissionTest : public BERtest
     bool   given_time;
     double frames_or_time;
 
-    std::string fileRes;
-    int         theCurrentRun;
+    int theCurrentRun;
 };
 
 #endif

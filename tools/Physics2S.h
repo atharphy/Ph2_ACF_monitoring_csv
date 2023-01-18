@@ -10,15 +10,15 @@
 #ifndef Physics2S_H
 #define Physics2S_H
 
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/MPAChannelGroupHandler.h"
-#include "Tool.h"
-// #include "../Utils/PSSharedConstants.h"
-// #include "../HWInterface/PSFWInterface.h"
+#include "Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/MPAChannelGroupHandler.h"
+#include "tools/Tool.h"
+// #include "Utils/PSSharedConstants.h"
+// #include "HWInterface/PSFWInterface.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/Physics2SHistograms.h"
+#include "DQMUtils/Physics2SHistograms.h"
 #include "TApplication.h"
 #endif
 

@@ -13,7 +13,7 @@
 #ifndef LinkAlignmentOT_h__
 #define LinkAlignmentOT_h__
 
-#include "OTTool.h"
+#include "tools/OTTool.h"
 
 using namespace Ph2_HwDescription;
 

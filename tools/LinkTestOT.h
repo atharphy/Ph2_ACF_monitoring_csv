@@ -13,7 +13,7 @@
 #ifndef LinkTestOT_h__
 #define LinkTestOT_h__
 
-#include "LinkAlignmentOT.h"
+#include "tools/LinkAlignmentOT.h"
 
 using namespace Ph2_HwDescription;
 

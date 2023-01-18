@@ -1,4 +1,4 @@
-#include "D19cOpticalInterface.h"
+#include "HWInterface/D19cOpticalInterface.h"
 
 using namespace Ph2_HwDescription;
 
@@ -293,7 +293,7 @@ std::vector<uint16_t> D19cOpticalInterface::ReadI2C(Ph2_HwDescription::Chip* pCh
     return cReadBackData;
 }
 
-bool D19cOpticalInterface::SingleMultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress, uint8_t pSlaveData)
+bool D19cOpticalInterface::SingleMultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, uint8_t pSlaveAddress, uint32_t pSlaveData)
 {
     std::vector<uint32_t> cMasterData;
     cMasterData.push_back(pSlaveData << 8 | pSlaveAddress << 0);

@@ -63,6 +63,7 @@ void GenericDacDacScan::Running()
 
     if(PixelAlive::saveBinaryData == true)
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_GenericDacDacScan.raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -99,36 +100,28 @@ void GenericDacDacScan::Stop()
     RD53RunProgress::reset();
 }
 
-void GenericDacDacScan::localConfigure(const std::string& fileRes_, int currentRun)
+void GenericDacDacScan::localConfigure(const std::string& histoFileName, int currentRun)
 {
-#ifdef __USE_ROOT__
-    histos = nullptr;
-#endif
+    histos             = nullptr;
+    PixelAlive::histos = nullptr;
+    theCurrentRun      = currentRun;
 
-    if(currentRun >= 0)
-    {
-        theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[GenericDacDacScan::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
-    }
+    LOG(INFO) << GREEN << "[GenericDacDacScan::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
+    // ##########################
+    // # Initialize calibration #
+    // ##########################
     GenericDacDacScan::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "GenericDacDacScan");
-    GenericDacDacScan::initializeFiles(fileRes_, currentRun);
-}
 
-void GenericDacDacScan::initializeFiles(const std::string& fileRes_, int currentRun)
-{
-    fileRes = fileRes_;
-
-    if((currentRun >= 0) && (PixelAlive::saveBinaryData == true))
-    {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_GenericDacDacScan.raw", 'w');
-        this->initializeWriteFileHandler();
-    }
-
-#ifdef __USE_ROOT__
-    delete histos;
-    histos = new GenericDacDacScanHistograms;
-#endif
+    // #########################################
+    // # Initialize histogram and binary files #
+    // #########################################
+    CalibBase::initializeFiles<GenericDacDacScanHistograms>(histoFileName, "GenericDacDacScan", histos, currentRun, PixelAlive::saveBinaryData);
 }
 
 void GenericDacDacScan::run()
@@ -155,7 +148,7 @@ void GenericDacDacScan::draw(bool saveData)
 
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
-        this->InitResultFile(fileRes);
+        this->InitResultFile(CalibBase::theHistoFileName);
         LOG(INFO) << BOLDBLUE << "\t--> GenericDacDacScan saving histograms..." << RESET;
     }
 
@@ -282,4 +275,9 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
             GenericDacDacScan::sendData();
         }
     }
+
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in");
 }

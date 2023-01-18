@@ -46,7 +46,7 @@ void RD53eudaqProducer::DoStartRun()
     // # Send a BORE event #
     // #####################
     auto ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
-    // ev->SetBORE();
+    ev->SetBORE();
     // RD53eudaqProducer::MySendEvent(std::move(ev));
 
     // #############################
@@ -72,7 +72,7 @@ void RD53eudaqProducer::DoStartRun()
                 for(const auto cChip: *cHybrid)
                 {
                     std::stringstream header;
-                    std::stringstream chipData = cChip->saveRegMap("ONSTREAM");
+                    std::stringstream chipData = cChip->saveRegMap("STREAMON");
                     header << "Register map and mask: B" << cBoard->getId() << "_O" << cOpticalGroup->getId() << "_H" << cHybrid->getId() << "_C" << +cChip->getId();
                     ev->SetTag(header.str().c_str(), chipData.str());
                 }
@@ -83,7 +83,7 @@ void RD53eudaqProducer::DoStartRun()
     // # Get configuration directly from EUDAQ framework #
     // ###################################################
     std::string fileName("Run" + RD53Shared::fromInt2Str(theRunNumber) + "_Physics");
-    RD53sysCntrPhys.initializeFiles(fileName);
+    RD53sysCntrPhys.initializeFiles<PhysicsHistograms>(fileName, "Physics", RD53sysCntrPhys.histos, theRunNumber);
     RD53sysCntrPhys.Start(theRunNumber);
 
     doExit = false;
@@ -121,7 +121,7 @@ void RD53eudaqProducer::DoStopRun()
 
 void RD53eudaqProducer::DoTerminate()
 {
-    std::unique_lock<std::mutex> theGuard(theMtx);
+    std::unique_lock<std::recursive_mutex> theGuard(theMtx);
     doExit = true;
     theGuard.unlock();
     wakeUp.notify_one();
@@ -129,7 +129,7 @@ void RD53eudaqProducer::DoTerminate()
 
 void RD53eudaqProducer::RunLoop()
 {
-    std::unique_lock<std::mutex> theGuard(theMtx);
+    std::unique_lock<std::recursive_mutex> theGuard(theMtx);
     wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 

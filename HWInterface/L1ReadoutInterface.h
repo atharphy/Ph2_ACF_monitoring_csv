@@ -1,13 +1,13 @@
 #ifndef _L1ReadoutInterface_H__
 #define _L1ReadoutInterface_H__
 
-#include "../Utils/Utilities.h"
-#include "../Utils/easylogging++.h"
-#include "RegManager.h"
+#include "HWInterface/RegManager.h"
+#include "Utils/Utilities.h"
+#include "Utils/easylogging++.h"
 #include <string>
 
-#include "FastCommandInterface.h"
-#include "TriggerInterface.h"
+#include "HWInterface/FastCommandInterface.h"
+#include "HWInterface/TriggerInterface.h"
 
 namespace Ph2_HwInterface
 {

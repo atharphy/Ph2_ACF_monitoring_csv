@@ -10,8 +10,8 @@
 #ifndef RD53DACScan_H
 #define RD53DACScan_H
 
-#include "../tools/Tool.h"
 #include "ITchipTestingInterface.h"
+#include "tools/Tool.h"
 
 // #ifdef __POWERSUPPLY__
 // #include "DeviceHandler.h"
@@ -21,7 +21,7 @@
 // #endif
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53DACScanHistograms.h"
+#include "DQMUtils/RD53DACScanHistograms.h"
 #include "TApplication.h"
 #endif
 

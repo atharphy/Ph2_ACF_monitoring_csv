@@ -7,7 +7,7 @@
   Support :                     mail to : lorenzo.bidegain@gmail.com nico.pierre@icloud.com
 */
 
-#include "BeBoardInterface.h"
+#include "HWInterface/BeBoardInterface.h"
 
 using namespace Ph2_HwDescription;
 
