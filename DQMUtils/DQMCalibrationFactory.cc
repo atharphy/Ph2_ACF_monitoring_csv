@@ -1,5 +1,5 @@
-#include "DQMUtils/CBCHistogramPulseShape.h"
 #include "DQMUtils/DQMCalibrationFactory.h"
+#include "DQMUtils/CBCHistogramPulseShape.h"
 #include "DQMUtils/DQMHistogramBeamTestCheck.h"
 #include "DQMUtils/DQMHistogramCalibrationExample.h"
 #include "DQMUtils/DQMHistogramKira.h"
@@ -65,7 +65,6 @@ DQMCalibrationFactory::~DQMCalibrationFactory()
     fDQMInterfaceMap.clear();
 }
 
-
 std::vector<DQMHistogramBase*> DQMCalibrationFactory::createDQMHistogrammerVector(const std::string& calibrationTag) const
 {
     try
@@ -78,7 +77,6 @@ std::vector<DQMHistogramBase*> DQMCalibrationFactory::createDQMHistogrammerVecto
         throw std::runtime_error(errorMessage);
     }
 }
-
 
 std::vector<std::string> DQMCalibrationFactory::getAvailableCalibrations() const
 {

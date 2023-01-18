@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-// namespace detail 
+// namespace detail
 // {
 //     template<typename T, typename... Rest>
 //     void addToList(std::vector<DQMHistogramBase*>& theVectorList)
@@ -26,14 +26,13 @@
 //     void addToList(std::vector<DQMHistogramBase*>& theVectorList) {}
 // }
 
-template<typename...>
+template <typename...>
 struct Lister
 {
     static void addToList(std::vector<DQMHistogramBase*>& theVectorList) {}
 };
 
-
-template<typename T, typename... Rest>
+template <typename T, typename... Rest>
 struct Lister<T, Rest...>
 {
     static void addToList(std::vector<DQMHistogramBase*>& theVectorList)
@@ -58,7 +57,7 @@ class DQMCreator : public DQMBaseCreator
     DQMCreator() {}
     virtual ~DQMCreator() {}
 
-    std::vector<DQMHistogramBase*> Create() const override 
+    std::vector<DQMHistogramBase*> Create() const override
     {
         std::vector<DQMHistogramBase*> theVectorList;
         Lister<Args...>::addToList(theVectorList);
@@ -71,7 +70,6 @@ class DQMCalibrationFactory
   public:
     DQMCalibrationFactory();
     ~DQMCalibrationFactory();
-
 
     template <typename... Args>
     void Register(const std::string& calibrationTag, MessageUtils::CalibrationList::CalibrationNameEnum theCalibrationEnum)
@@ -86,7 +84,7 @@ class DQMCalibrationFactory
             std::cerr << "calibrationEnum for calibration tag " << calibrationTag << " already exists, aborting..." << std::endl;
             abort();
         }
-        fDQMInterfaceMap[calibrationTag]              = new DQMCreator<Args...>;
+        fDQMInterfaceMap[calibrationTag]             = new DQMCreator<Args...>;
         fCalibrationNameToString[theCalibrationEnum] = calibrationTag;
         fStringToCalibrationName[calibrationTag]     = theCalibrationEnum;
     }
@@ -102,9 +100,6 @@ class DQMCalibrationFactory
     std::map<std::string, DQMBaseCreator*>                                    fDQMInterfaceMap;
     std::map<MessageUtils::CalibrationList::CalibrationNameEnum, std::string> fCalibrationNameToString;
     std::map<std::string, MessageUtils::CalibrationList::CalibrationNameEnum> fStringToCalibrationName;
-
-
-
 };
 
 #endif
