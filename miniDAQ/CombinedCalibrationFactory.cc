@@ -74,7 +74,7 @@ CombinedCalibrationFactory::~CombinedCalibrationFactory()
     fCalibrationMap.clear();
 }
 
-Tool* CombinedCalibrationFactory::CreateCombinedCalibration(const std::string& calibrationTag) const
+Tool* CombinedCalibrationFactory::createCombinedCalibration(const std::string& calibrationTag) const
 {
     try
     {
