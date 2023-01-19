@@ -19,7 +19,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
 {
     this->setBoard(pChip->getBeBoardId());
 
-    auto                  nameAndValue(SetSpecialRegister(regName, data, RD53Shared::firstChip->getRegMap()));
+    auto                  nameAndValue(SetSpecialRegister(regName, data, pChip->getRegMap()));
     std::vector<uint16_t> cmdStream;
     PackWriteCommand(pChip, nameAndValue.first, nameAndValue.second, cmdStream, pVerifLoop);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());
@@ -147,7 +147,7 @@ void RD53Interface::DumpChipRegisters(ReadoutChip* pChip)
 {
     this->setBoard(pChip->getBeBoardId());
 
-    for(auto& cRegItem: RD53Shared::firstChip->getRegMap())
+    for(auto& cRegItem: pChip->getRegMap())
     {
         auto value = RD53Interface::ReadChipReg(pChip, cRegItem.first);
         std::cout << "\t--> Register " << std::left << std::setfill(' ') << std::setw(24) << cRegItem.first << " = " << std::setw(8) << std::dec << value << std::hex << "(0x" << value << ")"
