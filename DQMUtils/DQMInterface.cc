@@ -28,8 +28,8 @@ void DQMInterface::destroy(void)
     if(fListener != nullptr) delete fListener;
     destroyHistogram();
     fListener = nullptr;
-    for(auto dqmHistogrammer: fDQMHistogrammerVector) delete dqmHistogrammer;
-    fDQMHistogrammerVector.clear();
+    // for(auto dqmHistogrammer: fDQMHistogrammerVector) delete dqmHistogrammer;
+    // fDQMHistogrammerVector.clear();
     delete fOutputFile;
     fOutputFile = nullptr;
 
