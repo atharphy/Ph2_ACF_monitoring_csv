@@ -1,6 +1,6 @@
-#include "../miniDAQ/MiddlewareMessageHandler.h"
-#include "../MessageUtils/cpp/Common.pb.h"
-#include "../miniDAQ/CombinedCalibrationFactory.h"
+#include "miniDAQ/MiddlewareMessageHandler.h"
+#include "MessageUtils/cpp/Common.pb.h"
+#include "miniDAQ/CombinedCalibrationFactory.h"
 
 using namespace MessageUtils;
 

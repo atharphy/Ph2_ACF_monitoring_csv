@@ -6,9 +6,9 @@
         Date of creation :             5/01/18
  */
 
-#include "PSInterface.h"
+#include "HWInterface/PSInterface.h"
 
-#include "../Utils/ConsoleColor.h"
+#include "Utils/ConsoleColor.h"
 #include <typeinfo>
 
 #define DEV_FLAG 0

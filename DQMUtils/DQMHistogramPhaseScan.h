@@ -35,7 +35,7 @@ class DQMHistogramPhaseScan : public DQMHistogramBase
     /*!
      * Book histograms
      */
-    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;
+    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap) override;
 
     /*!
      * Fill histogram
@@ -57,7 +57,7 @@ class DQMHistogramPhaseScan : public DQMHistogramBase
     void fillPhasePlots(uint16_t pPhase, uint16_t pLatency, DetectorDataContainer& pOccupancy);
 
   private:
-    void parseSettings(const Ph2_System::SettingsMap& pSettingsMap);
+    void parseSettings(const Ph2_Parser::SettingsMap& pSettingsMap);
 
     DetectorDataContainer fDetectorData;
 

@@ -3,11 +3,11 @@
 #include <string>
 #include <vector>
 
-#include "../Utils/ConsoleColor.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/argvparser.h"
-#include "../Utils/easylogging++.h"
-#include "../miniDAQ/MiddlewareStateMachine.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/Utilities.h"
+#include "Utils/argvparser.h"
+#include "Utils/easylogging++.h"
+#include "miniDAQ/MiddlewareStateMachine.h"
 
 using namespace CommandLineProcessing;
 

@@ -37,7 +37,7 @@ DQMHistogramPhaseScan::DQMHistogramPhaseScan()
 DQMHistogramPhaseScan::~DQMHistogramPhaseScan() {}
 
 //========================================================================================================================
-void DQMHistogramPhaseScan::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramPhaseScan::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
 {
 
 
@@ -153,7 +153,7 @@ void DQMHistogramPhaseScan::fillPhasePlots(uint16_t pLatency, uint16_t pPhase,  
 
 }
 
-void DQMHistogramPhaseScan::parseSettings(const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramPhaseScan::parseSettings(const Ph2_Parser::SettingsMap& pSettingsMap)
 {
     auto cSetting = pSettingsMap.find("StartPhase");
     if(cSetting != std::end(pSettingsMap))

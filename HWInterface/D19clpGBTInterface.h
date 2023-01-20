@@ -10,7 +10,7 @@
 #ifndef D19clpGBTInterface_H
 #define D19clpGBTInterface_H
 
-#include "lpGBTInterface.h"
+#include "HWInterface/lpGBTInterface.h"
 
 namespace Ph2_HwInterface
 {

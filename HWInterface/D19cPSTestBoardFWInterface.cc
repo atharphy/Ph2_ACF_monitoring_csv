@@ -1,4 +1,4 @@
-#include "D19cPSTestBoardFWInterface.h"
+#include "HWInterface/D19cPSTestBoardFWInterface.h"
 
 using namespace Ph2_HwDescription;
 

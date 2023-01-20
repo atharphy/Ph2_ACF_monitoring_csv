@@ -9,10 +9,10 @@
 
  */
 
-#include "SSA2Interface.h"
-#include "../Utils/ChannelGroupHandler.h"
-#include "../Utils/ConsoleColor.h"
-#include "../Utils/Container.h"
+#include "HWInterface/SSA2Interface.h"
+#include "Utils/ChannelGroupHandler.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/Container.h"
 #include <bitset>
 
 using namespace Ph2_HwDescription;

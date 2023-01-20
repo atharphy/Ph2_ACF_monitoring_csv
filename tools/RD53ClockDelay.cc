@@ -18,6 +18,9 @@ void ClockDelay::ConfigureCalibration()
     // # Initialize sub-calibration #
     // ##############################
     PixelAlive::ConfigureCalibration();
+    PixelAlive::doDisplay    = false;
+    PixelAlive::doUpdateChip = false;
+    PixelAlive::doSaveData   = false;
     RD53RunProgress::total() -= PixelAlive::getNumberIterations();
 
     // #######################
@@ -36,7 +39,7 @@ void ClockDelay::ConfigureCalibration()
     // # Initialize Latency #
     // ######################
     la.Inherit(this);
-    la.localConfigure();
+    la.ConfigureCalibration();
 
     // #######################
     // # Initialize progress #
@@ -51,6 +54,7 @@ void ClockDelay::Running()
 
     if(PixelAlive::saveBinaryData == true)
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_ClockDelay.raw", 'w');
         this->initializeWriteFileHandler();
     }
@@ -59,7 +63,6 @@ void ClockDelay::Running()
     ClockDelay::analyze();
     CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     ClockDelay::sendData();
-
     la.sendData();
 }
 
@@ -89,43 +92,36 @@ void ClockDelay::Stop()
     RD53RunProgress::reset();
 }
 
-void ClockDelay::localConfigure(const std::string& fileRes_, int currentRun)
+void ClockDelay::localConfigure(const std::string& histoFileName, int currentRun)
 {
-#ifdef __USE_ROOT__
-    histos = nullptr;
-#endif
+    histos                = nullptr;
+    la.histos             = nullptr;
+    la.PixelAlive::histos = nullptr;
+    PixelAlive::histos    = nullptr;
+    theCurrentRun         = currentRun;
 
-    if(currentRun >= 0)
-    {
-        theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[ClockDelay::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
-    }
+    LOG(INFO) << GREEN << "[ClockDelay::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
+    // ##########################
+    // # Initialize calibration #
+    // ##########################
     ClockDelay::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "ClockDelay");
-    ClockDelay::initializeFiles(fileRes_, currentRun);
-}
 
-void ClockDelay::initializeFiles(const std::string& fileRes_, int currentRun)
-{
-    fileRes = fileRes_;
-
-    if((currentRun >= 0) && (PixelAlive::saveBinaryData == true))
-    {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_ClockDelay.raw", 'w');
-        this->initializeWriteFileHandler();
-    }
-
-#ifdef __USE_ROOT__
-    delete histos;
-    histos = new ClockDelayHistograms;
-#endif
-
+    // #########################################
+    // # Initialize histogram and binary files #
+    // #########################################
+    CalibBase::initializeFiles<ClockDelayHistograms>(histoFileName, "ClockDelay", histos, currentRun, PixelAlive::saveBinaryData);
     // ######################
     // # Initialize Latency #
     // ######################
-    std::string fileName = fileRes;
-    fileName.replace(fileRes.find("_ClockDelay"), 15, "_Latency");
-    la.initializeFiles(fileName);
+    std::string fileName = histoFileName;
+    fileName.replace(fileName.find("_ClockDelay"), 15, "_Latency");
+    la.initializeFiles<LatencyHistograms>(fileName, "Latency", la.histos);
 }
 
 void ClockDelay::run()
@@ -198,7 +194,7 @@ void ClockDelay::draw(bool saveData)
 
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
-        this->InitResultFile(fileRes);
+        this->InitResultFile(CalibBase::theHistoFileName);
         LOG(INFO) << BOLDBLUE << "\t--> ClockDelay saving histograms..." << RESET;
     }
 
@@ -228,8 +224,14 @@ void ClockDelay::analyze()
 
                     for(auto i = 0u; i < dacList.size(); i++)
                     {
-                        auto current =
-                            theOccContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<GenericDataArray<ClkDelaySize>>().data[i];
+                        auto current = round(theOccContainer.at(cBoard->getIndex())
+                                                 ->at(cOpticalGroup->getIndex())
+                                                 ->at(cHybrid->getIndex())
+                                                 ->at(cChip->getIndex())
+                                                 ->getSummary<GenericDataArray<ClkDelaySize>>()
+                                                 .data[i] /
+                                             RD53Shared::PRECISION) *
+                                       RD53Shared::PRECISION;
                         if(current > best)
                         {
                             regVal = dacList[i];
@@ -300,6 +302,11 @@ void ClockDelay::scanDac(const std::string& regName, const std::vector<uint16_t>
         // ##############################################
         ClockDelay::sendData();
     }
+
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in");
 }
 
 void ClockDelay::writeClkDelaySequence(const Ph2_HwDescription::BeBoard* pBoard, Ph2_HwDescription::ReadoutChip* pChip, uint16_t value)
@@ -319,5 +326,5 @@ void ClockDelay::writeClkDelaySequence(const Ph2_HwDescription::BeBoard* pBoard,
     pChip->getRegItem("CLK_DATA_DELAY_CLK").fValue  = value % maxClkValue;
     pChip->getRegItem("CLK_DATA_DELAY_DATA").fValue = data_delay;
 
-    static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteClokDataDelay(pChip, nameAndValue.second);
+    static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteClockDataDelay(pChip, nameAndValue.second);
 }

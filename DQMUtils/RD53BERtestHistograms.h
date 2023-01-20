@@ -9,17 +9,16 @@
 #ifndef RD53BERtestHistograms_H
 #define RD53BERtestHistograms_H
 
-#include "../System/SystemController.h"
-#include "../Utils/ChipContainerStream.h"
-#include "../Utils/ContainerFactory.h"
 #include "DQMHistogramBase.h"
+#include "Utils/ChipContainerStream.h"
+#include "Utils/ContainerFactory.h"
 
 #include <TH1F.h>
 
 class BERtestHistograms : public DQMHistogramBase
 {
   public:
-    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap) override;
+    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap) override;
     void process() override;
     bool fill(std::vector<char>& dataBuffer) override;
     void reset() override{};

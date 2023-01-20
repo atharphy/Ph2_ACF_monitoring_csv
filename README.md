@@ -27,16 +27,15 @@ If you installed the command `pv` (`sudo yum install -y pv`), then the best way 
 ```bash
 pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 ```
-<hr>
 
 
 ## Middleware for the Inner-Tracker (IT) system
 ```diff
-+ Last change made to this section: 25/07/2022
++ Last change made to this section: 21/11/2022
 ```
 
 **Suggested software and firmware versions:**
-- Software git branch / tag : `Dev` / `v4-06`
+- Software git branch / tag : `Dev` / `v4-08`
 - Firmware tag: `4.5`
 
 **Important webpages:**
@@ -105,89 +104,8 @@ Through `CMSITminiDAQ`, and with the right command line option, you can run the 
 16. Physics
 ```
 
-It might be useful to create one `CMSIT.xml` file for each "set" of calibrations. In the following it's reported the suggested sequence of calibrations, implemented in bash shell script:
-```
-#!/bin/bash
-if [ $# -ne 1 ]
-then
-    echo "You should provide one, and only one, argument [step1, step2, step3, step4, step5, help]"
-elif [ $1 == "step1" ]
-then
-    CMSITminiDAQ -f CMSIT_noise.xml -c noise # Masks noisy pixels
-    echo "noise" >> calibDone.txt
-
-    CMSITminiDAQ -f CMSIT_scurve.xml -c pixelalive # Masks dead pixels
-    echo "pixelalive" >> calibDone.txt
-
-    CMSITminiDAQ -f CMSIT_noise.xml -c thrmin
-    echo "thrmin" >> calibDone.txt
-
-    echo "Choose whether to accept new threshold (i.e. copy it into the xml file(s))"
-    read -p "Press any key to continue... " -n1 -s
-    echo
-elif [ $1 == "step2" ]
-then
-    CMSITminiDAQ -f CMSIT_scurve.xml -c threqu
-    echo "scurve" >> calibDone.txt
-    echo "threqu" >> calibDone.txt
-
-    CMSITminiDAQ -f CMSIT_scurve.xml -c scurve
-    echo "scurve" >> calibDone.txt
-
-    CMSITminiDAQ -f CMSIT_noise.xml -c noise # Masks noisy pixels @ new threshold
-    echo "noise" >> calibDone.txt
-
-    CMSITminiDAQ -f CMSIT_noise.xml -c thrmin
-    echo "thrmin" >> calibDone.txt
-
-    echo "Choose whether to accept new threshold (i.e. copy it into the xml file(s))"
-    read -p "Press any key to continue... " -n1 -s
-    echo
-elif [ $1 == "step3" ]
-then
-    CMSITminiDAQ -f CMSIT_scurve.xml -c scurve
-    echo "scurve" >> calibDone.txt
-
-    CMSITminiDAQ -f CMSIT_gain.xml -c gain
-    echo "gain" >> calibDone.txt
-
-    CMSITminiDAQ -f CMSIT_gain.xml -c gainopt
-    echo "gainopt" >> calibDone.txt
-
-    echo "Choose whether to accept new Krummenacher current (i.e. copy it into the xml file(s))"
-    echo "- Set nTRIGxEvent = 1 and DoOnlyNGroups = 1 in the xml file(s)"
-    echo "- Set VCAL_HIGH to MIP value in the xml file(s)"
-    read -p "Press any key to continue... " -n1 -s
-    echo
-elif [ $1 == "step4" ]
-then
-    CMSITminiDAQ -f CMSIT_scurve.xml -c injdelay
-    echo "latency" >> calibDone.txt
-    echo "injdelay" >> calibDone.txt
-
-    echo "Choose whether to accept new LATENCY_CONFIG and INJECTION_SELECT (i.e. copy them into the xml file(s))"
-    echo "- Set DoOnlyNGroups to 0 in the xml files(s)"
-    read -p "Press any key to continue... " -n1 -s
-    echo
-elif [ $1 == "step5" ]
-then
-    CMSITminiDAQ -f CMSIT_scurve.xml -c scurve
-    echo "scurve" >> calibDone.txt
-elif [ $1 == "help" ]
-then
-    echo "Available options are:"
-    echo "- step1 [noise + pixelalive + thrmin]"
-    echo "- step2 [(pixelalive)threqu + scurve + noise + thrmin]"
-    echo "- step3 [scurve + gain + gainopt]"
-    echo "- step4 [(latency)injdelay]"
-    echo "- step5 [scurve]"
-else
-    echo "Argument not recognized: $1"
-fi
-```
-**N.B.:** steps **4** and **5** are meant to measure the so called "in-time threshold", to be compared with the threshold measured at step **3**, which is the so called "absoulte threshold"
+It might be useful to create one `CMSIT.xml` file for each "set" of calibrations, for instance `noise`, `gain`, and "the rest".
 ### ~=-=~ End of Inner-Tracker section ~=-=~
-<hr>
 
 
 ### Setup
@@ -220,6 +138,148 @@ For more information on the firmware, please check the doc directory of https://
     i. from `settings > CI/CD` expand the `Runners` section
 
     ii. click the `Allow shared Runners` button
+
+
+### Setup on CentOs7
+1. Install devtoolset 10
+
+        $> sudo yum install -y centos-release-scl-rh
+        $> sudo yum install -y devtoolset-10
+
+2. On CC7 you also need to install boost v1.53 headers (default on this system) and pugixml as they don't ship with uHAL any more:
+
+        $> sudo yum install -y boost-devel pugixml-devel json-devel
+
+2. Install uHAL. SW tested with uHAL version up to 2.7.1
+
+        Follow instructions from
+        https://ipbus.web.cern.ch/ipbus/doc/user/html/software/install/yum.html
+
+3. Install CERN ROOT
+
+        $> sudo yum install -y root
+        $> sudo yum install -y root-net-http root-net-httpsniff  root-graf3d-gl root-physics root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
+
+
+5. Install CMAKE3 > 3.0:
+
+        $> sudo yum install -y cmake3
+
+6. Install python3
+
+        $> sudo yum install -y python3 python3-devel
+
+7. Install protobuf:
+
+        Follow instructions from
+        https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
+
+8. Install pybind11 (if installed in the same directoory when you plan to install the Ph2_ACF, the setup.sh will point to the correct location)
+
+        $> wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
+        $> tar zxvf v2.9.2.tar.gz
+
+
+### Run in docker container
+    Docker container are provided to facilitate users and developers in setting up the framework.
+
+    All docker containers can be found here:
+    https://gitlab.cern.ch/cms_tk_ph2/docker_exploration/container_registry
+
+    Do run using one of the container, use the command:
+    $> docker run --rm -ti -v $PWD:$PWD -w $PWD <image>
+
+    Suggested images are:
+    For users (comes with Ph2_ACF of Dev branch installed): `gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_user_c7:latest`
+    For developers (no Ph2_ACF, just environment and libraries): `gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_udaq_c7:latest`
+
+    Specific tags can be pulled substituting `latest` with `ph2_acf_<Ph2_ACF tag>` (i.e. `ph2_acf_v4-05`)
+
+
+### clang-format (required to submit merge requests!!!)
+1. install 7.0 llvm toolset:
+
+        $> yum install centos-release-scl
+        $> yum install llvm-toolset-7.0
+
+2. if you already sourced the environment, you should be able to run the command to format the Ph2_ACF (to be done before each merge request!!!):
+
+        $> formatAll
+
+
+### The Ph2_ACF software
+Follow these instructions to install and compile the libraries (provided you installed the latest version of gcc, µHal,  mentioned above):
+
+1. Clone the GitHub repo and run cmake
+
+        $> git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git # N.B. to syncrhonize only the submodule: `git submodule sync; git submodule update --init --recursive --remote`
+        $> cd Ph2_ACF
+        $> source setup.sh
+        $> mkdir build
+        $> cd build
+        $> cmake .. # add -D CMAKE_BUILD_TYPE=Debug if you plan to use gdb for debugging, if you yum-instanlled `cmake3`, you might need to tall it `cmake3 ..`
+
+2. Do a `make -jN` in the build/ directory or alternatively do `make -C build/ -jN` in the Ph2_ACF root directory.
+
+3. Don't forget to `source setup.sh` to set all the environment variables correctly.
+
+4. Launch
+
+        $> systemtest --help
+
+    to test the parsing of the HWDescription.xml file.
+
+5. Launch
+
+        $> datatest --help
+
+    to test if you can correctly read data
+
+6. Launch
+
+        $> calibrate --help
+
+    to calibrate a hybrid,
+
+        $> hybridtest --help
+
+    to test a hybird's I2C registers and input channel connectivity
+
+          $> cmtest --help
+
+    to run the CM noise study
+
+          $> pulseshape --help
+
+    to measure the analog pulseshape of the cbc
+
+          $> configure --help
+
+    to apply a configuration to the CBCs
+
+7. Launch
+
+          $> commission --help
+
+    to do latency & threshold scans
+
+8. Launch
+
+          $> fpgaconfig --help
+
+    to upload a new FW image to the GLIB
+
+9. Launch
+
+          $> miniDAQ --help
+
+    to save binary data from the GLIB to file
+
+10. Launch
+
+          $> miniDQM --help
+
+    to run the DQM code from the June '15 beamtest
 
 
 ### Setup on CentOs8
@@ -270,147 +330,6 @@ Install pybind11 (if installed in the same directoory when you plan to install t
         $> tar zxvf v2.9.2.tar.gz
 
 
-### clang-format (required to submit merge requests!!!)
-1. install 7.0 llvm toolset:
-
-        $> yum install centos-release-scl
-        $> yum install llvm-toolset-7.0
-
-2. if you already sourced the environment, you should be able to run the command to format the Ph2_ACF (to be done before each merge request!!!):
-
-        $> formatAll
-
-
-### Setup on CC7 (scroll down for instructions on setting up on SLC6)
-1. Install devtoolset 10
-
-        $> sudo yum install -y centos-release-scl-rh
-        $> sudo yum install -y devtoolset-10
-
-2. On CC7 you also need to install boost v1.53 headers (default on this system) and pugixml as they don't ship with uHAL any more:
-
-        $> sudo yum install -y boost-devel pugixml-devel json-devel
-
-2. Install uHAL. SW tested with uHAL version up to 2.7.1
-
-        Follow instructions from 
-        https://ipbus.web.cern.ch/ipbus/doc/user/html/software/install/yum.html
-
-3. Install CERN ROOT
-
-        $> sudo yum install -y root
-        $> sudo yum install -y root-net-http root-net-httpsniff  root-graf3d-gl root-physics root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
-
-
-5. Install CMAKE3 > 3.0:
-
-        $> sudo yum install -y cmake3
-
-6. Install python3
-
-        $> sudo yum install -y python3 python3-devel
-
-7. Install protobuf:
-
-        Follow instructions from
-        https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
-
-8. Install pybind11 (if installed in the same directoory when you plan to install the Ph2_ACF, the setup.sh will point to the correct location)
-
-        $> wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
-        $> tar zxvf v2.9.2.tar.gz
-
-### Run in docker container
-    Docker container are provided to facilitate users and developers in setting up the framework.
-
-    All docker containers can be found here:
-    https://gitlab.cern.ch/cms_tk_ph2/docker_exploration/container_registry
-
-    Do run using one of the container, use the command:
-    $> docker run --rm -ti -v $PWD:$PWD -w $PWD <image>
-
-    Suggested images are:
-    For users (comes with Ph2_ACF of Dev branch installed): `gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_user_c7:latest`
-    For developers (no Ph2_ACF, just environment and libraries): `gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_udaq_c7:latest`
-
-    Specific tags can be pulled substituting `latest` with `ph2_acf_<Ph2_ACF tag>` (i.e. `ph2_acf_v4-05`)
-
-### The Ph2_ACF software
-Follow these instructions to install and compile the libraries:
-(provided you installed the latest version of gcc, µHal,  mentioned above).
-
-1. Clone the GitHub repo and run cmake
-  
-        $> git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git # N.B. to syncrhonize only the submodule: `git submodule sync; git submodule update --init --recursive --remote`
-        $> cd Ph2_ACF
-        $> source setup.sh
-        $> mkdir build 
-        $> cd build 
-        $> cmake .. # add -DCMAKE_BUILD_TYPE=Debug if you plan to use gdb for debugging, if you yum-instanlled `cmake3`, you might need to tall it `cmake3 ..`
-
-2. Do a `make -jN` in the build/ directory or alternatively do `make -C build/ -jN` in the Ph2_ACF root directory.
-
-3. Don't forget to `source setup.sh` to set all the environment variables correctly.
-
-4. Launch 
-
-        $> systemtest --help
-
-    command if you want to test the parsing of the HWDescription.xml file.
-
-5. Launch
-
-        $> datatest --help
-
-    command if you want to test if you can correctly read data
-
-6. Launch
-
-        $> calibrate --help
-
-    to calibrate a hybrid,
-
-        $> hybridtest --help
-
-    to test a hybird's I2C registers and input channel connectivity
-
-          $> cmtest --help
-
-    to run the CM noise study
-
-          $> pulseshape --help
-
-    to measure the analog pulseshape of the cbc
-
-          $> configure --help
-
-    to apply a configuration to the CBCs
-
-7. Launch
-
-          $> commission --help
-
-    to do latency & threshold scans
-
-8. Launch 
-
-          $> fpgaconfig --help
-
-    to upload a new FW image to the GLIB
-
-9. Launch
-
-          $> miniDAQ --help
-
-    to save binary data from the GLIB to file
-
-10. Launch
-
-          $> miniDQM --help
-
-    to run the DQM code from the June '15 beamtest
-
-
 ### Nota Bene
 When you write a register in the Glib or the Cbc, the corresponding map of the HWDescription object in memory is also updated, so that you always have an exact replica of the HW Status in the memory.
 
@@ -422,7 +341,6 @@ For debugging purpose, you can activate DEV_FLAG in the sources or in the Makefi
 
 
 ### External clock and trigger
-
 Please see the D19C FW  [documentation](https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware/blob/master/doc/Middleware_Short_Guide.md) for instructions on how to use external clock and trigger with the various FMCs (DIO5 and CBC3 FMC)
 
 

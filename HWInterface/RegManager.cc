@@ -7,10 +7,10 @@
   Support :                     mail to : nico.pierre@icloud.com
 */
 
-#include "RegManager.h"
-#include "../HWDescription/Definition.h"
-#include "../Utils/ConsoleColor.h"
-#include "../Utils/Utilities.h"
+#include "HWInterface/RegManager.h"
+#include "HWDescription/Definition.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/Utilities.h"
 #include <uhal/uhal.hpp>
 
 #include <boost/iostreams/device/file.hpp>

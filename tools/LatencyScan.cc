@@ -1,12 +1,12 @@
 #include "LatencyScan.h"
 
-#include "../HWDescription/Cbc.h"
-#include "../Utils/CBCChannelGroupHandler.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/GenericDataArray.h"
-#include "../Utils/MPAChannelGroupHandler.h"
-#include "../Utils/Occupancy.h"
-#include "../Utils/SSAChannelGroupHandler.h"
+#include "HWDescription/Cbc.h"
+#include "Utils/CBCChannelGroupHandler.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/GenericDataArray.h"
+#include "Utils/MPAChannelGroupHandler.h"
+#include "Utils/Occupancy.h"
+#include "Utils/SSAChannelGroupHandler.h"
 
 LatencyScan::LatencyScan() : Tool() {}
 

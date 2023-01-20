@@ -10,12 +10,14 @@
 #ifndef RD53Gain_H
 #define RD53Gain_H
 
-#include "../Utils/ContainerRecycleBin.h"
-#include "../Utils/GainFit.h"
 #include "RD53CalibBase.h"
+#include "Utils/ContainerRecycleBin.h"
+#include "Utils/GainFit.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53GainHistograms.h"
+#include "DQMUtils/RD53GainHistograms.h"
+#else
+typedef bool GainHistograms;
 #endif
 
 // #############
@@ -32,11 +34,9 @@ class Gain : public CalibBase
     ~Gain()
     {
         for(auto container: detectorContainerVector) theRecyclingBin.free(container);
-#ifdef __USE_ROOT__
-        if(saveData == true) this->WriteRootFile();
+        if(doSaveData == true) this->WriteRootFile();
         this->CloseResultFile();
         delete histos;
-#endif
     }
 
     void Running() override;
@@ -44,18 +44,16 @@ class Gain : public CalibBase
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string& fileRes_ = "", int currentRun = -1) override;
-    void   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void   localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
     void   run() override;
     void   draw(bool saveData = true) override;
     size_t getNumberIterations() override { return theChnGroupHandler->getNumberOfGroups() * nSteps; }
 
     std::shared_ptr<DetectorDataContainer> analyze();
-    static float                           gainFunction(const std::vector<float>& par, float q) { return par[0] + par[1] * q; }
+    static float                           gainFunction(const std::vector<float>& par, float q, const Ph2_HwDescription::RD53::FrontEnd* frontEnd);
+    static float                           gainInverseFunction(const std::vector<float>& par, float ToT, const Ph2_HwDescription::RD53::FrontEnd* frontEnd);
 
-#ifdef __USE_ROOT__
     GainHistograms* histos;
-#endif
 
   private:
     void fillHisto() override;
@@ -92,9 +90,8 @@ class Gain : public CalibBase
     bool   doUpdateChip;
     bool   saveBinaryData;
 
-    std::string fileRes;
-    int         theCurrentRun;
-    bool        saveData;
+    int  theCurrentRun;
+    bool doSaveData;
 
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
 };

@@ -6,16 +6,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     MESSAGE(STATUS " ")
 
     # Includes
-    include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
-    include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
-    include_directories(${PROJECT_SOURCE_DIR}/Utils)
-    include_directories(${PROJECT_SOURCE_DIR}/MonitorUtils)
-    include_directories(${PROJECT_SOURCE_DIR}/NetworkUtils)
     include_directories(${PROJECT_SOURCE_DIR})
     include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
     include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
     include_directories(${UHAL_LOG_INCLUDE_PREFIX})
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
     # Library directories
     link_directories(${UHAL_UHAL_LIB_PREFIX})
@@ -39,7 +33,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     # Add the library
     add_library(Ph2_System STATIC ${SOURCES} ${HEADERS})
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_MonitorUtils NetworkUtils)
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_MonitorUtils NetworkUtils Ph2_Parser)
     if(NoDataShipping)
         set(LIBS ${LIBS} Ph2_MonitorDQM)
     endif()
@@ -123,6 +117,7 @@ else()
              Ph2_Description_${Ph2_ACF_Master}
              Ph2_Interface_${Ph2_ACF_Master}
              Ph2_Utils_${Ph2_ACF_Master}
+             Ph2_Parser_${Ph2_ACF_Master}
             )
 
     install_headers()

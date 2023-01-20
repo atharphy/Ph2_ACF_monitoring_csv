@@ -11,9 +11,9 @@
 #ifndef RD53BInterface_H
 #define RD53BInterface_H
 
-#include "../HWDescription/RD53B.h"
-#include "../HWDescription/RD53BCommands.h"
-#include "RD53Interface.h"
+#include "HWDescription/RD53B.h"
+#include "HWDescription/RD53BCommands.h"
+#include "HWInterface/RD53Interface.h"
 
 namespace Ph2_HwInterface
 {
@@ -29,7 +29,7 @@ class RD53BInterface : public RD53Interface
     void     InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip) override;
     void     PackWriteCommand(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true) override;
     void     PackWriteBroadcastCommand(const Ph2_HwDescription::BeBoard* pBoard, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true) override;
-    void     WriteClokDataDelay(Ph2_HwDescription::Chip* pChip, uint16_t value) override;
+    void     WriteClockDataDelay(Ph2_HwDescription::Chip* pChip, uint16_t value) override;
     uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip) override;
 
   private:
@@ -47,9 +47,10 @@ class RD53BInterface : public RD53Interface
     void     ResetCoreColumns(Ph2_HwDescription::RD53* pRD53);
 
     const std::map<std::string, RD53Interface::SpecialRegInfo> specialRegMap = {{"CDR_CONFIG_SEL_SER_CLK", {"CDR_CONFIG", 0}},
+                                                                                {"CDR_CONFIG_SEL_PD", {"CDR_CONFIG", 3}},
 
                                                                                 {"CLK_DATA_DELAY_DATA", {"CLK_DATA_DELAY", 0}},
-                                                                                {"CLK_DATA_DELAY_CLK", {"CLK_DATA_DELAY", 7}},
+                                                                                {"CLK_DATA_DELAY_CLK", {"CLK_DATA_DELAY", 6}},
 
                                                                                 {"MON_ADC_TRIM", {"MON_ADC", 0}},
 
@@ -84,6 +85,7 @@ class RD53BInterface : public RD53Interface
   private:
     uint32_t getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage) override;
     uint32_t measureADC(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data) override;
+    float    measureTemperature(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data, const std::string& type = "", int beta = 3435) override;
 };
 
 } // namespace Ph2_HwInterface

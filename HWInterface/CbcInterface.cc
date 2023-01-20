@@ -9,10 +9,10 @@
 
  */
 
-#include "CbcInterface.h"
-#include "../Utils/ChannelGroupHandler.h"
-#include "../Utils/ConsoleColor.h"
-#include "../Utils/Container.h"
+#include "HWInterface/CbcInterface.h"
+#include "Utils/ChannelGroupHandler.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/Container.h"
 #include <bitset>
 
 #define DEV_FLAG 0

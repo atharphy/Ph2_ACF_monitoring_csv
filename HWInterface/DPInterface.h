@@ -2,7 +2,7 @@
 #ifndef __ROHInterface_H__
 #define __ROHInterface_H__
 
-#include "BeBoardFWInterface.h"
+#include "HWInterface/BeBoardFWInterface.h"
 #include <boost/tokenizer.hpp>
 #include <random>
 

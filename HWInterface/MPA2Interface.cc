@@ -9,9 +9,9 @@
 
  */
 
-#include "MPA2Interface.h"
-#include "../Utils/ChannelGroupHandler.h"
-#include "../Utils/ConsoleColor.h"
+#include "HWInterface/MPA2Interface.h"
+#include "Utils/ChannelGroupHandler.h"
+#include "Utils/ConsoleColor.h"
 #include <typeinfo>
 
 #define DEV_FLAG 0

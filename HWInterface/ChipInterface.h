@@ -10,7 +10,7 @@
 #ifndef __CHIPINTERFACE_H__
 #define __CHIPINTERFACE_H__
 
-#include "BeBoardFWInterface.h"
+#include "HWInterface/BeBoardFWInterface.h"
 #include <mutex>
 #include <vector>
 

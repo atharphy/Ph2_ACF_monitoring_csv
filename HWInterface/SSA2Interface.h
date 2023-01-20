@@ -11,8 +11,8 @@
 #ifndef __SSA2INTERFACE_H__
 #define __SSA2INTERFACE_H__
 
-#include "BeBoardFWInterface.h"
-#include "ReadoutChipInterface.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/ReadoutChipInterface.h"
 #include <fstream>
 #include <iostream> // std::cout
 #include <string>

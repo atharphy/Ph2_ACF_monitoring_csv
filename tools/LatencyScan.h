@@ -12,12 +12,12 @@
 #ifndef LATENCYSCAN_H__
 #define LATENCYSCAN_H__
 
-#include "../Utils/CommonVisitors.h"
-#include "../Utils/ContainerRecycleBin.h"
-#include "../Utils/Visitor.h"
 #include "Tool.h"
+#include "Utils/CommonVisitors.h"
+#include "Utils/ContainerRecycleBin.h"
+#include "Utils/Visitor.h"
 #ifdef __USE_ROOT__
-#include "../DQMUtils/DQMHistogramLatencyScan.h"
+#include "DQMUtils/DQMHistogramLatencyScan.h"
 #include "TCanvas.h"
 #include "TF1.h"
 #include "TGaxis.h"

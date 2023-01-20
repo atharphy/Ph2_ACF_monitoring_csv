@@ -11,10 +11,10 @@
 #ifndef KIRA_h__
 #define KIRA_h__
 
-#include "../NetworkUtils/TCPClient.h"
-#include "../NetworkUtils/TCPPublishServer.h"
-#include "../Utils/ContainerRecycleBin.h"
+#include "NetworkUtils/TCPClient.h"
+#include "NetworkUtils/TCPPublishServer.h"
 #include "OTTool.h"
+#include "Utils/ContainerRecycleBin.h"
 
 #include <fstream>
 #include <iostream>
@@ -26,7 +26,7 @@
 #include <sys/time.h>
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/DQMHistogramKira.h"
+#include "DQMUtils/DQMHistogramKira.h"
 #endif
 
 class Occupancy;

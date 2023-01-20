@@ -9,14 +9,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
     include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
     include_directories(${UHAL_LOG_INCLUDE_PREFIX})
-    include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
-    include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
-    include_directories(${PROJECT_SOURCE_DIR}/Utils)
-    include_directories(${PROJECT_SOURCE_DIR}/System)
-    include_directories(${PROJECT_SOURCE_DIR}/tools)
-    include_directories(${PROJECT_SOURCE_DIR}/ProductionToolsIT)
     include_directories(${PROJECT_SOURCE_DIR})
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
     # Library dirs
     link_directories(${UHAL_UHAL_LIB_PREFIX})
@@ -25,9 +18,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     link_directories(${PROJECT_SOURCE_DIR/lib})
 
     find_package(Protobuf REQUIRED)
-
-    # Initial set of libraries
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System Ph2_Tools Ph2_RootUtils Ph2_DQMUtils Ph2_MonitorDQM Ph2_MonitorUtils Ph2_ProductionToolsIT Ph2_miniDAQ NetworkUtils MessageUtils ${Protobuf_LIBRARIES})
 
     # Check for ZMQ installed
     if(ZMQ_FOUND)
@@ -123,12 +113,24 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src *.cc)
 
+
+    # Initial set of libraries
+    set(LIBS ${LIBS} Ph2_Description Ph2_Utils Ph2_Parser Ph2_RootUtils Ph2_DQMUtils Ph2_MonitorDQM NetworkUtils MessageUtils ${Protobuf_LIBRARIES})
+    
+    message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")
+
     # Remove binaries
     if(CompileForShep AND CompileForHerd)
         list(REMOVE_ITEM BINARIES *.cc)
-        file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src supervisor.cc CMSITminiDAQ.cc fpgaconfig.cc)
+        file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src supervisor.cc CMSITminiDAQ.cc fpgaconfig.cc testShep.cc)
+        set(LIBS ${LIBS} Ph2_Interface Ph2_System Ph2_Tools Ph2_MonitorUtils Ph2_ProductionToolsIT Ph2_miniDAQ)
+    elseif(CompileForShep)
+        list(REMOVE_ITEM BINARIES *.cc)
+        file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/src testShep.cc)
+        set(LIBS ${LIBS} Ph2_Parser boost_regex)
     else()
-        list(REMOVE_ITEM BINARIES supervisor.cc)
+        list(REMOVE_ITEM BINARIES supervisor.cc testShep.cc)
+        set(LIBS ${LIBS} Ph2_Interface Ph2_System Ph2_Tools Ph2_MonitorUtils Ph2_ProductionToolsIT Ph2_miniDAQ)
     endif()
 
     message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")

@@ -13,7 +13,9 @@
 #include "RD53Latency.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53ClockDelayHistograms.h"
+#include "DQMUtils/RD53ClockDelayHistograms.h"
+#else
+typedef bool ClockDelayHistograms;
 #endif
 
 // ##########################
@@ -24,11 +26,9 @@ class ClockDelay : public PixelAlive
   public:
     ~ClockDelay()
     {
-#ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
         delete histos;
-#endif
     }
 
     void Running() override;
@@ -36,8 +36,7 @@ class ClockDelay : public PixelAlive
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string& fileRes_ = "", int currentRun = -1) override;
-    void   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void   localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
     void   run() override;
     void   draw(bool saveData = true) override;
     size_t getNumberIterations() override
@@ -48,9 +47,7 @@ class ClockDelay : public PixelAlive
 
     void analyze();
 
-#ifdef __USE_ROOT__
     ClockDelayHistograms* histos;
-#endif
 
   private:
     void fillHisto() override;
@@ -67,8 +64,7 @@ class ClockDelay : public PixelAlive
     size_t startValue;
     size_t stopValue;
 
-    std::string fileRes;
-    int         theCurrentRun;
+    int theCurrentRun;
 };
 
 #endif

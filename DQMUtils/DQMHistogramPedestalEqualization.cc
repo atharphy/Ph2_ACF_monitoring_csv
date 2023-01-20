@@ -7,22 +7,22 @@
         Support :            mail to : fabio.ravera@cern.ch
  */
 
-#include "../DQMUtils/DQMHistogramPedestalEqualization.h"
-#include "../RootUtils/RootContainerFactory.h"
-#include "../Utils/ChannelContainerStream.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
-#include "../Utils/EmptyContainer.h"
-#include "../Utils/HybridContainerStream.h"
-#include "../Utils/Occupancy.h"
-#include "../Utils/ThresholdAndNoise.h"
-#include "../Utils/Utilities.h"
+#include "DQMUtils/DQMHistogramPedestalEqualization.h"
+#include "RootUtils/RootContainerFactory.h"
 #include "TCanvas.h"
 #include "TF1.h"
 #include "TFile.h"
 #include "TH1F.h"
 #include "TH1I.h"
+#include "Utils/ChannelContainerStream.h"
+#include "Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/ContainerStream.h"
+#include "Utils/EmptyContainer.h"
+#include "Utils/HybridContainerStream.h"
+#include "Utils/Occupancy.h"
+#include "Utils/ThresholdAndNoise.h"
+#include "Utils/Utilities.h"
 
 //========================================================================================================================
 DQMHistogramPedestalEqualization::DQMHistogramPedestalEqualization() {}
@@ -31,7 +31,7 @@ DQMHistogramPedestalEqualization::DQMHistogramPedestalEqualization() {}
 DQMHistogramPedestalEqualization::~DQMHistogramPedestalEqualization() {}
 
 //========================================================================================================================
-void DQMHistogramPedestalEqualization::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramPedestalEqualization::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
     NCH = theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();

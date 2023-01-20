@@ -10,13 +10,13 @@
 #ifndef RD53EyeDiag_H
 #define RD53EyeDiag_H
 
-#include "../Utils/Container.h"
-#include "../tools/Tool.h"
+#include "Utils/Container.h"
+#include "tools/Tool.h"
 #include <boost/algorithm/string.hpp>
 #include <unordered_map>
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53DataReadbackOptimizationHistograms.h"
+#include "DQMUtils/RD53DataReadbackOptimizationHistograms.h"
 #include "TApplication.h"
 #endif
 

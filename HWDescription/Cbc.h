@@ -12,10 +12,10 @@
 #ifndef Cbc_h__
 #define Cbc_h__
 
-#include "../Utils/Exception.h"
-#include "../Utils/Visitor.h"
 #include "FrontEndDescription.h"
 #include "ReadoutChip.h"
+#include "Utils/Exception.h"
+#include "Utils/Visitor.h"
 #include <iostream>
 #include <set>
 #include <stdint.h>

@@ -65,10 +65,10 @@ class RD53eudaqProducer : public eudaq::Producer
     static const uint32_t m_id_factory = eudaq::cstr2hash(EUDAQ::EUDAQproducerNAME);
 
   private:
-    std::condition_variable wakeUp;
-    std::mutex              theMtx;
-    bool                    doExit;
-    std::string             configFile;
+    std::condition_variable_any wakeUp;
+    std::recursive_mutex        theMtx;
+    bool                        doExit;
+    std::string                 configFile;
 };
 
 #endif

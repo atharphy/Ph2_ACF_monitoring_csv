@@ -13,7 +13,9 @@
 #include "RD53Gain.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53GainOptimizationHistograms.h"
+#include "DQMUtils/RD53GainOptimizationHistograms.h"
+#else
+typedef bool GainOptimizationHistograms;
 #endif
 
 // #############
@@ -29,11 +31,9 @@ class GainOptimization : public Gain
   public:
     ~GainOptimization()
     {
-#ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
         delete histos;
-#endif
     }
 
     void Running() override;
@@ -41,8 +41,7 @@ class GainOptimization : public Gain
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string& fileRes_ = "", int currentRun = -1) override;
-    void   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1) override;
+    void   localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
     void   run() override;
     void   draw(bool saveData = true) override;
     size_t getNumberIterations() override
@@ -54,9 +53,7 @@ class GainOptimization : public Gain
 
     void analyze();
 
-#ifdef __USE_ROOT__
     GainOptimizationHistograms* histos;
-#endif
 
   private:
     void fillHisto() override;
@@ -71,8 +68,7 @@ class GainOptimization : public Gain
     bool   doUpdateChip;
     bool   doDisplay;
 
-    std::string fileRes;
-    int         theCurrentRun;
+    int theCurrentRun;
 };
 
 #endif

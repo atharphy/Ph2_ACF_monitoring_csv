@@ -10,18 +10,15 @@
 #ifndef FILEPARSER_H
 #define FILEPARSER_H
 
-#include "../HWDescription/Chip.h"
-#include "../HWDescription/Definition.h"
-#include "../HWDescription/OpticalGroup.h"
-#include "../HWInterface/BeBoardFWInterface.h"
-#include "../HWInterface/D19cFWInterface.h"
-#include "../HWInterface/RD53FWInterface.h"
-#include "../MonitorUtils/DetectorMonitorConfig.h"
-#include "../Utils/ConditionDataSet.h"
-#include "../Utils/ConsoleColor.h"
-#include "../Utils/Exception.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/easylogging++.h"
+#include "HWDescription/Chip.h"
+#include "HWDescription/Definition.h"
+#include "HWDescription/OpticalGroup.h"
+#include "Parser/DetectorMonitorConfig.h"
+#include "Utils/ConditionDataSet.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/Exception.h"
+#include "Utils/Utilities.h"
+#include "Utils/easylogging++.h"
 
 #include "pugixml.hpp"
 #include <boost/any.hpp>
@@ -32,7 +29,7 @@
 #include <vector>
 
 /*!
- * \namespace Ph2_System
+ * \namespace Ph2_Parser
  * \brief Namespace regrouping the framework wrapper
  */
 
@@ -40,11 +37,10 @@ namespace Ph2_HwInterface
 {
 class RegManager;
 }
-namespace Ph2_System
+namespace Ph2_Parser
 {
-using BeBoardVec   = std::vector<Ph2_HwDescription::BeBoard*>;                 /*!< Vector of Board pointers */
-using BeBoardFWMap = std::map<uint16_t, Ph2_HwInterface::BeBoardFWInterface*>; /*!< Map of Board connected */
-using SettingsMap  = std::unordered_map<std::string, boost::any>;              /*!< Maps the settings */
+using BeBoardVec  = std::vector<Ph2_HwDescription::BeBoard*>;    /*!< Vector of Board pointers */
+using SettingsMap = std::unordered_map<std::string, boost::any>; /*!< Maps the settings */
 
 /*!
  * \class FileParser
@@ -56,12 +52,11 @@ class FileParser
     FileParser() {}
     ~FileParser() {}
 
-    void                                            parseHW(const std::string& pFilename, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os);
-    void                                            parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os);
-    std::string                                     parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os);
-    void                                            disableInterfaces() { fEnableInterfaces = false; }
-    void                                            openHWconfig(const std::string& pFilename, pugi::xml_document& doc);
-    std::map<uint16_t, Ph2_HwInterface::RegManager> getRegManagerList(const std::string& pFilename);
+    void                                                                  parseHW(const std::string& pFilename, DetectorContainer* pDetectorContainer, std::ostream& os);
+    void                                                                  parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os);
+    std::string                                                           parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os);
+    void                                                                  openHWconfig(const std::string& pFilename, pugi::xml_document& doc);
+    std::map<uint16_t, std::tuple<std::string, std::string, std::string>> getRegManagerInfoList(const std::string& pFilename);
 
   protected:
     /*!
@@ -77,7 +72,7 @@ class FileParser
      * \param pFilename : HW Description file
      *\param os : ostream to dump output
      */
-    void parseBeBoard(pugi::xml_node pBeBordNode, BeBoardFWMap& pBeBoardFWMap, DetectorContainer* pDetectorContainer, std::ostream& os);
+    void parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDetectorContainer, std::ostream& os);
     void parseRegister(pugi::xml_node pRegisterNode, std::string& pAttributeString, double& pValue, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os);
     void parseSLink(pugi::xml_node pSLinkNode, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os);
     void parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Ph2_HwDescription::BeBoard* pBoard, std::ostream& os);
@@ -124,10 +119,7 @@ class FileParser
         {18, "MaskChannel-152-to-145"}, {19, "MaskChannel-160-to-153"}, {20, "MaskChannel-168-to-161"}, {21, "MaskChannel-176-to-169"}, {22, "MaskChannel-184-to-177"}, {23, "MaskChannel-192-to-185"},
         {24, "MaskChannel-200-to-193"}, {25, "MaskChannel-208-to-201"}, {26, "MaskChannel-216-to-209"}, {27, "MaskChannel-224-to-217"}, {28, "MaskChannel-232-to-225"}, {29, "MaskChannel-240-to-233"},
         {30, "MaskChannel-248-to-241"}, {31, "MaskChannel-254-to-249"}};
-
-  private:
-    bool fEnableInterfaces{true};
 };
-} // namespace Ph2_System
+} // namespace Ph2_Parser
 
 #endif

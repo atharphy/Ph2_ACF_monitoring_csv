@@ -1,11 +1,11 @@
 
-#include "../Utils/Timer.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/argvparser.h"
-#include "../tools/BackEndAlignment.h"
-#include "../tools/Tool.h"
+#include "Utils/Timer.h"
+#include "Utils/Utilities.h"
+#include "Utils/argvparser.h"
+#include "tools/BackEndAlignment.h"
+#include "tools/Tool.h"
 
-#include "../tools/SEHTester.h"
+#include "tools/SEHTester.h"
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"
@@ -15,7 +15,7 @@
 #define __NAMEDPIPE__
 
 #ifdef __NAMEDPIPE__
-#include "gui_logger.h"
+#include "Utils/gui_logger.h"
 #endif
 
 #include <cstring>
@@ -210,30 +210,32 @@ int main(int argc, char* argv[])
 
     pugi::xml_document doc;
     if(!doc.load_file(cHWFile.c_str())) return -1;
-    pugi::xml_node devices = doc.child("Devices");
-
-    for(pugi::xml_node ps = devices.first_child(); ps; ps = ps.next_sibling())
+    pugi::xml_node cDescription = doc.child("HwDescription");
+    for(pugi::xml_node devices = cDescription.first_child(); devices; devices = devices.next_sibling())
     {
-        std::string stringID(ps.attribute("ID").value());
-        std::string stringType(ps.attribute("Type").value());
-        if(stringType == "LV")
+        for(pugi::xml_node ps = devices.first_child(); ps; ps = ps.next_sibling())
         {
-            for(pugi::xml_node channel = ps.child("Channel"); channel; channel = channel.next_sibling("Channel"))
+            std::string stringID(ps.attribute("ID").value());
+            std::string stringType(ps.attribute("Type").value());
+            if(stringType == "LV")
             {
-                std::string stringChannel(channel.attribute("ID").value());
-                cLVPowerSupplyId = stringID;
-                cLVChannelId     = stringChannel;
-                LOG(INFO) << BOLDBLUE << "Identified LV Power Supply " << stringID << " and channel " << stringChannel << RESET;
+                for(pugi::xml_node channel = ps.child("Channel"); channel; channel = channel.next_sibling("Channel"))
+                {
+                    std::string stringChannel(channel.attribute("ID").value());
+                    cLVPowerSupplyId = stringID;
+                    cLVChannelId     = stringChannel;
+                    LOG(INFO) << BOLDBLUE << "Identified LV Power Supply " << stringID << " and channel " << stringChannel << RESET;
+                }
             }
-        }
-        if(stringType == "HV")
-        {
-            for(pugi::xml_node channel = ps.child("Channel"); channel; channel = channel.next_sibling("Channel"))
+            if(stringType == "HV")
             {
-                std::string stringChannel(channel.attribute("ID").value());
-                cHVPowerSupplyId = stringID;
-                cHVChannelId     = stringChannel;
-                LOG(INFO) << BOLDBLUE << "Identified HV Power Supply " << stringID << " and channel " << stringChannel << RESET;
+                for(pugi::xml_node channel = ps.child("Channel"); channel; channel = channel.next_sibling("Channel"))
+                {
+                    std::string stringChannel(channel.attribute("ID").value());
+                    cHVPowerSupplyId = stringID;
+                    cHVChannelId     = stringChannel;
+                    LOG(INFO) << BOLDBLUE << "Identified HV Power Supply " << stringID << " and channel " << stringChannel << RESET;
+                }
             }
         }
     }
@@ -276,7 +278,7 @@ int main(int argc, char* argv[])
     cTool.InitializeSettings(cHWFile, outp);
     LOG(INFO) << outp.str();
     outp.str("");
-    cTool.CreateResultDirectory(cDirectory);
+    cTool.CreateResultDirectory(cDirectory, true, true);
     cTool.InitResultFile(cResultfile);
     cTool.bookSummaryTree();
 
@@ -301,7 +303,7 @@ int main(int argc, char* argv[])
     }
     if(cmd.foundOption("test-ext-leak"))
     {
-        if(cmd.foundOption("test-hv-parallel"))
+        if(cmd.foundOption("test-leak-parallel"))
         {
             LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply in parallel" << RESET;
             cSEHTester.SetupExternalTestLeakageCurrent(cExtLeakVoltage, cHVPowerSupplyId, cHVChannelId);
@@ -340,31 +342,8 @@ int main(int argc, char* argv[])
     //     // std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     //     // cSEHTester.TurnOn(cRightLoad, cLeftLoad);
     //     // std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-    try
-    {
-        cTool.ConfigureHw();
-    }
-    catch(...)
-    {
-        cTool.fBeBoardInterface->setBoard(pBoard->getId());
-        for(int i = 0; i < 8; i++)
-        {
-            std::cout << "###--------------l8---------------###" << std::endl;
-            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("T", i);
-            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("V", i);
-            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("I", i);
-            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("TX", i);
-            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("RX", i);
-            std::cout << "###--------------l12--------------###" << std::endl;
-            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("T", i);
-            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("V", i);
-            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("I", i);
-            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("TX", i);
-            dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("RX", i);
-        }
-        return -1;
-    }
-    //}
+    cTool.ConfigureHw();
+
     cTool.fBeBoardInterface->setBoard(pBoard->getId());
     for(int i = 0; i < 8; i++)
     {
@@ -406,7 +385,9 @@ int main(int argc, char* argv[])
             gui::progress(1 / 10.0);
 
             gui::data("ResultsDirectory", cSEHTester.getDirectoryName().c_str());
-            gui::data("MonitoringFile", cTool.GetMonitorFileName().c_str());
+            // gui::data("MonitoringFile", cTool.GetMonitorFileName().c_str());
+            LOG(DEBUG) << BOLDBLUE << cSEHTester.getDirectoryName().c_str() << RESET;
+            LOG(DEBUG) << BOLDBLUE << cTool.GetMonitorFileName().c_str() << RESET;
         }
         /* INTERNALLY GENERATED PATTERN */
         if(cmd.foundOption("test-internal-pattern"))
@@ -523,9 +504,9 @@ int main(int argc, char* argv[])
             gui::status("Testing ADC lines on the lpGBT");
             gui::progress(5 / 10.0);
         }
-        cSEHTester.LpGBTTestFixedADCs();
         std::vector<std::string> cADCs = {"ADC0", "ADC3"};
-        cSEHTester.LpGBTTestADC(cADCs, 0, 3720, 300); // DAC *should* be 16 bit with 1V reference, ROH is 12 bit something, needs to be included somewhere
+        cSEHTester.LpGBTTestADC(cADCs, 0, 3720, 600); // DAC *should* be 16 bit with 1V reference, ROH is 12 bit something, needs to be included somewhere
+        cSEHTester.LpGBTTestFixedADCs();
     }
 
     /********************/
@@ -633,7 +614,10 @@ int main(int argc, char* argv[])
     }
 
     cTool.StopMonitoring();
-    if(cmd.foundOption("test-ext-leak") & cmd.foundOption("test-hv-parallel"))
+    std::string MonitorFileName = cTool.GetMonitorFileName().c_str();
+    std::string DirectoryName   = cSEHTester.getDirectoryName().c_str();
+
+    if(cmd.foundOption("test-ext-leak") & cmd.foundOption("test-leak-parallel"))
     {
         LOG(INFO) << BOLDBLUE << "Ending leakage current with external power supply in parallel" << RESET;
         cSEHTester.EndExternalTestLeakageCurrent(cHVPowerSupplyId, cHVChannelId);
@@ -644,10 +628,10 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDBLUE << "Measuring leakage current" << RESET;
         cSEHTester.TestLeakageCurrent(cLeakVoltage, 150);
     }
-    if(cmd.foundOption("test-ext-leak") & !cmd.foundOption("test-hv-parallel"))
+    if(cmd.foundOption("test-ext-leak") & !cmd.foundOption("test-leak-parallel"))
     {
         LOG(INFO) << BOLDBLUE << "Measuring leakage current with external power supply" << RESET;
-        cSEHTester.ExternalTestLeakageCurrent(cExtLeakVoltage, 150, cHVPowerSupplyId, cHVChannelId);
+        cSEHTester.ExternalTestLeakageCurrent(cExtLeakVoltage, 30, cHVPowerSupplyId, cHVChannelId);
     }
 
     /*********************/
@@ -721,7 +705,7 @@ int main(int argc, char* argv[])
         LOG(INFO) << BOLDBLUE << "Flushing check BRAM!" << RESET;
         cSEHTester.ClearBRAM(std::string("test"));
     }
-    // cSEHTester.freeTest();
+    // cSEHTester.calibrateADC();
     cSEHTester.SetLoad(0, 0);
     cSEHTester.LpGBTInjectULExternalPattern(false, 170);
 
@@ -737,6 +721,35 @@ int main(int argc, char* argv[])
     cTool.CloseResultFile();
     // Destroy Tools
     cTool.Destroy();
+    if(!MonitorFileName.empty())
+    {
+        LOG(INFO) << GREEN << "Attempting to copy monitoring file : " << BOLDYELLOW << MonitorFileName << RESET;
+
+        std::string cCommand = "cp " + MonitorFileName + " " + DirectoryName + "/Monitoring.root";
+        try
+        {
+            system(cCommand.c_str());
+        }
+        catch(std::exception& e)
+        {
+            LOG(ERROR) << BOLDRED << "Exceptin when trying to move Monitoring File to Directory: " << DirectoryName << RESET;
+        }
+    }
+    // if(!MonitorFileName.empty())
+    // {
+    //     LOG(INFO) << GREEN << "Attempting to merge monitoring file : " << BOLDYELLOW << MonitorFileName << RESET;
+
+    //     std::string cCommand = "hadd " + DirectoryName + "/test.root " + DirectoryName + "/Hybrid.root " + DirectoryName + "/Monitoring.root";
+    //     try
+    //     {
+    //         system(cCommand.c_str());
+    //     }
+    //     catch(std::exception& e)
+    //     {
+    //         LOG(ERROR) << BOLDRED << "Exceptin when trying to merge Monitoring File" << RESET;
+    //     }
+    // }
+
     runCompleted = 1;
 
     if(!batchMode) cApp.Run();

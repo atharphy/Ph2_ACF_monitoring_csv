@@ -1,8 +1,8 @@
 #include "KIRA.h"
 
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/GenericDataArray.h"
-#include "../Utils/Occupancy.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/GenericDataArray.h"
+#include "Utils/Occupancy.h"
 
 KIRA::KIRA() : OTTool() {}
 KIRA::~KIRA() {}

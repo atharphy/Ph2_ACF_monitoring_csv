@@ -96,14 +96,20 @@ class StateMachine(object):
                 self.status_ = "ERROR"
                 return
             elif type == Reply.ReplyType.RUNNING:
+                print("RUNNING")
                 time.sleep(0.5)
                 continue
             elif type == Reply.ReplyType.SUCCESS:
+                print("SUCCESS")
                 break
             else:
                 print("Unrecognized status from Ph2_ACF")
                 self.status_ = "ERROR"
                 return
+        stopMessage = Query.QueryMessage()
+        stopMessage.query_type.type = Query.QueryType.STOP
+        stringStopMessage = stopMessage.SerializeToString()
+        replyBuffer = Ph2_ACF_controller.halt(stringStopMessage)
         self.status_ = "STOPPED"
         if self.parseReply(replyBuffer) != Reply.ReplyType.SUCCESS:
             self.status_ = "ERROR"
@@ -182,7 +188,7 @@ class StateMachine(object):
         self.queryFirmware("DELETE", configurationFile, boardId, firmwareName)
 
     def queryCalibrationList(self):
-        print(Common.CalibrationList.CALIBRATIONANDPEDENOISE)
+        print(Common.CalibrationList.calibrationandpedenoise)
         print(Common.CalibrationList)
         calibrationListQuery = Query.QueryMessage()
         calibrationListQuery.query_type.type = Query.QueryType.CALIBRATION

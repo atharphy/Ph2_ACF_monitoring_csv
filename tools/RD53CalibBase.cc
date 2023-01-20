@@ -25,6 +25,14 @@ void CalibBase::chipErrorReport() const
                 }
 }
 
+void CalibBase::copyMaskFromDefault(const std::string& which) const
+{
+    for(const auto cBoard: *fDetectorContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid) static_cast<RD53*>(cChip)->copyMaskFromDefault(which);
+}
+
 void CalibBase::saveChipRegisters(int currentRun, bool doUpdateChip)
 {
     const std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
@@ -56,7 +64,7 @@ void CalibBase::saveChipRegisters(int currentRun, bool doUpdateChip)
         }
 }
 
-void CalibBase::downloadNewDACvalues(DetectorDataContainer& DACcontainer, const std::string& regName, bool checkAgaint, int value)
+void CalibBase::downloadNewDACvalues(DetectorDataContainer& DACcontainer, const std::string& regName, bool checkAgainst, int value)
 {
     std::vector<uint16_t> chipCommandList;
     std::vector<uint32_t> hybridCommandList;
@@ -72,9 +80,9 @@ void CalibBase::downloadNewDACvalues(DetectorDataContainer& DACcontainer, const 
                 int hybridId = cHybrid->getId();
 
                 for(const auto cChip: *cHybrid)
-                    if(((checkAgaint == true) &&
+                    if(((checkAgainst == true) &&
                         (DACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() != value)) ||
-                       (checkAgaint == false))
+                       (checkAgainst == false))
                     {
                         static_cast<RD53Interface*>(this->fReadoutChipInterface)
                             ->PackWriteCommand(cChip,
@@ -83,15 +91,18 @@ void CalibBase::downloadNewDACvalues(DetectorDataContainer& DACcontainer, const 
                                                chipCommandList,
                                                true);
 
-                        LOG(INFO) << BOLDMAGENTA << ">>> " << (checkAgaint == true ? "Best " : "") << BOLDYELLOW << regName << BOLDMAGENTA
+                        LOG(INFO) << BOLDMAGENTA << ">>> " << (checkAgainst == true ? "Best " : "") << BOLDYELLOW << regName << BOLDMAGENTA
                                   << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                                   << +cChip->getId() << RESET << BOLDMAGENTA << "] = " << RESET << BOLDYELLOW
                                   << DACcontainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getSummary<uint16_t>() << BOLDMAGENTA << " <<<"
                                   << RESET;
                     }
                     else
+                    {
                         LOG(WARNING) << BOLDRED << ">>> Best " << BOLDYELLOW << regName << BOLDRED << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
                                      << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << BOLDRED << "] was not found <<<" << RESET;
+                        return;
+                    }
 
                 static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(cBoard, chipCommandList, hybridId, hybridCommandList);
             }
