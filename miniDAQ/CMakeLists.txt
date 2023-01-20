@@ -105,8 +105,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     include_directories(${UHAL_DIR}/grammars/include)
 
     #library dirs
-#    link_directories($ENV{OTSDAQ_CMSTRACKER_DIR}/otsdaq-cmstracker/uhal/lib)
-    link_directories($ENV{OTSDAQ_CMSTRACKER_DIR}/otsdaq-cmstracker/protobuf/lib)
+    link_directories(${Protobuf_LIBRARIES})
 
     cet_make_exec(RunController
         SOURCE
