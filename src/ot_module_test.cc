@@ -21,6 +21,7 @@
 #include "tools/PSBiasCal.h"
 #include "tools/PedeNoise.h"
 #include "tools/PedestalEqualization.h"
+#include "tools/PhaseScan.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
 
@@ -142,6 +143,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("reconfigure", "Reconfigure Hardware");
     cmd.defineOption("reload", "Reload settings files and board registers");
     cmd.defineOption("realign", "Re-align module [SSA-MPA] and/or [BE]");
+    cmd.defineOption("phaseScan", "Phase Scan");
 
     cmd.defineOption("moduleId", "Serial Number of module . Default value: xxxx", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOption("checkData", "Compare injected hits and stubs with output [please provide a comma seperated list of chips to check]", ArgvParser::OptionRequiresValue);
@@ -792,6 +794,7 @@ int main(int argc, char* argv[])
                                 cTool.fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_ALL", 0x0);
                                 cTool.fReadoutChipInterface->WriteChipReg(cChip, "CalPulse_duration", 0x01);
                                 cTool.fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_L_ALL", 0x01);
+                                cTool.fReadoutChipInterface->WriteChipReg(cChip, "DigCalibPattern_H_ALL", 0x00);
                                 for(auto cInjection: cInjections) { cTool.fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cInjection.fRow), 0x9); }
                             }
                         } // chip
@@ -894,6 +897,7 @@ int main(int argc, char* argv[])
                             {
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "Threshold", cPSmoduleSSAth);
                                 cTool.fReadoutChipInterface->WriteChipReg(chip, "SAMPLINGMODE_ALL", cSamplingSSA);
+                                cTool.fReadoutChipInterface->WriteChipReg(chip, "CalPulse_duration", 0x01);
                             }
                             if(chip->getFrontEndType() == FrontEndType::MPA || chip->getFrontEndType() == FrontEndType::MPA2)
                             {
@@ -1012,6 +1016,13 @@ int main(int argc, char* argv[])
         cLatencyScan.Inherit(&cTool);
         cLatencyScan.Initialize();
         cLatencyScan.ScanLatency();
+    if(cmd.foundOption("phaseScan"))
+	{
+        PhaseScan cPhaseScan;
+        cPhaseScan.Inherit(&cTool);
+        cPhaseScan.Initialize();
+        cPhaseScan.ScanPhase();
+	}
     }
     // measure noise on FE chips
     if(cmd.foundOption("measurePedeNoise") && !cmd.foundOption("read"))
