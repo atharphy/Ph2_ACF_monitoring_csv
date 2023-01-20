@@ -31,7 +31,8 @@ variables:
 
 stages:
   - quality
-  - build
+  - build_c7
+  - build_al8
   - run
   - check
   - deploy
@@ -45,7 +46,7 @@ include:
 ## BUILD ##########
 
 .build:
-  stage: build
+  stage: build_c7
   needs: []
   image:
     name: gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_ci_c7:latest
@@ -62,7 +63,7 @@ include:
     expire_in: 1 week
 
 # Stand-alone application, without data streaming
-build:StandAlone_woDS:
+build:StandAlone_woDS_c7:
   extends: .build
   # artifacts:
   #   paths:
@@ -72,7 +73,7 @@ build:StandAlone_woDS:
   #   expire_in: 1 week
 
 # Stand-alone application, with data streaming
-build:StandAlone_wDS:
+build:StandAlone_wDS_c7:
   extends: .build
   before_script:
     - source ./setup.sh ci
@@ -80,7 +81,7 @@ build:StandAlone_wDS:
     - export CompileForShep=true
 
 # Herd application
-build:HerdApplication:
+build:HerdApplication_c7:
   extends: .build
   before_script:
     - source ./setup.sh ci
@@ -88,21 +89,21 @@ build:HerdApplication:
     - yum remove -y root #final home will not have ROOT. Should test build without it.
 
 # Shep application
-build:ShepApplication:
+build:ShepApplication_c7:
   extends: .build
   before_script:
     - source ./setup.sh ci
     - export CompileForShep=true
 
 # Compile with EUDAQ libraries
-build:StandAlone_wEUDAQ:
+build:StandAlone_wEUDAQ_c7:
   extends: .build
   before_script:
     - source ./setup.sh ci
     - export CompileWithEUDAQ=true
 
 # Compile with TC_USB library
-build:StandAlone_wTC_USB_SEH:
+build:StandAlone_wTC_USB_SEH_c7:
   extends: .build
   before_script:
     - yum install -y libusb-devel libusbx-devel
@@ -112,7 +113,7 @@ build:StandAlone_wTC_USB_SEH:
 
 
 # Compile with TC_USB library for ROH
-build:StandAlone_wTC_USB_ROH:
+build:StandAlone_wTC_USB_ROH_c7:
   extends: .build
   before_script:
     - yum install -y libusb-devel libusbx-devel
@@ -123,12 +124,73 @@ build:StandAlone_wTC_USB_ROH:
 
 
 
+
+
+
+# Stand-alone application, without data streaming
+build:StandAlone_woDS_al8:
+  extends: build:StandAlone_woDS_c7
+  stage: build_al8
+  image:
+    name: gitlab-registry.cern.ch/leejr/docker_exploration/cmstkph2_ci_al8:test
+    entrypoint: ["/bin/sh","-c"]
+
+# Stand-alone application, with data streaming
+build:StandAlone_wDS_al8:
+  extends: build:StandAlone_wDS_c7
+  stage: build_al8
+  image:
+    name: gitlab-registry.cern.ch/leejr/docker_exploration/cmstkph2_ci_al8:test
+    entrypoint: ["/bin/sh","-c"]
+
+# Herd application
+build:HerdApplication_al8:
+  extends: build:HerdApplication_c7
+  stage: build_al8
+  image:
+    name: gitlab-registry.cern.ch/leejr/docker_exploration/cmstkph2_ci_al8:test
+    entrypoint: ["/bin/sh","-c"]
+
+# Shep application
+build:ShepApplication_al8:
+  extends: build:ShepApplication_c7
+  stage: build_al8
+  image:
+    name: gitlab-registry.cern.ch/leejr/docker_exploration/cmstkph2_ci_al8:test
+    entrypoint: ["/bin/sh","-c"]
+
+# Compile with EUDAQ libraries
+build:StandAlone_wEUDAQ_al8:
+  extends: build:StandAlone_wEUDAQ_c7
+  stage: build_al8
+  image:
+    name: gitlab-registry.cern.ch/leejr/docker_exploration/cmstkph2_ci_al8:test
+    entrypoint: ["/bin/sh","-c"]
+
+# Compile with TC_USB library
+build:StandAlone_wTC_USB_SEH_al8:
+  extends: build:StandAlone_wTC_USB_SEH_c7
+  stage: build_al8
+  image:
+    name: gitlab-registry.cern.ch/leejr/docker_exploration/cmstkph2_ci_al8:test
+    entrypoint: ["/bin/sh","-c"]
+
+# Compile with TC_USB library for ROH
+build:StandAlone_wTC_USB_ROH_al8:
+  extends: build:StandAlone_wTC_USB_ROH_c7
+  stage: build_al8
+  image:
+    name: gitlab-registry.cern.ch/leejr/docker_exploration/cmstkph2_ci_al8:test
+    entrypoint: ["/bin/sh","-c"]
+
+
+
 ## RUN ##########
 
 .run:
   stage: run
   needs:
-    - build:StandAlone_woDS
+    - build:StandAlone_woDS_c7
   before_script:
     - printf $USER_PASS | base64 -d | kinit $USER_NAME
     - xrdcp -r root://eosuser.cern.ch//eos/user/c/cmstkph2/ci_repo/ci_tools .
