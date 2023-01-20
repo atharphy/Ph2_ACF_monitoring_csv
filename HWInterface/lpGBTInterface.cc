@@ -701,6 +701,38 @@ uint16_t lpGBTInterface::GetADCOffset(Chip* pChip, bool pVerbose)
     return cMeasurement;
 }
 
+// Implements the ADC master formula for the a basic measurement
+// Assumes a calibrated Vref
+float lpGBTInterface::GetADCVoltage(Chip* pChip, const std::string& pADCInputP, uint16_t cOffset, float cGain, bool pVerbose)
+{
+    uint16_t cMeasurement = ReadADC(pChip, pADCInputP, "VREF/2");
+    return (cMeasurement - cOffset * (1. - cGain / 2.)) / cGain / 512.;
+}
+
+float lpGBTInterface::GetADCVoltage(Chip* pChip, const std::string& pADCInputP, bool pVerbose)
+{
+    uint16_t cOffset = GetADCOffset(pChip, pVerbose);
+    float    cGain   = GetADCGain(pChip, pVerbose);
+    return GetADCVoltage(pChip, pADCInputP, cOffset, cGain, pVerbose);
+}
+
+float lpGBTInterface::GetRssiPower(Chip* pChip, const std::string& pADCInputP, float cResponsivity, bool pVerbose)
+{
+    uint16_t cOffset = GetADCOffset(pChip, pVerbose);
+    float    cGain   = GetADCGain(pChip, pVerbose);
+    return GetRssiPower(pChip, pADCInputP, cResponsivity, cOffset, cGain, pVerbose);
+}
+
+// Calculation vaild for 2S prototypes in W
+// R1=1k; Voltage divider 680k and 1000K
+// Typical responsivity 0.45-0.55 A/W
+float lpGBTInterface::GetRssiPower(Chip* pChip, const std::string& pADCInputP, float cResponsivity, uint16_t cOffset, float cGain, bool pVerbose)
+{
+    float cAdcMeasurement = GetADCVoltage(pChip, pADCInputP, cOffset, cGain, pVerbose);
+    float cCurrent        = 1. / 1000. * (2.5 - cAdcMeasurement * 1680. / 680.);
+    return cCurrent / cResponsivity;
+}
+
 float lpGBTInterface::GetADCGain(Chip* pChip, bool pVerbose)
 {
     float cResult;
