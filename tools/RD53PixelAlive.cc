@@ -17,23 +17,24 @@ void PixelAlive::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    rowStart       = this->findValueInSettings<double>("ROWstart");
-    rowStop        = this->findValueInSettings<double>("ROWstop");
-    colStart       = this->findValueInSettings<double>("COLstart");
-    colStop        = this->findValueInSettings<double>("COLstop");
-    nEvents        = this->findValueInSettings<double>("nEvents");
-    nEvtsBurst     = this->findValueInSettings<double>("nEvtsBurst") < nEvents ? this->findValueInSettings<double>("nEvtsBurst") : nEvents;
-    nTRIGxEvent    = this->findValueInSettings<double>("nTRIGxEvent");
-    injType        = this->findValueInSettings<double>("INJtype");
-    nHITxCol       = this->findValueInSettings<double>("nHITxCol");
-    doOnlyNGroups  = this->findValueInSettings<double>("DoOnlyNGroups");
-    occPerPixel    = this->findValueInSettings<double>("OccPerPixel");
-    unstuckPixels  = this->findValueInSettings<double>("UnstuckPixels");
-    doDisplay      = this->findValueInSettings<double>("DisplayHisto");
-    doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
-    saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
-    dataOutputDir  = this->findValueInSettings<std::string>("DataOutputDir", "");
-    frontEnd       = RD53Shared::firstChip->getFEtype(colStart, colStop);
+    rowStart        = this->findValueInSettings<double>("ROWstart");
+    rowStop         = this->findValueInSettings<double>("ROWstop");
+    colStart        = this->findValueInSettings<double>("COLstart");
+    colStop         = this->findValueInSettings<double>("COLstop");
+    nEvents         = this->findValueInSettings<double>("nEvents");
+    nEvtsBurst      = this->findValueInSettings<double>("nEvtsBurst") < nEvents ? this->findValueInSettings<double>("nEvtsBurst") : nEvents;
+    nTRIGxEvent     = this->findValueInSettings<double>("nTRIGxEvent");
+    injType         = this->findValueInSettings<double>("INJtype");
+    nHITxCol        = this->findValueInSettings<double>("nHITxCol");
+    doDataIntegrity = this->findValueInSettings<double>("DoDataIntegrity");
+    doOnlyNGroups   = this->findValueInSettings<double>("DoOnlyNGroups");
+    occPerPixel     = this->findValueInSettings<double>("OccPerPixel");
+    unstuckPixels   = this->findValueInSettings<double>("UnstuckPixels");
+    doDisplay       = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
+    saveBinaryData  = this->findValueInSettings<double>("SaveBinaryData");
+    dataOutputDir   = this->findValueInSettings<std::string>("DataOutputDir", "");
+    frontEnd        = RD53Shared::firstChip->getFEtype(colStart, colStop);
 
     // ################################
     // # Custom channel group handler #
@@ -125,6 +126,97 @@ void PixelAlive::localConfigure(const std::string& histoFileName, int currentRun
 }
 
 void PixelAlive::run()
+{
+    if(doDataIntegrity == true)
+    {
+        RD53RunProgress::turnOFF();
+
+        const std::string regName = "EN_CORE_COL";
+
+        std::shared_ptr<DetectorDataContainer> localOccContainer = std::make_shared<DetectorDataContainer>();
+        this->fDetectorDataContainer                             = localOccContainer.get();
+        ContainerFactory::copyAndInitStructure<OccupancyAndPh, GenericDataVector>(*fDetectorContainer, *this->fDetectorDataContainer);
+
+        std::shared_ptr<RD53ChannelGroupHandler> localChnGroupHandler = std::make_shared<RD53ChannelGroupHandler>(
+            rowStart, rowStop, colStart, colStop, RD53Shared::firstChip->getNRows(), RD53Shared::firstChip->getNCols(), RD53GroupType::AllPixels, nHITxCol, doOnlyNGroups);
+        this->setChannelGroupHandler(localChnGroupHandler);
+
+        LOG(INFO) << GREEN << "[PixelAlive::run] Running detection of Core-Column data corruption" << RESET;
+
+        for(const auto cBoard: *fDetectorContainer)
+            for(const auto cOpticalGroup: *cBoard)
+            {
+                // ############################
+                // # Disable all core columns #
+                // ############################
+                for(auto suffix: {"_0", "_1", "_2", "_3"}) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regName + suffix, 0);
+
+                for(const auto cHybrid: *cOpticalGroup)
+                    for(const auto cChip: *cHybrid)
+                    {
+                        std::map<std::string, uint16_t> regValueMap;
+
+                        for(auto suffix: {"_0", "_1", "_2", "_3"})
+                        {
+                            const auto numberOfBits = RD53Shared::firstChip->getRegMap()[regName + suffix].fBitSize;
+                            regValueMap[suffix]     = RD53Shared::setBits(numberOfBits);
+
+                            for(auto i = 0u; i < numberOfBits; i++)
+                            {
+                                // ###########################
+                                // # Download new DAC values #
+                                // ###########################
+                                this->fReadoutChipInterface->WriteChipReg(cChip, regName + suffix, 1 << i);
+
+                                // ################
+                                // # Run analysis #
+                                // ################
+                                this->SetTestPulse(false);
+                                this->measureData(1, 1);
+
+                                // #####################
+                                // # Compute next step #
+                                // #####################
+                                bool statusGood = true;
+                                for(const auto& ev: RD53Event::decodedEvents)
+                                    if(ev.eventStatus != RD53FWEvtEncoder::GOOD)
+                                    {
+                                        statusGood = false;
+                                        break;
+                                    }
+                                if(statusGood == false) regValueMap[suffix] ^= 1 << i;
+                            }
+                        }
+
+                        // ###########################
+                        // # Download new DAC values #
+                        // ###########################
+                        LOG(INFO) << BOLDBLUE << "Results for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                                  << +cChip->getId() << BOLDBLUE << "]" << RESET;
+                        for(auto suffix: {"_0", "_1", "_2", "_3"})
+                        {
+                            this->fReadoutChipInterface->WriteChipReg(cChip, regName + suffix, regValueMap[suffix]);
+                            const auto numberOfBits = RD53Shared::firstChip->getRegMap()[regName + suffix].fBitSize;
+                            uint16_t   mask         = RD53Shared::setBits(numberOfBits);
+                            auto       value        = (std::bitset<16>(regValueMap[suffix]) & std::bitset<16>(mask)).to_string().erase(0, 16 - numberOfBits);
+                            bool       problems     = (regValueMap[suffix] != mask);
+                            LOG(INFO) << (problems ? BOLDRED : BOLDBLUE) << "\t--> " << regName + suffix << " value = " << BOLDYELLOW << value << (problems ? BOLDRED : BOLDBLUE) << " (0 = disabled)"
+                                      << RESET;
+                        }
+                    }
+            }
+
+        // ############################
+        // # Reset to original values #
+        // ############################
+        this->setChannelGroupHandler(theChnGroupHandler);
+        RD53RunProgress::turnON();
+    }
+
+    PixelAlive::runPixelAlive();
+}
+
+void PixelAlive::runPixelAlive()
 {
     theOccContainer              = std::make_shared<DetectorDataContainer>();
     this->fDetectorDataContainer = theOccContainer.get();

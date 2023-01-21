@@ -18,8 +18,8 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
 {
     this->setBoard(pChip->getBeBoardId());
 
-    auto        pRD53       = static_cast<RD53*>(pChip);
-    ChipRegMap& pRD53RegMap = pChip->getRegMap();
+    auto* pRD53       = static_cast<RD53*>(pChip);
+    auto& pRD53RegMap = pChip->getRegMap();
 
     // ########################################################################
     // # Switching to pixel-register configuration, instead of the hard-wired #
