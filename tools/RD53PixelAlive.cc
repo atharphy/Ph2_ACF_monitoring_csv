@@ -191,8 +191,8 @@ void PixelAlive::run()
                         // ###########################
                         // # Download new DAC values #
                         // ###########################
-                        LOG(INFO) << BOLDBLUE << "Results for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                                  << +cChip->getId() << BOLDBLUE << "]" << RESET;
+                        LOG(INFO) << GREEN << "Results for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                                  << +cChip->getId() << RESET << GREEN << "]" << RESET;
                         for(auto suffix: {"_0", "_1", "_2", "_3"})
                         {
                             this->fReadoutChipInterface->WriteChipReg(cChip, regName + suffix, regValueMap[suffix]);
@@ -200,8 +200,8 @@ void PixelAlive::run()
                             uint16_t   mask         = RD53Shared::setBits(numberOfBits);
                             auto       value        = (std::bitset<16>(regValueMap[suffix]) & std::bitset<16>(mask)).to_string().erase(0, 16 - numberOfBits);
                             bool       problems     = (regValueMap[suffix] != mask);
-                            LOG(INFO) << (problems ? BOLDRED : BOLDBLUE) << "\t--> " << regName + suffix << " value = " << BOLDYELLOW << value << (problems ? BOLDRED : BOLDBLUE) << " (0 = disabled)"
-                                      << RESET;
+                            LOG(INFO) << (problems ? BOLDRED : BOLDBLUE) << "\t--> " << BOLDYELLOW << regName + suffix << (problems ? BOLDRED : BOLDBLUE) << " value = " << BOLDYELLOW << value
+                                      << (problems ? BOLDRED : BOLDBLUE) << " (0 = disabled)" << RESET;
                         }
 
                         LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
