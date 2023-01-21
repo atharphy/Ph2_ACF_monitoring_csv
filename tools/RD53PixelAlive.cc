@@ -127,7 +127,7 @@ void PixelAlive::localConfigure(const std::string& histoFileName, int currentRun
 
 void PixelAlive::run()
 {
-    if((doDataIntegrity == true) && (strcmp(frontEnd->name, "CROC") == 0))
+    if((doDataIntegrity == true) && (strcmp(frontEnd->name, "RD53B") == 0))
     {
         RD53RunProgress::turnOFF();
 
@@ -203,6 +203,8 @@ void PixelAlive::run()
                             LOG(INFO) << (problems ? BOLDRED : BOLDBLUE) << "\t--> " << regName + suffix << " value = " << BOLDYELLOW << value << (problems ? BOLDRED : BOLDBLUE) << " (0 = disabled)"
                                       << RESET;
                         }
+
+                        LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
                     }
             }
 
@@ -212,7 +214,7 @@ void PixelAlive::run()
         this->setChannelGroupHandler(theChnGroupHandler);
         RD53RunProgress::turnON();
     }
-    else if((doDataIntegrity == true) && (strcmp(frontEnd->name, "CROC") != 0))
+    else if((doDataIntegrity == true) && (strcmp(frontEnd->name, "RD53B") != 0))
     {
         throw std::runtime_error("Option -DoDataIntegrity- not available for RD53A");
     }

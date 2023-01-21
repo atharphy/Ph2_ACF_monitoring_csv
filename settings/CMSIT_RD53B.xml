@@ -284,7 +284,7 @@
        MonitoringSleepTime: sleep for monitoring thread in milliseconds
   -->
   <MonitoringSettings>
-    <Monitoring type="RD53" enable="0">
+    <Monitoring type="RD53B" enable="0">
       <MonitoringSleepTime> 1000 </MonitoringSleepTime>
       <MonitoringElement device="RD53" register="VINA"                 enable="1"/>
       <MonitoringElement device="RD53" register="VDDA"                 enable="1"/>
