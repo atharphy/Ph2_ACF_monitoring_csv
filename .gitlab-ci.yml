@@ -33,6 +33,7 @@ stages:
   - quality
   - build_c7
   - build_al8
+  - build_al9
   - run
   - check
   - deploy
@@ -182,6 +183,78 @@ build:StandAlone_wTC_USB_ROH_al8:
   image:
     name: gitlab-registry.cern.ch/leejr/docker_exploration/cmstkph2_ci_al8:test
     entrypoint: ["/bin/sh","-c"]
+
+
+
+
+
+
+
+
+
+
+
+# Stand-alone application, without data streaming
+build:StandAlone_woDS_al9:
+  extends: build:StandAlone_woDS_c7
+  stage: build_al9
+  image:
+    name: gitlab-registry.cern.ch/leejr/docker_exploration/cmstkph2_ci_al9:test
+    entrypoint: ["/bin/sh","-c"]
+
+# Stand-alone application, with data streaming
+build:StandAlone_wDS_al9:
+  extends: build:StandAlone_wDS_c7
+  stage: build_al9
+  image:
+    name: gitlab-registry.cern.ch/leejr/docker_exploration/cmstkph2_ci_al9:test
+    entrypoint: ["/bin/sh","-c"]
+
+# Herd application
+build:HerdApplication_al9:
+  extends: build:HerdApplication_c7
+  stage: build_al9
+  image:
+    name: gitlab-registry.cern.ch/leejr/docker_exploration/cmstkph2_ci_al9:test
+    entrypoint: ["/bin/sh","-c"]
+
+# Shep application
+build:ShepApplication_al9:
+  extends: build:ShepApplication_c7
+  stage: build_al9
+  image:
+    name: gitlab-registry.cern.ch/leejr/docker_exploration/cmstkph2_ci_al9:test
+    entrypoint: ["/bin/sh","-c"]
+
+# Compile with EUDAQ libraries
+build:StandAlone_wEUDAQ_al9:
+  extends: build:StandAlone_wEUDAQ_c7
+  stage: build_al9
+  image:
+    name: gitlab-registry.cern.ch/leejr/docker_exploration/cmstkph2_ci_al9:test
+    entrypoint: ["/bin/sh","-c"]
+
+# Compile with TC_USB library
+build:StandAlone_wTC_USB_SEH_al9:
+  extends: build:StandAlone_wTC_USB_SEH_c7
+  stage: build_al9
+  image:
+    name: gitlab-registry.cern.ch/leejr/docker_exploration/cmstkph2_ci_al9:test
+    entrypoint: ["/bin/sh","-c"]
+
+# Compile with TC_USB library for ROH
+build:StandAlone_wTC_USB_ROH_al9:
+  extends: build:StandAlone_wTC_USB_ROH_c7
+  stage: build_al9
+  image:
+    name: gitlab-registry.cern.ch/leejr/docker_exploration/cmstkph2_ci_al9:test
+    entrypoint: ["/bin/sh","-c"]
+
+
+
+
+
+
 
 
 
