@@ -8,6 +8,7 @@
 */
 
 #include "MonitorUtils/RD53Monitor.h"
+#include <array>
 
 RD53Monitor::RD53Monitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {

@@ -35,7 +35,10 @@
 using namespace MessageUtils;
 
 //========================================================================================================================
-MiddlewareController::MiddlewareController(uint16_t portShift) : TCPServer(PORT_BASE + portShift, 1) {}
+MiddlewareController::MiddlewareController(uint16_t portShift) : TCPServer(PORT_BASE + portShift, 1) 
+{
+       std::cout << "[" << __LINE__ << "]" << __PRETTY_FUNCTION__ << "come on!" << std::endl;
+}
 
 //========================================================================================================================
 MiddlewareController::~MiddlewareController(void) { LOG(INFO) << __PRETTY_FUNCTION__ << " DESTRUCTOR" << RESET; }

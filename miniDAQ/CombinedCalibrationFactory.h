@@ -49,7 +49,7 @@ class CombinedCalibrationFactory
         fStringToCalibrationName[calibrationTag]     = theCalibrationEnum;
     }
 
-    Tool* CreateCombinedCalibration(const std::string& calibrationTag) const;
+    Tool* createCombinedCalibration(const std::string& calibrationTag) const;
 
     std::vector<std::string>                                                  getAvailableCalibrations() const;
     std::map<MessageUtils::CalibrationList::CalibrationNameEnum, std::string> getAvailableCalibrationMap() const { return fCalibrationNameToString; }
