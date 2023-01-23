@@ -468,8 +468,8 @@ void Gain::computeStats(const std::vector<float>& x,
     DoF                = nData - NGAINPAR / 2;
     if(RD53Shared::firstChip->getUseGainDualSlope() == true)
     {
-        const size_t nDataLow = std::count_if(scanOutputs.begin(), scanOutputs.end(), [&](ScanOutput val) { return val.y <= limitToT; });
-        if(((nDataLow - NGAINPAR) < 1) || ((nData - nDataLow - NGAINPAR) < 1))
+        const size_t nDataLowRange = std::count_if(scanOutputs.begin(), scanOutputs.end(), [&](ScanOutput val) { return val.y <= limitToT; });
+        if(((nDataLowRange - NGAINPAR) < 1) || ((nData - nDataLowRange - NGAINPAR) < 1))
             return;
         else
             DoF = nData - NGAINPAR;
