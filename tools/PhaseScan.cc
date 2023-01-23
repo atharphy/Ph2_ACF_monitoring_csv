@@ -122,7 +122,7 @@ void PhaseScan::ScanPhase()
 
                                     // cTotalHitsS0 += cPclstrs.size();
                                     // cTotalHitsS1 += cSclstrs.size();
-                                    if(cChip->getFrontEndType() == FrontEndType::MPA2)
+                                    if(cChip->getFrontEndType() == FrontEndType::MPA2 or cChip->getFrontEndType() == FrontEndType::MPA)
                                     {
                                         for(auto& cPclstr: cPclstrs)
                                         {
@@ -137,7 +137,7 @@ void PhaseScan::ScanPhase()
                                             }
                                         }
                                     }
-                                    if(cChip->getFrontEndType() == FrontEndType::SSA2)
+                                    if(cChip->getFrontEndType() == FrontEndType::SSA2 or cChip->getFrontEndType() == FrontEndType::SSA)
                                     {
                                         for(auto& cSclstr: cSclstrs)
                                         {
