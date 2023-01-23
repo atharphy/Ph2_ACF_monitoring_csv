@@ -11,7 +11,7 @@
 #ifndef RD53ACOMMANDS_H
 #define RD53ACOMMANDS_H
 
-#include "../Utils/BitMaster/bit_packing.h"
+#include "Utils/BitMaster/bit_packing.h"
 
 #include <vector>
 
@@ -143,7 +143,7 @@ struct WrRegLong
 
     size_t                  chip_id = 8;
     size_t                  address;
-    std::array<uint16_t, 9> values;
+    std::array<uint16_t, 6> values;
 };
 
 std::array<uint8_t, WrRegLong::nFields()> serializeFields(const WrRegLong& cmd);
@@ -159,6 +159,12 @@ struct RdReg
 
 std::array<uint8_t, RdReg::nFields()> serializeFields(const RdReg& cmd);
 
+template <class CmdType>
+size_t getN16bitWords()
+{
+    return 1 + CmdType::nFields() / 2;
+}
+
 template <int... Sizes, class... Args>
 uint8_t packAndEncode(Args&&... args)
 {
@@ -169,7 +175,7 @@ template <class CmdType>
 void serialize(const CmdType& cmd, std::vector<uint16_t>& cmdStream)
 {
     auto fields = serializeFields(cmd);
-    cmdStream.reserve(cmdStream.size() + 1 + fields.size() / 2);
+    cmdStream.reserve(cmdStream.size() + getN16bitWords<CmdType>());
 
     // Insert command code
     cmdStream.push_back(CmdType::cmdCode());

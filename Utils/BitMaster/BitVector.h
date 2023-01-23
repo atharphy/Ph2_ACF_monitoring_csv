@@ -28,11 +28,12 @@ class BitVector
     {
     }
 
-    size_t size() const { return _size; }
+    size_t  size() const { return _size; }
+    size_t& size() { return _size; }
 
     BitView<BlockType> append_zeros(size_t n)
     {
-        int extra_bits = n + _size - _data.size() * block_size;
+        int extra_bits = n + _size - _data.size() * int(block_size);
         if(extra_bits > 0)
         {
             int extra_words = (extra_bits + block_size - 1) / block_size;
@@ -43,35 +44,43 @@ class BitVector
         return {_data.data(), old_size, _size};
     }
 
+    void append(size_t value, size_t size = 64)
+    {
+        int extra_bits = size + _size - _data.size() * int(block_size);
+        if(extra_bits > 0)
+        {
+            int extra_words = (extra_bits + block_size - 1) / block_size;
+            _data.insert(std::end(_data), extra_words, 0);
+        }
+        auto new_bits = BitView<BlockType>{_data.data(), _size, _size + size};
+        new_bits.set(value);
+        _size += size;
+    }
+
     template <class BlockTypeOther>
     void append(const BitView<BlockTypeOther>& bits)
     {
-        int extra_bits = bits.size() + _size - _data.size() * block_size;
+        int extra_bits = bits.size() + _size - _data.size() * int(block_size);
 
         if(extra_bits > 0)
         {
             int extra_words = (extra_bits + block_size - 1) / block_size;
             _data.insert(std::end(_data), extra_words, 0);
         }
-        auto new_bits = BitView<BlockType>{_data.data(), _size, _size + bits.size()};
-
-        size_t offset = 0;
-
+        auto   new_bits = BitView<BlockType>{_data.data(), _size, _size + bits.size()};
+        size_t offset   = 0;
         while(offset + 8 < bits.size())
         {
-            uint8_t byte = bits.slice(offset, offset + 8).template get<uint8_t>();
+            uint8_t byte = bits.parse(offset, 8);
             new_bits.slice(offset, offset + 8).set(byte);
             offset += 8;
         }
-
         int leftover_bits = bits.size() - offset;
-
         if(leftover_bits > 0)
         {
-            uint8_t byte = bits.slice(offset, offset + leftover_bits).template get<uint8_t>();
+            uint8_t byte = bits.parse(offset, leftover_bits);
             new_bits.slice(offset, offset + leftover_bits).set(byte);
         }
-
         _size += bits.size();
     }
 

@@ -10,14 +10,14 @@
 #ifndef PSHybridTester_h__
 #define PSHybridTester_h__
 
-#include "LinkAlignmentOT.h"
-#include "Tool.h"
+#include "tools/LinkAlignmentOT.h"
+#include "tools/Tool.h"
 #if defined(__TCUSB__)
 #include "USB_a.h"
 #endif
 
-#include "../HWInterface/DPInterface.h"
-#include "../Utils/SSAChannelGroupHandler.h"
+#include "HWInterface/DPInterface.h"
+#include "Utils/SSAChannelGroupHandler.h"
 #define PSHYBRIDMAXV 1.32
 
 #include <map>

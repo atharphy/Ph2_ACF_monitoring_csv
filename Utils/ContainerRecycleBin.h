@@ -1,9 +1,9 @@
 #ifndef CONTAINER_RECICLE_BIN_H
 #define CONTAINER_RECICLE_BIN_H
 
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/DataContainer.h"
+#include "Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/DataContainer.h"
 
 template <typename... Ts>
 using TestType = decltype(ContainerFactory::copyAndInitStructure(std::declval<const DetectorContainer&>(), std::declval<DetectorDataContainer&>(), std::declval<Ts&>()...))(const DetectorContainer&,

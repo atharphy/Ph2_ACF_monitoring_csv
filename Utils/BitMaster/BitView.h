@@ -53,7 +53,10 @@ class BitView
 
     explicit BitView(BlockType& val) : _data(&val), _start(0), _end(block_size) {}
 
+    size_t start() const { return _start; }
     size_t size() const { return _end - _start; }
+
+    auto data() const { return _data; }
 
     BitView slice(size_t start) const
     {
@@ -74,10 +77,48 @@ class BitView
     }
 
     template <class T = size_t>
+    T parse(size_t n) const
+    {
+        return parse(0, n);
+    }
+
+    template <class T = size_t>
+    T parse(size_t offset, size_t n) const
+    {
+        if(offset + n > size()) throw std::runtime_error("BitView::parse: out of range");
+
+        T result{0};
+
+        int    block_offset = (_start + offset) / block_size;
+        size_t bit_offset   = (_start + offset) % block_size;
+        size_t bits_copied  = 0;
+
+        while(true)
+        {
+            size_t bits_in_current_block = block_size - bit_offset;
+            size_t bits_to_copy          = n - bits_copied;
+            if(bits_in_current_block >= bits_to_copy)
+            {
+                size_t excess_bits_in_current_block = bits_in_current_block - bits_to_copy;
+                result |= (_data[block_offset] >> excess_bits_in_current_block) & BitViewDetails::low_mask<BlockType>(bits_to_copy);
+                break;
+            }
+            else
+            {
+                result |= (_data[block_offset] & BitViewDetails::low_mask<BlockType>(bits_in_current_block)) << (bits_to_copy - bits_in_current_block);
+                ++block_offset;
+                bit_offset = 0;
+                bits_copied += bits_in_current_block;
+            }
+        }
+
+        return result;
+    }
+
+    template <class T = size_t>
     T pop(size_t n)
     {
-        if(n > size()) throw std::runtime_error("BitView::pop: out of range");
-        auto result = BitView{_data, _start, _start + n}.template get<T>();
+        T result = parse(n);
         _start += n;
         return result;
     }
@@ -136,7 +177,6 @@ class BitView
             copy_into(std::rbegin(result.raw), std::rend(result.raw));
         else
             copy_into(std::begin(result.raw), std::end(result.raw));
-
         if(size() < 8 * sizeof(T))
         {
             if(big_endian)
@@ -144,7 +184,6 @@ class BitView
             else
                 result.val &= BitViewDetails::low_mask<T>(size());
         }
-
         return result.val;
     }
 
@@ -168,10 +207,11 @@ class BitView
     {
         if(size() == 0) return;
 
-        int    first_block = _start / block_size;
-        int    last_block  = (_end - 1) / block_size;
-        size_t bit_start   = _start % block_size;
-        size_t bit_end     = (_end - 1) % block_size + 1;
+        int first_block = _start / block_size;
+        int last_block  = (_end - 1) / block_size;
+
+        size_t bit_start = _start % block_size;
+        size_t bit_end   = (_end - 1) % block_size + 1;
 
         int n_bits;
         if(first_block == last_block) { n_bits = bit_end - bit_start; }

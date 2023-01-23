@@ -10,14 +10,14 @@
 #ifndef RD53FWInterface_H
 #define RD53FWInterface_H
 
-#include "../HWDescription/RD53.h"
-#include "../HWDescription/RD53ACommands.h"
-#include "../Utils/RD53Event.h"
-#include "../Utils/RD53RunProgress.h"
-#include "../Utils/RD53Shared.h"
-#include "../Utils/easylogging++.h"
-#include "BeBoardFWInterface.h"
-#include "RD53lpGBTInterface.h"
+#include "HWDescription/RD53.h"
+#include "HWDescription/RD53ACommands.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/RD53lpGBTInterface.h"
+#include "Utils/RD53Event.h"
+#include "Utils/RD53RunProgress.h"
+#include "Utils/RD53Shared.h"
+#include "Utils/easylogging++.h"
 
 #include <uhal/uhal.hpp>
 
@@ -30,15 +30,12 @@ const uint8_t  NLANE_HYBRID         = 4;      // Number of lanes per hybrid
 const uint8_t  HEADEAR_WRTCMD       = 0xFF;   // Header of chip write command sequence
 const uint8_t  NBIT_FWVER           = 16;     // Number of bits for the firmware version
 const uint8_t  IPBUS_FASTDURATION   = 1;      // Duration of a fast command in terms of 40 MHz clk cycles
-const uint8_t  AURORA_SPEED         = 0;      // 0 = 1.28 Gbp/s, 1 = 640 Mbp/s
+const uint8_t  AURORA_SPEED         = 0;      // 0 = 1.28 Gbps, 1 = 640 Mbps, 2 = 320 Mbps
 const uint32_t NBIT_SLOWCMD_FIFO    = 16;     // Slow command FIFO depth 65.536, i.e. 16 bits (in terms of 32-bit words)
 const uint32_t NBIT_DATA_FIFO       = 27;     // Data FIFO depth 134.217.728, i.e. 27 bits (in terms of 32-bit words)
 const uint32_t EVENT_STREAM_TIMEOUT = 0xFFFF; // Event stream timeout
 
-constexpr float VDDD2Volt(float val) { return (0.968 + val * 0.0115); }
-constexpr float CDR2Freq(float val) { return (140 + val * 5); }
-
-enum class ReadoutSpeed : uint8_t
+enum ReadoutSpeed : uint8_t
 {
     x1280,
     x640,
@@ -88,6 +85,10 @@ class RD53FWInterface : public BeBoardFWInterface
                                     const bool                        doReset               = false);
     uint32_t ReadArbitraryRegister(const std::string& regName);
     void     ResetBoard();
+    void     ResetFastCmdBlk();
+    void     ResetSlowCmdFIFO();
+    void     ResetReadBkFIFO();
+    void     ResetReadoutBlk();
 
     // ####################################
     // # Check AURORA lock on data stream #
@@ -205,18 +206,15 @@ class RD53FWInterface : public BeBoardFWInterface
     float calcVoltage(uint32_t senseVDD, uint32_t senseGND);
 
   private:
-    void                  PrintFWstatus();
-    void                  TurnOffFMC();
-    void                  TurnOnFMC();
-    void                  ResetFastCmdBlk();
-    void                  ResetSlowCmdBlk();
-    void                  ResetReadoutBlk();
-    void                  ConfigureFastCommands(const FastCommandsConfig* config = nullptr);
-    void                  ConfigureDIO5(const DIO5Config* config);
-    void                  SendBoardCommand(const std::string& cmd_reg);
-    void                  InitHybridByHybrid(const Ph2_HwDescription::BeBoard* pBoard);
-    std::vector<uint16_t> GetInitSequence(const unsigned int type);
-    uint32_t              GetHybridEnabledChips(const Ph2_HwDescription::Hybrid* pHybrid);
+    void     PrintFWstatus();
+    void     TurnOffFMC();
+    void     TurnOnFMC();
+    void     ConfigureFastCommands(const FastCommandsConfig* config = nullptr);
+    void     ConfigureDIO5(const DIO5Config* config);
+    void     SendBoardCommandWithStrobe(const std::string& cmdReg);
+    void     SendBoardCommand(const std::string& cmdReg);
+    uint32_t GetBoardEnabledChips(const Ph2_HwDescription::BeBoard* pBoard);
+    uint32_t GetBoardEnabledHybrids(const Ph2_HwDescription::BeBoard* pBoard);
 
     // ###################
     // # Clock generator #

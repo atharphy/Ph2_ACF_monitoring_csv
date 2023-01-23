@@ -1,7 +1,7 @@
 #include "PulseShape.h"
 
 #ifdef __USE_ROOT__
-#include "../HWInterface/CbcInterface.h"
+#include "HWInterface/CbcInterface.h"
 
 PulseShape::PulseShape() : Tool() {}
 

@@ -2,18 +2,18 @@
 <HwDescription>
   <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="1" boardReset="1">
     <!-- B598 skeleton -->
-    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.185:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="ipbusudp-2.0://192.168.0.72:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
     <CDCE configure="0" clockRate="320"/>
 
-    <OpticalGroup Id="0" FMCId="0" reset="1">
+    <OpticalGroup Id="0" FMCId="L12" reset="1">
         <lpGBT_Files path="./settings/lpGBTFiles/" />
         <lpGBT Id="0" version="0" optical="1" configfile="lpGBT_v0.txt">
           <Settings
           />
         </lpGBT>
-        <Hybrid Id="0" Status="1" reset="1">
+        <Hybrid Id="0" enable="1" reset="1">
             <Global>
-                <Settings threshold="720" latency="108"/>
+                <Settings threshold="520" latency="108"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
@@ -34,9 +34,9 @@
             <CIC_Files path="${PH2ACF_BASE_DIR}/settings/CicFiles/" />
             <CIC2 Id="8" configfile="CIC2_default.txt" />
         </Hybrid>
-        <Hybrid Id="1" Status="1" reset="1" > <!-- i2cMaster="1"> -->
+        <Hybrid Id="1" enable="1" reset="1" > <!-- i2cMaster="1"> -->
             <Global>
-                <Settings threshold="720" latency="108"/>
+                <Settings threshold="520" latency="108"/>
                 <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
                 <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
                 <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
@@ -60,8 +60,8 @@
     </OpticalGroup>
 
     <!--CONFIG-->
-    <!-- 3 - default (internal oscillator), 2 - backplane, 0 - AMC13 -->
-    <Register name="clock_source_u7">3</Register>
+    <!-- 15 - default (internal oscillator), 0 - AMC13 -->
+    <Register name="clock_source_u7">15</Register>
     <!-- 3 = 3 = internal oscillator (default), 1 = fmc_l8_clk1, 2 = fmc_l8_clk0, 0 = COAX_IN -->
     <Register name="clock_source_u8">3</Register>
     <Register name="fc7_daq_cnfg">
@@ -216,8 +216,8 @@
     <!-- <Setting name="PedeNoiseMinThreshold">375</Setting>
     <Setting name="PedeNoiseMaxThreshold">750</Setting> -->
 
-    <Setting name="PedestalEqualizationPulseAmplitude">70</Setting>
-    <Setting name="PedeNoisePulseAmplitude">70</Setting>
+    <!-- <Setting name="PedestalEqualizationPulseAmplitude">70</Setting>
+    <Setting name="PedeNoisePulseAmplitude">70</Setting> -->
     <Setting name="TriggerRate">10</Setting>
     <Setting name="StubAlignmentThreshold">550</Setting>
     <Setting name="StubAlignmentScanStart">67</Setting>

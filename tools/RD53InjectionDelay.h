@@ -13,7 +13,9 @@
 #include "RD53Latency.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53InjectionDelayHistograms.h"
+#include "DQMUtils/RD53InjectionDelayHistograms.h"
+#else
+typedef bool InjectionDelayHistograms;
 #endif
 
 // ##############################
@@ -24,10 +26,9 @@ class InjectionDelay : public PixelAlive
   public:
     ~InjectionDelay()
     {
-#ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
-#endif
+        delete histos;
     }
 
     void Running() override;
@@ -35,42 +36,34 @@ class InjectionDelay : public PixelAlive
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
-    void   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
-    void   run();
-    void   draw();
-    void   analyze();
-    size_t getNumberIterations()
+    void   localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
+    void   run() override;
+    void   draw(bool saveData = true) override;
+    size_t getNumberIterations() override
     {
         return PixelAlive::getNumberIterations() *
                (stopValue - startValue + 1 <= RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1 ? stopValue - startValue + 1 : RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
     }
-    void saveChipRegisters(int currentRun);
 
-#ifdef __USE_ROOT__
+    void analyze();
+
     InjectionDelayHistograms* histos;
-#endif
 
   private:
-    Latency la;
+    void fillHisto() override;
 
+    void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer);
+
+    Latency               la;
     std::vector<uint16_t> dacList;
-
     DetectorDataContainer theOccContainer;
     DetectorDataContainer theInjectionDelayContainer;
-
-    void fillHisto();
-    void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer);
-    void chipErrorReport() const;
 
   protected:
     size_t startValue;
     size_t stopValue;
 
-    std::string fileRes;
-    int         theCurrentRun;
-    size_t      saveInjection;
-    size_t      maxDelay;
+    int theCurrentRun;
 };
 
 #endif

@@ -1,7 +1,7 @@
-#include "../System/SystemController.h"
-#include "../Utils/CommonVisitors.h"
-#include "../Utils/Timer.h"
-#include "../Utils/argvparser.h"
+#include "System/SystemController.h"
+#include "Utils/CommonVisitors.h"
+#include "Utils/Timer.h"
+#include "Utils/argvparser.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -25,7 +25,7 @@ int main(int argc, char** argv)
     // options
     cmd.setHelpOption("h", "help", "Print this help page");
 
-    cmd.defineOption("file", "Hw Description File . Default value: settings/D19CDescription.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
+    cmd.defineOption("file", "Hw Description File . Default value: settings/2S_GIPHT.xml", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOptionAlternative("file", "f");
 
     cmd.defineOption("configure", "Configure HW", ArgvParser::NoOptionAttribute);
@@ -40,7 +40,7 @@ int main(int argc, char** argv)
     }
 
     // now query the parsing results
-    std::string cHWFile    = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/gipht_2s_default.xml";
+    std::string cHWFile    = (cmd.foundOption("file")) ? cmd.optionValue("file") : "settings/2S_GIPHT.xml";
     bool        cConfigure = (cmd.foundOption("configure")) ? true : false;
 
     std::stringstream outp;

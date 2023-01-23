@@ -1,5 +1,4 @@
-#include "D19cPSCounterFWInterface.h"
-// #include "FEConfigurationInterface.h"
+#include "HWInterface/D19cPSCounterFWInterface.h"
 
 using namespace Ph2_HwDescription;
 
@@ -112,6 +111,7 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard)
             } // chip loop
         }     // hybrid loop
     }         // board loop
+    // PS_Clear_counters();
 }
 bool D19cPSCounterFWInterface::ReadPSCountersFast(uint8_t pRawMode, size_t pChipId, size_t pHybridId)
 {

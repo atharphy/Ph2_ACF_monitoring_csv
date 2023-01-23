@@ -5,7 +5,7 @@
 #include "uhal/DerivedNode.hpp"
 #include "uhal/log/exception.hpp"
 
-#include "Firmware.h"
+#include "HWInterface/Firmware.h"
 
 #include <string>
 

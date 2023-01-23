@@ -10,10 +10,10 @@
 #ifndef lpGBT_H
 #define lpGBT_H
 
-#include "../Utils/ConsoleColor.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/easylogging++.h"
 #include "Chip.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/Utilities.h"
+#include "Utils/easylogging++.h"
 
 #include <iomanip>
 
@@ -24,9 +24,9 @@ class lpGBT : public Chip
   public:
     lpGBT(uint8_t pBeBoardId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChipId, const std::string& fileName);
 
-    void    loadfRegMap(const std::string& fileName) override;
-    void    saveRegMap(const std::string& fileName) override;
-    uint8_t getNumberOfBits(const std::string& dacName) override { return 0; }
+    void              loadfRegMap(const std::string& fileName) override;
+    std::stringstream saveRegMap(const std::string& fName2Add = "") override;
+    uint8_t           getNumberOfBits(const std::string& dacName) override { return 0; }
 
     void    setVersion(uint8_t pVersion) { fVersion = pVersion; }
     uint8_t getVersion() const { return fVersion; }

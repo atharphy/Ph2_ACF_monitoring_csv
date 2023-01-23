@@ -11,8 +11,8 @@
 #ifndef HistContainer_H
 #define HistContainer_H
 
-#include "../RootUtils/PlotContainer.h"
-#include "../Utils/Container.h"
+#include "RootUtils/PlotContainer.h"
+#include "Utils/Container.h"
 
 #include <iostream>
 

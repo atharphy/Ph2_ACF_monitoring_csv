@@ -14,10 +14,10 @@
 #ifndef _D19CFWINTERFACE_H__
 #define _D19CFWINTERFACE_H__
 
-#include "../Utils/DataContainer.h"
-#include "../Utils/Event.h"
-#include "../Utils/easylogging++.h"
-#include "BeBoardFWInterface.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "Utils/DataContainer.h"
+#include "Utils/Event.h"
+#include "Utils/easylogging++.h"
 
 #include <limits.h>
 #include <map>
@@ -26,8 +26,8 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
-//#include "../Utils/OccupancyAndPh.h"
-//#include "../Utils/GenericDataVector.h"
+//#include "Utils/OccupancyAndPh.h"
+//#include "Utils/GenericDataVector.h"
 #include <uhal/uhal.hpp>
 
 /*!
@@ -315,7 +315,9 @@ class D19cFWInterface : public BeBoardFWInterface
     // consecutive triggers FSM
     void ConfigureAntennaFSM(uint16_t pNtriggers = 1, uint16_t pTriggerRate = 1, uint16_t pL1Delay = 100);
 
-    void configureTxRxPolarity(const Ph2_HwDescription::BeBoard* pBoard);
+    void configureLinks(const Ph2_HwDescription::BeBoard* pBoard);
+    void configureTxRxPolarities(const Ph2_HwDescription::BeBoard* pBoard);
+    void configureLpGbtVersions(const Ph2_HwDescription::BeBoard* pBoard);
     void setRxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fRxPolarity.insert({pLinkId, pPolarity}); };
     void setTxPolarity(uint8_t pLinkId, uint8_t pPolarity = 1) { fTxPolarity.insert({pLinkId, pPolarity}); };
 

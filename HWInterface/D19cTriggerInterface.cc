@@ -1,4 +1,4 @@
-#include "D19cTriggerInterface.h"
+#include "HWInterface/D19cTriggerInterface.h"
 
 using namespace Ph2_HwDescription;
 
@@ -177,52 +177,7 @@ bool D19cTriggerInterface::Start()
 
     cTriggerState = GetTriggerState();
     LOG(DEBUG) << BOLDYELLOW << "D19cTriggerInterface::Start - post-start trigger state is " << cTriggerState << RESET;
-
     return (cTriggerState == 1);
-
-    // // get handshake mode
-    // // this changes how I check if I've actually started
-    // auto cHandshake = ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
-    // bool cBreak     = false;
-    // do
-    // {
-    //     LOG(DEBUG) << BOLDBLUE << "D19cFWInterface::Start Trigger state is " << cTriggerState << RESET;
-    //     // this stops triggers  + resets
-    //     this->ResetTriggerFSM();
-    //     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us * 100));
-    //     this->TriggerConfiguration();
-
-    //     // here open the shutter for the stub counter block (for some reason self clear doesn't work, that why we have to
-    //     // clear the register manually)
-    //     WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x1);
-    //     WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x0);
-    //     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-
-    //     WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
-    //     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
-
-    //     // prints to debug and also checks that things are ok
-    //     this->TriggerConfiguration();
-    //     cTriggerState = GetTriggerState();
-    //     LOG(DEBUG) << BOLDBLUE << "D19cFWInterface::Start Trigger state is " << cTriggerState << RESET;
-
-    //     // now check if I should try and start again
-    //     if(cHandshake)
-    //     {
-    //         auto cReadoutReq = ReadReg("fc7_daq_stat.readout_block.general.readout_req");
-    //         cBreak           = (cReadoutReq == 1) || (cTriggerState != 0);
-    //         if(cBreak)
-    //             LOG(DEBUG) << BOLDMAGENTA << "Hand-shake is on .. readout-request after start is " << +cReadoutReq << " - triggers have started and I've got all the events I've asked for " <<
-    //             RESET;
-    //         else
-    //             LOG(DEBUG) << BOLDMAGENTA << "Hand-shake is on .. readout-request after start is " << +cReadoutReq << " - trigger state is " << +cTriggerState << RESET;
-    //     }
-    //     else
-    //         cBreak = (cTriggerState != 0);
-    //     if(!cBreak) LOG(INFO) << BOLDRED << "Triggers failed to START - trying again" << RESET;
-    // } while(!cBreak);
-    // LOG(DEBUG) << BOLDBLUE << "D19cFWInterface::Start Trigger state at the end of start is " << +cTriggerState << RESET;
-    // return true;
 }
 // configure number of triggers to accept
 bool D19cTriggerInterface::SetNTriggersToAccept(uint32_t pNTriggersToAccept)

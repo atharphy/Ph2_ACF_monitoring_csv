@@ -12,10 +12,10 @@
 #ifndef Cbc_h__
 #define Cbc_h__
 
-#include "../Utils/Exception.h"
-#include "../Utils/Visitor.h"
 #include "FrontEndDescription.h"
 #include "ReadoutChip.h"
+#include "Utils/Exception.h"
+#include "Utils/Visitor.h"
 #include <iostream>
 #include <set>
 #include <stdint.h>
@@ -60,9 +60,10 @@ class Cbc : public ReadoutChip
 
     /*!
      * \brief Write the registers of the Map in a file
-     * \param filename
+     * \param fName2Add
+     * \return std::stringstream
      */
-    void saveRegMap(const std::string& filename) override;
+    std::stringstream saveRegMap(const std::string& fName2Add = "") override;
 
     uint32_t getNumberOfChannels() const override { return NCHANNELS; }
 

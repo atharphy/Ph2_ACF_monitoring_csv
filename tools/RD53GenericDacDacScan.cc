@@ -63,13 +63,14 @@ void GenericDacDacScan::Running()
 
     if(PixelAlive::saveBinaryData == true)
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_GenericDacDacScan.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
     GenericDacDacScan::run();
     GenericDacDacScan::analyze();
-    GenericDacDacScan::saveChipRegisters(theCurrentRun);
+    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     GenericDacDacScan::sendData();
 }
 
@@ -77,8 +78,8 @@ void GenericDacDacScan::sendData()
 {
     const size_t GenericDacDacScanSize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-    auto theStream                  = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<GenericDacDacScanSize>>("Occ");
-    auto theGenericDacDacScanStream = prepareChipContainerStreamer<EmptyContainer, std::pair<uint16_t, uint16_t>>("DACDAC");
+    auto theStream                  = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<GenericDacDacScanSize>>("Occ");
+    auto theGenericDacDacScanStream = this->prepareChipContainerStreamer<EmptyContainer, std::pair<uint16_t, uint16_t>>("DACDAC");
 
     if(fDQMStreamerEnabled == true)
     {
@@ -99,36 +100,28 @@ void GenericDacDacScan::Stop()
     RD53RunProgress::reset();
 }
 
-void GenericDacDacScan::localConfigure(const std::string& fileRes_, int currentRun)
+void GenericDacDacScan::localConfigure(const std::string& histoFileName, int currentRun)
 {
-#ifdef __USE_ROOT__
-    histos = nullptr;
-#endif
+    histos             = nullptr;
+    PixelAlive::histos = nullptr;
+    theCurrentRun      = currentRun;
 
-    if(currentRun >= 0)
-    {
-        theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[GenericDacDacScan::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
-    }
+    LOG(INFO) << GREEN << "[GenericDacDacScan::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
+    // ##########################
+    // # Initialize calibration #
+    // ##########################
     GenericDacDacScan::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "GenericDacDacScan");
-    GenericDacDacScan::initializeFiles(fileRes_, currentRun);
-}
 
-void GenericDacDacScan::initializeFiles(const std::string& fileRes_, int currentRun)
-{
-    fileRes = fileRes_;
-
-    if((currentRun >= 0) && (PixelAlive::saveBinaryData == true))
-    {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_GenericDacDacScan.raw", 'w');
-        this->initializeWriteFileHandler();
-    }
-
-#ifdef __USE_ROOT__
-    delete histos;
-    histos = new GenericDacDacScanHistograms;
-#endif
+    // #########################################
+    // # Initialize histogram and binary files #
+    // #########################################
+    CalibBase::initializeFiles<GenericDacDacScanHistograms>(histoFileName, "GenericDacDacScan", histos, currentRun, PixelAlive::saveBinaryData);
 }
 
 void GenericDacDacScan::run()
@@ -141,12 +134,12 @@ void GenericDacDacScan::run()
     // ################
     // # Error report #
     // ################
-    GenericDacDacScan::chipErrorReport();
+    CalibBase::chipErrorReport();
 }
 
-void GenericDacDacScan::draw()
+void GenericDacDacScan::draw(bool saveData)
 {
-    GenericDacDacScan::saveChipRegisters(theCurrentRun);
+    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
@@ -155,7 +148,7 @@ void GenericDacDacScan::draw()
 
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
-        this->InitResultFile(fileRes);
+        this->InitResultFile(CalibBase::theHistoFileName);
         LOG(INFO) << BOLDBLUE << "\t--> GenericDacDacScan saving histograms..." << RESET;
     }
 
@@ -178,9 +171,9 @@ void GenericDacDacScan::analyze()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    auto best    = 0.;
-                    int  regVal1 = 0;
-                    int  regVal2 = 0;
+                    float  best    = 0u;
+                    size_t regVal1 = 0u;
+                    size_t regVal2 = 0u;
 
                     for(auto i = 0u; i < dac1List.size(); i++)
                         for(auto j = 0u; j < dac2List.size(); j++)
@@ -232,7 +225,7 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
         // ###########################
         // # Download new DAC values #
         // ###########################
-        LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regNameDAC1 << BOLDMAGENTA << " value = " << BOLDYELLOW << dac1List[i] << BOLDMAGENTA << " <<<" << RESET;
+        LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regNameDAC1 << BOLDMAGENTA << " broadcast value = " << BOLDYELLOW << dac1List[i] << BOLDMAGENTA << " <<<" << RESET;
         if(isDAC1ChipReg == true)
             for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regNameDAC1, dac1List[i]);
         else
@@ -245,7 +238,7 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
             // ###########################
             // # Download new DAC values #
             // ###########################
-            LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regNameDAC2 << BOLDMAGENTA << " value = " << BOLDYELLOW << dac2List[j] << BOLDMAGENTA << " <<<" << RESET;
+            LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regNameDAC2 << BOLDMAGENTA << " broadcast value = " << BOLDYELLOW << dac2List[j] << BOLDMAGENTA << " <<<" << RESET;
             if(isDAC2ChipReg == true)
                 for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regNameDAC2, dac2List[j]);
             else
@@ -282,49 +275,9 @@ void GenericDacDacScan::scanDacDac(const std::string&           regNameDAC1,
             GenericDacDacScan::sendData();
         }
     }
-}
 
-void GenericDacDacScan::chipErrorReport() const
-{
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
-                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->ChipErrorReport(cChip);
-                }
-}
-
-void GenericDacDacScan::saveChipRegisters(int currentRun)
-{
-    const std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
-
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-        {
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    static_cast<RD53*>(cChip)->copyMaskFromDefault();
-                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
-                    static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-                    std::string command("mv " + cChip->getFileName(fileReg) + " " + this->fDirectoryName);
-                    system(command.c_str());
-                    LOG(INFO) << BOLDBLUE << "\t--> GenericDacDacScan saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
-                              << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
-                }
-
-            if(cOpticalGroup->flpGBT != nullptr)
-            {
-                if(doUpdateChip == true) cOpticalGroup->flpGBT->saveRegMap("");
-                cOpticalGroup->flpGBT->saveRegMap(fileReg);
-                std::string command("mv " + cOpticalGroup->flpGBT->getFileName(fileReg) + " " + this->fDirectoryName);
-                system(command.c_str());
-
-                LOG(INFO) << BOLDBLUE << "\t--> GenericDacDacScan saved the LpGBT configuration file for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId()
-                          << RESET << BOLDBLUE << "]" << RESET;
-            }
-        }
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in");
 }

@@ -2,7 +2,7 @@
 
 using namespace Ph2_HwDescription;
 
-#include "../HWDescription/OuterTrackerHybrid.h"
+#include "HWDescription/OuterTrackerHybrid.h"
 namespace Ph2_HwInterface
 {
 D19cI2CInterface::D19cI2CInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable) : FEConfigurationInterface(pId, pUri, pAddressTable)

@@ -20,7 +20,7 @@
 class OccupancyAndPh
 {
   public:
-    OccupancyAndPh() : fOccupancy(0), fOccupancyMedian(0), fPh(0), fPhError(0), readoutError(false) {}
+    OccupancyAndPh() : fOccupancy(0), fOccupancyMedian(0), fPh(0), fPhError(0), fStatus(0), readoutError(false) {}
 
     void print(void) { std::cout << fOccupancy << "\t" << fPh << std::endl; }
 
@@ -38,6 +38,8 @@ class OccupancyAndPh
 
     float fPh;
     float fPhError;
+
+    uint8_t fStatus;
 
     bool readoutError;
 };

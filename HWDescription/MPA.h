@@ -12,12 +12,12 @@
 #ifndef MPA_h__
 #define MPA_h__
 
-#include "../Utils/Exception.h"
-#include "../Utils/Visitor.h"
-#include "../Utils/easylogging++.h"
 #include "ChipRegItem.h"
 #include "FrontEndDescription.h"
 #include "ReadoutChip.h"
+#include "Utils/Exception.h"
+#include "Utils/Visitor.h"
+#include "Utils/easylogging++.h"
 #include <iostream>
 #include <map>
 #include <set>
@@ -45,10 +45,10 @@ class MPA : public ReadoutChip
     MPA(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartnerId, const std::string& filename);
 
     using MPARegPair = std::pair<std::string, ChipRegItem>;
-    uint8_t fPartnerId;
-    uint8_t getPartid() { return fPartnerId; }
-    void    loadfRegMap(const std::string& filename) override;
-    void    saveRegMap(const std::string& filename) override;
+    uint8_t           fPartnerId;
+    uint8_t           getPartid() { return fPartnerId; }
+    void              loadfRegMap(const std::string& filename) override;
+    std::stringstream saveRegMap(const std::string& fName2Add = "") override;
 
     bool isDACLocal(const std::string& dacName) override
     {

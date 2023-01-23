@@ -9,13 +9,13 @@
 
  */
 
-#include "../Utils/ContainerFactory.h"
-#include "../HWDescription/BeBoard.h"
-#include "../HWDescription/Hybrid.h"
-#include "../HWDescription/OpticalGroup.h"
-#include "../HWDescription/ReadoutChip.h"
-#include "../Utils/ChannelGroupHandler.h"
-#include "../Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "HWDescription/BeBoard.h"
+#include "HWDescription/Hybrid.h"
+#include "HWDescription/OpticalGroup.h"
+#include "HWDescription/ReadoutChip.h"
+#include "Utils/ChannelGroupHandler.h"
+#include "Utils/Container.h"
 
 // void ContainerFactory::copyStructure(const DetectorContainer& original, DetectorDataContainer& copy)
 // {

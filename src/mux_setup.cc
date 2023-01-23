@@ -1,15 +1,15 @@
-﻿#include <cstring>
-#include "BackEndAlignment.h"
-#include "CicFEAlignment.h"
-#include "MultiplexingSetup.h"
+﻿#include "tools/BackEndAlignment.h"
 #include "Utils/argvparser.h"
+#include "tools/CicFEAlignment.h"
+#include "tools/MultiplexingSetup.h"
+#include <cstring>
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"
 #include "TROOT.h"
 #endif
 
-#include "../Utils/Timer.h"
+#include "Utils/Timer.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

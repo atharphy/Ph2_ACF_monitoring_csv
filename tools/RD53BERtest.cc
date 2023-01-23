@@ -21,6 +21,7 @@ void BERtest::ConfigureCalibration()
     given_time     = this->findValueInSettings<double>("byTime");
     frames_or_time = this->findValueInSettings<double>("framesORtime");
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
+    dataOutputDir  = this->findValueInSettings<std::string>("DataOutputDir", "");
 
     // ##########################################################################################
     // # Select BER counter meaning: number of frames with errors or number of bits with errors #
@@ -39,7 +40,7 @@ void BERtest::Running()
 
 void BERtest::sendData()
 {
-    auto theStream = prepareChipContainerStreamer<EmptyContainer, double>("BERtest");
+    auto theStream = this->prepareChipContainerStreamer<EmptyContainer, double>("BERtest");
 
     if(fDQMStreamerEnabled == true)
         for(const auto cBoard: theBERtestContainer) theStream->streamAndSendBoard(cBoard, fDQMStreamer);
@@ -57,30 +58,27 @@ void BERtest::Stop()
     RD53RunProgress::reset();
 }
 
-void BERtest::localConfigure(const std::string& fileRes_, int currentRun)
+void BERtest::localConfigure(const std::string& histoFileName, int currentRun)
 {
-#ifdef __USE_ROOT__
-    histos = nullptr;
-#endif
+    histos        = nullptr;
+    theCurrentRun = currentRun;
 
-    if(currentRun >= 0)
-    {
-        theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[BERtest::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
-    }
+    LOG(INFO) << GREEN << "[BERtest::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
+    // ##########################
+    // # Initialize calibration #
+    // ##########################
     BERtest::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "BERtest");
-    BERtest::initializeFiles(fileRes_, currentRun);
-}
 
-void BERtest::initializeFiles(const std::string& fileRes_, int currentRun)
-{
-    fileRes = fileRes_;
-
-#ifdef __USE_ROOT__
-    delete histos;
-    histos = new BERtestHistograms;
-#endif
+    // #########################################
+    // # Initialize histogram and binary files #
+    // #########################################
+    CalibBase::initializeFiles<BERtestHistograms>(histoFileName, "BERtest", histos);
 }
 
 void BERtest::run()
@@ -95,7 +93,7 @@ void BERtest::run()
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                 {
-                    static_cast<D19clpGBTInterface*>(flpGBTInterface)->StartPRBSpattern(cOpticalGroup->flpGBT);
+                    static_cast<lpGBTInterface*>(flpGBTInterface)->StartPRBSpattern(cOpticalGroup->flpGBT);
 
                     auto value = fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, cHybrid->getId(), 0, frontendSpeed); // @TMP@ : fixed chip lane
                     theBERtestContainer.at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(0)->getSummary<double>() = value;
@@ -104,7 +102,7 @@ void BERtest::run()
                               << "]: " << BOLDYELLOW << (value == 0 ? "PASSED" : "NOT PASSED") << RESET;
 
                     static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Downlink(cBoard);
-                    static_cast<D19clpGBTInterface*>(flpGBTInterface)->StopPRBSpattern(cOpticalGroup->flpGBT);
+                    static_cast<lpGBTInterface*>(flpGBTInterface)->StopPRBSpattern(cOpticalGroup->flpGBT);
                 }
         }
     else
@@ -136,7 +134,7 @@ void BERtest::run()
         }
 }
 
-void BERtest::draw()
+void BERtest::draw(bool saveData)
 {
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
@@ -145,7 +143,7 @@ void BERtest::draw()
 
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
-        this->InitResultFile(fileRes);
+        this->InitResultFile(CalibBase::theHistoFileName);
         LOG(INFO) << BOLDBLUE << "\t--> BERtest saving histograms..." << RESET;
     }
 

@@ -2,15 +2,16 @@
 #include <fstream>
 #include <ios>
 
-#include "../System/SystemController.h"
-#include "../Utils/CommonVisitors.h"
-#include "../Utils/Timer.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/argvparser.h"
-#include "../tools/Tool.h"
-#include "FC7FpgaConfig.h"
+#include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/FC7FpgaConfig.h"
+#include "System/SystemController.h"
 #include "TApplication.h"
 #include "TROOT.h"
+#include "Utils/CommonVisitors.h"
+#include "Utils/Timer.h"
+#include "Utils/Utilities.h"
+#include "Utils/argvparser.h"
+#include "tools/Tool.h"
 #ifdef __ANTENNA__
 #include "Antenna.h"
 #endif
@@ -135,13 +136,13 @@ int main(int argc, char** argv)
         cTool.fBeBoardInterface->setBoard(pBoard->getId());
         for(int i = 0; i < 8; i++)
         {
-            std::cout << "###--------------l8---------------###" << std::endl;
+            std::cout << "###--------------l8--ch: " << i << " -------------###" << std::endl;
             dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("T", i);
             dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("V", i);
             dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("I", i);
             dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("TX", i);
             dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L8("RX", i);
-            std::cout << "###--------------l12--------------###" << std::endl;
+            std::cout << "###--------------l12--ch: " << i << " ------------###" << std::endl;
             dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("T", i);
             dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("V", i);
             dynamic_cast<D19cFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface())->GetSFPParameter_L12("I", i);

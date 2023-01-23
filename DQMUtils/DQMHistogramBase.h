@@ -16,16 +16,19 @@
 #include <string>
 #include <vector>
 
-#include "../RootUtils/CanvasContainer.h"
-#include "../RootUtils/HistContainer.h"
-#include "../RootUtils/RootContainerFactory.h"
-#include "../System/SystemController.h"
-#include "../Utils/Container.h"
+#include "HWDescription/RD53.h"
+#include "Parser/FileParser.h"
+#include "RootUtils/CanvasContainer.h"
+#include "RootUtils/HistContainer.h"
+#include "RootUtils/RootContainerFactory.h"
+#include "Utils/Container.h"
+#include "Utils/RD53Shared.h"
 
 #include <TCanvas.h>
 #include <TFile.h>
 #include <TGaxis.h>
 #include <TPad.h>
+#include <TStyle.h>
 
 class DetectorDataContainer;
 class DetectorContainer;
@@ -78,7 +81,19 @@ class DQMHistogramBase
     /*!
      * constructor
      */
-    DQMHistogramBase() { ; }
+    DQMHistogramBase()
+    {
+        const int NRGBs = 5;
+        const int NCont = 255;
+
+        double stops[NRGBs] = {0.00, 0.34, 0.61, 0.84, 1.00};
+        double red[NRGBs]   = {0.00, 0.00, 0.87, 1.00, 0.51};
+        double green[NRGBs] = {0.00, 0.81, 1.00, 0.20, 0.00};
+        double blue[NRGBs]  = {0.51, 1.00, 0.12, 0.00, 0.00};
+
+        TColor::CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont);
+        gStyle->SetNumberContours(NCont);
+    }
 
     /*!
      * destructor
@@ -89,7 +104,7 @@ class DQMHistogramBase
      * \brief Book histograms
      * \param theDetectorStructure : Container of the Detector structure
      */
-    virtual void book(TFile* outputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) = 0;
+    virtual void book(TFile* outputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap) = 0;
 
     /*!
      * \brief Book histograms
@@ -141,8 +156,8 @@ class DQMHistogramBase
                 for(auto cHybrid: *cOpticalGroup)
                     for(auto cChip: *cHybrid)
                     {
-                        TCanvas* canvas = cChip->getSummary<CanvasContainer<Hist>>().fCanvas;
-                        Hist*    hist   = cChip->getSummary<CanvasContainer<Hist>>().fTheHistogram;
+                        auto canvas = cChip->getSummary<CanvasContainer<Hist>>().fCanvas;
+                        auto hist   = cChip->getSummary<CanvasContainer<Hist>>().fTheHistogram;
 
                         canvas->cd();
                         hist->Draw(opt);
@@ -151,7 +166,7 @@ class DQMHistogramBase
 
                         if(additionalAxisType != "")
                         {
-                            TPad* myPad = static_cast<TPad*>(canvas->GetPad(0));
+                            auto myPad = static_cast<TPad*>(canvas->GetPad(0));
                             myPad->SetTopMargin(0.16);
 
                             if(additionalAxisType == "electron")
@@ -182,7 +197,7 @@ class DQMHistogramBase
     }
 
     template <typename T>
-    T findValueInSettings(const Ph2_System::SettingsMap& settingsMap, const std::string name, T defaultValue = T()) const
+    T findValueInSettings(const Ph2_Parser::SettingsMap& settingsMap, const std::string name, T defaultValue = T()) const
     {
         auto setting = settingsMap.find(name);
         return (setting != std::end(settingsMap) ? boost::any_cast<T>(setting->second) : defaultValue);

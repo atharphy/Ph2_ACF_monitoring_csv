@@ -5,7 +5,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/HWDescription/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+    include_directories(${PROJECT_SOURCE_DIR})
 
     # Boost also needs to be linked
     include_directories(${Boost_INCLUDE_DIRS})

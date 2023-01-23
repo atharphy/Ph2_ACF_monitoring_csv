@@ -1,8 +1,8 @@
-#include "../Utils/Timer.h"
-#include "../Utils/argvparser.h"
-#include "../tools/StubTool.h"
 #include "TApplication.h"
 #include "TROOT.h"
+#include "Utils/Timer.h"
+#include "Utils/argvparser.h"
+#include "tools/StubTool.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

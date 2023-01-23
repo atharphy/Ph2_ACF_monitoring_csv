@@ -9,10 +9,10 @@
 
  */
 
-#include "SSA2Interface.h"
-#include "../Utils/ChannelGroupHandler.h"
-#include "../Utils/ConsoleColor.h"
-#include "../Utils/Container.h"
+#include "HWInterface/SSA2Interface.h"
+#include "Utils/ChannelGroupHandler.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/Container.h"
 #include <bitset>
 
 using namespace Ph2_HwDescription;
@@ -174,7 +174,7 @@ uint8_t SSA2Interface::ReadChipId(Chip* pChip)
     return cItem.fValue;
 }
 // WRITE REGISTER (ALL LOCAL):
-bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& dacName, ChipContainer& localRegValues, bool pVerifLoop) // FIXME SSA2
+bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& dacName, const ChipContainer& localRegValues, bool pVerifLoop) // FIXME SSA2
 {
     bool cSuccess = true;
     // set board

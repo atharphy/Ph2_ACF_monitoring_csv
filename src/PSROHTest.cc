@@ -1,11 +1,11 @@
 
-#include "../Utils/Timer.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/argvparser.h"
-#include "../tools/BackEndAlignment.h"
-#include "../tools/Tool.h"
+#include "Utils/Timer.h"
+#include "Utils/Utilities.h"
+#include "Utils/argvparser.h"
+#include "tools/BackEndAlignment.h"
+#include "tools/Tool.h"
 
-#include "../tools/PSROHTester.h"
+#include "tools/PSROHTester.h"
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"
@@ -15,7 +15,7 @@
 #define __NAMEDPIPE__
 
 #ifdef __NAMEDPIPE__
-#include "gui_logger.h"
+#include "Utils/gui_logger.h"
 #endif
 
 #include <cstring>
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
     // Load pattern
     cmd.defineOption("test-internal-pattern", "Internally Generated LpGBT Pattern", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
     cmd.defineOptionAlternative("test-internal-pattern", "ip");
-    cmd.defineOption("test-external-pattern", "Externally Generated LpGBT Pattern using the Data Player for Control FC7", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
+    cmd.defineOption("test-external-pattern", "Externlly Generated LpGBT Pattern using the Data Player for Control FC7", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
     cmd.defineOptionAlternative("test-external-pattern", "ep");
 
     cmd.defineOption("cic-pattern", "Externally Generated LpGBT Pattern using CIC output", ArgvParser::NoOptionAttribute /*| ArgvParser::OptionRequires*/);
@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("fcmd-pattern", "Injected pattern (simulates FCMD) on the DownLink", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequires*/);
     cmd.defineOptionAlternative("fcmd-pattern", "fp");
     //
-    cmd.defineOption("fcmd-test", "Run fast command tests", ArgvParser::NoOptionAttribute);
+    cmd.defineOption("fmcd-test", "Run fast command tests", ArgvParser::NoOptionAttribute);
     cmd.defineOption("fcmd-test-start-pattern", "Fast command FSM test start pattern", ArgvParser::OptionRequiresValue);
     cmd.defineOption("fcmd-test-userfile", "User file with fastcommands for testing", ArgvParser::OptionRequiresValue);
     // FCMD check in BRAM
@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
     cmd.defineOptionAlternative("debug", "d");
     // Test VTRx+ registers
     cmd.defineOption("test-vtrx", "Test testVTRx+ slow control");
-    cmd.defineOptionAlternative("test-vtrx", "v");
+    cmd.defineOptionAlternative("testVTRx+", "v");
     // Check ROM
     cmd.defineOption("test-rom", "Test ROM loading [only lpGBT-v1]");
     // Measure Current-Voltages on test card
@@ -166,7 +166,7 @@ int main(int argc, char* argv[])
     std::string cHybridId  = (cmd.foundOption("hybridId")) ? cmd.optionValue("hybridId") : "xxxx";
     bool        cDebug     = (cmd.foundOption("debug"));
     // Test to perform
-    bool        cFCMDTest             = (cmd.foundOption("fcmd-test")) ? true : false;
+    bool        cFCMDTest             = (cmd.foundOption("fmcd-test")) ? true : false;
     std::string cFCMDTestStartPattern = (cmd.foundOption("fcmd-test-start-pattern")) ? cmd.optionValue("fcmd-test-start-pattern") : "11000001";
     std::string cFCMDTestUserFileName = (cmd.foundOption("fcmd-test-userfile")) ? cmd.optionValue("fcmd-test-userfile") : "fcmd_file.txt";
     std::string cBRAMFCMDLine         = (cmd.foundOption("bramfcmd-check")) ? cmd.optionValue("bramfcmd-check") : "fe_for_ps_roh_fcmd_SSA_l_check";
@@ -216,7 +216,7 @@ int main(int argc, char* argv[])
 
     if(cmd.foundOption("USBBus") && cmd.foundOption("USBDev")) { TC_PSROH cTC_PSROH(cUsbBus, cUsbDev); }
 
-    // Initialize PSROH tester
+    // Initilaise PSROH tester
     PSROHTester cPSROHTester;
     cPSROHTester.Inherit(&cTool);
 
@@ -229,15 +229,14 @@ int main(int argc, char* argv[])
     LOG(INFO) << BOLDMAGENTA << " ------------------------------------------- " << RESET;
     cTool.ConfigureHw();
 
-    // Initialize tester
+    // Initialise tester
     cPSROHTester.Initialise();
 
     if(cMeasureInputIV) cPSROHTester.MeasureInputIV("AFTER_CONFIG");
 
-    /*******************/
-    /*   TEST UPLINK   */
-    /* E-links CIC_OUT */
-    /*******************/
+    /***************/
+    /* TEST UPLINK */
+    /***************/
     if(cmd.foundOption("test-internal-pattern") || cmd.foundOption("test-external-pattern"))
     {
         if(cGui)
@@ -310,9 +309,8 @@ int main(int argc, char* argv[])
         }
     }
 
-    /****************************/
-    /*  Test VTRx+ slow control */
-    /****************************/
+    // Test VTRx+ slow control
+
     if(cmd.foundOption("test-vtrx"))
     {
         if(cGui)
@@ -331,9 +329,9 @@ int main(int argc, char* argv[])
             LOG(INFO) << BOLDRED << "VTRx+ slow control test failed." << RESET;
     }
 
-    /****************************/
-    /*  Test LpGBT I2C Masters  */
-    /****************************/
+    /********************/
+    /* TEST I2C MASTERS */
+    /********************/
     if(cmd.foundOption("test-i2c"))
     {
         if(cGui)
@@ -439,13 +437,10 @@ int main(int argc, char* argv[])
             int     cFmcdCounter = 0, cFcmdTries = 100;
             uint8_t cFCMDPattern = (cmd.foundOption("fcmd-pattern")) ? convertAnyInt(cmd.optionValue("fcmd-pattern").c_str()) : 0;
             LOG(INFO) << BOLDBLUE << "FCMD pattern test" << RESET;
-            // Align lines in the back-end with selected pattern
             cPSROHTester.LpGBTInjectDLInternalPattern(cFCMDPattern);
-            // Now this has switched to idle frames!
-
             for(int i = 0; i < cFcmdTries; i++)
             {
-                if(!cPSROHTester.LpGBTFastCommandChecker(7)) cFmcdCounter += 1;
+                if(!cPSROHTester.LpGBTFastCommandChecker(cFCMDPattern)) cFmcdCounter += 1;
             }
             LOG(INFO) << BOLDRED << "FCMD pattern test failed " << +cFmcdCounter << " times" << RESET;
 #ifdef __USE_ROOT__

@@ -13,10 +13,10 @@
 #ifndef MemoryCheck2S_h_
 #define MemoryCheck2S_h_
 
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerRecycleBin.h"
-#include "Tool.h"
+#include "Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/ContainerRecycleBin.h"
+#include "tools/Tool.h"
 
 #ifndef ChannelList
 typedef std::vector<uint8_t> ChannelList;

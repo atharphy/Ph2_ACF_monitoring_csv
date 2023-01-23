@@ -8,7 +8,7 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "lpGBTInterface.h"
+#include "HWInterface/lpGBTInterface.h"
 
 using namespace Ph2_HwDescription;
 
@@ -159,7 +159,7 @@ uint16_t lpGBTInterface::GetRxDataRate(Chip* pChip, uint8_t pGroup)
     std::string cRXCntrlReg = "EPRX" + std::to_string(pGroup) + "Control";
     auto        cRegValue   = ReadChipReg(pChip, cRXCntrlReg);
     uint16_t    cValue      = (cRegValue & 0xC);
-    return (cChipRate / 5.) * (int)cValue * (float)fClockSpeed / 1e6;
+    return (cChipRate / 5.) * (int)cValue * (float)lpGBTconstants::ACCELERATOR_CLK / 1e6;
 }
 
 void lpGBTInterface::ConfigureRxChannels(Chip*                       pChip,
@@ -701,6 +701,38 @@ uint16_t lpGBTInterface::GetADCOffset(Chip* pChip, bool pVerbose)
     return cMeasurement;
 }
 
+// Implements the ADC master formula for the a basic measurement
+// Assumes a calibrated Vref
+float lpGBTInterface::GetADCVoltage(Chip* pChip, const std::string& pADCInputP, uint16_t cOffset, float cGain, bool pVerbose)
+{
+    uint16_t cMeasurement = ReadADC(pChip, pADCInputP, "VREF/2");
+    return (cMeasurement - cOffset * (1. - cGain / 2.)) / cGain / 512.;
+}
+
+float lpGBTInterface::GetADCVoltage(Chip* pChip, const std::string& pADCInputP, bool pVerbose)
+{
+    uint16_t cOffset = GetADCOffset(pChip, pVerbose);
+    float    cGain   = GetADCGain(pChip, pVerbose);
+    return GetADCVoltage(pChip, pADCInputP, cOffset, cGain, pVerbose);
+}
+
+float lpGBTInterface::GetRssiPower(Chip* pChip, const std::string& pADCInputP, float cResponsivity, bool pVerbose)
+{
+    uint16_t cOffset = GetADCOffset(pChip, pVerbose);
+    float    cGain   = GetADCGain(pChip, pVerbose);
+    return GetRssiPower(pChip, pADCInputP, cResponsivity, cOffset, cGain, pVerbose);
+}
+
+// Calculation vaild for 2S prototypes in W
+// R1=1k; Voltage divider 680k and 1000K
+// Typical responsivity 0.45-0.55 A/W
+float lpGBTInterface::GetRssiPower(Chip* pChip, const std::string& pADCInputP, float cResponsivity, uint16_t cOffset, float cGain, bool pVerbose)
+{
+    float cAdcMeasurement = GetADCVoltage(pChip, pADCInputP, cOffset, cGain, pVerbose);
+    float cCurrent        = 1. / 1000. * (2.5 - cAdcMeasurement * 1680. / 680.);
+    return cCurrent / cResponsivity;
+}
+
 float lpGBTInterface::GetADCGain(Chip* pChip, bool pVerbose)
 {
     float cResult;
@@ -881,7 +913,7 @@ double lpGBTInterface::BERtestCL(Chip* pChip, uint8_t pGroup, uint8_t pChannel, 
     double    bitsRxd  = (given_time) ? time2run * cRxRate : bits_or_time;
     LOG(INFO) << GREEN << "Running BERT for ~" << BOLDYELLOW << std::fixed << std::setprecision(0) << time2run << RESET << GREEN << "s will test  " << BOLDYELLOW << bitsRxd << RESET << GREEN
               << " received bits." << RESET;
-    uint32_t BERTMeasTime = (log2(time2run * fClockSpeed) - 5) / 2.;
+    uint32_t BERTMeasTime = (log2(time2run * lpGBTconstants::ACCELERATOR_CLK) - 5) / 2.;
     // Configure number of printouts and calculate the frequency of printouts
     double time_per_step = std::min(std::max(time2run / n_prints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
 
@@ -940,7 +972,6 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
 // # 320 Mbit/s   = 2 #
 // ####################
 {
-    const double   mainClock       = 40e6;                             // @CONST@
     const uint32_t nBitInClkPeriod = 32. * std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
     const double   fps             = 1.28e9 / nBitInClkPeriod;         // Frames per second
     const int      n_prints        = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
@@ -951,7 +982,7 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
         time2run = frames_or_time;
     else
         time2run = frames_or_time / fps;
-    size_t BERTMeasTime = (log2(time2run * mainClock) - 5) / 2.;
+    size_t BERTMeasTime = (log2(time2run * lpGBTconstants::ACCELERATOR_CLK) - 5) / 2.;
     frames2run          = fBERTMeasTimeMap[BERTMeasTime];
 
     // Configure number of printouts and calculate the frequency of printouts
@@ -1071,13 +1102,19 @@ void lpGBTInterface::ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<
 void lpGBTInterface::ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode)
 {
     // First let's write configuration data into the I2C Master Data register
-    std::string cI2CCntrlReg = "I2CM" + std::to_string(pMaster) + "Data0";
-    uint8_t     cValueCntrl  = (pFreq << 0) | (pNBytes << 2) | (pSCLDriveMode << 7);
-    WriteChipReg(pChip, cI2CCntrlReg, cValueCntrl);
+    std::string cI2CDataReg = "I2CM" + std::to_string(pMaster) + "Data0";
+    uint8_t     cValueData  = (pFreq << 0) | (pNBytes << 2) | (pSCLDriveMode << 7);
+    WriteChipReg(pChip, cI2CDataReg, cValueData);
 
     // Now let's write Command (0x00) to the Command register to tranfer Configuration to the I2C Master Control register
     std::string cI2CCmdReg = "I2CM" + std::to_string(pMaster) + "Cmd";
     WriteChipReg(pChip, cI2CCmdReg, 0x00);
+}
+
+uint8_t lpGBTInterface::GetI2CConfiguration(Ph2_HwDescription::Chip* pChip, uint8_t pMaster)
+{
+    std::string cI2CCntrlReg = "I2CM" + std::to_string(pMaster) + "Ctrl";
+    return ReadChipReg(pChip, cI2CCntrlReg);
 }
 
 bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes, uint8_t pFreq)
@@ -1196,6 +1233,8 @@ uint8_t lpGBTInterface::GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMa
     LOG(DEBUG) << GREEN << "I2C Master " << +pMaster << " -- Status : " << lpGBTInterface::fI2CStatusMap[cStatus] << RESET;
     return cStatus;
 }
+
+std::string lpGBTInterface::GetI2CState(Ph2_HwDescription::Chip* pChip, uint8_t pStatus) { return fI2CStatusMap[pStatus]; }
 
 bool lpGBTInterface::IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster) { return (lpGBTInterface::GetI2CStatus(pChip, pMaster) == 4); }
 

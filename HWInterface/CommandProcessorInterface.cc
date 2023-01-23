@@ -1,4 +1,4 @@
-#include "CommandProcessorInterface.h"
+#include "HWInterface/CommandProcessorInterface.h"
 
 namespace Ph2_HwInterface
 {

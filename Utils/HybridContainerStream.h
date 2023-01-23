@@ -12,12 +12,12 @@
 #ifndef __HybridCONTAINERSTREAM_H__
 #define __HybridCONTAINERSTREAM_H__
 // pointers to base class
-#include "../HWDescription/Hybrid.h"
-#include "../HWDescription/ReadoutChip.h"
-#include "../NetworkUtils/TCPPublishServer.h"
-#include "../Utils/ChipContainerStream.h"
-#include "../Utils/ContainerStream.h"
-#include "../Utils/ObjectStream.h"
+#include "HWDescription/Hybrid.h"
+#include "HWDescription/ReadoutChip.h"
+#include "NetworkUtils/TCPPublishServer.h"
+#include "Utils/ChipContainerStream.h"
+#include "Utils/ContainerStream.h"
+#include "Utils/ObjectStream.h"
 #include <cmath>
 #include <cstdint>
 #include <cstring>

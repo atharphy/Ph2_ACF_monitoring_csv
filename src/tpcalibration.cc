@@ -1,17 +1,17 @@
 #include <cstring>
 
-#include "../Utils/Timer.h"
-#include "../Utils/Utilities.h"
-#include "../tools/LatencyScan.h"
-#include "../tools/PedeNoise.h"
-#include "../tools/SignalScan.h"
-#include "../tools/SignalScanFit.h"
-#include "../tools/TPCalibration.h"
-#include "../tools/Tool.h"
+#include "Utils/Timer.h"
+#include "Utils/Utilities.h"
+#include "tools/LatencyScan.h"
+#include "tools/PedeNoise.h"
+#include "tools/SignalScan.h"
+#include "tools/SignalScanFit.h"
+#include "tools/TPCalibration.h"
+#include "tools/Tool.h"
 
-#include "../Utils/argvparser.h"
 #include "TApplication.h"
 #include "TROOT.h"
+#include "Utils/argvparser.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

@@ -8,8 +8,8 @@
 */
 
 #include "RD53Event.h"
-#include "../HWDescription/RD53A.h"
-#include "../HWDescription/RD53B.h"
+#include "HWDescription/RD53A.h"
+#include "HWDescription/RD53B.h"
 
 #ifdef __USE_ROOT__
 #include "TFile.h"
@@ -143,9 +143,9 @@ void RD53Event::PrintEvents(const std::vector<RD53Event>& events, const std::vec
             if(j % NWORDS_DDR3 == NWORDS_DDR3 - 1) std::cout << std::endl;
         }
 
-    // ######################
-    // # Print decoded data #
-    // ######################
+    // ############################
+    // # Print decoded event data #
+    // ############################
     for(auto i = 0u; i < events.size(); i++)
     {
         auto& evt = events[i];
@@ -158,6 +158,9 @@ void RD53Event::PrintEvents(const std::vector<RD53Event>& events, const std::vec
         LOG(INFO) << BOLDGREEN << "l1a_counter     = " << evt.l1a_counter << RESET;
         LOG(INFO) << BOLDGREEN << "bx_counter      = " << evt.bx_counter << RESET;
 
+        // ###########################
+        // # Print decoded chip data #
+        // ###########################
         for(auto& event: evt.chip_events)
         {
             LOG(INFO) << CYAN << "------- Chip Header -------" << RESET;
@@ -168,6 +171,7 @@ void RD53Event::PrintEvents(const std::vector<RD53Event>& events, const std::vec
             LOG(INFO) << CYAN << "chip_type       = " << event.chip_type << RESET;
             LOG(INFO) << CYAN << "frame_delay     = " << event.frame_delay << RESET;
 
+            LOG(INFO) << CYAN << "chip_id_mod4    = " << event.chip_id_mod4 << RESET;
             LOG(INFO) << CYAN << "trigger_id      = " << event.trigger_id << RESET;
             LOG(INFO) << CYAN << "trigger_tag     = " << event.trigger_tag << RESET;
             LOG(INFO) << CYAN << "bc_id           = " << event.bc_id << RESET;
@@ -178,8 +182,9 @@ void RD53Event::PrintEvents(const std::vector<RD53Event>& events, const std::vec
                 LOG(INFO) << BOLDYELLOW << "Column: " << std::setw(3) << hit.col << std::setw(-1) << ", Row: " << std::setw(3) << hit.row << std::setw(-1) << ", ToT: " << std::setw(3) << +hit.tot
                           << std::setw(-1) << RESET;
         }
+
         LOG(INFO) << BOLDGREEN << "===========================" << RESET;
-        LOG(INFO) << BOLDGREEN << "EVENT STATUS    = " << evt.eventStatus << RESET;
+        LOG(INFO) << BOLDGREEN << "EVENT STATUS^   = " << evt.eventStatus << RESET;
         RD53Event::EvtErrorHandler(evt.eventStatus);
     }
 }
@@ -325,7 +330,7 @@ bool RD53Event::findEventStarts(const std::vector<uint32_t>& data, std::vector<s
 void RD53Event::DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStartExt, uint32_t& eventStatus)
 {
     std::vector<size_t> eventStartLocal;
-    eventStatus |= RD53FWEvtEncoder::GOOD;
+    eventStatus = RD53FWEvtEncoder::GOOD;
 
     // #####################
     // # Consistency check #
@@ -641,7 +646,7 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
 {
     auto         bits         = bit_view(data, 0, howMany);
     const size_t n32bitsWords = bits.size() / RD53FWEvtEncoder::NBIT_EVT_WORD;
-    const size_t maxL1Counter = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
+    const size_t maxL1Counter = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID * (options.enableBCID == true ? 1 : 2)) + 1;
 
     if(howMany == 0) eventStatus |= RD53FWEvtEncoder::EMPTY;
 
@@ -731,7 +736,9 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
     TFile theFile(fileName.c_str(), "RECREATE");
     TTree theTree("theTree", "Ntuple with event data");
 
-    uint32_t event, FW_block_size, FW_tlu_trigger_id, FW_data_format_ver, FW_tdc, FW_l1a_counter, FW_bx_counter, FW_nframes;
+    uint16_t FW_block_size, FW_tlu_trigger_id, FW_data_format_ver, FW_tdc;
+    uint32_t event, FW_l1a_counter, FW_bx_counter, FW_event_status, FW_nframes;
+
     theTree.Branch("event", &event, "event/i");
     theTree.Branch("FW_block_size", &FW_block_size, "FW_block_size/i");
     theTree.Branch("FW_tlu_trigger_id", &FW_tlu_trigger_id, "FW_tlu_trigger_id/i");
@@ -739,18 +746,21 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
     theTree.Branch("FW_tdc", &FW_tdc, "FW_tdc/i");
     theTree.Branch("FW_l1a_counter", &FW_l1a_counter, "FW_l1a_counter/i");
     theTree.Branch("FW_bx_counter", &FW_bx_counter, "FW_bx_counter/i");
+    theTree.Branch("FW_event_status", &FW_event_status, "FW_event_status/i");
     theTree.Branch("FW_nframes", &FW_nframes, "FW_nframes/i");
 
-    std::vector<uint32_t> FW_frame_event_error_code;
-    std::vector<uint32_t> FW_frame_event_hybrid_id;
-    std::vector<uint32_t> FW_frame_event_chip_lane;
-    std::vector<uint32_t> FW_frame_event_l1a_data_size;
-    std::vector<uint32_t> FW_frame_event_chip_type;
-    std::vector<uint32_t> FW_frame_event_frame_delay;
+    std::vector<uint16_t> FW_frame_event_error_code;
+    std::vector<uint16_t> FW_frame_event_hybrid_id;
+    std::vector<uint16_t> FW_frame_event_chip_lane;
+    std::vector<uint16_t> FW_frame_event_l1a_data_size;
+    std::vector<uint16_t> FW_frame_event_chip_type;
+    std::vector<uint16_t> FW_frame_event_frame_delay;
 
-    std::vector<uint32_t> RD53_frame_event_trigger_id;
-    std::vector<uint32_t> RD53_frame_event_trigger_tag;
-    std::vector<uint32_t> RD53_frame_event_bc_id;
+    std::vector<uint16_t> RD53_frame_event_chip_id_mod4;
+    std::vector<uint16_t> RD53_frame_event_trigger_id;
+    std::vector<uint16_t> RD53_frame_event_trigger_tag;
+    std::vector<uint16_t> RD53_frame_event_bc_id;
+    std::vector<uint32_t> RD53_frame_event_status;
     std::vector<uint32_t> RD53_frame_event_nhits;
 
     theTree.Branch("FW_frame_event_error_code", &FW_frame_event_error_code);
@@ -760,9 +770,11 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
     theTree.Branch("FW_frame_event_chip_type", &FW_frame_event_chip_type);
     theTree.Branch("FW_frame_event_frame_delay", &FW_frame_event_frame_delay);
 
+    theTree.Branch("RD53_frame_event_chip_id_mod4", &RD53_frame_event_chip_id_mod4);
     theTree.Branch("RD53_frame_event_trigger_id", &RD53_frame_event_trigger_id);
     theTree.Branch("RD53_frame_event_trigger_tag", &RD53_frame_event_trigger_tag);
     theTree.Branch("RD53_frame_event_bc_id", &RD53_frame_event_bc_id);
+    theTree.Branch("RD53_frame_event_status", &RD53_frame_event_status);
     theTree.Branch("RD53_frame_event_nhits", &RD53_frame_event_nhits);
 
     std::vector<uint8_t> RD53_hit_row;
@@ -784,6 +796,7 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
         FW_tdc             = evt.tdc;
         FW_l1a_counter     = evt.l1a_counter;
         FW_bx_counter      = evt.bx_counter;
+        FW_event_status    = evt.eventStatus;
         FW_nframes         = evt.chip_events.size();
 
         FW_frame_event_error_code.clear();
@@ -793,9 +806,11 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
         FW_frame_event_chip_type.clear();
         FW_frame_event_frame_delay.clear();
 
+        RD53_frame_event_chip_id_mod4.clear();
         RD53_frame_event_trigger_id.clear();
         RD53_frame_event_trigger_tag.clear();
         RD53_frame_event_bc_id.clear();
+        RD53_frame_event_status.clear();
         RD53_frame_event_nhits.clear();
 
         RD53_hit_row.clear();
@@ -811,9 +826,11 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
             FW_frame_event_chip_type.push_back(event.chip_type);
             FW_frame_event_frame_delay.push_back(event.frame_delay);
 
+            RD53_frame_event_chip_id_mod4.push_back(event.chip_id_mod4);
             RD53_frame_event_trigger_id.push_back(event.trigger_id);
             RD53_frame_event_trigger_tag.push_back(event.trigger_tag);
             RD53_frame_event_bc_id.push_back(event.bc_id);
+            RD53_frame_event_status.push_back(event.eventStatus);
             RD53_frame_event_nhits.push_back(event.hit_data.size());
 
             for(const auto& hit: event.hit_data)

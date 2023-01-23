@@ -11,7 +11,7 @@
 #ifndef RD53BCOMMANDS_H
 #define RD53BCOMMANDS_H
 
-#include "../Utils/BitMaster/bit_packing.h"
+#include "Utils/BitMaster/bit_packing.h"
 
 #include <vector>
 

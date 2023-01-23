@@ -11,9 +11,9 @@
 #ifndef RD53AInterface_H
 #define RD53AInterface_H
 
-#include "../HWDescription/RD53A.h"
-#include "../HWDescription/RD53ACommands.h"
-#include "RD53Interface.h"
+#include "HWDescription/RD53A.h"
+#include "HWDescription/RD53ACommands.h"
+#include "HWInterface/RD53Interface.h"
 
 namespace Ph2_HwInterface
 {
@@ -26,10 +26,10 @@ class RD53AInterface : public RD53Interface
     void     Reset(Ph2_HwDescription::ReadoutChip* pChip, const size_t resetType, const size_t duration = 0x4) override;
     void     ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip) override;
     void     InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard) override;
-    void     InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip, int nActiveLanes = 1) override;
+    void     InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip) override;
     void     PackWriteCommand(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true) override;
     void     PackWriteBroadcastCommand(const Ph2_HwDescription::BeBoard* pBoard, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true) override;
-    void     WriteClokDataDelay(Ph2_HwDescription::Chip* pChip, uint16_t value) override;
+    void     WriteClockDataDelay(Ph2_HwDescription::Chip* pChip, uint16_t value) override;
     uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip) override { return pChip->getId(); }
 
   private:
@@ -46,8 +46,8 @@ class RD53AInterface : public RD53Interface
                                                                                 {"CLK_DATA_DELAY_CLK", {"CLK_DATA_DELAY", 4}},
                                                                                 {"CLK_DATA_DELAY_2INV", {"CLK_DATA_DELAY", 5}},
 
-                                                                                {"MONITOR_CONFIG_ADC", {"MONITOR_CONFIG", 0}},
-                                                                                {"MONITOR_CONFIG_BG", {"MONITOR_CONFIG", 6}},
+                                                                                {"MONITOR_CONFIG_ADC", {"MonitorConfig", 0}},
+                                                                                {"MONITOR_CONFIG_BG", {"MonitorConfig", 6}},
 
                                                                                 {"VOLTAGE_TRIM_DIG", {"VOLTAGE_TRIM", 0}},
                                                                                 {"VOLTAGE_TRIM_ANA", {"VOLTAGE_TRIM", 5}},
@@ -68,8 +68,10 @@ class RD53AInterface : public RD53Interface
     // ###########################
     // # Dedicated to monitoring #
     // ###########################
-  protected:
-    uint32_t getADCobservable(const std::string& observableName, bool* isCurrentNotVoltage) override;
+  private:
+    uint32_t getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage) override;
+    uint32_t measureADC(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data) override;
+    float    measureTemperature(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data, const std::string& type = "", int beta = 3435) override;
 };
 
 } // namespace Ph2_HwInterface

@@ -10,8 +10,8 @@
  */
 
 #include "SSA2.h"
-#include "../Utils/ChannelGroupHandler.h"
 #include "Definition.h"
+#include "Utils/ChannelGroupHandler.h"
 #include <cstdio>
 #include <fstream>
 #include <iomanip>
@@ -108,10 +108,9 @@ void SSA2::loadfRegMap(const std::string& filename)
     }
 } // end loadfRegMap
 
-void SSA2::saveRegMap(const std::string& filename)
+std::stringstream SSA2::saveRegMap(const std::string& fName2Add)
 { // start saveRegMap
-
-    std::ofstream file(filename.c_str(), std::ios::out | std::ios::trunc);
+    std::ofstream file(this->getFileName(fName2Add), std::ios::out | std::ios::trunc);
 
     if(file)
     {
@@ -148,6 +147,8 @@ void SSA2::saveRegMap(const std::string& filename)
     }
     else
         LOG(ERROR) << "Error opening file";
+
+    return std::stringstream("");
 } // end saveRegMap
 
 } // namespace Ph2_HwDescription

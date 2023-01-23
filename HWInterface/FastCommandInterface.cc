@@ -1,4 +1,4 @@
-#include "FastCommandInterface.h"
+#include "HWInterface/FastCommandInterface.h"
 
 using namespace Ph2_HwDescription;
 

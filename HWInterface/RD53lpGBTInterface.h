@@ -10,7 +10,7 @@
 #ifndef RD53lpGBTInterface_H
 #define RD53lpGBTInterface_H
 
-#include "lpGBTInterface.h"
+#include "HWInterface/lpGBTInterface.h"
 
 namespace Ph2_HwInterface
 {

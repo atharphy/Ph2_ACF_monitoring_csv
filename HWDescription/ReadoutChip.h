@@ -10,13 +10,13 @@
 #ifndef ReadoutChip_H
 #define ReadoutChip_H
 
-#include "../Utils/ChannelGroupHandler.h"
-#include "../Utils/Container.h"
-#include "../Utils/Exception.h"
-#include "../Utils/Visitor.h"
-#include "../Utils/easylogging++.h"
 #include "Chip.h"
 #include "Definition.h"
+#include "Utils/ChannelGroupHandler.h"
+#include "Utils/Container.h"
+#include "Utils/Exception.h"
+#include "Utils/Visitor.h"
+#include "Utils/easylogging++.h"
 
 #include <cstdio>
 #include <fstream>

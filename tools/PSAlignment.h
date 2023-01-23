@@ -13,7 +13,7 @@
 #ifndef PSAlignment_h__
 #define PSAlignment_h__
 
-#include "OTTool.h"
+#include "tools/OTTool.h"
 
 #include <map>
 

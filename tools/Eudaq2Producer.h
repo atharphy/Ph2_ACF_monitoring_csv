@@ -11,9 +11,9 @@
 #ifndef Eudaq2Producer_h__
 #define Eudaq2Producer_h__
 
-#include "CommonVisitors.h"
-#include "OTTool.h"
-#include "Visitor.h"
+#include "Utils/CommonVisitors.h"
+#include "Utils/Visitor.h"
+#include "tools/OTTool.h"
 
 #include <cmath>
 #include <map>

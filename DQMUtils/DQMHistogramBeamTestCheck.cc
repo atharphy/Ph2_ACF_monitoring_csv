@@ -7,22 +7,22 @@
         Support :            mail to : fabio.ravera@cern.ch
  */
 
-#include "../DQMUtils/DQMHistogramBeamTestCheck.h"
-#include "../RootUtils/RootContainerFactory.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
-#include "../Utils/EmptyContainer.h"
-#include "../Utils/GenericDataArray.h"
-#include "../Utils/HybridContainerStream.h"
-#include "../Utils/Occupancy.h"
-#include "../Utils/ThresholdAndNoise.h"
-#include "../Utils/Utilities.h"
+#include "DQMUtils/DQMHistogramBeamTestCheck.h"
+#include "RootUtils/RootContainerFactory.h"
 #include "TCanvas.h"
 #include "TF1.h"
 #include "TFile.h"
 #include "TH1F.h"
 #include "TH2F.h"
+#include "Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/ContainerStream.h"
+#include "Utils/EmptyContainer.h"
+#include "Utils/GenericDataArray.h"
+#include "Utils/HybridContainerStream.h"
+#include "Utils/Occupancy.h"
+#include "Utils/ThresholdAndNoise.h"
+#include "Utils/Utilities.h"
 
 //========================================================================================================================
 DQMHistogramBeamTestCheck::DQMHistogramBeamTestCheck()
@@ -35,7 +35,7 @@ DQMHistogramBeamTestCheck::DQMHistogramBeamTestCheck()
 DQMHistogramBeamTestCheck::~DQMHistogramBeamTestCheck() {}
 
 //========================================================================================================================
-void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
 {
     uint32_t cNCh         = 0;
     uint32_t cNSeedChsS0  = 0;
@@ -1215,7 +1215,7 @@ void DQMHistogramBeamTestCheck::fillCountPlots(DetectorDataContainer& theEventCo
     //     }     // OG
     // }         // board
 }
-void DQMHistogramBeamTestCheck::parseSettings(const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramBeamTestCheck::parseSettings(const Ph2_Parser::SettingsMap& pSettingsMap)
 {
     auto cSetting = pSettingsMap.find("StartLatency");
     if(cSetting != std::end(pSettingsMap))

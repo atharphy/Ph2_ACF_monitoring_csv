@@ -11,8 +11,8 @@
 #ifndef GraphContainer_H
 #define GraphContainer_H
 
-#include "../RootUtils/PlotContainer.h"
-#include "../Utils/Container.h"
+#include "RootUtils/PlotContainer.h"
+#include "Utils/Container.h"
 #include <TDirectory.h>
 
 #include <iostream>

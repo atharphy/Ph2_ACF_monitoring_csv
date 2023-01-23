@@ -7,24 +7,24 @@
         Support :            mail to : fabio.ravera@cern.ch
  */
 
-#include "../DQMUtils/DQMHistogramPedeNoise.h"
-#include "../HWDescription/ReadoutChip.h"
-#include "../RootUtils/HistContainer.h"
-#include "../RootUtils/RootContainerFactory.h"
-#include "../Utils/ChannelContainerStream.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
-#include "../Utils/EmptyContainer.h"
-#include "../Utils/HybridContainerStream.h"
-#include "../Utils/Occupancy.h"
-#include "../Utils/ThresholdAndNoise.h"
-#include "../Utils/Utilities.h"
+#include "DQMUtils/DQMHistogramPedeNoise.h"
+#include "HWDescription/ReadoutChip.h"
+#include "RootUtils/HistContainer.h"
+#include "RootUtils/RootContainerFactory.h"
 #include "TCanvas.h"
 #include "TF1.h"
 #include "TFile.h"
 #include "TH1F.h"
 #include "TH2F.h"
+#include "Utils/ChannelContainerStream.h"
+#include "Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/ContainerStream.h"
+#include "Utils/EmptyContainer.h"
+#include "Utils/HybridContainerStream.h"
+#include "Utils/Occupancy.h"
+#include "Utils/ThresholdAndNoise.h"
+#include "Utils/Utilities.h"
 
 using namespace Ph2_HwDescription;
 
@@ -35,7 +35,7 @@ DQMHistogramPedeNoise::DQMHistogramPedeNoise() {}
 DQMHistogramPedeNoise::~DQMHistogramPedeNoise() {}
 
 //========================================================================================================================
-void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
 {
     // copy detector structrure
     fDetectorContainer = &theDetectorStructure;

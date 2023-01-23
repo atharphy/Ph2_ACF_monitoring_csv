@@ -10,17 +10,16 @@
 #ifndef RD53VoltageTuningHistograms_H
 #define RD53VoltageTuningHistograms_H
 
-#include "../System/SystemController.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
 #include "DQMHistogramBase.h"
+#include "Utils/ChipContainerStream.h"
+#include "Utils/ContainerFactory.h"
 
 #include <TH1F.h>
 
 class VoltageTuningHistograms : public DQMHistogramBase
 {
   public:
-    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap) override;
+    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap) override;
     void process() override;
     bool fill(std::vector<char>& dataBuffer) override;
     void reset() override{};

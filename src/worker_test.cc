@@ -1,6 +1,6 @@
-#include "../tools/WorkerTester.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
+#include "tools/WorkerTester.h"
 #include <cstring>
 
 using namespace Ph2_HwDescription;
@@ -54,9 +54,6 @@ int main(int argc, char* argv[])
     cmd.defineOption("measure-ipbus", "Measure duration of single IPbus transactions", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
     cmd.defineOptionAlternative("measure-ipbus", "mipb");
 
-    cmd.defineOption("implementation", "Functions implementation to use [new/old]", ArgvParser::OptionRequiresValue /*| ArgvParser::OptionRequired*/);
-    cmd.defineOptionAlternative("implementation", "imp");
-
     cmd.defineOption("verbose", "Verbose run with debug printout");
     cmd.defineOptionAlternative("verbose", "v");
 
@@ -75,26 +72,25 @@ int main(int argc, char* argv[])
     cTool.InitializeHw(cHWFile, outp);
     cTool.InitializeSettings(cHWFile, outp);
     LOG(INFO) << outp.str();
-    // bool cIgnoreI2c    = false;
-    // bool cReInitialize = true;
-    // cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
+    bool cIgnoreI2c    = false;
+    bool cReInitialize = true;
+    cTool.ConfigureHw(cIgnoreI2c, cReInitialize);
 
     std::string cDirectory = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
+    cDirectory += "WorkerTest";
     cTool.CreateResultDirectory(cDirectory, false, false);
 
-    std::string cResultfile = "Worker";
+    std::string cResultfile = "result";
     cTool.InitResultFile(cResultfile);
 
-    bool cNewImp = true;
-    if(cmd.foundOption("implementation")) { cNewImp = (cmd.optionValue("implementation") == "new") ? true : false; }
     uint8_t cLpGbtVers = 0;
     if(cmd.foundOption("lpgbt-version")) { cLpGbtVers = convertAnyInt(cmd.optionValue("lpgbt-version").c_str()); }
     bool cVerbose = cmd.foundOption("verbose");
 
-    WorkerTester cWorkerTester(cNewImp, cVerbose, cLpGbtVers);
+    WorkerTester cWorkerTester(cVerbose, cLpGbtVers);
     cWorkerTester.Inherit(&cTool);
 
-    cWorkerTester.PrepareForTests();
+    // cWorkerTester.PrepareForTests();
 
     if(cmd.foundOption("test-ic-write")) cWorkerTester.TestICWrite();
     if(cmd.foundOption("test-ic-read")) cWorkerTester.TestICRead();

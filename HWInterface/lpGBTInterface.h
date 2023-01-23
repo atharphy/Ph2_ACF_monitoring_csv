@@ -11,12 +11,12 @@
 #ifndef lpGBTInterface_H
 #define lpGBTInterface_H
 
-#include "../HWDescription/lpGBT.h"
-#include "ChipInterface.h"
-#include "ReadoutChipInterface.h"
+#include "HWDescription/lpGBT.h"
+#include "HWInterface/ChipInterface.h"
+#include "HWInterface/ReadoutChipInterface.h"
 
 #if defined(__TCUSB__)
-#include "TCInterface.h"
+#include "HWInterface/TCInterface.h"
 #endif
 
 // ##########################
@@ -34,6 +34,7 @@ const uint8_t  rxPhaseTracking   = 2;      // Rx phase tracking mode [0 = no-tra
 const uint8_t  SUPERDEEPSLEEP    = 10;     // [milliseconds]
 const uint32_t DEEPSLEEP         = 100000; // [microseconds]
 const uint8_t  MAXATTEMPTS       = 40;     // Maximum number of attempts
+const float    ACCELERATOR_CLK   = 40e6;   // Accelerator clock frequency [Hz]
 } // namespace lpGBTconstants
 
 namespace Ph2_HwInterface
@@ -128,6 +129,10 @@ class lpGBTInterface : public ChipInterface
     // ###########################
     uint16_t GetADCOffset(Ph2_HwDescription::Chip* pChip, bool pVerbose = true);
     float    GetADCGain(Ph2_HwDescription::Chip* pChip, bool pVerbose = true);
+    float    GetADCVoltage(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, uint16_t cOffset, float cGain, bool pVerbose = true);
+    float    GetADCVoltage(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, bool pVerbose = true);
+    float    GetRssiPower(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, float cResponsivity, uint16_t cOffset, float cGain, bool pVerbose = true);
+    float    GetRssiPower(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, float cResponsivity, bool pVerbose = true);
 
     uint16_t ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN = "VREF/2", uint8_t pGain = 0);
     void     ConfigureInternalMonitoring(Ph2_HwDescription::Chip* pChip, uint8_t pEnable);
@@ -160,12 +165,14 @@ class lpGBTInterface : public ChipInterface
     // ##############################################
     // # LpGBT I2C Masters functions (Slow Control) #
     // ##############################################
-    void     ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pMasters);
-    void     ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode);
-    bool     WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes, uint8_t pFreq = 3 /* 3   1 MHz */);
-    uint32_t ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes, uint8_t pFreq = 3 /* 3   1 MHz */);
-    uint8_t  GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
-    bool     IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
+    void        ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pMasters);
+    void        ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode);
+    uint8_t     GetI2CConfiguration(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
+    bool        WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes, uint8_t pFreq = 3 /* 3   1 MHz */);
+    uint32_t    ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes, uint8_t pFreq = 3 /* 3   1 MHz */);
+    uint8_t     GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
+    std::string GetI2CState(Ph2_HwDescription::Chip* pChip, uint8_t pStatus);
+    bool        IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
 
     // ###########################
     // # LpGBT ADC-DAC functions #
@@ -265,8 +272,6 @@ class lpGBTInterface : public ChipInterface
     uint64_t GetBERTErrors(Ph2_HwDescription::Chip* pChip);
 
   protected:
-    const float fClockSpeed = 40e6; // 40 MHz clock for the LpGBT
-
     // ##############
     // # LpGBT maps #
     // ##############

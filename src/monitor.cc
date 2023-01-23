@@ -1,8 +1,8 @@
-#include "../Utils/ConsoleColor.h"
-#include "../Utils/Timer.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/argvparser.h"
-#include "../Utils/easylogging++.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/Timer.h"
+#include "Utils/Utilities.h"
+#include "Utils/argvparser.h"
+#include "Utils/easylogging++.h"
 #include <atomic>
 #include <chrono>
 #include <cstring>

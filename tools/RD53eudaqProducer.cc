@@ -9,6 +9,8 @@
 
 #include "RD53eudaqProducer.h"
 
+using namespace Ph2_HwInterface;
+
 void RD53eudaqProducer::DoReset()
 {
     RD53sysCntrPhys.Stop();
@@ -43,8 +45,8 @@ void RD53eudaqProducer::DoStartRun()
     // #####################
     // # Send a BORE event #
     // #####################
-    // auto ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
-    // ev->SetBORE();
+    auto ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
+    ev->SetBORE();
     // RD53eudaqProducer::MySendEvent(std::move(ev));
 
     // #############################
@@ -52,25 +54,36 @@ void RD53eudaqProducer::DoStartRun()
     // #############################
     // ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
     // ev->SetTriggerN(swTrigCnt++);
-    // this->MySendEvent(std::move(ev));
+    // RD53eudaqProducer::MySendEvent(std::move(ev));
 
     // ######################################
     // # Add extra information to the event #
     // ######################################
-    // std::stringstream os;
-    // ev->SetTag("FirmwareVersion", RD53sysCntrPhys.fBeBoardInterface->FWinfo);
-    // for(const auto cBoard: *(RD53sysCntrPhys.fDetectorContainer))
-    //     for(const auto cOpticalGroup: *cBoard)
-    //         for(const auto cHybrid: *cOpticalGroup)
-    //             for(const auto cChip: *cHybrid)
-    //               cChip->saveRegMap("NONE", os);
-    // ev->SetTag("RegisterMapAndMask", os);
+    ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
+    ev->SetTag("Configuration file", RD53sysCntrPhys.fParsedFile.str());
+    for(const auto cBoard: *(RD53sysCntrPhys.fDetectorContainer))
+    {
+        std::stringstream header;
+        header << "Firmware version: B" << cBoard->getId();
+        ev->SetTag(header.str().c_str(), static_cast<RD53FWInterface*>(RD53sysCntrPhys.fBeBoardFWMap[cBoard->getId()])->getBoardInfo());
+
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    std::stringstream header;
+                    std::stringstream chipData = cChip->saveRegMap("STREAMON");
+                    header << "Register map and mask: B" << cBoard->getId() << "_O" << cOpticalGroup->getId() << "_H" << cHybrid->getId() << "_C" << +cChip->getId();
+                    ev->SetTag(header.str().c_str(), chipData.str());
+                }
+    }
+    RD53eudaqProducer::MySendEvent(std::move(ev));
 
     // ###################################################
     // # Get configuration directly from EUDAQ framework #
     // ###################################################
     std::string fileName("Run" + RD53Shared::fromInt2Str(theRunNumber) + "_Physics");
-    RD53sysCntrPhys.initializeFiles(fileName);
+    RD53sysCntrPhys.initializeFiles<PhysicsHistograms>(fileName, "Physics", RD53sysCntrPhys.histos, theRunNumber);
     RD53sysCntrPhys.Start(theRunNumber);
 
     doExit = false;
@@ -108,7 +121,7 @@ void RD53eudaqProducer::DoStopRun()
 
 void RD53eudaqProducer::DoTerminate()
 {
-    std::unique_lock<std::mutex> theGuard(theMtx);
+    std::unique_lock<std::recursive_mutex> theGuard(theMtx);
     doExit = true;
     theGuard.unlock();
     wakeUp.notify_one();
@@ -116,7 +129,7 @@ void RD53eudaqProducer::DoTerminate()
 
 void RD53eudaqProducer::RunLoop()
 {
-    std::unique_lock<std::mutex> theGuard(theMtx);
+    std::unique_lock<std::recursive_mutex> theGuard(theMtx);
     wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 

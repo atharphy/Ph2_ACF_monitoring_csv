@@ -1,7 +1,7 @@
 #ifndef __D19cBackendAlignmentFWInterface_H__
 #define __D19cBackendAlignmentFWInterface_H__
 
-#include "BeBoardFWInterface.h"
+#include "HWInterface/BeBoardFWInterface.h"
 #include <string>
 
 namespace Ph2_HwInterface
