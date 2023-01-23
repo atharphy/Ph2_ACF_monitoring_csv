@@ -30,6 +30,7 @@ void GainHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorSt
     offset                = this->findValueInSettings<double>(settingsMap, "VCalMED");
     auto         frontEnd = RD53Shared::firstChip->getFEtype(nCols / 2, nCols / 2);
     const size_t ToTsize  = frontEnd->maxToTvalue + 1;
+    const int    MAXCHI2  = 4; // @CONST@
 
     auto hOcc2D = CanvasContainer<TH2F>("Gain", "Gain", nSteps, startValue - offset, stopValue - offset, nEvents, 0, ToTsize);
     bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, "#DeltaVCal", "ToT");
@@ -55,7 +56,7 @@ void GainHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorSt
     auto hSlopeLowQ1D = CanvasContainer<TH1F>("SlopeLowQ1D", "Slope low Q 1D", NBINS, 0, SLOPE_RANGE);
     bookImplementer(theOutputFile, theDetectorStructure, SlopeLowQ1D, hSlopeLowQ1D, "Slope for low charge range (ToT/VCal)", "Entries");
 
-    auto hChi2DoF1D = CanvasContainer<TH1F>("Chi2DoF1D", "Chi2DoF1D", NBINS, 0, 2);
+    auto hChi2DoF1D = CanvasContainer<TH1F>("Chi2DoF1D", "Chi2DoF1D", NBINS, 0, MAXCHI2);
     bookImplementer(theOutputFile, theDetectorStructure, Chi2DoF1D, hChi2DoF1D, "#chi^{2}/D.o.F.", "Entries");
 
     auto hInterceptHighQ2D = CanvasContainer<TH2F>("InterceptHighQ2D", "Intercept high Q Map", nCols, 0, nCols, nRows, 0, nRows);
