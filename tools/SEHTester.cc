@@ -32,6 +32,7 @@ void SEHTester::Initialise()
             clpGBTInterface->hybridClock(cOpticalGroup->flpGBT, cClkCnfg, 1);
         }
     }
+    LOG(INFO) << BOLDRED << "DONE: Initialise  SEHTester" << RESET;
 }
 
 void SEHTester::readTestParameters(std::string file)
@@ -84,14 +85,15 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
     float cVolts = 0;
     float I_SEH;
     float U_SEH;
-    float cVoltages[] = {0.,  0.5,  1.,   1.5,  2.,   2.5,  3.,  3.5, 4.0, 4.2, 4.4, 4.6, 4.8, 5.,  5.2, 5.4, 6.,  7.,  8.,  9.,  9.5, 9.6, 9.7, 9.8, 9.9,
-                         10., 10.1, 10.2, 10.3, 10.4, 10.5, 10., 9.,  8.,  7.,  6.8, 6.6, 6.4, 6.2, 6.0, 5,   4.8, 4.6, 4.4, 4.2, 4.,  3.0, 2.0, 1.0, 0.};
+    float cVoltages[] = {4.6, 4.8, 5., 5.2, 5.4, 6., 7., 8., 9., 9.5, 9.6, 9.7, 9.8, 9.9, 10., 10.1, 10.2, 10.3, 10.4, 10.5, 10., 9., 8., 7., 6.8, 6.6, 6.4, 6.2, 6.0, 5, 4.8, 4.6};
+    // float cVoltages[] = {0.,  0.5,  1.,   1.5,  2.,   2.5,  3.,  3.5, 4.0, 4.2, 4.4, 4.6, 4.8, 5.,  5.2, 5.4, 6.,  7.,  8.,  9.,  9.5, 9.6, 9.7, 9.8, 9.9,
+    // 10., 10.1, 10.2, 10.3, 10.4, 10.5, 10., 9., 8., 7., 6.8, 6.6, 6.4, 6.2, 6.0, 5, 4.8, 4.6, 4.4, 4.2, 4., 3.0, 2.0, 1.0, 0.};
     for(auto& voltage: cVoltages)
     // while(cVolts < 10.01)
     {
-        std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(voltage) + ",";
+        std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Voltage:" + std::to_string(voltage) + ",";
         fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
-        std::this_thread::sleep_for(std::chrono::milliseconds(1200));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 // std::string buffer = fPowerSupplyClient->sendAndReceivePacket("GetStatus");
 // U_SEH              = std::stof(getVariableValue(powerSupplyId + "_" + channelId + "_Voltage", buffer));
 // I_SEH              = std::stof(getVariableValue(powerSupplyId + "_" + channelId + "_Current", buffer));
@@ -121,7 +123,7 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
     cUinIinGraph->GetYaxis()->SetTitle("Iin [A]");
 
     cUinIinCanvas->Write();
-    std::string setVoltageMessage2 = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(10.5) + ",";
+    std::string setVoltageMessage2 = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Voltage:" + std::to_string(10.5) + ",";
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage2);
 }
 
@@ -285,7 +287,7 @@ void SEHTester::SetupExternalTestLeakageCurrent(uint16_t pHvSet, std::string pow
 #else
     flpGBTInterface->GetExternalController()->getInterface().set_HV(true, false, false, 0);
 #endif
-    std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(-1 * static_cast<float>(pHvSet)) + ",";
+    std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Voltage:" + std::to_string(-1 * static_cast<float>(pHvSet)) + ",";
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
     setVoltageMessage = "TurnOn,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
@@ -298,7 +300,7 @@ void SEHTester::EndExternalTestLeakageCurrent(std::string powerSupplyId, std::st
 #else
     flpGBTInterface->GetExternalController()->getInterface().set_HV(true, false, false, 0);
 #endif
-    std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(-1 * static_cast<float>(0)) + ",";
+    std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Voltage:" + std::to_string(-1 * static_cast<float>(0)) + ",";
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
     setVoltageMessage = "TurnOff,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
@@ -315,7 +317,7 @@ void SEHTester::ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTi
 #else
     flpGBTInterface->GetExternalController()->getInterface().set_HV(true, false, false, 0);
 #endif
-    std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(-1 * static_cast<float>(pHvSet)) + ",";
+    std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Voltage:" + std::to_string(-1 * static_cast<float>(pHvSet)) + ",";
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
     setVoltageMessage = "TurnOn,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
@@ -407,7 +409,7 @@ void SEHTester::ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTi
     // cEfficencyCanvas->BuildLegend();
     cMonGraph->Write();
     cMonCanvas->Write();
-    setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(0) + ",";
+    setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Voltage:" + std::to_string(0) + ",";
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
     setVoltageMessage = "TurnOff,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
@@ -449,23 +451,23 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
     cBiasVoltageTree->Branch("VHVJ7", &cVHVJ7ValVect);
     cBiasVoltageTree->Branch("VHVJ8", &cVHVJ8ValVect);
     cBiasVoltageTree->Branch("HvMea", &cHvMeaValVect);
-    std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(0) + ",";
+    std::string setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Voltage:" + std::to_string(0) + ",";
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
     setVoltageMessage = "TurnOn,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
-    std::this_thread::sleep_for(std::chrono::milliseconds(15000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10000));
     for(int cHvSet = 0; cHvSet <= 1000; cHvSet += 100)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        // std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 #ifdef __TCP_SERVER__
         fTestcardClient->sendAndReceivePacket("set_HV,hvRelay:1,hvmonx7Relay:1,hvmonx8Relay:1,HVDAC_setvalue:" + std::to_string(0) + ",");
 #else
         flpGBTInterface->GetExternalController()->getInterface().set_HV(true, true, true, 0); // 0x155 = 100V
 #endif
 
-        setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(-1 * cHvSet) + ",";
+        setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Voltage:" + std::to_string(-1 * cHvSet) + ",";
         fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
-        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(3500));
         std::string buffer = fPowerSupplyClient->sendAndReceivePacket("GetStatus");
         cHvMea             = std::stof(getVariableValue(powerSupplyId + "_" + channelId + "_Voltage", buffer));
 #ifdef __TCP_SERVER__
@@ -518,7 +520,7 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
     cDACtoMonGraph->SetLineWidth(3);
     cDACtoMonGraph->SetMarkerStyle(22);
     cDACtoHVMultiGraph->Add(cDACtoMonGraph);
-    setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Value:" + std::to_string(0) + ",";
+    setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Voltage:" + std::to_string(0) + ",";
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
     setVoltageMessage = "TurnOff,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId;
     fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
@@ -558,8 +560,8 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
             xval          = myGraphs_vec4->at(n).GetX()[i];
             yval          = myGraphs_vec4->at(n).GetY()[i];
             yvalConvert   = (yval - 1.) * 1000.;
-            y_allowed_min = fit_grading_HV_test->Eval(xval) * 0.95 - 20.; // Offset, da bei kleinen Werten der relative Fehler größer sein kann
-            y_allowed_max = fit_grading_HV_test->Eval(xval) * 1.05 + 50.;
+            y_allowed_min = fit_grading_HV_test->Eval(xval) * 0.99 - 25.; // Offset, da bei kleinen Werten der relative Fehler größer sein kann
+            y_allowed_max = fit_grading_HV_test->Eval(xval) * 1.01 + 50.;
 
             if(yvalConvert < y_allowed_min || yvalConvert > y_allowed_max)
             {
@@ -707,7 +709,6 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     cMonGraph->Draw("AL*");
     cMonGraph->GetXaxis()->SetTitle("Time [s]");
     cMonGraph->GetYaxis()->SetTitle("Monitoring Voltage [V]");
-
     cMonCanvas->Write();
 
 #ifdef __TCP_SERVER__
@@ -784,7 +785,13 @@ void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, u
         cIoutRValVect.clear(), cIinValVect.clear(), cUoutRValVect.clear(), cUoutLValVect.clear();
         cEfficiencyValVect.clear(), cU2v5ValVect.clear(), cIoutLValVect.clear();
         cSideValVect.clear(), cUinValVect.clear(), cIoutValVect.clear();
-
+        // uint32_t cStep = 0;
+        // if(cSide == "both") { cStep = pStep; }
+        // else
+        // {
+        //     cStep = 2 * pStep;
+        // }
+        // for(int cLoadValue = pMinLoadValue; cLoadValue <= (int)pMaxLoadValue; cLoadValue += Step)
         for(int cLoadValue = pMinLoadValue; cLoadValue <= (int)pMaxLoadValue; cLoadValue += pStep)
         {
             float I_SEH;
@@ -814,7 +821,7 @@ void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, u
             if(cSide == "right") { flpGBTInterface->GetExternalController()->getInterface().set_load1(true, false, cLoadValue); }
 #endif
             // Delay needs to be optimized during functional testing
-            std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+            std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 #ifdef __TCP_SERVER__
             I_P1V2_R = this->getMeasurement("read_load:I_P1V2_R");
             I_P1V2_L = this->getMeasurement("read_load:I_P1V2_L");

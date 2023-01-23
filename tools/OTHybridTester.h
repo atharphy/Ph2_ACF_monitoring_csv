@@ -14,15 +14,16 @@
 
 #if defined(__TCUSB__) && defined(__USE_ROOT__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
 
-#include "../HWInterface/DPInterface.h"
-#include "D19cDebugFWInterface.h"
-#include "D19cLinkInterface.h"
-#include "D19cOpticalInterface.h"
-#include "D19cTriggerInterface.h"
-#include "L1ReadoutInterface.h"
-#include "LinkAlignmentOT.h"
-#include "Tool.h"
-#include "linearFitter.h"
+#include "HWInterface/D19cDebugFWInterface.h"
+#include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/D19cLinkInterface.h"
+#include "HWInterface/D19cOpticalInterface.h"
+#include "HWInterface/D19cTriggerInterface.h"
+#include "HWInterface/DPInterface.h"
+#include "HWInterface/L1ReadoutInterface.h"
+#include "Utils/linearFitter.h"
+#include "tools/LinkAlignmentOT.h"
+#include "tools/Tool.h"
 
 #include "TAxis.h"
 #include "TF1.h"
@@ -68,19 +69,22 @@ class OTHybridTester : public Tool
     // Test lpGBT ADC
     void LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_t pMinDAC, uint32_t pMaxDAC, uint32_t pStep);
     // Set GPIO level
-    void LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t Level);
-    bool LpGBTTestResetLines();
-    bool LpGBTTestFixedADCs();
-    bool LpGBTTestGPILines();
-    bool LpGBTTestVTRx();
-    bool LpGBTGetLinkLock();
-    bool LpGBTCheckClocks();
-    bool LpGBTFastCommandChecker(uint8_t pPattern);
+    void     LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t Level);
+    bool     LpGBTTestResetLines();
+    bool     LpGBTTestFixedADCs();
+    bool     LpGBTTestGPILines();
+    bool     LpGBTTestVTRx();
+    bool     LpGBTGetLinkLock();
+    bool     LpGBTCheckClocks();
+    bool     LpGBTFastCommandChecker(uint8_t pPattern);
+    void     freeTest();
+    uint16_t calibrateADC();
+    void     calibrateCurrentDAC();
     // Run Eye Openin Monitor
     void LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect, uint8_t pEQAttenuation = 3);
     // Run Bit Error Rate Test
     void LpGBTRunBitErrorRateTest(uint8_t pCoarseSource, uint8_t pFineSource, uint8_t pMeasTime, uint32_t pPattern = 0x00000000);
-    void freeTest();
+
     // Phase Alignment
     void                     BackEndAlignment(std::vector<std::string> pLines);
     std::pair<bool, uint8_t> PhaseTuneLineEleFC7(uint8_t pHybrid, uint8_t pLineId);
