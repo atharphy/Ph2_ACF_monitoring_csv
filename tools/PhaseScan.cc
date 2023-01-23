@@ -58,7 +58,7 @@ void PhaseScan::Initialize()
     fPhaseStartLatency = findValueInSettings<double>("PhaseStartLatency", 1);
     fPhaseLatencyRange = findValueInSettings<double>("PhaseLatencyRange", 1);
     fStartPhase        = findValueInSettings<double>("StartPhase", 0);
-    fPhaseRange        = findValueInSettings<double>("PhaseRange", 15);
+    fPhaseRange        = findValueInSettings<double>("PhaseRange", 7);
     std::cout << "Going to read " << fNevents << " events" << std::endl;
 
 #ifdef __USE_ROOT__
@@ -70,27 +70,6 @@ void PhaseScan::Initialize()
 
 void PhaseScan::ScanPhase()
 {
-
-
-            for(auto cBoard: *fDetectorContainer)//config DLL
-            {
-                for(auto cOpticalGroup: *cBoard)
-                {
-                    for(auto cHybrid: *cOpticalGroup)
-                    {
-                        for(auto cChip: *cHybrid)
-                        {
-                            if(cChip->getFrontEndType() == FrontEndType::SSA2)
-                                fReadoutChipInterface->WriteChipReg(cChip, "ClockDeskewing_fine", 0x91 );
-                            else if(cChip->getFrontEndType() == FrontEndType::MPA2)
-                                fReadoutChipInterface->WriteChipReg(cChip, "ConfDLL", 0x71 );
-
-                        }
-                    }
-                }	
-	    }
-
-
     uint32_t cDeltaLat = fPhaseStartLatency;
     do
     {
@@ -106,13 +85,12 @@ void PhaseScan::ScanPhase()
                         for(auto cChip: *cHybrid)
                         {
                             if(cChip->getFrontEndType() == FrontEndType::SSA)
-
                                 fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cDeltaLat - 1);
                             else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                                 fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cDeltaLat + 1);
                             else
                                 fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cDeltaLat);
-                            fReadoutChipInterface->WriteChipReg(cChip, "SamplePhaseShift", cPhaseLat);
+                            fReadoutChipInterface->WriteChipReg(cChip, "PhaseShift", cPhaseLat);
                         }
                     }
                 }
@@ -142,50 +120,51 @@ void PhaseScan::ScanPhase()
                                     std::vector<PCluster> cPclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetPixelClusters(cHybrid->getId(), cChip->getId());
                                     std::vector<SCluster> cSclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetStripClusters(cHybrid->getId(), cChip->getId());
 
-                                    //cTotalHitsS0 += cPclstrs.size();
-                                    //cTotalHitsS1 += cSclstrs.size();
-                            	if(cChip->getFrontEndType() == FrontEndType::MPA2){
-                                    for(auto& cPclstr: cPclstrs)
+                                    // cTotalHitsS0 += cPclstrs.size();
+                                    // cTotalHitsS1 += cSclstrs.size();
+                                    if(cChip->getFrontEndType() == FrontEndType::MPA2)
                                     {
-                                        for(uint8_t cId = 0; cId < (1 + cPclstr.fWidth); cId++)
+                                        for(auto& cPclstr: cPclstrs)
                                         {
-                                            cHitContainer.at(cBoard->getIndex())
-                                                ->at(cOpticalGroup->getIndex())
-                                                ->at(cHybrid->getIndex())
-                                                ->at(cChip->getIndex())
-                                                ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
-					    NPclus+=1;
+                                            for(uint8_t cId = 0; cId < (1 + cPclstr.fWidth); cId++)
+                                            {
+                                                cHitContainer.at(cBoard->getIndex())
+                                                    ->at(cOpticalGroup->getIndex())
+                                                    ->at(cHybrid->getIndex())
+                                                    ->at(cChip->getIndex())
+                                                    ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
+                                                NPclus += 1;
+                                            }
                                         }
-                                    }}
-                            	if(cChip->getFrontEndType() == FrontEndType::SSA2){
-                                    for(auto& cSclstr: cSclstrs)
+                                    }
+                                    if(cChip->getFrontEndType() == FrontEndType::SSA2)
                                     {
-                                        for(uint8_t cId = 0; cId < (1 + cSclstr.fWidth); cId++)
+                                        for(auto& cSclstr: cSclstrs)
                                         {
-                                            cHitContainer.at(cBoard->getIndex())
-                                                ->at(cOpticalGroup->getIndex())
-                                                ->at(cHybrid->getIndex())
-                                                ->at(cChip->getIndex())
-                                                ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
-					    NSclus+=1;
+                                            for(uint8_t cId = 0; cId < (1 + cSclstr.fWidth); cId++)
+                                            {
+                                                cHitContainer.at(cBoard->getIndex())
+                                                    ->at(cOpticalGroup->getIndex())
+                                                    ->at(cHybrid->getIndex())
+                                                    ->at(cChip->getIndex())
+                                                    ->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[cTDCVal] += 1;
+                                                NSclus += 1;
+                                            }
                                         }
-                                    }}
+                                    }
                                 }
                             }
                         }
 
                         cEventIter += (1 + cTriggerMult);
                     } while(cEventIter < cEvents.end());
-                fDQMHistogramPhaseScan.fillPhasePlots(cDeltaLat, cPhaseLat, cHitContainer);
-                if(NPclus + NSclus > 0)
-                {
-                    LOG(INFO) << "Latency: "<<cDeltaLat<<" SamplingPhase: "<<cPhaseLat<< RESET;
-                    LOG(INFO) << "Found NPclus: " <<NPclus<<" NSclus: " << NSclus << RESET;
-
-
+                    fDQMHistogramPhaseScan.fillPhasePlots(cDeltaLat, cPhaseLat, cHitContainer);
+                    if(NPclus + NSclus > 0)
+                    {
+                        LOG(INFO) << "Latency: " << cDeltaLat << " SamplingPhase: " << cPhaseLat << RESET;
+                        LOG(INFO) << "Found NPclus: " << NPclus << " NSclus: " << NSclus << RESET;
+                    }
                 }
-                }
-
             }
             cPhaseLat += 1;
         } while(cPhaseLat < (fStartPhase + fPhaseRange));

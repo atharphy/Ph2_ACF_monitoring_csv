@@ -205,11 +205,8 @@
     <Setting name="StartLatency">250</Setting>
     <Setting name="LatencyRange">100</Setting>
 
-    <Setting name="PhaseStartLatency">290</Setting>
-    <Setting name="PhaseLatencyRange">10</Setting>
 
-
-    <Setting name="PSmoduleSSAthreshold">100</Setting>
+    <Setting name="PSmoduleSSAthreshold">150</Setting>
     <Setting name="PSmoduleMPAthreshold">150</Setting>
     <Setting name="PSmoduleTriggerLatency">180</Setting>
     <Setting name="PSmoduleStubWindow">32</Setting>
@@ -290,13 +287,11 @@
     <Setting name="PedeNoiseMinThreshold">0</Setting>
     <Setting name="PedeNoiseMaxThreshold">220</Setting>
 
-    <Setting name="PSOccupancyPulseAmplitude">250</Setting>
-
 
     <Setting name="StartPhase">0</Setting>
-    <Setting name="PhaseRange">15</Setting>
-    <Setting name="PhaseStartLatency">280</Setting>
-    <Setting name="PhaseLatencyRange">20</Setting>
+    <Setting name="PhaseRange">7</Setting>
+    <Setting name="PhaseStartLatency">270</Setting>
+    <Setting name="PhaseLatencyRange">40</Setting>
 
     <!-- Sync Test --> 
     <Setting name="Attempts">1</Setting>

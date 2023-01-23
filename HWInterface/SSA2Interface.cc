@@ -382,6 +382,13 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
 
         return this->WriteChipRegBits(pSSA2, "ClockDeskewing_fine", (pValue << cBitShift), "mask_peri_D", cRegMask);
     }
+    else if(pRegName == "PhaseShift")
+    {
+        uint8_t cBitShift = 0;
+        uint8_t cRegMask  = (0x7 << cBitShift); //
+
+        return this->WriteChipRegBits(pSSA2, "ClockDeskewing_coarse", (pValue << cBitShift), "mask_peri_D", cRegMask);
+    }
     else if(pRegNameMod == "AsyncDelay")
     {
         uint8_t                  cLSB = pValue & 0xFF;

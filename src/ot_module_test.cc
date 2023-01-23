@@ -1016,13 +1016,14 @@ int main(int argc, char* argv[])
         cLatencyScan.Inherit(&cTool);
         cLatencyScan.Initialize();
         cLatencyScan.ScanLatency();
-    if(cmd.foundOption("phaseScan"))
-	{
-        PhaseScan cPhaseScan;
-        cPhaseScan.Inherit(&cTool);
-        cPhaseScan.Initialize();
-        cPhaseScan.ScanPhase();
-	}
+
+        if(cmd.foundOption("phaseScan"))
+        {
+            PhaseScan cPhaseScan;
+            cPhaseScan.Inherit(&cTool);
+            cPhaseScan.Initialize();
+            cPhaseScan.ScanPhase();
+        }
     }
     // measure noise on FE chips
     if(cmd.foundOption("measurePedeNoise") && !cmd.foundOption("read"))

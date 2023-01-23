@@ -526,6 +526,13 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         return this->WriteChipRegBits(pMPA2, "Control_1", (pValue << cBitShift), "Mask", cRegMask, pVerify);
     }
 
+    else if(pRegName == "PhaseShift")
+    {
+        uint8_t cBitShift = CONTROL_TABLE.find("PhaseShift")->second;
+        uint8_t cRegMask  = (0x7 << cBitShift);
+        return this->WriteChipRegBits(pMPA2, "Control_1", (pValue << cBitShift), "Mask", cRegMask, pVerify);
+    }
+
     else if(pRegName == "ClusterCut_ALL")
     {
         LOG(INFO) << BOLDMAGENTA << "ClusterCut_ALL" << RESET;
@@ -690,7 +697,7 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         // LOG(INFO) << BOLDBLUE << "Writing " << std::bitset<8>(+cValue) << " mask is " << std::bitset<8>(cReg & cRegMask) << RESET; //"  "<<(pValue <<  cBitShift )<< std::dec << RESET;
         // return this->WriteChipSingleReg(pMPA2, "LatencyRx320", cValue);
     }
-    else if(pRegName == "SamplePhaseShift")
+    else if(pRegName == "SamplePhaseShiftFine")
     {
         uint8_t cBitShift = 0;
         uint8_t cRegMask  = (0xF << cBitShift); //

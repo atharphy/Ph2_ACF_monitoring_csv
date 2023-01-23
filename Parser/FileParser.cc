@@ -2,7 +2,7 @@
 #include "HWDescription/Cbc.h"
 #include "HWDescription/Cic.h"
 #include "HWDescription/Hybrid.h"
-#include "HWDescription/MPA2.h" 
+#include "HWDescription/MPA2.h"
 #include "HWDescription/OuterTrackerHybrid.h"
 #include "HWDescription/RD53A.h"
 #include "HWDescription/RD53B.h"

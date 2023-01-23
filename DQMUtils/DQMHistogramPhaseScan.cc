@@ -39,27 +39,21 @@ DQMHistogramPhaseScan::~DQMHistogramPhaseScan() {}
 //========================================================================================================================
 void DQMHistogramPhaseScan::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
 {
-
-
     // need to get settings from settings map
     parseSettings(pSettingsMap);
 
     ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
     LOG(INFO) << "Setting histograms with range " << fPhaseRange << " and start value " << fStartPhase;
 
-    HistContainer<TH1F> hPhase("PhaseValue", "Phase Value", fPhaseRange-0.5, fStartPhase, fStartPhase + fPhaseRange-0.5);
+    HistContainer<TH1F> hPhase("PhaseValue", "Phase Value", fPhaseRange - 0.5, fStartPhase, fStartPhase + fPhaseRange - 0.5);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fPhaseHistograms, hPhase);
 
     HistContainer<TH2F> hLatencyVsPhase(
-        "LatencyVsPhaseValue", "Latency vs Phase Value", fLatencyRange, fStartLatency-0.5, fStartLatency + fLatencyRange-0.5, fPhaseRange, fStartPhase-0.5, fStartPhase + fPhaseRange-0.5);
+        "LatencyVsPhaseValue", "Latency vs Phase Value", fLatencyRange, fStartLatency - 0.5, fStartLatency + fLatencyRange - 0.5, fPhaseRange, fStartPhase - 0.5, fStartPhase + fPhaseRange - 0.5);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fLatencyVsPhaseHistograms, hLatencyVsPhase);
 
-
-
-    HistContainer<TH2F> hTDCVsPhase(
-        "TDCVsPhaseValue", "TDC vs Phase Value",  TDCBINS, -0.5, TDCBINS-0.5, fPhaseRange, fStartPhase-0.5, fStartPhase + fPhaseRange-0.5);
+    HistContainer<TH2F> hTDCVsPhase("TDCVsPhaseValue", "TDC vs Phase Value", TDCBINS, -0.5, TDCBINS - 0.5, fPhaseRange, fStartPhase - 0.5, fStartPhase + fPhaseRange - 0.5);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fTDCVsPhaseHistograms, hTDCVsPhase);
-
 }
 
 //========================================================================================================================
@@ -105,52 +99,47 @@ void DQMHistogramPhaseScan::process()
 //========================================================================================================================
 
 void DQMHistogramPhaseScan::reset(void) {}
-void DQMHistogramPhaseScan::fillPhasePlots(uint16_t pLatency, uint16_t pPhase,  DetectorDataContainer& pHits) 
-{ 
-
+void DQMHistogramPhaseScan::fillPhasePlots(uint16_t pLatency, uint16_t pPhase, DetectorDataContainer& pHits)
+{
     for(auto board: pHits)
     {
         for(auto opticalGroup: *board)
         {
             for(auto hybrid: *opticalGroup)
             {
-		uint32_t curch=0;
+                uint32_t curch = 0;
                 for(auto chip: *hybrid)
                 {
-		    	TH2F* cTDCVsPhase = fTDCVsPhaseHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-		    	TH2F* cLatencyVsPhase = fLatencyVsPhaseHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-		    	TH1F* cPhase = fPhaseHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-		    	//TH1F* cPhase   = fPhaseHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    TH2F* cTDCVsPhase =
+                        fTDCVsPhaseHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH2F* cLatencyVsPhase =
+                        fLatencyVsPhaseHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    TH1F* cPhase = fPhaseHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->at(chip->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    // TH1F* cPhase   = fPhaseHistograms.at(board->getIndex())->at(opticalGroup->getIndex())->at(hybrid->getIndex())->getSummary<HistContainer<TH1F>>().fTheHistogram;
 
+                    for(uint32_t i = 0; i < TDCBINS; i++)
+                    {
+                        uint32_t hits = chip->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[i];
 
+                        auto theTDCbin  = cTDCVsPhase->FindBin(float(i), float(pPhase));
+                        auto thecontent = cTDCVsPhase->GetBinContent(theTDCbin);
+                        cTDCVsPhase->SetBinContent(theTDCbin, thecontent + hits);
 
-		        for(uint32_t i = 0; i < TDCBINS; i++)
-		        {
-		                uint32_t hits  = chip->getSummary<GenericDataArray<VECSIZE, uint16_t>>()[i];
+                        auto theLatencybin = cLatencyVsPhase->FindBin(float(pLatency), float(pPhase));
+                        thecontent         = cLatencyVsPhase->GetBinContent(theLatencybin);
+                        cLatencyVsPhase->SetBinContent(theLatencybin, thecontent + hits);
 
+                        auto thePhasebin = cLatencyVsPhase->FindBin(float(pPhase));
+                        thecontent       = cPhase->GetBinContent(thePhasebin);
+                        cPhase->SetBinContent(thePhasebin, thecontent + hits);
+                    }
+                    curch += 1;
+                }
 
-		    		auto theTDCbin = cTDCVsPhase->FindBin(float(i),float(pPhase));
-		                auto thecontent = cTDCVsPhase->GetBinContent(theTDCbin);
-				cTDCVsPhase->SetBinContent(theTDCbin, thecontent + hits);
-
-		    		auto theLatencybin = cLatencyVsPhase->FindBin(float(pLatency),float(pPhase));
-		                thecontent = cLatencyVsPhase->GetBinContent(theLatencybin);
-		                cLatencyVsPhase->SetBinContent(theLatencybin, thecontent + hits);
-
-		    		auto thePhasebin = cLatencyVsPhase->FindBin(float(pPhase));
-		                thecontent = cPhase->GetBinContent(thePhasebin);
-		                cPhase->SetBinContent(thePhasebin, thecontent + hits);
-
-		        }
-			curch+=1;
-		}
-
-
-		//cPhase 
-	    }
-	}
+                // cPhase
+            }
+        }
     }
-
 }
 
 void DQMHistogramPhaseScan::parseSettings(const Ph2_Parser::SettingsMap& pSettingsMap)
@@ -178,6 +167,4 @@ void DQMHistogramPhaseScan::parseSettings(const Ph2_Parser::SettingsMap& pSettin
         fLatencyRange = boost::any_cast<double>(cSetting->second);
     else
         fLatencyRange = 512;
-
-
 }
