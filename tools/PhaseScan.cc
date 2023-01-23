@@ -172,22 +172,7 @@ void PhaseScan::ScanPhase()
 
     } while(cDeltaLat < (fPhaseStartLatency + fPhaseLatencyRange));
 }
-void PhaseScan::updateHists(std::string pHistName, bool pFinal)
-{
-    for(auto& cCanvas: fCanvasMap)
-    {
-        // maybe need to declare temporary pointers outside the if condition?
-        if(pHistName == "hybrid_latency")
-        {
-            cCanvas.second->cd();
-            TH1F* cTmpHist = dynamic_cast<TH1F*>(getHist(static_cast<Ph2_HwDescription::Hybrid*>(cCanvas.first), pHistName));
-            cTmpHist->DrawCopy();
-            cCanvas.second->Update();
-        }
-    }
 
-    this->HttpServerProcess();
-}
 void PhaseScan::writeObjects()
 {
 #ifdef __USE_ROOT__
@@ -197,22 +182,19 @@ void PhaseScan::writeObjects()
 
 void PhaseScan::Running()
 {
-    LOG(INFO) << "Starting Latency Scan";
-
+    LOG(INFO) << "Starting Phase Scan";
     Initialize();
     PhaseScan();
-    // StubLatencyScan();
-    // MeasureTriggerTDC();
-    LOG(INFO) << "Done with Latency Scan";
+    LOG(INFO) << "Done with Phase Scan";
 }
 
 void PhaseScan::Stop()
 {
-    LOG(INFO) << "Stopping Latency Scan.";
+    LOG(INFO) << "Stopping Phase Scan.";
     writeObjects();
     dumpConfigFiles();
     closeFileHandler();
-    LOG(INFO) << "Latency Scan stopped.";
+    LOG(INFO) << "Phase Scan stopped.";
 }
 
 void PhaseScan::Pause() {}
