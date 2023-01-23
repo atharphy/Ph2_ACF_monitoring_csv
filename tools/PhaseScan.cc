@@ -158,7 +158,10 @@ void PhaseScan::ScanPhase()
 
                         cEventIter += (1 + cTriggerMult);
                     } while(cEventIter < cEvents.end());
-                    fDQMHistogramPhaseScan.fillPhasePlots(cDeltaLat, cPhaseLat, cHitContainer);
+#ifdef __USE_ROOT__
+		        fDQMHistogramPhaseScan.fillPhasePlots(cDeltaLat, cPhaseLat, cHitContainer);
+#endif
+                        ;
                     if(NPclus + NSclus > 0)
                     {
                         LOG(INFO) << "Latency: " << cDeltaLat << " SamplingPhase: " << cPhaseLat << RESET;
