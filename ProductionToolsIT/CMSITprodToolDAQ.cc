@@ -1,11 +1,11 @@
-#include "../DQMUtils/DQMInterface.h"
-#include "../System/SystemController.h"
-#include "../Utils/MiddlewareInterface.h"
-#include "../Utils/RD53Shared.h"
-#include "../Utils/argvparser.h"
+#include "DQMUtils/DQMInterface.h"
+#include "System/SystemController.h"
+#include "Utils/MiddlewareInterface.h"
+#include "Utils/RD53Shared.h"
+#include "Utils/argvparser.h"
 
-#include "../ProductionToolsIT/RD53EyeDiag.h"
-#include "../ProductionToolsIT/RD53EyeScanOptimization.h"
+#include "ProductionToolsIT/RD53EyeDiag.h"
+#include "ProductionToolsIT/RD53EyeScanOptimization.h"
 
 #include <chrono>
 #include <sys/wait.h>

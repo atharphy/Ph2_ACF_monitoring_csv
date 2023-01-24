@@ -1,6 +1,6 @@
-#include "../NetworkUtils/TCPPublishServer.h"
-#include "../NetworkUtils/TCPServer.h"
-#include "../Utils/easylogging++.h"
+#include "NetworkUtils/TCPPublishServer.h"
+#include "NetworkUtils/TCPServer.h"
+#include "Utils/easylogging++.h"
 
 #include <future>
 #include <iostream>

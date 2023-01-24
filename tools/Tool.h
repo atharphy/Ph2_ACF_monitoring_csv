@@ -12,12 +12,12 @@
 #ifndef __TOOL_H__
 #define __TOOL_H__
 
-#include "../System/SystemController.h"
-#include "../Utils/BoardContainerStream.h"
-#include "../Utils/ChannelContainerStream.h"
-#include "../Utils/ChipContainerStream.h"
-#include "../Utils/HybridContainerStream.h"
-#include "../Utils/OpticalGroupContainerStream.h"
+#include "System/SystemController.h"
+#include "Utils/BoardContainerStream.h"
+#include "Utils/ChannelContainerStream.h"
+#include "Utils/ChipContainerStream.h"
+#include "Utils/HybridContainerStream.h"
+#include "Utils/OpticalGroupContainerStream.h"
 
 #ifdef __USE_ROOT__
 #include "TCanvas.h"
@@ -108,7 +108,7 @@ class Tool : public Ph2_System::SystemController
 
     void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000) override;
     void Start(int runNumber) override;
-    void InformImDone();
+    // void InformImDone();
     void Stop() override;
 
     void waitForRunToBeCompleted();
@@ -425,13 +425,14 @@ class Tool : public Ph2_System::SystemController
     THttpServer* fHttpServer;
 #endif
 
-    int                         fRunNumber;
-    bool                        doExit;
-    std::atomic<bool>           fKeepRunning;
-    std::thread                 fRunningThread;
-    std::future<int>            fRunningFuture;
-    std::condition_variable_any wakeUp;
-    std::recursive_mutex        theMtx;
+    int               fRunNumber;
+    std::atomic<bool> fKeepRunning;
+    std::future<void> fRunningFuture;
+    // bool                        doExit;
+    // std::thread                 fRunningThread;
+    // std::future<int>            fRunningFuture;
+    // std::condition_variable_any wakeUp;
+    // std::recursive_mutex        theMtx;
 
     bool        fSkipMaskedChannels;
     bool        fAllChan;

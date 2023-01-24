@@ -1,6 +1,6 @@
 #include <cstring>
 
-#include "D19cDebugFWInterface.h"
+#include "HWInterface/D19cDebugFWInterface.h"
 #include "Utils/Timer.h"
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
@@ -38,7 +38,7 @@
 #define __NAMEDPIPE__
 
 #ifdef __NAMEDPIPE__
-#include "gui_logger.h"
+#include "Utils/gui_logger.h"
 #endif
 
 using namespace Ph2_HwDescription;

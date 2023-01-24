@@ -10,17 +10,17 @@
 #ifndef RD53RingOscillator_H
 #define RD53RingOscillator_H
 
-#include "../tools/Tool.h"
+#include "tools/Tool.h"
 
 #include <chrono>
 #include <cmath>
 
-#include "../HWInterface/BeBoardFWInterface.h"
-#include "../HWInterface/RD53FWInterface.h"
-#include "../HWInterface/ReadoutChipInterface.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/RD53FWInterface.h"
+#include "HWInterface/ReadoutChipInterface.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53RingOscillatorHistograms.h"
+#include "DQMUtils/RD53RingOscillatorHistograms.h"
 #endif
 
 // #########################

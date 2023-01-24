@@ -14,11 +14,11 @@
 
 #if defined(__TCUSB__) && defined(__USE_ROOT__) && (defined(__ROH_USB__) || defined(__SEH_USB__))
 
-#include "../HWInterface/DPInterface.h"
 #include "D19cDebugFWInterface.h"
 #include "D19cLinkInterface.h"
 #include "D19cOpticalInterface.h"
 #include "D19cTriggerInterface.h"
+#include "HWInterface/DPInterface.h"
 #include "L1ReadoutInterface.h"
 #include "LinkAlignmentOT.h"
 #include "Tool.h"
@@ -67,14 +67,17 @@ class OTHybridTester : public Tool
     // Test lpGBT ADC
     void LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_t pMinDAC, uint32_t pMaxDAC, uint32_t pStep);
     // Set GPIO level
-    void LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t Level);
-    bool LpGBTTestResetLines();
-    bool LpGBTTestFixedADCs();
-    bool LpGBTTestGPILines();
-    bool LpGBTTestVTRx();
-    bool LpGBTGetLinkLock();
-    bool LpGBTCheckClocks();
-    bool LpGBTFastCommandChecker(uint8_t pPattern);
+    void     LpGBTSetGPIOLevel(const std::vector<uint8_t>& pGPIOs, uint8_t Level);
+    bool     LpGBTTestResetLines();
+    bool     LpGBTTestFixedADCs();
+    bool     LpGBTTestGPILines();
+    bool     LpGBTTestVTRx();
+    bool     LpGBTGetLinkLock();
+    bool     LpGBTCheckClocks();
+    bool     LpGBTFastCommandChecker(uint8_t pPattern);
+    void     freeTest();
+    uint16_t calibrateADC();
+    void     calibrateCurrentDAC();
     // Run Eye Openin Monitor
     void LpGBTRunEyeOpeningMonitor(uint8_t pEndOfCountSelect, uint8_t pEQAttenuation = 3);
     // Run Bit Error Rate Test

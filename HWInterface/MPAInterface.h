@@ -12,9 +12,9 @@
 #ifndef __MPAINTERFACE_H__
 #define __MPAINTERFACE_H__
 
-#include "BeBoardFWInterface.h"
-#include "D19clpGBTInterface.h"
-#include "ReadoutChipInterface.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/D19clpGBTInterface.h"
+#include "HWInterface/ReadoutChipInterface.h"
 #include "pugixml.hpp"
 #include <vector>
 

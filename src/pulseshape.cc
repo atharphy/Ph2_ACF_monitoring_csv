@@ -1,9 +1,9 @@
 #include <cstring>
 
-#include "../Utils/Utilities.h"
-#include "../Utils/argvparser.h"
-#include "../tools/PulseShape.h"
 #include "TROOT.h"
+#include "Utils/Utilities.h"
+#include "Utils/argvparser.h"
+#include "tools/PulseShape.h"
 #include <TApplication.h>
 
 using namespace Ph2_HwDescription;

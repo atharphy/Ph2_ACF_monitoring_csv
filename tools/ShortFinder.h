@@ -12,7 +12,7 @@
 #ifndef ShortFinder_h__
 #define ShortFinder_h__
 
-#include "Tool.h"
+#include "tools/Tool.h"
 
 const float THRESHOLD_SHORT = 0.1;
 

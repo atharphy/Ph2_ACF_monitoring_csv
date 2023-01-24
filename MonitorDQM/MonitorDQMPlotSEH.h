@@ -8,9 +8,9 @@
 
 #ifndef __MonitorDQMPlotSEH_H__
 #define __MonitorDQMPlotSEH_H__
-#include "../MonitorDQM/MonitorDQMPlotBase.h"
-#include "../Utils/Container.h"
-#include "../Utils/DataContainer.h"
+#include "MonitorDQM/MonitorDQMPlotBase.h"
+#include "Utils/Container.h"
+#include "Utils/DataContainer.h"
 
 class TFile;
 

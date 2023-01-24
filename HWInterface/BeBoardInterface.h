@@ -43,9 +43,9 @@
 #ifndef BEBOARDINTERFACE_H
 #define BEBOARDINTERFACE_H
 
-#include "BeBoardFWInterface.h"
-#include "RD53Interface.h"
-#include "ReadoutChipInterface.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/RD53Interface.h"
+#include "HWInterface/ReadoutChipInterface.h"
 
 /*!
  * \namespace Ph2_HwInterface

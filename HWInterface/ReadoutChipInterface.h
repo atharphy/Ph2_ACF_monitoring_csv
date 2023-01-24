@@ -10,8 +10,8 @@
 #ifndef __READOUTCHIPINTERFACE_H__
 #define __READOUTCHIPINTERFACE_H__
 
-#include "BeBoardFWInterface.h"
-#include "ChipInterface.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/ChipInterface.h"
 #include <vector>
 
 template <typename T>

@@ -1,9 +1,9 @@
 #ifndef _AMC13_CONTROLLER_H__
 #define _AMC13_CONTROLLER_H__
 
-#include "../Utils/ConsoleColor.h"
 #include "Amc13Description.h"
 #include "Amc13Interface.h"
+#include "Utils/ConsoleColor.h"
 #include "pugixml/pugixml.hpp"
 #include <iostream>
 #include <map>

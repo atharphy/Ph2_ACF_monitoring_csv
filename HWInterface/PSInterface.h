@@ -12,12 +12,12 @@
 #ifndef __PSINTERFACE_H__
 #define __PSINTERFACE_H__
 
-#include "BeBoardFWInterface.h"
-#include "MPA2Interface.h"
-#include "MPAInterface.h"
-#include "ReadoutChipInterface.h"
-#include "SSA2Interface.h"
-#include "SSAInterface.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/MPA2Interface.h"
+#include "HWInterface/MPAInterface.h"
+#include "HWInterface/ReadoutChipInterface.h"
+#include "HWInterface/SSA2Interface.h"
+#include "HWInterface/SSAInterface.h"
 
 #include "pugixml.hpp"
 #include <vector>

@@ -10,10 +10,10 @@
 #ifndef RD53ADCHistogram_H
 #define RD53ADCHistogram_H
 
-#include "../tools/Tool.h"
+#include "tools/Tool.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53ADCScanHistograms.h"
+#include "DQMUtils/RD53ADCScanHistograms.h"
 #endif
 
 // #########################

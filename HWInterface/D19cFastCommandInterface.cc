@@ -1,4 +1,4 @@
-#include "D19cFastCommandInterface.h"
+#include "HWInterface/D19cFastCommandInterface.h"
 
 using namespace Ph2_HwDescription;
 

@@ -14,10 +14,10 @@
 #ifndef _D19CFWINTERFACE_H__
 #define _D19CFWINTERFACE_H__
 
-#include "../Utils/DataContainer.h"
-#include "../Utils/Event.h"
-#include "../Utils/easylogging++.h"
-#include "BeBoardFWInterface.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "Utils/DataContainer.h"
+#include "Utils/Event.h"
+#include "Utils/easylogging++.h"
 
 #include <limits.h>
 #include <map>
@@ -26,8 +26,8 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
-//#include "../Utils/OccupancyAndPh.h"
-//#include "../Utils/GenericDataVector.h"
+//#include "Utils/OccupancyAndPh.h"
+//#include "Utils/GenericDataVector.h"
 #include <uhal/uhal.hpp>
 
 /*!

@@ -13,7 +13,7 @@
 #include "RD53Latency.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53ClockDelayHistograms.h"
+#include "DQMUtils/RD53ClockDelayHistograms.h"
 #else
 typedef bool ClockDelayHistograms;
 #endif

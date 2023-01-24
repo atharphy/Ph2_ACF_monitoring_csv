@@ -10,7 +10,7 @@
 #ifndef REGMANAGER_H
 #define REGMANAGER_H
 
-#include "../Utils/easylogging++.h"
+#include "Utils/easylogging++.h"
 #include <chrono>
 #include <map>
 #include <mutex>

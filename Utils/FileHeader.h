@@ -10,8 +10,8 @@
 #ifndef FILEHEADER_H
 #define FILEHEADER_H
 
-#include "../HWDescription/Definition.h"
-#include "../Utils/ConsoleColor.h"
+#include "HWDescription/Definition.h"
+#include "Utils/ConsoleColor.h"
 #include "easylogging++.h"
 
 #include <iostream>

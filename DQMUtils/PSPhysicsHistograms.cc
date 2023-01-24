@@ -8,17 +8,17 @@
 */
 
 #include "PSPhysicsHistograms.h"
-#include "../HWDescription/Definition.h"
-#include "../Utils/ChannelContainerStream.h"
-#include "../Utils/ChipContainerStream.h"
-#include "../Utils/ContainerFactory.h"
+#include "HWDescription/Definition.h"
+#include "Utils/ChannelContainerStream.h"
+#include "Utils/ChipContainerStream.h"
+#include "Utils/ContainerFactory.h"
 
-#include "../Utils/ContainerStream.h"
-#include "../Utils/PSSync.h"
+#include "Utils/ContainerStream.h"
+#include "Utils/PSSync.h"
 
 using namespace Ph2_HwDescription;
 
-void PSPhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
+void PSPhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
     fDetectorContainer = &theDetectorStructure;
     for(auto board: *fDetectorContainer)

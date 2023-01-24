@@ -9,7 +9,7 @@
 
 */
 
-#include "../Utils/Utilities.h"
+#include "Utils/Utilities.h"
 #include <boost/math/special_functions/binomial.hpp>
 
 long getTimeTook(struct timeval& pStart, bool pMili)

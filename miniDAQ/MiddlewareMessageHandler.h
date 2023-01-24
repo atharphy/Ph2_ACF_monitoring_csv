@@ -1,8 +1,8 @@
 #ifndef __MIDDLEWARE_MESSAGE_HANDLER__
 #define __MIDDLEWARE_MESSAGE_HANDLER__
 
-#include "../MessageUtils/cpp/QueryMessage.pb.h"
-#include "../MessageUtils/cpp/ReplyMessage.pb.h"
+#include "MessageUtils/cpp/QueryMessage.pb.h"
+#include "MessageUtils/cpp/ReplyMessage.pb.h"
 #include "MiddlewareStateMachine.h"
 #include <fstream>
 #include <iostream>

@@ -1,20 +1,14 @@
-if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
+if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "    ${BoldYellow}========================================================================================================${Reset}")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/tools/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}TOOLS${Reset} [stand-alone]: [${BoldCyan}Ph2_ACF/tools/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
     # Includes
     include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
-    include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
+    include_directories(${grammars})
     include_directories(${UHAL_LOG_INCLUDE_PREFIX})
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-    include_directories(${PROJECT_SOURCE_DIR}/HWDescription)
-    include_directories(${PROJECT_SOURCE_DIR}/HWInterface)
-    include_directories(${PROJECT_SOURCE_DIR}/Utils)
-    include_directories(${PROJECT_SOURCE_DIR}/DQMUtils)
-    include_directories(${PROJECT_SOURCE_DIR}/System)
     include_directories(${PROJECT_SOURCE_DIR})
 
     # Library dirs
@@ -132,7 +126,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     message("--     ${BoldCyan}#### End ####${Reset}")
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone/middleware]: [${BoldCyan}Ph2_ACF/tools/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}TOOLS${Reset} [stand-alone]: [${BoldCyan}Ph2_ACF/tools/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
 
@@ -140,20 +134,18 @@ else()
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/tools/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}TOOLS${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/tools/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
-    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/uhal/include)
-    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/log/include)
-    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
-
-    include_directories($ENV{PH2ACF_BASE_DIR}/Utils)
-
+    include_directories(${UHAL_DIR}/uhal/include)
+    include_directories(${UHAL_DIR}/log/include)
+    include_directories(${UHAL_DIR}/grammars/include)
+    
     cet_set_compiler_flags(
      EXTRA_FLAGS -Wno-reorder -Wl,--undefined
      )
 
-    cet_make(LIBRARY_NAME Ph2_Tools_${Ph2_ACF_Master}
+    cet_make(LIBRARY_NAME Ph2_Tools
             LIBRARIES
             pthread
             ${Boost_SYSTEM_LIBRARY}
@@ -167,7 +159,7 @@ else()
     install_source()
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/tool/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}TOOLS${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/tools/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
 

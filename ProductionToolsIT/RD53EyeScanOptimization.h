@@ -1,12 +1,12 @@
 #ifndef RD53EyeScanOptimization_H
 #define RD53EyeScanOptimization_H
 
-#include "../Utils/GenericDataArray.h"
 #include "RD53EyeDiag.h"
+#include "Utils/GenericDataArray.h"
 #include <array>
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53EyeScanOptimizationHistograms.h"
+#include "DQMUtils/RD53EyeScanOptimizationHistograms.h"
 #include "TApplication.h"
 #include "TH2F.h"
 #endif

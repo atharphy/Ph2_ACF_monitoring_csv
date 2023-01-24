@@ -15,12 +15,12 @@
 #include "Tool.h"
 #ifdef __USE_ROOT__
 
-#include "../Utils/CommonVisitors.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/Visitor.h"
+#include "Utils/CommonVisitors.h"
+#include "Utils/Utilities.h"
+#include "Utils/Visitor.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/DQMHistogramSignalScanFit.h"
+#include "DQMUtils/DQMHistogramSignalScanFit.h"
 #endif
 
 #include "TCanvas.h"

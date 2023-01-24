@@ -13,7 +13,7 @@
 #include "RD53PixelAlive.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53GenericDacDacScanHistograms.h"
+#include "DQMUtils/RD53GenericDacDacScanHistograms.h"
 #else
 typedef bool GenericDacDacScanHistograms;
 #endif

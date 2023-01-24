@@ -1,7 +1,7 @@
 #ifndef __COMBINED_CALIBRATION__
 #define __COMBINED_CALIBRATION__
 
-#include "../tools/Tool.h"
+#include "tools/Tool.h"
 #include <iostream>
 
 #if __cplusplus < 201402

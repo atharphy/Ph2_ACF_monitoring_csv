@@ -16,11 +16,13 @@
 #include <string>
 #include <vector>
 
-#include "../RootUtils/CanvasContainer.h"
-#include "../RootUtils/HistContainer.h"
-#include "../RootUtils/RootContainerFactory.h"
-#include "../System/SystemController.h"
-#include "../Utils/Container.h"
+#include "HWDescription/RD53.h"
+#include "Parser/FileParser.h"
+#include "RootUtils/CanvasContainer.h"
+#include "RootUtils/HistContainer.h"
+#include "RootUtils/RootContainerFactory.h"
+#include "Utils/Container.h"
+#include "Utils/RD53Shared.h"
 
 #include <TCanvas.h>
 #include <TFile.h>
@@ -102,7 +104,7 @@ class DQMHistogramBase
      * \brief Book histograms
      * \param theDetectorStructure : Container of the Detector structure
      */
-    virtual void book(TFile* outputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) = 0;
+    virtual void book(TFile* outputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap) = 0;
 
     /*!
      * \brief Book histograms
@@ -195,7 +197,7 @@ class DQMHistogramBase
     }
 
     template <typename T>
-    T findValueInSettings(const Ph2_System::SettingsMap& settingsMap, const std::string name, T defaultValue = T()) const
+    T findValueInSettings(const Ph2_Parser::SettingsMap& settingsMap, const std::string name, T defaultValue = T()) const
     {
         auto setting = settingsMap.find(name);
         return (setting != std::end(settingsMap) ? boost::any_cast<T>(setting->second) : defaultValue);

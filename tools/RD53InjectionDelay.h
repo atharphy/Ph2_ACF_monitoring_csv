@@ -13,7 +13,7 @@
 #include "RD53Latency.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53InjectionDelayHistograms.h"
+#include "DQMUtils/RD53InjectionDelayHistograms.h"
 #else
 typedef bool InjectionDelayHistograms;
 #endif

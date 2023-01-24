@@ -1,9 +1,9 @@
 #ifndef __COMBINED_CALIBRATION_FACTORY__
 #define __COMBINED_CALIBRATION_FACTORY__
 
-#include "../MessageUtils/cpp/QueryMessage.pb.h"
-#include "../tools/CombinedCalibration.h"
-#include "../tools/Tool.h"
+#include "MessageUtils/cpp/QueryMessage.pb.h"
+#include "tools/CombinedCalibration.h"
+#include "tools/Tool.h"
 #include <iostream>
 #include <map>
 #include <string>
@@ -49,7 +49,7 @@ class CombinedCalibrationFactory
         fStringToCalibrationName[calibrationTag]     = theCalibrationEnum;
     }
 
-    Tool* CreateCombinedCalibration(const std::string& calibrationTag) const;
+    Tool* createCombinedCalibration(const std::string& calibrationTag) const;
 
     std::vector<std::string>                                                  getAvailableCalibrations() const;
     std::map<MessageUtils::CalibrationList::CalibrationNameEnum, std::string> getAvailableCalibrationMap() const { return fCalibrationNameToString; }

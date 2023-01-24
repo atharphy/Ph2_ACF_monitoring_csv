@@ -1,7 +1,7 @@
 #ifndef _D19cMuxBackplaneFWInterface_H__
 #define __D19cMuxBackplaneFWInterface_H__
 
-#include "BeBoardFWInterface.h"
+#include "HWInterface/BeBoardFWInterface.h"
 #include <string>
 
 namespace Ph2_HwInterface

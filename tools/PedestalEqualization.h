@@ -12,15 +12,14 @@
 #ifndef PedestalEqualization_h__
 #define PedestalEqualization_h__
 
-#include "../Utils/CommonVisitors.h"
-#include "../Utils/ContainerRecycleBin.h"
-#include "../Utils/Visitor.h"
-#include "Tool.h"
+#include "Utils/CommonVisitors.h"
+#include "Utils/ContainerRecycleBin.h"
+#include "Utils/Visitor.h"
+#include "tools/Tool.h"
 #include <map>
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/DQMHistogramPedestalEqualization.h"
-#include "TString.h"
+#include "DQMUtils/DQMHistogramPedestalEqualization.h"
 #endif
 
 class PedestalEqualization : public Tool

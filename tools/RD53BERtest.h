@@ -13,7 +13,7 @@
 #include "RD53CalibBase.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53BERtestHistograms.h"
+#include "DQMUtils/RD53BERtestHistograms.h"
 #else
 typedef bool BERtestHistograms;
 #endif

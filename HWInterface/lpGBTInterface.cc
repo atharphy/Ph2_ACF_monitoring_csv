@@ -8,7 +8,7 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "lpGBTInterface.h"
+#include "HWInterface/lpGBTInterface.h"
 
 using namespace Ph2_HwDescription;
 
