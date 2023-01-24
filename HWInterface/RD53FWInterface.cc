@@ -662,6 +662,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         std::this_thread::sleep_for(std::chrono::microseconds(20));
     }
 
+    uint32_t status;
     do
     {
         nAttempts++;
@@ -681,7 +682,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         // # Error checking #
         // ##################
         RD53Event::decodedEvents.clear();
-        uint32_t status;
+        status = 0;
         RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents, status); // Decode events with multiple threads
         // RD53Event::DecodeEvents(pData, RD53Event::decodedEvents, {}, status);         // Decode events with a single thread
         // RD53Event::PrintEvents(RD53Event::decodedEvents, pData);                      // @TMP@
@@ -705,6 +706,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     {
         LOG(ERROR) << BOLDRED << "Reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") without success" << RESET;
         pData.clear();
+        std::cout << "AAAAAAAAAAA " << RD53Event::decodedEvents.size() << " " << std::hex << status << std::dec << " " << RD53Event::EvtErrorHandler(status) << std::endl;
     }
 
     // #################

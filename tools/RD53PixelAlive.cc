@@ -184,7 +184,11 @@ void PixelAlive::run()
                                         statusGood = false;
                                         break;
                                     }
-                                if(statusGood == false) regValueMap[suffix] ^= 1 << i;
+                                if(statusGood == false)
+                                {
+                                    regValueMap[suffix] ^= 1 << i;
+                                    std::cout << "AAAAAAAAAAAA BBBBBBBBBBB found bad event" << std::endl;
+                                }
                             }
                         }
 
