@@ -84,7 +84,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow -Wno-error=unused-function -Wno-error=pedantic")
     set (GCC_9_NOERROR_FLAGS "-Wno-error=deprecated-copy -Wno-error=int-in-bool-context -Wno-error=unused-variable")
     set (GCC_10_NOERROR_FLAGS "-Wno-error=class-memaccess -Wno-error=int-in-bool-context -Wno-error=unused-variable")
-    set (GCC_12_NOERROR_FLAGS "-Wno-error=int-in-bool-context -Wno-error=unused-variable")
+    set (GCC_12_NOERROR_FLAGS "-Wno-error=range-loop-construct -Wno-error=class-memaccess -Wno-error=int-in-bool-context -Wno-error=unused-variable")
 
     set(CMAKE_CXX_STANDARD $ENV{STDCXX} CACHE STRING "C++ version selection")
     set(CMAKE_CXX_STANDARD_REQUIRED ON)  # optional, ensure standard is supported

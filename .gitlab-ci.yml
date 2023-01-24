@@ -44,7 +44,7 @@ include:
   - .gitlab/ci/code-quality.yml
 
 
-## BUILD ##########
+## BUILD C7 ##########
 
 .build:
   stage: build_c7
@@ -124,8 +124,7 @@ build:StandAlone_wTC_USB_ROH_c7:
     - export UseTCUSBTcpServer=true
 
 
-
-
+## BUILD AL8 ##########
 
 
 # Stand-alone application, without data streaming
@@ -186,12 +185,7 @@ build:StandAlone_wTC_USB_ROH_al8:
 
 
 
-
-
-
-
-
-
+## BUILD AL9 ##########
 
 
 # Stand-alone application, without data streaming
