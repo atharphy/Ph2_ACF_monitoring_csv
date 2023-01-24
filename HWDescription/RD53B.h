@@ -55,7 +55,7 @@ class RD53B : public RD53
     static constexpr size_t NROWS = 336; // Total number of rows
     static constexpr size_t NCOLS = 432; // Total number of columns
 
-    static constexpr FrontEnd CROC = {"CROC",
+    static constexpr FrontEnd CROC = {"RD53B",
                                       "DAC_GDAC_M_LIN",
                                       "DAC_KRUM_CURR_LIN",
                                       "TriggerConfig",
@@ -65,7 +65,7 @@ class RD53B : public RD53
                                       1,
                                       32,
                                       RD53Shared::setBits(RD53BEvtEncoder::NBIT_TOT) - 1,
-                                      8,
+                                      7,
                                       RD53Shared::setBits(RD53BEvtEncoder::NBIT_BCID),
                                       RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID),
                                       4,
