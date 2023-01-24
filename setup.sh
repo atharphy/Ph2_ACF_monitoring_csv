@@ -114,7 +114,11 @@ export EuDaqFlag='-D__EUDAQ__'
 #####################
 
 # C++ standard
-export STDCXX="14"
+if [[ $majorRelease == "9" ]]; then
+  export STDCXX="17"
+else
+  export STDCXX="14"
+fi
 
 # Stand-alone application, without data streaming
 export CompileForHerd=false
