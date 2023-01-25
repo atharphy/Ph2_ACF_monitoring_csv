@@ -723,7 +723,8 @@ float lpGBTInterface::GetRssiPower(Chip* pChip, const std::string& pADCInputP, f
     return GetRssiPower(pChip, pADCInputP, cResponsivity, cOffset, cGain, pVerbose);
 }
 
-// Calculation vaild for 2S prototypes in W
+// Calculation vaild for 2S SEH v3.2 prototypes in W
+// Resistor values also valid for PS ROH v2 
 // R1=1k; Voltage divider 680k and 1000K
 // Typical responsivity 0.45-0.55 A/W
 float lpGBTInterface::GetRssiPower(Chip* pChip, const std::string& pADCInputP, float cResponsivity, uint16_t cOffset, float cGain, bool pVerbose)
