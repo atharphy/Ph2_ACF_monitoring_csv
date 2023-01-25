@@ -184,7 +184,7 @@ void PixelAlive::run()
                                         statusGood = false;
                                         break;
                                     }
-                                if(statusGood == false)
+                                if((statusGood == false) || (RD53Event::decodedEvents.size() == 0))
                                 {
                                     regValueMap[suffix] ^= 1 << i;
                                     std::cout << "AAAAAAAAAAAA BBBBBBBBBBB found bad event" << std::endl;
