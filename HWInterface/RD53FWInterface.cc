@@ -706,7 +706,6 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     {
         LOG(ERROR) << BOLDRED << "Reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") without success" << RESET;
         pData.clear();
-        std::cout << "AAAAAAAAAAA " << RD53Event::decodedEvents.size() << " " << std::hex << status << std::dec << " " << RD53Event::EvtErrorHandler(status) << std::endl;
     }
 
     // #################
