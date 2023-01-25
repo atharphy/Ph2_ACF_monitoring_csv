@@ -301,6 +301,9 @@ uint16_t RD53BInterface::GetPixelConfigTDAC(const pixelMask& mask, uint16_t row,
 }
 
 void RD53BInterface::ResetCoreColumns(RD53* pRD53)
+// #############################################################################
+// # This function causes a fluctuation of the current consumption of the chip #
+// #############################################################################
 {
     for(auto suffix: {"_0", "_1", "_2"})
     {
