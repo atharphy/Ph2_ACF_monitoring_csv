@@ -398,7 +398,9 @@ void D19cFWInterface::configureCDCE(uint16_t pClockRate, std::pair<std::string, 
     // ddr3 clock reference
     cWriteBuffer[2] = 0xEB840302; // reg2 (out2=240mhz,lvds  phase shift  0deg) 0xEB840302
     // two not used outputs
-    cWriteBuffer[3] = 0xEA860303; //# reg3 (off)
+    cWriteBuffer[3] = 0xEB140303; //# reg3 (off)
+    //cWriteBuffer[3] = 0xEA860303; //# reg3 (off)
+    
     cWriteBuffer[4] = 0xEB140334; //# reg4 (off)  0x00860314
     // selecting the reference
     if(pCDCEselect.first == "sec")
