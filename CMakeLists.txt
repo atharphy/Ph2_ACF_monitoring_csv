@@ -208,8 +208,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     #set(BOOST_ROOT "" CACHE PATH "Boost library path")
     #set(Boost_NO_SYSTEM_PATHS on CACHE BOOL "Do not search system for Boost")
     find_package(Boost 1.53 REQUIRED COMPONENTS system filesystem serialization iostreams program_options regex)
-    include_directories(${Boost_INCLUDE_DIRS}) 
-    target_link_libraries(progname ${Boost_LIBRARIES})
 
     message("--     ${BoldCyan}#### End ####${Reset}")
 
