@@ -78,13 +78,11 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     # If it's a recent gcc compiler, then let's add some
     # compiler options to avoid warnings promoted to errors
 
-    set (GCC_NOERROR_FLAGS " -Wno-error=unused-result -Wno-error=deprecated-declarations")
-    #set (GCC_6_NOERROR_FLAGS "-Wno-error=misleading-indentation")
-    #set (GCC_7_NOERROR_FLAGS "-Wno-expansion-to-defined -Wno-error=format-overflow -Wno-error=catch-value")
-    set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=class-memaccess -Wno-error=format-overflow -Wno-error=unused-function -Wno-error=pedantic")
-    set (GCC_9_NOERROR_FLAGS "-Wno-error=deprecated-copy -Wno-error=int-in-bool-context -Wno-error=unused-variable -Wno-error=unused-function")
-    set (GCC_10_NOERROR_FLAGS "-Wno-error=class-memaccess -Wno-error=int-in-bool-context -Wno-error=unused-variable")
-    set (GCC_12_NOERROR_FLAGS "-Wno-error=range-loop-construct -Wno-error=class-memaccess -Wno-error=int-in-bool-context -Wno-error=unused-variable")
+    set (GCC_NOERROR_FLAGS " -Wno-error=unused-result -Wno-error=deprecated-declarations -Wno-error=parentheses -Wno-error=misleading-indentation -Wno-error=unused-function -Wno-error=class-memaccess  -Wno-error=unused-variable")
+    set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=format-overflow -Wno-error=pedantic")
+    set (GCC_9_NOERROR_FLAGS "-Wno-error=deprecated-copy -Wno-error=int-in-bool-context")
+    set (GCC_10_NOERROR_FLAGS "-Wno-error=int-in-bool-context")
+    set (GCC_12_NOERROR_FLAGS "-Wno-error=range-loop-construct -Wno-error=int-in-bool-context")
 
     set(CMAKE_CXX_STANDARD $ENV{STDCXX} CACHE STRING "C++ version selection")
     set(CMAKE_CXX_STANDARD_REQUIRED ON)  # optional, ensure standard is supported
