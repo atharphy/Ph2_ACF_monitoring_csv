@@ -697,7 +697,7 @@ float lpGBTInterface::ReadResistance(Chip* pChip, const std::string& pADC, const
 uint16_t lpGBTInterface::GetADCOffset(Chip* pChip, bool pVerbose)
 {
     uint16_t cMeasurement = ReadADC(pChip, "VREF/2", "VREF/2");
-    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC Offset " << BOLDYELLOW << +cMeasurement << RESET;
+    if(pVerbose) LOG(INFO) << BOLDBLUE << "Reading ADC Offset " << BOLDYELLOW << +cMeasurement << RESET;
     return cMeasurement;
 }
 
@@ -730,7 +730,9 @@ float lpGBTInterface::GetRssiPower(Chip* pChip, const std::string& pADCInputP, f
 {
     float cAdcMeasurement = GetADCVoltage(pChip, pADCInputP, cOffset, cGain, pVerbose);
     float cCurrent        = 1. / 1000. * (2.5 - cAdcMeasurement * 1680. / 680.);
-    return cCurrent / cResponsivity;
+    float cResult         = cCurrent / cResponsivity;
+    if(pVerbose) LOG(INFO) << BOLDBLUE << "Measured RSSI Power " << BOLDYELLOW << +cResult << BOLDBLUE << " W" << RESET;
+    return cResult;
 }
 
 float lpGBTInterface::GetADCGain(Chip* pChip, bool pVerbose)
@@ -741,12 +743,12 @@ float lpGBTInterface::GetADCGain(Chip* pChip, bool pVerbose)
     std::this_thread::sleep_for(std::chrono::microseconds(1000));
     uint16_t cMeasurement = ReadADC(pChip, "VDD", "VREF/2");
     cResult               = ((cMeasurement * 1.) - (GetADCOffset(pChip, pVerbose) * 1.)) / 512. * 2. * -1.;
-    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC value " << BOLDYELLOW << +cMeasurement << RESET;
-    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC Gain via GND-Vref/2 " << BOLDYELLOW << +cResult << RESET;
+    if(pVerbose) LOG(INFO) << BOLDBLUE << "Reading ADC value " << BOLDYELLOW << +cMeasurement << RESET;
+    if(pVerbose) LOG(INFO) << BOLDBLUE << "Reading ADC Gain via GND-Vref/2 " << BOLDYELLOW << +cResult << RESET;
     cMeasurement = ReadADC(pChip, "VREF/2", "VDD");
     cResult      = ((cMeasurement * 1.) - (GetADCOffset(pChip, pVerbose) * 1.)) / 512. * 2.;
-    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC value " << BOLDYELLOW << +cMeasurement << RESET;
-    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC Gain via Vref/2-GND " << BOLDYELLOW << +cResult << RESET;
+    if(pVerbose) LOG(INFO) << BOLDBLUE << "Reading ADC value " << BOLDYELLOW << +cMeasurement << RESET;
+    if(pVerbose) LOG(INFO) << BOLDBLUE << "Reading ADC Gain via Vref/2-GND " << BOLDYELLOW << +cResult << RESET;
 
     return cResult;
 }
@@ -766,7 +768,8 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
     lpGBTInterface::ConfigureADC(pChip, pGain, true, false);
 
     // Enable Internal VREF
-    WriteChipReg(pChip, "VREFCNTR", 1 << 7 | 0x00);
+    uint8_t CVrefcntrContent = ReadChipReg(pChip, "VREFCNTR");
+    WriteChipReg(pChip, "VREFCNTR", 1 << 7 | (0x3f & CVrefcntrContent));
     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
 
     // Start ADC conversion
@@ -792,7 +795,7 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
     lpGBTInterface::ConfigureADC(pChip, pGain, false, false);
 
     // disable Internal VREF
-    WriteChipReg(pChip, "VREFCNTR", 0 << 7);
+    WriteChipReg(pChip, "VREFCNTR", 0 << 7 | (0x3f & CVrefcntrContent));
 
     return (cADCvalue1 << 8 | cADCvalue2);
 }
