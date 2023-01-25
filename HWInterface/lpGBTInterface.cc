@@ -769,7 +769,7 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
     lpGBTInterface::ConfigureADC(pChip, pGain, true, false);
 
     // Enable Internal VREF
-    uint8_t CVrefcntrContent = ReadChipReg(pChip, "VREFCNTR");
+    uint8_t cVrefcntrContent = ReadChipReg(pChip, "VREFCNTR");
     WriteChipReg(pChip, "VREFCNTR", 1 << 7 | (0x3f & CVrefcntrContent));
     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
 
