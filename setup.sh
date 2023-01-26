@@ -8,6 +8,8 @@ if [[ $majorRelease == "7" ]]; then
   source scl_source enable devtoolset-10 || true # This might cause a nonzero exit code in the CI for some reason, so let's ignore it
 elif [[ $majorRelease == "8" ]]; then
   source scl_source enable gcc-toolset-10
+elif [[ $majorRelease == "9" ]]; then
+  source scl_source enable gcc-toolset-12
 else
   echo OS Release not supported
 fi
@@ -112,7 +114,11 @@ export EuDaqFlag='-D__EUDAQ__'
 #####################
 
 # C++ standard
-export STDCXX="14"
+if [[ $majorRelease == "9" ]]; then
+  export STDCXX="17"
+else
+  export STDCXX="14"
+fi
 
 # Stand-alone application, without data streaming
 export CompileForHerd=false
