@@ -13,9 +13,9 @@
 #include "Utils/ThresholdAndNoise.h"
 #include "boost/format.hpp"
 #include <math.h>
+#include "Utils/ContainerSerialization.h"
 
 #ifdef __USE_ROOT__
-// static_assert(false,"use root is defined");
 #include "DQMUtils/DQMHistogramPedeNoise.h"
 #endif
 
@@ -384,9 +384,6 @@ void PedeNoise::Validate()
 #ifdef __USE_ROOT__
     fDQMHistogramPedeNoise.fillValidationPlots(theOccupancyContainer);
 #else
-    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fDQMStreamerEnabled << std::endl;
-    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fDQMStreamerEnabled << std::endl;
-    std::cout << __PRETTY_FUNCTION__ << "Is stream enabled: " << fDQMStreamerEnabled << std::endl;
     auto theOccupancyStream = prepareHybridContainerStreamer<Occupancy, Occupancy, Occupancy>();
     // auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
 
@@ -604,6 +601,23 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
             }
             cStripGlobalOccupancy /= cNStripChips;
             cPixelGlobalOccupancy /= cNPixelChips;
+            
+            // std::string calibrationName = "pippo";
+            // int varIn1 = 42;
+            // float varIn2 = 3.14;
+            // std::cout << theOccupancyContainer->at(0)->at(0)->at(0)->at(1)->getId() << " - " << theOccupancyContainer->getSummary<Occupancy>().fOccupancy << " - " << varIn1 << " - " << varIn2 << std::endl;
+            // ContainerSerialization theContainerSerialization;
+            // const std::string myStream = theContainerSerialization.serializeContainer(calibrationName, *theOccupancyContainer, varIn1, varIn2);
+
+
+            // int varOut1;
+            // float varOut2;
+            // DetectorDataContainer theOutputOccupancy;
+            // ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, theOutputOccupancy);
+            // std::cout << theContainerSerialization.deserializeIntoContainer(myStream, calibrationName, theOutputOccupancy, varOut1, varOut2) << std::endl;
+            // std::cout << theOutputOccupancy.at(0)->at(0)->at(0)->at(1)->getId() << " - " << theOutputOccupancy.getSummary<Occupancy>().fOccupancy << " - " << varOut1 << " - " << varOut2 << std::endl;
+
+
 #ifdef __USE_ROOT__
             if(fPlotSCurves) fDQMHistogramPedeNoise.fillSCurvePlots(cStripValue, cPixelValue, *theOccupancyContainer);
 #else

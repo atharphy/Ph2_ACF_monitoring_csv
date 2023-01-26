@@ -41,6 +41,16 @@ class Occupancy //: public streammable
 
     // }
 
+
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive& theArchive, const unsigned int version)
+    {
+        theArchive & fOccupancy;
+        theArchive & fOccupancyError;
+    }
+
     float fOccupancy;
     float fOccupancyError;
 };

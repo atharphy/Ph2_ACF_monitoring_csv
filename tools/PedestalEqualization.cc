@@ -7,8 +7,7 @@
 #include "Utils/MPAChannelGroupHandler.h"
 #include "Utils/Occupancy.h"
 #include "Utils/SSAChannelGroupHandler.h"
-
-// initialize the static member
+// #include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
