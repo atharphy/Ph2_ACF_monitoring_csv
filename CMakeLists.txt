@@ -25,7 +25,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}")
-    MESSAGE(STATUS "    ${BoldYellow}PH2_ACF${Reset} [stand-alone]: ${BoldRed}Compilation of the PH2_ACF package${Reset")
+    MESSAGE(STATUS "    ${BoldYellow}PH2_ACF${Reset} [stand-alone]: ${BoldRed}Compilation of the PH2_ACF package${Reset}")
     MESSAGE(STATUS "    ${BoldYellow}PH2_ACF${Reset} [stand-alone]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS " ")
 

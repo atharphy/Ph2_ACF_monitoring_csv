@@ -44,8 +44,8 @@
               VCAL_HIGH              =  "2000"
               VCAL_MED               =   "100"
 
-              GP_LVDS_ROUTE_0        =    "28"
-              GP_LVDS_ROUTE_1        =    "28"
+              GP_LVDS_ROUTE_0        =  "1495"
+              GP_LVDS_ROUTE_1        =  "1495"
               TriggerConfig          =   "136"
               CLK_DATA_DELAY         =     "0"
               CAL_EDGE_FINE_DELAY    =     "0"
@@ -173,6 +173,7 @@
          INJtype               = 0:  no injection;                       INJtype               = 1: analog;                                     INJtype = 2: digital
          ResetMask             = 0:  do not enable masked pixels;        ResetMask             = 1: enable all pixels
          ResetTDAC             = -1: do not reset TDAC;                  ResetTDAC             >=0: reset all TDACs to value
+         DoDataIntegrity       = 0:  no data integrity detection;        DoDataIntegrity       = 1: run data integrity detection
          DoOnlyNGroups         = 0:  do not consider this option;        DoOnlyNGroups         = n: run only on the specified number of groups
          DisplayHisto          = 0:  don't display;                      DisplayHisto          = 1: display
          UpdateChipCfg         = 0:  don't update;                       UpdateChipCfg         = 1: update
@@ -199,6 +200,7 @@
     <Setting name="INJtype">               1 </Setting>
     <Setting name="ResetMask">             0 </Setting>
     <Setting name="ResetTDAC">            -1 </Setting>
+    <Setting name="DoDataIntegrity">       0 </Setting>
 
     <Setting name="ROWstart">              0 </Setting>
     <Setting name="ROWstop">             335 </Setting>
@@ -282,7 +284,7 @@
        MonitoringSleepTime: sleep for monitoring thread in milliseconds
   -->
   <MonitoringSettings>
-    <Monitoring type="RD53" enable="0">
+    <Monitoring type="RD53B" enable="0">
       <MonitoringSleepTime> 1000 </MonitoringSleepTime>
       <MonitoringElement device="RD53" register="VINA"                 enable="1"/>
       <MonitoringElement device="RD53" register="VDDA"                 enable="1"/>
