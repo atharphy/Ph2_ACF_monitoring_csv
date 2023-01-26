@@ -349,7 +349,6 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
     // ########################
     // # Save original status #
     // ########################
-    // auto  pixMode = RD53Interface::ReadChipReg(pRD53, "PIX_MODE"); // @TMP@ : temporary fix untill FIFO error FW fix
     auto pixMode = pRD53->getRegMap().find("PIX_MODE")->second.fValue;
 
     if(doSparse == true)
