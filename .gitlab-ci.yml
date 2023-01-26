@@ -363,6 +363,7 @@ deploy:
       when: always
       variables:
         IMAGE_TAG: ph2_acf_$CI_COMMIT_TAG
+        GIT_REF: $CI_COMMIT_TAG
     - if: $CI_COMMIT_BRANCH == "Dev"
       when: always
       variables:
