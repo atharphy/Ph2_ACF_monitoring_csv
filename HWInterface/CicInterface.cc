@@ -7,11 +7,11 @@
 
  */
 
-#include "CicInterface.h"
-#include "BeBoardFWInterface.h"
-#include "D19cFWInterface.h"
-#include "D19clpGBTInterface.h"
-#include "ReadoutChipInterface.h"
+#include "HWInterface/CicInterface.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/D19clpGBTInterface.h"
+#include "HWInterface/ReadoutChipInterface.h"
 #include "boost/format.hpp"
 #include <numeric>
 

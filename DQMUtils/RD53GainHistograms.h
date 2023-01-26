@@ -11,12 +11,11 @@
 #ifndef RD53GainHistograms_H
 #define RD53GainHistograms_H
 
-#include "../System/SystemController.h"
-#include "../Utils/ChannelContainerStream.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/GainFit.h"
-#include "../Utils/RD53Shared.h"
 #include "DQMHistogramBase.h"
+#include "Utils/ChannelContainerStream.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/GainFit.h"
+#include "Utils/RD53Shared.h"
 
 #include <TH1F.h>
 #include <TH2F.h>
@@ -32,7 +31,7 @@
 class GainHistograms : public DQMHistogramBase
 {
   public:
-    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap) override;
+    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap) override;
     void process() override;
     bool fill(std::vector<char>& dataBuffer) override;
     void reset() override{};

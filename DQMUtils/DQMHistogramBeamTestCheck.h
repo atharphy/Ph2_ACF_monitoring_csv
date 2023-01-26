@@ -9,9 +9,9 @@
 
 #ifndef __DQMHISTOGRAMBEAMTESTCHECK_H__
 #define __DQMHISTOGRAMBEAMTESTCHECK_H__
-#include "../DQMUtils/DQMHistogramBase.h"
-#include "../Utils/Container.h"
-#include "../Utils/DataContainer.h"
+#include "DQMUtils/DQMHistogramBase.h"
+#include "Utils/Container.h"
+#include "Utils/DataContainer.h"
 
 class TFile;
 
@@ -35,7 +35,7 @@ class DQMHistogramBeamTestCheck : public DQMHistogramBase
     /*!
      * Book histograms
      */
-    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap) override;
+    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap) override;
 
     /*!
      * Fill histogram
@@ -67,7 +67,7 @@ class DQMHistogramBeamTestCheck : public DQMHistogramBase
     void fillCountPlots(DetectorDataContainer& theEventCount, DetectorDataContainer& theStubCount);
 
   private:
-    void parseSettings(const Ph2_System::SettingsMap& pSettingsMap);
+    void parseSettings(const Ph2_Parser::SettingsMap& pSettingsMap);
 
     DetectorDataContainer fDetectorData;
     DetectorDataContainer fLatencyHitMaps;

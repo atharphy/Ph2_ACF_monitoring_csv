@@ -12,13 +12,13 @@
 #ifndef __CONTAINERFACTORY_H__
 #define __CONTAINERFACTORY_H__
 
-#include "../HWDescription/BeBoard.h"
-#include "../HWDescription/Hybrid.h"
-#include "../HWDescription/OpticalGroup.h"
-#include "../HWDescription/ReadoutChip.h"
-#include "../Utils/Container.h"
-#include "../Utils/DataContainer.h"
-#include "../Utils/EmptyContainer.h"
+#include "HWDescription/BeBoard.h"
+#include "HWDescription/Hybrid.h"
+#include "HWDescription/OpticalGroup.h"
+#include "HWDescription/ReadoutChip.h"
+#include "Utils/Container.h"
+#include "Utils/DataContainer.h"
+#include "Utils/EmptyContainer.h"
 #include <iostream>
 #include <map>
 #include <vector>

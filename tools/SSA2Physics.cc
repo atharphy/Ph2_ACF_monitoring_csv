@@ -7,8 +7,9 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "SSA2Physics.h"
-#include "../Utils/Occupancy.h"
+#include "tools/SSA2Physics.h"
+#include "HWInterface/D19cFWInterface.h"
+#include "Utils/Occupancy.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

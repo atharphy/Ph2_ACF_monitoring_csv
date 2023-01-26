@@ -1,28 +1,8 @@
-#include "../NetworkUtils/TCPSubscribeClient.h"
-#include "../System/FileParser.h"
-#include "../System/SystemController.h"
-#include "../Utils/ObjectStream.h"
-
-#include "CBCHistogramPulseShape.h"
-#include "DQMHistogramCalibrationExample.h"
-#include "DQMHistogramLatencyScan.h"
-#include "DQMHistogramPedeNoise.h"
-#include "DQMHistogramPedestalEqualization.h"
-#include "DQMInterface.h"
-#include "PSPhysicsHistograms.h"
-#include "Physics2SHistograms.h"
-#include "RD53ClockDelayHistograms.h"
-#include "RD53DataTransmissionTestGraphs.h"
-#include "RD53GainHistograms.h"
-#include "RD53GainOptimizationHistograms.h"
-#include "RD53InjectionDelayHistograms.h"
-#include "RD53LatencyHistograms.h"
-#include "RD53PhysicsHistograms.h"
-#include "RD53PixelAliveHistograms.h"
-#include "RD53SCurveHistograms.h"
-#include "RD53ThrEqualizationHistograms.h"
-#include "RD53ThresholdHistograms.h"
-#include "SSAPhysicsHistograms.h"
+#include "DQMUtils/DQMInterface.h"
+#include "DQMUtils/DQMCalibrationFactory.h"
+#include "NetworkUtils/TCPSubscribeClient.h"
+#include "Parser/FileParser.h"
+#include "Utils/ObjectStream.h"
 
 #include "TFile.h"
 
@@ -48,8 +28,8 @@ void DQMInterface::destroy(void)
     if(fListener != nullptr) delete fListener;
     destroyHistogram();
     fListener = nullptr;
-    for(auto dqmHistogrammer: fDQMHistogrammerVector) delete dqmHistogrammer;
-    fDQMHistogrammerVector.clear();
+    // for(auto dqmHistogrammer: fDQMHistogrammerVector) delete dqmHistogrammer;
+    // fDQMHistogrammerVector.clear();
     delete fOutputFile;
     fOutputFile = nullptr;
 
@@ -81,59 +61,15 @@ void DQMInterface::configure(std::string const& calibrationName, std::string con
     }
     LOG(INFO) << __PRETTY_FUNCTION__ << " DQM connected" << RESET;
 
-    Ph2_System::FileParser                                   fParser;
-    std::map<uint16_t, Ph2_HwInterface::BeBoardFWInterface*> fBeBoardFWMap;
-    std::stringstream                                        out;
-    Ph2_System::SettingsMap                                  pSettingsMap;
+    Ph2_Parser::FileParser  fParser;
+    std::stringstream       out;
+    Ph2_Parser::SettingsMap pSettingsMap;
 
-    fParser.parseHW(configurationFilePath, fBeBoardFWMap, &fDetectorStructure, out);
+    fParser.parseHW(configurationFilePath, &fDetectorStructure, out);
     fParser.parseSettings(configurationFilePath, pSettingsMap, out);
 
-    if(calibrationName == "pedenoise")
-        fDQMHistogrammerVector.push_back(new DQMHistogramPedeNoise());
-    else if(calibrationName == "calibrationandpedenoise")
-    {
-        fDQMHistogrammerVector.push_back(new DQMHistogramPedestalEqualization());
-        fDQMHistogrammerVector.push_back(new DQMHistogramPedeNoise());
-    }
-    else if(calibrationName == "OTLatency")
-        fDQMHistogrammerVector.push_back(new DQMHistogramLatencyScan());
-    else if(calibrationName == "calibrationexample")
-        fDQMHistogrammerVector.push_back(new DQMHistogramCalibrationExample());
-    else if(calibrationName == "cbcPulseShape")
-        fDQMHistogrammerVector.push_back(new CBCHistogramPulseShape());
-    else if(calibrationName == "pixelalive")
-        fDQMHistogrammerVector.push_back(new PixelAliveHistograms());
-    else if(calibrationName == "noise")
-        fDQMHistogrammerVector.push_back(new PixelAliveHistograms());
-    else if(calibrationName == "scurve")
-        fDQMHistogrammerVector.push_back(new SCurveHistograms());
-    else if(calibrationName == "gain")
-        fDQMHistogrammerVector.push_back(new GainHistograms());
-    else if(calibrationName == "gainopt")
-        fDQMHistogrammerVector.push_back(new GainOptimizationHistograms());
-    else if(calibrationName == "threqu")
-        fDQMHistogrammerVector.push_back(new ThrEqualizationHistograms());
-    else if(calibrationName == "thrmin")
-        fDQMHistogrammerVector.push_back(new ThresholdHistograms());
-    else if(calibrationName == "thradj")
-        fDQMHistogrammerVector.push_back(new ThresholdHistograms());
-    else if(calibrationName == "latency")
-        fDQMHistogrammerVector.push_back(new LatencyHistograms());
-    else if(calibrationName == "injdelay")
-        fDQMHistogrammerVector.push_back(new InjectionDelayHistograms());
-    else if(calibrationName == "clockdelay")
-        fDQMHistogrammerVector.push_back(new ClockDelayHistograms());
-    else if(calibrationName == "physics")
-        fDQMHistogrammerVector.push_back(new PhysicsHistograms());
-    else if(calibrationName == "ssaphysics")
-        fDQMHistogrammerVector.push_back(new SSAPhysicsHistograms());
-    else if(calibrationName == "datatrtest")
-        fDQMHistogrammerVector.push_back(new DataTransmissionTestGraphs());
-    else if(calibrationName == "psphysics")
-        fDQMHistogrammerVector.push_back(new PSPhysicsHistograms());
-    else if(calibrationName == "2sphysics")
-        fDQMHistogrammerVector.push_back(new Physics2SHistograms());
+    DQMCalibrationFactory theDQMCalibrationFactory;
+    fDQMHistogrammerVector = theDQMCalibrationFactory.createDQMHistogrammerVector(calibrationName);
 
     fOutputFile = new TFile("tmp.root", "RECREATE");
     for(auto dqmHistogrammer: fDQMHistogrammerVector) dqmHistogrammer->book(fOutputFile, fDetectorStructure, pSettingsMap);

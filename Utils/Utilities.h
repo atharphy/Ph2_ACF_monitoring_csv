@@ -12,7 +12,7 @@
 #ifndef __UTILITIES_H__
 #define __UTILITIES_H__
 
-#include "../HWDescription/Definition.h"
+#include "HWDescription/Definition.h"
 #include <algorithm>
 #include <bitset>
 #include <cstdio>

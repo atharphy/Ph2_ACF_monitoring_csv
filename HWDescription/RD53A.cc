@@ -15,6 +15,8 @@ namespace Ph2_HwDescription
 // ########################################
 // # Support for different FrontEnd types #
 // ########################################
+constexpr size_t         RD53A::NROWS;
+constexpr size_t         RD53A::NCOLS;
 constexpr RD53::FrontEnd RD53A::SYNC;
 constexpr RD53::FrontEnd RD53A::LIN;
 constexpr RD53::FrontEnd RD53A::DIFF;

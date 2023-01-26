@@ -10,11 +10,11 @@
 #ifndef RD53DataReadbackOptimization_H
 #define RD53DataReadbackOptimization_H
 
-#include "../Utils/GenericDataArray.h"
 #include "RD53BERtest.h"
+#include "Utils/GenericDataArray.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53DataReadbackOptimizationHistograms.h"
+#include "DQMUtils/RD53DataReadbackOptimizationHistograms.h"
 #else
 typedef bool DataReadbackOptimizationHistograms;
 #endif

@@ -14,9 +14,6 @@
 
 #include "Tool.h"
 #ifdef __USE_ROOT__
-#include "../Utils/CommonVisitors.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/Visitor.h"
 #include "Channel.h"
 #include "TCanvas.h"
 #include "TF1.h"
@@ -27,6 +24,9 @@
 #include "TMath.h"
 #include "TMultiGraph.h"
 #include "TString.h"
+#include "Utils/CommonVisitors.h"
+#include "Utils/Utilities.h"
+#include "Utils/Visitor.h"
 #include <math.h>
 
 using namespace Ph2_System;

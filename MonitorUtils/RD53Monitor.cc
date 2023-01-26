@@ -7,7 +7,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "RD53Monitor.h"
+#include "MonitorUtils/RD53Monitor.h"
+#include <array>
 
 RD53Monitor::RD53Monitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {

@@ -12,8 +12,8 @@
 #ifndef __CONTAINER_H__
 #define __CONTAINER_H__
 
-#include "../Utils/ChannelGroupHandler.h"
-#include "../Utils/Exception.h"
+#include "Utils/ChannelGroupHandler.h"
+#include "Utils/Exception.h"
 #include <boost/iterator/filter_iterator.hpp>
 #include <functional>
 #include <iostream>

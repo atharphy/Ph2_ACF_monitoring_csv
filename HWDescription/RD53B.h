@@ -11,11 +11,11 @@
 #ifndef RD53B_H
 #define RD53B_H
 
-#include "../Utils/BitMaster/BitVector.h"
-#include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/RD53Event.h"
 #include "RD53.h"
 #include "RD53BCommands.h"
+#include "Utils/BitMaster/BitVector.h"
+#include "Utils/RD53ChannelGroupHandler.h"
+#include "Utils/RD53Event.h"
 
 // ############################
 // # Chip event configuration #

@@ -1,6 +1,6 @@
 #include "OTCMNoise.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/GenericDataArray.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/GenericDataArray.h"
 
 // PUBLIC METHODS
 OTCMNoise::OTCMNoise() : Tool() {}

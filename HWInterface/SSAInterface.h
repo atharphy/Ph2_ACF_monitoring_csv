@@ -11,9 +11,9 @@
 #ifndef __SSAINTERFACE_H__
 #define __SSAINTERFACE_H__
 
-#include "BeBoardFWInterface.h"
-#include "D19clpGBTInterface.h"
-#include "ReadoutChipInterface.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/D19clpGBTInterface.h"
+#include "HWInterface/ReadoutChipInterface.h"
 #include <vector>
 
 // pixelEnable bits

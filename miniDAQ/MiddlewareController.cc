@@ -2,40 +2,40 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "../tools/CBCPulseShape.h"
-#include "../tools/CalibrationExample.h"
-#include "../tools/CombinedCalibration.h"
-#include "../tools/LatencyScan.h"
-#include "../tools/PedeNoise.h"
-#include "../tools/PedestalEqualization.h"
-#include "../tools/RD53ClockDelay.h"
-#include "../tools/RD53DataTransmissionTest.h"
-#include "../tools/RD53Gain.h"
-#include "../tools/RD53GainOptimization.h"
-#include "../tools/RD53InjectionDelay.h"
-#include "../tools/RD53Latency.h"
-#include "../tools/RD53Physics.h"
-#include "../tools/RD53PixelAlive.h"
-#include "../tools/RD53SCurve.h"
-#include "../tools/RD53ThrAdjustment.h"
-#include "../tools/RD53ThrEqualization.h"
-#include "../tools/RD53ThrMinimization.h"
-#include "../tools/Tool.h"
 #include "MiddlewareController.h"
-//#include "../tools/SSAPhysics.h"
-#include "../tools/CicFEAlignment.h"
-#include "../tools/LinkAlignmentOT.h"
-#include "../tools/PSPhysics.h"
-#include "../tools/Physics2S.h"
-#include "../tools/StubBackEndAlignment.h"
+#include "tools/CBCPulseShape.h"
+#include "tools/CalibrationExample.h"
+#include "tools/CombinedCalibration.h"
+#include "tools/LatencyScan.h"
+#include "tools/PedeNoise.h"
+#include "tools/PedestalEqualization.h"
+#include "tools/RD53ClockDelay.h"
+#include "tools/RD53DataTransmissionTest.h"
+#include "tools/RD53Gain.h"
+#include "tools/RD53GainOptimization.h"
+#include "tools/RD53InjectionDelay.h"
+#include "tools/RD53Latency.h"
+#include "tools/RD53Physics.h"
+#include "tools/RD53PixelAlive.h"
+#include "tools/RD53SCurve.h"
+#include "tools/RD53ThrAdjustment.h"
+#include "tools/RD53ThrEqualization.h"
+#include "tools/RD53ThrMinimization.h"
+#include "tools/Tool.h"
+//#include "tools/SSAPhysics.h"
+#include "tools/CicFEAlignment.h"
+#include "tools/LinkAlignmentOT.h"
+#include "tools/PSPhysics.h"
+#include "tools/Physics2S.h"
+#include "tools/StubBackEndAlignment.h"
 
-#include "../MessageUtils/cpp/QueryMessage.pb.h"
-#include "../MessageUtils/cpp/ReplyMessage.pb.h"
+#include "MessageUtils/cpp/QueryMessage.pb.h"
+#include "MessageUtils/cpp/ReplyMessage.pb.h"
 
 using namespace MessageUtils;
 
 //========================================================================================================================
-MiddlewareController::MiddlewareController(uint16_t portShift) : TCPServer(PORT_BASE + portShift, 1) {}
+MiddlewareController::MiddlewareController(uint16_t portShift) : TCPServer(PORT_BASE + portShift, 1) { std::cout << "[" << __LINE__ << "]" << __PRETTY_FUNCTION__ << "come on!" << std::endl; }
 
 //========================================================================================================================
 MiddlewareController::~MiddlewareController(void) { LOG(INFO) << __PRETTY_FUNCTION__ << " DESTRUCTOR" << RESET; }

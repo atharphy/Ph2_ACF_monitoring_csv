@@ -1,6 +1,6 @@
-#include "../NetworkUtils/TCPClient.h"
-#include "../NetworkUtils/TCPSubscribeClient.h"
-#include "../Utils/easylogging++.h"
+#include "NetworkUtils/TCPClient.h"
+#include "NetworkUtils/TCPSubscribeClient.h"
+#include "Utils/easylogging++.h"
 
 #include <chrono>
 #include <future>

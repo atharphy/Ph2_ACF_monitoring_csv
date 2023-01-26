@@ -8,7 +8,7 @@
 */
 
 #include "RD53RingOscillator.h"
-#include "../HWDescription/RD53ACommands.h"
+#include "HWDescription/RD53ACommands.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

@@ -1,4 +1,4 @@
-#include "../Utils/CBCChannelGroupHandler.h"
+#include "Utils/CBCChannelGroupHandler.h"
 #include <memory>
 
 CBCChannelGroupHandler::CBCChannelGroupHandler()

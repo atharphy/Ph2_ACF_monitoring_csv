@@ -18,7 +18,7 @@
    Support : 		mail to : christian.bonnin@iphc.cnrs.fr
 */
 
-#include "FpgaConfig.h"
+#include "HWInterface/FpgaConfig.h"
 // #include <boost/format.hpp>
 // #include <boost/thread.hpp>
 // #include <fstream>

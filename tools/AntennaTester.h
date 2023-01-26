@@ -13,12 +13,12 @@
 
 #ifdef __USE_ROOT__
 
-#include "../HWInterface/BeBoardFWInterface.h"
-#include "../Utils/CommonVisitors.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/Visitor.h"
 #include "Channel.h"
+#include "HWInterface/BeBoardFWInterface.h"
 #include "Tool.h"
+#include "Utils/CommonVisitors.h"
+#include "Utils/Utilities.h"
+#include "Utils/Visitor.h"
 
 #ifdef __ANTENNA__
 #include "Antenna.h"

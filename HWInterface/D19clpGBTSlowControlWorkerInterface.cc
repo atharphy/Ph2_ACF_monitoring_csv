@@ -1,4 +1,4 @@
-#include "D19clpGBTSlowControlWorkerInterface.h"
+#include "HWInterface/D19clpGBTSlowControlWorkerInterface.h"
 
 namespace Ph2_HwInterface
 {

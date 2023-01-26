@@ -9,7 +9,7 @@ Support :                      mail to : Sarah.Storey@cern.ch
 
 */
 
-#include "../Utils/UsbUtilities.h"
+#include "Utils/UsbUtilities.h"
 
 bool InitializeMonitoring(std::string pHostname, std::string pInstrumentName, PortsInfo& pPortsInfo, int pMonitorInterval, std::string pLogFile)
 {

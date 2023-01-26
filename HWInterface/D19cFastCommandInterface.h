@@ -1,7 +1,7 @@
 #ifndef _D19cFastCommandInterface_H__
 #define _D19cFastCommandInterface_H__
 
-#include "FastCommandInterface.h"
+#include "HWInterface/FastCommandInterface.h"
 
 namespace Ph2_HwInterface
 {

@@ -1,4 +1,5 @@
-#include "WorkerTester.h"
+#include "tools/WorkerTester.h"
+#include "HWInterface/D19cFWInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

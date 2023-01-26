@@ -8,7 +8,7 @@
   Support:               email to alkiviadis.papadopoulos@cern.ch
 */
 
-#include "RD53BInterface.h"
+#include "HWInterface/RD53BInterface.h"
 
 using namespace Ph2_HwDescription;
 
@@ -301,6 +301,9 @@ uint16_t RD53BInterface::GetPixelConfigTDAC(const pixelMask& mask, uint16_t row,
 }
 
 void RD53BInterface::ResetCoreColumns(RD53* pRD53)
+// #############################################################################
+// # This function causes a fluctuation of the current consumption of the chip #
+// #############################################################################
 {
     for(auto suffix: {"_0", "_1", "_2"})
     {
@@ -346,7 +349,7 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
     // ########################
     // # Save original status #
     // ########################
-    auto pixMode = RD53Interface::ReadChipReg(pRD53, "PIX_MODE");
+    auto pixMode = pRD53->getRegMap().find("PIX_MODE")->second.fValue;
 
     if(doSparse == true)
     {

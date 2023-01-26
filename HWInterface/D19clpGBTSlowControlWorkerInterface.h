@@ -1,7 +1,7 @@
 #ifndef _D19clpGBTSlowControlWorkerInterface_H__
 #define _D19clpGBTSlowControlWorkerInterface_H__
 
-#include "D19cCommandProcessorInterface.h"
+#include "HWInterface/D19cCommandProcessorInterface.h"
 
 namespace LpGBTSlowControlWorker
 {

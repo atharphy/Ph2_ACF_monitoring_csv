@@ -17,6 +17,8 @@ namespace Ph2_HwDescription
 // ########################################
 // # Support for different FrontEnd types #
 // ########################################
+constexpr size_t          RD53B::NROWS;
+constexpr size_t          RD53B::NCOLS;
 constexpr RD53B::FrontEnd RD53B::CROC;
 
 RD53B::RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment)

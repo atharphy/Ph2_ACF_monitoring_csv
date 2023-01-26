@@ -11,12 +11,12 @@
 #ifndef lpGBTInterface_H
 #define lpGBTInterface_H
 
-#include "../HWDescription/lpGBT.h"
-#include "ChipInterface.h"
-#include "ReadoutChipInterface.h"
+#include "HWDescription/lpGBT.h"
+#include "HWInterface/ChipInterface.h"
+#include "HWInterface/ReadoutChipInterface.h"
 
 #if defined(__TCUSB__)
-#include "TCInterface.h"
+#include "HWInterface/TCInterface.h"
 #endif
 
 // ##########################

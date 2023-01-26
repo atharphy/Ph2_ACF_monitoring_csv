@@ -10,10 +10,10 @@
 #ifndef lpGBT_H
 #define lpGBT_H
 
-#include "../Utils/ConsoleColor.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/easylogging++.h"
 #include "Chip.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/Utilities.h"
+#include "Utils/easylogging++.h"
 
 #include <iomanip>
 

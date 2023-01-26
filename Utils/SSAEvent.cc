@@ -9,8 +9,8 @@
 
  */
 
-#include "../Utils/SSAEvent.h"
-#include "../HWDescription/OuterTrackerHybrid.h"
+#include "Utils/SSAEvent.h"
+#include "HWDescription/OuterTrackerHybrid.h"
 
 using namespace Ph2_HwDescription;
 

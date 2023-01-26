@@ -21,12 +21,12 @@ include(FetchContent)
 
 set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
 
-if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
+if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: Compilation of the middleware package")
-    MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
+    MESSAGE(STATUS "    ${BoldYellow}PH2_ACF${Reset} [stand-alone]: ${BoldRed}Compilation of the PH2_ACF package${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}PH2_ACF${Reset} [stand-alone]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS " ")
 
     cmake_minimum_required(VERSION 3.4)
@@ -218,9 +218,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
     if(CompileForHerd OR NoDataShipping)
         add_subdirectory(tools)
         add_subdirectory(ProductionToolsIT)
-        add_subdirectory(HWDescription)
         add_subdirectory(HWInterface)
         add_subdirectory(System)
+        add_subdirectory(MonitorUtils)
+        add_subdirectory(miniDAQ)
     endif()
 
     if(CompileForShep OR NoDataShipping)
@@ -229,7 +230,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         add_subdirectory(MonitorDQM)
     endif()
 
-    if(NoDataShipping OR (CompileForShep AND CompileForHerd))
+    if(NoDataShipping OR CompileForShep)
         add_subdirectory(src)
     endif()
 
@@ -238,17 +239,17 @@ if(NOT DEFINED ENV{OTSDAQ_CMSOUTERTRACKER_DIR})
         add_subdirectory(pythonUtils)
     endif()
 
+    add_subdirectory(HWDescription)
     add_subdirectory(Utils)
     add_subdirectory(NetworkUtils)
-    add_subdirectory(MonitorUtils)
     add_subdirectory(MessageUtils/cpp)
-    add_subdirectory(miniDAQ)
+    add_subdirectory(Parser)
 
     message("--     ${BoldRed}#### Don't forget to set the path and ld_library_path by sourcing setup.sh before running ###${Reset}")
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [stand-alone]: Compilation of the middleware package done.")
+    MESSAGE(STATUS "${BoldYellow}PH2_ACF${Reset} [stand-alone]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
+    MESSAGE(STATUS "${BoldYellow}PH2_ACF${Reset} [stand-alone]: ${BoldGreen}Compilation of the PH2_ACF package done.${Reset}")
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
 
@@ -256,11 +257,13 @@ else() # ------------------------------- Compilation in the otsdaq environment -
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}")
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: Compilation of the middleware package for OTSDAQ")
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
+    MESSAGE(STATUS "    ${BoldYellow}PH2_ACF${Reset} [otsdaq]: ${BoldRed}Compilation of the PH2_ACF package${Reset}")
+    MESSAGE(STATUS "    ${BoldYellow}PH2_ACF${Reset} [otsdaq]: [${BoldCyan}$ENV{PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS " ")
 
     MESSAGE (STATUS "${CMAKE_CXX_FLAGS}")
+
+    include_directories($ENV{PH2ACF_BASE_DIR})
 
     set(CompileForShep true)
     set(CompileForHerd false)
@@ -295,12 +298,11 @@ else() # ------------------------------- Compilation in the otsdaq environment -
         message(STATUS "EUDAQ variable is not defined. Building without EUDAQ producer")
     endif(${USE_EUDAQ})
 
-    message("--     ${BoldCyan}#### Done ####${Reset}")
+    cet_set_compiler_flags(
+        EXTRA_FLAGS -DELPP_THREAD_SAFE
+    )
 
-    # All the subdirs
-    if(${CACTUS_AMC13_FOUND})
-        add_subdirectory(AMC13)
-    endif()
+    message("--     ${BoldCyan}#### Done ####${Reset}")
 
     add_subdirectory(tools)
     add_subdirectory(ProductionToolsIT)
@@ -311,16 +313,14 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     add_subdirectory(HWDescription)
     add_subdirectory(HWInterface)
     add_subdirectory(System)
-    add_subdirectory(miniDAQ)
     add_subdirectory(MonitorUtils)
-
-    cet_set_compiler_flags(
-        EXTRA_FLAGS -DELPP_THREAD_SAFE
-    )
+    add_subdirectory(Parser)
+    add_subdirectory(MessageUtils/cpp)
+    add_subdirectory(miniDAQ)
 
     MESSAGE(STATUS " ")
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: [${BoldCyan}${PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
-    MESSAGE(STATUS "${BoldYellow}MIDDLEWARE${Reset} [otsdaq]: Compilation of the middleware package done.")
+    MESSAGE(STATUS "    ${BoldYellow}PH2_ACF${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/CMakeLists.txt${Reset}]")
+    MESSAGE(STATUS "    ${BoldYellow}PH2_ACF${Reset} [otsdaq]: ${BoldGreen}Compilation of the PH2_ACF package done.${Reset}")
     MESSAGE(STATUS "${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS " ")
 

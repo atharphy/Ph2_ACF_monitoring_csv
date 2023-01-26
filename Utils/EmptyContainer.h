@@ -12,7 +12,7 @@
 #ifndef __EMPTY_CONTAINER_H__
 #define __EMPTY_CONTAINER_H__
 
-#include "../Utils/Container.h"
+#include "Utils/Container.h"
 #include <iostream>
 
 class EmptyContainer //: public streammable

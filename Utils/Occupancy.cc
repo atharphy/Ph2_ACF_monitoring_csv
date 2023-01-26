@@ -1,4 +1,4 @@
-#include "../Utils/Occupancy.h"
+#include "Utils/Occupancy.h"
 #include <math.h>
 
 void Occupancy::makeSummaryAverage(const std::vector<Occupancy>* theOccupancyVector, const std::vector<uint32_t>& theNumberOfEnabledChannelsList, const uint32_t numberOfEvents)

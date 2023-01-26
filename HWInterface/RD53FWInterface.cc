@@ -7,8 +7,8 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "RD53FWInterface.h"
-#include "RD53Interface.h"
+#include "HWInterface/RD53FWInterface.h"
+#include "HWInterface/RD53Interface.h"
 
 using namespace Ph2_HwDescription;
 
@@ -347,7 +347,7 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(Re
         if(chipAddress == chipLane) regReadback.emplace_back(regAddress, regValue);
     }
 
-    // if(regReadback.size() == 0) LOG(ERROR) << BOLDRED << "Read-command FIFO empty" << RESET; // @TMP@ : temporary fix untill FIRO error FW fix
+    // if(regReadback.size() == 0) LOG(ERROR) << BOLDRED << "Read-command FIFO empty" << RESET; // @TMP@ : temporary fix untill FIFO error FW fix
 
     return regReadback;
 }
@@ -706,7 +706,6 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     {
         LOG(ERROR) << BOLDRED << "Reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ") without success" << RESET;
         pData.clear();
-        std::cout << "AAAAAAAAAAA " << RD53Event::decodedEvents.size() << " " << std::hex << status << std::dec << " " << RD53Event::EvtErrorHandler(status) << std::endl;
     }
 
     // #################

@@ -12,11 +12,11 @@
 #ifndef __CHANNELCONTAINERSTREAM_H__
 #define __CHANNELCONTAINERSTREAM_H__
 // pointers to base class
-#include "../HWDescription/ReadoutChip.h"
-#include "../NetworkUtils/TCPPublishServer.h"
-#include "../Utils/ContainerStream.h"
-#include "../Utils/DataContainer.h"
-#include "../Utils/ObjectStream.h"
+#include "HWDescription/ReadoutChip.h"
+#include "NetworkUtils/TCPPublishServer.h"
+#include "Utils/ContainerStream.h"
+#include "Utils/DataContainer.h"
+#include "Utils/ObjectStream.h"
 #include <cmath>
 #include <cstdint>
 #include <cstring>

@@ -1,18 +1,18 @@
 #include "Tool.h"
 #include <numeric>
 
-#include "../HWDescription/Chip.h"
-#include "../Utils/ChannelGroupHandler.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
-#include "../Utils/DataContainer.h"
-#include "../Utils/EmptyContainer.h"
-#include "../Utils/Occupancy.h"
+#include "HWDescription/Chip.h"
+#include "Utils/ChannelGroupHandler.h"
+#include "Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/ContainerStream.h"
+#include "Utils/DataContainer.h"
+#include "Utils/EmptyContainer.h"
+#include "Utils/Occupancy.h"
 #include <future>
 
-#include "../Utils/MPAChannelGroupHandler.h"
-#include "../Utils/SSAChannelGroupHandler.h"
+#include "Utils/MPAChannelGroupHandler.h"
+#include "Utils/SSAChannelGroupHandler.h"
 
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
@@ -75,20 +75,21 @@ Tool::Tool(const Tool& pTool) { this->Inherit(&pTool); }
 
 Tool::~Tool() {}
 
-void Tool::privateRunning(std::promise<int>&& thePromise)
-{
-    try
-    {
-        Running();
-        Tool::InformImDone();
-        thePromise.set_value(0);
-    }
-    catch(...)
-    {
-        Tool::InformImDone();
-        thePromise.set_exception(std::current_exception());
-    }
-}
+// void Tool::privateRunning(std::promise<int>&& thePromise)
+// {
+//     try
+//     {
+//         Running();
+//         Tool::InformImDone();
+//         thePromise.set_value(0);
+//     }
+//     catch(...)
+//     {
+//         Tool::InformImDone();
+//         thePromise.set_value(99);
+//         thePromise.set_exception(std::current_exception());
+//     }
+// }
 
 bool Tool::GetRunningStatus()
 {
@@ -111,8 +112,9 @@ bool Tool::GetRunningStatus()
 
 void Tool::waitForRunToBeCompleted()
 {
-    std::unique_lock<std::recursive_mutex> theGuard(theMtx);
-    wakeUp.wait(theGuard, [this]() { return doExit; });
+    fRunningFuture.wait();
+    // std::unique_lock<std::recursive_mutex> theGuard(theMtx);
+    // wakeUp.wait(theGuard, [this]() { return doExit; });
 }
 
 void Tool::Configure(std::string cHWFile, bool enableStream, uint16_t DQMportNumber)
@@ -128,27 +130,28 @@ void Tool::Start(int runNumber)
 #ifdef __USE_ROOT__
     InitResultFile("Hybrid");
 #endif
-    doExit       = false;
-    fKeepRunning = true;
-    fRunNumber   = runNumber;
-    std::promise<int> thePromise;
-    fRunningFuture = thePromise.get_future();
-    fRunningThread = std::thread(&Tool::privateRunning, this, std::move(thePromise));
+    // doExit       = false;
+    fKeepRunning   = true;
+    fRunNumber     = runNumber;
+    fRunningFuture = std::async(std::launch::async, &Tool::Running, this);
+    // std::promise<int> thePromise;
+    // fRunningFuture = thePromise.get_future();
+    // fRunningThread = std::thread(&Tool::privateRunning, this, std::move(thePromise));
 }
 
-void Tool::InformImDone()
-{
-    std::unique_lock<std::recursive_mutex> theGuard(theMtx);
-    doExit = true;
-    theGuard.unlock();
-    wakeUp.notify_one();
-}
+// void Tool::InformImDone()
+// {
+//     std::unique_lock<std::recursive_mutex> theGuard(theMtx);
+//     doExit = true;
+//     theGuard.unlock();
+//     wakeUp.notify_one();
+// }
 
 void Tool::Stop()
 {
     fKeepRunning = false;
     Tool::waitForRunToBeCompleted();
-    if(fRunningThread.joinable() == true) fRunningThread.join();
+    // if(fRunningThread.joinable() == true) fRunningThread.join();
     try
     {
         fRunningFuture.get();
@@ -538,7 +541,6 @@ void Tool::SaveResults()
 void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool pDate)
 {
     std::string nDirname;
-    if(pDate) nDirname += currentDateTime();
 
     if(std::getenv("GIPHT_RESULT_FOLDER"))
     {
@@ -549,6 +551,7 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
     {
         nDirname = pDirname;
     }
+    if(pDate) nDirname += currentDateTime();
 
     std::string cCommand = "mkdir -p " + nDirname;
 

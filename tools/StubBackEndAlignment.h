@@ -13,7 +13,7 @@
 #ifndef StubBackEndAlignment_h__
 #define StubBackEndAlignment_h__
 
-#include "OTTool.h"
+#include "tools/OTTool.h"
 
 #include <map>
 const uint8_t FAILED_STUBBACKEND_ALIGNMENT = 100;

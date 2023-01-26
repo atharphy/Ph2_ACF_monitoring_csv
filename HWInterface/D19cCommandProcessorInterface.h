@@ -1,7 +1,7 @@
 #ifndef _D19cCommandProcessorInterface_H__
 #define _D19cCommandProcessorInterface_H__
 
-#include "CommandProcessorInterface.h"
+#include "HWInterface/CommandProcessorInterface.h"
 
 namespace CommandProcessorArbitrators
 {

@@ -7,28 +7,28 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "../System/SystemController.h"
-#include "../Utils/argvparser.h"
-#include "../tools/RD53BERtest.h"
-#include "../tools/RD53ClockDelay.h"
-#include "../tools/RD53DataReadbackOptimization.h"
-#include "../tools/RD53DataTransmissionTest.h"
-#include "../tools/RD53Gain.h"
-#include "../tools/RD53GainOptimization.h"
-#include "../tools/RD53GenericDacDacScan.h"
-#include "../tools/RD53InjectionDelay.h"
-#include "../tools/RD53Latency.h"
-#include "../tools/RD53Physics.h"
-#include "../tools/RD53PixelAlive.h"
-#include "../tools/RD53SCurve.h"
-#include "../tools/RD53ThrAdjustment.h"
-#include "../tools/RD53ThrEqualization.h"
-#include "../tools/RD53ThrMinimization.h"
-#include "../tools/RD53VoltageTuning.h"
+#include "System/SystemController.h"
+#include "Utils/argvparser.h"
+#include "tools/RD53BERtest.h"
+#include "tools/RD53ClockDelay.h"
+#include "tools/RD53DataReadbackOptimization.h"
+#include "tools/RD53DataTransmissionTest.h"
+#include "tools/RD53Gain.h"
+#include "tools/RD53GainOptimization.h"
+#include "tools/RD53GenericDacDacScan.h"
+#include "tools/RD53InjectionDelay.h"
+#include "tools/RD53Latency.h"
+#include "tools/RD53Physics.h"
+#include "tools/RD53PixelAlive.h"
+#include "tools/RD53SCurve.h"
+#include "tools/RD53ThrAdjustment.h"
+#include "tools/RD53ThrEqualization.h"
+#include "tools/RD53ThrMinimization.h"
+#include "tools/RD53VoltageTuning.h"
 
 #ifdef __EUDAQ__
-#include "../tools/RD53eudaqProducer.h"
 #include "TROOT.h"
+#include "tools/RD53eudaqProducer.h"
 #endif
 
 // ##################

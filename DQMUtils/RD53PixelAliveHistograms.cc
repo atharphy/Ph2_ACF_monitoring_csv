@@ -9,10 +9,12 @@
 */
 
 #include "RD53PixelAliveHistograms.h"
+#include "HWDescription/RD53A.h"
+#include "HWDescription/RD53B.h"
 
 using namespace Ph2_HwDescription;
 
-void PixelAliveHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
+void PixelAliveHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
     RD53Shared::setFirstChip(theDetectorStructure);

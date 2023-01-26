@@ -1,7 +1,7 @@
 #ifndef _D19cLinkInterface_H__
 #define _D19cLinkInterface_H__
 
-#include "LinkInterface.h"
+#include "HWInterface/LinkInterface.h"
 
 namespace Ph2_HwInterface
 {
