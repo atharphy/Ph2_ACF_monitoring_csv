@@ -124,21 +124,16 @@ For more information on the firmware, please check the doc directory of https://
     ii. expand the `Variables` section
 
     iii. click the `Add variable` button
-
         - add key: USER_NAME and value: <your CERN user name>
 
     iv. click the `Add variable` button
-
         - select the flag `Mask variable`
         - add key: USER_PASS and value: <your CERN password encoded to base64>
           e.g encode "thisword": printf "thisword" | base64
 
 3. Enable shared Runners (if not enabled)
-
     i. from `settings > CI/CD` expand the `Runners` section
-
     ii. click the `Allow shared Runners` button
-
 
 ### Setup on CentOs7
 1. Install devtoolset 10
@@ -155,8 +150,8 @@ sudo yum install -y boost-devel pugixml-devel json-devel
 
 2. Install uHAL. SW tested with uHAL version up to 2.7.1
 
-        Follow instructions from
-        https://ipbus.web.cern.ch/ipbus/doc/user/html/software/install/yum.html
+    Follow instructions from
+    https://ipbus.web.cern.ch/ipbus/doc/user/html/software/install/yum.html
 
 3. Install CERN ROOT
 ```bash
@@ -191,17 +186,17 @@ tar zxvf v2.9.2.tar.gz
 ### Run in docker container
     Docker container are provided to facilitate users and developers in setting up the framework.
 
-    All docker containers can be found here:
-    https://gitlab.cern.ch/cms_tk_ph2/docker_exploration/container_registry
+All docker containers can be found here:
+https://gitlab.cern.ch/cms_tk_ph2/docker_exploration/container_registry
 
-    Do run using one of the container, use the command:
+Do run using one of the container, use the command:
 ```bash
     $> docker run --rm -ti -v $PWD:$PWD -w $PWD <image>
 ```
 
-    Suggested images are:
-    For users (comes with Ph2_ACF of Dev branch installed): `gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_user_c7:latest`
-    For developers (no Ph2_ACF, just environment and libraries): `gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_udaq_c7:latest`
+Suggested images are:
+  -  For users (comes with Ph2_ACF of Dev branch installed): `gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_user_c7:latest`
+  -  For developers (no Ph2_ACF, just environment and libraries): `gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_udaq_c7:latest`
 
     Specific tags can be pulled substituting `latest` with `ph2_acf_<Ph2_ACF tag>` (i.e. `ph2_acf_v4-05`)
 
