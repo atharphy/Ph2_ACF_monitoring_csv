@@ -32,11 +32,11 @@ RD53A::RD53A(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHy
 
 std::vector<uint16_t> RD53A::getLaneUpInitSequence() const
 {
-    const int             nWordsRest     = 500;  // @CONST@
+    const int             nWordsReset    = 500;  // @CONST@
     const int             nWordsSequence = 2000; // @CONST@
     std::vector<uint16_t> initSequence;
 
-    for(auto i = 0u; i < nWordsRest; i++) initSequence.push_back(0x0000);     // 0000 0000
+    for(auto i = 0u; i < nWordsReset; i++) initSequence.push_back(0x0000);    // 0000 0000
     for(auto i = 0u; i < nWordsSequence; i++) initSequence.push_back(0xCCCC); // 1100 1100
 
     return initSequence;
