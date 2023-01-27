@@ -239,79 +239,69 @@ cmake .. # add -D CMAKE_BUILD_TYPE=Debug if you plan to use gdb for debugging, i
 ```bash
 systemtest --help
 ```
-
-    to test the parsing of the HWDescription.xml file.
+to test the parsing of the HWDescription.xml file.
 
 5. Launch
 
 ```bash
 datatest --help
 ```
-
-    to test if you can correctly read data
+to test if you can correctly read data
 
 6. Launch
 
 ```bash
 calibrate --help
 ```
-
-    to calibrate a hybrid,
+to calibrate a hybrid,
 
 ```bash
 hybridtest --help
 ```
-
-    to test a hybird's I2C registers and input channel connectivity
-
-```bash
-          $> cmtest --help
-```
-
-    to run the CM noise study
+to test a hybird's I2C registers and input channel connectivity
 
 ```bash
-          $> pulseshape --help
+cmtest --help
 ```
-    to measure the analog pulseshape of the cbc
+to run the CM noise study
 
 ```bash
-          $> configure --help
+pulseshape --help
 ```
+to measure the analog pulseshape of the cbc
 
-    to apply a configuration to the CBCs
+```bash
+configure --help
+```
+to apply a configuration to the CBCs
 
 7. Launch
 
 ```bash
-          $> commission --help
+commission --help
 ```
-
-    to do latency & threshold scans
+to do latency & threshold scans
 
 8. Launch
 
 ```bash
-          $> fpgaconfig --help
+fpgaconfig --help
 ```
-
-    to upload a new FW image to the GLIB
+to upload a new FW image to the GLIB
 
 9. Launch
 
 ```bash
-          $> miniDAQ --help
+miniDAQ --help
 ```
-
-    to save binary data from the GLIB to file
+to save binary data from the GLIB to file
 
 10. Launch
 
 ```bash
-          $> miniDQM --help
+miniDQM --help
 ```
-
-    to run the DQM code from the June '15 beamtest
+to run the DQM code from the June '15 beamtest
 
 
 ### Setup on CentOs8
