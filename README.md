@@ -173,8 +173,8 @@ sudo yum install -y python3 python3-devel
 
 7. Install protobuf:
 
-        Follow instructions from
-        https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
+   Follow instructions from
+   https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
 
 8. Install pybind11 (if installed in the same directoory when you plan to install the Ph2_ACF, the setup.sh will point to the correct location)
 ```bash
