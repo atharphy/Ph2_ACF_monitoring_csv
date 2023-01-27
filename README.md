@@ -191,7 +191,7 @@ https://gitlab.cern.ch/cms_tk_ph2/docker_exploration/container_registry
 
 Do run using one of the container, use the command:
 ```bash
-    $> docker run --rm -ti -v $PWD:$PWD -w $PWD <image>
+docker run --rm -ti -v $PWD:$PWD -w $PWD <image>
 ```
 
 Suggested images are:
