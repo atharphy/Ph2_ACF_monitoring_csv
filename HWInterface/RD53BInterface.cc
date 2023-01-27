@@ -18,8 +18,8 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
 {
     this->setBoard(pChip->getBeBoardId());
 
-    auto        pRD53       = static_cast<RD53*>(pChip);
-    ChipRegMap& pRD53RegMap = pChip->getRegMap();
+    auto* pRD53       = static_cast<RD53*>(pChip);
+    auto& pRD53RegMap = pChip->getRegMap();
 
     // ########################################################################
     // # Switching to pixel-register configuration, instead of the hard-wired #
@@ -242,14 +242,14 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53BInterface::ReadRD53Reg(ReadoutCh
 {
     this->setBoard(pChip->getBeBoardId());
 
-    auto nameAndValue(SetSpecialRegister(regName, 0, RD53Shared::firstChip->getRegMap()));
+    auto nameAndValue(SetSpecialRegister(regName, 0, pChip->getRegMap()));
     RD53Interface::SendCommand(pChip, RD53BCmd::RdReg{pChip->getId(), pChip->getRegItem(nameAndValue.first).fAddress});
     auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip);
 
     for(auto i = 0u; i < regReadback.size(); i++)
     {
         regReadback[i].first  = regReadback[i].first & static_cast<uint16_t>(RD53Shared::setBits(RD53Constants::NBIT_ADDR)); // Removing bit related to PIX_PORTAL register identification
-        regReadback[i].second = RD53BInterface::GetSpecialRegisterValue(regName, regReadback[i].second, RD53Shared::firstChip->getRegMap());
+        regReadback[i].second = RD53BInterface::GetSpecialRegisterValue(regName, regReadback[i].second, pChip->getRegMap());
     }
 
     return regReadback;
@@ -301,6 +301,9 @@ uint16_t RD53BInterface::GetPixelConfigTDAC(const pixelMask& mask, uint16_t row,
 }
 
 void RD53BInterface::ResetCoreColumns(RD53* pRD53)
+// #############################################################################
+// # This function causes a fluctuation of the current consumption of the chip #
+// #############################################################################
 {
     for(auto suffix: {"_0", "_1", "_2"})
     {
@@ -346,7 +349,7 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, bool doSparse, bool doDefault)
     // ########################
     // # Save original status #
     // ########################
-    auto pixMode = RD53Interface::ReadChipReg(pRD53, "PIX_MODE");
+    auto pixMode = pRD53->getRegMap().find("PIX_MODE")->second.fValue;
 
     if(doSparse == true)
     {
