@@ -1277,7 +1277,7 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
 {
     const uint32_t nBitInClkPeriod  = 32. * std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
     const double   fps              = 1.28e9 / nBitInClkPeriod;         // Frames per second
-    const int      n_prints         = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
+    const int      nPrints          = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
     const double   scaleByAuroraClk = 37.5 / 40;                        // @CONST@
     double         frames2run;
     double         time2run;
@@ -1296,7 +1296,7 @@ double RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, uint1
     }
 
     // Configure number of printouts and calculate the frequency of printouts
-    double time_per_step = std::min(std::max(time2run / n_prints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
+    double time_per_step = std::min(std::max(time2run / nPrints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
 
     WriteStackReg({{"user.ctrl_regs.PRBS_checker.module_addr", hybrid_id},
                    {"user.ctrl_regs.PRBS_checker.chip_address", chip_lane},

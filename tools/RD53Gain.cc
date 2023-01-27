@@ -290,7 +290,12 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                                 highQslope        = par[3];
                                 highQslopeErr     = parErr[3];
 
-                                if(chi2 != 0)
+                                if(chi2 == -1)
+                                {
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fChi2 =
+                                        RD53Shared::ISFITERROR;
+                                }
+                                else
                                 {
                                     theGainContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
@@ -339,9 +344,6 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                                     theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fChi2 = chi2;
                                     theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fDoF  = DoF;
                                 }
-                                else
-                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fChi2 =
-                                        RD53Shared::ISFITERROR;
                             }
 
                     index++;
