@@ -3,7 +3,9 @@
 ###################################
 # Enable devtools-10 for C++ > 14 #
 ###################################
-majorRelease=$(cat /etc/centos-release | tr -dc '0-9.'|cut -d \. -f1)
+[ -f /etc/centos-release ] && majorRelease=$(cat /etc/centos-release | tr -dc '0-9.'|cut -d \. -f1)
+[ -f /etc/redhat-release ] && majorRelease=$(cat /etc/redhat-release | tr -dc '0-9.'|cut -d \. -f1)
+
 if [[ $majorRelease == "7" ]]; then
   source scl_source enable devtoolset-10 || true # This might cause a nonzero exit code in the CI for some reason, so let's ignore it
 elif [[ $majorRelease == "8" ]]; then
