@@ -142,13 +142,16 @@ For more information on the firmware, please check the doc directory of https://
 
 ### Setup on CentOs7
 1. Install devtoolset 10
-
-        $> sudo yum install -y centos-release-scl-rh
-        $> sudo yum install -y devtoolset-10
+```bash
+sudo yum install -y centos-release-scl-rh
+sudo yum install -y devtoolset-10
+```
 
 2. On CC7 you also need to install boost v1.53 headers (default on this system) and pugixml as they don't ship with uHAL any more:
 
-        $> sudo yum install -y boost-devel pugixml-devel json-devel
+```bash
+sudo yum install -y boost-devel pugixml-devel json-devel
+```
 
 2. Install uHAL. SW tested with uHAL version up to 2.7.1
 
@@ -156,18 +159,22 @@ For more information on the firmware, please check the doc directory of https://
         https://ipbus.web.cern.ch/ipbus/doc/user/html/software/install/yum.html
 
 3. Install CERN ROOT
-
-        $> sudo yum install -y root
-        $> sudo yum install -y root-net-http root-net-httpsniff  root-graf3d-gl root-physics root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
-
+```bash
+sudo yum install -y root
+sudo yum install -y root-net-http root-net-httpsniff  root-graf3d-gl root-physics root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
+```
 
 5. Install CMAKE3 > 3.0:
 
-        $> sudo yum install -y cmake3
+```bash
+sudo yum install -y cmake3
+```
 
 6. Install python3
 
-        $> sudo yum install -y python3 python3-devel
+```bash
+sudo yum install -y python3 python3-devel
+```
 
 7. Install protobuf:
 
@@ -175,9 +182,10 @@ For more information on the firmware, please check the doc directory of https://
         https://gitlab.cern.ch/cms_tk_ph2/MessageUtils/-/blob/master/README.md
 
 8. Install pybind11 (if installed in the same directoory when you plan to install the Ph2_ACF, the setup.sh will point to the correct location)
-
-        $> wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
-        $> tar zxvf v2.9.2.tar.gz
+```bash
+wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
+tar zxvf v2.9.2.tar.gz
+```
 
 
 ### Run in docker container
@@ -187,7 +195,9 @@ For more information on the firmware, please check the doc directory of https://
     https://gitlab.cern.ch/cms_tk_ph2/docker_exploration/container_registry
 
     Do run using one of the container, use the command:
+```bash
     $> docker run --rm -ti -v $PWD:$PWD -w $PWD <image>
+```
 
     Suggested images are:
     For users (comes with Ph2_ACF of Dev branch installed): `gitlab-registry.cern.ch/cms_tk_ph2/docker_exploration/cmstkph2_user_c7:latest`
@@ -199,12 +209,16 @@ For more information on the firmware, please check the doc directory of https://
 ### clang-format (required to submit merge requests!!!)
 1. install 7.0 llvm toolset:
 
-        $> yum install centos-release-scl
-        $> yum install llvm-toolset-7.0
+```bash
+yum install centos-release-scl
+yum install llvm-toolset-7.0
+```
 
 2. if you already sourced the environment, you should be able to run the command to format the Ph2_ACF (to be done before each merge request!!!):
 
-        $> formatAll
+```bash
+formatAll
+```
 
 
 ### The Ph2_ACF software
@@ -212,12 +226,14 @@ Follow these instructions to install and compile the libraries (provided you ins
 
 1. Clone the GitHub repo and run cmake
 
-        $> git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git # N.B. to syncrhonize only the submodule: `git submodule sync; git submodule update --init --recursive --remote`
-        $> cd Ph2_ACF
-        $> source setup.sh
-        $> mkdir build
-        $> cd build
-        $> cmake .. # add -D CMAKE_BUILD_TYPE=Debug if you plan to use gdb for debugging, if you yum-instanlled `cmake3`, you might need to tall it `cmake3 ..`
+```bash
+git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git # N.B. to syncrhonize only the submodule: `git submodule sync; git submodule update --init --recursive --remote`
+cd Ph2_ACF
+source setup.sh
+mkdir build
+cd build
+cmake .. # add -D CMAKE_BUILD_TYPE=Debug if you plan to use gdb for debugging, if you yum-instanlled `cmake3`, you might need to tall it `cmake3 ..`
+```
 
 2. Do a `make -jN` in the build/ directory or alternatively do `make -C build/ -jN` in the Ph2_ACF root directory.
 
@@ -225,59 +241,80 @@ Follow these instructions to install and compile the libraries (provided you ins
 
 4. Launch
 
-        $> systemtest --help
+```bash
+systemtest --help
+```
 
     to test the parsing of the HWDescription.xml file.
 
 5. Launch
 
-        $> datatest --help
+```bash
+datatest --help
+```
 
     to test if you can correctly read data
 
 6. Launch
 
-        $> calibrate --help
+```bash
+calibrate --help
+```
 
     to calibrate a hybrid,
 
-        $> hybridtest --help
+```bash
+hybridtest --help
+```
 
     to test a hybird's I2C registers and input channel connectivity
 
+```bash
           $> cmtest --help
+```
 
     to run the CM noise study
 
+```bash
           $> pulseshape --help
-
+```
     to measure the analog pulseshape of the cbc
 
+```bash
           $> configure --help
+```
 
     to apply a configuration to the CBCs
 
 7. Launch
 
+```bash
           $> commission --help
+```
 
     to do latency & threshold scans
 
 8. Launch
 
+```bash
           $> fpgaconfig --help
+```
 
     to upload a new FW image to the GLIB
 
 9. Launch
 
+```bash
           $> miniDAQ --help
+```
 
     to save binary data from the GLIB to file
 
 10. Launch
 
+```bash
           $> miniDQM --help
+```
 
     to run the DQM code from the June '15 beamtest
 
@@ -289,35 +326,44 @@ The following procedure will install (in order):
 3. `root` with all its needed libraries
 4. `cmake`, tools for clang, including `clang-format` and `git-extras`
 
-```bash
 # Libraries needed by Ph2_ACF
+```bash
 sudo yum install -y boost-devel pugixml-devel json-devel
+```
 
 # uHAL libraries (cactus)
+```bash
 sudo curl https://ipbus.web.cern.ch/doc/user/html/_downloads/ipbus-sw.centos8.x86_64.repo \
   -o /etc/yum.repos.d/ipbus-sw.repo
 sudo yum-config-manager --enable powertools
 sudo yum clean all
 sudo yum groupinstall uhal
+```
 
 # ROOT
+```bash
 sudo yum install -y root root-net-http root-net-httpsniff root-graf3d-gl root-physics \
   root-montecarlo-eg root-graf3d-eve root-geom libusb-devel xorg-x11-xauth.x86_64
+```
 
 # Build tools and some nice git extras
+```bash
 sudo yum install -y cmake3
 sudo yum install -y clang-tools-extra
 sudo yum install -y git-extras
 ```
 
 Install devtoolset 10
-
-        $> sudo yum makecache --refresh
-        $> sudo yum -y install gcc-toolset-10-gcc
+```bash
+sudo yum makecache --refresh
+sudo yum -y install gcc-toolset-10-gcc
+```
 
 Install python3
 
-        $> sudo yum install -y python3 python3-devel
+```bash
+sudo yum install -y python3 python3-devel
+```
 
 Install protobuf:
 
@@ -326,8 +372,10 @@ Install protobuf:
 
 Install pybind11 (if installed in the same directoory when you plan to install the Ph2_ACF, the setup.sh will point to the correct location)
 
-        $> wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
-        $> tar zxvf v2.9.2.tar.gz
+```bash
+wget https://github.com/pybind/pybind11/archive/refs/tags/v2.9.2.tar.gz
+tar zxvf v2.9.2.tar.gz
+```
 
 
 ### Nota Bene
