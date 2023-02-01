@@ -93,7 +93,7 @@ std::stringstream lpGBT::saveRegMap(const std::string& fName2Add)
 // # If fName2Add != STREAMON --> then data are also saved on file #
 // #################################################################
 {
-    const int Nspaces = 26;
+    const int Nspaces = 26; // @CONST@
 
     std::stringstream theStream;
     std::ofstream     file;
