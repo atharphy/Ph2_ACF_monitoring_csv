@@ -93,7 +93,7 @@ std::stringstream lpGBT::saveRegMap(const std::string& fName2Add)
 // # If fName2Add != STREAMON --> then data are also saved on file #
 // #################################################################
 {
-    const int Nspaces = 26; // @CONST@
+    const unsigned int Nspaces = 26; // @CONST@
 
     std::stringstream theStream;
     std::ofstream     file;
@@ -114,11 +114,15 @@ std::stringstream lpGBT::saveRegMap(const std::string& fName2Add)
         }
 
         theStream << v.first;
-        for(auto j = 0; j < Nspaces; j++) theStream << " ";
-        theStream.seekp(-v.first.size(), std::ios_base::cur);
-        theStream << "0x" << std::setfill('0') << std::setw(3) << std::hex << std::uppercase << int(v.second.fAddress) << "          0x" << std::setfill('0') << std::setw(2) << std::hex
-                  << std::uppercase << int(v.second.fDefValue) << "                  0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fValue)
-                  << "                             " << std::setfill('0') << std::setw(1) << std::dec << std::uppercase << int(v.second.fBitSize) << std::endl;
+        for(auto j = 0u; j < Nspaces; j++) theStream << " ";
+        theStream.seekp(-(v.first.size() < Nspaces ? v.first.size() : Nspaces - 2), std::ios_base::cur);
+        theStream << "0x" << std::setfill('0') << std::setw(3) << std::hex << std::uppercase << int(v.second.fAddress);
+        for(auto j = 0u; j < 9 - (v.first.size() < Nspaces ? 0 : v.first.size() - Nspaces + 2); j++) theStream << " ";
+        theStream << "0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fDefValue);
+        for(auto j = 0u; j < 14; j++) theStream << " ";
+        theStream << "0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fValue);
+        for(auto j = 0u; j < 26; j++) theStream << " ";
+        theStream << std::setfill('0') << std::setw(1) << std::dec << std::uppercase << int(v.second.fBitSize) << std::endl;
 
         cLineCounter++;
     }
