@@ -11,11 +11,12 @@
 #ifndef RD53ThrEqualizationHistograms_H
 #define RD53ThrEqualizationHistograms_H
 
-#include "../System/SystemController.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
-#include "../Utils/RD53Shared.h"
 #include "DQMHistogramBase.h"
+#include "Utils/ChannelContainerStream.h"
+#include "Utils/ChipContainerStream.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/GenericDataArray.h"
+#include "Utils/RD53Shared.h"
 
 #include <TH1F.h>
 #include <TH2F.h>
@@ -23,13 +24,15 @@
 class ThrEqualizationHistograms : public DQMHistogramBase
 {
   public:
-    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap) override;
+    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap) override;
     void process() override;
     bool fill(std::vector<char>& dataBuffer) override;
     void reset() override{};
 
     void fillOccupancy(const DetectorDataContainer& OccupancyContainer);
     void fillTDAC(const DetectorDataContainer& TDACContainer);
+    void fillOccupancyScan(const DetectorDataContainer& OccupancyContainer);
+    void fillTDACGain(const DetectorDataContainer& TDACGainContainer);
 
   private:
     DetectorDataContainer DetectorData;
@@ -37,9 +40,13 @@ class ThrEqualizationHistograms : public DQMHistogramBase
     DetectorDataContainer ThrEqualization;
     DetectorDataContainer TDAC1D;
     DetectorDataContainer TDAC2D;
+    DetectorDataContainer Occupancy1D;
+    DetectorDataContainer TDACGain;
 
+    size_t startValue;
+    size_t stopValue;
+    size_t TDACGainNSteps;
     size_t nEvents;
-    size_t VCalHnsteps;
 
     size_t nRows;
     size_t nCols;

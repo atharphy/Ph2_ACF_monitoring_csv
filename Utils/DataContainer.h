@@ -12,11 +12,11 @@
 #ifndef __DATA_CONTAINER_H__
 #define __DATA_CONTAINER_H__
 
-#include "../Utils/ChannelGroupHandler.h"
-#include "../Utils/ConsoleColor.h"
-#include "../Utils/Container.h"
-#include "../Utils/EmptyContainer.h"
-#include "../Utils/easylogging++.h"
+#include "Utils/ChannelGroupHandler.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/Container.h"
+#include "Utils/EmptyContainer.h"
+#include "Utils/easylogging++.h"
 #include <cxxabi.h>
 #include <iostream>
 #include <map>

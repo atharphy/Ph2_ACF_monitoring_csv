@@ -7,8 +7,8 @@
   Support :                     mail to : lorenzo.bidegain@gmail.com, nico.pierre@icloud.com
 */
 
-#include "BeBoardFWInterface.h"
-#include "FpgaConfig.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/FpgaConfig.h"
 
 namespace Ph2_HwInterface
 {

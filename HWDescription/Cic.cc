@@ -95,10 +95,12 @@ void Cic::loadfRegMap(const std::string& filename)
 
     for(auto& cRegItem: fRegMap) { LOG(DEBUG) << BOLDBLUE << "CIC register : " << cRegItem.first << " --- " << +cRegItem.second.fValue << RESET; }
 }
+
 // Write RegValues in a file
-void Cic::saveRegMap(const std::string& filename)
+std::stringstream Cic::saveRegMap(const std::string& fName2Add)
 {
-    std::ofstream file(filename.c_str(), std::ios::out | std::ios::trunc);
+    std::ofstream file(this->getFileName(fName2Add), std::ios::out | std::ios::trunc);
+
     if(file)
     {
         std::set<CicRegPair, RegItemComparer> fSetRegItem;
@@ -133,6 +135,8 @@ void Cic::saveRegMap(const std::string& filename)
     }
     else
         LOG(ERROR) << "Error opening file";
+
+    return std::stringstream("");
 }
 
 } // namespace Ph2_HwDescription

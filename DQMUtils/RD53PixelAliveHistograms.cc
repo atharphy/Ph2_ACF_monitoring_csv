@@ -9,14 +9,15 @@
 */
 
 #include "RD53PixelAliveHistograms.h"
-#include "../Utils/ChannelContainerStream.h"
-#include "../Utils/ChipContainerStream.h"
+#include "HWDescription/RD53A.h"
+#include "HWDescription/RD53B.h"
 
 using namespace Ph2_HwDescription;
 
-void PixelAliveHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
+void PixelAliveHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    RD53Shared::setFirstChip(theDetectorStructure);
 
     nRows = RD53Shared::firstChip->getNRows();
     nCols = RD53Shared::firstChip->getNCols();
@@ -26,7 +27,7 @@ void PixelAliveHistograms::book(TFile* theOutputFile, DetectorContainer& theDete
     // #######################
     nEvents                = this->findValueInSettings<double>(settingsMap, "nEvents");
     auto         frontEnd  = RD53Shared::firstChip->getFEtype(nCols / 2, nCols / 2);
-    const size_t ToTsize   = frontEnd->maxToTvalue + 2;
+    const size_t ToTsize   = frontEnd->maxToTvalue + 1;
     const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
 
@@ -141,7 +142,7 @@ void PixelAliveHistograms::fill(const DetectorDataContainer& DataContainer)
                         {
                             if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy > 0)
                             {
-                                Occupancy1DHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy + Occupancy1DHist->GetBinWidth(0) / 2);
+                                Occupancy1DHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy + Occupancy1DHist->GetBinWidth(1) / 2);
                                 Occupancy2DHist->SetBinContent(col + 1, row + 1, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
                                 ToT1DHist->Fill(cChip->getChannel<OccupancyAndPh>(row, col).fPh);
                                 ToT2DHist->SetBinContent(col + 1, row + 1, ToT2DHist->GetBinContent(col + 1, row + 1) + cChip->getChannel<OccupancyAndPh>(row, col).fPh);
@@ -150,14 +151,14 @@ void PixelAliveHistograms::fill(const DetectorDataContainer& DataContainer)
                                                        sqrt(ToT2DHist->GetBinError(col + 1, row + 1) * ToT2DHist->GetBinError(col + 1, row + 1) +
                                                             cChip->getChannel<OccupancyAndPh>(row, col).fPhError * cChip->getChannel<OccupancyAndPh>(row, col).fPhError));
                             }
-                            else if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy == RD53Shared::ISMASKED)
+                            else if(cChip->getChannel<OccupancyAndPh>(row, col).fStatus == RD53Shared::ISMASKED)
                                 Mask1DrowHist->Fill(row);
                             if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col + 1, row + 1);
                         }
 
                     for(auto col = 0u; col < nCols; col++)
                         for(auto row = 0u; row < nRows; row++)
-                            if(cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy == RD53Shared::ISMASKED) Mask1DcolHist->Fill(col);
+                            if(cChip->getChannel<OccupancyAndPh>(row, col).fStatus == RD53Shared::ISMASKED) Mask1DcolHist->Fill(col);
                 }
 }
 

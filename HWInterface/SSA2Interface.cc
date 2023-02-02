@@ -9,10 +9,10 @@
 
  */
 
-#include "SSA2Interface.h"
-#include "../Utils/ChannelGroupHandler.h"
-#include "../Utils/ConsoleColor.h"
-#include "../Utils/Container.h"
+#include "HWInterface/SSA2Interface.h"
+#include "Utils/ChannelGroupHandler.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/Container.h"
 #include <bitset>
 
 using namespace Ph2_HwDescription;
@@ -174,7 +174,7 @@ uint8_t SSA2Interface::ReadChipId(Chip* pChip)
     return cItem.fValue;
 }
 // WRITE REGISTER (ALL LOCAL):
-bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& dacName, ChipContainer& localRegValues, bool pVerify) // FIXME SSA2
+bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& dacName, const ChipContainer& localRegValues, bool pVerify) // FIXME SSA2
 {
     bool cSuccess = true;
     // set board
@@ -374,6 +374,20 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
         bool cSuccess = this->WriteChipRegBits(pSSA2, "control_3", pValue & 0xFF, "mask_peri_D", 0xFF);
         cSuccess &= this->WriteChipRegBits(pSSA2, "control_1", ((pValue & 0x100) >> 4), "mask_peri_D", 0x10);
         return cSuccess;
+    }
+    else if(pRegName == "SamplePhaseShift")
+    {
+        uint8_t cBitShift = 0;
+        uint8_t cRegMask  = (0xF << cBitShift); //
+
+        return this->WriteChipRegBits(pSSA2, "ClockDeskewing_fine", (pValue << cBitShift), "mask_peri_D", cRegMask);
+    }
+    else if(pRegName == "PhaseShift")
+    {
+        uint8_t cBitShift = 0;
+        uint8_t cRegMask  = (0x7 << cBitShift); //
+
+        return this->WriteChipRegBits(pSSA2, "ClockDeskewing_coarse", (pValue << cBitShift), "mask_peri_D", cRegMask);
     }
     else if(pRegNameMod == "AsyncDelay")
     {

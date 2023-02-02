@@ -8,13 +8,13 @@
 */
 
 #include "RD53DataReadbackOptimizationHistograms.h"
-#include "../Utils/ChipContainerStream.h"
 
 using namespace Ph2_HwDescription;
 
-void DataReadbackOptimizationHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
+void DataReadbackOptimizationHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    RD53Shared::setFirstChip(theDetectorStructure);
 
     // #######################
     // # Retrieve parameters #

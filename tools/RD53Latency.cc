@@ -18,6 +18,9 @@ void Latency::ConfigureCalibration()
     // # Initialize sub-calibration #
     // ##############################
     PixelAlive::ConfigureCalibration();
+    PixelAlive::doDisplay    = false;
+    PixelAlive::doUpdateChip = false;
+    PixelAlive::doSaveData   = false;
     RD53RunProgress::total() -= PixelAlive::getNumberIterations();
 
     // #######################
@@ -47,13 +50,14 @@ void Latency::Running()
 
     if(PixelAlive::saveBinaryData == true)
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_Latency.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
     Latency::run();
     Latency::analyze();
-    Latency::saveChipRegisters(theCurrentRun);
+    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     Latency::sendData();
 }
 
@@ -61,8 +65,8 @@ void Latency::sendData()
 {
     const size_t LatencySize = RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1;
 
-    auto theStream        = prepareChipContainerStreamer<EmptyContainer, GenericDataArray<LatencySize>>("Occ");
-    auto theLatencyStream = prepareChipContainerStreamer<EmptyContainer, uint16_t>("Latency");
+    auto theStream        = this->prepareChipContainerStreamer<EmptyContainer, GenericDataArray<LatencySize>>("Occ");
+    auto theLatencyStream = this->prepareChipContainerStreamer<EmptyContainer, uint16_t>("Latency");
 
     if(fDQMStreamerEnabled == true)
     {
@@ -83,36 +87,28 @@ void Latency::Stop()
     RD53RunProgress::reset();
 }
 
-void Latency::localConfigure(const std::string& fileRes_, int currentRun)
+void Latency::localConfigure(const std::string& histoFileName, int currentRun)
 {
-#ifdef __USE_ROOT__
-    histos = nullptr;
-#endif
+    histos             = nullptr;
+    PixelAlive::histos = nullptr;
+    theCurrentRun      = currentRun;
 
-    if(currentRun >= 0)
-    {
-        theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[Latency::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
-    }
+    LOG(INFO) << GREEN << "[Latency::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+
+    // ##########################
+    // # Initialize calibration #
+    // ##########################
     Latency::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "Latency");
-    Latency::initializeFiles(fileRes_, currentRun);
-}
 
-void Latency::initializeFiles(const std::string& fileRes_, int currentRun)
-{
-    fileRes = fileRes_;
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
 
-    if((currentRun >= 0) && (PixelAlive::saveBinaryData == true))
-    {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_Latency.raw", 'w');
-        this->initializeWriteFileHandler();
-    }
-
-#ifdef __USE_ROOT__
-    delete histos;
-    histos = new LatencyHistograms;
-#endif
+    // #########################################
+    // # Initialize histogram and binary files #
+    // #########################################
+    CalibBase::initializeFiles<LatencyHistograms>(histoFileName, "Latency", histos, currentRun, PixelAlive::saveBinaryData);
 }
 
 void Latency::run()
@@ -122,15 +118,20 @@ void Latency::run()
     ContainerFactory::copyAndInitChip<GenericDataArray<LatencySize>>(*fDetectorContainer, theOccContainer);
     Latency::scanDac(frontEnd->latencyReg, dacList, &theOccContainer);
 
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in");
+
     // ################
     // # Error report #
     // ################
-    Latency::chipErrorReport();
+    CalibBase::chipErrorReport();
 }
 
 void Latency::draw(bool saveData)
 {
-    if(saveData == true) Latency::saveChipRegisters(theCurrentRun);
+    if(saveData == true) CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
@@ -139,7 +140,7 @@ void Latency::draw(bool saveData)
 
     if((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false))
     {
-        this->InitResultFile(fileRes);
+        this->InitResultFile(CalibBase::theHistoFileName);
         LOG(INFO) << BOLDBLUE << "\t--> Latency saving histograms..." << RESET;
     }
 
@@ -162,8 +163,8 @@ void Latency::analyze()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    auto best   = 0.;
-                    int  regVal = 0;
+                    float best   = 0;
+                    int   regVal = 0;
 
                     for(auto i = 0u; i < dacList.size(); i++)
                     {
@@ -210,7 +211,7 @@ void Latency::scanDac(const std::string& regName, const std::vector<uint16_t>& d
         // ###########################
         // # Download new DAC values #
         // ###########################
-        LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regName << BOLDMAGENTA << " value = " << BOLDYELLOW << dacList[i] << BOLDMAGENTA << " <<<" << RESET;
+        LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regName << BOLDMAGENTA << " broadcast value = " << BOLDYELLOW << dacList[i] << BOLDMAGENTA << " <<<" << RESET;
         for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regName, dacList[i]);
 
         // ################
@@ -234,49 +235,4 @@ void Latency::scanDac(const std::string& regName, const std::vector<uint16_t>& d
         // ##############################################
         Latency::sendData();
     }
-}
-
-void Latency::chipErrorReport() const
-{
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
-                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->ChipErrorReport(cChip);
-                }
-}
-
-void Latency::saveChipRegisters(int currentRun)
-{
-    const std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
-
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-        {
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    static_cast<RD53*>(cChip)->copyMaskFromDefault();
-                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
-                    static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-                    std::string command("mv " + cChip->getFileName(fileReg) + " " + this->fDirectoryName);
-                    system(command.c_str());
-                    LOG(INFO) << BOLDBLUE << "\t--> Latency saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId()
-                              << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
-                }
-
-            if(cOpticalGroup->flpGBT != nullptr)
-            {
-                if(doUpdateChip == true) cOpticalGroup->flpGBT->saveRegMap("");
-                cOpticalGroup->flpGBT->saveRegMap(fileReg);
-                std::string command("mv " + cOpticalGroup->flpGBT->getFileName(fileReg) + " " + this->fDirectoryName);
-                system(command.c_str());
-
-                LOG(INFO) << BOLDBLUE << "\t--> Latency saved the LpGBT configuration file for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << RESET
-                          << BOLDBLUE << "]" << RESET;
-            }
-        }
 }

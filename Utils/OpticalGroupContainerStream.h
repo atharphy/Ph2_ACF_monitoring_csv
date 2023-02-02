@@ -12,12 +12,12 @@
 #ifndef __OPTICALGROUPCONTAINERSTREAM_H__
 #define __OPTICALGROUPCONTAINERSTREAM_H__
 // pointers to base class
-#include "../HWDescription/OpticalGroup.h"
-#include "../HWDescription/ReadoutChip.h"
-#include "../NetworkUtils/TCPPublishServer.h"
-#include "../Utils/ContainerStream.h"
-#include "../Utils/HybridContainerStream.h"
-#include "../Utils/ObjectStream.h"
+#include "HWDescription/OpticalGroup.h"
+#include "HWDescription/ReadoutChip.h"
+#include "NetworkUtils/TCPPublishServer.h"
+#include "Utils/ContainerStream.h"
+#include "Utils/HybridContainerStream.h"
+#include "Utils/ObjectStream.h"
 #include <cmath>
 #include <cstdint>
 #include <cstring>

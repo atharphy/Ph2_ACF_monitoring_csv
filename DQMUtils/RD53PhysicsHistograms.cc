@@ -8,14 +8,15 @@
 */
 
 #include "RD53PhysicsHistograms.h"
-#include "../Utils/ChannelContainerStream.h"
-#include "../Utils/ChipContainerStream.h"
+#include "HWDescription/RD53A.h"
+#include "HWDescription/RD53B.h"
 
 using namespace Ph2_HwDescription;
 
-void PhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
+void PhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    RD53Shared::setFirstChip(theDetectorStructure);
 
     nRows = RD53Shared::firstChip->getNRows();
     nCols = RD53Shared::firstChip->getNCols();
@@ -24,7 +25,7 @@ void PhysicsHistograms::book(TFile* theOutputFile, DetectorContainer& theDetecto
     // # Retrieve parameters #
     // #######################
     auto         frontEnd  = RD53Shared::firstChip->getFEtype(nCols / 2, nCols / 2);
-    const size_t ToTsize   = frontEnd->maxToTvalue + 2;
+    const size_t ToTsize   = frontEnd->maxToTvalue + 1;
     const size_t BCIDsize  = RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID) + 1;
     const size_t TrgIDsize = RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID) + 1;
 

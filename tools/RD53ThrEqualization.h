@@ -13,13 +13,16 @@
 #include "RD53PixelAlive.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53ThrEqualizationHistograms.h"
+#include "DQMUtils/RD53ThrEqualizationHistograms.h"
+#else
+typedef bool ThrEqualizationHistograms;
 #endif
 
 // #############
 // # CONSTANTS #
 // #############
-#define TARGETEFF 0.50 // Target efficiency for optimization algorithm
+#define TARGETEFF 0.50    // Target efficiency for optimization algorithm
+#define MAXtdacDISTANCE 2 // Max TDAC average distribution distance from TDAC range center
 
 // #####################################
 // # Threshold equalization test suite #
@@ -29,10 +32,9 @@ class ThrEqualization : public PixelAlive
   public:
     ~ThrEqualization()
     {
-#ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
-#endif
+        delete histos;
     }
 
     void Running() override;
@@ -40,42 +42,49 @@ class ThrEqualization : public PixelAlive
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
-    void   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
-    void   run();
-    void   draw();
-    void   analyze();
-    size_t getNumberIterations()
+    void   localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
+    void   run() override;
+    void   draw(bool saveData = true) override;
+    size_t getNumberIterations() override
     {
         uint16_t nIterationsVCal    = floor(log2(stopValue - startValue + 1) + 2);
         uint16_t moreIterationsVCal = 1;
-        uint16_t nIterationsTDAC    = floor(log2(frontEnd->nTDACvalues) + 2);
+        uint16_t nIterationsTDAC    = (doNSteps != 0 ? doNSteps + 1 : floor(log2(frontEnd->nTDACvalues) + 2));
         uint16_t moreIterationsTDAC = 1;
-        return PixelAlive::getNumberIterations() * ((nIterationsVCal + moreIterationsVCal) + (nIterationsTDAC + moreIterationsTDAC));
+        return PixelAlive::getNumberIterations() * (((TDACGainNSteps == 0 ? 1 : TDACGainNSteps + 2) * ((nIterationsVCal + moreIterationsVCal) + (nIterationsTDAC + moreIterationsTDAC))));
     }
-    void saveChipRegisters(int currentRun);
 
-#ifdef __USE_ROOT__
+    void analyze();
+    void analyzeDuringRun();
+
     ThrEqualizationHistograms* histos;
-#endif
 
   private:
-    std::shared_ptr<DetectorDataContainer> theOccContainer;
-    DetectorDataContainer                  theTDACcontainer;
+    void fillHisto() override;
 
-    void fillHisto();
-    void bitWiseScanGlobal(const std::string& regName, const float& target, uint16_t startValue, uint16_t stopValue);
-    void bitWiseScanLocal(const std::string& regName, uint32_t nEvents, const float& target, uint32_t nEvtsBurst);
+    void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer);
+    void bitWiseScanGlobal(const std::string& regName, float target, uint16_t startValue, uint16_t stopValue);
+    void bitWiseScanLocal(float target, bool updateDACs);
     void chipErrorReport() const;
 
+    std::vector<uint16_t>                  dacList;
+    std::shared_ptr<DetectorDataContainer> theOccContainer;
+    DetectorDataContainer                  theContainer;
+    DetectorDataContainer                  theTDACGainContainer;
+    DetectorDataContainer                  theTDACContainer;
+
   protected:
+    int    resetTDAC;
     size_t startValue;
     size_t stopValue;
+    size_t startTDACGainValue;
+    size_t stopTDACGainValue;
+    size_t TDACGainNSteps;
+    size_t doNSteps;
     bool   doUpdateChip;
     bool   doDisplay;
 
-    std::string fileRes;
-    int         theCurrentRun;
+    int theCurrentRun;
 };
 
 #endif

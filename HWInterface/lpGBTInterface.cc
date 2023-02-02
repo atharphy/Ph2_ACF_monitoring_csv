@@ -8,7 +8,7 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "lpGBTInterface.h"
+#include "HWInterface/lpGBTInterface.h"
 
 using namespace Ph2_HwDescription;
 
@@ -155,7 +155,7 @@ uint16_t lpGBTInterface::GetRxDataRate(Chip* pChip, uint8_t pGroup)
     std::string cRXCntrlReg = "EPRX" + std::to_string(pGroup) + "Control";
     auto        cRegValue   = ReadChipReg(pChip, cRXCntrlReg);
     uint16_t    cValue      = (cRegValue & 0xC);
-    return (cChipRate / 5.) * (int)cValue * (float)fClockSpeed / 1e6;
+    return (cChipRate / 5.) * (int)cValue * (float)lpGBTconstants::ACCELERATOR_CLK / 1e6;
 }
 
 void lpGBTInterface::ConfigureRxChannels(Chip*                       pChip,
@@ -690,6 +690,31 @@ float lpGBTInterface::ReadResistance(Chip* pChip, const std::string& pADC, const
     return cLSQResistance;
 }
 
+uint16_t lpGBTInterface::GetADCOffset(Chip* pChip, bool pVerbose)
+{
+    uint16_t cMeasurement = ReadADC(pChip, "VREF/2", "VREF/2");
+    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC Offset " << BOLDYELLOW << +cMeasurement << RESET;
+    return cMeasurement;
+}
+
+float lpGBTInterface::GetADCGain(Chip* pChip, bool pVerbose)
+{
+    float cResult;
+    WriteChipReg(pChip, "ADCMon", 0);
+    // Disable resistive divider, so "VDD" is actually GND
+    std::this_thread::sleep_for(std::chrono::microseconds(1000));
+    uint16_t cMeasurement = ReadADC(pChip, "VDD", "VREF/2");
+    cResult               = ((cMeasurement * 1.) - (GetADCOffset(pChip, pVerbose) * 1.)) / 512. * 2. * -1.;
+    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC value " << BOLDYELLOW << +cMeasurement << RESET;
+    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC Gain via GND-Vref/2 " << BOLDYELLOW << +cResult << RESET;
+    cMeasurement = ReadADC(pChip, "VREF/2", "VDD");
+    cResult      = ((cMeasurement * 1.) - (GetADCOffset(pChip, pVerbose) * 1.)) / 512. * 2.;
+    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC value " << BOLDYELLOW << +cMeasurement << RESET;
+    if(pVerbose) LOG(INFO) << BLUE << "Reading ADC Gain via Vref/2-GND " << BOLDYELLOW << +cResult << RESET;
+
+    return cResult;
+}
+
 uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain)
 {
     // Read differential (converted) data on two ADC inputs
@@ -852,7 +877,7 @@ double lpGBTInterface::BERtestCL(Chip* pChip, uint8_t pGroup, uint8_t pChannel, 
     double    bitsRxd  = (given_time) ? time2run * cRxRate : bits_or_time;
     LOG(INFO) << GREEN << "Running BERT for ~" << BOLDYELLOW << std::fixed << std::setprecision(0) << time2run << RESET << GREEN << "s will test  " << BOLDYELLOW << bitsRxd << RESET << GREEN
               << " received bits." << RESET;
-    uint32_t BERTMeasTime = (log2(time2run * fClockSpeed) - 5) / 2.;
+    uint32_t BERTMeasTime = (log2(time2run * lpGBTconstants::ACCELERATOR_CLK) - 5) / 2.;
     // Configure number of printouts and calculate the frequency of printouts
     double time_per_step = std::min(std::max(time2run / n_prints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
 
@@ -911,7 +936,6 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
 // # 320 Mbit/s   = 2 #
 // ####################
 {
-    const double   mainClock       = 40e6;                             // @CONST@
     const uint32_t nBitInClkPeriod = 32. * std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
     const double   fps             = 1.28e9 / nBitInClkPeriod;         // Frames per second
     const int      n_prints        = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
@@ -922,7 +946,7 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
         time2run = frames_or_time;
     else
         time2run = frames_or_time / fps;
-    size_t BERTMeasTime = (log2(time2run * mainClock) - 5) / 2.;
+    size_t BERTMeasTime = (log2(time2run * lpGBTconstants::ACCELERATOR_CLK) - 5) / 2.;
     frames2run          = fBERTMeasTimeMap[BERTMeasTime];
 
     // Configure number of printouts and calculate the frequency of printouts

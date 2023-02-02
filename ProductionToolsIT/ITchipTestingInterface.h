@@ -10,9 +10,9 @@
 #ifndef ITchipTestingInterface_H
 #define ITchipTestingInterface_H
 
-#include "../NetworkUtils/TCPClient.h"
-#include "../Utils/ConsoleColor.h"
-#include "../Utils/easylogging++.h"
+#include "NetworkUtils/TCPClient.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/easylogging++.h"
 
 #include <string>
 

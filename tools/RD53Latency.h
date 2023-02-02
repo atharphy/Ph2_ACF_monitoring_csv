@@ -13,7 +13,9 @@
 #include "RD53PixelAlive.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53LatencyHistograms.h"
+#include "DQMUtils/RD53LatencyHistograms.h"
+#else
+typedef bool LatencyHistograms;
 #endif
 
 // ######################
@@ -24,10 +26,9 @@ class Latency : public PixelAlive
   public:
     ~Latency()
     {
-#ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
-#endif
+        delete histos;
     }
 
     void Running() override;
@@ -35,40 +36,35 @@ class Latency : public PixelAlive
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
-    void   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
-    void   run();
-    void   draw(bool saveData = true);
-    void   analyze();
-    size_t getNumberIterations()
+    void   localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
+    void   run() override;
+    void   draw(bool saveData = true) override;
+    size_t getNumberIterations() override
     {
         return PixelAlive::getNumberIterations() * ((stopValue - startValue) / nTRIGxEvent + 1 <= RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1
                                                         ? (stopValue - startValue) / nTRIGxEvent + 1
                                                         : RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
     }
-    void saveChipRegisters(int currentRun);
 
-#ifdef __USE_ROOT__
+    void analyze();
+
     LatencyHistograms* histos;
-#endif
 
   private:
-    std::vector<uint16_t> dacList;
+    void fillHisto() override;
 
+    void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer);
+
+    std::vector<uint16_t> dacList;
     DetectorDataContainer theOccContainer;
     DetectorDataContainer theLatencyContainer;
-
-    void fillHisto();
-    void scanDac(const std::string& regName, const std::vector<uint16_t>& dacList, DetectorDataContainer* theContainer);
-    void chipErrorReport() const;
 
   protected:
     size_t startValue;
     size_t stopValue;
+    bool   doUpdateChip;
 
-    std::string fileRes;
-    int         theCurrentRun;
-    bool        doUpdateChip;
+    int theCurrentRun;
 };
 
 #endif

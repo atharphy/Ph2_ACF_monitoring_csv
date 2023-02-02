@@ -1,4 +1,4 @@
-#include "Firmware.h"
+#include "HWInterface/Firmware.h"
 
 #include <arpa/inet.h>
 #include <fstream>

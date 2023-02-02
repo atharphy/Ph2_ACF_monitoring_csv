@@ -8,13 +8,14 @@
 */
 
 #include "RD53GenericDacDacScanHistograms.h"
-#include "../Utils/ChipContainerStream.h"
+#include "Utils/ChipContainerStream.h"
 
 using namespace Ph2_HwDescription;
 
-void GenericDacDacScanHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
+void GenericDacDacScanHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    RD53Shared::setFirstChip(theDetectorStructure);
 
     // #######################
     // # Retrieve parameters #
@@ -28,6 +29,53 @@ void GenericDacDacScanHistograms::book(TFile* theOutputFile, DetectorContainer& 
     stopValueDAC2  = this->findValueInSettings<double>(settingsMap, "StopValueDAC2");
     stepDAC2       = this->findValueInSettings<double>(settingsMap, "StepDAC2");
 
+    // #####################################
+    // # Make proper axis for secial cases #
+    // #####################################
+    size_t            startValueX = startValueDAC1;
+    size_t            stopValueX  = stopValueDAC1 + stepDAC1;
+    size_t            startValueY = startValueDAC2;
+    size_t            stopValueY  = stopValueDAC2 + stepDAC2;
+    std::stringstream titleX("");
+    std::stringstream titleY("");
+
+    if(regNameDAC2.find("CAL_EDGE_FINE_DELAY") != std::string::npos)
+    {
+        const auto frontEnd = RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNRows() / 2, RD53Shared::firstChip->getNCols() / 2);
+        const auto unitTime =
+            1. / RD53Constants::ACCELERATOR_CLK * 1000 / ((RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CAL_EDGE_FINE_DELAY")) + 1) / (2. / frontEnd->nLatencyBins2Span));
+        titleY << "Injection Delay (ns)";
+        startValueY *= unitTime;
+        stopValueY *= unitTime;
+    }
+    else if(regNameDAC1.find("CAL_EDGE_FINE_DELAY") != std::string::npos)
+    {
+        const auto frontEnd = RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNRows() / 2, RD53Shared::firstChip->getNCols() / 2);
+        const auto unitTime =
+            1. / RD53Constants::ACCELERATOR_CLK * 1000 / ((RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("CAL_EDGE_FINE_DELAY")) + 1) / (2. / frontEnd->nLatencyBins2Span));
+        titleX << "Injection Delay (ns)";
+        startValueX *= unitTime;
+        stopValueX *= unitTime;
+    }
+
+    if(regNameDAC1.find("VCAL") != std::string::npos)
+    {
+        const auto& regMap = RD53Shared::firstChip->getRegMap();
+        titleX << "#DeltaVCal";
+        startValueX -= regMap.find("VCAL_MED")->second.fValue;
+        stopValueX -= regMap.find("VCAL_MED")->second.fValue;
+    }
+    else if(regNameDAC2.find("VCAL") != std::string::npos)
+    {
+        const auto& regMap = RD53Shared::firstChip->getRegMap();
+        titleY << "#DeltaVCal";
+        startValueY -= regMap.find("VCAL_MED")->second.fValue;
+        stopValueY -= regMap.find("VCAL_MED")->second.fValue;
+    }
+
+    if(titleX.str() == "") titleX << regNameDAC1;
+    if(titleY.str() == "") titleY << regNameDAC2;
+
     auto hGenericDac1Scan = CanvasContainer<TH1F>("GenericDac1Scan", "GenericDac1Scan", (stopValueDAC1 - startValueDAC1) / stepDAC1 + 1, startValueDAC1, stopValueDAC1 + stepDAC1);
     bookImplementer(theOutputFile, theDetectorStructure, GenericDac1Scan, hGenericDac1Scan, regNameDAC1.c_str(), "Entries");
 
@@ -37,12 +85,12 @@ void GenericDacDacScanHistograms::book(TFile* theOutputFile, DetectorContainer& 
     auto hOcc2D = CanvasContainer<TH2F>("GenericDacDacScanScan",
                                         "Generic DAC-DAC Scan",
                                         (stopValueDAC1 - startValueDAC1) / stepDAC1 + 1,
-                                        startValueDAC1,
-                                        stopValueDAC1 + stepDAC1,
+                                        startValueX,
+                                        stopValueX,
                                         (stopValueDAC2 - startValueDAC2) / stepDAC2 + 1,
-                                        startValueDAC2,
-                                        stopValueDAC2 + stepDAC2);
-    bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, regNameDAC1.c_str(), regNameDAC2.c_str());
+                                        startValueY,
+                                        stopValueY);
+    bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, titleX.str().c_str(), titleY.str().c_str());
 }
 
 bool GenericDacDacScanHistograms::fill(std::vector<char>& dataBuffer)

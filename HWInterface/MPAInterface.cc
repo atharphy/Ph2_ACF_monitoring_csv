@@ -6,9 +6,9 @@
         Date of creation :             5/01/18
  */
 
-#include "MPAInterface.h"
-#include "../Utils/ChannelGroupHandler.h"
-#include "../Utils/ConsoleColor.h"
+#include "HWInterface/MPAInterface.h"
+#include "Utils/ChannelGroupHandler.h"
+#include "Utils/ConsoleColor.h"
 #include <typeinfo>
 
 #define DEV_FLAG 0
@@ -408,9 +408,11 @@ bool MPAInterface::enablePixelInjection(Chip* pChip, int pPixelNum, uint8_t pInj
 bool MPAInterface::ConfigureChipOriginalMask(ReadoutChip* pMPA, bool pVerify, uint32_t pBlockSize)
 {
     // use pix 1 as a proxy. Better to save this as a constant
+
     auto pixval = readPixel(pMPA, "ENFLAGS", 1);
     // write broadcast then mask is much much faster than full config
     configPixel(pMPA, "ENFLAGS", 0, pixval);
+
     auto allChannelEnabledGroup = std::make_shared<ChannelGroup<NSSACHANNELS * NMPACOLS>>();
     return maskChannelGroup(pMPA, allChannelEnabledGroup, pVerify);
 }
@@ -708,7 +710,7 @@ bool MPAInterface::WriteChipMultReg(Chip* pMPA, const std::vector<std::pair<std:
     return fBoardFW->MultiRegisterWrite(pMPA, cRegItems, pVerify);
 }
 
-bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& dacName, ChipContainer& localRegValues, bool pVerify)
+bool MPAInterface::WriteChipAllLocalReg(ReadoutChip* pMPA, const std::string& dacName, const ChipContainer& localRegValues, bool pVerify)
 {
     setBoard(pMPA->getBeBoardId());
     assert(localRegValues.size() == pMPA->getNumberOfChannels());

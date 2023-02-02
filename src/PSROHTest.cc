@@ -1,11 +1,11 @@
 
-#include "../Utils/Timer.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/argvparser.h"
-#include "../tools/Tool.h"
+#include "Utils/Timer.h"
+#include "Utils/Utilities.h"
+#include "Utils/argvparser.h"
 #include "tools/BackEndAlignment.h"
+#include "tools/Tool.h"
 
-#include "../tools/PSROHTester.h"
+#include "tools/PSROHTester.h"
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"
@@ -15,7 +15,7 @@
 #define __NAMEDPIPE__
 
 #ifdef __NAMEDPIPE__
-#include "gui_logger.h"
+#include "Utils/gui_logger.h"
 #endif
 
 #include <cstring>

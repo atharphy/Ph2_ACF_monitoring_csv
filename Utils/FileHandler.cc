@@ -26,7 +26,7 @@ FileHandler::FileHandler(const std::string& pBinaryFileName, char pOption, FileH
 
 FileHandler::~FileHandler()
 {
-    while(fQueue.empty() == false) usleep(DESTROYSLEEP);
+    while(fQueue.empty() == false) std::this_thread::sleep_for(std::chrono::microseconds(DESTROYSLEEP));
     FileHandler::closeFile();
 }
 

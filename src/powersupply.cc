@@ -1,9 +1,9 @@
-#include "../System/SystemController.h"
-#include "../Utils/CommonVisitors.h"
-#include "../Utils/Timer.h"
-#include "../Utils/argvparser.h"
-#include "../Utils/gui_logger.h"
-#include "../tools/Channel.h"
+#include "System/SystemController.h"
+#include "Utils/CommonVisitors.h"
+#include "Utils/Timer.h"
+#include "Utils/argvparser.h"
+#include "Utils/gui_logger.h"
+#include "tools/Channel.h"
 #ifdef __POWERSUPPLY__
 // Libraries
 #include "DeviceHandler.h"

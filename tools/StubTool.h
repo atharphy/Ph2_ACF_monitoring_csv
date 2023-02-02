@@ -3,9 +3,9 @@
 
 #include "Tool.h"
 #ifdef __USE_ROOT__
-#include "../Utils/CommonVisitors.h"
-#include "../Utils/Visitor.h"
 #include "Channel.h"
+#include "Utils/CommonVisitors.h"
+#include "Utils/Visitor.h"
 #include <TGraphErrors.h>
 
 #include "TCanvas.h"

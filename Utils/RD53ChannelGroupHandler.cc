@@ -12,10 +12,12 @@
 RD53ChannelGroupHandler::RD53ChannelGroupHandler(size_t rowStart, size_t rowStop, size_t colStart, size_t colStop, size_t nRows, size_t nCols, uint8_t groupType, size_t hitPerCol, size_t onlyNGroups)
     : ChannelGroupHandler(), regionOfInterest(nRows, nCols), enabledGroups(nRows, nCols), groupType(groupType), hitPerCol(hitPerCol), onlyNGroups(onlyNGroups)
 {
+    // ##################################
+    // # Initialize internal structures #
+    // ##################################
     for(auto col = colStart; col <= colStop; col++)
         for(auto row = rowStart; row <= rowStop; row++) regionOfInterest.enableChannel(row, col);
-
-    allChannelGroup_ = std::shared_ptr<ChannelGroupBase>(&enabledGroups, [](auto*) {});
+    enabledGroups.disableAllChannels();
 
     if(groupType == RD53GroupType::AllPixels)
     {
@@ -24,7 +26,7 @@ RD53ChannelGroupHandler::RD53ChannelGroupHandler(size_t rowStart, size_t rowStop
     }
     else
     {
-        numberOfGroups_  = onlyNGroups == 0 ? (nRows / hitPerCol) : onlyNGroups;
+        numberOfGroups_  = (onlyNGroups == 0 ? nRows / hitPerCol : onlyNGroups);
         allChannelGroup_ = std::shared_ptr<ChannelGroupBase>(&enabledGroups, [](auto*) {});
     }
 }

@@ -1,7 +1,7 @@
 #ifndef __MIDDLEWARE_STATE_MACHINE__
 #define __MIDDLEWARE_STATE_MACHINE__
 
-#include "../miniDAQ/CombinedCalibrationFactory.h"
+#include "miniDAQ/CombinedCalibrationFactory.h"
 #include <map>
 #include <string>
 #include <vector>

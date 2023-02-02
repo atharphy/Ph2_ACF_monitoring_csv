@@ -12,9 +12,9 @@
 #ifndef __DATA2S_H__
 #define __DATA2S_H__
 
-#include "../Utils/Container.h"
-#include "../Utils/Event.h"
-#include "../Utils/GenericDataArray.h"
+#include "Utils/Container.h"
+#include "Utils/Event.h"
+#include "Utils/GenericDataArray.h"
 #include <iostream>
 #include <math.h>
 

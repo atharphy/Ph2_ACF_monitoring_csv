@@ -10,13 +10,13 @@
 #ifndef Chip_H
 #define Chip_H
 
-#include "../Utils/ConsoleColor.h"
-#include "../Utils/Container.h"
-#include "../Utils/Exception.h"
-#include "../Utils/Visitor.h"
-#include "../Utils/easylogging++.h"
 #include "ChipRegItem.h"
 #include "FrontEndDescription.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/Container.h"
+#include "Utils/Exception.h"
+#include "Utils/Visitor.h"
+#include "Utils/easylogging++.h"
 
 #include <iostream>
 #include <set>
@@ -110,16 +110,17 @@ class Chip : public FrontEndDescription
     /*!
      * \brief Get any registeritem of the Map
      * \param pReg
-     * \return  RegItem
+     * \return RegItem
      */
     const ChipRegItem& getRegItem(const std::string& pReg) const;
     ChipRegItem&       getRegItem(const std::string& pReg);
 
     /*!
      * \brief Write the registers of the Map in a file
-     * \param filename
+     * \param fName2Add
+     * \return std::stringstream
      */
-    virtual void saveRegMap(const std::string& filename) = 0;
+    virtual std::stringstream saveRegMap(const std::string& fName2Add = "") = 0;
 
     /*!
      * \brief Get the Map of the registers
@@ -230,7 +231,7 @@ class Chip : public FrontEndDescription
     void        setRegisterTracking(uint8_t pEnable) { fTrackRegisters = pEnable; }
     uint8_t     getRegisterTracking() { return fTrackRegisters; }
 
-    std::string getFileName(const std::string& fName2Add)
+    std::string getFileName(const std::string& fName2Add) const
     {
         std::string output = configFileName;
         output.insert(output.find_last_of("/\\") + 1, fName2Add);

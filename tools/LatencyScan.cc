@@ -1,12 +1,12 @@
 #include "LatencyScan.h"
 
-#include "../HWDescription/Cbc.h"
-#include "../Utils/CBCChannelGroupHandler.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/GenericDataArray.h"
-#include "../Utils/MPAChannelGroupHandler.h"
-#include "../Utils/Occupancy.h"
-#include "../Utils/SSAChannelGroupHandler.h"
+#include "HWDescription/Cbc.h"
+#include "Utils/CBCChannelGroupHandler.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/GenericDataArray.h"
+#include "Utils/MPAChannelGroupHandler.h"
+#include "Utils/Occupancy.h"
+#include "Utils/SSAChannelGroupHandler.h"
 
 LatencyScan::LatencyScan() : Tool() {}
 
@@ -23,8 +23,8 @@ void LatencyScan::Initialize()
 
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->at(0)->at(0)->at(0)->at(0));
     bool         cWithCBC          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
-    bool         cWithSSA          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA || cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA2);
-    bool         cWithMPA          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA || cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA2);
+    bool         cWithPS           = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA || cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA);
+    bool         cWithPSv2         = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA2 || cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA2);
 
     if(cWithCBC)
     {
@@ -32,19 +32,25 @@ void LatencyScan::Initialize()
         theChannelGroupHandler.setChannelGroupParameters(16, 2); // 16*2*8
         setChannelGroupHandler(theChannelGroupHandler);
     }
-    if(cWithSSA)
+    else if(cWithPS)
     {
-        SSAChannelGroupHandler theChannelGroupHandler;
-        theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
-        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA);
-        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::SSA2);
+        MPAChannelGroupHandler theChannelGroupHandlerMPA;
+        theChannelGroupHandlerMPA.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandlerMPA, FrontEndType::MPA);
+
+        SSAChannelGroupHandler theChannelGroupHandlerSSA;
+        theChannelGroupHandlerSSA.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandlerSSA, FrontEndType::SSA);
     }
-    if(cWithMPA)
+    else if(cWithPSv2)
     {
-        MPAChannelGroupHandler theChannelGroupHandler;
-        theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
-        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA);
-        setChannelGroupHandler(theChannelGroupHandler, FrontEndType::MPA2);
+        MPAChannelGroupHandler theChannelGroupHandlerMPA;
+        theChannelGroupHandlerMPA.setChannelGroupParameters(1, NSSACHANNELS * NMPACOLS); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandlerMPA, FrontEndType::MPA2);
+
+        SSAChannelGroupHandler theChannelGroupHandlerSSA;
+        theChannelGroupHandlerSSA.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+        setChannelGroupHandler(theChannelGroupHandlerSSA, FrontEndType::SSA2);
     }
 
     initializeRecycleBin();
@@ -342,10 +348,7 @@ void LatencyScan::ScanLatency()
                     cEventIter += (1 + cTriggerMult);
                     cNEventsThisTriggerId++;
                 } while(cEventIter < cEvents.end());
-
-                // Doesnt work PSv2 -- tofix
-                // cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), getChannelGroupHandlerContainer()->getObject(cOccBrd->getId()), cNormalizationFactor);
-                //\Doesnt work PSv2
+                cOccBrd->normalizeAndAverageContainers(fDetectorContainer->at(cBrdIndx), getChannelGroupHandlerContainer()->getObject(cOccBrd->getId()), cNormalizationFactor);
 
                 // float cOccGlbl = cOccBrd->getSummary<Occupancy, Occupancy>().fOccupancy;
                 cTotalHits = cTotalHitsS0 + cTotalHitsS1;

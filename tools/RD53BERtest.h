@@ -10,27 +10,25 @@
 #ifndef RD53BERtest_H
 #define RD53BERtest_H
 
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "Tool.h"
+#include "RD53CalibBase.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53BERtestHistograms.h"
-#include "TApplication.h"
+#include "DQMUtils/RD53BERtestHistograms.h"
+#else
+typedef bool BERtestHistograms;
 #endif
 
 // ##################
 // # BER test suite #
 // ##################
-class BERtest : public Tool
+class BERtest : public CalibBase
 {
   public:
     ~BERtest()
     {
-#ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
-#endif
+        delete histos;
     }
 
     void Running() override;
@@ -38,26 +36,23 @@ class BERtest : public Tool
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
-    void initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
-    void run();
-    void draw();
+    void localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
+    void run() override;
+    void draw(bool saveData = true) override;
 
-#ifdef __USE_ROOT__
     BERtestHistograms* histos;
-#endif
 
   private:
-    void fillHisto();
+    void fillHisto() override;
 
   protected:
-    size_t chain2test;
-    bool   given_time;
-    double frames_or_time;
-    bool   doDisplay;
+    size_t      chain2test;
+    bool        given_time;
+    double      frames_or_time;
+    bool        doDisplay;
+    std::string dataOutputDir;
 
-    std::string fileRes;
-    int         theCurrentRun;
+    int theCurrentRun;
 
     DetectorDataContainer theBERtestContainer;
 };

@@ -11,11 +11,11 @@
 #ifndef RD53B_H
 #define RD53B_H
 
-#include "../Utils/BitMaster/BitVector.h"
-#include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/RD53Event.h"
 #include "RD53.h"
 #include "RD53BCommands.h"
+#include "Utils/BitMaster/BitVector.h"
+#include "Utils/RD53ChannelGroupHandler.h"
+#include "Utils/RD53Event.h"
 
 // ############################
 // # Chip event configuration #
@@ -32,17 +32,15 @@ const uint8_t NBIT_CCOL   = 6;  // Number of core column bits
 
 namespace RD53BConstants
 {
-const uint8_t  BROADCAST_CHIPID    = 31;   // Broadcast chip ID used to send the command to multiple chips
-const uint8_t  AUTO_INCREMENT_MASK = 0x1;  // Auto-increment mask bits
-const uint16_t GLOBAL_PULSE_ADDR   = 0x3D; // Global Pulse Route regiser address
+const uint8_t  BROADCAST_CHIPID  = 31;   // Broadcast chip ID used to send the command to multiple chips
+const uint16_t GLOBAL_PULSE_ADDR = 0x3D; // Global Pulse Route regiser address
 } // namespace RD53BConstants
 
-// #####################################################################
-// # Formula: par0/par1 * VCal / electron_charge [C] * capacitance [C] #
-// #####################################################################
+// ####################################################################################
+// # Formula: Vref / ADCrange * VCal / electron_charge [C] * capacitance [F] + offset #
+// ####################################################################################
 namespace RD53BchargeConvertion
 {
-const float Vref     = 0.8;    // Vref [V]
 const float ADCrange = 4096.0; // VCal total range
 const float cap      = 8.0;    // [fF]
 const float ele      = 1.6;    // [e-19]
@@ -61,24 +59,35 @@ class RD53B : public RD53
                                       "DAC_GDAC_M_LIN",
                                       "DAC_KRUM_CURR_LIN",
                                       "TriggerConfig",
+                                      "DAC_LDAC_LIN",
+                                      "VDDD",
+                                      "VDDA",
                                       1,
                                       32,
                                       RD53Shared::setBits(RD53BEvtEncoder::NBIT_TOT) - 1,
+                                      8,
                                       RD53Shared::setBits(RD53BEvtEncoder::NBIT_BCID),
                                       RD53Shared::setBits(RD53BEvtEncoder::NBIT_TRIGID),
+                                      4,
+                                      4,
                                       0,
-                                      RD53B::NCOLS - 1};
+                                      RD53B::NCOLS - 1,
+                                      0,
+                                      0x01};
 
     static void decodeChipData(BitView<const uint32_t> bits, Ph2_HwInterface::RD53ChipEvent& e, const Ph2_HwInterface::FormatOptions& options = {});
 
+    RD53B() {}
     RD53B(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
 
-    const FrontEnd* getFEtype(size_t colStart, size_t colStop) const override { return &RD53B::CROC; }
-    size_t          getNRows() const override { return RD53B::NROWS; }
-    size_t          getNCols() const override { return RD53B::NCOLS; }
-    uint32_t        getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const override;
-    float           VCal2Charge(float VCal, bool isNoise = false) const override;
-    float           Charge2VCal(float Charge) const override;
+    const FrontEnd*       getFEtype(const size_t colStart, const size_t colStop) const override { return &RD53B::CROC; }
+    size_t                getNRows() const override { return RD53B::NROWS; }
+    size_t                getNCols() const override { return RD53B::NCOLS; }
+    std::vector<uint16_t> getLaneUpInitSequence() const override { return {}; }
+    uint32_t              getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const override;
+    float                 VCal2Charge(float VCal, bool isNoise = false) const override;
+    float                 Charge2VCal(float Charge) const override;
+    bool                  getUseGainDualSlope() const override { return this->getRegItem("ToT6to4Mapping").fValue == 0 ? false : true; };
 };
 
 } // namespace Ph2_HwDescription

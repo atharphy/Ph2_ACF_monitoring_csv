@@ -1,20 +1,20 @@
 #ifndef DETECTOR_MONITOR_H
 #define DETECTOR_MONITOR_H
 
-#include "../System/SystemController.h"
-#include "../Utils/BoardContainerStream.h"
-#include "../Utils/ChannelContainerStream.h"
-#include "../Utils/ChipContainerStream.h"
-#include "../Utils/HybridContainerStream.h"
-#include "../Utils/OpticalGroupContainerStream.h"
-#include "DetectorMonitorConfig.h"
+#include "Parser/DetectorMonitorConfig.h"
+#include "System/SystemController.h"
+#include "Utils/BoardContainerStream.h"
+#include "Utils/ChannelContainerStream.h"
+#include "Utils/ChipContainerStream.h"
+#include "Utils/HybridContainerStream.h"
+#include "Utils/OpticalGroupContainerStream.h"
 
 #include "chrono"
 #include "thread"
 
 #ifdef __USE_ROOT__
 class TFile;
-#include "../MonitorDQM/MonitorDQMPlotBase.h"
+#include "MonitorDQM/MonitorDQMPlotBase.h"
 #endif
 
 class DetectorMonitor
@@ -22,11 +22,12 @@ class DetectorMonitor
   public:
     DetectorMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig);
     virtual ~DetectorMonitor();
-    void forkMonitor();
-    void operator()();
-    void startMonitoring() { startMonitor = true; }
-    void stopMonitoring() { startMonitor = false; }
-    void stopRunning() { fKeepRunning = false; }
+    void        forkMonitor();
+    void        operator()();
+    void        startMonitoring() { startMonitor = true; }
+    void        stopMonitoring() { startMonitor = false; }
+    void        stopRunning() { fKeepRunning = false; }
+    std::string getMonitorFileName();
 
   protected:
     virtual void                        runMonitor() = 0;
@@ -35,6 +36,7 @@ class DetectorMonitor
 #ifdef __USE_ROOT__
     TFile*              fOutputFile{nullptr};
     MonitorDQMPlotBase* fMonitorPlotDQM{nullptr};
+    std::string         fMonitorFileName = "";
 #endif
     time_t      getTimeStamp();
     std::string getMonitorName();

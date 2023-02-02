@@ -12,12 +12,12 @@
 #ifndef SSA_h__
 #define SSA_h__
 
-#include "../Utils/Exception.h"
-#include "../Utils/Visitor.h"
-#include "../Utils/easylogging++.h"
 #include "ChipRegItem.h"
 #include "FrontEndDescription.h"
 #include "ReadoutChip.h"
+#include "Utils/Exception.h"
+#include "Utils/Visitor.h"
+#include "Utils/easylogging++.h"
 #include <iostream>
 #include <map>
 #include <set>
@@ -38,13 +38,13 @@ class SSA : public ReadoutChip
     SSA(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename);
     // C'tors with object FE Description
     SSA(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename);
-    uint8_t      fPartnerId;
-    uint8_t      getPartid() { return fPartnerId; }
-    virtual void accept(HwDescriptionVisitor& pVisitor) { pVisitor.visitChip(*this); }
-    void         loadfRegMap(const std::string& filename) override;
-    void         saveRegMap(const std::string& filename) override;
-    uint32_t     getNumberOfChannels() const override { return NSSACHANNELS; }
-    bool         isDACLocal(const std::string& dacName) override
+    uint8_t           fPartnerId;
+    uint8_t           getPartid() { return fPartnerId; }
+    virtual void      accept(HwDescriptionVisitor& pVisitor) { pVisitor.visitChip(*this); }
+    void              loadfRegMap(const std::string& filename) override;
+    std::stringstream saveRegMap(const std::string& fName2Add = "") override;
+    uint32_t          getNumberOfChannels() const override { return NSSACHANNELS; }
+    bool              isDACLocal(const std::string& dacName) override
     {
         if(dacName.find("THTRIMMING_S", 0, 12) != std::string::npos)
             return true;

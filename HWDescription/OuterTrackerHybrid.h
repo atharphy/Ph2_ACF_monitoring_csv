@@ -12,15 +12,15 @@
 #ifndef OuterTrackerHybrid_h__
 #define OuterTrackerHybrid_h__
 
-#include "../Utils/Container.h"
-#include "../Utils/Visitor.h"
-#include "../Utils/easylogging++.h"
 #include "Cic.h"
 #include "FrontEndDescription.h"
 #include "Hybrid.h"
 #include "MPA.h"
 #include "SSA.h"
 #include "SSA2.h"
+#include "Utils/Container.h"
+#include "Utils/Visitor.h"
+#include "Utils/easylogging++.h"
 #include <stdint.h>
 #include <vector>
 

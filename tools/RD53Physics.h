@@ -10,24 +10,27 @@
 #ifndef RD53Physics_H
 #define RD53Physics_H
 
-#include "../HWDescription/RD53ACommands.h"
-#include "../HWInterface/RD53FWInterface.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/GenericDataArray.h"
-#include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/RD53Shared.h"
-#include "Tool.h"
+#include "HWDescription/RD53ACommands.h"
+#include "HWInterface/RD53FWInterface.h"
+#include "RD53CalibBase.h"
+#include "Utils/GenericDataArray.h"
+#include "Utils/RD53Shared.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53PhysicsHistograms.h"
-#include "TApplication.h"
+#include "DQMUtils/RD53PhysicsHistograms.h"
+#else
+typedef bool PhysicsHistograms;
 #endif
+
+// #############
+// # CONSTANTS #
+// #############
+#define PRINTeventsEVERY 100 // Number of recorded events before printing
 
 // #######################
 // # Physics data taking #
 // #######################
-class Physics : public Tool
+class Physics : public CalibBase
 {
     using evtConvType = std::function<void(const std::vector<Ph2_HwInterface::RD53Event>&)>;
 
@@ -35,49 +38,41 @@ class Physics : public Tool
     Physics() { Physics::setGenericEvtConverter(RD53dummyEvtConverter()); }
     ~Physics()
     {
-#ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
-#endif
+        delete histos;
     }
 
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
 
-    void sendBoardData(const BoardContainer* cBoard);
-    void localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
-    void initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
-    void run();
-    void draw();
-    void analyze(bool doReadBinary = false);
-    void saveChipRegisters(int currentRun);
-    void fillDataContainer(Ph2_HwDescription::BeBoard& cBoard);
+    void localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
+    void run() override;
+    void draw(bool saveData = true) override;
 
+    void analyze(bool doReadBinary = false);
+    void sendBoardData(const BoardContainer* cBoard);
+    void fillDataContainer(Ph2_HwDescription::BeBoard& cBoard);
     void setGenericEvtConverter(evtConvType arg)
     {
-        std::lock_guard<std::mutex> theGuard(theMtx);
+        std::lock_guard<std::recursive_mutex> theGuard(theMtx);
         genericEvtConverter = std::move(arg);
     }
 
-#ifdef __USE_ROOT__
     PhysicsHistograms* histos;
-    TApplication*      myApp;
-#endif
 
   private:
-    size_t errors;
+    void fillHisto() override;
 
+    void clearContainers(Ph2_HwDescription::BeBoard& cBoard);
+
+    size_t                                   errors;
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
-
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
     DetectorDataContainer                    theOccContainer;
     DetectorDataContainer                    theBCIDContainer;
     DetectorDataContainer                    theTrgIDContainer;
-
-    void fillHisto();
-    void chipErrorReport() const;
-    void clearContainers(Ph2_HwDescription::BeBoard& cBoard);
 
   protected:
     struct RD53dummyEvtConverter
@@ -93,13 +88,12 @@ class Physics : public Tool
     bool        doDisplay;
     bool        doUpdateChip;
     bool        saveBinaryData;
-    std::string outputBinaryDir;
+    std::string dataOutputDir;
 
-    std::string fileRes;
-    int         theCurrentRun;
-    size_t      numberOfEventsPerRun;
-    std::mutex  theMtx;
-    evtConvType genericEvtConverter;
+    int                  theCurrentRun;
+    size_t               numberOfEventsPerRun;
+    std::recursive_mutex theMtx;
+    evtConvType          genericEvtConverter;
 };
 
 #endif

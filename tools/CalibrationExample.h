@@ -16,7 +16,7 @@
 #include <map>
 #ifdef __USE_ROOT__
 // Calibration is not running on the SoC: I need to instantiate the DQM histrgrammer here
-#include "../DQMUtils/DQMHistogramCalibrationExample.h"
+#include "DQMUtils/DQMHistogramCalibrationExample.h"
 #endif
 
 using namespace Ph2_System;

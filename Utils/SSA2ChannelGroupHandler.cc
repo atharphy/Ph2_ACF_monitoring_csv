@@ -1,5 +1,5 @@
-#include "../Utils/SSA2ChannelGroupHandler.h"
-#include "../HWDescription/Definition.h"
+#include "Utils/SSA2ChannelGroupHandler.h"
+#include "HWDescription/Definition.h"
 
 SSA2ChannelGroupHandler::SSA2ChannelGroupHandler()
 {

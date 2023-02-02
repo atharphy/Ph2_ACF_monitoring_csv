@@ -1,21 +1,22 @@
-#include "PedeNoise.h"
-#include "../HWDescription/Cbc.h"
-#include "../HWDescription/SSA.h"
-#include "../Utils/CBCChannelGroupHandler.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
-#include "../Utils/EmptyContainer.h"
-#include "../Utils/MPAChannelGroupHandler.h"
-#include "../Utils/Occupancy.h"
-#include "../Utils/SSAChannelGroupHandler.h"
-#include "../Utils/ThresholdAndNoise.h"
+#include "tools/PedeNoise.h"
+#include "HWDescription/Cbc.h"
+#include "HWDescription/SSA.h"
+#include "HWInterface/D19cFWInterface.h"
+#include "Utils/CBCChannelGroupHandler.h"
+#include "Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/ContainerStream.h"
+#include "Utils/EmptyContainer.h"
+#include "Utils/MPAChannelGroupHandler.h"
+#include "Utils/Occupancy.h"
+#include "Utils/SSAChannelGroupHandler.h"
+#include "Utils/ThresholdAndNoise.h"
 #include "boost/format.hpp"
 #include <math.h>
 
 #ifdef __USE_ROOT__
 // static_assert(false,"use root is defined");
-#include "../DQMUtils/DQMHistogramPedeNoise.h"
+#include "DQMUtils/DQMHistogramPedeNoise.h"
 #endif
 
 PedeNoise::PedeNoise() : Tool() {}
@@ -777,11 +778,11 @@ void PedeNoise::extractPedeNoise()
                             auto  cType = chip->getFrontEndType();
                             if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA || cType == FrontEndType::SSA2)
                             {
-				if(mStripIt == fSCurveStripOccupancyMap.rend())
-				{
-					mStripIt--;
-					continue;
-				}
+                                if(mStripIt == fSCurveStripOccupancyMap.rend())
+                                {
+                                    mStripIt--;
+                                    continue;
+                                }
                                 previousOccupancy = (previousStripIterator)
                                                         ->second->at(board->getIndex())
                                                         ->at(opticalGroup->getIndex())
@@ -795,11 +796,11 @@ void PedeNoise::extractPedeNoise()
                             }
                             else if(cType == FrontEndType::MPA || cType == FrontEndType::MPA2)
                             {
-				if(mPixelIt == fSCurvePixelOccupancyMap.rend())
-				{
-					mPixelIt--;
-					continue;
-				}
+                                if(mPixelIt == fSCurvePixelOccupancyMap.rend())
+                                {
+                                    mPixelIt--;
+                                    continue;
+                                }
                                 previousOccupancy = (previousPixelIterator)
                                                         ->second->at(board->getIndex())
                                                         ->at(opticalGroup->getIndex())

@@ -1,4 +1,4 @@
-#include "TriggerInterface.h"
+#include "HWInterface/TriggerInterface.h"
 
 using namespace Ph2_HwDescription;
 

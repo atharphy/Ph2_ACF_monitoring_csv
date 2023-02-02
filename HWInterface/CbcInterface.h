@@ -12,8 +12,8 @@
 #ifndef __CBCINTERFACE_H__
 #define __CBCINTERFACE_H__
 
-#include "BeBoardFWInterface.h"
-#include "ReadoutChipInterface.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/ReadoutChipInterface.h"
 
 #include <vector>
 
@@ -97,7 +97,7 @@ class CbcInterface : public ReadoutChipInterface
      * \brief Write all Local registers on Cbc and Cbc Config File (able to recognize local parameter names such as
      * ChannelOffset) \param pCbc \param pRegNode : Node of the register to write \param pValue : Value to write
      */
-    bool WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pCbc, const std::string& dacName, ChipContainer& pValue, bool pVerify = true) override;
+    bool WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pCbc, const std::string& dacName, const ChipContainer& pValue, bool pVerify = true) override;
 
     /*!
      * \brief Read the designated register in the Chip

@@ -1,10 +1,10 @@
 #ifndef _MiddlewareController_h_
 #define _MiddlewareController_h_
 
-#include "../NetworkUtils/TCPServer.h"
-#include "../System/SystemController.h"
-#include "../miniDAQ/MiddlewareMessageHandler.h"
-#include "../tools/Tool.h"
+#include "NetworkUtils/TCPServer.h"
+#include "System/SystemController.h"
+#include "miniDAQ/MiddlewareMessageHandler.h"
+#include "tools/Tool.h"
 
 #include <string>
 

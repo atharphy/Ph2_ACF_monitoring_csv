@@ -1,8 +1,9 @@
-#include "PSAlignment.h"
+#include "tools/PSAlignment.h"
 
-#include "../HWInterface/L1ReadoutInterface.h"
-#include "../Utils/CBCChannelGroupHandler.h"
-#include "../Utils/ContainerFactory.h"
+#include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/L1ReadoutInterface.h"
+#include "Utils/CBCChannelGroupHandler.h"
+#include "Utils/ContainerFactory.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -994,8 +995,8 @@ bool PSAlignment::FindLatency(BeBoard* pBoard, uint8_t pChipId, std::vector<Inje
                 for(auto cChip: *cHybrid) // for each chip (makes sense)
                 {
                     if(cChip->getId() % 8 != pChipId) continue;
-
                     if(cChip->getFrontEndType() == FrontEndType::SSA) fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cHitLatency - 1);
+
                     else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                         fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cHitLatency + 1);
                     else

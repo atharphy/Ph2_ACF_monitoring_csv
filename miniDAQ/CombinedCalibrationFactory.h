@@ -1,15 +1,12 @@
 #ifndef __COMBINED_CALIBRATION_FACTORY__
 #define __COMBINED_CALIBRATION_FACTORY__
 
-#include "../MessageUtils/cpp/QueryMessage.pb.h"
-#include "../tools/CombinedCalibration.h"
-#include "../tools/Tool.h"
+#include "MessageUtils/cpp/QueryMessage.pb.h"
+#include "tools/CombinedCalibration.h"
+#include "tools/Tool.h"
 #include <iostream>
 #include <map>
 #include <string>
-
-template <typename... Args>
-class CombineCalibration;
 
 class BaseCreator
 {

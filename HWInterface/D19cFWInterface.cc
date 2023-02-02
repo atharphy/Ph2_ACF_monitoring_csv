@@ -10,19 +10,19 @@
 
  */
 
-#include "D19cFWInterface.h"
-#include "../HWDescription/Hybrid.h"
-#include "../HWDescription/OuterTrackerHybrid.h"
-#include "D19cBackendAlignmentFWInterface.h"
-#include "D19cDebugFWInterface.h"
-#include "D19cFastCommandInterface.h"
-#include "D19cI2CInterface.h"
-#include "D19cL1ReadoutInterface.h"
-#include "D19cLinkInterface.h"
-#include "D19cOpticalInterface.h"
-#include "D19cPSCounterFWInterface.h"
-#include "D19cTriggerInterface.h"
-#include "D19clpGBTSlowControlWorkerInterface.h"
+#include "HWInterface/D19cFWInterface.h"
+#include "HWDescription/Hybrid.h"
+#include "HWDescription/OuterTrackerHybrid.h"
+#include "HWInterface/D19cBackendAlignmentFWInterface.h"
+#include "HWInterface/D19cDebugFWInterface.h"
+#include "HWInterface/D19cFastCommandInterface.h"
+#include "HWInterface/D19cI2CInterface.h"
+#include "HWInterface/D19cL1ReadoutInterface.h"
+#include "HWInterface/D19cLinkInterface.h"
+#include "HWInterface/D19cOpticalInterface.h"
+#include "HWInterface/D19cPSCounterFWInterface.h"
+#include "HWInterface/D19cTriggerInterface.h"
+#include "HWInterface/D19clpGBTSlowControlWorkerInterface.h"
 #include <algorithm>
 #include <chrono>
 #include <time.h>

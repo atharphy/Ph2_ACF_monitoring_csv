@@ -12,12 +12,12 @@
 #ifndef __TOOL_H__
 #define __TOOL_H__
 
-#include "../System/SystemController.h"
-#include "../Utils/BoardContainerStream.h"
-#include "../Utils/ChannelContainerStream.h"
-#include "../Utils/ChipContainerStream.h"
-#include "../Utils/HybridContainerStream.h"
-#include "../Utils/OpticalGroupContainerStream.h"
+#include "System/SystemController.h"
+#include "Utils/BoardContainerStream.h"
+#include "Utils/ChannelContainerStream.h"
+#include "Utils/ChipContainerStream.h"
+#include "Utils/HybridContainerStream.h"
+#include "Utils/OpticalGroupContainerStream.h"
 
 #ifdef __USE_ROOT__
 #include "TCanvas.h"
@@ -107,10 +107,13 @@ class Tool : public Ph2_System::SystemController
     virtual bool GetRunningStatus();
 
     void Configure(std::string cHWFile, bool enableStream = false, uint16_t DQMportNumber = 6000, bool doAlsoFrontend = true) override;
+
     void Start(int runNumber) override;
+    // void InformImDone();
     void Stop() override;
 
     void waitForRunToBeCompleted();
+    void privateRunning(std::promise<int>&& thePromise);
     void SaveResults();
     void CloseResultFile();
 
@@ -119,7 +122,7 @@ class Tool : public Ph2_System::SystemController
      * \param pDirectoryname : the name of the directory to create
      * \param pDate : apend the current date and time to the directoryname
      */
-    void CreateResultDirectory(const std::string& pDirname, bool pMode = true, bool pDate = true, const std::string& whichCalib = "");
+    void CreateResultDirectory(const std::string& pDirname, bool pMode = true, bool pDate = true);
 
 /*!
  * \brief Initialize the result Root file
@@ -368,9 +371,9 @@ class Tool : public Ph2_System::SystemController
     StatsSum SummarizeStats(std::vector<T> cData)
     {
         T cInitVal = (T)(0);
-        // remove NANs
+        // Remove NANs
         cData.erase(std::remove_if(cData.begin(), cData.end(), [](T x) { return std::isnan(x); }), cData.end());
-        // calculate stats
+        // Calculate stats
         StatsSum cStatsSum;
         cStatsSum.fSum      = std::accumulate(cData.begin(), cData.end(), cInitVal);
         cStatsSum.fMean     = cStatsSum.fSum / cData.size();
@@ -421,20 +424,26 @@ class Tool : public Ph2_System::SystemController
     THttpServer* fHttpServer;
 #endif
 
-    std::atomic<bool> fKeepRunning;
     int               fRunNumber;
+    std::atomic<bool> fKeepRunning;
     std::future<void> fRunningFuture;
-    bool              fSkipMaskedChannels;
-    bool              fAllChan;
-    bool              fMaskChannelsFromOtherGroups;
-    bool              fTestPulse;
-    bool              fDoBoardBroadcast;
-    bool              fDoHybridBroadcast;
-    bool              fUseReadNEvents{1};
-    int               fWait_ms{100};
-    size_t            fNReadbackEvents{0};
-    uint8_t           fNormalize{1};
-    std::string       getCalibrationName();
+    // bool                        doExit;
+    // std::thread                 fRunningThread;
+    // std::future<int>            fRunningFuture;
+    // std::condition_variable_any wakeUp;
+    // std::recursive_mutex        theMtx;
+
+    bool        fSkipMaskedChannels;
+    bool        fAllChan;
+    bool        fMaskChannelsFromOtherGroups;
+    bool        fTestPulse;
+    bool        fDoBoardBroadcast;
+    bool        fDoHybridBroadcast;
+    bool        fUseReadNEvents{1};
+    int         fWait_ms{100};
+    size_t      fNReadbackEvents{0};
+    uint8_t     fNormalize{1};
+    std::string getCalibrationName();
 };
 
 #endif

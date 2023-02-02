@@ -6,18 +6,9 @@
     MESSAGE(STATUS " ")
 
     # Includes
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-    include_directories(${PROJECT_SOURCE_DIR}/Utils)
-    include_directories(${PROJECT_SOURCE_DIR}/MessageUtils/cpp)
     include_directories(${PROJECT_SOURCE_DIR})
-    include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
-    include_directories(${UHAL_GRAMMARS_INCLUDE_PREFIX})
-    include_directories(${UHAL_LOG_INCLUDE_PREFIX})
 
     # Library
-    link_directories(${UHAL_UHAL_LIB_PREFIX})
-    link_directories(${UHAL_LOG_LIB_PREFIX})
-    link_directories(${UHAL_GRAMMARS_LIB_PREFIX})
 
     # Find source files
     file(GLOB HEADERS *.h)
@@ -80,11 +71,7 @@ else()
     MESSAGE(STATUS "    ${BoldYellow}MIDDLEWARE${Reset} [otsdaq/middleware]: [${BoldCyan}Ph2_ACF/Utils/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
-    #include_directories(${UHAL_UHAL_INCLUDE_PREFIX})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/uhal/include)
-    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/log/include)
-    include_directories($ENV{OTSDAQ_CMSOUTERTRACKER_DIR}/uhal/uhal_2_7_5/uhal/grammars/include)
     include_directories($ENV{PH2ACF_BASE_DIR}/Utils)
     include_directories($ENV{PH2ACF_BASE_DIR}/Utils/../)
     include_directories($ENV{PH2ACF_BASE_DIR})

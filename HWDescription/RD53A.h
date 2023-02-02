@@ -11,9 +11,9 @@
 #ifndef RD53A_H
 #define RD53A_H
 
-#include "../Utils/RD53ChannelGroupHandler.h"
 #include "RD53.h"
 #include "RD53ACommands.h"
+#include "Utils/RD53ChannelGroupHandler.h"
 
 // ############################
 // # Chip event configuration #
@@ -33,17 +33,15 @@ const uint8_t NBIT_CCOL   = 6;   // Number of core column bits
 
 namespace RD53AConstants
 {
-const uint8_t  BROADCAST_CHIPID    = 0x08; // Broadcast chip ID used to send the command to multiple chips
-const uint8_t  AUTO_INCREMENT_MASK = 0x08; // Auto-increment mask bits
-const uint16_t GLOBAL_PULSE_ADDR   = 0x2C; // Global Pulse Route regiser address
+const uint8_t  BROADCAST_CHIPID  = 0x08; // Broadcast chip ID used to send the command to multiple chips
+const uint16_t GLOBAL_PULSE_ADDR = 0x2C; // Global Pulse Route regiser address
 } // namespace RD53AConstants
 
-// #####################################################################
-// # Formula: par0/par1 * VCal / electron_charge [C] * capacitance [C] #
-// #####################################################################
+// ####################################################################################
+// # Formula: Vref / ADCrange * VCal / electron_charge [C] * capacitance [F] + offset #
+// ####################################################################################
 namespace RD53AchargeConvertion
 {
-const float Vref     = 0.9;    // Vref [V]
 const float ADCrange = 4096.0; // VCal total range
 const float cap      = 8.5;    // [fF]
 const float ele      = 1.6;    // [e-19]
@@ -62,47 +60,74 @@ class RD53A : public RD53
                                       "VTH_SYNC",
                                       "IBIAS_KRUM_SYNC",
                                       "LATENCY_CONFIG",
+                                      "",
+                                      "VOUT_dig_ShuLDO",
+                                      "VOUT_ana_ShuLDO",
                                       2,
                                       0,
                                       RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
+                                      RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
                                       RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID),
                                       RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID),
+                                      5,
+                                      5,
                                       0,
-                                      127};
+                                      127,
+                                      50000,
+                                      0x08};
     static constexpr FrontEnd LIN  = {"LIN",
                                      "Vthreshold_LIN",
                                      "KRUM_CURR_LIN",
                                      "LATENCY_CONFIG",
+                                     "LDAC_LIN",
+                                     "VOUT_dig_ShuLDO",
+                                     "VOUT_ana_ShuLDO",
                                      2,
                                      16,
                                      RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
+                                     RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
                                      RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID),
                                      RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID),
+                                     5,
+                                     5,
                                      128,
-                                     263};
+                                     263,
+                                     50000,
+                                     0x08};
     static constexpr FrontEnd DIFF = {"DIFF",
                                       "VTH1_DIFF",
                                       "VFF_DIFF",
                                       "LATENCY_CONFIG",
+                                      "",
+                                      "VOUT_dig_ShuLDO",
+                                      "VOUT_ana_ShuLDO",
                                       2,
                                       31,
                                       RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
+                                      RD53Shared::setBits(RD53AEvtEncoder::NBIT_TOT) - 1,
                                       RD53Shared::setBits(RD53AEvtEncoder::NBIT_BCID),
                                       RD53Shared::setBits(RD53AEvtEncoder::NBIT_TRIGID),
+                                      5,
+                                      5,
                                       264,
-                                      399};
+                                      399,
+                                      50000,
+                                      0x08};
     static const FrontEnd*    frontEnds[];
 
     static void decodeChipData(const uint32_t* data, size_t size, Ph2_HwInterface::RD53ChipEvent& chipEvent);
 
+    RD53A() {}
     RD53A(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
 
-    const FrontEnd* getFEtype(size_t colStart, size_t colStop) const override;
-    size_t          getNRows() const override { return RD53A::NROWS; }
-    size_t          getNCols() const override { return RD53A::NCOLS; }
-    uint32_t        getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const override;
-    float           VCal2Charge(float VCal, bool isNoise = false) const override;
-    float           Charge2VCal(float Charge) const override;
+    const FrontEnd*       getFEtype(const size_t colStart, const size_t colStop) const override;
+    size_t                getNRows() const override { return RD53A::NROWS; }
+    size_t                getNCols() const override { return RD53A::NCOLS; }
+    std::vector<uint16_t> getLaneUpInitSequence() const override;
+    uint32_t              getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const override;
+    float                 VCal2Charge(float VCal, bool isNoise = false) const override;
+    float                 Charge2VCal(float Charge) const override;
+    bool                  getUseGainDualSlope() const override { return false; }
 };
 
 } // namespace Ph2_HwDescription

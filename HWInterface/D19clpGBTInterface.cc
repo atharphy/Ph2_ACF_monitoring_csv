@@ -7,7 +7,7 @@
   Support:               email to younes.otarid@cern.ch
 */
 
-#include "D19clpGBTInterface.h"
+#include "HWInterface/D19clpGBTInterface.h"
 #include <chrono>
 #include <cstring>
 #include <fstream>

@@ -205,7 +205,8 @@
     <Setting name="StartLatency">250</Setting>
     <Setting name="LatencyRange">100</Setting>
 
-    <Setting name="PSmoduleSSAthreshold">50</Setting>
+
+    <Setting name="PSmoduleSSAthreshold">150</Setting>
     <Setting name="PSmoduleMPAthreshold">150</Setting>
     <Setting name="PSmoduleTriggerLatency">180</Setting>
     <Setting name="PSmoduleStubWindow">32</Setting>
@@ -269,7 +270,7 @@
 
 
     <!--Full search settings (lowcal) MPA-->
-    <Setting name="Nevents">1500</Setting>
+    <Setting name="Nevents">500</Setting>
     <Setting name="PedestalEqualizationFullScanStart">220</Setting>
     <Setting name="PedestalEqualizationOccupancy">0.5</Setting>
     <Setting name="PedestalEqualizationPulseAmplitude">1</Setting>
@@ -286,7 +287,11 @@
     <Setting name="PedeNoiseMinThreshold">0</Setting>
     <Setting name="PedeNoiseMaxThreshold">220</Setting>
 
-    <Setting name="PSOccupancyPulseAmplitude">250</Setting>
+
+    <Setting name="StartPhase">0</Setting>
+    <Setting name="PhaseRange">7</Setting>
+    <Setting name="PhaseStartLatency">270</Setting>
+    <Setting name="PhaseLatencyRange">40</Setting>
 
     <!-- Sync Test --> 
     <Setting name="Attempts">1</Setting>

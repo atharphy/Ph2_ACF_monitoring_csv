@@ -1,6 +1,6 @@
-﻿#include "../Utils/Utilities.h"
-#include "../Utils/argvparser.h"
-#include "../tools/Eudaq2Producer.h"
+﻿#include "Utils/Utilities.h"
+#include "Utils/argvparser.h"
+#include "tools/Eudaq2Producer.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

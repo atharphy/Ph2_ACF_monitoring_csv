@@ -11,12 +11,11 @@
 #ifndef RD53GainHistograms_H
 #define RD53GainHistograms_H
 
-#include "../System/SystemController.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
-#include "../Utils/GainFit.h"
-#include "../Utils/RD53Shared.h"
 #include "DQMHistogramBase.h"
+#include "Utils/ChannelContainerStream.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/GainFit.h"
+#include "Utils/RD53Shared.h"
 
 #include <TH1F.h>
 #include <TH2F.h>
@@ -26,12 +25,13 @@
 // # CONSTANTS #
 // #############
 #define INTERCEPT_HALFRANGE 15 // [ToT]
-#define SLOPE_HALFRANGE 9e-2   // [ToT / VCal]
+#define SLOPE_RANGE 8e-2       // [ToT / VCal]
+#define NBINS 100              // Number of histogram bins
 
 class GainHistograms : public DQMHistogramBase
 {
   public:
-    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap) override;
+    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap) override;
     void process() override;
     bool fill(std::vector<char>& dataBuffer) override;
     void reset() override{};
@@ -47,16 +47,16 @@ class GainHistograms : public DQMHistogramBase
     DetectorDataContainer ErrorReadOut2D;
     DetectorDataContainer ErrorFit2D;
 
-    DetectorDataContainer Intercept1D;
-    DetectorDataContainer Slope1D;
-    DetectorDataContainer InterceptLowQ1D; // @TMP@
-    DetectorDataContainer SlopeLowQ1D;     // @TMP@
+    DetectorDataContainer InterceptHighQ1D;
+    DetectorDataContainer SlopeHighQ1D;
+    DetectorDataContainer InterceptLowQ1D;
+    DetectorDataContainer SlopeLowQ1D;
     DetectorDataContainer Chi2DoF1D;
 
-    DetectorDataContainer Intercept2D;
-    DetectorDataContainer Slope2D;
-    DetectorDataContainer InterceptLowQ2D; // @TMP@
-    DetectorDataContainer SlopeLowQ2D;     // @TMP@
+    DetectorDataContainer InterceptHighQ2D;
+    DetectorDataContainer SlopeHighQ2D;
+    DetectorDataContainer InterceptLowQ2D;
+    DetectorDataContainer SlopeLowQ2D;
     DetectorDataContainer Chi2DoF2D;
 
     size_t nEvents;

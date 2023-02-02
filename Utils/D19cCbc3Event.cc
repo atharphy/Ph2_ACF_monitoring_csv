@@ -9,13 +9,13 @@
 
  */
 
-#include "../Utils/D19cCbc3Event.h"
-#include "../HWDescription/Definition.h"
-#include "../HWDescription/OuterTrackerHybrid.h"
-#include "../Utils/ChannelGroupHandler.h"
-#include "../Utils/DataContainer.h"
-#include "../Utils/EmptyContainer.h"
-#include "../Utils/Occupancy.h"
+#include "Utils/D19cCbc3Event.h"
+#include "HWDescription/Definition.h"
+#include "HWDescription/OuterTrackerHybrid.h"
+#include "Utils/ChannelGroupHandler.h"
+#include "Utils/DataContainer.h"
+#include "Utils/EmptyContainer.h"
+#include "Utils/Occupancy.h"
 
 using namespace Ph2_HwDescription;
 

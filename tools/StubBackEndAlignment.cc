@@ -1,7 +1,8 @@
-#include "StubBackEndAlignment.h"
+#include "tools/StubBackEndAlignment.h"
 
-#include "../Utils/CBCChannelGroupHandler.h"
-#include "../Utils/ContainerFactory.h"
+#include "HWInterface/D19cFWInterface.h"
+#include "Utils/CBCChannelGroupHandler.h"
+#include "Utils/ContainerFactory.h"
 #include "boost/format.hpp"
 
 using namespace Ph2_HwDescription;
@@ -255,6 +256,21 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
     // read back original masks
     bool cWithPS = false;
     for(auto cOpticalGroup: *pBoard) { cWithPS = cWithPS || (cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS); }
+
+    for(auto cOpticalGroup: *pBoard) // TODO: Need a PSv2 Flag
+    {
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            for(auto cChip: *cHybrid)
+            {
+                if(cChip->getFrontEndType() == FrontEndType::MPA2)
+                {
+                    cWithPS = false;
+                    break;
+                }
+            }
+        }
+    }
 
     // reconfigure fast commands
     // fast command config

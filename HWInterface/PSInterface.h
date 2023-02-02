@@ -12,12 +12,12 @@
 #ifndef __PSINTERFACE_H__
 #define __PSINTERFACE_H__
 
-#include "BeBoardFWInterface.h"
-#include "MPA2Interface.h"
-#include "MPAInterface.h"
-#include "ReadoutChipInterface.h"
-#include "SSA2Interface.h"
-#include "SSAInterface.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/MPA2Interface.h"
+#include "HWInterface/MPAInterface.h"
+#include "HWInterface/ReadoutChipInterface.h"
+#include "HWInterface/SSA2Interface.h"
+#include "HWInterface/SSAInterface.h"
 
 #include "pugixml.hpp"
 #include <vector>
@@ -62,7 +62,7 @@ class PSInterface : public ReadoutChipInterface
 
     bool     WriteChipReg(Ph2_HwDescription::Chip* pPS, const std::string& pRegName, uint16_t pValue, bool pVerifLoop = true) override;
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pPS, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop = true) override;
-    bool     WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pPS, const std::string& dacName, ChipContainer& pValue, bool pVerifLoop = true) override;
+    bool     WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pPS, const std::string& dacName, const ChipContainer& pValue, bool pVerifLoop = true) override;
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pPS, const std::string& pRegName) override;
 
     void                 producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;

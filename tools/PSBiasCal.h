@@ -13,11 +13,11 @@
 #ifndef PSBiasCal_h__
 #define PSBiasCal_h__
 
-#include "Tool.h"
+#include "tools/Tool.h"
 
-#include "../HWInterface/BeBoardFWInterface.h"
-#include "../HWInterface/D19clpGBTInterface.h"
-#include "../HWInterface/ReadoutChipInterface.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/D19clpGBTInterface.h"
+#include "HWInterface/ReadoutChipInterface.h"
 
 #include <map>
 

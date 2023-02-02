@@ -31,6 +31,7 @@ void SCurve::ConfigureCalibration()
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
+    dataOutputDir  = this->findValueInSettings<std::string>("DataOutputDir", "");
     frontEnd       = RD53Shared::firstChip->getFEtype(colStart, colStop);
 
     // ########################
@@ -64,20 +65,21 @@ void SCurve::Running()
 
     if(saveBinaryData == true)
     {
+        this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_SCurve.raw", 'w');
         this->initializeWriteFileHandler();
     }
 
     SCurve::run();
     SCurve::analyze();
-    SCurve::saveChipRegisters(theCurrentRun);
+    CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
     SCurve::sendData();
 }
 
 void SCurve::sendData()
 {
-    auto theOccStream         = prepareChannelContainerStreamer<OccupancyAndPh, uint16_t>("Occ");
-    auto theThrAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>("ThrAndNoise");
+    auto theOccStream         = this->prepareChannelContainerStreamer<OccupancyAndPh, uint16_t>("Occ");
+    auto theThrAndNoiseStream = this->prepareChannelContainerStreamer<ThresholdAndNoise>("ThrAndNoise");
 
     if(fDQMStreamerEnabled == true)
     {
@@ -106,36 +108,27 @@ void SCurve::Stop()
     RD53RunProgress::reset();
 }
 
-void SCurve::localConfigure(const std::string& fileRes_, int currentRun)
+void SCurve::localConfigure(const std::string& histoFileName, int currentRun)
 {
-#ifdef __USE_ROOT__
-    histos = nullptr;
-#endif
+    histos        = nullptr;
+    theCurrentRun = currentRun;
 
-    if(currentRun >= 0)
-    {
-        theCurrentRun = currentRun;
-        LOG(INFO) << GREEN << "[SCurve::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
-    }
+    LOG(INFO) << GREEN << "[SCurve::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
+    // ##########################
+    // # Initialize calibration #
+    // ##########################
     SCurve::ConfigureCalibration();
-    this->CreateResultDirectory(RD53Shared::RESULTDIR, false, false, "SCurve");
-    SCurve::initializeFiles(fileRes_, currentRun);
-}
 
-void SCurve::initializeFiles(const std::string& fileRes_, int currentRun)
-{
-    fileRes = fileRes_;
-
-    if((currentRun >= 0) && (saveBinaryData == true))
-    {
-        this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(currentRun) + "_SCurve.raw", 'w');
-        this->initializeWriteFileHandler();
-    }
-
-#ifdef __USE_ROOT__
-    delete histos;
-    histos = new SCurveHistograms;
-#endif
+    // #########################################
+    // # Initialize histogram and binary files #
+    // #########################################
+    CalibBase::initializeFiles<SCurveHistograms>(histoFileName, "SCurve", histos, currentRun, saveBinaryData);
 }
 
 void SCurve::run()
@@ -178,33 +171,38 @@ void SCurve::run()
                                         ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
                                         ->getChannel<OccupancyAndPh>(row, col)
-                                        .fOccupancy = RD53Shared::ISDISABLED;
+                                        .fStatus = RD53Shared::ISDISABLED;
+
+    // #################################
+    // # Reset masks to default values #
+    // #################################
+    CalibBase::copyMaskFromDefault("en in");
 
     // ################
     // # Error report #
     // ################
-    SCurve::chipErrorReport();
+    CalibBase::chipErrorReport();
 }
 
-void SCurve::draw(bool doSaveData)
+void SCurve::draw(bool saveData)
 {
-    if(doSaveData == true) SCurve::saveChipRegisters(theCurrentRun);
+    if(saveData == true) CalibBase::saveChipRegisters(theCurrentRun, doUpdateChip);
 
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 
     if(doDisplay == true) myApp = new TApplication("myApp", nullptr, nullptr);
 
-    if((doSaveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
+    if((saveData == true) && ((this->fResultFile == nullptr) || (this->fResultFile->IsOpen() == false)))
     {
-        this->InitResultFile(fileRes);
+        this->InitResultFile(CalibBase::theHistoFileName);
         LOG(INFO) << BOLDBLUE << "\t--> SCurve saving histograms..." << RESET;
     }
 
     histos->book(this->fResultFile, *fDetectorContainer, fSettingsMap);
     SCurve::fillHisto();
     histos->process();
-    saveData = doSaveData;
+    doSaveData = saveData;
 
     if(doDisplay == true) myApp->Run(true);
 #endif
@@ -212,57 +210,7 @@ void SCurve::draw(bool doSaveData)
     // #####################
     // # @TMP@ : CalibFile #
     // #####################
-    if(saveBinaryData == true)
-    {
-        for(const auto cBoard: *fDetectorContainer)
-            for(const auto cOpticalGroup: *cBoard)
-                for(const auto cHybrid: *cOpticalGroup)
-                    for(const auto cChip: *cHybrid)
-                    {
-                        std::stringstream myString;
-                        myString.clear();
-                        myString.str("");
-                        myString << this->fDirectoryName + "/Run" + RD53Shared::fromInt2Str(theCurrentRun) + "_SCurve_"
-                                 << "B" << std::setfill('0') << std::setw(2) << +cBoard->getId() << "_"
-                                 << "O" << std::setfill('0') << std::setw(2) << +cOpticalGroup->getId() << "_"
-                                 << "M" << std::setfill('0') << std::setw(2) << +cHybrid->getId() << "_"
-                                 << "C" << std::setfill('0') << std::setw(2) << +cChip->getId() << ".dat";
-                        std::ofstream fileOutID(myString.str(), std::ios::out);
-                        for(auto i = 0u; i < dacList.size(); i++)
-                        {
-                            fileOutID << "Iteration " << i << " --- reg = " << dacList[i] - offset << std::endl;
-                            for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
-                                for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
-                                    if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
-                                                                                                                           ->at(cBoard->getIndex())
-                                                                                                                           ->at(cOpticalGroup->getIndex())
-                                                                                                                           ->at(cHybrid->getIndex())
-                                                                                                                           ->at(cChip->getIndex())
-                                                                                                                           ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
-                                                                                                                           ->allChannelGroup()
-                                                                                                                           ->isChannelEnabled(row, col))
-                                        fileOutID << "r " << row << " c " << col << " h "
-                                                  << detectorContainerVector[i]
-                                                             ->at(cBoard->getIndex())
-                                                             ->at(cOpticalGroup->getIndex())
-                                                             ->at(cHybrid->getIndex())
-                                                             ->at(cChip->getIndex())
-                                                             ->getChannel<OccupancyAndPh>(row, col)
-                                                             .fOccupancy *
-                                                         nEvents
-                                                  << " a "
-                                                  << detectorContainerVector[i]
-                                                         ->at(cBoard->getIndex())
-                                                         ->at(cOpticalGroup->getIndex())
-                                                         ->at(cHybrid->getIndex())
-                                                         ->at(cChip->getIndex())
-                                                         ->getChannel<OccupancyAndPh>(row, col)
-                                                         .fPh
-                                                  << std::endl;
-                        }
-                        fileOutID.close();
-                    }
-    }
+    if(saveBinaryData == true) CalibBase::saveSCurveOrGaindValues(detectorContainerVector, theCurrentRun, dacList, offset, nEvents, "SCurve");
 }
 
 std::shared_ptr<DetectorDataContainer> SCurve::analyze()
@@ -339,7 +287,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
                                         ->at(cHybrid->getIndex())
                                         ->at(cChip->getIndex())
                                         ->getChannel<ThresholdAndNoise>(row, col)
-                                        .fNoise = RD53Shared::FITERROR;
+                                        .fNoise = RD53Shared::ISFITERROR;
                             }
 
                     index++;
@@ -381,12 +329,12 @@ void SCurve::computeStats(std::vector<float>& measurements, int offset, float& n
 
     std::for_each(measurements.begin(), measurements.end(), [](float& ele) { ele = (std::fabs(ele) > 1. ? 1. : std::fabs(ele)); });
     std::reverse(measurements.begin(), measurements.end());
-    auto itHigh = measurements.end() - std::max_element(measurements.begin(), measurements.end());
+    const auto itHigh = measurements.end() - std::max_element(measurements.begin(), measurements.end());
 
     std::reverse(measurements.begin(), measurements.end());
-    auto itLow = std::max_element(measurements.begin(), measurements.end()) - measurements.begin();
+    const auto itLow = std::max_element(measurements.begin(), measurements.end()) - measurements.begin();
 
-    auto stop = std::min<int>((itHigh + itLow) / 2, dacList.size() - 1);
+    const auto stop = std::min<int>((itHigh + itLow) / 2, dacList.size() - 1);
 
     for(auto i = 0; i < stop; i++)
     {
@@ -410,49 +358,4 @@ void SCurve::computeStats(std::vector<float>& measurements, int offset, float& n
         mean = 0;
         rms  = 0;
     }
-}
-
-void SCurve::chipErrorReport() const
-{
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    LOG(INFO) << GREEN << "Readout chip error report for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
-                    static_cast<RD53Interface*>(this->fReadoutChipInterface)->ChipErrorReport(cChip);
-                }
-}
-
-void SCurve::saveChipRegisters(int currentRun)
-{
-    const std::string fileReg("Run" + RD53Shared::fromInt2Str(currentRun) + "_");
-
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-        {
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    static_cast<RD53*>(cChip)->copyMaskFromDefault();
-                    if(doUpdateChip == true) static_cast<RD53*>(cChip)->saveRegMap("");
-                    static_cast<RD53*>(cChip)->saveRegMap(fileReg);
-                    std::string command("mv " + cChip->getFileName(fileReg) + " " + this->fDirectoryName);
-                    system(command.c_str());
-                    LOG(INFO) << BOLDBLUE << "\t--> SCurve saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "]" << RESET;
-                }
-
-            if(cOpticalGroup->flpGBT != nullptr)
-            {
-                if(doUpdateChip == true) cOpticalGroup->flpGBT->saveRegMap("");
-                cOpticalGroup->flpGBT->saveRegMap(fileReg);
-                std::string command("mv " + cOpticalGroup->flpGBT->getFileName(fileReg) + " " + this->fDirectoryName);
-                system(command.c_str());
-
-                LOG(INFO) << BOLDBLUE << "\t--> SCurve saved the LpGBT configuration file for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << RESET
-                          << BOLDBLUE << "]" << RESET;
-            }
-        }
 }

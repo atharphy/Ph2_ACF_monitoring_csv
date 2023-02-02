@@ -13,7 +13,9 @@
 #include "RD53PixelAlive.h"
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53GenericDacDacScanHistograms.h"
+#include "DQMUtils/RD53GenericDacDacScanHistograms.h"
+#else
+typedef bool GenericDacDacScanHistograms;
 #endif
 
 // ##############################
@@ -24,10 +26,9 @@ class GenericDacDacScan : public PixelAlive
   public:
     ~GenericDacDacScan()
     {
-#ifdef __USE_ROOT__
         this->WriteRootFile();
         this->CloseResultFile();
-#endif
+        delete histos;
     }
 
     void Running() override;
@@ -35,19 +36,26 @@ class GenericDacDacScan : public PixelAlive
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string& fileRes_, int currentRun);
-    void   initializeFiles(const std::string& fileRes_, int currentRun);
-    void   run();
-    void   draw();
-    void   analyze();
-    size_t getNumberIterations() { return PixelAlive::getNumberIterations() * ((stopValueDAC1 - startValueDAC1) / stepDAC1 + 1) * ((stopValueDAC2 - startValueDAC2) / stepDAC2 + 1); }
-    void   saveChipRegisters(int currentRun);
+    void   localConfigure(const std::string& histoFileName, int currentRun) override;
+    void   run() override;
+    void   draw(bool saveData = true) override;
+    size_t getNumberIterations() override { return PixelAlive::getNumberIterations() * ((stopValueDAC1 - startValueDAC1) / stepDAC1 + 1) * ((stopValueDAC2 - startValueDAC2) / stepDAC2 + 1); }
 
-#ifdef __USE_ROOT__
+    void analyze();
+
     GenericDacDacScanHistograms* histos;
-#endif
 
   private:
+    void fillHisto() override;
+
+    void scanDacDac(const std::string& regNameDAC1, const std::string& regNameDAC2, const std::vector<uint16_t>& dac1List, const std::vector<uint16_t>& dac2List, DetectorDataContainer* theContainer);
+
+    std::vector<uint16_t> dac1List;
+    std::vector<uint16_t> dac2List;
+    DetectorDataContainer theOccContainer;
+    DetectorDataContainer theGenericDacDacScanContainer;
+
+  protected:
     std::string regNameDAC1;
     size_t      startValueDAC1;
     size_t      stopValueDAC1;
@@ -56,24 +64,12 @@ class GenericDacDacScan : public PixelAlive
     size_t      startValueDAC2;
     size_t      stopValueDAC2;
     size_t      stepDAC2;
-
-    std::vector<uint16_t> dac1List;
-    std::vector<uint16_t> dac2List;
-
-    DetectorDataContainer theOccContainer;
-    DetectorDataContainer theGenericDacDacScanContainer;
-
-    void fillHisto();
-    void scanDacDac(const std::string& regNameDAC1, const std::string& regNameDAC2, const std::vector<uint16_t>& dac1List, const std::vector<uint16_t>& dac2List, DetectorDataContainer* theContainer);
-    void chipErrorReport() const;
-
-  protected:
-    std::string fileRes;
-    int         theCurrentRun;
     bool        doUpdateChip;
     bool        doDisplay;
-    bool        isDAC1ChipReg;
-    bool        isDAC2ChipReg;
+
+    int  theCurrentRun;
+    bool isDAC1ChipReg;
+    bool isDAC2ChipReg;
 };
 
 #endif

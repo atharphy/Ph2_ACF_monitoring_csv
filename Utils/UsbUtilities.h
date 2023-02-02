@@ -29,7 +29,7 @@
 #include "easylogging++.h"
 #include "pugixml.hpp"
 
-#include "../HWDescription/Definition.h"
+#include "HWDescription/Definition.h"
 #include "Timer.h"
 #include <bitset>
 #include <fstream>

@@ -10,43 +10,43 @@
 #ifndef SYSTEMCONTROLLER_H
 #define SYSTEMCONTROLLER_H
 
-#include "../HWDescription/Definition.h"
-#include "../HWDescription/OuterTrackerHybrid.h"
-#include "../HWDescription/RD53A.h"
-#include "../HWInterface/BeBoardFWInterface.h"
-#include "../HWInterface/BeBoardInterface.h"
-#include "../HWInterface/CbcInterface.h"
-#include "../HWInterface/ChipInterface.h"
-#include "../HWInterface/CicInterface.h"
-#include "../HWInterface/D19clpGBTInterface.h"
-#include "../HWInterface/MPA2Interface.h"
-#include "../HWInterface/MPAInterface.h"
-#include "../HWInterface/PSInterface.h"
-#include "../HWInterface/RD53lpGBTInterface.h"
-#include "../HWInterface/ReadoutChipInterface.h"
-#include "../HWInterface/SSA2Interface.h"
-#include "../HWInterface/SSAInterface.h"
-#include "../HWInterface/lpGBTInterface.h"
-#include "../MonitorUtils/DetectorMonitorConfig.h"
-#include "../NetworkUtils/TCPClient.h"
-#include "../NetworkUtils/TCPPublishServer.h"
-#include "../Utils/ChannelGroupHandler.h"
-#include "../Utils/ConsoleColor.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/D19SCEventAS.h"
-#include "../Utils/D19cCbc3Event.h"
-#include "../Utils/D19cCbc3EventZS.h"
-#include "../Utils/D19cCic2Event.h"
-#include "../Utils/D19cMPAEvent.h"
-#include "../Utils/D19cPSEventAS.h"
-#include "../Utils/D19cSSA2Event.h"
-#include "../Utils/D19cSSAEvent.h"
-#include "../Utils/Event.h"
-#include "../Utils/FileHandler.h"
-#include "../Utils/Utilities.h"
-#include "../Utils/easylogging++.h"
-#include "FileParser.h"
+#include "HWDescription/Definition.h"
+#include "HWDescription/OuterTrackerHybrid.h"
+#include "HWDescription/RD53A.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/BeBoardInterface.h"
+#include "HWInterface/CbcInterface.h"
+#include "HWInterface/ChipInterface.h"
+#include "HWInterface/CicInterface.h"
+#include "HWInterface/D19clpGBTInterface.h"
+#include "HWInterface/MPA2Interface.h"
+#include "HWInterface/MPAInterface.h"
+#include "HWInterface/PSInterface.h"
+#include "HWInterface/RD53lpGBTInterface.h"
+#include "HWInterface/ReadoutChipInterface.h"
+#include "HWInterface/SSA2Interface.h"
+#include "HWInterface/SSAInterface.h"
+#include "HWInterface/lpGBTInterface.h"
+#include "NetworkUtils/TCPClient.h"
+#include "NetworkUtils/TCPPublishServer.h"
+#include "Parser/DetectorMonitorConfig.h"
+#include "Parser/FileParser.h"
+#include "Utils/ChannelGroupHandler.h"
+#include "Utils/ConsoleColor.h"
+#include "Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/D19SCEventAS.h"
+#include "Utils/D19cCbc3Event.h"
+#include "Utils/D19cCbc3EventZS.h"
+#include "Utils/D19cCic2Event.h"
+#include "Utils/D19cMPAEvent.h"
+#include "Utils/D19cPSEventAS.h"
+#include "Utils/D19cSSA2Event.h"
+#include "Utils/D19cSSAEvent.h"
+#include "Utils/Event.h"
+#include "Utils/FileHandler.h"
+#include "Utils/Utilities.h"
+#include "Utils/easylogging++.h"
 
 #include <boost/any.hpp>
 #include <future>
@@ -73,7 +73,8 @@ class ChannelGroupHandler;
  */
 namespace Ph2_System
 {
-using SettingsMap = std::unordered_map<std::string, boost::any>; /*!< Maps the settings */
+// using SettingsMap = std::unordered_map<std::string, boost::any>; /*!< Maps the settings */
+using BeBoardFWMap = std::map<uint16_t, Ph2_HwInterface::BeBoardFWInterface*>; /*!< Map of Board connected */
 
 /*!
  * \class SystemController
@@ -87,18 +88,19 @@ class SystemController
     Ph2_HwInterface::lpGBTInterface*       flpGBTInterface;       //!< Interface to the LpGBT
     Ph2_HwInterface::CicInterface*         fCicInterface;         //!< Interface to a CIC [only valid for OT]
 
-    DetectorContainer* fDetectorContainer;
-    BeBoardFWMap       fBeBoardFWMap;
-    SettingsMap        fSettingsMap;
-    FileHandler*       fFileHandler;
-    std::string        fRawFileName;
-    bool               fWriteHandlerEnabled;
-    bool               fDQMStreamerEnabled;
-    bool               fMonitorDQMStreamerEnabled;
-    TCPPublishServer*  fDQMStreamer;
-    TCPPublishServer*  fMonitorDQMStreamer;
-    DetectorMonitor*   fDetectorMonitor;
-    TCPClient*         fPowerSupplyClient{nullptr};
+    DetectorContainer*      fDetectorContainer;
+    BeBoardFWMap            fBeBoardFWMap;
+    Ph2_Parser::SettingsMap fSettingsMap;
+    FileHandler*            fFileHandler;
+    std::string             fRawFileName;
+    std::stringstream       fParsedFile;
+    bool                    fWriteHandlerEnabled;
+    bool                    fDQMStreamerEnabled;
+    bool                    fMonitorDQMStreamerEnabled;
+    TCPPublishServer*       fDQMStreamer;
+    TCPPublishServer*       fMonitorDQMStreamer;
+    DetectorMonitor*        fDetectorMonitor;
+    TCPClient*              fPowerSupplyClient{nullptr};
 #ifdef __TCP_SERVER__
     TCPClient* fTestcardClient{nullptr};
 #endif
@@ -121,6 +123,12 @@ class SystemController
      * \brief Destroy the SystemController object: clear the HWDescription Objects, FWInterface etc.
      */
     void Destroy();
+
+    /*!
+     * \brief Allow tool to act on monitoring dqm
+     */
+    void        StopMonitoring();
+    std::string GetMonitorFileName();
 
     /*!
      * \brief Create a FileHandler object with
@@ -349,7 +357,7 @@ class SystemController
 
     void setInterfaceInitialization(uint8_t pCnfg) { fInitializeInterfaces = pCnfg; }
     void disableAllChannels();
-    void DumpFrontendRegisters();
+    void DumpRegisters();
 
   private:
     void SetFuture(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
@@ -358,7 +366,7 @@ class SystemController
     std::future<void>                    fFuture;
     uint32_t                             fEventSize;
     uint32_t                             fNCbc;
-    FileParser                           fParser;
+    Ph2_Parser::FileParser               fParser;
 
     DetectorDataContainer* fChannelGroupHandlerContainer;
 

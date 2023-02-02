@@ -10,34 +10,31 @@
 #ifndef RD53SCurve_H
 #define RD53SCurve_H
 
-#include "../HWDescription/RD53.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerRecycleBin.h"
-#include "../Utils/RD53ChannelGroupHandler.h"
-#include "../Utils/ThresholdAndNoise.h"
-#include "Tool.h"
+#include "HWDescription/RD53.h"
+#include "RD53CalibBase.h"
+#include "Utils/ContainerRecycleBin.h"
+#include "Utils/ThresholdAndNoise.h"
 
 #include <algorithm>
 
 #ifdef __USE_ROOT__
-#include "../DQMUtils/RD53SCurveHistograms.h"
-#include "TApplication.h"
+#include "DQMUtils/RD53SCurveHistograms.h"
+#else
+typedef bool SCurveHistograms;
 #endif
 
 // #####################
 // # SCurve test suite #
 // #####################
-class SCurve : public Tool
+class SCurve : public CalibBase
 {
   public:
     ~SCurve()
     {
         for(auto container: detectorContainerVector) theRecyclingBin.free(container);
-#ifdef __USE_ROOT__
-        if(saveData == true) this->WriteRootFile();
+        if(doSaveData == true) this->WriteRootFile();
         this->CloseResultFile();
-#endif
+        delete histos;
     }
 
     void Running() override;
@@ -45,28 +42,24 @@ class SCurve : public Tool
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void                                   localConfigure(const std::string& fileRes_ = "", int currentRun = -1);
-    void                                   initializeFiles(const std::string& fileRes_ = "", int currentRun = -1);
-    void                                   run();
-    void                                   draw(bool doSaveData = true);
-    std::shared_ptr<DetectorDataContainer> analyze();
-    size_t                                 getNumberIterations() { return theChnGroupHandler->getNumberOfGroups() * nSteps; }
-    void                                   saveChipRegisters(int currentRun);
+    void   localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
+    void   run() override;
+    void   draw(bool saveData = true) override;
+    size_t getNumberIterations() override { return theChnGroupHandler->getNumberOfGroups() * nSteps; }
 
-#ifdef __USE_ROOT__
+    std::shared_ptr<DetectorDataContainer> analyze();
+
     SCurveHistograms* histos;
-#endif
 
   private:
-    std::vector<uint16_t> dacList;
+    void fillHisto() override;
 
+    void computeStats(std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
+
+    std::vector<uint16_t>                  dacList;
     std::vector<DetectorDataContainer*>    detectorContainerVector;
     std::shared_ptr<DetectorDataContainer> theThresholdAndNoiseContainer;
     ContainerRecycleBin<OccupancyAndPh>    theRecyclingBin;
-
-    void fillHisto();
-    void computeStats(std::vector<float>& measurements, int offset, float& nHits, float& mean, float& rms);
-    void chipErrorReport() const;
 
   protected:
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
@@ -86,9 +79,8 @@ class SCurve : public Tool
     bool   doUpdateChip;
     bool   saveBinaryData;
 
-    std::string fileRes;
-    int         theCurrentRun;
-    bool        saveData;
+    int  theCurrentRun;
+    bool doSaveData;
 
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
 };

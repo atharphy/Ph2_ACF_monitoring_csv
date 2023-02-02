@@ -8,13 +8,13 @@
 */
 
 #include "RD53VoltageTuningHistograms.h"
-#include "../Utils/ChipContainerStream.h"
 
 using namespace Ph2_HwDescription;
 
-void VoltageTuningHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& settingsMap)
+void VoltageTuningHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
     ContainerFactory::copyStructure(theDetectorStructure, DetectorData);
+    RD53Shared::setFirstChip(theDetectorStructure);
 
     auto hVoltageDig = CanvasContainer<TH1F>("VoltageDig", "Digital Voltage", 32, 0, 32);
     auto hVoltageAna = CanvasContainer<TH1F>("VoltageAna", "Analog Voltage", 32, 0, 32);

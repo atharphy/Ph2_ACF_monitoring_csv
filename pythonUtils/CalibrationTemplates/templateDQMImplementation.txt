@@ -1,8 +1,8 @@
-#include "../DQMUtils/DQMHistogramCLASS_NAME_TEMPLATE.h"
-#include "../RootUtils/RootContainerFactory.h"
-#include "../Utils/Container.h"
-#include "../Utils/ContainerFactory.h"
-#include "../Utils/ContainerStream.h"
+#include "DQMUtils/DQMHistogramCLASS_NAME_TEMPLATE.h"
+#include "RootUtils/RootContainerFactory.h"
+#include "Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/ContainerStream.h"
 #include "TFile.h"
 
 //========================================================================================================================
@@ -12,7 +12,7 @@ DQMHistogramCLASS_NAME_TEMPLATE::DQMHistogramCLASS_NAME_TEMPLATE() {}
 DQMHistogramCLASS_NAME_TEMPLATE::~DQMHistogramCLASS_NAME_TEMPLATE() {}
 
 //========================================================================================================================
-void DQMHistogramCLASS_NAME_TEMPLATE::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_System::SettingsMap& pSettingsMap)
+void DQMHistogramCLASS_NAME_TEMPLATE::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
 {
     // SoC utilities only - BEGIN
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC

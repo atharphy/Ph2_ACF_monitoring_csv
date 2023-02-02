@@ -12,9 +12,9 @@
 #ifndef __MPAINTERFACE_H__
 #define __MPAINTERFACE_H__
 
-#include "BeBoardFWInterface.h"
-#include "D19clpGBTInterface.h"
-#include "ReadoutChipInterface.h"
+#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/D19clpGBTInterface.h"
+#include "HWInterface/ReadoutChipInterface.h"
 #include "pugixml.hpp"
 #include <vector>
 
@@ -71,9 +71,10 @@ class MPAInterface : public ReadoutChipInterface
 
     bool ConfigureChip(Ph2_HwDescription::Chip* pMPA, bool pVerify = false, uint32_t pBlockSize = 310) override;
 
-    bool     WriteChipReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegName, uint16_t pValue, bool pVerify = true) override;
-    bool     WriteChipMultReg(Ph2_HwDescription::Chip* pMPA, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify = false) override;
-    bool     WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pMPA, const std::string& dacName, ChipContainer& pValue, bool pVerify = false) override;
+    bool WriteChipReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegName, uint16_t pValue, bool pVerify = true) override;
+    bool WriteChipMultReg(Ph2_HwDescription::Chip* pMPA, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify = false) override;
+    bool WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pMPA, const std::string& dacName, const ChipContainer& pValue, bool pVerify = false) override;
+
     uint16_t ReadChipReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegName) override;
 
     void producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
