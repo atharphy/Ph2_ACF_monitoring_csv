@@ -27,12 +27,11 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pBlock
     RD53Interface::WriteChipReg(pChip, "PIX_DEFAULT_CONFIG", 0x9CE2, pVerifLoop);
     RD53Interface::WriteChipReg(pChip, "PIX_DEFAULT_CONFIG_B", 0x631D, pVerifLoop);
 
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
-
     // ######################
     // # Reset Core Columns #
     // ######################
     RD53BInterface::ResetCoreColumns(pRD53);
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     // ##############
     // # Field data #
@@ -315,7 +314,7 @@ void RD53BInterface::ResetCoreColumns(RD53* pRD53)
     {
         for(int i = 0; i < 2; i++)
         {
-            uint16_t value = 0x55 << i;
+            uint16_t value = 0x5555 << i;
             RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL") + suffix, value, false);
             RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL_RESET") + suffix, value, false);
             RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{});
