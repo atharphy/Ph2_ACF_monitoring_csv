@@ -234,10 +234,13 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
 bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
 {
     uint32_t cNevents   = 10;
-    auto     cSetting   = fSettingsMap.find("StubAlignmentThreshold");
-    uint32_t cThreshold = (cSetting != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting->second) : 120;
-    auto     cSetting1  = fSettingsMap.find("StubAlignmentScanStart");
-    uint32_t cScanStart = (cSetting1 != std::end(fSettingsMap)) ? boost::any_cast<uint32_t>(cSetting1->second) : 100;
+    LOG(INFO) << BOLDMAGENTA << "StubAlignmentThreshold" << RESET;
+    //auto     cSetting   = fSettingsMap.find("StubAlignmentThreshold");
+    uint32_t cThreshold = 120;
+    LOG(INFO) << BOLDMAGENTA << "StubAlignmentScanStart" << RESET;
+    //auto     cSetting1  = fSettingsMap.find("StubAlignmentScanStart");
+    uint32_t cScanStart = 100;
+    LOG(INFO) << BOLDMAGENTA << "DNEN" << RESET;
 
     // sparsification of
     bool cSparsified = pBoard->getSparsification();
@@ -256,8 +259,8 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
     // reconfigure fast commands
     // fast command config
     // if PS module want trigger multiplicty to be 3
-    // uint8_t                  cMult            = (cWithPS) ? 2 : 0;
-    uint8_t                  cMult            = 0;
+    uint8_t                  cMult            = (cWithPS) ? 2 : 0;
+   // uint8_t                  cMult            = 0;
     uint8_t                  cTriggerSource   = 6;
     uint16_t                 cDelayAfterReset = 100;
     uint16_t                 cDelayAfterTP    = 200;

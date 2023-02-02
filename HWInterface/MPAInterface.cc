@@ -420,7 +420,7 @@ bool MPAInterface::WriteChipReg(Chip* pMPA, const std::string& pRegName, uint16_
 
     // LOG(INFO) << BOLDRED << "glorpMPA! " << RESET;
 
-    LOG(INFO) << BOLDMAGENTA << " MPAInterface::WriteChipReg writing to " << pRegName << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << " MPAInterface::WriteChipReg writing to " << pRegName << RESET;
 
     // need to or success
     if(pRegName.find("ThDAC_ALL") != std::string::npos || pRegName.find("Threshold") != std::string::npos)

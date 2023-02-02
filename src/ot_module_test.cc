@@ -584,9 +584,13 @@ int main(int argc, char* argv[])
         {
             LOG(INFO) << BOLDBLUE << "Performing time alignment of stub data with L1 data in the BE " << RESET;
             StubBackEndAlignment cStubBackEndAligner;
+LOG(INFO) << BOLDBLUE << "1 " << RESET;
             cStubBackEndAligner.Inherit(&cTool);
+LOG(INFO) << BOLDBLUE << "2 " << RESET;
             cStubBackEndAligner.Start(cRunNumber);
+LOG(INFO) << BOLDBLUE << "3 " << RESET;
             cStubBackEndAligner.waitForRunToBeCompleted();
+LOG(INFO) << BOLDBLUE << "4 " << RESET;
         }
         LOG(INFO) << BOLDRED << "PSAlignment " << RESET;
         // now align data between SSA-MPA
