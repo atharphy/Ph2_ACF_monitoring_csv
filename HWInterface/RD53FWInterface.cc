@@ -280,7 +280,7 @@ void RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
 
         nAttempts++;
         // RD53FWInterface::ResetSlowCmdFIFO(); // @TMP@ : temporary fix untill FIFO error FW fix
-        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
+        // std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP)); // @TMP@ : temporary fix untill FIFO error FW fix
     }
     if(nAttempts == RD53Shared::MAXATTEMPTS)
         LOG(ERROR) << BOLDRED << "Error in the write-command FIFO, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ")" << RESET;
