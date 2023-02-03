@@ -804,33 +804,14 @@ void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
             for(uint8_t cSSAId = 0; cSSAId < 8; cSSAId++)
             {
                 if(cSkipSSA3 && cSSAId == 3) continue;
-                SSA*    cSSA          = new SSA(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid-
+                SSA*    cSSA          = new SSA(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), cSSAId, 0, 0, "./settings/SSAFiles/SSA.txt");
+                uint8_t cSLVSdriveSSA = cSSA->getReg("SLVS_pad_current");
+                cSSA->setOptical(cHybrid->isOptical());
+                cSSA->setMasterId(cHybrid->getMasterId());
+                LOG(INFO) << BOLDMAGENTA << "SSA " << +cSSAId << " current set to " << +cSLVSdriveSSA << "" << RESET;
+                auto cRegItem = cSSA->getRegItem("SLVS_pad_current");
+                (fBeBoardInterface->getFirmwareInterface())->SingleRegisterWrite(cSSA, cRegItem, false);
 
-            bool setSSACurrent = true;
-            for(auto cChip: *cHybrid)
-            {
-                if(cChip->getFrontEndType() == FrontEndType::MPA2)
-                {
-                    setSSACurrent = false;
-                    break;
-                }
-            }
-            if(setSSACurrent)
-            {
-                bool cSkipSSA3 = true; // eventually this needs to be set in the xml somewhere
-                for(uint8_t cSSAId = 0; cSSAId < 8; cSSAId++)
-                {
-                    if(cSkipSSA3 && cSSAId == 3) continue;
-                    continue;
-                    SSA*    cSSA          = new SSA(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), cSSAId, 0, 0, "./settings/SSAFiles/SSA.txt");
-                    uint8_t cSLVSdriveSSA = cSSA->getReg("SLVS_pad_current");
-                    cSSA->setOptical(cHybrid->isOptical());
-                    cSSA->setMasterId(cHybrid->getMasterId());
-                    LOG(INFO) << BOLDMAGENTA << "SSA " << +cSSAId << " current set to " << +cSLVSdriveSSA << "" << RESET;
-                    auto cRegItem = cSSA->getRegItem("SLVS_pad_current");
-                    (fBeBoardInterface->getFirmwareInterface())->SingleRegisterWrite(cSSA, cRegItem, false);
-                }
->>>>>>> e6777331ed358645ed7849921e5ba1b176f1ddcc
             }
 	    }
 
