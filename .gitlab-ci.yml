@@ -347,7 +347,7 @@ run:2S:DS:
     - python ci_tools/status_manager.py 2s_status.txt --set_status 1
     - source ./setup.sh ci
     - cd ci_tools
-    - supervisor -f CMS2S.xml -c calibrationandpedenoise
+    - supervisor -b -f CMS2S.xml -c calibrationandpedenoise
   after_script:
     - python ci_tools/status_manager.py 2s_status.txt --set_status 0
     - cp ci_tools/Results/* .
