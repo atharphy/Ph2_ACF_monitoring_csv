@@ -32,8 +32,8 @@ export CACTUSINCLUDE=$CACTUSROOT/include
 ##########
 # PYTHON #
 ##########
-alias PythonController.py="python ${PH2ACF_BASE_DIR}/pythonUtils/PythonController.py"
-alias fpgaconfig.py="python ${PH2ACF_BASE_DIR}/pythonUtils/fpgaconfig.py"
+alias PythonController.py="python3 ${PH2ACF_BASE_DIR}/pythonUtils/PythonController.py"
+alias fpgaconfig.py="python3 ${PH2ACF_BASE_DIR}/pythonUtils/fpgaconfig.py"
 
 ########
 # ROOT #
