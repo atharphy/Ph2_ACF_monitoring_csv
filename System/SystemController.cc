@@ -55,6 +55,10 @@ void SystemController::Inherit(const SystemController* pController)
     fBeBoardFWMap                 = pController->fBeBoardFWMap;
     fSettingsMap                  = pController->fSettingsMap;
     fFileHandler                  = pController->fFileHandler;
+    fRawFileName                  = pController->fRawFileName;
+    // fParsedFile                   = pController->fParsedFile;
+    fWriteHandlerEnabled          = pController->fWriteHandlerEnabled;
+    fDetectorMonitor              = pController->fDetectorMonitor;
     fDQMStreamerEnabled           = pController->fDQMStreamerEnabled;
     fMonitorDQMStreamerEnabled    = pController->fMonitorDQMStreamerEnabled;
     fDQMStreamer                  = pController->fDQMStreamer;
@@ -63,6 +67,13 @@ void SystemController::Inherit(const SystemController* pController)
     fCicInterface                 = pController->fCicInterface;
     fPowerSupplyClient            = pController->fPowerSupplyClient;
     fChannelGroupHandlerContainer = pController->fChannelGroupHandlerContainer;
+    fEventList                    = pController->fEventList;
+    // fFuture                       = pController->fFuture;
+    fEventSize                    = pController->fEventSize;
+    fNCbc                         = pController->fNCbc;
+    fParser                       = pController->fParser;
+    fSameChannelGroupForAllChannels = pController->fSameChannelGroupForAllChannels;
+    fInitializeInterfaces           = pController->fInitializeInterfaces;
 
 #ifdef __TCP_SERVER__
     fTestcardClient = pController->fTestcardClient;

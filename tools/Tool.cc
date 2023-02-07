@@ -60,6 +60,8 @@ Tool::Tool(THttpServer* pHttpServer)
     , fDirectoryName("")
     , fResultFile(nullptr)
     , fHttpServer(pHttpServer)
+    , fRunNumber(0)
+    , fKeepRunning(false)
     , fSkipMaskedChannels(false)
     , fAllChan(false)
     , fMaskChannelsFromOtherGroups(false)
@@ -173,22 +175,33 @@ void Tool::Inherit(const Tool* pTool)
     fType          = pTool->fType;
     fDirectoryName = pTool->fDirectoryName;
 #ifdef __USE_ROOT__
-    fSummaryTree    = pTool->fSummaryTree;
-    fCanvasMap      = pTool->fCanvasMap;
-    fChipHistMap    = pTool->fChipHistMap;
-    fHybridHistMap  = pTool->fHybridHistMap;
-    fBeBoardHistMap = pTool->fBeBoardHistMap;
+    fSummaryTree          = pTool->fSummaryTree;
+    fCanvasMap            = pTool->fCanvasMap;
+    fChipHistMap          = pTool->fChipHistMap;
+    fHybridHistMap        = pTool->fHybridHistMap;
+    fBeBoardHistMap       = pTool->fBeBoardHistMap;
+    fSummaryTreeParameter = pTool->fSummaryTreeParameter;
+    fSummaryTreeValue     = pTool->fSummaryTreeValue;
 #endif
     fTestGroupChannelMap         = pTool->fTestGroupChannelMap;
+    fRunNumber                   = pTool->fRunNumber;
+    fKeepRunning                 = pTool->fKeepRunning.load();
+    // fRunningFuture               = pTool->fRunningFuture;
     fSkipMaskedChannels          = pTool->fSkipMaskedChannels;
     fAllChan                     = pTool->fAllChan;
+    fMaskForTestGroupChannelMap  = pTool->fMaskForTestGroupChannelMap;
     fMaskChannelsFromOtherGroups = pTool->fMaskChannelsFromOtherGroups;
     fTestPulse                   = pTool->fTestPulse;
     fDoBoardBroadcast            = pTool->fDoBoardBroadcast;
     fDoHybridBroadcast           = pTool->fDoHybridBroadcast;
+    fDirectoryName               = pTool->fDirectoryName;
+    fResultFileName              = pTool->fResultFileName;
+    fUseReadNEvents              = pTool->fUseReadNEvents;
+    fNReadbackEvents             = pTool->fNReadbackEvents;
+    fNormalize                   = pTool->fNormalize;
 
 #ifdef __HTTP__
-    fHttpServer = pTool->fHttpServer;
+                 fHttpServer = pTool->fHttpServer;
 #endif
 }
 
