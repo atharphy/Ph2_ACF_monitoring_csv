@@ -18,6 +18,8 @@ using namespace Ph2_System;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
+std::atomic<bool> Tool::fKeepRunning(false);
+
 Tool::Tool()
     : SystemController()
     ,
@@ -61,7 +63,6 @@ Tool::Tool(THttpServer* pHttpServer)
     , fResultFile(nullptr)
     , fHttpServer(pHttpServer)
     , fRunNumber(0)
-    , fKeepRunning(false)
     , fSkipMaskedChannels(false)
     , fAllChan(false)
     , fMaskChannelsFromOtherGroups(false)
@@ -133,9 +134,9 @@ void Tool::Start(int runNumber)
     InitResultFile("Hybrid");
 #endif
     // doExit       = false;
-    fKeepRunning   = true;
-    fRunNumber     = runNumber;
-    fRunningFuture = std::async(std::launch::async, &Tool::Running, this);
+    Tool::fKeepRunning = true;
+    fRunNumber         = runNumber;
+    fRunningFuture     = std::async(std::launch::async, &Tool::Running, this);
     // std::promise<int> thePromise;
     // fRunningFuture = thePromise.get_future();
     // fRunningThread = std::thread(&Tool::privateRunning, this, std::move(thePromise));
@@ -151,9 +152,9 @@ void Tool::Start(int runNumber)
 
 void Tool::Stop()
 {
-    if(fKeepRunning == true)
+    if(Tool::fKeepRunning == true)
     {
-        fKeepRunning = false;
+        Tool::fKeepRunning = false;
         Tool::waitForRunToBeCompleted();
         // if(fRunningThread.joinable() == true) fRunningThread.join();
         try
@@ -188,7 +189,6 @@ void Tool::Inherit(const Tool* pTool)
 #endif
     fTestGroupChannelMap = pTool->fTestGroupChannelMap;
     fRunNumber           = pTool->fRunNumber;
-    fKeepRunning         = pTool->fKeepRunning.load();
     // fRunningFuture               = pTool->fRunningFuture;
     fSkipMaskedChannels          = pTool->fSkipMaskedChannels;
     fAllChan                     = pTool->fAllChan;

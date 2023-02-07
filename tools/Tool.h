@@ -425,9 +425,9 @@ class Tool : public Ph2_System::SystemController
     THttpServer* fHttpServer;
 #endif
 
-    int               fRunNumber;
-    std::atomic<bool> fKeepRunning;
-    std::future<void> fRunningFuture;
+    static std::atomic<bool> fKeepRunning;
+    int                      fRunNumber;
+    std::future<void>        fRunningFuture;
     // bool                        doExit;
     // std::thread                 fRunningThread;
     // std::future<int>            fRunningFuture;
