@@ -353,17 +353,17 @@
         >
             <Channel ID="LV_Module3" Channel="3" InUse="Yes" />
         </PowerSupply>
-        <!-- <PowerSupply
+        <PowerSupply
             ID="MyIsegSHR4220"
             Type="HV"
         >
             <Channel ID="HV_Module1" Channel="1" InUse="Yes" />
-        </PowerSupply> -->
-        <PowerSupply
+        </PowerSupply>
+        <!-- <PowerSupply
             ID="MyKeithley"
             Type="HV"
         >
             <Channel ID="HV_Rear" Channel="REAR" InUse="Yes" />
-        </PowerSupply>
+        </PowerSupply> -->
     </Devices>
 </HwDescription>

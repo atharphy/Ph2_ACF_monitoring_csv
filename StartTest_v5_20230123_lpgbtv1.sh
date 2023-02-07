@@ -26,7 +26,7 @@ then
     exit -1
 fi
 
-cd /home/Felix/Ph2_ACF
+cd /home/l_tester/felix/Ph2_ACF
 source setup.sh 
 
 TIME=`date +"%Y-%m-%d_%H-%M-%S"`
@@ -52,7 +52,7 @@ SEHTest -f settings/2S_SEH_crate.xml --test-external-pattern 202 --fcmd-pattern 
 	#mux_setup -f settings/mux_setup.xml --mux_configure 0,$slot | tee -a logs/Logfile_${hybridID}_${TIME}.log
 #    SEHTest -f settings/2S_SEH.xml --test-external-pattern 202 --fcmd-pattern 170 --test-fcmd --test-clock  -a -r -v --i2c 10000 -b --hybridId ${hybridID}_withLoad --output Results/SEH_${hybridID}_${TIME}/ --leftLoad 2000 --rightLoad 2000 | tee -a logs/Logfile_withLoad_${hybridID}_${TIME}.log
 #fi 
-mux_setup -f settings/2S_SEH_crate.xml --mux_disconnect 0,$slot | tee -a logs/Logfile_${hybridID}_${TIME}.log
+mux_setup -f settings/2S_SEH_crate.xml --mux_disconnect | tee -a logs/Logfile_${hybridID}_${TIME}.log
 
 RESULTDIR=`ls Results -t | head -1`
 

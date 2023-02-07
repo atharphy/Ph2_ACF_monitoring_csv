@@ -198,7 +198,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     if(!fPowerSupplyClient->connect(1))
     {
         LOG(INFO) << BOLDYELLOW << "Cannot connect to the Power Supply Server, power supplies will need to be controlled manually" << RESET;
-        //FIX ME!! delete fPowerSupplyClient;
+        // FIX ME!! delete fPowerSupplyClient;
         fPowerSupplyClient = nullptr;
     }
     else
