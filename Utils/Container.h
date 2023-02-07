@@ -23,6 +23,7 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/vector.hpp>
+#include <boost/serialization/base_object.hpp>
 
 class ChannelContainerBase;
 template <typename T>
@@ -302,6 +303,11 @@ class ChipContainer : public BaseContainer
             delete container_;
             container_ = nullptr;
         }
+    }
+
+    ChannelContainerBase* getChannelContainer()
+    {
+        return container_;
     }
 
   protected:

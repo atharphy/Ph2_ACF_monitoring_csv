@@ -384,13 +384,13 @@ void PedeNoise::Validate()
 #ifdef __USE_ROOT__
     fDQMHistogramPedeNoise.fillValidationPlots(theOccupancyContainer);
 #else
-    auto theOccupancyStream = prepareHybridContainerStreamer<Occupancy, Occupancy, Occupancy>();
-    // auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
+    // auto theOccupancyStream = prepareHybridContainerStreamer<Occupancy, Occupancy, Occupancy>();
+    // // auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
 
-    for(auto board: theOccupancyContainer)
-    {
-        if(fDQMStreamerEnabled) theOccupancyStream->streamAndSendBoard(board, fDQMStreamer);
-    }
+    // for(auto board: theOccupancyContainer)
+    // {
+    //     if(fDQMStreamerEnabled) theOccupancyStream->streamAndSendBoard(board, fDQMStreamer);
+    // }
 #endif
     for(auto cBoard: *fDetectorContainer)
     {
@@ -606,31 +606,40 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
             // int varIn1 = 42;
             // float varIn2 = 3.14;
             // std::cout << theOccupancyContainer->at(0)->at(0)->at(0)->at(1)->getId() << " - " << theOccupancyContainer->getSummary<Occupancy>().fOccupancy << " - " << varIn1 << " - " << varIn2 << std::endl;
-            // ContainerSerialization theContainerSerialization;
-            // const std::string myStream = theContainerSerialization.serializeContainer(calibrationName, *theOccupancyContainer, varIn1, varIn2);
-
+            // ContainerSerialization outputContainerSerialization(calibrationName);
+            // const std::string myStream = outputContainerSerialization.serializeDetectorContainer(*theOccupancyContainer, varIn1, varIn2);
 
             // int varOut1;
             // float varOut2;
-            // DetectorDataContainer theOutputOccupancy;
-            // ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, theOutputOccupancy);
-            // std::cout << theContainerSerialization.deserializeIntoContainer(myStream, calibrationName, theOutputOccupancy, varOut1, varOut2) << std::endl;
-            // std::cout << theOutputOccupancy.at(0)->at(0)->at(0)->at(1)->getId() << " - " << theOutputOccupancy.getSummary<Occupancy>().fOccupancy << " - " << varOut1 << " - " << varOut2 << std::endl;
+            // ContainerSerialization inputContainerSerialization(calibrationName);
+            // if(inputContainerSerialization.attachDeserializer(myStream))
+            // {
+            //     DetectorDataContainer theOutputOccupancy = inputContainerSerialization.deserializeDetectorContainer<Occupancy,Occupancy,Occupancy,Occupancy,Occupancy,Occupancy>(fDetectorContainer, varOut1, varOut2);
+            //     std::cout << theOutputOccupancy.at(0)->at(0)->at(0)->at(1)->getId() << " - " << theOutputOccupancy.getSummary<Occupancy>().fOccupancy << " - " << varOut1 << " - " << varOut2 << std::endl;
+            // }
 
 
 #ifdef __USE_ROOT__
             if(fPlotSCurves) fDQMHistogramPedeNoise.fillSCurvePlots(cStripValue, cPixelValue, *theOccupancyContainer);
 #else
-            if(fPlotSCurves)
+            if(fDQMStreamerEnabled)
             {
-                auto theSCurveStreamer = prepareChannelContainerStreamer<Occupancy, uint16_t, uint16_t>("SCurve");
-                theSCurveStreamer->setHeaderElement<0>(cStripValue);
-                theSCurveStreamer->setHeaderElement<1>(cPixelValue);
-                for(auto board: *theOccupancyContainer)
+                if(fPlotSCurves)
                 {
-                    if(fDQMStreamerEnabled) theSCurveStreamer->streamAndSendBoard(board, fDQMStreamer);
+                    ContainerSerialization outputContainerSerialization("PedeNoiseSCurve");
+                    outputContainerSerialization.streamByHybridContainer(fDQMStreamer, *theOccupancyContainer, cStripValue, cPixelValue);
                 }
             }
+            // if(fPlotSCurves)
+            // {
+            //     auto theSCurveStreamer = prepareChannelContainerStreamer<Occupancy, uint16_t, uint16_t>("SCurve");
+            //     theSCurveStreamer->setHeaderElement<0>(cStripValue);
+            //     theSCurveStreamer->setHeaderElement<1>(cPixelValue);
+            //     for(auto board: *theOccupancyContainer)
+            //     {
+            //         if(fDQMStreamerEnabled) theSCurveStreamer->streamAndSendBoard(board, fDQMStreamer);
+            //     }
+            // }
 #endif
 
             auto cStripDistanceFromTarget = std::fabs(std::min(cStripGlobalOccupancy, cMaxOccupancy) - (cLimits[cCounter]));
@@ -941,11 +950,11 @@ void PedeNoise::producePedeNoisePlots()
     }
 
 #else
-    auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
-    for(auto board: *fThresholdAndNoiseContainer)
-    {
-        if(fDQMStreamerEnabled) { theThresholdAndNoiseStream->streamAndSendBoard(board, fDQMStreamer); }
-    }
+    // auto theThresholdAndNoiseStream = prepareChannelContainerStreamer<ThresholdAndNoise>();
+    // for(auto board: *fThresholdAndNoiseContainer)
+    // {
+    //     if(fDQMStreamerEnabled) { theThresholdAndNoiseStream->streamAndSendBoard(board, fDQMStreamer); }
+    // }
 #endif
 }
 

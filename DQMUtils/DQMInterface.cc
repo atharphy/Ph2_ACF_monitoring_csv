@@ -3,6 +3,7 @@
 #include "NetworkUtils/TCPSubscribeClient.h"
 #include "Parser/FileParser.h"
 #include "Utils/ObjectStream.h"
+#include "Utils/ContainerSerialization.h"
 
 #include "TFile.h"
 
@@ -108,9 +109,11 @@ void DQMInterface::stopProcessingData(void)
 //========================================================================================================================
 bool DQMInterface::running()
 {
-    CheckStream* theCurrentStream;
+    // CheckStream* theCurrentStream;
     // int               packetNumber = -1;
     std::vector<char> tmpDataBuffer;
+    PacketHeader thePacketHeader;
+    uint8_t packerHeaderSize = thePacketHeader.getPacketHeaderSize();
 
     while(fRunning)
     {
@@ -136,24 +139,23 @@ bool DQMInterface::running()
         LOG(DEBUG) << "Data buffer size: " << fDataBuffer.size() << RESET;
         while(fDataBuffer.size() > 0)
         {
-            if(fDataBuffer.size() < sizeof(CheckStream))
+            if(fDataBuffer.size() < packerHeaderSize)
             {
                 LOG(WARNING) << BOLDBLUE << "Not enough bytes to retrieve data stream" << RESET;
                 break; // Not enough bytes to retreive the packet size
             }
-            theCurrentStream = reinterpret_cast<CheckStream*>(&fDataBuffer.at(0));
-            LOG(DEBUG) << "Packet number received = " << int(theCurrentStream->getPacketNumber()) << RESET;
+            uint32_t packetSize = thePacketHeader.getPacketSize(fDataBuffer);
 
-            LOG(DEBUG) << "Vector size  = " << fDataBuffer.size() << "; expected = " << theCurrentStream->getPacketSize() << RESET;
+            LOG(DEBUG) << "Vector size  = " << fDataBuffer.size() << "; expected = " << packetSize << RESET;
 
-            if(fDataBuffer.size() < theCurrentStream->getPacketSize())
+            if(fDataBuffer.size() < packetSize)
             {
                 LOG(DEBUG) << "Packet not completed, waiting" << RESET;
                 break;
             }
 
-            std::vector<char> streamDataBuffer(fDataBuffer.begin(), fDataBuffer.begin() + theCurrentStream->getPacketSize());
-            fDataBuffer.erase(fDataBuffer.begin(), fDataBuffer.begin() + theCurrentStream->getPacketSize());
+            std::vector<char> streamDataBuffer(fDataBuffer.begin() + packerHeaderSize, fDataBuffer.begin() + packetSize);
+            fDataBuffer.erase(fDataBuffer.begin(), fDataBuffer.begin() + packetSize);
 
             for(auto dqmHistogrammer: fDQMHistogrammerVector)
                 if(dqmHistogrammer->fill(streamDataBuffer)) break;

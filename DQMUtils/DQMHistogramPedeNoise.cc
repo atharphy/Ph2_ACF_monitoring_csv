@@ -25,6 +25,7 @@
 #include "Utils/Occupancy.h"
 #include "Utils/ThresholdAndNoise.h"
 #include "Utils/Utilities.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 
@@ -215,37 +216,51 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
 //========================================================================================================================
 bool DQMHistogramPedeNoise::fill(std::vector<char>& dataBuffer)
 {
-    HybridContainerStream<Occupancy, Occupancy, Occupancy> theOccupancy("PedeNoise");
-    ChannelContainerStream<Occupancy, uint16_t, uint16_t>  theSCurve("PedeNoiseSCurve");
-    ChannelContainerStream<ThresholdAndNoise>              theThresholdAndNoiseStream("PedeNoise");
+    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
+    // std::cout << __PRETTY_FUNCTION__ << std::endl <<inputStream << std::endl << std::endl;
 
-    if(theOccupancy.attachBuffer(&dataBuffer))
-    {
-        std::cout << "Matched PedeNoise Occupancy!!!!!\n";
-        theOccupancy.decodeData(fDetectorData);
-        fillValidationPlots(fDetectorData);
+    ContainerSerialization theSCurveSerialization("PedeNoiseSCurve");
 
-        fDetectorData.cleanDataStored();
-        return true;
-    }
-    else if(theSCurve.attachBuffer(&dataBuffer))
+    if(theSCurveSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched PedeNoise SCurve!!!!!\n";
-        theSCurve.decodeChipData(fDetectorData);
-        fillSCurvePlots(theSCurve.getHeaderElement<0>(), theSCurve.getHeaderElement<1>(), fDetectorData);
-
-        fDetectorData.cleanDataStored();
+        uint16_t cStripValue, cPixelValue;
+        DetectorDataContainer fDetectorData = theSCurveSerialization.deserializeHybridContainer<Occupancy,Occupancy,Occupancy>(fDetectorContainer, cStripValue, cPixelValue);
+        fillSCurvePlots(cStripValue, cPixelValue, fDetectorData);
         return true;
     }
-    else if(theThresholdAndNoiseStream.attachBuffer(&dataBuffer))
-    {
-        std::cout << "Matched PedeNoise ThresholdAndNoise!!!!!\n";
-        theThresholdAndNoiseStream.decodeChipData(fDetectorData);
-        fillPedestalAndNoisePlots(fDetectorData);
 
-        fDetectorData.cleanDataStored();
-        return true;
-    }
+    // HybridContainerStream<Occupancy, Occupancy, Occupancy> theOccupancy("PedeNoise");
+    // ChannelContainerStream<Occupancy, uint16_t, uint16_t>  theSCurve("PedeNoiseSCurve");
+    // ChannelContainerStream<ThresholdAndNoise>              theThresholdAndNoiseStream("PedeNoise");
+
+    // if(theOccupancy.attachBuffer(&dataBuffer))
+    // {
+    //     std::cout << "Matched PedeNoise Occupancy!!!!!\n";
+    //     theOccupancy.decodeData(fDetectorData);
+    //     fillValidationPlots(fDetectorData);
+
+    //     fDetectorData.cleanDataStored();
+    //     return true;
+    // }
+    // else if(theSCurve.attachBuffer(&dataBuffer))
+    // {
+    //     std::cout << "Matched PedeNoise SCurve!!!!!\n";
+    //     theSCurve.decodeChipData(fDetectorData);
+    //     fillSCurvePlots(theSCurve.getHeaderElement<0>(), theSCurve.getHeaderElement<1>(), fDetectorData);
+
+    //     fDetectorData.cleanDataStored();
+    //     return true;
+    // }
+    // else if(theThresholdAndNoiseStream.attachBuffer(&dataBuffer))
+    // {
+    //     std::cout << "Matched PedeNoise ThresholdAndNoise!!!!!\n";
+    //     theThresholdAndNoiseStream.decodeChipData(fDetectorData);
+    //     fillPedestalAndNoisePlots(fDetectorData);
+
+    //     fDetectorData.cleanDataStored();
+    //     return true;
+    // }
 
     return false;
 }
@@ -818,6 +833,7 @@ void DQMHistogramPedeNoise::fillSCurvePlots(uint16_t pStripTh, uint16_t pPixelTh
                                                      ->getChannel<HistContainer<TH1F>>(cChannelNumber)
                                                      .fTheHistogram;
                             }
+                            // std::cout << "Threshold = " << cTh + 1 << " - Occupancy = " <<  tmpOccupancy << std::endl;
                             cChannelSCurve->SetBinContent(cTh + 1, tmpOccupancy);
                             cChannelSCurve->SetBinError(cTh + 1, tmpOccupancyError);
                         }

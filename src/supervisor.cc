@@ -20,6 +20,7 @@
 #include <unistd.h>
 
 #include <TApplication.h>
+#include "TROOT.h"
 
 #include "Utils/easylogging++.h"
 
@@ -208,12 +209,12 @@ int main(int argc, char* argv[])
     // int main ( int argc, char* argv[] )
     // std::cout << argc << "-" << argv[2] << std::endl;
     // exit(0);
-    int   tAppArgc = 1;
-    char* tAppArgv[2];
-    tAppArgv[0] = argv[0];
-    tAppArgv[1] = (char*)"-b";
-    if(batchMode) tAppArgc = 2;
-    TApplication theApp("App", &tAppArgc, tAppArgv);
+    TApplication cApp("Root Application", &argc, argv);
+
+    if(batchMode)
+        gROOT->SetBatch(true);
+    else
+        TQObject::Connect("TCanvas", "Closed()", "TApplication", &cApp, "Terminate()");
 
     DQMInterface        theDQMInterface;
     MonitorDQMInterface theMonitorDQMInterface;
@@ -343,7 +344,7 @@ int main(int argc, char* argv[])
     checkExitStatus(runControllerStatus, "RunController");
     // checkExitStatus(dqmControllerStatus,"DQMController");
 
-    theApp.Run();
+    if(!batchMode) cApp.Run();
 
     return EXIT_SUCCESS;
 }

@@ -26,7 +26,6 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/base_object.hpp>
 
-class ChannelDataContainerBase;
 template <typename T>
 class ChannelContainer;
 class ChipContainer;
@@ -336,7 +335,7 @@ class BaseDataContainer
     template<class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        // std::cout<<__PRETTY_FUNCTION__<<__LINE__<<std::endl;
+        // std::cout<<__PRETTY_FUNCTION__<<__LINE__ << " pointer " << this <<std::endl;
         // if(summary_ != nullptr)
         // {
         //     int32_t     status;
@@ -439,11 +438,11 @@ class DataContainer
         theArchive & boost::serialization::base_object<Container<T>>(*this);
         // std::cout << __PRETTY_FUNCTION__ << __LINE__ << this << std::endl;
         // std::cout << __PRETTY_FUNCTION__ << __LINE__ << " Size = " << this->size() << std::endl;
-        for(auto& subContainer: *this)
-        {
-            // std::cout << __PRETTY_FUNCTION__ << __LINE__ << " ID = " << subContainer->getId() << std::endl;
-            theArchive & subContainer;
-        }
+        // for(auto& subContainer : *this)
+        // {
+        //     // std::cout << __PRETTY_FUNCTION__ << __LINE__ << " ID = " << subContainer->getId() << std::endl;
+        //     theArchive & subContainer;
+        // }
     }
 };
 
@@ -513,12 +512,23 @@ class ChipDataContainer
     void initialize()
     {
         if(!std::is_same<S, EmptyContainer>::value) summary_ = new Summary<S, V>();
-        if(!std::is_same<V, EmptyContainer>::value) container_ = new ChannelDataContainer<V>(nOfRows_ * nOfCols_);
+        initializeChannels<V>();
     }
     template <typename S, typename V>
     void initialize(S& theSummary, V& initialValue)
     {
         if(!std::is_same<S, EmptyContainer>::value) summary_ = new Summary<S, V>(theSummary);
+        initializeChannels<V>(initialValue);
+    }
+
+    template <typename V>
+    void initializeChannels()
+    {
+        if(!std::is_same<V, EmptyContainer>::value) container_ = new ChannelDataContainer<V>(nOfRows_ * nOfCols_);
+    }
+    template <typename V>
+    void initializeChannels(V& initialValue)
+    {
         if(!std::is_same<V, EmptyContainer>::value) container_ = new ChannelDataContainer<V>(nOfRows_ * nOfCols_, initialValue);
     }
 
@@ -584,6 +594,7 @@ class ChipDataContainer
     template<class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {   
+        std::cout<<__PRETTY_FUNCTION__<<__LINE__ << " Chip pointer " << this <<std::endl;
         // std::cout<<__PRETTY_FUNCTION__<<__LINE__<<std::endl;
         theArchive & id_;
         // std::cout<<__PRETTY_FUNCTION__<<__LINE__<<std::endl;
@@ -626,6 +637,7 @@ class HybridDataContainer : public DataContainer<ChipDataContainer>
     template<class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {   
+        std::cout<<__PRETTY_FUNCTION__<<__LINE__ << " Hybrid pointer " << this <<std::endl;
         theArchive & boost::serialization::base_object<DataContainer<ChipDataContainer>>(*this);
     }
 };
