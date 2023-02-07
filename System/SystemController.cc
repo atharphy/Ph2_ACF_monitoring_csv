@@ -49,13 +49,13 @@ SystemController::~SystemController() {}
 
 void SystemController::Inherit(const SystemController* pController)
 {
-    fBeBoardInterface             = pController->fBeBoardInterface;
-    fReadoutChipInterface         = pController->fReadoutChipInterface;
-    flpGBTInterface               = pController->flpGBTInterface;
-    fBeBoardFWMap                 = pController->fBeBoardFWMap;
-    fSettingsMap                  = pController->fSettingsMap;
-    fFileHandler                  = pController->fFileHandler;
-    fRawFileName                  = pController->fRawFileName;
+    fBeBoardInterface     = pController->fBeBoardInterface;
+    fReadoutChipInterface = pController->fReadoutChipInterface;
+    flpGBTInterface       = pController->flpGBTInterface;
+    fBeBoardFWMap         = pController->fBeBoardFWMap;
+    fSettingsMap          = pController->fSettingsMap;
+    fFileHandler          = pController->fFileHandler;
+    fRawFileName          = pController->fRawFileName;
     // fParsedFile                   = pController->fParsedFile;
     fWriteHandlerEnabled          = pController->fWriteHandlerEnabled;
     fDetectorMonitor              = pController->fDetectorMonitor;
@@ -69,9 +69,9 @@ void SystemController::Inherit(const SystemController* pController)
     fChannelGroupHandlerContainer = pController->fChannelGroupHandlerContainer;
     fEventList                    = pController->fEventList;
     // fFuture                       = pController->fFuture;
-    fEventSize                    = pController->fEventSize;
-    fNCbc                         = pController->fNCbc;
-    fParser                       = pController->fParser;
+    fEventSize                      = pController->fEventSize;
+    fNCbc                           = pController->fNCbc;
+    fParser                         = pController->fParser;
     fSameChannelGroupForAllChannels = pController->fSameChannelGroupForAllChannels;
     fInitializeInterfaces           = pController->fInitializeInterfaces;
 

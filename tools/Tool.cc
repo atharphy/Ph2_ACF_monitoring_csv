@@ -151,18 +151,21 @@ void Tool::Start(int runNumber)
 
 void Tool::Stop()
 {
-    fKeepRunning = false;
-    Tool::waitForRunToBeCompleted();
-    // if(fRunningThread.joinable() == true) fRunningThread.join();
-    try
+    if(fKeepRunning == true)
     {
-        fRunningFuture.get();
+        fKeepRunning = false;
+        Tool::waitForRunToBeCompleted();
+        // if(fRunningThread.joinable() == true) fRunningThread.join();
+        try
+        {
+            fRunningFuture.get();
+        }
+        catch(const std::exception& e)
+        {
+            throw std::runtime_error(e.what());
+        }
+        SystemController::Stop();
     }
-    catch(const std::exception& e)
-    {
-        throw std::runtime_error(e.what());
-    }
-    SystemController::Stop();
 }
 
 void Tool::Inherit(const Tool* pTool)
@@ -183,9 +186,9 @@ void Tool::Inherit(const Tool* pTool)
     fSummaryTreeParameter = pTool->fSummaryTreeParameter;
     fSummaryTreeValue     = pTool->fSummaryTreeValue;
 #endif
-    fTestGroupChannelMap         = pTool->fTestGroupChannelMap;
-    fRunNumber                   = pTool->fRunNumber;
-    fKeepRunning                 = pTool->fKeepRunning.load();
+    fTestGroupChannelMap = pTool->fTestGroupChannelMap;
+    fRunNumber           = pTool->fRunNumber;
+    fKeepRunning         = pTool->fKeepRunning.load();
     // fRunningFuture               = pTool->fRunningFuture;
     fSkipMaskedChannels          = pTool->fSkipMaskedChannels;
     fAllChan                     = pTool->fAllChan;
@@ -201,7 +204,7 @@ void Tool::Inherit(const Tool* pTool)
     fNormalize                   = pTool->fNormalize;
 
 #ifdef __HTTP__
-                 fHttpServer = pTool->fHttpServer;
+    fHttpServer = pTool->fHttpServer;
 #endif
 }
 
