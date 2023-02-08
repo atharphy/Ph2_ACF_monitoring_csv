@@ -10,8 +10,21 @@
 #include "NetworkUtils/TCPPublishServer.h"
 
 class Occupancy;
-BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<Occupancy,Occupancy>)))
+class ThresholdAndNoise;
+class EmptyContainer;
+
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((ChannelDataContainer<Occupancy>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((ChannelDataContainer<ThresholdAndNoise>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((ChannelDataContainer<uint8_t>)))
+
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<Occupancy,Occupancy>)))
+
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<ThresholdAndNoise,ThresholdAndNoise>)))
+
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<uint16_t,EmptyContainer>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer,EmptyContainer>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer,uint8_t>)))
+
 
 #include "Utils/Occupancy.h"
 #include <iostream>
@@ -20,7 +33,7 @@ BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((ChannelDataContainer<Occupancy>)))
 class PacketHeader
 {
   public:
-    PacketHeader(){};
+    PacketHeader(){for(uint8_t i=0; i<SIZE; ++i) fPacketSize[i]=0u;};
     ~PacketHeader(){};
 
     uint8_t getPacketHeaderSize() {return SIZE;}
@@ -59,13 +72,13 @@ class PacketHeader
             throw std::runtime_error(outputMessage);
         }
         uint32_t    localPacketSize = htonl(packetSize);
-        for(uint8_t i=0; i<SIZE; ++i) fPacketSize[i] = (localPacketSize >> (8*i)) & 0xff;
+        for(uint8_t i=0u; i<SIZE; ++i) fPacketSize[i] = ((localPacketSize >> (8u*i)) & 0xff);
     }
 
     uint32_t getPacketSize()
     {
         uint32_t localPacketSize = 0;
-        for(uint8_t i=0; i<SIZE; ++i) localPacketSize += (fPacketSize[i] << (8*i));
+        for(uint8_t i=0; i<SIZE; ++i) localPacketSize += ((fPacketSize[i] & 0xff) << (8u*i));
         return htonl(localPacketSize);
     }
 
@@ -113,6 +126,15 @@ class ContainerSerialization
     // !!! ---------------------------------------------------------------------------- !!! //
     // Stream
     // !!! ---------------------------------------------------------------------------- !!! //
+    template<typename... Args>
+    void streamByDetectorContainer(TCPPublishServer* networkStreamer, DetectorDataContainer& theInputContainer, Args&... extraArguments) const
+    {
+        std::string myStream = serializeDetectorContainer(theInputContainer, extraArguments...);
+        PacketHeader thePacketHeader;
+        thePacketHeader.addPacketHeader(myStream);
+        networkStreamer->broadcast(myStream);
+    }
+
     template<typename... Args>
     void streamByBoardContainer(TCPPublishServer* networkStreamer, DetectorDataContainer& theInputContainer, Args&... extraArguments) const
     {
@@ -262,24 +284,6 @@ class ContainerSerialization
         return ouputStream.str();
     }
 
-    // template<typename... Args>
-    // std::string serializeChannelContainer(ChipDataContainer* theInputContainer, uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, Args&... extraArguments) const
-    // {
-    //     std::ostringstream ouputStream;
-    //     boost::archive::text_oarchive theArchive(ouputStream);
-    //     uint16_t id = theInputContainer->getId();
-
-    //     theArchive << fCalibrationName;
-    //     theArchive << boardId;
-    //     theArchive << opticalGroupId;
-    //     theArchive << hybridId;
-    //     theArchive << id;
-    //     theArchive << theInputContainer->getChannelContainer();
-
-    //     serializeExtraArguments(theArchive, extraArguments...);
-    //     return ouputStream.str();
-    // }
-
     // !!! ---------------------------------------------------------------------------- !!! //
     // Deserialize
     // !!! ---------------------------------------------------------------------------- !!! //
@@ -295,6 +299,8 @@ class ContainerSerialization
         theArchive >> inputCalibrationName;
         theArchive >> theOutputContainer;
         serializeExtraArguments(theArchive, extraArguments...);
+
+        theOutputContainer.remapIdtoPointer();
         return theOutputContainer;
     }
 
@@ -326,6 +332,8 @@ class ContainerSerialization
         }
         theArchive >> board;
         serializeExtraArguments(theArchive, extraArguments...);
+
+        theOutputContainer.remapIdtoPointer();
         return theOutputContainer;
     }
 
@@ -357,6 +365,8 @@ class ContainerSerialization
 
         theArchive >> opticalGroup;
         serializeExtraArguments(theArchive, extraArguments...);
+
+        theOutputContainer.remapIdtoPointer();
         return theOutputContainer;
     }
 
@@ -376,40 +386,17 @@ class ContainerSerialization
         theArchive >> opticalGroupId;
         theArchive >> hybridId;
 
-        // HybridDataContainer& hybrid = *theOutputContainer.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId);
-        HybridDataContainer hybrid;
-        // hybrid.initialize<SH, SC>();
-        std::cout<<__PRETTY_FUNCTION__<<__LINE__ << " hybrid pointer " << &hybrid <<std::endl;
-        // for(auto chip : hybrid)
-        // {
-        //     chip->initialize<SC, T>();
-        //     std::cout<<__PRETTY_FUNCTION__<<__LINE__ << " chip pointer " << chip <<std::endl;
-        // }
-        std::cout << __PRETTY_FUNCTION__ << "number of chips before = " << theOutputContainer.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->size()<< std::endl;
-
+        HybridDataContainer& hybrid = *theOutputContainer.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId);
+        hybrid.initialize<SH, SC>();
+        for(auto chip : hybrid)
+        {
+            chip->initialize<SC, T>();
+        }
+       
         theArchive >> hybrid;
         serializeExtraArguments(theArchive, extraArguments...);
 
-
-        std::cout << __PRETTY_FUNCTION__ << "number of chips after = " << theOutputContainer.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->size()<< std::endl;
-        // std::cout << __PRETTY_FUNCTION__ << std::endl;
-        // std::cout << __PRETTY_FUNCTION__ << std::endl;
-        // std::cout << boardId << " | " << opticalGroupId << " | " << hybridId << " | " << std::endl;
-        // std::cout << "theOutputContainer content" << std::endl;
-        // std::cout << "Hybrid occupancy " << theOutputContainer.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getSummary<Occupancy>().fOccupancy << std::endl;
-        // std::cout << "Chip occupancy " << theOutputContainer.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(0)->getSummary<Occupancy>().fOccupancy << std::endl;
-        // for(auto channel : *theOutputContainer.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(0)->getChannelContainer<Occupancy>()) std::cout << channel.fOccupancy << " ";
-        // std::cout << std::endl;
-        // std::cout << "chip content" << std::endl;
-        // std::cout << "Hybrid occupancy " << hybrid.getSummary<Occupancy>().fOccupancy << std::endl;
-        std::cout << "Chip occupancy " << hybrid.getObject(0)->getSummary<Occupancy>().fOccupancy << std::endl;
-        // for(auto channel : *hybrid.getObject(0)->getChannelContainer<Occupancy>()) std::cout << channel.fOccupancy << " ";
-        // std::cout << std::endl;
-        // std::cout<<__PRETTY_FUNCTION__<<__LINE__ << " hybrid pointer " << theOutputContainer.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId) <<std::endl;
-        // std::cout<<__PRETTY_FUNCTION__<<__LINE__ << " chip pointer " << theOutputContainer.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(0) <<std::endl;
-        // std::cout<<__PRETTY_FUNCTION__<<__LINE__ << " chip pointer " << theOutputContainer.getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(1) <<std::endl;
-
-
+        theOutputContainer.remapIdtoPointer();
         return theOutputContainer;
     }
 
@@ -437,6 +424,7 @@ class ContainerSerialization
         theArchive >> chip;
         serializeExtraArguments(theArchive, extraArguments...);
 
+        theOutputContainer.remapIdtoPointer();
         return theOutputContainer;
     }
 

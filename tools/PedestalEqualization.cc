@@ -7,7 +7,7 @@
 #include "Utils/MPAChannelGroupHandler.h"
 #include "Utils/Occupancy.h"
 #include "Utils/SSAChannelGroupHandler.h"
-// #include "Utils/ContainerSerialization.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_System;
 using namespace Ph2_HwDescription;
@@ -346,10 +346,10 @@ void PedestalEqualization::FindVplus()
 #ifdef __USE_ROOT__
     fDQMHistogramPedestalEqualization.fillVplusPlots(theVcthContainer);
 #else
-    auto theVCthStream = prepareHybridContainerStreamer<EmptyContainer, uint16_t, EmptyContainer>();
-    for(auto board: theVcthContainer)
+    if(fDQMStreamerEnabled)
     {
-        if(fDQMStreamerEnabled) theVCthStream->streamAndSendBoard(board, fDQMStreamer);
+        ContainerSerialization theContainerSerialization("PedestalEqualizationVCth");
+        theContainerSerialization.streamByHybridContainer(fDQMStreamer, theVcthContainer);
     }
 #endif
 
@@ -484,16 +484,12 @@ void PedestalEqualization::FindOffsets()
     fDQMHistogramPedestalEqualization.fillOccupancyPlots(theOccupancyContainer);
     fDQMHistogramPedestalEqualization.fillOffsetPlots(theOffsetsCointainer);
 #else
-    auto theOccupancyStream = prepareChannelContainerStreamer<Occupancy>();
-    for(auto board: theOccupancyContainer)
+    if(fDQMStreamerEnabled)
     {
-        if(fDQMStreamerEnabled) theOccupancyStream->streamAndSendBoard(board, fDQMStreamer);
-    }
-
-    auto theOffsetStream = prepareChannelContainerStreamer<uint8_t>();
-    for(auto board: theOffsetsCointainer)
-    {
-        if(fDQMStreamerEnabled) theOffsetStream->streamAndSendBoard(board, fDQMStreamer);
+        ContainerSerialization theOccupancyContainerSerialization("PedestalEqualizationOccupancy");
+        theOccupancyContainerSerialization.streamByHybridContainer(fDQMStreamer, theOccupancyContainer);
+        ContainerSerialization theOffsetContainerSerialization("PedestalEqualizationOffset");
+        theOffsetContainerSerialization.streamByHybridContainer(fDQMStreamer, theOffsetsCointainer);
     }
 #endif
 

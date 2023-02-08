@@ -88,10 +88,10 @@ void DQMInterface::stopProcessingData(void)
 {
     fRunning = false;
     std::chrono::milliseconds span(1000);
-    int                       timeout = 10; // in seconds
+    int                       timeout = 3; // in seconds
 
     fListener->close();
-    while(fRunningFuture.wait_for(span) == std::future_status::timeout && timeout >= 0)
+    while(fRunningFuture.wait_for(span) == std::future_status::timeout && timeout > 0)
     { LOG(INFO) << __PRETTY_FUNCTION__ << " Process still running! Waiting " << timeout-- << " more seconds!" << RESET; }
 
     LOG(INFO) << __PRETTY_FUNCTION__ << " Thread done running" << RESET;
@@ -135,6 +135,7 @@ bool DQMInterface::running()
             break;
         }
         LOG(DEBUG) << "Got something" << RESET;
+        LOG(DEBUG) << "Tmp buffer size: " << tmpDataBuffer.size() << RESET;
         fDataBuffer.insert(fDataBuffer.end(), tmpDataBuffer.begin(), tmpDataBuffer.end());
         LOG(DEBUG) << "Data buffer size: " << fDataBuffer.size() << RESET;
         while(fDataBuffer.size() > 0)

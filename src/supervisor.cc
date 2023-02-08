@@ -296,12 +296,19 @@ int main(int argc, char* argv[])
                     if(cmd.optionValue("calibration") != "psphysics" && cmd.optionValue("calibration") != "2sphysics")
                     {
                         std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                        theMiddlewareInterface.status();
+                        std::string status = theMiddlewareInterface.status();
+                        
                         std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                        while(theMiddlewareInterface.status() != "Done")
+                        while(status != "Done")
                         {
                             std::cout << __PRETTY_FUNCTION__ << __LINE__ << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
                             usleep(5e5);
+                            status = theMiddlewareInterface.status();
+                            if(status == "Error")
+                            {
+                                std::cout << "An error occurred, Aborting..." << std::endl;
+                                abort();
+                            }
                         }
                     }
                     else

@@ -36,12 +36,6 @@ class Occupancy //: public streammable
 
     void normalize(const uint32_t numberOfEvents);
 
-    // Occupancy operator/(const float &denominator) const
-    // {
-
-    // }
-
-
     friend class boost::serialization::access;
 
     template<class Archive>

@@ -46,10 +46,7 @@ class SummaryBase
   private:
     friend class boost::serialization::access;
     template<class Archive>
-    void serialize(Archive& theArchive, const unsigned int version)
-    {   
-        // std::cout<<__PRETTY_FUNCTION__<<__LINE__<<std::endl;
-    }
+    void serialize(Archive& theArchive, const unsigned int version){}
 };
 BOOST_SERIALIZATION_ASSUME_ABSTRACT(SummaryBase)
 
@@ -219,11 +216,8 @@ class Summary : public SummaryBase
     template<class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        // std::cout<<__PRETTY_FUNCTION__<<__LINE__<<std::endl;
         theArchive.template register_type<Summary<S, C>>();
-        // std::cout<<__PRETTY_FUNCTION__<<__LINE__<<std::endl;
         theArchive & boost::serialization::base_object<SummaryBase>(*this);
-        // std::cout<<__PRETTY_FUNCTION__<<__LINE__<<std::endl;
         theArchive & theSummary_;
     }
 };
@@ -335,14 +329,7 @@ class BaseDataContainer
     template<class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        // std::cout<<__PRETTY_FUNCTION__<<__LINE__ << " pointer " << this <<std::endl;
-        // if(summary_ != nullptr)
-        // {
-        //     int32_t     status;
-        //     std::cout << abi::__cxa_demangle(typeid(*summary_).name(), 0, 0, &status) << std::endl;
-        // }
         theArchive & summary_;
-        // std::cout<<__PRETTY_FUNCTION__<<__LINE__<<std::endl;
     }
 };
 BOOST_SERIALIZATION_ASSUME_ABSTRACT(BaseDataContainer)
@@ -360,6 +347,15 @@ class DataContainer
 
     DataContainer(const DataContainer&) = delete;
     DataContainer(DataContainer&& theCopyContainer) : Container<T>(std::move(theCopyContainer)), BaseDataContainer(std::move(theCopyContainer)) {}
+
+    void remapIdtoPointer()
+    {
+        for(auto object : *this)
+        {
+             Container<T>::idObjectMap_[object->getId()] = object;
+            object->remapIdtoPointer();
+        }
+    }
 
     template <typename S, typename V>
     void initialize()
@@ -436,13 +432,6 @@ class DataContainer
         theArchive & this->id_;
         theArchive & boost::serialization::base_object<BaseDataContainer>(*this);
         theArchive & boost::serialization::base_object<Container<T>>(*this);
-        // std::cout << __PRETTY_FUNCTION__ << __LINE__ << this << std::endl;
-        // std::cout << __PRETTY_FUNCTION__ << __LINE__ << " Size = " << this->size() << std::endl;
-        // for(auto& subContainer : *this)
-        // {
-        //     // std::cout << __PRETTY_FUNCTION__ << __LINE__ << " ID = " << subContainer->getId() << std::endl;
-        //     theArchive & subContainer;
-        // }
     }
 };
 
@@ -507,6 +496,8 @@ class ChipDataContainer
     ChipDataContainer(ChipDataContainer&& theCopyContainer) : ChipContainer(std::move(theCopyContainer)), BaseDataContainer(std::move(theCopyContainer)) {}
 
     virtual ~ChipDataContainer() { ; }
+
+    void remapIdtoPointer(){};
 
     template <typename S, typename V>
     void initialize()
@@ -594,14 +585,9 @@ class ChipDataContainer
     template<class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {   
-        std::cout<<__PRETTY_FUNCTION__<<__LINE__ << " Chip pointer " << this <<std::endl;
-        // std::cout<<__PRETTY_FUNCTION__<<__LINE__<<std::endl;
         theArchive & id_;
-        // std::cout<<__PRETTY_FUNCTION__<<__LINE__<<std::endl;
         theArchive & boost::serialization::base_object<BaseDataContainer>(*this);
-        // std::cout<<__PRETTY_FUNCTION__<<__LINE__<<std::endl;
         theArchive & container_;
-        // std::cout<<__PRETTY_FUNCTION__<<__LINE__<<std::endl;
     }
 };
 
@@ -637,7 +623,6 @@ class HybridDataContainer : public DataContainer<ChipDataContainer>
     template<class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {   
-        std::cout<<__PRETTY_FUNCTION__<<__LINE__ << " Hybrid pointer " << this <<std::endl;
         theArchive & boost::serialization::base_object<DataContainer<ChipDataContainer>>(*this);
     }
 };
