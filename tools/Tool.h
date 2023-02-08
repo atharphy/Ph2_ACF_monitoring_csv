@@ -1,12 +1,10 @@
 /*!
-
         \file                   Tool.h
         \brief                                   Controller of the System, overall wrapper of the framework
         \author                                  Georg AUZINGER
         \version                 1.0
         \date                                    06/02/15
         Support :                                mail to : georg.auzinger@cern.ch
-
  */
 
 #ifndef __TOOL_H__
@@ -355,8 +353,6 @@ class Tool : public Ph2_System::SystemController
 
     std::string getDirectoryName() { return fDirectoryName; }
 
-    // summarize stats
-    // while removing NANs
     struct StatsSum
     {
       public:
@@ -399,7 +395,8 @@ class Tool : public Ph2_System::SystemController
   protected:
     DetectorDataContainer* fDetectorDataContainer{nullptr};
 
-    uint16_t getMaxNumberOfGroups();
+    uint16_t    getMaxNumberOfGroups();
+    std::string getCalibrationName();
 
 #ifdef __USE_ROOT__
     CanvasMap           fCanvasMap;
@@ -425,6 +422,9 @@ class Tool : public Ph2_System::SystemController
     THttpServer* fHttpServer;
 #endif
 
+    // ################################
+    // # Hanldlers for Running thread #
+    // ################################
     static std::atomic<bool> fKeepRunning;
     int                      fRunNumber;
     std::future<void>        fRunningFuture;
@@ -434,17 +434,16 @@ class Tool : public Ph2_System::SystemController
     // std::condition_variable_any wakeUp;
     // std::recursive_mutex        theMtx;
 
-    bool        fSkipMaskedChannels;
-    bool        fAllChan;
-    bool        fMaskChannelsFromOtherGroups;
-    bool        fTestPulse;
-    bool        fDoBoardBroadcast;
-    bool        fDoHybridBroadcast;
-    bool        fUseReadNEvents{1};
-    int         fWait_ms{100};
-    size_t      fNReadbackEvents{0};
-    uint8_t     fNormalize{1};
-    std::string getCalibrationName();
+    bool    fSkipMaskedChannels;
+    bool    fAllChan;
+    bool    fMaskChannelsFromOtherGroups;
+    bool    fTestPulse;
+    bool    fDoBoardBroadcast;
+    bool    fDoHybridBroadcast;
+    bool    fUseReadNEvents{1};
+    int     fWait_ms{100};
+    size_t  fNReadbackEvents{0};
+    uint8_t fNormalize{1};
 };
 
 #endif

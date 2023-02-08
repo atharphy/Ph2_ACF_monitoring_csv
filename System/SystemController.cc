@@ -350,6 +350,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
 
     if(fWriteHandlerEnabled == true) this->initializeWriteFileHandler();
 
+    // ####################
+    // # Set module type  #
+    // ####################
     DetectorMonitorConfig theDetectorMonitorConfig;
     std::string           monitoringType = fParser.parseMonitor(pFilename, theDetectorMonitorConfig, os);
 
@@ -366,12 +369,13 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             LOG(ERROR) << BOLDRED << "Unrecognized monitor type, Aborting" << RESET;
             abort();
         }
+
         fDetectorMonitor->forkMonitor();
     }
 
-    // ############################################
-    // # Make sure  all interfaces are configured #
-    // ############################################
+    // ###########################################
+    // # Make sure all interfaces are configured #
+    // ###########################################
     for(const auto cBoard: *fDetectorContainer)
     {
         if(cBoard->getBoardType() == BoardType::RD53) continue;
@@ -379,9 +383,9 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureInterfaces(cBoard);
     }
 
-    // ###################
-    // # Set module type #
-    // ###################
+    // ##########################
+    // # Set module type for OT #
+    // ##########################
     for(const auto cBoard: *fDetectorContainer)
     {
         if(cBoard->getBoardType() != BoardType::D19C) continue;
