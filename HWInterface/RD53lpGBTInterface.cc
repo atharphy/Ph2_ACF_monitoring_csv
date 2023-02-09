@@ -136,14 +136,14 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
         {
             LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << cRegItem.first << BOLDBLUE << " = " << BOLDYELLOW << cRegItem.second.fValue << RESET;
 
-            if(cRegItem.second.fAddress < 0x13C)
-                RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
-            else if((cRegItem.second.fAddress >= 0x1D0) && (cRegItem.second.fAddress < 0x1EB))
+            if(cRegItem.first.find("_phase"))
             {
                 lpGBTInterface::ConfigureRxPhase(
                     pChip, {static_cast<uint8_t>(std::stoi(cRegItem.first.substr(4, 1)))}, {static_cast<uint8_t>(std::stoi(cRegItem.first.substr(5, 1)))}, cRegItem.second.fValue);
                 static_cast<lpGBT*>(pChip)->setPhaseRxAligned(true); // @TMP@
             }
+            else
+                RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
         }
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 

@@ -776,3 +776,38 @@ FAHeaderNotFoundCount     0x1ea         0x00              0x00                  
 FALossOfLockCount         0x1eb         0x00              0x00                          8
 ConfigErrorCounterH       0x1ec         0x00              0x00                          8
 ConfigErrorCounterL       0x1ed         0x00              0x00                          8
+
+
+*-------------------------------------------------------------------------------------------------------
+* Fake registers
+*-------------------------------------------------------------------------------------------------------
+* RegName                 Addr          Defval            Value                         BitSize
+*-------------------------------------------------------------------------------------------------------
+EPRX00ChnCntr_phase       0x1F0         0x00              0x00                          4
+EPRX01ChnCntr_phase       0x1F1         0x00              0x00                          4
+EPRX02ChnCntr_phase       0x1F2         0x00              0x00                          4
+EPRX03ChnCntr_phase       0x1F3         0x00              0x00                          4
+EPRX10ChnCntr_phase       0x1F4         0x00              0x00                          4
+EPRX11ChnCntr_phase       0x1F5         0x00              0x00                          4
+EPRX12ChnCntr_phase       0x1F6         0x00              0x00                          4
+EPRX13ChnCntr_phase       0x1F7         0x00              0x00                          4
+EPRX20ChnCntr_phase       0x1F8         0x00              0x00                          4
+EPRX21ChnCntr_phase       0x1F9         0x00              0x00                          4
+EPRX22ChnCntr_phase       0x1FA         0x00              0x00                          4
+EPRX23ChnCntr_phase       0x1FB         0x00              0x00                          4
+EPRX30ChnCntr_phase       0x1FC         0x00              0x00                          4
+EPRX31ChnCntr_phase       0x1FD         0x00              0x00                          4
+EPRX32ChnCntr_phase       0x1FE         0x00              0x00                          4
+EPRX33ChnCntr_phase       0x1FF         0x00              0x00                          4
+EPRX40ChnCntr_phase       0x200         0x00              0x00                          4
+EPRX41ChnCntr_phase       0x201         0x00              0x00                          4
+EPRX42ChnCntr_phase       0x202         0x00              0x00                          4
+EPRX43ChnCntr_phase       0x203         0x00              0x00                          4
+EPRX50ChnCntr_phase       0x204         0x00              0x00                          4
+EPRX51ChnCntr_phase       0x205         0x00              0x00                          4
+EPRX52ChnCntr_phase       0x206         0x00              0x00                          4
+EPRX53ChnCntr_phase       0x207         0x00              0x00                          4
+EPRX60ChnCntr_phase       0x208         0x00              0x00                          4
+EPRX61ChnCntr_phase       0x209         0x00              0x00                          4
+EPRX62ChnCntr_phase       0x20A         0x00              0x00                          4
+EPRX63ChnCntr_phase       0x20B         0x00              0x00                          4
