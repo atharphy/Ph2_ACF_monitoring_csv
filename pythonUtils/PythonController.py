@@ -9,7 +9,13 @@ import lib.Ph2_ACF_PythonInterface as Ph2_ACF
 
 def getNewRunNumber():
     runNumberFileName = os.getenv('PH2ACF_BASE_DIR') + "/RunNumbers.dat"
-    with open(runNumberFileName, "r") as runNumberFile:
+    
+    try:
+        file = open(runNumberFileName, "r")
+    except FileNotFoundError:
+        file = open(runNumberFileName, "w")
+    
+    with file as runNumberFile:
         for line in runNumberFile:
             pass
         runNumber = int(line) + 1

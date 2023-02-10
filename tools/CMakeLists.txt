@@ -23,7 +23,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     # Boost also needs to be linked
     include_directories(${Boost_INCLUDE_DIRS})
     link_directories(${Boost_LIBRARY_DIRS})
-    set(LIBS ${LIBS} ${Boost_ARCHIVE_LIBRARY} ${Boost_SERIALIZATION_LIBRARY} ${Boost_MULTIPRECISION_LIBRARY})
+    set(LIBS ${LIBS} boost_serialization ${Boost_ARCHIVE_LIBRARY} ${Boost_SERIALIZATION_LIBRARY} ${Boost_MULTIPRECISION_LIBRARY})
 
     # Check for ZMQ installed
     if(ZMQ_FOUND)
