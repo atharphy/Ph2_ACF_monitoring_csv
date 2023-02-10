@@ -1525,9 +1525,9 @@ void SEHTester::CheckHybridInputs(BeBoard* pBoard, std::vector<std::string> pInp
     pCounters.resize(cIndices.size());
     for(uint8_t cIndex: cIndices)
     {
-        char cBuffer[21];
-        sprintf(cBuffer, "debug_blk_counter%03d", cIndex);
-        std::string cRegName = cBuffer;
+        std::ostringstream oss;
+        oss << std::setw(3) << std::setfill('0') << cIndex;
+        std::string cRegName = "debug_blk_counter" + oss.str();
         uint32_t    cCounter = fBeBoardInterface->ReadBoardReg(pBoard, cRegName);
         pCounters.push_back(cCounter);
     }
@@ -1570,9 +1570,9 @@ void SEHTester::CheckHybridOutputs(BeBoard* pBoard, std::vector<std::string> pOu
     pCounters.resize(cIndices.size());
     for(uint8_t cIndex: cIndices)
     {
-        char cBuffer[21];
-        sprintf(cBuffer, "debug_blk_counter%03d", cIndex);
-        std::string cRegName = cBuffer;
+        std::ostringstream oss;
+        oss << std::setw(3) << std::setfill('0') << cIndex;
+        std::string cRegName = "debug_blk_counter" + oss.str();
         uint32_t    cCounter = fBeBoardInterface->ReadBoardReg(pBoard, cRegName);
         pCounters.push_back(cCounter);
     }

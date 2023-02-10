@@ -144,6 +144,7 @@ export CompileWithEUDAQ=false
 # Compile with TC_USB library
 export CompileWithTCUSB=false
 export UseTCUSBforROH=false
+export UseTCUSBforSEH=false
 export UseTCUSBTcpServer=false
 
 
@@ -162,6 +163,7 @@ if [[ $1 == "ci" ]]; then
     export CompileWithEUDAQ=false
     export CompileWithTCUSB=false
     export UseTCUSBforROH=false
+    export UseTCUSBforSEH=false
     export UseTCUSBTcpServer=false
 fi
 
