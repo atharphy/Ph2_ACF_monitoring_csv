@@ -872,14 +872,14 @@ double lpGBTInterface::BERtestCL(Chip* pChip, uint8_t pGroup, uint8_t pChannel, 
     // number of bits received per second
     uint16_t cRxRate = GetRxDataRate(pChip, pGroup);
     // constants to allow me to calculate the error rate
-    const int n_prints = 10; // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
+    const int nPrints  = 10; // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
     double    time2run = (given_time) ? bits_or_time : bits_or_time / cRxRate;
     double    bitsRxd  = (given_time) ? time2run * cRxRate : bits_or_time;
     LOG(INFO) << GREEN << "Running BERT for ~" << BOLDYELLOW << std::fixed << std::setprecision(0) << time2run << RESET << GREEN << "s will test  " << BOLDYELLOW << bitsRxd << RESET << GREEN
               << " received bits." << RESET;
     uint32_t BERTMeasTime = (log2(time2run * lpGBTconstants::ACCELERATOR_CLK) - 5) / 2.;
     // Configure number of printouts and calculate the frequency of printouts
-    double time_per_step = std::min(std::max(time2run / n_prints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
+    double time_per_step = std::min(std::max(time2run / nPrints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
 
     // ###############
     // # Configuring #
@@ -938,7 +938,7 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
 {
     const uint32_t nBitInClkPeriod = 32. * std::pow(2, frontendSpeed); // Number of bits in the 40 MHz clock period
     const double   fps             = 1.28e9 / nBitInClkPeriod;         // Frames per second
-    const int      n_prints        = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
+    const int      nPrints         = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
     double         frames2run;
     double         time2run;
 
@@ -950,7 +950,7 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     frames2run          = fBERTMeasTimeMap[BERTMeasTime];
 
     // Configure number of printouts and calculate the frequency of printouts
-    double time_per_step = std::min(std::max(time2run / n_prints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
+    double time_per_step = std::min(std::max(time2run / nPrints, 1.), 3600.); // The runtime of the PRBS test will have a precision of one step (at most 1h and at least 1s)
 
     // ###############
     // # Configuring #

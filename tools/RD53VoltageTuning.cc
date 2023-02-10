@@ -272,10 +272,10 @@ void VoltageTuning::run()
                     // # Save original configuration #
                     // ###############################
 
-                    auto memCoreCol0 = RD53ChipInterface->ReadChipReg(cChip, "EN_CORE_COL_0");
-                    auto memCoreCol1 = RD53ChipInterface->ReadChipReg(cChip, "EN_CORE_COL_1");
-                    auto memCoreCol2 = RD53ChipInterface->ReadChipReg(cChip, "EN_CORE_COL_3");
-                    auto memCoreCol3 = RD53ChipInterface->ReadChipReg(cChip, "EN_CORE_COL_3");
+                    auto memCoreCol0 = cChip->getRegMap().find("EN_CORE_COL_0")->second.fValue;
+                    auto memCoreCol1 = cChip->getRegMap().find("EN_CORE_COL_1")->second.fValue;
+                    auto memCoreCol2 = cChip->getRegMap().find("EN_CORE_COL_2")->second.fValue;
+                    auto memCoreCol3 = cChip->getRegMap().find("EN_CORE_COL_3")->second.fValue;
 
                     // ########################
                     // # Disable all channels #

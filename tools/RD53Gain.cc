@@ -290,7 +290,12 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                                 highQslope        = par[3];
                                 highQslopeErr     = parErr[3];
 
-                                if(chi2 != 0)
+                                if(chi2 == -1)
+                                {
+                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fChi2 =
+                                        RD53Shared::ISFITERROR;
+                                }
+                                else
                                 {
                                     theGainContainer->at(cBoard->getIndex())
                                         ->at(cOpticalGroup->getIndex())
@@ -339,9 +344,6 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
                                     theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fChi2 = chi2;
                                     theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fDoF  = DoF;
                                 }
-                                else
-                                    theGainContainer->at(cBoard->getIndex())->at(cOpticalGroup->getIndex())->at(cHybrid->getIndex())->at(cChip->getIndex())->getChannel<GainFit>(row, col).fChi2 =
-                                        RD53Shared::ISFITERROR;
                             }
 
                     index++;
@@ -439,6 +441,11 @@ void Gain::computeStats(const std::vector<float>& x,
     // ##########################################
     const int limitToT = (RD53Shared::firstChip->getUseGainDualSlope() == true ? frontEnd->splitToTvalue : frontEnd->maxToTvalue);
     chi2               = -1;
+    for(auto i = 0; i < NGAINPAR; i++)
+    {
+        par[i]    = 0;
+        parErr[i] = 0;
+    }
 
     // ############################################
     // # Struct for ordering the vectors together #
@@ -456,15 +463,21 @@ void Gain::computeStats(const std::vector<float>& x,
         if((e[i] != 0) && (o[i] == 1)) scanOutputs.push_back({x[i], y[i], e[i], o[i]});
     std::sort(scanOutputs.begin(), scanOutputs.end(), [&](ScanOutput i, ScanOutput j) { return i.y < j.y; });
 
+    // ###########################################
+    // # Check to have enough points for the fit #
+    // ###########################################
     const size_t nData = scanOutputs.size();
-    DoF                = nData - NGAINPAR;
-
-    for(auto i = 0; i < NGAINPAR; i++)
+    DoF                = nData - NGAINPAR / 2;
+    if(RD53Shared::firstChip->getUseGainDualSlope() == true)
     {
-        par[i]    = 0;
-        parErr[i] = 0;
+        const size_t nDataLowRange = std::count_if(scanOutputs.begin(), scanOutputs.end(), [&](ScanOutput val) { return val.y <= limitToT; });
+        if(((nDataLowRange - NGAINPAR) < 1) || ((nData - nDataLowRange - NGAINPAR) < 1))
+            return;
+        else
+            DoF = nData - NGAINPAR;
     }
-    if(DoF < 1) return;
+    else if(DoF < 1)
+        return;
 
     // ############################################
     // # Retreive oredered vectors for x, y and e #

@@ -25,7 +25,7 @@ void MiddlewareStateMachine::initialize()
 
 void MiddlewareStateMachine::configure(const std::string& calibrationName, const std::string& configurationFile)
 {
-    fTheTool = fCombinedCalibrationFactory.CreateCombinedCalibration(calibrationName);
+    fTheTool = fCombinedCalibrationFactory.createCombinedCalibration(calibrationName);
 
     LOG(INFO) << BOLDBLUE << "Tool created" << RESET;
 

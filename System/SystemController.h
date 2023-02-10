@@ -61,7 +61,7 @@
 // # Librariries for communicating with Hybrid Test Cards #
 // ########################################################
 #ifdef __TCUSB__
-#include "TCInterface.h"
+#include "HWInterface/TCInterface.h"
 #endif
 
 class DetectorMonitor;

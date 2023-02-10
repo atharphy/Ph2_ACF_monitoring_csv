@@ -130,7 +130,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerifLoop, uint32_t pB
     // # Programming registers as from configuration file #
     // ####################################################
     LOG(INFO) << GREEN << "Initializing registers of LpGBT: " << BOLDYELLOW << pChip->getId() << RESET;
-    ChipRegMap& lpGBTRegMap = pChip->getRegMap();
+    const auto& lpGBTRegMap = pChip->getRegMap();
     for(const auto& cRegItem: lpGBTRegMap)
         if(cRegItem.second.fPrmptCfg == true)
         {
