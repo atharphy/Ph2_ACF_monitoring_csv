@@ -62,7 +62,6 @@ class DQMHistogramPedestalEqualization : public DQMHistogramBase
   private:
     DetectorContainer*    fDetectorContainer;
     uint32_t              NCH = 0;
-    DetectorDataContainer fDetectorData;
     DetectorDataContainer fDetectorVplusHistograms;
     DetectorDataContainer fDetectorOffsetHistograms;
     DetectorDataContainer fDetectorOccupancyHistograms;

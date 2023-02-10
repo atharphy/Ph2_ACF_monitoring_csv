@@ -16,13 +16,12 @@
 #include "TH2F.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ContainerStream.h"
 #include "Utils/EmptyContainer.h"
 #include "Utils/GenericDataArray.h"
-#include "Utils/HybridContainerStream.h"
 #include "Utils/Occupancy.h"
 #include "Utils/ThresholdAndNoise.h"
 #include "Utils/Utilities.h"
+#include "Utils/ContainerSerialization.h"
 
 //========================================================================================================================
 DQMHistogramLatencyScan::DQMHistogramLatencyScan()
@@ -54,7 +53,6 @@ void DQMHistogramLatencyScan::book(TFile* theOutputFile, DetectorContainer& theD
     // need to get settings from settings map
     parseSettings(pSettingsMap);
 
-    ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
     LOG(INFO) << "Setting histograms with range " << fLatencyRange << " and start value " << fStartLatency;
 
     HistContainer<TH1F> hLatency("LatencyValue", "Latency Value", fLatencyRange, fStartLatency, fStartLatency + fLatencyRange);
@@ -87,44 +85,38 @@ void DQMHistogramLatencyScan::book(TFile* theOutputFile, DetectorContainer& theD
 //========================================================================================================================
 bool DQMHistogramLatencyScan::fill(std::vector<char>& dataBuffer)
 {
-    HybridContainerStream<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>                            theLatencyStream("LatencyScan");
-    HybridContainerStream<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>                            theStubStream("LatencyScanStub");
-    HybridContainerStream<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>> the2DStream("LatencyScan2D");
-    HybridContainerStream<EmptyContainer, EmptyContainer, GenericDataArray<TDCBINS, uint16_t>>                            theTriggerTDCStream("LatencyScanTriggerTDC");
+    std::string inputStream(dataBuffer.begin(), dataBuffer.end());
+    ContainerSerialization theDataSerialization("LatencyScanData");
+    ContainerSerialization theStubSerialization("LatencyScanStub");
+    ContainerSerialization the2DSerialization("LatencyScan2D");
+    ContainerSerialization theTriggerTDCSerialization("LatencyScanTriggerTDC");
 
-    if(theLatencyStream.attachBuffer(&dataBuffer))
+    if(theDataSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched Latency Stream!!!!!\n";
-        theLatencyStream.decodeData(fDetectorData);
+        std::cout << "Matched LatencyScan Data!!!!!\n";
+        DetectorDataContainer fDetectorData = theDataSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>(fDetectorContainer);
         fillLatencyPlots(fDetectorData);
-        fDetectorData.cleanDataStored();
         return true;
     }
-
-    if(theTriggerTDCStream.attachBuffer(&dataBuffer))
+    if(theStubSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched TriggerTDC!!!!!\n";
-        theTriggerTDCStream.decodeData(fDetectorData);
-        fillTriggerTDCPlots(fDetectorData);
-        fDetectorData.cleanDataStored();
-        return true;
-    }
-
-    if(theTriggerTDCStream.attachBuffer(&dataBuffer))
-    {
-        std::cout << "Matched Stub Latency!!!!!\n";
-        theStubStream.decodeData(fDetectorData);
+        std::cout << "Matched LatencyScan Stub!!!!!\n";
+        DetectorDataContainer fDetectorData = theStubSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, uint16_t>>(fDetectorContainer);
         fillStubLatencyPlots(fDetectorData);
-        fDetectorData.cleanDataStored();
         return true;
     }
-
-    if(the2DStream.attachBuffer(&dataBuffer))
+    if(the2DSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched 2D Latency!!!!!\n";
-        the2DStream.decodeData(fDetectorData);
+        std::cout << "Matched LatencyScan 2D!!!!!\n";
+        DetectorDataContainer fDetectorData = the2DSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<VECSIZE, GenericDataArray<VECSIZE, uint16_t>>>(fDetectorContainer);
         fill2DLatencyPlots(fDetectorData);
-        fDetectorData.cleanDataStored();
+        return true;
+    }
+    if(theTriggerTDCSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched LatencyScan TriggerTDC!!!!!\n";
+        DetectorDataContainer fDetectorData = theTriggerTDCSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<TDCBINS, uint16_t>>(fDetectorContainer);
+        fillTriggerTDCPlots(fDetectorData);
         return true;
     }
 

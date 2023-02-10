@@ -5,7 +5,6 @@
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ContainerStream.h"
 #include "Utils/EmptyContainer.h"
 #include "Utils/MPAChannelGroupHandler.h"
 #include "Utils/Occupancy.h"

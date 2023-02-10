@@ -16,12 +16,9 @@
 #include "TFile.h"
 #include "TH1F.h"
 #include "TH2F.h"
-#include "Utils/ChannelContainerStream.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ContainerStream.h"
 #include "Utils/EmptyContainer.h"
-#include "Utils/HybridContainerStream.h"
 #include "Utils/Occupancy.h"
 #include "Utils/ThresholdAndNoise.h"
 #include "Utils/Utilities.h"
@@ -90,8 +87,6 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
     cSetting      = pSettingsMap.find("FitSCurves");
     fFitSCurves   = (cSetting != std::end(pSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
     if(fFitSCurves) fPlotSCurves = true;
-
-    ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
 
     if(fWithCBC || fWithSSA)
     {

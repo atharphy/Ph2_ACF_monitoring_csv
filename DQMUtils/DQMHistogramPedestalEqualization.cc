@@ -14,12 +14,9 @@
 #include "TFile.h"
 #include "TH1F.h"
 #include "TH1I.h"
-#include "Utils/ChannelContainerStream.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ContainerStream.h"
 #include "Utils/EmptyContainer.h"
-#include "Utils/HybridContainerStream.h"
 #include "Utils/Occupancy.h"
 #include "Utils/ThresholdAndNoise.h"
 #include "Utils/Utilities.h"
@@ -36,7 +33,6 @@ void DQMHistogramPedestalEqualization::book(TFile* theOutputFile, DetectorContai
 {
     fDetectorContainer = &theDetectorStructure;
 
-    ContainerFactory::copyStructure(theDetectorStructure, fDetectorData);
     NCH = theDetectorStructure.at(0)->at(0)->at(0)->at(0)->size();
 
     HistContainer<TH1I> hVplus("VplusValue", "Vplus Value", 1, 0, 1);

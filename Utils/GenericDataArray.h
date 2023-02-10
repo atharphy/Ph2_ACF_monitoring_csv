@@ -29,6 +29,15 @@ class GenericDataArray
     T&     operator[](size_t position) { return data[position]; }
 
     T data[size];
+
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive& theArchive, const unsigned int version)
+    {
+        for(size_t i = 0; i < size; ++i) theArchive & data[i];
+    }
+
 };
 
 // 2D generic array, accessed with () instead of [] to make overloading easier
@@ -51,20 +60,5 @@ class GenericDataArray_2D
 
     T data[size_0][size_1];
 };
-
-template <size_t size, typename T = float>
-inline GenericDataArray<size, T> fromVectorToGenericDataArray(const std::vector<T>& theInputVector)
-{
-    if(theInputVector.size() > size)
-    {
-        LOG(WARNING) << BOLDRED << __PRETTY_FUNCTION__ << " input vector size (" << theInputVector.size() << ") is greater than the array size (" << size
-                     << ")\nSome data may be lost in the conversion";
-    }
-    GenericDataArray<size, T> theOutputVector;
-
-    for(size_t it = 0; it < std::min(theInputVector.size(), size); ++it) { theOutputVector[it] = theInputVector[it]; }
-
-    return theOutputVector;
-}
 
 #endif
