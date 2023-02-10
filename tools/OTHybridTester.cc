@@ -409,8 +409,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
 #endif
                     std::this_thread::sleep_for(std::chrono::milliseconds(1200));
                     int cADCValue = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, cADC);
-
-                    LOG(INFO) << BOLDBLUE << "DAC value = 0x" << std::hex << +cDACValue << " --- ADC value = 0x" << std::hex << +cADCValue << RESET;
+                    LOG(INFO) << BOLDBLUE << "DAC value = 0x" << std::hex << +cDACValue << std::dec << " --- ADC value = 0x" << std::hex << +cADCValue << std::dec << RESET;
                     cDACValVect.push_back(cDACValue);
                     cADCValVect.push_back(cADCValue);
                 }
@@ -539,7 +538,7 @@ bool OTHybridTester::LpGBTTestFixedADCs()
                     // cADCValue-=34;
                     cADCValueVect.push_back(cADCValue);
                     cADCHistogram->Fill(cADCsMapIterator->first.c_str(), cADCValue, 1);
-                    LOG(INFO) << BOLDBLUE << "Read " << cADCsMapIterator->first << " ADC Value " << +cADCValue << RESET;
+                    LOG(INFO) << BOLDBLUE << "Read " << cADCsMapIterator->first << " ADC Value 0x" << std::hex << +cADCValue << std::dec << RESET;
                 }
 
                 // float cTestValue = clpGBTInterface->GetADCVoltage(cOpticalGroup->flpGBT, "ADC5", true);
@@ -1116,8 +1115,8 @@ uint16_t OTHybridTester::calibrateADC()
                 cADC1V25 = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "ADC1", "VREF/2");
                 cVref    = cTestCard1V25 * 200. / 310. * cGain * 512 / (cADC1V25 - cOffset * (1 - cGain / 2.));
                 // std::cout << std::dec << trim << "," << cOffset << "," << cGain << "," << cADC1V25 << "," << cTestCard1V25 << "," << cVref << std::endl;
-                LOG(INFO) << BOLDBLUE << "OTHybridTester::calibrateADC(): VREFTune: 0x" << std::hex << +trim << " ADC value: 0x" << std::hex << +cADC1V25 << " calculated Vref: " << cVref
-                          << "V offset: 0x" << std::hex << +cOffset << " gain: " << cGain << RESET;
+                LOG(INFO) << BOLDBLUE << "OTHybridTester::calibrateADC(): VREFTune: 0x" << std::hex << +trim << std::dec << " ADC value: 0x" << std::hex << +cADC1V25 << std::dec
+                          << " calculated Vref: " << cVref << "V offset: 0x" << std::hex << +cOffset << std::dec << " gain: " << cGain << RESET;
                 cVREFTuneVect.push_back(trim);
                 cADCValVect.push_back(cADC1V25);
                 cOffsetVect.push_back(cOffset);
@@ -1127,7 +1126,7 @@ uint16_t OTHybridTester::calibrateADC()
             for(uint16_t i = 0; i < cVREFTuneVect.size(); i++) { cCalibrationGraph->SetPoint(i, cVrefVect.at(i), cVREFTuneVect.at(i)); }
             double cBestVref = cCalibrationGraph->Eval(1);
             cBestVrefround   = std::lround(cBestVref);
-            LOG(INFO) << BOLDBLUE << "OTHybridTester::calibrateADC(): Best Vref: " << cBestVref << " rounded 0x" << std::hex << cBestVrefround << RESET;
+            LOG(INFO) << BOLDBLUE << "OTHybridTester::calibrateADC(): Best Vref: " << cBestVref << " rounded 0x" << std::hex << cBestVrefround << std::dec << RESET;
             // cGain   = clpGBTInterface->GetADCGain(cOpticalGroup->flpGBT, false);
             // cOffset = clpGBTInterface->GetADCOffset(cOpticalGroup->flpGBT, false);
 
@@ -1144,8 +1143,8 @@ uint16_t OTHybridTester::calibrateADC()
                 cADC1V25 = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "ADC0", "VREF/2");
                 cVref    = 3303. / 4096. * cGain * 512 / (cADC1V25 - cOffset * (1 - cGain / 2.));
                 // std::cout << std::dec << trim << "," << cOffset << "," << cGain << "," << cADC1V25 << "," << cTestCard1V25 << "," << cVref << std::endl;
-                LOG(INFO) << BOLDBLUE << "OTHybridTester::calibrateADC(): VREFTune: 0x" << std::hex << +trim << " ADC value: 0x" << std::hex << +cADC1V25 << " calculated Vref: " << cVref
-                          << "V offset: 0x" << std::hex << +cOffset << " gain: " << cGain << RESET;
+                LOG(INFO) << BOLDBLUE << "OTHybridTester::calibrateADC(): VREFTune: 0x" << std::hex << +trim << std::dec << " ADC value: 0x" << std::hex << +cADC1V25 << std::dec
+                          << " calculated Vref: " << cVref << "V offset: 0x" << std::hex << +cOffset << std::dec << " gain: " << cGain << RESET;
                 cVREFTuneVect.push_back(trim);
                 cADCValVect.push_back(cADC1V25);
                 cOffsetVect.push_back(cOffset);
@@ -1155,7 +1154,7 @@ uint16_t OTHybridTester::calibrateADC()
             for(uint16_t i = 0; i < cVREFTuneVect.size(); i++) { cCalibrationGraph->SetPoint(i, cVrefVect.at(i), cVREFTuneVect.at(i)); }
             cBestVref      = cCalibrationGraph->Eval(1);
             cBestVrefround = std::lround(cBestVref);
-            LOG(INFO) << BOLDBLUE << "OTHybridTester::calibrateADC(): Best Vref: " << cBestVref << " rounded 0x" << std::hex << cBestVrefround << RESET;
+            LOG(INFO) << BOLDBLUE << "OTHybridTester::calibrateADC(): Best Vref: " << cBestVref << " rounded 0x" << std::hex << cBestVrefround << std::dec << RESET;
         }
     }
     fResultFile->cd();
@@ -1196,8 +1195,8 @@ void OTHybridTester::calibrateCurrentDAC()
                 cADCTempp           = clpGBTInterface->ReadADC(cOpticalGroup->flpGBT, "ADC4", "VREF/2", 0);
                 float cTemppVoltage = 1. / cGain / 512. * (cADCTempp - cOffset * (1. - cGain / 2.));
                 float cCurrent      = cTemppVoltage / 5100. * 1e6;
-                LOG(INFO) << BOLDBLUE << "OTHybridTester::calibrateCurrenDAC(): Current DAC value: 0x" << std::hex << +cDAC << " ADC value: 0x" << std::hex << +cADCTempp
-                          << " calculated voltage: " << cTemppVoltage << "V calculated current: " << cCurrent << "muA offset: 0x" << std::hex << +cOffset << " gain: " << cGain << RESET;
+                LOG(INFO) << BOLDBLUE << "OTHybridTester::calibrateCurrenDAC(): Current DAC value: 0x" << std::hex << +cDAC << std::dec << " ADC value: 0x" << std::hex << +cADCTempp << std::dec
+                          << " calculated voltage: " << cTemppVoltage << "V calculated current: " << cCurrent << "muA offset: 0x" << std::hex << +cOffset << std::dec << " gain: " << cGain << RESET;
                 cCurrentVect.push_back(cCurrent);
                 cDACVect.push_back(cDAC);
                 cADCVect.push_back(cADCTempp);
