@@ -32,8 +32,8 @@ export CACTUSINCLUDE=$CACTUSROOT/include
 ##########
 # PYTHON #
 ##########
-alias PythonController.py="python pythonUtils/PythonController.py"
-alias fpgaconfig.py="python pythonUtils/fpgaconfig.py"
+alias PythonController.py="python3 ${PH2ACF_BASE_DIR}/pythonUtils/PythonController.py"
+alias fpgaconfig.py="python3 ${PH2ACF_BASE_DIR}/pythonUtils/fpgaconfig.py"
 
 ########
 # ROOT #
@@ -144,6 +144,7 @@ export CompileWithEUDAQ=false
 # Compile with TC_USB library
 export CompileWithTCUSB=false
 export UseTCUSBforROH=false
+export UseTCUSBforSEH=false
 export UseTCUSBTcpServer=false
 
 
@@ -162,6 +163,7 @@ if [[ $1 == "ci" ]]; then
     export CompileWithEUDAQ=false
     export CompileWithTCUSB=false
     export UseTCUSBforROH=false
+    export UseTCUSBforSEH=false
     export UseTCUSBTcpServer=false
 fi
 

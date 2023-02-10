@@ -81,6 +81,7 @@ class PSAlignment : public OTTool
     uint16_t fOptimalLatency = 0;
     // status
     bool fSuccess;
+    bool PSv2 = false;
     // Containers
     DetectorDataContainer fRegMapContainer;
     DetectorDataContainer fBoardRegContainer;

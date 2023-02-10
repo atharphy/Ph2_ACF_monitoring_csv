@@ -339,7 +339,7 @@ std::string D19cCbc3EventZS::DataBitString(uint8_t pHybridId, uint8_t pCbcId) co
 
         std::ostringstream os;
         for(uint32_t i = 0; i < NCHANNELS; i++) os << hit_bits[i];
-        delete hit_bits;
+        delete[] hit_bits;
 
         return os.str();
     }
@@ -404,7 +404,7 @@ std::vector<bool> D19cCbc3EventZS::DataBitVector(uint8_t pHybridId, uint8_t pCbc
         }
 
         for(uint32_t i = 0; i < NCHANNELS; i++) blist.push_back(hit_bits[i]);
-        delete hit_bits;
+        delete[] hit_bits;
     }
     else
         LOG(INFO) << "Event: Hybrid " << +pHybridId << " CBC " << +pCbcId << " is not found.";

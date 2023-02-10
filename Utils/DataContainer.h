@@ -397,8 +397,10 @@ class DataContainer
         {
             uint32_t numberOfContainerEnabledChannels = 0;
             if(container != nullptr)
+            {
                 numberOfContainerEnabledChannels = container->normalizeAndAverageContainers(
                     theContainer->getElement(index++), static_cast<const DataContainer<T>*>(theChannelGroupContainer)->getObject(container->getId()), numberOfEvents);
+            }
             theNumberOfEnabledChannelsList.emplace_back(numberOfContainerEnabledChannels);
             numberOfEnabledChannels_ += numberOfContainerEnabledChannels;
         }
